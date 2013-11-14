@@ -1,246 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:63988 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359Ab3KFXwO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 18:52:14 -0500
-Received: by mail-ie0-f171.google.com with SMTP id tp5so416727ieb.2
-        for <linux-pci@vger.kernel.org>; Wed, 06 Nov 2013 15:52:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com>
-References: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 Nov 2013 16:51:52 -0700
-Message-ID: <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Introduce two new MSI infrastructure calls for masking/unmasking.
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: xen-devel@lists.xenproject.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52640 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754646Ab3KNUSG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 15:18:06 -0500
+Date: Thu, 14 Nov 2013 15:17:46 -0500
+From: Neil Horman <nhorman@tuxdriver.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Veaceslav Falico <vfalico@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
-	Zhenzhong Duan <zhenzhong.duan@oracle.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH] PCI: export MSI mode using attributes, not kobjects
+Message-ID: <20131114201746.GB14807@hmsreliant.think-freely.org>
+References: <20131029214631.GA19354@kroah.com>
+ <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
+ <20131102155054.GD23938@kroah.com>
+ <CAErSpo5DD_H8_auWZ9QAVPLk85=Zcviv3RjeEWmHQkHPnFPCzA@mail.gmail.com>
+ <CAErSpo6Q3LvDN0QkOf4HnsDZf7neNgSE2nz2Z191Ajp62OLVrQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAErSpo6Q3LvDN0QkOf4HnsDZf7neNgSE2nz2Z191Ajp62OLVrQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Thomas, Ingo, Peter, x86 list]
+On Thu, Nov 14, 2013 at 12:33:11PM -0700, Bjorn Helgaas wrote:
+> On Tue, Nov 5, 2013 at 11:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Sat, Nov 2, 2013 at 9:50 AM, Greg Kroah-Hartman
+> > <gregkh@linuxfoundation.org> wrote:
+> >> On Fri, Nov 01, 2013 at 05:40:02PM -0600, Bjorn Helgaas wrote:
+> >>> On Tue, Oct 29, 2013 at 3:46 PM, Greg Kroah-Hartman
+> >>> <gregkh@linuxfoundation.org> wrote:
+> >>> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >>> >
+> >>> > The PCI MSI sysfs code is a mess with kobjects for things that don't
+> >>> > really need to be kobjects.  This patch creates attributes dynamically
+> >>> > for the MSI interrupts instead of using kobjects.
+> >>> >
+> >>> > Note, this does not delete the existing sysfs MSI code, but puts the
+> >>> > attributes under a "msi_irqs_2" directory for testing / example.
+> >>> >
+> >>> > Also note, this removes a directory from the current MSI interrupt sysfs
+> >>> > code:
+> >>> >
+> >>> > old MSI kobjects:
+> >>> > pci_device
+> >>> >    └── msi_irqs
+> >>> >        └── 40
+> >>> >            └── mode
+> >>> >
+> >>> > new MSI attributes:
+> >>> > pci_device
+> >>> >    └── msi_irqs_2
+> >>> >        └── 40
+> >>> >
+> >>> > As there was only one file "mode" with the kobject model, the interrupt
+> >>> > number is now a file that returns the "mode" of the interrupt (msi vs.
+> >>> > msix).
+> >>> >
+> >>> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >>> > ---
+> >>> >
+> >>> > Bjorn, I can make up a patch that rips out the existing kobject code
+> >>> > here, but I figured this patch would make things easier to follow
+> >>> > instead of having to dig through the removed logic at the same time.
+> >>> >
+> >>> > I'll clean up the error handling path for the create attribute logic as
+> >>> > well, this was just a proof of concept that this could be done.
+> >>> >
+> >>> > Do you think that anyone cares about the current mode files in sysfs to
+> >>> > move things in this manner?
+> >>>
+> >>> I like this a lot better than trying to fix all the holes in the
+> >>> current kobject code.
+> >>
+> >> Great.
+> >>
+> >>> I have no idea who, if anybody, cares about the "mode" files.  I
+> >>> assume there's a way to create the "mode" files with attributes, too?
+> >>> If so, we could replicate the existing structure with one patch, and
+> >>> simplify it with a second patch, so it would be easier to revert the
+> >>> directory change while keeping the fix.
+> >>
+> >> No, we can't create a 2-level deep attribute at the moment, only one
+> >> level, like the patch does.
+> >>
+> >> Based on Neil's comments, I think we should be fine with this as-is as
+> >> no one is messing with these files directly (which implies that we could
+> >> possibly just remove them entirely to save us the overall pain...)
+> >
+> > Hmmm.  https://bugzilla.redhat.com/show_bug.cgi?id=744012 suggests
+> > that irqbalance might be reading these files.
+> 
+> I looked at the current irqbalance on github [1], and I *think* it
+> never reads the "mode" files.  It reads the entries in the "msi_irqs"
+> directory, which you're proposing to change from directories to files,
+> but I think it only uses the names.
+> 
+It doesn't read the mode file (I had intended for it to, but all the information
+irqbalance needs currently is implied by the fact that it appears in the sysfs
+tree under msi_irqs in the first place).
 
-On Wed, Nov 6, 2013 at 2:16 PM, Konrad Rzeszutek Wilk
-<konrad.wilk@oracle.com> wrote:
-> Certain platforms do not allow writes in the MSI-X bars
-> to setup or tear down vector values. To combat against
-> the generic code trying to write to that and either silently
-> being ignored or crashing due to the pagetables being marked r/o
-> this patch introduces a platform over-write.
->
-> Note that we keep two separate, non-weak, functions
-> default_mask_msi_irqs() and default_mask_msix_irqs() for the
-> behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
-> as the default behavior is needed by x86 PCI code.
->
-> For Xen, which does not allow the guest to write to MSI-X
-> tables - as the hypervisor is solely responsible for setting
-> the vector values - we implement two nops.
->
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-> CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> It looks like it should be safe at least for irqbalance to make this a
+> one-level attribute.  It's possible we'll break somebody's scripts,
+> but I'm willing to try making this change because it really makes the
+> refcounting much simpler.
+> 
+ACK, if you cc me on the patch that will change the sysfs directory structure,
+I'll make the corresponding changes needed to irqblanace in parallel.
 
-I think this is safe, and I'd like to squeeze it into the v3.13 merge
-window next week, since it supersedes three patches Zhenzhong has been
-trying to get in since July [1], and this patch is much simpler to
-understand.
+Thanks!
+Neil
 
-I *think* this also fixes an actual bug on Xen.  Konrad, is there a
-bugzilla or any kind of email problem description that we can include
-here as a reference?  I think there's a lost interrupt with qlcnic,
-but I don't know the details or what the failure looks like to a user.
-
-[1] http://lkml.kernel.org/r/51EF44FA.4020903@oracle.com
-
-> ---
->  arch/x86/include/asm/x86_init.h |  3 +++
->  arch/x86/kernel/x86_init.c      | 10 ++++++++++
->  arch/x86/pci/xen.c              | 13 ++++++++++++-
->  drivers/pci/msi.c               | 22 ++++++++++++++++------
->  include/linux/msi.h             |  2 ++
->  5 files changed, 43 insertions(+), 7 deletions(-)
->
-> diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-> index 828a156..0f1be11 100644
-> --- a/arch/x86/include/asm/x86_init.h
-> +++ b/arch/x86/include/asm/x86_init.h
-> @@ -172,6 +172,7 @@ struct x86_platform_ops {
->
->  struct pci_dev;
->  struct msi_msg;
-> +struct msi_desc;
->
->  struct x86_msi_ops {
->         int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
-> @@ -182,6 +183,8 @@ struct x86_msi_ops {
->         void (*teardown_msi_irqs)(struct pci_dev *dev);
->         void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
->         int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
-> +       u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
-> +       u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
->  };
->
->  struct IO_APIC_route_entry;
-> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-> index 8ce0072..021783b 100644
-> --- a/arch/x86/kernel/x86_init.c
-> +++ b/arch/x86/kernel/x86_init.c
-> @@ -116,6 +116,8 @@ struct x86_msi_ops x86_msi = {
->         .teardown_msi_irqs      = default_teardown_msi_irqs,
->         .restore_msi_irqs       = default_restore_msi_irqs,
->         .setup_hpet_msi         = default_setup_hpet_msi,
-> +       .msi_mask_irq           = default_msi_mask_irq,
-> +       .msix_mask_irq          = default_msix_mask_irq,
->  };
->
->  /* MSI arch specific hooks */
-> @@ -138,6 +140,14 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
->  {
->         x86_msi.restore_msi_irqs(dev, irq);
->  }
-> +u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-> +{
-> +       return x86_msi.msi_mask_irq(desc, mask, flag);
-> +}
-> +u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
-> +{
-> +       return x86_msi.msix_mask_irq(desc, flag);
-> +}
->  #endif
->
->  struct x86_io_apic_ops x86_io_apic_ops = {
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index 48e8461..5eee495 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -382,7 +382,14 @@ static void xen_teardown_msi_irq(unsigned int irq)
->  {
->         xen_destroy_irq(irq);
->  }
-> -
-> +static u32 xen_nop_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-> +{
-> +       return 0;
-> +}
-> +static u32 xen_nop_msix_mask_irq(struct msi_desc *desc, u32 flag)
-> +{
-> +       return 0;
-> +}
->  #endif
->
->  int __init pci_xen_init(void)
-> @@ -406,6 +413,8 @@ int __init pci_xen_init(void)
->         x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
->         x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
->         x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
-> +       x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
-> +       x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
->  #endif
->         return 0;
->  }
-> @@ -485,6 +494,8 @@ int __init pci_xen_initial_domain(void)
->         x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
->         x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
->         x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
-> +       x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
-> +       x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
->  #endif
->         xen_setup_acpi_sci();
->         __acpi_register_gsi = acpi_register_gsi_xen;
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d5f90d6..7916699 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -185,7 +185,7 @@ static inline __attribute_const__ u32 msi_enabled_mask(u16 control)
->   * reliably as devices without an INTx disable bit will then generate a
->   * level IRQ which will never be cleared.
->   */
-> -static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-> +u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->  {
->         u32 mask_bits = desc->masked;
->
-> @@ -199,9 +199,14 @@ static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->         return mask_bits;
->  }
->
-> +__weak u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
-> +{
-> +       return default_msi_mask_irq(desc, mask, flag);
-> +}
-> +
->  static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->  {
-> -       desc->masked = __msi_mask_irq(desc, mask, flag);
-> +       desc->masked = arch_msi_mask_irq(desc, mask, flag);
->  }
->
->  /*
-> @@ -211,7 +216,7 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->   * file.  This saves a few milliseconds when initialising devices with lots
->   * of MSI-X interrupts.
->   */
-> -static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
-> +u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
->  {
->         u32 mask_bits = desc->masked;
->         unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
-> @@ -224,9 +229,14 @@ static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
->         return mask_bits;
->  }
->
-> +__weak u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
-> +{
-> +       return default_msix_mask_irq(desc, flag);
-> +}
-> +
->  static void msix_mask_irq(struct msi_desc *desc, u32 flag)
->  {
-> -       desc->masked = __msix_mask_irq(desc, flag);
-> +       desc->masked = arch_msix_mask_irq(desc, flag);
->  }
->
->  static void msi_set_mask_bit(struct irq_data *data, u32 flag)
-> @@ -902,7 +912,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
->         pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &ctrl);
->         mask = msi_capable_mask(ctrl);
->         /* Keep cached state to be restored */
-> -       __msi_mask_irq(desc, mask, ~mask);
-> +       arch_msi_mask_irq(desc, mask, ~mask);
->
->         /* Restore dev->irq to its default pin-assertion irq */
->         dev->irq = desc->msi_attrib.default_irq;
-> @@ -998,7 +1008,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
->         /* Return the device with MSI-X masked as initial states */
->         list_for_each_entry(entry, &dev->msi_list, list) {
->                 /* Keep cached states to be restored */
-> -               __msix_mask_irq(entry, 1);
-> +               arch_msix_mask_irq(entry, 1);
->         }
->
->         msix_set_enable(dev, 0);
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index b17ead8..87cce50 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -64,6 +64,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
->
->  void default_teardown_msi_irqs(struct pci_dev *dev);
->  void default_restore_msi_irqs(struct pci_dev *dev, int irq);
-> +u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
-> +u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag);
->
->  struct msi_chip {
->         struct module *owner;
-> --
-> 1.8.3.1
->
+> Bjorn
+> 
+> [1] https://github.com/Irqbalance/irqbalance/blob/master/classify.c#L357
+> 
