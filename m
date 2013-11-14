@@ -1,78 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog121.obsmtp.com ([207.126.144.151]:34888 "EHLO
-	eu1sys200aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752640Ab3K0Ihd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 03:37:33 -0500
-Date: Wed, 27 Nov 2013 14:06:37 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Marek Vasut <marex@denx.de>, Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: Tim Harvey <tharvey@gateworks.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
-Message-ID: <20131127083637.GD12773@pratyush-vbox>
-References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com>
- <201311262146.09780.marex@denx.de>
- <20131127035056.GA12773@pratyush-vbox>
- <201311270924.47277.marex@denx.de>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:47882 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753000Ab3KNRyU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 12:54:20 -0500
+Received: by mail-ie0-f180.google.com with SMTP id qd12so3060638ieb.39
+        for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2013 09:54:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201311270924.47277.marex@denx.de>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 14 Nov 2013 10:53:58 -0700
+Message-ID: <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: wzyboy <wzyboy@wzyboy.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 27, 2013 at 04:24:47PM +0800, Marek Vasut wrote:
-> Dear Pratyush Anand,
-> 
-> > On Wed, Nov 27, 2013 at 04:46:09AM +0800, Marek Vasut wrote:
-> > > Dear Pratyush Anand,
-> > > 
-> > > > Hi,
-> > > > 
-> > > > On Wed, Oct 23, 2013 at 12:55:43PM +0800, Tim Harvey wrote:
-> > > > > The IMX6 iATU is used for address translation between the AXI bus
-> > > > > address space and PCI address space.  This is used for type0 and
-> > > > > type1 config cycles but is not necessary for outbound io/mem
-> > > > > regions.
-> > > > > 
-> > > > > This patch removes the calls that inappropriately re-configures the
-> > > > > ATU viewport for outbound memory and IO after config cycles and
-> > > > > removes them altogether as they are not necessary.
-> > > > > 
-> > > > > This resolves issues with PCI devices behind switches and has been
-> > > > > tested with a Gige device behind a PLX PEX860x switch.  More testing
-> > > > > is needed for other configurations.
-> > > > 
-> > > > It seems to me that in your controller you have only one view port.
-> > > > Also mem_base and mem_bus_addr is same. Thats why it works in your
-> > > > case.
-> > > 
-> > > MX6 has 4 In/4 Out viewports AFAICT.
-> > 
-> > Then if I do not miss anything, MX6 should work even without this patch.
-> 
-> Yes, yet, it does not. On the other hand, this defect is only problematic if you 
-> use the devices behind a switch. Do you use a PCIe switch on your platform 
-> please?
+On Thu, Nov 14, 2013 at 1:39 AM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>> > Awesome - you have L1 enabled:
+>>
+>> Though do not understand but it seems like a good news :-)
+>
+> You are saving power (and I know that at least, L1 works).
+> L1 PM substates doesn't work (but that's a brand new feature)
+>
+>> Does that mean you find a real fix instead of a workaround? Congratulations!
+>
+> No. The real fix should come from the driver (unlikely from what I hear from system people here) or disable in BIOS.
+> So I guess you'd need to ask Lenovo how to disable L1 PM Substate in BIOS.
 
-I had tested with device under bridge.
-Mohit is in process of validating SPEAr patches with latest kernel.
-Mohit, see if we can arrange a switch and test, once SPEAr platform is
-ready with latest kernel.
+Why would it be unlikely to fix the driver?  Do people think the
+problem is not actually in the driver?
 
-Regards
-Pratyush
-> 
-> Best regards,
-> Marek Vasut
+Asking Lenovo how to disable L1 PM substates is really a non-answer.
+Only the extremely technical and extremely patient user (hi wzyboy :))
+will even bother to investigate why wifi works fine with Windows but
+not with Linux.  The only thing Lenovo *could* do is to release a new
+BIOS with a switch to control L1 PM Substates.  If I were Lenovo, I
+would never do that because then I would have to tell customers
+"disable this for Linux, enable this for Windows," and I'd have to
+deal with support calls about devices using more power than they
+should, battery life being shorter, etc.  Plus you'd have to ask every
+Linux user to upgrade their BIOS.  That's all just a terrible user
+experience.
+
+Bjorn
