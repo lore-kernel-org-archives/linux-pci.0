@@ -1,120 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:33773 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205Ab3KZDix (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 22:38:53 -0500
-Received: by mail-ie0-f172.google.com with SMTP id qd12so8438244ieb.17
-        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 19:38:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1385429290-25397-5-git-send-email-yinghai@kernel.org>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-5-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 25 Nov 2013 20:38:32 -0700
-Message-ID: <CAErSpo7umvs=U1_X--Vxx29hf6+pnm8KQ0bUKG4FZkNS+ffR8Q@mail.gmail.com>
-Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
+Received: from mga02.intel.com ([134.134.136.20]:61967 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751896Ab3KNIyX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Nov 2013 03:54:23 -0500
+Message-ID: <1384419260.30364.27.camel@yhuang-dev>
+Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM
+ enabled for unbound PCI devices
+From: Huang Ying <ying.huang@intel.com>
+To: mike <qiudayu@linux.vnet.ibm.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-pm@vger.kernel.org, rjw@rjwysocki.net
+Date: Thu, 14 Nov 2013 16:54:20 +0800
+In-Reply-To: <52848BD9.1010704@linux.vnet.ibm.com>
+References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org>
+	 <5284423D.4090907@linux.vnet.ibm.com> <1384408745.30364.8.camel@yhuang-dev>
+	 <5284799C.1010000@linux.vnet.ibm.com>
+		 <1384415609.30364.18.camel@yhuang-dev>
+	 <528485EA.5080309@linux.vnet.ibm.com>
+	 <1384417538.30364.25.camel@yhuang-dev>
+	 <52848BD9.1010704@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Mutliple removing via /sys will call pci_destroy_dev two times.
->
-> | When concurent removing pci devices which are in the same pci subtree
-> | via sysfs, such as:
-> | echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
-> | /sys/bus/pci/devices/0000\:1a\:01.0/remove
-> | (1a:01.0 device is downstream from the 10:00.0 bridge)
-> |
-> | the following warning will show:
-> | [ 1799.280918] ------------[ cut here ]------------
-> | [ 1799.336199] WARNING: CPU: 7 PID: 126 at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
-> | [ 1799.433093] list_del corruption, ffff8807b4a7c000->next is LIST_POISON1 (dead000000100100)
-> | [ 1800.276623] CPU: 7 PID: 126 Comm: kworker/u512:1 Tainted: G        W    3.12.0-rc5+ #196
-> | [ 1800.508918] Workqueue: sysfsd sysfs_schedule_callback_work
-> | [ 1800.574703]  0000000000000009 ffff8807adbadbd8 ffffffff8168b26c ffff8807c27d08a8
-> | [ 1800.663860]  ffff8807adbadc28 ffff8807adbadc18 ffffffff810711dc ffff8807adbadc68
-> | [ 1800.753130]  ffff8807b4a7c000 ffff8807b4a7c000 ffff8807ad089c00 0000000000000000
-> | [ 1800.842282] Call Trace:
-> | [ 1800.871651]  [<ffffffff8168b26c>] dump_stack+0x55/0x76
-> | [ 1800.933301]  [<ffffffff810711dc>] warn_slowpath_common+0x8c/0xc0
-> | [ 1801.005283]  [<ffffffff810712c6>] warn_slowpath_fmt+0x46/0x50
-> | [ 1801.074081]  [<ffffffff8135a343>] __list_del_entry+0x63/0xd0
-> | [ 1801.141839]  [<ffffffff8135a3c1>] list_del+0x11/0x40
-> | [ 1801.201320]  [<ffffffff813734da>] pci_remove_bus_device+0x6a/0xe0
-> | [ 1801.274279]  [<ffffffff8137356e>] pci_stop_and_remove_bus_device+0x1e/0x30
-> | [ 1801.356606]  [<ffffffff8137b20b>] remove_callback+0x2b/0x40
-> | [ 1801.423412]  [<ffffffff81251848>] sysfs_schedule_callback_work+0x18/0x60
-> | [ 1801.503744]  [<ffffffff8108eab5>] process_one_work+0x1f5/0x540
-> | [ 1801.573640]  [<ffffffff8108ea53>] ? process_one_work+0x193/0x540
-> | [ 1801.645616]  [<ffffffff8108f2ac>] worker_thread+0x11c/0x370
-> | [ 1801.712337]  [<ffffffff8108f190>] ? rescuer_thread+0x350/0x350
-> | [ 1801.782178]  [<ffffffff8109731d>] kthread+0xed/0x100
-> | [ 1801.841661]  [<ffffffff81097230>] ? kthread_create_on_node+0x160/0x160
-> | [ 1801.919919]  [<ffffffff8169cc3c>] ret_from_fork+0x7c/0xb0
-> | [ 1801.984608]  [<ffffffff81097230>] ? kthread_create_on_node+0x160/0x160
-> | [ 1802.062825] ---[ end trace d77f2054de000fb7 ]---
-> |
-> | This issue is related to the bug 54411:
-> | https://bugzilla.kernel.org/show_bug.cgi?id=54411
->
-> Add is_removed to record if pci_destroy_dev is called already.
->
-> During second calling, still have extra dev ref hold via
-> device_schedule_call, so we are safe to check dev->is_removed.
->
-> It fixs the problem In Gu's test.
->
-> -v2: add partial changelog from Gu Zheng <guz.fnst@cn.fujitsu.com>
->      refresh after patch of moving device_del from Rafael.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/remove.c | 8 +++++---
->  include/linux/pci.h  | 1 +
->  2 files changed, 6 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index f452148..b090cec 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -20,9 +20,11 @@ static void pci_stop_dev(struct pci_dev *dev)
->
->  static void pci_destroy_dev(struct pci_dev *dev)
->  {
-> -       device_del(&dev->dev);
-> -
-> -       put_device(&dev->dev);
-> +       if (!dev->is_removed) {
-> +               device_del(&dev->dev);
-> +               dev->is_removed = 1;
+On Thu, 2013-11-14 at 16:37 +0800, mike wrote:
+> On 11/14/2013 04:25 PM, Huang Ying wrote:
+> > On Thu, 2013-11-14 at 16:12 +0800, mike wrote:
+> >> On 11/14/2013 03:53 PM, Huang Ying wrote:
+> >>> On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
+> >>>> On 11/14/2013 01:59 PM, Huang Ying wrote:
+> >>>>> On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
+> >>>>>> On 11/14/2013 03:20 AM, Alan Stern wrote:
+> >>>>>>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
+> >>>>>>>
+> >>>>>>>> [+cc Rafael, linux-pm]
+> >>>>>>>>
+> >>>>>>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
+> >>>>>>>>> Hi Huang Ying,
+> >>>>>>>>>
+> >>>>>>>>> I see you are the author of this patch, commit id is:
+> >>>>>>>>> 967577b062417b4e4b8e27b711220f4124f5153a
+> >>>>>>>>>
+> >>>>>>>>> I have a question while I try to understand this patch,
+> >>>>>>>>> So I would very grateful if you or others can give me some reply.....
+> >>>>>>>>>
+> >>>>>>>>> ............
+> >>>>>>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
+> >>>>>>>>> +       pm_runtime_get_sync(dev);
+> >>>>>>>>> +       pci_dev->driver = pci_drv;
+> >>>>>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> >>>>>>>>> I see here you make the driver to initialize before probe,
+> >>>>>>>>> But I have no idea of why you do this change.....
+> >>>>>>>>>
+> >>>>>>>>> and I look inside the code, it may be pm_runtime relate??
+> >>>>>>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
+> >>>>>>> doesn't do anything unless pci_dev->driver is set.  You can see this at
+> >>>>>>> the start of pci_pm_runtime_suspend().
+> >>>>>>>
+> >>>>>>> Since we want the driver's probe routine to be able to carry out
+> >>>>>>> runtime PM operations, we have to set pci_dev->driver before the probe
+> >>>>>>> routine runs.
+> >>>>>> Is there any situations , like in  probe state,  pci_dev->driver
+> >>>>>> has been set. the  pci_pm_runtime_xxx() has passed
+> >>>>>> pci_dev->driver NULL check, but at this point, probe fail
+> >>>>>> occurs, and  pci_dev->driver to be set to NULL.
+> >>>>>>
+> >>>>>> What will happen ? Or this situation will never happen?
+> >>>>>> I'm confuse about this.
+> >>>>> I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
+> >>>>> is called, so pci_pm_runtime_xxx() will not be called until
+> >>>>> pm_runtime_put_noidle() is called in ->probe().  And
+> >>>>>     should be done as one of the latest actions in
+> >>>>> ->probe(), after the normal probe actions succeeded.
+> >>>> OK, just as your description, it seems OK.
+> >>>> But this is really a issue as I explained in last email.
+> >>>>
+> >>>> So I want to know if there are any side-effect of changing the code
+> >>>> in pci_pm_runtime_xxx()
+> >>>>
+> >>>>     if (!pci_dev->driver)
+> >>>>            return 0;
+> >>>>     to
+> >>>>
+> >>>>     if (!dev->driver)
+> >>>>            return 0;
+> >>>>
+> >>> If you make this change, we can not put devices into low power state
+> >>> (runtime suspend the device) in ->probe().  That is expected in some
+> >> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> >> This means dev->driver is NULL ?? but pci_dev->driver is set???
+> >>
+> >> Because if use pci_dev->driver can put into low power state, means
+> >>
+> >> pci_dev->driver is set, but in the situation, use dev->driver will can't,
+> >>
+> >> means dev->driver = null, but I have not find any case that
+> >>
+> >> dev->driver = null, but pci_dev->driver != null;
+> > Sorry I make a mistake here.  The dev->driver != null in
+> > local_pci_probe().  We use pci_dev->driver instead of dev->driver in
+> > pci_pm_runtime_xxx() because we want device to be kept in normal power
+> > state (D0) and SUSPENDED state when unbound.The
+> > pm_runtime_put/get_sync in pci_device_remove/local_pci_probe will not
+> > change the power state of the device because of the check in
+> > pci_pm_runtime_xxx().
+> Yes, you are right, but what am I confuse is that, why check dev->driver
+> in pci_pm_runtime_xxx() can't keep the device in normal power
+> state (D0) and SUSPENDED state when unbound.
+> 
+> May be logic issue ?
 
-As Rafael pointed out, this looks like a race.  What prevents two
-concurrent calls to pci_destroy_dev() from seeing "dev->is_removed ==
-0" and both calling device_del() on the same device?
+Because dev->driver is set before local_pci_probe() and cleared after
+pci_device_remove().  But we need a flag to be changed in
+local_pci_probe() and pci_device_remove().
 
-> +               put_device(&dev->dev);
-> +       }
->  }
->
->  void pci_remove_bus(struct pci_bus *bus)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1084a15..ccb316d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -321,6 +321,7 @@ struct pci_dev {
->         unsigned int    multifunction:1;/* Part of multi-function device */
->         /* keep track of device state */
->         unsigned int    is_added:1;
-> +       unsigned int    is_removed:1;   /* pci_destroy_dev is called */
->         unsigned int    is_busmaster:1; /* device is busmaster */
->         unsigned int    no_msi:1;       /* device may not use msi */
->         unsigned int    block_cfg_access:1;     /* config space access is blocked */
-> --
-> 1.8.1.4
->
+Best Regards,
+Huang Ying
+
+
