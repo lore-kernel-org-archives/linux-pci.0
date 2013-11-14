@@ -1,73 +1,34 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Lan Tianyu <tianyu.lan@intel.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Date: Thu, 14 Nov 2013 11:44:07 +0900
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Aaron Lu <aaron.lu@intel.com>,
 	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
 	"Luck, Tony" <tony.luck@intel.com>
-Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct acpi_dev_node
-Date: Tue, 12 Nov 2013 15:20:37 +0100
-Message-ID: <3448237.NUtWjlv2Mb@vostro.rjw.lan>
-In-Reply-To: <20131112092402.GO22916@intel.com>
-References: <3268437.YsusHvklcv@vostro.rjw.lan> <1683079.zjqzsOAjXB@vostro.rjw.lan> <20131112092402.GO22916@intel.com>
+Subject: Re: [PATCH 1/2] ACPI: Eliminate the DEVICE_ACPI_HANDLE() macro
+Message-ID: <20131114024407.GB9899@kroah.com>
+References: <3268437.YsusHvklcv@vostro.rjw.lan>
+ <1803808.ghCmmaO2Cj@vostro.rjw.lan>
+ <5216191.8B6uiYXXe4@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5216191.8B6uiYXXe4@vostro.rjw.lan>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 12, 2013 11:24:02 AM Mika Westerberg wrote:
-> On Mon, Nov 11, 2013 at 02:45:39PM +0100, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Subject: ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
-> > 
-> > Modify struct acpi_dev_node to contain a pointer to struct acpi_device
-> > associated with the given device object (that is, its ACPI companion
-> > device) instead of an ACPI handle corresponding to it.  Introduce two
-> > new macros for manipulating that pointer in a CONFIG_ACPI-safe way,
-> > ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
-> > ACPI_HANDLE() macro to take the above changes into account.
-> > Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
-> > use ACPI_COMPANION_SET() instead.  For some of them who used to
-> > pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
-> > introduce a helper routine acpi_preset_companion() doing an
-> > equivalent thing.
-> > 
-> > The main motivation for doing this is that there are things
-> > represented by struct acpi_device objects that don't have valid
-> > ACPI handles (so called fixed ACPI hardware features, such as
-> > power and sleep buttons) and we would like to create platform
-> > device objects for them and "glue" them to their ACPI companions
-> > in the usual way (which currently is impossible due to the
-> > lack of valid ACPI handles).  However, there are more reasons
-> > why it may be useful.
-> > 
-> > First, struct acpi_device pointers allow of much better type checking
-> > than void pointers which are ACPI handles, so it should be more
-> > difficult to write buggy code using modified struct acpi_dev_node
-> > and the new macros.  Second, the change should help to reduce (over
-> > time) the number of places in which the result of ACPI_HANDLE() is
-> > passed to acpi_bus_get_device() in order to obtain a pointer to the
-> > struct acpi_device associated with the given "physical" device,
-> > because now that pointer is returned by ACPI_COMPANION() directly.
-> > Finally, the change should make it easier to write generic code that
-> > will build both for CONFIG_ACPI set and unset without adding explicit
-> > compiler directives to it.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Nov 14, 2013 at 12:26:00AM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> I tested this on Haswell as well and it works fine with ACPI enumerated
-> platform, I2C and SPI devices.
+> Since DEVICE_ACPI_HANDLE() is now literally identical to
+> ACPI_HANDLE(), replace it with the latter everywhere and drop its
+> definition from include/acpi.h.
 > 
-> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com> (on Haswell)
-> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thanks!
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
