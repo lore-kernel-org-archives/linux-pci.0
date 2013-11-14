@@ -1,58 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35497 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753798Ab3KNP7y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 10:59:54 -0500
+Date: Thu, 14 Nov 2013 10:59:53 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 3/3] ACPI / hotplug: Merge device hot-removal routines
-Date: Mon, 04 Nov 2013 14:26:18 +0100
-Message-ID: <1495379.L9vZXsvTcv@vostro.rjw.lan>
-In-Reply-To: <5913958.7oJcoqqQ9l@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <5913958.7oJcoqqQ9l@vostro.rjw.lan>
+	<linux-usb@vger.kernel.org>, Kevin Hilman <khilman@linaro.org>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+In-Reply-To: <CAPDyKFocx3L5d5_6TCx5fDy9RgD0MmmWEG0pL=77Hk7bA5EZfA@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1311141055470.1439-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 04, 2013 01:21:46 AM Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The only substantial difference between acpi_bus_device_eject() and
-> acpi_bus_hot_remove_device() is the get_device() done by the former
-> which is supposed to be done by callers of the latter.  However,
-> at least one caller of acpi_bus_hot_remove_device(), which is
-> handle_root_bridge_removal(), doesn't do that and generally it
-> won't be necessary to do that at all if ACPI handles, rather than
-> struct acpi_device objects, are passed between ACPI hotplug routines,
-> because the correctness of those routines already depends on the
-> persistence of ACPI handles (that may not be an entirely correct
-> assumption in theory, but in practice it has been good enough for a
-> long time).
-> 
-> For this reason, modify acpi_bus_device_eject() to take two
-> arguments, an ACPI handle and event code, and make
-> acpi_bus_hot_remove_device() call it internally.  Moreover, rework
-> acpi_bus_hot_remove_device() so that it only takes one argument,
-> an ACPI handle, and make acpi_scan_bus_device_check() queue up
-> acpi_bus_hot_remove_device() instead of acpi_bus_device_eject()
-> itself.  After these changes, handle_root_bridge_removal() may
-> be replaced with async execution of acpi_bus_hot_remove_device()
-> with the ACPI handle of the root passed to it as the argument.
-> 
-> However, since acpi_eject_store() also needs to execute
-> acpi_bus_device_eject() asynchronously and it needs to pass a
-> special event code, ACPI_OST_EC_OSPM_EJECT, to that function,
-> introduce a separate wrapper around acpi_bus_device_eject(),
-> acpi_eject_store_work(), that will be queued up by
-> acpi_eject_store() instead of acpi_bus_hot_remove_device().
-> This allows acpi_eject_store() to be simplified and it allows
-> struct acpi_eject_event to be dropped entirely, as there's
-> no more users of that structure.
+On Thu, 14 Nov 2013, Ulf Hansson wrote:
 
-Well, scratch this (and the follow-up), it didn't go in the right direction.
+> > The reason for doing things the way they are is to avoid races between
+> > system PM callbacks and runtime PM callbacks.  We don't want to have a
+> > runtime_resume routine powering up a device at the same time as a
+> > suspend routine is powering it down.
+> 
+> I believe I understand why the PM core prevent this. Some subsystems
+> and drivers depends on this behaviour, but I wonder if we should
+> consider this as common cases or more like special cases?
+> 
+> For those drivers that potentially could rely on runtime PM (and it's
+> callbacks) to inactivate the device during system suspend, and thus
+> don't have issues with races you describe above, the current behaviour
+> in the PM core adds unnecessary complexity for these drivers to handle
+> system suspend.
 
-I'll send a new series shortly.
+What unnecessary complexity?
 
-Rafael
+Bear in mind that drivers _cannot_ rely on runtime PM to inactivate a 
+device during system suspend.  The user can always prevent a device 
+from going into runtime suspend by writing "on" to the 
+/sys/.../power/control file.
+
+> Drivers/buses/power_domains that handles runtime PM enabled devices,
+> will, as you also have pointed out earlier, need to implement the
+> .suspend callback (suspend_late or suspend_noirq might work as well)
+> and the corresponding .resume callback. This just for the sake of
+> making sure all their runtime enabled devices gets fully inactivated
+> during system suspend.
+> 
+> I wonder if we somehow should move the responsibility of preventing
+> "runtime suspend" as a part of the system suspend, down to the driver
+> to decide instead of the PM core?
+
+No, I don't think so.  It would mean that every driver's suspend
+routine would have to do a pm_runtime_get of some sort.  It's better to
+just leave the single runtime_get call in the PM core.
+
+Alan Stern
 
