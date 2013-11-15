@@ -1,47 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:26120 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754595Ab3K0UiC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 15:38:02 -0500
-From: Toshi Kani <toshi.kani@hp.com>
-To: rjw@rjwysocki.net, bhelgaas@google.com
-Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>
-Subject: [PATCH] ACPI / PCI / hotplug: Avoid warning when _ADR not present
-Date: Wed, 27 Nov 2013 13:33:09 -0700
-Message-Id: <1385584389-22461-1-git-send-email-toshi.kani@hp.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:35991 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268Ab3KOVRd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 16:17:33 -0500
+Received: by mail-ie0-f175.google.com with SMTP id u16so5740822iet.34
+        for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2013 13:17:33 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1384548866-13141-11-git-send-email-swarren@wwwdotorg.org>
+References: <1384548866-13141-1-git-send-email-swarren@wwwdotorg.org> <1384548866-13141-11-git-send-email-swarren@wwwdotorg.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 15 Nov 2013 14:17:12 -0700
+Message-ID: <CAErSpo7i_rGBNvjCb002VeXuL9xpkZ+Nx3APFA1OYH1PyMQ3yQ@mail.gmail.com>
+Subject: Re: [PATCH 10/31] ARM: tegra: pass reset to tegra_powergate_sequence_power_up()
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Stephen Warren <swarren@nvidia.com>, treding@nvidia.com,
+	pdeschrijver@nvidia.com,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	=?ISO-8859-1?Q?Terje_Bergstr=F6m?= <tbergstrom@nvidia.com>,
+	David Airlie <airlied@linux.ie>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-acpiphp_enumerate_slots() walks ACPI namenamespace under
-a PCI host bridge with callback register_slot().
-register_slot() evaluates _ADR for all the device objects
-and emits a warning message for any error.  Some platforms
-have _HID device objects (such as HPET and IPMI), which
-trigger unnecessary warning messages.
+On Fri, Nov 15, 2013 at 1:54 PM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+> From: Stephen Warren <swarren@nvidia.com>
+>
+> Tegra's clock driver now provides an implementation of the common
+> reset API (include/linux/reset.h). Use this instead of the old Tegra-
+> specific API; that will soon be removed.
+>
+> Cc: treding@nvidia.com
+> Cc: pdeschrijver@nvidia.com
+> Cc: linux-tegra@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: Terje Bergström <tbergstrom@nvidia.com>
+> Cc: David Airlie <airlied@linux.ie>
+> Cc: dri-devel@lists.freedesktop.org
+> Signed-off-by: Stephen Warren <swarren@nvidia.com>
 
-This patch avoids emitting a warning message when a target
-device object does not have _ADR.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Toshi Kani <toshi.kani@hp.com>
----
-Patch is based on Linus's tree (3.13-rc1).
----
- drivers/pci/hotplug/acpiphp_glue.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 1cf605f..438a4d0 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -279,7 +279,9 @@ static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
- 
- 	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
- 	if (ACPI_FAILURE(status)) {
--		acpi_handle_warn(handle, "can't evaluate _ADR (%#x)\n", status);
-+		if (status != AE_NOT_FOUND)
-+			acpi_handle_warn(handle,
-+				"can't evaluate _ADR (%#x)\n", status);
- 		return AE_OK;
- 	}
- 
+> ---
+> This patch is part of a series with strong internal depdendencies. I'm
+> looking for an ack so that I can take the entire series through the Tegra
+> and arm-soc trees. The series will be part of a stable branch that can be
+> merged into other subsystems if needed to avoid/resolve dependencies.
+> ---
+>  arch/arm/mach-tegra/powergate.c | 8 +++++---
+>  drivers/gpu/drm/tegra/gr3d.c    | 6 ++++--
+>  drivers/pci/host/pci-tegra.c    | 3 ++-
+>  include/linux/tegra-powergate.h | 4 +++-
+>  4 files changed, 14 insertions(+), 7 deletions(-)
+>
+> diff --git a/arch/arm/mach-tegra/powergate.c b/arch/arm/mach-tegra/powergate.c
+> index 85d28e756bb7..f6f5b54ff95e 100644
+> --- a/arch/arm/mach-tegra/powergate.c
+> +++ b/arch/arm/mach-tegra/powergate.c
+> @@ -25,6 +25,7 @@
+>  #include <linux/export.h>
+>  #include <linux/init.h>
+>  #include <linux/io.h>
+> +#include <linux/reset.h>
+>  #include <linux/seq_file.h>
+>  #include <linux/spinlock.h>
+>  #include <linux/clk/tegra.h>
+> @@ -144,11 +145,12 @@ int tegra_powergate_remove_clamping(int id)
+>  }
+>
+>  /* Must be called with clk disabled, and returns with clk enabled */
+> -int tegra_powergate_sequence_power_up(int id, struct clk *clk)
+> +int tegra_powergate_sequence_power_up(int id, struct clk *clk,
+> +                                       struct reset_control *rst)
+>  {
+>         int ret;
+>
+> -       tegra_periph_reset_assert(clk);
+> +       reset_control_assert(rst);
+>
+>         ret = tegra_powergate_power_on(id);
+>         if (ret)
+> @@ -165,7 +167,7 @@ int tegra_powergate_sequence_power_up(int id, struct clk *clk)
+>                 goto err_clamp;
+>
+>         udelay(10);
+> -       tegra_periph_reset_deassert(clk);
+> +       reset_control_deassert(rst);
+>
+>         return 0;
+>
+> diff --git a/drivers/gpu/drm/tegra/gr3d.c b/drivers/gpu/drm/tegra/gr3d.c
+> index f629e38b00e4..0cbb24b1ae04 100644
+> --- a/drivers/gpu/drm/tegra/gr3d.c
+> +++ b/drivers/gpu/drm/tegra/gr3d.c
+> @@ -279,7 +279,8 @@ static int gr3d_probe(struct platform_device *pdev)
+>                 }
+>         }
+>
+> -       err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_3D, gr3d->clk);
+> +       err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_3D, gr3d->clk,
+> +                                               gr3d->rst);
+>         if (err < 0) {
+>                 dev_err(&pdev->dev, "failed to power up 3D unit\n");
+>                 return err;
+> @@ -287,7 +288,8 @@ static int gr3d_probe(struct platform_device *pdev)
+>
+>         if (gr3d->clk_secondary) {
+>                 err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_3D1,
+> -                                                       gr3d->clk_secondary);
+> +                                                       gr3d->clk_secondary,
+> +                                                       gr3d->rst_secondary);
+>                 if (err < 0) {
+>                         dev_err(&pdev->dev,
+>                                 "failed to power up secondary 3D unit\n");
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 174a5bc2d993..aace19edc469 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -956,7 +956,8 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+>         }
+>
+>         err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_PCIE,
+> -                                               pcie->pex_clk);
+> +                                               pcie->pex_clk,
+> +                                               pcie->pex_rst);
+>         if (err) {
+>                 dev_err(pcie->dev, "powerup sequence failed: %d\n", err);
+>                 return err;
+> diff --git a/include/linux/tegra-powergate.h b/include/linux/tegra-powergate.h
+> index c98cfa406952..b5ad64aca071 100644
+> --- a/include/linux/tegra-powergate.h
+> +++ b/include/linux/tegra-powergate.h
+> @@ -19,6 +19,7 @@
+>  #define _MACH_TEGRA_POWERGATE_H_
+>
+>  struct clk;
+> +struct reset_control;
+>
+>  #define TEGRA_POWERGATE_CPU    0
+>  #define TEGRA_POWERGATE_3D     1
+> @@ -51,6 +52,7 @@ int tegra_powergate_power_off(int id);
+>  int tegra_powergate_remove_clamping(int id);
+>
+>  /* Must be called with clk disabled, and returns with clk enabled */
+> -int tegra_powergate_sequence_power_up(int id, struct clk *clk);
+> +int tegra_powergate_sequence_power_up(int id, struct clk *clk,
+> +                                       struct reset_control *rst);
+>
+>  #endif /* _MACH_TEGRA_POWERGATE_H_ */
+> --
+> 1.8.1.5
+>
