@@ -1,48 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:63803 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755289Ab3KYTsk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 14:48:40 -0500
+Received: from mail-out.m-online.net ([212.18.0.10]:41237 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844Ab3KOAkb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 19:40:31 -0500
+From: Marek Vasut <marex@denx.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [QUERY] Number of address translation regions in designware
+Date: Fri, 15 Nov 2013 01:40:22 +0100
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Ajay KHANDELWAL <ajay.khandelwal@st.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+References: <52652BF1.4040507@ti.com> <CAHM4w1=YkiYv_N0qxQpbfqz3VHQrZ46j96x0tCvL6q-oOLXtKA@mail.gmail.com> <527A0112.60908@ti.com>
+In-Reply-To: <527A0112.60908@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1890016.dnpTzZzgDl@vostro.rjw.lan>
-References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com>
-	<CAE9FiQXfhK9k8j0jQ_aHt=+frrhcHZH7DQdKK3_OFo97eEAA4w@mail.gmail.com>
-	<CAE9FiQV7EhXy8xDVQ2oWefWwje3D-DofX=yyLVbHTP1OV87QOw@mail.gmail.com>
-	<1890016.dnpTzZzgDl@vostro.rjw.lan>
-Date: Mon, 25 Nov 2013 11:48:40 -0800
-Message-ID: <CAE9FiQWQ=0ZK7C_2Ex7jW8hkJmzQ4b9fitZ1SvXUrH5e8oBOow@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tejun Heo <tj@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311150140.22501.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 3:23 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>
->> or you can check if
->> http://patchwork.ozlabs.org/patch/292622/
->>   [1/6] PCI: move back pci_proc_attach_devices calling
->> http://patchwork.ozlabs.org/patch/292623/
->>   [2/6] PCI: move resources and bus_list releasing to pci_release_dev
->> http://patchwork.ozlabs.org/patch/292624/
->>   [3/6] PCI: Destroy pci dev only once
->>
->> could help with you test setup.
->
-> I honestly don't think that all of the additional changes are needed to fix
-> this particular problem.
+Hi Kishon,
 
-I thought
-[3/6] PCI: Destroy pci dev only once
-should be enough, but it depend change on other two.
+just curious, what's the current status of the DWC PCIe driver? How's the iATU 
+issue going? Can you please update us a little?
 
-Thanks
+Thank you!
 
-Yinghai
+Cheers!
