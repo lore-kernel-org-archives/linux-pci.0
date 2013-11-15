@@ -1,249 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <527C41E9.6040002@oracle.com>
-Date: Fri, 08 Nov 2013 09:44:09 +0800
-From: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Reply-To: zhenzhong.duan@oracle.com
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:37312 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347Ab3KOIot convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 03:44:49 -0500
+Received: by mail-qc0-f176.google.com with SMTP id s19so1912730qcw.7
+        for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2013 00:44:48 -0800 (PST)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: xen-devel@lists.xenproject.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH] PCI: Introduce two new MSI infrastructure calls for masking/unmasking.
-References: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com> <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
-In-Reply-To: <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44L0.1311141249580.1439-100000@iolanthe.rowland.org>
+References: <CAPDyKFqYOnfWKH7BFRem5T5yGmJrOWBTDhZwoExuemMf0HQ7Ag@mail.gmail.com>
+	<Pine.LNX.4.44L0.1311141249580.1439-100000@iolanthe.rowland.org>
+Date: Fri, 15 Nov 2013 09:44:48 +0100
+Message-ID: <CAPDyKFrQfwOQsOCB1QFo4GWeX303AEWnanE61svy9UUJpNBUiw@mail.gmail.com>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 14 November 2013 18:57, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Thu, 14 Nov 2013, Ulf Hansson wrote:
+>
+>> > Bear in mind that drivers _cannot_ rely on runtime PM to inactivate a
+>> > device during system suspend.  The user can always prevent a device
+>> > from going into runtime suspend by writing "on" to the
+>> > /sys/.../power/control file.
+>>
+>> Good that you brought this up. From my point of view I think the sysfs
+>> for runtime PM could be debated whether it should exist at all, at
+>> least in it's current form.
+>
+> What other form would you suggest?
 
-On 2013-11-07 07:51, Bjorn Helgaas wrote:
-> [+cc Thomas, Ingo, Peter, x86 list]
->
-> On Wed, Nov 6, 2013 at 2:16 PM, Konrad Rzeszutek Wilk
-> <konrad.wilk@oracle.com> wrote:
->> Certain platforms do not allow writes in the MSI-X bars
->> to setup or tear down vector values. To combat against
->> the generic code trying to write to that and either silently
->> being ignored or crashing due to the pagetables being marked r/o
->> this patch introduces a platform over-write.
->>
->> Note that we keep two separate, non-weak, functions
->> default_mask_msi_irqs() and default_mask_msix_irqs() for the
->> behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
->> as the default behavior is needed by x86 PCI code.
->>
->> For Xen, which does not allow the guest to write to MSI-X
->> tables - as the hypervisor is solely responsible for setting
->> the vector values - we implement two nops.
->>
->> CC: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
->> CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
->> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> I think this is safe, and I'd like to squeeze it into the v3.13 merge
-> window next week, since it supersedes three patches Zhenzhong has been
-> trying to get in since July [1], and this patch is much simpler to
-> understand.
-This patch could replace the first two.
-I think the third patch of mine is still needed as it does a different 
-thing.
-It optimizes restore path in dom0.
+I think it is kind of strange to give provision to userspace to
+control a "request based" power management feature in the kernel. Me
+personally can't think of any good use case, but I comes from the
+embedded/ARM world so I might not have the full picture.
 
-zduan
->
-> I *think* this also fixes an actual bug on Xen.  Konrad, is there a
-> bugzilla or any kind of email problem description that we can include
-> here as a reference?  I think there's a lost interrupt with qlcnic,
-> but I don't know the details or what the failure looks like to a user.
->
-> [1] http://lkml.kernel.org/r/51EF44FA.4020903@oracle.com
->
->> ---
->>   arch/x86/include/asm/x86_init.h |  3 +++
->>   arch/x86/kernel/x86_init.c      | 10 ++++++++++
->>   arch/x86/pci/xen.c              | 13 ++++++++++++-
->>   drivers/pci/msi.c               | 22 ++++++++++++++++------
->>   include/linux/msi.h             |  2 ++
->>   5 files changed, 43 insertions(+), 7 deletions(-)
->>
->> diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
->> index 828a156..0f1be11 100644
->> --- a/arch/x86/include/asm/x86_init.h
->> +++ b/arch/x86/include/asm/x86_init.h
->> @@ -172,6 +172,7 @@ struct x86_platform_ops {
->>
->>   struct pci_dev;
->>   struct msi_msg;
->> +struct msi_desc;
->>
->>   struct x86_msi_ops {
->>          int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
->> @@ -182,6 +183,8 @@ struct x86_msi_ops {
->>          void (*teardown_msi_irqs)(struct pci_dev *dev);
->>          void (*restore_msi_irqs)(struct pci_dev *dev, int irq);
->>          int  (*setup_hpet_msi)(unsigned int irq, unsigned int id);
->> +       u32 (*msi_mask_irq)(struct msi_desc *desc, u32 mask, u32 flag);
->> +       u32 (*msix_mask_irq)(struct msi_desc *desc, u32 flag);
->>   };
->>
->>   struct IO_APIC_route_entry;
->> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
->> index 8ce0072..021783b 100644
->> --- a/arch/x86/kernel/x86_init.c
->> +++ b/arch/x86/kernel/x86_init.c
->> @@ -116,6 +116,8 @@ struct x86_msi_ops x86_msi = {
->>          .teardown_msi_irqs      = default_teardown_msi_irqs,
->>          .restore_msi_irqs       = default_restore_msi_irqs,
->>          .setup_hpet_msi         = default_setup_hpet_msi,
->> +       .msi_mask_irq           = default_msi_mask_irq,
->> +       .msix_mask_irq          = default_msix_mask_irq,
->>   };
->>
->>   /* MSI arch specific hooks */
->> @@ -138,6 +140,14 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq)
->>   {
->>          x86_msi.restore_msi_irqs(dev, irq);
->>   }
->> +u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->> +{
->> +       return x86_msi.msi_mask_irq(desc, mask, flag);
->> +}
->> +u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
->> +{
->> +       return x86_msi.msix_mask_irq(desc, flag);
->> +}
->>   #endif
->>
->>   struct x86_io_apic_ops x86_io_apic_ops = {
->> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
->> index 48e8461..5eee495 100644
->> --- a/arch/x86/pci/xen.c
->> +++ b/arch/x86/pci/xen.c
->> @@ -382,7 +382,14 @@ static void xen_teardown_msi_irq(unsigned int irq)
->>   {
->>          xen_destroy_irq(irq);
->>   }
->> -
->> +static u32 xen_nop_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->> +{
->> +       return 0;
->> +}
->> +static u32 xen_nop_msix_mask_irq(struct msi_desc *desc, u32 flag)
->> +{
->> +       return 0;
->> +}
->>   #endif
->>
->>   int __init pci_xen_init(void)
->> @@ -406,6 +413,8 @@ int __init pci_xen_init(void)
->>          x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
->>          x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
->>          x86_msi.teardown_msi_irqs = xen_teardown_msi_irqs;
->> +       x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
->> +       x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
->>   #endif
->>          return 0;
->>   }
->> @@ -485,6 +494,8 @@ int __init pci_xen_initial_domain(void)
->>          x86_msi.setup_msi_irqs = xen_initdom_setup_msi_irqs;
->>          x86_msi.teardown_msi_irq = xen_teardown_msi_irq;
->>          x86_msi.restore_msi_irqs = xen_initdom_restore_msi_irqs;
->> +       x86_msi.msi_mask_irq = xen_nop_msi_mask_irq;
->> +       x86_msi.msix_mask_irq = xen_nop_msix_mask_irq;
->>   #endif
->>          xen_setup_acpi_sci();
->>          __acpi_register_gsi = acpi_register_gsi_xen;
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index d5f90d6..7916699 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -185,7 +185,7 @@ static inline __attribute_const__ u32 msi_enabled_mask(u16 control)
->>    * reliably as devices without an INTx disable bit will then generate a
->>    * level IRQ which will never be cleared.
->>    */
->> -static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->> +u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->>   {
->>          u32 mask_bits = desc->masked;
->>
->> @@ -199,9 +199,14 @@ static u32 __msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->>          return mask_bits;
->>   }
->>
->> +__weak u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->> +{
->> +       return default_msi_mask_irq(desc, mask, flag);
->> +}
->> +
->>   static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->>   {
->> -       desc->masked = __msi_mask_irq(desc, mask, flag);
->> +       desc->masked = arch_msi_mask_irq(desc, mask, flag);
->>   }
->>
->>   /*
->> @@ -211,7 +216,7 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
->>    * file.  This saves a few milliseconds when initialising devices with lots
->>    * of MSI-X interrupts.
->>    */
->> -static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
->> +u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag)
->>   {
->>          u32 mask_bits = desc->masked;
->>          unsigned offset = desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE +
->> @@ -224,9 +229,14 @@ static u32 __msix_mask_irq(struct msi_desc *desc, u32 flag)
->>          return mask_bits;
->>   }
->>
->> +__weak u32 arch_msix_mask_irq(struct msi_desc *desc, u32 flag)
->> +{
->> +       return default_msix_mask_irq(desc, flag);
->> +}
->> +
->>   static void msix_mask_irq(struct msi_desc *desc, u32 flag)
->>   {
->> -       desc->masked = __msix_mask_irq(desc, flag);
->> +       desc->masked = arch_msix_mask_irq(desc, flag);
->>   }
->>
->>   static void msi_set_mask_bit(struct irq_data *data, u32 flag)
->> @@ -902,7 +912,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
->>          pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &ctrl);
->>          mask = msi_capable_mask(ctrl);
->>          /* Keep cached state to be restored */
->> -       __msi_mask_irq(desc, mask, ~mask);
->> +       arch_msi_mask_irq(desc, mask, ~mask);
->>
->>          /* Restore dev->irq to its default pin-assertion irq */
->>          dev->irq = desc->msi_attrib.default_irq;
->> @@ -998,7 +1008,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
->>          /* Return the device with MSI-X masked as initial states */
->>          list_for_each_entry(entry, &dev->msi_list, list) {
->>                  /* Keep cached states to be restored */
->> -               __msix_mask_irq(entry, 1);
->> +               arch_msix_mask_irq(entry, 1);
->>          }
->>
->>          msix_set_enable(dev, 0);
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index b17ead8..87cce50 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -64,6 +64,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
->>
->>   void default_teardown_msi_irqs(struct pci_dev *dev);
->>   void default_restore_msi_irqs(struct pci_dev *dev, int irq);
->> +u32 default_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
->> +u32 default_msix_mask_irq(struct msi_desc *desc, u32 flag);
->>
->>   struct msi_chip {
->>          struct module *owner;
->> --
->> 1.8.3.1
->>
+What would make sense to me, is to move the runtime PM sysfs to
+debugfs, because it is a good feature to make use of during
+development and debugging.
 
+>
+>> Anyway, if userspace decides to prevent runtime_suspend, I guess it
+>> will have take the consequences for it as well. :-)
+>
+> Right now, those consequences don't include also preventing the device
+> from going to low power during system system.  What would you do if you
+> had a buggy device, where you knew it couldn't handle runtime suspend?
+> If you still wanted to put the whole system to sleep, you'd be stuck.
+
+Hmm, this seems like a use case for runtime PM sysfs then. :-)
+
+It sounds like vague arguments. If the driver has bugs we need to fix
+them, right? Should we really let userspace workaround bugs in the
+kernel?
+
+>
+>> So as a way forward, I am thinking of a similar approach as you
+>> suggested with the "generic" suspend_late. But instead add a new
+>> runtime PM API, which intent is to let drivers to specify for PM core,
+>> if it should care to prevent the runtime suspend from happen during
+>> system system - or not. Could that work?
+>
+> I don't see what good it would do.  Instead of adding a new flag, why
+> not just let drivers point their .suspend_late methods to the new
+> generic function?  That would accomplish almost the same thing without
+> changing the API.
+
+Two minor functions will be added to the API, no big deal I think.
+More importantly these will actually make life easier for some drivers
+since they don't need to set up any additional PM callbacks.
+
+Using the generic suspend_late approach would for sure work, but it
+will spread to buses and power domains as well, which is not the case
+when adding when adding a new API.
+
+>
+> (Actually, it would be superior.  The generic suspend_late approach
+> will work even if the user writes "on" to /sys/.../power/control,
+> whereas your approach won't work.)
+
+We have different view here. :-)
+
+Whether I like it or not, the sysfs interface exist and then I think
+the kernel must act accordingly. We shouldn’t override it. I mean if
+userspace has decided to keep a device active, there is probably a
+reason.
+
+
+Thanks a lot Alan for being patient with me and continuing the discussion!
+
+Kind regards
+Ulf Hansson
+
+>
+> Alan Stern
+>
