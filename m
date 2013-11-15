@@ -1,184 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:50411 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753142Ab3KDN0B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 08:26:01 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [Update][PATCH 4/6] ACPI / hotplug: Simplify device ejection routines
-Date: Mon, 04 Nov 2013 14:36:44 +0100
-Message-ID: <1602442.26cFiMyQkW@vostro.rjw.lan>
-In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:58812 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752504Ab3KOIts (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 03:49:48 -0500
+Message-ID: <5285E028.20906@gmail.com>
+Date: Fri, 15 Nov 2013 10:49:44 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: wzyboy <wzyboy@wzyboy.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bj?rn Mork <bjorn@mork.no>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com> <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com> <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com> <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com> <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com> <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com> <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com> <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com> <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com> <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+In-Reply-To: <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Simplify handle_root_bridge_removal() and acpi_eject_store() by
-getting rid of struct acpi_eject_event and passing device objects
-directly to async routines executed via acpi_os_hotplug_execute().
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/pci_root.c |   20 ++------------------
- drivers/acpi/scan.c     |   46 ++++++++++++++++++----------------------------
- include/acpi/acpi_bus.h |    5 -----
- 3 files changed, 20 insertions(+), 51 deletions(-)
+On 11/15/2013 05:06 AM, wzyboy wrote:
+> 2013/11/15 Bjorn Helgaas <bhelgaas@google.com>:
+>> Why would it be unlikely to fix the driver?  Do people think the
+>> problem is not actually in the driver?
+>>
+>> Asking Lenovo how to disable L1 PM substates is really a non-answer.
+>> Only the extremely technical and extremely patient user (hi wzyboy :))
+>> will even bother to investigate why wifi works fine with Windows but
+>> not with Linux.  The only thing Lenovo *could* do is to release a new
+>> BIOS with a switch to control L1 PM Substates.  If I were Lenovo, I
+>> would never do that because then I would have to tell customers
+>> "disable this for Linux, enable this for Windows," and I'd have to
+>> deal with support calls about devices using more power than they
+>> should, battery life being shorter, etc.  Plus you'd have to ask every
+>> Linux user to upgrade their BIOS.  That's all just a terrible user
+>> experience.
+> 
+> 
+> I am a little confused. There are two sets of "setpci" commands, both
+> of which can make me use my NIC reliably. But you two say they are
+> just workarounds, not real fixes.
+> 
 
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -593,27 +593,11 @@ static void handle_root_bridge_insertion
- static void handle_root_bridge_removal(struct acpi_device *device)
- {
- 	acpi_status status;
--	struct acpi_eject_event *ej_event;
--
--	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
--	if (!ej_event) {
--		/* Inform firmware the hot-remove operation has error */
--		(void) acpi_evaluate_hotplug_ost(device->handle,
--					ACPI_NOTIFY_EJECT_REQUEST,
--					ACPI_OST_SC_NON_SPECIFIC_FAILURE,
--					NULL);
--		return;
--	}
--
--	ej_event->device = device;
--	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
- 
- 	get_device(&device->dev);
--	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
--	if (ACPI_FAILURE(status)) {
-+	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, device);
-+	if (ACPI_FAILURE(status))
- 		put_device(&device->dev);
--		kfree(ej_event);
--	}
- }
- 
- static void _handle_hotplug_event_root(struct work_struct *work)
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -441,18 +441,8 @@ static void acpi_hotplug_notify_cb(acpi_
- 					  NULL);
- }
- 
--/**
-- * acpi_bus_hot_remove_device: hot-remove a device and its children
-- * @context: struct acpi_eject_event pointer (freed in this func)
-- *
-- * Hot-remove a device and its children. This function frees up the
-- * memory space passed by arg context, so that the caller may call
-- * this function asynchronously through acpi_os_hotplug_execute().
-- */
--void acpi_bus_hot_remove_device(void *context)
-+void __acpi_bus_hot_remove_device(struct acpi_device *device, u32 ost_src)
- {
--	struct acpi_eject_event *ej_event = context;
--	struct acpi_device *device = ej_event->device;
- 	acpi_handle handle = device->handle;
- 	int error;
- 
-@@ -461,13 +451,21 @@ void acpi_bus_hot_remove_device(void *co
- 
- 	error = acpi_scan_hot_remove(device);
- 	if (error && handle)
--		acpi_evaluate_hotplug_ost(handle, ej_event->event,
-+		acpi_evaluate_hotplug_ost(handle, ost_src,
- 					  ACPI_OST_SC_NON_SPECIFIC_FAILURE,
- 					  NULL);
- 
- 	mutex_unlock(&acpi_scan_lock);
- 	unlock_device_hotplug();
--	kfree(context);
-+}
-+
-+/**
-+ * acpi_bus_hot_remove_device: Hot-remove a device and its children.
-+ * @context: Address of the ACPI device object to hot-remove.
-+ */
-+void acpi_bus_hot_remove_device(void *context)
-+{
-+	__acpi_bus_hot_remove_device(context, ACPI_NOTIFY_EJECT_REQUEST);
- }
- EXPORT_SYMBOL(acpi_bus_hot_remove_device);
- 
-@@ -497,15 +495,18 @@ static ssize_t power_state_show(struct d
- 
- static DEVICE_ATTR(power_state, 0444, power_state_show, NULL);
- 
-+static void acpi_eject_store_work(void *context)
-+{
-+	__acpi_bus_hot_remove_device(context, ACPI_OST_EC_OSPM_EJECT);
-+}
-+
- static ssize_t
- acpi_eject_store(struct device *d, struct device_attribute *attr,
- 		const char *buf, size_t count)
- {
- 	struct acpi_device *acpi_device = to_acpi_device(d);
--	struct acpi_eject_event *ej_event;
- 	acpi_object_type not_used;
- 	acpi_status status;
--	int ret;
- 
- 	if (!count || buf[0] != '1')
- 		return -EINVAL;
-@@ -518,28 +519,17 @@ acpi_eject_store(struct device *d, struc
- 	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
- 		return -ENODEV;
- 
--	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
--	if (!ej_event) {
--		ret = -ENOMEM;
--		goto err_out;
--	}
- 	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
- 				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
--	ej_event->device = acpi_device;
--	ej_event->event = ACPI_OST_EC_OSPM_EJECT;
- 	get_device(&acpi_device->dev);
--	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
-+	status = acpi_os_hotplug_execute(acpi_eject_store_work, acpi_device);
- 	if (ACPI_SUCCESS(status))
- 		return count;
- 
- 	put_device(&acpi_device->dev);
--	kfree(ej_event);
--	ret = status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
--
-- err_out:
- 	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
- 				  ACPI_OST_SC_NON_SPECIFIC_FAILURE, NULL);
--	return ret;
-+	return -EAGAIN;
- }
- 
- static DEVICE_ATTR(eject, 0200, NULL, acpi_eject_store);
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -339,11 +339,6 @@ struct acpi_bus_event {
- 	u32 data;
- };
- 
--struct acpi_eject_event {
--	struct acpi_device	*device;
--	u32		event;
--};
--
- struct acpi_hp_work {
- 	struct work_struct work;
- 	acpi_handle handle;
+Right - because they force a mode that the BIOS doesn't allow. The BIOS
+doesn't allow the OS (the driver) to decide in what mode to work - so we
+cannot reach the same effect as the setpci command from the OS / driver
+level. setpci just directly accesses the HW without asking the
+permissions of anyone.
+
+> I know the "side effect" of first two "setpci" commands is consuming
+> more power. (Actually by my experience of running on battery, I did
+> not notice ...)
+> 
+> But Grumbach said after the second two "setpci" commands enables "L1".
+> Does it mean it saves power? So what's the "side effect" of second two
+> "setpci" commands?
+> 
+
+They are both the same in terms of side-effects. The first set of setpci
+commands will disable L1 altogether - meaning you don't save any power.
+The second set of setpci doesn't disable L1, but disable a more subtle
+power state (actually several) which are defined as L1 PM substates. In
+theses substates, you save less power than in L1 (I think) but you are
+more likely to be able to reach them. After all, it is always the same
+story - the deeper you sleep, you longer it takes to wake up. And if it
+takes longer to wake up, it also means that in several cases you won't
+chose to go to sleep. So the way PCI folks help to save power even in
+case where you cannot go to a deep sleep is to define states in the
+middle in which you save less power, but in which you are more likely to
+be. Again - time spent in each state and power saved in each state trade
+off.
+Now:
+L1 - deep sleep
+L1 PM substate - something in the middle.
+
+First setpci command - disable both features.
+Second setpci command - disable only the second feature.
+
+Regarding side effects... I don't think this is really "dangerous". But
+this is not a fix in the way that I wouldn't like to deploy millions of
+machines like that. The risk you have here is probably to have a bad
+timing and have the setpci commands run exactly when the link is in a
+state that setpci disables. That would be bad. How bad? Probably would
+just require a reboot - or worst case G3 (take the battery off).
+
+> IMHO, if this could user use their NIC reliably, maybe Grumbach may
+> write these commands to iwlwifi driver and run them when 7260 is
+> detected...
+
+I can't as exlained above.
+
+> 
+> BTW, no replies from Lenovo, yet.
+> 
+
+
+> Or maybe you could add an option, which enables this "workaround" if
+> user wants. A user could simply write a /etc/modprobe.d/iwlwifi.conf
+> and enable this "workaround", to use their NICs without having to
+> reboot from time to time...
+
+same.
