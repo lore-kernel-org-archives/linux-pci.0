@@ -1,113 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:7459 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750842Ab3K0HDH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 02:03:07 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: pciehp LinkState
-Date: Wed, 27 Nov 2013 07:02:59 +0000
-Message-ID: <8446b1354b434e759cd37ddb5f8b6cc5@BLUPR05MB118.namprd05.prod.outlook.com>
-References: <528D4739.80700@fold.natur.cuni.cz>
-	 <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
-	 <01b89ce965ed454fb9f0e0cf52ba622e@BLUPR05MB118.namprd05.prod.outlook.com>
-	 <20131125194044.GA9710@google.com> <5293F3FB.6000401@fold.natur.cuni.cz>
-	 <20131126031317.GA6258@google.com>
-	 <cfeb9976fbb74028b600c9f86fcdd9ad@BLUPR05MB118.namprd05.prod.outlook.com>
-	 <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
-	 <55dfa94fa7224bafa14d52c5835ea1ca@BLUPR05MB118.namprd05.prod.outlook.com>
-	 <CAErSpo5BSzUJofyuNH5wKqYfcydOXEtrnJSq0xpssafomqHWrQ@mail.gmail.com>
- <1385507535.25738.74.camel@ul30vt.home>
-In-Reply-To: <1385507535.25738.74.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:47507 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385Ab3KOVQm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 16:16:42 -0500
+Received: by mail-ie0-f172.google.com with SMTP id to1so5743835ieb.3
+        for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2013 13:16:42 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1384548866-13141-9-git-send-email-swarren@wwwdotorg.org>
+References: <1384548866-13141-1-git-send-email-swarren@wwwdotorg.org> <1384548866-13141-9-git-send-email-swarren@wwwdotorg.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 15 Nov 2013 14:16:21 -0700
+Message-ID: <CAErSpo7ZP-1qkBYjdNYRPz3Z3rHL_tUOY3fNi4nvTfFmcdEEOQ@mail.gmail.com>
+Subject: Re: [PATCH 08/31] pci: tegra: use reset framework
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Stephen Warren <swarren@nvidia.com>, treding@nvidia.com,
+	pdeschrijver@nvidia.com,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gPiA+PiA+IEN1cnJlbnRseSBpbiBteSBwYXRjaCwgdGhlIHBjaWVocF91c2VfbGlua19l
-dmVudHM9MSBpcyB1c2VkIHRvDQo+ID4gPj4gPiBvbmx5DQo+ID4gPj4gZW5hYmxlIGxpbmsgc3Rh
-dGUgY2hhbmdlIG5vdGlmaWNhdGlvbnMsIGJ1dCBpbiBjYXNlIHBjaWVfaXNyKCkNCj4gPiA+PiBm
-aW5kcyAiRExMIGNoYW5nZWQiIGJpdCBzZXQgaW4gIlNsb3Qgc3RhdHVzIiwgaXQgcHJvY2Vzc2Vz
-IHRoZSBsaW5rDQo+ID4gPj4gc3RhdGUgY2hhbmdlLiBJJ2xsIG1ha2UgdGhlIHNpbmdsZSBsaW5l
-IGNoYW5nZSB0byBwY2llX2lzcigpIHRvDQo+ID4gPj4gcHJvY2VzcyB0aGUgZXZlbnQgb25seSBp
-ZiBwY2llaHBfdXNlX2xpbmtfZXZlbnRzPTEuIExldCBtZSBrbm93IGlmDQo+ID4gPj4gdGhpcyBz
-b3VuZHMgYWxyaWdodC4NCj4gPiA+Pg0KPiA+ID4+IElmIHdlIGNhbiBhdm9pZCBpdCwgSSdkIHBy
-ZWZlciBub3QgdG8gYWRkIHRoZQ0KPiAicGNpZWhwX3VzZV9saW5rX2V2ZW50cyINCj4gPiA+PiBt
-b2R1bGUgcGFyYW1ldGVyLiAgV2hhdCB3b3VsZCBicmVhayBpZiB3ZSBqdXN0ICphbHdheXMqIHVz
-ZWQgbGluaw0KPiA+ID4+IGV2ZW50cz8NCj4gPiA+DQo+ID4gPiBOb3QgcmVhbGx5ICJicmVhayIs
-IGJ1dCBJJ2QgdGhpbmsgc29tZSBjaGFuZ2VzIGluIGJlaGF2aW9yIHNoYWxsIGJlDQo+IHZpc2li
-bGU6DQo+ID4gPg0KPiA+ID4gMSkgV2hlbiBhIGNhcmQgaXMgcHVsbGVkIG91dCAodGh1cyBjYXVz
-aW5nIHRoZSBsaW5rIHRvIGdvIGRvd24pLCBpdA0KPiBzaGFsbCBhbHdheXMgYmUgZGlzYWJsZWQg
-LSB3aGV0aGVyIG9yIG5vdCBpdCBzdXBwb3J0cyAic3VycHJpc2UgcmVtb3ZhbCINCj4gKGluIHRo
-ZSBjYXBhYmlsaXRpZXMpLiBJIHRoaW5rIHRoaXMgd291bGQgYmUgdGhlIHJpZ2h0IHRoaW5nIHRv
-IGRvIGluDQo+IHRoaXMgc2l0dWF0aW9uLg0KPiA+DQo+ID4gWWVwLCB0aGlzIHNvdW5kcyBsaWtl
-IGl0IHdvdWxkIGJlIE9LLg0KPiA+DQo+ID4gPiAyKSBFdmVuIG90aGVyIHNjZW5hcmlvcyB3aGVy
-ZSB0aGUgbGluayBtYXkgZ28gZG93biAtIGUuZy4gZGV2aWNlDQo+IHJlc2V0IHVzaW5nIGFuIGV4
-dGVybmFsIHJlc2V0IHBpbiwgb3IgYSBmaXJtd2FyZSBpbml0aWF0ZWQgcmVzZXQgZXRjLA0KPiBz
-aGFsbCBjYXVzZSB0aGUgZGV2aWNlIHRvIGJlIGltbWVkaWF0ZWx5IHJlbW92ZWQgYW5kIHJlLWFk
-ZGVkIGFnYWluIHdoZW4NCj4gdGhlIGxpbmsgY29tZXMgYmFjayB1cCkuIFRoaXMgbWF5IGFsc28g
-YmUgZGVzaXJlZC4NCj4gPg0KPiA+IFRoaXMgc291bmRzIE9LLCB0b28uICBUaGVyZSdzIGFscmVh
-ZHkgc29tZSBmYW5jeSBkYW5jaW5nIGZvciBzaW1pbGFyDQo+ID4gc2NlbmFyaW9zIGluIHBjaWVo
-cF9yZXNldF9zbG90KCk7IG1heWJlIHRoYXQgd291bGQgaGF2ZSB0byBiZQ0KPiA+IGV4dGVuZGVk
-LiAgQWxleCBtaWdodCBoYXZlIGlucHV0IGhlcmUuDQo+IA0KPiBTbyBsb25nIGFzIHJlc2V0IGlu
-aXRpYXRlZCB0aHJvdWdoIHBjaS1jb3JlIGRvZXNuJ3QgY2F1c2UgYSBob3RwbHVnIEkNCj4gdGhp
-bmsgSSdtIG9rIHdpdGggaXQuICBJIHNhdyBjb2RlIHdhcyBhbHJlYWR5IGJlaW5nIGFkZGVkIGFy
-b3VuZCBzbG90DQo+IHJlc2V0IHRvIG1hc2sgbGluayBjaGFuZ2VzLCBqdXN0IGxpa2Ugd2UgZG8g
-d2l0aCBwcmVzZW5jZSBkZXRlY3Rpb24uDQoNClRoYW5rcyBBbGV4IGZvciB0YWtpbmcgYSBsb29r
-IGF0IG15IHBhdGNoLiBZZXMsIEkgaGF2ZSB0YWtlbiBjYXJlIGluIHRoZSBwY2llaHBfcmVzZXRf
-c2xvdCgpLg0KDQo+IFRoYW5rcywNCj4gDQo+IEFsZXgNCj4gDQo+ID4gPiAzKSBJZiB0aGUgbGlu
-ayBjb21lcyB1cCBhdXRvbWF0aWNhbGx5IGFzIHNvb24gYXMgYSBjYXJkIGlzIHBsdWdnZWQNCj4g
-aW4gKGkuZS4gd2l0aG91dCB0aGUgbmVlZCB0byB0dXJuIG9uIHBvd2VyIG9yIGRvIGFueXRoaW5n
-IGVsc2UgZnJvbSBTVyksDQo+IHRoZSBjYXJkIHNoYWxsIGJlIGltbWVkaWF0ZWx5IGFkZGVkIC0g
-ZXZlbiBpZiBzdXJwcmlzZSBjYXBhYmlsaXR5IGlzIG5vdA0KPiBwcmVzZW50LiBJJ20gbm90IHN1
-cmUgaWYgdGhpcyBpcyBkZXNpcmVkLiBUaGF0J3MgYmVjYXVzZSB0aGUgY3VycmVudA0KPiBiZWhh
-dmlvciBpcyB0aGF0IGZvciBzbG90cyB0aGF0IGRvIG5vdCBzdXBwb3J0IHN1cnByaXNlIGV2ZW50
-cywgdGhlIHVzZXINCj4gaGFzIHRvIGluaXRpYXRlIHRoZSBob3QtYWRkIHVzaW5nIHRoZSBhdHRl
-bnRpb24gYnV0dG9uLiBFdmVuIGFmdGVyIHRoYXQsDQo+IGhlIGdldHMgYSA1IHNlY29uZCB0aW1l
-IHRvIGNhbmNlbCB0aGUgb3BlcmF0aW9uIGluIGNhc2UgaGUgd2lzaGVzLiBUaGlzDQo+IHdpbGwg
-bm8gbG9uZ2VyIGJlIHRoZSBjYXNlLCBpZiB1c2Ugb2YgbGluayBldmVudHMgaXMgYWx3YXlzIGVu
-YWJsZWQuDQo+ID4NCj4gPiBUaGlzIG9uZSBzb3VuZHMgbGlrZSBhIHByb2JsZW0uICBCdXQgSSB0
-aGluayB3ZSBjb3VsZCBtYW5hZ2UgdGhpcywNCj4gPiBlLmcuLCBieSBub3RpY2luZyB0aGUgbGlu
-ay11cCBpbnRlcnJ1cHQsIGJ1dCB3YWl0aW5nIGZvciB0aGUgNS1zZWNvbmQNCj4gPiB0aW1lb3V0
-IGlmIGFuIGF0dGVudGlvbiBidXR0b24gaXMgcHJlc2VudC4NCg0KSSB0aGluayB0aGF0IG9uZSBh
-c3BlY3QgbWlnaHQgc3RpbGwgbm90IGJlIHJpZ2h0LiBUaGUgc3BlYyBzZWVtcyB0byBpbmRpY2F0
-ZSB0aGF0IHRoZSBob3QtcGx1ZyBzaG91bGQgYmUgKmluaXRpYXRlZCogYnkgdGhlIHByZXNzIG9m
-IGF0dGVudGlvbiBidXR0b24sIGFuZCBhZnRlciBhdHRlbnRpb24gYnV0dG9uIHByZXNzIHVzZXIg
-aGFzIGEgdGltZSBvZiA1IHNlY29uZHMuIFNvIEkgdGhpbmsgaWYgd2Ugd2FudCB0byByZW1vdmUg
-dGhhdCBtb2R1bGUgcGFyYW1ldGVyIGFuZCBhbHNvIHJldGFpbiBhdHRlbnRpb24gYnV0dG9uIGJl
-aGF2aW9yLCBvdXIgb3B0aW9ucyBtaWdodCBiZToNCg0KKiBJZiBhdHRlbnRpb24gYnV0dG9uIGlz
-IHByZXNlbnQsIGRvIG5vdCB1c2UgbGluayBzdGF0ZSBldmVudHMgYWxsIHRvZ2V0aGVyLiAoaS5l
-LiB1c2VyIGhhcyB0byB1c2UgYXR0ZW50aW9uIGJ1dHRvbiBhbHdheXMgdG8gaW5pdGlhdGUgZW5h
-Ymxpbmcgb3IgZGlzYWJsaW5nIGRldmljZS4gVGhpcydkIGJlIGNvbXBsaWFudCB3aXRoIGN1cnJl
-bnQgYmVoYXZpb3IgYW5kIGV4cGVjdGF0aW9ucyBJIGd1ZXNzKS4gSW4gYWxsIHRoZSByZW1haW5p
-bmcgY2FzZXMsIHRoZSBsaW5rIGV2ZW50cyBjYW4gYmUgdXNlZCBqdXN0IGZpbmUuDQoNCiogSWYg
-YXR0ZW50aW9uIGJ1dHRvbiBpcyBwcmVzZW50LCBwcm9jZXNzIExJTkstRE9XTiBldmVudHMsIGJ1
-dCBub3QgTElOSy1VUCBldmVudHMuIEFueSBkZXZpY2VzIHdob3NlIGxpbmsgc3VkZGVubHkgZ29l
-cyBkb3duLCB3aWxsIGJlIGRpc2FibGVkIChzb3VuZHMgcXVpdGUgcmlnaHQpLiBCdXQgd2hlbiBM
-aW5rIGNvbWVzIGJhY2sgdXAsIHRoZXknbGwgbm90IGJlIGVuYWJsZWQgKGFsdGhvdWdoIHRoaXMg
-bWF5IG5vdCBzb3VuZCByaWdodCwgYnV0IHRoaXMgY29tcGxpZXMgd2l0aCB0aGUgY3VycmVudCBi
-ZWhhdmlvciBhbmQgdGhlIHNlbWFudGljcyBvZiBhdHRlbnRpb24gYnV0dG9uKS4NCg0KT3IgZWxz
-ZSwgd2UgY2FuIGxlYXZlIHRoZSBtb2R1bGUgcGFyYW1ldGVyIGluIHBsYWNlLg0KDQpCVFcsIHdo
-YXQgYXJlIHRoZSBvZGRzIG9mIGNvbWluZyBhY3Jvc3MgYSBzbG90IHdoZXJlIHRoZSBsaW5rIGNv
-bWVzIHVwIGF1dG9tYXRpY2FsbHkgd2l0aG91dCB0aGUgbmVlZCBmb3IgU1cgdG8gZG8gYW55dGhp
-bmcgKGRlc3BpdGUgaGF2aW5nIGFuIGF0dGVudGlvbiBidXR0b24gdGhlcmUpLCBidXQgInN1cnBy
-aXNlIiBldmVudHMgYXJlIG5vdCBzdXBwb3J0ZWQgOi0pPyBKdXN0IHdvbmRlcmluZyBpZiB3ZSBh
-cmUgZGlzY3Vzc2luZyBhIHJlYWxpc3RpYyBzY2VuYXJpby4gSWYgd2UgZG9uJ3Qgc2VlIHRoaXMg
-YXMgcmVhbGlzdGljLCB0aGVuIHdlIGNhbiBzYWZlbHkgZHJvcCB0aGUgbW9kdWxlIHBhcmFtZXRl
-ciBJTUhPLiANCg0KVGhhbmtzLA0KDQpSYWphdA0KDQoNCg0KDQo+ID4NCj4gPiA+IEkgdGhpbmsg
-aXQgd291bGQgYmUgZmFpciB0byBzYXkgdGhhdCBpZiB1c2Ugb2YgbGluayBldmVudHMgaXMgYWx3
-YXlzDQo+IHN1cHBvcnRlZCwgaXQgd291bGQgYmUgcm91Z2hseSBlcXVpdmFsZW50IHRvIGEgc2xv
-dCBzdXBwb3J0aW5nIHN1cnByaXNlDQo+IGV2ZW50cy4gKFN1cnByaXNlIGV2ZW50cyB3b3JrIG9u
-ICJwcmVzZW5jZSBkZXRlY3QiIHBpbiwgYW5kIHRoaXMgd2lsbA0KPiB3b3JrIG9uIHRoZSBsaW5r
-IHN0YXRlIGNoYW5nZXMpLg0KPiA+ID4NCj4gPiA+IFRoYW5rcywNCj4gPiA+DQo+ID4gPiBSYWph
-dA0KPiA+ID4NCj4gDQo+IA0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxp
-c3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4gdGhlIGJvZHkg
-b2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8g
-aW5mbw0KPiBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+
-IA0KDQo=
+On Fri, Nov 15, 2013 at 1:54 PM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+> From: Stephen Warren <swarren@nvidia.com>
+>
+> Tegra's clock driver now provides an implementation of the common
+> reset API (include/linux/reset.h). Use this instead of the old Tegra-
+> specific API; that will soon be removed.
+>
+> The old Tegra-specific API used a struct clock to represent the module
+> to reset. Some of the clocks retrieved during probe() were only used for
+> reset purposes, and indeed aren't even true clocks. So, there's no need
+> to get() them any more.
+>
+> Cc: treding@nvidia.com
+> Cc: pdeschrijver@nvidia.com
+> Cc: linux-tegra@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Stephen Warren <swarren@nvidia.com>
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Feel free to merge this through whatever tree is appropriate.  If I
+were applying this, I would be looking for an ack from Thierry in
+addition to mine.
+
+> ---
+> This patch is part of a series with strong internal depdendencies. I'm
+> looking for an ack so that I can take the entire series through the Tegra
+> and arm-soc trees. The series will be part of a stable branch that can be
+> merged into other subsystems if needed to avoid/resolve dependencies.
+> ---
+>  drivers/pci/host/pci-tegra.c | 49 ++++++++++++++++++++++++++++++++------------
+>  1 file changed, 36 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 0afbbbc55c81..174a5bc2d993 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -39,6 +39,7 @@
+>  #include <linux/of_platform.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/reset.h>
+>  #include <linux/sizes.h>
+>  #include <linux/slab.h>
+>  #include <linux/tegra-cpuidle.h>
+> @@ -259,10 +260,13 @@ struct tegra_pcie {
+>
+>         struct clk *pex_clk;
+>         struct clk *afi_clk;
+> -       struct clk *pcie_xclk;
+>         struct clk *pll_e;
+>         struct clk *cml_clk;
+>
+> +       struct reset_control *pex_rst;
+> +       struct reset_control *afi_rst;
+> +       struct reset_control *pcie_xrst;
+> +
+>         struct tegra_msi msi;
+>
+>         struct list_head ports;
+> @@ -858,7 +862,7 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>         pads_writel(pcie, value, PADS_CTL);
+>
+>         /* take the PCIe interface module out of reset */
+> -       tegra_periph_reset_deassert(pcie->pcie_xclk);
+> +       reset_control_deassert(pcie->pcie_xrst);
+>
+>         /* finally enable PCIe */
+>         value = afi_readl(pcie, AFI_CONFIGURATION);
+> @@ -891,9 +895,9 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+>
+>         /* TODO: disable and unprepare clocks? */
+>
+> -       tegra_periph_reset_assert(pcie->pcie_xclk);
+> -       tegra_periph_reset_assert(pcie->afi_clk);
+> -       tegra_periph_reset_assert(pcie->pex_clk);
+> +       reset_control_assert(pcie->pcie_xrst);
+> +       reset_control_assert(pcie->afi_rst);
+> +       reset_control_assert(pcie->pex_rst);
+>
+>         tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+>
+> @@ -921,9 +925,9 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+>         const struct tegra_pcie_soc_data *soc = pcie->soc_data;
+>         int err;
+>
+> -       tegra_periph_reset_assert(pcie->pcie_xclk);
+> -       tegra_periph_reset_assert(pcie->afi_clk);
+> -       tegra_periph_reset_assert(pcie->pex_clk);
+> +       reset_control_assert(pcie->pcie_xrst);
+> +       reset_control_assert(pcie->afi_rst);
+> +       reset_control_assert(pcie->pex_rst);
+>
+>         tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+>
+> @@ -958,7 +962,7 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+>                 return err;
+>         }
+>
+> -       tegra_periph_reset_deassert(pcie->afi_clk);
+> +       reset_control_deassert(pcie->afi_rst);
+>
+>         err = clk_prepare_enable(pcie->afi_clk);
+>         if (err < 0) {
+> @@ -996,10 +1000,6 @@ static int tegra_pcie_clocks_get(struct tegra_pcie *pcie)
+>         if (IS_ERR(pcie->afi_clk))
+>                 return PTR_ERR(pcie->afi_clk);
+>
+> -       pcie->pcie_xclk = devm_clk_get(pcie->dev, "pcie_xclk");
+> -       if (IS_ERR(pcie->pcie_xclk))
+> -               return PTR_ERR(pcie->pcie_xclk);
+> -
+>         pcie->pll_e = devm_clk_get(pcie->dev, "pll_e");
+>         if (IS_ERR(pcie->pll_e))
+>                 return PTR_ERR(pcie->pll_e);
+> @@ -1013,6 +1013,23 @@ static int tegra_pcie_clocks_get(struct tegra_pcie *pcie)
+>         return 0;
+>  }
+>
+> +static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
+> +{
+> +       pcie->pex_rst = devm_reset_control_get(pcie->dev, "pex");
+> +       if (IS_ERR(pcie->pex_rst))
+> +               return PTR_ERR(pcie->pex_rst);
+> +
+> +       pcie->afi_rst = devm_reset_control_get(pcie->dev, "afi");
+> +       if (IS_ERR(pcie->afi_rst))
+> +               return PTR_ERR(pcie->afi_rst);
+> +
+> +       pcie->pcie_xrst = devm_reset_control_get(pcie->dev, "pcie_x");
+> +       if (IS_ERR(pcie->pcie_xrst))
+> +               return PTR_ERR(pcie->pcie_xrst);
+> +
+> +       return 0;
+> +}
+> +
+>  static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+>  {
+>         struct platform_device *pdev = to_platform_device(pcie->dev);
+> @@ -1025,6 +1042,12 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+>                 return err;
+>         }
+>
+> +       err = tegra_pcie_resets_get(pcie);
+> +       if (err) {
+> +               dev_err(&pdev->dev, "failed to get resets: %d\n", err);
+> +               return err;
+> +       }
+> +
+>         err = tegra_pcie_power_on(pcie);
+>         if (err) {
+>                 dev_err(&pdev->dev, "failed to power up: %d\n", err);
+> --
+> 1.8.1.5
+>
