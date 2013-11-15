@@ -1,69 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:36944 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574Ab3K2Naq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 08:30:46 -0500
-Date: Fri, 29 Nov 2013 14:29:58 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Stephen Warren <swarren@nvidia.com>, treding@nvidia.com,
-	pdeschrijver@nvidia.com, linux-tegra@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 08/31] pci: tegra: use reset framework
-Message-ID: <20131129132957.GU22771@ulmo.nvidia.com>
-References: <1384548866-13141-1-git-send-email-swarren@wwwdotorg.org>
- <1384548866-13141-9-git-send-email-swarren@wwwdotorg.org>
+Received: from mantis.wzyboy.im ([199.83.51.51]:40026 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753196Ab3KODHP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Nov 2013 22:07:15 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ULJ2Z7kCM1hyNsWd"
-In-Reply-To: <1384548866-13141-9-git-send-email-swarren@wwwdotorg.org>
+In-Reply-To: <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com> <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Fri, 15 Nov 2013 11:06:58 +0800
+Message-ID: <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+2013/11/15 Bjorn Helgaas <bhelgaas@google.com>:
+> Why would it be unlikely to fix the driver?  Do people think the
+> problem is not actually in the driver?
+>
+> Asking Lenovo how to disable L1 PM substates is really a non-answer.
+> Only the extremely technical and extremely patient user (hi wzyboy :))
+> will even bother to investigate why wifi works fine with Windows but
+> not with Linux.  The only thing Lenovo *could* do is to release a new
+> BIOS with a switch to control L1 PM Substates.  If I were Lenovo, I
+> would never do that because then I would have to tell customers
+> "disable this for Linux, enable this for Windows," and I'd have to
+> deal with support calls about devices using more power than they
+> should, battery life being shorter, etc.  Plus you'd have to ask every
+> Linux user to upgrade their BIOS.  That's all just a terrible user
+> experience.
 
---ULJ2Z7kCM1hyNsWd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-On Fri, Nov 15, 2013 at 01:54:03PM -0700, Stephen Warren wrote:
-[...]
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 0afbbbc55c81..174a5bc2d993 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -39,6 +39,7 @@
->  #include <linux/of_platform.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
-> +#include <linux/reset.h>
+I am a little confused. There are two sets of "setpci" commands, both
+of which can make me use my NIC reliably. But you two say they are
+just workarounds, not real fixes.
 
-Can't you also remove the linux/clk/tegra.h include now that none of the
-functions it declares are used anymore?
+I know the "side effect" of first two "setpci" commands is consuming
+more power. (Actually by my experience of running on battery, I did
+not notice ...)
 
-Otherwise looks good to me:
+But Grumbach said after the second two "setpci" commands enables "L1".
+Does it mean it saves power? So what's the "side effect" of second two
+"setpci" commands?
 
-Reviewed-by: Thierry Reding <treding@nvidia.com>
+IMHO, if this could user use their NIC reliably, maybe Grumbach may
+write these commands to iwlwifi driver and run them when 7260 is
+detected...
 
---ULJ2Z7kCM1hyNsWd
-Content-Type: application/pgp-signature
+BTW, no replies from Lenovo, yet.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSmJbVAAoJEN0jrNd/PrOhDHwQAIc9/Y/paQQ8HQ1EvLTwh6jr
-ZEjpYkzQzXhkO65mU1PWY5JXyB7D3WmCAhBXDnoHmXSnj1qmhQdlC+RXFcAIsMJQ
-wXPlo+aeXHEnw+RehQvevJPSAIuXTXbcQeHfmRFqoh1EBqC+ccXzvVmy2+zV6+jq
-T7wPPBiT5/ld3IxvZiGtZeM/MCH27iAb0KYkhcFUaY96Z2s9gbzOwzQebjM6Fgcn
-gmX6mpVW/M1/cvlwWcEwoJ4pum5D2uqX2ys1uGfQ+HPGMub0cIpsi/uXrLMiJ+O+
-exAwjj3Y2RRME9RgvX+tr8g+QBJLURkfH23Fw9wFjBkgXezMFcJNALk2Wy9qs5/N
-98Lly/Y+YAXiUIJyfmZQkte4JH253JBtIZWYoGbnF41EVOyxrVJ65ZlnieP08aGb
-LEtmELZyT7yNh6N6nrDhm7saT1WhsXGT4QLAiMOJfflvIMI/T2T/ZO90uDfaa7HO
-b5vRyUfoKZBElYjwqqFQNWdydpeFO/BssWgH8OMAbrjEChT2GnSPQFAExddDOrCi
-PkXv0Df9RsIcBPjHNnfC3UB2v6hd5WAQjWYitih0iSpRQLp1NlkkXI6pe68qVlZG
-cT9UVnsh18TL5MmAflzSknTDstQmoTgBVj4tF+anEc1Ijl0/CdRkyWUsAhNNkx9H
-Y9ChG/vPwoY2gxp2k6M+
-=3mjw
------END PGP SIGNATURE-----
-
---ULJ2Z7kCM1hyNsWd--
+--
+wzyboy
