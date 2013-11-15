@@ -1,162 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64423 "HELO
+Received: from v094114.home.net.pl ([79.96.170.134]:54951 "HELO
 	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751807Ab3KDN0D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 08:26:03 -0500
+	with SMTP id S1751665Ab3KOPM6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 10:12:58 -0500
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [Update][PATCH 2/6] ACPI / hotplug: Refuse to hot-remove all objects with disabled hotplug
-Date: Mon, 04 Nov 2013 14:32 +0100
-Message-ID: <1842331.UHR0XPv1jo@vostro.rjw.lan>
-In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix whitespace, capitalization, and spelling errors
+Date: Fri, 15 Nov 2013 16:25:31 +0100
+Message-ID: <10501061.Rz588Hzp2k@vostro.rjw.lan>
+In-Reply-To: <20131114223602.GA9315@google.com>
+References: <20131114223602.GA9315@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thursday, November 14, 2013 03:36:02 PM Bjorn Helgaas wrote:
+> I posted an earlier version of this a while ago[1], but decided to wait
+> until the v3.13 merge window to reduce conflicts.  Unless there's
+> objection, I plan to ask Linus to pull this before v3.13-rc1.
+> 
+> It makes no functional changes at all; it's only spelling, capitalization,
+> and whitespace fixes (space-before-tab, whitespace-at-end-of-line, etc.)
+> 
+> Bjorn
+> 
+> [1] http://lkml.kernel.org/r/20130925174215.GA26273@google.com
+> 
+> 
+> 
+> PCI: Fix whitespace, capitalization, and spelling errors
+> 
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Fix whitespace, capitalization, and spelling errors.  No functional change.
+> I know "busses" is not an error, but "buses" was more common, so I used it
+> consistently.
+> 
+> Signed-off-by: Marta Rybczynska <rybczynska@gmail.com> (pci_reset_bridge_secondary_bus())
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-In theory, an ACPI device object may be the parent of another
-device object whose hotplug is disabled by user space thorugh its
-scan handler.  In that case, the eject operation targeting the
-parent should fail as though the parent's own hotplug was disabled,
-but currently this is not the case, because acpi_scan_hot_remove()
-doesn't check the disable/enable hotplug status of the children
-of the top-most object passed to it.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-To fix this, modify acpi_bus_offline_companions() to return an
-error code if hotplug is disabled for the given device object.
-[Also change the name of the function to acpi_bus_offline(),
-because it is not only about companions any more, and change
-the name of acpi_bus_online_companions() accordingly.]  Make
-acpi_scan_hot_remove() propagate that error to its callers.
+Thanks!
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c |   57 ++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 36 insertions(+), 21 deletions(-)
-
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -125,8 +125,8 @@ acpi_device_modalias_show(struct device
- }
- static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
- 
--static acpi_status acpi_bus_offline_companions(acpi_handle handle, u32 lvl,
--					       void *data, void **ret_p)
-+static acpi_status acpi_bus_offline(acpi_handle handle, u32 lvl, void *data,
-+				    void **ret_p)
- {
- 	struct acpi_device *device = NULL;
- 	struct acpi_device_physical_node *pn;
-@@ -136,6 +136,11 @@ static acpi_status acpi_bus_offline_comp
- 	if (acpi_bus_get_device(handle, &device))
- 		return AE_OK;
- 
-+	if (device->handler && !device->handler->hotplug.enabled) {
-+		*ret_p = &device->dev;
-+		return AE_SUPPORT;
-+	}
-+
- 	mutex_lock(&device->physical_node_lock);
- 
- 	list_for_each_entry(pn, &device->physical_node_list, node) {
-@@ -168,8 +173,8 @@ static acpi_status acpi_bus_offline_comp
- 	return status;
- }
- 
--static acpi_status acpi_bus_online_companions(acpi_handle handle, u32 lvl,
--					      void *data, void **ret_p)
-+static acpi_status acpi_bus_online(acpi_handle handle, u32 lvl, void *data,
-+				   void **ret_p)
- {
- 	struct acpi_device *device = NULL;
- 	struct acpi_device_physical_node *pn;
-@@ -214,26 +219,32 @@ static int acpi_scan_hot_remove(struct a
- 	 * If the first pass is successful, the second one isn't needed, though.
- 	 */
- 	errdev = NULL;
--	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
--			    NULL, acpi_bus_offline_companions,
--			    (void *)false, (void **)&errdev);
--	acpi_bus_offline_companions(handle, 0, (void *)false, (void **)&errdev);
-+	status = acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-+				     NULL, acpi_bus_offline, (void *)false,
-+				     (void **)&errdev);
-+	if (status == AE_SUPPORT) {
-+		dev_warn(errdev, "Offline disabled.\n");
-+		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-+				    acpi_bus_online, NULL, NULL, NULL);
-+		put_device(&device->dev);
-+		return -EPERM;
-+	}
-+	acpi_bus_offline(handle, 0, (void *)false, (void **)&errdev);
- 	if (errdev) {
- 		errdev = NULL;
- 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
--				    NULL, acpi_bus_offline_companions,
--				    (void *)true , (void **)&errdev);
-+				    NULL, acpi_bus_offline, (void *)true,
-+				    (void **)&errdev);
- 		if (!errdev || acpi_force_hot_remove)
--			acpi_bus_offline_companions(handle, 0, (void *)true,
--						    (void **)&errdev);
-+			acpi_bus_offline(handle, 0, (void *)true,
-+					 (void **)&errdev);
- 
- 		if (errdev && !acpi_force_hot_remove) {
- 			dev_warn(errdev, "Offline failed.\n");
--			acpi_bus_online_companions(handle, 0, NULL, NULL);
-+			acpi_bus_online(handle, 0, NULL, NULL);
- 			acpi_walk_namespace(ACPI_TYPE_ANY, handle,
--					    ACPI_UINT32_MAX,
--					    acpi_bus_online_companions, NULL,
--					    NULL, NULL);
-+					    ACPI_UINT32_MAX, acpi_bus_online,
-+					    NULL, NULL, NULL);
- 			put_device(&device->dev);
- 			return -EBUSY;
- 		}
-@@ -290,10 +301,9 @@ static void acpi_bus_device_eject(void *
- 		goto err_out;
- 
- 	handler = device->handler;
--	if (!handler || !handler->hotplug.enabled) {
--		ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
--		goto err_out;
--	}
-+	if (!handler || !handler->hotplug.enabled)
-+		goto err_support;
-+
- 	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
- 				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
- 	if (handler->hotplug.mode == AHM_CONTAINER)
-@@ -301,14 +311,19 @@ static void acpi_bus_device_eject(void *
- 
- 	get_device(&device->dev);
- 	error = acpi_scan_hot_remove(device);
--	if (error)
-+	if (error == -EPERM) {
-+		goto err_support;
-+	} else if (error) {
- 		goto err_out;
-+	}
- 
-  out:
- 	mutex_unlock(&acpi_scan_lock);
- 	unlock_device_hotplug();
- 	return;
- 
-+ err_support:
-+	ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
-  err_out:
- 	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST, ost_code,
- 				  NULL);
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
