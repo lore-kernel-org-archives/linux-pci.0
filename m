@@ -1,84 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:38519 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172Ab3KPEyD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 23:54:03 -0500
+Date: Sat, 16 Nov 2013 13:53:56 +0900
+From: Tejun Heo <tj@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 11/12] PCI: Sort pci root bus resources list
-Date: Sat, 30 Nov 2013 14:40:37 -0800
-Message-Id: <1385851238-21085-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Hugh Dickins <hughd@google.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Li Zefan <lizefan@huawei.com>,
+	Markus Blank-Burian <burian@muenster.de>,
+	Michal Hocko <mhocko@suse.cz>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	David Rientjes <rientjes@google.com>,
+	Ying Han <yinghan@google.com>,
+	Greg Thelen <gthelen@google.com>,
+	Michel Lespinasse <walken@google.com>, cgroups@vger.kernel.org,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Lai Jiangshan <laijs@cn.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Possible regression with cgroups in 3.11
+Message-ID: <20131116045356.GA5618@mtj.dyndns.org>
+References: <525CB337.8050105@huawei.com>
+ <CA+SBX_Ogo8HP81o+vrJ8ozSBN6gPwzc8WNOV3Uya=4AYv+CCyQ@mail.gmail.com>
+ <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ@mail.gmail.com>
+ <5270BFE7.4000602@huawei.com>
+ <alpine.LNX.2.00.1310301606080.2333@eggly.anvils>
+ <20131031130647.0ff6f2c7@gandalf.local.home>
+ <alpine.LNX.2.00.1310311442030.2633@eggly.anvils>
+ <20131113032804.GB19394@mtj.dyndns.org>
+ <20131113073806.GA23244@mtj.dyndns.org>
+ <20131116002820.GA31073@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131116002820.GA31073@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some x86 systems expose above 4G 64bit mmio in _CRS as non-pref mmio range.
-[   49.415281] PCI host bridge to bus 0000:00
-[   49.419921] pci_bus 0000:00: root bus resource [bus 00-1e]
-[   49.426107] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
-[   49.433041] pci_bus 0000:00: root bus resource [io  0x1000-0x5fff]
-[   49.440010] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
-[   49.447768] pci_bus 0000:00: root bus resource [mem 0xfed8c000-0xfedfffff]
-[   49.455532] pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffbfff]
-[   49.463259] pci_bus 0000:00: root bus resource [mem 0x380000000000-0x381fffffffff]
+Hello, Bjorn.
 
-During assign unassigned 64bit mmio resource, it will go through
-every non-pref mmio for root bus in pci_bus_alloc_resource().
-As the loop is with pci_bus_for_each_resource(), and could have chance
-to use under 4G mmio range instead of above 4G mmio range if the requested
-range is not big enough, even it could handle above 4G 64bit pref mmio.
+On Fri, Nov 15, 2013 at 05:28:20PM -0700, Bjorn Helgaas wrote:
+> It would be better to fix PCI so we don't call VF driver .probe() methods
+> from inside a PF driver .probe() method, but that's a bigger project.
 
-For root bus, we can order list from high to low in pci_add_resource_offset(),
-during creating root bus, it will still keep the same order in final bus
-resource list.
-	pci_acpi_scan_root
-		==> add_resources
-			==> pci_add_resource_offset: # Add to temp resources
-		==> pci_create_root_bus
-			==> pci_bus_add_resource # add to final bus resources.
+Yeah, if pci doesn't need the recursion, we can simply revert restore
+the lockdep annoation on work_on_cpu().
 
-After that, we can make sure 64bit pref mmio for pci bridges will be allocated
-higest of mmio non-pref, and in this case it is above 4G instead of under 4G.
+> @@ -293,7 +293,9 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+>  	   its local memory on the right node without any need to
+>  	   change it. */
+>  	node = dev_to_node(&dev->dev);
+> -	if (node >= 0) {
+> +	preempt_disable();
+> +
+> +	if (node >= 0 && node != numa_node_id()) {
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+A bit of comment here would be nice but yeah I think this should work.
+Can you please also queue the revert of c2fda509667b ("workqueue:
+allow work_on_cpu() to be called recursively") after this patch?
+Please feel free to add my acked-by.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 82eb234..30993ab 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -21,7 +21,8 @@
- void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 			     resource_size_t offset)
- {
--	struct pci_host_bridge_window *window;
-+	struct pci_host_bridge_window *window, *tmp;
-+	struct list_head *n;
- 
- 	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
- 	if (!window) {
-@@ -31,7 +32,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- 
- 	window->res = res;
- 	window->offset = offset;
--	list_add_tail(&window->list, resources);
-+
-+	/* sorted it according to res end */
-+	n = resources;
-+	list_for_each_entry(tmp, resources, list)
-+		if (window->res->end > tmp->res->end) {
-+			n = &tmp->list;
-+			break;
-+		}
-+
-+	/* Insert it just before n */
-+	list_add_tail(&window->list, n);
- }
- EXPORT_SYMBOL(pci_add_resource_offset);
- 
+Thanks.
+
 -- 
-1.8.1.4
-
+tejun
