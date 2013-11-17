@@ -1,51 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:39908 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750916Ab3KNHJw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Nov 2013 02:09:52 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
+Subject: [PATCH 8/10] ACPI / hotplug: Rework generic code to handle suprise removals
+Date: Sun, 17 Nov 2013 17:36:42 +0100
+Message-ID: <3525698.21F2z08v1h@vostro.rjw.lan>
+In-Reply-To: <1421028.Rsfpmhnym3@vostro.rjw.lan>
+References: <1421028.Rsfpmhnym3@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Thu, 14 Nov 2013 15:09:36 +0800
-Message-ID: <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/11/14 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
-> Awesome - you have L1 enabled:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+The generic ACPI hotplug code used for several types of device
+doesn't handle surprise removals, mostly because those devices
+currently cannot be removed by surprise in the majority of systems.
+However, surprise removals should be handled by that code as well
+as surprise additions of devices, so make it do that.
 
-Though do not understand but it seems like a good news :-)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   85 ++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 59 insertions(+), 26 deletions(-)
 
-Does that mean you find a real fix instead of a workaround? Congratulations!
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -276,18 +276,72 @@ static int acpi_scan_hot_remove(struct a
+ 	return 0;
+ }
+ 
++static int acpi_scan_device_not_present(struct acpi_device *adev)
++{
++	if (!acpi_device_enumerated(adev)) {
++		dev_warn(&adev->dev, "Still not present\n");
++		return -EALREADY;
++	}
++	acpi_bus_trim(adev);
++	return 0;
++}
++
+ static int acpi_scan_device_check(struct acpi_device *adev)
+ {
+ 	int error;
+ 
++	acpi_bus_get_status(adev);
++	if (adev->status.present || adev->status.functional) {
++		/*
++		 * This function is only called for device objects for which
++		 * matching scan handlers exist.  The only situation in which
++		 * the scan handler is not attached to this device object yet
++		 * is when the device has just appeared (either it wasn't
++		 * present at all before or it was removed and then added
++		 * again).
++		 */
++		if (adev->handler) {
++			dev_warn(&adev->dev, "Already enumerated\n");
++			return -EALREADY;
++		}
++		error = acpi_bus_scan(adev->handle);
++		if (error) {
++			dev_warn(&adev->dev, "Namespace scan failure\n");
++			return error;
++		}
++		if (!adev->handler) {
++			dev_warn(&adev->dev, "Enumeration failure\n");
++			error = -ENODEV;
++		}
++	} else {
++		error = acpi_scan_device_not_present(adev);
++	}
++	return error;
++}
++
++static int acpi_scan_bus_check(struct acpi_device *adev)
++{
++	struct acpi_scan_handler *handler = adev->handler;
++	struct acpi_device *child;
++	int error;
++
++	acpi_bus_get_status(adev);
++	if (!(adev->status.present || adev->status.functional)) {
++		acpi_scan_device_not_present(adev);
++		return 0;
++	}
++	if (handler && handler->hotplug.scan_dependent)
++		return handler->hotplug.scan_dependent(adev);
++
+ 	error = acpi_bus_scan(adev->handle);
+ 	if (error) {
+ 		dev_warn(&adev->dev, "Namespace scan failure\n");
+ 		return error;
+ 	}
+-	if (!adev->handler) {
+-		dev_warn(&adev->dev, "Enumeration failure\n");
+-		return -ENODEV;
++	list_for_each_entry(child, &adev->children, node) {
++		error = acpi_scan_bus_check(child);
++		if (error)
++			return error;
+ 	}
+ 	return 0;
+ }
+@@ -296,7 +350,6 @@ static void acpi_device_hotplug(void *da
+ {
+ 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+ 	struct acpi_device *adev = data;
+-	struct acpi_scan_handler *handler;
+ 	int error;
+ 
+ 	lock_device_hotplug();
+@@ -310,32 +363,12 @@ static void acpi_device_hotplug(void *da
+ 	if (adev->handle == INVALID_ACPI_HANDLE)
+ 		goto out;
+ 
+-	handler = adev->handler;
+-
+ 	switch (src) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+-		if (handler) {
+-			error = handler->hotplug.scan_dependent ?
+-					handler->hotplug.scan_dependent(adev) :
+-					acpi_bus_scan(adev->handle);
+-		} else {
+-			error = acpi_scan_device_check(adev);
+-		}
++		error = acpi_scan_bus_check(adev);
+ 		break;
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+-		/*
+-		 * This code is only run for device objects for which matching
+-		 * scan handlers exist.  The only situation in which the scan
+-		 * handler is not attached to this device object yet is when the
+-		 * device has just appeared (either it wasn't present at all
+-		 * before or it was removed and then added again).
+-		 */
+-		if (adev->handler) {
+-			dev_warn(&adev->dev, "Already enumerated\n");
+-			error = -EBUSY;
+-		} else {
+-			error = acpi_scan_device_check(adev);
+-		}
++		error = acpi_scan_device_check(adev);
+ 		break;
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 	case ACPI_OST_EC_OSPM_EJECT:
 
---
-wzyboy
