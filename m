@@ -1,50 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:52804 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755991Ab3KXDAj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Nov 2013 22:00:39 -0500
-Date: Sat, 23 Nov 2013 22:00:33 -0500
-From: Jason Cooper <jason@lakedaemon.net>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: mvebu - The bridge should obey the MEM and IO
- command bits
-Message-ID: <20131124030033.GR29241@titan.lakedaemon.net>
-References: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
+Subject: [PATCH 4/10] ACPI / hotplug: Do not fail bus and device checks for disabled hotplug
+Date: Sun, 17 Nov 2013 17:33:47 +0100
+Message-ID: <15560767.B2ZaDjMsph@vostro.rjw.lan>
+In-Reply-To: <1421028.Rsfpmhnym3@vostro.rjw.lan>
+References: <1421028.Rsfpmhnym3@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 31, 2013 at 05:32:59PM -0600, Jason Gunthorpe wrote:
-> When PCI_COMMAND_MEMORY/PCI_COMMAND_IO are cleared the bridge should not
-> allocate windows or even look at the window limit/base registers.
-> 
-> Otherwise it can attempt to setup bogus windows that the PCI core code
-> creates during discovery. The core will leave PCI_COMMAND_IO cleared if
-> it doesn't need an IO window.
-> 
-> Have mvebu_pcie_handle_*_change respect the bits, and call the change
-> function whenever the bits changes.
-> 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 14 ++++++++++++--
->  1 file changed, 12 insertions(+), 2 deletions(-)
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-And a small addendum: I currently have the following in mvebu/drivers
+If the scan handler for the given device has hotplug.enabled
+unset, it doesn't really make sense to fail bus check and device
+check notifications.
 
-  572bd682145f PCI: mvebu - The bridge secondary status register should be 0
-  9503c7fe4d9d PCI: mvebu - Support a bridge with no IO port window
-  058100a08be8 PCI: mvebu: return NULL instead of ERR_PTR(ret)
+First, bus check may not have anything to do with the device it is
+signaled for, but it may concern another device on the bus below
+this one.  For this reason, bus check notifications should not be
+failed if hotplug is disabled for the target device.
 
-which means they didn't make it in for v3.13-rc1.  I'll hold them there
-for reference until you resend.
+Second, device check notifications are signaled only after a device
+has already appeared (or disappeared), so failing it can only prevent
+scan handlers and drivers from attaching to that (already existing)
+device, which is not very useful.
 
-thx,
+Consequently, if device hotplug is disabled through the device's
+scan handler, fail eject request notifications only.
 
-Jason.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   40 +++++++---------------------------------
+ 1 file changed, 7 insertions(+), 33 deletions(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -363,43 +363,13 @@ static void acpi_scan_bus_device_check(v
+ 	unlock_device_hotplug();
+ }
+ 
+-static void acpi_hotplug_unsupported(acpi_handle handle, u32 type)
+-{
+-	u32 ost_status;
+-
+-	switch (type) {
+-	case ACPI_NOTIFY_BUS_CHECK:
+-		acpi_handle_debug(handle,
+-			"ACPI_NOTIFY_BUS_CHECK event: unsupported\n");
+-		ost_status = ACPI_OST_SC_INSERT_NOT_SUPPORTED;
+-		break;
+-	case ACPI_NOTIFY_DEVICE_CHECK:
+-		acpi_handle_debug(handle,
+-			"ACPI_NOTIFY_DEVICE_CHECK event: unsupported\n");
+-		ost_status = ACPI_OST_SC_INSERT_NOT_SUPPORTED;
+-		break;
+-	case ACPI_NOTIFY_EJECT_REQUEST:
+-		acpi_handle_debug(handle,
+-			"ACPI_NOTIFY_EJECT_REQUEST event: unsupported\n");
+-		ost_status = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+-		break;
+-	default:
+-		/* non-hotplug event; possibly handled by other handler */
+-		return;
+-	}
+-
+-	acpi_evaluate_hotplug_ost(handle, type, ost_status, NULL);
+-}
+-
+ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+ {
++	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+ 	struct acpi_scan_handler *handler = data;
+ 	struct acpi_device *adev;
+ 	acpi_status status;
+ 
+-	if (!handler->hotplug.enabled)
+-		return acpi_hotplug_unsupported(handle, type);
+-
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_BUS_CHECK event\n");
+@@ -409,6 +379,11 @@ static void acpi_hotplug_notify_cb(acpi_
+ 		break;
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
++		if (!handler->hotplug.enabled) {
++			acpi_handle_err(handle, "Eject disabled\n");
++			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
++			goto err_out;
++		}
+ 		if (acpi_bus_get_device(handle, &adev))
+ 			goto err_out;
+ 
+@@ -428,8 +403,7 @@ static void acpi_hotplug_notify_cb(acpi_
+ 		return;
+ 
+  err_out:
+-	acpi_evaluate_hotplug_ost(handle, type,
+-				  ACPI_OST_SC_NON_SPECIFIC_FAILURE, NULL);
++	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ }
+ 
+ static ssize_t real_power_state_show(struct device *dev,
+
