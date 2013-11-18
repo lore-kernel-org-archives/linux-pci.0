@@ -1,74 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <528AC4F2.40708@huawei.com>
-Date: Tue, 19 Nov 2013 09:54:58 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:46159 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751171Ab3KRPRN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Nov 2013 10:17:13 -0500
+Date: Mon, 18 Nov 2013 10:17:12 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	<linux-usb@vger.kernel.org>, Kevin Hilman <khilman@linaro.org>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+In-Reply-To: <CAPDyKFrushEwW7x_VguPjOnP8BuSO=+tD=DxS9J0JQVfYTgOYA@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1311181010080.1421-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com> <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com> <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com> <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com> <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com> <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com> <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com> <20131115115235.GA2281@intel.com> <20131119013343.GA17294@google.com>
-In-Reply-To: <20131119013343.GA17294@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> The pcie_portdrv .probe() method calls pci_enable_device() once, in
-> pcie_port_device_register(), but the .remove() method calls
-> pci_disable_device() twice, in pcie_port_device_remove() and in
-> pcie_portdrv_remove().
-> 
-> That causes a "disabling already-disabled device" warning when removing a
-> PCIe port device.  This happens all the time when removing Thunderbolt
-> devices, but is also easy to reproduce with, e.g.,
-> "echo 0000:00:1c.3 > /sys/bus/pci/drivers/pcieport/unbind"
-> 
-> This patch removes the disable from pcie_portdrv_remove().
-> 
-> [bhelgaas: changelog, tag for stable]
-> Reported-by: David Bulkow <David.Bulkow@stratus.com>
-> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: stable@vger.kernel.org	# v2.6.32+
+On Mon, 18 Nov 2013, Ulf Hansson wrote:
 
-Hi Bjorn,
-   This issue in X86 seems to be introduced after commit 928bea9 "PCI: Delay enabling bridges until they're needed"
-So this patch needs to back port to 2.6.32+ ?
+> I favour the pm_runtime_no_prevent_suspend API approach, since it
+> would mean a change in behaviour of the PM core.
 
-> ---
->  drivers/pci/pcie/portdrv_pci.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index cd1e57e51aa7..0d8fdc48e642 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -223,7 +223,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  static void pcie_portdrv_remove(struct pci_dev *dev)
->  {
->  	pcie_port_device_remove(dev);
-> -	pci_disable_device(dev);
->  }
->  
->  static int error_detected_iter(struct device *device, void *data)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> .
-> 
+That's exactly why I don't favor it!  :-)
 
+>  I also think that in
+> some cases it could make runtime PM better understandable, for those
+> who are deploying it.
 
--- 
-Thanks!
-Yijing
+I don't see how it would make runtime PM either more or less
+understandable, since the proposed change affects system PM, not
+runtime PM.  On the other hand, it would make the Runtime PM 
+documentation more complicated.
+
+(Also, I think the name "pm_runtime_no_prevent_suspend" is a very bad 
+choice.  It should be something more like 
+"allow_runtime_suspend_during_system_sleep".)
+
+> Another advantage of "pm_runtime_no_prevent_suspend" is that driver's
+> can still easily prevent runtime suspend, during system suspend, by an
+> extra call to "pm_runtime_get*". Typically this could be used when the
+> device is configured for wakeup.
+
+How is this an advantage?  Drivers can accomplish the same thing right 
+now by not doing anything at all.
+
+>  In this case the generic suspend_late
+> approach would not work, since the driver would need to implement it's
+> own .suspend_late callback to handle this.
+
+Actually, drivers would simply need to _avoid_ setting the 
+.suspend_late callback.
+
+Alan Stern
 
