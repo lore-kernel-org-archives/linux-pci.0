@@ -1,69 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f44.google.com ([209.85.128.44]:61391 "EHLO
-	mail-qe0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110Ab3KTMnu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 07:43:50 -0500
-Received: by mail-qe0-f44.google.com with SMTP id b10so169311qen.31
-        for <linux-pci@vger.kernel.org>; Wed, 20 Nov 2013 04:43:48 -0800 (PST)
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:62812 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468Ab3KRSOo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Nov 2013 13:14:44 -0500
+Received: by mail-ie0-f175.google.com with SMTP id u16so9054182iet.20
+        for <linux-pci@vger.kernel.org>; Mon, 18 Nov 2013 10:14:44 -0800 (PST)
+Date: Mon, 18 Nov 2013 11:14:40 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Hugh Dickins <hughd@google.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Li Zefan <lizefan@huawei.com>,
+	Markus Blank-Burian <burian@muenster.de>,
+	Michal Hocko <mhocko@suse.cz>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	David Rientjes <rientjes@google.com>,
+	Ying Han <yinghan@google.com>,
+	Greg Thelen <gthelen@google.com>,
+	Michel Lespinasse <walken@google.com>, cgroups@vger.kernel.org,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Lai Jiangshan <laijs@cn.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Possible regression with cgroups in 3.11
+Message-ID: <20131118181440.GA2996@google.com>
+References: <CA+SBX_Ogo8HP81o+vrJ8ozSBN6gPwzc8WNOV3Uya=4AYv+CCyQ@mail.gmail.com>
+ <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ@mail.gmail.com>
+ <5270BFE7.4000602@huawei.com>
+ <alpine.LNX.2.00.1310301606080.2333@eggly.anvils>
+ <20131031130647.0ff6f2c7@gandalf.local.home>
+ <alpine.LNX.2.00.1310311442030.2633@eggly.anvils>
+ <20131113032804.GB19394@mtj.dyndns.org>
+ <20131113073806.GA23244@mtj.dyndns.org>
+ <20131116002820.GA31073@google.com>
+ <20131116045356.GA5618@mtj.dyndns.org>
 MIME-Version: 1.0
-In-Reply-To: <20131120112303.GA5123@amd.pavel.ucw.cz>
-References: <CAPDyKFpypLVKiOZEweWMig9LrNHcOpNQnm+J3KJ3KzCDBgkv9A@mail.gmail.com>
-	<Pine.LNX.4.44L0.1311191011470.1145-100000@iolanthe.rowland.org>
-	<CAPDyKFopHvAvpb1O__3HoMv2YuhYnVLg5sk+NeRs9tsg8OLSig@mail.gmail.com>
-	<20131120112303.GA5123@amd.pavel.ucw.cz>
-Date: Wed, 20 Nov 2013 13:43:48 +0100
-Message-ID: <CAPDyKFocLDLLp0mJghP-+nwacxM58T3EengqW0vLka=WeRQxvw@mail.gmail.com>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
- system suspend
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131116045356.GA5618@mtj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20 November 2013 12:23, Pavel Machek <pavel@ucw.cz> wrote:
-> On Wed 2013-11-20 11:52:05, Ulf Hansson wrote:
->> On 19 November 2013 16:35, Alan Stern <stern@rowland.harvard.edu> wrote:
->> > On Tue, 19 Nov 2013, Ulf Hansson wrote:
->> >
->> >> At the moment, system PM is already affecting behaviour of runtime PM
->> >> since it is preventing runtime suspend during system suspend.
->> >
->> > Sure.  And that behavior is documented.  In any case, it's a bug for
->> > drivers to depend on runtime suspend for carrying out a system suspend.
->>
->> Why do you say that?
->
-> Because that's the way it is?
->
->> A significant amount of drivers should be able to cope with only the
->> runtime PM callbacks, if only the PM core have respected the drivers
->> in the way my RFC proposes.
->
-> So what? It is not as additional callback is huge burden -- code is
-> the same -- and we do want option of disabling runtime PM.
->
-> Don't make system suspend dependend on runtime PM.
+On Sat, Nov 16, 2013 at 01:53:56PM +0900, Tejun Heo wrote:
+> Hello, Bjorn.
+> 
+> On Fri, Nov 15, 2013 at 05:28:20PM -0700, Bjorn Helgaas wrote:
+> > It would be better to fix PCI so we don't call VF driver .probe() methods
+> > from inside a PF driver .probe() method, but that's a bigger project.
+> 
+> Yeah, if pci doesn't need the recursion, we can simply revert restore
+> the lockdep annoation on work_on_cpu().
+> 
+> > @@ -293,7 +293,9 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+> >  	   its local memory on the right node without any need to
+> >  	   change it. */
+> >  	node = dev_to_node(&dev->dev);
+> > -	if (node >= 0) {
+> > +	preempt_disable();
+> > +
+> > +	if (node >= 0 && node != numa_node_id()) {
+> 
+> A bit of comment here would be nice but yeah I think this should work.
+> Can you please also queue the revert of c2fda509667b ("workqueue:
+> allow work_on_cpu() to be called recursively") after this patch?
+> Please feel free to add my acked-by.
 
-I get your point and for sure I respect it, even if don't agree. :-)
+OK, below are the two patches (Alex's fix + the revert) I propose to
+merge.  Unless there are objections, I'll ask Linus to pull these
+before v3.13-rc1.
 
-Do note that, the intent with my RFC is also to simplify for drivers
-in general using runtime PM. No matter how you put it, the
-consequences of preventing runtime suspend during system suspend are
-causing confusions.
+Bjorn
 
-Kind regards
-Ulf Hansson
 
->
->                                                                 Pavel
-> --
-> (english) http://www.livejournal.com/~pavelmachek
-> (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
+commit 84f23f99b507c2c9247f47d3db0f71a3fd65e3a3
+Author: Alexander Duyck <alexander.h.duyck@intel.com>
+Date:   Mon Nov 18 10:59:59 2013 -0700
+
+    PCI: Avoid unnecessary CPU switch when calling driver .probe() method
+    
+    If we are already on a CPU local to the device, call the driver .probe()
+    method directly without using work_on_cpu().
+    
+    This is a workaround for a lockdep warning in the following scenario:
+    
+      pci_call_probe
+        work_on_cpu(cpu, local_pci_probe, ...)
+          driver .probe
+            pci_enable_sriov
+              ...
+                pci_bus_add_device
+                  ...
+                    pci_call_probe
+                      work_on_cpu(cpu, local_pci_probe, ...)
+    
+    It would be better to fix PCI so we don't call VF driver .probe() methods
+    from inside a PF driver .probe() method, but that's a bigger project.
+    
+    [bhelgaas: disable preemption, open bugzilla, rework comments & changelog]
+    Link: https://bugzilla.kernel.org/show_bug.cgi?id=65071
+    Link: http://lkml.kernel.org/r/CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com
+    Link: http://lkml.kernel.org/r/20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com
+    Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Tejun Heo <tj@kernel.org>
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 9042fdbd7244..add04e70ac2a 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -288,12 +288,24 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 	int error, node;
+ 	struct drv_dev_and_id ddi = { drv, dev, id };
+ 
+-	/* Execute driver initialization on node where the device's
+-	   bus is attached to.  This way the driver likely allocates
+-	   its local memory on the right node without any need to
+-	   change it. */
++	/*
++	 * Execute driver initialization on node where the device is
++	 * attached.  This way the driver likely allocates its local memory
++	 * on the right node.
++	 */
+ 	node = dev_to_node(&dev->dev);
+-	if (node >= 0) {
++	preempt_disable();
++
++	/*
++	 * On NUMA systems, we are likely to call a PF probe function using
++	 * work_on_cpu().  If that probe calls pci_enable_sriov() (which
++	 * adds the VF devices via pci_bus_add_device()), we may re-enter
++	 * this function to call the VF probe function.  Calling
++	 * work_on_cpu() again will cause a lockdep warning.  Since VFs are
++	 * always on the same node as the PF, we can work around this by
++	 * avoiding work_on_cpu() when we're already on the correct node.
++	 */
++	if (node >= 0 && node != numa_node_id()) {
+ 		int cpu;
+ 
+ 		get_online_cpus();
+@@ -305,6 +317,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 		put_online_cpus();
+ 	} else
+ 		error = local_pci_probe(&ddi);
++
++	preempt_enable();
+ 	return error;
+ }
+ 
+commit 2dde5285d06370b2004613ee4fd253e95622af20
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Mon Nov 18 11:00:29 2013 -0700
+
+    Revert "workqueue: allow work_on_cpu() to be called recursively"
+    
+    This reverts commit c2fda509667b0fda4372a237f5a59ea4570b1627.
+    
+    c2fda509667b removed lockdep annotation from work_on_cpu() to work around
+    the PCI path that calls work_on_cpu() from within a work_on_cpu() work item
+    (PF driver .probe() method -> pci_enable_sriov() -> add VFs -> VF driver
+    .probe method).
+    
+    84f23f99b507 ("PCI: Avoid unnecessary CPU switch when calling driver
+    .probe() method) avoids that recursive work_on_cpu() use in a different
+    way, so this revert restores the work_on_cpu() lockdep annotation.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Tejun Heo <tj@kernel.org>
+
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 987293d03ebc..5690b8eabfbc 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2840,19 +2840,6 @@ already_gone:
+ 	return false;
+ }
+ 
+-static bool __flush_work(struct work_struct *work)
+-{
+-	struct wq_barrier barr;
+-
+-	if (start_flush_work(work, &barr)) {
+-		wait_for_completion(&barr.done);
+-		destroy_work_on_stack(&barr.work);
+-		return true;
+-	} else {
+-		return false;
+-	}
+-}
+-
+ /**
+  * flush_work - wait for a work to finish executing the last queueing instance
+  * @work: the work to flush
+@@ -2866,10 +2853,18 @@ static bool __flush_work(struct work_struct *work)
+  */
+ bool flush_work(struct work_struct *work)
+ {
++	struct wq_barrier barr;
++
+ 	lock_map_acquire(&work->lockdep_map);
+ 	lock_map_release(&work->lockdep_map);
+ 
+-	return __flush_work(work);
++	if (start_flush_work(work, &barr)) {
++		wait_for_completion(&barr.done);
++		destroy_work_on_stack(&barr.work);
++		return true;
++	} else {
++		return false;
++	}
+ }
+ EXPORT_SYMBOL_GPL(flush_work);
+ 
+@@ -4814,14 +4809,7 @@ long work_on_cpu(int cpu, long (*fn)(void *), void *arg)
+ 
+ 	INIT_WORK_ONSTACK(&wfc.work, work_for_cpu_fn);
+ 	schedule_work_on(cpu, &wfc.work);
+-
+-	/*
+-	 * The work item is on-stack and can't lead to deadlock through
+-	 * flushing.  Use __flush_work() to avoid spurious lockdep warnings
+-	 * when work_on_cpu()s are nested.
+-	 */
+-	__flush_work(&wfc.work);
+-
++	flush_work(&wfc.work);
+ 	return wfc.ret;
+ }
+ EXPORT_SYMBOL_GPL(work_on_cpu);
