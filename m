@@ -1,107 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21635 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452Ab3K3Wkq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 17:40:46 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 07/12] PCI: Don't use 4G bus address directly in resource allocation
-Date: Sat, 30 Nov 2013 14:40:33 -0800
-Message-Id: <1385851238-21085-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 2/2] PCI: Support PCIe Capability Slot registers only for
+ ports with slots
+To: stable@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	Amos Kong <kongjianjun@gmail.com>,
+	Adam Lee <adam.lee@canonical.com>,
+	linux-kernel@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Thomas Renninger <trenn@suse.de>
+Date: Mon, 18 Nov 2013 12:17:52 -0700
+Message-ID: <20131118191752.26774.25303.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20131118191723.26774.53479.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131118191723.26774.53479.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current we are using PCIBIOS_MAX_MEM_32 (4G limit) directly in the
-pci_bus_alloc_resource to make sure that don't allocate too high
-pref 64bit above 4G in the system that does not support that.
+Commit 6d3a1741f1e648cfbd5a0cc94477a0d5004c6f5e upstream.
 
-That is not right, as allocate_resource() should take resource limit.
+Previously we allowed callers to access Slot Capabilities, Status, and
+Control for Root Ports even if the Root Port did not implement a slot.
+This seems dubious because the spec only requires these registers if a
+slot is implemented.
 
-Add pci_clip_resource() and use it check the pci bus address limit.
+It's true that even Root Ports without slots must have *space* for these
+slot registers, because the Root Capabilities, Status, and Control
+registers are after the slot registers in the capability.  However,
+for a v1 PCIe Capability, the *semantics* of the slot registers are
+undefined unless a slot is implemented.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-By: Jiang Liu <jiang.liu@huawei.com>
+CC: stable@vger.kernel.org	# 3.10.x 3.11.x
 ---
- drivers/pci/bus.c | 41 ++++++++++++++++++++++++++++++++++-------
- 1 file changed, 34 insertions(+), 7 deletions(-)
+ drivers/pci/access.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 1ffd95b..e75bb17 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -98,6 +98,25 @@ void pci_bus_remove_resources(struct pci_bus *bus)
- 	}
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index e26c3bd9aca4..bcd92b629d3c 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -499,8 +499,8 @@ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+ 	int type = pci_pcie_type(dev);
+ 
+ 	return pcie_cap_version(dev) > 1 ||
+-	       type == PCI_EXP_TYPE_ROOT_PORT ||
+-	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
++	       ((type == PCI_EXP_TYPE_ROOT_PORT ||
++	         type == PCI_EXP_TYPE_DOWNSTREAM) &&
+ 		pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
  }
  
-+static struct pci_bus_region pci_mem_32 = {0, 0xffffffff};
-+
-+static void pci_clip_resource(struct resource *res, struct pci_bus *bus,
-+			      struct pci_bus_region *region)
-+{
-+	struct pci_bus_region r;
-+
-+	__pcibios_resource_to_bus(bus, &r, res);
-+	if (r.start < region->start)
-+		r.start = region->start;
-+	if (r.end > region->end)
-+		r.end = region->end;
-+
-+	if (r.end < r.start)
-+		res->end = res->start - 1;
-+	else
-+		__pcibios_bus_to_resource(bus, res, &r);
-+}
-+
- /**
-  * pci_bus_alloc_resource - allocate a resource from a parent bus
-  * @bus: PCI bus
-@@ -125,15 +144,12 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- {
- 	int i, ret = -ENOMEM;
- 	struct resource *r;
--	resource_size_t max = -1;
- 
- 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
- 
--	/* don't allocate too high if the pref mem doesn't support 64bit*/
--	if (!(res->flags & IORESOURCE_MEM_64))
--		max = PCIBIOS_MAX_MEM_32;
--
- 	pci_bus_for_each_resource(bus, r, i) {
-+		struct resource avail;
-+
- 		if (!r)
- 			continue;
- 
-@@ -147,10 +163,21 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 		    !(res->flags & IORESOURCE_PREFETCH))
- 			continue;
- 
-+		/*
-+		 * don't allocate too high if the pref mem doesn't
-+		 * support 64bit.
-+		 */
-+		avail = *r;
-+		if (!(res->flags & IORESOURCE_MEM_64)) {
-+			pci_clip_resource(&avail, bus, &pci_mem_32);
-+			if (!resource_size(&avail))
-+				continue;
-+		}
-+
- 		/* Ok, try it out.. */
- 		ret = allocate_resource(r, res, size,
--					r->start ? : min,
--					max, align,
-+					max(avail.start, r->start ? : min),
-+					avail.end, align,
- 					alignf, alignf_data);
- 		if (ret == 0)
- 			break;
--- 
-1.8.1.4
 
