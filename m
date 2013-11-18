@@ -1,236 +1,202 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [Update][PATCH 4/6] ACPI / hotplug: Simplify device ejection routines
-Date: Thu, 07 Nov 2013 01:14:57 +0100
-Message-ID: <1642586.5aH3MlB2GZ@vostro.rjw.lan>
-In-Reply-To: <1383780421.1847.50.camel@misato.fc.hp.com>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <1602442.26cFiMyQkW@vostro.rjw.lan> <1383780421.1847.50.camel@misato.fc.hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:57182 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750731Ab3KRFqw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Nov 2013 00:46:52 -0500
+Message-ID: <5289A9B8.3010408@ti.com>
+Date: Mon, 18 Nov 2013 11:16:32 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Marek Vasut <marex@denx.de>, Jingoo Han <jg1.han@samsung.com>
+CC: "'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	<linux-pci@vger.kernel.org>,
+	"'Mohit KUMAR DCG'" <Mohit.KUMAR@st.com>,
+	"'Ajay KHANDELWAL'" <ajay.khandelwal@st.com>,
+	"'Tim Harvey'" <tharvey@gateworks.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>
+Subject: Re: [QUERY] Number of address translation regions in designware
+References: <52652BF1.4040507@ti.com> <5285B0E7.5000802@ti.com> <000901cee1c9$d8ec6450$8ac52cf0$%han@samsung.com> <201311151637.53867.marex@denx.de>
+In-Reply-To: <201311151637.53867.marex@denx.de>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, November 06, 2013 04:27:01 PM Toshi Kani wrote:
-> On Mon, 2013-11-04 at 14:36 +0100, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Simplify handle_root_bridge_removal() and acpi_eject_store() by
-> > getting rid of struct acpi_eject_event and passing device objects
-> > directly to async routines executed via acpi_os_hotplug_execute().
->  :
-> >  static ssize_t
-> >  acpi_eject_store(struct device *d, struct device_attribute *attr,
-> >  		const char *buf, size_t count)
-> >  {
-> >  	struct acpi_device *acpi_device = to_acpi_device(d);
-> > -	struct acpi_eject_event *ej_event;
-> >  	acpi_object_type not_used;
-> >  	acpi_status status;
-> > -	int ret;
-> >  
-> >  	if (!count || buf[0] != '1')
-> >  		return -EINVAL;
-> > @@ -518,28 +519,17 @@ acpi_eject_store(struct device *d, struc
-> >  	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
-> >  		return -ENODEV;
-> >  
-> > -	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
-> > -	if (!ej_event) {
-> > -		ret = -ENOMEM;
-> > -		goto err_out;
-> > -	}
-> >  	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
-> >  				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
-> > -	ej_event->device = acpi_device;
-> > -	ej_event->event = ACPI_OST_EC_OSPM_EJECT;
-> >  	get_device(&acpi_device->dev);
-> > -	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
-> > +	status = acpi_os_hotplug_execute(acpi_eject_store_work, acpi_device);
-> >  	if (ACPI_SUCCESS(status))
-> >  		return count;
-> >  
-> >  	put_device(&acpi_device->dev);
-> > -	kfree(ej_event);
-> > -	ret = status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
+Hi,
+On Friday 15 November 2013 09:07 PM, Marek Vasut wrote:
+> Hi Kishon, Jingoo,
 > 
-> Why are you deleting the above line as part of this change?
+>> On Friday, November 15, 2013 2:28 PM, Kishon Vijay Abraham I wrote:
+>>> On Friday 15 November 2013 06:10 AM, Marek Vasut wrote:
+>>>> Hi Kishon,
+>>>>
+>>>> just curious, what's the current status of the DWC PCIe driver? How's
+>>>> the iATU issue going? Can you please update us a little?
+>>>
+>>> I was able to get it working in DRA7. Few of the dependent stuffs are not
+>>> in mainline yet (some clock related patches, rest framework changes, PHY
+>>> changes). Will post a RFC soon for pcie only part.
+>>
+>> OK, I see.
+>> If you send the RFC patch, I will review ant test your patch
+>> as soon as possible. Thank you for your effort. :-)
+> 
+> DTTO here, I can test it on MX6 as well. If you can roll out a prototype, I'm 
+> sure we can help in some ways too :)
 
-Ah, because I forgot that acpi_os_hotplug_execute() can also return AE_NO_MEMORY. :-)
+huh.. I didn't change much in designware code that would affect other
+platforms. I just added a property base_mask that should be populated from the
+dt data. (if it's not populated from the dt data, it will take the default
+value of all f's). Here is the patch anyway.
 
-Good catch, updated pach follows.
+Thanks
+Kishon
 
-Thanks,
-Rafael
+commit b91b61d594f293d994d87f10eb8a1a3b2e5f8977
+Author: Kishon Vijay Abraham I <kishon@ti.com>
+Date:   Wed Oct 30 14:51:58 2013 +0530
 
----
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / hotplug: Simplify device ejection routines
+    pci: host: pcie-designware: Use *base-mask* for configuring the iATU
 
-Simplify handle_root_bridge_removal() and acpi_eject_store() by
-getting rid of struct acpi_eject_event and passing device objects
-directly to async routines executed via acpi_os_hotplug_execute().
+    In DRA7, the cpu sees 32bit address, but the pcie controller can see only 28bit
+    address. So whenever the cpu issues a read/write request, the 4 most
+    significant bits are used by L3 to determine the target controller.
+    For example, the cpu reserves 0x2000_0000 - 0x2FFF_FFFF for PCIe controller but
+    the PCIe controller will see only (0x000_0000 - 0xFFF_FFF). So for programming
+    the outbound translation window the *base* should be programmed as 0x000_0000.
+    Whenever we try to write to say 0x2000_0000, it will be translated to whatever
+    we have programmed in the translation window with base as 0x000_0000.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/pci_root.c |   20 ++------------------
- drivers/acpi/scan.c     |   46 ++++++++++++++++++----------------------------
- include/acpi/acpi_bus.h |    5 -----
- 3 files changed, 20 insertions(+), 51 deletions(-)
+    Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -593,27 +593,11 @@ static void handle_root_bridge_insertion
- static void handle_root_bridge_removal(struct acpi_device *device)
- {
- 	acpi_status status;
--	struct acpi_eject_event *ej_event;
--
--	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
--	if (!ej_event) {
--		/* Inform firmware the hot-remove operation has error */
--		(void) acpi_evaluate_hotplug_ost(device->handle,
--					ACPI_NOTIFY_EJECT_REQUEST,
--					ACPI_OST_SC_NON_SPECIFIC_FAILURE,
--					NULL);
--		return;
--	}
--
--	ej_event->device = device;
--	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
- 
- 	get_device(&device->dev);
--	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
--	if (ACPI_FAILURE(status)) {
-+	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, device);
-+	if (ACPI_FAILURE(status))
- 		put_device(&device->dev);
--		kfree(ej_event);
--	}
- }
- 
- static void _handle_hotplug_event_root(struct work_struct *work)
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -441,18 +441,8 @@ static void acpi_hotplug_notify_cb(acpi_
- 					  NULL);
- }
- 
--/**
-- * acpi_bus_hot_remove_device: hot-remove a device and its children
-- * @context: struct acpi_eject_event pointer (freed in this func)
-- *
-- * Hot-remove a device and its children. This function frees up the
-- * memory space passed by arg context, so that the caller may call
-- * this function asynchronously through acpi_os_hotplug_execute().
-- */
--void acpi_bus_hot_remove_device(void *context)
-+void __acpi_bus_hot_remove_device(struct acpi_device *device, u32 ost_src)
- {
--	struct acpi_eject_event *ej_event = context;
--	struct acpi_device *device = ej_event->device;
- 	acpi_handle handle = device->handle;
- 	int error;
- 
-@@ -461,13 +451,21 @@ void acpi_bus_hot_remove_device(void *co
- 
- 	error = acpi_scan_hot_remove(device);
- 	if (error && handle)
--		acpi_evaluate_hotplug_ost(handle, ej_event->event,
-+		acpi_evaluate_hotplug_ost(handle, ost_src,
- 					  ACPI_OST_SC_NON_SPECIFIC_FAILURE,
- 					  NULL);
- 
- 	mutex_unlock(&acpi_scan_lock);
- 	unlock_device_hotplug();
--	kfree(context);
-+}
-+
-+/**
-+ * acpi_bus_hot_remove_device: Hot-remove a device and its children.
-+ * @context: Address of the ACPI device object to hot-remove.
-+ */
-+void acpi_bus_hot_remove_device(void *context)
-+{
-+	__acpi_bus_hot_remove_device(context, ACPI_NOTIFY_EJECT_REQUEST);
- }
- EXPORT_SYMBOL(acpi_bus_hot_remove_device);
- 
-@@ -497,15 +495,18 @@ static ssize_t power_state_show(struct d
- 
- static DEVICE_ATTR(power_state, 0444, power_state_show, NULL);
- 
-+static void acpi_eject_store_work(void *context)
-+{
-+	__acpi_bus_hot_remove_device(context, ACPI_OST_EC_OSPM_EJECT);
-+}
-+
- static ssize_t
- acpi_eject_store(struct device *d, struct device_attribute *attr,
- 		const char *buf, size_t count)
- {
- 	struct acpi_device *acpi_device = to_acpi_device(d);
--	struct acpi_eject_event *ej_event;
- 	acpi_object_type not_used;
- 	acpi_status status;
--	int ret;
- 
- 	if (!count || buf[0] != '1')
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index d5d26d4..fc04ab7 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -25,6 +25,7 @@ Optional properties for fsl,imx6q-pcie
+ - power-on-gpio: gpio pin number of power-enable signal
+ - wake-up-gpio: gpio pin number of incoming wakeup signal
+ - disable-gpio: gpio pin number of outgoing rfkill/endpoint disable signal
++- base-mask: address mask for the PCIe controller target port
+
+ Example:
+
+diff --git a/drivers/pci/host/pcie-designware.c
+b/drivers/pci/host/pcie-designware.c
+index f879116..fef64cf 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -440,6 +440,9 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
  		return -EINVAL;
-@@ -518,28 +519,17 @@ acpi_eject_store(struct device *d, struc
- 	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
- 		return -ENODEV;
- 
--	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
--	if (!ej_event) {
--		ret = -ENOMEM;
--		goto err_out;
--	}
- 	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
- 				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
--	ej_event->device = acpi_device;
--	ej_event->event = ACPI_OST_EC_OSPM_EJECT;
- 	get_device(&acpi_device->dev);
--	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
-+	status = acpi_os_hotplug_execute(acpi_eject_store_work, acpi_device);
- 	if (ACPI_SUCCESS(status))
- 		return count;
- 
- 	put_device(&acpi_device->dev);
--	kfree(ej_event);
--	ret = status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
--
-- err_out:
- 	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
- 				  ACPI_OST_SC_NON_SPECIFIC_FAILURE, NULL);
--	return ret;
-+	return status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
- }
- 
- static DEVICE_ATTR(eject, 0200, NULL, acpi_eject_store);
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -339,11 +339,6 @@ struct acpi_bus_event {
- 	u32 data;
- };
- 
--struct acpi_eject_event {
--	struct acpi_device	*device;
--	u32		event;
--};
--
- struct acpi_hp_work {
- 	struct work_struct work;
- 	acpi_handle handle;
+ 	}
+
++	if (of_property_read_u64(np, "base-mask", &pp->base_mask))
++		pp->base_mask = ~(0x0ULL);
++
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
+ 					MAX_MSI_IRQS, &msi_domain_ops,
+@@ -479,12 +482,15 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+
+ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
+ {
++	u64 cfg0_base;
++
++	cfg0_base = pp->cfg0_base & pp->base_mask;
+ 	/* Program viewport 0 : OUTBOUND : CFG0 */
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+ 			  PCIE_ATU_VIEWPORT);
+-	dw_pcie_writel_rc(pp, pp->cfg0_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->cfg0_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->cfg0_base + pp->config.cfg0_size - 1,
++	dw_pcie_writel_rc(pp, cfg0_base, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (cfg0_base >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, cfg0_base + pp->config.cfg0_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
+@@ -494,14 +500,17 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port
+*pp, u32 busdev)
+
+ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
+ {
++	u64 cfg1_base;
++
++	cfg1_base = pp->cfg1_base & pp->base_mask;
+ 	/* Program viewport 1 : OUTBOUND : CFG1 */
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+-	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
++	dw_pcie_writel_rc(pp, cfg1_base, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, cfg1_base + pp->config.cfg1_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
+@@ -509,14 +518,17 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port
+*pp, u32 busdev)
+
+ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+ {
++	u64 mem_base;
++
++	mem_base = pp->mem_base & pp->base_mask;
+ 	/* Program viewport 0 : OUTBOUND : MEM */
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+-	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
++	dw_pcie_writel_rc(pp, mem_base, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (mem_base >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, mem_base + pp->config.mem_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
+@@ -525,14 +537,17 @@ static void dw_pcie_prog_viewport_mem_outbound(struct
+pcie_port *pp)
+
+ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
+ {
++	u64 io_base;
++
++	io_base = pp->io_base & pp->base_mask;
+ 	/* Program viewport 1 : OUTBOUND : IO */
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+-	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
+-	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
+-	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
++	dw_pcie_writel_rc(pp, io_base, PCIE_ATU_LOWER_BASE);
++	dw_pcie_writel_rc(pp, (io_base >> 32), PCIE_ATU_UPPER_BASE);
++	dw_pcie_writel_rc(pp, io_base + pp->config.io_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
+diff --git a/drivers/pci/host/pcie-designware.h
+b/drivers/pci/host/pcie-designware.h
+index c15379b..2fe1dc5 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -35,6 +35,7 @@ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
+ 	void __iomem		*dbi_base;
++	u64			base_mask;
+ 	u64			cfg0_base;
+ 	void __iomem		*va_cfg0_base;
+ 	u64			cfg1_base;
+> 
+> Best regards,
+> Marek Vasut
+> 
 
