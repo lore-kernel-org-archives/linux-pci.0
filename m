@@ -1,32 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 2/3] ACPI / hotplug: Fix PCI host bridge hot removal
+Date: Mon, 18 Nov 2013 22:39:25 +0100
+Message-ID: <11362197.FWMPl6Gp0A@vostro.rjw.lan>
+In-Reply-To: <1384798205.1791.14.camel@misato.fc.hp.com>
+References: <2434673.zhjYZOTQ4A@vostro.rjw.lan> <3206422.AfXMUDqMXZ@vostro.rjw.lan> <1384798205.1791.14.camel@misato.fc.hp.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5JVNsYxr6ka5KwLtpv7LX74SmkHsb1jED31jXfdSsxAg@mail.gmail.com>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
-	<1385429290-25397-9-git-send-email-yinghai@kernel.org>
-	<CAErSpo5bxRJpiO8QmEQBkRGGKkTOEjnQBFRsZJG8CsaJ5JJkJg@mail.gmail.com>
-	<20131126065944.GA13781@yanx>
-	<CAErSpo5JVNsYxr6ka5KwLtpv7LX74SmkHsb1jED31jXfdSsxAg@mail.gmail.com>
-Date: Tue, 26 Nov 2013 14:00:10 -0800
-Message-ID: <CAE9FiQX0-gmijLmNLf3RWKcwDA-6a6TpPQNwj7tkRnF=990F2Q@mail.gmail.com>
-Subject: Re: [PATCH v2 08/10] PCI: Try best to allocate pref mmio 64bit above 4g
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 9:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> I don't know what "MEM_64 for bridge get reset" means -- there are a
-> couple places that clear IORESOURCE_MEM_64, but they don't seem
-> relevant.
+On Monday, November 18, 2013 11:10:05 AM Toshi Kani wrote:
+> On Thu, 2013-11-14 at 00:16 +0100, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Since the PCI host bridge scan handler does not set hotplug.enabled,
+> > the check of it in acpi_bus_device_eject() effectively prevents the
+> > root bridge hot removal from working after commit a3b1b1ef78cd
+> > (ACPI / hotplug: Merge device hot-removal routines).  However, that
+> > check is not necessary, because the other acpi_bus_device_eject()
+> > users, acpi_hotplug_notify_cb and acpi_eject_store(), do the same
+> > check by themselves before executing that function.
+> > 
+> > For this reason, remove the scan handler check from
+> > acpi_bus_device_eject() to make PCI hot bridge hot removal work
+> > again.
+> 
+> I am curious why the PCI host bridge scan handler does not set
+> hotplug.enabled.  Is this how it disables hotplug via sysfs eject but
+> enables via ACPI notification? 
 
-during size bridge resource, we try to clear bridge mmio64 pref MEM_64
-bit in bridge resource flags.
-if one children pref mmio does not support 64bit pref mmio.
+It just doesn't register for hotplug at all.  I guess it could set that
+bit alone, but then it would be quite confusing and the check is not
+necessary anyway.
 
-Yinghai
+Thanks,
+Rafael
+
