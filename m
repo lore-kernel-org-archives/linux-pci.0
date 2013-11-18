@@ -1,44 +1,54 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 14 Nov 2013 11:43:48 +0900
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Message-ID: <1384816407.1791.19.camel@misato.fc.hp.com>
+Subject: Re: [PATCH 2/3] ACPI / hotplug: Fix PCI host bridge hot removal
+From: Toshi Kani <toshi.kani@hp.com>
 To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Luck, Tony" <tony.luck@intel.com>
-Subject: Re: [PATCH 2/2] ACPI / bind: Use (put|get)_device() on ACPI device
- objects too
-Message-ID: <20131114024348.GA9899@kroah.com>
-References: <3268437.YsusHvklcv@vostro.rjw.lan>
- <1803808.ghCmmaO2Cj@vostro.rjw.lan>
- <9712243.It8gvaRCs0@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9712243.It8gvaRCs0@vostro.rjw.lan>
+	Yinghai Lu <yinghai@kernel.org>
+Date: Mon, 18 Nov 2013 16:13:27 -0700
+In-Reply-To: <11362197.FWMPl6Gp0A@vostro.rjw.lan>
+References: <2434673.zhjYZOTQ4A@vostro.rjw.lan>
+	 <3206422.AfXMUDqMXZ@vostro.rjw.lan>
+	 <1384798205.1791.14.camel@misato.fc.hp.com>
+	 <11362197.FWMPl6Gp0A@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 14, 2013 at 12:26:47AM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, 2013-11-18 at 22:39 +0100, Rafael J. Wysocki wrote:
+> On Monday, November 18, 2013 11:10:05 AM Toshi Kani wrote:
+> > On Thu, 2013-11-14 at 00:16 +0100, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > 
+> > > Since the PCI host bridge scan handler does not set hotplug.enabled,
+> > > the check of it in acpi_bus_device_eject() effectively prevents the
+> > > root bridge hot removal from working after commit a3b1b1ef78cd
+> > > (ACPI / hotplug: Merge device hot-removal routines).  However, that
+> > > check is not necessary, because the other acpi_bus_device_eject()
+> > > users, acpi_hotplug_notify_cb and acpi_eject_store(), do the same
+> > > check by themselves before executing that function.
+> > > 
+> > > For this reason, remove the scan handler check from
+> > > acpi_bus_device_eject() to make PCI hot bridge hot removal work
+> > > again.
+> > 
+> > I am curious why the PCI host bridge scan handler does not set
+> > hotplug.enabled.  Is this how it disables hotplug via sysfs eject but
+> > enables via ACPI notification? 
 > 
-> When associating a "physical" device with an ACPI device object
-> acpi_bind_one() only uses get_device() to increment the reference
-> counter of the former, but there is no reason not to do that with
-> the latter too.  Among other things, that may help to avoid
-> use-after-free when an ACPI device object is freed without calling
-> acpi_unbind_one() for all "physical" devices associated with it
-> (that only can happen in buggy code, but then it's better if the
-> kernel doesn't crash as a result of a bug).
-> 
-> For this reason, modify acpi_bind_one() to apply get_device() to
-> the ACPI device object too and update acpi_unbind_one() to drop
-> that reference using put_device() as appropriate.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> It just doesn't register for hotplug at all.  I guess it could set that
+> bit alone, but then it would be quite confusing and the check is not
+> necessary anyway.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+I see.  Given how the PCI host bridge scan handler is integrated today,
+the change looks reasonable to me.
+
+Acked-by: Toshi Kani <toshi.kani@hp.com>
+
+Thanks,
+-Toshi
+
