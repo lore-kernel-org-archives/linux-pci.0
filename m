@@ -1,45 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:55656 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752720Ab3KTAHz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 19:07:55 -0500
-Received: by mail-ie0-f170.google.com with SMTP id qd12so3204428ieb.1
-        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 16:07:55 -0800 (PST)
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:45708 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752870Ab3KSXBt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 18:01:49 -0500
+Message-ID: <528BEDD7.6000308@gmail.com>
+Date: Tue, 19 Nov 2013 15:01:43 -0800
+From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5bYwgK618AOgvD=mgbfjcLLGE3CVw1SN3sP3PqRaCk5A@mail.gmail.com>
-References: <1383749353-3510-1-git-send-email-ethan.kernel@gmail.com> <CAErSpo5bYwgK618AOgvD=mgbfjcLLGE3CVw1SN3sP3PqRaCk5A@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 19 Nov 2013 17:07:35 -0700
-Message-ID: <CAErSpo4ReYw5koMrwcuNQj7yfFXvDnuZGiRc70mekv6L40KjWw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Init NumVFs register to zero in sriov_init()
-To: "ethan.zhao" <ethan.kernel@gmail.com>
-Cc: Yu Zhao <yu.zhao@intel.com>, Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+To: Linux-PCI <linux-pci@vger.kernel.org>,
+	Linux-hotplug <linux-hotplug@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: [RFC PATCH 3/4] pciehp: Ensure very fast hotplug events are also
+ processed.
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 19, 2013 at 3:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc linux-pci]
->
-> On Wed, Nov 6, 2013 at 7:49 AM, ethan.zhao <ethan.kernel@gmail.com> wrote:
->> Though no specification about NumVFs register initial value after POST, to void the confusion
->> lspci output as following before VF was enabled, we should clear the NumVFs value left by BIOS
->> to zero:
->>
->> $lspci -vvv -s 03:00.0
->> Ethernet controller: Intel Corporation 82599EB 10-Gigabit SFI/SFP+ Network Connection (rev 01)
->> ~
->> Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
->>                 IOVCap: Migration-, Interrupt Message Number: 000
->>                 IOVCtl: Enable+ Migration- Interrupt- MSE+ ARIHierarchy+
->>                 IOVSta: Migration-
->>                 Initial VFs: 64, Total VFs: 64, Number of VFs: 64, Function Dependency Link: 00
->>                                                               ^dazed !
 
-Did you mean to show lspci output from before SR-IOV was enabled?  It
-looks like SR-IOV is enabled here, so I don't think your patch would
-change this output at all.
+Today, this is how all the hotplug and unplug events work:
 
-Bjorn
+Hotplug / Removal needs to be done
+  => Set slot->state (protected by slot->lock) to either
+    POWERON_STATE (for enabling) or POWEROFF_STATE (for disabling).
+  => Submit the work item for pciehp_power_thread() to slot->wq.
+
+Problem:
+  There is a problem if the hotplug events can happen fast enough that
+  they do not give SW enough time to add or remove the new devices.
+
+  => Assume: Event for unplug comes (e.g. surprise removal). But
+     before the pciehp_power_thread() work item was executed, the
+     card was replaced by another card, causing surprise hotplug event.
+
+  => What goes wrong:
+    => The hot-removal event sets slot->state to POWEROFF_STATE, and
+       schedules the pciehp_power_thread().
+    => The hot-add event sets slot->state to POWERON_STATE, and
+       schedules the pciehp_power_thread().
+    => Now the pciehp_power_thread() is scheduled twice, and on both
+       occasions it will find POWERON_STATE and will try to add the
+       devices on the slot, and will fail complaining that the devices
+       already exist.
+
+  => Why this is a problem: If the device was replaced between the hot
+     removal and hot-add, then we should unload the old driver and
+     reload the new one. This does not happen today. The kernel or the
+     driver is not even aware that the device was replaced.
+
+     The problem is that the pciehp_power_thread() only looks at the
+     slot->state which would only contain the *latest* state - not
+     the actual event (add / remove) that was the intent of the IRQ
+     handler who submitted the work.
+
+What this patch does:
+
+  => Hotplug events pass on an actual request (for addition or removal)
+     to pciehp_power_thread() which is local to that work item
+     submission.
+
+  => pciehp_power_thread() does not need to look at slote->state and
+     hence no locks needed in that.
+
+  => Essentially this results in all the hotplug and unplug events
+     "replayed" by pciehp_power_thread().
+
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c |   32 +++++++++++++++++++++++---------
+ 1 file changed, 23 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 3899b52..83dbe08 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -299,6 +299,9 @@ static int remove_board(struct slot *p_slot)
+ struct power_work_info {
+ 	struct slot *p_slot;
+ 	struct work_struct work;
++	unsigned int req;
++#define DISABLE_REQ 0
++#define ENABLE_REQ  1
+ };
+ 
+ /**
+@@ -314,10 +317,8 @@ static void pciehp_power_thread(struct work_struct *work)
+ 		container_of(work, struct power_work_info, work);
+ 	struct slot *p_slot = info->p_slot;
+ 
+-	mutex_lock(&p_slot->lock);
+-	switch (p_slot->state) {
+-	case POWEROFF_STATE:
+-		mutex_unlock(&p_slot->lock);
++	switch (info->req) {
++	case DISABLE_REQ:
+ 		ctrl_dbg(p_slot->ctrl,
+ 			 "Disabling domain:bus:device=%04x:%02x:00\n",
+ 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
+@@ -325,18 +326,22 @@ static void pciehp_power_thread(struct work_struct *work)
+ 		pciehp_disable_slot(p_slot);
+ 		mutex_lock(&p_slot->lock);
+ 		p_slot->state = STATIC_STATE;
+-		break;
+-	case POWERON_STATE:
+ 		mutex_unlock(&p_slot->lock);
++		break;
++	case ENABLE_REQ:
++		ctrl_dbg(p_slot->ctrl,
++			 "Enabling domain:bus:device=%04x:%02x:00\n",
++			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
++			 p_slot->ctrl->pcie->port->subordinate->number);
+ 		if (pciehp_enable_slot(p_slot) && PWR_LED(p_slot->ctrl))
+ 			pciehp_green_led_off(p_slot);
+ 		mutex_lock(&p_slot->lock);
+ 		p_slot->state = STATIC_STATE;
++		mutex_unlock(&p_slot->lock);
+ 		break;
+ 	default:
+ 		break;
+ 	}
+-	mutex_unlock(&p_slot->lock);
+ 
+ 	kfree(info);
+ }
+@@ -359,9 +364,11 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
+ 	switch (p_slot->state) {
+ 	case BLINKINGOFF_STATE:
+ 		p_slot->state = POWEROFF_STATE;
++		info->req = DISABLE_REQ;
+ 		break;
+ 	case BLINKINGON_STATE:
+ 		p_slot->state = POWERON_STATE;
++		info->req = ENABLE_REQ;
+ 		break;
+ 	default:
+ 		kfree(info);
+@@ -457,10 +464,13 @@ static void handle_surprise_event(struct slot *p_slot)
+ 	INIT_WORK(&info->work, pciehp_power_thread);
+ 
+ 	pciehp_get_adapter_status(p_slot, &getstatus);
+-	if (!getstatus)
++	if (!getstatus) {
+ 		p_slot->state = POWEROFF_STATE;
+-	else
++		info->req = DISABLE_REQ;
++	} else {
+ 		p_slot->state = POWERON_STATE;
++		info->req = ENABLE_REQ;
++	}
+ 
+ 	queue_work(p_slot->wq, &info->work);
+ }
+@@ -489,6 +499,7 @@ static void handle_link_up_event(struct slot *p_slot)
+ 		/* Fall through */
+ 	case STATIC_STATE:
+ 		p_slot->state = POWERON_STATE;
++		info->req = ENABLE_REQ;
+ 		queue_work(p_slot->wq, &info->work);
+ 		break;
+ 	case POWERON_STATE:
+@@ -502,6 +513,7 @@ static void handle_link_up_event(struct slot *p_slot)
+ 			  "Link Up event queued on slot(%s): currently getting powered off\n",
+ 			  slot_name(p_slot));
+ 		p_slot->state = POWERON_STATE;
++		info->req = ENABLE_REQ;
+ 		queue_work(p_slot->wq, &info->work);
+ 		break;
+ 	default:
+@@ -536,6 +548,7 @@ static void handle_link_down_event(struct slot *p_slot)
+ 		/* Fall through */
+ 	case STATIC_STATE:
+ 		p_slot->state = POWEROFF_STATE;
++		info->req = DISABLE_REQ;
+ 		queue_work(p_slot->wq, &info->work);
+ 		break;
+ 	case POWEROFF_STATE:
+@@ -549,6 +562,7 @@ static void handle_link_down_event(struct slot *p_slot)
+ 			  "Link Down event queued on slot(%s): currently getting powered on\n",
+ 			  slot_name(p_slot));
+ 		p_slot->state = POWEROFF_STATE;
++		info->req = DISABLE_REQ;
+ 		queue_work(p_slot->wq, &info->work);
+ 		break;
+ 	default:
+-- 
+1.7.9.5
+
