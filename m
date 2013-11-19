@@ -1,110 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44734 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754507Ab3KYQiX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Nov 2013 11:38:23 -0500
-Message-ID: <1385397493.2879.557.camel@ul30vt.home>
-Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bharat Bhushan <Bharat.Bhushan@freescale.com>
-Cc: Scott Wood <scottwood@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 25 Nov 2013 09:38:13 -0700
-In-Reply-To: <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:29095
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751464Ab3KSFXb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 00:23:31 -0500
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
+	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 2/9 v2] pci: msi: expose msi region information functions
+Date: Tue, 19 Nov 2013 10:47:06 +0530
+Message-ID: <1384838233-24847-3-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
 References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1384973243.2879.361.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385066603.2879.414.camel@ul30vt.home>
-	 <1385066835.1403.489.camel@snotra.buserror.net>
-	 <1385067648.2879.421.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-11-25 at 05:33 +0000, Bharat Bhushan wrote:
-> 
-> > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Friday, November 22, 2013 2:31 AM
-> > To: Wood Scott-B07421
-> > Cc: Bhushan Bharat-R65777; linux-pci@vger.kernel.org; agraf@suse.de; Yoder
-> > Stuart-B08248; iommu@lists.linux-foundation.org; bhelgaas@google.com; linuxppc-
-> > dev@lists.ozlabs.org; linux-kernel@vger.kernel.org
-> > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-> > 
-> > On Thu, 2013-11-21 at 14:47 -0600, Scott Wood wrote:
-> > > On Thu, 2013-11-21 at 13:43 -0700, Alex Williamson wrote:
-> > > > On Thu, 2013-11-21 at 11:20 +0000, Bharat Bhushan wrote:
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > > > > Sent: Thursday, November 21, 2013 12:17 AM
-> > > > > > To: Bhushan Bharat-R65777
-> > > > > > Cc: joro@8bytes.org; bhelgaas@google.com; agraf@suse.de; Wood
-> > > > > > Scott-B07421; Yoder Stuart-B08248;
-> > > > > > iommu@lists.linux-foundation.org; linux- pci@vger.kernel.org;
-> > > > > > linuxppc-dev@lists.ozlabs.org; linux- kernel@vger.kernel.org;
-> > > > > > Bhushan Bharat-R65777
-> > > > > > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale
-> > > > > > IOMMU (PAMU)
-> > > > > >
-> > > > > > Is VFIO_IOMMU_PAMU_GET_MSI_BANK_COUNT per aperture (ie. each
-> > > > > > vfio user has $COUNT regions at their disposal exclusively)?
-> > > > >
-> > > > > Number of msi-bank count is system wide and not per aperture, But will be
-> > setting windows for banks in the device aperture.
-> > > > > So say if we are direct assigning 2 pci device (both have different iommu
-> > group, so 2 aperture in iommu) to VM.
-> > > > > Now qemu can make only one call to know how many msi-banks are there but
-> > it must set sub-windows for all banks for both pci device in its respective
-> > aperture.
-> > > >
-> > > > I'm still confused.  What I want to make sure of is that the banks
-> > > > are independent per aperture.  For instance, if we have two separate
-> > > > userspace processes operating independently and they both chose to
-> > > > use msi bank zero for their device, that's bank zero within each
-> > > > aperture and doesn't interfere.  Or another way to ask is can a
-> > > > malicious user interfere with other users by using the wrong bank.
-> > > > Thanks,
-> > >
-> > > They can interfere.
-> 
-> Want to be sure of how they can interfere?
+So by now we have defined all the interfaces for getting the msi region,
+this patch expose the interface to linux subsystem. These will be used by
+vfio subsystem for setting up iommu for MSI interrupt of direct assignment
+devices.
 
-What happens if more than one user selects the same MSI bank?
-Minimally, wouldn't that result in the IOMMU blocking transactions from
-the previous user once the new user activates their mapping?
+Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+---
+v1->v2
+ - None
 
-> >>  With this hardware, the only way to prevent that
-> > > is to make sure that a bank is not shared by multiple protection contexts.
-> > > For some of our users, though, I believe preventing this is less
-> > > important than the performance benefit.
-> 
-> So should we let this patch series in without protection?
+ include/linux/pci.h |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-No.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index da172f9..c587034 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1142,6 +1142,7 @@ struct msix_entry {
+ 	u16	entry;	/* driver uses to specify entry, OS writes */
+ };
+ 
++struct msi_region;
+ 
+ #ifndef CONFIG_PCI_MSI
+ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+@@ -1184,6 +1185,16 @@ static inline int pci_msi_enabled(void)
+ {
+ 	return 0;
+ }
++
++static inline int msi_get_region_count(void)
++{
++	return 0;
++}
++
++static inline int msi_get_region(int region_num, struct msi_region *region)
++{
++	return 0;
++}
+ #else
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+@@ -1196,6 +1207,8 @@ void pci_disable_msix(struct pci_dev *dev);
+ void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+ void pci_restore_msi_state(struct pci_dev *dev);
+ int pci_msi_enabled(void);
++int msi_get_region_count(void);
++int msi_get_region(int region_num, struct msi_region *region);
+ #endif
+ 
+ #ifdef CONFIG_PCIEPORTBUS
+-- 
+1.7.0.4
 
-> > 
-> > I think we need some sort of ownership model around the msi banks then.
-> > Otherwise there's nothing preventing another userspace from attempting an MSI
-> > based attack on other users, or perhaps even on the host.  VFIO can't allow
-> > that.  Thanks,
-> 
-> We have very few (3 MSI bank on most of chips), so we can not assign
-> one to each userspace. What we can do is host and userspace does not
-> share a MSI bank while userspace will share a MSI bank.
-
-Then you probably need VFIO to "own" the MSI bank and program devices
-into it rather than exposing the MSI banks to userspace to let them have
-direct access.  Thanks,
-
-Alex
 
