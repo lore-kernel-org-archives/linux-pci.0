@@ -1,193 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64252 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751986Ab3KYW5Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 17:57:24 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	linux-pm@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	Kevin Hilman <khilman@linaro.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2] PM / Sleep: Add pm_generic functions to re-use runtime PM callbacks
-Date: Tue, 26 Nov 2013 00:10:11 +0100
-Message-ID: <5827021.HqYFigfrCJ@vostro.rjw.lan>
-In-Reply-To: <1385383221-20372-1-git-send-email-ulf.hansson@linaro.org>
-References: <1385383221-20372-1-git-send-email-ulf.hansson@linaro.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
+	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 5/9 v2] pci/msi: interface to set an iova for a msi region
+Date: Tue, 19 Nov 2013 10:47:09 +0530
+Message-ID: <1384838233-24847-6-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 25, 2013 01:40:21 PM Ulf Hansson wrote:
-> To put devices into low power state during sleep, it sometimes makes
-> sense at subsystem-level to re-use device's runtime PM callbacks.
-> 
-> The PM core will at device_suspend_late disable runtime PM, after that
-> we can safely operate on these callbacks. At suspend_late the device
-> will be put into low power state by invoking the device's
-> runtime_suspend callback, unless the runtime status is already
-> suspended. At resume_early the state is restored by invoking the
-> device's runtime_resume callback. Soon after the PM core will re-enable
-> runtime PM before returning from device_resume_early.
-> 
-> The new pm_generic functions are named pm_generic_suspend_late_runtime
-> and pm_generic_resume_early_runtime, they are supposed to be used in
-> pairs.
+This patch defines an interface by which a msi page
+can be mapped to a specific iova page.
 
-What happens if the subsystem uses the new functions as its late suspend/
-early resume callbacks, but some of its drivers implement .suspend_late()
-and .resume_early()?
+This is a requirement in aperture type of IOMMUs (like Freescale PAMU),
+where we map msi iova page just after guest memory iova address.
 
-Also, these are system suspend/resume callbacks, so the "runtime" part of
-the names is kind of confusing.  I have no idea for better naming at this
-point, but still.
+Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+---
+v2
+ - new patch
 
-> Do note that these new generic callbacks will work smothly even with
-> and without CONFIG_PM_RUNTIME, as long as the runtime PM callbacks are
-> implemented inside CONFIG_PM instead of CONFIG_PM_RUNTIME.
-> 
-> A special thanks to Alan Stern who came up with this idea.
-> 
-> Cc: Kevin Hilman <khilman@linaro.org>
-> Cc: Alan Stern <stern@rowland.harvard.edu>
-> Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
-> ---
->  drivers/base/power/generic_ops.c |   86 ++++++++++++++++++++++++++++++++++++++
->  include/linux/pm.h               |    2 +
->  2 files changed, 88 insertions(+)
-> 
-> diff --git a/drivers/base/power/generic_ops.c b/drivers/base/power/generic_ops.c
-> index 5ee030a..3132768 100644
-> --- a/drivers/base/power/generic_ops.c
-> +++ b/drivers/base/power/generic_ops.c
-> @@ -93,6 +93,49 @@ int pm_generic_suspend_late(struct device *dev)
->  EXPORT_SYMBOL_GPL(pm_generic_suspend_late);
->  
->  /**
-> + * pm_generic_suspend_late_runtime - Generic suspend_late callback for
-> + * subsystems that wants to use runtime_suspend callbacks at suspend_late.
+ drivers/pci/msi.c   |   13 +++++++++++++
+ include/linux/pci.h |    8 ++++++++
+ 2 files changed, 21 insertions(+), 0 deletions(-)
 
-This has to be one line.  You can add more description below the @dev line.
-
-> + * @dev: Device to suspend.
-> + */
-> +int pm_generic_suspend_late_runtime(struct device *dev)
-> +{
-> +	int (*callback)(struct device *);
-> +	int ret = 0;
-> +
-> +	/*
-> +	 * PM core has disabled runtime PM in device_suspend_late, thus we can
-> +	 * safely check the device's runtime status and decide whether
-> +	 * additional actions are needed to put the device into low power state.
-> +	 * If so, we invoke the device's runtime_suspend callback.
-> +	 * For the !CONFIG_PM_RUNTIME case, pm_runtime_status_suspended() always
-> +	 * returns false and therefore the runtime_suspend callback will be
-> +	 * invoked.
-> +	 */
-> +	if (pm_runtime_status_suspended(dev))
-> +		return 0;
-> +
-> +	if (dev->pm_domain)
-> +		callback = dev->pm_domain->ops.runtime_suspend;
-> +	else if (dev->type && dev->type->pm)
-> +		callback = dev->type->pm->runtime_suspend;
-> +	else if (dev->class && dev->class->pm)
-> +		callback = dev->class->pm->runtime_suspend;
-> +	else if (dev->bus && dev->bus->pm)
-> +		callback = dev->bus->pm->runtime_suspend;
-> +	else
-> +		callback = NULL;
-> +
-> +	if (!callback && dev->driver && dev->driver->pm)
-> +		callback = dev->driver->pm->runtime_suspend;
-> +
-> +	if (callback)
-> +		ret = callback(dev);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(pm_generic_suspend_late_runtime);
-> +
-> +/**
->   * pm_generic_suspend - Generic suspend callback for subsystems.
->   * @dev: Device to suspend.
->   */
-> @@ -237,6 +280,49 @@ int pm_generic_resume_early(struct device *dev)
->  EXPORT_SYMBOL_GPL(pm_generic_resume_early);
->  
->  /**
-> + * pm_generic_resume_early_runtime - Generic resume_early callback for
-> + * subsystems that wants to use runtime_resume callbacks at resume_early.
-
-Same here.
-
-> + * @dev: Device to resume.
-> + */
-> +int pm_generic_resume_early_runtime(struct device *dev)
-> +{
-> +	int (*callback)(struct device *);
-> +	int ret = 0;
-> +
-> +	/*
-> +	 * PM core has not yet enabled runtime PM in device_resume_early,
-> +	 * thus we can safely check the device's runtime status and restore the
-> +	 * previous state we had in device_suspend_late. If restore is needed
-> +	 * we invoke the device's runtime_resume callback.
-> +	 * For the !CONFIG_PM_RUNTIME case, pm_runtime_status_suspended() always
-> +	 * returns false and therefore the runtime_resume callback will be
-> +	 * invoked.
-> +	 */
-> +	if (pm_runtime_status_suspended(dev))
-> +		return 0;
-> +
-> +	if (dev->pm_domain)
-> +		callback = dev->pm_domain->ops.runtime_resume;
-> +	else if (dev->type && dev->type->pm)
-> +		callback = dev->type->pm->runtime_resume;
-> +	else if (dev->class && dev->class->pm)
-> +		callback = dev->class->pm->runtime_resume;
-> +	else if (dev->bus && dev->bus->pm)
-> +		callback = dev->bus->pm->runtime_resume;
-> +	else
-> +		callback = NULL;
-> +
-> +	if (!callback && dev->driver && dev->driver->pm)
-> +		callback = dev->driver->pm->runtime_resume;
-> +
-> +	if (callback)
-> +		ret = callback(dev);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(pm_generic_resume_early_runtime);
-> +
-> +/**
->   * pm_generic_resume - Generic resume callback for subsystems.
->   * @dev: Device to resume.
->   */
-> diff --git a/include/linux/pm.h b/include/linux/pm.h
-> index a224c7f..5bce0d4 100644
-> --- a/include/linux/pm.h
-> +++ b/include/linux/pm.h
-> @@ -656,9 +656,11 @@ extern void dpm_for_each_dev(void *data, void (*fn)(struct device *, void *));
->  
->  extern int pm_generic_prepare(struct device *dev);
->  extern int pm_generic_suspend_late(struct device *dev);
-> +extern int pm_generic_suspend_late_runtime(struct device *dev);
->  extern int pm_generic_suspend_noirq(struct device *dev);
->  extern int pm_generic_suspend(struct device *dev);
->  extern int pm_generic_resume_early(struct device *dev);
-> +extern int pm_generic_resume_early_runtime(struct device *dev);
->  extern int pm_generic_resume_noirq(struct device *dev);
->  extern int pm_generic_resume(struct device *dev);
->  extern int pm_generic_freeze_noirq(struct device *dev);
-
-Thanks!
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 2643a29..040609f 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -77,6 +77,19 @@ int __weak arch_msi_get_region(int region_num, struct msi_region *region)
+ 	return 0;
+ }
+ 
++int __weak arch_msi_set_iova(struct pci_dev *pdev, int region_num,
++			     dma_addr_t iova, bool set)
++{
++	return 0;
++}
++
++int msi_set_iova(struct pci_dev *pdev, int region_num,
++		 dma_addr_t iova, bool set)
++{
++	return arch_msi_set_iova(pdev, region_num, iova, set);
++}
++EXPORT_SYMBOL(msi_set_iova);
++
+ int msi_get_region_count(void)
+ {
+ 	return arch_msi_get_region_count();
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c587034..c6d3e58 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1195,6 +1195,12 @@ static inline int msi_get_region(int region_num, struct msi_region *region)
+ {
+ 	return 0;
+ }
++
++static inline int msi_set_iova(struct pci_dev *pdev, int region_num,
++			       dma_addr_t iova, bool set)
++{
++	return 0;
++}
+ #else
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+ int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+@@ -1209,6 +1215,8 @@ void pci_restore_msi_state(struct pci_dev *dev);
+ int pci_msi_enabled(void);
+ int msi_get_region_count(void);
+ int msi_get_region(int region_num, struct msi_region *region);
++int msi_set_iova(struct pci_dev *pdev, int region_num,
++		 dma_addr_t iova, bool set);
+ #endif
+ 
+ #ifdef CONFIG_PCIEPORTBUS
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.0.4
+
+
