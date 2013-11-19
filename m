@@ -1,74 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52142 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751555Ab3KZMrg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 07:47:36 -0500
-Date: Tue, 26 Nov 2013 07:47:19 -0500
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Veaceslav Falico <vfalico@redhat.com>,
-	linux-pci@vger.kernel.org, torvalds@linux-foundation.org,
-	tglx@linutronix.de, yinghai@kernel.org, Knut_Petersen@t-online.de,
-	mingo@kernel.org, paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] msi: free msi_desc entry only after we've
- released the kobject
-Message-ID: <20131126124719.GA11637@hmsreliant.think-freely.org>
-References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
- <1383042632-7102-2-git-send-email-vfalico@redhat.com>
- <20131125231248.GB4034@google.com>
- <20131125232936.GA31746@kroah.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36386 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753555Ab3KSSDM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 13:03:12 -0500
+Date: Tue, 19 Nov 2013 13:03:11 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Kevin Hilman <khilman@linaro.org>
+cc: Ulf Hansson <ulf.hansson@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	<linux-usb@vger.kernel.org>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+In-Reply-To: <87r4acmjc6.fsf@linaro.org>
+Message-ID: <Pine.LNX.4.44L0.1311191258550.1145-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131125232936.GA31746@kroah.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 03:29:36PM -0800, Greg Kroah-Hartman wrote:
-> On Mon, Nov 25, 2013 at 04:12:48PM -0700, Bjorn Helgaas wrote:
-> > On Tue, Oct 29, 2013 at 11:30:30AM +0100, Veaceslav Falico wrote:
-> > > Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
-> > > however kobject_put() doesn't guarantee us that it was the last reference
-> > > and that the kobj isn't used currently by someone else, so after we
-> > > kfree(entry) with the struct kobject - other users will begin using the
-> > > freed memory, instead of the actual kobject.
-> > > 
-> > > Fix this by using the kobject->release callback, which is called last when
-> > > the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
-> > > which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
-> > > kobj itself after ->release() was called, so we're safe).
-> > > 
-> > > In case we've failed to create the sysfs directories - just kfree()
-> > > it - cause we don't have the kobjects attached.
-> > > 
-> > > Also, remove the same functionality from populate_msi_sysfs(), cause on
-> > > failure we anyway call free_msi_irqs(), which will take care of all the
-> > > kobjects properly.
-> > > 
-> > > And add the forgotten pci_dev_put(pdev) in case of failure to register the
-> > > kobject in populate_msi_sysfs().
-> > > 
-> > > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > > CC: Neil Horman <nhorman@tuxdriver.com>
-> > > CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > CC: linux-pci@vger.kernel.org
-> > > CC: linux-kernel@vger.kernel.org
-> > > Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
-> > 
-> > I'm still hoping that Greg (or somebody else; Greg already posted the bulk
-> > of the work) will finish up the conversion to attributes, and that Neil
-> > will confirm that works with no changes to irqbalance.  So I'm going to
-> > drop these patches for now.  Poke me if we need to revive them.
-> 
-> Ah, sorry about that.  I'll redo my series, dropping the existing format
-> and using the attribute-only code.  Give me a day or so, thanks for the
-> reminder.
-> 
-> greg k-h
-> 
-Thank you greg, I'll make sure Irqbalance doesn't choke on the new format as
-soon as you post them.
+On Tue, 19 Nov 2013, Kevin Hilman wrote:
 
-Neil
+> Alan Stern <stern@rowland.harvard.edu> writes:
+> 
+> > On Tue, 19 Nov 2013, Ulf Hansson wrote:
+> >
+> >> At the moment, system PM is already affecting behaviour of runtime PM
+> >> since it is preventing runtime suspend during system suspend.
+> >
+> > Sure.  And that behavior is documented.  In any case, it's a bug for 
+> > drivers to depend on runtime suspend for carrying out a system suspend.
+> 
+> As Rafael mentioned, there is bus/pm_domain code that comes into play
+> here, so I'm not sure it's always a bug.
+> 
+> IMO, it's not a bug for the driver to depend on runtime PM if the
+> bus/pm_domain is handling the details.
+> 
+> On OMAP, we handle all the SoC on-chip devices with a pm_domain since
+> the low-level PM operations that need to happen are bus-level things not
+> device-level things.  Therefore, drivers for these devices can rely
+> entirely on runtime PM, even for system suspend.  The late/early
+> callbacks in the pm_domain can see if the device is runtime suspended
+> already or not and behave accordingly.
+> 
+> So, this all *can* work by handling it at the bus/pm_domain level, but
+> as Ulf has mentioned (and I agree) it seems like a clunky workaround
+> because the PM core is preventing it from happening as one might expect.
+
+The problem is that userspace can disable runtime PM at any time by 
+writing "on" to /sys/.../power/control.  Once that's done, you can't
+depend on runtime PM to put the device into a low-power state during 
+system suspend.
+
+Now, if the bus-level code always takes care of putting the device into
+low power during system suspend, then the driver doesn't have to worry
+about it at all.  That's perfectly fine -- but I would hardly describe
+the situation by saying the driver relies on runtime PM for system
+suspend.
+
+Alan Stern
 
