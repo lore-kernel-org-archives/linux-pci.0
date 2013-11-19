@@ -1,117 +1,220 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:41254 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932543Ab3KZVLT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:11:19 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/7] PCI: imx6: Make reset-gpio optional
-Date: Tue, 26 Nov 2013 22:10:42 +0100
-Message-Id: <1385500248-6551-1-git-send-email-marex@denx.de>
+Received: from am1ehsobe004.messaging.microsoft.com ([213.199.154.207]:41568
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751822Ab3KSFYO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 00:24:14 -0500
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
+	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 7/9 v2] pci: msi: Extend msi iova setting interface to powerpc arch
+Date: Tue, 19 Nov 2013 10:47:11 +0530
+Message-ID: <1384838233-24847-8-git-send-email-Bharat.Bhushan@freescale.com>
+In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some boards do not have a PCIe reset GPIO. To avoid probe
-failure on these boards, make the reset GPIO optional as
-well.
+Now we Keep track of devices which have msi page mapping to specific
+iova page for all msi bank. When composing MSI address and data then
+this list will be traversed. If device found in the list then use
+configured iova page otherwise iova page will be taken as before.
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
 ---
- .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
- drivers/pci/host/pci-imx6.c                        | 29 +++++++++++-----------
- 2 files changed, 16 insertions(+), 15 deletions(-)
+v2
+ - new patch
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index d5d26d4..b7a2279 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -19,9 +19,9 @@ Required properties:
- 	to define the mapping of the PCIe interface to interrupt
- 	numbers.
- - num-lanes: number of lanes to use
--- reset-gpio: gpio pin number of power good signal
+ arch/powerpc/sysdev/fsl_msi.c |   90 +++++++++++++++++++++++++++++++++++++++++
+ arch/powerpc/sysdev/fsl_msi.h |   16 ++++++-
+ 2 files changed, 104 insertions(+), 2 deletions(-)
+
+diff --git a/arch/powerpc/sysdev/fsl_msi.c b/arch/powerpc/sysdev/fsl_msi.c
+index eeebbf0..52d2beb 100644
+--- a/arch/powerpc/sysdev/fsl_msi.c
++++ b/arch/powerpc/sysdev/fsl_msi.c
+@@ -137,6 +137,75 @@ static int fsl_msi_get_region(int region_num, struct msi_region *region)
+ 	return -ENODEV;
+ }
  
- Optional properties for fsl,imx6q-pcie
-+- reset-gpio: gpio pin number of power good signal
- - power-on-gpio: gpio pin number of power-enable signal
- - wake-up-gpio: gpio pin number of incoming wakeup signal
- - disable-gpio: gpio pin number of outgoing rfkill/endpoint disable signal
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index bd70af8..52027ad 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -214,9 +214,12 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
- 
--	gpio_set_value(imx6_pcie->reset_gpio, 0);
--	msleep(100);
--	gpio_set_value(imx6_pcie->reset_gpio, 1);
-+	/* Some boards don't have PCIe reset GPIO. */
-+	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-+		gpio_set_value(imx6_pcie->reset_gpio, 0);
-+		msleep(100);
-+		gpio_set_value(imx6_pcie->reset_gpio, 1);
++/* Add device to the list which have iova page mapping */
++static int fsl_msi_add_iova_device(struct fsl_msi *msi_data,
++				   struct pci_dev *pdev, dma_addr_t iova)
++{
++	struct fsl_msi_device *device;
++
++	mutex_lock(&msi_data->lock);
++	list_for_each_entry(device, &msi_data->device_list, list) {
++		/* If mapping already exits then update with new page mapping */
++		if (device->dev == pdev) {
++			device->iova = iova;
++			mutex_unlock(&msi_data->lock);
++			return 0;
++		}
 +	}
++
++	device = kzalloc(sizeof(struct fsl_msi_device), GFP_KERNEL);
++	if (!device) {
++		pr_err("%s: Memory allocation failed\n", __func__);
++		mutex_unlock(&msi_data->lock);
++		return -ENOMEM;
++	}
++
++	device->dev = pdev;
++	device->iova = iova;
++	list_add_tail(&device->list, &msi_data->device_list);
++	mutex_unlock(&msi_data->lock);
++	return 0;
++}
++
++/* Remove device to the list which have iova page mapping */
++static int fsl_msi_del_iova_device(struct fsl_msi *msi_data,
++				   struct pci_dev *pdev)
++{
++	struct fsl_msi_device *device;
++
++	mutex_lock(&msi_data->lock);
++	list_for_each_entry(device, &msi_data->device_list, list) {
++		if (device->dev == pdev) {
++			list_del(&device->list);
++			kfree(device);
++			break;
++		}
++	}
++	mutex_unlock(&msi_data->lock);
++	return 0;
++}
++
++/* set/clear device iova mapping for the requested msi region */
++static int fsl_msi_set_iova(struct pci_dev *pdev, int region_num,
++			    dma_addr_t iova, bool set)
++{
++	struct fsl_msi *msi_data;
++	int ret = -EINVAL;
++
++	list_for_each_entry(msi_data, &msi_head, list) {
++		if (msi_data->bank_index != region_num)
++			continue;
++
++		if (set)
++			ret = fsl_msi_add_iova_device(msi_data, pdev, iova);
++		else
++			ret = fsl_msi_del_iova_device(msi_data, pdev);
++
++		break;
++	}
++	return ret;
++}
++
+ static int fsl_msi_check_device(struct pci_dev *pdev, int nvec, int type)
+ {
+ 	if (type == PCI_CAP_ID_MSIX)
+@@ -167,6 +236,7 @@ static void fsl_compose_msi_msg(struct pci_dev *pdev, int hwirq,
+ 				struct msi_msg *msg,
+ 				struct fsl_msi *fsl_msi_data)
+ {
++	struct fsl_msi_device *device;
+ 	struct fsl_msi *msi_data = fsl_msi_data;
+ 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+ 	u64 address; /* Physical address of the MSIIR */
+@@ -181,6 +251,15 @@ static void fsl_compose_msi_msg(struct pci_dev *pdev, int hwirq,
+ 		address = fsl_pci_immrbar_base(hose) +
+ 			   (msi_data->msiir & 0xfffff);
+ 
++	mutex_lock(&msi_data->lock);
++	list_for_each_entry(device, &msi_data->device_list, list) {
++		if (device->dev == pdev) {
++			address = device->iova | (msi_data->msiir & 0xfff);
++			break;
++		}
++	}
++	mutex_unlock(&msi_data->lock);
++
+ 	msg->address_lo = lower_32_bits(address);
+ 	msg->address_hi = upper_32_bits(address);
+ 
+@@ -356,6 +435,7 @@ static int fsl_of_msi_remove(struct platform_device *ofdev)
+ 	struct fsl_msi *msi = platform_get_drvdata(ofdev);
+ 	int virq, i;
+ 	struct fsl_msi_cascade_data *cascade_data;
++	struct fsl_msi_device *device;
+ 
+ 	if (msi->list.prev != NULL)
+ 		list_del(&msi->list);
+@@ -371,6 +451,13 @@ static int fsl_of_msi_remove(struct platform_device *ofdev)
+ 		msi_bitmap_free(&msi->bitmap);
+ 	if ((msi->feature & FSL_PIC_IP_MASK) != FSL_PIC_IP_VMPIC)
+ 		iounmap(msi->msi_regs);
++
++	mutex_lock(&msi->lock);
++	list_for_each_entry(device, &msi->device_list, list) {
++		list_del(&device->list);
++		kfree(device);
++	}
++	mutex_unlock(&msi->lock);
+ 	kfree(msi);
  
  	return 0;
- }
-@@ -439,17 +442,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 
- 	/* Fetch GPIOs */
- 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
--	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
--		dev_err(&pdev->dev, "no reset-gpio defined\n");
--		ret = -ENODEV;
--	}
--	ret = devm_gpio_request_one(&pdev->dev,
--				imx6_pcie->reset_gpio,
--				GPIOF_OUT_INIT_LOW,
--				"PCIe reset");
--	if (ret) {
--		dev_err(&pdev->dev, "unable to get reset gpio\n");
--		goto err;
-+	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-+		ret = devm_gpio_request_one(&pdev->dev,
-+					imx6_pcie->reset_gpio,
-+					GPIOF_OUT_INIT_LOW,
-+					"PCIe reset");
-+		if (ret) {
-+			dev_err(&pdev->dev, "unable to get reset gpio\n");
-+			goto err;
-+		}
+@@ -436,6 +523,8 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+ 		dev_err(&dev->dev, "No memory for MSI structure\n");
+ 		return -ENOMEM;
  	}
++	INIT_LIST_HEAD(&msi->device_list);
++	mutex_init(&msi->lock);
+ 	platform_set_drvdata(dev, msi);
  
- 	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
+ 	msi->irqhost = irq_domain_add_linear(dev->dev.of_node,
+@@ -558,6 +647,7 @@ static int fsl_of_msi_probe(struct platform_device *dev)
+ 		ppc_md.msi_check_device = fsl_msi_check_device;
+ 		ppc_md.msi_get_region_count = fsl_msi_get_region_count;
+ 		ppc_md.msi_get_region = fsl_msi_get_region;
++		ppc_md.msi_set_iova = fsl_msi_set_iova;
+ 	} else if (ppc_md.setup_msi_irqs != fsl_setup_msi_irqs) {
+ 		dev_err(&dev->dev, "Different MSI driver already installed!\n");
+ 		err = -ENODEV;
+diff --git a/arch/powerpc/sysdev/fsl_msi.h b/arch/powerpc/sysdev/fsl_msi.h
+index a2cc5a2..4da2af9 100644
+--- a/arch/powerpc/sysdev/fsl_msi.h
++++ b/arch/powerpc/sysdev/fsl_msi.h
+@@ -27,9 +27,16 @@
+ #define FSL_PIC_IP_IPIC   0x00000002
+ #define FSL_PIC_IP_VMPIC  0x00000003
+ 
++/* List of devices having specific iova page mapping */
++struct fsl_msi_device {
++	struct list_head list;
++	struct pci_dev *dev;
++	dma_addr_t iova;
++};
++
+ struct fsl_msi {
+ 	struct irq_domain *irqhost;
+-
++	struct mutex lock;
+ 	unsigned long cascade_irq;
+ 	phys_addr_t msiir; /* MSIIR Address in CCSR */
+ 	u32 ibs_shift; /* Shift of interrupt bit select */
+@@ -37,7 +44,12 @@ struct fsl_msi {
+ 	void __iomem *msi_regs;
+ 	u32 feature;
+ 	int msi_virqs[NR_MSI_REG_MAX];
+-
++	/*
++	 * Keep track of devices which have msi page mapping to specific
++	 * iova page. Default this is NULL which means legacy way of
++	 * setting iova will be used.
++	 */
++	struct list_head device_list;
+ 	/*
+ 	 * During probe each bank is assigned a index number.
+ 	 * index number start from 0.
 -- 
-1.8.4.3
+1.7.0.4
+
 
