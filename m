@@ -1,103 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:58327 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119Ab3KZXtr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 18:49:47 -0500
-Received: by mail-lb0-f173.google.com with SMTP id u14so4959057lbd.18
-        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2013 15:49:46 -0800 (PST)
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	linux-pm@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Kevin Hilman <khilman@linaro.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] PM / Runtime: Implement the pm_generic_runtime functions for CONFIG_PM
-Date: Wed, 27 Nov 2013 00:49:41 +0100
-Message-Id: <1385509781-18721-1-git-send-email-ulf.hansson@linaro.org>
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:37810 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784Ab3KSF50 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 00:57:26 -0500
+Received: by mail-pb0-f49.google.com with SMTP id jt11so3286932pbb.22
+        for <linux-pci@vger.kernel.org>; Mon, 18 Nov 2013 21:57:26 -0800 (PST)
+Date: Tue, 19 Nov 2013 13:57:14 +0800
+From: Adam Lee <adam.lee@canonical.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	Amos Kong <kongjianjun@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [PATCH] pci: check PCI_EXP_FLAGS_SLOT before setting hotplug
+ bridge
+Message-ID: <20131119055714.GA3451@adam-laptop>
+References: <1384767652-20567-1-git-send-email-adam.lee@canonical.com>
+ <CAErSpo7bERHRbBNOzb6g+666jMmFXQvv2T2U6dv82fVh1dU5kA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7bERHRbBNOzb6g+666jMmFXQvv2T2U6dv82fVh1dU5kA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pm_generic_runtime_suspend|resume functions were implemented within
-CONFIG_PM_RUNTIME.
+On Mon, Nov 18, 2013 at 10:38:17AM -0700, Bjorn Helgaas wrote:
+> [+cc Myron, Amos, Thomas, Ben]
+> 
+> On Mon, Nov 18, 2013 at 2:40 AM, Adam Lee <adam.lee@canonical.com> wrote:
+> > This patch adds the PCI_EXP_FLAGS_SLOT check back before setting
+> > hotplug bridge, which is omitted by an API switching commit,
+> > 59875ae489609b2267548dc85160c5f0f0c6f9d4 "PCI/core: Use PCI Express
+> > Capability accessors".
+> >
+> > Some Lenovo laptops hang in booting without this fix.
+> 
+> What kernel version hangs?  I suspect you might be missing 6d3a1741f1
+> ("PCI: Support PCIe Capability Slot registers only for ports with
+> slots"), because it *looks* like the current kernel should work
+> correctly even without your patch.
 
-As we also may use runtime PM callbacks during system suspend, to put
-devices into low power state, we need to move the implementation of
-pm_generic_runtime_suspend|resume to CONFIG_PM.
+No, patching 6d3a1741f1 and d3694d4fa3 doesn't fix the hang.
 
-This change prevents the platform bus from by-passing driver's runtime
-PM callbacks while only CONFIG_PM_SLEEP and not CONFIG_PM_RUNTIME is
-being used.
+It hangs in acpi_evaluate_integer() from
+59875ae489609b2267548dc85160c5f0f0c6f9d4 "PCI/core: Use PCI Express
+Capability accessors" and before
+ac212b6980d8d5eda705864fc5a8ecddc6d6eacc "ACPI / processor: Use common
+hotplug infrastructure", 3.4~3.11. (double confirmed)
 
-Cc: Kevin Hilman <khilman@linaro.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
----
- drivers/base/power/generic_ops.c |    4 ++--
- include/linux/pm_runtime.h       |   12 ++++++++----
- 2 files changed, 10 insertions(+), 6 deletions(-)
+I didn't mention this because:
+1, that check is omitted obviously, an API switching patch should not
+remove things like that.
+2, have run some tests, adding the check back is harmless.
+3, I believe ac212b6 just workarounds the hang unexpectedly, bug still
+exists.
 
-diff --git a/drivers/base/power/generic_ops.c b/drivers/base/power/generic_ops.c
-index 5ee030a..a2e55bf 100644
---- a/drivers/base/power/generic_ops.c
-+++ b/drivers/base/power/generic_ops.c
-@@ -10,7 +10,7 @@
- #include <linux/pm_runtime.h>
- #include <linux/export.h>
- 
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- /**
-  * pm_generic_runtime_suspend - Generic runtime suspend callback for subsystems.
-  * @dev: Device to suspend.
-@@ -48,7 +48,7 @@ int pm_generic_runtime_resume(struct device *dev)
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(pm_generic_runtime_resume);
--#endif /* CONFIG_PM_RUNTIME */
-+#endif /* CONFIG_PM */
- 
- #ifdef CONFIG_PM_SLEEP
- /**
-diff --git a/include/linux/pm_runtime.h b/include/linux/pm_runtime.h
-index 6fa7cea..16c9a62 100644
---- a/include/linux/pm_runtime.h
-+++ b/include/linux/pm_runtime.h
-@@ -23,6 +23,14 @@
- 					    usage_count */
- #define RPM_AUTO		0x08	/* Use autosuspend_delay */
- 
-+#ifdef CONFIG_PM
-+extern int pm_generic_runtime_suspend(struct device *dev);
-+extern int pm_generic_runtime_resume(struct device *dev);
-+#else
-+static inline int pm_generic_runtime_suspend(struct device *dev) { return 0; }
-+static inline int pm_generic_runtime_resume(struct device *dev) { return 0; }
-+#endif
-+
- #ifdef CONFIG_PM_RUNTIME
- 
- extern struct workqueue_struct *pm_wq;
-@@ -37,8 +45,6 @@ extern void pm_runtime_enable(struct device *dev);
- extern void __pm_runtime_disable(struct device *dev, bool check_resume);
- extern void pm_runtime_allow(struct device *dev);
- extern void pm_runtime_forbid(struct device *dev);
--extern int pm_generic_runtime_suspend(struct device *dev);
--extern int pm_generic_runtime_resume(struct device *dev);
- extern void pm_runtime_no_callbacks(struct device *dev);
- extern void pm_runtime_irq_safe(struct device *dev);
- extern void __pm_runtime_use_autosuspend(struct device *dev, bool use);
-@@ -142,8 +148,6 @@ static inline bool pm_runtime_active(struct device *dev) { return true; }
- static inline bool pm_runtime_status_suspended(struct device *dev) { return false; }
- static inline bool pm_runtime_enabled(struct device *dev) { return false; }
- 
--static inline int pm_generic_runtime_suspend(struct device *dev) { return 0; }
--static inline int pm_generic_runtime_resume(struct device *dev) { return 0; }
- static inline void pm_runtime_no_callbacks(struct device *dev) {}
- static inline void pm_runtime_irq_safe(struct device *dev) {}
- 
 -- 
-1.7.9.5
-
+Adam Lee
