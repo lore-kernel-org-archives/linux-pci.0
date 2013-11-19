@@ -1,63 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:62353 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751021Ab3K2XdD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 18:33:03 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
-Date: Sat, 30 Nov 2013 00:45:55 +0100
-Message-ID: <4276127.HzbOlVUbc2@vostro.rjw.lan>
-In-Reply-To: <461934992.nFRx8soJrp@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <CAE9FiQXevSPmPEvxzXjC-CFhpYHic0v+vN5+JV3j5kmX-wv_GQ@mail.gmail.com> <461934992.nFRx8soJrp@vostro.rjw.lan>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:38659 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753039Ab3KSWYn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 17:24:43 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so4107453iec.23
+        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 14:24:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1383749353-3510-1-git-send-email-ethan.kernel@gmail.com>
+References: <1383749353-3510-1-git-send-email-ethan.kernel@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 19 Nov 2013 15:24:22 -0700
+Message-ID: <CAErSpo5bYwgK618AOgvD=mgbfjcLLGE3CVw1SN3sP3PqRaCk5A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Init NumVFs register to zero in sriov_init()
+To: "ethan.zhao" <ethan.kernel@gmail.com>
+Cc: Yu Zhao <yu.zhao@intel.com>, Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, November 30, 2013 12:38:26 AM Rafael J. Wysocki wrote:
-> On Tuesday, November 26, 2013 06:26:54 PM Yinghai Lu wrote:
-> > On Tue, Nov 26, 2013 at 5:24 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > >
-> > > So assume pci_destroy_dev() is called twice in parallel for the same dev
-> > > by two different threads.  Thread 1 does the atomic_inc_and_test() and
-> > > finds that it is OK to do the device_del() and put_device() which causes
-> > > the device object to be freed.  Then thread 2 does the atomic_inc_and_test()
-> > > on the already freed device object and crashes the kernel.
-> > >
-> > thread2 should still hold one extra reference.
-> > that is in
-> >   device_schedule_callback
-> >      ==> sysfs_schedule_callback
-> >          ==> kobject_get(kobj)
-> > 
-> > pci_destroy_dev for thread2 is called at this point.
-> > 
-> > and that reference will be released from
-> >         sysfs_schedule_callback
-> >         ==> kobject_put()...
-> 
-> Well, that would be the case if thread 2 was started by device_schedule_callback(),
-> but again, for example, it may be trim_stale_devices() started by acpiphp_check_bridge()
-> that doesn't hold extra references to the pci_dev.  [Well, that piece of code
-> is racy anyway, because it walks bus->devices without locking.  Which is my
-> fault too, because I overlooked that.  Shame, shame.]
-> 
-> Perhaps we can do something like the (untested) patch below (in addition to the
-> $subject patch).  Do you see any immediate problems with it?
+[+cc linux-pci]
 
-Ah, I see one.  It will break pci_stop_bus_device() and pci_remove_bus_device().
-So much for being clever.
+On Wed, Nov 6, 2013 at 7:49 AM, ethan.zhao <ethan.kernel@gmail.com> wrote:
+> Though no specification about NumVFs register initial value after POST, to void the confusion
+> lspci output as following before VF was enabled, we should clear the NumVFs value left by BIOS
+> to zero:
+>
+> $lspci -vvv -s 03:00.0
+> Ethernet controller: Intel Corporation 82599EB 10-Gigabit SFI/SFP+ Network Connection (rev 01)
+> ~
+> Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
+>                 IOVCap: Migration-, Interrupt Message Number: 000
+>                 IOVCtl: Enable+ Migration- Interrupt- MSE+ ARIHierarchy+
+>                 IOVSta: Migration-
+>                 Initial VFs: 64, Total VFs: 64, Number of VFs: 64, Function Dependency Link: 00
+>                                                               ^dazed !
+> ~
+> Signed-off-by: ethan.zhao <ethan.kernel@gmail.com>
+> ---
+>  drivers/pci/iov.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index de8ffac..a4941ad 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -439,6 +439,8 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>
+>  found:
+>         pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+> +       /* VF Enable is cleared, so we could init the NumVFs register to 0 */
+> +       pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
+>         pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+>         pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+>         if (!offset || (total > 1 && !stride))
 
-Moreover, it looks like those two routines above are racy too for the same
-reason?
+I'm not 100% sure we should always disable SR-IOV when we enumerate a
+PF, but as long as we do, it seems OK to me to clear NumVFs at the
+same time.
 
-Rafael
+We already clear NumVFs at other places where we disable SR-IOV
+(sriov_enable() failure path and sriov_disable()).
 
+Bjorn
