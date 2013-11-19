@@ -1,82 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:62277 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752152Ab3KSW6K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 17:58:10 -0500
-Message-ID: <528BECFF.7000900@gmail.com>
-Date: Tue, 19 Nov 2013 14:58:07 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:47983 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753110Ab3KSVfx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 16:35:53 -0500
+Received: by mail-ie0-f172.google.com with SMTP id qd12so2933119ieb.31
+        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 13:35:52 -0800 (PST)
+Subject: [PATCH v2 2/3] PCI: Remove PCIe Capability version checks
+To: stable@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	Amos Kong <kongjianjun@gmail.com>,
+	Adam Lee <adam.lee@canonical.com>,
+	linux-kernel@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Thomas Renninger <trenn@suse.de>
+Date: Tue, 19 Nov 2013 14:35:50 -0700
+Message-ID: <20131119213550.3839.2581.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20131119212714.3839.52182.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131119212714.3839.52182.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Linux-PCI <linux-pci@vger.kernel.org>,
-	Linux-hotplug <linux-hotplug@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: [RFC PATCH 1/4] pciehp: Make check_link_active() non-static
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Commit c8b303d0206b28c4ff3aecada47108d1655ae00f upstream.  This is part
+of the fix for https://bugzilla.kernel.org/show_bug.cgi?id=65211
 
-check_link_active() functionality needs to be used by subsequent patches
-(that introduce link state change based hotplug). Thus make the function
-non-static, and rename it to pciehp_check_link_active() so as to be
-consistent with other non-static functions.
+Previously we relied on the PCIe r3.0, sec 7.8, spec language that says
+"For Functions that do not implement the [Link, Slot, Root] registers,
+these spaces must be hardwired to 0b," which means that for v2 PCIe
+capabilities, we don't need to check the device type at all.
 
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+But it's simpler if we don't need to check the capability version at all,
+and I think the spec is explicit enough about which registers are required
+for which types that we can remove the version checks.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-By: Jiang Liu <jiang.liu@huawei.com>
+CC: stable@vger.kernel.org	# v3.7+
 ---
- drivers/pci/hotplug/pciehp.h     |    1 +
- drivers/pci/hotplug/pciehp_hpc.c |    6 +++---
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/pci/access.c |    9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 541bbe6..fc322ed 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -154,6 +154,7 @@ void pciehp_green_led_on(struct slot *slot);
- void pciehp_green_led_off(struct slot *slot);
- void pciehp_green_led_blink(struct slot *slot);
- int pciehp_check_link_status(struct controller *ctrl);
-+bool pciehp_check_link_active(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
- int pciehp_reset_slot(struct slot *slot, int probe);
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index e26c3bd9aca4..9a46fa9135d9 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -484,8 +484,7 @@ static inline bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
  
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 51f56ef..3a5eee7 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -241,7 +241,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- 	return retval;
+-	return pcie_cap_version(dev) > 1 ||
+-	       type == PCI_EXP_TYPE_ENDPOINT ||
++	return type == PCI_EXP_TYPE_ENDPOINT ||
+ 	       type == PCI_EXP_TYPE_LEG_END ||
+ 	       type == PCI_EXP_TYPE_ROOT_PORT ||
+ 	       type == PCI_EXP_TYPE_UPSTREAM ||
+@@ -498,8 +497,7 @@ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+ 
+-	return pcie_cap_version(dev) > 1 ||
+-	       type == PCI_EXP_TYPE_ROOT_PORT ||
++	return type == PCI_EXP_TYPE_ROOT_PORT ||
+ 	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
+ 		pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
+ }
+@@ -508,8 +506,7 @@ static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+ 
+-	return pcie_cap_version(dev) > 1 ||
+-	       type == PCI_EXP_TYPE_ROOT_PORT ||
++	return type == PCI_EXP_TYPE_ROOT_PORT ||
+ 	       type == PCI_EXP_TYPE_RC_EC;
  }
  
--static bool check_link_active(struct controller *ctrl)
-+bool pciehp_check_link_active(struct controller *ctrl)
- {
- 	bool ret = false;
- 	u16 lnk_status;
-@@ -261,12 +261,12 @@ static void __pcie_wait_link_active(struct controller *ctrl, bool active)
- {
- 	int timeout = 1000;
- 
--	if (check_link_active(ctrl) == active)
-+	if (pciehp_check_link_active(ctrl) == active)
- 		return;
- 	while (timeout > 0) {
- 		msleep(10);
- 		timeout -= 10;
--		if (check_link_active(ctrl) == active)
-+		if (pciehp_check_link_active(ctrl) == active)
- 			return;
- 	}
- 	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
--- 
-1.7.9.5
 
