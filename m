@@ -1,16 +1,17 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:47807 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689Ab3KRRij (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Nov 2013 12:38:39 -0500
-Received: by mail-ie0-f170.google.com with SMTP id to1so9591370ieb.15
-        for <linux-pci@vger.kernel.org>; Mon, 18 Nov 2013 09:38:38 -0800 (PST)
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:51587 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752139Ab3KSRkb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 12:40:31 -0500
+Received: by mail-ie0-f174.google.com with SMTP id at1so5821666iec.33
+        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 09:40:30 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1384767652-20567-1-git-send-email-adam.lee@canonical.com>
+In-Reply-To: <20131119055714.GA3451@adam-laptop>
 References: <1384767652-20567-1-git-send-email-adam.lee@canonical.com>
+ <CAErSpo7bERHRbBNOzb6g+666jMmFXQvv2T2U6dv82fVh1dU5kA@mail.gmail.com> <20131119055714.GA3451@adam-laptop>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 18 Nov 2013 10:38:17 -0700
-Message-ID: <CAErSpo7bERHRbBNOzb6g+666jMmFXQvv2T2U6dv82fVh1dU5kA@mail.gmail.com>
+Date: Tue, 19 Nov 2013 10:40:09 -0700
+Message-ID: <CAErSpo45HV27k-ULgj4JFzEWqDC+o9dH11qVwO21YfYBFGP9Mw@mail.gmail.com>
 Subject: Re: [PATCH] pci: check PCI_EXP_FLAGS_SLOT before setting hotplug bridge
 To: Adam Lee <adam.lee@canonical.com>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -23,65 +24,52 @@ Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Myron, Amos, Thomas, Ben]
-
-On Mon, Nov 18, 2013 at 2:40 AM, Adam Lee <adam.lee@canonical.com> wrote:
-> This patch adds the PCI_EXP_FLAGS_SLOT check back before setting
-> hotplug bridge, which is omitted by an API switching commit,
-> 59875ae489609b2267548dc85160c5f0f0c6f9d4 "PCI/core: Use PCI Express
-> Capability accessors".
+On Mon, Nov 18, 2013 at 10:57 PM, Adam Lee <adam.lee@canonical.com> wrote:
+> On Mon, Nov 18, 2013 at 10:38:17AM -0700, Bjorn Helgaas wrote:
+>> [+cc Myron, Amos, Thomas, Ben]
+>>
+>> On Mon, Nov 18, 2013 at 2:40 AM, Adam Lee <adam.lee@canonical.com> wrote:
+>> > This patch adds the PCI_EXP_FLAGS_SLOT check back before setting
+>> > hotplug bridge, which is omitted by an API switching commit,
+>> > 59875ae489609b2267548dc85160c5f0f0c6f9d4 "PCI/core: Use PCI Express
+>> > Capability accessors".
+>> >
+>> > Some Lenovo laptops hang in booting without this fix.
+>>
+>> What kernel version hangs?  I suspect you might be missing 6d3a1741f1
+>> ("PCI: Support PCIe Capability Slot registers only for ports with
+>> slots"), because it *looks* like the current kernel should work
+>> correctly even without your patch.
 >
-> Some Lenovo laptops hang in booting without this fix.
+> No, patching 6d3a1741f1 and d3694d4fa3 doesn't fix the hang.
+>
+> It hangs in acpi_evaluate_integer() from
+> 59875ae489609b2267548dc85160c5f0f0c6f9d4 "PCI/core: Use PCI Express
+> Capability accessors" and before
+> ac212b6980d8d5eda705864fc5a8ecddc6d6eacc "ACPI / processor: Use common
+> hotplug infrastructure", 3.4~3.11. (double confirmed)
 
-What kernel version hangs?  I suspect you might be missing 6d3a1741f1
-("PCI: Support PCIe Capability Slot registers only for ports with
-slots"), because it *looks* like the current kernel should work
-correctly even without your patch.
+I don't understand what you're saying here.  We're talking about this path:
 
-If you're missing 6d3a1741f1, I think it's better to fix the hang by
-pulling in that patch because it has the potential to fix other bugs
-as well.  I should have marked that commit for stable, but I didn't
-realize at the time that it might fix an actual bug.
+    set_pcie_hotplug_bridge
+      pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, ...)
+        pcie_capability_reg_implemented(dev, PCI_EXP_SLTCAP)
+          pcie_cap_has_sltctl(dev)
 
-This was part of a short series:
+This path doesn't invoke acpi_evaluate_integer().  How does a hang
+there relate to the patch you posted?  Are you saying you bisected the
+hang to one of the commits you mentioned?
 
-1) d3694d4fa3 PCI: Allow PCIe Capability link-related register access
-for switches
-2) c8b303d020 PCI: Remove PCIe Capability version checks
-3) 6d3a1741f1 PCI: Support PCIe Capability Slot registers only for
-ports with slots
-4) fed2451512 PCI: Remove pcie_cap_has_devctl()
+Your patch appears to be functionally equivalent to 6d3a1741f1 -- they
+both check the PCI_EXP_FLAGS_SLOT bit in the PCI_EXP_FLAGS word.  But
+6d3a1741f1 uses a cached copy of PCI_EXP_FLAGS, so it could be that
+you found a path where the cached copy hasn't been updated yet.
 
-You might also want d3694d4fa3.  Without it, we won't read Link
-registers for switch ports, which could also cause problems, though I
-don't have an example to point at.  I'm pretty sure the others (2 and
-4) are simplifications only and won't actually fix anything.
+I don't want to apply a patch that is logically unnecessary, because
+then it's likely that somebody in the future will think "there's no
+need to check PCI_EXP_FLAGS_SLOT twice, so I'll remove the second
+one," which will break things again.  Your patch appears unnecessary,
+so obviously I'm missing something.  I'm just trying to understand
+what I'm missing.
 
 Bjorn
-
-> Signed-off-by: Adam Lee <adam.lee@canonical.com>
-> ---
->  drivers/pci/probe.c | 5 +++++
->  1 file changed, 5 insertions(+)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 5e14f5a..b93d5ac 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -992,8 +992,13 @@ void set_pcie_port_type(struct pci_dev *pdev)
->
->  void set_pcie_hotplug_bridge(struct pci_dev *pdev)
->  {
-> +       u16 reg16;
->         u32 reg32;
->
-> +       pcie_capability_read_word(pdev, PCI_EXP_FLAGS, &reg16);
-> +       if (!(reg16 & PCI_EXP_FLAGS_SLOT))
-> +               return;
-> +
->         pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32);
->         if (reg32 & PCI_EXP_SLTCAP_HPC)
->                 pdev->is_hotplug_bridge = 1;
-> --
-> 1.8.4.3
->
