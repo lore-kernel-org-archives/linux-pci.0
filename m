@@ -1,106 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:62759 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753041Ab3KVQ7S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2013 11:59:18 -0500
-Received: by mail-ie0-f169.google.com with SMTP id e14so2533206iej.14
-        for <linux-pci@vger.kernel.org>; Fri, 22 Nov 2013 08:59:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <528D4739.80700@fold.natur.cuni.cz>
-References: <528D4739.80700@fold.natur.cuni.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 22 Nov 2013 09:58:55 -0700
-Message-ID: <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
-Subject: Re: pciehp LinkState
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:33412 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917Ab3KSGhI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 01:37:08 -0500
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <yan@linux.vnet.ibm.com>;
+	Tue, 19 Nov 2013 12:07:05 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id A3F00E0056
+	for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 12:09:00 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id rAJ6axdW48562202
+	for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 12:06:59 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id rAJ6b1hR008553
+	for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 12:07:02 +0530
+From: Guo Chao <yan@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yinghai@kernel.org
+Subject: [RFC PATCH 1/3] PCI: do not compare CPU address with PCI address
+Date: Tue, 19 Nov 2013 14:36:56 +0800
+Message-Id: <1384843018-9479-2-git-send-email-yan@linux.vnet.ibm.com>
+In-Reply-To: <1384843018-9479-1-git-send-email-yan@linux.vnet.ibm.com>
+References: <1384843018-9479-1-git-send-email-yan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rajat, linux-pci]
+In resource assignment code, limits are exerted to restrict allocated
+resource range. However these limits are PCI address but compared to
+CPU address in the end. Translated them before comparing.
 
-On Wed, Nov 20, 2013 at 4:35 PM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> OK, here is one minor issue in pciehp. The LinkState remains in + after card's eject.
-> ...
-> Ahm, well, maybe the Abort bits could be reset if the slot is empty? Maybe the abort is written while
-> the card is being unplugged, but why keep the bit set if the slot is already empty?
->
-> vostro ~ # diff -u -w pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial.txt  pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial__inserted__ejected_but_not_realized.txt
-> --- pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial.txt 2013-11-20 19:34:24.430000727 +0100
-> +++ pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial__inserted__ejected_but_not_realized.txt     2013-11-20 19:35:55.670000965 +0100
-> @@ -296,7 +296,7 @@
->         I/O behind bridge: 0000c000-0000dfff
->         Memory behind bridge: f6c00000-f7cfffff
->         Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
-> -       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-> +       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+We can't just use pcibios_bus_to_resource because the limits may not
+included in the host bridge window. Introduce a help function to
+do this translation, if address missed, return an approximate one.
 
-I opened https://bugzilla.kernel.org/show_bug.cgi?id=65511 for this
-issue.  I'm not sure exactly where we would clear MAbort -- we'd have
-to do it after the driver has been detached.  But it does seem
-reasonable to clear it somewhere.
+Signed-off-by: Guo Chao <yan@linux.vnet.ibm.com>
+---
+ drivers/pci/bus.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 63 insertions(+), 2 deletions(-)
 
-> ...
-> But below, still, you can see that LinkState is in "+", no matter how long you wait.
->
-> vostro ~ # diff -u -w pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial.txt  pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial__inserted__ejected_but_not_realized__inserted__ejected.txt
-> --- pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial.txt 2013-11-20 19:34:24.430000727 +0100
-> +++ pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial__inserted__ejected_but_not_realized__inserted__ejected.txt  2013-11-20 19:37:43.950001248 +0100
-> @@ -296,7 +296,7 @@
->         I/O behind bridge: 0000c000-0000dfff
->         Memory behind bridge: f6c00000-f7cfffff
->         Prefetchable memory behind bridge: 00000000f0000000-00000000f10fffff
-> -       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-> +       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
->         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-> @@ -306,17 +306,17 @@
->                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->                         MaxPayload 128 bytes, MaxReadReq 128 bytes
->                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-> -               LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 <16us
-> +               LnkCap: Port #8, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <16us
->                         ClockPM- Surprise- LLActRep+ BwNot-
-> -               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk-
-> +               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> -               LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-> +               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
->                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
->                         Slot #7, PowerLimit 10.000W; Interlock- NoCompl+
->                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt- HPIrq+ LinkChg-
->                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
->                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-> -                       Changed: MRL- PresDet- LinkState-
-> +                       Changed: MRL- PresDet- LinkState+
->                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
->                 RootCap: CRSVisible-
->                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-> vostro ~ #
->
->
->
-> Below is the overview since cold boot with no card inserted with all those hotplug events. You see,
-> pciehp never sets LinkState back to minus once the slot is empty:
->
-> vostro ~ # grep LinkState pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial__inserted__ejected_but_not_realized__inserted__ejected.txt
->                         Changed: MRL- PresDet- LinkState-
->                         Changed: MRL- PresDet- LinkState+
->                         Changed: MRL- PresDet- LinkState+
->                         Changed: MRL- PresDet- LinkState+
->                         Changed: MRL- PresDet- LinkState+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index fc1b740..532c0a4 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -99,6 +99,64 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+ }
+ 
+ /**
++ * pci_bus_to_resource
++ *
++ * Much like pcibios_bus_to_resource() except it takes a single address
++ * and returns an approximate one if target address is not included
++ * in the bridge window. The approximate address is smaller than required
++ * one is 'bound' is 1, larger than required one if 'bound' is 0.
++ */
++static resource_size_t pci_bus_to_resource(struct pci_bus *bus, int flags,
++				    int mask, resource_size_t addr, int bound)
++{
++	struct pci_host_bridge *bridge;
++	struct pci_host_bridge_window *window, *match = NULL;
++	resource_size_t max = 0, min = -1;
++	resource_size_t offset = -1, start, end;
++
++	while (bus->parent)
++		bus = bus->parent;
++
++	bridge = to_pci_host_bridge(bus->bridge);
++
++	list_for_each_entry(window, &bridge->windows, list) {
++		if ((flags ^ window->res->flags) & mask)
++			continue;
++
++		start = window->res->start - window->offset;
++		end = window->res->end - window->offset;
++
++		if (addr >= start && addr <= end) {
++			offset = window->offset;
++			break;
++		}
++
++		if (bound && addr > end && end > max) {
++			max = end;
++			match = window;
++		} else if (!bound && addr < start && start < min) {
++			min = start;
++			match = window;
++		}
++	}
++
++	if (offset == -1) {
++		/*
++		 * Not even found the matched type. This may happen,
++		 * for example, if try to translate IO address in a HB
++		 * without IO window. Just return the original address,
++		 * it will fail later anyway.
++		 */
++		if (match == NULL)
++			return addr;
++
++		return (bound ? max : min) + match->offset;
++	}
++
++	return addr + offset;
++}
++
++/**
+  * pci_bus_alloc_resource - allocate a resource from a parent bus
+  * @bus: PCI bus
+  * @res: resource to allocate
+@@ -129,9 +187,12 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
+ 
+-	/* don't allocate too high if the pref mem doesn't support 64bit*/
++	/* don't allocate too high if the pref mem doesn't support 64bit */
+ 	if (!(res->flags & IORESOURCE_MEM_64))
+-		max = PCIBIOS_MAX_MEM_32;
++		max = pci_bus_to_resource(bus, res->flags, type_mask,
++							PCIBIOS_MAX_MEM_32, 1);
++
++	min = pci_bus_to_resource(bus, res->flags, type_mask, min, 0);
+ 
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		if (!r)
+-- 
+1.8.3.2
 
-I opened https://bugzilla.kernel.org/show_bug.cgi?id=65521 for this
-issue.  I agree that pciehp should probably clear this bit.  Rajat
-recently posted some patches [1] that add support for link state
-changes.  I haven't look at them in detail yet, but I wouldn't be
-surprised if they will fix this issue.  If you wanted to test them,
-that would be awesome!
-
-Bjorn
-
-[1] http://lkml.kernel.org/r/528BE8B6.9080007@gmail.com
