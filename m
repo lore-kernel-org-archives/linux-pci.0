@@ -1,42 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:16298 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751301Ab3KRWzP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Nov 2013 17:55:15 -0500
-From: Eric Brower <ebrower@nvidia.com>
-To: <thierry.reding@gmail.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<swarren@wwwdotorg.org>, <linux-tegra@vger.kernel.org>,
-	Eric Brower <ebrower@nvidia.com>
-Subject: [PATCH] PCI: Disable Gen2 for Tegra20 and Tegra30
-Date: Mon, 18 Nov 2013 14:55:06 -0800
-Message-ID: <1384815306-3149-1-git-send-email-ebrower@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 3/3] PCI: Support PCIe Capability Slot registers only for
+ ports with slots
+To: stable@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	Amos Kong <kongjianjun@gmail.com>,
+	Adam Lee <adam.lee@canonical.com>,
+	linux-kernel@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Thomas Renninger <trenn@suse.de>
+Date: Tue, 19 Nov 2013 14:35:57 -0700
+Message-ID: <20131119213557.3839.56953.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20131119212714.3839.52182.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131119212714.3839.52182.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra20 and Tegra30 do not support gen2 PCIe, so correct the
-register setting to disable it.
+Commit 6d3a1741f1e648cfbd5a0cc94477a0d5004c6f5e upstream.  This is part
+of the fix for https://bugzilla.kernel.org/show_bug.cgi?id=65211
 
-Signed-off-by: Eric Brower <ebrower@nvidia.com>
+Previously we allowed callers to access Slot Capabilities, Status, and
+Control for Root Ports even if the Root Port did not implement a slot.
+This seems dubious because the spec only requires these registers if a
+slot is implemented.
+
+It's true that even Root Ports without slots must have *space* for these
+slot registers, because the Root Capabilities, Status, and Control
+registers are after the slot registers in the capability.  However,
+for a v1 PCIe Capability, the *semantics* of the slot registers are
+undefined unless a slot is implemented.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-By: Jiang Liu <jiang.liu@huawei.com>
+CC: stable@vger.kernel.org	# v3.7+
 ---
- drivers/pci/host/pci-tegra.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/access.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 0afbbbc..b8ba2f7 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -805,7 +805,7 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	afi_writel(pcie, value, AFI_PCIE_CONFIG);
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 9a46fa9135d9..061da8c3ab4b 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -497,9 +497,9 @@ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
  
- 	value = afi_readl(pcie, AFI_FUSE);
--	value &= ~AFI_FUSE_PCIE_T0_GEN2_DIS;
-+	value |= AFI_FUSE_PCIE_T0_GEN2_DIS;
- 	afi_writel(pcie, value, AFI_FUSE);
+-	return type == PCI_EXP_TYPE_ROOT_PORT ||
+-	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
+-		pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
++	return (type == PCI_EXP_TYPE_ROOT_PORT ||
++		type == PCI_EXP_TYPE_DOWNSTREAM) &&
++	       pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT;
+ }
  
- 	/* initialize internal PHY, enable up to 16 PCIE lanes */
--- 
-1.8.1.5
+ static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
 
