@@ -1,111 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:65150 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755373Ab3KFAZJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 19:25:09 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so16240716iec.41
-        for <linux-pci@vger.kernel.org>; Tue, 05 Nov 2013 16:25:08 -0800 (PST)
-Date: Tue, 5 Nov 2013 17:25:05 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rajat Jain <rajatjain.linux@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-hotplug@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Tom Nguyen <tom.l.nguyen@intel.com>,
-	Kristen Accardi <kristen.c.accardi@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
-Message-ID: <20131106002505.GC3359@google.com>
-References: <52797238.8070304@gmail.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:55885 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753070Ab3KSXsi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 18:48:38 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so5017791ieb.8
+        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 15:48:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52797238.8070304@gmail.com>
+In-Reply-To: <CAE9FiQUBiocnOhdmK3n4rgmTzdtxxNP93UU+uJvZm56s3VY5GA@mail.gmail.com>
+References: <1384843018-9479-1-git-send-email-yan@linux.vnet.ibm.com>
+ <1384843018-9479-2-git-send-email-yan@linux.vnet.ibm.com> <CAE9FiQUBiocnOhdmK3n4rgmTzdtxxNP93UU+uJvZm56s3VY5GA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 19 Nov 2013 16:48:17 -0700
+Message-ID: <CAErSpo7Je79ES=AL1LZ1ynVxx=7JfcsjkNP7Kr3ShfDb-2efJw@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] PCI: do not compare CPU address with PCI address
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 05, 2013 at 02:33:28PM -0800, Rajat Jain wrote:
-> In case of a spurious "cmd completed", pcie_write_cmd() does not
-> clear it, but yet expects more "cmd completed" events to be generated.
-> This does not happen because the previous (spurious) event has not
-> been acknowledged. Fix that.
-> 
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
-> ---
-> This is how I saw it in action: my controller does not implement any
-> hot-plug elements (LED, power ctrl, EMI etc) but still supports Command
-> completed bit.
->  - During initialization,
->       pcie_disable_notification()
->       -> pcie_write_cmd()
->          -> writes to Slot control register
->             -> which causes PCI_EXP_SLTSTA_CC to get set, which is not
->                cleared, because IRQ is not generated (we just disabled
->                notifications).
->  - After some time,
->       pcie_enable_notification()
->       -> pcie_write_cmd()
->           -> finds PCI_EXP_SLTSTA_CC is set, assumes it is spurious.
->           -> Does not clear it, yet expects more command completed
->              events to be generated (never happens).
+On Tue, Nov 19, 2013 at 12:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Nov 18, 2013 at 10:36 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+>> In resource assignment code, limits are exerted to restrict allocated
+>> resource range. However these limits are PCI address but compared to
+>> CPU address in the end. Translated them before comparing.
+>>
+>> We can't just use pcibios_bus_to_resource because the limits may not
+>> included in the host bridge window. Introduce a help function to
+>> do this translation, if address missed, return an approximate one.
+>>
+>> Signed-off-by: Guo Chao <yan@linux.vnet.ibm.com>
+>> ---
+>>  drivers/pci/bus.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
+>>  1 file changed, 63 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index fc1b740..532c0a4 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -99,6 +99,64 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+>>  }
+>>
+>>  /**
+>> + * pci_bus_to_resource
+>> + *
+>> + * Much like pcibios_bus_to_resource() except it takes a single address
+>> + * and returns an approximate one if target address is not included
+>> + * in the bridge window. The approximate address is smaller than required
+>> + * one is 'bound' is 1, larger than required one if 'bound' is 0.
+>> + */
+>> +static resource_size_t pci_bus_to_resource(struct pci_bus *bus, int flags,
+>> +                                   int mask, resource_size_t addr, int bound)
+>> +{
+>> +       struct pci_host_bridge *bridge;
+>> +       struct pci_host_bridge_window *window, *match = NULL;
+>> +       resource_size_t max = 0, min = -1;
+>> +       resource_size_t offset = -1, start, end;
+>> +
+>> +       while (bus->parent)
+>> +               bus = bus->parent;
+>> +
+>> +       bridge = to_pci_host_bridge(bus->bridge);
+>> +
+>> +       list_for_each_entry(window, &bridge->windows, list) {
+>> +               if ((flags ^ window->res->flags) & mask)
+>> +                       continue;
+>> +
+>> +               start = window->res->start - window->offset;
+>> +               end = window->res->end - window->offset;
+>> +
+>> +               if (addr >= start && addr <= end) {
+>> +                       offset = window->offset;
+>> +                       break;
+>> +               }
+>> +
+>> +               if (bound && addr > end && end > max) {
+>> +                       max = end;
+>> +                       match = window;
+>> +               } else if (!bound && addr < start && start < min) {
+>> +                       min = start;
+>> +                       match = window;
+>> +               }
+>> +       }
+>> +
+>> +       if (offset == -1) {
+>> +               /*
+>> +                * Not even found the matched type. This may happen,
+>> +                * for example, if try to translate IO address in a HB
+>> +                * without IO window. Just return the original address,
+>> +                * it will fail later anyway.
+>> +                */
+>> +               if (match == NULL)
+>> +                       return addr;
+>> +
+>> +               return (bound ? max : min) + match->offset;
+>> +       }
+>> +
+>> +       return addr + offset;
+>> +}
+>
+> that is confusing.
 
-I'm not sure this "cmd completed" is actually spurious.  Spec section
-7.8.10 is very clear that any write to Slot Control must cause a
-hot-plug command to be generated (if the port is hot-plug capable).
+I agree, this is way too confusing.
 
-Can you collect "lspci -vv" output for your controller?  I assume
-you're hitting this case in pcie_init() (added by 5808639bfa98
-("pciehp: fix slow probing")):
+I certainly agree that the current code is wrong -- PCIBIOS_MAX_MEM_32
+is a limit on the *bus* address, but we're using it to limit CPU
+addresses.  And it's not arch-dependent at all; it's strictly a
+function of PCI, so I think you should fix that, too.  Your [2/3]
+patch is a start, but I don't think there's any reason to allow an
+arch to override it, and it's only used in one place, so it doesn't
+need to be in include/linux/pci.h where it's effectively exported to
+the world.
 
-        /*
-         * Controller doesn't notify of command completion if the "No
-         * Command Completed Support" bit is set in Slot Capability
-         * register or the controller supports none of power
-         * controller, attention led, power led and EMI.
-         */
-        if (NO_CMD_CMPL(ctrl) ||
-            !(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) | EMI(ctrl)))
-            ctrl->no_cmd_complete = 1;
-
-and we're setting "no_cmd_complete = 1" for your controller, which
-keeps us from waiting for completion in pcie_write_cmd().
-
-I'm dubious about the assertion that a controller without power
-control, attention LED, power LED, or EMI can't support command
-completion.  I don't see anything in the spec to that effect.
-
-Since you're seeing PCI_EXP_SLTSTA_CC=1, your controller *should*
-support Command Completion notification and PCI_EXP_SLTCAP_NCCS should
-be 0 (per Table 7-20), so I wonder what happens on your system if you
-change pcie_init() so it leaves "ctrl->no_cmd_complete = 0" instead?
-Does it work correctly then?
-
-I know we can't just drop the "!(POWER_CTRL(ctrl) | ...)" tests
-because we don't want to reintroduce the problem fixed by
-5808639bfa98, but I wonder if we can find a better fix that addresses
-both problems.
+It's completely bogus to try to compute "max" outside the loop because
+there's no requirement that the translation offset be the same for all
+the resources.  But *inside* the loop, you have a valid struct
+resource, and you can easily compute the corresponding bus addresses
+and determine whether they fit in 32 bits.
 
 Bjorn
-
-> 
->  drivers/pci/hotplug/pciehp_hpc.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 5b8d749..ba8e06f 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -185,6 +185,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
->  	}
->  
->  	if (slot_status & PCI_EXP_SLTSTA_CC) {
-> +		pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_CC);
->  		if (!ctrl->no_cmd_complete) {
->  			/*
->  			 * After 1 sec and CMD_COMPLETED still not set, just
-> -- 
-> 1.7.9.5
-> 
