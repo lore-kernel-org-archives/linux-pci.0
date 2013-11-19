@@ -1,45 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:53332 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751900Ab3KZV2A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:28:00 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 03/11] PCI/MSI/pSeries: Fix wrong error code reporting
-Date: Tue, 26 Nov 2013 10:09:52 +0100
-Message-Id: <d581b747b29bec18b6c8a8ee2d55c476751fb77c.1385399393.git.agordeev@redhat.com>
-In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
-References: <cover.1385399393.git.agordeev@redhat.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:36451 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663Ab3KSTfY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 14:35:24 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so3911770iec.9
+        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 11:35:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUBiocnOhdmK3n4rgmTzdtxxNP93UU+uJvZm56s3VY5GA@mail.gmail.com>
+References: <1384843018-9479-1-git-send-email-yan@linux.vnet.ibm.com>
+	<1384843018-9479-2-git-send-email-yan@linux.vnet.ibm.com>
+	<CAE9FiQUBiocnOhdmK3n4rgmTzdtxxNP93UU+uJvZm56s3VY5GA@mail.gmail.com>
+Date: Tue, 19 Nov 2013 11:35:24 -0800
+Message-ID: <CAE9FiQWnXrj+8eDGqmqv+admc0a352b-n2mMKmmmKVLbXmPm-A@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] PCI: do not compare CPU address with PCI address
+From: Yinghai Lu <yinghai@kernel.org>
+To: Guo Chao <yan@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: multipart/mixed; boundary=047d7bd758b81307de04eb8cc473
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/powerpc/platforms/pseries/msi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+--047d7bd758b81307de04eb8cc473
+Content-Type: text/plain; charset=ISO-8859-1
 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 6d2f0ab..009ec73 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -467,7 +467,7 @@ again:
- 	list_for_each_entry(entry, &pdev->msi_list, list) {
- 		hwirq = rtas_query_irq_number(pdn, i++);
- 		if (hwirq < 0) {
--			pr_debug("rtas_msi: error (%d) getting hwirq\n", rc);
-+			pr_debug("rtas_msi: error (%d) getting hwirq\n", hwirq);
- 			return hwirq;
- 		}
- 
--- 
-1.7.7.6
+On Tue, Nov 19, 2013 at 11:31 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Nov 18, 2013 at 10:36 PM, Guo Chao <yan@linux.vnet.ibm.com>
+> Can we use http://lkml.indiana.edu/hypermail/linux/kernel/1206.0/00437/pcibus_addr_converting_bus.patch
+> instead?
+>
+> or as attached:
 
+and
+
+--047d7bd758b81307de04eb8cc473
+Content-Type: text/x-patch; charset=US-ASCII; name="allocate_high_at_first_v6_1.patch"
+Content-Disposition: attachment;
+	filename="allocate_high_at_first_v6_1.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ho7jl0mn2
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IFRyeSB0byBhbGxvY2F0ZSBtZW02NCBhYm92ZSA0RyBhdCBm
+aXJzdAoKV2lsbCBmYWxsIGJhY2sgdG8gYmVsb3cgNGcgaWYgaXQgY2FuIG5vdCBmaW5kIGFueSBh
+Ym92ZSA0Zy4KCng4NiAzMmJpdCB3aXRob3V0IFg4Nl9QQUUgc3VwcG9ydCB3aWxsIGhhdmUgYm90
+dG9tIHNldCB0byAwLCBiZWNhdXNlCnJlc291cmNlX3NpemVfdCBpcyAzMmJpdC4KCkFsc28gZm9y
+IDMyYml0IHdpdGggcmVzb3VyY2Vfc2l6ZV90IDY0Yml0IGtlcm5lbCBvbiBtYWNoaW5lIHdpdGgg
+cGFlIHN1cHBvcnQKd2UgYXJlIHNhZmUgYmVjYXVzZSBpb21lbV9yZXNvdXJjZSBpcyBsaW1pdGVk
+IHRvIDMyYml0IGFjY29yZGluZyB0bwp4ODZfcGh5c19iaXRzLgoKLXYyOiB1cGRhdGUgYm90dG9t
+IGFzc2lnbmluZyB0byBtYWtlIGl0IGNsZWFyIGZvciBub24tcGFlIHN1cHBvcnQgbWFjaGluZS4K
+LXYzOiBCam9ybidzIGNoYW5nZToKICAgICAgICB1c2UgTUFYX1JFU09VUkNFIGluc3RlYWQgb2Yg
+LTEKICAgICAgICB1c2Ugc3RhcnQvZW5kIGluc3RlYWQgb2YgYm90dG9tL21heAogICAgICAgIGZv
+ciBhbGwgYXJjaCBpbnN0ZWFkIG9mIGp1c3QgeDg2XzY0Ci12NDogdXBkYXRlZCBhZnRlciBQQ0lf
+TUFYX1JFU09VUkNFXzMyIGNoYW5nZS4KLXY1OiByZXN0b3JlIGlvIGhhbmRsaW5nIHRvIHVzZSBQ
+Q0lfTUFYX1JFU09VUkNFXzMyIGFzIGxpbWl0LgotdjY6IGNoZWNraW5nIHBjaWJpb3NfcmVzb3Vy
+Y2VfdG9fYnVzIHJldHVybiBmb3IgZXZlcnkgYnVzIHJlcywgdG8gZGVjaWRlIGl0CglpZiB3ZSBu
+ZWVkIHRvIHRyeSBoaWdoIGF0IGZpcnN0LgogICAgIEl0IHN1cHBvcnRzIGFsbCBhcmNoZXMgaW5z
+dGVhZCBvZiBqdXN0IHg4Nl82NC4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlA
+a2VybmVsLm9yZz4KCi0tLQogYXJjaC94ODYvaW5jbHVkZS9hc20vcGNpLmggfCAgICAxIC0KIGRy
+aXZlcnMvcGNpL2J1cy5jICAgICAgICAgIHwgICA0MiArKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrLS0tLS0tLS0KIGRyaXZlcnMvcGNpL3BjaS5oICAgICAgICAgIHwgICAgMiArKwog
+aW5jbHVkZS9saW51eC9wY2kuaCAgICAgICAgfCAgICA0IC0tLS0KIDQgZmlsZXMgY2hhbmdlZCwg
+MzYgaW5zZXJ0aW9ucygrKSwgMTMgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2FyY2gv
+eDg2L2luY2x1ZGUvYXNtL3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2FyY2gv
+eDg2L2luY2x1ZGUvYXNtL3BjaS5oCisrKyBsaW51eC0yLjYvYXJjaC94ODYvaW5jbHVkZS9hc20v
+cGNpLmgKQEAgLTE1NSw3ICsxNTUsNiBAQCB2b2lkIGRlZmF1bHRfcmVzdG9yZV9tc2lfaXJxcyhz
+dHJ1Y3QgcGNpCiAKIC8qIGdlbmVyaWMgcGNpIHN0dWZmICovCiAjaW5jbHVkZSA8YXNtLWdlbmVy
+aWMvcGNpLmg+Ci0jZGVmaW5lIFBDSUJJT1NfTUFYX01FTV8zMiAweGZmZmZmZmZmCiAKICNpZmRl
+ZiBDT05GSUdfTlVNQQogLyogUmV0dXJucyB0aGUgbm9kZSBiYXNlZCBvbiBwY2kgYnVzICovCklu
+ZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42
+Lm9yaWcvZHJpdmVycy9wY2kvYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMuYwpA
+QCAtMTI1LDE1ICsxMjUsMTMgQEAgcGNpX2J1c19hbGxvY19yZXNvdXJjZShzdHJ1Y3QgcGNpX2J1
+cyAqYgogewogCWludCBpLCByZXQgPSAtRU5PTUVNOwogCXN0cnVjdCByZXNvdXJjZSAqcjsKLQly
+ZXNvdXJjZV9zaXplX3QgbWF4ID0gLTE7CiAKIAl0eXBlX21hc2sgfD0gSU9SRVNPVVJDRV9JTyB8
+IElPUkVTT1VSQ0VfTUVNOwogCi0JLyogZG9uJ3QgYWxsb2NhdGUgdG9vIGhpZ2ggaWYgdGhlIHBy
+ZWYgbWVtIGRvZXNuJ3Qgc3VwcG9ydCA2NGJpdCovCi0JaWYgKCEocmVzLT5mbGFncyAmIElPUkVT
+T1VSQ0VfTUVNXzY0KSkKLQkJbWF4ID0gUENJQklPU19NQVhfTUVNXzMyOwotCiAJcGNpX2J1c19m
+b3JfZWFjaF9yZXNvdXJjZShidXMsIHIsIGkpIHsKKwkJcmVzb3VyY2Vfc2l6ZV90IHN0YXJ0LCBl
+bmQsIG1pZGRsZTsKKwkJc3RydWN0IHBjaV9idXNfcmVnaW9uIHJlZ2lvbjsKKwogCQlpZiAoIXIp
+CiAJCQljb250aW51ZTsKIApAQCAtMTQ3LDE0ICsxNDUsNDIgQEAgcGNpX2J1c19hbGxvY19yZXNv
+dXJjZShzdHJ1Y3QgcGNpX2J1cyAqYgogCQkgICAgIShyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9Q
+UkVGRVRDSCkpCiAJCQljb250aW51ZTsKIAorCQlzdGFydCA9IDA7CisJCWVuZCA9IE1BWF9SRVNP
+VVJDRTsKKwkJLyoKKwkJICogZG9uJ3QgYWxsb2NhdGUgdG9vIGhpZ2ggaWYgdGhlIHByZWYgbWVt
+IGRvZXNuJ3QKKwkJICogc3VwcG9ydCA2NGJpdCwgYWxzbyBpZiB0aGlzIGlzIGEgNjQtYml0IG1l
+bQorCQkgKiByZXNvdXJjZSwgdHJ5IGFib3ZlIDRHQiBmaXJzdAorCQkgKi8KKwkJX19wY2liaW9z
+X3Jlc291cmNlX3RvX2J1cyhidXMsICZyZWdpb24sIHIpOworCQlpZiAocmVnaW9uLnN0YXJ0IDw9
+IFBDSV9NQVhfQUREUl8zMiAmJgorCQkgICAgcmVnaW9uLmVuZCA+IFBDSV9NQVhfQUREUl8zMikg
+eworCQkJbWlkZGxlID0gcGNpYmlvc19idXNfYWRkcl90b19yZXMoYnVzLCByZXMtPmZsYWdzLAor
+CQkJCQkJICAgICAgUENJX01BWF9BRERSXzMyKTsKKwkJCWlmIChyZXMtPmZsYWdzICYgSU9SRVNP
+VVJDRV9NRU1fNjQpCisJCQkJc3RhcnQgPSBtaWRkbGUgKyAxOworCQkJZWxzZQorCQkJCWVuZCA9
+IG1pZGRsZTsKKwkJfSBlbHNlIGlmIChyZWdpb24uc3RhcnQgPiBQQ0lfTUFYX0FERFJfMzIgJiYK
+KwkJCSAgICEocmVzLT5mbGFncyAmIElPUkVTT1VSQ0VfTUVNXzY0KSkKKwkJCQljb250aW51ZTsK
+KworYWdhaW46CiAJCS8qIE9rLCB0cnkgaXQgb3V0Li4gKi8KIAkJcmV0ID0gYWxsb2NhdGVfcmVz
+b3VyY2UociwgcmVzLCBzaXplLAotCQkJCQlyLT5zdGFydCA/IDogbWluLAotCQkJCQltYXgsIGFs
+aWduLAorCQkJCQltYXgoc3RhcnQsIHItPnN0YXJ0ID8gOiBtaW4pLAorCQkJCQllbmQsIGFsaWdu
+LAogCQkJCQlhbGlnbmYsIGFsaWduZl9kYXRhKTsKIAkJaWYgKHJldCA9PSAwKQotCQkJYnJlYWs7
+CisJCQlyZXR1cm4gMDsKKworCQlpZiAoc3RhcnQgIT0gMCkgeworCQkJc3RhcnQgPSAwOworCQkJ
+Z290byBhZ2FpbjsKKwkJfQogCX0KKworCiAJcmV0dXJuIHJldDsKIH0KIApJbmRleDogbGludXgt
+Mi42L2RyaXZlcnMvcGNpL3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZl
+cnMvcGNpL3BjaS5oCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLmgKQEAgLTE5NSw2ICsx
+OTUsOCBAQCBlbnVtIHBjaV9iYXJfdHlwZSB7CiAJcGNpX2Jhcl9tZW02NCwJCS8qIEEgNjQtYml0
+IG1lbW9yeSBCQVIgKi8KIH07CiAKKyNkZWZpbmUgUENJX01BWF9BRERSXzMyCSgocmVzb3VyY2Vf
+c2l6ZV90KTB4ZmZmZmZmZmYpCisKIGJvb2wgcGNpX2J1c19yZWFkX2Rldl92ZW5kb3JfaWQoc3Ry
+dWN0IHBjaV9idXMgKmJ1cywgaW50IGRldmZuLCB1MzIgKnBsLAogCQkJCWludCBjcnNfdGltZW91
+dCk7CiBpbnQgcGNpX3NldHVwX2RldmljZShzdHJ1Y3QgcGNpX2RldiAqZGV2KTsKSW5kZXg6IGxp
+bnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmln
+L2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCkBA
+IC0xNTM5LDEwICsxNTM5LDYgQEAgc3RhdGljIGlubGluZSBzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdl
+ICpwYwogCiAjaW5jbHVkZSA8YXNtL3BjaS5oPgogCi0jaWZuZGVmIFBDSUJJT1NfTUFYX01FTV8z
+MgotI2RlZmluZSBQQ0lCSU9TX01BWF9NRU1fMzIgKC0xKQotI2VuZGlmCi0KIC8qIHRoZXNlIGhl
+bHBlcnMgcHJvdmlkZSBmdXR1cmUgYW5kIGJhY2t3YXJkcyBjb21wYXRpYmlsaXR5CiAgKiBmb3Ig
+YWNjZXNzaW5nIHBvcHVsYXIgUENJIEJBUiBpbmZvICovCiBzdGF0aWMgaW5saW5lIHJlc291cmNl
+X3NpemVfdCBwY2lfcmVzb3VyY2Vfc3RhcnQoY29uc3Qgc3RydWN0IHBjaV9kZXYgKmRldiwK
+--047d7bd758b81307de04eb8cc473--
