@@ -1,64 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56733 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752543Ab3K2SPH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 13:15:07 -0500
-Message-ID: <5298D99A.5040304@canonical.com>
-Date: Fri, 29 Nov 2013 13:14:50 -0500
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:47116
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750707Ab3KSFXR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 00:23:17 -0500
+From: Bharat Bhushan <r65777@freescale.com>
+To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
+	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
+	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
+	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-kernel@vger.kernel.org>
+CC: Bharat Bhushan <bharat.bhushan@freescale.com>
+Subject: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Tue, 19 Nov 2013 10:47:04 +0530
+Message-ID: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [REGRESSION][v3.4-rc1] PCI: add a PCI resource reallocation config
- option
-References: <52965493.8060208@canonical.com> <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
-In-Reply-To: <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/28/2013 02:17 AM, Yinghai Lu wrote:
-> On Wed, Nov 27, 2013 at 12:22 PM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
->> Hi Yinghai,
->>
->> A kernel bug was opened against Ubuntu [0].  After a kernel bisect, it
->> was found that the following commit introduced the bug:
->>
->> commit b07f2ebc109b607789f648dedcff4b125f9afec6
->> Author: Yinghai Lu <yinghai@kernel.org>
->> Date:   Thu Feb 23 19:23:32 2012 -0800
->>
->>     PCI: add a PCI resource reallocation config option
->>
->>
->>
->> The regression was introduced as of v3.4-rc1 and also exists in current
->> mainline.
->>
->> The bug seems platform specific since we have not had allot of other
->> reports.  The bug is preventing ixgbe to probe Intel x520 NIC's.
->>
->> It would be easy enough to disable the PCI_REALLOC_ENABLE_AUTO config
->> option, but I wanted to get your feedback since you are the author.  It
->> looks like the bug reporter may also be able to work around the problem
->> with the pci=realloc=.
-> The bios has problem to have two functions rom bar to same place, and
-> root bus does
-> not enough mmio range and confuse realloc logic.
->
-> Please try attached patches to top of linus's tree, or your internal tree.
->
-> Thanks
->
-> Yinghai
-Thanks so much for the patches, Yinghai.  I'll report back with the
-testing results.
+From: Bharat Bhushan <bharat.bhushan@freescale.com>
 
-Thanks,
+PAMU (FSL IOMMU) has a concept of primary window and subwindows.
+Primary window corresponds to the complete guest iova address space
+(including MSI space), with respect to IOMMU_API this is termed as
+geometry. IOVA Base of subwindow is determined from the number of
+subwindows (configurable using iommu API).
+MSI I/O page must be within the geometry and maximum supported
+subwindows, so MSI IO-page is setup just after guest memory iova space.
 
-Joe
+So patch 1/9-4/9(inclusive) are for defining the interface to get:
+  - Number of MSI regions (which is number of MSI banks for powerpc)
+  - MSI-region address range: Physical page which have the
+    address/addresses used for generating MSI interrupt
+    and size of the page.
+
+Patch 5/9-7/9(inclusive) is defining the interface of setting up
+MSI iova-base for a msi region(bank) for a device. so that when
+msi-message will be composed then this configured iova will be used.
+Earlier we were using iommu interface for getting the configured iova
+which was not currect and Alex Williamson suggeested this type of interface.
+
+patch 8/9 moves some common functions in a separate file so that these
+can be used by FSL_PAMU implementation (next patch uses this).
+These will be used later for iommu-none implementation. I believe we
+can do more of this but will take step by step.
+
+Finally last patch actually adds the support for FSL-PAMU :)
+
+v1->v2
+ - Added interface for setting msi iova for a msi region for a device.
+   Earlier I added iommu interface for same but as per comment that is
+   removed and now created a direct interface between vfio and msi.
+ - Incorporated review comments (details is in individual patch)
+
+Bharat Bhushan (9):
+  pci:msi: add weak function for returning msi region info
+  pci: msi: expose msi region information functions
+  powerpc: pci: Add arch specific msi region interface
+  powerpc: msi: Extend the msi region interface to get info from
+    fsl_msi
+  pci/msi: interface to set an iova for a msi region
+  powerpc: pci: Extend msi iova page setup to arch specific
+  pci: msi: Extend msi iova setting interface to powerpc arch
+  vfio: moving some functions in common file
+  vfio pci: Add vfio iommu implementation for FSL_PAMU
+
+ arch/powerpc/include/asm/machdep.h |   10 +
+ arch/powerpc/kernel/msi.c          |   28 +
+ arch/powerpc/sysdev/fsl_msi.c      |  132 +++++-
+ arch/powerpc/sysdev/fsl_msi.h      |   25 +-
+ drivers/pci/msi.c                  |   35 ++
+ drivers/vfio/Kconfig               |    6 +
+ drivers/vfio/Makefile              |    5 +-
+ drivers/vfio/vfio_iommu_common.c   |  227 ++++++++
+ drivers/vfio/vfio_iommu_common.h   |   27 +
+ drivers/vfio/vfio_iommu_fsl_pamu.c | 1003 ++++++++++++++++++++++++++++++++++++
+ drivers/vfio/vfio_iommu_type1.c    |  206 +--------
+ include/linux/msi.h                |   14 +
+ include/linux/pci.h                |   21 +
+ include/uapi/linux/vfio.h          |  100 ++++
+ 14 files changed, 1623 insertions(+), 216 deletions(-)
+ create mode 100644 drivers/vfio/vfio_iommu_common.c
+ create mode 100644 drivers/vfio/vfio_iommu_common.h
+ create mode 100644 drivers/vfio/vfio_iommu_fsl_pamu.c
+
+
