@@ -1,301 +1,220 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/3] ACPI / hotplug: Merge device hot-removal routines
-Date: Mon, 04 Nov 2013 01:21:46 +0100
-Message-ID: <5913958.7oJcoqqQ9l@vostro.rjw.lan>
-In-Reply-To: <5839747.7HXXGHmMBd@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:60284 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751723Ab3KSTbr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 14:31:47 -0500
+Received: by mail-ie0-f172.google.com with SMTP id qd12so2658337ieb.31
+        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 11:31:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1384843018-9479-2-git-send-email-yan@linux.vnet.ibm.com>
+References: <1384843018-9479-1-git-send-email-yan@linux.vnet.ibm.com>
+	<1384843018-9479-2-git-send-email-yan@linux.vnet.ibm.com>
+Date: Tue, 19 Nov 2013 11:31:45 -0800
+Message-ID: <CAE9FiQUBiocnOhdmK3n4rgmTzdtxxNP93UU+uJvZm56s3VY5GA@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] PCI: do not compare CPU address with PCI address
+From: Yinghai Lu <yinghai@kernel.org>
+To: Guo Chao <yan@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: multipart/mixed; boundary=047d7bdca4300d4bbd04eb8cb7ef
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+--047d7bdca4300d4bbd04eb8cb7ef
+Content-Type: text/plain; charset=ISO-8859-1
 
-The only substantial difference between acpi_bus_device_eject() and
-acpi_bus_hot_remove_device() is the get_device() done by the former
-which is supposed to be done by callers of the latter.  However,
-at least one caller of acpi_bus_hot_remove_device(), which is
-handle_root_bridge_removal(), doesn't do that and generally it
-won't be necessary to do that at all if ACPI handles, rather than
-struct acpi_device objects, are passed between ACPI hotplug routines,
-because the correctness of those routines already depends on the
-persistence of ACPI handles (that may not be an entirely correct
-assumption in theory, but in practice it has been good enough for a
-long time).
+On Mon, Nov 18, 2013 at 10:36 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+> In resource assignment code, limits are exerted to restrict allocated
+> resource range. However these limits are PCI address but compared to
+> CPU address in the end. Translated them before comparing.
+>
+> We can't just use pcibios_bus_to_resource because the limits may not
+> included in the host bridge window. Introduce a help function to
+> do this translation, if address missed, return an approximate one.
+>
+> Signed-off-by: Guo Chao <yan@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/bus.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 63 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index fc1b740..532c0a4 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -99,6 +99,64 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+>  }
+>
+>  /**
+> + * pci_bus_to_resource
+> + *
+> + * Much like pcibios_bus_to_resource() except it takes a single address
+> + * and returns an approximate one if target address is not included
+> + * in the bridge window. The approximate address is smaller than required
+> + * one is 'bound' is 1, larger than required one if 'bound' is 0.
+> + */
+> +static resource_size_t pci_bus_to_resource(struct pci_bus *bus, int flags,
+> +                                   int mask, resource_size_t addr, int bound)
+> +{
+> +       struct pci_host_bridge *bridge;
+> +       struct pci_host_bridge_window *window, *match = NULL;
+> +       resource_size_t max = 0, min = -1;
+> +       resource_size_t offset = -1, start, end;
+> +
+> +       while (bus->parent)
+> +               bus = bus->parent;
+> +
+> +       bridge = to_pci_host_bridge(bus->bridge);
+> +
+> +       list_for_each_entry(window, &bridge->windows, list) {
+> +               if ((flags ^ window->res->flags) & mask)
+> +                       continue;
+> +
+> +               start = window->res->start - window->offset;
+> +               end = window->res->end - window->offset;
+> +
+> +               if (addr >= start && addr <= end) {
+> +                       offset = window->offset;
+> +                       break;
+> +               }
+> +
+> +               if (bound && addr > end && end > max) {
+> +                       max = end;
+> +                       match = window;
+> +               } else if (!bound && addr < start && start < min) {
+> +                       min = start;
+> +                       match = window;
+> +               }
+> +       }
+> +
+> +       if (offset == -1) {
+> +               /*
+> +                * Not even found the matched type. This may happen,
+> +                * for example, if try to translate IO address in a HB
+> +                * without IO window. Just return the original address,
+> +                * it will fail later anyway.
+> +                */
+> +               if (match == NULL)
+> +                       return addr;
+> +
+> +               return (bound ? max : min) + match->offset;
+> +       }
+> +
+> +       return addr + offset;
+> +}
 
-For this reason, modify acpi_bus_device_eject() to take two
-arguments, an ACPI handle and event code, and make
-acpi_bus_hot_remove_device() call it internally.  Moreover, rework
-acpi_bus_hot_remove_device() so that it only takes one argument,
-an ACPI handle, and make acpi_scan_bus_device_check() queue up
-acpi_bus_hot_remove_device() instead of acpi_bus_device_eject()
-itself.  After these changes, handle_root_bridge_removal() may
-be replaced with async execution of acpi_bus_hot_remove_device()
-with the ACPI handle of the root passed to it as the argument.
+that is confusing.
 
-However, since acpi_eject_store() also needs to execute
-acpi_bus_device_eject() asynchronously and it needs to pass a
-special event code, ACPI_OST_EC_OSPM_EJECT, to that function,
-introduce a separate wrapper around acpi_bus_device_eject(),
-acpi_eject_store_work(), that will be queued up by
-acpi_eject_store() instead of acpi_bus_hot_remove_device().
-This allows acpi_eject_store() to be simplified and it allows
-struct acpi_eject_event to be dropped entirely, as there's
-no more users of that structure.
+Can we use http://lkml.indiana.edu/hypermail/linux/kernel/1206.0/00437/pcibus_addr_converting_bus.patch
+instead?
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/internal.h |    1 
- drivers/acpi/pci_root.c |   28 ++--------------
- drivers/acpi/scan.c     |   81 ++++++++++++++++--------------------------------
- include/acpi/acpi_bus.h |    6 ---
- 4 files changed, 32 insertions(+), 84 deletions(-)
+or as attached:
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -285,9 +285,8 @@ static int acpi_scan_hot_remove(struct a
- 	return 0;
- }
- 
--static void acpi_bus_device_eject(void *context)
-+static void acpi_bus_device_eject(acpi_handle handle, u32 ost_source)
- {
--	acpi_handle handle = context;
- 	struct acpi_device *device = NULL;
- 	struct acpi_scan_handler *handler;
- 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
-@@ -304,8 +303,10 @@ static void acpi_bus_device_eject(void *
- 	if (!handler || !handler->hotplug.enabled)
- 		goto err_support;
- 
--	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
--				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
-+	if (ost_source == ACPI_NOTIFY_EJECT_REQUEST)
-+		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
-+					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
-+
- 	if (handler->hotplug.mode == AHM_CONTAINER)
- 		kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
- 
-@@ -325,11 +326,22 @@ static void acpi_bus_device_eject(void *
-  err_support:
- 	ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
-  err_out:
--	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST, ost_code,
--				  NULL);
-+	acpi_evaluate_hotplug_ost(handle, ost_source, ost_code, NULL);
- 	goto out;
- }
- 
-+/**
-+ * acpi_bus_hot_remove_device: Eject a device and its children.
-+ * @context: ACPI handle of the device to eject.
-+ *
-+ * Hot-remove a device and its children. This function is to be called
-+ * asynchronously through acpi_os_hotplug_execute().
-+ */
-+void acpi_bus_hot_remove_device(void *context)
-+{
-+	acpi_bus_device_eject(context, ACPI_NOTIFY_EJECT_REQUEST);
-+}
-+
- static void acpi_scan_bus_device_check(acpi_handle handle, u32 ost_source)
- {
- 	struct acpi_device *device = NULL;
-@@ -428,7 +440,7 @@ static void acpi_hotplug_notify_cb(acpi_
- 		break;
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
--		callback = acpi_bus_device_eject;
-+		callback = acpi_bus_hot_remove_device;
- 		break;
- 	default:
- 		/* non-hotplug event; possibly handled by other handler */
-@@ -441,36 +453,6 @@ static void acpi_hotplug_notify_cb(acpi_
- 					  NULL);
- }
- 
--/**
-- * acpi_bus_hot_remove_device: hot-remove a device and its children
-- * @context: struct acpi_eject_event pointer (freed in this func)
-- *
-- * Hot-remove a device and its children. This function frees up the
-- * memory space passed by arg context, so that the caller may call
-- * this function asynchronously through acpi_os_hotplug_execute().
-- */
--void acpi_bus_hot_remove_device(void *context)
--{
--	struct acpi_eject_event *ej_event = context;
--	struct acpi_device *device = ej_event->device;
--	acpi_handle handle = device->handle;
--	int error;
--
--	lock_device_hotplug();
--	mutex_lock(&acpi_scan_lock);
--
--	error = acpi_scan_hot_remove(device);
--	if (error && handle)
--		acpi_evaluate_hotplug_ost(handle, ej_event->event,
--					  ACPI_OST_SC_NON_SPECIFIC_FAILURE,
--					  NULL);
--
--	mutex_unlock(&acpi_scan_lock);
--	unlock_device_hotplug();
--	kfree(context);
--}
--EXPORT_SYMBOL(acpi_bus_hot_remove_device);
--
- static ssize_t real_power_state_show(struct device *dev,
- 				     struct device_attribute *attr, char *buf)
- {
-@@ -497,15 +479,18 @@ static ssize_t power_state_show(struct d
- 
- static DEVICE_ATTR(power_state, 0444, power_state_show, NULL);
- 
-+static void acpi_eject_store_work(void *context)
-+{
-+	acpi_bus_device_eject(context, ACPI_OST_EC_OSPM_EJECT);
-+}
-+
- static ssize_t
- acpi_eject_store(struct device *d, struct device_attribute *attr,
- 		const char *buf, size_t count)
- {
- 	struct acpi_device *acpi_device = to_acpi_device(d);
--	struct acpi_eject_event *ej_event;
- 	acpi_object_type not_used;
- 	acpi_status status;
--	int ret;
- 
- 	if (!count || buf[0] != '1')
- 		return -EINVAL;
-@@ -518,28 +503,16 @@ acpi_eject_store(struct device *d, struc
- 	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
- 		return -ENODEV;
- 
--	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
--	if (!ej_event) {
--		ret = -ENOMEM;
--		goto err_out;
--	}
- 	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
- 				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
--	ej_event->device = acpi_device;
--	ej_event->event = ACPI_OST_EC_OSPM_EJECT;
--	get_device(&acpi_device->dev);
--	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
-+	status = acpi_os_hotplug_execute(acpi_eject_store_work,
-+					 acpi_device->handle);
- 	if (ACPI_SUCCESS(status))
- 		return count;
- 
--	put_device(&acpi_device->dev);
--	kfree(ej_event);
--	ret = status == AE_NO_MEMORY ? -ENOMEM : -EAGAIN;
--
-- err_out:
- 	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
- 				  ACPI_OST_SC_NON_SPECIFIC_FAILURE, NULL);
--	return ret;
-+	return -EAGAIN;
- }
- 
- static DEVICE_ATTR(eject, 0200, NULL, acpi_eject_store);
-Index: linux-pm/drivers/acpi/internal.h
-===================================================================
---- linux-pm.orig/drivers/acpi/internal.h
-+++ linux-pm/drivers/acpi/internal.h
-@@ -92,6 +92,7 @@ void acpi_device_add_finalize(struct acp
- void acpi_free_pnp_ids(struct acpi_device_pnp *pnp);
- int acpi_bind_one(struct device *dev, acpi_handle handle);
- int acpi_unbind_one(struct device *dev);
-+void acpi_bus_hot_remove_device(void *context);
- 
- /* --------------------------------------------------------------------------
-                                   Power Resource
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -39,6 +39,8 @@
- #include <acpi/acpi_drivers.h>
- #include <acpi/apei.h>
- 
-+#include "internal.h"
-+
- #define PREFIX "ACPI: "
- 
- #define _COMPONENT		ACPI_PCI_COMPONENT
-@@ -590,29 +592,6 @@ static void handle_root_bridge_insertion
- 		acpi_handle_err(handle, "cannot add bridge to acpi list\n");
- }
- 
--static void handle_root_bridge_removal(struct acpi_device *device)
--{
--	acpi_status status;
--	struct acpi_eject_event *ej_event;
--
--	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
--	if (!ej_event) {
--		/* Inform firmware the hot-remove operation has error */
--		(void) acpi_evaluate_hotplug_ost(device->handle,
--					ACPI_NOTIFY_EJECT_REQUEST,
--					ACPI_OST_SC_NON_SPECIFIC_FAILURE,
--					NULL);
--		return;
--	}
--
--	ej_event->device = device;
--	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
--
--	status = acpi_os_hotplug_execute(acpi_bus_hot_remove_device, ej_event);
--	if (ACPI_FAILURE(status))
--		kfree(ej_event);
--}
--
- static void _handle_hotplug_event_root(struct work_struct *work)
- {
- 	struct acpi_pci_root *root;
-@@ -653,7 +632,8 @@ static void _handle_hotplug_event_root(s
- 		acpi_handle_printk(KERN_DEBUG, handle,
- 				   "Device eject notify on %s\n", __func__);
- 		if (root)
--			handle_root_bridge_removal(root->device);
-+			acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
-+						handle);
- 		break;
- 	default:
- 		acpi_handle_warn(handle,
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -339,11 +339,6 @@ struct acpi_bus_event {
- 	u32 data;
- };
- 
--struct acpi_eject_event {
--	struct acpi_device	*device;
--	u32		event;
--};
--
- struct acpi_hp_work {
- 	struct work_struct work;
- 	acpi_handle handle;
-@@ -391,7 +386,6 @@ int acpi_scan_add_handler(struct acpi_sc
- int acpi_bus_register_driver(struct acpi_driver *driver);
- void acpi_bus_unregister_driver(struct acpi_driver *driver);
- int acpi_bus_scan(acpi_handle handle);
--void acpi_bus_hot_remove_device(void *context);
- void acpi_bus_trim(struct acpi_device *start);
- acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
- int acpi_match_device_ids(struct acpi_device *device,
+--047d7bdca4300d4bbd04eb8cb7ef
+Content-Type: text/x-patch; charset=US-ASCII; name="pcibus_addr_converting_bus.patch"
+Content-Disposition: attachment; filename="pcibus_addr_converting_bus.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ho7jb30a0
 
+U3ViamVjdDogW1BBVENIXSBQQ0k6IHBjaWJ1cyBhZGRyZXNzIHRvIHJlc291cmNlIGNvbnZlcnRp
+bmcgdGFrZSBidXMgZGlyZWN0bHkKCkZvciBhbGxvY2F0aW5nIHJlc291cmNlIHVuZGVyIGJ1cyBw
+YXRoLCB3ZSBkbyBoYXZlIGRldiBwYXNzIGFsb25nLCBhbmQgd2UKY291bGQganVzdCB1c2UgYnVz
+IGluc3RlYWQuCgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+
+CgotLS0KIGRyaXZlcnMvcGNpL2hvc3QtYnJpZGdlLmMgfCAgIDM0ICsrKysrKysrKysrKysrKysr
+KysrKy0tLS0tLS0tLS0tLS0KIGluY2x1ZGUvbGludXgvcGNpLmggICAgICAgfCAgICAzICsrKwog
+MiBmaWxlcyBjaGFuZ2VkLCAyNCBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKCkluZGV4
+OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvaG9zdC1icmlkZ2UuYwo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51
+eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9ob3N0LWJyaWRnZS5jCisrKyBsaW51eC0yLjYvZHJpdmVy
+cy9wY2kvaG9zdC1icmlkZ2UuYwpAQCAtOSwyMiArOSwxOSBAQAogCiAjaW5jbHVkZSAicGNpLmgi
+CiAKLXN0YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqZmluZF9wY2lfcm9vdF9idXMoc3RydWN0IHBjaV9k
+ZXYgKmRldikKK3N0YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqZmluZF9wY2lfcm9vdF9idXMoc3RydWN0
+IHBjaV9idXMgKmJ1cykKIHsKLQlzdHJ1Y3QgcGNpX2J1cyAqYnVzOwotCi0JYnVzID0gZGV2LT5i
+dXM7CiAJd2hpbGUgKGJ1cy0+cGFyZW50KQogCQlidXMgPSBidXMtPnBhcmVudDsKIAogCXJldHVy
+biBidXM7CiB9CiAKLXN0YXRpYyBzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpmaW5kX3BjaV9ob3N0
+X2JyaWRnZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQorc3RhdGljIHN0cnVjdCBwY2lfaG9zdF9icmlk
+Z2UgKmZpbmRfcGNpX2hvc3RfYnJpZGdlKHN0cnVjdCBwY2lfYnVzICpidXMpCiB7Ci0Jc3RydWN0
+IHBjaV9idXMgKmJ1cyA9IGZpbmRfcGNpX3Jvb3RfYnVzKGRldik7CisJc3RydWN0IHBjaV9idXMg
+KnJvb3RfYnVzID0gZmluZF9wY2lfcm9vdF9idXMoYnVzKTsKIAotCXJldHVybiB0b19wY2lfaG9z
+dF9icmlkZ2UoYnVzLT5icmlkZ2UpOworCXJldHVybiB0b19wY2lfaG9zdF9icmlkZ2Uocm9vdF9i
+dXMtPmJyaWRnZSk7CiB9CiAKIHZvaWQgcGNpX3NldF9ob3N0X2JyaWRnZV9yZWxlYXNlKHN0cnVj
+dCBwY2lfaG9zdF9icmlkZ2UgKmJyaWRnZSwKQEAgLTQwLDEwICszNywxMSBAQCBzdGF0aWMgYm9v
+bCByZXNvdXJjZV9jb250YWlucyhzdHJ1Y3QgcmVzCiAJcmV0dXJuIHJlczEtPnN0YXJ0IDw9IHJl
+czItPnN0YXJ0ICYmIHJlczEtPmVuZCA+PSByZXMyLT5lbmQ7CiB9CiAKLXZvaWQgcGNpYmlvc19y
+ZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV9kZXYgKmRldiwgc3RydWN0IHBjaV9idXNfcmVnaW9u
+ICpyZWdpb24sCi0JCQkgICAgIHN0cnVjdCByZXNvdXJjZSAqcmVzKQordm9pZCBfX3BjaWJpb3Nf
+cmVzb3VyY2VfdG9fYnVzKHN0cnVjdCBwY2lfYnVzICpidXMsCisJCQkJICAgICAgc3RydWN0IHBj
+aV9idXNfcmVnaW9uICpyZWdpb24sCisJCQkJICAgICAgc3RydWN0IHJlc291cmNlICpyZXMpCiB7
+Ci0Jc3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqYnJpZGdlID0gZmluZF9wY2lfaG9zdF9icmlkZ2Uo
+ZGV2KTsKKwlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlkZ2UgPSBmaW5kX3BjaV9ob3N0X2Jy
+aWRnZShidXMpOwogCXN0cnVjdCBwY2lfaG9zdF9icmlkZ2Vfd2luZG93ICp3aW5kb3c7CiAJcmVz
+b3VyY2Vfc2l6ZV90IG9mZnNldCA9IDA7CiAKQEAgLTYwLDYgKzU4LDExIEBAIHZvaWQgcGNpYmlv
+c19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV8KIAlyZWdpb24tPnN0YXJ0ID0gcmVzLT5zdGFy
+dCAtIG9mZnNldDsKIAlyZWdpb24tPmVuZCA9IHJlcy0+ZW5kIC0gb2Zmc2V0OwogfQordm9pZCBw
+Y2liaW9zX3Jlc291cmNlX3RvX2J1cyhzdHJ1Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3QgcGNpX2J1
+c19yZWdpb24gKnJlZ2lvbiwKKwkJCSAgICAgc3RydWN0IHJlc291cmNlICpyZXMpCit7CisJX19w
+Y2liaW9zX3Jlc291cmNlX3RvX2J1cyhkZXYtPmJ1cywgcmVnaW9uLCByZXMpOworfQogRVhQT1JU
+X1NZTUJPTChwY2liaW9zX3Jlc291cmNlX3RvX2J1cyk7CiAKIHN0YXRpYyBib29sIHJlZ2lvbl9j
+b250YWlucyhzdHJ1Y3QgcGNpX2J1c19yZWdpb24gKnJlZ2lvbjEsCkBAIC02OCwxMCArNzEsMTAg
+QEAgc3RhdGljIGJvb2wgcmVnaW9uX2NvbnRhaW5zKHN0cnVjdCBwY2lfYgogCXJldHVybiByZWdp
+b24xLT5zdGFydCA8PSByZWdpb24yLT5zdGFydCAmJiByZWdpb24xLT5lbmQgPj0gcmVnaW9uMi0+
+ZW5kOwogfQogCi12b2lkIHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKHN0cnVjdCBwY2lfZGV2ICpk
+ZXYsIHN0cnVjdCByZXNvdXJjZSAqcmVzLAotCQkJICAgICBzdHJ1Y3QgcGNpX2J1c19yZWdpb24g
+KnJlZ2lvbikKK3N0YXRpYyB2b2lkIF9fcGNpYmlvc19idXNfdG9fcmVzb3VyY2Uoc3RydWN0IHBj
+aV9idXMgKmJ1cywgc3RydWN0IHJlc291cmNlICpyZXMsCisJCQkJICAgICAgc3RydWN0IHBjaV9i
+dXNfcmVnaW9uICpyZWdpb24pCiB7Ci0Jc3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqYnJpZGdlID0g
+ZmluZF9wY2lfaG9zdF9icmlkZ2UoZGV2KTsKKwlzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpicmlk
+Z2UgPSBmaW5kX3BjaV9ob3N0X2JyaWRnZShidXMpOwogCXN0cnVjdCBwY2lfaG9zdF9icmlkZ2Vf
+d2luZG93ICp3aW5kb3c7CiAJcmVzb3VyY2Vfc2l6ZV90IG9mZnNldCA9IDA7CiAKQEAgLTkzLDQg
+Kzk2LDkgQEAgdm9pZCBwY2liaW9zX2J1c190b19yZXNvdXJjZShzdHJ1Y3QgcGNpXwogCXJlcy0+
+c3RhcnQgPSByZWdpb24tPnN0YXJ0ICsgb2Zmc2V0OwogCXJlcy0+ZW5kID0gcmVnaW9uLT5lbmQg
+KyBvZmZzZXQ7CiB9Cit2b2lkIHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKHN0cnVjdCBwY2lfZGV2
+ICpkZXYsIHN0cnVjdCByZXNvdXJjZSAqcmVzLAorCQkJICAgICBzdHJ1Y3QgcGNpX2J1c19yZWdp
+b24gKnJlZ2lvbikKK3sKKwlfX3BjaWJpb3NfYnVzX3RvX3Jlc291cmNlKGRldi0+YnVzLCByZXMs
+IHJlZ2lvbik7Cit9CiBFWFBPUlRfU1lNQk9MKHBjaWJpb3NfYnVzX3RvX3Jlc291cmNlKTsKSW5k
+ZXg6IGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIu
+Ni5vcmlnL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3Bj
+aS5oCkBAIC03OTIsNiArNzkyLDkgQEAgdm9pZCBwY2lfZml4dXBfY2FyZGJ1cyhzdHJ1Y3QgcGNp
+X2J1cyAqKQogCiAvKiBHZW5lcmljIFBDSSBmdW5jdGlvbnMgdXNlZCBpbnRlcm5hbGx5ICovCiAK
+K3ZvaWQgX19wY2liaW9zX3Jlc291cmNlX3RvX2J1cyhzdHJ1Y3QgcGNpX2J1cyAqYnVzLAorCQkJ
+ICAgICAgIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiAqcmVnaW9uLAorCQkJICAgICAgIHN0cnVjdCBy
+ZXNvdXJjZSAqcmVzKTsKIHZvaWQgcGNpYmlvc19yZXNvdXJjZV90b19idXMoc3RydWN0IHBjaV9k
+ZXYgKmRldiwgc3RydWN0IHBjaV9idXNfcmVnaW9uICpyZWdpb24sCiAJCQkgICAgIHN0cnVjdCBy
+ZXNvdXJjZSAqcmVzKTsKIHZvaWQgcGNpYmlvc19idXNfdG9fcmVzb3VyY2Uoc3RydWN0IHBjaV9k
+ZXYgKmRldiwgc3RydWN0IHJlc291cmNlICpyZXMsCg==
+--047d7bdca4300d4bbd04eb8cb7ef
+Content-Type: text/x-patch; charset=US-ASCII; name="pcibus_addr_converting_bus_2.patch"
+Content-Disposition: attachment;
+	filename="pcibus_addr_converting_bus_2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ho7jbbc11
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IEFkZCBwY2liaW9zX2J1c19hZGRyX3RvX3JlcygpCgppdCB0
+YWtlcyBhZGRyIGFuZCByZXR1cm4gY29udmVydGVkIGFkZHJlc3Mgb25seS4KClNpZ25lZC1vZmYt
+Ynk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvaG9z
+dC1icmlkZ2UuYyB8ICAgMTQgKysrKysrKysrKysrKysKIGluY2x1ZGUvbGludXgvcGNpLmggICAg
+ICAgfCAgICAyICsrCiAyIGZpbGVzIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKykKCkluZGV4OiBs
+aW51eC0yLjYvZHJpdmVycy9wY2kvaG9zdC1icmlkZ2UuYwo9PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0y
+LjYub3JpZy9kcml2ZXJzL3BjaS9ob3N0LWJyaWRnZS5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9w
+Y2kvaG9zdC1icmlkZ2UuYwpAQCAtMTAyLDMgKzEwMiwxNyBAQCB2b2lkIHBjaWJpb3NfYnVzX3Rv
+X3Jlc291cmNlKHN0cnVjdCBwY2lfCiAJX19wY2liaW9zX2J1c190b19yZXNvdXJjZShkZXYtPmJ1
+cywgcmVzLCByZWdpb24pOwogfQogRVhQT1JUX1NZTUJPTChwY2liaW9zX2J1c190b19yZXNvdXJj
+ZSk7CisKK3Jlc291cmNlX3NpemVfdCBwY2liaW9zX2J1c19hZGRyX3RvX3JlcyhzdHJ1Y3QgcGNp
+X2J1cyAqYnVzLCBpbnQgZmxhZ3MsCisJCQkJCXJlc291cmNlX3NpemVfdCBhZGRyKQoreworCXN0
+cnVjdCBwY2lfYnVzX3JlZ2lvbiByZWdpb247CisJc3RydWN0IHJlc291cmNlIHI7CisKKwlyLmZs
+YWdzID0gZmxhZ3M7CisJcmVnaW9uLnN0YXJ0ID0gYWRkcjsKKwlyZWdpb24uZW5kID0gYWRkcjsK
+KwlfX3BjaWJpb3NfYnVzX3RvX3Jlc291cmNlKGJ1cywgJnIsICZyZWdpb24pOworCisJcmV0dXJu
+IHIuZW5kOworfQpJbmRleDogbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKPT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PQotLS0gbGludXgtMi42Lm9yaWcvaW5jbHVkZS9saW51eC9wY2kuaAorKysgbGludXgtMi42L2lu
+Y2x1ZGUvbGludXgvcGNpLmgKQEAgLTc5OSw2ICs3OTksOCBAQCB2b2lkIHBjaWJpb3NfcmVzb3Vy
+Y2VfdG9fYnVzKHN0cnVjdCBwY2lfCiAJCQkgICAgIHN0cnVjdCByZXNvdXJjZSAqcmVzKTsKIHZv
+aWQgcGNpYmlvc19idXNfdG9fcmVzb3VyY2Uoc3RydWN0IHBjaV9kZXYgKmRldiwgc3RydWN0IHJl
+c291cmNlICpyZXMsCiAJCQkgICAgIHN0cnVjdCBwY2lfYnVzX3JlZ2lvbiAqcmVnaW9uKTsKK3Jl
+c291cmNlX3NpemVfdCBwY2liaW9zX2J1c19hZGRyX3RvX3JlcyhzdHJ1Y3QgcGNpX2J1cyAqYnVz
+LCBpbnQgZmxhZ3MsCisJCQkJCXJlc291cmNlX3NpemVfdCBhZGRyKTsKIHZvaWQgcGNpYmlvc19z
+Y2FuX3NwZWNpZmljX2J1cyhpbnQgYnVzbik7CiBzdHJ1Y3QgcGNpX2J1cyAqcGNpX2ZpbmRfYnVz
+KGludCBkb21haW4sIGludCBidXNucik7CiB2b2lkIHBjaV9idXNfYWRkX2RldmljZXMoY29uc3Qg
+c3RydWN0IHBjaV9idXMgKmJ1cyk7Cg==
+--047d7bdca4300d4bbd04eb8cb7ef--
