@@ -1,138 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:55354 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758752Ab3K0BpO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 20:45:14 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Tejun Heo <tj@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	linux-ide@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>,
-	Gwendal Grignou <gwendal@google.com>
-Subject: Re: [PATCH] ATA: Fix port removal ordering
-Date: Wed, 27 Nov 2013 02:58:03 +0100
-Message-ID: <3417322.uazj4NI2OU@vostro.rjw.lan>
-In-Reply-To: <9509557.LMLHG8ie3T@vostro.rjw.lan>
-References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com> <20131125101154.GS2281@intel.com> <9509557.LMLHG8ie3T@vostro.rjw.lan>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 2/3] ACPI / hotplug: Fix PCI host bridge hot removal
+Date: Tue, 19 Nov 2013 22:10:06 +0100
+Message-ID: <4037930.5v7ysfShLb@vostro.rjw.lan>
+In-Reply-To: <1384883331.1791.23.camel@misato.fc.hp.com>
+References: <2434673.zhjYZOTQ4A@vostro.rjw.lan> <1384816407.1791.19.camel@misato.fc.hp.com> <1384883331.1791.23.camel@misato.fc.hp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 25, 2013 01:19:01 PM Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> On Tuesday, November 19, 2013 10:48:51 AM Toshi Kani wrote:
+> > On Mon, 2013-11-18 at 22:39 +0100, Rafael J. Wysocki wrote:
+> > > On Monday, November 18, 2013 11:10:05 AM Toshi Kani wrote:
+> > > > On Thu, 2013-11-14 at 00:16 +0100, Rafael J. Wysocki wrote:
+> > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > 
+> > > > > Since the PCI host bridge scan handler does not set hotplug.enabled,
+> > > > > the check of it in acpi_bus_device_eject() effectively prevents the
+> > > > > root bridge hot removal from working after commit a3b1b1ef78cd
+> > > > > (ACPI / hotplug: Merge device hot-removal routines).  However, that
+> > > > > check is not necessary, because the other acpi_bus_device_eject()
+> > > > > users, acpi_hotplug_notify_cb and acpi_eject_store(), do the same
+> > > > > check by themselves before executing that function.
+> > > > > 
+> > > > > For this reason, remove the scan handler check from
+> > > > > acpi_bus_device_eject() to make PCI hot bridge hot removal work
+> > > > > again.
+> > > > 
+> > > > I am curious why the PCI host bridge scan handler does not set
+> > > > hotplug.enabled.  Is this how it disables hotplug via sysfs eject but
+> > > > enables via ACPI notification?
+> > > 
+> > > It just doesn't register for hotplug at all.  I guess it could set that
+> > > bit alone, but then it would be quite confusing and the check is not
+> > > necessary anyway.
+> > 
+> > I see.  Given how the PCI host bridge scan handler is integrated today,
+> > the change looks reasonable to me.
 > 
-> After commit bcdde7e221a8 (sysfs: make __sysfs_remove_dir() recursive)
-> Mika Westerberg sees traces analogous to the one below in Thunderbolt
-> hot-remove testing:
+> Looking further, I noticed that there is one more issue to address.  The
+> patch below applies on top of your patchset.
+>
+> From: Toshi Kani <toshi.kani@hp.com>
+> Subject: [PATCH] ACPI / hotplug: Fix conflicted PCI bridge notify
+> handlers
 > 
->  WARNING: CPU: 0 PID: 4 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
->  sysfs group ffffffff81c6f1e0 not found for kobject 'host7'
->  Modules linked in:
->  CPU: 0 PID: 4 Comm: kworker/0:0 Not tainted 3.12.0+ #13
->  Hardware name:                  /D33217CK, BIOS GKPPT10H.86A.0042.2013.0422.1439 04/22/2013
->  Workqueue: kacpi_hotplug acpi_hotplug_work_fn
->   0000000000000009 ffff8801002459b0 ffffffff817daab1 ffff8801002459f8
->   ffff8801002459e8 ffffffff810436b8 0000000000000000 ffffffff81c6f1e0
->   ffff88006d440358 ffff88006d440188 ffff88006e8b4c28 ffff880100245a48
->  Call Trace:
->   [<ffffffff817daab1>] dump_stack+0x45/0x56
->   [<ffffffff810436b8>] warn_slowpath_common+0x78/0xa0
->   [<ffffffff81043727>] warn_slowpath_fmt+0x47/0x50
->   [<ffffffff811ad319>] ? sysfs_get_dirent_ns+0x49/0x70
->   [<ffffffff811ae526>] sysfs_remove_group+0xc6/0xd0
->   [<ffffffff81432f7e>] dpm_sysfs_remove+0x3e/0x50
->   [<ffffffff8142a0d0>] device_del+0x40/0x1b0
->   [<ffffffff8142a24d>] device_unregister+0xd/0x20
->   [<ffffffff8144131a>] scsi_remove_host+0xba/0x110
->   [<ffffffff8145f526>] ata_host_detach+0xc6/0x100
->   [<ffffffff8145f578>] ata_pci_remove_one+0x18/0x20
->   [<ffffffff812e8f48>] pci_device_remove+0x28/0x60
->   [<ffffffff8142d854>] __device_release_driver+0x64/0xd0
->   [<ffffffff8142d8de>] device_release_driver+0x1e/0x30
->   [<ffffffff8142d257>] bus_remove_device+0xf7/0x140
->   [<ffffffff8142a1b1>] device_del+0x121/0x1b0
->   [<ffffffff812e43d4>] pci_stop_bus_device+0x94/0xa0
->   [<ffffffff812e437b>] pci_stop_bus_device+0x3b/0xa0
->   [<ffffffff812e437b>] pci_stop_bus_device+0x3b/0xa0
->   [<ffffffff812e44dd>] pci_stop_and_remove_bus_device+0xd/0x20
->   [<ffffffff812fc743>] trim_stale_devices+0x73/0xe0
->   [<ffffffff812fc78b>] trim_stale_devices+0xbb/0xe0
->   [<ffffffff812fc78b>] trim_stale_devices+0xbb/0xe0
->   [<ffffffff812fcb6e>] acpiphp_check_bridge+0x7e/0xd0
->   [<ffffffff812fd90d>] hotplug_event+0xcd/0x160
->   [<ffffffff812fd9c5>] hotplug_event_work+0x25/0x60
->   [<ffffffff81316749>] acpi_hotplug_work_fn+0x17/0x22
->   [<ffffffff8105cf3a>] process_one_work+0x17a/0x430
->   [<ffffffff8105db29>] worker_thread+0x119/0x390
->   [<ffffffff8105da10>] ? manage_workers.isra.25+0x2a0/0x2a0
->   [<ffffffff81063a5d>] kthread+0xcd/0xf0
->   [<ffffffff81063990>] ? kthread_create_on_node+0x180/0x180
->   [<ffffffff817eb33c>] ret_from_fork+0x7c/0xb0
->   [<ffffffff81063990>] ? kthread_create_on_node+0x180/0x180
+> The PCI host bridge scan handler installs its own notify handler,
+> handle_hotplug_event_root(), by itself.  Nevertheless, the ACPI
+> hotplug framework also installs the common notify handler,
+> acpi_hotplug_notify_cb(), for PCI root bridges.  This causes
+> acpi_hotplug_notify_cb() to call _OST method with unsupported
+> error as hotplug.enabled is not set.
 > 
-> The source of this problem is that SCSI hosts are removed from
-> ATA ports after calling ata_tport_delete() which removes the
-> port's sysfs directory, among other things.  Now, after commit
-> bcdde7e221a8, the sysfs directory is removed along with all of
-> its subdirectories that include the SCSI host's sysfs directory
-> and its subdirectories at this point.  Consequently, when
-> device_del() is finally called for any child device of the SCSI
-> host and tries to remove its "power" group (which is already
-> gone then), it triggers the above warning.
-> 
-> To make the warnings go away, change the removal ordering in
-> ata_port_detach() so that the SCSI host is removed from the
-> port before ata_tport_delete() is called.
-> 
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=65281
-> Reported-and-tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> Hi,
-> 
-> This along with https://patchwork.kernel.org/patch/3226081/ makes
-> all of the warnings observed by Mika go away without the patch at
-> https://patchwork.kernel.org/patch/3201841/ applied.
+> To address this issue, introduce hotplug.self_install flag, which
+> indicates that the scan handler installs its own notify handler by
+> itself.  The ACPI hotplug framework does not install the common
+> notify handler when this flag is set.
 
-Any news here?
+Good catch!
 
-Gwendal has agreed with this patch. :-)
+Still, I don't think we need a new flag, because we know that that
+scan handler doesn't support hotplug, because its hotplug profile
+hasn't been registered (that actually applies to all scan handlers
+without hotplug support, not only the root host bridge).  Moreover,
+if it does support hotplug, but the hotplug profile hasn't been
+registered due to an error, we still should not install the notify
+handler I think.  So, I prefer the patch below.
+
+And this fix will remain useful after my recent series at
+http://marc.info/?l=linux-pci&m=138470560909690&w=4
 
 Thanks,
 Rafael
 
 
-> ---
->  drivers/ata/libata-core.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> Index: linux-pm/drivers/ata/libata-core.c
-> ===================================================================
-> --- linux-pm.orig/drivers/ata/libata-core.c
-> +++ linux-pm/drivers/ata/libata-core.c
-> @@ -6304,10 +6304,9 @@ static void ata_port_detach(struct ata_p
->  		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
->  			ata_tlink_delete(&ap->pmp_link[i]);
->  	}
-> -	ata_tport_delete(ap);
-> -
->  	/* remove the associated SCSI host */
->  	scsi_remove_host(ap->scsi_host);
-> +	ata_tport_delete(ap);
->  }
->  
->  /**
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / hotplug: Ignore notifications for scan handlers without hotplug
+
+If a scan handler's hotplug profile has not been registered, do not
+install acpi_hotplug_notify_cb() as a notify handler for devices
+with the given scan handler attached.
+
+This fixes a problem with the PCI host bridge scan handler that
+installs its own notify handler, handle_hotplug_event_root(), by
+itself and doesn't register its hotplug profile.  Toshi says
+
+"Nevertheless, the ACPI hotplug framework also installs the common
+ notify handler, acpi_hotplug_notify_cb(), for PCI root bridges.
+ This causes acpi_hotplug_notify_cb() to call _OST method with
+ unsupported error as hotplug.enabled is not set."
+
+Moreover, it is pointless to install acpi_hotplug_notify_cb() as
+a notify handler for device objects whose scan handlers don't
+support hotplug, because it will always fail for them.
+
+Reported-by: Toshi Kani <toshi.kani@hp.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: 3.9+ <stable@vger.kernel.org> # 3.9+
+---
+ drivers/acpi/scan.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -84,6 +84,11 @@ int acpi_scan_add_handler_with_hotplug(s
+ 	return 0;
+ }
+ 
++static bool acpi_scan_handler_with_hotplug(struct acpi_scan_handler *handler)
++{
++	return handler && handler->hotplug.kobj.state_in_sysfs;
++}
++
+ /*
+  * Creates hid/cid(s) string needed for modalias and uevent
+  * e.g. on a device with hid:IBM0001 and cid:ACPI0001 you get:
+@@ -1841,7 +1846,7 @@ static void acpi_scan_init_hotplug(acpi_
+ 	 */
+ 	list_for_each_entry(hwid, &pnp.ids, list) {
+ 		handler = acpi_scan_match_handler(hwid->id, NULL);
+-		if (handler) {
++		if (acpi_scan_handler_with_hotplug(handler)) {
+ 			acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 					acpi_hotplug_notify_cb, handler);
+ 			break;
+
