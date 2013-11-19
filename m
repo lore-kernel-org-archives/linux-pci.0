@@ -1,50 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:45255 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753268Ab3KKVz5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 16:55:57 -0500
-Received: by mail-ie0-f170.google.com with SMTP id to1so3357758ieb.1
-        for <linux-pci@vger.kernel.org>; Mon, 11 Nov 2013 13:55:57 -0800 (PST)
-Date: Mon, 11 Nov 2013 14:55:53 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Message-ID: <20131111215553.GA30509@google.com>
-References: <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
- <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <528AC4F2.40708@huawei.com>
+Date: Tue, 19 Nov 2013 09:54:58 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+References: <CAMxnaaUim-MCDpaTiLmBqN3wfxjn9V6XE_n4SMfuO=vqeT6rVA@mail.gmail.com> <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com> <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com> <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com> <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com> <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com> <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com> <20131115115235.GA2281@intel.com> <20131119013343.GA17294@google.com>
+In-Reply-To: <20131119013343.GA17294@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Nov 10, 2013 at 06:19:58PM +0800, wzyboy wrote:
-> 2013/11/9 Bjorn Helgaas <bhelgaas@google.com>:
-> > it might
-> > be interesting to do "echo on >
-> > /sys/bus/pci/devices/0000:03:00.0/power/control" and see whether it
-> > makes a difference.
+> The pcie_portdrv .probe() method calls pci_enable_device() once, in
+> pcie_port_device_register(), but the .remove() method calls
+> pci_disable_device() twice, in pcie_port_device_remove() and in
+> pcie_portdrv_remove().
 > 
-> Hi, should I run this command after the bug? I just ran this after the
-> bug occurs, but there is no output in dmesg, and "ip link set wlan0
-> up" still returns same error ("RTNETLINK answers: Connection timed
-> out").
+> That causes a "disabling already-disabled device" warning when removing a
+> PCIe port device.  This happens all the time when removing Thunderbolt
+> devices, but is also easy to reproduce with, e.g.,
+> "echo 0000:00:1c.3 > /sys/bus/pci/drivers/pcieport/unbind"
+> 
+> This patch removes the disable from pcie_portdrv_remove().
+> 
+> [bhelgaas: changelog, tag for stable]
+> Reported-by: David Bulkow <David.Bulkow@stratus.com>
+> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: stable@vger.kernel.org	# v2.6.32+
 
-Run the command before the bug occurs.  The idea is to disable run-time
-power management.  If the problem is that we're turning off power to
-the device, disabling power management might make a difference.
+Hi Bjorn,
+   This issue in X86 seems to be introduced after commit 928bea9 "PCI: Delay enabling bridges until they're needed"
+So this patch needs to back port to 2.6.32+ ?
 
-Bjorn
+> ---
+>  drivers/pci/pcie/portdrv_pci.c |    1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index cd1e57e51aa7..0d8fdc48e642 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -223,7 +223,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  static void pcie_portdrv_remove(struct pci_dev *dev)
+>  {
+>  	pcie_port_device_remove(dev);
+> -	pci_disable_device(dev);
+>  }
+>  
+>  static int error_detected_iter(struct device *device, void *data)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
