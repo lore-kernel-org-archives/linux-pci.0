@@ -1,561 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe006.messaging.microsoft.com ([216.32.180.189]:31905
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751822Ab3KSFYT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 00:24:19 -0500
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
-	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 8/9 v2] vfio: moving some functions in common file
-Date: Tue, 19 Nov 2013 10:47:12 +0530
-Message-ID: <1384838233-24847-9-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+Received: from mail-qe0-f53.google.com ([209.85.128.53]:36012 "EHLO
+	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906Ab3KSMWA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 07:22:00 -0500
+Received: by mail-qe0-f53.google.com with SMTP id cy11so4959456qeb.26
+        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 04:21:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <Pine.LNX.4.44L0.1311181010080.1421-100000@iolanthe.rowland.org>
+References: <CAPDyKFrushEwW7x_VguPjOnP8BuSO=+tD=DxS9J0JQVfYTgOYA@mail.gmail.com>
+	<Pine.LNX.4.44L0.1311181010080.1421-100000@iolanthe.rowland.org>
+Date: Tue, 19 Nov 2013 13:21:57 +0100
+Message-ID: <CAPDyKFpypLVKiOZEweWMig9LrNHcOpNQnm+J3KJ3KzCDBgkv9A@mail.gmail.com>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some function defined in vfio_iommu_type1.c are generic (not specific
-or type1 iommu) and we want to use these for FSL IOMMU (PAMU) and
-going forward in iommu-none driver.
-So I have created a new file naming vfio_iommu_common.c and moved some
-of generic functions into this file.
+On 18 November 2013 16:17, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Mon, 18 Nov 2013, Ulf Hansson wrote:
+>
+>> I favour the pm_runtime_no_prevent_suspend API approach, since it
+>> would mean a change in behaviour of the PM core.
+>
+> That's exactly why I don't favor it!  :-)
 
-I Agree (with Alex Williamson and myself :-)) that some more functions
-can be moved to this new common file (with some changes in type1/fsl_pamu
-and others). But in this patch i avoided doing these changes and
-just moved functions which are straight forward and allow me to
-get fsl-powerpc vfio framework in place.
+I will try my best to convince you then. :-)
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
----
-v1->v2
- - removed un-necessary header file inclusion
- - mark static function which are internal to *common.c
+>
+>>  I also think that in
+>> some cases it could make runtime PM better understandable, for those
+>> who are deploying it.
+>
+> I don't see how it would make runtime PM either more or less
+> understandable, since the proposed change affects system PM, not
+> runtime PM.  On the other hand, it would make the Runtime PM
+> documentation more complicated.
 
- drivers/vfio/Makefile            |    4 +-
- drivers/vfio/vfio_iommu_common.c |  227 ++++++++++++++++++++++++++++++++++++++
- drivers/vfio/vfio_iommu_common.h |   27 +++++
- drivers/vfio/vfio_iommu_type1.c  |  206 +----------------------------------
- 4 files changed, 257 insertions(+), 207 deletions(-)
- create mode 100644 drivers/vfio/vfio_iommu_common.c
- create mode 100644 drivers/vfio/vfio_iommu_common.h
+At the moment, system PM is already affecting behaviour of runtime PM
+since it is preventing runtime suspend during system suspend.
 
-diff --git a/drivers/vfio/Makefile b/drivers/vfio/Makefile
-index 72bfabc..c5792ec 100644
---- a/drivers/vfio/Makefile
-+++ b/drivers/vfio/Makefile
-@@ -1,4 +1,4 @@
- obj-$(CONFIG_VFIO) += vfio.o
--obj-$(CONFIG_VFIO_IOMMU_TYPE1) += vfio_iommu_type1.o
--obj-$(CONFIG_VFIO_IOMMU_SPAPR_TCE) += vfio_iommu_spapr_tce.o
-+obj-$(CONFIG_VFIO_IOMMU_TYPE1) += vfio_iommu_common.o vfio_iommu_type1.o
-+obj-$(CONFIG_VFIO_IOMMU_SPAPR_TCE) += vfio_iommu_common.o vfio_iommu_spapr_tce.o
- obj-$(CONFIG_VFIO_PCI) += pci/
-diff --git a/drivers/vfio/vfio_iommu_common.c b/drivers/vfio/vfio_iommu_common.c
-new file mode 100644
-index 0000000..08eea71
---- /dev/null
-+++ b/drivers/vfio/vfio_iommu_common.c
-@@ -0,0 +1,227 @@
-+/*
-+ * VFIO: Common code for vfio IOMMU support
-+ *
-+ * Copyright (C) 2012 Red Hat, Inc.  All rights reserved.
-+ *     Author: Alex Williamson <alex.williamson@redhat.com>
-+ *     Author: Bharat Bhushan <bharat.bhushan@freescale.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Derived from original vfio:
-+ * Copyright 2010 Cisco Systems, Inc.  All rights reserved.
-+ * Author: Tom Lyon, pugs@cisco.com
-+ */
-+
-+#include <linux/compat.h>
-+#include <linux/iommu.h>
-+#include <linux/module.h>
-+#include <linux/mm.h>
-+#include <linux/slab.h>
-+#include <linux/workqueue.h>
-+
-+static bool disable_hugepages;
-+module_param_named(disable_hugepages,
-+		   disable_hugepages, bool, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(disable_hugepages,
-+		 "Disable VFIO IOMMU support for IOMMU hugepages.");
-+
-+struct vwork {
-+	struct mm_struct	*mm;
-+	long			npage;
-+	struct work_struct	work;
-+};
-+
-+/* delayed decrement/increment for locked_vm */
-+static void vfio_lock_acct_bg(struct work_struct *work)
-+{
-+	struct vwork *vwork = container_of(work, struct vwork, work);
-+	struct mm_struct *mm;
-+
-+	mm = vwork->mm;
-+	down_write(&mm->mmap_sem);
-+	mm->locked_vm += vwork->npage;
-+	up_write(&mm->mmap_sem);
-+	mmput(mm);
-+	kfree(vwork);
-+}
-+
-+void vfio_lock_acct(long npage)
-+{
-+	struct vwork *vwork;
-+	struct mm_struct *mm;
-+
-+	if (!current->mm || !npage)
-+		return; /* process exited or nothing to do */
-+
-+	if (down_write_trylock(&current->mm->mmap_sem)) {
-+		current->mm->locked_vm += npage;
-+		up_write(&current->mm->mmap_sem);
-+		return;
-+	}
-+
-+	/*
-+	 * Couldn't get mmap_sem lock, so must setup to update
-+	 * mm->locked_vm later. If locked_vm were atomic, we
-+	 * wouldn't need this silliness
-+	 */
-+	vwork = kmalloc(sizeof(struct vwork), GFP_KERNEL);
-+	if (!vwork)
-+		return;
-+	mm = get_task_mm(current);
-+	if (!mm) {
-+		kfree(vwork);
-+		return;
-+	}
-+	INIT_WORK(&vwork->work, vfio_lock_acct_bg);
-+	vwork->mm = mm;
-+	vwork->npage = npage;
-+	schedule_work(&vwork->work);
-+}
-+
-+/*
-+ * Some mappings aren't backed by a struct page, for example an mmap'd
-+ * MMIO range for our own or another device.  These use a different
-+ * pfn conversion and shouldn't be tracked as locked pages.
-+ */
-+static bool is_invalid_reserved_pfn(unsigned long pfn)
-+{
-+	if (pfn_valid(pfn)) {
-+		bool reserved;
-+		struct page *tail = pfn_to_page(pfn);
-+		struct page *head = compound_trans_head(tail);
-+		reserved = !!(PageReserved(head));
-+		if (head != tail) {
-+			/*
-+			 * "head" is not a dangling pointer
-+			 * (compound_trans_head takes care of that)
-+			 * but the hugepage may have been split
-+			 * from under us (and we may not hold a
-+			 * reference count on the head page so it can
-+			 * be reused before we run PageReferenced), so
-+			 * we've to check PageTail before returning
-+			 * what we just read.
-+			 */
-+			smp_rmb();
-+			if (PageTail(tail))
-+				return reserved;
-+		}
-+		return PageReserved(tail);
-+	}
-+
-+	return true;
-+}
-+
-+static int put_pfn(unsigned long pfn, int prot)
-+{
-+	if (!is_invalid_reserved_pfn(pfn)) {
-+		struct page *page = pfn_to_page(pfn);
-+		if (prot & IOMMU_WRITE)
-+			SetPageDirty(page);
-+		put_page(page);
-+		return 1;
-+	}
-+	return 0;
-+}
-+
-+static int vaddr_get_pfn(unsigned long vaddr, int prot, unsigned long *pfn)
-+{
-+	struct page *page[1];
-+	struct vm_area_struct *vma;
-+	int ret = -EFAULT;
-+
-+	if (get_user_pages_fast(vaddr, 1, !!(prot & IOMMU_WRITE), page) == 1) {
-+		*pfn = page_to_pfn(page[0]);
-+		return 0;
-+	}
-+
-+	down_read(&current->mm->mmap_sem);
-+
-+	vma = find_vma_intersection(current->mm, vaddr, vaddr + 1);
-+
-+	if (vma && vma->vm_flags & VM_PFNMAP) {
-+		*pfn = ((vaddr - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
-+		if (is_invalid_reserved_pfn(*pfn))
-+			ret = 0;
-+	}
-+
-+	up_read(&current->mm->mmap_sem);
-+
-+	return ret;
-+}
-+
-+/*
-+ * Attempt to pin pages.  We really don't want to track all the pfns and
-+ * the iommu can only map chunks of consecutive pfns anyway, so get the
-+ * first page and all consecutive pages with the same locking.
-+ */
-+long vfio_pin_pages(unsigned long vaddr, long npage,
-+			   int prot, unsigned long *pfn_base)
-+{
-+	unsigned long limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
-+	bool lock_cap = capable(CAP_IPC_LOCK);
-+	long ret, i;
-+
-+	if (!current->mm)
-+		return -ENODEV;
-+
-+	ret = vaddr_get_pfn(vaddr, prot, pfn_base);
-+	if (ret)
-+		return ret;
-+
-+	if (is_invalid_reserved_pfn(*pfn_base))
-+		return 1;
-+
-+	if (!lock_cap && current->mm->locked_vm + 1 > limit) {
-+		put_pfn(*pfn_base, prot);
-+		pr_warn("%s: RLIMIT_MEMLOCK (%ld) exceeded\n", __func__,
-+			limit << PAGE_SHIFT);
-+		return -ENOMEM;
-+	}
-+
-+	if (unlikely(disable_hugepages)) {
-+		vfio_lock_acct(1);
-+		return 1;
-+	}
-+
-+	/* Lock all the consecutive pages from pfn_base */
-+	for (i = 1, vaddr += PAGE_SIZE; i < npage; i++, vaddr += PAGE_SIZE) {
-+		unsigned long pfn = 0;
-+
-+		ret = vaddr_get_pfn(vaddr, prot, &pfn);
-+		if (ret)
-+			break;
-+
-+		if (pfn != *pfn_base + i || is_invalid_reserved_pfn(pfn)) {
-+			put_pfn(pfn, prot);
-+			break;
-+		}
-+
-+		if (!lock_cap && current->mm->locked_vm + i + 1 > limit) {
-+			put_pfn(pfn, prot);
-+			pr_warn("%s: RLIMIT_MEMLOCK (%ld) exceeded\n",
-+				__func__, limit << PAGE_SHIFT);
-+			break;
-+		}
-+	}
-+
-+	vfio_lock_acct(i);
-+
-+	return i;
-+}
-+
-+long vfio_unpin_pages(unsigned long pfn, long npage,
-+			     int prot, bool do_accounting)
-+{
-+	unsigned long unlocked = 0;
-+	long i;
-+
-+	for (i = 0; i < npage; i++)
-+		unlocked += put_pfn(pfn++, prot);
-+
-+	if (do_accounting)
-+		vfio_lock_acct(-unlocked);
-+
-+	return unlocked;
-+}
-diff --git a/drivers/vfio/vfio_iommu_common.h b/drivers/vfio/vfio_iommu_common.h
-new file mode 100644
-index 0000000..2566ce6
---- /dev/null
-+++ b/drivers/vfio/vfio_iommu_common.h
-@@ -0,0 +1,27 @@
-+/*
-+ * Copyright (C) 2012 Red Hat, Inc.  All rights reserved.
-+ * Copyright (C) 2013 Freescale Semiconductor, Inc.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published
-+ * by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-+ */
-+
-+#ifndef _VFIO_IOMMU_COMMON_H
-+#define _VFIO_IOMMU_COMMON_H
-+
-+void vfio_lock_acct(long npage);
-+long vfio_pin_pages(unsigned long vaddr, long npage, int prot,
-+		    unsigned long *pfn_base);
-+long vfio_unpin_pages(unsigned long pfn, long npage,
-+		      int prot, bool do_accounting);
-+#endif
-diff --git a/drivers/vfio/vfio_iommu_type1.c b/drivers/vfio/vfio_iommu_type1.c
-index a9807de..e9a58fa 100644
---- a/drivers/vfio/vfio_iommu_type1.c
-+++ b/drivers/vfio/vfio_iommu_type1.c
-@@ -37,6 +37,7 @@
- #include <linux/uaccess.h>
- #include <linux/vfio.h>
- #include <linux/workqueue.h>
-+#include "vfio_iommu_common.h"
- 
- #define DRIVER_VERSION  "0.2"
- #define DRIVER_AUTHOR   "Alex Williamson <alex.williamson@redhat.com>"
-@@ -48,12 +49,6 @@ module_param_named(allow_unsafe_interrupts,
- MODULE_PARM_DESC(allow_unsafe_interrupts,
- 		 "Enable VFIO IOMMU support for on platforms without interrupt remapping support.");
- 
--static bool disable_hugepages;
--module_param_named(disable_hugepages,
--		   disable_hugepages, bool, S_IRUGO | S_IWUSR);
--MODULE_PARM_DESC(disable_hugepages,
--		 "Disable VFIO IOMMU support for IOMMU hugepages.");
--
- struct vfio_iommu {
- 	struct iommu_domain	*domain;
- 	struct mutex		lock;
-@@ -123,205 +118,6 @@ static void vfio_remove_dma(struct vfio_iommu *iommu, struct vfio_dma *old)
- 	rb_erase(&old->node, &iommu->dma_list);
- }
- 
--struct vwork {
--	struct mm_struct	*mm;
--	long			npage;
--	struct work_struct	work;
--};
--
--/* delayed decrement/increment for locked_vm */
--static void vfio_lock_acct_bg(struct work_struct *work)
--{
--	struct vwork *vwork = container_of(work, struct vwork, work);
--	struct mm_struct *mm;
--
--	mm = vwork->mm;
--	down_write(&mm->mmap_sem);
--	mm->locked_vm += vwork->npage;
--	up_write(&mm->mmap_sem);
--	mmput(mm);
--	kfree(vwork);
--}
--
--static void vfio_lock_acct(long npage)
--{
--	struct vwork *vwork;
--	struct mm_struct *mm;
--
--	if (!current->mm || !npage)
--		return; /* process exited or nothing to do */
--
--	if (down_write_trylock(&current->mm->mmap_sem)) {
--		current->mm->locked_vm += npage;
--		up_write(&current->mm->mmap_sem);
--		return;
--	}
--
--	/*
--	 * Couldn't get mmap_sem lock, so must setup to update
--	 * mm->locked_vm later. If locked_vm were atomic, we
--	 * wouldn't need this silliness
--	 */
--	vwork = kmalloc(sizeof(struct vwork), GFP_KERNEL);
--	if (!vwork)
--		return;
--	mm = get_task_mm(current);
--	if (!mm) {
--		kfree(vwork);
--		return;
--	}
--	INIT_WORK(&vwork->work, vfio_lock_acct_bg);
--	vwork->mm = mm;
--	vwork->npage = npage;
--	schedule_work(&vwork->work);
--}
--
--/*
-- * Some mappings aren't backed by a struct page, for example an mmap'd
-- * MMIO range for our own or another device.  These use a different
-- * pfn conversion and shouldn't be tracked as locked pages.
-- */
--static bool is_invalid_reserved_pfn(unsigned long pfn)
--{
--	if (pfn_valid(pfn)) {
--		bool reserved;
--		struct page *tail = pfn_to_page(pfn);
--		struct page *head = compound_trans_head(tail);
--		reserved = !!(PageReserved(head));
--		if (head != tail) {
--			/*
--			 * "head" is not a dangling pointer
--			 * (compound_trans_head takes care of that)
--			 * but the hugepage may have been split
--			 * from under us (and we may not hold a
--			 * reference count on the head page so it can
--			 * be reused before we run PageReferenced), so
--			 * we've to check PageTail before returning
--			 * what we just read.
--			 */
--			smp_rmb();
--			if (PageTail(tail))
--				return reserved;
--		}
--		return PageReserved(tail);
--	}
--
--	return true;
--}
--
--static int put_pfn(unsigned long pfn, int prot)
--{
--	if (!is_invalid_reserved_pfn(pfn)) {
--		struct page *page = pfn_to_page(pfn);
--		if (prot & IOMMU_WRITE)
--			SetPageDirty(page);
--		put_page(page);
--		return 1;
--	}
--	return 0;
--}
--
--static int vaddr_get_pfn(unsigned long vaddr, int prot, unsigned long *pfn)
--{
--	struct page *page[1];
--	struct vm_area_struct *vma;
--	int ret = -EFAULT;
--
--	if (get_user_pages_fast(vaddr, 1, !!(prot & IOMMU_WRITE), page) == 1) {
--		*pfn = page_to_pfn(page[0]);
--		return 0;
--	}
--
--	down_read(&current->mm->mmap_sem);
--
--	vma = find_vma_intersection(current->mm, vaddr, vaddr + 1);
--
--	if (vma && vma->vm_flags & VM_PFNMAP) {
--		*pfn = ((vaddr - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
--		if (is_invalid_reserved_pfn(*pfn))
--			ret = 0;
--	}
--
--	up_read(&current->mm->mmap_sem);
--
--	return ret;
--}
--
--/*
-- * Attempt to pin pages.  We really don't want to track all the pfns and
-- * the iommu can only map chunks of consecutive pfns anyway, so get the
-- * first page and all consecutive pages with the same locking.
-- */
--static long vfio_pin_pages(unsigned long vaddr, long npage,
--			   int prot, unsigned long *pfn_base)
--{
--	unsigned long limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
--	bool lock_cap = capable(CAP_IPC_LOCK);
--	long ret, i;
--
--	if (!current->mm)
--		return -ENODEV;
--
--	ret = vaddr_get_pfn(vaddr, prot, pfn_base);
--	if (ret)
--		return ret;
--
--	if (is_invalid_reserved_pfn(*pfn_base))
--		return 1;
--
--	if (!lock_cap && current->mm->locked_vm + 1 > limit) {
--		put_pfn(*pfn_base, prot);
--		pr_warn("%s: RLIMIT_MEMLOCK (%ld) exceeded\n", __func__,
--			limit << PAGE_SHIFT);
--		return -ENOMEM;
--	}
--
--	if (unlikely(disable_hugepages)) {
--		vfio_lock_acct(1);
--		return 1;
--	}
--
--	/* Lock all the consecutive pages from pfn_base */
--	for (i = 1, vaddr += PAGE_SIZE; i < npage; i++, vaddr += PAGE_SIZE) {
--		unsigned long pfn = 0;
--
--		ret = vaddr_get_pfn(vaddr, prot, &pfn);
--		if (ret)
--			break;
--
--		if (pfn != *pfn_base + i || is_invalid_reserved_pfn(pfn)) {
--			put_pfn(pfn, prot);
--			break;
--		}
--
--		if (!lock_cap && current->mm->locked_vm + i + 1 > limit) {
--			put_pfn(pfn, prot);
--			pr_warn("%s: RLIMIT_MEMLOCK (%ld) exceeded\n",
--				__func__, limit << PAGE_SHIFT);
--			break;
--		}
--	}
--
--	vfio_lock_acct(i);
--
--	return i;
--}
--
--static long vfio_unpin_pages(unsigned long pfn, long npage,
--			     int prot, bool do_accounting)
--{
--	unsigned long unlocked = 0;
--	long i;
--
--	for (i = 0; i < npage; i++)
--		unlocked += put_pfn(pfn++, prot);
--
--	if (do_accounting)
--		vfio_lock_acct(-unlocked);
--
--	return unlocked;
--}
--
- static int vfio_unmap_unpin(struct vfio_iommu *iommu, struct vfio_dma *dma,
- 			    dma_addr_t iova, size_t *size)
- {
--- 
-1.7.0.4
+To me and and those driver authors, that don't see the direct need for
+why the PM core behaves like this (because we are not working with PCI
+drivers for example), I would guess this is probably the piece in the
+documentation we have more difficult to understand and adapt to.
 
+I can point at some examples, were I believe drivers that use runtime
+PM, tries to adapt to the PM core behaviour, but I fear they for too
+many times have got it wrong. Here are some various examples I have
+found, which made me think like this.
 
+1.
+Not many are using the .suspend_late callback at all, which should be
+the most proper solution to use.
+
+2.
+Drivers are using the synchronise pm_runtime_put_sync in their
+.suspend callbacks.
+
+3.
+Drivers do "pm_runtime_get_sync" from their .suspend callbacks, but
+don't put the device into inactive state from anywhere as a part of
+the system suspend.
+
+4.
+Drivers only handles system suspend tasks from it's .suspend callbacks
+and don't implement .suspend_late, thus the device will not be fully
+inactivated.
+
+5.
+Drivers relies on pm_runtime_suspended or worse
+pm_runtime_status_suspend, to check if they shall put their device
+into inactive state from their .suspend callbacks or leave it as is.
+While they put the device into inactive state, the runtime state is
+not properly updated to reflect this. Most important, at this point
+runtime PM has not yet been disabled from the PM core.
+
+>
+> (Also, I think the name "pm_runtime_no_prevent_suspend" is a very bad
+> choice.  It should be something more like
+> "allow_runtime_suspend_during_system_sleep".)
+
+I am not so happy with the naming myself, we should work out a better one then.
+
+>
+>> Another advantage of "pm_runtime_no_prevent_suspend" is that driver's
+>> can still easily prevent runtime suspend, during system suspend, by an
+>> extra call to "pm_runtime_get*". Typically this could be used when the
+>> device is configured for wakeup.
+>
+> How is this an advantage?  Drivers can accomplish the same thing right
+> now by not doing anything at all.
+>
+>>  In this case the generic suspend_late
+>> approach would not work, since the driver would need to implement it's
+>> own .suspend_late callback to handle this.
+>
+> Actually, drivers would simply need to _avoid_ setting the
+> .suspend_late callback.
+
+I should have stated, that I means those scenarios were the wakeup
+configuration is decided in runtime and depending on the current
+situation. For example depending on what kind of peripheral that is
+connected. In this scenario, I think the advantage still stands.
+
+Kind regards
+Ulf Hansson
+
+>
+> Alan Stern
+>
