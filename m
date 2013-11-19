@@ -1,134 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:61954 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754195Ab3KTXFf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 18:05:35 -0500
-Received: by mail-ie0-f180.google.com with SMTP id tp5so7316632ieb.25
-        for <linux-pci@vger.kernel.org>; Wed, 20 Nov 2013 15:05:35 -0800 (PST)
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:62277 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152Ab3KSW6K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 17:58:10 -0500
+Message-ID: <528BECFF.7000900@gmail.com>
+Date: Tue, 19 Nov 2013 14:58:07 -0800
+From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20131120212851.GA3658@google.com>
-References: <20131120212851.GA3658@google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 20 Nov 2013 16:05:14 -0700
-Message-ID: <CAErSpo59LUoh5icU7ev2TyKTzS-sQRUaxSM76eEZ4dMhHJ+0nw@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI updates for v3.13
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiri Slaby <jslaby@suse.cz>, Tejun Heo <tj@kernel.org>
+To: Linux-PCI <linux-pci@vger.kernel.org>,
+	Linux-hotplug <linux-hotplug@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: [RFC PATCH 1/4] pciehp: Make check_link_active() non-static
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jiri, Tejun]
 
-On Wed, Nov 20, 2013 at 2:28 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> The following changes since commit 4fbf888accb39af423f271111d44e8186f053723:
->
->   Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4 (2013-11-14 17:19:58 +0900)
->
-> are available in the git repository at:
->
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.13-fixes-1
->
-> for you to fetch changes up to 30b7fc1277c74667d0d5421526dc5f7a7fa926c5:
+check_link_active() functionality needs to be used by subsequent patches
+(that introduce link state change based hotplug). Thus make the function
+non-static, and rename it to pciehp_check_link_active() so as to be
+consistent with other non-static functions.
 
-Sigh, please ignore this until we figure out the "scheduling while
-atomic" problem Jiri reported [1].  Sorry.
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+---
+ drivers/pci/hotplug/pciehp.h     |    1 +
+ drivers/pci/hotplug/pciehp_hpc.c |    6 +++---
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-[1] http://lkml.kernel.org/r/528D3F36.3050403@suse.cz
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 541bbe6..fc322ed 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -154,6 +154,7 @@ void pciehp_green_led_on(struct slot *slot);
+ void pciehp_green_led_off(struct slot *slot);
+ void pciehp_green_led_blink(struct slot *slot);
+ int pciehp_check_link_status(struct controller *ctrl);
++bool pciehp_check_link_active(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
+ int pciehp_reset_slot(struct slot *slot, int probe);
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 51f56ef..3a5eee7 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -241,7 +241,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+ 	return retval;
+ }
+ 
+-static bool check_link_active(struct controller *ctrl)
++bool pciehp_check_link_active(struct controller *ctrl)
+ {
+ 	bool ret = false;
+ 	u16 lnk_status;
+@@ -261,12 +261,12 @@ static void __pcie_wait_link_active(struct controller *ctrl, bool active)
+ {
+ 	int timeout = 1000;
+ 
+-	if (check_link_active(ctrl) == active)
++	if (pciehp_check_link_active(ctrl) == active)
+ 		return;
+ 	while (timeout > 0) {
+ 		msleep(10);
+ 		timeout -= 10;
+-		if (check_link_active(ctrl) == active)
++		if (pciehp_check_link_active(ctrl) == active)
+ 			return;
+ 	}
+ 	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+-- 
+1.7.9.5
 
->
->   PCI: Remove duplicate pci_disable_device() from pcie_portdrv_remove() (2013-11-18 17:02:45 -0700)
->
-> ----------------------------------------------------------------
-> PCI updates for v3.13:
->
->   Miscellaneous
->     - Avoid CPU switch for .probe() methods (Alexander Duyck)
->     - Restore work_on_cpu() lockdep annotation (Bjorn Helgaas)
->     - Remove duplicate disable from pcie_portdrv_remove() (Yinghai Lu)
->     - Fix whitespace, capitalization, and spelling errors (Bjorn Helgaas)
->
-> ----------------------------------------------------------------
-> Alexander Duyck (1):
->       PCI: Avoid unnecessary CPU switch when calling driver .probe() method
->
-> Bjorn Helgaas (2):
->       PCI: Fix whitespace, capitalization, and spelling errors
->       Revert "workqueue: allow work_on_cpu() to be called recursively"
->
-> Yinghai Lu (1):
->       PCI: Remove duplicate pci_disable_device() from pcie_portdrv_remove()
->
->  drivers/pci/ats.c                       |   2 +-
->  drivers/pci/host/pci-tegra.c            |  12 ++--
->  drivers/pci/host/pcie-designware.c      |   2 +-
->  drivers/pci/hotplug/Kconfig             |   4 +-
->  drivers/pci/hotplug/Makefile            |   2 +-
->  drivers/pci/hotplug/acpiphp_core.c      |  12 ++--
->  drivers/pci/hotplug/acpiphp_glue.c      |   2 +-
->  drivers/pci/hotplug/acpiphp_ibm.c       |  14 ++--
->  drivers/pci/hotplug/cpci_hotplug_core.c |   2 +-
->  drivers/pci/hotplug/cpci_hotplug_pci.c  |   2 +-
->  drivers/pci/hotplug/cpcihp_generic.c    |  20 +++---
->  drivers/pci/hotplug/cpcihp_zt5550.c     |  22 +++----
->  drivers/pci/hotplug/cpcihp_zt5550.h     |  18 +++---
->  drivers/pci/hotplug/cpqphp_core.c       |   4 +-
->  drivers/pci/hotplug/cpqphp_ctrl.c       |  10 +--
->  drivers/pci/hotplug/cpqphp_pci.c        |   5 +-
->  drivers/pci/hotplug/ibmphp.h            |  12 ++--
->  drivers/pci/hotplug/ibmphp_core.c       | 109 ++++++++++++++++----------------
->  drivers/pci/hotplug/ibmphp_ebda.c       | 103 +++++++++++++++---------------
->  drivers/pci/hotplug/ibmphp_hpc.c        |  24 +++----
->  drivers/pci/hotplug/ibmphp_pci.c        |  71 ++++++++++-----------
->  drivers/pci/hotplug/ibmphp_res.c        |  76 +++++++++++-----------
->  drivers/pci/hotplug/pci_hotplug_core.c  |   8 +--
->  drivers/pci/hotplug/pciehp.h            |   2 +-
->  drivers/pci/hotplug/pciehp_acpi.c       |   2 +-
->  drivers/pci/hotplug/pciehp_core.c       |   4 +-
->  drivers/pci/hotplug/pciehp_hpc.c        |   6 +-
->  drivers/pci/hotplug/pcihp_skeleton.c    |   8 +--
->  drivers/pci/hotplug/rpadlpar_core.c     |   2 +-
->  drivers/pci/hotplug/rpaphp.h            |   6 +-
->  drivers/pci/hotplug/rpaphp_core.c       |   8 +--
->  drivers/pci/hotplug/rpaphp_pci.c        |   3 +-
->  drivers/pci/hotplug/rpaphp_slot.c       |  19 +++---
->  drivers/pci/hotplug/shpchp.h            |   8 +--
->  drivers/pci/hotplug/shpchp_core.c       |  10 +--
->  drivers/pci/hotplug/shpchp_hpc.c        |   2 +-
->  drivers/pci/iov.c                       |   2 +-
->  drivers/pci/irq.c                       |   2 +-
->  drivers/pci/msi.c                       |   2 +-
->  drivers/pci/pci-acpi.c                  |   2 +-
->  drivers/pci/pci-driver.c                |  40 ++++++++----
->  drivers/pci/pci-stub.c                  |   4 +-
->  drivers/pci/pci-sysfs.c                 |  28 ++++----
->  drivers/pci/pci.c                       |  46 +++++++-------
->  drivers/pci/pcie/aer/aerdrv_core.c      |   2 +-
->  drivers/pci/pcie/aspm.c                 |   2 +-
->  drivers/pci/pcie/pme.c                  |   4 +-
->  drivers/pci/pcie/portdrv.h              |   2 +-
->  drivers/pci/pcie/portdrv_bus.c          |   4 +-
->  drivers/pci/pcie/portdrv_core.c         |   2 +-
->  drivers/pci/pcie/portdrv_pci.c          |   7 +-
->  drivers/pci/probe.c                     |  10 +--
->  drivers/pci/proc.c                      |   2 +-
->  drivers/pci/quirks.c                    | 104 +++++++++++++++---------------
->  drivers/pci/remove.c                    |   2 +-
->  drivers/pci/search.c                    |  12 ++--
->  drivers/pci/setup-bus.c                 |  18 +++---
->  drivers/pci/setup-res.c                 |   2 +-
->  drivers/pci/slot.c                      |   2 +-
->  drivers/pci/syscall.c                   |   2 +-
->  include/linux/msi.h                     |  10 +--
->  include/linux/pci.h                     |  55 ++++++++--------
->  include/linux/pci_hotplug.h             |   5 +-
->  include/linux/pcieport_if.h             |   2 +-
->  include/uapi/linux/pci_regs.h           |  72 ++++++++++-----------
->  kernel/workqueue.c                      |  32 +++-------
->  66 files changed, 547 insertions(+), 548 deletions(-)
