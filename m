@@ -1,110 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f50.google.com ([209.85.128.50]:49682 "EHLO
-	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339Ab3KRN1B convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Nov 2013 08:27:01 -0500
-Received: by mail-qe0-f50.google.com with SMTP id 1so3980186qee.23
-        for <linux-pci@vger.kernel.org>; Mon, 18 Nov 2013 05:27:00 -0800 (PST)
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:61954 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754195Ab3KTXFf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 18:05:35 -0500
+Received: by mail-ie0-f180.google.com with SMTP id tp5so7316632ieb.25
+        for <linux-pci@vger.kernel.org>; Wed, 20 Nov 2013 15:05:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1311151006280.1527-100000@iolanthe.rowland.org>
-References: <CAPDyKFrQfwOQsOCB1QFo4GWeX303AEWnanE61svy9UUJpNBUiw@mail.gmail.com>
-	<Pine.LNX.4.44L0.1311151006280.1527-100000@iolanthe.rowland.org>
-Date: Mon, 18 Nov 2013 14:27:00 +0100
-Message-ID: <CAPDyKFrushEwW7x_VguPjOnP8BuSO=+tD=DxS9J0JQVfYTgOYA@mail.gmail.com>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
- system suspend
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20131120212851.GA3658@google.com>
+References: <20131120212851.GA3658@google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 Nov 2013 16:05:14 -0700
+Message-ID: <CAErSpo59LUoh5icU7ev2TyKTzS-sQRUaxSM76eEZ4dMhHJ+0nw@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI updates for v3.13
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jiri Slaby <jslaby@suse.cz>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> In any case, although Bjørn made a good point about latency, the main
-> reason for having the sysfs interface was to cope with buggy devices.
-> Linux started using runtime PM before Windows did.  At that time, many
-> devices did not support runtime suspend very well -- they didn't have
-> to since Windows didn't use it.  Plenty of devices simply couldn't
-> handle it.  Too many for a blacklist.
->
-> So we pushed the decision about whether to enable runtime PM out to
-> userspace.  There was no other choice; too many people were having too
-> many problems when runtime PM was automatically on.
->
->> What would make sense to me, is to move the runtime PM sysfs to
->> debugfs, because it is a good feature to make use of during
->> development and debugging.
->
-> But since it is primarily needed for device control by the user, it
-> belongs in sysfs.
->
+[+cc Jiri, Tejun]
 
-Got it! Thanks for giving me the history to better understand why the
-sysfs exists.
-
-<snip>
-
->> >> So as a way forward, I am thinking of a similar approach as you
->> >> suggested with the "generic" suspend_late. But instead add a new
->> >> runtime PM API, which intent is to let drivers to specify for PM core,
->> >> if it should care to prevent the runtime suspend from happen during
->> >> system system - or not. Could that work?
->> >
->> > I don't see what good it would do.  Instead of adding a new flag, why
->> > not just let drivers point their .suspend_late methods to the new
->> > generic function?  That would accomplish almost the same thing without
->> > changing the API.
->>
->> Two minor functions will be added to the API, no big deal I think.
->> More importantly these will actually make life easier for some drivers
->> since they don't need to set up any additional PM callbacks.
->>
->> Using the generic suspend_late approach would for sure work, but it
->> will spread to buses and power domains as well, which is not the case
->> when adding when adding a new API.
+On Wed, Nov 20, 2013 at 2:28 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> The following changes since commit 4fbf888accb39af423f271111d44e8186f053723:
 >
-> I don't understand what you mean by "spread to".  That makes it sound
-> like an infectious disease rather than a subroutine.  :-)
+>   Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4 (2013-11-14 17:19:58 +0900)
 >
-> Also, I don't see how adding one line for an extra callback pointer is
-> any harder than adding one line to call pm_runtime_no_prevent_suspend.
+> are available in the git repository at:
 >
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.13-fixes-1
+>
+> for you to fetch changes up to 30b7fc1277c74667d0d5421526dc5f7a7fa926c5:
 
-I favour the pm_runtime_no_prevent_suspend API approach, since it
-would mean a change in behaviour of the PM core. I also think that in
-some cases it could make runtime PM better understandable, for those
-who are deploying it.
+Sigh, please ignore this until we figure out the "scheduling while
+atomic" problem Jiri reported [1].  Sorry.
 
-Another advantage of "pm_runtime_no_prevent_suspend" is that driver's
-can still easily prevent runtime suspend, during system suspend, by an
-extra call to "pm_runtime_get*". Typically this could be used when the
-device is configured for wakeup. In this case the generic suspend_late
-approach would not work, since the driver would need to implement it's
-own .suspend_late callback to handle this.
+[1] http://lkml.kernel.org/r/528D3F36.3050403@suse.cz
 
-Kind regards
-Ulf Hansson
-
->> > (Actually, it would be superior.  The generic suspend_late approach
->> > will work even if the user writes "on" to /sys/.../power/control,
->> > whereas your approach won't work.)
->>
->> We have different view here. :-)
->>
->> Whether I like it or not, the sysfs interface exist and then I think
->> the kernel must act accordingly. We shouldn’t override it. I mean if
->> userspace has decided to keep a device active, there is probably a
->> reason.
->>
->>
->> Thanks a lot Alan for being patient with me and continuing the discussion!
 >
-> My pleasure.
+>   PCI: Remove duplicate pci_disable_device() from pcie_portdrv_remove() (2013-11-18 17:02:45 -0700)
 >
-> Alan Stern
+> ----------------------------------------------------------------
+> PCI updates for v3.13:
 >
+>   Miscellaneous
+>     - Avoid CPU switch for .probe() methods (Alexander Duyck)
+>     - Restore work_on_cpu() lockdep annotation (Bjorn Helgaas)
+>     - Remove duplicate disable from pcie_portdrv_remove() (Yinghai Lu)
+>     - Fix whitespace, capitalization, and spelling errors (Bjorn Helgaas)
+>
+> ----------------------------------------------------------------
+> Alexander Duyck (1):
+>       PCI: Avoid unnecessary CPU switch when calling driver .probe() method
+>
+> Bjorn Helgaas (2):
+>       PCI: Fix whitespace, capitalization, and spelling errors
+>       Revert "workqueue: allow work_on_cpu() to be called recursively"
+>
+> Yinghai Lu (1):
+>       PCI: Remove duplicate pci_disable_device() from pcie_portdrv_remove()
+>
+>  drivers/pci/ats.c                       |   2 +-
+>  drivers/pci/host/pci-tegra.c            |  12 ++--
+>  drivers/pci/host/pcie-designware.c      |   2 +-
+>  drivers/pci/hotplug/Kconfig             |   4 +-
+>  drivers/pci/hotplug/Makefile            |   2 +-
+>  drivers/pci/hotplug/acpiphp_core.c      |  12 ++--
+>  drivers/pci/hotplug/acpiphp_glue.c      |   2 +-
+>  drivers/pci/hotplug/acpiphp_ibm.c       |  14 ++--
+>  drivers/pci/hotplug/cpci_hotplug_core.c |   2 +-
+>  drivers/pci/hotplug/cpci_hotplug_pci.c  |   2 +-
+>  drivers/pci/hotplug/cpcihp_generic.c    |  20 +++---
+>  drivers/pci/hotplug/cpcihp_zt5550.c     |  22 +++----
+>  drivers/pci/hotplug/cpcihp_zt5550.h     |  18 +++---
+>  drivers/pci/hotplug/cpqphp_core.c       |   4 +-
+>  drivers/pci/hotplug/cpqphp_ctrl.c       |  10 +--
+>  drivers/pci/hotplug/cpqphp_pci.c        |   5 +-
+>  drivers/pci/hotplug/ibmphp.h            |  12 ++--
+>  drivers/pci/hotplug/ibmphp_core.c       | 109 ++++++++++++++++----------------
+>  drivers/pci/hotplug/ibmphp_ebda.c       | 103 +++++++++++++++---------------
+>  drivers/pci/hotplug/ibmphp_hpc.c        |  24 +++----
+>  drivers/pci/hotplug/ibmphp_pci.c        |  71 ++++++++++-----------
+>  drivers/pci/hotplug/ibmphp_res.c        |  76 +++++++++++-----------
+>  drivers/pci/hotplug/pci_hotplug_core.c  |   8 +--
+>  drivers/pci/hotplug/pciehp.h            |   2 +-
+>  drivers/pci/hotplug/pciehp_acpi.c       |   2 +-
+>  drivers/pci/hotplug/pciehp_core.c       |   4 +-
+>  drivers/pci/hotplug/pciehp_hpc.c        |   6 +-
+>  drivers/pci/hotplug/pcihp_skeleton.c    |   8 +--
+>  drivers/pci/hotplug/rpadlpar_core.c     |   2 +-
+>  drivers/pci/hotplug/rpaphp.h            |   6 +-
+>  drivers/pci/hotplug/rpaphp_core.c       |   8 +--
+>  drivers/pci/hotplug/rpaphp_pci.c        |   3 +-
+>  drivers/pci/hotplug/rpaphp_slot.c       |  19 +++---
+>  drivers/pci/hotplug/shpchp.h            |   8 +--
+>  drivers/pci/hotplug/shpchp_core.c       |  10 +--
+>  drivers/pci/hotplug/shpchp_hpc.c        |   2 +-
+>  drivers/pci/iov.c                       |   2 +-
+>  drivers/pci/irq.c                       |   2 +-
+>  drivers/pci/msi.c                       |   2 +-
+>  drivers/pci/pci-acpi.c                  |   2 +-
+>  drivers/pci/pci-driver.c                |  40 ++++++++----
+>  drivers/pci/pci-stub.c                  |   4 +-
+>  drivers/pci/pci-sysfs.c                 |  28 ++++----
+>  drivers/pci/pci.c                       |  46 +++++++-------
+>  drivers/pci/pcie/aer/aerdrv_core.c      |   2 +-
+>  drivers/pci/pcie/aspm.c                 |   2 +-
+>  drivers/pci/pcie/pme.c                  |   4 +-
+>  drivers/pci/pcie/portdrv.h              |   2 +-
+>  drivers/pci/pcie/portdrv_bus.c          |   4 +-
+>  drivers/pci/pcie/portdrv_core.c         |   2 +-
+>  drivers/pci/pcie/portdrv_pci.c          |   7 +-
+>  drivers/pci/probe.c                     |  10 +--
+>  drivers/pci/proc.c                      |   2 +-
+>  drivers/pci/quirks.c                    | 104 +++++++++++++++---------------
+>  drivers/pci/remove.c                    |   2 +-
+>  drivers/pci/search.c                    |  12 ++--
+>  drivers/pci/setup-bus.c                 |  18 +++---
+>  drivers/pci/setup-res.c                 |   2 +-
+>  drivers/pci/slot.c                      |   2 +-
+>  drivers/pci/syscall.c                   |   2 +-
+>  include/linux/msi.h                     |  10 +--
+>  include/linux/pci.h                     |  55 ++++++++--------
+>  include/linux/pci_hotplug.h             |   5 +-
+>  include/linux/pcieport_if.h             |   2 +-
+>  include/uapi/linux/pci_regs.h           |  72 ++++++++++-----------
+>  kernel/workqueue.c                      |  32 +++-------
+>  66 files changed, 547 insertions(+), 548 deletions(-)
