@@ -1,68 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46550 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516Ab3KHPfd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Nov 2013 10:35:33 -0500
-Date: Fri, 8 Nov 2013 10:35:07 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	xen-devel@lists.xenproject.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, "x86@kernel.org" <x86@kernel.org>
-Subject: Re: [PATCH] PCI: Introduce two new MSI infrastructure calls for
- masking/unmasking.
-Message-ID: <20131108153507.GA24755@phenom.dumpdata.com>
-References: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com>
- <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
- <527C41E9.6040002@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <527C41E9.6040002@oracle.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31623 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355Ab3KTBwX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:23 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/6] PCI: move back pci_proc_attach_devices calling
+Date: Tue, 19 Nov 2013 17:51:52 -0800
+Message-Id: <1384912317-3721-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 08, 2013 at 09:44:09AM +0800, Zhenzhong Duan wrote:
-> 
-> On 2013-11-07 07:51, Bjorn Helgaas wrote:
-> >[+cc Thomas, Ingo, Peter, x86 list]
-> >
-> >On Wed, Nov 6, 2013 at 2:16 PM, Konrad Rzeszutek Wilk
-> ><konrad.wilk@oracle.com> wrote:
-> >>Certain platforms do not allow writes in the MSI-X bars
-> >>to setup or tear down vector values. To combat against
-> >>the generic code trying to write to that and either silently
-> >>being ignored or crashing due to the pagetables being marked r/o
-> >>this patch introduces a platform over-write.
-> >>
-> >>Note that we keep two separate, non-weak, functions
-> >>default_mask_msi_irqs() and default_mask_msix_irqs() for the
-> >>behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
-> >>as the default behavior is needed by x86 PCI code.
-> >>
-> >>For Xen, which does not allow the guest to write to MSI-X
-> >>tables - as the hypervisor is solely responsible for setting
-> >>the vector values - we implement two nops.
-> >>
-> >>CC: Bjorn Helgaas <bhelgaas@google.com>
-> >>CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-> >>CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-> >>Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> >I think this is safe, and I'd like to squeeze it into the v3.13 merge
-> >window next week, since it supersedes three patches Zhenzhong has been
-> >trying to get in since July [1], and this patch is much simpler to
-> >understand.
-> This patch could replace the first two.
-> I think the third patch of mine is still needed as it does a
-> different thing.
-> It optimizes restore path in dom0.
+We stop detach proc when pci_stop_device.
+So should attach that during pci_bus_add_device.
 
-I tried to rebase it on top of this patch but it ended up that
-you still need the two arguments (for restore_... operation). 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c   | 1 +
+ drivers/pci/probe.c | 2 --
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
-But perhaps there is a better way. If you can rebase on top
-of this patch - and send it out - that would be great!
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index fc1b740..1ffd95b 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -175,6 +175,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 	 * are not assigned yet for some devices.
+ 	 */
+ 	pci_fixup_device(pci_fixup_final, dev);
++	pci_proc_attach_device(dev);
+ 	pci_create_sysfs_dev_files(dev);
+ 
+ 	dev->match_driver = true;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 38e403d..173a9cf 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1381,8 +1381,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->match_driver = false;
+ 	ret = device_add(&dev->dev);
+ 	WARN_ON(ret < 0);
+-
+-	pci_proc_attach_device(dev);
+ }
+ 
+ struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
+-- 
+1.8.1.4
+
