@@ -1,73 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27740 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752403Ab3KLJSx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Nov 2013 04:18:53 -0500
-Date: Tue, 12 Nov 2013 11:24:02 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Lan Tianyu <tianyu.lan@intel.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
-	"Luck, Tony" <tony.luck@intel.com>
-Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct
- acpi_dev_node
-Message-ID: <20131112092402.GO22916@intel.com>
-References: <3268437.YsusHvklcv@vostro.rjw.lan>
- <52803124.7000304@intel.com>
- <1683079.zjqzsOAjXB@vostro.rjw.lan>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:35350 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753061Ab3KTBkf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:40:35 -0500
+Message-ID: <528C12B9.60506@huawei.com>
+Date: Wed, 20 Nov 2013 09:39:05 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1683079.zjqzsOAjXB@vostro.rjw.lan>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	"Matthew Garrett" <mjg59@srcf.ucam.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
+References: <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com> <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com> <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com> <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com> <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com> <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com> <20131115115235.GA2281@intel.com> <20131119013343.GA17294@google.com> <528AC4F2.40708@huawei.com> <20131119171850.GA4261@google.com> <528C0CF9.3020906@huawei.com> <CAErSpo7nKXR9NBbjs8K__T2TCONW6N76ytevTH-bxcs-NH3+Zg@mail.gmail.com>
+In-Reply-To: <CAErSpo7nKXR9NBbjs8K__T2TCONW6N76ytevTH-bxcs-NH3+Zg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 11, 2013 at 02:45:39PM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
+On 2013/11/20 9:20, Bjorn Helgaas wrote:
+> On Tue, Nov 19, 2013 at 6:14 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>>> [bhelgaas: changelog, tag for stable]
+>>>>> Reported-by: David Bulkow <David.Bulkow@stratus.com>
+>>>>> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+>>>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>>> CC: stable@vger.kernel.org  # v2.6.32+
+>>>>
+>>>> Hi Bjorn,
+>>>>    This issue in X86 seems to be introduced after commit 928bea9 "PCI: Delay enabling bridges until they're needed"
+>>>> So this patch needs to back port to 2.6.32+ ?
+>>>
+>>> 928bea9 might have made it more visible, but the underlying problem is that
+>>> we enable the device once in the probe path, and disable it twice in the
+>>> remove path.  That problem exists in 2.6.32.61:
+>>>
+>>>   pcie_portdrv_probe                # .probe() method
+>>>     pcie_port_device_register
+>>>       pci_enable_device             <-- enable
+>>>
+>>>   pcie_portdrv_remove               # .remove() method
+>>>     pcie_port_device_remove
+>>>       pci_disable_device            <-- disable #1
+>>>     pci_disable_device              <-- disable #2
+>>
+>> During assign unassigned resources, we also enable the port device,
+>>
+>> fs_initcall(pcibios_assign_resources);
+>>   pci_assign_unassigned_resources;
+>>     pci_enable_bridges()
+>>       pci_enable_device()
+>>
+>>
+>> So I think before the commit 928bea9 , the pci bridge device enable and disable is symmetrical.
+>> After the commit 928bea9, we only enable bridge once, but still remove twice.
 > 
-> Modify struct acpi_dev_node to contain a pointer to struct acpi_device
-> associated with the given device object (that is, its ACPI companion
-> device) instead of an ACPI handle corresponding to it.  Introduce two
-> new macros for manipulating that pointer in a CONFIG_ACPI-safe way,
-> ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
-> ACPI_HANDLE() macro to take the above changes into account.
-> Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
-> use ACPI_COMPANION_SET() instead.  For some of them who used to
-> pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
-> introduce a helper routine acpi_preset_companion() doing an
-> equivalent thing.
+> The port driver should be symmetrical, regardless of what happens
+> outside it.  We have to be able to bind/unbind/bind/unbind
+> indefinitely.
 > 
-> The main motivation for doing this is that there are things
-> represented by struct acpi_device objects that don't have valid
-> ACPI handles (so called fixed ACPI hardware features, such as
-> power and sleep buttons) and we would like to create platform
-> device objects for them and "glue" them to their ACPI companions
-> in the usual way (which currently is impossible due to the
-> lack of valid ACPI handles).  However, there are more reasons
-> why it may be useful.
+> Do you think the patch is a problem for current upstream, or are you
+> just saying it doesn't need to be backported as far as 2.6.32?  I
+> frankly don't care that much if those old kernels pick it up or not.
+> All I'm saying is that the problem this fixes is present that far
+> back.
 > 
-> First, struct acpi_device pointers allow of much better type checking
-> than void pointers which are ACPI handles, so it should be more
-> difficult to write buggy code using modified struct acpi_dev_node
-> and the new macros.  Second, the change should help to reduce (over
-> time) the number of places in which the result of ACPI_HANDLE() is
-> passed to acpi_bus_get_device() in order to obtain a pointer to the
-> struct acpi_device associated with the given "physical" device,
-> because now that pointer is returned by ACPI_COMPANION() directly.
-> Finally, the change should make it easier to write generic code that
-> will build both for CONFIG_ACPI set and unset without adding explicit
-> compiler directives to it.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> I'm not really interested in doing a lot more digging about ancient
+> kernels, unless you think it's going to break something if applied to
+> them.
 
-I tested this on Haswell as well and it works fine with ACPI enumerated
-platform, I2C and SPI devices.
+As you said, this is not a big problem, it's ok for current upstream,
+and for 3.4 3.5 3.10 stable tree, it seems just a enable and disable symmetry problem.
+I don't find anything unsafe about this even though when we unbind pcie port driver,
+the pcie port maybe still enable. I have no objection to backport it to ancient kernels. :)
 
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com> (on Haswell)
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Thanks!
+Yijing.
+
+
+> 
+> Bjorn
+> 
+> 
+
+
+-- 
+Thanks!
+Yijing
+
