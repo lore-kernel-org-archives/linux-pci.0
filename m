@@ -1,166 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [fixup][PATCH 2/6] ACPI / hotplug: Refuse to hot-remove all objects with disabled hotplug
-Date: Wed, 06 Nov 2013 00:27:26 +0100
-Message-ID: <5195965.AgE9G8aXP3@vostro.rjw.lan>
-In-Reply-To: <1842331.UHR0XPv1jo@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan> <1842331.UHR0XPv1jo@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:36475 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355Ab3KTBwS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:18 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 0/6] PCI: double remove fixing and allocate 64bit mmio pref
+Date: Tue, 19 Nov 2013 17:51:51 -0800
+Message-Id: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+First 3 are for Gu Zheng <guz.fnst@cn.fujitsu.com> to help double pci
+device removing via sysfs.
 
-In theory, an ACPI device object may be the parent of another
-device object whose hotplug is disabled by user space through its
-scan handler.  In that case, the eject operation targeting the
-parent should fail as though the parent's own hotplug was disabled,
-but currently this is not the case, because acpi_scan_hot_remove()
-doesn't check the disable/enable hotplug status of the children
-of the top-most object passed to it.
+Second 3 are about mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
+It will try to assign 64 bit resource above 4g at first.
 
-To fix this, modify acpi_bus_offline_companions() to return an
-error code if hotplug is disabled for the given device object.
-[Also change the name of the function to acpi_bus_offline(),
-because it is not only about companions any more, and change
-the name of acpi_bus_online_companions() accordingly.]  Make
-acpi_scan_hot_remove() propagate that error to its callers.
+I extracted them from big piles of pci related...
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+Could be found:
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-3.14
 
-acpi_force_hot_remove has to be honored by the new code.
+And it is based on current pci/for-linus, and should be applied without
+problem on 3.13-rc1 after linus pull pci/for-linus.
 
-Thanks,
-Rafael
+Thanks
 
----
- drivers/acpi/scan.c |   58 +++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 37 insertions(+), 21 deletions(-)
+Yinghai
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -125,8 +125,8 @@ acpi_device_modalias_show(struct device
- }
- static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
- 
--static acpi_status acpi_bus_offline_companions(acpi_handle handle, u32 lvl,
--					       void *data, void **ret_p)
-+static acpi_status acpi_bus_offline(acpi_handle handle, u32 lvl, void *data,
-+				    void **ret_p)
- {
- 	struct acpi_device *device = NULL;
- 	struct acpi_device_physical_node *pn;
-@@ -136,6 +136,12 @@ static acpi_status acpi_bus_offline_comp
- 	if (acpi_bus_get_device(handle, &device))
- 		return AE_OK;
- 
-+	if (device->handler && !device->handler->hotplug.enabled
-+	    && !acpi_force_hot_remove) {
-+		*ret_p = &device->dev;
-+		return AE_SUPPORT;
-+	}
-+
- 	mutex_lock(&device->physical_node_lock);
- 
- 	list_for_each_entry(pn, &device->physical_node_list, node) {
-@@ -168,8 +174,8 @@ static acpi_status acpi_bus_offline_comp
- 	return status;
- }
- 
--static acpi_status acpi_bus_online_companions(acpi_handle handle, u32 lvl,
--					      void *data, void **ret_p)
-+static acpi_status acpi_bus_online(acpi_handle handle, u32 lvl, void *data,
-+				   void **ret_p)
- {
- 	struct acpi_device *device = NULL;
- 	struct acpi_device_physical_node *pn;
-@@ -214,26 +220,32 @@ static int acpi_scan_hot_remove(struct a
- 	 * If the first pass is successful, the second one isn't needed, though.
- 	 */
- 	errdev = NULL;
--	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
--			    NULL, acpi_bus_offline_companions,
--			    (void *)false, (void **)&errdev);
--	acpi_bus_offline_companions(handle, 0, (void *)false, (void **)&errdev);
-+	status = acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-+				     NULL, acpi_bus_offline, (void *)false,
-+				     (void **)&errdev);
-+	if (status == AE_SUPPORT) {
-+		dev_warn(errdev, "Offline disabled.\n");
-+		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-+				    acpi_bus_online, NULL, NULL, NULL);
-+		put_device(&device->dev);
-+		return -EPERM;
-+	}
-+	acpi_bus_offline(handle, 0, (void *)false, (void **)&errdev);
- 	if (errdev) {
- 		errdev = NULL;
- 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
--				    NULL, acpi_bus_offline_companions,
--				    (void *)true , (void **)&errdev);
-+				    NULL, acpi_bus_offline, (void *)true,
-+				    (void **)&errdev);
- 		if (!errdev || acpi_force_hot_remove)
--			acpi_bus_offline_companions(handle, 0, (void *)true,
--						    (void **)&errdev);
-+			acpi_bus_offline(handle, 0, (void *)true,
-+					 (void **)&errdev);
- 
- 		if (errdev && !acpi_force_hot_remove) {
- 			dev_warn(errdev, "Offline failed.\n");
--			acpi_bus_online_companions(handle, 0, NULL, NULL);
-+			acpi_bus_online(handle, 0, NULL, NULL);
- 			acpi_walk_namespace(ACPI_TYPE_ANY, handle,
--					    ACPI_UINT32_MAX,
--					    acpi_bus_online_companions, NULL,
--					    NULL, NULL);
-+					    ACPI_UINT32_MAX, acpi_bus_online,
-+					    NULL, NULL, NULL);
- 			put_device(&device->dev);
- 			return -EBUSY;
- 		}
-@@ -290,10 +302,9 @@ static void acpi_bus_device_eject(void *
- 		goto err_out;
- 
- 	handler = device->handler;
--	if (!handler || !handler->hotplug.enabled) {
--		ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
--		goto err_out;
--	}
-+	if (!handler || !handler->hotplug.enabled)
-+		goto err_support;
-+
- 	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
- 				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
- 	if (handler->hotplug.mode == AHM_CONTAINER)
-@@ -301,14 +312,19 @@ static void acpi_bus_device_eject(void *
- 
- 	get_device(&device->dev);
- 	error = acpi_scan_hot_remove(device);
--	if (error)
-+	if (error == -EPERM) {
-+		goto err_support;
-+	} else if (error) {
- 		goto err_out;
-+	}
- 
-  out:
- 	mutex_unlock(&acpi_scan_lock);
- 	unlock_device_hotplug();
- 	return;
- 
-+ err_support:
-+	ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
-  err_out:
- 	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST, ost_code,
- 				  NULL);
+Yinghai Lu (6):
+  PCI: move back pci_proc_attach_devices calling
+  PCI: move resources and bus_list releasing to pci_release_dev
+  PCI: Destroy pci dev only once
+  PCI: pcibus address to resource converting take bus directly
+  PCI: Add pcibios_bus_addr_to_res()
+  PCI: Try to allocate mem64 above 4G at first
+
+ arch/x86/include/asm/pci.h |  1 -
+ drivers/pci/bus.c          | 43 +++++++++++++++++++++++++++++++++--------
+ drivers/pci/host-bridge.c  | 48 +++++++++++++++++++++++++++++++++-------------
+ drivers/pci/pci.h          |  2 ++
+ drivers/pci/probe.c        | 23 ++++++++++++++++++----
+ drivers/pci/remove.c       | 24 ++++-------------------
+ include/linux/pci.h        | 10 ++++++----
+ 7 files changed, 101 insertions(+), 50 deletions(-)
+
+-- 
+1.8.1.4
 
