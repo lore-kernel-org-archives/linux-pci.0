@@ -1,69 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42345 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754160Ab3KUVA7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Nov 2013 16:00:59 -0500
-Message-ID: <1385067648.2879.421.camel@ul30vt.home>
-Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Scott Wood <scottwood@freescale.com>
-Cc: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Thu, 21 Nov 2013 14:00:48 -0700
-In-Reply-To: <1385066835.1403.489.camel@snotra.buserror.net>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1384973243.2879.361.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385066603.2879.414.camel@ul30vt.home>
-	 <1385066835.1403.489.camel@snotra.buserror.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from v094114.home.net.pl ([79.96.170.134]:61491 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752073Ab3KTLlB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 06:41:01 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Len Brown <len.brown@intel.com>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during system suspend
+Date: Wed, 20 Nov 2013 12:53:40 +0100
+Message-ID: <1498151.XLZyrcjCz6@vostro.rjw.lan>
+In-Reply-To: <20131120112303.GA5123@amd.pavel.ucw.cz>
+References: <CAPDyKFpypLVKiOZEweWMig9LrNHcOpNQnm+J3KJ3KzCDBgkv9A@mail.gmail.com> <CAPDyKFopHvAvpb1O__3HoMv2YuhYnVLg5sk+NeRs9tsg8OLSig@mail.gmail.com> <20131120112303.GA5123@amd.pavel.ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-11-21 at 14:47 -0600, Scott Wood wrote:
-> On Thu, 2013-11-21 at 13:43 -0700, Alex Williamson wrote:
-> > On Thu, 2013-11-21 at 11:20 +0000, Bharat Bhushan wrote:
-> > > 
-> > > > -----Original Message-----
-> > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > > Sent: Thursday, November 21, 2013 12:17 AM
-> > > > To: Bhushan Bharat-R65777
-> > > > Cc: joro@8bytes.org; bhelgaas@google.com; agraf@suse.de; Wood Scott-B07421;
-> > > > Yoder Stuart-B08248; iommu@lists.linux-foundation.org; linux-
-> > > > pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
-> > > > kernel@vger.kernel.org; Bhushan Bharat-R65777
-> > > > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-> > > > 
-> > > > Is VFIO_IOMMU_PAMU_GET_MSI_BANK_COUNT per aperture (ie. each vfio user has
-> > > > $COUNT regions at their disposal exclusively)?
-> > > 
-> > > Number of msi-bank count is system wide and not per aperture, But will be setting windows for banks in the device aperture.
-> > > So say if we are direct assigning 2 pci device (both have different iommu group, so 2 aperture in iommu) to VM.
-> > > Now qemu can make only one call to know how many msi-banks are there but it must set sub-windows for all banks for both pci device in its respective aperture.
+On Wednesday, November 20, 2013 12:23:03 PM Pavel Machek wrote:
+> On Wed 2013-11-20 11:52:05, Ulf Hansson wrote:
+> > On 19 November 2013 16:35, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > > On Tue, 19 Nov 2013, Ulf Hansson wrote:
+> > >
+> > >> At the moment, system PM is already affecting behaviour of runtime PM
+> > >> since it is preventing runtime suspend during system suspend.
+> > >
+> > > Sure.  And that behavior is documented.  In any case, it's a bug for
+> > > drivers to depend on runtime suspend for carrying out a system suspend.
 > > 
-> > I'm still confused.  What I want to make sure of is that the banks are
-> > independent per aperture.  For instance, if we have two separate
-> > userspace processes operating independently and they both chose to use
-> > msi bank zero for their device, that's bank zero within each aperture
-> > and doesn't interfere.  Or another way to ask is can a malicious user
-> > interfere with other users by using the wrong bank.  Thanks,
+> > Why do you say that?
 > 
-> They can interfere.  With this hardware, the only way to prevent that is
-> to make sure that a bank is not shared by multiple protection contexts.
-> For some of our users, though, I believe preventing this is less
-> important than the performance benefit.
+> Because that's the way it is?
+> 
+> > A significant amount of drivers should be able to cope with only the
+> > runtime PM callbacks, if only the PM core have respected the drivers
+> > in the way my RFC proposes.
+> 
+> So what? It is not as additional callback is huge burden -- code is
+> the same -- and we do want option of disabling runtime PM.
+> 
+> Don't make system suspend dependend on runtime PM.
 
-I think we need some sort of ownership model around the msi banks then.
-Otherwise there's nothing preventing another userspace from attempting
-an MSI based attack on other users, or perhaps even on the host.  VFIO
-can't allow that.  Thanks,
-
-Alex
+Amen.
 
