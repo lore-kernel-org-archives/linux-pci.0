@@ -1,122 +1,29 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:53977 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754584Ab3K0Ukl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 15:40:41 -0500
-Received: by mail-we0-f172.google.com with SMTP id w62so1659263wes.17
-        for <linux-pci@vger.kernel.org>; Wed, 27 Nov 2013 12:40:39 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 20 Nov 2013 12:16:25 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC v2 00/29] Introduce pcim_enable_msi*() family helpers
+Message-ID: <20131120171625.GM28946@htj.dyndns.org>
+References: <cover.1382103786.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20131125205441.5046e0cb@neptune.home>
-References: <20131125205441.5046e0cb@neptune.home>
-Date: Wed, 27 Nov 2013 21:40:39 +0100
-Message-ID: <CANq1E4QabD9Nba_s-oqBvZg8+Zo7iMFGCsOgg7LE7qnDm+pwNA@mail.gmail.com>
-Subject: Re: [RFC patch] PCI: Extend boot_vga sysfs attribute lookup to fix X
- on MBA+EFI
-From: David Herrmann <dh.herrmann@gmail.com>
-To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>
-Cc: Dave Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Peter Jones <pjones@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1382103786.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
+Hello,
 
-On Mon, Nov 25, 2013 at 8:54 PM, Bruno Prémont
-<bonbons@linux-vserver.org> wrote:
-> On a MacBookAir2,1, booting to Linux with EFI though having
-> no efifb built-in Xorg refuses to start with "no devices detected"
-> because for the only VGA device available (NVidia Geforce 9400M)
-> the sysfs attribute boot_vga is zero (instead of expected 1).
->
-> When CONFIG_FB_EFI is selected, efifb does provide its own
-> vga_default_device() to report the PCI device matching global
-> screen_info as determined during efifb setup.
->
-> Otherwise there is just a dummy or VGA_ARB's vga_default_device()
-> that does not provide the right information.
->
-> On the other hand, boot_vga_show() falls back to poking PCI
-> resources to flag a PCI device as boot_vga if vga_default_device()
-> returned no PCI device (NULL).
->
-> To complement this PCI resource poking, this patch copies the
-> validation code used to determine which PCI device to report as
-> default VGA device by efifb into boot_vga_show().
->
-> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-> ---
-> Would it make sense to kill the corresponding code from efifb
-> as it covers only a single case?
->
-> The other EFI capable system I have (AMD Ilano based, Gigabyte
-> mainboard does report boot_vga=1, possibly through the resources
-> poking and there Xorg starts properly without efifb built in.
->
-> Selecting CONFIG_X86_SYSFB (combined with CONFIG_FB_SIMPLE) does
-> not help by itself, patching that one instead of PCI's boot_vga
-> attribute directly would still not cover the case when neither
-> of them is enabled.
+Sorry about the long delay.  Except for the several nits that I
+mentioned, things generally look good to me.
 
-How about moving the code from efifb to arch/x86/kernel/sysfb_efi.c?
-efifb is x86 only so we don't break anything by this. And all the
-other efi-quirks have already been moved. Imho this would be the
-easiest fix right now. But if you can spend some time to clean up the
-vga_default_device() mess, please go ahead.
+Thanks a lot for your patience.
 
-Btw., thanks for tracking this down. It bothered me for quite some
-while that Xorg ignores my cards if I boot via efi..
-
-Thanks
-David
-
->
->  drivers/pci/pci-sysfs.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 7128cfd..91cac71 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -28,6 +28,7 @@
->  #include <linux/pci-aspm.h>
->  #include <linux/slab.h>
->  #include <linux/vgaarb.h>
-> +#include <linux/screen_info.h>
->  #include <linux/pm_runtime.h>
->  #include "pci.h"
->
-> @@ -540,6 +541,26 @@ boot_vga_show(struct device *dev, struct device_attribute *attr, char *buf)
->         if (vga_dev)
->                 return sprintf(buf, "%u\n", (pdev == vga_dev));
->
-> +       if ((pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA) {
-> +               resource_size_t start, end;
-> +               int i;
-> +
-> +               for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> +                       if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> +                               continue;
-> +
-> +                       start = pci_resource_start(pdev, i);
-> +                       end  = pci_resource_end(pdev, i);
-> +
-> +                       if (!start || !end)
-> +                               continue;
-> +
-> +                       if (screen_info.lfb_base >= start &&
-> +                               (screen_info.lfb_base + screen_info.lfb_size) < end)
-> +                               return sprintf(buf, "1\n");
-> +               }
-> +       }
-> +
->         return sprintf(buf, "%u\n",
->                 !!(pdev->resource[PCI_ROM_RESOURCE].flags &
->                    IORESOURCE_ROM_SHADOW));
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/dri-devel
+-- 
+tejun
