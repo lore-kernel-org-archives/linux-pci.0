@@ -1,293 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:55058 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459Ab3KZERc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 23:17:32 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so8347809iec.27
-        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 20:17:32 -0800 (PST)
+Received: from v094114.home.net.pl ([79.96.170.134]:65410 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752110Ab3KTLoG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 06:44:06 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 2/3] ACPI / hotplug: Fix PCI host bridge hot removal
+Date: Wed, 20 Nov 2013 12:56:45 +0100
+Message-ID: <13221031.pZI6l8TTGT@vostro.rjw.lan>
+In-Reply-To: <1384910527.1791.140.camel@misato.fc.hp.com>
+References: <2434673.zhjYZOTQ4A@vostro.rjw.lan> <2499259.JLRCUgMzrL@vostro.rjw.lan> <1384910527.1791.140.camel@misato.fc.hp.com>
 MIME-Version: 1.0
-In-Reply-To: <1385429290-25397-9-git-send-email-yinghai@kernel.org>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-9-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 25 Nov 2013 21:17:11 -0700
-Message-ID: <CAErSpo5bxRJpiO8QmEQBkRGGKkTOEjnQBFRsZJG8CsaJ5JJkJg@mail.gmail.com>
-Subject: Re: [PATCH v2 08/10] PCI: Try best to allocate pref mmio 64bit above 4g
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> When one of children resources does not support MEM_64, MEM_64 for
-> bridge get reset, so pull down whole pref resource on the bridge under 4G.
->
-> If the bridge support pref mem 64, will only allocate that with pref mem64 to
-> children that support it.
-> For children resources if they only support pref mem 32, will allocate them
-> from non pref mem instead.
->
-> If the bridge only support 32bit pref mmio, will still have all children pref
-> mmio under that.
+On Tuesday, November 19, 2013 06:22:07 PM Toshi Kani wrote:
+> On Wed, 2013-11-20 at 01:08 +0100, Rafael J. Wysocki wrote:
+> > On Wednesday, November 20, 2013 12:42:28 AM Rafael J. Wysocki wrote:
+> > > On Tuesday, November 19, 2013 02:58:40 PM Toshi Kani wrote:
+> > > > On Tue, 2013-11-19 at 22:10 +0100, Rafael J. Wysocki wrote:
+> > > > > > On Tuesday, November 19, 2013 10:48:51 AM Toshi Kani wrote:
+> > > > > > > On Mon, 2013-11-18 at 22:39 +0100, Rafael J. Wysocki wrote:
+> > > > > > > > On Monday, November 18, 2013 11:10:05 AM Toshi Kani wrote:
+> > > > > > > > > On Thu, 2013-11-14 at 00:16 +0100, Rafael J. Wysocki wrote:
+> > > > > > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > > > > > 
+> > > > > > > > > > Since the PCI host bridge scan handler does not set hotplug.enabled,
+> > > > > > > > > > the check of it in acpi_bus_device_eject() effectively prevents the
+> > > > > > > > > > root bridge hot removal from working after commit a3b1b1ef78cd
+> > > > > > > > > > (ACPI / hotplug: Merge device hot-removal routines).  However, that
+> > > > > > > > > > check is not necessary, because the other acpi_bus_device_eject()
+> > > > > > > > > > users, acpi_hotplug_notify_cb and acpi_eject_store(), do the same
+> > > > > > > > > > check by themselves before executing that function.
+> > > > > > > > > > 
+> > > > > > > > > > For this reason, remove the scan handler check from
+> > > > > > > > > > acpi_bus_device_eject() to make PCI hot bridge hot removal work
+> > > > > > > > > > again.
+> > > > > > > > > 
+> > > > > > > > > I am curious why the PCI host bridge scan handler does not set
+> > > > > > > > > hotplug.enabled.  Is this how it disables hotplug via sysfs eject but
+> > > > > > > > > enables via ACPI notification?
+> > > > > > > > 
+> > > > > > > > It just doesn't register for hotplug at all.  I guess it could set that
+> > > > > > > > bit alone, but then it would be quite confusing and the check is not
+> > > > > > > > necessary anyway.
+> > > > > > > 
+> > > > > > > I see.  Given how the PCI host bridge scan handler is integrated today,
+> > > > > > > the change looks reasonable to me.
+> > > > > > 
+> > > > > > Looking further, I noticed that there is one more issue to address.  The
+> > > > > > patch below applies on top of your patchset.
+> > > > > >
+> > > > > > From: Toshi Kani <toshi.kani@hp.com>
+> > > > > > Subject: [PATCH] ACPI / hotplug: Fix conflicted PCI bridge notify
+> > > > > > handlers
+> > > > > > 
+> > > > > > The PCI host bridge scan handler installs its own notify handler,
+> > > > > > handle_hotplug_event_root(), by itself.  Nevertheless, the ACPI
+> > > > > > hotplug framework also installs the common notify handler,
+> > > > > > acpi_hotplug_notify_cb(), for PCI root bridges.  This causes
+> > > > > > acpi_hotplug_notify_cb() to call _OST method with unsupported
+> > > > > > error as hotplug.enabled is not set.
+> > > > > > 
+> > > > > > To address this issue, introduce hotplug.self_install flag, which
+> > > > > > indicates that the scan handler installs its own notify handler by
+> > > > > > itself.  The ACPI hotplug framework does not install the common
+> > > > > > notify handler when this flag is set.
+> > > > > 
+> > > > > Good catch!
+> > > > > 
+> > > > > Still, I don't think we need a new flag, because we know that that
+> > > > > scan handler doesn't support hotplug, because its hotplug profile
+> > > > > hasn't been registered (that actually applies to all scan handlers
+> > > > > without hotplug support, not only the root host bridge).  
+> > > > 
+> > > > When a scan handler does not support hotplug at all, the common notify
+> > > > handler should be installed so that it can call _OST with an appropriate
+> > > > response.
+> > > 
+> > > That creates an arbitrary difference between devices that have scan handlers
+> > > and devices that don't have them (PCI, USB, SATA etc).  So if we want _OST
+> > > to be called for all devices for which hotplug is not supported, that
+> > > should be implemented in a different way and not necessarily in 3.13.
+> 
+> I do not think we have an immediate issue since it only matters when the
+> firmware supports ACPI hotplug with _OST.  Such device types are CPU,
+> memory, container, and PCI bridge, which uses scan handlers.  USB, SATA,
+> etc. do not use ACPI hotplug.  That said, ideally, we should be able to
+> call _OST for any device types.
+>  
+> > > > > Moreover,
+> > > > > if it does support hotplug, but the hotplug profile hasn't been
+> > > > > registered due to an error, we still should not install the notify
+> > > > > handler I think.  
+> > > > 
+> > > > This case, I think the common notify handler should be installed so that
+> > > > it can call _OST for error response as well.  The question is what to do
+> > > > when a scan handler has its own notify handler.
+> > 
+> > Actually, having considered this particular case a bit more I think that it
+> > is useful to install acpi_hotplug_notify_cb() for things whose scan handlers
+> > register hotplug support, but the registration fails (which should be treated
+> > as "permanently disabled").
+> >
+> > However, I still think that devices whose scan handlers don't support hotplug
+> > at all should be treated consistently with devices without scan handlers.
+> 
+> Basically, the kernel needs to be compliant with ACPI spec.  Once the
+> kernel tells firmware that it supports _OST, it needs to call _OST for
+> an ACPI hotplug event when _OST is implemented on the object.  Although
+> we cannot assure this behavior for the devices without scan handler, we
+> should do so for the devices with scan handlers.
+> 
+> > So, what about the slightly modified patch below?
+> 
+> Well, I do not think it is right.  The kernel is supposed to tell
+> firmware that it does not support hotplug when it doesn't... 
 
-I can't figure out if this is supposed to fix a problem, and if so,
-what problem it is.  Can you include a URL for a bugzilla or other
-problem description?
+OK, I see your point.
 
-> -v2: Add release bridge res support with bridge mem res for pref_mem children res.
-> -v3: refresh and make it can be applied early before for_each_dev_res patchset.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
-> ---
->  drivers/pci/setup-bus.c | 133 ++++++++++++++++++++++++++++++++----------------
->  drivers/pci/setup-res.c |  14 ++++-
->  2 files changed, 101 insertions(+), 46 deletions(-)
->
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 219a410..b98419e 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -711,12 +711,11 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->     bus resource of a given type. Note: we intentionally skip
->     the bus resources which have already been assigned (that is,
->     have non-NULL parent resource). */
-> -static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
-> +static struct resource *find_free_bus_resource(struct pci_bus *bus,
-> +                        unsigned long type_mask, unsigned long type)
->  {
->         int i;
->         struct resource *r;
-> -       unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> -                                 IORESOURCE_PREFETCH;
->
->         pci_bus_for_each_resource(bus, r, i) {
->                 if (r == &ioport_resource || r == &iomem_resource)
-> @@ -813,7 +812,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->                 resource_size_t add_size, struct list_head *realloc_head)
->  {
->         struct pci_dev *dev;
-> -       struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
-> +       struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
-> +                                                       IORESOURCE_IO);
->         resource_size_t size = 0, size0 = 0, size1 = 0;
->         resource_size_t children_add_size = 0;
->         resource_size_t min_align, align;
-> @@ -913,15 +913,16 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
->   * guarantees that all child resources fit in this size.
->   */
->  static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
-> -                        unsigned long type, resource_size_t min_size,
-> -                       resource_size_t add_size,
-> -                       struct list_head *realloc_head)
-> +                        unsigned long type, unsigned long type2,
-> +                        resource_size_t min_size, resource_size_t add_size,
-> +                        struct list_head *realloc_head)
->  {
->         struct pci_dev *dev;
->         resource_size_t min_align, align, size, size0, size1;
->         resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
->         int order, max_order;
-> -       struct resource *b_res = find_free_bus_resource(bus, type);
-> +       struct resource *b_res = find_free_bus_resource(bus,
-> +                                        mask | IORESOURCE_PREFETCH, type);
->         unsigned int mem64_mask = 0;
->         resource_size_t children_add_size = 0;
->
-> @@ -942,7 +943,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->                         struct resource *r = &dev->resource[i];
->                         resource_size_t r_size;
->
-> -                       if (r->parent || (r->flags & mask) != type)
-> +                       if (r->parent || ((r->flags & mask) != type &&
-> +                                         (r->flags & mask) != type2))
->                                 continue;
->                         r_size = resource_size(r);
->  #ifdef CONFIG_PCI_IOV
-> @@ -1115,8 +1117,9 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
->                         struct list_head *realloc_head)
->  {
->         struct pci_dev *dev;
-> -       unsigned long mask, prefmask;
-> +       unsigned long mask, prefmask, type2 = 0;
->         resource_size_t additional_mem_size = 0, additional_io_size = 0;
-> +       struct resource *b_res;
->
->         list_for_each_entry(dev, &bus->devices, bus_list) {
->                 struct pci_bus *b = dev->subordinate;
-> @@ -1161,15 +1164,31 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
->                    has already been allocated by arch code, try
->                    non-prefetchable range for both types of PCI memory
->                    resources. */
-> +               b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
->                 mask = IORESOURCE_MEM;
->                 prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
-> -               if (pbus_size_mem(bus, prefmask, prefmask,
-> +               if (b_res[2].flags & IORESOURCE_MEM_64) {
-> +                       prefmask |= IORESOURCE_MEM_64;
-> +                       if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
->                                   realloc_head ? 0 : additional_mem_size,
-> -                                 additional_mem_size, realloc_head))
-> -                       mask = prefmask; /* Success, size non-prefetch only. */
-> -               else
-> -                       additional_mem_size += additional_mem_size;
-> -               pbus_size_mem(bus, mask, IORESOURCE_MEM,
-> +                                 additional_mem_size, realloc_head)) {
-> +                                       /* Success, size non-pref64 only. */
-> +                                       mask = prefmask;
-> +                                       type2 = prefmask & ~IORESOURCE_MEM_64;
-> +                       }
-> +               }
-> +               if (!type2) {
-> +                       prefmask &= ~IORESOURCE_MEM_64;
-> +                       if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
-> +                                        realloc_head ? 0 : additional_mem_size,
-> +                                        additional_mem_size, realloc_head)) {
-> +                               /* Success, size non-prefetch only. */
-> +                               mask = prefmask;
-> +                       } else
-> +                               additional_mem_size += additional_mem_size;
-> +                       type2 = IORESOURCE_MEM;
-> +               }
-> +               pbus_size_mem(bus, mask, IORESOURCE_MEM, type2,
->                                 realloc_head ? 0 : additional_mem_size,
->                                 additional_mem_size, realloc_head);
->                 break;
-> @@ -1255,42 +1274,66 @@ static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
->  static void pci_bridge_release_resources(struct pci_bus *bus,
->                                           unsigned long type)
->  {
-> -       int idx;
-> -       bool changed = false;
-> -       struct pci_dev *dev;
-> +       struct pci_dev *dev = bus->self;
->         struct resource *r;
->         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> -                                 IORESOURCE_PREFETCH;
-> +                                 IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-> +       unsigned old_flags = 0;
-> +       struct resource *b_res;
-> +       int idx = 1;
->
-> -       dev = bus->self;
-> -       for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
-> -            idx++) {
-> -               r = &dev->resource[idx];
-> -               if ((r->flags & type_mask) != type)
-> -                       continue;
-> -               if (!r->parent)
-> -                       continue;
-> -               /*
-> -                * if there are children under that, we should release them
-> -                *  all
-> -                */
-> -               release_child_resources(r);
-> -               if (!release_resource(r)) {
-> -                       dev_printk(KERN_DEBUG, &dev->dev,
-> -                                "resource %d %pR released\n", idx, r);
-> -                       /* keep the old size */
-> -                       r->end = resource_size(r) - 1;
-> -                       r->start = 0;
-> -                       r->flags = 0;
-> -                       changed = true;
-> -               }
-> -       }
-> +       b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
-> +
-> +       /*
-> +        *     1. if there is io port assign fail, will release bridge
-> +        *        io port.
-> +        *     2. if there is non pref mmio assign fail, release bridge
-> +        *        nonpref mmio.
-> +        *     3. if there is 64bit pref mmio assign fail, and bridge pref
-> +        *        is 64bit, release bridge pref mmio.
-> +        *     4. if there is pref mmio assign fail, and bridge pref is
-> +        *        32bit mmio, release bridge pref mmio
-> +        *     5. if there is pref mmio assign fail, and bridge pref is not
-> +        *        assigned, release bridge nonpref mmio.
-> +        */
-> +       if (type & IORESOURCE_IO)
-> +               idx = 0;
-> +       else if (!(type & IORESOURCE_PREFETCH))
-> +               idx = 1;
-> +       else if ((type & IORESOURCE_MEM_64) &&
-> +                (b_res[2].flags & IORESOURCE_MEM_64))
-> +               idx = 2;
-> +       else if (!(b_res[2].flags & IORESOURCE_MEM_64) &&
-> +                (b_res[2].flags & IORESOURCE_PREFETCH))
-> +               idx = 2;
-> +       else
-> +               idx = 1;
-> +
-> +       r = &b_res[idx];
-> +
-> +       if (!r->parent)
-> +               return;
-> +
-> +       /*
-> +        * if there are children under that, we should release them
-> +        *  all
-> +        */
-> +       release_child_resources(r);
-> +       if (!release_resource(r)) {
-> +               type = old_flags = r->flags & type_mask;
-> +               dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-> +                                       PCI_BRIDGE_RESOURCES + idx, r);
-> +               /* keep the old size */
-> +               r->end = resource_size(r) - 1;
-> +               r->start = 0;
-> +               r->flags = 0;
->
-> -       if (changed) {
->                 /* avoiding touch the one without PREF */
->                 if (type & IORESOURCE_PREFETCH)
->                         type = IORESOURCE_PREFETCH;
->                 __pci_setup_bridge(bus, type);
-> +               /* for next child res under same bridge */
-> +               r->flags = old_flags;
->         }
->  }
->
-> @@ -1469,7 +1512,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
->         LIST_HEAD(fail_head);
->         struct pci_dev_resource *fail_res;
->         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> -                                 IORESOURCE_PREFETCH;
-> +                                 IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
->         int pci_try_num = 1;
->         enum enable_type enable_local;
->
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 83c4d3b..e968412 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -208,9 +208,21 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
->
->         /* First, try exact prefetching match.. */
->         ret = pci_bus_alloc_resource(bus, res, size, align, min,
-> -                                    IORESOURCE_PREFETCH,
-> +                                    IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
->                                      pcibios_align_resource, dev);
->
-> +       if (ret < 0 &&
-> +           (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
-> +               /*
-> +                * That failed.
-> +                *
-> +                * Try below 4g pref
-> +                */
-> +               ret = pci_bus_alloc_resource(bus, res, size, align, min,
-> +                                            IORESOURCE_PREFETCH,
-> +                                            pcibios_align_resource, dev);
-> +       }
-> +
->         if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
->                 /*
->                  * That failed.
-> --
-> 1.8.1.4
->
+I'll apply your patch, then, but I'm going to rename the new flag to
+"ignore".
+
+Thanks!
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
