@@ -1,144 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([122.248.162.6]:33264 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193Ab3KZFlY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 00:41:24 -0500
-Received: from /spool/local
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
-	Tue, 26 Nov 2013 11:11:21 +0530
-Message-ID: <52943479.9050004@linux.vnet.ibm.com>
-Date: Tue, 26 Nov 2013 13:41:13 +0800
-From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-pm@vger.kernel.org, rjw@rjwysocki.net
-Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM enabled
- for unbound PCI devices
-References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org> <5284423D.4090907@linux.vnet.ibm.com> <1384408745.30364.8.camel@yhuang-dev> <5284799C.1010000@linux.vnet.ibm.com> <1384415609.30364.18.camel@yhuang-dev>	 <528485EA.5080309@linux.vnet.ibm.com> <1384417538.30364.25.camel@yhuang-dev>	 <52848BD9.1010704@linux.vnet.ibm.com> <1384419260.30364.27.camel@yhuang-dev>
-In-Reply-To: <1384419260.30364.27.camel@yhuang-dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from aserp1040.oracle.com ([141.146.126.69]:31701 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355Ab3KTBwl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:41 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/6] PCI: pcibus address to resource converting take bus directly
+Date: Tue, 19 Nov 2013 17:51:55 -0800
+Message-Id: <1384912317-3721-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/14/2013 04:54 PM, Huang Ying wrote:
-> On Thu, 2013-11-14 at 16:37 +0800, mike wrote:
->> On 11/14/2013 04:25 PM, Huang Ying wrote:
->>> On Thu, 2013-11-14 at 16:12 +0800, mike wrote:
->>>> On 11/14/2013 03:53 PM, Huang Ying wrote:
->>>>> On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
->>>>>> On 11/14/2013 01:59 PM, Huang Ying wrote:
->>>>>>> On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
->>>>>>>> On 11/14/2013 03:20 AM, Alan Stern wrote:
->>>>>>>>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
->>>>>>>>>
->>>>>>>>>> [+cc Rafael, linux-pm]
->>>>>>>>>>
->>>>>>>>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
->>>>>>>>>>> Hi Huang Ying,
->>>>>>>>>>>
->>>>>>>>>>> I see you are the author of this patch, commit id is:
->>>>>>>>>>> 967577b062417b4e4b8e27b711220f4124f5153a
->>>>>>>>>>>
->>>>>>>>>>> I have a question while I try to understand this patch,
->>>>>>>>>>> So I would very grateful if you or others can give me some reply.....
->>>>>>>>>>>
->>>>>>>>>>> ............
->>>>>>>>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
->>>>>>>>>>> +       pm_runtime_get_sync(dev);
->>>>>>>>>>> +       pci_dev->driver = pci_drv;
->>>>>>>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
->>>>>>>>>>> I see here you make the driver to initialize before probe,
->>>>>>>>>>> But I have no idea of why you do this change.....
->>>>>>>>>>>
->>>>>>>>>>> and I look inside the code, it may be pm_runtime relate??
->>>>>>>>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
->>>>>>>>> doesn't do anything unless pci_dev->driver is set.  You can see this at
->>>>>>>>> the start of pci_pm_runtime_suspend().
->>>>>>>>>
->>>>>>>>> Since we want the driver's probe routine to be able to carry out
->>>>>>>>> runtime PM operations, we have to set pci_dev->driver before the probe
->>>>>>>>> routine runs.
->>>>>>>> Is there any situations , like in  probe state,  pci_dev->driver
->>>>>>>> has been set. the  pci_pm_runtime_xxx() has passed
->>>>>>>> pci_dev->driver NULL check, but at this point, probe fail
->>>>>>>> occurs, and  pci_dev->driver to be set to NULL.
->>>>>>>>
->>>>>>>> What will happen ? Or this situation will never happen?
->>>>>>>> I'm confuse about this.
->>>>>>> I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
->>>>>>> is called, so pci_pm_runtime_xxx() will not be called until
->>>>>>> pm_runtime_put_noidle() is called in ->probe().  And
->>>>>>>      should be done as one of the latest actions in
->>>>>>> ->probe(), after the normal probe actions succeeded.
->>>>>> OK, just as your description, it seems OK.
->>>>>> But this is really a issue as I explained in last email.
->>>>>>
->>>>>> So I want to know if there are any side-effect of changing the code
->>>>>> in pci_pm_runtime_xxx()
->>>>>>
->>>>>>      if (!pci_dev->driver)
->>>>>>             return 0;
->>>>>>      to
->>>>>>
->>>>>>      if (!dev->driver)
->>>>>>             return 0;
->>>>>>
->>>>> If you make this change, we can not put devices into low power state
->>>>> (runtime suspend the device) in ->probe().  That is expected in some
->>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->>>> This means dev->driver is NULL ?? but pci_dev->driver is set???
->>>>
->>>> Because if use pci_dev->driver can put into low power state, means
->>>>
->>>> pci_dev->driver is set, but in the situation, use dev->driver will can't,
->>>>
->>>> means dev->driver = null, but I have not find any case that
->>>>
->>>> dev->driver = null, but pci_dev->driver != null;
->>> Sorry I make a mistake here.  The dev->driver != null in
->>> local_pci_probe().  We use pci_dev->driver instead of dev->driver in
->>> pci_pm_runtime_xxx() because we want device to be kept in normal power
->>> state (D0) and SUSPENDED state when unbound.The
->>> pm_runtime_put/get_sync in pci_device_remove/local_pci_probe will not
->>> change the power state of the device because of the check in
->>> pci_pm_runtime_xxx().
->> Yes, you are right, but what am I confuse is that, why check dev->driver
->> in pci_pm_runtime_xxx() can't keep the device in normal power
->> state (D0) and SUSPENDED state when unbound.
->>
->> May be logic issue ?
-> Because dev->driver is set before local_pci_probe() and cleared after
-> pci_device_remove().  But we need a flag to be changed in
-> local_pci_probe() and pci_device_remove().
-Hi Ying,
+For allocating resource under bus path, we do have dev pass along, and we
+could just use bus instead.
 
-I'm now face one bug, and the root cause is this logic has some problem.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host-bridge.c | 34 +++++++++++++++++++++-------------
+ include/linux/pci.h       |  3 +++
+ 2 files changed, 24 insertions(+), 13 deletions(-)
 
-The other component calls the ops in driver during probe state, which a 
-lot of critical data struct haven't been setup yet.
-
-This never happen in old logic, because dev->driver is unset in probe 
-state, it can check dev->driver to see if the device diver can work. But 
-for new logic it is really a big issue.
-
-Shall I add an other flag like 'unsigned int probe_state:1' in struct 
-pci_dev instead of setting dev->driver before probe and change the logic 
-back?
-
-Then in pci_pm_runtime_xxx() can check this flag instead of pci_dev->driver.
-
-If my logic does not affect your PM logic, I will send out the patch for 
-review. Otherwise I will consider other solutions.
-
-Thanks
-Mike
->
-> Best Regards,
-> Huang Ying
->
->
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..2e7288b 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -9,22 +9,19 @@
+ 
+ #include "pci.h"
+ 
+-static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
++static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus;
+-
+-	bus = dev->bus;
+ 	while (bus->parent)
+ 		bus = bus->parent;
+ 
+ 	return bus;
+ }
+ 
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
++static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus = find_pci_root_bus(dev);
++	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ 
+-	return to_pci_host_bridge(bus->bridge);
++	return to_pci_host_bridge(root_bus->bridge);
+ }
+ 
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+@@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+ 	return res1->start <= res2->start && res1->end >= res2->end;
+ }
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
++void __pcibios_resource_to_bus(struct pci_bus *bus,
++				      struct pci_bus_region *region,
++				      struct resource *res)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 	region->start = res->start - offset;
+ 	region->end = res->end - offset;
+ }
++void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
++			     struct resource *res)
++{
++	__pcibios_resource_to_bus(dev->bus, region, res);
++}
+ EXPORT_SYMBOL(pcibios_resource_to_bus);
+ 
+ static bool region_contains(struct pci_bus_region *region1,
+@@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
++static void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
++				      struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 	res->start = region->start + offset;
+ 	res->end = region->end + offset;
+ }
++void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++			     struct pci_bus_region *region)
++{
++	__pcibios_bus_to_resource(dev->bus, res, region);
++}
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ccb316d..55ee90f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -738,6 +738,9 @@ void pci_fixup_cardbus(struct pci_bus *);
+ 
+ /* Generic PCI functions used internally */
+ 
++void __pcibios_resource_to_bus(struct pci_bus *bus,
++			       struct pci_bus_region *region,
++			       struct resource *res);
+ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 			     struct resource *res);
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-- 
+1.8.1.4
 
