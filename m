@@ -1,63 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
-Subject: [PATCH 0/10] ACPI: Device objects for all namespace nodes and PCI root hotplug integration
-Date: Sun, 17 Nov 2013 17:29:41 +0100
-Message-ID: <1421028.Rsfpmhnym3@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:42246 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754668Ab3KTTAV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 14:00:21 -0500
+Received: by mail-ie0-f171.google.com with SMTP id ar20so8357907iec.30
+        for <linux-pci@vger.kernel.org>; Wed, 20 Nov 2013 11:00:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1384968417-31856-1-git-send-email-keith.busch@intel.com>
+References: <1384968417-31856-1-git-send-email-keith.busch@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 20 Nov 2013 12:00:00 -0700
+Message-ID: <CAErSpo70JVQitPxUGYwRqSH1-2f41VMtDc=RcN3=+u8RPnCHUA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add function reset callback to pci_driver
+To: Keith Busch <keith.busch@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+[+cc Alex]
 
-This is 3.14 material, but I'm posting it today to let you know it is coming.
-Of course, if you see any immediate problems with the following patches, please
-let me know.
-
-Patch [1/10] is a place holder until we get an equivalent from ACPICA upstream,
-which should happen early after 3.13-rc1.  The remaining patches are:
-
- [2/10] ACPI / scan: Define non-empty removal handler to passed to
-        acpi_attach_data() for struct acpi_device objects.
-
- [3/10] ACPI / scan: Create struct acpi_device objects for all device nodes in
-        the namespace regardless of the current result of _STA (the reasons are
-        explained in the changelog).
-
- [4/10] ACPI / hotplug: Do not fail bus check and device check notifications
-        if hotplug is not enabled for the given group of devices via sysfs
-        (failing those notifications only skips device enumeration, but doesn't
-         prevent devices from being physically added to the system).
-
- [5/10] ACPI / hotplug: Introduce common device hotplug function
-        acpi_device_hotplug() and reduce some code duplication.
-
- [6/10] ACPI / hotplug: Make PCI host bridge hotplug use common code (instead
-        of defining its own notify handler).
-
- [7/10] ACPI / hotplug: Move container-specific code out of the common code.
-
- [8/10] ACPI / hotplug: Rework the common device hotplug code to cover surprise
-        removals of devices.
-
- [9/10] ACPI / hotplug: Drop unfinished global hotplug notification handling
-        routines.
-
-[10/10] ACPI: Clean up some revoltingly ugly stuff.
-
-Thanks!
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+On Wed, Nov 20, 2013 at 10:26 AM, Keith Busch <keith.busch@intel.com> wrote:
+> A user can issue a pci function level reset to a device using sysfs
+> entry /sys/bus/pci/devices/.../reset. A kernel driver handling the
+> pci device probably would like to know that such a reset has occured,
+> so this patch adds a callback in to pci_driver's pci_error_handler.
+>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+> Assuming this is a good idea, is this the right place to invoke the
+> reset callback, or should it be up the call stack closer to the sysfs
+> reset entry point? Or somewhere else entirely?
+>
+>  drivers/pci/pci.c   |    6 ++++++
+>  include/linux/pci.h |    3 +++
+>  2 files changed, 9 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b127fbda..5ee6fc0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3435,6 +3435,12 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+>
+>         rc = pci_parent_bus_reset(dev, probe);
+>  done:
+> +       if (rc != -ENOTTY && !probe) {
+> +               struct pci_error_handlers *err_handler =
+> +                               dev->driver ? dev->driver->err_handler : NULL;
+> +               if (err_handler && err_handler->function_reset)
+> +                       err_handler->function_reset(dev);
+> +       }
+>         return rc;
+>  }
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 835ec7b..d1f100e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -605,6 +605,9 @@ struct pci_error_handlers {
+>         /* PCI slot has been reset */
+>         pci_ers_result_t (*slot_reset)(struct pci_dev *dev);
+>
+> +       /* PCI function has been reset */
+> +       pci_ers_result_t (*function_reset)(struct pci_dev *dev);
+> +
+>         /* Device driver may resume normal operations */
+>         void (*resume)(struct pci_dev *dev);
+>  };
+> --
+> 1.7.10.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
