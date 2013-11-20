@@ -1,39 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30207 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750760Ab3KDUoO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 15:44:14 -0500
-Date: Mon, 4 Nov 2013 15:43:04 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, ian.campbell@citrix.com
-Cc: George Dunlap <george.dunlap@eu.citrix.com>,
-	xen-devel <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH] xen/pci: Deal with toolstack missing an
- 'XenbusStateClosing'.
-Message-ID: <20131104204304.GA18492@phenom.dumpdata.com>
-References: <20130610202456.GA17822@phenom.dumpdata.com>
- <1370898399-20968-1-git-send-email-konrad.wilk@oracle.com>
- <1370898399-20968-2-git-send-email-konrad.wilk@oracle.com>
- <51B743EA.5020800@eu.citrix.com>
- <51B74B77.1000806@oracle.com>
- <51B74DA9.7060509@eu.citrix.com>
- <20130612134504.GG2918@phenom.dumpdata.com>
- <CAErSpo7zw3MSNzdjRcZuy44uOGT_GZ8T4vaqgkd1fvWG4fadTA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7zw3MSNzdjRcZuy44uOGT_GZ8T4vaqgkd1fvWG4fadTA@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:31717 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355Ab3KTBwo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:44 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/6] PCI: Add pcibios_bus_addr_to_res()
+Date: Tue, 19 Nov 2013 17:51:56 -0800
+Message-Id: <1384912317-3721-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+it takes addr and return converted address only.
 
-> Sure; this is your baby :)  Why don't you handle it via your tree,
-> since it's more related to xen than any PCI core stuff.
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host-bridge.c | 14 ++++++++++++++
+ include/linux/pci.h       |  2 ++
+ 2 files changed, 16 insertions(+)
 
-Definitly fixed in v3.12. Just tested it and it works.
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 2e7288b..c911adb 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -102,3 +102,17 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 	__pcibios_bus_to_resource(dev->bus, res, region);
+ }
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
++
++resource_size_t pcibios_bus_addr_to_res(struct pci_bus *bus, int flags,
++					resource_size_t addr)
++{
++	struct pci_bus_region region;
++	struct resource r;
++
++	r.flags = flags;
++	region.start = addr;
++	region.end = addr;
++	__pcibios_bus_to_resource(bus, &r, &region);
++
++	return r.end;
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 55ee90f..3c6e399 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -745,6 +745,8 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 			     struct resource *res);
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region);
++resource_size_t pcibios_bus_addr_to_res(struct pci_bus *bus, int flags,
++					resource_size_t addr);
+ void pcibios_scan_specific_bus(int busn);
+ struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+-- 
+1.8.1.4
 
-George, Ian, how do I "close" a bug in http://bugs.xenproject.org/xen/bug/12 ?
