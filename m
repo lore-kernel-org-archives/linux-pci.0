@@ -1,75 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40868 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752224Ab3K2Rwn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 12:52:43 -0500
-Date: Fri, 29 Nov 2013 09:53:36 -0800
-From: Greg KH <greg@kroah.com>
-To: Veaceslav Falico <vfalico@redhat.com>,
-	Neil Horman <nhorman@tuxdriver.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
-Message-ID: <20131129175336.GA6152@kroah.com>
+Received: from mail-qe0-f50.google.com ([209.85.128.50]:41540 "EHLO
+	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754279Ab3KTQSM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 11:18:12 -0500
+Date: Wed, 20 Nov 2013 11:18:08 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC v2 09/29] PCI/MSI: Factor out pci_get_msi_cap()
+ interface
+Message-ID: <20131120161808.GI28946@htj.dyndns.org>
+References: <cover.1382103786.git.agordeev@redhat.com>
+ <85500e7239fcb104df091bbfa873eef8ae654772.1382103786.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20131129031419.GB5889@neilslaptop.think-freely.org>
- <20131129094137.GC3028@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <85500e7239fcb104df091bbfa873eef8ae654772.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 29, 2013 at 10:41:37AM +0100, Veaceslav Falico wrote:
-> On Wed, Nov 27, 2013 at 10:46:52AM -0800, Greg Kroah-Hartman wrote:
-> >From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >
-> >The PCI MSI sysfs code is a mess with kobjects for things that don't
-> >really need to be kobjects.  This patch creates attributes dynamically
-> >for the MSI interrupts instead of using kobjects.
-> >
-> >Note, this removes a directory from the current MSI interrupt sysfs
-> >code:
-> >
-> >old MSI kobjects:
-> >pci_device
-> >   └── msi_irqs
-> >       └── 40
-> >           └── mode
-> >
-> >new MSI attributes:
-> >pci_device
-> >   └── msi_irqs
-> >       └── 40
-> >
-> >As there was only one file "mode" with the kobject model, the interrupt
-> >number is now a file that returns the "mode" of the interrupt (msi vs.
-> >msix).
-> >
-> >Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
-> Works like a charm for me.
-> 
-> FWIW,
-> 
-> Reviewed-by: Veaceslav Falico <vfalico@redhat.com>
+Hello,
 
-On Thu, Nov 28, 2013 at 10:14:19PM -0500, Neil Horman wrote:
-> ACK, Testing with git-head irqbalance on F19 with this patch and it works fine.
-> 
-> Thanks!
-> Acked-by: Neil Horman <nhorman@tuxdriver.com>
+On Fri, Oct 18, 2013 at 07:12:09PM +0200, Alexander Gordeev wrote:
+> +If this function returns a negative number, it indicates the device is
+> +not capable of sending MSIs.
 
-Great, thanks for both of you testing this.
+Wouldn't "errno" better describe the error return rather than
+"negative number"?
 
-Bjorn, any objection to take this through your tree for 3.14-rc1?
+> @@ -795,6 +795,21 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  	return 0;
+>  }
 
-thanks,
+We probably want a function comment here?
 
-gre k-h
+> +int pci_get_msi_cap(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +	u16 msgctl;
+> +
+> +	if (!dev->msi_cap)
+> +		return -EINVAL;
+> +
+> +	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+> +	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(pci_get_msi_cap);
+
+Other than that,
+
+ Reviewed-by: Tejun Heo <tj@kernel.org>
+
+Thanks.
+
+-- 
+tejun
