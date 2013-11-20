@@ -1,81 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:59839 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423Ab3KLJgm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 04:36:42 -0500
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P2O26WcBfPC41-m4NWMhzFD90h_qT8C-ntQ79y1a6Q4Qw@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
-	<CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
-	<CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
-	<CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
-	<527A8166.6000701@gmail.com>
-	<CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
-	<CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
-	<CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
-	<CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
-	<20131111224439.GA30638@google.com>
-	<CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
-	<CANUX_P2O26WcBfPC41-m4NWMhzFD90h_qT8C-ntQ79y1a6Q4Qw@mail.gmail.com>
-Date: Tue, 12 Nov 2013 11:36:40 +0200
-Message-ID: <CANUX_P3uYu==hi--RrwM7Y=8LJugsUTb5A1HGmRxtwcqkFa7Lw@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from aserp1040.oracle.com ([141.146.126.69]:31642 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355Ab3KTBwa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:30 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/6] PCI: move resources and bus_list releasing to pci_release_dev
+Date: Tue, 19 Nov 2013 17:51:53 -0800
+Message-Id: <1384912317-3721-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 12, 2013 at 9:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Tue, Nov 12, 2013 at 7:42 AM, wzyboy <wzyboy@wzyboy.org> wrote:
->> Hi, I've got some good news. Here is what I did today:
->>
->> boot up laptop -> do the sysfs trick -> start downloading a big file
->> to benchmark it -> several minutes later the bug occurs -> reboot my
->> laptop to recover -> do the setpci trick -> start downloading a big
->> file to benchmark it -> more than 5 GiB downloaded (at ~ 2.3 MiB/s)
->> and everything works fine!
->
-> encouraging. Thanks.
-> I just wonder... the patch I sent was supposed to tell the HW not to
-> use L1. So I would have hoped it would have helped in the same way?
-> After all, L1 is a handshake between the device and the bridge, so
-> that if the device doesn't initiate / refuses to go into L1, I'd
-> expect it to have the same effect as disabling L1 in the ASPM register
-> PCIe config space?
-> Obviously I am wrong though.
->
+We should not release resource in pci_destroy that is too early
+as there could be still other use hold reference.
 
-can you please try to see if you have BIOS updates? (It seems that all
-the BIOS update tools run on windows... - but I can have a bootable CD
-:))
+release them or remove it from bus devices list at last
+in pci_release_dev instead.
 
-You can also check this out:
-http://www-947.ibm.com/support/entry/portal/docdisplay?lndocid=TOOL-ASU
-This might help to remove support for L1 substates.
-I guess it'd be nice to ask Lenovo too about how to find these options
-in BIOS. From our experience, there are a lot of features and options
-in BIOS that are accessible only after you enter a "secret" (I meant
-obscure) sequence of keys.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c  | 21 +++++++++++++++++++--
+ drivers/pci/remove.c | 19 -------------------
+ 2 files changed, 19 insertions(+), 21 deletions(-)
 
->>
->> Here are the output of lspci -vv after running two "setpci" commands.
->>
->> There is also a screenshot of ThinkPad X240s HMM, showing how the
->> wireless card is connected to the motherboard. In this figure #10 is
->> the Wireless LAN card. It is connected to the motherboard with Intel's
->> NGFF connector.
->>
->> I will continue downloading big files to benchmark it.
->>
->
-> Thanks
->
->> --
->> wzyboy
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 173a9cf..12ec56c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1154,6 +1154,18 @@ static void pci_release_capabilities(struct pci_dev *dev)
+ 	pci_free_cap_save_buffers(dev);
+ }
+ 
++static void pci_free_resources(struct pci_dev *dev)
++{
++	int i;
++
++	pci_cleanup_rom(dev);
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *res = dev->resource + i;
++		if (res->parent)
++			release_resource(res);
++	}
++}
++
+ /**
+  * pci_release_dev - free a pci device structure when all users of it are finished.
+  * @dev: device that's been disconnected
+@@ -1163,9 +1175,14 @@ static void pci_release_capabilities(struct pci_dev *dev)
+  */
+ static void pci_release_dev(struct device *dev)
+ {
+-	struct pci_dev *pci_dev;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++
++	down_write(&pci_bus_sem);
++	list_del(&pci_dev->bus_list);
++	up_write(&pci_bus_sem);
++
++	pci_free_resources(pci_dev);
+ 
+-	pci_dev = to_pci_dev(dev);
+ 	pci_release_capabilities(pci_dev);
+ 	pci_release_of_node(pci_dev);
+ 	pcibios_release_device(pci_dev);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 1576851..0d2c36f 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -3,20 +3,6 @@
+ #include <linux/pci-aspm.h>
+ #include "pci.h"
+ 
+-static void pci_free_resources(struct pci_dev *dev)
+-{
+-	int i;
+-
+-	msi_remove_pci_irq_vectors(dev);
+-
+-	pci_cleanup_rom(dev);
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		struct resource *res = dev->resource + i;
+-		if (res->parent)
+-			release_resource(res);
+-	}
+-}
+-
+ static void pci_stop_dev(struct pci_dev *dev)
+ {
+ 	pci_pme_active(dev, false);
+@@ -34,11 +20,6 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 
+ static void pci_destroy_dev(struct pci_dev *dev)
+ {
+-	down_write(&pci_bus_sem);
+-	list_del(&dev->bus_list);
+-	up_write(&pci_bus_sem);
+-
+-	pci_free_resources(dev);
+ 	put_device(&dev->dev);
+ }
+ 
+-- 
+1.8.1.4
+
