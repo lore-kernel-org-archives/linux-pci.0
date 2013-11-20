@@ -1,75 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:47882 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000Ab3KNRyU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 12:54:20 -0500
-Received: by mail-ie0-f180.google.com with SMTP id qd12so3060638ieb.39
-        for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2013 09:54:20 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 2/3] ACPI / hotplug: Fix PCI host bridge hot removal
+Date: Wed, 20 Nov 2013 01:08:57 +0100
+Message-ID: <2499259.JLRCUgMzrL@vostro.rjw.lan>
+In-Reply-To: <3445730.IkUyvGUQQp@vostro.rjw.lan>
+References: <2434673.zhjYZOTQ4A@vostro.rjw.lan> <1384898320.1791.48.camel@misato.fc.hp.com> <3445730.IkUyvGUQQp@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 14 Nov 2013 10:53:58 -0700
-Message-ID: <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: wzyboy <wzyboy@wzyboy.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 14, 2013 at 1:39 AM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
->> > Awesome - you have L1 enabled:
->>
->> Though do not understand but it seems like a good news :-)
->
-> You are saving power (and I know that at least, L1 works).
-> L1 PM substates doesn't work (but that's a brand new feature)
->
->> Does that mean you find a real fix instead of a workaround? Congratulations!
->
-> No. The real fix should come from the driver (unlikely from what I hear from system people here) or disable in BIOS.
-> So I guess you'd need to ask Lenovo how to disable L1 PM Substate in BIOS.
+On Wednesday, November 20, 2013 12:42:28 AM Rafael J. Wysocki wrote:
+> On Tuesday, November 19, 2013 02:58:40 PM Toshi Kani wrote:
+> > On Tue, 2013-11-19 at 22:10 +0100, Rafael J. Wysocki wrote:
+> > > > On Tuesday, November 19, 2013 10:48:51 AM Toshi Kani wrote:
+> > > > > On Mon, 2013-11-18 at 22:39 +0100, Rafael J. Wysocki wrote:
+> > > > > > On Monday, November 18, 2013 11:10:05 AM Toshi Kani wrote:
+> > > > > > > On Thu, 2013-11-14 at 00:16 +0100, Rafael J. Wysocki wrote:
+> > > > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > > > 
+> > > > > > > > Since the PCI host bridge scan handler does not set hotplug.enabled,
+> > > > > > > > the check of it in acpi_bus_device_eject() effectively prevents the
+> > > > > > > > root bridge hot removal from working after commit a3b1b1ef78cd
+> > > > > > > > (ACPI / hotplug: Merge device hot-removal routines).  However, that
+> > > > > > > > check is not necessary, because the other acpi_bus_device_eject()
+> > > > > > > > users, acpi_hotplug_notify_cb and acpi_eject_store(), do the same
+> > > > > > > > check by themselves before executing that function.
+> > > > > > > > 
+> > > > > > > > For this reason, remove the scan handler check from
+> > > > > > > > acpi_bus_device_eject() to make PCI hot bridge hot removal work
+> > > > > > > > again.
+> > > > > > > 
+> > > > > > > I am curious why the PCI host bridge scan handler does not set
+> > > > > > > hotplug.enabled.  Is this how it disables hotplug via sysfs eject but
+> > > > > > > enables via ACPI notification?
+> > > > > > 
+> > > > > > It just doesn't register for hotplug at all.  I guess it could set that
+> > > > > > bit alone, but then it would be quite confusing and the check is not
+> > > > > > necessary anyway.
+> > > > > 
+> > > > > I see.  Given how the PCI host bridge scan handler is integrated today,
+> > > > > the change looks reasonable to me.
+> > > > 
+> > > > Looking further, I noticed that there is one more issue to address.  The
+> > > > patch below applies on top of your patchset.
+> > > >
+> > > > From: Toshi Kani <toshi.kani@hp.com>
+> > > > Subject: [PATCH] ACPI / hotplug: Fix conflicted PCI bridge notify
+> > > > handlers
+> > > > 
+> > > > The PCI host bridge scan handler installs its own notify handler,
+> > > > handle_hotplug_event_root(), by itself.  Nevertheless, the ACPI
+> > > > hotplug framework also installs the common notify handler,
+> > > > acpi_hotplug_notify_cb(), for PCI root bridges.  This causes
+> > > > acpi_hotplug_notify_cb() to call _OST method with unsupported
+> > > > error as hotplug.enabled is not set.
+> > > > 
+> > > > To address this issue, introduce hotplug.self_install flag, which
+> > > > indicates that the scan handler installs its own notify handler by
+> > > > itself.  The ACPI hotplug framework does not install the common
+> > > > notify handler when this flag is set.
+> > > 
+> > > Good catch!
+> > > 
+> > > Still, I don't think we need a new flag, because we know that that
+> > > scan handler doesn't support hotplug, because its hotplug profile
+> > > hasn't been registered (that actually applies to all scan handlers
+> > > without hotplug support, not only the root host bridge).  
+> > 
+> > When a scan handler does not support hotplug at all, the common notify
+> > handler should be installed so that it can call _OST with an appropriate
+> > response.
+> 
+> That creates an arbitrary difference between devices that have scan handlers
+> and devices that don't have them (PCI, USB, SATA etc).  So if we want _OST
+> to be called for all devices for which hotplug is not supported, that
+> should be implemented in a different way and not necessarily in 3.13.
+> 
+> > > Moreover,
+> > > if it does support hotplug, but the hotplug profile hasn't been
+> > > registered due to an error, we still should not install the notify
+> > > handler I think.  
+> > 
+> > This case, I think the common notify handler should be installed so that
+> > it can call _OST for error response as well.  The question is what to do
+> > when a scan handler has its own notify handler.
 
-Why would it be unlikely to fix the driver?  Do people think the
-problem is not actually in the driver?
+Actually, having considered this particular case a bit more I think that it
+is useful to install acpi_hotplug_notify_cb() for things whose scan handlers
+register hotplug support, but the registration fails (which should be treated
+as "permanently disabled").
 
-Asking Lenovo how to disable L1 PM substates is really a non-answer.
-Only the extremely technical and extremely patient user (hi wzyboy :))
-will even bother to investigate why wifi works fine with Windows but
-not with Linux.  The only thing Lenovo *could* do is to release a new
-BIOS with a switch to control L1 PM Substates.  If I were Lenovo, I
-would never do that because then I would have to tell customers
-"disable this for Linux, enable this for Windows," and I'd have to
-deal with support calls about devices using more power than they
-should, battery life being shorter, etc.  Plus you'd have to ask every
-Linux user to upgrade their BIOS.  That's all just a terrible user
-experience.
+However, I still think that devices whose scan handlers don't support hotplug
+at all should be treated consistently with devices without scan handlers.
 
-Bjorn
+So, what about the slightly modified patch below?
+
+Rafael
+
+
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / hotplug: Ignore notifications for scan handlers without hotplug
+
+If a scan handler's hotplug profile has not been initialized, do not
+install acpi_hotplug_notify_cb() as a notify handler for devices
+with the given scan handler attached.
+
+This fixes a problem with the PCI host bridge hotplug which installs
+its own notify handler, handle_hotplug_event_root(), by itself and
+doesn't register its scan handler's hotplug profile.  Toshi says:
+
+"Nevertheless, the ACPI hotplug framework also installs the common
+ notify handler, acpi_hotplug_notify_cb(), for PCI root bridges.
+ This causes acpi_hotplug_notify_cb() to call _OST method with
+ unsupported error as hotplug.enabled is not set."
+
+Moreover, the default behavior for all devices that don't have any
+scan handlers attached is not to install notify handlers for them
+and there is no difference between this case and the case when
+a device's scan handler doesn't support hotplug.
+
+Reported-by: Toshi Kani <toshi.kani@hp.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: 3.9+ <stable@vger.kernel.org> # 3.9+
+---
+ drivers/acpi/scan.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -84,6 +84,11 @@ int acpi_scan_add_handler_with_hotplug(s
+ 	return 0;
+ }
+ 
++static bool acpi_scan_handler_with_hotplug(struct acpi_scan_handler *handler)
++{
++	return handler && handler->hotplug.kobj.state_initialized;
++}
++
+ /*
+  * Creates hid/cid(s) string needed for modalias and uevent
+  * e.g. on a device with hid:IBM0001 and cid:ACPI0001 you get:
+@@ -1841,7 +1846,7 @@ static void acpi_scan_init_hotplug(acpi_
+ 	 */
+ 	list_for_each_entry(hwid, &pnp.ids, list) {
+ 		handler = acpi_scan_match_handler(hwid->id, NULL);
+-		if (handler) {
++		if (acpi_scan_handler_with_hotplug(handler)) {
+ 			acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 					acpi_hotplug_notify_cb, handler);
+ 			break;
+
