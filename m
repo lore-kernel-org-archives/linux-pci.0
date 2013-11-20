@@ -1,66 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:60280 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755346Ab3KUVeK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 16:34:10 -0500
-Received: by mail-ie0-f171.google.com with SMTP id ar20so640232iec.2
-        for <linux-pci@vger.kernel.org>; Thu, 21 Nov 2013 13:34:08 -0800 (PST)
+Received: from mail-yh0-f44.google.com ([209.85.213.44]:36761 "EHLO
+	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754088Ab3KTQHV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 11:07:21 -0500
+Date: Wed, 20 Nov 2013 11:07:16 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC v2 06/29] PCI/MSI: Get rid of useless count of
+ msi_desc leftovers
+Message-ID: <20131120160716.GF28946@htj.dyndns.org>
+References: <cover.1382103786.git.agordeev@redhat.com>
+ <79a2aeb6a06563c5f09463d53d2e0146e44c92be.1382103786.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFyM5o39pmFtPOc1VVE5y_SYp1WXtz773cBp3fHrvnzOLQ@mail.gmail.com>
-References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
-	<1384912317-3721-7-git-send-email-yinghai@kernel.org>
-	<20131121103021.GA29873@yanx>
-	<CAE9FiQXgvaqErd1oiHmt6G8GwbW92C490+0sYyLUMcMFMMNRAg@mail.gmail.com>
-	<CA+55aFyM5o39pmFtPOc1VVE5y_SYp1WXtz773cBp3fHrvnzOLQ@mail.gmail.com>
-Date: Thu, 21 Nov 2013 13:34:08 -0800
-Message-ID: <CAE9FiQVY6si_3uG6ndbZVOWCY5o8RuXpSLimEo96FVtNC38Dgw@mail.gmail.com>
-Subject: Re: [PATCH 6/6] PCI: Try to allocate mem64 above 4G at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <79a2aeb6a06563c5f09463d53d2e0146e44c92be.1382103786.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 21, 2013 at 1:05 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Thu, Nov 21, 2013 at 12:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>
->> 3. or more generic, treat all pci BAR 32bit prefetechable as normal
->> MMIO32 during allocation. aka mmio prefectechable will be used for pci
->> bridge that support 64bit mmio pref and leave bridge's 32bit only pref
->> bar register blank.
->>
->> Bjorn, Linus,
->> Are you happy with No 3?
->
-> I don't think I understand your #3. If there's a 32-bit device behind
-> the bridge, it will need to be in the low 4G, so you can't use the
-> 64-bit window because it will be out of range. So that wouldn't work.
-> So you'd need to have a bridge window in the low 32-bit area too if
-> there are any 32-bit devices behind the bridge.
+Hello, Alexander.
 
-bridge should have two mmio,
-mmio nonpref: it only can be 32bit
-mmio pref: it could be 32bit only or 64bit.
-and we are ok to put child pref range under nonpref range from bridge.
+On Fri, Oct 18, 2013 at 07:12:06PM +0200, Alexander Gordeev wrote:
+> @@ -744,23 +744,6 @@ static int msix_capability_init(struct pci_dev *dev,
+>  
+>  	return 0;
+>  
+> -out_avail:
+> -	if (ret < 0) {
+> -		/*
+> -		 * If we had some success, report the number of irqs
+> -		 * we succeeded in setting up.
+> -		 */
+> -		struct msi_desc *entry;
+> -		int avail = 0;
+> -
+> -		list_for_each_entry(entry, &dev->msi_list, list) {
+> -			if (entry->irq != 0)
+> -				avail++;
+> -		}
+> -		if (avail != 0)
+> -			ret = avail;
+> -	}
 
-Here are suggestion is:
-assume mmio pref: will be use for 64bit pref only, and if the mmio pref
-does not support 64bit, we just ignore it.
-If devices under that bridge need pref, we will just use range from bridge's
-nonpref mmio.
+Hmmm... so, before this, the function would have returned the partial
+number of irqs that arch set up successfully.  Is it okay to lose that
+information?  If so, can you please elaborate a bit more on why it's
+okay in the description?
 
->
-> Also, haven't we tried the "try to allocate 64-bit devices in high
-> memory" and it has always failed because there are broken devices?
+Thanks.
 
-In my test setups, it is always working.
---- only with Intel network devices and Mellanox Infiniband cards and storage
-cards from Qlogic and Emulex.
-
-Thanks
-
-Yinghai
+-- 
+tejun
