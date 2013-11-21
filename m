@@ -1,65 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog111.obsmtp.com ([207.126.144.131]:38890 "EHLO
-	eu1sys200aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751810Ab3K0Dvw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 22:51:52 -0500
-Date: Wed, 27 Nov 2013 09:20:56 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Marek Vasut <marex@denx.de>
-Cc: Tim Harvey <tharvey@gateworks.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
-Message-ID: <20131127035056.GA12773@pratyush-vbox>
-References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com>
- <20131023064051.GA7646@pratyush-vbox>
- <201311262146.09780.marex@denx.de>
+Received: from mail-qe0-f53.google.com ([209.85.128.53]:44686 "EHLO
+	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805Ab3KUJAP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 04:00:15 -0500
+Received: by mail-qe0-f53.google.com with SMTP id cy11so6936728qeb.40
+        for <linux-pci@vger.kernel.org>; Thu, 21 Nov 2013 01:00:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201311262146.09780.marex@denx.de>
+In-Reply-To: <Pine.LNX.4.44L0.1311191258550.1145-100000@iolanthe.rowland.org>
+References: <87r4acmjc6.fsf@linaro.org>
+	<Pine.LNX.4.44L0.1311191258550.1145-100000@iolanthe.rowland.org>
+Date: Thu, 21 Nov 2013 10:00:14 +0100
+Message-ID: <CAPDyKFrJ34oWhPosqqfh-cCpoQnAY9Q90wP7nn60RAh87ZCPAw@mail.gmail.com>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Kevin Hilman <khilman@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 27, 2013 at 04:46:09AM +0800, Marek Vasut wrote:
-> Dear Pratyush Anand,
-> 
-> > Hi,
-> > 
-> > On Wed, Oct 23, 2013 at 12:55:43PM +0800, Tim Harvey wrote:
-> > > The IMX6 iATU is used for address translation between the AXI bus
-> > > address space and PCI address space.  This is used for type0 and type1
-> > > config cycles but is not necessary for outbound io/mem regions.
-> > > 
-> > > This patch removes the calls that inappropriately re-configures the ATU
-> > > viewport for outbound memory and IO after config cycles and removes them
-> > > altogether as they are not necessary.
-> > > 
-> > > This resolves issues with PCI devices behind switches and has been tested
-> > > with a Gige device behind a PLX PEX860x switch.  More testing is needed
-> > > for other configurations.
-> > 
-> > It seems to me that in your controller you have only one view port.
-> > Also mem_base and mem_bus_addr is same. Thats why it works in your
-> > case.
-> 
-> MX6 has 4 In/4 Out viewports AFAICT.
+On 19 November 2013 19:03, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 19 Nov 2013, Kevin Hilman wrote:
+>
+>> Alan Stern <stern@rowland.harvard.edu> writes:
+>>
+>> > On Tue, 19 Nov 2013, Ulf Hansson wrote:
+>> >
+>> >> At the moment, system PM is already affecting behaviour of runtime PM
+>> >> since it is preventing runtime suspend during system suspend.
+>> >
+>> > Sure.  And that behavior is documented.  In any case, it's a bug for
+>> > drivers to depend on runtime suspend for carrying out a system suspend.
+>>
+>> As Rafael mentioned, there is bus/pm_domain code that comes into play
+>> here, so I'm not sure it's always a bug.
+>>
+>> IMO, it's not a bug for the driver to depend on runtime PM if the
+>> bus/pm_domain is handling the details.
+>>
+>> On OMAP, we handle all the SoC on-chip devices with a pm_domain since
+>> the low-level PM operations that need to happen are bus-level things not
+>> device-level things.  Therefore, drivers for these devices can rely
+>> entirely on runtime PM, even for system suspend.  The late/early
+>> callbacks in the pm_domain can see if the device is runtime suspended
+>> already or not and behave accordingly.
+>>
+>> So, this all *can* work by handling it at the bus/pm_domain level, but
+>> as Ulf has mentioned (and I agree) it seems like a clunky workaround
+>> because the PM core is preventing it from happening as one might expect.
+>
+> The problem is that userspace can disable runtime PM at any time by
+> writing "on" to /sys/.../power/control.  Once that's done, you can't
+> depend on runtime PM to put the device into a low-power state during
+> system suspend.
+>
+> Now, if the bus-level code always takes care of putting the device into
+> low power during system suspend, then the driver doesn't have to worry
+> about it at all.  That's perfectly fine -- but I would hardly describe
+> the situation by saying the driver relies on runtime PM for system
+> suspend.
 
-Then if I do not miss anything, MX6 should work even without this patch.
+But they are, since that is exactly what these driver depends on
+during system suspend. And since the power domain invokes the runtime
+callbacks, normally CONFIG_PM_RUNTIME is needed for the callbacks to
+be set up from in the bus/driver.
 
-Regards
-Pratyush
-> 
-> Best regards,
-> Marek Vasut
+I suppose that the OMAP SoC maintainers were accepting that this
+dependency were allowed to exist, since that was the only solution to
+their problem at that point.
+
+Today, several years later, we are still indirectly pushing those SoC
+maintainers that faces similar issues, to accept this dependency
+between system suspend and runtime suspend. I see a conflict here. :-)
+
+Kind regards
+Ulf Hansson
+
+>
+> Alan Stern
+>
