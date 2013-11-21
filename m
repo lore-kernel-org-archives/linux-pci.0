@@ -1,61 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:49735 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752152Ab3KSWyh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 17:54:37 -0500
-Received: by mail-pb0-f46.google.com with SMTP id md12so2593655pbc.33
-        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 14:54:37 -0800 (PST)
-Received: from [192.168.211.134] ([66.129.239.13])
-        by mx.google.com with ESMTPSA id g8sm19718656pbe.37.2013.11.19.14.54.35
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Tue, 19 Nov 2013 14:54:36 -0800 (PST)
-Message-ID: <528BEC2B.4040208@gmail.com>
-Date: Tue, 19 Nov 2013 14:54:35 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:60280 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755346Ab3KUVeK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 16:34:10 -0500
+Received: by mail-ie0-f171.google.com with SMTP id ar20so640232iec.2
+        for <linux-pci@vger.kernel.org>; Thu, 21 Nov 2013 13:34:08 -0800 (PST)
 MIME-Version: 1.0
-To: Linux-PCI <linux-pci@vger.kernel.org>
-Subject: test mail 9
+In-Reply-To: <CA+55aFyM5o39pmFtPOc1VVE5y_SYp1WXtz773cBp3fHrvnzOLQ@mail.gmail.com>
+References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+	<1384912317-3721-7-git-send-email-yinghai@kernel.org>
+	<20131121103021.GA29873@yanx>
+	<CAE9FiQXgvaqErd1oiHmt6G8GwbW92C490+0sYyLUMcMFMMNRAg@mail.gmail.com>
+	<CA+55aFyM5o39pmFtPOc1VVE5y_SYp1WXtz773cBp3fHrvnzOLQ@mail.gmail.com>
+Date: Thu, 21 Nov 2013 13:34:08 -0800
+Message-ID: <CAE9FiQVY6si_3uG6ndbZVOWCY5o8RuXpSLimEo96FVtNC38Dgw@mail.gmail.com>
+Subject: Re: [PATCH 6/6] PCI: Try to allocate mem64 above 4G at first
+From: Yinghai Lu <yinghai@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Nov 21, 2013 at 1:05 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Thu, Nov 21, 2013 at 12:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>
+>> 3. or more generic, treat all pci BAR 32bit prefetechable as normal
+>> MMIO32 during allocation. aka mmio prefectechable will be used for pci
+>> bridge that support 64bit mmio pref and leave bridge's 32bit only pref
+>> bar register blank.
+>>
+>> Bjorn, Linus,
+>> Are you happy with No 3?
+>
+> I don't think I understand your #3. If there's a 32-bit device behind
+> the bridge, it will need to be in the low 4G, so you can't use the
+> 64-bit window because it will be out of range. So that wouldn't work.
+> So you'd need to have a bridge window in the low 32-bit area too if
+> there are any 32-bit devices behind the bridge.
 
-Hello,
+bridge should have two mmio,
+mmio nonpref: it only can be 32bit
+mmio pref: it could be 32bit only or 64bit.
+and we are ok to put child pref range under nonpref range from bridge.
 
-This patch set enables the use of PCI Express link up and link down events
-for Hotplug or Unplug. The requirement of such a feature was originally
-discussed here:
+Here are suggestion is:
+assume mmio pref: will be use for 64bit pref only, and if the mmio pref
+does not support 64bit, we just ignore it.
+If devices under that bridge need pref, we will just use range from bridge's
+nonpref mmio.
 
-http://www.spinics.net/lists/linux-pci/msg05783.html
-http://www.spinics.net/lists/hotplug/msg05801.html
+>
+> Also, haven't we tried the "try to allocate 64-bit devices in high
+> memory" and it has always failed because there are broken devices?
 
-Patch [1/4]: makes a function non-static for use by patch 2.
-Patch [2/4]: Contains the bulk logic to allow link events to be used
-             for hotplug and removal.
-Patch [3/4]: Makes the pciehp_power_thread() lock free by making it
-             look at a work info->req instead of slot->state.
-Patch [4/4]: Introduce slot->hotplug_lock to serialize the hotplug
-             operations.
+In my test setups, it is always working.
+--- only with Intel network devices and Mellanox Infiniband cards and storage
+cards from Qlogic and Emulex.
 
-I'd appreciate if you could please review and provide me with any comments.
+Thanks
 
-Thanks,
-
-Rajat
-
-Rajat Jain (4):
-  pciehp: Make check_link_active() non-static
-  pciehp: Use link state change notifications for hot-plug and removal
-  pciehp: Ensure all hotplug events are processed, even very fast ones.
-  pciehp: Introduce hotplug_lock to serialize HP events on each slot
-
- drivers/pci/hotplug/pciehp.h      |    6 ++
- drivers/pci/hotplug/pciehp_core.c |   10 +-
- drivers/pci/hotplug/pciehp_ctrl.c |  181 ++++++++++++++++++++++++++++++++++---
- drivers/pci/hotplug/pciehp_hpc.c  |   63 +++++++++----
- 4 files changed, 229 insertions(+), 31 deletions(-)
-
--- 
-1.7.9.5
-
+Yinghai
