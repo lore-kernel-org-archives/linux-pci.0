@@ -1,125 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18326 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754444Ab3KTSrj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Nov 2013 13:47:39 -0500
-Message-ID: <1384973243.2879.361.camel@ul30vt.home>
-Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bharat Bhushan <r65777@freescale.com>
-Cc: joro@8bytes.org, bhelgaas@google.com, agraf@suse.de,
-	scottwood@freescale.com, stuart.yoder@freescale.com,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Date: Wed, 20 Nov 2013 11:47:23 -0700
-In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qe0-f52.google.com ([209.85.128.52]:56628 "EHLO
+	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629Ab3KUJLw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 04:11:52 -0500
+Received: by mail-qe0-f52.google.com with SMTP id ne12so923893qeb.39
+        for <linux-pci@vger.kernel.org>; Thu, 21 Nov 2013 01:11:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <Pine.LNX.4.44L0.1311141053060.1439-100000@iolanthe.rowland.org>
+References: <CAPDyKFozCfPj-gW124cyFSu=ckiL-zVEmEx5tspY-1maO=+6fA@mail.gmail.com>
+	<Pine.LNX.4.44L0.1311141053060.1439-100000@iolanthe.rowland.org>
+Date: Thu, 21 Nov 2013 10:11:50 +0100
+Message-ID: <CAPDyKFpfdjMRVWnkiGTy2D=J1ghxbFgiDXROrpX1-mDMihhgdw@mail.gmail.com>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-11-19 at 10:47 +0530, Bharat Bhushan wrote:
-> From: Bharat Bhushan <bharat.bhushan@freescale.com>
-> 
-> PAMU (FSL IOMMU) has a concept of primary window and subwindows.
-> Primary window corresponds to the complete guest iova address space
-> (including MSI space), with respect to IOMMU_API this is termed as
-> geometry. IOVA Base of subwindow is determined from the number of
-> subwindows (configurable using iommu API).
-> MSI I/O page must be within the geometry and maximum supported
-> subwindows, so MSI IO-page is setup just after guest memory iova space.
-> 
-> So patch 1/9-4/9(inclusive) are for defining the interface to get:
->   - Number of MSI regions (which is number of MSI banks for powerpc)
->   - MSI-region address range: Physical page which have the
->     address/addresses used for generating MSI interrupt
->     and size of the page.
-> 
-> Patch 5/9-7/9(inclusive) is defining the interface of setting up
-> MSI iova-base for a msi region(bank) for a device. so that when
-> msi-message will be composed then this configured iova will be used.
-> Earlier we were using iommu interface for getting the configured iova
-> which was not currect and Alex Williamson suggeested this type of interface.
-> 
-> patch 8/9 moves some common functions in a separate file so that these
-> can be used by FSL_PAMU implementation (next patch uses this).
-> These will be used later for iommu-none implementation. I believe we
-> can do more of this but will take step by step.
-> 
-> Finally last patch actually adds the support for FSL-PAMU :)
+On 14 November 2013 16:55, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Thu, 14 Nov 2013, Ulf Hansson wrote:
+>
+>> > If you want a driver to do the same thing for runtime PM and system
+>> > suspend/resume, point its .suspend_late() and .runtime_suspend() to the
+>> > same routine and analogously for .runtime_resume() and .resume_early()
+>> > (that may not work for PCI, though, because of the _noirq stuff, but that's
+>> > the PCI bus type issue).
+>>
+>> When your .suspend_late callback gets called, your device may be
+>> either active or inactive from runtime PM point of view. Just pointing
+>> the .suspend_late callback to the .runtime_suspend callback, simply
+>> wont work.
+>>
+>> That would mean we might end up in trying to inactivate an already
+>> inactivated device, which I doubt is a good thing.:-) Some additional
+>> code will be needed to track the "runtime state" and to act
+>> accordingly. This is what drivers already tries to handle as of today,
+>> though so far mostly from their .suspend callbacks I believe.
+>
+> You could write a "generic" suspend_late routine that would invoke the
+> driver's runtime_suspend routine if the device's runtime PM status was
+> RPM_ACTIVE.
+>
 
-Patches 1-3: msi_get_region needs to return an error an error (probably
--EINVAL) if called on a path where there's no backend implementation.
-Otherwise the caller doesn't know that the data in the region pointer
-isn't valid.
+I started drafting a new RFC according to your suggestion. Soon I
+realized that using such a callback for .suspend_late will make
+drivers/buses system suspend to depend on runtime suspend, (which my
+RFC also has problem with). So I guess this is not a recommended set
+up from the PM maintainers. Wandering in circles... :-)
 
-Patches 5&6: same as above for msi_set_iova, return an error if no
-backend implementation.
-
-Patch 7: Why does fsl_msi_del_iova_device bother to return anything if
-it's always zero?  Return -ENODEV when not found?
-
-Patch 9:
-
-vfio_handle_get_attr() passes random kernel data back to userspace in
-the event of iommu_domain_get_attr() error.
-
-vfio_handle_set_attr(): I don't see any data validation happening, is
-iommu_domain_set_attr() really that safe?
-
-For both of those, drop the pr_err on unknown attribute, it's sufficient
-to return error.
-
-Is VFIO_IOMMU_PAMU_GET_MSI_BANK_COUNT per aperture (ie. each vfio user
-has $COUNT regions at their disposal exclusively)?  Thanks,
-
-Alex
-
-> v1->v2
->  - Added interface for setting msi iova for a msi region for a device.
->    Earlier I added iommu interface for same but as per comment that is
->    removed and now created a direct interface between vfio and msi.
->  - Incorporated review comments (details is in individual patch)
-> 
-> Bharat Bhushan (9):
->   pci:msi: add weak function for returning msi region info
->   pci: msi: expose msi region information functions
->   powerpc: pci: Add arch specific msi region interface
->   powerpc: msi: Extend the msi region interface to get info from
->     fsl_msi
->   pci/msi: interface to set an iova for a msi region
->   powerpc: pci: Extend msi iova page setup to arch specific
->   pci: msi: Extend msi iova setting interface to powerpc arch
->   vfio: moving some functions in common file
->   vfio pci: Add vfio iommu implementation for FSL_PAMU
-> 
->  arch/powerpc/include/asm/machdep.h |   10 +
->  arch/powerpc/kernel/msi.c          |   28 +
->  arch/powerpc/sysdev/fsl_msi.c      |  132 +++++-
->  arch/powerpc/sysdev/fsl_msi.h      |   25 +-
->  drivers/pci/msi.c                  |   35 ++
->  drivers/vfio/Kconfig               |    6 +
->  drivers/vfio/Makefile              |    5 +-
->  drivers/vfio/vfio_iommu_common.c   |  227 ++++++++
->  drivers/vfio/vfio_iommu_common.h   |   27 +
->  drivers/vfio/vfio_iommu_fsl_pamu.c | 1003 ++++++++++++++++++++++++++++++++++++
->  drivers/vfio/vfio_iommu_type1.c    |  206 +--------
->  include/linux/msi.h                |   14 +
->  include/linux/pci.h                |   21 +
->  include/uapi/linux/vfio.h          |  100 ++++
->  14 files changed, 1623 insertions(+), 216 deletions(-)
->  create mode 100644 drivers/vfio/vfio_iommu_common.c
->  create mode 100644 drivers/vfio/vfio_iommu_common.h
->  create mode 100644 drivers/vfio/vfio_iommu_fsl_pamu.c
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
-
-
+Kind regards
+Ulf Hansson
