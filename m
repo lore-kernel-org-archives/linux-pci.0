@@ -1,67 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:48712 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753494Ab3KOKeg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 05:34:36 -0500
-Received: by mail-qa0-f49.google.com with SMTP id cm18so423976qab.8
-        for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2013 02:34:36 -0800 (PST)
+Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:59896
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753924Ab3KULU5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 06:20:57 -0500
+From: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "joro@8bytes.org" <joro@8bytes.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Scott Wood <scottwood@freescale.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Thu, 21 Nov 2013 11:20:49 +0000
+Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+ <1384973243.2879.361.camel@ul30vt.home>
+In-Reply-To: <1384973243.2879.361.camel@ul30vt.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87li0q9fna.fsf@nemi.mork.no>
-References: <CAPDyKFqYOnfWKH7BFRem5T5yGmJrOWBTDhZwoExuemMf0HQ7Ag@mail.gmail.com>
-	<Pine.LNX.4.44L0.1311141249580.1439-100000@iolanthe.rowland.org>
-	<CAPDyKFrQfwOQsOCB1QFo4GWeX303AEWnanE61svy9UUJpNBUiw@mail.gmail.com>
-	<87li0q9fna.fsf@nemi.mork.no>
-Date: Fri, 15 Nov 2013 11:34:35 +0100
-Message-ID: <CAPDyKFqJMbsF30PtFicXQ17fA+62YX7a9smsLrUUK7Fxn2SWpA@mail.gmail.com>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
- system suspend
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: =?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15 November 2013 10:29, Bjørn Mork <bjorn@mork.no> wrote:
-> Ulf Hansson <ulf.hansson@linaro.org> writes:
->
->> I think it is kind of strange to give provision to userspace to
->> control a "request based" power management feature in the kernel. Me
->> personally can't think of any good use case, but I comes from the
->> embedded/ARM world so I might not have the full picture.
->
-> Because resuming a device inevitably adds latency, and that only
-> userspace can decide the latency vs power policy for any given device,
-> system and user?
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
+IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBO
+b3ZlbWJlciAyMSwgMjAxMyAxMjoxNyBBTQ0KPiBUbzogQmh1c2hhbiBCaGFyYXQtUjY1Nzc3DQo+
+IENjOiBqb3JvQDhieXRlcy5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IGFncmFmQHN1c2UuZGU7
+IFdvb2QgU2NvdHQtQjA3NDIxOw0KPiBZb2RlciBTdHVhcnQtQjA4MjQ4OyBpb21tdUBsaXN0cy5s
+aW51eC1mb3VuZGF0aW9uLm9yZzsgbGludXgtDQo+IHBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4
+cHBjLWRldkBsaXN0cy5vemxhYnMub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9y
+ZzsgQmh1c2hhbiBCaGFyYXQtUjY1Nzc3DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMC85IHYyXSB2
+ZmlvLXBjaTogYWRkIHN1cHBvcnQgZm9yIEZyZWVzY2FsZSBJT01NVSAoUEFNVSkNCj4gDQo+IE9u
+IFR1ZSwgMjAxMy0xMS0xOSBhdCAxMDo0NyArMDUzMCwgQmhhcmF0IEJodXNoYW4gd3JvdGU6DQo+
+ID4gRnJvbTogQmhhcmF0IEJodXNoYW4gPGJoYXJhdC5iaHVzaGFuQGZyZWVzY2FsZS5jb20+DQo+
+ID4NCj4gPiBQQU1VIChGU0wgSU9NTVUpIGhhcyBhIGNvbmNlcHQgb2YgcHJpbWFyeSB3aW5kb3cg
+YW5kIHN1YndpbmRvd3MuDQo+ID4gUHJpbWFyeSB3aW5kb3cgY29ycmVzcG9uZHMgdG8gdGhlIGNv
+bXBsZXRlIGd1ZXN0IGlvdmEgYWRkcmVzcyBzcGFjZQ0KPiA+IChpbmNsdWRpbmcgTVNJIHNwYWNl
+KSwgd2l0aCByZXNwZWN0IHRvIElPTU1VX0FQSSB0aGlzIGlzIHRlcm1lZCBhcw0KPiA+IGdlb21l
+dHJ5LiBJT1ZBIEJhc2Ugb2Ygc3Vid2luZG93IGlzIGRldGVybWluZWQgZnJvbSB0aGUgbnVtYmVy
+IG9mDQo+ID4gc3Vid2luZG93cyAoY29uZmlndXJhYmxlIHVzaW5nIGlvbW11IEFQSSkuDQo+ID4g
+TVNJIEkvTyBwYWdlIG11c3QgYmUgd2l0aGluIHRoZSBnZW9tZXRyeSBhbmQgbWF4aW11bSBzdXBw
+b3J0ZWQNCj4gPiBzdWJ3aW5kb3dzLCBzbyBNU0kgSU8tcGFnZSBpcyBzZXR1cCBqdXN0IGFmdGVy
+IGd1ZXN0IG1lbW9yeSBpb3ZhIHNwYWNlLg0KPiA+DQo+ID4gU28gcGF0Y2ggMS85LTQvOShpbmNs
+dXNpdmUpIGFyZSBmb3IgZGVmaW5pbmcgdGhlIGludGVyZmFjZSB0byBnZXQ6DQo+ID4gICAtIE51
+bWJlciBvZiBNU0kgcmVnaW9ucyAod2hpY2ggaXMgbnVtYmVyIG9mIE1TSSBiYW5rcyBmb3IgcG93
+ZXJwYykNCj4gPiAgIC0gTVNJLXJlZ2lvbiBhZGRyZXNzIHJhbmdlOiBQaHlzaWNhbCBwYWdlIHdo
+aWNoIGhhdmUgdGhlDQo+ID4gICAgIGFkZHJlc3MvYWRkcmVzc2VzIHVzZWQgZm9yIGdlbmVyYXRp
+bmcgTVNJIGludGVycnVwdA0KPiA+ICAgICBhbmQgc2l6ZSBvZiB0aGUgcGFnZS4NCj4gPg0KPiA+
+IFBhdGNoIDUvOS03LzkoaW5jbHVzaXZlKSBpcyBkZWZpbmluZyB0aGUgaW50ZXJmYWNlIG9mIHNl
+dHRpbmcgdXAgTVNJDQo+ID4gaW92YS1iYXNlIGZvciBhIG1zaSByZWdpb24oYmFuaykgZm9yIGEg
+ZGV2aWNlLiBzbyB0aGF0IHdoZW4NCj4gPiBtc2ktbWVzc2FnZSB3aWxsIGJlIGNvbXBvc2VkIHRo
+ZW4gdGhpcyBjb25maWd1cmVkIGlvdmEgd2lsbCBiZSB1c2VkLg0KPiA+IEVhcmxpZXIgd2Ugd2Vy
+ZSB1c2luZyBpb21tdSBpbnRlcmZhY2UgZm9yIGdldHRpbmcgdGhlIGNvbmZpZ3VyZWQgaW92YQ0K
+PiA+IHdoaWNoIHdhcyBub3QgY3VycmVjdCBhbmQgQWxleCBXaWxsaWFtc29uIHN1Z2dlZXN0ZWQg
+dGhpcyB0eXBlIG9mIGludGVyZmFjZS4NCj4gPg0KPiA+IHBhdGNoIDgvOSBtb3ZlcyBzb21lIGNv
+bW1vbiBmdW5jdGlvbnMgaW4gYSBzZXBhcmF0ZSBmaWxlIHNvIHRoYXQgdGhlc2UNCj4gPiBjYW4g
+YmUgdXNlZCBieSBGU0xfUEFNVSBpbXBsZW1lbnRhdGlvbiAobmV4dCBwYXRjaCB1c2VzIHRoaXMp
+Lg0KPiA+IFRoZXNlIHdpbGwgYmUgdXNlZCBsYXRlciBmb3IgaW9tbXUtbm9uZSBpbXBsZW1lbnRh
+dGlvbi4gSSBiZWxpZXZlIHdlDQo+ID4gY2FuIGRvIG1vcmUgb2YgdGhpcyBidXQgd2lsbCB0YWtl
+IHN0ZXAgYnkgc3RlcC4NCj4gPg0KPiA+IEZpbmFsbHkgbGFzdCBwYXRjaCBhY3R1YWxseSBhZGRz
+IHRoZSBzdXBwb3J0IGZvciBGU0wtUEFNVSA6KQ0KPiANCj4gUGF0Y2hlcyAxLTM6IG1zaV9nZXRf
+cmVnaW9uIG5lZWRzIHRvIHJldHVybiBhbiBlcnJvciBhbiBlcnJvciAocHJvYmFibHkNCj4gLUVJ
+TlZBTCkgaWYgY2FsbGVkIG9uIGEgcGF0aCB3aGVyZSB0aGVyZSdzIG5vIGJhY2tlbmQgaW1wbGVt
+ZW50YXRpb24uDQo+IE90aGVyd2lzZSB0aGUgY2FsbGVyIGRvZXNuJ3Qga25vdyB0aGF0IHRoZSBk
+YXRhIGluIHRoZSByZWdpb24gcG9pbnRlciBpc24ndA0KPiB2YWxpZC4NCg0Kd2lsbCBjb3JyZWN0
+Lg0KDQo+IA0KPiBQYXRjaGVzIDUmNjogc2FtZSBhcyBhYm92ZSBmb3IgbXNpX3NldF9pb3ZhLCBy
+ZXR1cm4gYW4gZXJyb3IgaWYgbm8gYmFja2VuZA0KPiBpbXBsZW1lbnRhdGlvbi4NCg0KT2sNCg0K
+PiANCj4gUGF0Y2ggNzogV2h5IGRvZXMgZnNsX21zaV9kZWxfaW92YV9kZXZpY2UgYm90aGVyIHRv
+IHJldHVybiBhbnl0aGluZyBpZiBpdCdzDQo+IGFsd2F5cyB6ZXJvPyAgUmV0dXJuIC1FTk9ERVYg
+d2hlbiBub3QgZm91bmQ/DQoNCldpbGwgbWFrZSAtRU5PREVWLg0KDQo+IA0KPiBQYXRjaCA5Og0K
+PiANCj4gdmZpb19oYW5kbGVfZ2V0X2F0dHIoKSBwYXNzZXMgcmFuZG9tIGtlcm5lbCBkYXRhIGJh
+Y2sgdG8gdXNlcnNwYWNlIGluIHRoZSBldmVudA0KPiBvZiBpb21tdV9kb21haW5fZ2V0X2F0dHIo
+KSBlcnJvci4NCg0KV2lsbCBjb3JyZWN0Lg0KDQo+IA0KPiB2ZmlvX2hhbmRsZV9zZXRfYXR0cigp
+OiBJIGRvbid0IHNlZSBhbnkgZGF0YSB2YWxpZGF0aW9uIGhhcHBlbmluZywgaXMNCj4gaW9tbXVf
+ZG9tYWluX3NldF9hdHRyKCkgcmVhbGx5IHRoYXQgc2FmZT8NCg0KV2UgZG8gbm90IG5lZWQgYW55
+IGRhdGEgdmFsaWRhdGlvbiBoZXJlIGFuZCBpb21tdSBkcml2ZXIgZG9lcyB3aGF0ZXZlciBuZWVk
+ZWQuDQpTbyB5ZXMsICBpb21tdV9kb21haW5fc2V0X2F0dHIoKSBpcyBzYWZlLg0KDQo+IA0KPiBG
+b3IgYm90aCBvZiB0aG9zZSwgZHJvcCB0aGUgcHJfZXJyIG9uIHVua25vd24gYXR0cmlidXRlLCBp
+dCdzIHN1ZmZpY2llbnQgdG8NCj4gcmV0dXJuIGVycm9yLg0KDQpvaw0KDQo+IA0KPiBJcyBWRklP
+X0lPTU1VX1BBTVVfR0VUX01TSV9CQU5LX0NPVU5UIHBlciBhcGVydHVyZSAoaWUuIGVhY2ggdmZp
+byB1c2VyIGhhcw0KPiAkQ09VTlQgcmVnaW9ucyBhdCB0aGVpciBkaXNwb3NhbCBleGNsdXNpdmVs
+eSk/DQoNCk51bWJlciBvZiBtc2ktYmFuayBjb3VudCBpcyBzeXN0ZW0gd2lkZSBhbmQgbm90IHBl
+ciBhcGVydHVyZSwgQnV0IHdpbGwgYmUgc2V0dGluZyB3aW5kb3dzIGZvciBiYW5rcyBpbiB0aGUg
+ZGV2aWNlIGFwZXJ0dXJlLg0KU28gc2F5IGlmIHdlIGFyZSBkaXJlY3QgYXNzaWduaW5nIDIgcGNp
+IGRldmljZSAoYm90aCBoYXZlIGRpZmZlcmVudCBpb21tdSBncm91cCwgc28gMiBhcGVydHVyZSBp
+biBpb21tdSkgdG8gVk0uDQpOb3cgcWVtdSBjYW4gbWFrZSBvbmx5IG9uZSBjYWxsIHRvIGtub3cg
+aG93IG1hbnkgbXNpLWJhbmtzIGFyZSB0aGVyZSBidXQgaXQgbXVzdCBzZXQgc3ViLXdpbmRvd3Mg
+Zm9yIGFsbCBiYW5rcyBmb3IgYm90aCBwY2kgZGV2aWNlIGluIGl0cyByZXNwZWN0aXZlIGFwZXJ0
+dXJlLg0KDQpUaGFua3MNCi1CaGFyYXQNCg0KPiAgVGhhbmtzLA0KPiANCj4gQWxleA0KPiANCj4g
+PiB2MS0+djINCj4gPiAgLSBBZGRlZCBpbnRlcmZhY2UgZm9yIHNldHRpbmcgbXNpIGlvdmEgZm9y
+IGEgbXNpIHJlZ2lvbiBmb3IgYSBkZXZpY2UuDQo+ID4gICAgRWFybGllciBJIGFkZGVkIGlvbW11
+IGludGVyZmFjZSBmb3Igc2FtZSBidXQgYXMgcGVyIGNvbW1lbnQgdGhhdCBpcw0KPiA+ICAgIHJl
+bW92ZWQgYW5kIG5vdyBjcmVhdGVkIGEgZGlyZWN0IGludGVyZmFjZSBiZXR3ZWVuIHZmaW8gYW5k
+IG1zaS4NCj4gPiAgLSBJbmNvcnBvcmF0ZWQgcmV2aWV3IGNvbW1lbnRzIChkZXRhaWxzIGlzIGlu
+IGluZGl2aWR1YWwgcGF0Y2gpDQo+ID4NCj4gPiBCaGFyYXQgQmh1c2hhbiAoOSk6DQo+ID4gICBw
+Y2k6bXNpOiBhZGQgd2VhayBmdW5jdGlvbiBmb3IgcmV0dXJuaW5nIG1zaSByZWdpb24gaW5mbw0K
+PiA+ICAgcGNpOiBtc2k6IGV4cG9zZSBtc2kgcmVnaW9uIGluZm9ybWF0aW9uIGZ1bmN0aW9ucw0K
+PiA+ICAgcG93ZXJwYzogcGNpOiBBZGQgYXJjaCBzcGVjaWZpYyBtc2kgcmVnaW9uIGludGVyZmFj
+ZQ0KPiA+ICAgcG93ZXJwYzogbXNpOiBFeHRlbmQgdGhlIG1zaSByZWdpb24gaW50ZXJmYWNlIHRv
+IGdldCBpbmZvIGZyb20NCj4gPiAgICAgZnNsX21zaQ0KPiA+ICAgcGNpL21zaTogaW50ZXJmYWNl
+IHRvIHNldCBhbiBpb3ZhIGZvciBhIG1zaSByZWdpb24NCj4gPiAgIHBvd2VycGM6IHBjaTogRXh0
+ZW5kIG1zaSBpb3ZhIHBhZ2Ugc2V0dXAgdG8gYXJjaCBzcGVjaWZpYw0KPiA+ICAgcGNpOiBtc2k6
+IEV4dGVuZCBtc2kgaW92YSBzZXR0aW5nIGludGVyZmFjZSB0byBwb3dlcnBjIGFyY2gNCj4gPiAg
+IHZmaW86IG1vdmluZyBzb21lIGZ1bmN0aW9ucyBpbiBjb21tb24gZmlsZQ0KPiA+ICAgdmZpbyBw
+Y2k6IEFkZCB2ZmlvIGlvbW11IGltcGxlbWVudGF0aW9uIGZvciBGU0xfUEFNVQ0KPiA+DQo+ID4g
+IGFyY2gvcG93ZXJwYy9pbmNsdWRlL2FzbS9tYWNoZGVwLmggfCAgIDEwICsNCj4gPiAgYXJjaC9w
+b3dlcnBjL2tlcm5lbC9tc2kuYyAgICAgICAgICB8ICAgMjggKw0KPiA+ICBhcmNoL3Bvd2VycGMv
+c3lzZGV2L2ZzbF9tc2kuYyAgICAgIHwgIDEzMiArKysrKy0NCj4gPiAgYXJjaC9wb3dlcnBjL3N5
+c2Rldi9mc2xfbXNpLmggICAgICB8ICAgMjUgKy0NCj4gPiAgZHJpdmVycy9wY2kvbXNpLmMgICAg
+ICAgICAgICAgICAgICB8ICAgMzUgKysNCj4gPiAgZHJpdmVycy92ZmlvL0tjb25maWcgICAgICAg
+ICAgICAgICB8ICAgIDYgKw0KPiA+ICBkcml2ZXJzL3ZmaW8vTWFrZWZpbGUgICAgICAgICAgICAg
+IHwgICAgNSArLQ0KPiA+ICBkcml2ZXJzL3ZmaW8vdmZpb19pb21tdV9jb21tb24uYyAgIHwgIDIy
+NyArKysrKysrKw0KPiA+ICBkcml2ZXJzL3ZmaW8vdmZpb19pb21tdV9jb21tb24uaCAgIHwgICAy
+NyArDQo+ID4gIGRyaXZlcnMvdmZpby92ZmlvX2lvbW11X2ZzbF9wYW11LmMgfCAxMDAzDQo+ICsr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0KPiA+ICBkcml2ZXJzL3ZmaW8vdmZp
+b19pb21tdV90eXBlMS5jICAgIHwgIDIwNiArLS0tLS0tLS0NCj4gPiAgaW5jbHVkZS9saW51eC9t
+c2kuaCAgICAgICAgICAgICAgICB8ICAgMTQgKw0KPiA+ICBpbmNsdWRlL2xpbnV4L3BjaS5oICAg
+ICAgICAgICAgICAgIHwgICAyMSArDQo+ID4gIGluY2x1ZGUvdWFwaS9saW51eC92ZmlvLmggICAg
+ICAgICAgfCAgMTAwICsrKysNCj4gPiAgMTQgZmlsZXMgY2hhbmdlZCwgMTYyMyBpbnNlcnRpb25z
+KCspLCAyMTYgZGVsZXRpb25zKC0pICBjcmVhdGUgbW9kZQ0KPiA+IDEwMDY0NCBkcml2ZXJzL3Zm
+aW8vdmZpb19pb21tdV9jb21tb24uYyAgY3JlYXRlIG1vZGUgMTAwNjQ0DQo+ID4gZHJpdmVycy92
+ZmlvL3ZmaW9faW9tbXVfY29tbW9uLmggIGNyZWF0ZSBtb2RlIDEwMDY0NA0KPiA+IGRyaXZlcnMv
+dmZpby92ZmlvX2lvbW11X2ZzbF9wYW11LmMNCj4gPg0KPiA+DQo+ID4gLS0NCj4gPiBUbyB1bnN1
+YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUNCj4gPiBs
+aW51eC1rZXJuZWwiIGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5r
+ZXJuZWwub3JnDQo+ID4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVs
+Lm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+ID4gUGxlYXNlIHJlYWQgdGhlIEZBUSBhdCAgaHR0
+cDovL3d3dy50dXgub3JnL2xrbWwvDQo+IA0KPiANCj4gDQoNCg==
 
-That is a valid point. Though we have pm_qos, should not that be the
-input for these kind of requirement for a driver?
-
-In other words, if the latency requirement can't be met for a device
-while re-activating it, it should not enter runtime suspend state.
-
->
-> There are also other reasons, mostly related to device bugs.  But the
-> above is the most important in my view.  Without that control knob I
-> don't think I would have enabled runtime PM in any network driver while
-> the netif is running.  The additional latency is noticable.
->
-> Anyway, this is a pointless discussion.  The power/control ABI is in use
-> so many places that it cannot be changed.  I'd suggest googling "break
-> userspace" before even suggesting anything like that again.
->
-
-I agree, and has never been a suggestion from my side either, more
-like a statement that I don't like the sysfs for runtime PM. :-)
-
-Kind regards
-Ulf Hansson
-
->
-> Bjørn
