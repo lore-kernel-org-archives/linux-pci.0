@@ -1,56 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4817 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755795Ab3KVSct (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Nov 2013 13:32:49 -0500
-Date: Fri, 22 Nov 2013 19:34:40 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH RFC v2 08/29] PCI/MSI: Make pci_enable_msix() 'nvec'
- argument unsigned int
-Message-ID: <20131122183439.GE8401@dhcp-26-207.brq.redhat.com>
-References: <cover.1382103786.git.agordeev@redhat.com>
- <93e145deeb238ad805196762cae696d3ae67f812.1382103786.git.agordeev@redhat.com>
- <20131120161412.GH28946@htj.dyndns.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Varun Sethi <Varun.Sethi@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Bharat Bhushan <Bharat.Bhushan@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Thu, 21 Nov 2013 11:20:01 +0000
+Message-ID: <C5ECD7A89D1DC44195F34B25E172658D0A5C38AC@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+ <1384973243.2879.361.camel@ul30vt.home>
+In-Reply-To: <1384973243.2879.361.camel@ul30vt.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131120161412.GH28946@htj.dyndns.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 11:14:12AM -0500, Tejun Heo wrote:
-> I'm personally not a big fan of using unsigneds where they're just
-> used as numbers unless strictly necessary.  They don't really provide
-> any meaningful protection and we often end up in situations where we
-> want to encode error conditions in the same type variable as return
-> value or whatever and end up with silly situations like functions
-> which take unsigned and returns integer or having a separate err
-> variable when the high bit of the orignal variable would have worked
-> just fine.  Also, people have different thresholds for what should be
-> unsigned and we end up with half things unsigned and the other signed.
 
-That sounds convincing. Given that arch hooks do use signed int's 
-there is one more reason to convert to signed.
 
-> I'll defer the decision to Bjorn but I'd vote for converting things to
-> int.
-
-I will re-post with int's in next version unless Bjorn (someone) speaks
-up against.
-
-> Thanks.
+> -----Original Message-----
+> From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
+> bounces@lists.linux-foundation.org] On Behalf Of Alex Williamson
+> Sent: Thursday, November 21, 2013 12:17 AM
+> To: Bhushan Bharat-R65777
+> Cc: linux-pci@vger.kernel.org; agraf@suse.de; Yoder Stuart-B08248; Wood
+> Scott-B07421; iommu@lists.linux-foundation.org; bhelgaas@google.com;
+> linuxppc-dev@lists.ozlabs.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU
+> (PAMU)
 > 
-> -- 
-> tejun
+> On Tue, 2013-11-19 at 10:47 +0530, Bharat Bhushan wrote:
+> > From: Bharat Bhushan <bharat.bhushan@freescale.com>
+> >
+> > PAMU (FSL IOMMU) has a concept of primary window and subwindows.
+> > Primary window corresponds to the complete guest iova address space
+> > (including MSI space), with respect to IOMMU_API this is termed as
+> > geometry. IOVA Base of subwindow is determined from the number of
+> > subwindows (configurable using iommu API).
+> > MSI I/O page must be within the geometry and maximum supported
+> > subwindows, so MSI IO-page is setup just after guest memory iova space.
+> >
+> > So patch 1/9-4/9(inclusive) are for defining the interface to get:
+> >   - Number of MSI regions (which is number of MSI banks for powerpc)
+> >   - MSI-region address range: Physical page which have the
+> >     address/addresses used for generating MSI interrupt
+> >     and size of the page.
+> >
+> > Patch 5/9-7/9(inclusive) is defining the interface of setting up MSI
+> > iova-base for a msi region(bank) for a device. so that when
+> > msi-message will be composed then this configured iova will be used.
+> > Earlier we were using iommu interface for getting the configured iova
+> > which was not currect and Alex Williamson suggeested this type of
+> interface.
+> >
+> > patch 8/9 moves some common functions in a separate file so that these
+> > can be used by FSL_PAMU implementation (next patch uses this).
+> > These will be used later for iommu-none implementation. I believe we
+> > can do more of this but will take step by step.
+> >
+> > Finally last patch actually adds the support for FSL-PAMU :)
+> 
+> Patches 1-3: msi_get_region needs to return an error an error (probably
+> -EINVAL) if called on a path where there's no backend implementation.
+> Otherwise the caller doesn't know that the data in the region pointer
+> isn't valid.
+> 
+> Patches 5&6: same as above for msi_set_iova, return an error if no
+> backend implementation.
+> 
+> Patch 7: Why does fsl_msi_del_iova_device bother to return anything if
+> it's always zero?  Return -ENODEV when not found?
+> 
+> Patch 9:
+> 
+> vfio_handle_get_attr() passes random kernel data back to userspace in the
+> event of iommu_domain_get_attr() error.
+> 
+> vfio_handle_set_attr(): I don't see any data validation happening, is
+> iommu_domain_set_attr() really that safe?
+[Sethi Varun-B16395] The parameter validation can be left to the lower level iommu driver. The attribute could be specific to a given hardware.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+-Varun
+
