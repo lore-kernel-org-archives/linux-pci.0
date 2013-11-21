@@ -1,64 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:54683 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752654Ab3KZSDE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Nov 2013 13:03:04 -0500
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: mvebu - Return a value for the INTERRUPT_LINE/PIN register
-Date: Tue, 26 Nov 2013 11:02:53 -0700
-Message-Id: <1385488975-27694-2-git-send-email-jgunthorpe@obsidianresearch.com>
-In-Reply-To: <1385488975-27694-1-git-send-email-jgunthorpe@obsidianresearch.com>
-References: <1385488975-27694-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1385066835.1403.489.camel@snotra.buserror.net>
+Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+From: Scott Wood <scottwood@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 21 Nov 2013 14:47:15 -0600
+In-Reply-To: <1385066603.2879.414.camel@ul30vt.home>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The emulated bridge does not support interrupts so it should return the
-value 0 for interrupt line, 0 for pin. This indicates that interrupts
-are not supported.
+On Thu, 2013-11-21 at 13:43 -0700, Alex Williamson wrote:
+> On Thu, 2013-11-21 at 11:20 +0000, Bharat Bhushan wrote:
+> > 
+> > > -----Original Message-----
+> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > Sent: Thursday, November 21, 2013 12:17 AM
+> > > To: Bhushan Bharat-R65777
+> > > Cc: joro@8bytes.org; bhelgaas@google.com; agraf@suse.de; Wood Scott-B07421;
+> > > Yoder Stuart-B08248; iommu@lists.linux-foundation.org; linux-
+> > > pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
+> > > kernel@vger.kernel.org; Bhushan Bharat-R65777
+> > > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+> > > 
+> > > Is VFIO_IOMMU_PAMU_GET_MSI_BANK_COUNT per aperture (ie. each vfio user has
+> > > $COUNT regions at their disposal exclusively)?
+> > 
+> > Number of msi-bank count is system wide and not per aperture, But will be setting windows for banks in the device aperture.
+> > So say if we are direct assigning 2 pci device (both have different iommu group, so 2 aperture in iommu) to VM.
+> > Now qemu can make only one call to know how many msi-banks are there but it must set sub-windows for all banks for both pci device in its respective aperture.
+> 
+> I'm still confused.  What I want to make sure of is that the banks are
+> independent per aperture.  For instance, if we have two separate
+> userspace processes operating independently and they both chose to use
+> msi bank zero for their device, that's bank zero within each aperture
+> and doesn't interfere.  Or another way to ask is can a malicious user
+> interfere with other users by using the wrong bank.  Thanks,
 
-Since max lat and min gnt are also in the same 32 bit word we return
-0 for them, which means 'do not care'.
+They can interfere.  With this hardware, the only way to prevent that is
+to make sure that a bank is not shared by multiple protection contexts.
+For some of our users, though, I believe preventing this is less
+important than the performance benefit.
 
-This corrects an error message from the kernel:
+-Scott
 
-pci 0000:00:01.0: of_irq_parse_pci() failed with rc=135
 
-Which is due to the default return of 0xFFFFFFFF indicating that
-interrupts are supported.
-
-The error message regression was caused by 16b84e5a505
-'of/irq: Create of_irq_parse_and_map_pci() to consolidate arch code.'
-So this patch should head toward 3.13
-
-Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
----
- drivers/pci/host/pci-mvebu.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-Thomas: This is needed for 3.13, can you Ack it so Bjorn can pick it up?
-Thanks
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 6f5a20f..327ee2f 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -447,6 +447,11 @@ static int mvebu_sw_pci_bridge_read(struct mvebu_pcie_port *port,
- 		*value = 0;
- 		break;
- 
-+	case PCI_INTERRUPT_LINE:
-+		/* LINE PIN MIN_GNT MAX_LAT */
-+		*value = 0;
-+		break;
-+
- 	default:
- 		*value = 0xffffffff;
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
--- 
-1.8.1.2
 
