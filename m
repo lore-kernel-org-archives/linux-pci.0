@@ -1,91 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19961 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751104Ab3KNHxf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Nov 2013 02:53:35 -0500
-Message-ID: <1384415609.30364.18.camel@yhuang-dev>
-Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM
- enabled for unbound PCI devices
-From: Huang Ying <ying.huang@intel.com>
-To: mike <qiudayu@linux.vnet.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-pm@vger.kernel.org, rjw@rjwysocki.net
-Date: Thu, 14 Nov 2013 15:53:29 +0800
-In-Reply-To: <5284799C.1010000@linux.vnet.ibm.com>
-References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org>
-	 <5284423D.4090907@linux.vnet.ibm.com> <1384408745.30364.8.camel@yhuang-dev>
-	 <5284799C.1010000@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ve0-f178.google.com ([209.85.128.178]:50196 "EHLO
+	mail-ve0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755349Ab3KUCBp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 21:01:45 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4ReYw5koMrwcuNQj7yfFXvDnuZGiRc70mekv6L40KjWw@mail.gmail.com>
+References: <1383749353-3510-1-git-send-email-ethan.kernel@gmail.com>
+	<CAErSpo5bYwgK618AOgvD=mgbfjcLLGE3CVw1SN3sP3PqRaCk5A@mail.gmail.com>
+	<CAErSpo4ReYw5koMrwcuNQj7yfFXvDnuZGiRc70mekv6L40KjWw@mail.gmail.com>
+Date: Thu, 21 Nov 2013 10:01:44 +0800
+Message-ID: <CABawtvNHbRKdCXcfa-fOcS-7kA1TqBey+h+8QFFUtfYWwVRW8w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Init NumVFs register to zero in sriov_init()
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yu Zhao <yu.zhao@intel.com>, Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
-> On 11/14/2013 01:59 PM, Huang Ying wrote:
-> > On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
-> >> On 11/14/2013 03:20 AM, Alan Stern wrote:
-> >>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
-> >>>
-> >>>> [+cc Rafael, linux-pm]
-> >>>>
-> >>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
-> >>>>> Hi Huang Ying,
-> >>>>>
-> >>>>> I see you are the author of this patch, commit id is:
-> >>>>> 967577b062417b4e4b8e27b711220f4124f5153a
-> >>>>>
-> >>>>> I have a question while I try to understand this patch,
-> >>>>> So I would very grateful if you or others can give me some reply.....
-> >>>>>
-> >>>>> ............
-> >>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
-> >>>>> +       pm_runtime_get_sync(dev);
-> >>>>> +       pci_dev->driver = pci_drv;
-> >>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >>>>> I see here you make the driver to initialize before probe,
-> >>>>> But I have no idea of why you do this change.....
-> >>>>>
-> >>>>> and I look inside the code, it may be pm_runtime relate??
-> >>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
-> >>> doesn't do anything unless pci_dev->driver is set.  You can see this at
-> >>> the start of pci_pm_runtime_suspend().
-> >>>
-> >>> Since we want the driver's probe routine to be able to carry out
-> >>> runtime PM operations, we have to set pci_dev->driver before the probe
-> >>> routine runs.
-> >> Is there any situations , like in  probe state,  pci_dev->driver
-> >> has been set. the  pci_pm_runtime_xxx() has passed
-> >> pci_dev->driver NULL check, but at this point, probe fail
-> >> occurs, and  pci_dev->driver to be set to NULL.
-> >>
-> >> What will happen ? Or this situation will never happen?
-> >> I'm confuse about this.
-> > I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
-> > is called, so pci_pm_runtime_xxx() will not be called until
-> > pm_runtime_put_noidle() is called in ->probe().  And
-> >   should be done as one of the latest actions in
-> > ->probe(), after the normal probe actions succeeded.
-> OK, just as your description, it seems OK.
-> But this is really a issue as I explained in last email.
-> 
-> So I want to know if there are any side-effect of changing the code
-> in pci_pm_runtime_xxx()
-> 
->   if (!pci_dev->driver)
->          return 0;
->   to
-> 
->   if (!dev->driver)
->          return 0;
-> 
+Bjorn,
+    I revised the description part with the original bug material as
+below, help to take a look, will send V2 back to home, SMTP blocked by
+company network.
 
-If you make this change, we can not put devices into low power state
-(runtime suspend the device) in ->probe().  That is expected in some
-circumstance.
+    PCI: Init NumVFs register to zero in sriov_init()
 
-Best Regards,
-Huang Ying
+    Though no specification about NumVFs register initial value after
+POST, to void the confusion
+    lspci output as following before VF was enabled, we should clear
+the NumVFs value left by BIOS
+    to zero:
+
+    #lspci -vvvxxx -s 13:00.0
+   13:00.0 Ethernet controller: Intel Corporation 82599EB 10-Gigabit SFI/SFP+
+    Network Connection (rev 01)  Subsystem: Oracle/SUN Ethernet Server
+Adapter X520-2
+    ~
+    Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
+            IOVCap: Migration-, Interrupt Message Number: 000
+            IOVCtl: Enable- Migration- Interrupt- MSE- ARIHierarchy+
+            IOVSta: Migration-
+            Initial VFs: 64, Total VFs: 64, Number of VFs: 64, Function
+            Dependency Link: 00
+                                                                     ^dazed !
+    140: 03 00 01 15 c4 24 c8 ff ff 21 1b 00 00 00 00 00
+    150: 0e 00 01 16 00 01 00 00 00 00 00 00 00 00 00 00
+    160: 10 00 01 00 00 00 00 00 10 00 00 00 40 00 40 00
+
+          ^        ^Total VFs
+
+          Initial VFs
+    170: 40 00 00 00 80 00 02 00 00 00 ed 10 53 05 00 00
+             ^Number of VFs
 
 
+Thanks,
+Ethan
+
+
+On Wed, Nov 20, 2013 at 8:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Nov 19, 2013 at 3:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc linux-pci]
+>>
+>> On Wed, Nov 6, 2013 at 7:49 AM, ethan.zhao <ethan.kernel@gmail.com> wrote:
+>>> Though no specification about NumVFs register initial value after POST, to void the confusion
+>>> lspci output as following before VF was enabled, we should clear the NumVFs value left by BIOS
+>>> to zero:
+>>>
+>>> $lspci -vvv -s 03:00.0
+>>> Ethernet controller: Intel Corporation 82599EB 10-Gigabit SFI/SFP+ Network Connection (rev 01)
+>>> ~
+>>> Capabilities: [160 v1] Single Root I/O Virtualization (SR-IOV)
+>>>                 IOVCap: Migration-, Interrupt Message Number: 000
+>>>                 IOVCtl: Enable+ Migration- Interrupt- MSE+ ARIHierarchy+
+>>>                 IOVSta: Migration-
+>>>                 Initial VFs: 64, Total VFs: 64, Number of VFs: 64, Function Dependency Link: 00
+>>>                                                               ^dazed !
+>
+> Did you mean to show lspci output from before SR-IOV was enabled?  It
+> looks like SR-IOV is enabled here, so I don't think your patch would
+> change this output at all.
+>
+> Bjorn
