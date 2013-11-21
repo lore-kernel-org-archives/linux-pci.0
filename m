@@ -1,72 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:65267 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756598Ab3KHRUs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Nov 2013 12:20:48 -0500
-Received: by mail-ie0-f180.google.com with SMTP id e14so3746147iej.11
-        for <linux-pci@vger.kernel.org>; Fri, 08 Nov 2013 09:20:47 -0800 (PST)
+Received: from mail-ve0-f179.google.com ([209.85.128.179]:59350 "EHLO
+	mail-ve0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430Ab3KUVml (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 16:42:41 -0500
+Received: by mail-ve0-f179.google.com with SMTP id jw12so293478veb.10
+        for <linux-pci@vger.kernel.org>; Thu, 21 Nov 2013 13:42:40 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
-References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Nov 2013 10:20:27 -0700
-Message-ID: <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+In-Reply-To: <CAE9FiQVY6si_3uG6ndbZVOWCY5o8RuXpSLimEo96FVtNC38Dgw@mail.gmail.com>
+References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+	<1384912317-3721-7-git-send-email-yinghai@kernel.org>
+	<20131121103021.GA29873@yanx>
+	<CAE9FiQXgvaqErd1oiHmt6G8GwbW92C490+0sYyLUMcMFMMNRAg@mail.gmail.com>
+	<CA+55aFyM5o39pmFtPOc1VVE5y_SYp1WXtz773cBp3fHrvnzOLQ@mail.gmail.com>
+	<CAE9FiQVY6si_3uG6ndbZVOWCY5o8RuXpSLimEo96FVtNC38Dgw@mail.gmail.com>
+Date: Thu, 21 Nov 2013 13:42:40 -0800
+Message-ID: <CA+55aFyDSK9fOwicxP3=44-R_tDLgBtm93wVFPrquizO3WJuSQ@mail.gmail.com>
+Subject: Re: [PATCH 6/6] PCI: Try to allocate mem64 above 4G at first
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 6, 2013 at 9:49 PM, wzyboy <wzyboy@wzyboy.org> wrote:
-> 2013/11/7 Bjorn Helgaas <bhelgaas@google.com>:
->> Do you have any more details?  Maybe open a bugzilla.kernel.org report
->> and attach:
->>
->>   - complete dmesg log
->>   - lspci -vvxxx output for entire system before issue occurs
->>   - lspci -vvxxx output for entire system after issue occurs
+On Thu, Nov 21, 2013 at 1:34 PM, Yinghai Lu <yinghai@kernel.org> wrote:
 >
->
-> Hi, I have filed a bug on bugzilla:
-> https://bugzilla.kernel.org/show_bug.cgi?id=64541
->
-> Actually I have posted some more logs before, you could find them on
-> the mailing lists archive:
-> http://thread.gmane.org/gmane.linux.kernel.wireless.general/115259
->
-> Here is the output of lspci -vxxxx just now. I'll run this command
-> again when the bug occurs next time:
+> Here are suggestion is:
+> assume mmio pref: will be use for 64bit pref only, and if the mmio pref
+> does not support 64bit, we just ignore it.
+> If devices under that bridge need pref, we will just use range from bridge's
+> nonpref mmio.
 
-Thanks.  But can you please attach the output of "lspci -vvxxx" (not
-"-vxxxx") for the entire system before the problem occurs?  All the
-info is in the "-xxxx" output, but it's really painful to decode it
-all by hand.  Using "-vv" will decode the PCIe Capability structures
-where the ASPM configuration is.  And the entire system is
-interesting, because ASPM requires configuration on upstream bridges
-as well as on the device itself.
+Since we always scan devices behind the bus, why don't we take that
+into account? If we find devices with 32-bit mmio, we try to make the
+prefetchable one be in the 32-bit range.
 
-My only guess is that there's something wrong with the ASPM
-configuration and the device just stops responding to config accesses
-(and probably MMIO accesses, too, based on the errors in your dmesg
-log).  Or maybe the device got powered off somehow.
+> In my test setups, it is always working.
+> --- only with Intel network devices and Mellanox Infiniband cards and storage
+> cards from Qlogic and Emulex.
 
-Bjorn
+Right. And remember how many times your testing did *not* show
+problems that others saw?
+
+"Works for me" doesn't work for PCI resource management.
+
+              Linus
