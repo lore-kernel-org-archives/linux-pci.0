@@ -1,33 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:39003 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753290Ab3K0TZZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 14:25:25 -0500
-Date: Wed, 27 Nov 2013 19:24:20 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: bhelgaas@google.com, cl91tp@gmail.com, tianyu.lan@intel.com,
-	khlebnikov@openvz.org, gnomes@lxorguk.ukuu.org.uk,
-	indou.takao@jp.fujitsu.com, jility09@gmail.com, f.otti@gmx.at,
-	ebiederm@xmission.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kexec@lists.infradead.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Clear Bus Master bit only on kexec reboot
-Message-ID: <20131127192420.GC11829@srcf.ucam.org>
-References: <1385579908-24608-1-git-send-email-khalid.aziz@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4817 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755795Ab3KVSct (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Nov 2013 13:32:49 -0500
+Date: Fri, 22 Nov 2013 19:34:40 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC v2 08/29] PCI/MSI: Make pci_enable_msix() 'nvec'
+ argument unsigned int
+Message-ID: <20131122183439.GE8401@dhcp-26-207.brq.redhat.com>
+References: <cover.1382103786.git.agordeev@redhat.com>
+ <93e145deeb238ad805196762cae696d3ae67f812.1382103786.git.agordeev@redhat.com>
+ <20131120161412.GH28946@htj.dyndns.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1385579908-24608-1-git-send-email-khalid.aziz@oracle.com>
+In-Reply-To: <20131120161412.GH28946@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 27, 2013 at 12:18:28PM -0700, Khalid Aziz wrote:
+On Wed, Nov 20, 2013 at 11:14:12AM -0500, Tejun Heo wrote:
+> I'm personally not a big fan of using unsigneds where they're just
+> used as numbers unless strictly necessary.  They don't really provide
+> any meaningful protection and we often end up in situations where we
+> want to encode error conditions in the same type variable as return
+> value or whatever and end up with silly situations like functions
+> which take unsigned and returns integer or having a separate err
+> variable when the high bit of the orignal variable would have worked
+> just fine.  Also, people have different thresholds for what should be
+> unsigned and we end up with half things unsigned and the other signed.
 
-> +/* flag to track if kexec reboot is in progress */
-> +extern unsigned long kexec_in_progress;
+That sounds convincing. Given that arch hooks do use signed int's 
+there is one more reason to convert to signed.
 
-Adding this to pci.h seems a little odd. We may want to use it somewhere 
-else at some point. Add it to kexec.h instead?
+> I'll defer the decision to Bjorn but I'd vote for converting things to
+> int.
+
+I will re-post with int's in next version unless Bjorn (someone) speaks
+up against.
+
+> Thanks.
+> 
+> -- 
+> tejun
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
