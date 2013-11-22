@@ -1,111 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:54126 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755285Ab3KNTdc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 14:33:32 -0500
-Received: by mail-ie0-f177.google.com with SMTP id qd12so3219046ieb.8
-        for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2013 11:33:32 -0800 (PST)
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:60086 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975Ab3KVITd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2013 03:19:33 -0500
+Received: by mail-qa0-f49.google.com with SMTP id ii20so3489552qab.15
+        for <linux-pci@vger.kernel.org>; Fri, 22 Nov 2013 00:19:32 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5DD_H8_auWZ9QAVPLk85=Zcviv3RjeEWmHQkHPnFPCzA@mail.gmail.com>
-References: <20131029214631.GA19354@kroah.com> <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
- <20131102155054.GD23938@kroah.com> <CAErSpo5DD_H8_auWZ9QAVPLk85=Zcviv3RjeEWmHQkHPnFPCzA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 14 Nov 2013 12:33:11 -0700
-Message-ID: <CAErSpo6Q3LvDN0QkOf4HnsDZf7neNgSE2nz2Z191Ajp62OLVrQ@mail.gmail.com>
-Subject: Re: [RFC PATCH] PCI: export MSI mode using attributes, not kobjects
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Neil Horman <nhorman@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <Pine.LNX.4.44L0.1311211046160.1301-100000@iolanthe.rowland.org>
+References: <CAPDyKFrJ34oWhPosqqfh-cCpoQnAY9Q90wP7nn60RAh87ZCPAw@mail.gmail.com>
+	<Pine.LNX.4.44L0.1311211046160.1301-100000@iolanthe.rowland.org>
+Date: Fri, 22 Nov 2013 09:19:32 +0100
+Message-ID: <CAPDyKFo9vzCVtMFzZaCjkGosPve72=RbWtLXaSzzX8Wq2O5ptA@mail.gmail.com>
+Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
+ system suspend
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Kevin Hilman <khilman@linaro.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 5, 2013 at 11:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Nov 2, 2013 at 9:50 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
->> On Fri, Nov 01, 2013 at 05:40:02PM -0600, Bjorn Helgaas wrote:
->>> On Tue, Oct 29, 2013 at 3:46 PM, Greg Kroah-Hartman
->>> <gregkh@linuxfoundation.org> wrote:
->>> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>> >
->>> > The PCI MSI sysfs code is a mess with kobjects for things that don't
->>> > really need to be kobjects.  This patch creates attributes dynamically
->>> > for the MSI interrupts instead of using kobjects.
->>> >
->>> > Note, this does not delete the existing sysfs MSI code, but puts the
->>> > attributes under a "msi_irqs_2" directory for testing / example.
->>> >
->>> > Also note, this removes a directory from the current MSI interrupt sysfs
->>> > code:
->>> >
->>> > old MSI kobjects:
->>> > pci_device
->>> >    └── msi_irqs
->>> >        └── 40
->>> >            └── mode
->>> >
->>> > new MSI attributes:
->>> > pci_device
->>> >    └── msi_irqs_2
->>> >        └── 40
->>> >
->>> > As there was only one file "mode" with the kobject model, the interrupt
->>> > number is now a file that returns the "mode" of the interrupt (msi vs.
->>> > msix).
->>> >
->>> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>> > ---
->>> >
->>> > Bjorn, I can make up a patch that rips out the existing kobject code
->>> > here, but I figured this patch would make things easier to follow
->>> > instead of having to dig through the removed logic at the same time.
->>> >
->>> > I'll clean up the error handling path for the create attribute logic as
->>> > well, this was just a proof of concept that this could be done.
->>> >
->>> > Do you think that anyone cares about the current mode files in sysfs to
->>> > move things in this manner?
->>>
->>> I like this a lot better than trying to fix all the holes in the
->>> current kobject code.
->>
->> Great.
->>
->>> I have no idea who, if anybody, cares about the "mode" files.  I
->>> assume there's a way to create the "mode" files with attributes, too?
->>> If so, we could replicate the existing structure with one patch, and
->>> simplify it with a second patch, so it would be easier to revert the
->>> directory change while keeping the fix.
->>
->> No, we can't create a 2-level deep attribute at the moment, only one
->> level, like the patch does.
->>
->> Based on Neil's comments, I think we should be fine with this as-is as
->> no one is messing with these files directly (which implies that we could
->> possibly just remove them entirely to save us the overall pain...)
+On 21 November 2013 16:54, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Thu, 21 Nov 2013, Ulf Hansson wrote:
 >
-> Hmmm.  https://bugzilla.redhat.com/show_bug.cgi?id=744012 suggests
-> that irqbalance might be reading these files.
+>> >> As Rafael mentioned, there is bus/pm_domain code that comes into play
+>> >> here, so I'm not sure it's always a bug.
+>> >>
+>> >> IMO, it's not a bug for the driver to depend on runtime PM if the
+>> >> bus/pm_domain is handling the details.
+>> >>
+>> >> On OMAP, we handle all the SoC on-chip devices with a pm_domain since
+>> >> the low-level PM operations that need to happen are bus-level things not
+>> >> device-level things.  Therefore, drivers for these devices can rely
+>> >> entirely on runtime PM, even for system suspend.  The late/early
+>> >> callbacks in the pm_domain can see if the device is runtime suspended
+>> >> already or not and behave accordingly.
+>> >>
+>> >> So, this all *can* work by handling it at the bus/pm_domain level, but
+>> >> as Ulf has mentioned (and I agree) it seems like a clunky workaround
+>> >> because the PM core is preventing it from happening as one might expect.
+>> >
+>> > The problem is that userspace can disable runtime PM at any time by
+>> > writing "on" to /sys/.../power/control.  Once that's done, you can't
+>> > depend on runtime PM to put the device into a low-power state during
+>> > system suspend.
+>> >
+>> > Now, if the bus-level code always takes care of putting the device into
+>> > low power during system suspend, then the driver doesn't have to worry
+>> > about it at all.  That's perfectly fine -- but I would hardly describe
+>> > the situation by saying the driver relies on runtime PM for system
+>> > suspend.
+>>
+>> But they are, since that is exactly what these driver depends on
+>> during system suspend.
+>
+> Not at all.  These drivers rely on the bus-level code's suspend
+> routine to handle system suspend.  They don't rely on runtime PM.
+>
+>>  And since the power domain invokes the runtime
+>> callbacks, normally CONFIG_PM_RUNTIME is needed for the callbacks to
+>> be set up from in the bus/driver.
+>
+> No, it isn't.  You can always write callbacks that get compiled even
+> when CONFIG_PM_RUNTIME isn't enabled.  It's very easy -- all you have
+> to do is change
+>
+>         #ifdef CONFIG_PM_RUNTIME
+>
+> to
+>
+>         #ifdef CONFIG_PM
 
-I looked at the current irqbalance on github [1], and I *think* it
-never reads the "mode" files.  It reads the entries in the "msi_irqs"
-directory, which you're proposing to change from directories to files,
-but I think it only uses the names.
+You nailed it here! Since you consider this to be allowed from
+dependency point of view, all my problems described would be
+"solvable". :-)
 
-It looks like it should be safe at least for irqbalance to make this a
-one-level attribute.  It's possible we'll break somebody's scripts,
-but I'm willing to try making this change because it really makes the
-refcounting much simpler.
+Regarding the SET_RUNTIME_PM_OPS macro, which today relies on
+CONFIG_PM_RUNTIME should then be moved to CONFIG_PM instead. As
+prerequisites, drivers using this macro, obviously need to implement
+the runtime PM callbacks within CONFIG_PM as well. If that makes sense
+to you as well, I will start working on converting them that needs.
 
-Bjorn
+>
+>> I suppose that the OMAP SoC maintainers were accepting that this
+>> dependency were allowed to exist, since that was the only solution to
+>> their problem at that point.
+>>
+>> Today, several years later, we are still indirectly pushing those SoC
+>> maintainers that faces similar issues, to accept this dependency
+>> between system suspend and runtime suspend. I see a conflict here. :-)
+>
+> It's only a misunderstanding.  There is no dependency.
+>
+>
+>> I started drafting a new RFC according to your suggestion. Soon I
+>> realized that using such a callback for .suspend_late will make
+>> drivers/buses system suspend to depend on runtime suspend, (which my
+>> RFC also has problem with). So I guess this is not a recommended set
+>> up from the PM maintainers. Wandering in circles... :-)
+>
+> Same misunderstanding as before.  The drivers merely need to be written
+> so that the callbacks are compiled whenever CONFIG_PM is enabled rather
+> than CONFIG_PM_RUNTIME.
 
-[1] https://github.com/Irqbalance/irqbalance/blob/master/classify.c#L357
+I will submit a patch for a "generic suspend late" asap.
+
+I noticed the pm_generic_suspend_late already existed in similar form
+as the other generic functions, so I suggest we leave that as is. We
+name this new one as, "pm_generic_suspend_late_runtime", to indicate
+some relationship with runtime PM.
+
+If you have other suggestions, please advise me.
+
+Kind regards
+Ulf Hansson
+
+>
+> Alan Stern
+>
