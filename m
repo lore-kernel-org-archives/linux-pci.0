@@ -1,133 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:63297 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752003Ab3KZUTy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:19:54 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Cc: Huang Ying <ying.huang@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-pm@vger.kernel.org
-Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM enabled for unbound PCI devices
-Date: Tue, 26 Nov 2013 21:32:42 +0100
-Message-ID: <2309058.t3ZWy0Bt5x@vostro.rjw.lan>
-In-Reply-To: <52943479.9050004@linux.vnet.ibm.com>
-References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org> <1384419260.30364.27.camel@yhuang-dev> <52943479.9050004@linux.vnet.ibm.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:62734 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753034Ab3KWTdR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 23 Nov 2013 14:33:17 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so4501448iec.9
+        for <linux-pci@vger.kernel.org>; Sat, 23 Nov 2013 11:33:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <a3dc3d613f274e4d993d6a7612f1dde6@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <52797238.8070304@gmail.com> <20131106002505.GC3359@google.com>
+ <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
+ <CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
+ <20131108012352.GE2955@google.com> <CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
+ <CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
+ <CADTPrLRJD0er1kijjm2SEE6wUA9eQaz+OOd67E3MpHLu6k-R6Q@mail.gmail.com>
+ <20131123005102.GA14690@google.com> <a3dc3d613f274e4d993d6a7612f1dde6@BLUPR05MB118.namprd05.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 23 Nov 2013 12:32:55 -0700
+Message-ID: <CAErSpo7J8UZpYSaAPavJrR8iOt368expOuF-s_M7x+jW7drnWw@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Tom Nguyen <tom.l.nguyen@intel.com>,
+	Kristen Accardi <kristen.c.accardi@intel.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 26, 2013 01:41:13 PM Mike Qiu wrote:
-> On 11/14/2013 04:54 PM, Huang Ying wrote:
-> > On Thu, 2013-11-14 at 16:37 +0800, mike wrote:
-> >> On 11/14/2013 04:25 PM, Huang Ying wrote:
-> >>> On Thu, 2013-11-14 at 16:12 +0800, mike wrote:
-> >>>> On 11/14/2013 03:53 PM, Huang Ying wrote:
-> >>>>> On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
-> >>>>>> On 11/14/2013 01:59 PM, Huang Ying wrote:
-> >>>>>>> On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
-> >>>>>>>> On 11/14/2013 03:20 AM, Alan Stern wrote:
-> >>>>>>>>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
-> >>>>>>>>>
-> >>>>>>>>>> [+cc Rafael, linux-pm]
-> >>>>>>>>>>
-> >>>>>>>>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
-> >>>>>>>>>>> Hi Huang Ying,
-> >>>>>>>>>>>
-> >>>>>>>>>>> I see you are the author of this patch, commit id is:
-> >>>>>>>>>>> 967577b062417b4e4b8e27b711220f4124f5153a
-> >>>>>>>>>>>
-> >>>>>>>>>>> I have a question while I try to understand this patch,
-> >>>>>>>>>>> So I would very grateful if you or others can give me some reply.....
-> >>>>>>>>>>>
-> >>>>>>>>>>> ............
-> >>>>>>>>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
-> >>>>>>>>>>> +       pm_runtime_get_sync(dev);
-> >>>>>>>>>>> +       pci_dev->driver = pci_drv;
-> >>>>>>>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >>>>>>>>>>> I see here you make the driver to initialize before probe,
-> >>>>>>>>>>> But I have no idea of why you do this change.....
-> >>>>>>>>>>>
-> >>>>>>>>>>> and I look inside the code, it may be pm_runtime relate??
-> >>>>>>>>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
-> >>>>>>>>> doesn't do anything unless pci_dev->driver is set.  You can see this at
-> >>>>>>>>> the start of pci_pm_runtime_suspend().
-> >>>>>>>>>
-> >>>>>>>>> Since we want the driver's probe routine to be able to carry out
-> >>>>>>>>> runtime PM operations, we have to set pci_dev->driver before the probe
-> >>>>>>>>> routine runs.
-> >>>>>>>> Is there any situations , like in  probe state,  pci_dev->driver
-> >>>>>>>> has been set. the  pci_pm_runtime_xxx() has passed
-> >>>>>>>> pci_dev->driver NULL check, but at this point, probe fail
-> >>>>>>>> occurs, and  pci_dev->driver to be set to NULL.
-> >>>>>>>>
-> >>>>>>>> What will happen ? Or this situation will never happen?
-> >>>>>>>> I'm confuse about this.
-> >>>>>>> I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
-> >>>>>>> is called, so pci_pm_runtime_xxx() will not be called until
-> >>>>>>> pm_runtime_put_noidle() is called in ->probe().  And
-> >>>>>>>      should be done as one of the latest actions in
-> >>>>>>> ->probe(), after the normal probe actions succeeded.
-> >>>>>> OK, just as your description, it seems OK.
-> >>>>>> But this is really a issue as I explained in last email.
-> >>>>>>
-> >>>>>> So I want to know if there are any side-effect of changing the code
-> >>>>>> in pci_pm_runtime_xxx()
-> >>>>>>
-> >>>>>>      if (!pci_dev->driver)
-> >>>>>>             return 0;
-> >>>>>>      to
-> >>>>>>
-> >>>>>>      if (!dev->driver)
-> >>>>>>             return 0;
-> >>>>>>
-> >>>>> If you make this change, we can not put devices into low power state
-> >>>>> (runtime suspend the device) in ->probe().  That is expected in some
-> >>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >>>> This means dev->driver is NULL ?? but pci_dev->driver is set???
-> >>>>
-> >>>> Because if use pci_dev->driver can put into low power state, means
-> >>>>
-> >>>> pci_dev->driver is set, but in the situation, use dev->driver will can't,
-> >>>>
-> >>>> means dev->driver = null, but I have not find any case that
-> >>>>
-> >>>> dev->driver = null, but pci_dev->driver != null;
-> >>> Sorry I make a mistake here.  The dev->driver != null in
-> >>> local_pci_probe().  We use pci_dev->driver instead of dev->driver in
-> >>> pci_pm_runtime_xxx() because we want device to be kept in normal power
-> >>> state (D0) and SUSPENDED state when unbound.The
-> >>> pm_runtime_put/get_sync in pci_device_remove/local_pci_probe will not
-> >>> change the power state of the device because of the check in
-> >>> pci_pm_runtime_xxx().
-> >> Yes, you are right, but what am I confuse is that, why check dev->driver
-> >> in pci_pm_runtime_xxx() can't keep the device in normal power
-> >> state (D0) and SUSPENDED state when unbound.
-> >>
-> >> May be logic issue ?
-> > Because dev->driver is set before local_pci_probe() and cleared after
-> > pci_device_remove().  But we need a flag to be changed in
-> > local_pci_probe() and pci_device_remove().
-> Hi Ying,
-> 
-> I'm now face one bug, and the root cause is this logic has some problem.
-> 
-> The other component calls the ops in driver during probe state, which a 
-> lot of critical data struct haven't been setup yet.
-> 
-> This never happen in old logic, because dev->driver is unset in probe 
-> state, it can check dev->driver to see if the device diver can work. But 
-> for new logic it is really a big issue.
+On Sat, Nov 23, 2013 at 7:56 AM, Rajat Jain <rajatjain@juniper.net> wrote:
+> Hello Bjorn,
+>
+>> >
+>> > https://bugzilla.kernel.org/show_bug.cgi?id=64821
+>> >
+>> > Please let me know if you need any help in trying something out - I'd
+>> > be more than keen to help - write code or test.
+>>
+>> What do you think of the patch below?  I'm afraid we'll trip over a few
+>> other old parts similar to the 82801H, but I'd rather do that than
+>> penalize the parts that work correctly.
+>
+> Tested and works fine. Looks good (on a side note, we are introducing device specific check in a common code, but I do not think there is any other cleaner way). I think this patch should be applied as it solves the problem of slow probing.
 
-What is the other component and why is it doing that?
+Thanks for testing.  I don't like the device-specific code either, but
+it does seem like a device-specific defect, and I didn't have any
+better ideas.
 
-Checking dev->driver may not be a correct way to address this issue anyway.
+> On a different note, I feel there is still a need to apply my original patch. There is still an open problem in case of spurious interrupts (or in any case where the condition "if (slot_status & PCI_EXP_SLTSTA_CC)" becomes true in pcie_write_cmd()). That is because once that happens, we never clear that interrupt, and no further hotplug interrupts shall be received unless we do that.
 
-Thanks!
+I agree this is an issue and we should address it somehow.  My
+hesitation is just that I'd prefer to do some more aggressive
+restructuring rather than apply a point fix.  For example:
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+- We currently look at PCI_EXP_SLTSTA_CC in pcie_isr(),
+pcie_poll_cmd(), and pcie_write_cmd().  I think it would be better to
+look at it only in pcie_isr().
+
+- I don't think pcie_poll_cmd() should exist at all; we should poll by
+calling pcie_isr() instead.
+
+- We need pcie_write_cmd(), but I think the way it waits is backwards.
+ Currently we issue the command, then wait for it to complete.  I
+think we should issue the command, note the current time, and return
+without waiting.  The *next* time we need to issue a command, we can
+wait for completion of the previous one (or timeout) if necessary.
+
+But maybe we need the point fix in the interim, especially if anybody
+can actually produce the scenario you mention.
+
+Bjorn
