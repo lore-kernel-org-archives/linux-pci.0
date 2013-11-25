@@ -1,91 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:43861 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756346Ab3KNQk5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 11:40:57 -0500
-Received: by mail-qa0-f51.google.com with SMTP id i13so310984qae.17
-        for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2013 08:40:55 -0800 (PST)
+Received: from am1ehsobe001.messaging.microsoft.com ([213.199.154.204]:43769
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753226Ab3KYFdX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 00:33:23 -0500
+From: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Scott Wood <scottwood@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Mon, 25 Nov 2013 05:33:16 +0000
+Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+ <1385067648.2879.421.camel@ul30vt.home>
+In-Reply-To: <1385067648.2879.421.camel@ul30vt.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1311141055470.1439-100000@iolanthe.rowland.org>
-References: <CAPDyKFocx3L5d5_6TCx5fDy9RgD0MmmWEG0pL=77Hk7bA5EZfA@mail.gmail.com>
-	<Pine.LNX.4.44L0.1311141055470.1439-100000@iolanthe.rowland.org>
-Date: Thu, 14 Nov 2013 17:40:55 +0100
-Message-ID: <CAPDyKFqYOnfWKH7BFRem5T5yGmJrOWBTDhZwoExuemMf0HQ7Ag@mail.gmail.com>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
- system suspend
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14 November 2013 16:59, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Thu, 14 Nov 2013, Ulf Hansson wrote:
->
->> > The reason for doing things the way they are is to avoid races between
->> > system PM callbacks and runtime PM callbacks.  We don't want to have a
->> > runtime_resume routine powering up a device at the same time as a
->> > suspend routine is powering it down.
->>
->> I believe I understand why the PM core prevent this. Some subsystems
->> and drivers depends on this behaviour, but I wonder if we should
->> consider this as common cases or more like special cases?
->>
->> For those drivers that potentially could rely on runtime PM (and it's
->> callbacks) to inactivate the device during system suspend, and thus
->> don't have issues with races you describe above, the current behaviour
->> in the PM core adds unnecessary complexity for these drivers to handle
->> system suspend.
->
-> What unnecessary complexity?
->
-> Bear in mind that drivers _cannot_ rely on runtime PM to inactivate a
-> device during system suspend.  The user can always prevent a device
-> from going into runtime suspend by writing "on" to the
-> /sys/.../power/control file.
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
+IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IEZyaWRheSwgTm92
+ZW1iZXIgMjIsIDIwMTMgMjozMSBBTQ0KPiBUbzogV29vZCBTY290dC1CMDc0MjENCj4gQ2M6IEJo
+dXNoYW4gQmhhcmF0LVI2NTc3NzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgYWdyYWZAc3Vz
+ZS5kZTsgWW9kZXINCj4gU3R1YXJ0LUIwODI0ODsgaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlv
+bi5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IGxpbnV4cHBjLQ0KPiBkZXZAbGlzdHMub3psYWJz
+Lm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
+IDAvOSB2Ml0gdmZpby1wY2k6IGFkZCBzdXBwb3J0IGZvciBGcmVlc2NhbGUgSU9NTVUgKFBBTVUp
+DQo+IA0KPiBPbiBUaHUsIDIwMTMtMTEtMjEgYXQgMTQ6NDcgLTA2MDAsIFNjb3R0IFdvb2Qgd3Jv
+dGU6DQo+ID4gT24gVGh1LCAyMDEzLTExLTIxIGF0IDEzOjQzIC0wNzAwLCBBbGV4IFdpbGxpYW1z
+b24gd3JvdGU6DQo+ID4gPiBPbiBUaHUsIDIwMTMtMTEtMjEgYXQgMTE6MjAgKzAwMDAsIEJoYXJh
+dCBCaHVzaGFuIHdyb3RlOg0KPiA+ID4gPg0KPiA+ID4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2Fn
+ZS0tLS0tDQo+ID4gPiA+ID4gRnJvbTogQWxleCBXaWxsaWFtc29uIFttYWlsdG86YWxleC53aWxs
+aWFtc29uQHJlZGhhdC5jb21dDQo+ID4gPiA+ID4gU2VudDogVGh1cnNkYXksIE5vdmVtYmVyIDIx
+LCAyMDEzIDEyOjE3IEFNDQo+ID4gPiA+ID4gVG86IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiA+
+ID4gPiA+IENjOiBqb3JvQDhieXRlcy5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IGFncmFmQHN1
+c2UuZGU7IFdvb2QNCj4gPiA+ID4gPiBTY290dC1CMDc0MjE7IFlvZGVyIFN0dWFydC1CMDgyNDg7
+DQo+ID4gPiA+ID4gaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmc7IGxpbnV4LSBwY2lA
+dmdlci5rZXJuZWwub3JnOw0KPiA+ID4gPiA+IGxpbnV4cHBjLWRldkBsaXN0cy5vemxhYnMub3Jn
+OyBsaW51eC0ga2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+ID4gPiBCaHVzaGFuIEJoYXJh
+dC1SNjU3NzcNCj4gPiA+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIDAvOSB2Ml0gdmZpby1wY2k6
+IGFkZCBzdXBwb3J0IGZvciBGcmVlc2NhbGUNCj4gPiA+ID4gPiBJT01NVSAoUEFNVSkNCj4gPiA+
+ID4gPg0KPiA+ID4gPiA+IElzIFZGSU9fSU9NTVVfUEFNVV9HRVRfTVNJX0JBTktfQ09VTlQgcGVy
+IGFwZXJ0dXJlIChpZS4gZWFjaA0KPiA+ID4gPiA+IHZmaW8gdXNlciBoYXMgJENPVU5UIHJlZ2lv
+bnMgYXQgdGhlaXIgZGlzcG9zYWwgZXhjbHVzaXZlbHkpPw0KPiA+ID4gPg0KPiA+ID4gPiBOdW1i
+ZXIgb2YgbXNpLWJhbmsgY291bnQgaXMgc3lzdGVtIHdpZGUgYW5kIG5vdCBwZXIgYXBlcnR1cmUs
+IEJ1dCB3aWxsIGJlDQo+IHNldHRpbmcgd2luZG93cyBmb3IgYmFua3MgaW4gdGhlIGRldmljZSBh
+cGVydHVyZS4NCj4gPiA+ID4gU28gc2F5IGlmIHdlIGFyZSBkaXJlY3QgYXNzaWduaW5nIDIgcGNp
+IGRldmljZSAoYm90aCBoYXZlIGRpZmZlcmVudCBpb21tdQ0KPiBncm91cCwgc28gMiBhcGVydHVy
+ZSBpbiBpb21tdSkgdG8gVk0uDQo+ID4gPiA+IE5vdyBxZW11IGNhbiBtYWtlIG9ubHkgb25lIGNh
+bGwgdG8ga25vdyBob3cgbWFueSBtc2ktYmFua3MgYXJlIHRoZXJlIGJ1dA0KPiBpdCBtdXN0IHNl
+dCBzdWItd2luZG93cyBmb3IgYWxsIGJhbmtzIGZvciBib3RoIHBjaSBkZXZpY2UgaW4gaXRzIHJl
+c3BlY3RpdmUNCj4gYXBlcnR1cmUuDQo+ID4gPg0KPiA+ID4gSSdtIHN0aWxsIGNvbmZ1c2VkLiAg
+V2hhdCBJIHdhbnQgdG8gbWFrZSBzdXJlIG9mIGlzIHRoYXQgdGhlIGJhbmtzDQo+ID4gPiBhcmUg
+aW5kZXBlbmRlbnQgcGVyIGFwZXJ0dXJlLiAgRm9yIGluc3RhbmNlLCBpZiB3ZSBoYXZlIHR3byBz
+ZXBhcmF0ZQ0KPiA+ID4gdXNlcnNwYWNlIHByb2Nlc3NlcyBvcGVyYXRpbmcgaW5kZXBlbmRlbnRs
+eSBhbmQgdGhleSBib3RoIGNob3NlIHRvDQo+ID4gPiB1c2UgbXNpIGJhbmsgemVybyBmb3IgdGhl
+aXIgZGV2aWNlLCB0aGF0J3MgYmFuayB6ZXJvIHdpdGhpbiBlYWNoDQo+ID4gPiBhcGVydHVyZSBh
+bmQgZG9lc24ndCBpbnRlcmZlcmUuICBPciBhbm90aGVyIHdheSB0byBhc2sgaXMgY2FuIGENCj4g
+PiA+IG1hbGljaW91cyB1c2VyIGludGVyZmVyZSB3aXRoIG90aGVyIHVzZXJzIGJ5IHVzaW5nIHRo
+ZSB3cm9uZyBiYW5rLg0KPiA+ID4gVGhhbmtzLA0KPiA+DQo+ID4gVGhleSBjYW4gaW50ZXJmZXJl
+Lg0KDQpXYW50IHRvIGJlIHN1cmUgb2YgaG93IHRoZXkgY2FuIGludGVyZmVyZT8NCg0KPj4gIFdp
+dGggdGhpcyBoYXJkd2FyZSwgdGhlIG9ubHkgd2F5IHRvIHByZXZlbnQgdGhhdA0KPiA+IGlzIHRv
+IG1ha2Ugc3VyZSB0aGF0IGEgYmFuayBpcyBub3Qgc2hhcmVkIGJ5IG11bHRpcGxlIHByb3RlY3Rp
+b24gY29udGV4dHMuDQo+ID4gRm9yIHNvbWUgb2Ygb3VyIHVzZXJzLCB0aG91Z2gsIEkgYmVsaWV2
+ZSBwcmV2ZW50aW5nIHRoaXMgaXMgbGVzcw0KPiA+IGltcG9ydGFudCB0aGFuIHRoZSBwZXJmb3Jt
+YW5jZSBiZW5lZml0Lg0KDQpTbyBzaG91bGQgd2UgbGV0IHRoaXMgcGF0Y2ggc2VyaWVzIGluIHdp
+dGhvdXQgcHJvdGVjdGlvbj8NCg0KPiANCj4gSSB0aGluayB3ZSBuZWVkIHNvbWUgc29ydCBvZiBv
+d25lcnNoaXAgbW9kZWwgYXJvdW5kIHRoZSBtc2kgYmFua3MgdGhlbi4NCj4gT3RoZXJ3aXNlIHRo
+ZXJlJ3Mgbm90aGluZyBwcmV2ZW50aW5nIGFub3RoZXIgdXNlcnNwYWNlIGZyb20gYXR0ZW1wdGlu
+ZyBhbiBNU0kNCj4gYmFzZWQgYXR0YWNrIG9uIG90aGVyIHVzZXJzLCBvciBwZXJoYXBzIGV2ZW4g
+b24gdGhlIGhvc3QuICBWRklPIGNhbid0IGFsbG93DQo+IHRoYXQuICBUaGFua3MsDQoNCldlIGhh
+dmUgdmVyeSBmZXcgKDMgTVNJIGJhbmsgb24gbW9zdCBvZiBjaGlwcyksIHNvIHdlIGNhbiBub3Qg
+YXNzaWduIG9uZSB0byBlYWNoIHVzZXJzcGFjZS4gV2hhdCB3ZSBjYW4gZG8gaXMgaG9zdCBhbmQg
+dXNlcnNwYWNlIGRvZXMgbm90IHNoYXJlIGEgTVNJIGJhbmsgd2hpbGUgdXNlcnNwYWNlIHdpbGwg
+c2hhcmUgYSBNU0kgYmFuay4NCg0KDQpUaGFua3MNCi1CaGFyYXQNCg0KPiANCj4gQWxleA0KPiAN
+Cg0K
 
-Good that you brought this up. From my point of view I think the sysfs
-for runtime PM could be debated whether it should exist at all, at
-least in it's current form.
-
-Anyway, if userspace decides to prevent runtime_suspend, I guess it
-will have take the consequences for it as well. :-)
-
->
->> Drivers/buses/power_domains that handles runtime PM enabled devices,
->> will, as you also have pointed out earlier, need to implement the
->> .suspend callback (suspend_late or suspend_noirq might work as well)
->> and the corresponding .resume callback. This just for the sake of
->> making sure all their runtime enabled devices gets fully inactivated
->> during system suspend.
->>
->> I wonder if we somehow should move the responsibility of preventing
->> "runtime suspend" as a part of the system suspend, down to the driver
->> to decide instead of the PM core?
->
-> No, I don't think so.  It would mean that every driver's suspend
-> routine would have to do a pm_runtime_get of some sort.  It's better to
-> just leave the single runtime_get call in the PM core.
-
-In the end I suppose what case that is most common should win. :-) At
-the same time, we should go slowly forward and it is probably not
-realistic to convert each and every driver in one go.
-
-So as a way forward, I am thinking of a similar approach as you
-suggested with the "generic" suspend_late. But instead add a new
-runtime PM API, which intent is to let drivers to specify for PM core,
-if it should care to prevent the runtime suspend from happen during
-system system - or not. Could that work?
-
-Kind regards
-Ulf Hansson
-
->
-> Alan Stern
->
