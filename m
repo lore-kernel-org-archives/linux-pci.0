@@ -1,43 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/3] ACPI / hotplug: Fix acpi_bus_get_device() return value check
-Date: Thu, 14 Nov 2013 00:15:19 +0100
-Message-ID: <1785834.mvVFipiyRh@vostro.rjw.lan>
-In-Reply-To: <2434673.zhjYZOTQ4A@vostro.rjw.lan>
-References: <2434673.zhjYZOTQ4A@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:43372 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752049Ab3KYIM3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 03:12:29 -0500
+Date: Mon, 25 Nov 2013 09:12:18 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: mvebu - The bridge should obey the MEM and IO
+ command bits
+Message-ID: <20131125091218.48bad3be@skate>
+In-Reply-To: <20131125055222.GA28064@obsidianresearch.com>
+References: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
+	<20131124025808.GQ29241@titan.lakedaemon.net>
+	<20131125055222.GA28064@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Dear Jason Gunthorpe,
 
-Since acpi_bus_get_device() returns plain int and not acpi_status,
-ACPI_FAILURE() should not be used for checking its return value.  Fix
-that.
+On Sun, 24 Nov 2013 22:52:22 -0700, Jason Gunthorpe wrote:
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> > I'd like to get back on track with these small patches being Acked by
+> > mvebu maintainers and then going through Bjorn.  Could you please resend
+> > an updated patchset for this and 2/2?
+> 
+> I recall these two patches are waiting for Thomas to give his Ok. His
+> testing found problems with the prior versions that I cannot detect on
+> my hardware..
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -411,8 +411,7 @@ static void acpi_hotplug_notify_cb(acpi_
- 		break;
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
--		status = acpi_bus_get_device(handle, &adev);
--		if (ACPI_FAILURE(status))
-+		if (acpi_bus_get_device(handle, &adev))
- 			goto err_out;
- 
- 		get_device(&adev->dev);
+Correct. Sorry for the delay, I'll try to test them today. Thanks for
+the reminder!
 
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
