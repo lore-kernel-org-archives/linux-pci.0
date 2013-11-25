@@ -1,89 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59061 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab3KBCKR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 22:10:17 -0400
-Date: Fri, 1 Nov 2013 22:09:45 -0400
-From: Neil Horman <nhorman@tuxdriver.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH] PCI: export MSI mode using attributes, not kobjects
-Message-ID: <20131102020945.GB16290@hmsreliant.think-freely.org>
-References: <20131029214631.GA19354@kroah.com>
- <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:49106 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904Ab3KYWTE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 17:19:04 -0500
+Received: by mail-ie0-f172.google.com with SMTP id qd12so7928624ieb.31
+        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 14:19:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
+In-Reply-To: <5281E97D.6090806@suse.cz>
+References: <1384177236-8371-1-git-send-email-mmarek@suse.cz> <5281E97D.6090806@suse.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 25 Nov 2013 15:18:42 -0700
+Message-ID: <CAErSpo6sCvDuSA3Bw0LY7D6QYC=xhPP05f966kjDP0mvqu5wEg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: Do not use PCI ID macros in quirk names
+To: Michal Marek <mmarek@suse.cz>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-kbuild <linux-kbuild@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Andi Kleen <ak@linux.intel.com>, Joe Mario <jmario@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 01, 2013 at 05:40:02PM -0600, Bjorn Helgaas wrote:
-> On Tue, Oct 29, 2013 at 3:46 PM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >
-> > The PCI MSI sysfs code is a mess with kobjects for things that don't
-> > really need to be kobjects.  This patch creates attributes dynamically
-> > for the MSI interrupts instead of using kobjects.
-> >
-> > Note, this does not delete the existing sysfs MSI code, but puts the
-> > attributes under a "msi_irqs_2" directory for testing / example.
-> >
-> > Also note, this removes a directory from the current MSI interrupt sysfs
-> > code:
-> >
-> > old MSI kobjects:
-> > pci_device
-> >    └── msi_irqs
-> >        └── 40
-> >            └── mode
-> >
-> > new MSI attributes:
-> > pci_device
-> >    └── msi_irqs_2
-> >        └── 40
-> >
-> > As there was only one file "mode" with the kobject model, the interrupt
-> > number is now a file that returns the "mode" of the interrupt (msi vs.
-> > msix).
-> >
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > ---
-> >
-> > Bjorn, I can make up a patch that rips out the existing kobject code
-> > here, but I figured this patch would make things easier to follow
-> > instead of having to dig through the removed logic at the same time.
-> >
-> > I'll clean up the error handling path for the create attribute logic as
-> > well, this was just a proof of concept that this could be done.
-> >
-> > Do you think that anyone cares about the current mode files in sysfs to
-> > move things in this manner?
-> 
-> I like this a lot better than trying to fix all the holes in the
-> current kobject code.
-> 
-> I have no idea who, if anybody, cares about the "mode" files.  I
-> assume there's a way to create the "mode" files with attributes, too?
-> If so, we could replicate the existing structure with one patch, and
-> simplify it with a second patch, so it would be easier to revert the
-> directory change while keeping the fix.
-> 
-> Bjorn
-> 
-FWIW, I created the mode files because I wanted to be able to add other
-attributes to an irq in the future, in case we needed them.  I think time has
-show that additional attributes seem unnecessecary, so it makes sense to me to
-just include the mode attribute in the irq number file
-Neil
+On Tue, Nov 12, 2013 at 1:40 AM, Michal Marek <mmarek@suse.cz> wrote:
+> On 11.11.2013 14:40, Michal Marek wrote:
+>> Pasting the verbatim PCI_(VENDOR|DEVICE)_* macros in the __pci_fixup_*
+>> symbol names results in insanely long names such as
+>>
+>> __pci_fixup_resumePCI_VENDOR_ID_SERVERWORKSPCI_DEVICE_ID_SERVERWORKS_HT1000SBquirk_disable_broadcom_boot_interrupt
+>>
+>> When LTO adds its numeric suffix to such symbol, it overflows the
+>> namebuf[KSYM_NAME_LEN] array. Use the line number instead to create
+>
+> "... the namebuf[KSYM_NAME_LEN] array in kernel/kallsyms.c."
 
+What's LTO?  I guess it's Link Time Optimization?  Is there any
+documentation about how it works or how to use it?
+
+Bjorn
