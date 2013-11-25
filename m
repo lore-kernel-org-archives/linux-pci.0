@@ -1,157 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:35991 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268Ab3KOVRd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 16:17:33 -0500
-Received: by mail-ie0-f175.google.com with SMTP id u16so5740822iet.34
-        for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2013 13:17:33 -0800 (PST)
+Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:40465
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754522Ab3KYTAM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Nov 2013 14:00:12 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: pciehp LinkState
+Date: Mon, 25 Nov 2013 19:00:01 +0000
+Message-ID: <01b89ce965ed454fb9f0e0cf52ba622e@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <528D4739.80700@fold.natur.cuni.cz>
+ <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
+In-Reply-To: <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1384548866-13141-11-git-send-email-swarren@wwwdotorg.org>
-References: <1384548866-13141-1-git-send-email-swarren@wwwdotorg.org> <1384548866-13141-11-git-send-email-swarren@wwwdotorg.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 15 Nov 2013 14:17:12 -0700
-Message-ID: <CAErSpo7i_rGBNvjCb002VeXuL9xpkZ+Nx3APFA1OYH1PyMQ3yQ@mail.gmail.com>
-Subject: Re: [PATCH 10/31] ARM: tegra: pass reset to tegra_powergate_sequence_power_up()
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Stephen Warren <swarren@nvidia.com>, treding@nvidia.com,
-	pdeschrijver@nvidia.com,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	=?ISO-8859-1?Q?Terje_Bergstr=F6m?= <tbergstrom@nvidia.com>,
-	David Airlie <airlied@linux.ie>,
-	DRI mailing list <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 15, 2013 at 1:54 PM, Stephen Warren <swarren@wwwdotorg.org> wrote:
-> From: Stephen Warren <swarren@nvidia.com>
->
-> Tegra's clock driver now provides an implementation of the common
-> reset API (include/linux/reset.h). Use this instead of the old Tegra-
-> specific API; that will soon be removed.
->
-> Cc: treding@nvidia.com
-> Cc: pdeschrijver@nvidia.com
-> Cc: linux-tegra@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: Terje Bergström <tbergstrom@nvidia.com>
-> Cc: David Airlie <airlied@linux.ie>
-> Cc: dri-devel@lists.freedesktop.org
-> Signed-off-by: Stephen Warren <swarren@nvidia.com>
+Hello Martin,
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
-> This patch is part of a series with strong internal depdendencies. I'm
-> looking for an ack so that I can take the entire series through the Tegra
-> and arm-soc trees. The series will be part of a stable branch that can be
-> merged into other subsystems if needed to avoid/resolve dependencies.
-> ---
->  arch/arm/mach-tegra/powergate.c | 8 +++++---
->  drivers/gpu/drm/tegra/gr3d.c    | 6 ++++--
->  drivers/pci/host/pci-tegra.c    | 3 ++-
->  include/linux/tegra-powergate.h | 4 +++-
->  4 files changed, 14 insertions(+), 7 deletions(-)
->
-> diff --git a/arch/arm/mach-tegra/powergate.c b/arch/arm/mach-tegra/powergate.c
-> index 85d28e756bb7..f6f5b54ff95e 100644
-> --- a/arch/arm/mach-tegra/powergate.c
-> +++ b/arch/arm/mach-tegra/powergate.c
-> @@ -25,6 +25,7 @@
->  #include <linux/export.h>
->  #include <linux/init.h>
->  #include <linux/io.h>
-> +#include <linux/reset.h>
->  #include <linux/seq_file.h>
->  #include <linux/spinlock.h>
->  #include <linux/clk/tegra.h>
-> @@ -144,11 +145,12 @@ int tegra_powergate_remove_clamping(int id)
->  }
->
->  /* Must be called with clk disabled, and returns with clk enabled */
-> -int tegra_powergate_sequence_power_up(int id, struct clk *clk)
-> +int tegra_powergate_sequence_power_up(int id, struct clk *clk,
-> +                                       struct reset_control *rst)
->  {
->         int ret;
->
-> -       tegra_periph_reset_assert(clk);
-> +       reset_control_assert(rst);
->
->         ret = tegra_powergate_power_on(id);
->         if (ret)
-> @@ -165,7 +167,7 @@ int tegra_powergate_sequence_power_up(int id, struct clk *clk)
->                 goto err_clamp;
->
->         udelay(10);
-> -       tegra_periph_reset_deassert(clk);
-> +       reset_control_deassert(rst);
->
->         return 0;
->
-> diff --git a/drivers/gpu/drm/tegra/gr3d.c b/drivers/gpu/drm/tegra/gr3d.c
-> index f629e38b00e4..0cbb24b1ae04 100644
-> --- a/drivers/gpu/drm/tegra/gr3d.c
-> +++ b/drivers/gpu/drm/tegra/gr3d.c
-> @@ -279,7 +279,8 @@ static int gr3d_probe(struct platform_device *pdev)
->                 }
->         }
->
-> -       err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_3D, gr3d->clk);
-> +       err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_3D, gr3d->clk,
-> +                                               gr3d->rst);
->         if (err < 0) {
->                 dev_err(&pdev->dev, "failed to power up 3D unit\n");
->                 return err;
-> @@ -287,7 +288,8 @@ static int gr3d_probe(struct platform_device *pdev)
->
->         if (gr3d->clk_secondary) {
->                 err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_3D1,
-> -                                                       gr3d->clk_secondary);
-> +                                                       gr3d->clk_secondary,
-> +                                                       gr3d->rst_secondary);
->                 if (err < 0) {
->                         dev_err(&pdev->dev,
->                                 "failed to power up secondary 3D unit\n");
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 174a5bc2d993..aace19edc469 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -956,7 +956,8 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
->         }
->
->         err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_PCIE,
-> -                                               pcie->pex_clk);
-> +                                               pcie->pex_clk,
-> +                                               pcie->pex_rst);
->         if (err) {
->                 dev_err(pcie->dev, "powerup sequence failed: %d\n", err);
->                 return err;
-> diff --git a/include/linux/tegra-powergate.h b/include/linux/tegra-powergate.h
-> index c98cfa406952..b5ad64aca071 100644
-> --- a/include/linux/tegra-powergate.h
-> +++ b/include/linux/tegra-powergate.h
-> @@ -19,6 +19,7 @@
->  #define _MACH_TEGRA_POWERGATE_H_
->
->  struct clk;
-> +struct reset_control;
->
->  #define TEGRA_POWERGATE_CPU    0
->  #define TEGRA_POWERGATE_3D     1
-> @@ -51,6 +52,7 @@ int tegra_powergate_power_off(int id);
->  int tegra_powergate_remove_clamping(int id);
->
->  /* Must be called with clk disabled, and returns with clk enabled */
-> -int tegra_powergate_sequence_power_up(int id, struct clk *clk);
-> +int tegra_powergate_sequence_power_up(int id, struct clk *clk,
-> +                                       struct reset_control *rst);
->
->  #endif /* _MACH_TEGRA_POWERGATE_H_ */
+> >
+> > Below is the overview since cold boot with no card inserted with all
+> those hotplug events. You see,
+> > pciehp never sets LinkState back to minus once the slot is empty:
+> >
+> > vostro ~ # grep LinkState
+> pciehp/3.12/cold_boot_no_card_in_slot/lspci_vvv_initial__inserted__eject
+> ed_but_not_realized__inserted__ejected.txt
+> >                         Changed: MRL- PresDet- LinkState-
+> >                         Changed: MRL- PresDet- LinkState+
+> >                         Changed: MRL- PresDet- LinkState+
+> >                         Changed: MRL- PresDet- LinkState+
+> >                         Changed: MRL- PresDet- LinkState+
+> 
+> I opened https://bugzilla.kernel.org/show_bug.cgi?id=65521 for this
+> issue.  I agree that pciehp should probably clear this bit.  Rajat
+> recently posted some patches [1] that add support for link state
+> changes.  I haven't look at them in detail yet, but I wouldn't be
+> surprised if they will fix this issue.  If you wanted to test them,
+> that would be awesome!
+> 
+> Bjorn
+> 
+> [1] http://lkml.kernel.org/r/528BE8B6.9080007@gmail.com
 > --
-> 1.8.1.5
->
+
+Yes, this issue should be fixed by the following 2 patches:
+
+https://lkml.org/lkml/2013/11/19/542
+https://lkml.org/lkml/2013/11/19/543
+
+The particular hunk you want to be looking at is this:
+
+@@ -661,7 +669,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 
+ 		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+ 			     PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+-			     PCI_EXP_SLTSTA_CC);
++			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+ 		detected &= ~intr_loc;
+ 		intr_loc |= detected;
+ 		if (!intr_loc)
+
+
+Would you be please kind enough to test the patch out? No need to pass any module parameter (Just apply patch and build & boot normally like you would).
+
+Thanks,
+
+Rajat
+
