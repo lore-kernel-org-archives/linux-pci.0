@@ -1,51 +1,215 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:51780 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757198Ab3K0VW2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 16:22:28 -0500
-Date: Wed, 27 Nov 2013 13:22:27 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, bhelgaas@google.com,
-	cl91tp@gmail.com, tianyu.lan@intel.com, khlebnikov@openvz.org,
-	gnomes@lxorguk.ukuu.org.uk, indou.takao@jp.fujitsu.com,
-	jility09@gmail.com, f.otti@gmx.at, mjg59@srcf.ucam.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kexec@lists.infradead.org, stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Clear Bus Master bit only on kexec reboot
-Message-ID: <20131127212227.GA31237@kroah.com>
-References: <1385579908-24608-1-git-send-email-khalid.aziz@oracle.com>
- <87ob55my8z.fsf@xmission.com>
- <52964F2C.1020803@oracle.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 1/4] ACPI / bind: Simplify child device lookups
+Date: Mon, 25 Nov 2013 01:10:52 +0100
+Message-ID: <3586671.1gUWMiGnWE@vostro.rjw.lan>
+In-Reply-To: <2610478.KxPMyuOMok@vostro.rjw.lan>
+References: <2610478.KxPMyuOMok@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52964F2C.1020803@oracle.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 27, 2013 at 12:59:40PM -0700, Khalid Aziz wrote:
-> On 11/27/2013 12:38 PM, ebiederm@xmission.com wrote:
-> >Khalid Aziz <khalid.aziz@oracle.com> writes:
-> >
-> >>Add a flag to tell the PCI subsystem that kernel is shutting down
-> >>in prepapration to kexec a kernel. Add code in PCI subsystem to use
-> >>this flag to clear Bus Master bit on PCI devices only in case of
-> >>kexec reboot. This fixes https://bugzilla.kernel.org/show_bug.cgi?id=63861
-> >>and avoids any other issues caused by clearing Bus Master bit on PCI
-> >>devices in normal shutdown path. This patch is based on discussion at
-> >>http://marc.info/?l=linux-pci&m=138425645204355&w=2
-> >
-> >Scratches head.
-> >
-> >Given that most devices already call pci_disable_device which clears the
-> >bus master bit how does this change anything meaningful?
-> >
-> >Is is the problem here that most drivers are lazy and have a noop
-> >shutdown method?
-> 
-> Yes, that is exactly the problem.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Then fix the drivers please.  It's not as if you don't have access to
-the source for them all...
+Now that we create a struct acpi_device object for every ACPI
+namespace node representing a device, it is not necessary to
+use acpi_walk_namespace() for child device lookup in
+acpi_find_child() any more.  Instead, we can simply walk the
+list of children of the given struct acpi_device object and
+return the matching one (or the one which is the best match if
+there are more of them).  The checks done during the matching
+loop can be simplified too so that the secondary namespace walks
+in find_child_checks() are not necessary any more.
 
-greg k-h
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/glue.c     |  134 ++++++++++++++++++------------------------------
+ include/acpi/acpi_bus.h |    3 +
+ 2 files changed, 56 insertions(+), 81 deletions(-)
+
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -82,107 +82,79 @@ static struct acpi_bus_type *acpi_get_bu
+ #define FIND_CHILD_MIN_SCORE	1
+ #define FIND_CHILD_MAX_SCORE	2
+ 
+-static acpi_status acpi_dev_present(acpi_handle handle, u32 lvl_not_used,
+-				  void *not_used, void **ret_p)
+-{
+-	struct acpi_device *adev = NULL;
+-
+-	acpi_bus_get_device(handle, &adev);
+-	if (adev) {
+-		*ret_p = handle;
+-		return AE_CTRL_TERMINATE;
+-	}
+-	return AE_OK;
+-}
+-
+-static int do_find_child_checks(acpi_handle handle, bool is_bridge)
++static int find_child_checks(struct acpi_device *adev, bool check_children)
+ {
+ 	bool sta_present = true;
+ 	unsigned long long sta;
+ 	acpi_status status;
+ 
+-	status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++	status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
+ 	if (status == AE_NOT_FOUND)
+ 		sta_present = false;
+ 	else if (ACPI_FAILURE(status) || !(sta & ACPI_STA_DEVICE_ENABLED))
+ 		return -ENODEV;
+ 
+-	if (is_bridge) {
+-		void *test = NULL;
++	if (check_children && list_empty(&adev->children))
++		return -ENODEV;
+ 
+-		/* Check if this object has at least one child device. */
+-		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+-				    acpi_dev_present, NULL, NULL, &test);
+-		if (!test)
+-			return -ENODEV;
+-	}
+ 	return sta_present ? FIND_CHILD_MAX_SCORE : FIND_CHILD_MIN_SCORE;
+ }
+ 
+-struct find_child_context {
+-	u64 addr;
+-	bool is_bridge;
+-	acpi_handle ret;
+-	int ret_score;
+-};
+-
+-static acpi_status do_find_child(acpi_handle handle, u32 lvl_not_used,
+-				 void *data, void **not_used)
++struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
++					   u64 address, bool check_children)
+ {
+-	struct find_child_context *context = data;
+-	unsigned long long addr;
+-	acpi_status status;
+-	int score;
++	struct acpi_device *adev, *ret = NULL;
++	int ret_score = 0;
+ 
+-	status = acpi_evaluate_integer(handle, METHOD_NAME__ADR, NULL, &addr);
+-	if (ACPI_FAILURE(status) || addr != context->addr)
+-		return AE_OK;
+-
+-	if (!context->ret) {
+-		/* This is the first matching object.  Save its handle. */
+-		context->ret = handle;
+-		return AE_OK;
+-	}
+-	/*
+-	 * There is more than one matching object with the same _ADR value.
+-	 * That really is unexpected, so we are kind of beyond the scope of the
+-	 * spec here.  We have to choose which one to return, though.
+-	 *
+-	 * First, check if the previously found object is good enough and return
+-	 * its handle if so.  Second, check the same for the object that we've
+-	 * just found.
+-	 */
+-	if (!context->ret_score) {
+-		score = do_find_child_checks(context->ret, context->is_bridge);
+-		if (score == FIND_CHILD_MAX_SCORE)
+-			return AE_CTRL_TERMINATE;
+-		else
+-			context->ret_score = score;
+-	}
+-	score = do_find_child_checks(handle, context->is_bridge);
+-	if (score == FIND_CHILD_MAX_SCORE) {
+-		context->ret = handle;
+-		return AE_CTRL_TERMINATE;
+-	} else if (score > context->ret_score) {
+-		context->ret = handle;
+-		context->ret_score = score;
++	list_for_each_entry(adev, &parent->children, node) {
++		unsigned long long addr;
++		acpi_status status;
++		int score;
++
++		status = acpi_evaluate_integer(adev->handle, METHOD_NAME__ADR,
++					       NULL, &addr);
++		if (ACPI_FAILURE(status) || addr != address)
++			continue;
++
++		if (!ret) {
++			/* This is the first matching object.  Save it. */
++			ret = adev;
++			continue;
++		}
++		/*
++		 * There is more than one matching device object with the same
++		 * _ADR value.  That really is unexpected, so we are kind of
++		 * beyond the scope of the spec here.  We have to choose which
++		 * one to return, though.
++		 *
++		 * First, check if the previously found object is good enough
++		 * and return it if so.  Second, do the same for the object that
++		 * we've just found.
++		 */
++		if (!ret_score) {
++			ret_score = find_child_checks(ret, check_children);
++			if (ret_score == FIND_CHILD_MAX_SCORE)
++				return ret;
++		}
++		score = find_child_checks(adev, check_children);
++		if (score == FIND_CHILD_MAX_SCORE) {
++			return adev;
++		} else if (score > ret_score) {
++			ret = adev;
++			ret_score = score;
++		}
+ 	}
+-	return AE_OK;
++	return ret;
+ }
+ 
+-acpi_handle acpi_find_child(acpi_handle parent, u64 addr, bool is_bridge)
++acpi_handle acpi_find_child(acpi_handle handle, u64 addr, bool is_bridge)
+ {
+-	if (parent) {
+-		struct find_child_context context = {
+-			.addr = addr,
+-			.is_bridge = is_bridge,
+-		};
+-
+-		acpi_walk_namespace(ACPI_TYPE_DEVICE, parent, 1, do_find_child,
+-				    NULL, &context, NULL);
+-		return context.ret;
+-	}
+-	return NULL;
++	struct acpi_device *parent;
++
++	if (!handle || acpi_bus_get_device(handle, &parent))
++		return NULL;
++
++	return acpi_find_child_device(parent, addr, is_bridge);
+ }
+ EXPORT_SYMBOL_GPL(acpi_find_child);
+ 
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -433,6 +433,9 @@ struct acpi_pci_root {
+ };
+ 
+ /* helper */
++
++struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
++					   u64 address, bool check_children);
+ acpi_handle acpi_find_child(acpi_handle, u64, bool);
+ static inline acpi_handle acpi_get_child(acpi_handle handle, u64 addr)
+ {
+
