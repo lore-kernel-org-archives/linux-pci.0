@@ -1,120 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:2262 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885Ab3KUGXR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 01:23:17 -0500
-Message-ID: <528DA672.9020707@huawei.com>
-Date: Thu, 21 Nov 2013 14:21:38 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: David Woodhouse <dwmw2@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Vinod Koul <vinod.koul@intel.com>,
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:55154
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756921Ab3KYTDj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Nov 2013 14:03:39 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatjain.linux@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <dmaengine@vger.kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 1/1] IOMMU: Save pci device id instead of pci_dev* pointer
- for DMAR devices
-References: <1383639898-48776-1-git-send-email-wangyijing@huawei.com>	 <1383639898-48776-2-git-send-email-wangyijing@huawei.com>	 <20131107180713.GA2955@google.com> <527C5D36.7050206@huawei.com>	 <CAErSpo73N2Th-4D5G8-60tMuGwqthfu-VNHVf3LF9+s2mQp53w@mail.gmail.com> <1384963192.15487.76.camel@shinybook.infradead.org>
-In-Reply-To: <1384963192.15487.76.camel@shinybook.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Tom Nguyen <tom.l.nguyen@intel.com>,
+	Kristen Accardi <kristen.c.accardi@intel.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
+Date: Mon, 25 Nov 2013 19:03:11 +0000
+Message-ID: <18997e8c20fb4bdd8a72e4c01b3fd308@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <52797238.8070304@gmail.com> <20131106002505.GC3359@google.com>
+ <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
+ <CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
+ <20131108012352.GE2955@google.com>
+ <CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
+ <CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
+ <CADTPrLRJD0er1kijjm2SEE6wUA9eQaz+OOd67E3MpHLu6k-R6Q@mail.gmail.com>
+ <20131123005102.GA14690@google.com>
+ <a3dc3d613f274e4d993d6a7612f1dde6@BLUPR05MB118.namprd05.prod.outlook.com>
+ <CAErSpo7J8UZpYSaAPavJrR8iOt368expOuF-s_M7x+jW7drnWw@mail.gmail.com>
+In-Reply-To: <CAErSpo7J8UZpYSaAPavJrR8iOt368expOuF-s_M7x+jW7drnWw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/11/20 23:59, David Woodhouse wrote:
-> On Fri, 2013-11-08 at 08:46 -0700, Bjorn Helgaas wrote:
->>
->> I don't know the IOMMU drivers well either, but it seems like they
->> rely on notifications of device addition and removal (see
->> iommu_bus_notifier()).  It doesn't seem right for them to also use the
->> generic PCI interfaces like pci_get_domain_bus_and_slot() because the
->> IOMMU driver should already know what devices exist and their
->> lifetimes.  It seems like confusion to mix the two.  But I don't have
->> a concrete suggestion.
+Hello,
+
+> > On a different note, I feel there is still a need to apply my original
+> patch. There is still an open problem in case of spurious interrupts (or
+> in any case where the condition "if (slot_status & PCI_EXP_SLTSTA_CC)"
+> becomes true in pcie_write_cmd()). That is because once that happens, we
+> never clear that interrupt, and no further hotplug interrupts shall be
+> received unless we do that.
 > 
+> I agree this is an issue and we should address it somehow.  My
+> hesitation is just that I'd prefer to do some more aggressive
+> restructuring rather than apply a point fix.  For example:
 
-Hi David,
-   Thanks for your review and comment!
-
-> The generic IOMMU code has a notifier, and calls through to an
-> ->add_device() method in the specific IOMMU driver's iommu_ops.
-> 
-> The Intel IOMMU driver predates that, and its scheme for mapping devices
-> to the correct DMAR unit is different. It happens entirely within the
-> get_domain_for_dev() function, which happens when we're first asked to
-> set up a mapping for a given device (when we don't already have the
-> answer stashed in dev->archdata).
-> 
-> I think we should add an ->add_device() method to the Intel IOMMU
-> driver, and make it do much of what's in get_domain_for_dev() right now
-> — finding the "proxy" device (the upstream PCIe bridge or whatever), and
-> then looking through the ACPI DMAR table to find which DMAR unit that's
-> attached to. Then we stash that information (dmar, devfn) in
-> dev->archdata, and get_domain_for_dev() still has *some* work to do,
-> actually allocating a logical domain on the IOMMU in question, but not
-> as much. And refcount the damn domain instead of playing the horrid
-> tricks we currently do to hang it off the upstream proxy device *too*.
-
-Intel IOMMU driver has an ->add_device() method already,   .add_device	= intel_iommu_add_device,
-this method was used to update iommu group info. Since Intel IOMMU driver has
-its own notifier, so maybe it's a nice candidate to do something.
-Currently, dmar driver parse DMAR table and find the pci device id under a specific
-DRHD. But only save the device pci_dev * pointer in devices array. So if this pci device
-was removed, this info became stale info. In the last version patch, I use pci device id intead
-of pci_dev * pointer array completely. This maybe introduce some unsafe issues. Because
-pci device maybe destroyed during process device dma mapping etc.
-
-So, I have rework the patch and try to save pci device id as well as pci_dev *pointer, like:
-
-struct dmar_device {
-   u16 segment;
-   u8 bus;
-   u8 devfn;  ----------->these tree will be used only when pci device add or remove, we will use them to update pci_dev * pointer in intel iommu driver notifier.
-   struct list_head list;   -->add to DRHD device list.
-   struct pci_dev *pdev;   --->use to hold the pci device
-}
-
-What do you think about ?
-
-In this new patch, we won't change the Intel iommu driver much, just enhance Intel driver iommu
-notifier to make DRHD device list always effect, not stale info.
-
-I will send out this new patch soon.
+OK, I'll attempt to fix it that way when I get time.
 
 > 
-> My main concern here is that the DMAR table contains the PCI bus numbers
-> at boot time. Doing the lookup later will only work if we don't renumber
-> busses. Or if we have a way to look things up based on the *original*
-> bus number.
-
-If we won't remove the pci device, the occupied buses won't be change, I think.
-And because in the new patch, we still use pci_dev *pointer to find match DRHD, so
-this is not a regression.
-Since DMAR also use pci device id to identify the support device,
-I have not found anything instead of device id.
-
-In AMD IOMMU driver, it seems to use pci device id to identify drhd too, although
-I just take a quickly glanced at it, maybe not correctly.
-
+> - We currently look at PCI_EXP_SLTSTA_CC in pcie_isr(), pcie_poll_cmd(),
+> and pcie_write_cmd().  I think it would be better to look at it only in
+> pcie_isr().
 > 
-> The Intel IOMMU also has a bus notifier of its own which it only uses to
-> know when a driver is *detached*, so it can tear down the logical domain
-> for the corresponding device. Would be nice to have the generic IOMMU
-> notifier call a callback for us then too, perhaps.
-
-Update the device info in Intel IOMMU driver is a good point.
-
-
-Thanks!
-Yijing.
-
+> - I don't think pcie_poll_cmd() should exist at all; we should poll by
+> calling pcie_isr() instead.
 > 
+> - We need pcie_write_cmd(), but I think the way it waits is backwards.
+>  Currently we issue the command, then wait for it to complete.  I think
+> we should issue the command, note the current time, and return without
+> waiting.  The *next* time we need to issue a command, we can wait for
+> completion of the previous one (or timeout) if necessary.
 > 
+> But maybe we need the point fix in the interim, especially if anybody
+> can actually produce the scenario you mention.
 
+Ok.
 
--- 
-Thanks!
-Yijing
+Thanks,
+
+Rajat
 
