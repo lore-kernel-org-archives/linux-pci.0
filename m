@@ -1,173 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:33339 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753314Ab3KKNbI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 08:31:08 -0500
-From: =?iso-8859-1?q?J=FCrgen_Beisert?= <jbe@pengutronix.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 0/6] PCI: imx6: Random fixes
-Date: Mon, 11 Nov 2013 14:32:59 +0100
-Cc: Marek Vasut <marex@denx.de>, linux-pci@vger.kernel.org
-References: <1381853200-5534-1-git-send-email-marex@denx.de>
-In-Reply-To: <1381853200-5534-1-git-send-email-marex@denx.de>
+Received: from v094114.home.net.pl ([79.96.170.134]:49250 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753345Ab3KYLK6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 06:10:58 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Tejun Heo <tj@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
+Date: Mon, 25 Nov 2013 12:23:44 +0100
+Message-ID: <1890016.dnpTzZzgDl@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQV7EhXy8xDVQ2oWefWwje3D-DofX=yyLVbHTP1OV87QOw@mail.gmail.com>
+References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com> <CAE9FiQXfhK9k8j0jQ_aHt=+frrhcHZH7DQdKK3_OFo97eEAA4w@mail.gmail.com> <CAE9FiQV7EhXy8xDVQ2oWefWwje3D-DofX=yyLVbHTP1OV87QOw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201311111432.59318.jbe@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Sunday, November 24, 2013 08:58:12 PM Yinghai Lu wrote:
+> On Sun, Nov 24, 2013 at 8:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Sat, Nov 23, 2013 at 4:17 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>
+> >> After commit bcdde7e221a8 (sysfs: make __sysfs_remove_dir() recursive)
+> >> I'm seeing traces analogous to the one below in Thunderbolt testing:
+> >>
+> >> WARNING: CPU: 3 PID: 76 at /scratch/rafael/work/linux-pm/fs/sysfs/group.c:214 sysfs_remove_group+0x59/0xe0()
+> >>  sysfs group ffffffff81c6c500 not found for kobject '0000:08'
+> >>  Modules linked in: fuse hidp af_packet xt_tcpudp xt_pkttype xt_LOG xt_limit ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_raw ipt_REJECT iptable_raw xt_CT iptable_filter ip6table_mangle nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4 nf_defrag_ipv4 ip_tables xt_conntrack nf_conntrack rfcomm ip6table_filter bnep ip6_tables x_tables arc4 ath9k mac80211 x86_pkg_temp_thermal intel_powerclamp coretemp crct10dif_pclmul crc32_pclmul iTCO_wdt crc32c_intel iTCO_vendor_support ghash_clmulni_intel aesni_intel ablk_helper acer_wmi sparse_keymap ath9k_common ath9k_hw cryptd lrw gf128mul ath3k glue_helper aes_x86_64 btusb microcode ath pcspkr joydev uvcvideo serio_raw videobuf2_core i2c_i801 videodev snd_hda_codec_hdmi cfg80211 videobuf2_vmalloc tg3 videobuf2_memops sg ptp pps_core lpc_ich mfd_core snd_hda_codec_realtek bluetooth hid_logitech_dj rfkill snd_hda_intel snd_hda_codec shpchp battery ac wmi acpi_cpufreq edd snd_usb_audio snd_pcm snd_page_alloc snd_hwdep snd_usbmidi_lib
+> >> snd_rawmidi snd_seq snd_timer snd_seq_device snd soundcore autofs4 xhci_hcd processor scsi_dh_hp_sw scsi_dh_rdac scsi_dh_emc scsi_dh_alua scsi_dh
+> >>  CPU: 3 PID: 76 Comm: kworker/u16:7 Not tainted 3.13.0-rc1+ #76
+> >>  Hardware name: Acer Aspire S5-391/Venus    , BIOS V1.02 05/29/2012
+> >>  Workqueue: kacpi_hotplug acpi_hotplug_work_fn
+> >>   0000000000000009 ffff8801644b9ac8 ffffffff816b23bf 0000000000000007
+> >>   ffff8801644b9b18 ffff8801644b9b08 ffffffff81046607 ffff88016925b800
+> >>   0000000000000000 ffffffff81c6c500 ffff88016924f928 ffff88016924f800
+> >>  Call Trace:
+> >>   [<ffffffff816b23bf>] dump_stack+0x4e/0x71
+> >>   [<ffffffff81046607>] warn_slowpath_common+0x87/0xb0
+> >>   [<ffffffff810466d1>] warn_slowpath_fmt+0x41/0x50
+> >>   [<ffffffff811e42ef>] ? sysfs_get_dirent_ns+0x6f/0x80
+> >>   [<ffffffff811e5389>] sysfs_remove_group+0x59/0xe0
+> >>   [<ffffffff8149f00b>] dpm_sysfs_remove+0x3b/0x50
+> >>   [<ffffffff81495818>] device_del+0x58/0x1c0
+> >>   [<ffffffff814959c8>] device_unregister+0x48/0x60
+> >>   [<ffffffff813254fe>] pci_remove_bus+0x6e/0x80
+> >>   [<ffffffff81325548>] pci_remove_bus_device+0x38/0x110
+> >>   [<ffffffff8132555d>] pci_remove_bus_device+0x4d/0x110
+> >>   [<ffffffff81325639>] pci_stop_and_remove_bus_device+0x19/0x20
+> >>   [<ffffffff813418d0>] disable_slot+0x20/0xe0
+> >>   [<ffffffff81341a38>] acpiphp_check_bridge+0xa8/0xd0
+> >>   [<ffffffff813427ad>] hotplug_event+0x17d/0x220
+> >>   [<ffffffff81342880>] hotplug_event_work+0x30/0x70
+> >>   [<ffffffff8136d665>] acpi_hotplug_work_fn+0x18/0x24
+> >>   [<ffffffff81061331>] process_one_work+0x261/0x450
+> >>   [<ffffffff81061a7e>] worker_thread+0x21e/0x370
+> >>   [<ffffffff81061860>] ? rescuer_thread+0x300/0x300
+> >>   [<ffffffff81068342>] kthread+0xd2/0xe0
+> >>   [<ffffffff81068270>] ? flush_kthread_worker+0x70/0x70
+> >>   [<ffffffff816c19bc>] ret_from_fork+0x7c/0xb0
+> >>   [<ffffffff81068270>] ? flush_kthread_worker+0x70/0x70
+> >>
+> >> (Mika Westerberg sees them too in his tests).
+> >>
+> >> Some investigation documented in kernel bug #65281 lead me to the
+> >> conclusion that the source of the problem is the device_del() in
+> >> pci_stop_dev() as it now causes the sysfs directory of the device
+> >> to be removed recursively along with all of its subdirectories.
+> >> That includes the sysfs directory of the device's subordinate
+> >> bus (dev->subordinate) and its "power" group.
+> >>
+> >> Consequently, when pci_remove_bus() is called for dev->subordinate
+> >> in pci_remove_bus_device(), it calls device_unregister(&bus->dev),
+> >> but at this point the sysfs directory of bus->dev doesn't exist any
+> >> more and its "power" group doesn't exist either.  Thus, when
+> >> dpm_sysfs_remove() called from device_del() tries to remove that
+> >> group, it triggers the above warning.
+> >>
+> >> That indicates a logical mistake in the design of
+> >> pci_stop_and_remove_bus_device(), which causes bus device objects
+> >> to be left behind their parents (bridge device objects) and can be
+> >> fixed by moving the device_del() from pci_stop_dev() into
+> >> pci_destroy_dev(), so pci_remove_bus() can be called for the
+> >> device's subordinate bus before the device itself is unregistered
+> >> from the hierarchy.  Still, the driver, if any, should be detached
+> >> from the device in pci_stop_dev(), so use device_release_driver()
+> >> directly from there.
+> >>
+> >> References: https://bugzilla.kernel.org/show_bug.cgi?id=65281#c6
+> >> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> ---
+> >>  drivers/pci/remove.c |    4 +++-
+> >>  1 file changed, 3 insertions(+), 1 deletion(-)
+> >>
+> >> Index: linux-pm/drivers/pci/remove.c
+> >> ===================================================================
+> >> --- linux-pm.orig/drivers/pci/remove.c
+> >> +++ linux-pm/drivers/pci/remove.c
+> >> @@ -24,7 +24,7 @@ static void pci_stop_dev(struct pci_dev
+> >>         if (dev->is_added) {
+> >>                 pci_proc_detach_device(dev);
+> >>                 pci_remove_sysfs_dev_files(dev);
+> >> -               device_del(&dev->dev);
+> >> +               device_release_driver(&dev->dev);
+> >>                 dev->is_added = 0;
+> >>         }
+> >>
+> >> @@ -34,6 +34,8 @@ static void pci_stop_dev(struct pci_dev
+> >>
+> >>  static void pci_destroy_dev(struct pci_dev *dev)
+> >>  {
+> >> +       device_del(&dev->dev);
+> >> +
+> >>         down_write(&pci_bus_sem);
+> >>         list_del(&dev->bus_list);
+> >>         up_write(&pci_bus_sem);
+> >>
+> >
+> > Maybe that is not enough. could still need add is_removed ...
+> >
+> > Please check
+> >
+> > https://lkml.org/lkml/2013/5/13/653
+> > PATCH 3/7] PCI: Detach driver in pci_stop_device
+> 
+> or you can check if
+> http://patchwork.ozlabs.org/patch/292622/
+>   [1/6] PCI: move back pci_proc_attach_devices calling
+> http://patchwork.ozlabs.org/patch/292623/
+>   [2/6] PCI: move resources and bus_list releasing to pci_release_dev
+> http://patchwork.ozlabs.org/patch/292624/
+>   [3/6] PCI: Destroy pci dev only once
+> 
+> could help with you test setup.
 
-I'm also trying to get the PCIe to work on an i.MX6. But the attached device
-cannot be enabled. The external device is an FPGA directly connected to the
-i.MX6. I'm using the changes from linux-next to get the machine working up
-to this point. But it seems I still miss something.
+I honestly don't think that all of the additional changes are needed to fix
+this particular problem.
 
-What I see is:
-
-[...]
-PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
-pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
-pci_bus 0000:00: scanning bus
-pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
-pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
-pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
-pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x5c
-pci 0000:00:00.0: supports D1
-pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
-pci 0000:00:00.0: PME# disabled
-pci_bus 0000:00: fixups for bus
-PCI: bus0: Fast back to back transfers disabled
-pci 0000:00:00.0: scanning [bus 01-01] behind bridge, pass 0
-pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
-pci_bus 0000:01: scanning bus
-pci 0000:01:00.0: [1172:0004] type 00 class 0x000000
-pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x0000ffff]
-pci 0000:01:00.0: calling pci_fixup_ide_bases+0x0/0x5c
-pci_bus 0000:01: fixups for bus
-PCI: bus1: Fast back to back transfers disabled
-pci_bus 0000:01: bus scan returning with max=01
-pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-pci_bus 0000:00: bus scan returning with max=01
-pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 01
-pci 0000:00:00.0: fixup irq: got 155
-pci 0000:00:00.0: assigning IRQ 155
-pci 0000:01:00.0: fixup irq: got 155
-pci 0000:01:00.0: assigning IRQ 155
-pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-pci 0000:00:00.0: BAR 0: set to [mem 0x01000000-0x010fffff] (PCI address [0x1000000-0x10fffff])
-pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x011fffff]
-pci 0000:00:00.0: BAR 6: assigned [mem 0x01200000-0x0120ffff pref]
-pci 0000:00:00.0: PCI bridge to [bus 01]
-pci 0000:00:00.0:   bridge window [mem 0x01100000-0x011fffff]
-pci_bus 0000:00: max bus depth: 1 pci_try_num: 2
-pci 0000:00:00.0: PCI bridge to [bus 01]
-pci 0000:00:00.0:   bridge window [mem 0x01100000-0x011fffff]
-pci_bus 0000:00: resource 4 [io  0x1000-0x10000]
-pci_bus 0000:00: resource 5 [mem 0x01000000-0x01efffff]
-pci_bus 0000:01: resource 1 [mem 0x01100000-0x011fffff]
-[...]
-pcieport 0000:00:00.0: Resource 0: from 1000000 to 10FFFFF <- my message from pcibios_enable_device()/arch/arm/kernel/bios32.c
-[...]
-FPGA 0000:01:00.0: Dummy FPGA driver starts probing
-FPGA 0000:01:00.0: Resource 0: from 0 to FFFF <- my message from pcibios_enable_device()/arch/arm/kernel/bios32.c
-PCI: Device 0000:01:00.0 not available because of resource collisions
-FPGA 000:01:00.0: Cannot enable PCIe device, aborting
-FPGA: probe of 0000:01:00.0 failed with error -5
-
-pcibios_enable_device() fails due to the start address of this device is
-still 0.
-
-Accesses to the configuration space are working. Here the output:
-
-root@platform:~ lspci -vv
-00:00.0 PCI bridge: Device 16c3:abcd (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Region 0: Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        Memory behind bridge: 01100000-011fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        [virtual] Expansion ROM at 01200000 [disabled] [size=64K]
-        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold+)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Mask+ 64bit+ Count=1/1 Enable+
-                Address: 0000000090000000  Data: 0000
-                Masking: 00000001  Pending: 00000000
-        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 unlimited
-                        ClockPM- Surprise- LLActRep+ BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB
-        Capabilities: [100] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [140] Virtual Channel <?>
-        Kernel driver in use: pcieport
-
-01:00.0 Non-VGA unclassified device: Altera Corporation Device 0004 (rev 01)
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 155
-        Capabilities: [50] MSI: Mask- 64bit+ Count=1/1 Enable-
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [78] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [80] Express (v2) Endpoint, MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-                LnkCap: Port #1, Speed 5GT/s, Width x1, ASPM unknown, Latency L0 <4us, L1 <1us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB
-        Capabilities: [100] Virtual Channel <?>
-        Capabilities: [200] Vendor Specific Information <?>
-
-
-Any idea what is missing?
-
-Regards,
-Juergen
+Thanks!
 
 -- 
-Pengutronix e.K.                              | Juergen Beisert             |
-Linux Solutions for Science and Industry      | http://www.pengutronix.de/  |
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
