@@ -1,90 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f171.google.com ([209.85.128.171]:38621 "EHLO
-	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256Ab3KKV0H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 16:26:07 -0500
+Received: from quartz.orcorp.ca ([184.70.90.242]:53769 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751099Ab3KYFw2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Nov 2013 00:52:28 -0500
+Date: Sun, 24 Nov 2013 22:52:22 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: mvebu - The bridge should obey the MEM and IO
+ command bits
+Message-ID: <20131125055222.GA28064@obsidianresearch.com>
+References: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
+ <20131124025808.GQ29241@titan.lakedaemon.net>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
-References: <52797238.8070304@gmail.com>
-	<20131106002505.GC3359@google.com>
-	<CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
-	<CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
-	<20131108012352.GE2955@google.com>
-	<CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
-	<CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
-Date: Mon, 11 Nov 2013 13:26:06 -0800
-Message-ID: <CADTPrLRJD0er1kijjm2SEE6wUA9eQaz+OOd67E3MpHLu6k-R6Q@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
-From: Rajat Jain <rajatjain.linux@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Tom Nguyen <tom.l.nguyen@intel.com>,
-	Kristen Accardi <kristen.c.accardi@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131124025808.GQ29241@titan.lakedaemon.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Sat, Nov 23, 2013 at 09:58:08PM -0500, Jason Cooper wrote:
+> Jason,
+> 
+> On Thu, Oct 31, 2013 at 05:32:59PM -0600, Jason Gunthorpe wrote:
+> > When PCI_COMMAND_MEMORY/PCI_COMMAND_IO are cleared the bridge should not
+> > allocate windows or even look at the window limit/base registers.
+> > 
+> > Otherwise it can attempt to setup bogus windows that the PCI core code
+> > creates during discovery. The core will leave PCI_COMMAND_IO cleared if
+> > it doesn't need an IO window.
+> > 
+> > Have mvebu_pcie_handle_*_change respect the bits, and call the change
+> > function whenever the bits changes.
+> > 
+> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> >  drivers/pci/host/pci-mvebu.c | 14 ++++++++++++--
+> >  1 file changed, 12 insertions(+), 2 deletions(-)
+> 
+> I'd like to get back on track with these small patches being Acked by
+> mvebu maintainers and then going through Bjorn.  Could you please resend
+> an updated patchset for this and 2/2?
 
->> With my patch, we'd eliminate the 1 second delay and the second line
->> of output above. If we also want to get rid of the first line
->> "Unexpected CMD_COMPLETED..." also, that would probably have to be
->> solved by changing the behavior to assume that CC shall be generated
->> for every SLOTCTRL register write.
->
-> I *do* want to get rid of the "Unexpected CMD_COMPLETED" complaint.
-> We shouldn't complain about hardware that is working perfectly fine.
-> I don't know the best way to do that yet.  I have found a box with the
-> same hardware that was fixed by 5808639bfa98, so I hope to play with
-> it and figure out something that will work nicely for both scenarios.
+I recall these two patches are waiting for Thomas to give his Ok. His
+testing found problems with the prior versions that I cannot detect on
+my hardware..
 
-Please keep posted :-)
+Once that happens I can send them on with his ack to Bjorn?
 
->
-> BTW, can you open a report at bugzilla.kernel.org and attach your
-> "lspci -vvxxx" and dmesg output?  When we eventually merge a fix, I'd
-> like to have the details archived somewhere.
-
-Done:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=64821
-
-Please let me know if you need any help in trying something out - I'd
-be more than keen to help - write code or test.
-
-BTW, I figured another way that solves the current problem at hand
-(for both kind of controllers). Today the events are cleared just
-before call to pcie_disable_notification, if we clear them afterwards
-also, the current problem is taken care of for all controllers. Of
-course this does not look the right way to solve the problem though
-(since the ctrl->no_cmd_completed shall still be 1, which is not
-right).
-
-@@ -948,6 +948,10 @@ struct controller *pcie_init(struct pcie_device *dev)
-
-        /* Clear all remaining event bits in Slot Status register */
-        if (pciehp_writew(ctrl, PCI_EXP_SLTSTA, 0x1f))
-                goto abort_ctrl;
-
-        /* Disable sotfware notification */
-        pcie_disable_notification(ctrl);
-
-+       /* Clear all remaining event bits in Slot Status register */
-+       if (pciehp_writew(ctrl, PCI_EXP_SLTSTA, 0x1f))
-+               goto abort_ctrl;
-+
-        ctrl_info(ctrl, "HPC vendor_id %x device_id %x ss_vid %x ss_did %x\n",
-                  pdev->vendor, pdev->device, pdev->subsystem_vendor,
-                  pdev->subsystem_device);
-
-
-Thanks,
-
-Rajat
+Regards,
+Jason
