@@ -1,97 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:42654 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757569Ab3KMQ3y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 11:29:54 -0500
-Received: by mail-wg0-f51.google.com with SMTP id m15so656671wgh.6
-        for <linux-pci@vger.kernel.org>; Wed, 13 Nov 2013 08:29:53 -0800 (PST)
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	linux-pm@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Kevin Hilman <khilman@linaro.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [RFC PATCH] PM / Runtime: Allow to inactivate devices during system suspend
-Date: Wed, 13 Nov 2013 17:29:38 +0100
-Message-Id: <1384360178-333-1-git-send-email-ulf.hansson@linaro.org>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:49826 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751809Ab3KYXMx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 18:12:53 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so7722072ieb.8
+        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 15:12:52 -0800 (PST)
+Date: Mon, 25 Nov 2013 16:12:48 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Veaceslav Falico <vfalico@redhat.com>
+Cc: linux-pci@vger.kernel.org, torvalds@linux-foundation.org,
+	tglx@linutronix.de, yinghai@kernel.org, Knut_Petersen@t-online.de,
+	mingo@kernel.org, paulmck@linux.vnet.ibm.com, fweisbec@gmail.com,
+	linux-kernel@vger.kernel.org, Neil Horman <nhorman@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v3 1/3] msi: free msi_desc entry only after we've
+ released the kobject
+Message-ID: <20131125231248.GB4034@google.com>
+References: <1383042632-7102-1-git-send-email-vfalico@redhat.com>
+ <1383042632-7102-2-git-send-email-vfalico@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1383042632-7102-2-git-send-email-vfalico@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PM core was preventing devices from going inactive during system
-suspend. Remove this constraint and moreover try to inactivate devices
-by invoking pm_runtime_idle() before proceeding with device's
-suspend_late callbacks.
+On Tue, Oct 29, 2013 at 11:30:30AM +0100, Veaceslav Falico wrote:
+> Currently, we first do kobject_put(&entry->kobj) and the kfree(entry),
+> however kobject_put() doesn't guarantee us that it was the last reference
+> and that the kobj isn't used currently by someone else, so after we
+> kfree(entry) with the struct kobject - other users will begin using the
+> freed memory, instead of the actual kobject.
+> 
+> Fix this by using the kobject->release callback, which is called last when
+> the kobject is indeed not used and is cleaned up - it's msi_kobj_release(),
+> which can do the kfree(entry) safely (kobject_put/cleanup doesn't use the
+> kobj itself after ->release() was called, so we're safe).
+> 
+> In case we've failed to create the sysfs directories - just kfree()
+> it - cause we don't have the kobjects attached.
+> 
+> Also, remove the same functionality from populate_msi_sysfs(), cause on
+> failure we anyway call free_msi_irqs(), which will take care of all the
+> kobjects properly.
+> 
+> And add the forgotten pci_dev_put(pdev) in case of failure to register the
+> kobject in populate_msi_sysfs().
+> 
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Neil Horman <nhorman@tuxdriver.com>
+> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> CC: linux-pci@vger.kernel.org
+> CC: linux-kernel@vger.kernel.org
+> Signed-off-by: Veaceslav Falico <vfalico@redhat.com>
 
-A great amount of drivers that uses runtime PM will benefit from this.
+I'm still hoping that Greg (or somebody else; Greg already posted the bulk
+of the work) will finish up the conversion to attributes, and that Neil
+will confirm that works with no changes to irqbalance.  So I'm going to
+drop these patches for now.  Poke me if we need to revive them.
 
-Drivers that implements some of the system ->suspend* callbacks for the
-only reason of making sure the runtime PM resourses gets inactive, can
-now solely instead rely on the PM core to handle this.
+Bjorn
 
-In the case were drivers needs there runtime resourses to be activated
-to be able to handle their system suspend tasks, those can easily just
-restore the runtime PM usage count, pm_runtime_put_sync(), once done
-with it's suspend operations, which then will inactivate the device.
-
-Cc: Kevin Hilman <khilman@linaro.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
----
-
-There are a quite long history for how the PM core behaves around this
-topic. Changes has been iterated, back for forward, you might even
-think that it should have been settled at this point. So, forgive me
-for bringing this up, again.
-
-This patch shall obviously not be merged as is, it will cause
-regressions for several drivers and subsystems. The intent is instead
-to try to follow up on previous discussions to see if we might end up
-closer to the sequence, which my RFC PATCH suggests, or if I am just
-bothering you completely unnecessary.
-
----
- drivers/base/power/main.c |   11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
-index ee039af..670b1d5 100644
---- a/drivers/base/power/main.c
-+++ b/drivers/base/power/main.c
-@@ -832,7 +832,7 @@ static void device_complete(struct device *dev, pm_message_t state)
- 
- 	device_unlock(dev);
- 
--	pm_runtime_put(dev);
-+	pm_request_idle(dev);
- }
- 
- /**
-@@ -1004,6 +1004,7 @@ static int device_suspend_late(struct device *dev, pm_message_t state)
- 	pm_callback_t callback = NULL;
- 	char *info = NULL;
- 
-+	pm_runtime_idle(dev);
- 	__pm_runtime_disable(dev, false);
- 
- 	if (dev->power.syscore)
-@@ -1312,14 +1313,6 @@ static int device_prepare(struct device *dev, pm_message_t state)
- 	if (dev->power.syscore)
- 		return 0;
- 
--	/*
--	 * If a device's parent goes into runtime suspend at the wrong time,
--	 * it won't be possible to resume the device.  To prevent this we
--	 * block runtime suspend here, during the prepare phase, and allow
--	 * it again during the complete phase.
--	 */
--	pm_runtime_get_noresume(dev);
--
- 	device_lock(dev);
- 
- 	dev->power.wakeup_path = device_may_wakeup(dev);
--- 
-1.7.9.5
-
+> ---
+>  drivers/pci/msi.c | 31 ++++++++++++-------------------
+>  1 file changed, 12 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index d5f90d6..5d70f49 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -374,19 +374,22 @@ static void free_msi_irqs(struct pci_dev *dev)
+>  				iounmap(entry->mask_base);
+>  		}
+>  
+> +		list_del(&entry->list);
+> +
+>  		/*
+>  		 * Its possible that we get into this path
+>  		 * When populate_msi_sysfs fails, which means the entries
+>  		 * were not registered with sysfs.  In that case don't
+> -		 * unregister them.
+> +		 * unregister them, and just free. Otherwise the
+> +		 * kobject->release will take care of freeing the entry via
+> +		 * msi_kobj_release().
+>  		 */
+>  		if (entry->kobj.parent) {
+>  			kobject_del(&entry->kobj);
+>  			kobject_put(&entry->kobj);
+> +		} else {
+> +			kfree(entry);
+>  		}
+> -
+> -		list_del(&entry->list);
+> -		kfree(entry);
+>  	}
+>  }
+>  
+> @@ -509,6 +512,7 @@ static void msi_kobj_release(struct kobject *kobj)
+>  	struct msi_desc *entry = to_msi_desc(kobj);
+>  
+>  	pci_dev_put(entry->dev);
+> +	kfree(entry);
+>  }
+>  
+>  static struct kobj_type msi_irq_ktype = {
+> @@ -522,7 +526,6 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>  	struct msi_desc *entry;
+>  	struct kobject *kobj;
+>  	int ret;
+> -	int count = 0;
+>  
+>  	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
+>  	if (!pdev->msi_kset)
+> @@ -534,23 +537,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>  		pci_dev_get(pdev);
+>  		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+>  				     "%u", entry->irq);
+> -		if (ret)
+> -			goto out_unroll;
+> -
+> -		count++;
+> +		if (ret) {
+> +			pci_dev_put(pdev);
+> +			return ret;
+> +		}
+>  	}
+>  
+>  	return 0;
+> -
+> -out_unroll:
+> -	list_for_each_entry(entry, &pdev->msi_list, list) {
+> -		if (!count)
+> -			break;
+> -		kobject_del(&entry->kobj);
+> -		kobject_put(&entry->kobj);
+> -		count--;
+> -	}
+> -	return ret;
+>  }
+>  
+>  /**
+> -- 
+> 1.8.4
+> 
