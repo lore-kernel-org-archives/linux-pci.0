@@ -1,39 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f49.google.com ([209.85.213.49]:41494 "EHLO
-	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758049Ab3KZU6m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:58:42 -0500
-Date: Tue, 26 Nov 2013 15:58:36 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 07/11] PCI/MSI: Make pci_enable_msi/msix() 'nvec'
- argument type as int
-Message-ID: <20131126205836.GA8588@mtj.dyndns.org>
-References: <cover.1385399393.git.agordeev@redhat.com>
- <50fceee5c8b44c950c6082a6d73c643fa3788c81.1385399393.git.agordeev@redhat.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:54488 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756685Ab3KYUDC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Nov 2013 15:03:02 -0500
+Date: Mon, 25 Nov 2013 13:02:56 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jason Cooper <jason@lakedaemon.net>,
+	Jingoo Han <jg1.han@samsung.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: PCI: mvebu: return NULL instead of ERR_PTR(ret)
+Message-ID: <20131125200256.GA7316@obsidianresearch.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50fceee5c8b44c950c6082a6d73c643fa3788c81.1385399393.git.agordeev@redhat.com>
+In-Reply-To: <001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 10:09:56AM +0100, Alexander Gordeev wrote:
-> Make pci_enable_msi_block(), pci_enable_msi_block_auto() and
-> pci_enable_msix() consistent with regard to the type of 'nvec'
-> argument.
+On Sat, Nov 23, 2013 at 10:00:33PM -0500, Jason Cooper wrote:
+> And a small addendum: I currently have the following in mvebu/drivers
+>   058100a08be8 PCI: mvebu: return NULL instead of ERR_PTR(ret)
+
+Folks, I took a quick look at this, and it looks suspicious (sorry, I
+can't seem to find the thread to followup post)
+
+>    PCI: mvebu: return NULL instead of ERR_PTR(ret)
+>    
+>    Return NULL instead of ERR_PTR(ret) in order to fix the following
+>    sparse warning:
+>    
+>    drivers/pci/host/pci-mvebu.c:744:31: warning: incorrect type in return expression (different address
+>    spaces)
+>    drivers/pci/host/pci-mvebu.c:744:31:    expected void [noderef] <asn:2>*
+>    drivers/pci/host/pci-mvebu.c:744:31:    got void *
+>    
+>    Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+>    Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+>    Signed-off-by: Jason Cooper <jason@lakedaemon.net>
+>
+>--- a/drivers/pci/host/pci-mvebu.c
+>+++ b/drivers/pci/host/pci-mvebu.c
+>@@ -740,7 +740,7 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+>        ret = of_address_to_resource(np, 0, &regs);
+>        if (ret)
+>-               return ERR_PTR(ret);
+>+               return NULL;
+> 
+>        return devm_ioremap_resource(&pdev->dev, &regs);
 
-Reviewed-by: Tejun Heo <tj@kernel.org>
+So we drop the ERR_PTR for that return but 'devm_ioremap_resource'
+returns ERR_PTR too:
 
-Thanks.
+/**
+ * devm_ioremap_resource() - check, request region, and ioremap resource
+ * @dev: generic device to handle the resource for
+ * @res: resource to be handled
+ *
+ * Checks that a resource is a valid memory region, requests the memory region
+ * and ioremaps it either as cacheable or as non-cacheable memory depending on
+ * the resource's flags. All operations are managed and will be undone on
+ * driver detach.
+ *
+ * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
+ * on failure. Usage example:
+ *
+ *      res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ *      base = devm_ioremap_resource(&pdev->dev, res);
+ *      if (IS_ERR(base))
+ *              return PTR_ERR(base);
 
--- 
-tejun
+So this is clearly wrong:
+ 
+> 		port->base = mvebu_pcie_map_registers(pdev, child, port);
+>-		if (IS_ERR(port->base)) {
+>+		if (!port->base) {
+> 			dev_err(&pdev->dev,
+
+NAK I guess?
+
+This looks like a sparse problem, doesn't it complain for
+devm_ioremap_resource too?
+
+void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
+{
+[..]
+                return ERR_PTR(-EBUSY);
+
+Regards,
+Jason
