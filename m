@@ -1,124 +1,127 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hygieia.santi-shop.eu ([78.46.175.2]:51379 "EHLO
+	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510Ab3KYVEX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 16:04:23 -0500
+Date: Mon, 25 Nov 2013 22:04:19 +0100
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: dri-devel@lists.freedesktop.org,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 2/3] ACPI / hotplug: Fix PCI host bridge hot removal
-Date: Wed, 20 Nov 2013 00:42:28 +0100
-Message-ID: <3445730.IkUyvGUQQp@vostro.rjw.lan>
-In-Reply-To: <1384898320.1791.48.camel@misato.fc.hp.com>
-References: <2434673.zhjYZOTQ4A@vostro.rjw.lan> <4037930.5v7ysfShLb@vostro.rjw.lan> <1384898320.1791.48.camel@misato.fc.hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	Peter Jones <pjones@redhat.com>
+Subject: Re: [RFC patch] PCI: Extend boot_vga sysfs attribute lookup to fix
+ X on MBA+EFI
+Message-ID: <20131125220419.302ccc54@neptune.home>
+In-Reply-To: <CAErSpo5D1uFVGcuGJyX+FGFL6mfaXZQ6dOZPsRwDACXxqe5j_w@mail.gmail.com>
+References: <20131125205441.5046e0cb@neptune.home>
+	<CAErSpo5D1uFVGcuGJyX+FGFL6mfaXZQ6dOZPsRwDACXxqe5j_w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 19, 2013 02:58:40 PM Toshi Kani wrote:
-> On Tue, 2013-11-19 at 22:10 +0100, Rafael J. Wysocki wrote:
-> > > On Tuesday, November 19, 2013 10:48:51 AM Toshi Kani wrote:
-> > > > On Mon, 2013-11-18 at 22:39 +0100, Rafael J. Wysocki wrote:
-> > > > > On Monday, November 18, 2013 11:10:05 AM Toshi Kani wrote:
-> > > > > > On Thu, 2013-11-14 at 00:16 +0100, Rafael J. Wysocki wrote:
-> > > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > > > 
-> > > > > > > Since the PCI host bridge scan handler does not set hotplug.enabled,
-> > > > > > > the check of it in acpi_bus_device_eject() effectively prevents the
-> > > > > > > root bridge hot removal from working after commit a3b1b1ef78cd
-> > > > > > > (ACPI / hotplug: Merge device hot-removal routines).  However, that
-> > > > > > > check is not necessary, because the other acpi_bus_device_eject()
-> > > > > > > users, acpi_hotplug_notify_cb and acpi_eject_store(), do the same
-> > > > > > > check by themselves before executing that function.
-> > > > > > > 
-> > > > > > > For this reason, remove the scan handler check from
-> > > > > > > acpi_bus_device_eject() to make PCI hot bridge hot removal work
-> > > > > > > again.
-> > > > > > 
-> > > > > > I am curious why the PCI host bridge scan handler does not set
-> > > > > > hotplug.enabled.  Is this how it disables hotplug via sysfs eject but
-> > > > > > enables via ACPI notification?
-> > > > > 
-> > > > > It just doesn't register for hotplug at all.  I guess it could set that
-> > > > > bit alone, but then it would be quite confusing and the check is not
-> > > > > necessary anyway.
-> > > > 
-> > > > I see.  Given how the PCI host bridge scan handler is integrated today,
-> > > > the change looks reasonable to me.
-> > > 
-> > > Looking further, I noticed that there is one more issue to address.  The
-> > > patch below applies on top of your patchset.
-> > >
-> > > From: Toshi Kani <toshi.kani@hp.com>
-> > > Subject: [PATCH] ACPI / hotplug: Fix conflicted PCI bridge notify
-> > > handlers
-> > > 
-> > > The PCI host bridge scan handler installs its own notify handler,
-> > > handle_hotplug_event_root(), by itself.  Nevertheless, the ACPI
-> > > hotplug framework also installs the common notify handler,
-> > > acpi_hotplug_notify_cb(), for PCI root bridges.  This causes
-> > > acpi_hotplug_notify_cb() to call _OST method with unsupported
-> > > error as hotplug.enabled is not set.
-> > > 
-> > > To address this issue, introduce hotplug.self_install flag, which
-> > > indicates that the scan handler installs its own notify handler by
-> > > itself.  The ACPI hotplug framework does not install the common
-> > > notify handler when this flag is set.
-> > 
-> > Good catch!
-> > 
-> > Still, I don't think we need a new flag, because we know that that
-> > scan handler doesn't support hotplug, because its hotplug profile
-> > hasn't been registered (that actually applies to all scan handlers
-> > without hotplug support, not only the root host bridge).  
-> 
-> When a scan handler does not support hotplug at all, the common notify
-> handler should be installed so that it can call _OST with an appropriate
-> response.
-
-That creates an arbitrary difference between devices that have scan handlers
-and devices that don't have them (PCI, USB, SATA etc).  So if we want _OST
-to be called for all devices for which hotplug is not supported, that
-should be implemented in a different way and not necessarily in 3.13.
-
-> > Moreover,
-> > if it does support hotplug, but the hotplug profile hasn't been
-> > registered due to an error, we still should not install the notify
-> > handler I think.  
-> 
-> This case, I think the common notify handler should be installed so that
-> it can call _OST for error response as well.  The question is what to do
-> when a scan handler has its own notify handler.
-
-Well, to be precise, in the case of the PCI host bridge the notify handler is
-installed via a separate init routine that doesn't belong to the scan handler.
-
-Semantics aside, my original intention was not to install notify handlers for
-all devices with scan handlers, but only for those whose scan handlers support
-hotplug, because the default for all devices without hotplug support is to
-avoid installing any notify handlers at all.
-
-> > So, I prefer the patch below.
+On Mon, 25 November 2013 Bjorn Helgaas wrote:
+> On Mon, Nov 25, 2013 at 12:54 PM, Bruno Prémont wrote:
+> > On a MacBookAir2,1, booting to Linux with EFI though having
+> > no efifb built-in Xorg refuses to start with "no devices detected"
+> > because for the only VGA device available (NVidia Geforce 9400M)
+> > the sysfs attribute boot_vga is zero (instead of expected 1).
 > >
-> > And this fix will remain useful after my recent series at
-> > http://marc.info/?l=linux-pci&m=138470560909690&w=4
+> > When CONFIG_FB_EFI is selected, efifb does provide its own
+> > vga_default_device() to report the PCI device matching global
+> > screen_info as determined during efifb setup.
+> >
+> > Otherwise there is just a dummy or VGA_ARB's vga_default_device()
+> > that does not provide the right information.
 > 
-> I agree that the PCI host bridge scan handler should use the common
-> notify handler, and your change is on the right direction.  But as I
-> understand, this patchset is for 3.14.  For 3.13, I thought we have to
-> live with the separate PCI root notify handler, and this patch avoids
-> the conflict for the time being.  If necessary, the new flag can be
-> removed in 3.14.
+> Wouldn't it be cleaner to fix vga_default_device() so it returns the
+> correct thing even when CONFIG_FB_EFI=n?
 
-Well, it could, but then the current behavior is not intentional as I
-said and obviously buggy for PCI host bridges.  So in my opinion we
-should bring things back to the way they were *intended* to behave in the
-first place.  If that causes problems to happen for someone, we can still
-special case the PCI host bridge, but I'd prefer to avoid that if possible.
+I would rather completely drop the vga_default_device() from efifb
+(CONFIG_FB_EFI) and just keep vga_default_device() for
+vga-arbitration/vga-switcheroo.
 
-Thanks!
+The fact that there are currently *two* instances of that function
+doesn't make life easy for determining who is providing it and when.
+  drivers/gpu/vga/vgaarb.c:135
+  drivers/video/efifb.c:88
+  include/linux/vgaarb.h:190 (dummy)
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> > On the other hand, boot_vga_show() falls back to poking PCI
+> > resources to flag a PCI device as boot_vga if vga_default_device()
+> > returned no PCI device (NULL).
+> >
+> > To complement this PCI resource poking, this patch copies the
+> > validation code used to determine which PCI device to report as
+> > default VGA device by efifb into boot_vga_show().
+> 
+> If we do have to use logic like this, I'd like it better if it were
+> factored into a single function called both here and from
+> efifb_setup().
+
+As of above, I would preferably drop that part of code from
+efifb_setup() and have the logic called only in one place and each
+time the same way.
+Otherwise efifb versus x86_sysfb+simplefb or directly going to
+native driver (nvoueau/radeon/...) behave differently without reason.
+
+Bruno
+
+
+> > Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+> > ---
+> > Would it make sense to kill the corresponding code from efifb
+> > as it covers only a single case?
+> >
+> > The other EFI capable system I have (AMD Ilano based, Gigabyte
+> > mainboard does report boot_vga=1, possibly through the resources
+> > poking and there Xorg starts properly without efifb built in.
+> >
+> > Selecting CONFIG_X86_SYSFB (combined with CONFIG_FB_SIMPLE) does
+> > not help by itself, patching that one instead of PCI's boot_vga
+> > attribute directly would still not cover the case when neither
+> > of them is enabled.
+> >
+> >
+> >  drivers/pci/pci-sysfs.c | 21 +++++++++++++++++++++
+> >  1 file changed, 21 insertions(+)
+> >
+> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > index 7128cfd..91cac71 100644
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -28,6 +28,7 @@
+> >  #include <linux/pci-aspm.h>
+> >  #include <linux/slab.h>
+> >  #include <linux/vgaarb.h>
+> > +#include <linux/screen_info.h>
+> >  #include <linux/pm_runtime.h>
+> >  #include "pci.h"
+> >
+> > @@ -540,6 +541,26 @@ boot_vga_show(struct device *dev, struct device_attribute *attr, char *buf)
+> >         if (vga_dev)
+> >                 return sprintf(buf, "%u\n", (pdev == vga_dev));
+> >
+> > +       if ((pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA) {
+> > +               resource_size_t start, end;
+> > +               int i;
+> > +
+> > +               for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> > +                       if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+> > +                               continue;
+> > +
+> > +                       start = pci_resource_start(pdev, i);
+> > +                       end  = pci_resource_end(pdev, i);
+> > +
+> > +                       if (!start || !end)
+> > +                               continue;
+> > +
+> > +                       if (screen_info.lfb_base >= start &&
+> > +                               (screen_info.lfb_base + screen_info.lfb_size) < end)
+> > +                               return sprintf(buf, "1\n");
+> > +               }
+> > +       }
+> > +
+> >         return sprintf(buf, "%u\n",
+> >                 !!(pdev->resource[PCI_ROM_RESOURCE].flags &
+> >                    IORESOURCE_ROM_SHADOW));
