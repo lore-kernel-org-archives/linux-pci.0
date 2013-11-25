@@ -1,94 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57909 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752135Ab3K2A0q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 19:26:46 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Aaron Lu <aaron.lu@intel.com>, Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org,
-	linux-usb@vger.kernel.org, Lan Tianyu <tianyu.lan@intel.com>
-Subject: [PATCH 3/3] ACPI / bind: Move acpi_get_child() to drivers/ide/ide-acpi.c
-Date: Fri, 29 Nov 2013 01:39:06 +0100
-Message-ID: <2277225.7ruX4XHWxe@vostro.rjw.lan>
-In-Reply-To: <4501334.ovACrGogrl@vostro.rjw.lan>
-References: <4501334.ovACrGogrl@vostro.rjw.lan>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:58332 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752111Ab3KYV6U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 16:58:20 -0500
+Received: by mail-oa0-f47.google.com with SMTP id k1so5024820oag.6
+        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 13:58:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo4bXfVbxcJ6-LcByDRX25DSa8Pa+9dLtcaW631YK88Gcw@mail.gmail.com>
+References: <5270BFE7.4000602@huawei.com> <alpine.LNX.2.00.1310301606080.2333@eggly.anvils>
+ <20131031130647.0ff6f2c7@gandalf.local.home> <alpine.LNX.2.00.1310311442030.2633@eggly.anvils>
+ <20131113032804.GB19394@mtj.dyndns.org> <20131113073806.GA23244@mtj.dyndns.org>
+ <20131116002820.GA31073@google.com> <20131116045356.GA5618@mtj.dyndns.org>
+ <20131118181440.GA2996@google.com> <CAE9FiQW07ZAU_0bjkrwK54TAn48ByyS=kXNFwQJ-G2FFkK_W3A@mail.gmail.com>
+ <20131118203925.GA26682@google.com> <528D8B6A.40008@oracle.com> <CAErSpo4bXfVbxcJ6-LcByDRX25DSa8Pa+9dLtcaW631YK88Gcw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 25 Nov 2013 14:57:59 -0700
+Message-ID: <CAErSpo5S4GqbOPfGUMOw2vsMFewrB4p4kXfW5D1MB9MC_WTWPQ@mail.gmail.com>
+Subject: Re: Possible regression with cgroups in 3.11
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Tejun Heo <tj@kernel.org>,
+	Hugh Dickins <hughd@google.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Li Zefan <lizefan@huawei.com>,
+	Markus Blank-Burian <burian@muenster.de>,
+	Michal Hocko <mhocko@suse.cz>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	David Rientjes <rientjes@google.com>,
+	Ying Han <yinghan@google.com>,
+	Greg Thelen <gthelen@google.com>,
+	Michel Lespinasse <walken@google.com>, cgroups@vger.kernel.org,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Lai Jiangshan <laijs@cn.fujitsu.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Alexander Duyck <alexander.h.duyck@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jiri Slaby <jslaby@suse.cz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Nov 20, 2013 at 9:47 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Jiri]
+>
+> On Wed, Nov 20, 2013 at 9:26 PM, Sasha Levin <sasha.levin@oracle.com> wrote:
+>> On 11/18/2013 03:39 PM, Bjorn Helgaas wrote:
+>>>
+>>> On Mon, Nov 18, 2013 at 11:29:32AM -0800, Yinghai Lu wrote:
+>>>>
+>>>> On Mon, Nov 18, 2013 at 10:14 AM, Bjorn Helgaas <bhelgaas@google.com>
+>>>> wrote:
+>>>>>>
+>>>>>> A bit of comment here would be nice but yeah I think this should work.
+>>>>>> Can you please also queue the revert of c2fda509667b ("workqueue:
+>>>>>> allow work_on_cpu() to be called recursively") after this patch?
+>>>>>> Please feel free to add my acked-by.
+>>>>>
+>>>>>
+>>>>> OK, below are the two patches (Alex's fix + the revert) I propose to
+>>>>> merge.  Unless there are objections, I'll ask Linus to pull these
+>>>>> before v3.13-rc1.
+>>>>>
+>>>>>
+>>>>>
+>>>>> commit 84f23f99b507c2c9247f47d3db0f71a3fd65e3a3
+>>>>> Author: Alexander Duyck <alexander.h.duyck@intel.com>
+>>>>> Date:   Mon Nov 18 10:59:59 2013 -0700
+>>>>>
+>>>>>      PCI: Avoid unnecessary CPU switch when calling driver .probe()
+>>>>> method
+>>>>>
+>>>>>      If we are already on a CPU local to the device, call the driver
+>>>>> .probe()
+>>>>>      method directly without using work_on_cpu().
+>>>>>
+>>>>>      This is a workaround for a lockdep warning in the following
+>>>>> scenario:
+>>>>>
+>>>>>        pci_call_probe
+>>>>>          work_on_cpu(cpu, local_pci_probe, ...)
+>>>>>            driver .probe
+>>>>>              pci_enable_sriov
+>>>>>                ...
+>>>>>                  pci_bus_add_device
+>>>>>                    ...
+>>>>>                      pci_call_probe
+>>>>>                        work_on_cpu(cpu, local_pci_probe, ...)
+>>>>>
+>>>>>      It would be better to fix PCI so we don't call VF driver .probe()
+>>>>> methods
+>>>>>      from inside a PF driver .probe() method, but that's a bigger
+>>>>> project.
+>>>>>
+>>>>>      [bhelgaas: disable preemption, open bugzilla, rework comments &
+>>>>> changelog]
+>>>>>      Link: https://bugzilla.kernel.org/show_bug.cgi?id=65071
+>>>>>      Link:
+>>>>> http://lkml.kernel.org/r/CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com
+>>>>>      Link:
+>>>>> http://lkml.kernel.org/r/20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com
+>>>>>      Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>>>>>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>>>      Acked-by: Tejun Heo <tj@kernel.org>
+>>>>
+>>>>
+>>>> Tested-by: Yinghai Lu <yinghai@kernel.org>
+>>>> Acked-by: Yinghai Lu <yinghai@kernel.org>
+>>>
+>>>
+>>> Thanks, I added these and pushed my for-linus branch for -next to
+>>> pick up before I ask Linus to pull them.
+>>
+>>
+>> Hi guys,
+>>
+>> This patch seems to be causing virtio (wouldn't it happen with any other
+>> driver too?) to give
+>> the following spew:
+>
+> Yep, Jiri Slaby reported this earlier.  I dropped those patches for
+> now.  Yinghai and I both tested this without incident, but we must
+> have tested quite the same scenario you did.
+>
+> I'll look at this more tomorrow.  My first thought is that it's
+> probably silly to worry about preemption when checking the node.  It's
+> unlikely that we'd be preempted (probably not even possible except at
+> hot add-time), and the worst that can happen is we run the .probe()
+> method on the wrong node, which means worse performance but correct
+> functionality.
 
-Since drivers/ide/ide-acpi.c is the only remaining user of
-acpi_get_child(), move that function into that file as a static
-routine.
+I dropped the preempt_disable() and re-added this to my for-linus
+branch.  Let me know if you see any more issues.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/glue.c     |   12 ------------
- drivers/ide/ide-acpi.c  |   11 +++++++++++
- include/acpi/acpi_bus.h |    1 -
- 3 files changed, 11 insertions(+), 13 deletions(-)
-
-Index: linux-pm/drivers/acpi/glue.c
-===================================================================
---- linux-pm.orig/drivers/acpi/glue.c
-+++ linux-pm/drivers/acpi/glue.c
-@@ -151,18 +151,6 @@ struct acpi_device *acpi_find_child_devi
- }
- EXPORT_SYMBOL_GPL(acpi_find_child_device);
- 
--acpi_handle acpi_get_child(acpi_handle handle, u64 addr)
--{
--	struct acpi_device *adev;
--
--	if (!handle || acpi_bus_get_device(handle, &adev))
--		return NULL;
--
--	adev = acpi_find_child_device(adev, addr, false);
--	return adev ? adev->handle : NULL;
--}
--EXPORT_SYMBOL_GPL(acpi_get_child);
--
- static void acpi_physnode_link_name(char *buf, unsigned int node_id)
- {
- 	if (node_id > 0)
-Index: linux-pm/drivers/ide/ide-acpi.c
-===================================================================
---- linux-pm.orig/drivers/ide/ide-acpi.c
-+++ linux-pm/drivers/ide/ide-acpi.c
-@@ -98,6 +98,17 @@ bool ide_port_acpi(ide_hwif_t *hwif)
- 	return ide_noacpi == 0 && hwif->acpidata;
- }
- 
-+static acpi_handle acpi_get_child(acpi_handle handle, u64 addr)
-+{
-+	struct acpi_device *adev;
-+
-+	if (!handle || acpi_bus_get_device(handle, &adev))
-+		return NULL;
-+
-+	adev = acpi_find_child_device(adev, addr, false);
-+	return adev ? adev->handle : NULL;
-+}
-+
- /**
-  * ide_get_dev_handle - finds acpi_handle and PCI device.function
-  * @dev: device to locate
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -436,7 +436,6 @@ struct acpi_pci_root {
- 
- struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
- 					   u64 address, bool check_children);
--acpi_handle acpi_get_child(acpi_handle handle, u64 addr);
- int acpi_is_root_bridge(acpi_handle);
- struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle);
- 
-
+Bjorn
