@@ -1,71 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26482 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056Ab3KZB30 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 20:29:26 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	David Airlie <airlied@linux.ie>
-Subject: [PATCH v2 10/10] intel-gtt: Read 64bit for gmar_bus_addr
-Date: Mon, 25 Nov 2013 17:28:10 -0800
-Message-Id: <1385429290-25397-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 3/4] ACPI / bind: Redefine acpi_get_child()
+Date: Mon, 25 Nov 2013 01:12:45 +0100
+Message-ID: <1530243.8AySlVFSvm@vostro.rjw.lan>
+In-Reply-To: <2610478.KxPMyuOMok@vostro.rjw.lan>
+References: <2610478.KxPMyuOMok@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-That bar could be 64bit pref mem and above 4G.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
--v2: refresh to 3.13-rc1
+Since acpi_get_child() is the only user of acpi_find_child() now,
+drop the static inline definition of the former and redefine the
+latter as new acpi_get_child().
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Airlie <airlied@linux.ie>
-Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/char/agp/intel-gtt.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/acpi/glue.c     |    6 +++---
+ include/acpi/acpi_bus.h |    6 +-----
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
-index b8e2014..b929e9d 100644
---- a/drivers/char/agp/intel-gtt.c
-+++ b/drivers/char/agp/intel-gtt.c
-@@ -609,8 +609,10 @@ static bool intel_gtt_can_wc(void)
- static int intel_gtt_init(void)
- {
- 	u32 gma_addr;
-+	u32 addr_hi = 0;
- 	u32 gtt_map_size;
- 	int ret;
-+	int pos;
- 
- 	ret = intel_private.driver->setup();
- 	if (ret != 0)
-@@ -660,13 +662,17 @@ static int intel_gtt_init(void)
- 	}
- 
- 	if (INTEL_GTT_GEN <= 2)
--		pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
--				      &gma_addr);
-+		pos = I810_GMADDR;
- 	else
--		pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
--				      &gma_addr);
-+		pos = I915_GMADDR;
-+
-+	pci_read_config_dword(intel_private.pcidev, pos, &gma_addr);
-+
-+	if (gma_addr & PCI_BASE_ADDRESS_MEM_TYPE_64)
-+		pci_read_config_dword(intel_private.pcidev, pos + 4, &addr_hi);
- 
- 	intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
-+	intel_private.gma_bus_addr |= (u64)addr_hi << 32;
- 
- 	return 0;
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -147,16 +147,16 @@ struct acpi_device *acpi_find_child_devi
+ 	return ret;
  }
--- 
-1.8.1.4
+ 
+-acpi_handle acpi_find_child(acpi_handle handle, u64 addr, bool is_bridge)
++acpi_handle acpi_get_child(acpi_handle handle, u64 addr)
+ {
+ 	struct acpi_device *parent;
+ 
+ 	if (!handle || acpi_bus_get_device(handle, &parent))
+ 		return NULL;
+ 
+-	return acpi_find_child_device(parent, addr, is_bridge);
++	return acpi_find_child_device(parent, addr, false);
+ }
+-EXPORT_SYMBOL_GPL(acpi_find_child);
++EXPORT_SYMBOL_GPL(acpi_get_child);
+ 
+ static void acpi_physnode_link_name(char *buf, unsigned int node_id)
+ {
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -436,11 +436,7 @@ struct acpi_pci_root {
+ 
+ struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
+ 					   u64 address, bool check_children);
+-acpi_handle acpi_find_child(acpi_handle, u64, bool);
+-static inline acpi_handle acpi_get_child(acpi_handle handle, u64 addr)
+-{
+-	return acpi_find_child(handle, addr, false);
+-}
++acpi_handle acpi_get_child(acpi_handle handle, u64 addr);
+ void acpi_preset_companion(struct device *dev, acpi_handle parent, u64 addr);
+ int acpi_is_root_bridge(acpi_handle);
+ struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle);
 
