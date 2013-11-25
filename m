@@ -1,191 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog122.obsmtp.com ([207.126.144.153]:47858 "EHLO
-	eu1sys200aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751524Ab3K0Ea4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 23:30:56 -0500
-Date: Wed, 27 Nov 2013 10:00:09 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Marek Vasut <marex@denx.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:44734 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754507Ab3KYQiX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Nov 2013 11:38:23 -0500
+Message-ID: <1385397493.2879.557.camel@ul30vt.home>
+Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+Cc: Scott Wood <scottwood@freescale.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region
- mapping
-Message-ID: <20131127043009.GB12773@pratyush-vbox>
-References: <1385500248-6551-1-git-send-email-marex@denx.de>
- <1385500248-6551-2-git-send-email-marex@denx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1385500248-6551-2-git-send-email-marex@denx.de>
+	"agraf@suse.de" <agraf@suse.de>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 25 Nov 2013 09:38:13 -0700
+In-Reply-To: <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+	 <1385067648.2879.421.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Marek Vasut,
-
-Please replace imx6 with designware in subject line  of this patch.
-
-On Wed, Nov 27, 2013 at 05:10:43AM +0800, Marek Vasut wrote:
-> From: Tim Harvey <tharvey@gateworks.com>
+On Mon, 2013-11-25 at 05:33 +0000, Bharat Bhushan wrote:
 > 
-> The IMX6 iATU is used for address translation between the AXI bus
-> address space and PCI address space.  This is used for type0 and type1
-> config cycles but is not necessary for outbound io/mem regions.
+> > -----Original Message-----
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Friday, November 22, 2013 2:31 AM
+> > To: Wood Scott-B07421
+> > Cc: Bhushan Bharat-R65777; linux-pci@vger.kernel.org; agraf@suse.de; Yoder
+> > Stuart-B08248; iommu@lists.linux-foundation.org; bhelgaas@google.com; linuxppc-
+> > dev@lists.ozlabs.org; linux-kernel@vger.kernel.org
+> > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+> > 
+> > On Thu, 2013-11-21 at 14:47 -0600, Scott Wood wrote:
+> > > On Thu, 2013-11-21 at 13:43 -0700, Alex Williamson wrote:
+> > > > On Thu, 2013-11-21 at 11:20 +0000, Bharat Bhushan wrote:
+> > > > >
+> > > > > > -----Original Message-----
+> > > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > > > Sent: Thursday, November 21, 2013 12:17 AM
+> > > > > > To: Bhushan Bharat-R65777
+> > > > > > Cc: joro@8bytes.org; bhelgaas@google.com; agraf@suse.de; Wood
+> > > > > > Scott-B07421; Yoder Stuart-B08248;
+> > > > > > iommu@lists.linux-foundation.org; linux- pci@vger.kernel.org;
+> > > > > > linuxppc-dev@lists.ozlabs.org; linux- kernel@vger.kernel.org;
+> > > > > > Bhushan Bharat-R65777
+> > > > > > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale
+> > > > > > IOMMU (PAMU)
+> > > > > >
+> > > > > > Is VFIO_IOMMU_PAMU_GET_MSI_BANK_COUNT per aperture (ie. each
+> > > > > > vfio user has $COUNT regions at their disposal exclusively)?
+> > > > >
+> > > > > Number of msi-bank count is system wide and not per aperture, But will be
+> > setting windows for banks in the device aperture.
+> > > > > So say if we are direct assigning 2 pci device (both have different iommu
+> > group, so 2 aperture in iommu) to VM.
+> > > > > Now qemu can make only one call to know how many msi-banks are there but
+> > it must set sub-windows for all banks for both pci device in its respective
+> > aperture.
+> > > >
+> > > > I'm still confused.  What I want to make sure of is that the banks
+> > > > are independent per aperture.  For instance, if we have two separate
+> > > > userspace processes operating independently and they both chose to
+> > > > use msi bank zero for their device, that's bank zero within each
+> > > > aperture and doesn't interfere.  Or another way to ask is can a
+> > > > malicious user interfere with other users by using the wrong bank.
+> > > > Thanks,
+> > >
+> > > They can interfere.
 > 
-> This patch removes the calls that inappropriately re-configures the ATU
-> viewport for outbound memory and IO after config cycles and removes them
-> altogether as they are not necessary.
+> Want to be sure of how they can interfere?
 
-Yes, they are not necessary for all the cases where translation is one
-to one. So so for sure all the platform till now introduced should
-work.
-But, what about a platform where memory translation is not one to one?
+What happens if more than one user selects the same MSI bank?
+Minimally, wouldn't that result in the IOMMU blocking transactions from
+the previous user once the new user activates their mapping?
 
-Existing code should work with all sort of memory translation on a
-platform having atleast two viewports capable of programming any type
-of outbound transaction.
-
+> >>  With this hardware, the only way to prevent that
+> > > is to make sure that a bank is not shared by multiple protection contexts.
+> > > For some of our users, though, I believe preventing this is less
+> > > important than the performance benefit.
 > 
-> This resolves issues with PCI devices behind switches and has been tested with
-> a Gige device behind a PLX PEX860x switch.  More testing is needed for other
-> configurations.
+> So should we let this patch series in without protection?
 
-I do not understand if MX6 has 4 Outbound Viewport then how this patch
-helps?
--- PCI devices behind switches would not have been working because
-CFG1 transaction would not have been correct.
--- It works with this patch. This patch changes viewport for CFG1 from
-1 to 0.
--- Can it be possible that MX6 has some restriction on viewport
-programming capability. I mean,like only viewport0 can be programmed
-for CFG0/1?
+No.
 
-Otherwise I do not find any convincing reason that why this patch
-helps in resolving issues with PCI devices behind switches.
-
-
-Regards
-Pratyush
-
+> > 
+> > I think we need some sort of ownership model around the msi banks then.
+> > Otherwise there's nothing preventing another userspace from attempting an MSI
+> > based attack on other users, or perhaps even on the host.  VFIO can't allow
+> > that.  Thanks,
 > 
-> From: Tim Harvey <tharvey@gateworks.com>
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Frank Li <lznuaa@gmail.com>
-> Cc: Harro Haan <hrhaan@gmail.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Richard Zhu <r65037@freescale.com>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Sean Cross <xobs@kosagi.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> Cc: Tim Harvey <tharvey@gateworks.com>
-> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/host/pcie-designware.c | 41 +++-----------------------------------
->  1 file changed, 3 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index ed9b11b..01d76ad 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -46,7 +46,6 @@
->  #define PCIE_ATU_VIEWPORT		0x900
->  #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
->  #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
-> -#define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
->  #define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
->  #define PCIE_ATU_CR1			0x904
->  #define PCIE_ATU_TYPE_MEM		(0x0 << 0)
-> @@ -494,8 +493,8 @@ static void dw_pcie_prog_viewport_cfg0(struct pcie_port *pp, u32 busdev)
->  
->  static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
->  {
-> -	/* Program viewport 1 : OUTBOUND : CFG1 */
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
-> +	/* Program viewport 0 : OUTBOUND : CFG1 */
-> +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
->  			  PCIE_ATU_VIEWPORT);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> @@ -505,38 +504,8 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
->  			  PCIE_ATU_LIMIT);
->  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
->  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-> -}
-> -
-> -static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
-> -{
-> -	/* Program viewport 0 : OUTBOUND : MEM */
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
-> -			  PCIE_ATU_VIEWPORT);
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> -	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
-> -	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
-> -			  PCIE_ATU_LIMIT);
-> -	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
-> -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
-> -			  PCIE_ATU_UPPER_TARGET);
-> -}
-> -
-> -static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
-> -{
-> -	/* Program viewport 1 : OUTBOUND : IO */
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
-> -			  PCIE_ATU_VIEWPORT);
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
-> +	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> -	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
-> -	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
-> -	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
-> -			  PCIE_ATU_LIMIT);
-> -	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
-> -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
-> -			  PCIE_ATU_UPPER_TARGET);
->  }
->  
->  static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-> @@ -552,11 +521,9 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->  	if (bus->parent->number == pp->root_bus_nr) {
->  		dw_pcie_prog_viewport_cfg0(pp, busdev);
->  		ret = cfg_read(pp->va_cfg0_base + address, where, size, val);
-> -		dw_pcie_prog_viewport_mem_outbound(pp);
->  	} else {
->  		dw_pcie_prog_viewport_cfg1(pp, busdev);
->  		ret = cfg_read(pp->va_cfg1_base + address, where, size, val);
-> -		dw_pcie_prog_viewport_io_outbound(pp);
->  	}
->  
->  	return ret;
-> @@ -575,11 +542,9 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->  	if (bus->parent->number == pp->root_bus_nr) {
->  		dw_pcie_prog_viewport_cfg0(pp, busdev);
->  		ret = cfg_write(pp->va_cfg0_base + address, where, size, val);
-> -		dw_pcie_prog_viewport_mem_outbound(pp);
->  	} else {
->  		dw_pcie_prog_viewport_cfg1(pp, busdev);
->  		ret = cfg_write(pp->va_cfg1_base + address, where, size, val);
-> -		dw_pcie_prog_viewport_io_outbound(pp);
->  	}
->  
->  	return ret;
-> -- 
-> 1.8.4.3
+> We have very few (3 MSI bank on most of chips), so we can not assign
+> one to each userspace. What we can do is host and userspace does not
+> share a MSI bank while userspace will share a MSI bank.
+
+Then you probably need VFIO to "own" the MSI bank and program devices
+into it rather than exposing the MSI banks to userspace to let them have
+direct access.  Thanks,
+
+Alex
+
