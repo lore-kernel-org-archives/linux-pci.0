@@ -1,123 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64950 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754088Ab3KQQZt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Nov 2013 11:25:49 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
-Subject: [PATCH 7/10] ACPI / hotplug: Move container-specific code out of the core
-Date: Sun, 17 Nov 2013 17:36 +0100
-Message-ID: <2547688.l8Q1XKb3Ol@vostro.rjw.lan>
-In-Reply-To: <1421028.Rsfpmhnym3@vostro.rjw.lan>
-References: <1421028.Rsfpmhnym3@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 04/10] PCI: Destroy pci dev only once
+Date: Mon, 25 Nov 2013 17:28:04 -0800
+Message-Id: <1385429290-25397-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Mutliple removing via /sys will call pci_destroy_dev two times.
 
-Move container-specific uevents from the core hotplug code to the
-container scan handler's .attach() and .detach() callbacks.
+| When concurent removing pci devices which are in the same pci subtree
+| via sysfs, such as:
+| echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
+| /sys/bus/pci/devices/0000\:1a\:01.0/remove
+| (1a:01.0 device is downstream from the 10:00.0 bridge)
+|
+| the following warning will show:
+| [ 1799.280918] ------------[ cut here ]------------
+| [ 1799.336199] WARNING: CPU: 7 PID: 126 at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
+| [ 1799.433093] list_del corruption, ffff8807b4a7c000->next is LIST_POISON1 (dead000000100100)
+| [ 1800.276623] CPU: 7 PID: 126 Comm: kworker/u512:1 Tainted: G        W    3.12.0-rc5+ #196
+| [ 1800.508918] Workqueue: sysfsd sysfs_schedule_callback_work
+| [ 1800.574703]  0000000000000009 ffff8807adbadbd8 ffffffff8168b26c ffff8807c27d08a8
+| [ 1800.663860]  ffff8807adbadc28 ffff8807adbadc18 ffffffff810711dc ffff8807adbadc68
+| [ 1800.753130]  ffff8807b4a7c000 ffff8807b4a7c000 ffff8807ad089c00 0000000000000000
+| [ 1800.842282] Call Trace:
+| [ 1800.871651]  [<ffffffff8168b26c>] dump_stack+0x55/0x76
+| [ 1800.933301]  [<ffffffff810711dc>] warn_slowpath_common+0x8c/0xc0
+| [ 1801.005283]  [<ffffffff810712c6>] warn_slowpath_fmt+0x46/0x50
+| [ 1801.074081]  [<ffffffff8135a343>] __list_del_entry+0x63/0xd0
+| [ 1801.141839]  [<ffffffff8135a3c1>] list_del+0x11/0x40
+| [ 1801.201320]  [<ffffffff813734da>] pci_remove_bus_device+0x6a/0xe0
+| [ 1801.274279]  [<ffffffff8137356e>] pci_stop_and_remove_bus_device+0x1e/0x30
+| [ 1801.356606]  [<ffffffff8137b20b>] remove_callback+0x2b/0x40
+| [ 1801.423412]  [<ffffffff81251848>] sysfs_schedule_callback_work+0x18/0x60
+| [ 1801.503744]  [<ffffffff8108eab5>] process_one_work+0x1f5/0x540
+| [ 1801.573640]  [<ffffffff8108ea53>] ? process_one_work+0x193/0x540
+| [ 1801.645616]  [<ffffffff8108f2ac>] worker_thread+0x11c/0x370
+| [ 1801.712337]  [<ffffffff8108f190>] ? rescuer_thread+0x350/0x350
+| [ 1801.782178]  [<ffffffff8109731d>] kthread+0xed/0x100
+| [ 1801.841661]  [<ffffffff81097230>] ? kthread_create_on_node+0x160/0x160
+| [ 1801.919919]  [<ffffffff8169cc3c>] ret_from_fork+0x7c/0xb0
+| [ 1801.984608]  [<ffffffff81097230>] ? kthread_create_on_node+0x160/0x160
+| [ 1802.062825] ---[ end trace d77f2054de000fb7 ]---
+|
+| This issue is related to the bug 54411:
+| https://bugzilla.kernel.org/show_bug.cgi?id=54411
 
-This way the core will not have to special-case containers and
-the uevents will be guaranteed to happen every time a container
-is either scanned or trimmed as appropriate.
+Add is_removed to record if pci_destroy_dev is called already.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+During second calling, still have extra dev ref hold via
+device_schedule_call, so we are safe to check dev->is_removed.
+
+It fixs the problem In Gu's test.
+
+-v2: add partial changelog from Gu Zheng <guz.fnst@cn.fujitsu.com>
+     refresh after patch of moving device_del from Rafael.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/acpi/container.c |   11 ++++++++---
- drivers/acpi/scan.c      |    8 +-------
- include/acpi/acpi_bus.h  |    7 -------
- 3 files changed, 9 insertions(+), 17 deletions(-)
+ drivers/pci/remove.c | 8 +++++---
+ include/linux/pci.h  | 1 +
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-Index: linux-pm/drivers/acpi/container.c
-===================================================================
---- linux-pm.orig/drivers/acpi/container.c
-+++ linux-pm/drivers/acpi/container.c
-@@ -44,19 +44,24 @@ static const struct acpi_device_id conta
- 	{"", 0},
- };
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index f452148..b090cec 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -20,9 +20,11 @@ static void pci_stop_dev(struct pci_dev *dev)
  
--static int container_device_attach(struct acpi_device *device,
-+static int container_device_attach(struct acpi_device *adev,
- 				   const struct acpi_device_id *not_used)
+ static void pci_destroy_dev(struct pci_dev *dev)
  {
--	/* This is necessary for container hotplug to work. */
-+	kobject_uevent(&adev->dev.kobj, KOBJ_ONLINE);
- 	return 1;
+-	device_del(&dev->dev);
+-
+-	put_device(&dev->dev);
++	if (!dev->is_removed) {
++		device_del(&dev->dev);
++		dev->is_removed = 1;
++		put_device(&dev->dev);
++	}
  }
  
-+static void container_device_detach(struct acpi_device *adev)
-+{
-+	kobject_uevent(&adev->dev.kobj, KOBJ_OFFLINE);
-+}
-+
- static struct acpi_scan_handler container_handler = {
- 	.ids = container_device_ids,
- 	.attach = container_device_attach,
-+	.detach = container_device_detach,
- 	.hotplug = {
- 		.enabled = true,
--		.mode = AHM_CONTAINER,
- 	},
- };
- 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -206,9 +206,6 @@ static int acpi_scan_hot_remove(struct a
- 	acpi_status status;
- 	unsigned long long sta;
- 
--	if (device->handler && device->handler->hotplug.mode == AHM_CONTAINER)
--		kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
--
- 	/*
- 	 * Carry out two passes here and ignore errors in the first pass,
- 	 * because if the devices in question are memory blocks and
-@@ -288,10 +285,7 @@ static int acpi_scan_device_check(struct
- 		dev_warn(&adev->dev, "Namespace scan failure\n");
- 		return error;
- 	}
--	if (adev->handler) {
--		if (adev->handler->hotplug.mode == AHM_CONTAINER)
--			kobject_uevent(&adev->dev.kobj, KOBJ_ONLINE);
--	} else {
-+	if (!adev->handler) {
- 		dev_warn(&adev->dev, "Enumeration failure\n");
- 		return -ENODEV;
- 	}
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -91,16 +91,9 @@ struct acpi_device;
-  * -----------------
-  */
- 
--enum acpi_hotplug_mode {
--	AHM_GENERIC = 0,
--	AHM_CONTAINER,
--	AHM_COUNT
--};
--
- struct acpi_hotplug_profile {
- 	struct kobject kobj;
- 	bool enabled:1;
--	enum acpi_hotplug_mode mode;
- 	int (*scan_dependent)(struct acpi_device *adev);
- };
- 
+ void pci_remove_bus(struct pci_bus *bus)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1084a15..ccb316d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -321,6 +321,7 @@ struct pci_dev {
+ 	unsigned int	multifunction:1;/* Part of multi-function device */
+ 	/* keep track of device state */
+ 	unsigned int	is_added:1;
++	unsigned int	is_removed:1;	/* pci_destroy_dev is called */
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
+ 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
+-- 
+1.8.1.4
 
