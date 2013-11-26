@@ -1,154 +1,329 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52333 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751403Ab3LABVo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 20:21:44 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: netdev@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Nithin Nayak Sujir <nsujir@broadcom.com>,
-	Michael Chan <mchan@broadcom.com>,
-	David Miller <davem@davemloft.net>
-Subject: [PATCH] PCI / tg3: Give up chip reset and carrier loss handling if PCI device is not present
-Date: Sun, 01 Dec 2013 02:34:37 +0100
-Message-ID: <7807315.7cU9KldDtM@vostro.rjw.lan>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:60104 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754345Ab3KZRxp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 12:53:45 -0500
+Received: by mail-ie0-f171.google.com with SMTP id ar20so9572839iec.2
+        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2013 09:53:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20131126065944.GA13781@yanx>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+ <1385429290-25397-9-git-send-email-yinghai@kernel.org> <CAErSpo5bxRJpiO8QmEQBkRGGKkTOEjnQBFRsZJG8CsaJ5JJkJg@mail.gmail.com>
+ <20131126065944.GA13781@yanx>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 26 Nov 2013 10:53:24 -0700
+Message-ID: <CAErSpo5JVNsYxr6ka5KwLtpv7LX74SmkHsb1jED31jXfdSsxAg@mail.gmail.com>
+Subject: Re: [PATCH v2 08/10] PCI: Try best to allocate pref mmio 64bit above 4g
+To: Guo Chao <yan@linux.vnet.ibm.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, Nov 25, 2013 at 11:59 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+> On Mon, Nov 25, 2013 at 09:17:11PM -0700, Bjorn Helgaas wrote:
+>> On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> > When one of children resources does not support MEM_64, MEM_64 for
+>> > bridge get reset, so pull down whole pref resource on the bridge under 4G.
+>> >
+>> > If the bridge support pref mem 64, will only allocate that with pref mem64 to
+>> > children that support it.
+>> > For children resources if they only support pref mem 32, will allocate them
+>> > from non pref mem instead.
+>> >
+>> > If the bridge only support 32bit pref mmio, will still have all children pref
+>> > mmio under that.
+>>
+>> I can't figure out if this is supposed to fix a problem, and if so,
+>> what problem it is.  Can you include a URL for a bugzilla or other
+>> problem description?
+>
+> This is intended to fix resource allocation problem when we expose
+> 64-bit MMIO window in PowerNV platform. Please see issue 3 in:
+>
+> http://www.spinics.net/lists/linux-pci/msg26472.html
+>
+> Without this, any 32-bit prefetchable BARs will pull down the
+> prefetahable window to allocate resource from 32-bit non-prefetchable
+> range, preventing 64-bit MMIO from being used at all.
+>
+> What's worse, in some machines, 32-bit range is too small to provide
+> fall back space for prefetchable window, causing all prefetchable
+> BAR failing to get address.
+>
+> 64-bit MMIO on PowerNV is still pending (but definitely in plan).
+> So if no one else complained, it seems not fix any problems in upstream.
 
-Modify tg3_chip_reset() and tg3_close() to check if the PCI network
-adapter device is accessible at all in order to skip poking it or
-trying to handle a carrier loss in vain when that's not the case.
-Introduce a special PCI helper function pci_device_is_present()
-for this purpose.
+I don't mind fixing a problem even if it's for pending platforms.  But
+I do need a concrete specific description of the problem, e.g., a
+dmesg log and pointers to specific bridge windows or device BARs that
+are not allocated correctly, and some explanation about what is
+different with this patch.
 
-Of course, this uncovers the lack of the appropriate RTNL locking
-in tg3_suspend() and tg3_resume(), so add that locking in there
-too.
+I don't know what "MEM_64 for bridge get reset" means -- there are a
+couple places that clear IORESOURCE_MEM_64, but they don't seem
+relevant.
 
-These changes prevent tg3 from burning a CPU at 100% load level for
-solid several seconds after the Thunderbolt link is disconnected from
-a Matrox DS1 docking station.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/net/ethernet/broadcom/tg3.c |   26 +++++++++++++++++++-------
- drivers/pci/pci.c                   |    8 ++++++++
- include/linux/pci.h                 |    1 +
- 3 files changed, 28 insertions(+), 7 deletions(-)
-
-Index: linux-pm/drivers/net/ethernet/broadcom/tg3.c
-===================================================================
---- linux-pm.orig/drivers/net/ethernet/broadcom/tg3.c
-+++ linux-pm/drivers/net/ethernet/broadcom/tg3.c
-@@ -8932,6 +8932,9 @@ static int tg3_chip_reset(struct tg3 *tp
- 	void (*write_op)(struct tg3 *, u32, u32);
- 	int i, err;
- 
-+	if (!pci_device_is_present(tp->pdev))
-+		return -ENODEV;
-+
- 	tg3_nvram_lock(tp);
- 
- 	tg3_ape_lock(tp, TG3_APE_LOCK_GRC);
-@@ -11594,10 +11597,11 @@ static int tg3_close(struct net_device *
- 	memset(&tp->net_stats_prev, 0, sizeof(tp->net_stats_prev));
- 	memset(&tp->estats_prev, 0, sizeof(tp->estats_prev));
- 
--	tg3_power_down_prepare(tp);
--
--	tg3_carrier_off(tp);
-+	if (pci_device_is_present(tp->pdev)) {
-+		tg3_power_down_prepare(tp);
- 
-+		tg3_carrier_off(tp);
-+	}
- 	return 0;
- }
- 
-@@ -17739,10 +17743,12 @@ static int tg3_suspend(struct device *de
- 	struct pci_dev *pdev = to_pci_dev(device);
- 	struct net_device *dev = pci_get_drvdata(pdev);
- 	struct tg3 *tp = netdev_priv(dev);
--	int err;
-+	int err = 0;
-+
-+	rtnl_lock();
- 
- 	if (!netif_running(dev))
--		return 0;
-+		goto unlock;
- 
- 	tg3_reset_task_cancel(tp);
- 	tg3_phy_stop(tp);
-@@ -17784,6 +17790,8 @@ out:
- 			tg3_phy_start(tp);
- 	}
- 
-+unlock:
-+	rtnl_unlock();
- 	return err;
- }
- 
-@@ -17792,10 +17800,12 @@ static int tg3_resume(struct device *dev
- 	struct pci_dev *pdev = to_pci_dev(device);
- 	struct net_device *dev = pci_get_drvdata(pdev);
- 	struct tg3 *tp = netdev_priv(dev);
--	int err;
-+	int err = 0;
-+
-+	rtnl_lock();
- 
- 	if (!netif_running(dev))
--		return 0;
-+		goto unlock;
- 
- 	netif_device_attach(dev);
- 
-@@ -17819,6 +17829,8 @@ out:
- 	if (!err)
- 		tg3_phy_start(tp);
- 
-+unlock:
-+	rtnl_unlock();
- 	return err;
- }
- #endif /* CONFIG_PM_SLEEP */
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -4171,6 +4171,14 @@ int pci_set_vga_state(struct pci_dev *de
- 	return 0;
- }
- 
-+bool pci_device_is_present(struct pci_dev *pdev)
-+{
-+	u32 v;
-+
-+	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
-+}
-+EXPORT_SYMBOL_GPL(pci_device_is_present);
-+
- #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
- static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
- static DEFINE_SPINLOCK(resource_alignment_lock);
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -961,6 +961,7 @@ void pci_update_resource(struct pci_dev
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
- int pci_select_bars(struct pci_dev *dev, unsigned long flags);
-+bool pci_device_is_present(struct pci_dev *pdev);
- 
- /* ROM control related routines */
- int pci_enable_rom(struct pci_dev *pdev);
-
+>> > -v2: Add release bridge res support with bridge mem res for pref_mem children res.
+>> > -v3: refresh and make it can be applied early before for_each_dev_res patchset.
+>> >
+>> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> > Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
+>> > ---
+>> >  drivers/pci/setup-bus.c | 133 ++++++++++++++++++++++++++++++++----------------
+>> >  drivers/pci/setup-res.c |  14 ++++-
+>> >  2 files changed, 101 insertions(+), 46 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> > index 219a410..b98419e 100644
+>> > --- a/drivers/pci/setup-bus.c
+>> > +++ b/drivers/pci/setup-bus.c
+>> > @@ -711,12 +711,11 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+>> >     bus resource of a given type. Note: we intentionally skip
+>> >     the bus resources which have already been assigned (that is,
+>> >     have non-NULL parent resource). */
+>> > -static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
+>> > +static struct resource *find_free_bus_resource(struct pci_bus *bus,
+>> > +                        unsigned long type_mask, unsigned long type)
+>> >  {
+>> >         int i;
+>> >         struct resource *r;
+>> > -       unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>> > -                                 IORESOURCE_PREFETCH;
+>> >
+>> >         pci_bus_for_each_resource(bus, r, i) {
+>> >                 if (r == &ioport_resource || r == &iomem_resource)
+>> > @@ -813,7 +812,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>> >                 resource_size_t add_size, struct list_head *realloc_head)
+>> >  {
+>> >         struct pci_dev *dev;
+>> > -       struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+>> > +       struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+>> > +                                                       IORESOURCE_IO);
+>> >         resource_size_t size = 0, size0 = 0, size1 = 0;
+>> >         resource_size_t children_add_size = 0;
+>> >         resource_size_t min_align, align;
+>> > @@ -913,15 +913,16 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+>> >   * guarantees that all child resources fit in this size.
+>> >   */
+>> >  static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>> > -                        unsigned long type, resource_size_t min_size,
+>> > -                       resource_size_t add_size,
+>> > -                       struct list_head *realloc_head)
+>> > +                        unsigned long type, unsigned long type2,
+>> > +                        resource_size_t min_size, resource_size_t add_size,
+>> > +                        struct list_head *realloc_head)
+>> >  {
+>> >         struct pci_dev *dev;
+>> >         resource_size_t min_align, align, size, size0, size1;
+>> >         resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
+>> >         int order, max_order;
+>> > -       struct resource *b_res = find_free_bus_resource(bus, type);
+>> > +       struct resource *b_res = find_free_bus_resource(bus,
+>> > +                                        mask | IORESOURCE_PREFETCH, type);
+>> >         unsigned int mem64_mask = 0;
+>> >         resource_size_t children_add_size = 0;
+>> >
+>> > @@ -942,7 +943,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>> >                         struct resource *r = &dev->resource[i];
+>> >                         resource_size_t r_size;
+>> >
+>> > -                       if (r->parent || (r->flags & mask) != type)
+>> > +                       if (r->parent || ((r->flags & mask) != type &&
+>> > +                                         (r->flags & mask) != type2))
+>> >                                 continue;
+>> >                         r_size = resource_size(r);
+>> >  #ifdef CONFIG_PCI_IOV
+>> > @@ -1115,8 +1117,9 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+>> >                         struct list_head *realloc_head)
+>> >  {
+>> >         struct pci_dev *dev;
+>> > -       unsigned long mask, prefmask;
+>> > +       unsigned long mask, prefmask, type2 = 0;
+>> >         resource_size_t additional_mem_size = 0, additional_io_size = 0;
+>> > +       struct resource *b_res;
+>> >
+>> >         list_for_each_entry(dev, &bus->devices, bus_list) {
+>> >                 struct pci_bus *b = dev->subordinate;
+>> > @@ -1161,15 +1164,31 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+>> >                    has already been allocated by arch code, try
+>> >                    non-prefetchable range for both types of PCI memory
+>> >                    resources. */
+>> > +               b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+>> >                 mask = IORESOURCE_MEM;
+>> >                 prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+>> > -               if (pbus_size_mem(bus, prefmask, prefmask,
+>> > +               if (b_res[2].flags & IORESOURCE_MEM_64) {
+>> > +                       prefmask |= IORESOURCE_MEM_64;
+>> > +                       if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
+>> >                                   realloc_head ? 0 : additional_mem_size,
+>> > -                                 additional_mem_size, realloc_head))
+>> > -                       mask = prefmask; /* Success, size non-prefetch only. */
+>> > -               else
+>> > -                       additional_mem_size += additional_mem_size;
+>> > -               pbus_size_mem(bus, mask, IORESOURCE_MEM,
+>> > +                                 additional_mem_size, realloc_head)) {
+>> > +                                       /* Success, size non-pref64 only. */
+>> > +                                       mask = prefmask;
+>> > +                                       type2 = prefmask & ~IORESOURCE_MEM_64;
+>> > +                       }
+>> > +               }
+>> > +               if (!type2) {
+>> > +                       prefmask &= ~IORESOURCE_MEM_64;
+>> > +                       if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
+>> > +                                        realloc_head ? 0 : additional_mem_size,
+>> > +                                        additional_mem_size, realloc_head)) {
+>> > +                               /* Success, size non-prefetch only. */
+>> > +                               mask = prefmask;
+>> > +                       } else
+>> > +                               additional_mem_size += additional_mem_size;
+>> > +                       type2 = IORESOURCE_MEM;
+>> > +               }
+>> > +               pbus_size_mem(bus, mask, IORESOURCE_MEM, type2,
+>> >                                 realloc_head ? 0 : additional_mem_size,
+>> >                                 additional_mem_size, realloc_head);
+>> >                 break;
+>> > @@ -1255,42 +1274,66 @@ static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
+>> >  static void pci_bridge_release_resources(struct pci_bus *bus,
+>> >                                           unsigned long type)
+>> >  {
+>> > -       int idx;
+>> > -       bool changed = false;
+>> > -       struct pci_dev *dev;
+>> > +       struct pci_dev *dev = bus->self;
+>> >         struct resource *r;
+>> >         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>> > -                                 IORESOURCE_PREFETCH;
+>> > +                                 IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+>> > +       unsigned old_flags = 0;
+>> > +       struct resource *b_res;
+>> > +       int idx = 1;
+>> >
+>> > -       dev = bus->self;
+>> > -       for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
+>> > -            idx++) {
+>> > -               r = &dev->resource[idx];
+>> > -               if ((r->flags & type_mask) != type)
+>> > -                       continue;
+>> > -               if (!r->parent)
+>> > -                       continue;
+>> > -               /*
+>> > -                * if there are children under that, we should release them
+>> > -                *  all
+>> > -                */
+>> > -               release_child_resources(r);
+>> > -               if (!release_resource(r)) {
+>> > -                       dev_printk(KERN_DEBUG, &dev->dev,
+>> > -                                "resource %d %pR released\n", idx, r);
+>> > -                       /* keep the old size */
+>> > -                       r->end = resource_size(r) - 1;
+>> > -                       r->start = 0;
+>> > -                       r->flags = 0;
+>> > -                       changed = true;
+>> > -               }
+>> > -       }
+>> > +       b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
+>> > +
+>> > +       /*
+>> > +        *     1. if there is io port assign fail, will release bridge
+>> > +        *        io port.
+>> > +        *     2. if there is non pref mmio assign fail, release bridge
+>> > +        *        nonpref mmio.
+>> > +        *     3. if there is 64bit pref mmio assign fail, and bridge pref
+>> > +        *        is 64bit, release bridge pref mmio.
+>> > +        *     4. if there is pref mmio assign fail, and bridge pref is
+>> > +        *        32bit mmio, release bridge pref mmio
+>> > +        *     5. if there is pref mmio assign fail, and bridge pref is not
+>> > +        *        assigned, release bridge nonpref mmio.
+>> > +        */
+>> > +       if (type & IORESOURCE_IO)
+>> > +               idx = 0;
+>> > +       else if (!(type & IORESOURCE_PREFETCH))
+>> > +               idx = 1;
+>> > +       else if ((type & IORESOURCE_MEM_64) &&
+>> > +                (b_res[2].flags & IORESOURCE_MEM_64))
+>> > +               idx = 2;
+>> > +       else if (!(b_res[2].flags & IORESOURCE_MEM_64) &&
+>> > +                (b_res[2].flags & IORESOURCE_PREFETCH))
+>> > +               idx = 2;
+>> > +       else
+>> > +               idx = 1;
+>> > +
+>> > +       r = &b_res[idx];
+>> > +
+>> > +       if (!r->parent)
+>> > +               return;
+>> > +
+>> > +       /*
+>> > +        * if there are children under that, we should release them
+>> > +        *  all
+>> > +        */
+>> > +       release_child_resources(r);
+>> > +       if (!release_resource(r)) {
+>> > +               type = old_flags = r->flags & type_mask;
+>> > +               dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
+>> > +                                       PCI_BRIDGE_RESOURCES + idx, r);
+>> > +               /* keep the old size */
+>> > +               r->end = resource_size(r) - 1;
+>> > +               r->start = 0;
+>> > +               r->flags = 0;
+>> >
+>> > -       if (changed) {
+>> >                 /* avoiding touch the one without PREF */
+>> >                 if (type & IORESOURCE_PREFETCH)
+>> >                         type = IORESOURCE_PREFETCH;
+>> >                 __pci_setup_bridge(bus, type);
+>> > +               /* for next child res under same bridge */
+>> > +               r->flags = old_flags;
+>> >         }
+>> >  }
+>> >
+>> > @@ -1469,7 +1512,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+>> >         LIST_HEAD(fail_head);
+>> >         struct pci_dev_resource *fail_res;
+>> >         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>> > -                                 IORESOURCE_PREFETCH;
+>> > +                                 IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+>> >         int pci_try_num = 1;
+>> >         enum enable_type enable_local;
+>> >
+>> > diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+>> > index 83c4d3b..e968412 100644
+>> > --- a/drivers/pci/setup-res.c
+>> > +++ b/drivers/pci/setup-res.c
+>> > @@ -208,9 +208,21 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+>> >
+>> >         /* First, try exact prefetching match.. */
+>> >         ret = pci_bus_alloc_resource(bus, res, size, align, min,
+>> > -                                    IORESOURCE_PREFETCH,
+>> > +                                    IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
+>> >                                      pcibios_align_resource, dev);
+>> >
+>> > +       if (ret < 0 &&
+>> > +           (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
+>> > +               /*
+>> > +                * That failed.
+>> > +                *
+>> > +                * Try below 4g pref
+>> > +                */
+>> > +               ret = pci_bus_alloc_resource(bus, res, size, align, min,
+>> > +                                            IORESOURCE_PREFETCH,
+>> > +                                            pcibios_align_resource, dev);
+>> > +       }
+>> > +
+>> >         if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
+>> >                 /*
+>> >                  * That failed.
+>> > --
+>> > 1.8.1.4
+>> >
+>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
