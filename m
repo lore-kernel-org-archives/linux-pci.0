@@ -1,124 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:39731 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751284Ab3KNIhy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 03:37:54 -0500
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
-	Thu, 14 Nov 2013 18:37:51 +1000
-Message-ID: <52848BD9.1010704@linux.vnet.ibm.com>
-Date: Thu, 14 Nov 2013 16:37:45 +0800
-From: mike <qiudayu@linux.vnet.ibm.com>
-MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-pm@vger.kernel.org, rjw@rjwysocki.net
-Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM enabled
- for unbound PCI devices
-References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org> <5284423D.4090907@linux.vnet.ibm.com> <1384408745.30364.8.camel@yhuang-dev> <5284799C.1010000@linux.vnet.ibm.com>	 <1384415609.30364.18.camel@yhuang-dev> <528485EA.5080309@linux.vnet.ibm.com> <1384417538.30364.25.camel@yhuang-dev>
-In-Reply-To: <1384417538.30364.25.camel@yhuang-dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 01/10] PCI: Use device_release_driver in pci_stop_root_bus
+Date: Mon, 25 Nov 2013 17:28:01 -0800
+Message-Id: <1385429290-25397-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/14/2013 04:25 PM, Huang Ying wrote:
-> On Thu, 2013-11-14 at 16:12 +0800, mike wrote:
->> On 11/14/2013 03:53 PM, Huang Ying wrote:
->>> On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
->>>> On 11/14/2013 01:59 PM, Huang Ying wrote:
->>>>> On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
->>>>>> On 11/14/2013 03:20 AM, Alan Stern wrote:
->>>>>>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
->>>>>>>
->>>>>>>> [+cc Rafael, linux-pm]
->>>>>>>>
->>>>>>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
->>>>>>>>> Hi Huang Ying,
->>>>>>>>>
->>>>>>>>> I see you are the author of this patch, commit id is:
->>>>>>>>> 967577b062417b4e4b8e27b711220f4124f5153a
->>>>>>>>>
->>>>>>>>> I have a question while I try to understand this patch,
->>>>>>>>> So I would very grateful if you or others can give me some reply.....
->>>>>>>>>
->>>>>>>>> ............
->>>>>>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
->>>>>>>>> +       pm_runtime_get_sync(dev);
->>>>>>>>> +       pci_dev->driver = pci_drv;
->>>>>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
->>>>>>>>> I see here you make the driver to initialize before probe,
->>>>>>>>> But I have no idea of why you do this change.....
->>>>>>>>>
->>>>>>>>> and I look inside the code, it may be pm_runtime relate??
->>>>>>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
->>>>>>> doesn't do anything unless pci_dev->driver is set.  You can see this at
->>>>>>> the start of pci_pm_runtime_suspend().
->>>>>>>
->>>>>>> Since we want the driver's probe routine to be able to carry out
->>>>>>> runtime PM operations, we have to set pci_dev->driver before the probe
->>>>>>> routine runs.
->>>>>> Is there any situations , like in  probe state,  pci_dev->driver
->>>>>> has been set. the  pci_pm_runtime_xxx() has passed
->>>>>> pci_dev->driver NULL check, but at this point, probe fail
->>>>>> occurs, and  pci_dev->driver to be set to NULL.
->>>>>>
->>>>>> What will happen ? Or this situation will never happen?
->>>>>> I'm confuse about this.
->>>>> I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
->>>>> is called, so pci_pm_runtime_xxx() will not be called until
->>>>> pm_runtime_put_noidle() is called in ->probe().  And
->>>>>     should be done as one of the latest actions in
->>>>> ->probe(), after the normal probe actions succeeded.
->>>> OK, just as your description, it seems OK.
->>>> But this is really a issue as I explained in last email.
->>>>
->>>> So I want to know if there are any side-effect of changing the code
->>>> in pci_pm_runtime_xxx()
->>>>
->>>>     if (!pci_dev->driver)
->>>>            return 0;
->>>>     to
->>>>
->>>>     if (!dev->driver)
->>>>            return 0;
->>>>
->>> If you make this change, we can not put devices into low power state
->>> (runtime suspend the device) in ->probe().  That is expected in some
->> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->> This means dev->driver is NULL ?? but pci_dev->driver is set???
->>
->> Because if use pci_dev->driver can put into low power state, means
->>
->> pci_dev->driver is set, but in the situation, use dev->driver will can't,
->>
->> means dev->driver = null, but I have not find any case that
->>
->> dev->driver = null, but pci_dev->driver != null;
-> Sorry I make a mistake here.  The dev->driver != null in
-> local_pci_probe().  We use pci_dev->driver instead of dev->driver in
-> pci_pm_runtime_xxx() because we want device to be kept in normal power
-> state (D0) and SUSPENDED state when unbound.The
-> pm_runtime_put/get_sync in pci_device_remove/local_pci_probe will not
-> change the power state of the device because of the check in
-> pci_pm_runtime_xxx().
-Yes, you are right, but what am I confuse is that, why check dev->driver
-in pci_pm_runtime_xxx() can't keep the device in normal power
-state (D0) and SUSPENDED state when unbound.
+To be consistent with change in
+| PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
 
-May be logic issue ?
+Use device_release_driver for root bus/hostbridge.
 
-Thanks
-Mike
->
->> I know I always been a question guy, i apologize for spend a lot
->> time to reply this mail, but I really want to understand it,
-> Never mind.
->
-> Best Regards,
-> Huang Ying
->
->
+Also use device_unregister() in pci_remove_root_bus() instead of
+device_del/put_device, that will be corresponding device_register()
+for pci_create_root_bus for hostbridge.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index cc9337a..692f4c3 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -128,7 +128,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+ 		pci_stop_bus_device(child);
+ 
+ 	/* stop the host bridge */
+-	device_del(&host_bridge->dev);
++	device_release_driver(&host_bridge->dev);
+ }
+ 
+ void pci_remove_root_bus(struct pci_bus *bus)
+@@ -147,5 +147,5 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	host_bridge->bus = NULL;
+ 
+ 	/* remove the host bridge */
+-	put_device(&host_bridge->dev);
++	device_unregister(&host_bridge->dev);
+ }
+-- 
+1.8.1.4
 
