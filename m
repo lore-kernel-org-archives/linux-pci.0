@@ -1,150 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:24372
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751295Ab3K1KIV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Nov 2013 05:08:21 -0500
-From: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25937 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940Ab3KZB2V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 20:28:21 -0500
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Scott Wood <scottwood@freescale.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 1/9 v2] pci:msi: add weak function for returning msi
- region info
-Date: Thu, 28 Nov 2013 10:08:16 +0000
-Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D072363E5@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
- <1384838233-24847-2-git-send-email-Bharat.Bhushan@freescale.com>
- <20131125233602.GA4066@google.com>
-In-Reply-To: <20131125233602.GA4066@google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 00/10] PCI: Double removing fix and allocate 64bit mmio pref
+Date: Mon, 25 Nov 2013 17:28:00 -0800
+Message-Id: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+First 4 are for Gu Zheng <guz.fnst@cn.fujitsu.com> to help double pci
+device removing via sysfs.
 
+Second 6 are about mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
+It will try to assign 64 bit resource above 4g at first.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
-> On Behalf Of Bjorn Helgaas
-> Sent: Tuesday, November 26, 2013 5:06 AM
-> To: Bhushan Bharat-R65777
-> Cc: alex.williamson@redhat.com; joro@8bytes.org; agraf@suse.de; Wood Scott-
-> B07421; Yoder Stuart-B08248; iommu@lists.linux-foundation.org; linux-
-> pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
-> kernel@vger.kernel.org; Bhushan Bharat-R65777
-> Subject: Re: [PATCH 1/9 v2] pci:msi: add weak function for returning msi region
-> info
-> 
-> On Tue, Nov 19, 2013 at 10:47:05AM +0530, Bharat Bhushan wrote:
-> > In Aperture type of IOMMU (like FSL PAMU), VFIO-iommu system need to
-> > know the MSI region to map its window in h/w. This patch just defines
-> > the required weak functions only and will be used by followup patches.
-> >
-> > Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
-> > ---
-> > v1->v2
-> >  - Added description on "struct msi_region"
-> >
-> >  drivers/pci/msi.c   |   22 ++++++++++++++++++++++
-> >  include/linux/msi.h |   14 ++++++++++++++
-> >  2 files changed, 36 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c index
-> > d5f90d6..2643a29 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -67,6 +67,28 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int
-> nvec, int type)
-> >  	return chip->check_device(chip, dev, nvec, type);  }
-> >
-> > +int __weak arch_msi_get_region_count(void) {
-> > +	return 0;
-> > +}
-> > +
-> > +int __weak arch_msi_get_region(int region_num, struct msi_region
-> > +*region) {
-> > +	return 0;
-> > +}
-> > +
-> > +int msi_get_region_count(void)
-> > +{
-> > +	return arch_msi_get_region_count();
-> > +}
-> > +EXPORT_SYMBOL(msi_get_region_count);
-> > +
-> > +int msi_get_region(int region_num, struct msi_region *region) {
-> > +	return arch_msi_get_region(region_num, region); }
-> > +EXPORT_SYMBOL(msi_get_region);
-> > +
-> >  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int
-> > type)  {
-> >  	struct msi_desc *entry;
-> > diff --git a/include/linux/msi.h b/include/linux/msi.h index
-> > b17ead8..ade1480 100644
-> > --- a/include/linux/msi.h
-> > +++ b/include/linux/msi.h
-> > @@ -51,6 +51,18 @@ struct msi_desc {
-> >  };
-> >
-> >  /*
-> > + * This structure is used to get
-> > + * - physical address
-> > + * - size
-> > + * of a msi region
-> > + */
-> > +struct msi_region {
-> > +	int region_num; /* MSI region number */
-> > +	dma_addr_t addr; /* Address of MSI region */
-> > +	size_t size; /* Size of MSI region */ };
-> > +
-> > +/*
-> >   * The arch hooks to setup up msi irqs. Those functions are
-> >   * implemented as weak symbols so that they /can/ be overriden by
-> >   * architecture specific code if needed.
-> > @@ -64,6 +76,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int
-> > irq);
-> >
-> >  void default_teardown_msi_irqs(struct pci_dev *dev);  void
-> > default_restore_msi_irqs(struct pci_dev *dev, int irq);
-> > +int arch_msi_get_region_count(void);
-> > +int arch_msi_get_region(int region_num, struct msi_region *region);
-> 
-> It doesn't look like any of this (struct msi_region, msi_get_region(),
-> msi_get_region_count()) is actually used by drivers/pci/msi.c, so I don't think
-> it needs to be declared in generic code.  It looks like it's only used in
-> drivers/vfio/vfio_iommu_fsl_pamu.c, where you already know you have an FSL
-> IOMMU, and you can just call FSL-specific interfaces directly.
+Could be found:
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-3.14
 
-Thanks Bjorn,
+And it is based on current pci/for-linus.
 
-Want to be sure of what you are suggesting.
+-v2: update after patch that move device_del down to pci_destroy_dev.
+     add "Try best to allocate pref mmio 64bit above 4G"
 
-What I understood is that we define these (struct msi_region, msi_get_region(), msi_get_region_count()) in arch/powerpc/include/fsl_msi.h (a new file). Include this header file directly in driver/vfio/vfio_iommu_fsl_pamu.c
+Yinghai Lu (10):
+  PCI: Use device_release_driver in pci_stop_root_bus
+  PCI: Move back pci_proc_attach_devices calling
+  PCI: Move resources and bus_list releasing to pci_release_dev
+  PCI: Destroy pci dev only once
+  PCI: pcibus address to resource converting take bus directly
+  PCI: Add pcibios_bus_addr_to_res()
+  PCI: Try to allocate mem64 above 4G at first
+  PCI: Try best to allocate pref mmio 64bit above 4g
+  PCI: Sort pci root bus resources list
+  intel-gtt: Read 64bit for gmar_bus_addr
 
-Same also applies for msi_set_iova() in patch-5 ?
+ arch/x86/include/asm/pci.h   |   1 -
+ drivers/char/agp/intel-gtt.c |  14 +++--
+ drivers/pci/bus.c            |  58 +++++++++++++++----
+ drivers/pci/host-bridge.c    |  48 +++++++++++-----
+ drivers/pci/pci.h            |   2 +
+ drivers/pci/probe.c          |  23 ++++++--
+ drivers/pci/remove.c         |  31 +++-------
+ drivers/pci/setup-bus.c      | 133 ++++++++++++++++++++++++++++---------------
+ drivers/pci/setup-res.c      |  14 ++++-
+ include/linux/pci.h          |  10 ++--
+ 10 files changed, 228 insertions(+), 106 deletions(-)
 
--Bharat
-
-> 
-> Bjorn
-> 
-> >
-> >  struct msi_chip {
-> >  	struct module *owner;
-> > --
-> > 1.7.0.4
-> >
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body
-> of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
-
+-- 
+1.8.1.4
 
