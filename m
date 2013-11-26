@@ -1,153 +1,323 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42200 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750848Ab3KMUbj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2013 15:31:39 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, wzyboy <wzyboy@wzyboy.org>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:43758 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929Ab3KZG75 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 01:59:57 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <yan@linux.vnet.ibm.com>;
+	Tue, 26 Nov 2013 16:59:54 +1000
+Date: Tue, 26 Nov 2013 14:59:44 +0800
+From: Guo Chao <yan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	=?iso-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Wed, 13 Nov 2013 20:30:57 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E02A58@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com>
- <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com>
- <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
-In-Reply-To: <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 08/10] PCI: Try best to allocate pref mmio 64bit above
+ 4g
+Message-ID: <20131126065944.GA13781@yanx>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+ <1385429290-25397-9-git-send-email-yinghai@kernel.org>
+ <CAErSpo5bxRJpiO8QmEQBkRGGKkTOEjnQBFRsZJG8CsaJ5JJkJg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5bxRJpiO8QmEQBkRGGKkTOEjnQBFRsZJG8CsaJ5JJkJg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> 
-> [+cc Bjørn]
-> 
-> On Tue, Nov 12, 2013 at 10:39 PM, wzyboy <wzyboy@wzyboy.org> wrote:
-> > 2013/11/13 Bjorn Helgaas <bhelgaas@google.com>:
-> >> wzyboy, can you run these commands before the bug occurs and before
-> >> using the "setpci" workaround:
-> >>
-> >>   lspci -vvxxxx -s00:1c.1
-> >>   lspci -vvxxxx -s03:00.0
+Hi, Bjorn:
+
+On Mon, Nov 25, 2013 at 09:17:11PM -0700, Bjorn Helgaas wrote:
+> On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > When one of children resources does not support MEM_64, MEM_64 for
+> > bridge get reset, so pull down whole pref resource on the bridge under 4G.
 > >
-> > After today's morning lessons I booted up my laptop with pci=earlydump
-> > kernel perameter and here are the output of lspci (without setpci and
-> > before bug hit) and dmesg.
+> > If the bridge support pref mem 64, will only allocate that with pref mem64 to
+> > children that support it.
+> > For children resources if they only support pref mem 32, will allocate them
+> > from non pref mem instead.
+> >
+> > If the bridge only support 32bit pref mmio, will still have all children pref
+> > mmio under that.
 > 
-> Thanks.  Are you 100% sure the lspci output is before the setpci workaround?
-> The dmesg earlydump shows this (the ASPM control bits are in the 16-bit Link
-> Control register, which is at 0x50 for both
-> devices):
-> 
->     00:1c.1 Root Port config
->          50: 42 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
->     03:00.0 Intel 7260 config:
->          50: 42 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
-> 
-> So at boot-time, ASPM was enabled.  But the lspci shows:
-> 
->     00:1c.1 Root Port config
->       Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
->         LnkCtl: ASPM Disabled
->          50: 40 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
->     03:00.0 Intel 7620 config
->       Capabilities: [40] Express (v2) Endpoint, MSI 00
->         LnkCtl: ASPM Disabled
->          50: 40 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
-> 
-> And now ASPM is disabled.  I'm pretty sure the kernel did not disable ASPM,
-> so I assume it was disabled by setpci.
-> 
-> I manually decoded the L1 PM Substates registers for both the Root Port and
-> the 7260 device (details appended below), and everything appears enabled
-> there (though I think that since ASPM is disabled, L1 PM substates is
-> ignored).
-> 
-> My conclusion is that the BIOS enabled both ASPM and L1 PM substates.
-> Obviously the BIOS will do the same when booting Windows, and I assume
-> the device works fine with the Windows driver.  Based on our previous
-> experience with Windows, I don't think it will change the ASPM configuration
-> because the ACPI FADT table and the PCI _OSC method do not grant control
-> of ASPM to the OS.  Therefore, I think the problem is in the Linux iwlwifi
-> driver.
-> 
-> I don't think there's anything more I can do here because there's no
-> evidence that the PCI core is doing anything wrong.  But if it turns out that we
-> *should* be doing something differently, let me know.
+> I can't figure out if this is supposed to fix a problem, and if so,
+> what problem it is.  Can you include a URL for a bugzilla or other
+> problem description?
+>
+
+This is intended to fix resource allocation problem when we expose
+64-bit MMIO window in PowerNV platform. Please see issue 3 in:
+
+http://www.spinics.net/lists/linux-pci/msg26472.html
+
+Without this, any 32-bit prefetchable BARs will pull down the
+prefetahable window to allocate resource from 32-bit non-prefetchable
+range, preventing 64-bit MMIO from being used at all.
+
+What's worse, in some machines, 32-bit range is too small to provide
+fall back space for prefetchable window, causing all prefetchable
+BAR failing to get address.
+
+64-bit MMIO on PowerNV is still pending (but definitely in plan).
+So if no one else complained, it seems not fix any problems in upstream.
+
+Thanks,
+Guo Chao
+
+> > -v2: Add release bridge res support with bridge mem res for pref_mem children res.
+> > -v3: refresh and make it can be applied early before for_each_dev_res patchset.
+> >
+> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> > Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
+> > ---
+> >  drivers/pci/setup-bus.c | 133 ++++++++++++++++++++++++++++++++----------------
+> >  drivers/pci/setup-res.c |  14 ++++-
+> >  2 files changed, 101 insertions(+), 46 deletions(-)
+> >
+> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > index 219a410..b98419e 100644
+> > --- a/drivers/pci/setup-bus.c
+> > +++ b/drivers/pci/setup-bus.c
+> > @@ -711,12 +711,11 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+> >     bus resource of a given type. Note: we intentionally skip
+> >     the bus resources which have already been assigned (that is,
+> >     have non-NULL parent resource). */
+> > -static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
+> > +static struct resource *find_free_bus_resource(struct pci_bus *bus,
+> > +                        unsigned long type_mask, unsigned long type)
+> >  {
+> >         int i;
+> >         struct resource *r;
+> > -       unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+> > -                                 IORESOURCE_PREFETCH;
+> >
+> >         pci_bus_for_each_resource(bus, r, i) {
+> >                 if (r == &ioport_resource || r == &iomem_resource)
+> > @@ -813,7 +812,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+> >                 resource_size_t add_size, struct list_head *realloc_head)
+> >  {
+> >         struct pci_dev *dev;
+> > -       struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+> > +       struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+> > +                                                       IORESOURCE_IO);
+> >         resource_size_t size = 0, size0 = 0, size1 = 0;
+> >         resource_size_t children_add_size = 0;
+> >         resource_size_t min_align, align;
+> > @@ -913,15 +913,16 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+> >   * guarantees that all child resources fit in this size.
+> >   */
+> >  static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+> > -                        unsigned long type, resource_size_t min_size,
+> > -                       resource_size_t add_size,
+> > -                       struct list_head *realloc_head)
+> > +                        unsigned long type, unsigned long type2,
+> > +                        resource_size_t min_size, resource_size_t add_size,
+> > +                        struct list_head *realloc_head)
+> >  {
+> >         struct pci_dev *dev;
+> >         resource_size_t min_align, align, size, size0, size1;
+> >         resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
+> >         int order, max_order;
+> > -       struct resource *b_res = find_free_bus_resource(bus, type);
+> > +       struct resource *b_res = find_free_bus_resource(bus,
+> > +                                        mask | IORESOURCE_PREFETCH, type);
+> >         unsigned int mem64_mask = 0;
+> >         resource_size_t children_add_size = 0;
+> >
+> > @@ -942,7 +943,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+> >                         struct resource *r = &dev->resource[i];
+> >                         resource_size_t r_size;
+> >
+> > -                       if (r->parent || (r->flags & mask) != type)
+> > +                       if (r->parent || ((r->flags & mask) != type &&
+> > +                                         (r->flags & mask) != type2))
+> >                                 continue;
+> >                         r_size = resource_size(r);
+> >  #ifdef CONFIG_PCI_IOV
+> > @@ -1115,8 +1117,9 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+> >                         struct list_head *realloc_head)
+> >  {
+> >         struct pci_dev *dev;
+> > -       unsigned long mask, prefmask;
+> > +       unsigned long mask, prefmask, type2 = 0;
+> >         resource_size_t additional_mem_size = 0, additional_io_size = 0;
+> > +       struct resource *b_res;
+> >
+> >         list_for_each_entry(dev, &bus->devices, bus_list) {
+> >                 struct pci_bus *b = dev->subordinate;
+> > @@ -1161,15 +1164,31 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+> >                    has already been allocated by arch code, try
+> >                    non-prefetchable range for both types of PCI memory
+> >                    resources. */
+> > +               b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+> >                 mask = IORESOURCE_MEM;
+> >                 prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+> > -               if (pbus_size_mem(bus, prefmask, prefmask,
+> > +               if (b_res[2].flags & IORESOURCE_MEM_64) {
+> > +                       prefmask |= IORESOURCE_MEM_64;
+> > +                       if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
+> >                                   realloc_head ? 0 : additional_mem_size,
+> > -                                 additional_mem_size, realloc_head))
+> > -                       mask = prefmask; /* Success, size non-prefetch only. */
+> > -               else
+> > -                       additional_mem_size += additional_mem_size;
+> > -               pbus_size_mem(bus, mask, IORESOURCE_MEM,
+> > +                                 additional_mem_size, realloc_head)) {
+> > +                                       /* Success, size non-pref64 only. */
+> > +                                       mask = prefmask;
+> > +                                       type2 = prefmask & ~IORESOURCE_MEM_64;
+> > +                       }
+> > +               }
+> > +               if (!type2) {
+> > +                       prefmask &= ~IORESOURCE_MEM_64;
+> > +                       if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
+> > +                                        realloc_head ? 0 : additional_mem_size,
+> > +                                        additional_mem_size, realloc_head)) {
+> > +                               /* Success, size non-prefetch only. */
+> > +                               mask = prefmask;
+> > +                       } else
+> > +                               additional_mem_size += additional_mem_size;
+> > +                       type2 = IORESOURCE_MEM;
+> > +               }
+> > +               pbus_size_mem(bus, mask, IORESOURCE_MEM, type2,
+> >                                 realloc_head ? 0 : additional_mem_size,
+> >                                 additional_mem_size, realloc_head);
+> >                 break;
+> > @@ -1255,42 +1274,66 @@ static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
+> >  static void pci_bridge_release_resources(struct pci_bus *bus,
+> >                                           unsigned long type)
+> >  {
+> > -       int idx;
+> > -       bool changed = false;
+> > -       struct pci_dev *dev;
+> > +       struct pci_dev *dev = bus->self;
+> >         struct resource *r;
+> >         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+> > -                                 IORESOURCE_PREFETCH;
+> > +                                 IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+> > +       unsigned old_flags = 0;
+> > +       struct resource *b_res;
+> > +       int idx = 1;
+> >
+> > -       dev = bus->self;
+> > -       for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
+> > -            idx++) {
+> > -               r = &dev->resource[idx];
+> > -               if ((r->flags & type_mask) != type)
+> > -                       continue;
+> > -               if (!r->parent)
+> > -                       continue;
+> > -               /*
+> > -                * if there are children under that, we should release them
+> > -                *  all
+> > -                */
+> > -               release_child_resources(r);
+> > -               if (!release_resource(r)) {
+> > -                       dev_printk(KERN_DEBUG, &dev->dev,
+> > -                                "resource %d %pR released\n", idx, r);
+> > -                       /* keep the old size */
+> > -                       r->end = resource_size(r) - 1;
+> > -                       r->start = 0;
+> > -                       r->flags = 0;
+> > -                       changed = true;
+> > -               }
+> > -       }
+> > +       b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
+> > +
+> > +       /*
+> > +        *     1. if there is io port assign fail, will release bridge
+> > +        *        io port.
+> > +        *     2. if there is non pref mmio assign fail, release bridge
+> > +        *        nonpref mmio.
+> > +        *     3. if there is 64bit pref mmio assign fail, and bridge pref
+> > +        *        is 64bit, release bridge pref mmio.
+> > +        *     4. if there is pref mmio assign fail, and bridge pref is
+> > +        *        32bit mmio, release bridge pref mmio
+> > +        *     5. if there is pref mmio assign fail, and bridge pref is not
+> > +        *        assigned, release bridge nonpref mmio.
+> > +        */
+> > +       if (type & IORESOURCE_IO)
+> > +               idx = 0;
+> > +       else if (!(type & IORESOURCE_PREFETCH))
+> > +               idx = 1;
+> > +       else if ((type & IORESOURCE_MEM_64) &&
+> > +                (b_res[2].flags & IORESOURCE_MEM_64))
+> > +               idx = 2;
+> > +       else if (!(b_res[2].flags & IORESOURCE_MEM_64) &&
+> > +                (b_res[2].flags & IORESOURCE_PREFETCH))
+> > +               idx = 2;
+> > +       else
+> > +               idx = 1;
+> > +
+> > +       r = &b_res[idx];
+> > +
+> > +       if (!r->parent)
+> > +               return;
+> > +
+> > +       /*
+> > +        * if there are children under that, we should release them
+> > +        *  all
+> > +        */
+> > +       release_child_resources(r);
+> > +       if (!release_resource(r)) {
+> > +               type = old_flags = r->flags & type_mask;
+> > +               dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
+> > +                                       PCI_BRIDGE_RESOURCES + idx, r);
+> > +               /* keep the old size */
+> > +               r->end = resource_size(r) - 1;
+> > +               r->start = 0;
+> > +               r->flags = 0;
+> >
+> > -       if (changed) {
+> >                 /* avoiding touch the one without PREF */
+> >                 if (type & IORESOURCE_PREFETCH)
+> >                         type = IORESOURCE_PREFETCH;
+> >                 __pci_setup_bridge(bus, type);
+> > +               /* for next child res under same bridge */
+> > +               r->flags = old_flags;
+> >         }
+> >  }
+> >
+> > @@ -1469,7 +1512,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+> >         LIST_HEAD(fail_head);
+> >         struct pci_dev_resource *fail_res;
+> >         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+> > -                                 IORESOURCE_PREFETCH;
+> > +                                 IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+> >         int pci_try_num = 1;
+> >         enum enable_type enable_local;
+> >
+> > diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> > index 83c4d3b..e968412 100644
+> > --- a/drivers/pci/setup-res.c
+> > +++ b/drivers/pci/setup-res.c
+> > @@ -208,9 +208,21 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+> >
+> >         /* First, try exact prefetching match.. */
+> >         ret = pci_bus_alloc_resource(bus, res, size, align, min,
+> > -                                    IORESOURCE_PREFETCH,
+> > +                                    IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
+> >                                      pcibios_align_resource, dev);
+> >
+> > +       if (ret < 0 &&
+> > +           (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
+> > +               /*
+> > +                * That failed.
+> > +                *
+> > +                * Try below 4g pref
+> > +                */
+> > +               ret = pci_bus_alloc_resource(bus, res, size, align, min,
+> > +                                            IORESOURCE_PREFETCH,
+> > +                                            pcibios_align_resource, dev);
+> > +       }
+> > +
+> >         if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
+> >                 /*
+> >                  * That failed.
+> > --
+> > 1.8.1.4
+> >
 > 
 
-Right - no evidence of anything - Thank you a lot for all your help. I have learnt a lot from this thread.
-I guess I'll try to disable L1 PM substates with setpci command and see what happens.
-
-
-
-> Bjorn
-> 
-> 
->     00:1c.1 Root Port config
->       Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
->         LnkCtl: ASPM Disabled
->          50: 40 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
->       Capabilities: [200 v1] #1e
->         200: 1e 00 01 00 1f 28 28 00 1f 28 a0 40 f0 00 00 00
->         210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->           Header                        0x0001001e
->             ID 0x001e (L1 Substates)
->             Version 1
->           Capabilities                  0x0028281f
->           Control 1                     0x40a0281f
->             0x40a0281f  Control 1
->             0x00000001    PCI-PM L1.2 Enable
->             0x00000002    PCI-PM L1.1 Enable
->             0x00000004    ASPM L1.2 Enable
->             0x00000008    ASPM L1.1 Enable
->             0x00000010    RsvdP
->             0x00002800    Common_Mode_Restore_Time
->             0x00a00000    LTR_L1.2_THRESHOLD_Value
->             0x40000000    LTR_L1.2_THRESHOLD_Scale
->           Control 2                     0x000000f0
->             0x000000f0  Control 2
->             0x000000f0    T_POWER_ON Value
-> 
->     03:00.0 Intel 7620 config
->       Capabilities: [40] Express (v2) Endpoint, MSI 00
->         LnkCtl: ASPM Disabled
->          50: 40 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
->       Capabilities: [154 v1] Vendor Specific Information: ID=cafe
-> Rev=1 Len=014 <?>
->         150:             0b 00 01 00 fe ca 41 01 1f 1e f0 00
->         160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00
->           Header                        0x0001000b
->             ID 0x000b (Vendor-specific)
->             Version 1
->           Vendor-specific header        0x0141cafe
->             VSEC ID 0xcafe
->             VSEC Rev 1
->             Length 0x14
->           Capabilities                  0x00f01e1f
->           Control 1                     0x40a0000f
->             0x40a0000f  Control 1
->             0x00000001    PCI-PM L1.2 Enable
->             0x00000002    PCI-PM L1.1 Enable
->             0x00000004    ASPM L1.2 Enable
->             0x00000008    ASPM L1.1 Enable
->           Control 2                     0x000000f0
