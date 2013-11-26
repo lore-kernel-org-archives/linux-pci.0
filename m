@@ -1,58 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:35536 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758487Ab3KZWGY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Nov 2013 17:06:24 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: pciehp LinkState
-Date: Tue, 26 Nov 2013 22:06:12 +0000
-Message-ID: <55dfa94fa7224bafa14d52c5835ea1ca@BLUPR05MB118.namprd05.prod.outlook.com>
-References: <528D4739.80700@fold.natur.cuni.cz>
- <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
- <01b89ce965ed454fb9f0e0cf52ba622e@BLUPR05MB118.namprd05.prod.outlook.com>
- <20131125194044.GA9710@google.com> <5293F3FB.6000401@fold.natur.cuni.cz>
- <20131126031317.GA6258@google.com>
- <cfeb9976fbb74028b600c9f86fcdd9ad@BLUPR05MB118.namprd05.prod.outlook.com>
- <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
-In-Reply-To: <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from quartz.orcorp.ca ([184.70.90.242]:53695 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753565Ab3KZSJe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Nov 2013 13:09:34 -0500
+Date: Tue, 26 Nov 2013 11:09:30 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Jason Cooper' <jason@lakedaemon.net>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	'Ezequiel Garcia' <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: PCI: mvebu: return NULL instead of ERR_PTR(ret)
+Message-ID: <20131126180930.GC19852@obsidianresearch.com>
+References: <001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
+ <20131125200256.GA7316@obsidianresearch.com>
+ <001101ceea68$cb486220$61d92660$%han@samsung.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <001101ceea68$cb486220$61d92660$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Nov 26, 2013 at 02:31:44PM +0900, Jingoo Han wrote:
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Previously, I sent the patch in order to fix sparse warning as below:
+> How about this?
 > 
-> >
-> > Currently in my patch, the pciehp_use_link_events=1 is used to only
-> enable link state change notifications, but in case pcie_isr() finds
-> "DLL changed" bit set in "Slot status", it processes the link state
-> change. I'll make the single line change to pcie_isr() to process the
-> event only if pciehp_use_link_events=1. Let me know if this sounds
-> alright.
+> static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+> 			struct device_node *np, struct mvebu_pcie_port *port)
+> {
+> 	struct resource regs;
+> 	int ret = 0;
 > 
-> If we can avoid it, I'd prefer not to add the "pciehp_use_link_events"
-> module parameter.  What would break if we just *always* used link
-> events?
+> 	ret = of_address_to_resource(np, 0, &regs);
+> 	if (ret)
+> -		return ERR_PTR(ret);
+> +		return (void __iomem *)ERR_PTR(ret);
 
-Not really "break", but I'd think some changes in behavior shall be visible:
+You should probably ask the sparse folks for guidance 'git grep
+iomem.*ERR_PTR' returns nothing, so this isn't an established pattern.
 
-1) When a card is pulled out (thus causing the link to go down), it shall always be disabled - whether or not it supports "surprise removal" (in the capabilities). I think this would be the right thing to do in this situation.
+It seems like sparse should know that ERR_PTR functions can work with
+any pointer no matter the type? IS_ERR_PTR will have the same problem
+with implicitly dropping the iomem tag.
 
-2) Even other scenarios where the link may go down - e.g. device reset using an external reset pin, or a firmware initiated reset etc, shall cause the device to be immediately removed and re-added again when the link comes back up). This may also be desired.
-
-3) If the link comes up automatically as soon as a card is plugged in (i.e. without the need to turn on power or do anything else from SW), the card shall be immediately added - even if surprise capability is not present. I'm not sure if this is desired. That's because the current behavior is that for slots that do not support surprise events, the user has to initiate the hot-add using the attention button. Even after that, he gets a 5 second time to cancel the operation in case he wishes. This will no longer be the case, if use of link events is always enabled.
-
-I think it would be fair to say that if use of link events is always supported, it would be roughly equivalent to a slot supporting surprise events. (Surprise events work on "presence detect" pin, and this will work on the link state changes).
-
-Thanks,
-
-Rajat
-
+Regards,
+Jason
