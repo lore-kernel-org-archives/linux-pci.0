@@ -1,56 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 2/2] PCI: Support PCIe Capability Slot registers only for
- ports with slots
-To: stable@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
-	Amos Kong <kongjianjun@gmail.com>,
-	Adam Lee <adam.lee@canonical.com>,
-	linux-kernel@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Thomas Renninger <trenn@suse.de>
-Date: Mon, 18 Nov 2013 12:17:52 -0700
-Message-ID: <20131118191752.26774.25303.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131118191723.26774.53479.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131118191723.26774.53479.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:52365 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757440Ab3KZUpM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:45:12 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 07/11] PCI/MSI: Make pci_enable_msi/msix() 'nvec' argument type as int
+Date: Tue, 26 Nov 2013 10:09:56 +0100
+Message-Id: <50fceee5c8b44c950c6082a6d73c643fa3788c81.1385399393.git.agordeev@redhat.com>
+In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
+References: <cover.1385399393.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 6d3a1741f1e648cfbd5a0cc94477a0d5004c6f5e upstream.
+Make pci_enable_msi_block(), pci_enable_msi_block_auto() and
+pci_enable_msix() consistent with regard to the type of 'nvec'
+argument.
 
-Previously we allowed callers to access Slot Capabilities, Status, and
-Control for Root Ports even if the Root Port did not implement a slot.
-This seems dubious because the spec only requires these registers if a
-slot is implemented.
-
-It's true that even Root Ports without slots must have *space* for these
-slot registers, because the Root Capabilities, Status, and Control
-registers are after the slot registers in the capability.  However,
-for a v1 PCIe Capability, the *semantics* of the slot registers are
-undefined unless a slot is implemented.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-By: Jiang Liu <jiang.liu@huawei.com>
-CC: stable@vger.kernel.org	# 3.10.x 3.11.x
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/pci/access.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ Documentation/PCI/MSI-HOWTO.txt |    2 +-
+ drivers/pci/msi.c               |    4 ++--
+ include/linux/pci.h             |    8 ++++----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index e26c3bd9aca4..bcd92b629d3c 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -499,8 +499,8 @@ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
- 	int type = pci_pcie_type(dev);
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index a091780..a4d174e 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -129,7 +129,7 @@ call to succeed.
  
- 	return pcie_cap_version(dev) > 1 ||
--	       type == PCI_EXP_TYPE_ROOT_PORT ||
--	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
-+	       ((type == PCI_EXP_TYPE_ROOT_PORT ||
-+	         type == PCI_EXP_TYPE_DOWNSTREAM) &&
- 		pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
+ 4.2.3 pci_enable_msi_block_auto
+ 
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
++int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
+ 
+ This variation on pci_enable_msi() call allows a device driver to request
+ the maximum possible number of MSIs.  The MSI specification only allows
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index babe503..4656b88 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -835,7 +835,7 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+  * updates the @dev's irq member to the lowest new interrupt number; the
+  * other interrupt numbers allocated to this device are consecutive.
+  */
+-int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
++int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+ {
+ 	int status, maxvec;
+ 	u16 msgctl;
+@@ -866,7 +866,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block);
+ 
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
++int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
+ {
+ 	int ret, nvec;
+ 	u16 msgctl;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d5cc0d3..6ba0deb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1155,13 +1155,13 @@ struct msix_entry {
+ 
+ 
+ #ifndef CONFIG_PCI_MSI
+-static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
++static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+ {
+ 	return -ENOSYS;
  }
  
+ static inline int
+-pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
++pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
+ {
+ 	return -ENOSYS;
+ }
+@@ -1196,8 +1196,8 @@ static inline int pci_msi_enabled(void)
+ 	return 0;
+ }
+ #else
+-int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
++int pci_enable_msi_block(struct pci_dev *dev, int nvec);
++int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_table_size(struct pci_dev *dev);
+-- 
+1.7.7.6
 
