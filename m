@@ -1,119 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:34523 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163Ab3KUVqd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 16:46:33 -0500
-Received: by mail-ie0-f172.google.com with SMTP id qd12so703084ieb.3
-        for <linux-pci@vger.kernel.org>; Thu, 21 Nov 2013 13:46:32 -0800 (PST)
-Date: Thu, 21 Nov 2013 14:46:26 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Received: from mail-out.m-online.net ([212.18.0.9]:37342 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932300Ab3KZUqM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:46:12 -0500
+From: Marek Vasut <marex@denx.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Date: Tue, 26 Nov 2013 21:46:09 +0100
+Cc: Tim Harvey <tharvey@gateworks.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [GIT PULL] PCI updates for v3.13
-Message-ID: <20131121214626.GA1916@google.com>
+References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com> <20131023064051.GA7646@pratyush-vbox>
+In-Reply-To: <20131023064051.GA7646@pratyush-vbox>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311262146.09780.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Dear Pratyush Anand,
 
-I dropped the work_on_cpu() changes that caused trouble.  I'll put those in
-later, but would like these to get in -rc1 to prevent merge hassles.
+> Hi,
+> 
+> On Wed, Oct 23, 2013 at 12:55:43PM +0800, Tim Harvey wrote:
+> > The IMX6 iATU is used for address translation between the AXI bus
+> > address space and PCI address space.  This is used for type0 and type1
+> > config cycles but is not necessary for outbound io/mem regions.
+> > 
+> > This patch removes the calls that inappropriately re-configures the ATU
+> > viewport for outbound memory and IO after config cycles and removes them
+> > altogether as they are not necessary.
+> > 
+> > This resolves issues with PCI devices behind switches and has been tested
+> > with a Gige device behind a PLX PEX860x switch.  More testing is needed
+> > for other configurations.
+> 
+> It seems to me that in your controller you have only one view port.
+> Also mem_base and mem_bus_addr is same. Thats why it works in your
+> case.
 
+MX6 has 4 In/4 Out viewports AFAICT.
 
-The following changes since commit 4fbf888accb39af423f271111d44e8186f053723:
-
-  Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4 (2013-11-14 17:19:58 +0900)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.13-fixes-1
-
-for you to fetch changes up to e7cc5cf74544d97d7b69e2701595037474db1f96:
-
-  PCI: Remove duplicate pci_disable_device() from pcie_portdrv_remove() (2013-11-20 16:05:49 -0700)
-
-----------------------------------------------------------------
-PCI updates for v3.13:
-
-  Miscellaneous
-    - Remove duplicate disable from pcie_portdrv_remove() (Yinghai Lu)
-    - Fix whitespace, capitalization, and spelling errors (Bjorn Helgaas)
-
-----------------------------------------------------------------
-Bjorn Helgaas (1):
-      PCI: Fix whitespace, capitalization, and spelling errors
-
-Yinghai Lu (1):
-      PCI: Remove duplicate pci_disable_device() from pcie_portdrv_remove()
-
- drivers/pci/ats.c                       |   2 +-
- drivers/pci/host/pci-tegra.c            |  12 ++--
- drivers/pci/host/pcie-designware.c      |   2 +-
- drivers/pci/hotplug/Kconfig             |   4 +-
- drivers/pci/hotplug/Makefile            |   2 +-
- drivers/pci/hotplug/acpiphp_core.c      |  12 ++--
- drivers/pci/hotplug/acpiphp_glue.c      |   2 +-
- drivers/pci/hotplug/acpiphp_ibm.c       |  14 ++--
- drivers/pci/hotplug/cpci_hotplug_core.c |   2 +-
- drivers/pci/hotplug/cpci_hotplug_pci.c  |   2 +-
- drivers/pci/hotplug/cpcihp_generic.c    |  20 +++---
- drivers/pci/hotplug/cpcihp_zt5550.c     |  22 +++----
- drivers/pci/hotplug/cpcihp_zt5550.h     |  18 +++---
- drivers/pci/hotplug/cpqphp_core.c       |   4 +-
- drivers/pci/hotplug/cpqphp_ctrl.c       |  10 +--
- drivers/pci/hotplug/cpqphp_pci.c        |   5 +-
- drivers/pci/hotplug/ibmphp.h            |  12 ++--
- drivers/pci/hotplug/ibmphp_core.c       | 109 ++++++++++++++++----------------
- drivers/pci/hotplug/ibmphp_ebda.c       | 103 +++++++++++++++---------------
- drivers/pci/hotplug/ibmphp_hpc.c        |  24 +++----
- drivers/pci/hotplug/ibmphp_pci.c        |  71 ++++++++++-----------
- drivers/pci/hotplug/ibmphp_res.c        |  76 +++++++++++-----------
- drivers/pci/hotplug/pci_hotplug_core.c  |   8 +--
- drivers/pci/hotplug/pciehp.h            |   2 +-
- drivers/pci/hotplug/pciehp_acpi.c       |   2 +-
- drivers/pci/hotplug/pciehp_core.c       |   4 +-
- drivers/pci/hotplug/pciehp_hpc.c        |   6 +-
- drivers/pci/hotplug/pcihp_skeleton.c    |   8 +--
- drivers/pci/hotplug/rpadlpar_core.c     |   2 +-
- drivers/pci/hotplug/rpaphp.h            |   6 +-
- drivers/pci/hotplug/rpaphp_core.c       |   8 +--
- drivers/pci/hotplug/rpaphp_pci.c        |   3 +-
- drivers/pci/hotplug/rpaphp_slot.c       |  19 +++---
- drivers/pci/hotplug/shpchp.h            |   8 +--
- drivers/pci/hotplug/shpchp_core.c       |  10 +--
- drivers/pci/hotplug/shpchp_hpc.c        |   2 +-
- drivers/pci/iov.c                       |   2 +-
- drivers/pci/irq.c                       |   2 +-
- drivers/pci/msi.c                       |   2 +-
- drivers/pci/pci-acpi.c                  |   2 +-
- drivers/pci/pci-driver.c                |  16 ++---
- drivers/pci/pci-stub.c                  |   4 +-
- drivers/pci/pci-sysfs.c                 |  28 ++++----
- drivers/pci/pci.c                       |  46 +++++++-------
- drivers/pci/pcie/aer/aerdrv_core.c      |   2 +-
- drivers/pci/pcie/aspm.c                 |   2 +-
- drivers/pci/pcie/pme.c                  |   4 +-
- drivers/pci/pcie/portdrv.h              |   2 +-
- drivers/pci/pcie/portdrv_bus.c          |   4 +-
- drivers/pci/pcie/portdrv_core.c         |   2 +-
- drivers/pci/pcie/portdrv_pci.c          |   7 +-
- drivers/pci/probe.c                     |  10 +--
- drivers/pci/proc.c                      |   2 +-
- drivers/pci/quirks.c                    | 104 +++++++++++++++---------------
- drivers/pci/remove.c                    |   2 +-
- drivers/pci/search.c                    |  12 ++--
- drivers/pci/setup-bus.c                 |  18 +++---
- drivers/pci/setup-res.c                 |   2 +-
- drivers/pci/slot.c                      |   2 +-
- drivers/pci/syscall.c                   |   2 +-
- include/linux/msi.h                     |  10 +--
- include/linux/pci.h                     |  55 ++++++++--------
- include/linux/pci_hotplug.h             |   5 +-
- include/linux/pcieport_if.h             |   2 +-
- include/uapi/linux/pci_regs.h           |  72 ++++++++++-----------
- 65 files changed, 518 insertions(+), 521 deletions(-)
+Best regards,
+Marek Vasut
