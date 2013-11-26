@@ -1,38 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:65036 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758324Ab3KZWBb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 17:01:31 -0500
-Received: by mail-ie0-f170.google.com with SMTP id qd12so10716505ieb.29
-        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2013 14:01:30 -0800 (PST)
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:52692 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011Ab3KZEUn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 23:20:43 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so8194743iec.23
+        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 20:20:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX0-gmijLmNLf3RWKcwDA-6a6TpPQNwj7tkRnF=990F2Q@mail.gmail.com>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
- <1385429290-25397-9-git-send-email-yinghai@kernel.org> <CAErSpo5bxRJpiO8QmEQBkRGGKkTOEjnQBFRsZJG8CsaJ5JJkJg@mail.gmail.com>
- <20131126065944.GA13781@yanx> <CAErSpo5JVNsYxr6ka5KwLtpv7LX74SmkHsb1jED31jXfdSsxAg@mail.gmail.com>
- <CAE9FiQX0-gmijLmNLf3RWKcwDA-6a6TpPQNwj7tkRnF=990F2Q@mail.gmail.com>
+In-Reply-To: <CAMZVYU8-thd2Q2CuFVuhT35D7cmv46b600365j0Zo-bFaVvK2Q@mail.gmail.com>
+References: <1384285203-642-1-git-send-email-cl91tp@gmail.com>
+ <CAErSpo5E4584zgTt4ySPSEFhtwdHDOyrrowirp=SmtmJjDyHgg@mail.gmail.com> <CAMZVYU8-thd2Q2CuFVuhT35D7cmv46b600365j0Zo-bFaVvK2Q@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 26 Nov 2013 15:01:10 -0700
-Message-ID: <CAErSpo7U-sAu9XwV4KkXPXmFYov2FJSQ3oRrzUj=Y9XH3Ys=mA@mail.gmail.com>
-Subject: Re: [PATCH v2 08/10] PCI: Try best to allocate pref mmio 64bit above 4g
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Date: Mon, 25 Nov 2013 21:20:23 -0700
+Message-ID: <CAErSpo4dwmpqC54wJ+qLPCyFS2zwJgzuOWNXT17hEg-tSE9VUw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
+To: Chang Liu <cl91tp@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Alan Cox <gnomes@lxorguk.ukuu.org.uk>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	Jility <jility09@gmail.com>, Florian Otti <f.otti@gmx.at>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 3:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Nov 26, 2013 at 9:53 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I don't know what "MEM_64 for bridge get reset" means -- there are a
->> couple places that clear IORESOURCE_MEM_64, but they don't seem
->> relevant.
->
-> during size bridge resource, we try to clear bridge mmio64 pref MEM_64
-> bit in bridge resource flags.
-> if one children pref mmio does not support 64bit pref mmio.
+On Mon, Nov 25, 2013 at 9:11 PM, Chang Liu <cl91tp@gmail.com> wrote:
+> If this turns out to be a problem specific to Acer V573G, we can simply
+> wrap the if (pdev->...) line in ata/ahci.c with if
+> (dmi_check_system(acer_v573g))
+> so that only acer v573g laptops will be affected by this patch. The remaining
+> part of the patch won't need to be changed.
 
-A function name?  Please?
+Well, sure.  But that doesn't change the fact that until we know *why*
+it hangs, this is voodoo programming.  And I don't like voodoo
+programming.
+
+> 2013/11/26 Bjorn Helgaas <bhelgaas@google.com>:
+>> [+cc Lan, Khalid, Konstantin, Alan, Takao, Jility, Florian, linux-kernel]
+>>
+>> On Tue, Nov 12, 2013 at 07:40:03PM +0000, Chang Liu wrote:
+>>> This fixes https://bugzilla.kernel.org/show_bug.cgi?id=63861
+>>>
+>>> Commit b566a22c2 and 7897e60227 made pci_device_shutdown()
+>>> unconditionally clear Bus Master bit for every pci devices.
+>>> While this works for most hardware, certain devices are not
+>>> compatible with this. Intel Lynx Point-LP SATA Controller,
+>>> for example, will hang the system if its Bus Master bit is
+>>> cleared during device shutdown. This patch adds a pci quirk
+>>> so that device drivers can instruct pci_device_shutdown()
+>>> to keep Bus Master from being cleared, and then implements
+>>> this mechanism for the Intel Lynx Point-LP AHCI driver.
+>>>
+>>> Signed-off-by: Chang Liu <cl91tp@gmail.com>
+>>
+>> I'm not 100% comfortable with disabling bus mastering in general;
+>> see [1] for more details.
+>>
+>> But given that we have been doing it for quite a while (b566a22c2 appeared
+>> in v3.5 on Jul 21, 2012), and Lynx Point should be in lots of machines, I'm
+>> surprised that we don't see more reports of this problem if it really
+>> affects all Lynx Point parts.
+>>
+>> Jility reported the same problem [2], and I did find one other similar
+>> report [3] from Florian.  All three reports (Chang, Jility, Florian) are on
+>> the same exact machine (Acer V5-573G), which seems sort of suspicious.
+>>
+>> Lan, do you have access to any Lynx Point boxes?  Can you test and see
+>> whether they hang on power-off also?  I suspect this might be something
+>> specific to the Acer box, not a generic Lynx Point issue.
+>>
+>> Bjorn
+>>
+>> [1] http://lkml.kernel.org/r/20120427190033.GA17588@ldl.usa.hp.com
+>> [2] https://bugzilla.kernel.org/show_bug.cgi?id=63861#c21
+>> [3] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1249329
+>>
+>>> ---
+>>> As per Takao's suggestion, add a new member into struct pci_dev
+>>> and add a quirk in the ahci driver. I tested this on my
+>>> machine (Acer V5-573G) and it works fine.
+>>>
+>>>  drivers/ata/ahci.c       |  8 ++++++++
+>>>  drivers/pci/pci-driver.c | 11 ++++++++---
+>>>  include/linux/pci.h      |  1 +
+>>>  3 files changed, 17 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>>> index 8e28f92..de6efcb 100644
+>>> --- a/drivers/ata/ahci.c
+>>> +++ b/drivers/ata/ahci.c
+>>> @@ -1385,6 +1385,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>>
+>>>   pci_set_master(pdev);
+>>>
+>>> + /* We normally clear Bus Master on pci device shutdown. However,
+>>> + * doing so for Intel Lynx Point-LP SATA Controller [AHCI mode]
+>>> + * hangs the system. Therefore keep it.
+>>> + * See bug report: https://bugzilla.kernel.org/show_bug.cgi?id=63861
+>>> + */
+>>> + if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x9c03)
+>>> + pdev->keep_busmaster_on_shutdown = 1;
+>>> +
+>>>   if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
+>>>   return ahci_host_activate(host, pdev->irq, n_msis);
+>>>
+>>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>>> index 38f3c01..ff15b0c 100644
+>>> --- a/drivers/pci/pci-driver.c
+>>> +++ b/drivers/pci/pci-driver.c
+>>> @@ -392,10 +392,15 @@ static void pci_device_shutdown(struct device *dev)
+>>>   pci_msix_shutdown(pci_dev);
+>>>
+>>>   /*
+>>> - * Turn off Bus Master bit on the device to tell it to not
+>>> - * continue to do DMA. Don't touch devices in D3cold or unknown states.
+>>> + * If the hardware is okay with it, turn off Bus Master bit
+>>> + * on the device to tell it not to continue doing DMA.
+>>> + * Don't touch devices in D3cold or unknown states.
+>>> + * On certain hardware clearing Bus Master bit on shutdown
+>>> + * may hang the entire system. In these cases the driver of
+>>> + * these devices should set keep_busmaster_on_shutdown to 1.
+>>>   */
+>>> - if (pci_dev->current_state <= PCI_D3hot)
+>>> + if (!pci_dev->keep_busmaster_on_shutdown
+>>> +    && pci_dev->current_state <= PCI_D3hot)
+>>>   pci_clear_master(pci_dev);
+>>>  }
+>>>
+>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>> index da172f9..63db735 100644
+>>> --- a/include/linux/pci.h
+>>> +++ b/include/linux/pci.h
+>>> @@ -322,6 +322,7 @@ struct pci_dev {
+>>>   /* keep track of device state */
+>>>   unsigned int is_added:1;
+>>>   unsigned int is_busmaster:1; /* device is busmaster */
+>>> + unsigned int keep_busmaster_on_shutdown:1; /* do not clear busmaster on shutdown */
+>>>   unsigned int no_msi:1; /* device may not use msi */
+>>>   unsigned int block_cfg_access:1; /* config space access is blocked */
+>>>   unsigned int broken_parity_status:1; /* Device generates false positive parity */
+>>> --
+>>> 1.8.4.2
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
