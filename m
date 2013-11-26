@@ -1,39 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:58650 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755589Ab3KEWXj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 17:23:39 -0500
-Received: by mail-wg0-f52.google.com with SMTP id k14so4190867wgh.7
-        for <linux-pci@vger.kernel.org>; Tue, 05 Nov 2013 14:23:37 -0800 (PST)
-Date: Tue, 5 Nov 2013 23:31:35 +0100
-From: Marta Rybczynska <rybczynska@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Jiri Kosina <trivial@kernel.org>
-Subject: [PATCH] drivers/pci/pci.c: fix comment typo
-Message-ID: <20131105223135.GA10523@desktop.fbx.proxad.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:52329 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754452Ab3KZUkB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:40:01 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 06/11] PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
+Date: Tue, 26 Nov 2013 10:09:55 +0100
+Message-Id: <2606621e4b4286536eb3592bd03352bcf856ab48.1385399393.git.agordeev@redhat.com>
+In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
+References: <cover.1385399393.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Marta Rybczynska <rybczynska@gmail.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Suggested-by: Ben Hutchings <bhutchings@solarflare.com>
+Reviewed-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/pci.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index bdd64b1..fb5090d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3339,7 +3339,7 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
- 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
- 	/*
- 	 * PCI spec v3.0 7.6.4.2 requires minimum Trst of 1ms.  Double
--	 * this to 2ms to ensure that we meet the minium requirement.
-+	 * this to 2ms to ensure that we meet the minimum requirement.
- 	 */
- 	msleep(2);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 835ec7b..d5cc0d3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1157,13 +1157,13 @@ struct msix_entry {
+ #ifndef CONFIG_PCI_MSI
+ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
  
+ static inline int
+ pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
+ 
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+@@ -1178,7 +1178,7 @@ static inline int pci_msix_table_size(struct pci_dev *dev)
+ static inline int pci_enable_msix(struct pci_dev *dev,
+ 				  struct msix_entry *entries, int nvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
+ 
+ static inline void pci_msix_shutdown(struct pci_dev *dev)
 -- 
-1.8.4.rc3
+1.7.7.6
 
