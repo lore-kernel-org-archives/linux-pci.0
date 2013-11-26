@@ -1,46 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:59908 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754154Ab3K1DML (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 22:12:11 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MWY00FCEE8A1J40@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 28 Nov 2013 12:12:10 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] PCI: PCIe portdrv: use DEFINE_PCI_DEVICE_TABLE macro
-Date: Thu, 28 Nov 2013 12:12:09 +0900
-Message-id: <002801ceebe7$a0293170$e07b9450$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-out.m-online.net ([212.18.0.10]:46426 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932544Ab3KZVLU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:11:20 -0500
+From: Marek Vasut <marex@denx.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/7] PCI: imx6: Split away the PHY reset
+Date: Tue, 26 Nov 2013 22:10:45 +0100
+Message-Id: <1385500248-6551-4-git-send-email-marex@denx.de>
+In-Reply-To: <1385500248-6551-1-git-send-email-marex@denx.de>
+References: <1385500248-6551-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This macro is used to create a struct pci_device_id array.
+Split the PCIe PHY reset from the link up function to make
+the code a little more structured.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Harro Haan <hrhaan@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pcie/portdrv_pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pci-imx6.c | 33 ++++++++++++++++++---------------
+ 1 file changed, 18 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 0d8fdc4..5356902 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -368,7 +368,7 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
- /*
-  * LINUX Device Driver Model
-  */
--static const struct pci_device_id port_pci_ids[] = { {
-+static DEFINE_PCI_DEVICE_TABLE(port_pci_ids) = { {
- 	/* handle any PCI-Express port */
- 	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
- 	}, { /* end: all zeroes */ }
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 4d5be4e..a9781e7 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -336,6 +336,23 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 	return;
+ }
+ 
++static void imx6_pcie_reset_phy(struct pcie_port *pp)
++{
++	uint32_t temp;
++
++	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
++	temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
++		 PHY_RX_OVRD_IN_LO_RX_PLL_EN);
++	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
++
++	usleep_range(2000, 3000);
++
++	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
++	temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
++		  PHY_RX_OVRD_IN_LO_RX_PLL_EN);
++	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
++}
++
+ static int imx6_pcie_link_up(struct pcie_port *pp)
+ {
+ 	u32 rc, ltssm, rx_valid, temp;
+@@ -370,21 +387,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 
+ 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+ 
+-	pcie_phy_read(pp->dbi_base,
+-		PHY_RX_OVRD_IN_LO, &temp);
+-	temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN
+-		| PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+-	pcie_phy_write(pp->dbi_base,
+-		PHY_RX_OVRD_IN_LO, temp);
+-
+-	usleep_range(2000, 3000);
+-
+-	pcie_phy_read(pp->dbi_base,
+-		PHY_RX_OVRD_IN_LO, &temp);
+-	temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN
+-		| PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+-	pcie_phy_write(pp->dbi_base,
+-		PHY_RX_OVRD_IN_LO, temp);
++	imx6_pcie_reset_phy(pp);
+ 
+ 	return 0;
+ }
 -- 
-1.7.10.4
-
+1.8.4.3
 
