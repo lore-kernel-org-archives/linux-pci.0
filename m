@@ -1,71 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:8682 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086Ab3KATe5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 15:34:57 -0400
-Subject: [PATCH] PCI: warn on driver probe return value greater than zero
-To: bhelgaas@google.com
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: axboe@kernel.dk, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stephenmcameron@gmail.com,
-	thenzl@redhat.com, akpm@linux-foundation.org
-Date: Fri, 01 Nov 2013 14:34:55 -0500
-Message-ID: <20131101193455.18686.92302.stgit@beardog.cce.hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:18980 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753057Ab3KZXMX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Nov 2013 18:12:23 -0500
+Message-ID: <1385507535.25738.74.camel@ul30vt.home>
+Subject: Re: pciehp LinkState
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatjain@juniper.net>,
+	Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Date: Tue, 26 Nov 2013 16:12:15 -0700
+In-Reply-To: <CAErSpo5BSzUJofyuNH5wKqYfcydOXEtrnJSq0xpssafomqHWrQ@mail.gmail.com>
+References: <528D4739.80700@fold.natur.cuni.cz>
+	 <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
+	 <01b89ce965ed454fb9f0e0cf52ba622e@BLUPR05MB118.namprd05.prod.outlook.com>
+	 <20131125194044.GA9710@google.com> <5293F3FB.6000401@fold.natur.cuni.cz>
+	 <20131126031317.GA6258@google.com>
+	 <cfeb9976fbb74028b600c9f86fcdd9ad@BLUPR05MB118.namprd05.prod.outlook.com>
+	 <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
+	 <55dfa94fa7224bafa14d52c5835ea1ca@BLUPR05MB118.namprd05.prod.outlook.com>
+	 <CAErSpo5BSzUJofyuNH5wKqYfcydOXEtrnJSq0xpssafomqHWrQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+On Tue, 2013-11-26 at 15:26 -0700, Bjorn Helgaas wrote:
+> [+cc Alex]
+> 
+> On Tue, Nov 26, 2013 at 3:06 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+> >> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> >> > Currently in my patch, the pciehp_use_link_events=1 is used to only
+> >> enable link state change notifications, but in case pcie_isr() finds
+> >> "DLL changed" bit set in "Slot status", it processes the link state
+> >> change. I'll make the single line change to pcie_isr() to process the
+> >> event only if pciehp_use_link_events=1. Let me know if this sounds
+> >> alright.
+> >>
+> >> If we can avoid it, I'd prefer not to add the "pciehp_use_link_events"
+> >> module parameter.  What would break if we just *always* used link
+> >> events?
+> >
+> > Not really "break", but I'd think some changes in behavior shall be visible:
+> >
+> > 1) When a card is pulled out (thus causing the link to go down), it shall always be disabled - whether or not it supports "surprise removal" (in the capabilities). I think this would be the right thing to do in this situation.
+> 
+> Yep, this sounds like it would be OK.
+> 
+> > 2) Even other scenarios where the link may go down - e.g. device reset using an external reset pin, or a firmware initiated reset etc, shall cause the device to be immediately removed and re-added again when the link comes back up). This may also be desired.
+> 
+> This sounds OK, too.  There's already some fancy dancing for similar
+> scenarios in pciehp_reset_slot(); maybe that would have to be
+> extended.  Alex might have input here.
 
-Ages ago, drivers could return values greater than zero from
-their probe function and this would be regarded as success.
-Commit f3ec4f87d607f40497 "PCI: change device runtime PM
-settings for probe and remove" slightly altered this in 2010,
-and commit 967577b062417b4e4b8e27b "PCI/PM: Keep runtime PM
-enabled for unbound PCI devices" in late 2012 altered it more
-signficantly, setting pci_dev->driver to NULL if the driver's
-probe function returned a value greater than zero, which would
-for example prevent the driver's remove function from being
-called on rmmod.
+So long as reset initiated through pci-core doesn't cause a hotplug I
+think I'm ok with it.  I saw code was already being added around slot
+reset to mask link changes, just like we do with presence detection.
+Thanks,
 
-Neither of those changes would necessarily make the driver fail
-in an obvious way though, and so at least a couple drivers (cciss,
-hpsa) fell into this hole since they were returning 1, and this
-situation went unnoticed for quite some time.
+Alex
 
-If a driver's probe function returns a value greater than zero,
-issue a warning, but otherwise treat this as success.
+> > 3) If the link comes up automatically as soon as a card is plugged in (i.e. without the need to turn on power or do anything else from SW), the card shall be immediately added - even if surprise capability is not present. I'm not sure if this is desired. That's because the current behavior is that for slots that do not support surprise events, the user has to initiate the hot-add using the attention button. Even after that, he gets a 5 second time to cancel the operation in case he wishes. This will no longer be the case, if use of link events is always enabled.
+> 
+> This one sounds like a problem.  But I think we could manage this,
+> e.g., by noticing the link-up interrupt, but waiting for the 5-second
+> timeout if an attention button is present.
+> 
+> > I think it would be fair to say that if use of link events is always supported, it would be roughly equivalent to a slot supporting surprise events. (Surprise events work on "presence detect" pin, and this will work on the link state changes).
+> >
+> > Thanks,
+> >
+> > Rajat
+> >
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
----
- drivers/pci/pci-driver.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 98f7b9b..7fbe343 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -264,11 +264,19 @@ static long local_pci_probe(void *_ddi)
- 	pm_runtime_get_sync(dev);
- 	pci_dev->driver = pci_drv;
- 	rc = pci_drv->probe(pci_dev, ddi->id);
--	if (rc) {
-+	if (!rc)
-+		return rc;
-+	if (rc < 0) {
- 		pci_dev->driver = NULL;
- 		pm_runtime_put_sync(dev);
-+		return rc;
- 	}
--	return rc;
-+	/*
-+	 * Probe function should return < 0 for failure, 0 for success
-+	 * Treat values > 0 as success, but warn.
-+	 */
-+	dev_warn(dev, "Driver probe function unexpectedly returned %d\n", rc);
-+	return 0;
- }
- 
- static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
 
