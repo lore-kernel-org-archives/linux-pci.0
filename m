@@ -1,55 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31623 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355Ab3KTBwX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:23 -0500
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:35536 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758487Ab3KZWGY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Nov 2013 17:06:24 -0500
+From: Rajat Jain <rajatjain@juniper.net>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/6] PCI: move back pci_proc_attach_devices calling
-Date: Tue, 19 Nov 2013 17:51:52 -0800
-Message-Id: <1384912317-3721-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
-References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: pciehp LinkState
+Date: Tue, 26 Nov 2013 22:06:12 +0000
+Message-ID: <55dfa94fa7224bafa14d52c5835ea1ca@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <528D4739.80700@fold.natur.cuni.cz>
+ <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
+ <01b89ce965ed454fb9f0e0cf52ba622e@BLUPR05MB118.namprd05.prod.outlook.com>
+ <20131125194044.GA9710@google.com> <5293F3FB.6000401@fold.natur.cuni.cz>
+ <20131126031317.GA6258@google.com>
+ <cfeb9976fbb74028b600c9f86fcdd9ad@BLUPR05MB118.namprd05.prod.outlook.com>
+ <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
+In-Reply-To: <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We stop detach proc when pci_stop_device.
-So should attach that during pci_bus_add_device.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c   | 1 +
- drivers/pci/probe.c | 2 --
- 2 files changed, 1 insertion(+), 2 deletions(-)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> 
+> >
+> > Currently in my patch, the pciehp_use_link_events=1 is used to only
+> enable link state change notifications, but in case pcie_isr() finds
+> "DLL changed" bit set in "Slot status", it processes the link state
+> change. I'll make the single line change to pcie_isr() to process the
+> event only if pciehp_use_link_events=1. Let me know if this sounds
+> alright.
+> 
+> If we can avoid it, I'd prefer not to add the "pciehp_use_link_events"
+> module parameter.  What would break if we just *always* used link
+> events?
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index fc1b740..1ffd95b 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -175,6 +175,7 @@ int pci_bus_add_device(struct pci_dev *dev)
- 	 * are not assigned yet for some devices.
- 	 */
- 	pci_fixup_device(pci_fixup_final, dev);
-+	pci_proc_attach_device(dev);
- 	pci_create_sysfs_dev_files(dev);
- 
- 	dev->match_driver = true;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 38e403d..173a9cf 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1381,8 +1381,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->match_driver = false;
- 	ret = device_add(&dev->dev);
- 	WARN_ON(ret < 0);
--
--	pci_proc_attach_device(dev);
- }
- 
- struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
--- 
-1.8.1.4
+Not really "break", but I'd think some changes in behavior shall be visible:
+
+1) When a card is pulled out (thus causing the link to go down), it shall always be disabled - whether or not it supports "surprise removal" (in the capabilities). I think this would be the right thing to do in this situation.
+
+2) Even other scenarios where the link may go down - e.g. device reset using an external reset pin, or a firmware initiated reset etc, shall cause the device to be immediately removed and re-added again when the link comes back up). This may also be desired.
+
+3) If the link comes up automatically as soon as a card is plugged in (i.e. without the need to turn on power or do anything else from SW), the card shall be immediately added - even if surprise capability is not present. I'm not sure if this is desired. That's because the current behavior is that for slots that do not support surprise events, the user has to initiate the hot-add using the attention button. Even after that, he gets a 5 second time to cancel the operation in case he wishes. This will no longer be the case, if use of link events is always enabled.
+
+I think it would be fair to say that if use of link events is always supported, it would be roughly equivalent to a slot supporting surprise events. (Surprise events work on "presence detect" pin, and this will work on the link state changes).
+
+Thanks,
+
+Rajat
 
