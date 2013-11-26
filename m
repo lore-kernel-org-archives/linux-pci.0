@@ -1,56 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:45618 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932300Ab3KZUrO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:47:14 -0500
-From: Marek Vasut <marex@denx.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
-Date: Tue, 26 Nov 2013 21:47:06 +0100
-Cc: Tim Harvey <tharvey@gateworks.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, Frank Li <lznuaa@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com> <20131125230935.GA4034@google.com>
-In-Reply-To: <20131125230935.GA4034@google.com>
+Received: from mga02.intel.com ([134.134.136.20]:6064 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751193Ab3KZFvU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Nov 2013 00:51:20 -0500
+Message-ID: <52943422.1090402@intel.com>
+Date: Tue, 26 Nov 2013 13:39:46 +0800
+From: Lan Tianyu <tianyu.lan@intel.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311262147.07036.marex@denx.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Chang Liu <cl91tp@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Alan Cox <gnomes@lxorguk.ukuu.org.uk>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	Jility <jility09@gmail.com>, Florian Otti <f.otti@gmx.at>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
+References: <1384285203-642-1-git-send-email-cl91tp@gmail.com> <CAErSpo5E4584zgTt4ySPSEFhtwdHDOyrrowirp=SmtmJjDyHgg@mail.gmail.com>
+In-Reply-To: <CAErSpo5E4584zgTt4ySPSEFhtwdHDOyrrowirp=SmtmJjDyHgg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn Helgaas,
+On 2013年11月26日 11:33, Bjorn Helgaas wrote:
+> Lan, do you have access to any Lynx Point boxes?  Can you test and see
+> whether they hang on power-off also?  I suspect this might be something
+> specific to the Acer box, not a generic Lynx Point issue.
 
-> On Tue, Oct 22, 2013 at 09:55:43PM -0700, Tim Harvey wrote:
-> > The IMX6 iATU is used for address translation between the AXI bus
-> > address space and PCI address space.  This is used for type0 and type1
-> > config cycles but is not necessary for outbound io/mem regions.
-> > 
-> > This patch removes the calls that inappropriately re-configures the ATU
-> > viewport for outbound memory and IO after config cycles and removes them
-> > altogether as they are not necessary.
-> > 
-> > This resolves issues with PCI devices behind switches and has been tested
-> > with a Gige device behind a PLX PEX860x switch.  More testing is needed
-> > for other configurations.
-> > 
-> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> 
-> Dropping for now, per Marek and Pratyush's concerns.  Poke me if/when those
-> are resolved.
+Sure. I just get one such prototype laptop and power off works normally
+on it.
 
-I hope (unless of course I again fail to under load of other stuff to do) to 
-look at the PCIe stuff again next week once I'm in the office. In the meantime, 
-I'd love to submit new set of patches.
-
-Best regards,
-Marek Vasut
+-- 
+Best regards
+Tianyu Lan
