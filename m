@@ -1,112 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:56763 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759Ab3KNIMr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Nov 2013 03:12:47 -0500
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
-	Thu, 14 Nov 2013 18:12:33 +1000
-Message-ID: <528485EA.5080309@linux.vnet.ibm.com>
-Date: Thu, 14 Nov 2013 16:12:26 +0800
-From: mike <qiudayu@linux.vnet.ibm.com>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:55071 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693Ab3KZELl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 23:11:41 -0500
 MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-pm@vger.kernel.org, rjw@rjwysocki.net
-Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM enabled
- for unbound PCI devices
-References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org> <5284423D.4090907@linux.vnet.ibm.com> <1384408745.30364.8.camel@yhuang-dev> <5284799C.1010000@linux.vnet.ibm.com> <1384415609.30364.18.camel@yhuang-dev>
-In-Reply-To: <1384415609.30364.18.camel@yhuang-dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAErSpo5E4584zgTt4ySPSEFhtwdHDOyrrowirp=SmtmJjDyHgg@mail.gmail.com>
+References: <1384285203-642-1-git-send-email-cl91tp@gmail.com>
+	<CAErSpo5E4584zgTt4ySPSEFhtwdHDOyrrowirp=SmtmJjDyHgg@mail.gmail.com>
+Date: Tue, 26 Nov 2013 04:11:40 +0000
+Message-ID: <CAMZVYU8-thd2Q2CuFVuhT35D7cmv46b600365j0Zo-bFaVvK2Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
+From: Chang Liu <cl91tp@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Alan Cox <gnomes@lxorguk.ukuu.org.uk>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	Jility <jility09@gmail.com>, Florian Otti <f.otti@gmx.at>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/14/2013 03:53 PM, Huang Ying wrote:
-> On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
->> On 11/14/2013 01:59 PM, Huang Ying wrote:
->>> On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
->>>> On 11/14/2013 03:20 AM, Alan Stern wrote:
->>>>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
->>>>>
->>>>>> [+cc Rafael, linux-pm]
->>>>>>
->>>>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
->>>>>>> Hi Huang Ying,
->>>>>>>
->>>>>>> I see you are the author of this patch, commit id is:
->>>>>>> 967577b062417b4e4b8e27b711220f4124f5153a
->>>>>>>
->>>>>>> I have a question while I try to understand this patch,
->>>>>>> So I would very grateful if you or others can give me some reply.....
->>>>>>>
->>>>>>> ............
->>>>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
->>>>>>> +       pm_runtime_get_sync(dev);
->>>>>>> +       pci_dev->driver = pci_drv;
->>>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
->>>>>>> I see here you make the driver to initialize before probe,
->>>>>>> But I have no idea of why you do this change.....
->>>>>>>
->>>>>>> and I look inside the code, it may be pm_runtime relate??
->>>>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
->>>>> doesn't do anything unless pci_dev->driver is set.  You can see this at
->>>>> the start of pci_pm_runtime_suspend().
->>>>>
->>>>> Since we want the driver's probe routine to be able to carry out
->>>>> runtime PM operations, we have to set pci_dev->driver before the probe
->>>>> routine runs.
->>>> Is there any situations , like in  probe state,  pci_dev->driver
->>>> has been set. the  pci_pm_runtime_xxx() has passed
->>>> pci_dev->driver NULL check, but at this point, probe fail
->>>> occurs, and  pci_dev->driver to be set to NULL.
->>>>
->>>> What will happen ? Or this situation will never happen?
->>>> I'm confuse about this.
->>> I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
->>> is called, so pci_pm_runtime_xxx() will not be called until
->>> pm_runtime_put_noidle() is called in ->probe().  And
->>>    should be done as one of the latest actions in
->>> ->probe(), after the normal probe actions succeeded.
->> OK, just as your description, it seems OK.
->> But this is really a issue as I explained in last email.
->>
->> So I want to know if there are any side-effect of changing the code
->> in pci_pm_runtime_xxx()
->>
->>    if (!pci_dev->driver)
->>           return 0;
->>    to
->>
->>    if (!dev->driver)
->>           return 0;
->>
-> If you make this change, we can not put devices into low power state
-> (runtime suspend the device) in ->probe().  That is expected in some
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This means dev->driver is NULL ?? but pci_dev->driver is set???
+If this turns out to be a problem specific to Acer V573G, we can simply
+wrap the if (pdev->...) line in ata/ahci.c with if
+(dmi_check_system(acer_v573g))
+so that only acer v573g laptops will be affected by this patch. The remaining
+part of the patch won't need to be changed.
 
-Because if use pci_dev->driver can put into low power state, means
+I can do an updated one as soon as it is confirmed that this is an acer specific
+issue.
 
-pci_dev->driver is set, but in the situation, use dev->driver will can't,
-
-means dev->driver = null, but I have not find any case that
-
-dev->driver = null, but pci_dev->driver != null;
-
-I know I always been a question guy, i apologize for spend a lot
-time to reply this mail, but I really want to understand it,
-
-Thanks
-Mike
-
-
-> circumstance.
+2013/11/26 Bjorn Helgaas <bhelgaas@google.com>:
+> [+cc Lan, Khalid, Konstantin, Alan, Takao, Jility, Florian, linux-kernel]
 >
-> Best Regards,
-> Huang Ying
+> On Tue, Nov 12, 2013 at 07:40:03PM +0000, Chang Liu wrote:
+>> This fixes https://bugzilla.kernel.org/show_bug.cgi?id=63861
+>>
+>> Commit b566a22c2 and 7897e60227 made pci_device_shutdown()
+>> unconditionally clear Bus Master bit for every pci devices.
+>> While this works for most hardware, certain devices are not
+>> compatible with this. Intel Lynx Point-LP SATA Controller,
+>> for example, will hang the system if its Bus Master bit is
+>> cleared during device shutdown. This patch adds a pci quirk
+>> so that device drivers can instruct pci_device_shutdown()
+>> to keep Bus Master from being cleared, and then implements
+>> this mechanism for the Intel Lynx Point-LP AHCI driver.
+>>
+>> Signed-off-by: Chang Liu <cl91tp@gmail.com>
 >
+> I'm not 100% comfortable with disabling bus mastering in general;
+> see [1] for more details.
 >
-
+> But given that we have been doing it for quite a while (b566a22c2 appeared
+> in v3.5 on Jul 21, 2012), and Lynx Point should be in lots of machines, I'm
+> surprised that we don't see more reports of this problem if it really
+> affects all Lynx Point parts.
+>
+> Jility reported the same problem [2], and I did find one other similar
+> report [3] from Florian.  All three reports (Chang, Jility, Florian) are on
+> the same exact machine (Acer V5-573G), which seems sort of suspicious.
+>
+> Lan, do you have access to any Lynx Point boxes?  Can you test and see
+> whether they hang on power-off also?  I suspect this might be something
+> specific to the Acer box, not a generic Lynx Point issue.
+>
+> Bjorn
+>
+> [1] http://lkml.kernel.org/r/20120427190033.GA17588@ldl.usa.hp.com
+> [2] https://bugzilla.kernel.org/show_bug.cgi?id=63861#c21
+> [3] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1249329
+>
+>> ---
+>> As per Takao's suggestion, add a new member into struct pci_dev
+>> and add a quirk in the ahci driver. I tested this on my
+>> machine (Acer V5-573G) and it works fine.
+>>
+>>  drivers/ata/ahci.c       |  8 ++++++++
+>>  drivers/pci/pci-driver.c | 11 ++++++++---
+>>  include/linux/pci.h      |  1 +
+>>  3 files changed, 17 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>> index 8e28f92..de6efcb 100644
+>> --- a/drivers/ata/ahci.c
+>> +++ b/drivers/ata/ahci.c
+>> @@ -1385,6 +1385,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>
+>>   pci_set_master(pdev);
+>>
+>> + /* We normally clear Bus Master on pci device shutdown. However,
+>> + * doing so for Intel Lynx Point-LP SATA Controller [AHCI mode]
+>> + * hangs the system. Therefore keep it.
+>> + * See bug report: https://bugzilla.kernel.org/show_bug.cgi?id=63861
+>> + */
+>> + if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x9c03)
+>> + pdev->keep_busmaster_on_shutdown = 1;
+>> +
+>>   if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
+>>   return ahci_host_activate(host, pdev->irq, n_msis);
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 38f3c01..ff15b0c 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -392,10 +392,15 @@ static void pci_device_shutdown(struct device *dev)
+>>   pci_msix_shutdown(pci_dev);
+>>
+>>   /*
+>> - * Turn off Bus Master bit on the device to tell it to not
+>> - * continue to do DMA. Don't touch devices in D3cold or unknown states.
+>> + * If the hardware is okay with it, turn off Bus Master bit
+>> + * on the device to tell it not to continue doing DMA.
+>> + * Don't touch devices in D3cold or unknown states.
+>> + * On certain hardware clearing Bus Master bit on shutdown
+>> + * may hang the entire system. In these cases the driver of
+>> + * these devices should set keep_busmaster_on_shutdown to 1.
+>>   */
+>> - if (pci_dev->current_state <= PCI_D3hot)
+>> + if (!pci_dev->keep_busmaster_on_shutdown
+>> +    && pci_dev->current_state <= PCI_D3hot)
+>>   pci_clear_master(pci_dev);
+>>  }
+>>
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index da172f9..63db735 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -322,6 +322,7 @@ struct pci_dev {
+>>   /* keep track of device state */
+>>   unsigned int is_added:1;
+>>   unsigned int is_busmaster:1; /* device is busmaster */
+>> + unsigned int keep_busmaster_on_shutdown:1; /* do not clear busmaster on shutdown */
+>>   unsigned int no_msi:1; /* device may not use msi */
+>>   unsigned int block_cfg_access:1; /* config space access is blocked */
+>>   unsigned int broken_parity_status:1; /* Device generates false positive parity */
+>> --
+>> 1.8.4.2
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
