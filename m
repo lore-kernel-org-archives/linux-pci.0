@@ -1,126 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31701 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355Ab3KTBwl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 20:52:41 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/6] PCI: pcibus address to resource converting take bus directly
-Date: Tue, 19 Nov 2013 17:51:55 -0800
-Message-Id: <1384912317-3721-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
-References: <1384912317-3721-1-git-send-email-yinghai@kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.9]:57742 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756886Ab3KZXFK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 18:05:10 -0500
+From: Marek Vasut <marex@denx.de>
+To: =?utf-8?q?Bj=C3=B8rn_Erik_Nilsen?= <ben@datarespons.no>
+Subject: Re: Kernel oops from pci_disable_msi
+Date: Wed, 27 Nov 2013 00:05:05 +0100
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Ajay KHANDELWAL <ajay.khandelwal@st.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Eric Nelson <Eric.Nelson@boundarydevices.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>
+References: <528a1bb6.6a88700a.28c9.ffff824aSMTPIN_ADDED_MISSING@mx.google.com> <201311262219.49115.marex@denx.de> <cmu-lmtpd-17794-1385506605-2@frontend1.mail.m-online.net>
+In-Reply-To: <cmu-lmtpd-17794-1385506605-2@frontend1.mail.m-online.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201311270005.05153.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For allocating resource under bus path, we do have dev pass along, and we
-could just use bus instead.
+Dear Bjørn Erik Nilsen,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host-bridge.c | 34 +++++++++++++++++++++-------------
- include/linux/pci.h       |  3 +++
- 2 files changed, 24 insertions(+), 13 deletions(-)
+> 26. nov. 2013 kl. 22:19 skrev Marek Vasut <marex@denx.de>:
+> > Dear Bjørn Erik Nilsen,
+> > [...]
+> > 
+> >>>> Thank you for your effort!
+> >>>> I reproduced this kernel panic on Exynos platform with LAN card.
+> >>>> And then, I tested your patch and checked this kernel panic is
+> >>>> resolved.
+> >>>> 
+> >>>> Marek Vasut,
+> >>>> Will you test Bjørn Erik Nilsen's patch with your i.MX platform?
+> >>>> 
+> >>>> Pratyush Anand,
+> >>>> Would you confirm Bjørn Erik Nilsen's patch?
+> >>>> 
+> >>>> I will do more extensive testing.
+> >>>> Thank you.
+> >>> 
+> >>> The patch does indeed fix the crash, but there are more subtle issues
+> >>> lurking around. I noticed how irq numbers were constantly increasing
+> >>> and I found at least one stupid mistake that I made.
+> >>> 
+> >>>> -             irq_set_msi_desc(irq + i, desc);
+> >>>> +             irq_set_msi_desc_off(irq + i, i, desc);
+> >>> 
+> >>> That should be 'irq_set_msi_desc_off(irq, i, desc)'
+> >>> 
+> >>> (I'm really puzzled why this didn't cause other oops ...)
+> >>> 
+> >>> I also realized that teardown() is only called for the irq returned
+> >>> from setup(), which kind of makes sense since the others are
+> >>> destroyed() in the first call to teardown. This means we need to
+> >>> iterate all irqs in the same fashion as we allocate in
+> >>> setup/assign_irq. Basically unrolling what was done there.
+> >>> 
+> >>> I'm hacking on this solution now but it doesn't quite take me to where
+> >>> I want at the moment, so it would be nice if someone with a better
+> >>> understanding of the code could pitch in.
+> >> 
+> >> I gave it another shot and now it starts to look like something. At
+> >> least I get consistent irq numbers and my system is very stable in
+> >> general.
+> >> 
+> >> My new patch does exactly the opposite in teardown() of what is done in
+> >> setup(), which in itself is a good sign.
+> >> 
+> >> --- pcie-designware.c.orig      2013-11-21 14:02:03.656007695 +0100
+> >> +++ pcie-designware.c   2013-11-22 16:32:30.360954591 +0100
+> >> @@ -242,11 +242,15 @@ static int assign_irq(int no_irqs, struc
+> >> 
+> >>        if (!irq)
+> >>        
+> >>                goto no_valid_irq;
+> >> 
+> >> +       /*
+> >> +        * irq_domain_add_linear (called from dw_pcie_host_init)
+> >> pre-allocates +        * descs so there is no need to call
+> >> irq_alloc_descs here. +        */
+> >> +
+> >> 
+> >>        i = 0;
+> >>        while (i < no_irqs) {
+> >>        
+> >>                set_bit(pos0 + i, pp->msi_irq_in_use);
+> >> 
+> >> -               irq_alloc_descs((irq + i), (irq + i), 1, 0);
+> >> -               irq_set_msi_desc(irq + i, desc);
+> >> +               irq_set_msi_desc_off(irq, i, desc);
+> > 
+> > Why do you not allocate the descs anymore ?
+> 
+> Descs are allocated in irq_create_mapping, added in commit 904d0e788993
+> 
+> Oh, and I realize now that my comment in the patch regarding this is wrong.
+> 
+> […]
+> 
+> > Can you try using 'git send-email' for submitting subsequent patches
+> > please?
+> 
+> I will eventually try using git send-mail for my next patch, which will
+> correct the comment.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index a68dc61..2e7288b 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -9,22 +9,19 @@
- 
- #include "pci.h"
- 
--static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
-+static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
--
--	bus = dev->bus;
- 	while (bus->parent)
- 		bus = bus->parent;
- 
- 	return bus;
- }
- 
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
-+static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
- {
--	struct pci_bus *bus = find_pci_root_bus(dev);
-+	struct pci_bus *root_bus = find_pci_root_bus(bus);
- 
--	return to_pci_host_bridge(bus->bridge);
-+	return to_pci_host_bridge(root_bus->bridge);
- }
- 
- void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
-@@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
- 	return res1->start <= res2->start && res1->end >= res2->end;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
-+void __pcibios_resource_to_bus(struct pci_bus *bus,
-+				      struct pci_bus_region *region,
-+				      struct resource *res)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 	region->start = res->start - offset;
- 	region->end = res->end - offset;
- }
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res)
-+{
-+	__pcibios_resource_to_bus(dev->bus, region, res);
-+}
- EXPORT_SYMBOL(pcibios_resource_to_bus);
- 
- static bool region_contains(struct pci_bus_region *region1,
-@@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
- 	return region1->start <= region2->start && region1->end >= region2->end;
- }
- 
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
-+static void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-+				      struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 	res->start = region->start + offset;
- 	res->end = region->end + offset;
- }
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region)
-+{
-+	__pcibios_bus_to_resource(dev->bus, res, region);
-+}
- EXPORT_SYMBOL(pcibios_bus_to_resource);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ccb316d..55ee90f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -738,6 +738,9 @@ void pci_fixup_cardbus(struct pci_bus *);
- 
- /* Generic PCI functions used internally */
- 
-+void __pcibios_resource_to_bus(struct pci_bus *bus,
-+			       struct pci_bus_region *region,
-+			       struct resource *res);
- void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 			     struct resource *res);
- void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--- 
-1.8.1.4
-
+That'd be really helpful, thanks for spotting this btw ;-)
