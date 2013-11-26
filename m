@@ -1,140 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:51720 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753307Ab3KPA2Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Nov 2013 19:28:24 -0500
-Received: by mail-ie0-f172.google.com with SMTP id to1so5995101ieb.3
-        for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2013 16:28:24 -0800 (PST)
-Date: Fri, 15 Nov 2013 17:28:20 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Hugh Dickins <hughd@google.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Li Zefan <lizefan@huawei.com>,
-	Markus Blank-Burian <burian@muenster.de>,
-	Michal Hocko <mhocko@suse.cz>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	David Rientjes <rientjes@google.com>,
-	Ying Han <yinghan@google.com>,
-	Greg Thelen <gthelen@google.com>,
-	Michel Lespinasse <walken@google.com>, cgroups@vger.kernel.org,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Lai Jiangshan <laijs@cn.fujitsu.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Possible regression with cgroups in 3.11
-Message-ID: <20131116002820.GA31073@google.com>
-References: <CA+SBX_MQVMuzWKroASK7Cr5J8cu9ajGo=CWr7SRs+OWh83h4_w@mail.gmail.com>
- <525CB337.8050105@huawei.com>
- <CA+SBX_Ogo8HP81o+vrJ8ozSBN6gPwzc8WNOV3Uya=4AYv+CCyQ@mail.gmail.com>
- <CA+SBX_OJBbYzrNX5Mi4rmM2SANShXMmAvuPGczAyBdx8F2hBDQ@mail.gmail.com>
- <5270BFE7.4000602@huawei.com>
- <alpine.LNX.2.00.1310301606080.2333@eggly.anvils>
- <20131031130647.0ff6f2c7@gandalf.local.home>
- <alpine.LNX.2.00.1310311442030.2633@eggly.anvils>
- <20131113032804.GB19394@mtj.dyndns.org>
- <20131113073806.GA23244@mtj.dyndns.org>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:32122 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756663Ab3KZSKx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 13:10:53 -0500
+Date: Tue, 26 Nov 2013 13:10:46 -0500
+From: Jason Cooper <jason@lakedaemon.net>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] PCI: mvebu - Support a bridge with no IO port
+ window
+Message-ID: <20131126181046.GO2879@titan.lakedaemon.net>
+References: <1383262380-6984-1-git-send-email-jgunthorpe@obsidianresearch.com>
+ <1383262380-6984-2-git-send-email-jgunthorpe@obsidianresearch.com>
+ <20131125181008.158b5b09@skate>
+ <20131126180659.GB19852@obsidianresearch.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131113073806.GA23244@mtj.dyndns.org>
+In-Reply-To: <20131126180659.GB19852@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 13, 2013 at 04:38:06PM +0900, Tejun Heo wrote:
-> Hey, guys.
-> 
-> cc'ing people from "workqueue, pci: INFO: possible recursive locking
-> detected" thread.
-> 
->   http://thread.gmane.org/gmane.linux.kernel/1525779
-> 
-> So, to resolve that issue, we ripped out lockdep annotation from
-> work_on_cpu() and cgroup is now experiencing deadlock involving
-> work_on_cpu().  It *could* be that workqueue is actually broken or
-> memcg is looping but it doesn't seem like a very good idea to not have
-> lockdep annotation around work_on_cpu().
-> 
-> IIRC, there was one pci code path which called work_on_cpu()
-> recursively.  Would it be possible for that path to use something like
-> work_on_cpu_nested(XXX, depth) so that we can retain lockdep
-> annotation on work_on_cpu()?
+On Tue, Nov 26, 2013 at 11:06:59AM -0700, Jason Gunthorpe wrote:
+> Bjorn, Jason C has asked these go through your tree from now on.
 
-I'm open to changing the way pci_call_probe() works, but my opinion is
-that the PCI path that causes trouble is a broken design, and we shouldn't
-complicate the work_on_cpu() interface just to accommodate that broken
-design.
+Just to be clear, I don't mind taking patches.  It's just the proper way
+is through the maintainer of the affected directory.  Unless other
+arrangements have been made.
 
-The problem is that when a PF .probe() method that calls
-pci_enable_sriov(), we add new VF devices and call *their* .probe()
-methods before the PF .probe() method completes.  That is ugly and
-error-prone.
+thx,
 
-When we call .probe() methods for the VFs, we're obviously already on the
-correct node, because the VFs are on the same node as the PF, so I think
-the best short-term fix is Alexander's patch to avoid work_on_cpu() when
-we're already on the correct node -- something like the (untested) patch
-below.
-
-Bjorn
-
-
-PCI: Avoid unnecessary CPU switch when calling driver .probe() method
-
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-If we are already on a CPU local to the device, call the driver .probe()
-method directly without using work_on_cpu().
-
-This is a workaround for a lockdep warning in the following scenario:
-
-  pci_call_probe
-    work_on_cpu(cpu, local_pci_probe, ...)
-      driver .probe
-        pci_enable_sriov
-          ...
-            pci_bus_add_device
-              ...
-                pci_call_probe
-                  work_on_cpu(cpu, local_pci_probe, ...)
-
-It would be better to fix PCI so we don't call VF driver .probe() methods
-from inside a PF driver .probe() method, but that's a bigger project.
-
-This patch is due to Alexander Duyck <alexander.h.duyck@intel.com>; I merely
-added the preemption disable.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=65071
-Link: http://lkml.kernel.org/r/CAE9FiQXYQEAZ=0sG6+2OdffBqfLS9MpoN1xviRR9aDbxPxcKxQ@mail.gmail.com
-Link: http://lkml.kernel.org/r/20130624195942.40795.27292.stgit@ahduyck-cp1.jf.intel.com
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci-driver.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 454853507b7e..accae06aa79a 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -293,7 +293,9 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 	   its local memory on the right node without any need to
- 	   change it. */
- 	node = dev_to_node(&dev->dev);
--	if (node >= 0) {
-+	preempt_disable();
-+
-+	if (node >= 0 && node != numa_node_id()) {
- 		int cpu;
- 
- 		get_online_cpus();
-@@ -305,6 +307,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 		put_online_cpus();
- 	} else
- 		error = local_pci_probe(&ddi);
-+
-+	preempt_enable();
- 	return error;
- }
- 
+Jason.
