@@ -1,45 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:52426 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788Ab3KSDka (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Nov 2013 22:40:30 -0500
-Received: by mail-bk0-f45.google.com with SMTP id mx13so632835bkb.18
-        for <linux-pci@vger.kernel.org>; Mon, 18 Nov 2013 19:40:29 -0800 (PST)
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:64005 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758035Ab3KZTfw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 14:35:52 -0500
 MIME-Version: 1.0
-Date: Tue, 19 Nov 2013 11:40:28 +0800
-Message-ID: <CAPgLHd-XTnQXdK7H2uLbGW1ftxNB_nHwzcNCoiCjpXsB5X3HnA@mail.gmail.com>
-Subject: [PATCH] PCI: rcar: fix return value check in rcar_pci_probe()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: bhelgaas@google.com, valentine.barshak@cogentembedded.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-pci@vger.kernel.org
+In-Reply-To: <CAErSpo4Sa6hpv45E9fQB_LsSrTt_mFzxbJvRocuCo9HXcAYfow@mail.gmail.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+	<1385429290-25397-11-git-send-email-yinghai@kernel.org>
+	<CAErSpo4Sa6hpv45E9fQB_LsSrTt_mFzxbJvRocuCo9HXcAYfow@mail.gmail.com>
+Date: Tue, 26 Nov 2013 11:35:51 -0800
+Message-ID: <CAE9FiQWcUqK11PSD-fCnD_G8HzvTh08N8h5tvQe2Z_YdZa7POQ@mail.gmail.com>
+Subject: Re: [PATCH v2 10/10] intel-gtt: Read 64bit for gmar_bus_addr
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Airlie <airlied@linux.ie>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Mon, Nov 25, 2013 at 7:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> That bar could be 64bit pref mem and above 4G.
+>>
+>> -v2: refresh to 3.13-rc1
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: David Airlie <airlied@linux.ie>
+>> Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+>
+> This looks OK to me.  Does it depend on any previous patches in this
+> series?  If not, I think Dave should pick it up.
 
-In case of error, the function devm_ioremap_resource() returns ERR_PTR()
-and never returns NULL. The NULL test in the return value check should
-be replaced with IS_ERR().
+No.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/pci/host/pci-rcar-gen2.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+could be exposed after 5-9 get applied.
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index cbaa5c4..96d1182 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -276,8 +276,8 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
- 
- 	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
--	if (!reg)
--		return -ENODEV;
-+	if (IS_ERR(reg))
-+		return PTR_ERR(reg);
- 
- 	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
- 	if (!mem_res || !mem_res->start)
-
+Yinghai
