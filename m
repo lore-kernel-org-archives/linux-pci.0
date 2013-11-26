@@ -1,67 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:33706 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932543Ab3KZVLX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:11:23 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 7/7] ARM: dts: imx6q-sabrelite: Enable PCI express
-Date: Tue, 26 Nov 2013 22:10:48 +0100
-Message-Id: <1385500248-6551-7-git-send-email-marex@denx.de>
-In-Reply-To: <1385500248-6551-1-git-send-email-marex@denx.de>
-References: <1385500248-6551-1-git-send-email-marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 02/10] PCI: Move back pci_proc_attach_devices calling
+Date: Mon, 25 Nov 2013 17:28:02 -0800
+Message-Id: <1385429290-25397-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- arch/arm/boot/dts/imx6q-sabrelite.dts | 4 ++++
- 1 file changed, 4 insertions(+)
+We stop detach proc when pci_stop_device.
+So should attach that during pci_bus_add_device.
 
-diff --git a/arch/arm/boot/dts/imx6q-sabrelite.dts b/arch/arm/boot/dts/imx6q-sabrelite.dts
-index 0f003d0..73d7e7e 100644
---- a/arch/arm/boot/dts/imx6q-sabrelite.dts
-+++ b/arch/arm/boot/dts/imx6q-sabrelite.dts
-@@ -191,6 +191,10 @@
- 	};
- };
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c   | 1 +
+ drivers/pci/probe.c | 2 --
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index fc1b740..1ffd95b 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -175,6 +175,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 	 * are not assigned yet for some devices.
+ 	 */
+ 	pci_fixup_device(pci_fixup_final, dev);
++	pci_proc_attach_device(dev);
+ 	pci_create_sysfs_dev_files(dev);
  
-+&pcie {
-+	status = "okay";
-+};
-+
- &sata {
- 	status = "okay";
- };
+ 	dev->match_driver = true;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 38e403d..173a9cf 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1381,8 +1381,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->match_driver = false;
+ 	ret = device_add(&dev->dev);
+ 	WARN_ON(ret < 0);
+-
+-	pci_proc_attach_device(dev);
+ }
+ 
+ struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
 -- 
-1.8.4.3
+1.8.1.4
 
