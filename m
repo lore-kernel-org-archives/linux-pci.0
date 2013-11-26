@@ -1,127 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hygieia.santi-shop.eu ([78.46.175.2]:51379 "EHLO
-	hygieia.santi-shop.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510Ab3KYVEX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 16:04:23 -0500
-Date: Mon, 25 Nov 2013 22:04:19 +0100
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: dri-devel@lists.freedesktop.org,
+Received: from v094114.home.net.pl ([79.96.170.134]:57400 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753291Ab3KZUVi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:21:38 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	Peter Jones <pjones@redhat.com>
-Subject: Re: [RFC patch] PCI: Extend boot_vga sysfs attribute lookup to fix
- X on MBA+EFI
-Message-ID: <20131125220419.302ccc54@neptune.home>
-In-Reply-To: <CAErSpo5D1uFVGcuGJyX+FGFL6mfaXZQ6dOZPsRwDACXxqe5j_w@mail.gmail.com>
-References: <20131125205441.5046e0cb@neptune.home>
-	<CAErSpo5D1uFVGcuGJyX+FGFL6mfaXZQ6dOZPsRwDACXxqe5j_w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v2] PM / Sleep: Add pm_generic functions to re-use runtime PM callbacks
+Date: Tue, 26 Nov 2013 21:34:26 +0100
+Message-ID: <2026361.IiCVpVNYkW@vostro.rjw.lan>
+In-Reply-To: <CAPDyKFrS=8_T51hwSo+ONchm49_tj2o-+-H7Uv44ow4izutzfQ@mail.gmail.com>
+References: <1385383221-20372-1-git-send-email-ulf.hansson@linaro.org> <5827021.HqYFigfrCJ@vostro.rjw.lan> <CAPDyKFrS=8_T51hwSo+ONchm49_tj2o-+-H7Uv44ow4izutzfQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 25 November 2013 Bjorn Helgaas wrote:
-> On Mon, Nov 25, 2013 at 12:54 PM, Bruno Prémont wrote:
-> > On a MacBookAir2,1, booting to Linux with EFI though having
-> > no efifb built-in Xorg refuses to start with "no devices detected"
-> > because for the only VGA device available (NVidia Geforce 9400M)
-> > the sysfs attribute boot_vga is zero (instead of expected 1).
+On Tuesday, November 26, 2013 10:48:56 AM Ulf Hansson wrote:
+> On 26 November 2013 00:10, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Monday, November 25, 2013 01:40:21 PM Ulf Hansson wrote:
+> >> To put devices into low power state during sleep, it sometimes makes
+> >> sense at subsystem-level to re-use device's runtime PM callbacks.
+> >>
+> >> The PM core will at device_suspend_late disable runtime PM, after that
+> >> we can safely operate on these callbacks. At suspend_late the device
+> >> will be put into low power state by invoking the device's
+> >> runtime_suspend callback, unless the runtime status is already
+> >> suspended. At resume_early the state is restored by invoking the
+> >> device's runtime_resume callback. Soon after the PM core will re-enable
+> >> runtime PM before returning from device_resume_early.
+> >>
+> >> The new pm_generic functions are named pm_generic_suspend_late_runtime
+> >> and pm_generic_resume_early_runtime, they are supposed to be used in
+> >> pairs.
 > >
-> > When CONFIG_FB_EFI is selected, efifb does provide its own
-> > vga_default_device() to report the PCI device matching global
-> > screen_info as determined during efifb setup.
-> >
-> > Otherwise there is just a dummy or VGA_ARB's vga_default_device()
-> > that does not provide the right information.
+> > What happens if the subsystem uses the new functions as its late suspend/
+> > early resume callbacks, but some of its drivers implement .suspend_late()
+> > and .resume_early()?
 > 
-> Wouldn't it be cleaner to fix vga_default_device() so it returns the
-> correct thing even when CONFIG_FB_EFI=n?
+> Good point. Normally, I think the decision of using these callbacks
+> should be taken at the lowest level, in other words in the driver.
+> Otherwise the lowest layer of .suspend_late will be by-passed.
 
-I would rather completely drop the vga_default_device() from efifb
-(CONFIG_FB_EFI) and just keep vga_default_device() for
-vga-arbitration/vga-switcheroo.
+I'm not sure what's the point to add them, then.  If the driver has to decide
+anyway, it may simply populate its .suspend_late and .resume_early pointers
+I think.
 
-The fact that there are currently *two* instances of that function
-doesn't make life easy for determining who is providing it and when.
-  drivers/gpu/vga/vgaarb.c:135
-  drivers/video/efifb.c:88
-  include/linux/vgaarb.h:190 (dummy)
+Thanks!
 
-> > On the other hand, boot_vga_show() falls back to poking PCI
-> > resources to flag a PCI device as boot_vga if vga_default_device()
-> > returned no PCI device (NULL).
-> >
-> > To complement this PCI resource poking, this patch copies the
-> > validation code used to determine which PCI device to report as
-> > default VGA device by efifb into boot_vga_show().
-> 
-> If we do have to use logic like this, I'd like it better if it were
-> factored into a single function called both here and from
-> efifb_setup().
-
-As of above, I would preferably drop that part of code from
-efifb_setup() and have the logic called only in one place and each
-time the same way.
-Otherwise efifb versus x86_sysfb+simplefb or directly going to
-native driver (nvoueau/radeon/...) behave differently without reason.
-
-Bruno
-
-
-> > Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
-> > ---
-> > Would it make sense to kill the corresponding code from efifb
-> > as it covers only a single case?
-> >
-> > The other EFI capable system I have (AMD Ilano based, Gigabyte
-> > mainboard does report boot_vga=1, possibly through the resources
-> > poking and there Xorg starts properly without efifb built in.
-> >
-> > Selecting CONFIG_X86_SYSFB (combined with CONFIG_FB_SIMPLE) does
-> > not help by itself, patching that one instead of PCI's boot_vga
-> > attribute directly would still not cover the case when neither
-> > of them is enabled.
-> >
-> >
-> >  drivers/pci/pci-sysfs.c | 21 +++++++++++++++++++++
-> >  1 file changed, 21 insertions(+)
-> >
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > index 7128cfd..91cac71 100644
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -28,6 +28,7 @@
-> >  #include <linux/pci-aspm.h>
-> >  #include <linux/slab.h>
-> >  #include <linux/vgaarb.h>
-> > +#include <linux/screen_info.h>
-> >  #include <linux/pm_runtime.h>
-> >  #include "pci.h"
-> >
-> > @@ -540,6 +541,26 @@ boot_vga_show(struct device *dev, struct device_attribute *attr, char *buf)
-> >         if (vga_dev)
-> >                 return sprintf(buf, "%u\n", (pdev == vga_dev));
-> >
-> > +       if ((pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA) {
-> > +               resource_size_t start, end;
-> > +               int i;
-> > +
-> > +               for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> > +                       if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
-> > +                               continue;
-> > +
-> > +                       start = pci_resource_start(pdev, i);
-> > +                       end  = pci_resource_end(pdev, i);
-> > +
-> > +                       if (!start || !end)
-> > +                               continue;
-> > +
-> > +                       if (screen_info.lfb_base >= start &&
-> > +                               (screen_info.lfb_base + screen_info.lfb_size) < end)
-> > +                               return sprintf(buf, "1\n");
-> > +               }
-> > +       }
-> > +
-> >         return sprintf(buf, "%u\n",
-> >                 !!(pdev->resource[PCI_ROM_RESOURCE].flags &
-> >                    IORESOURCE_ROM_SHADOW));
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
