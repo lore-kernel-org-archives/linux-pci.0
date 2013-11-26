@@ -1,83 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:52010 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121Ab3KZDqn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 22:46:43 -0500
-Received: by mail-ie0-f171.google.com with SMTP id ar20so8497607iec.30
-        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 19:46:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1385429290-25397-11-git-send-email-yinghai@kernel.org>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-11-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 25 Nov 2013 20:46:22 -0700
-Message-ID: <CAErSpo4Sa6hpv45E9fQB_LsSrTt_mFzxbJvRocuCo9HXcAYfow@mail.gmail.com>
-Subject: Re: [PATCH v2 10/10] intel-gtt: Read 64bit for gmar_bus_addr
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
+Received: from cavan.codon.org.uk ([93.93.128.6]:47746 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193Ab3KZRsQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 12:48:16 -0500
+Date: Tue, 26 Nov 2013 17:48:06 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Khalid Aziz <khalid.aziz@oracle.com>, Chang Liu <cl91tp@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Konstantin Khlebnikov <khlebnikov@openvz.org>,
+	Alan Cox <gnomes@lxorguk.ukuu.org.uk>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	Jility <jility09@gmail.com>, Florian Otti <f.otti@gmx.at>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Airlie <airlied@linux.ie>
-Content-Type: text/plain; charset=ISO-8859-1
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: [PATCH] PCI: add a quirk for keeping Bus Master bit on shutdown
+Message-ID: <20131126174806.GA14789@srcf.ucam.org>
+References: <1384285203-642-1-git-send-email-cl91tp@gmail.com>
+ <CAErSpo5E4584zgTt4ySPSEFhtwdHDOyrrowirp=SmtmJjDyHgg@mail.gmail.com>
+ <5294CF1A.6080707@oracle.com>
+ <CAErSpo6eAbVDfc8PFPP4b4HLzAjkFe23pJytu-TZq-V8-pfQMA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6eAbVDfc8PFPP4b4HLzAjkFe23pJytu-TZq-V8-pfQMA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> That bar could be 64bit pref mem and above 4G.
->
-> -v2: refresh to 3.13-rc1
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: David Airlie <airlied@linux.ie>
-> Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+On Tue, Nov 26, 2013 at 10:35:26AM -0700, Bjorn Helgaas wrote:
+> On Tue, Nov 26, 2013 at 9:40 AM, Khalid Aziz <khalid.aziz@oracle.com> wrote:
+> > Disabling Bus Master bit is effectively a brute force and not an elegant way
+> > to stop unwanted DMA. It can have side effects as Alan and others pointed
+> > out in the original discussion, and we are now seeing one with Lynx Point on
+> > Acer.
+> 
+> I'm getting more queasy all the time about disabling Bus Master.  I
+> don't think RHEL does it, and that's probably where most kexec use is.
+>  So I doubt we really have much experience with it yet.
 
-This looks OK to me.  Does it depend on any previous patches in this
-series?  If not, I think Dave should pick it up.
+Does Windows disable the BM bit on shutdown? If not, it's likely that 
+there are platforms where the SMM code assumes it's still enabled. We 
+also know that there are devices that hang if BM is disabled while their 
+DMA engines are still running.
 
-Bjorn
+Unless we verify that Windows does this, I think there's no way we can 
+guarantee that firmware won't make assumptions about the state of PCI. 
+The easiest compromise would probably be to set a flag that disables 
+busmastering purely when we're performing a kexec.
 
-> ---
->  drivers/char/agp/intel-gtt.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
-> index b8e2014..b929e9d 100644
-> --- a/drivers/char/agp/intel-gtt.c
-> +++ b/drivers/char/agp/intel-gtt.c
-> @@ -609,8 +609,10 @@ static bool intel_gtt_can_wc(void)
->  static int intel_gtt_init(void)
->  {
->         u32 gma_addr;
-> +       u32 addr_hi = 0;
->         u32 gtt_map_size;
->         int ret;
-> +       int pos;
->
->         ret = intel_private.driver->setup();
->         if (ret != 0)
-> @@ -660,13 +662,17 @@ static int intel_gtt_init(void)
->         }
->
->         if (INTEL_GTT_GEN <= 2)
-> -               pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
-> -                                     &gma_addr);
-> +               pos = I810_GMADDR;
->         else
-> -               pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
-> -                                     &gma_addr);
-> +               pos = I915_GMADDR;
-> +
-> +       pci_read_config_dword(intel_private.pcidev, pos, &gma_addr);
-> +
-> +       if (gma_addr & PCI_BASE_ADDRESS_MEM_TYPE_64)
-> +               pci_read_config_dword(intel_private.pcidev, pos + 4, &addr_hi);
->
->         intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
-> +       intel_private.gma_bus_addr |= (u64)addr_hi << 32;
->
->         return 0;
->  }
-> --
-> 1.8.1.4
->
+> > Eric had pointed out in original discussion -
+> > <http://marc.info/?l=linux-pci&m=133901193430829&w=2> that this code change
+> > moves failure from a random point in the kexec'd kernel to a predictable
+> > point on shutdown path where it becomes lot easier to debug than a random
+> > memory overwrite.
+> 
+> That is probably true in some cases, but not this one.  I have no idea
+> how to debug this poweroff hang.  Poweroff is a path *everybody* uses,
+> so it's much more important to have that work reliably than it is to
+> have kexec work.
+
+If it's hanging after we've performed the io writes that trap us into 
+SMM, there's no meaningful way for us to debug it. We're violating 
+assumptions that the firmware is making, and the only way to fix that is 
+to cease violating those assumptions.
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
