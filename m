@@ -1,56 +1,248 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21609 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751235Ab3K3Wkl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 17:40:41 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 02/12] PCI: Move back pci_proc_attach_devices calling
-Date: Sat, 30 Nov 2013 14:40:28 -0800
-Message-Id: <1385851238-21085-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 09/11] PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
+Date: Tue, 26 Nov 2013 10:09:58 +0100
+Message-Id: <a97bef1ff8499896a8e7ed57474d34801f56fca0.1385399393.git.agordeev@redhat.com>
+In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
+References: <cover.1385399393.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We stop detach proc when pci_stop_device.
-So should attach that during pci_bus_add_device.
+As result of introduction of pci_get_msi_cap() interface
+pci_enable_msi_block_auto() function became superflous.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+To enable maximum possible number of MSIs drivers will
+first obtain that number from pci_get_msi_cap() function
+and then call pci_enable_msi_block() interface.
+
+Function pci_enable_msi_block_auto() has been introduced
+recently and its only user is AHCI driver, which is also
+updated by this change.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/pci/bus.c   | 1 +
- drivers/pci/probe.c | 2 --
- 2 files changed, 1 insertion(+), 2 deletions(-)
+ Documentation/PCI/MSI-HOWTO.txt |   39 ++++-----------------------
+ drivers/ata/ahci.c              |   56 ++++++++++++++++++++++++--------------
+ drivers/pci/msi.c               |   25 -----------------
+ include/linux/pci.h             |    7 -----
+ 4 files changed, 41 insertions(+), 86 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index fc1b740..1ffd95b 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -175,6 +175,7 @@ int pci_bus_add_device(struct pci_dev *dev)
- 	 * are not assigned yet for some devices.
- 	 */
- 	pci_fixup_device(pci_fixup_final, dev);
-+	pci_proc_attach_device(dev);
- 	pci_create_sysfs_dev_files(dev);
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 9c1282e..1fe4900 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -127,49 +127,22 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
+ returns as soon as it finds any constraint that doesn't allow the
+ call to succeed.
  
- 	dev->match_driver = true;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 38e403d..173a9cf 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1381,8 +1381,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->match_driver = false;
- 	ret = device_add(&dev->dev);
- 	WARN_ON(ret < 0);
+-4.2.3 pci_enable_msi_block_auto
 -
--	pci_proc_attach_device(dev);
+-int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
+-
+-This variation on pci_enable_msi() call allows a device driver to request
+-the maximum possible number of MSIs.  The MSI specification only allows
+-interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
+-
+-If this function returns a positive number, it indicates that it has
+-succeeded and the returned value is the number of allocated interrupts. In
+-this case, the function enables MSI on this device and updates dev->irq to
+-be the lowest of the new interrupts assigned to it.  The other interrupts
+-assigned to the device are in the range dev->irq to dev->irq + returned
+-value - 1.
+-
+-If this function returns a negative number, it indicates an error and
+-the driver should not attempt to request any more MSI interrupts for
+-this device.
+-
+-If the device driver needs to know the number of interrupts the device
+-supports it can pass the pointer count where that number is stored. The
+-device driver must decide what action to take if pci_enable_msi_block_auto()
+-succeeds, but returns a value less than the number of interrupts supported.
+-If the device driver does not need to know the number of interrupts
+-supported, it can set the pointer count to NULL.
+-
+-4.2.4 pci_disable_msi
++4.2.3 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+ 
+ This function should be used to undo the effect of pci_enable_msi() or
+-pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
+-dev->irq to the pin-based interrupt number and frees the previously
+-allocated message signaled interrupt(s).  The interrupt may subsequently be
+-assigned to another device, so drivers should not cache the value of
+-dev->irq.
++pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
++interrupt number and frees the previously allocated message signaled
++interrupt(s).  The interrupt may subsequently be assigned to another
++device, so drivers should not cache the value of dev->irq.
+ 
+ Before calling this function, a device driver must always call free_irq()
+ on any interrupt for which it previously called request_irq().
+ Failure to do so results in a BUG_ON(), leaving the device with
+ MSI enabled and thus leaking its vector.
+ 
+-4.2.5 pci_get_msi_cap
++4.2.4 pci_get_msi_cap
+ 
+ int pci_get_msi_cap(struct pci_dev *dev)
+ 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9d715ae..f1c8838 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1091,26 +1091,40 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
+-int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
++			 struct ahci_host_priv *hpriv)
+ {
+-	int rc;
+-	unsigned int maxvec;
++	int rc, nvec;
+ 
+-	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
+-		rc = pci_enable_msi_block_auto(pdev, &maxvec);
+-		if (rc > 0) {
+-			if ((rc == maxvec) || (rc == 1))
+-				return rc;
+-			/*
+-			 * Assume that advantage of multipe MSIs is negated,
+-			 * so fallback to single MSI mode to save resources
+-			 */
+-			pci_disable_msi(pdev);
+-			if (!pci_enable_msi(pdev))
+-				return 1;
+-		}
+-	}
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		goto intx;
++
++	rc = pci_get_msi_cap(pdev);
++	if (rc < 0)
++		goto intx;
++
++	/*
++	 * If number of MSIs is less than number of ports then Sharing Last
++	 * Message mode could be enforced. In this case assume that advantage
++	 * of multipe MSIs is negated and use single MSI mode instead.
++	 */
++	if (rc < n_ports)
++		goto single_msi;
++
++	nvec = rc;
++	rc = pci_enable_msi_block(pdev, nvec);
++	if (rc)
++		goto intx;
+ 
++	return nvec;
++
++single_msi:
++	rc = pci_enable_msi(pdev);
++	if (rc)
++		goto intx;
++	return 1;
++
++intx:
+ 	pci_intx(pdev, 1);
+ 	return 0;
+ }
+@@ -1277,10 +1291,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
+-	n_msis = ahci_init_interrupts(pdev, hpriv);
+-	if (n_msis > 1)
+-		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+@@ -1335,6 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+ 
++	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
++	if (n_msis > 1)
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 3558b45..e4b02ac 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -891,31 +891,6 @@ int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block);
+ 
+-int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
+-{
+-	int ret, nvec;
+-
+-	if (dev->current_state != PCI_D0)
+-		return -EINVAL;
+-
+-	ret = pci_get_msi_cap(dev);
+-	if (ret < 0)
+-		return ret;
+-
+-	if (maxvec)
+-		*maxvec = ret;
+-
+-	do {
+-		nvec = ret;
+-		ret = pci_enable_msi_block(dev, nvec);
+-	} while (ret > 0);
+-
+-	if (ret < 0)
+-		return ret;
+-	return nvec;
+-}
+-EXPORT_SYMBOL(pci_enable_msi_block_auto);
+-
+ void pci_msi_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *desc;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e337086..9ab1692 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1165,12 +1165,6 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+ 	return -ENOSYS;
  }
  
- struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
+-static inline int
+-pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
+-{
+-	return -ENOSYS;
+-}
+-
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+ { }
+ static inline void pci_disable_msi(struct pci_dev *dev)
+@@ -1203,7 +1197,6 @@ static inline int pci_msi_enabled(void)
+ #else
+ int pci_get_msi_cap(struct pci_dev *dev);
+ int pci_enable_msi_block(struct pci_dev *dev, int nvec);
+-int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_table_size(struct pci_dev *dev);
 -- 
-1.8.1.4
+1.7.7.6
 
