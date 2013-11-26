@@ -1,118 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:43467 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592Ab3KYXgG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 18:36:06 -0500
-Received: by mail-ie0-f171.google.com with SMTP id ar20so8204230iec.30
-        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 15:36:05 -0800 (PST)
-Date: Mon, 25 Nov 2013 16:36:02 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Bharat Bhushan <r65777@freescale.com>
-Cc: alex.williamson@redhat.com, joro@8bytes.org, agraf@suse.de,
-	scottwood@freescale.com, stuart.yoder@freescale.com,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	Bharat Bhushan <Bharat.Bhushan@freescale.com>
-Subject: Re: [PATCH 1/9 v2] pci:msi: add weak function for returning msi
- region info
-Message-ID: <20131125233602.GA4066@google.com>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
- <1384838233-24847-2-git-send-email-Bharat.Bhushan@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1384838233-24847-2-git-send-email-Bharat.Bhushan@freescale.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1385449223.4579.23.camel@artifact>
+Subject: Re: [PATCH v2 09/10] PCI: Sort pci root bus resources list
+From: Steven Newbury <steve@snewbury.org.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Tue, 26 Nov 2013 07:00:23 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 19, 2013 at 10:47:05AM +0530, Bharat Bhushan wrote:
-> In Aperture type of IOMMU (like FSL PAMU), VFIO-iommu system need to know
-> the MSI region to map its window in h/w. This patch just defines the
-> required weak functions only and will be used by followup patches.
-> 
-> Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
-> ---
-> v1->v2
->  - Added description on "struct msi_region" 
-> 
->  drivers/pci/msi.c   |   22 ++++++++++++++++++++++
->  include/linux/msi.h |   14 ++++++++++++++
->  2 files changed, 36 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d5f90d6..2643a29 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -67,6 +67,28 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
->  	return chip->check_device(chip, dev, nvec, type);
->  }
->  
-> +int __weak arch_msi_get_region_count(void)
-> +{
-> +	return 0;
-> +}
-> +
-> +int __weak arch_msi_get_region(int region_num, struct msi_region *region)
-> +{
-> +	return 0;
-> +}
-> +
-> +int msi_get_region_count(void)
-> +{
-> +	return arch_msi_get_region_count();
-> +}
-> +EXPORT_SYMBOL(msi_get_region_count);
-> +
-> +int msi_get_region(int region_num, struct msi_region *region)
-> +{
-> +	return arch_msi_get_region(region_num, region);
-> +}
-> +EXPORT_SYMBOL(msi_get_region);
-> +
->  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  {
->  	struct msi_desc *entry;
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index b17ead8..ade1480 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -51,6 +51,18 @@ struct msi_desc {
->  };
->  
->  /*
-> + * This structure is used to get
-> + * - physical address
-> + * - size
-> + * of a msi region
-> + */
-> +struct msi_region {
-> +	int region_num; /* MSI region number */
-> +	dma_addr_t addr; /* Address of MSI region */
-> +	size_t size; /* Size of MSI region */
-> +};
-> +
-> +/*
->   * The arch hooks to setup up msi irqs. Those functions are
->   * implemented as weak symbols so that they /can/ be overriden by
->   * architecture specific code if needed.
-> @@ -64,6 +76,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int irq);
->  
->  void default_teardown_msi_irqs(struct pci_dev *dev);
->  void default_restore_msi_irqs(struct pci_dev *dev, int irq);
-> +int arch_msi_get_region_count(void);
-> +int arch_msi_get_region(int region_num, struct msi_region *region);
 
-It doesn't look like any of this (struct msi_region, msi_get_region(),
-msi_get_region_count()) is actually used by drivers/pci/msi.c, so I don't
-think it needs to be declared in generic code.  It looks like it's only
-used in drivers/vfio/vfio_iommu_fsl_pamu.c, where you already know you have
-an FSL IOMMU, and you can just call FSL-specific interfaces directly.
-
-Bjorn
-
->  
->  struct msi_chip {
->  	struct module *owner;
-> -- 
-> 1.7.0.4
+> On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > Some x86 systems expose above 4G 64bit mmio in _CRS as non-pref mmio range.
+> > [   49.415281] PCI host bridge to bus 0000:00
+> > [   49.419921] pci_bus 0000:00: root bus resource [bus 00-1e]
+> > [   49.426107] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+> > [   49.433041] pci_bus 0000:00: root bus resource [io  0x1000-0x5fff]
+> > [   49.440010] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+> > [   49.447768] pci_bus 0000:00: root bus resource [mem 0xfed8c000-0xfedfffff]
+> > [   49.455532] pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffbfff]
+> > [   49.463259] pci_bus 0000:00: root bus resource [mem 0x380000000000-0x381fffffffff]
+> >
+> > During assign unassigned 64bit mmio resource, it will go through
+> > every non-pref mmio for root bus in pci_bus_alloc_resource().
+> > As the loop is with pci_bus_for_each_resource(), and could have chance
+> > to use under 4G mmio range instead of above 4G mmio range if the requested
+> > range is not big enough, even it could handle above 4G 64bit pref mmio.
+> >
+> > For root bus, we can order list from high to low in pci_add_resource_offset(),
+> > during creating root bus, it will still keep the same order in final bus
+> > resource list.
+> >         pci_acpi_scan_root
+> >                 ==> add_resources
+> >                         ==> pci_add_resource_offset: # Add to temp resources
+> >                 ==> pci_create_root_bus
+> >                         ==> pci_bus_add_resource # add to final bus resources.
+> >
+> > After that, we can make sure 64bit pref mmio for pci bridges will be allocated
+> > higest of mmio non-pref, and in this case it is above 4G instead of under 4G.
 > 
-> 
+> Sorry I'm so slow; I'd like to know what problem this solves, too.
+> I'm trying to help people at distros figure out whether they will need
+> to backport this change.
+
+This series was originally instigated during my attempt to get a PCI
+Radeon 5450 graphics card with a 32-bit PLX bridge working in a
+(hot-plugable) docking station on a system which had insufficient free
+resources below 4G.  The biggest PCI address space user in my case was
+the integrated i965 graphics, which I wanted to also be working for my
+use case.  Allowing the IGP to be mapped above 4G freed enough resources
+to make my system work, and it's now been running this way for the last
+couple of years. (I've been rebasing the series in my local kernel.)
+
+I'm pretty sure there are other cases, particularly where hotplug is
+required where maximising free PCI address space <4G is extremely
+useful; and it's to my mind a generally a good principle to allocate
+resources such that limited resources (large aligned ranges) are
+preserved for allocations which *require* them.  Is this really any
+different than ZONE_DMA?
+
