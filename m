@@ -1,71 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21678 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559Ab3K3Wk5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 17:40:57 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	David Airlie <airlied@linux.ie>
-Subject: [PATCH v3 12/12] intel-gtt: Read 64bit for gmar_bus_addr
-Date: Sat, 30 Nov 2013 14:40:38 -0800
-Message-Id: <1385851238-21085-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:44659 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755495Ab3KZLEy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 06:04:54 -0500
+Received: by mail-lb0-f180.google.com with SMTP id w6so4149275lbh.25
+        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2013 03:04:53 -0800 (PST)
+From: Ulf Hansson <ulf.hansson@linaro.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	linux-pm@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Kevin Hilman <khilman@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH 1/2] PM / Runtime: Add second macro for definition of runtime PM callbacks
+Date: Tue, 26 Nov 2013 12:04:45 +0100
+Message-Id: <1385463886-9335-1-git-send-email-ulf.hansson@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-That bar could be 64bit pref mem and above 4G.
+It is allowed and will in many cases make sense to have the runtime PM
+callbacks to be defined for CONFIG_PM instead of CONFIG_PM_RUNTIME.
 
--v2: refresh to 3.13-rc1
+Since the PM core disables runtime PM during system suspend, before the
+.suspend_late callbacks are invoked, drivers could at this point
+directly invoke it's runtime PM callbacks or even walk through it's bus
+or power domain, to put it's device into low power state.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Airlie <airlied@linux.ie>
-Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Use the new macro SET_PM_RUNTIME_PM_OPS in cases were the above makes
+sense. Make sure the callbacks are encapsulated within CONFIG_PM
+instead of CONFIG_PM_RUNTIME.
+
+Do note that the old macro SET_RUNTIME_PM_OPS, which is being quite
+widely used right now, requires the callbacks to be defined for
+CONFIG_PM_RUNTIME. In many cases it will certainly be convenient to
+convert to the new macro above, but still some cases are optimal for
+only CONFIG_PM_RUNTIME.
+
+Cc: Kevin Hilman <khilman@linaro.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
 ---
- drivers/char/agp/intel-gtt.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ include/linux/pm.h |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
-index b8e2014..b929e9d 100644
---- a/drivers/char/agp/intel-gtt.c
-+++ b/drivers/char/agp/intel-gtt.c
-@@ -609,8 +609,10 @@ static bool intel_gtt_can_wc(void)
- static int intel_gtt_init(void)
- {
- 	u32 gma_addr;
-+	u32 addr_hi = 0;
- 	u32 gtt_map_size;
- 	int ret;
-+	int pos;
+diff --git a/include/linux/pm.h b/include/linux/pm.h
+index a224c7f..7a830a7 100644
+--- a/include/linux/pm.h
++++ b/include/linux/pm.h
+@@ -320,6 +320,15 @@ struct dev_pm_ops {
+ #define SET_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn)
+ #endif
  
- 	ret = intel_private.driver->setup();
- 	if (ret != 0)
-@@ -660,13 +662,17 @@ static int intel_gtt_init(void)
- 	}
- 
- 	if (INTEL_GTT_GEN <= 2)
--		pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
--				      &gma_addr);
-+		pos = I810_GMADDR;
- 	else
--		pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
--				      &gma_addr);
-+		pos = I915_GMADDR;
++#ifdef CONFIG_PM
++#define SET_PM_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn) \
++	.runtime_suspend = suspend_fn, \
++	.runtime_resume = resume_fn, \
++	.runtime_idle = idle_fn,
++#else
++#define SET_PM_RUNTIME_PM_OPS(suspend_fn, resume_fn, idle_fn)
++#endif
 +
-+	pci_read_config_dword(intel_private.pcidev, pos, &gma_addr);
-+
-+	if (gma_addr & PCI_BASE_ADDRESS_MEM_TYPE_64)
-+		pci_read_config_dword(intel_private.pcidev, pos + 4, &addr_hi);
- 
- 	intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
-+	intel_private.gma_bus_addr |= (u64)addr_hi << 32;
- 
- 	return 0;
- }
+ /*
+  * Use this if you want to use the same suspend and resume callbacks for suspend
+  * to RAM and hibernation.
 -- 
-1.8.1.4
+1.7.9.5
 
