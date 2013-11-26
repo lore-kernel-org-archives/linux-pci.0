@@ -1,43 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:12411 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755008Ab3KZSXf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 13:23:35 -0500
-Date: Tue, 26 Nov 2013 13:23:28 -0500
-From: Jason Cooper <jason@lakedaemon.net>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: mvebu - The bridge secondary status register
- should be 0
-Message-ID: <20131126182328.GP2879@titan.lakedaemon.net>
-References: <1385488975-27694-1-git-send-email-jgunthorpe@obsidianresearch.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1385488975-27694-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1385449223.4579.23.camel@artifact>
+References: <1385449223.4579.23.camel@artifact>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 26 Nov 2013 11:04:48 -0700
+Message-ID: <CAErSpo67325sLNsa8v=OepiuJs3NT7ZeAr1KtxQ-EFu1GPcFcA@mail.gmail.com>
+Subject: Re: [PATCH v2 09/10] PCI: Sort pci root bus resources list
+To: Steven Newbury <steve@snewbury.org.uk>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 11:02:52AM -0700, Jason Gunthorpe wrote:
-> There are no writable bits in the secondary status register, only
-> write 1 to clear bits. The driver never sets any of the write 1 to
-> clear bits so the status register should always be 0, just remove
-> the set from the write path.
-> 
-> Someday the write 1 to clear bits should be copied/cleared directly
-> from registers in the HW.
-> 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 1 -
->  1 file changed, 1 deletion(-)
+On Tue, Nov 26, 2013 at 12:00 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
+>
+>> On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> > Some x86 systems expose above 4G 64bit mmio in _CRS as non-pref mmio range.
+>> > [   49.415281] PCI host bridge to bus 0000:00
+>> > [   49.419921] pci_bus 0000:00: root bus resource [bus 00-1e]
+>> > [   49.426107] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+>> > [   49.433041] pci_bus 0000:00: root bus resource [io  0x1000-0x5fff]
+>> > [   49.440010] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+>> > [   49.447768] pci_bus 0000:00: root bus resource [mem 0xfed8c000-0xfedfffff]
+>> > [   49.455532] pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffbfff]
+>> > [   49.463259] pci_bus 0000:00: root bus resource [mem 0x380000000000-0x381fffffffff]
+>> >
+>> > During assign unassigned 64bit mmio resource, it will go through
+>> > every non-pref mmio for root bus in pci_bus_alloc_resource().
+>> > As the loop is with pci_bus_for_each_resource(), and could have chance
+>> > to use under 4G mmio range instead of above 4G mmio range if the requested
+>> > range is not big enough, even it could handle above 4G 64bit pref mmio.
+>> >
+>> > For root bus, we can order list from high to low in pci_add_resource_offset(),
+>> > during creating root bus, it will still keep the same order in final bus
+>> > resource list.
+>> >         pci_acpi_scan_root
+>> >                 ==> add_resources
+>> >                         ==> pci_add_resource_offset: # Add to temp resources
+>> >                 ==> pci_create_root_bus
+>> >                         ==> pci_bus_add_resource # add to final bus resources.
+>> >
+>> > After that, we can make sure 64bit pref mmio for pci bridges will be allocated
+>> > higest of mmio non-pref, and in this case it is above 4G instead of under 4G.
+>>
+>> Sorry I'm so slow; I'd like to know what problem this solves, too.
+>> I'm trying to help people at distros figure out whether they will need
+>> to backport this change.
+>
+> This series was originally instigated during my attempt to get a PCI
+> Radeon 5450 graphics card with a 32-bit PLX bridge working in a
+> (hot-plugable) docking station on a system which had insufficient free
+> resources below 4G.  The biggest PCI address space user in my case was
+> the integrated i965 graphics, which I wanted to also be working for my
+> use case.  Allowing the IGP to be mapped above 4G freed enough resources
+> to make my system work, and it's now been running this way for the last
+> couple of years. (I've been rebasing the series in my local kernel.)
 
-Whole series
+Do you have a URL handy for that discussion?
+https://bugzilla.kernel.org/show_bug.cgi?id=10461 looks like a similar
+issue.  If you could open a similar bugzilla for your specific problem
+and attach before and after dmesg logs, that would help me understand
+the problem.
 
-Acked-by: Jason Cooper <jason@lakedaemon.net>
+> I'm pretty sure there are other cases, particularly where hotplug is
+> required where maximising free PCI address space <4G is extremely
+> useful; and it's to my mind a generally a good principle to allocate
+> resources such that limited resources (large aligned ranges) are
+> preserved for allocations which *require* them.  Is this really any
+> different than ZONE_DMA?
 
-thx,
+It *sounds* great, I agree.  It's obvious that allocating from the top
+down instead of from bottom up helps preserve large aligned ranges.
+But when we've tried it, we've tripped over issues.  So we do have to
+be a little careful, even with "obviously good" allocation changes.
 
-Jason.
+Bjorn
