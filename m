@@ -1,96 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60804 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750854Ab3KBPsr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 2 Nov 2013 11:48:47 -0400
-Date: Sat, 2 Nov 2013 08:50:54 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [RFC PATCH] PCI: export MSI mode using attributes, not kobjects
-Message-ID: <20131102155054.GD23938@kroah.com>
-References: <20131029214631.GA19354@kroah.com>
- <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:53342 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624Ab3KZEP0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 23:15:26 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so8306935iec.37
+        for <linux-pci@vger.kernel.org>; Mon, 25 Nov 2013 20:15:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo5YpE-aoTbXd5=0xBDe+_aQPEO4PejrG=+JoEM=w2ZxQw@mail.gmail.com>
+In-Reply-To: <1385429290-25397-8-git-send-email-yinghai@kernel.org>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-8-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 25 Nov 2013 21:15:06 -0700
+Message-ID: <CAErSpo6Wxabxb6mnYbgKw__TeXeC+PJfgE66siFMuvGkbPGczg@mail.gmail.com>
+Subject: Re: [PATCH v2 07/10] PCI: Try to allocate mem64 above 4G at first
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 01, 2013 at 05:40:02PM -0600, Bjorn Helgaas wrote:
-> On Tue, Oct 29, 2013 at 3:46 PM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >
-> > The PCI MSI sysfs code is a mess with kobjects for things that don't
-> > really need to be kobjects.  This patch creates attributes dynamically
-> > for the MSI interrupts instead of using kobjects.
-> >
-> > Note, this does not delete the existing sysfs MSI code, but puts the
-> > attributes under a "msi_irqs_2" directory for testing / example.
-> >
-> > Also note, this removes a directory from the current MSI interrupt sysfs
-> > code:
-> >
-> > old MSI kobjects:
-> > pci_device
-> >    └── msi_irqs
-> >        └── 40
-> >            └── mode
-> >
-> > new MSI attributes:
-> > pci_device
-> >    └── msi_irqs_2
-> >        └── 40
-> >
-> > As there was only one file "mode" with the kobject model, the interrupt
-> > number is now a file that returns the "mode" of the interrupt (msi vs.
-> > msix).
-> >
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > ---
-> >
-> > Bjorn, I can make up a patch that rips out the existing kobject code
-> > here, but I figured this patch would make things easier to follow
-> > instead of having to dig through the removed logic at the same time.
-> >
-> > I'll clean up the error handling path for the create attribute logic as
-> > well, this was just a proof of concept that this could be done.
-> >
-> > Do you think that anyone cares about the current mode files in sysfs to
-> > move things in this manner?
-> 
-> I like this a lot better than trying to fix all the holes in the
-> current kobject code.
+On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Will fall back to below 4g if it can not find any above 4g.
 
-Great.
+Does this fix a bug?  If so, please include a bugzilla or mailing list URL.
 
-> I have no idea who, if anybody, cares about the "mode" files.  I
-> assume there's a way to create the "mode" files with attributes, too?
-> If so, we could replicate the existing structure with one patch, and
-> simplify it with a second patch, so it would be easier to revert the
-> directory change while keeping the fix.
+> x86 32bit without X86_PAE support will have bottom set to 0, because
+> resource_size_t is 32bit.
+>
+> Also for 32bit with resource_size_t 64bit kernel on machine with pae support
+> we are safe because iomem_resource is limited to 32bit according to
+> x86_phys_bits.
+>
+> -v2: update bottom assigning to make it clear for non-pae support machine.
+> -v3: Bjorn's change:
+>         use MAX_RESOURCE instead of -1
+>         use start/end instead of bottom/max
+>         for all arch instead of just x86_64
+> -v4: updated after PCI_MAX_RESOURCE_32 change.
+> -v5: restore io handling to use PCI_MAX_RESOURCE_32 as limit.
+> -v6: checking pcibios_resource_to_bus return for every bus res, to decide it
+>         if we need to try high at first.
+>      It supports all arches instead of just x86_64.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  arch/x86/include/asm/pci.h |  1 -
+>  drivers/pci/bus.c          | 42 ++++++++++++++++++++++++++++++++++--------
+>  drivers/pci/pci.h          |  2 ++
+>  include/linux/pci.h        |  4 ----
+>  4 files changed, 36 insertions(+), 13 deletions(-)
+>
+> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+> index 947b5c4..122c299 100644
+> --- a/arch/x86/include/asm/pci.h
+> +++ b/arch/x86/include/asm/pci.h
+> @@ -125,7 +125,6 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+>
+>  /* generic pci stuff */
+>  #include <asm-generic/pci.h>
+> -#define PCIBIOS_MAX_MEM_32 0xffffffff
+>
+>  #ifdef CONFIG_NUMA
+>  /* Returns the node based on pci bus */
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 1ffd95b..f801f6a 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -125,15 +125,13 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+>  {
+>         int i, ret = -ENOMEM;
+>         struct resource *r;
+> -       resource_size_t max = -1;
+>
+>         type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
+>
+> -       /* don't allocate too high if the pref mem doesn't support 64bit*/
+> -       if (!(res->flags & IORESOURCE_MEM_64))
+> -               max = PCIBIOS_MAX_MEM_32;
+> -
+>         pci_bus_for_each_resource(bus, r, i) {
+> +               resource_size_t start, end, middle;
+> +               struct pci_bus_region region;
+> +
 
-No, we can't create a 2-level deep attribute at the moment, only one
-level, like the patch does.
+I think you're doing two things at once in this patch:
 
-Based on Neil's comments, I think we should be fine with this as-is as
-no one is messing with these files directly (which implies that we could
-possibly just remove them entirely to save us the overall pain...)
+1) Fixing the problem that the IORESOURCE_MEM_64 constraint was being
+applied to CPU addresses, not bus addresses, and
 
-Want me to redo this in a way that is acceptable (i.e. remove the
-existing code at the same time?)
+2) Trying to allocate above 4G first.
 
-thanks,
+Please separate these into two patches.  The first thing is an obvious
+problem and should have little risk of breaking anything.  The second
+probably makes sense, but the allocation change could certainly break
+something and have to be reverted.  It would be good if we could save
+the first fix if that happened.
 
-greg k-h
+>                 if (!r)
+>                         continue;
+>
+> @@ -147,14 +145,42 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+>                     !(res->flags & IORESOURCE_PREFETCH))
+>                         continue;
+>
+> +               start = 0;
+> +               end = MAX_RESOURCE;
+> +               /*
+> +                * don't allocate too high if the pref mem doesn't
+> +                * support 64bit, also if this is a 64-bit mem
+> +                * resource, try above 4GB first
+> +                */
+> +               __pcibios_resource_to_bus(bus, &region, r);
+> +               if (region.start <= PCI_MAX_ADDR_32 &&
+> +                   region.end > PCI_MAX_ADDR_32) {
+> +                       middle = pcibios_bus_addr_to_res(bus, res->flags,
+> +                                                     PCI_MAX_ADDR_32);
+> +                       if (res->flags & IORESOURCE_MEM_64)
+> +                               start = middle + 1;
+> +                       else
+> +                               end = middle;
+> +               } else if (region.start > PCI_MAX_ADDR_32 &&
+> +                          !(res->flags & IORESOURCE_MEM_64))
+> +                               continue;
+
+This is sort of ugly.  Can you make some sort of "pci_clip_resource()"
+ so this loop remains readable?  E.g., something like:
+
+  static pci_bus_region pci_mem_32 = { 0, 0xffffffff };
+  static pci_bus_region pci_mem_64 = { 0x100000000, 0xffffffffffffffff };
+
+  struct resource avail = *r;
+
+  if (res->flags & IORESOURCE_MEM_64)
+    pci_clip_resource(&avail, &pci_mem_64);
+  else
+    pci_clip_resource(&avail, &pci_mem_32);
+  if (!resource_size(&avail))
+    continue;
+
+> +
+> +again:
+>                 /* Ok, try it out.. */
+>                 ret = allocate_resource(r, res, size,
+> -                                       r->start ? : min,
+> -                                       max, align,
+> +                                       max(start, r->start ? : min),
+> +                                       end, align,
+>                                         alignf, alignf_data);
+>                 if (ret == 0)
+> -                       break;
+> +                       return 0;
+> +
+> +               if (start != 0) {
+> +                       start = 0;
+> +                       goto again;
+> +               }
+>         }
+> +
+> +
+>         return ret;
+>  }
+>
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 9c91ecc..aea4efb 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -198,6 +198,8 @@ enum pci_bar_type {
+>         pci_bar_mem64,          /* A 64-bit memory BAR */
+>  };
+>
+> +#define PCI_MAX_ADDR_32        ((resource_size_t)0xffffffff)
+> +
+>  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+>                                 int crs_timeout);
+>  int pci_setup_device(struct pci_dev *dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 3c6e399..1c69789 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1491,10 +1491,6 @@ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
+>
+>  #include <asm/pci.h>
+>
+> -#ifndef PCIBIOS_MAX_MEM_32
+> -#define PCIBIOS_MAX_MEM_32 (-1)
+> -#endif
+> -
+>  /* these helpers provide future and backwards compatibility
+>   * for accessing popular PCI BAR info */
+>  #define pci_resource_start(dev, bar)   ((dev)->resource[(bar)].start)
+> --
+> 1.8.1.4
+>
