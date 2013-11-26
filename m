@@ -1,60 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:65358 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751280Ab3K0AOS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 19:14:18 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH 0/4] ACPI / bind: Simplify child devices lookup
-Date: Wed, 27 Nov 2013 01:27:05 +0100
-Message-ID: <3773077.bfZR2z09sY@vostro.rjw.lan>
-In-Reply-To: <1385510442.1791.195.camel@misato.fc.hp.com>
-References: <2610478.KxPMyuOMok@vostro.rjw.lan> <1385510442.1791.195.camel@misato.fc.hp.com>
+Received: from mail-yh0-f49.google.com ([209.85.213.49]:41494 "EHLO
+	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758049Ab3KZU6m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:58:42 -0500
+Date: Tue, 26 Nov 2013 15:58:36 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 07/11] PCI/MSI: Make pci_enable_msi/msix() 'nvec'
+ argument type as int
+Message-ID: <20131126205836.GA8588@mtj.dyndns.org>
+References: <cover.1385399393.git.agordeev@redhat.com>
+ <50fceee5c8b44c950c6082a6d73c643fa3788c81.1385399393.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50fceee5c8b44c950c6082a6d73c643fa3788c81.1385399393.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 26, 2013 05:00:42 PM Toshi Kani wrote:
-> On Mon, 2013-11-25 at 01:09 +0100, Rafael J. Wysocki wrote:
-> > Hi,
-> > 
-> > The following series of four patches (on top of current linux-pm.git/bleeding-edge)
-> > rework child device lookup in drivers/acpi/glue.c and related things:
-> > 
-> > [1/4] ACPI / bind: Simplify child device lookup
-> > [2/4] PCI/ ACPI: Use acpi_find_child_device() for child device lookup
-> > [3/4] ACPI / bind: Redefine acpi_get_child()
-> > [4/4] ACPI / bind: Redefine acpi_preset_companion()
+On Tue, Nov 26, 2013 at 10:09:56AM +0100, Alexander Gordeev wrote:
+> Make pci_enable_msi_block(), pci_enable_msi_block_auto() and
+> pci_enable_msix() consistent with regard to the type of 'nvec'
+> argument.
 > 
-> This patchset caused the attached panic during boot on a system.
-> acpi_pci_find_device() called acpi_find_child_device() with
-> ACPI_COMPANION(dev->parent) being a NULL pointer when scanning bus 0xf.
-> 
-> This bus 0xf seems to be a chipset internal bus, which is not intended
-> for the OS to use.  Therefore, ACPI does not list its PCI bridge device.
-> 
-> # lspci -tv
->    :
->  +-[0000:0f]-+-08.0  Intel Corporation Ivytown QPI Link 0
->  |           +-08.2  Intel Corporation Ivytown QPI Link 0
->    :
-> 
-> However, pcibios_fixup_peer_bridges(), called from pci_subsys_init(),
-> finds this bus as it scans all the buses from 0 to pcibios_last_bus.
-> Hence, this dev->parent does not have an associated ACPI device object. 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-Thanks for the report!
+Reviewed-by: Tejun Heo <tj@kernel.org>
 
-I've dropped the patches from bleeding-edge for now.
+Thanks.
 
-Does "[1/4] ACPI / bind: Simplify child device lookup" alone work on that
-system?
-
-Rafael
-
+-- 
+tejun
