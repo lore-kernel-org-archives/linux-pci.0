@@ -1,76 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:64547 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811Ab3KAP1u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2013 11:27:50 -0400
-Received: by mail-ie0-f171.google.com with SMTP id tp5so7696897ieb.16
-        for <linux-pci@vger.kernel.org>; Fri, 01 Nov 2013 08:27:50 -0700 (PDT)
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:10266 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744Ab3KZM1X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 07:27:23 -0500
+Date: Tue, 26 Nov 2013 07:27:10 -0500
+From: Jason Cooper <jason@lakedaemon.net>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	'Ezequiel Garcia' <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: PCI: mvebu: return NULL instead of ERR_PTR(ret)
+Message-ID: <20131126122710.GG2879@titan.lakedaemon.net>
+References: <001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
+ <20131125200256.GA7316@obsidianresearch.com>
+ <001101ceea68$cb486220$61d92660$%han@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <1382808205-843-1-git-send-email-amurray@embedded-bits.co.uk>
-References: <1382808205-843-1-git-send-email-amurray@embedded-bits.co.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 1 Nov 2013 09:27:30 -0600
-Message-ID: <CAErSpo6+YD4TRYcgbcvAr5vmNgt5L8vrm2tAqHmoiF4qGDnqZw@mail.gmail.com>
-Subject: Re: [PATCH] pci: update pcie_ports 'auto' behavior for non-ACPI platforms
-To: Andrew Murray <amurray@embedded-bits.co.uk>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Karicheri, Muralidharan" <m-karicheri2@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <001101ceea68$cb486220$61d92660$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 26, 2013 at 11:23 AM, Andrew Murray
-<amurray@embedded-bits.co.uk> wrote:
-> The pcie_ports parameter, which defaults to 'auto', allows a user
-> to specify if PCIe port services are disabled ('compat'), always
-> enabled ('native'), or only used when allowed by the BIOS
-> ('auto').
->
-> Where CONFIG_ACPI isn't enabled, as is often the case for non
-> x86/ia64 platforms, the 'auto' behavior results in that of
-> 'compat'. Thus in order to use port services on these platforms
-> 'pcie_ports=native' must be added to the kernel command line.
->
-> This patch results in the 'native' behavior being followed where
-> 'auto' is selected and ACPI is not enabled.
->
-> Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
+On Tue, Nov 26, 2013 at 02:31:44PM +0900, Jingoo Han wrote:
+> 
+> On Tuesday, November 26, 2013 5:03 AM, Jason Gunthorpe wrote:
+> > On Sat, Nov 23, 2013 at 10:00:33PM -0500, Jason Cooper wrote:
+> > > And a small addendum: I currently have the following in mvebu/drivers
+> > >   058100a08be8 PCI: mvebu: return NULL instead of ERR_PTR(ret)
+> > 
+> > Folks, I took a quick look at this, and it looks suspicious (sorry, I
+> > can't seem to find the thread to followup post)
+> > 
+> > >    PCI: mvebu: return NULL instead of ERR_PTR(ret)
+> > >
+> > >    Return NULL instead of ERR_PTR(ret) in order to fix the following
+> > >    sparse warning:
+> > >
+> > >    drivers/pci/host/pci-mvebu.c:744:31: warning: incorrect type in return expression (different
+> > address
+> > >    spaces)
+> > >    drivers/pci/host/pci-mvebu.c:744:31:    expected void [noderef] <asn:2>*
+> > >    drivers/pci/host/pci-mvebu.c:744:31:    got void *
+> > >
+> > >    Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> > >    Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > >    Signed-off-by: Jason Cooper <jason@lakedaemon.net>
+> > >
+> > >--- a/drivers/pci/host/pci-mvebu.c
+> > >+++ b/drivers/pci/host/pci-mvebu.c
+> > >@@ -740,7 +740,7 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+> > >
+> > >        ret = of_address_to_resource(np, 0, &regs);
+> > >        if (ret)
+> > >-               return ERR_PTR(ret);
+> > >+               return NULL;
+> > >
+> > >        return devm_ioremap_resource(&pdev->dev, &regs);
+> > 
+> > So we drop the ERR_PTR for that return but 'devm_ioremap_resource'
+> > returns ERR_PTR too:
+> 
+> Yes, you're right.
+> It makes the problem.
+> Thus, this commit "PCI: mvebu: return NULL instead of ERR_PTR(ret)"
+> should be reverted.
 
-Applied to pci/misc.  I'll probably include this in the v3.13 pull
-request.  Thanks!
+It hasn't gone to mainline yet and I haven't sent a pull request for it
+yet.  So I can just drop it.
 
-Bjorn
+Since we have the discussion on all three of those patches re-ignited,
+I'll just drop the branch and Ack the resends for going through Bjorn.
 
-> ---
->  drivers/pci/pcie/portdrv_core.c | 15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 31063ac..08d131f 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -260,13 +260,14 @@ static int get_port_device_capability(struct pci_dev *dev)
->         if (pcie_ports_disabled)
->                 return 0;
->
-> -       err = pcie_port_platform_notify(dev, &cap_mask);
-> -       if (!pcie_ports_auto) {
-> -               cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
-> -                               | PCIE_PORT_SERVICE_VC;
-> -               if (pci_aer_available())
-> -                       cap_mask |= PCIE_PORT_SERVICE_AER;
-> -       } else if (err) {
-> +       cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
-> +                       | PCIE_PORT_SERVICE_VC;
-> +       if (pci_aer_available())
-> +               cap_mask |= PCIE_PORT_SERVICE_AER;
-> +
-> +       if (pcie_ports_auto) {
-> +               err = pcie_port_platform_notify(dev, &cap_mask);
-> +               if (err)
->                         return 0;
->         }
->
-> --
-> 1.8.1.2
->
+thx,
+
+Jason.
