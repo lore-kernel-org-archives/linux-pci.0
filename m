@@ -1,63 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5639 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346Ab3KTR1T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Nov 2013 12:27:19 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH] PCI: add function reset callback to pci_driver
-Date: Wed, 20 Nov 2013 10:26:57 -0700
-Message-Id: <1384968417-31856-1-git-send-email-keith.busch@intel.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:41254 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932543Ab3KZVLT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:11:19 -0500
+From: Marek Vasut <marex@denx.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/7] PCI: imx6: Make reset-gpio optional
+Date: Tue, 26 Nov 2013 22:10:42 +0100
+Message-Id: <1385500248-6551-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A user can issue a pci function level reset to a device using sysfs
-entry /sys/bus/pci/devices/.../reset. A kernel driver handling the
-pci device probably would like to know that such a reset has occured,
-so this patch adds a callback in to pci_driver's pci_error_handler.
+Some boards do not have a PCIe reset GPIO. To avoid probe
+failure on these boards, make the reset GPIO optional as
+well.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Harro Haan <hrhaan@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
 ---
-Assuming this is a good idea, is this the right place to invoke the
-reset callback, or should it be up the call stack closer to the sysfs
-reset entry point? Or somewhere else entirely?
+ .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
+ drivers/pci/host/pci-imx6.c                        | 29 +++++++++++-----------
+ 2 files changed, 16 insertions(+), 15 deletions(-)
 
- drivers/pci/pci.c   |    6 ++++++
- include/linux/pci.h |    3 +++
- 2 files changed, 9 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b127fbda..5ee6fc0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3435,6 +3435,12 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index d5d26d4..b7a2279 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -19,9 +19,9 @@ Required properties:
+ 	to define the mapping of the PCIe interface to interrupt
+ 	numbers.
+ - num-lanes: number of lanes to use
+-- reset-gpio: gpio pin number of power good signal
  
- 	rc = pci_parent_bus_reset(dev, probe);
- done:
-+	if (rc != -ENOTTY && !probe) {
-+		struct pci_error_handlers *err_handler =
-+				dev->driver ? dev->driver->err_handler : NULL;
-+		if (err_handler && err_handler->function_reset)
-+			err_handler->function_reset(dev);
+ Optional properties for fsl,imx6q-pcie
++- reset-gpio: gpio pin number of power good signal
+ - power-on-gpio: gpio pin number of power-enable signal
+ - wake-up-gpio: gpio pin number of incoming wakeup signal
+ - disable-gpio: gpio pin number of outgoing rfkill/endpoint disable signal
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index bd70af8..52027ad 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -214,9 +214,12 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+ 
+-	gpio_set_value(imx6_pcie->reset_gpio, 0);
+-	msleep(100);
+-	gpio_set_value(imx6_pcie->reset_gpio, 1);
++	/* Some boards don't have PCIe reset GPIO. */
++	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		gpio_set_value(imx6_pcie->reset_gpio, 0);
++		msleep(100);
++		gpio_set_value(imx6_pcie->reset_gpio, 1);
 +	}
- 	return rc;
+ 
+ 	return 0;
  }
+@@ -439,17 +442,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 835ec7b..d1f100e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -605,6 +605,9 @@ struct pci_error_handlers {
- 	/* PCI slot has been reset */
- 	pci_ers_result_t (*slot_reset)(struct pci_dev *dev);
+ 	/* Fetch GPIOs */
+ 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+-	if (!gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		dev_err(&pdev->dev, "no reset-gpio defined\n");
+-		ret = -ENODEV;
+-	}
+-	ret = devm_gpio_request_one(&pdev->dev,
+-				imx6_pcie->reset_gpio,
+-				GPIOF_OUT_INIT_LOW,
+-				"PCIe reset");
+-	if (ret) {
+-		dev_err(&pdev->dev, "unable to get reset gpio\n");
+-		goto err;
++	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		ret = devm_gpio_request_one(&pdev->dev,
++					imx6_pcie->reset_gpio,
++					GPIOF_OUT_INIT_LOW,
++					"PCIe reset");
++		if (ret) {
++			dev_err(&pdev->dev, "unable to get reset gpio\n");
++			goto err;
++		}
+ 	}
  
-+	/* PCI function has been reset */
-+	pci_ers_result_t (*function_reset)(struct pci_dev *dev);
-+
- 	/* Device driver may resume normal operations */
- 	void (*resume)(struct pci_dev *dev);
- };
+ 	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
 -- 
-1.7.10.4
+1.8.4.3
 
