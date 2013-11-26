@@ -1,68 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:62053 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753316Ab3KDN0D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Nov 2013 08:26:03 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [Update][PATCH 1/6] ACPI / scan: Start matching drivers after trying scan handlers
-Date: Mon, 04 Nov 2013 14:30:58 +0100
-Message-ID: <2151922.M630KK6nC3@vostro.rjw.lan>
-In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
+Received: from mail-out.m-online.net ([212.18.0.10]:45618 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932300Ab3KZUrO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:47:14 -0500
+From: Marek Vasut <marex@denx.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Date: Tue, 26 Nov 2013 21:47:06 +0100
+Cc: Tim Harvey <tharvey@gateworks.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, Frank Li <lznuaa@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com> <20131125230935.GA4034@google.com>
+In-Reply-To: <20131125230935.GA4034@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311262147.07036.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Dear Bjorn Helgaas,
 
-ACPI scan handlers should always be attached to struct acpi_device
-objects before any ACPI drivers, but there is a window during which
-a driver may be attached to a struct acpi_device before checking if
-there is a matching scan handler.  Namely, that will happen if an
-ACPI driver module is loaded during acpi_bus_scan() right after
-the first namespace walk is complete and before the given device
-is processed by the second namespace walk.
+> On Tue, Oct 22, 2013 at 09:55:43PM -0700, Tim Harvey wrote:
+> > The IMX6 iATU is used for address translation between the AXI bus
+> > address space and PCI address space.  This is used for type0 and type1
+> > config cycles but is not necessary for outbound io/mem regions.
+> > 
+> > This patch removes the calls that inappropriately re-configures the ATU
+> > viewport for outbound memory and IO after config cycles and removes them
+> > altogether as they are not necessary.
+> > 
+> > This resolves issues with PCI devices behind switches and has been tested
+> > with a Gige device behind a PLX PEX860x switch.  More testing is needed
+> > for other configurations.
+> > 
+> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> 
+> Dropping for now, per Marek and Pratyush's concerns.  Poke me if/when those
+> are resolved.
 
-To prevent that from happening, set the match_driver flags of
-struct acpi_device objects right before running device_attach()
-for them in acpi_bus_device_attach().
+I hope (unless of course I again fail to under load of other stuff to do) to 
+look at the PCIe stuff again next week once I'm in the office. In the meantime, 
+I'd love to submit new set of patches.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -1676,7 +1676,6 @@ void acpi_init_device_object(struct acpi
- 
- void acpi_device_add_finalize(struct acpi_device *device)
- {
--	device->flags.match_driver = true;
- 	dev_set_uevent_suppress(&device->dev, false);
- 	kobject_uevent(&device->dev.kobj, KOBJ_ADD);
- }
-@@ -1915,8 +1914,12 @@ static acpi_status acpi_bus_device_attac
- 		return AE_OK;
- 
- 	ret = acpi_scan_attach_handler(device);
--	if (ret)
--		return ret > 0 ? AE_OK : AE_CTRL_DEPTH;
-+	if (ret < 0)
-+		return AE_CTRL_DEPTH;
-+
-+	device->flags.match_driver = true;
-+	if (ret > 0)
-+		return AE_OK;
- 
- 	ret = device_attach(&device->dev);
- 	return ret >= 0 ? AE_OK : AE_CTRL_DEPTH;
-
+Best regards,
+Marek Vasut
