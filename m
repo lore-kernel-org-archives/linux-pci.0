@@ -1,49 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:52312 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757418Ab3KZUho (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:37:44 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 01/11] PCI/MSI/s390: Fix single MSI only check
-Date: Tue, 26 Nov 2013 10:09:50 +0100
-Message-Id: <4a3fc109c984d74340d70f0053ec7e3d3263939a.1385399393.git.agordeev@redhat.com>
-In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
-References: <cover.1385399393.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 09/10] PCI: Sort pci root bus resources list
+Date: Mon, 25 Nov 2013 17:28:09 -0800
+Message-Id: <1385429290-25397-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Multiple MSIs have never been supported on s390 architecture,
-but the platform code fails to report single MSI only.
+Some x86 systems expose above 4G 64bit mmio in _CRS as non-pref mmio range.
+[   49.415281] PCI host bridge to bus 0000:00
+[   49.419921] pci_bus 0000:00: root bus resource [bus 00-1e]
+[   49.426107] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+[   49.433041] pci_bus 0000:00: root bus resource [io  0x1000-0x5fff]
+[   49.440010] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+[   49.447768] pci_bus 0000:00: root bus resource [mem 0xfed8c000-0xfedfffff]
+[   49.455532] pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffbfff]
+[   49.463259] pci_bus 0000:00: root bus resource [mem 0x380000000000-0x381fffffffff]
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
+During assign unassigned 64bit mmio resource, it will go through
+every non-pref mmio for root bus in pci_bus_alloc_resource().
+As the loop is with pci_bus_for_each_resource(), and could have chance
+to use under 4G mmio range instead of above 4G mmio range if the requested
+range is not big enough, even it could handle above 4G 64bit pref mmio.
+
+For root bus, we can order list from high to low in pci_add_resource_offset(),
+during creating root bus, it will still keep the same order in final bus
+resource list.
+	pci_acpi_scan_root
+		==> add_resources
+			==> pci_add_resource_offset: # Add to temp resources
+		==> pci_create_root_bus
+			==> pci_bus_add_resource # add to final bus resources.
+
+After that, we can make sure 64bit pref mmio for pci bridges will be allocated
+higest of mmio non-pref, and in this case it is above 4G instead of under 4G.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/s390/pci/pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/pci/bus.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index f17a834..c79c6e4 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
- 	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
- 		return -EINVAL;
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
- 	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index f801f6a..adf17858 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -21,7 +21,8 @@
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 			     resource_size_t offset)
+ {
+-	struct pci_host_bridge_window *window;
++	struct pci_host_bridge_window *window, *tmp;
++	struct list_head *n;
+ 
+ 	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
+ 	if (!window) {
+@@ -31,7 +32,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 
+ 	window->res = res;
+ 	window->offset = offset;
+-	list_add_tail(&window->list, resources);
++
++	/* sorted it according to res end */
++	n = resources;
++	list_for_each_entry(tmp, resources, list)
++		if (window->res->end > tmp->res->end) {
++			n = &tmp->list;
++			break;
++		}
++
++	/* Insert it just before n */
++	list_add_tail(&window->list, n);
+ }
+ EXPORT_SYMBOL(pci_add_resource_offset);
  
 -- 
-1.7.7.6
+1.8.1.4
 
