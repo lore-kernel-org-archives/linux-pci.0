@@ -1,59 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 3/3] PCI: Support PCIe Capability Slot registers only for
- ports with slots
-To: stable@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
-	Amos Kong <kongjianjun@gmail.com>,
-	Adam Lee <adam.lee@canonical.com>,
-	linux-kernel@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Thomas Renninger <trenn@suse.de>
-Date: Tue, 19 Nov 2013 14:35:57 -0700
-Message-ID: <20131119213557.3839.56953.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131119212714.3839.52182.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131119212714.3839.52182.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:63004 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756697Ab3K0A4r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 19:56:47 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 01/10] PCI: Use device_release_driver in pci_stop_root_bus
+Date: Wed, 27 Nov 2013 02:09:35 +0100
+Message-ID: <1669330.9A2ve7gAuo@vostro.rjw.lan>
+In-Reply-To: <1385429290-25397-2-git-send-email-yinghai@kernel.org>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-2-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 6d3a1741f1e648cfbd5a0cc94477a0d5004c6f5e upstream.  This is part
-of the fix for https://bugzilla.kernel.org/show_bug.cgi?id=65211
+On Monday, November 25, 2013 05:28:01 PM Yinghai Lu wrote:
+> To be consistent with change in
+> | PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
+> 
+> Use device_release_driver for root bus/hostbridge.
+> 
+> Also use device_unregister() in pci_remove_root_bus() instead of
+> device_del/put_device, that will be corresponding device_register()
+> for pci_create_root_bus for hostbridge.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Previously we allowed callers to access Slot Capabilities, Status, and
-Control for Root Ports even if the Root Port did not implement a slot.
-This seems dubious because the spec only requires these registers if a
-slot is implemented.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-It's true that even Root Ports without slots must have *space* for these
-slot registers, because the Root Capabilities, Status, and Control
-registers are after the slot registers in the capability.  However,
-for a v1 PCIe Capability, the *semantics* of the slot registers are
-undefined unless a slot is implemented.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-By: Jiang Liu <jiang.liu@huawei.com>
-CC: stable@vger.kernel.org	# v3.7+
----
- drivers/pci/access.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 9a46fa9135d9..061da8c3ab4b 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -497,9 +497,9 @@ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
- {
- 	int type = pci_pcie_type(dev);
- 
--	return type == PCI_EXP_TYPE_ROOT_PORT ||
--	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
--		pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT);
-+	return (type == PCI_EXP_TYPE_ROOT_PORT ||
-+		type == PCI_EXP_TYPE_DOWNSTREAM) &&
-+	       pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT;
- }
- 
- static inline bool pcie_cap_has_rtctl(const struct pci_dev *dev)
-
+> ---
+>  drivers/pci/remove.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index cc9337a..692f4c3 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -128,7 +128,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+>  		pci_stop_bus_device(child);
+>  
+>  	/* stop the host bridge */
+> -	device_del(&host_bridge->dev);
+> +	device_release_driver(&host_bridge->dev);
+>  }
+>  
+>  void pci_remove_root_bus(struct pci_bus *bus)
+> @@ -147,5 +147,5 @@ void pci_remove_root_bus(struct pci_bus *bus)
+>  	host_bridge->bus = NULL;
+>  
+>  	/* remove the host bridge */
+> -	put_device(&host_bridge->dev);
+> +	device_unregister(&host_bridge->dev);
+>  }
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
