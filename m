@@ -1,74 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:55665
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751858Ab3KSFYG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 00:24:06 -0500
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
-	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 6/9 v2] powerpc: pci: Extend msi iova page setup to arch specific
-Date: Tue, 19 Nov 2013 10:47:10 +0530
-Message-ID: <1384838233-24847-7-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from qmta01.emeryville.ca.mail.comcast.net ([76.96.30.16]:52371 "EHLO
+	qmta01.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757339Ab3K0WVf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 17:21:35 -0500
+From: Khalid Aziz <khalid.aziz@oracle.com>
+To: bhelgaas@google.com, cl91tp@gmail.com, tianyu.lan@intel.com,
+	khlebnikov@openvz.org, gnomes@lxorguk.ukuu.org.uk,
+	indou.takao@jp.fujitsu.com, jility09@gmail.com, f.otti@gmx.at,
+	ebiederm@xmission.com, mjg59@srcf.ucam.org
+Cc: Khalid Aziz <khalid.aziz@oracle.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kexec@lists.infradead.org,
+	stable@vger.kernel.org
+Subject: [PATCH v2] PCI: Clear Bus Master bit only on kexec reboot
+Date: Wed, 27 Nov 2013 15:19:25 -0700
+Message-Id: <1385590765-23094-1-git-send-email-khalid.aziz@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch extend the interface to arch specific code for setting
-msi iova address for a msi page. Machine specific code is not yet
-implemented.
+Add a flag to tell the PCI subsystem that kernel is shutting down
+in prepapration to kexec a kernel. Add code in PCI subsystem to use
+this flag to clear Bus Master bit on PCI devices only in case of
+kexec reboot. This fixes https://bugzilla.kernel.org/show_bug.cgi?id=63861
+and avoids any other issues caused by clearing Bus Master bit on PCI
+devices in normal shutdown path. This patch is based on discussion at
+http://marc.info/?l=linux-pci&m=138425645204355&w=2
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+Signed-off-by: Khalid Aziz <khalid.aziz@oracle.com>
+Acked-by: Konstantin Khlebnikov <koct9i@gmail.com>
+Cc: stable@vger.kernel.org
 ---
-v2
- - new patch
+Changes since v1:
+	- Moved kexec_in_progress flag from pci.h to kexec.h
+	- Changed the type for kexec_in_progress flag to bool
+	- Added #ifdef CONFIG_KEXEC to code in pci-driver.c to 
+	  ensure it builds with CONFIG_KEXEC not set.
 
- arch/powerpc/include/asm/machdep.h |    2 ++
- arch/powerpc/kernel/msi.c          |   10 ++++++++++
- 2 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/pci/pci-driver.c | 12 +++++++++---
+ include/linux/kexec.h    |  3 +++
+ kernel/kexec.c           |  4 ++++
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 8d1b787..e87b806 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -132,6 +132,8 @@ struct machdep_calls {
- 	/* Returns the requested region's address and size */
- 	int		(*msi_get_region)(int region_num,
- 					  struct msi_region *region);
-+	int		(*msi_set_iova)(struct pci_dev *pdev, int region_num,
-+					dma_addr_t iova, bool set);
- #endif
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 9042fdb..8eca81a 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -19,6 +19,7 @@
+ #include <linux/cpu.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/suspend.h>
++#include <linux/kexec.h>
+ #include "pci.h"
  
- 	void		(*restart)(char *cmd);
-diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
-index 1a67787..e2bd555 100644
---- a/arch/powerpc/kernel/msi.c
-+++ b/arch/powerpc/kernel/msi.c
-@@ -13,6 +13,16 @@
+ struct pci_dynid {
+@@ -399,12 +400,17 @@ static void pci_device_shutdown(struct device *dev)
+ 	pci_msi_shutdown(pci_dev);
+ 	pci_msix_shutdown(pci_dev);
  
- #include <asm/machdep.h>
++#ifdef CONFIG_KEXEC
+ 	/*
+-	 * Turn off Bus Master bit on the device to tell it to not
+-	 * continue to do DMA. Don't touch devices in D3cold or unknown states.
++	 * If this is a kexec reboot, turn off Bus Master bit on the
++	 * device to tell it to not continue to do DMA. Don't touch
++	 * devices in D3cold or unknown states.
++	 * If it is not a kexec reboot, firmware will hit the PCI
++	 * devices with big hammer and stop their DMA any way.
+ 	 */
+-	if (pci_dev->current_state <= PCI_D3hot)
++	if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
+ 		pci_clear_master(pci_dev);
++#endif
+ }
  
-+int arch_msi_set_iova(struct pci_dev *pdev, int region_num,
-+		      dma_addr_t iova, bool set)
-+{
-+	if (ppc_md.msi_set_iova) {
-+		pr_debug("msi: Using platform get_region_count routine.\n");
-+		return ppc_md.msi_set_iova(pdev, region_num, iova, set);
-+	}
-+	return 0;
-+}
+ #ifdef CONFIG_PM
+diff --git a/include/linux/kexec.h b/include/linux/kexec.h
+index d78d28a..5fd33dc 100644
+--- a/include/linux/kexec.h
++++ b/include/linux/kexec.h
+@@ -198,6 +198,9 @@ extern u32 vmcoreinfo_note[VMCOREINFO_NOTE_SIZE/4];
+ extern size_t vmcoreinfo_size;
+ extern size_t vmcoreinfo_max_size;
+ 
++/* flag to track if kexec reboot is in progress */
++extern bool kexec_in_progress;
 +
- int arch_msi_get_region_count(void)
- {
- 	if (ppc_md.msi_get_region_count) {
+ int __init parse_crashkernel(char *cmdline, unsigned long long system_ram,
+ 		unsigned long long *crash_size, unsigned long long *crash_base);
+ int parse_crashkernel_high(char *cmdline, unsigned long long system_ram,
+diff --git a/kernel/kexec.c b/kernel/kexec.c
+index 490afc0..d0d8fca 100644
+--- a/kernel/kexec.c
++++ b/kernel/kexec.c
+@@ -47,6 +47,9 @@ u32 vmcoreinfo_note[VMCOREINFO_NOTE_SIZE/4];
+ size_t vmcoreinfo_size;
+ size_t vmcoreinfo_max_size = sizeof(vmcoreinfo_data);
+ 
++/* Flag to indicate we are going to kexec a new kernel */
++bool kexec_in_progress = false;
++
+ /* Location of the reserved area for the crash kernel */
+ struct resource crashk_res = {
+ 	.name  = "Crash kernel",
+@@ -1675,6 +1678,7 @@ int kernel_kexec(void)
+ 	} else
+ #endif
+ 	{
++		kexec_in_progress = true;
+ 		kernel_restart_prepare(NULL);
+ 		printk(KERN_EMERG "Starting new kernel\n");
+ 		machine_shutdown();
 -- 
-1.7.0.4
-
+1.8.3.2
 
