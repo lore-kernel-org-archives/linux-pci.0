@@ -1,74 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:57967 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448Ab3K2Pg4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 10:36:56 -0500
-From: Marek Vasut <marex@denx.de>
-To: =?iso-8859-1?q?Bj=F8rn_Erik_Nilsen?= <ben@datarespons.no>
-Subject: Re: [PATCH v5 1/2] PCI: designware: Fix crash in dw_msi_teardown_irq
-Date: Fri, 29 Nov 2013 16:36:53 +0100
-Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"Mohit.KUMAR@st.com" <Mohit.KUMAR@st.com>,
-	"ajay.khandelwal@st.com" <ajay.khandelwal@st.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	"Eric.Nelson@boundarydevices.com" <Eric.Nelson@boundarydevices.com>,
-	"troy.kisky@boundarydevices.com" <troy.kisky@boundarydevices.com>
-References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com> <201311291532.08758.marex@denx.de> <cmu-lmtpd-25244-1385737839-23@frontend1.mail.m-online.net>
-In-Reply-To: <cmu-lmtpd-25244-1385737839-23@frontend1.mail.m-online.net>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:43167 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758477Ab3K0CPd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 21:15:33 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201311291636.53641.marex@denx.de>
+In-Reply-To: <5956447.Fj3sMXmCsu@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+	<1385429290-25397-4-git-send-email-yinghai@kernel.org>
+	<5956447.Fj3sMXmCsu@vostro.rjw.lan>
+Date: Tue, 26 Nov 2013 18:15:32 -0800
+Message-ID: <CAE9FiQXjGPB4uurUA8wYL73UcBzSJYVKx90px-KuEYit1-c_GQ@mail.gmail.com>
+Subject: Re: [PATCH v2 03/10] PCI: Move resources and bus_list releasing to pci_release_dev
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjørn Erik Nilsen,
-[...]
-> > Won't simple
-> > 
-> > for (i = 0; i < nvec; i++) {
-> > 
-> > do here?
-> 
-> Yes.
-> 
-> The very same syntax ('while i < nvec') is used in assign_irq. That is
-> why I wanted to keep it like that to avoid adding too much confusion, or
-> at least make it easy to recognize the same pattern.
-> 
-> You still want me to change it?
+On Tue, Nov 26, 2013 at 5:15 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> @@ -36,11 +22,6 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>>  {
+>>       device_del(&dev->dev);
+>>
+>> -     down_write(&pci_bus_sem);
+>> -     list_del(&dev->bus_list);
+>> -     up_write(&pci_bus_sem);
+>> -
+>> -     pci_free_resources(dev);
+>>       put_device(&dev->dev);
+>
+> And if the side effects are benign enough, why don't we do a device_unregister()
+> here?
 
-Your loop does exactly what a for() loop would do, there's no need to emulate it 
-with a while() loop. If you can fix the other one, fix the other one as well 
-please.
+Yes, that is same, but we are using device_add in pci_device_add...
 
-> As for the other nitpick, I don't agree with you.
-> 
-> In fact, dw_msi_teardown_irq has no return value itself. Moreover, if
-> setting the msi desc to NULL fails, then it simply means there is no irq
-> desc and there is nothing to unwind. Also, skipping the other unwind
-> operations just because that single operation failed would leave the
-> driver in a much worse state. At least in my opinion.
-> 
-> What's your opinion on that?
+Thanks
 
-I see this:
-
-$ git grep irq_set_msi_desc_off include/
-include/linux/irq.h:extern int irq_set_msi_desc_off(unsigned int irq_base, 
-unsigned int irq_offset,
-
-So it has a return value which needs to be handled. Sorry if I wasn't clear on 
-the first try.
-
-> Now, if you want me to make another patch do you prefer a standalone
-> patch on top of the other patches, or a completely new patchset?
-
-Let's keep iterating :) But please wait for more feedback first.
-
-Best regards,
-Marek Vasut
+Yinghai
