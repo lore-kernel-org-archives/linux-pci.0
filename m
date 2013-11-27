@@ -1,122 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:54382 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab3KFT4N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 14:56:13 -0500
-Received: by mail-ie0-f179.google.com with SMTP id aq17so17700971iec.24
-        for <linux-pci@vger.kernel.org>; Wed, 06 Nov 2013 11:56:13 -0800 (PST)
+Received: from v094114.home.net.pl ([79.96.170.134]:49248 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754947Ab3K0BCY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 20:02:24 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 03/10] PCI: Move resources and bus_list releasing to pci_release_dev
+Date: Wed, 27 Nov 2013 02:15:11 +0100
+Message-ID: <5956447.Fj3sMXmCsu@vostro.rjw.lan>
+In-Reply-To: <1385429290-25397-4-git-send-email-yinghai@kernel.org>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-4-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20131106181558.GA14444@google.com>
-References: <20131105232903.3790.8738.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<CAE9FiQX74B32iD2LAaWxwOAH62YAFWkt2=hK9pVDCDUnfrEaNw@mail.gmail.com>
-	<20131106181558.GA14444@google.com>
-Date: Wed, 6 Nov 2013 11:56:13 -0800
-Message-ID: <CAE9FiQU4V0waWNvMFgEjKv90KuCCQ2CYJU2UsnDP0+WDS9zb1Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Use pci_is_root_bus() to check for root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Nishank Trivedi <nistrive@cisco.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 6, 2013 at 10:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-
-> commit dfb66fee4715c747a94abd45c20fbe302b10e49c
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Wed Nov 6 10:11:48 2013 -0700
->
->     PCI: Add pci_upstream_bridge()
->
->     This adds a pci_upstream_bridge() interface to find the PCI-to-PCI bridge
->     upstream from a device.  If the device is on a root bus, i.e., the upstream
->     bridge is a host bridge instead of a PCI bridge, this returns NULL.  If the
->     device is a VF, this returns the bridge upstream from the PF corresponding
->     to the VF.  This is important for VFs on virtual buses, where
->     "dev->bus->self == NULL".
->
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d3a888a..e09d19a 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -480,6 +480,18 @@ static inline bool pci_is_root_bus(struct pci_bus *pbus)
->         return !(pbus->parent);
+On Monday, November 25, 2013 05:28:03 PM Yinghai Lu wrote:
+> We should not release resource in pci_destroy that is too early
+> as there could be still other use hold reference.
+> 
+> release them or remove it from bus devices list at last
+> in pci_release_dev instead.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/probe.c  | 21 +++++++++++++++++++--
+>  drivers/pci/remove.c | 19 -------------------
+>  2 files changed, 19 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 173a9cf..12ec56c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1154,6 +1154,18 @@ static void pci_release_capabilities(struct pci_dev *dev)
+>  	pci_free_cap_save_buffers(dev);
 >  }
->
-> +static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
+>  
+> +static void pci_free_resources(struct pci_dev *dev)
 > +{
-> +       if (pci_is_root_bus(dev->bus))
-> +               return NULL;
+> +	int i;
 > +
-> +       dev = pci_physfn(dev);
-> +       if (pci_is_root_bus(dev->bus))
-> +               return NULL;
-
-Maybe we can drop the first pci_is_root_bus() checking.
-for physfn, pci_physfn will return it's self.
-
-> +
-> +       return dev->bus->self;
+> +	pci_cleanup_rom(dev);
+> +	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> +		struct resource *res = dev->resource + i;
+> +		if (res->parent)
+> +			release_resource(res);
+> +	}
 > +}
 > +
->  #ifdef CONFIG_PCI_MSI
->  static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev)
+>  /**
+>   * pci_release_dev - free a pci device structure when all users of it are finished.
+>   * @dev: device that's been disconnected
+> @@ -1163,9 +1175,14 @@ static void pci_release_capabilities(struct pci_dev *dev)
+>   */
+>  static void pci_release_dev(struct device *dev)
 >  {
-> commit 4e5415f02e32c85e902cd9692eab18200e14b347
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Wed Nov 6 10:00:51 2013 -0700
->
->     PCI: Enable upstream bridges even for VFs on virtual buses
->
->     Previously we enabled the upstream PCI-to-PCI bridge only when
->     "dev->bus->self != NULL".  In the case of a VF on a virtual bus, where
->     "bus->self == NULL", we didn't enable the upstream bridge.
->
->     This fixes that by enabling the upstream bridge of the PF corresponding to
->     the VF.
->
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ac40f90..744dc26 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1150,10 +1150,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
->  {
->         int retval;
->
-> -       if (!dev)
-> -               return;
+> -	struct pci_dev *pci_dev;
+> +	struct pci_dev *pci_dev = to_pci_dev(dev);
+> +
+> +	down_write(&pci_bus_sem);
+> +	list_del(&pci_dev->bus_list);
+> +	up_write(&pci_bus_sem);
+> +
+> +	pci_free_resources(pci_dev);
+
+What are the possible side effects of this change?
+
+> -	pci_dev = to_pci_dev(dev);
+>  	pci_release_capabilities(pci_dev);
+>  	pci_release_of_node(pci_dev);
+>  	pcibios_release_device(pci_dev);
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 692f4c3..f452148 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -3,20 +3,6 @@
+>  #include <linux/pci-aspm.h>
+>  #include "pci.h"
+>  
+> -static void pci_free_resources(struct pci_dev *dev)
+> -{
+> -	int i;
 > -
-> -       pci_enable_bridge(dev->bus->self);
-> +       if (!pci_is_root_bus(dev->bus))
-> +               pci_enable_bridge(pci_upstream_bridge(dev));
->
->         if (pci_is_enabled(dev)) {
->                 if (!dev->is_busmaster)
-> @@ -1188,7 +1186,8 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->         if (atomic_inc_return(&dev->enable_cnt) > 1)
->                 return 0;               /* already enabled */
->
-> -       pci_enable_bridge(dev->bus->self);
-> +       if (!pci_is_root_bus(dev->bus))
-> +               pci_enable_bridge(pci_upstream_bridge(dev));
->
->         /* only skip sriov related */
->         for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+> -	msi_remove_pci_irq_vectors(dev);
+> -
+> -	pci_cleanup_rom(dev);
+> -	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> -		struct resource *res = dev->resource + i;
+> -		if (res->parent)
+> -			release_resource(res);
+> -	}
+> -}
+> -
+>  static void pci_stop_dev(struct pci_dev *dev)
+>  {
+>  	pci_pme_active(dev, false);
+> @@ -36,11 +22,6 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>  {
+>  	device_del(&dev->dev);
+>  
+> -	down_write(&pci_bus_sem);
+> -	list_del(&dev->bus_list);
+> -	up_write(&pci_bus_sem);
+> -
+> -	pci_free_resources(dev);
+>  	put_device(&dev->dev);
 
-still have problem.
+And if the side effects are benign enough, why don't we do a device_unregister()
+here?
 
-pci_upstream_bridge() could return NULL. so later pci_enable_bridge()
-referring dev->bus could panic, as you remove !dev checking.
+>  }
+>  
 
-Maybe you can cache return from pci_upstream_bridge and check that before
-calling pci_enable_bridge.
+Rafael
 
-Thanks
-
-Yinghai
