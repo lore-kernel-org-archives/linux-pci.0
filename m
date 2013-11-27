@@ -1,88 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay0086.hostedemail.com ([216.40.44.86]:60223 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751810Ab3K0Cs3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 21:48:29 -0500
-Message-ID: <1385520503.18487.32.camel@joe-AO722>
-Subject: Re: PCI: mvebu: return NULL instead of ERR_PTR(ret)
-From: Joe Perches <joe@perches.com>
-To: Josh Triplett <josh@joshtriplett.org>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	'Christopher Li' <sparse@chrisli.org>,
-	linux-sparse@vger.kernel.org,
-	'Dan Carpenter' <dan.carpenter@oracle.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	'Ezequiel Garcia' <ezequiel.garcia@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	'Axel Lin' <axel.lin@ingics.com>,
-	'Julia Lawall' <julia.lawall@lip6.fr>
-Date: Tue, 26 Nov 2013 18:48:23 -0800
-In-Reply-To: <20131127023526.GA14732@leaf>
-References: <001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
-	 <20131125200256.GA7316@obsidianresearch.com>
-	 <001101ceea68$cb486220$61d92660$%han@samsung.com>
-	 <20131126180930.GC19852@obsidianresearch.com>
-	 <000101ceeb14$480fee80$d82fcb80$%han@samsung.com>
-	 <1385519196.18487.25.camel@joe-AO722> <20131127023526.GA14732@leaf>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-out.m-online.net ([212.18.0.9]:41598 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810Ab3K0IYt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 03:24:49 -0500
+From: Marek Vasut <marex@denx.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Date: Wed, 27 Nov 2013 09:24:47 +0100
+Cc: Tim Harvey <tharvey@gateworks.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com> <201311262146.09780.marex@denx.de> <20131127035056.GA12773@pratyush-vbox>
+In-Reply-To: <20131127035056.GA12773@pratyush-vbox>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311270924.47277.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-11-26 at 18:35 -0800, Josh Triplett wrote:
-> On Tue, Nov 26, 2013 at 06:26:36PM -0800, Joe Perches wrote:
-> > On Wed, 2013-11-27 at 10:59 +0900, Jingoo Han wrote:
-> > []
-> > > ./drivers/pci/host/pci-mvebu.c
-> > > static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
-> > > 		struct device_node *np, struct mvebu_pcie_port *port)
-> > > {
-> > > 	.....
+Dear Pratyush Anand,
+
+> On Wed, Nov 27, 2013 at 04:46:09AM +0800, Marek Vasut wrote:
+> > Dear Pratyush Anand,
+> > 
+> > > Hi,
 > > > 
-> > > 	ret = of_address_to_resource(np, 0, &regs);
-> > > 	if (ret)
-> > > -		return ERR_PTR(ret);
-> > > +		return (void __iomem *)ERR_PTR(ret);
+> > > On Wed, Oct 23, 2013 at 12:55:43PM +0800, Tim Harvey wrote:
+> > > > The IMX6 iATU is used for address translation between the AXI bus
+> > > > address space and PCI address space.  This is used for type0 and
+> > > > type1 config cycles but is not necessary for outbound io/mem
+> > > > regions.
+> > > > 
+> > > > This patch removes the calls that inappropriately re-configures the
+> > > > ATU viewport for outbound memory and IO after config cycles and
+> > > > removes them altogether as they are not necessary.
+> > > > 
+> > > > This resolves issues with PCI devices behind switches and has been
+> > > > tested with a Gige device behind a PLX PEX860x switch.  More testing
+> > > > is needed for other configurations.
 > > > 
-> > > However, other engineers said that "(void __iomem *)ERR_PTR(ret)"
-> > > is not a general pattern. I cannot find the proper method to resolve
-> > > this sparse warning.
-> > > 
-> > > In this case, how can I resolve this sparse warning?
+> > > It seems to me that in your controller you have only one view port.
+> > > Also mem_base and mem_bus_addr is same. Thats why it works in your
+> > > case.
 > > 
-> > I think there's no problem using the cast.  It's not a
-> > pattern because it's not been required before as function
-> > returns have not previously been declared __iomem.
-> > 
-> > Or, perhaps the arm|hexagon specific #define below could
-> > be made generic so it could be used.
-> > 
-> > arch/arm/include/asm/io.h:#define IOMEM(x)	((void __force __iomem *)(x))
-> > 
-> > 	return IOMEM(ERR_PTR(ret));
-> > 
-> > There aren't any current uses of return IOMEM(foo) either
-> > though so the direct cast is probably more appropriate.
+> > MX6 has 4 In/4 Out viewports AFAICT.
 > 
-> I don't think that #define is appropriate for any non-constant value;
-> almost any instance of that __force cast applied to a variable would be
-> better written by fixing types more appropriately.  I'd suggest
-> updating that #define for both architectures to use BUILD_BUG_ON to
-> assert __builtin_constant_p on its argument.
+> Then if I do not miss anything, MX6 should work even without this patch.
 
-That's probably a good idea.
+Yes, yet, it does not. On the other hand, this defect is only problematic if you 
+use the devices behind a switch. Do you use a PCIe switch on your platform 
+please?
 
-There are at least a couple things would likely need to be
-fixed up if the #define were changed.
-
-arch/arm/plat-omap/sram.c
-drivers/clocksource/bcm_kona_timer.c
-
-I've no issue with either a direct cast or your idea of
-a new static inline like ERR_PTR_IO or IOMEM_ERR_PTR or
-any other appropriate name.
-
+Best regards,
+Marek Vasut
