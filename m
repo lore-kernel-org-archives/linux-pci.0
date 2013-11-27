@@ -1,48 +1,164 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:6282 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750717Ab3KFXZc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 18:25:32 -0500
-Message-ID: <1383780070.1847.45.camel@misato.fc.hp.com>
-Subject: Re: [Update][PATCH 3/6] ACPI / hotplug: Fix
- handle_root_bridge_removal()
-From: Toshi Kani <toshi.kani@hp.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
+Received: from mga09.intel.com ([134.134.136.24]:52787 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750831Ab3K0Gbw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Nov 2013 01:31:52 -0500
+Message-ID: <1385533892.9224.35.camel@yhuang-dev>
+Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM
+ enabled for unbound PCI devices
+From: Huang Ying <ying.huang@intel.com>
+To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Wed, 06 Nov 2013 16:21:10 -0700
-In-Reply-To: <6808835.gmCqHn1NaE@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
-	 <2970389.SeMGM45Qln@vostro.rjw.lan> <6808835.gmCqHn1NaE@vostro.rjw.lan>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-pm@vger.kernel.org
+Date: Wed, 27 Nov 2013 14:31:32 +0800
+In-Reply-To: <52958403.4040201@linux.vnet.ibm.com>
+References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org>
+	 <1384419260.30364.27.camel@yhuang-dev>
+	 <52943479.9050004@linux.vnet.ibm.com> <2309058.t3ZWy0Bt5x@vostro.rjw.lan>
+	 <52958403.4040201@linux.vnet.ibm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-11-04 at 14:33 +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, 2013-11-27 at 13:32 +0800, Mike Qiu wrote:
+> On 11/27/2013 04:32 AM, Rafael J. Wysocki wrote:
+> > On Tuesday, November 26, 2013 01:41:13 PM Mike Qiu wrote:
+> >> On 11/14/2013 04:54 PM, Huang Ying wrote:
+> >>> On Thu, 2013-11-14 at 16:37 +0800, mike wrote:
+> >>>> On 11/14/2013 04:25 PM, Huang Ying wrote:
+> >>>>> On Thu, 2013-11-14 at 16:12 +0800, mike wrote:
+> >>>>>> On 11/14/2013 03:53 PM, Huang Ying wrote:
+> >>>>>>> On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
+> >>>>>>>> On 11/14/2013 01:59 PM, Huang Ying wrote:
+> >>>>>>>>> On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
+> >>>>>>>>>> On 11/14/2013 03:20 AM, Alan Stern wrote:
+> >>>>>>>>>>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
+> >>>>>>>>>>>
+> >>>>>>>>>>>> [+cc Rafael, linux-pm]
+> >>>>>>>>>>>>
+> >>>>>>>>>>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
+> >>>>>>>>>>>>> Hi Huang Ying,
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>> I see you are the author of this patch, commit id is:
+> >>>>>>>>>>>>> 967577b062417b4e4b8e27b711220f4124f5153a
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>> I have a question while I try to understand this patch,
+> >>>>>>>>>>>>> So I would very grateful if you or others can give me some reply.....
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>> ............
+> >>>>>>>>>>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
+> >>>>>>>>>>>>> +       pm_runtime_get_sync(dev);
+> >>>>>>>>>>>>> +       pci_dev->driver = pci_drv;
+> >>>>>>>>>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> >>>>>>>>>>>>> I see here you make the driver to initialize before probe,
+> >>>>>>>>>>>>> But I have no idea of why you do this change.....
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>> and I look inside the code, it may be pm_runtime relate??
+> >>>>>>>>>>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
+> >>>>>>>>>>> doesn't do anything unless pci_dev->driver is set.  You can see this at
+> >>>>>>>>>>> the start of pci_pm_runtime_suspend().
+> >>>>>>>>>>>
+> >>>>>>>>>>> Since we want the driver's probe routine to be able to carry out
+> >>>>>>>>>>> runtime PM operations, we have to set pci_dev->driver before the probe
+> >>>>>>>>>>> routine runs.
+> >>>>>>>>>> Is there any situations , like in  probe state,  pci_dev->driver
+> >>>>>>>>>> has been set. the  pci_pm_runtime_xxx() has passed
+> >>>>>>>>>> pci_dev->driver NULL check, but at this point, probe fail
+> >>>>>>>>>> occurs, and  pci_dev->driver to be set to NULL.
+> >>>>>>>>>>
+> >>>>>>>>>> What will happen ? Or this situation will never happen?
+> >>>>>>>>>> I'm confuse about this.
+> >>>>>>>>> I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
+> >>>>>>>>> is called, so pci_pm_runtime_xxx() will not be called until
+> >>>>>>>>> pm_runtime_put_noidle() is called in ->probe().  And
+> >>>>>>>>>       should be done as one of the latest actions in
+> >>>>>>>>> ->probe(), after the normal probe actions succeeded.
+> >>>>>>>> OK, just as your description, it seems OK.
+> >>>>>>>> But this is really a issue as I explained in last email.
+> >>>>>>>>
+> >>>>>>>> So I want to know if there are any side-effect of changing the code
+> >>>>>>>> in pci_pm_runtime_xxx()
+> >>>>>>>>
+> >>>>>>>>       if (!pci_dev->driver)
+> >>>>>>>>              return 0;
+> >>>>>>>>       to
+> >>>>>>>>
+> >>>>>>>>       if (!dev->driver)
+> >>>>>>>>              return 0;
+> >>>>>>>>
+> >>>>>>> If you make this change, we can not put devices into low power state
+> >>>>>>> (runtime suspend the device) in ->probe().  That is expected in some
+> >>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> >>>>>> This means dev->driver is NULL ?? but pci_dev->driver is set???
+> >>>>>>
+> >>>>>> Because if use pci_dev->driver can put into low power state, means
+> >>>>>>
+> >>>>>> pci_dev->driver is set, but in the situation, use dev->driver will can't,
+> >>>>>>
+> >>>>>> means dev->driver = null, but I have not find any case that
+> >>>>>>
+> >>>>>> dev->driver = null, but pci_dev->driver != null;
+> >>>>> Sorry I make a mistake here.  The dev->driver != null in
+> >>>>> local_pci_probe().  We use pci_dev->driver instead of dev->driver in
+> >>>>> pci_pm_runtime_xxx() because we want device to be kept in normal power
+> >>>>> state (D0) and SUSPENDED state when unbound.The
+> >>>>> pm_runtime_put/get_sync in pci_device_remove/local_pci_probe will not
+> >>>>> change the power state of the device because of the check in
+> >>>>> pci_pm_runtime_xxx().
+> >>>> Yes, you are right, but what am I confuse is that, why check dev->driver
+> >>>> in pci_pm_runtime_xxx() can't keep the device in normal power
+> >>>> state (D0) and SUSPENDED state when unbound.
+> >>>>
+> >>>> May be logic issue ?
+> >>> Because dev->driver is set before local_pci_probe() and cleared after
+> >>> pci_device_remove().  But we need a flag to be changed in
+> >>> local_pci_probe() and pci_device_remove().
+> >> Hi Ying,
+> >>
+> >> I'm now face one bug, and the root cause is this logic has some problem.
+> >>
+> >> The other component calls the ops in driver during probe state, which a
+> >> lot of critical data struct haven't been setup yet.
+> >>
+> >> This never happen in old logic, because dev->driver is unset in probe
+> >> state, it can check dev->driver to see if the device diver can work. But
+> >> for new logic it is really a big issue.
+> > What is the other component and why is it doing that?
 > 
-> It is required to do get_device() on the struct acpi_device in
-> question before passing it to acpi_bus_hot_remove_device() through
-> acpi_os_hotplug_execute(), because acpi_bus_hot_remove_device()
-> calls acpi_scan_hot_remove() that does put_device() on that
-> object.
+> Some component like EEH in Power arch, it need to check whether the 
+> driver is work or not.
 > 
-> The ACPI PCI root removal routine, handle_root_bridge_removal(),
-> doesn't do that, which may lead to premature freeing of the
-> device object or to executing put_device() on an object that
-> has been freed already.
+> In old logic, if probed then dev->driver set, otherwise it will be NULL, 
+> it is safe to do so.
 > 
-> Fix this problem by making handle_root_bridge_removal() use
-> get_device() as appropriate.
+> But in new, it has problem, it can call the driver API, which is very 
+> dangerous in probe state, maybe a lot key data structure haven't been 
+> setup yet, this lead to the kernel down and machine reboot. Also this 
+> can be fixed in driver, like check the driver data it self, this 
+> solution needs all the driver fix this issue, It may be a huge program.
 > 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> So we need a new flag I think, or which old flag can we use to solve 
+> this issue ?
 
-Acked-by: Toshi Kani <toshi.kani@hp.com>
+I think a flag is not safe for you.  Driver may be removed when you
+operate on it.  Better to use device_lock() if possible, which will be
+held during device probe and driver remove.
 
-Thanks,
--Toshi
+Best Regards,
+Huang Ying
+
+> Thanks
+> Mike
+> >
+> > Checking dev->driver may not be a correct way to address this issue anyway.
+> 
+> >
+> > Thanks!
+> >
+> 
+
 
