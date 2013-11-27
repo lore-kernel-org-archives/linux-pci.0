@@ -1,134 +1,127 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH 0/4] ACPI / bind: Simplify child devices lookup
-Date: Wed, 27 Nov 2013 02:02:43 +0100
-Message-ID: <8065346.ZtkoVh8DW8@vostro.rjw.lan>
-In-Reply-To: <1385512408.1791.196.camel@misato.fc.hp.com>
-References: <2610478.KxPMyuOMok@vostro.rjw.lan> <3773077.bfZR2z09sY@vostro.rjw.lan> <1385512408.1791.196.camel@misato.fc.hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:61326 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810Ab3K0QXj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 11:23:39 -0500
+Received: by mail-ob0-f177.google.com with SMTP id va2so7470249obc.8
+        for <linux-pci@vger.kernel.org>; Wed, 27 Nov 2013 08:23:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1385500248-6551-4-git-send-email-marex@denx.de>
+References: <1385500248-6551-1-git-send-email-marex@denx.de>
+	<1385500248-6551-4-git-send-email-marex@denx.de>
+Date: Wed, 27 Nov 2013 17:23:37 +0100
+Message-ID: <CAB5oZtCTDJEWFxr-f1YJg7ihw0aCuiJiYvrHV597oNb6cZz92Q@mail.gmail.com>
+Subject: Re: [PATCH 4/7] PCI: imx6: Split away the PHY reset
+From: Harro Haan <hrhaan@gmail.com>
+To: Marek Vasut <marex@denx.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 26, 2013 05:33:28 PM Toshi Kani wrote:
-> On Wed, 2013-11-27 at 01:27 +0100, Rafael J. Wysocki wrote:
-> > On Tuesday, November 26, 2013 05:00:42 PM Toshi Kani wrote:
-> > > On Mon, 2013-11-25 at 01:09 +0100, Rafael J. Wysocki wrote:
-> > > > Hi,
-> > > > 
-> > > > The following series of four patches (on top of current linux-pm.git/bleeding-edge)
-> > > > rework child device lookup in drivers/acpi/glue.c and related things:
-> > > > 
-> > > > [1/4] ACPI / bind: Simplify child device lookup
-> > > > [2/4] PCI/ ACPI: Use acpi_find_child_device() for child device lookup
-> > > > [3/4] ACPI / bind: Redefine acpi_get_child()
-> > > > [4/4] ACPI / bind: Redefine acpi_preset_companion()
-> > > 
-> > > This patchset caused the attached panic during boot on a system.
-> > > acpi_pci_find_device() called acpi_find_child_device() with
-> > > ACPI_COMPANION(dev->parent) being a NULL pointer when scanning bus 0xf.
-> > > 
-> > > This bus 0xf seems to be a chipset internal bus, which is not intended
-> > > for the OS to use.  Therefore, ACPI does not list its PCI bridge device.
-> > > 
-> > > # lspci -tv
-> > >    :
-> > >  +-[0000:0f]-+-08.0  Intel Corporation Ivytown QPI Link 0
-> > >  |           +-08.2  Intel Corporation Ivytown QPI Link 0
-> > >    :
-> > > 
-> > > However, pcibios_fixup_peer_bridges(), called from pci_subsys_init(),
-> > > finds this bus as it scans all the buses from 0 to pcibios_last_bus.
-> > > Hence, this dev->parent does not have an associated ACPI device object. 
-> > 
-> > Thanks for the report!
-> > 
-> > I've dropped the patches from bleeding-edge for now.
-> > 
-> > Does "[1/4] ACPI / bind: Simplify child device lookup" alone work on that
-> > system?
-> 
-> Yes, the system boots fine with 1/4 alone.
+On 26 November 2013 22:10, Marek Vasut <marex@denx.de> wrote:
+> Split the PCIe PHY reset from the link up function to make
+> the code a little more structured.
+>
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Frank Li <lznuaa@gmail.com>
+> Cc: Harro Haan <hrhaan@gmail.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> Cc: Sean Cross <xobs@kosagi.com>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> Cc: Tim Harvey <tharvey@gateworks.com>
+> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/host/pci-imx6.c | 33 ++++++++++++++++++---------------
+>  1 file changed, 18 insertions(+), 15 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 4d5be4e..a9781e7 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -336,6 +336,23 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+>         return;
+>  }
+>
+> +static void imx6_pcie_reset_phy(struct pcie_port *pp)
+> +{
+> +       uint32_t temp;
+> +
+> +       pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
+> +       temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+> +                PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> +       pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
+> +
+> +       usleep_range(2000, 3000);
+> +
+> +       pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
+> +       temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+> +                 PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> +       pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
+> +}
+> +
+>  static int imx6_pcie_link_up(struct pcie_port *pp)
+>  {
+>         u32 rc, ltssm, rx_valid, temp;
+> @@ -370,21 +387,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>
+>         dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+>
+> -       pcie_phy_read(pp->dbi_base,
+> -               PHY_RX_OVRD_IN_LO, &temp);
+> -       temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN
+> -               | PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> -       pcie_phy_write(pp->dbi_base,
+> -               PHY_RX_OVRD_IN_LO, temp);
+> -
+> -       usleep_range(2000, 3000);
+> -
+> -       pcie_phy_read(pp->dbi_base,
+> -               PHY_RX_OVRD_IN_LO, &temp);
+> -       temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN
+> -               | PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> -       pcie_phy_write(pp->dbi_base,
+> -               PHY_RX_OVRD_IN_LO, temp);
+> +       imx6_pcie_reset_phy(pp);
+>
+>         return 0;
+>  }
+> --
+> 1.8.4.3
+>
 
-Thanks!
+Thanks Marek,
 
-Can you please check if the following modified [2/4] also works on top of it?
+A minor:
+drivers/pci/host/pci-imx6.c: In function 'imx6_pcie_link_up':
+drivers/pci/host/pci-imx6.c:353:27: warning: unused variable 'temp'
+[-Wunused-variable]
 
-Rafael
+See the following mail for more info which tests I did with patch 1/7,
+3/7, 4/7, 5/7 and 6/7:
+http://lists.infradead.org/pipermail/linux-arm-kernel/2013-November/214640.html
 
----
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: PCI / ACPI: Use acpi_find_child_device() for child devices lookup
+Regards,
 
-It is much more efficient to use acpi_find_child_device()
-for child devices lookup in acpi_pci_find_device() and pass
-ACPI_COMPANION(dev->parent) to it directly instead of obtaining
-ACPI_HANDLE() of ACPI_COMPANION(dev->parent) and passing it to
-acpi_find_child() which has to run acpi_bus_get_device() to
-obtain ACPI_COMPANION(dev->parent) from that again.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/acpi/glue.c    |    3 +++
- drivers/pci/pci-acpi.c |   16 ++++++++++------
- 2 files changed, 13 insertions(+), 6 deletions(-)
-
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -309,7 +309,8 @@ void acpi_pci_remove_bus(struct pci_bus
- static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	bool is_bridge;
-+	struct acpi_device *adev;
-+	bool check_children;
- 	u64 addr;
- 
- 	/*
-@@ -317,14 +318,17 @@ static int acpi_pci_find_device(struct d
- 	 * is set only after acpi_pci_find_device() has been called for the
- 	 * given device.
- 	 */
--	is_bridge = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
-+	check_children = pci_dev->hdr_type == PCI_HEADER_TYPE_BRIDGE
- 			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
- 	/* Please ref to ACPI spec for the syntax of _ADR */
- 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
--	*handle = acpi_find_child(ACPI_HANDLE(dev->parent), addr, is_bridge);
--	if (!*handle)
--		return -ENODEV;
--	return 0;
-+	adev = acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
-+				      check_children);
-+	if (adev) {
-+		*handle = adev->handle;
-+		return 0;
-+	}
-+	return -ENODEV;
- }
- 
- static void pci_acpi_setup(struct device *dev)
-Index: linux-pm/drivers/acpi/glue.c
-===================================================================
---- linux-pm.orig/drivers/acpi/glue.c
-+++ linux-pm/drivers/acpi/glue.c
-@@ -106,6 +106,9 @@ struct acpi_device *acpi_find_child_devi
- 	struct acpi_device *adev, *ret = NULL;
- 	int ret_score = 0;
- 
-+	if (!parent)
-+		return NULL;
-+
- 	list_for_each_entry(adev, &parent->children, node) {
- 		unsigned long long addr;
- 		acpi_status status;
-
+Harro
