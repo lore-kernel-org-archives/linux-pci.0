@@ -1,87 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:39548 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753107Ab3KARLm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Nov 2013 13:11:42 -0400
-Date: Fri, 1 Nov 2013 10:56:09 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: mvebu - Support a bridge with no IO port window
-Message-ID: <20131101165609.GA25978@obsidianresearch.com>
-References: <1381868182-8544-1-git-send-email-jgunthorpe@obsidianresearch.com>
- <20131031101357.5a56e2d0@skate>
- <20131031164810.GA26426@obsidianresearch.com>
- <CAErSpo7bUP63J5RkXr-DkQE8qmvKT7ri-vjkfq+TtGEaYWxSwA@mail.gmail.com>
- <20131031233245.GA9853@obsidianresearch.com>
- <CAErSpo4NDuNJ4mj1n4V8UgsdAJxMrSRy43Qz=3JNvtsrv2rMjA@mail.gmail.com>
- <20131101052848.GA20163@obsidianresearch.com>
- <CAErSpo5Y5TH+iapqzhQAcLY6V0rvK=7QAEStcbzLv4mAuLKPDg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5Y5TH+iapqzhQAcLY6V0rvK=7QAEStcbzLv4mAuLKPDg@mail.gmail.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:44042 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757359Ab3K0B7U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 20:59:20 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Christopher Li' <sparse@chrisli.org>,
+	linux-sparse@vger.kernel.org, 'Joe Perches' <joe@perches.com>,
+	'Dan Carpenter' <dan.carpenter@oracle.com>
+Cc: 'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	'Ezequiel Garcia' <ezequiel.garcia@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	'Axel Lin' <axel.lin@ingics.com>,
+	'Julia Lawall' <julia.lawall@lip6.fr>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <001001ceb816$5d1aecc0$1750c640$%han@samsung.com>
+ <20131125200256.GA7316@obsidianresearch.com>
+ <001101ceea68$cb486220$61d92660$%han@samsung.com>
+ <20131126180930.GC19852@obsidianresearch.com>
+In-reply-to: <20131126180930.GC19852@obsidianresearch.com>
+Subject: Re: PCI: mvebu: return NULL instead of ERR_PTR(ret)
+Date: Wed, 27 Nov 2013 10:59:18 +0900
+Message-id: <000101ceeb14$480fee80$d82fcb80$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> I don't know why 0xf0f0.  Anything that's non-zero in the upper four
-> bits of each byte should work to determine writability.  It seems like
-> it would be safer to write 0x00f0 so the window is disabled, because
-> even if we're enumerating the bridge at hot-plug time, nobody else
-> should be trying to access a device behind the bridge, and we wouldn't
-> inadvertently claim something destined for [io 0xf000-0xffff].
+On Wednesday, November 27, 2013 3:10 AM, Jason Gunthorpe wrote:
+> On Tue, Nov 26, 2013 at 02:31:44PM +0900, Jingoo Han wrote:
+> > Previously, I sent the patch in order to fix sparse warning as below:
+> > How about this?
+> >
+> > static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+> > 			struct device_node *np, struct mvebu_pcie_port *port)
+> > {
+> > 	struct resource regs;
+> > 	int ret = 0;
+> >
+> > 	ret = of_address_to_resource(np, 0, &regs);
+> > 	if (ret)
+> > -		return ERR_PTR(ret);
+> > +		return (void __iomem *)ERR_PTR(ret);
+> 
+> You should probably ask the sparse folks for guidance 'git grep
+> iomem.*ERR_PTR' returns nothing, so this isn't an established pattern.
+> 
+> It seems like sparse should know that ERR_PTR functions can work with
+> any pointer no matter the type? IS_ERR_PTR will have the same problem
+> with implicitly dropping the iomem tag.
 
-What do you think of this?
++cc Christopher Li, sparse mailing-list, Joe Perches, Dan Carpenter,
+     Axel Lin, Julia Lawall,
 
->From f1f0d6a5b192a46585c5fefdc7ec06808639be4d Mon Sep 17 00:00:00 2001
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Date: Fri, 1 Nov 2013 10:54:13 -0600
-Subject: [PATCH] PCI: Use a safer method to determine if a bridge has IO
- support
+Hi All,
 
-We want to avoid disturbing an active an enabled bus during IO detection,
-so first check if IO is enabled - if so then we know for sure that
-the bridge has IO.
+I have some questions about handling sparse warning.
 
-Otherwise we can safely fiddle with the IO window register to detect IO,
-as IO is disabled.
+Currently, the following sparse warning happens
+at Marvell Armada PCIe driver.
 
-This also changes the probe value to 0x00f0, which is intended to be
-clearer to the reader that this is just a probe.
+drivers/pci/host/pci-mvebu.c:743:31: warning: incorrect type in return expression (different address spaces)
+drivers/pci/host/pci-mvebu.c:743:31:    expected void [noderef] <asn:2>*
+drivers/pci/host/pci-mvebu.c:743:31:    got void *
 
-Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
----
- drivers/pci/setup-bus.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+mvebu_pcie_map_registers() returns ERR_PTR(ret),
+however ERR_PTR() returns (void *), not (void __iomem *).
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index bc26d79..d63087f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -665,10 +665,16 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 
- 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 	if (!io) {
--		pci_write_config_word(bridge, PCI_IO_BASE, 0xf0f0);
--		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-- 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-- 	}
-+		u16 command;
-+		pci_read_config_word(bridge, PCI_COMMAND, &command);
-+		if (command & PCI_COMMAND_IO)
-+			b_res[0].flags |= IORESOURCE_IO;
-+		else {
-+			pci_write_config_word(bridge, PCI_IO_BASE, 0x00f0);
-+			pci_read_config_word(bridge, PCI_IO_BASE, &io);
-+			pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-+		}
-+	}
-  	if (io)
- 		b_res[0].flags |= IORESOURCE_IO;
- 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
--- 
-1.8.1.2
+./drivers/pci/host/pci-mvebu.c
+static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+		struct device_node *np, struct mvebu_pcie_port *port)
+{
+	struct resource regs;
+	int ret = 0;
+
+	ret = of_address_to_resource(np, 0, &regs);
+	if (ret)
+		return ERR_PTR(ret);
+
+	return devm_ioremap_resource(&pdev->dev, &regs);
+}
+./include/linux/err.h
+static inline void * __must_check ERR_PTR(long error)
+{
+	return (void *) error;
+}
+
+
+Previously, I submitted the following patch, that adds
+(void __iomem *) cast.
+
+./drivers/pci/host/pci-mvebu.c
+static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+		struct device_node *np, struct mvebu_pcie_port *port)
+{
+	.....
+
+	ret = of_address_to_resource(np, 0, &regs);
+	if (ret)
+-		return ERR_PTR(ret);
++		return (void __iomem *)ERR_PTR(ret);
+
+However, other engineers said that "(void __iomem *)ERR_PTR(ret)"
+is not a general pattern. I cannot find the proper method to resolve
+this sparse warning.
+
+In this case, how can I resolve this sparse warning?
+
+Then, how about the following?
+
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -740,7 +740,7 @@ static void __iomem *mvebu_pcie_map_registers(struct platform_device *pdev,
+
+	ret = of_address_to_resource(np, 0, &regs);
+	if (ret)
+-		return ERR_PTR(ret);
++		return NULL;
+
+	return devm_ioremap_resource(&pdev->dev, &regs);
+ }
+@@ -939,7 +939,7 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+		continue;
+
+		port->base = mvebu_pcie_map_registers(pdev, child, port);
+-		if (IS_ERR(port->base)) {
++		if (IS_ERR_OR_NULL(port->base)) {
+			dev_err(&pdev->dev, "PCIe%d.%d: cannot map registers\n",
+				port->port, port->lane);
+			port->base = NULL;
+
+Thank you for reading this. :-)
+
+Best regards,
+Jingoo Han
 
