@@ -1,147 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:47039 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684Ab3KLHWM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2013 02:22:12 -0500
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 59B723EE0BD
-	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:10 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 3D21145DEBE
-	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:10 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.nic.fujitsu.com [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 258D845DEBB
-	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:10 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id A0B19E08001
-	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:09 +0900 (JST)
-Received: from m1001.s.css.fujitsu.com (m1001.s.css.fujitsu.com [10.240.81.139])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 42924E08008
-	for <linux-pci@vger.kernel.org>; Tue, 12 Nov 2013 16:22:09 +0900 (JST)
-Message-ID: <5281D717.3090809@jp.fujitsu.com>
-Date: Tue, 12 Nov 2013 16:21:59 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:58532 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751029Ab3K0N7w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 08:59:52 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
+Subject: Re: [PATCH v2] PM / Sleep: Add pm_generic functions to re-use runtime PM callbacks
+Date: Wed, 27 Nov 2013 15:12:40 +0100
+Message-ID: <18994672.4q6Ofp2t01@vostro.rjw.lan>
+In-Reply-To: <CAPDyKFow3Y7bWAWNxQyrKeHizk0TSoCuPLHD=p_1D=CAYQpm9A@mail.gmail.com>
+References: <2026361.IiCVpVNYkW@vostro.rjw.lan> <3028580.oiUVTDjyao@vostro.rjw.lan> <CAPDyKFow3Y7bWAWNxQyrKeHizk0TSoCuPLHD=p_1D=CAYQpm9A@mail.gmail.com>
 MIME-Version: 1.0
-To: cl91tp@gmail.com, linux-pci@vger.kernel.org
-CC: khalid.aziz@hp.com
-Subject: Re: [PATCH] PCI: Blacklist certain hardware from clearing Bus Master
- bit
-References: <1383132131-1096-1-git-send-email-cl91tp@gmail.com>
-In-Reply-To: <1383132131-1096-1-git-send-email-cl91tp@gmail.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Chang,
+On Wednesday, November 27, 2013 10:59:57 AM Ulf Hansson wrote:
+> >>
+> >> There are already a generic callbacks that does this. Normally the
+> >> generic callbacks is used from buses and power domains.
+> >>
+> >> My new callbacks are intended to be used from the driver, so those are
+> >> kind of different from the others in that sense.
+> >
+> > Hmm.  I see.
+> >
+> > For that to work, the subsystem's .suspend() and .resume() callbacks will
+> > have to be implemented in a special way, because of the unknown runtime PM
+> > status of devices while those callbacks are being executed.
+> 
+> Not sure I understand why you think the runtime PM status is unknown?
+> 
+> In .suspend the runtime status can still be changed. Since the PM core
+> disables runtime PM before invoking .suspend_late and since the PM
+> core will keep runtime PM disabled until after the .resume_early has
+> been invoked, it will be safe to operate on the runtime PM callbacks
+> during this period - if the driver/bus are adopted for it. While the
+> .resume callback gets invoked, the runtime status are restored to it's
+> previous state, which the bus/driver would expect.
+> 
+> Do you want me to send a patch for a driver that uses these callbacks?
+> I suppose it would clarify how I am thinking...
+> 
+> > Presumably you think about subsystems that don't implement those callbacks
+> > at all?
+> 
+> If you mean that "drivers" is not a part of the term "subsystem" here,
+> then I somewhat agree.
+> 
+> My view is that it will be mostly drivers that make use of these callbacks.
+> 
+> Though, I don't think we need to prevent subsystems or power domains
+> from using them, they will only have to know what the consequences
+> are. :-)
+> 
+> Maybe there could even be some cases were it actually makes good sense
+> of using them for subsystems, even if I yet not have come a cross such
+> a case.
 
-I'm working on DMA problem of kdump and interested in your patch. What
-happens when clearing Bus Master bit? The system hangs up immediately
-after calling pci_device_shutdown()?
+We first need to clarify the terminology as that seems to be the source of
+the confusion to some extent at least.
 
-Thanks,
-Takao Indoh
+When I (or Alan presumably too) say "a subsystem", I mean a bus type, a device
+type or a device class as represented by struct bus_type, struct device_type
+and struct class, respectively.  So "a subsystem callback" means the specific
+callback defined in the given bus type, device type or device class object.
+You can think about that as of "subsystem level" if that's easier.  So that's
+what we mean when we talk about subsystems, not the whole collection of drivers
+and the code above them.
 
-(2013/10/30 20:22), Chang Liu wrote:
-> This patch adds a blacklist that prevents pci device shutdown code
-> from clearing Bus Master bit on certain hardware that cannot tolerate it.
-> 
-> Clearing Bus Master bit was originally added in commit b566a22 to address
-> the issue of some PCI device breaking kexec by continuing to do DMA
-> after having been signaled to shutdown. However, this introduced a
-> regression (https://bugzilla.kernel.org/show_bug.cgi?id=63861) that
-> hangs the machine on kernel power off path.
-> 
-> It has been pointed out previously (https://lkml.org/lkml/2012/6/6/545)
-> that clearing Bus Master bit during PCI shutdown may have surprising
-> consequences as some devices may not tolerate this, and may hang the
-> system indefinitely. However, not doing so may break kexec. Since only
-> one bug report has come up since the introduction of b566a22, therefore
-> indicating that these misbehaving devices are in the minority, the
-> logical way to fix the hang while not breaking kexec is to blacklist
-> these devices from having their Bus Master bit cleared during the PCI
-> shutdown routine.
-> 
-> Signed-off-by: Chang Liu <cl91tp@gmail.com>
-> ---
-> This fixes the above mentioned bug https://bugzilla.kernel.org/show_bug.cgi?id=63861
-> 
-> As Alan Cox has warned in https://lkml.org/lkml/2012/6/6/545, some device
-> will break if we clear bus master bit on shutdown. So sooner or later
-> we will need to blacklist some device if we are to keep Bus Master being cleared
-> as the default behavior. Now with the first (as I have been aware) device
-> that breaks under this default behavior has surfaced, we might as well
-> add the infrastructure code now in case some other devices break down
-> in the future. These devices may not be many so a blacklist likely won't
-> add much maintainance overhead. And we should keep the blacklist here in
-> the pci shutdown code instead of in individual device drivers since this
-> is the most direct way and will likely aid future debug process.
-> 
-> Regarding the kexec issue which the original commit b566a22c was trying to address:
-> kexec doesn't work on this machine, even before the patch was applied (ie. in
-> earlier kernels, I tested 3.11.6 and 3.12-rc7). Possibly because some devices
-> won't reinitialize themselves properly. On 3.11.6, kexec -e triggers an immediate
-> reboot. On 3.12-rc7, both with and without this patch applied, kexec -e can get it
-> halfway into booting the new kernel but then a reboot is also triggered. I'm not sure
-> if this patch has helped the kexec situation in this machine or not, but since it
-> has no effects on machines without this defective SATA controller (and/or its firmware),
-> I would say it is unlikely to negatively affect kexec on other machines.
-> 
->   drivers/pci/pci-driver.c | 34 +++++++++++++++++++++++++++++++++-
->   1 file changed, 33 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 98f7b9b..1744ebf 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -376,6 +376,29 @@ static int pci_device_remove(struct device * dev)
->   	return 0;
->   }
->   
-> +/*
-> + * Blacklisting certain hardware from having their Bus Master bit cleared
-> + * during device shutdown. This is to workaround certain hardware's issue
-> + * with clearing Bus Master bit that hangs the entire system.
-> + */
-> +struct {
-> +	unsigned short vendor;
-> +	unsigned short device;
-> +} pci_bus_master_blacklist[] = {
-> +	{ 0x8086, 0x9c03 },	/* Intel Corporation Lynx Point-LP SATA Controller */
-> +};
-> +
-> +static bool pci_should_clear_master(struct pci_dev *pdev)
-> +{
-> +	int i;
-> +	for (i = 0; i < ARRAY_SIZE(pci_bus_master_blacklist); i++) {
-> +		if (pdev->vendor == pci_bus_master_blacklist[i].vendor
-> +		    && pdev->device == pci_bus_master_blacklist[i].device)
-> +			return false;
-> +	}
-> +	return true;
-> +}
-> +
->   static void pci_device_shutdown(struct device *dev)
->   {
->   	struct pci_dev *pci_dev = to_pci_dev(dev);
-> @@ -391,9 +414,18 @@ static void pci_device_shutdown(struct device *dev)
->   	/*
->   	 * Turn off Bus Master bit on the device to tell it to not
->   	 * continue to do DMA. Don't touch devices in D3cold or unknown states.
-> +	 * This is useful for proper kexec. However, a number of hardware
-> +	 * aren't happy with this. At the slightest, some hardware simply
-> +	 * ignore the bus master bit. For some other hardware, clearing
-> +	 * the bit on shutdown path hangs the entire system.
-> +	 * This is likely to be a firmware or hardware problem, but
-> +	 * we can workaround it here by blacklisting these hardware
-> +	 * from having their bus master bit cleared during device shutdown.
->   	 */
-> -	if (pci_dev->current_state <= PCI_D3hot)
-> +	if (pci_should_clear_master(pci_dev)
-> +	    && pci_dev->current_state <= PCI_D3hot) {
->   		pci_clear_master(pci_dev);
-> +	}
->   }
->   
->   #ifdef CONFIG_PM
-> 
+Now, say you have a bus type.  Usually, the bus type's PM callbacks will run
+device drivers' PM callbacks.  Quite often they will do things to hardware
+in addition to what the drivers do.  But if your driver's .suspend_late()
+depends on the runtime PM status of the device, then the bus type's .suspend()
+needs to preserve that status.  That is, it cannot do anything to the hardware
+that may cause the runtime PM status of the device to become stale.  That makes
+the .suspend() somewhat special, doesn't it?
 
+Now I *guess* that your goal is something like "if that device has been
+runtime suspended, don't touch it", which is a reasonable goal to have.  I'd
+like to implement something like that too, but I think that it needs to be done
+differently.
+
+Actually, my idea is to allow the subsystem-level .prepare() callback to let
+the core know if the device needs to be handled during the given suspend/resume
+cycle.  It may be arranged, for example, so that if the subsystem-level (e.g.
+bus type) .prepare() returns a positive number, the core will put the device
+into a special list and it won't take it into consideration at all during the
+whole cycle.
+
+Why this way?  Because subsystems have much better ways to determine whether
+or not it is necessary to access the device during the upcoming system
+suspend/resume cycle than the core does.
+
+Thanks!
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
