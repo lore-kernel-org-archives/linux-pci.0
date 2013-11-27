@@ -1,50 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:34422 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836Ab3KRJl3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Nov 2013 04:41:29 -0500
-Received: by mail-pd0-f182.google.com with SMTP id v10so754373pde.41
-        for <linux-pci@vger.kernel.org>; Mon, 18 Nov 2013 01:41:29 -0800 (PST)
-From: Adam Lee <adam.lee@canonical.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] pci: check PCI_EXP_FLAGS_SLOT before setting hotplug bridge
-Date: Mon, 18 Nov 2013 17:40:52 +0800
-Message-Id: <1384767652-20567-1-git-send-email-adam.lee@canonical.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:46472 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810Ab3K0IpF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 03:45:05 -0500
+From: Marek Vasut <marex@denx.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Date: Wed, 27 Nov 2013 09:45:04 +0100
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com> <201311270924.47277.marex@denx.de> <20131127083637.GD12773@pratyush-vbox>
+In-Reply-To: <20131127083637.GD12773@pratyush-vbox>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311270945.04372.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the PCI_EXP_FLAGS_SLOT check back before setting
-hotplug bridge, which is omitted by an API switching commit,
-59875ae489609b2267548dc85160c5f0f0c6f9d4 "PCI/core: Use PCI Express
-Capability accessors".
+Hi Pratyush,
 
-Some Lenovo laptops hang in booting without this fix.
+> On Wed, Nov 27, 2013 at 04:24:47PM +0800, Marek Vasut wrote:
+> > Dear Pratyush Anand,
+> > 
+> > > On Wed, Nov 27, 2013 at 04:46:09AM +0800, Marek Vasut wrote:
+> > > > Dear Pratyush Anand,
+> > > > 
+> > > > > Hi,
+> > > > > 
+> > > > > On Wed, Oct 23, 2013 at 12:55:43PM +0800, Tim Harvey wrote:
+> > > > > > The IMX6 iATU is used for address translation between the AXI bus
+> > > > > > address space and PCI address space.  This is used for type0 and
+> > > > > > type1 config cycles but is not necessary for outbound io/mem
+> > > > > > regions.
+> > > > > > 
+> > > > > > This patch removes the calls that inappropriately re-configures
+> > > > > > the ATU viewport for outbound memory and IO after config cycles
+> > > > > > and removes them altogether as they are not necessary.
+> > > > > > 
+> > > > > > This resolves issues with PCI devices behind switches and has
+> > > > > > been tested with a Gige device behind a PLX PEX860x switch. 
+> > > > > > More testing is needed for other configurations.
+> > > > > 
+> > > > > It seems to me that in your controller you have only one view port.
+> > > > > Also mem_base and mem_bus_addr is same. Thats why it works in your
+> > > > > case.
+> > > > 
+> > > > MX6 has 4 In/4 Out viewports AFAICT.
+> > > 
+> > > Then if I do not miss anything, MX6 should work even without this
+> > > patch.
+> > 
+> > Yes, yet, it does not. On the other hand, this defect is only problematic
+> > if you use the devices behind a switch. Do you use a PCIe switch on your
+> > platform please?
+> 
+> I had tested with device under bridge.
+> Mohit is in process of validating SPEAr patches with latest kernel.
+> Mohit, see if we can arrange a switch and test, once SPEAr platform is
+> ready with latest kernel.
 
-Signed-off-by: Adam Lee <adam.lee@canonical.com>
----
- drivers/pci/probe.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Thanks!
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5e14f5a..b93d5ac 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -992,8 +992,13 @@ void set_pcie_port_type(struct pci_dev *pdev)
- 
- void set_pcie_hotplug_bridge(struct pci_dev *pdev)
- {
-+	u16 reg16;
- 	u32 reg32;
- 
-+	pcie_capability_read_word(pdev, PCI_EXP_FLAGS, &reg16);
-+	if (!(reg16 & PCI_EXP_FLAGS_SLOT))
-+		return;
-+
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32);
- 	if (reg32 & PCI_EXP_SLTCAP_HPC)
- 		pdev->is_hotplug_bridge = 1;
--- 
-1.8.4.3
-
+Best regards,
+Marek Vasut
