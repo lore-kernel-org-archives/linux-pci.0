@@ -1,52 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52806 "HELO
+Received: from v094114.home.net.pl ([79.96.170.134]:55618 "HELO
 	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750709Ab3KYUpN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 15:45:13 -0500
+	with SMTP id S1759548Ab3K0BUF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 20:20:05 -0500
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tejun Heo <tj@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
-Date: Mon, 25 Nov 2013 21:57:58 +0100
-Message-ID: <3487591.Y6ONpGmBs6@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQUuZO2BtjnG-XVoFMO5kqd97bEt9sNKzh3VZ2BJkvVnLg@mail.gmail.com>
-References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com> <2098030.vsbrD30xN4@vostro.rjw.lan> <CAE9FiQUuZO2BtjnG-XVoFMO5kqd97bEt9sNKzh3VZ2BJkvVnLg@mail.gmail.com>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 0/4] ACPI / bind: Simplify child devices lookup
+Date: Wed, 27 Nov 2013 02:32:53 +0100
+Message-ID: <6140633.otq91cJcVd@vostro.rjw.lan>
+In-Reply-To: <1385514717.1791.197.camel@misato.fc.hp.com>
+References: <2610478.KxPMyuOMok@vostro.rjw.lan> <8065346.ZtkoVh8DW8@vostro.rjw.lan> <1385514717.1791.197.camel@misato.fc.hp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 25, 2013 11:45:50 AM Yinghai Lu wrote:
-> On Mon, Nov 25, 2013 at 3:22 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >
-> > Well, is_removed is only used by pci_destroy_dev() in your patch, right?
-> >
-> > That means its only role is to protect the device from being destroyed
-> > twice (or more times) in a row, but that surely would be a bug?  I don't
-> > see how that can legitimately happen at least, so what exactly is the
-> > scenario?
+On Tuesday, November 26, 2013 06:11:57 PM Toshi Kani wrote:
+> On Wed, 2013-11-27 at 02:02 +0100, Rafael J. Wysocki wrote:
+> > On Tuesday, November 26, 2013 05:33:28 PM Toshi Kani wrote:
+> > > On Wed, 2013-11-27 at 01:27 +0100, Rafael J. Wysocki wrote:
+> > > > On Tuesday, November 26, 2013 05:00:42 PM Toshi Kani wrote:
+> > > > > On Mon, 2013-11-25 at 01:09 +0100, Rafael J. Wysocki wrote:
+> > > > > > Hi,
+> > > > > > 
+> > > > > > The following series of four patches (on top of current linux-pm.git/bleeding-edge)
+> > > > > > rework child device lookup in drivers/acpi/glue.c and related things:
+> > > > > > 
+> > > > > > [1/4] ACPI / bind: Simplify child device lookup
+> > > > > > [2/4] PCI/ ACPI: Use acpi_find_child_device() for child device lookup
+> > > > > > [3/4] ACPI / bind: Redefine acpi_get_child()
+> > > > > > [4/4] ACPI / bind: Redefine acpi_preset_companion()
+> > > > > 
+> > > > > This patchset caused the attached panic during boot on a system.
+> > > > > acpi_pci_find_device() called acpi_find_child_device() with
+> > > > > ACPI_COMPANION(dev->parent) being a NULL pointer when scanning bus 0xf.
+> > > > > 
+> > > > > This bus 0xf seems to be a chipset internal bus, which is not intended
+> > > > > for the OS to use.  Therefore, ACPI does not list its PCI bridge device.
+> > > > > 
+> > > > > # lspci -tv
+> > > > >    :
+> > > > >  +-[0000:0f]-+-08.0  Intel Corporation Ivytown QPI Link 0
+> > > > >  |           +-08.2  Intel Corporation Ivytown QPI Link 0
+> > > > >    :
+> > > > > 
+> > > > > However, pcibios_fixup_peer_bridges(), called from pci_subsys_init(),
+> > > > > finds this bus as it scans all the buses from 0 to pcibios_last_bus.
+> > > > > Hence, this dev->parent does not have an associated ACPI device object. 
+> > > > 
+> > > > Thanks for the report!
+> > > > 
+> > > > I've dropped the patches from bleeding-edge for now.
+> > > > 
+> > > > Does "[1/4] ACPI / bind: Simplify child device lookup" alone work on that
+> > > > system?
+> > > 
+> > > Yes, the system boots fine with 1/4 alone.
+> > 
+> > Thanks!
+> > 
+> > Can you please check if the following modified [2/4] also works on top of it?
 > 
-> The thread:
-> https://patchwork.kernel.org/patch/3119001/
+> Yes, it works fine.
+> 
+> Thanks for the quick fix!
 
-Thanks for the pointer.
+No problem. :-)
 
-Well, so we have a bug in there and it is a *race* so adding a device flag
-is not going to really help.  Besides, if the put_device() really frees the
-struct pci_dev, accessing the flag itself would be a use-after-free,
-wouldn't it?
-
-What seems to be necessary is a lock preventing the
-/sys/bus/pci/devices/.../remove interface from being used on multiple devices
-in parallel.  Of course, it also has to protect against removals from hotplug
-events racing with removals from /sys/bus/pci/devices/.../remove.
-
-In any case, it is beyond the scope of the $subject patch, though.
+[3/4] and [4/4] on top of this one should work too.
 
 Thanks,
 Rafael
