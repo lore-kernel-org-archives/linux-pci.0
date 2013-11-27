@@ -1,62 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:55272 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754857Ab3K1OCz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 09:02:55 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: bhelgaas@google.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ACPI / PCI / hotplug: Avoid warning when _ADR not present
-Date: Thu, 28 Nov 2013 15:15:45 +0100
-Message-ID: <2967007.tqmdbM4ZBo@vostro.rjw.lan>
-In-Reply-To: <1385584389-22461-1-git-send-email-toshi.kani@hp.com>
-References: <1385584389-22461-1-git-send-email-toshi.kani@hp.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:44498 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932120Ab3K0UWz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 15:22:55 -0500
+Message-ID: <52965493.8060208@canonical.com>
+Date: Wed, 27 Nov 2013 15:22:43 -0500
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: yinghai@kernel.org
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+Subject: [REGRESSION][v3.4-rc1] PCI: add a PCI resource reallocation config
+ option
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, November 27, 2013 01:33:09 PM Toshi Kani wrote:
-> acpiphp_enumerate_slots() walks ACPI namenamespace under
-> a PCI host bridge with callback register_slot().
-> register_slot() evaluates _ADR for all the device objects
-> and emits a warning message for any error.  Some platforms
-> have _HID device objects (such as HPET and IPMI), which
-> trigger unnecessary warning messages.
-> 
-> This patch avoids emitting a warning message when a target
-> device object does not have _ADR.
-> 
-> Signed-off-by: Toshi Kani <toshi.kani@hp.com>
-> ---
-> Patch is based on Linus's tree (3.13-rc1).
+Hi Yinghai,
 
-Queued up as a fix for 3.13, thanks!
+A kernel bug was opened against Ubuntu [0].  After a kernel bisect, it
+was found that the following commit introduced the bug:
 
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 1cf605f..438a4d0 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -279,7 +279,9 @@ static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
->  
->  	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
->  	if (ACPI_FAILURE(status)) {
-> -		acpi_handle_warn(handle, "can't evaluate _ADR (%#x)\n", status);
-> +		if (status != AE_NOT_FOUND)
-> +			acpi_handle_warn(handle,
-> +				"can't evaluate _ADR (%#x)\n", status);
->  		return AE_OK;
->  	}
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+commit b07f2ebc109b607789f648dedcff4b125f9afec6
+Author: Yinghai Lu <yinghai@kernel.org>
+Date:   Thu Feb 23 19:23:32 2012 -0800
+
+    PCI: add a PCI resource reallocation config option
+
+
+
+The regression was introduced as of v3.4-rc1 and also exists in current
+mainline.
+
+The bug seems platform specific since we have not had allot of other
+reports.  The bug is preventing ixgbe to probe Intel x520 NIC's.
+
+It would be easy enough to disable the PCI_REALLOC_ENABLE_AUTO config
+option, but I wanted to get your feedback since you are the author.  It
+looks like the bug reporter may also be able to work around the problem
+with the pci=realloc=.
+   
+
+Thanks,
+   
+Joe
+
+[0] pad.lv/1245938
+
