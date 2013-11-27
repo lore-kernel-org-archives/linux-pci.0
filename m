@@ -1,83 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:60055 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752799Ab3KGVrx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Nov 2013 16:47:53 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so1942342iec.13
-        for <linux-pci@vger.kernel.org>; Thu, 07 Nov 2013 13:47:53 -0800 (PST)
-Date: Thu, 7 Nov 2013 14:47:50 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Zhenzhong Duan <zhenzhong.duan@oracle.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, xen-devel@lists.xenproject.org,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [Xen-devel] [PATCH] PCI: Introduce two new MSI infrastructure
- calls for masking/unmasking.
-Message-ID: <20131107214750.GB2955@google.com>
-References: <1383772616-23060-1-git-send-email-konrad.wilk@oracle.com>
- <CAErSpo4rdHwhuF=SM6WT3EP3TGoUFnwxVdx5919qxea3On7MRw@mail.gmail.com>
- <20131107014215.GA27725@andromeda.dapyr.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22145 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751648Ab3K0Tta (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 14:49:30 -0500
+Message-ID: <52964C9A.6040305@oracle.com>
+Date: Wed, 27 Nov 2013 12:48:42 -0700
+From: Khalid Aziz <khalid.aziz@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131107014215.GA27725@andromeda.dapyr.net>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+CC: bhelgaas@google.com, cl91tp@gmail.com, tianyu.lan@intel.com,
+	khlebnikov@openvz.org, gnomes@lxorguk.ukuu.org.uk,
+	indou.takao@jp.fujitsu.com, jility09@gmail.com, f.otti@gmx.at,
+	ebiederm@xmission.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kexec@lists.infradead.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: Clear Bus Master bit only on kexec reboot
+References: <1385579908-24608-1-git-send-email-khalid.aziz@oracle.com> <20131127192420.GC11829@srcf.ucam.org>
+In-Reply-To: <20131127192420.GC11829@srcf.ucam.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 06, 2013 at 09:42:15PM -0400, Konrad Rzeszutek Wilk wrote:
-> On Wed, Nov 06, 2013 at 04:51:52PM -0700, Bjorn Helgaas wrote:
-> > [+cc Thomas, Ingo, Peter, x86 list]
-> > 
-> > On Wed, Nov 6, 2013 at 2:16 PM, Konrad Rzeszutek Wilk
-> > <konrad.wilk@oracle.com> wrote:
-> > > Certain platforms do not allow writes in the MSI-X bars
-> > > to setup or tear down vector values. To combat against
-> > > the generic code trying to write to that and either silently
-> > > being ignored or crashing due to the pagetables being marked r/o
-> > > this patch introduces a platform over-write.
-> > >
-> > > Note that we keep two separate, non-weak, functions
-> > > default_mask_msi_irqs() and default_mask_msix_irqs() for the
-> > > behavior of the arch_mask_msi_irqs() and arch_mask_msix_irqs(),
-> > > as the default behavior is needed by x86 PCI code.
-> > >
-> > > For Xen, which does not allow the guest to write to MSI-X
-> > > tables - as the hypervisor is solely responsible for setting
-> > > the vector values - we implement two nops.
-> > >
-> > > CC: Bjorn Helgaas <bhelgaas@google.com>
-> > > CC: Sucheta Chakraborty <sucheta.chakraborty@qlogic.com>
-> > > CC: Zhenzhong Duan <zhenzhong.duan@oracle.com>
-> > > Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> > 
-> > I think this is safe, and I'd like to squeeze it into the v3.13 merge
-> > window next week, since it supersedes three patches Zhenzhong has been
-> > trying to get in since July [1], and this patch is much simpler to
-> > understand.
-> > 
-> > I *think* this also fixes an actual bug on Xen.  Konrad, is there a
-> > bugzilla or any kind of email problem description that we can include
-> > here as a reference?  I think there's a lost interrupt with qlcnic,
-> > but I don't know the details or what the failure looks like to a user.
-> 
-> It is pretty catastrophic. Here is the console log when I pass in
-> a PCI device (with MSI-X) to the guest:
+On 11/27/2013 12:24 PM, Matthew Garrett wrote:
+> On Wed, Nov 27, 2013 at 12:18:28PM -0700, Khalid Aziz wrote:
+>
+>> +/* flag to track if kexec reboot is in progress */
+>> +extern unsigned long kexec_in_progress;
+>
+> Adding this to pci.h seems a little odd. We may want to use it somewhere
+> else at some point. Add it to kexec.h instead?
+>
 
-Perfect, thanks!  I put the log info in
-https://bugzilla.kernel.org/show_bug.cgi?id=64581 and put this in
-my pci/misc branch for v3.13.  I added the following to the changelog:
+I debated between pci.h and kexec.h but pci-driver.c does not include 
+kexec.h and I didn't want to include a whole new file. Now I see another 
+problem with adding that extern declaration to pci.h - if CONFIG_KEXEC 
+is not set, build will fail. I should add #ifdef CONFIG_KEXEC to the 
+code in pci-driver.c as well. Time for v2.
 
-    This fixes a Xen guest crash when passing a PCI device with MSI-X to the
-    guest.  See the bugzilla for more details.
-
-    [bhelgaas: add bugzilla info]
-    Reference: https://bugzilla.kernel.org/show_bug.cgi?id=64581
-
-Let me know if this needs any tweaking.
-
-Bjorn
+--
+Khalid
