@@ -1,123 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:53902 "HELO
+Received: from v094114.home.net.pl ([79.96.170.134]:60041 "HELO
 	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751913Ab3KYMGO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Nov 2013 07:06:14 -0500
+	with SMTP id S1753153Ab3K0Aka (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 19:40:30 -0500
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Tejun Heo <tj@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	linux-ide@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH] ATA: Fix port removal ordering
-Date: Mon, 25 Nov 2013 13:19:01 +0100
-Message-ID: <9509557.LMLHG8ie3T@vostro.rjw.lan>
-In-Reply-To: <20131125101154.GS2281@intel.com>
-References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com> <3805095.rqdZNnA0Ng@vostro.rjw.lan> <20131125101154.GS2281@intel.com>
+	Linux PCI <linux-pci@vger.kernel.org>,
+	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
+Subject: Re: [PATCH v2] PM / Sleep: Add pm_generic functions to re-use runtime PM callbacks
+Date: Wed, 27 Nov 2013 01:53:18 +0100
+Message-ID: <3028580.oiUVTDjyao@vostro.rjw.lan>
+In-Reply-To: <CAPDyKFp2z=ST6Sd3T+1Ko5pf5pf3Cfr44jS=jTBWABPcSS2RLg@mail.gmail.com>
+References: <2026361.IiCVpVNYkW@vostro.rjw.lan> <Pine.LNX.4.44L0.1311261556480.1359-100000@iolanthe.rowland.org> <CAPDyKFp2z=ST6Sd3T+1Ko5pf5pf3Cfr44jS=jTBWABPcSS2RLg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wednesday, November 27, 2013 12:44:35 AM Ulf Hansson wrote:
+> On 26 November 2013 22:09, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > On Tue, 26 Nov 2013, Rafael J. Wysocki wrote:
+> >
+> >> On Tuesday, November 26, 2013 10:48:56 AM Ulf Hansson wrote:
+> >> > On 26 November 2013 00:10, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> > > On Monday, November 25, 2013 01:40:21 PM Ulf Hansson wrote:
+> >> > >> To put devices into low power state during sleep, it sometimes makes
+> >> > >> sense at subsystem-level to re-use device's runtime PM callbacks.
+> >
+> > Ulf, please be more careful about the distinction between "device" and
+> > "driver".  Devices don't have callbacks; drivers do.  You made this
+> > mistake a few times in the patch description.
+> 
+> Sorry, my bad.
+> 
+> >
+> >> > >> The PM core will at device_suspend_late disable runtime PM, after that
+> >> > >> we can safely operate on these callbacks. At suspend_late the device
+> >> > >> will be put into low power state by invoking the device's
+> >> > >> runtime_suspend callback, unless the runtime status is already
+> >> > >> suspended. At resume_early the state is restored by invoking the
+> >> > >> device's runtime_resume callback. Soon after the PM core will re-enable
+> >> > >> runtime PM before returning from device_resume_early.
+> >> > >>
+> >> > >> The new pm_generic functions are named pm_generic_suspend_late_runtime
+> >> > >> and pm_generic_resume_early_runtime, they are supposed to be used in
+> >> > >> pairs.
+> >> > >
+> >> > > What happens if the subsystem uses the new functions as its late suspend/
+> >> > > early resume callbacks, but some of its drivers implement .suspend_late()
+> >> > > and .resume_early()?
+> >
+> > The same thing that happens whenever any PM-related callback is defined
+> > by both the subsystem and the driver: The PM core uses the subsystem's
+> > callback.  (Or the pm_domain's callback, or the type's callback, or the
+> > class's callback.)
+> >
+> > Besides, Ulf specifically assumed at the top of this message that
+> > re-using the runtime-suspend callback makes sense at the subsystem
+> > level.  This must mean it is appropriate for all drivers in the
+> > subsystem.  So why would a driver want to override the subsystem's
+> > behavior?
+> >
+> >> > Good point. Normally, I think the decision of using these callbacks
+> >> > should be taken at the lowest level, in other words in the driver.
+> >> > Otherwise the lowest layer of .suspend_late will be by-passed.
+> >>
+> >> I'm not sure what's the point to add them, then.  If the driver has to decide
+> >> anyway, it may simply populate its .suspend_late and .resume_early pointers
+> >> I think.
+> >
+> > Another possibility is to have the pm_generic_suspend_late_runtime
+> > routine check to see if the driver has defined a suspend_late callback.
+> > If the driver has its own callback, we could invoke it instead of
+> > invoking the runtime_suspend callback.
+> 
+> There are already a generic callbacks that does this. Normally the
+> generic callbacks is used from buses and power domains.
+> 
+> My new callbacks are intended to be used from the driver, so those are
+> kind of different from the others in that sense.
 
-After commit bcdde7e221a8 (sysfs: make __sysfs_remove_dir() recursive)
-Mika Westerberg sees traces analogous to the one below in Thunderbolt
-hot-remove testing:
+Hmm.  I see.
 
- WARNING: CPU: 0 PID: 4 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
- sysfs group ffffffff81c6f1e0 not found for kobject 'host7'
- Modules linked in:
- CPU: 0 PID: 4 Comm: kworker/0:0 Not tainted 3.12.0+ #13
- Hardware name:                  /D33217CK, BIOS GKPPT10H.86A.0042.2013.0422.1439 04/22/2013
- Workqueue: kacpi_hotplug acpi_hotplug_work_fn
-  0000000000000009 ffff8801002459b0 ffffffff817daab1 ffff8801002459f8
-  ffff8801002459e8 ffffffff810436b8 0000000000000000 ffffffff81c6f1e0
-  ffff88006d440358 ffff88006d440188 ffff88006e8b4c28 ffff880100245a48
- Call Trace:
-  [<ffffffff817daab1>] dump_stack+0x45/0x56
-  [<ffffffff810436b8>] warn_slowpath_common+0x78/0xa0
-  [<ffffffff81043727>] warn_slowpath_fmt+0x47/0x50
-  [<ffffffff811ad319>] ? sysfs_get_dirent_ns+0x49/0x70
-  [<ffffffff811ae526>] sysfs_remove_group+0xc6/0xd0
-  [<ffffffff81432f7e>] dpm_sysfs_remove+0x3e/0x50
-  [<ffffffff8142a0d0>] device_del+0x40/0x1b0
-  [<ffffffff8142a24d>] device_unregister+0xd/0x20
-  [<ffffffff8144131a>] scsi_remove_host+0xba/0x110
-  [<ffffffff8145f526>] ata_host_detach+0xc6/0x100
-  [<ffffffff8145f578>] ata_pci_remove_one+0x18/0x20
-  [<ffffffff812e8f48>] pci_device_remove+0x28/0x60
-  [<ffffffff8142d854>] __device_release_driver+0x64/0xd0
-  [<ffffffff8142d8de>] device_release_driver+0x1e/0x30
-  [<ffffffff8142d257>] bus_remove_device+0xf7/0x140
-  [<ffffffff8142a1b1>] device_del+0x121/0x1b0
-  [<ffffffff812e43d4>] pci_stop_bus_device+0x94/0xa0
-  [<ffffffff812e437b>] pci_stop_bus_device+0x3b/0xa0
-  [<ffffffff812e437b>] pci_stop_bus_device+0x3b/0xa0
-  [<ffffffff812e44dd>] pci_stop_and_remove_bus_device+0xd/0x20
-  [<ffffffff812fc743>] trim_stale_devices+0x73/0xe0
-  [<ffffffff812fc78b>] trim_stale_devices+0xbb/0xe0
-  [<ffffffff812fc78b>] trim_stale_devices+0xbb/0xe0
-  [<ffffffff812fcb6e>] acpiphp_check_bridge+0x7e/0xd0
-  [<ffffffff812fd90d>] hotplug_event+0xcd/0x160
-  [<ffffffff812fd9c5>] hotplug_event_work+0x25/0x60
-  [<ffffffff81316749>] acpi_hotplug_work_fn+0x17/0x22
-  [<ffffffff8105cf3a>] process_one_work+0x17a/0x430
-  [<ffffffff8105db29>] worker_thread+0x119/0x390
-  [<ffffffff8105da10>] ? manage_workers.isra.25+0x2a0/0x2a0
-  [<ffffffff81063a5d>] kthread+0xcd/0xf0
-  [<ffffffff81063990>] ? kthread_create_on_node+0x180/0x180
-  [<ffffffff817eb33c>] ret_from_fork+0x7c/0xb0
-  [<ffffffff81063990>] ? kthread_create_on_node+0x180/0x180
+For that to work, the subsystem's .suspend() and .resume() callbacks will
+have to be implemented in a special way, because of the unknown runtime PM
+status of devices while those callbacks are being executed.
 
-The source of this problem is that SCSI hosts are removed from
-ATA ports after calling ata_tport_delete() which removes the
-port's sysfs directory, among other things.  Now, after commit
-bcdde7e221a8, the sysfs directory is removed along with all of
-its subdirectories that include the SCSI host's sysfs directory
-and its subdirectories at this point.  Consequently, when
-device_del() is finally called for any child device of the SCSI
-host and tries to remove its "power" group (which is already
-gone then), it triggers the above warning.
+Presumably you think about subsystems that don't implement those callbacks
+at all?
 
-To make the warnings go away, change the removal ordering in
-ata_port_detach() so that the SCSI host is removed from the
-port before ata_tport_delete() is called.
-
-References: https://bugzilla.kernel.org/show_bug.cgi?id=65281
-Reported-and-tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
-Hi,
-
-This along with https://patchwork.kernel.org/patch/3226081/ makes
-all of the warnings observed by Mika go away without the patch at
-https://patchwork.kernel.org/patch/3201841/ applied.
-
-Thanks,
 Rafael
-
----
- drivers/ata/libata-core.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-Index: linux-pm/drivers/ata/libata-core.c
-===================================================================
---- linux-pm.orig/drivers/ata/libata-core.c
-+++ linux-pm/drivers/ata/libata-core.c
-@@ -6304,10 +6304,9 @@ static void ata_port_detach(struct ata_p
- 		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
- 			ata_tlink_delete(&ap->pmp_link[i]);
- 	}
--	ata_tport_delete(ap);
--
- 	/* remove the associated SCSI host */
- 	scsi_remove_host(ap->scsi_host);
-+	ata_tport_delete(ap);
- }
- 
- /**
 
