@@ -1,271 +1,281 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:46032 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753117Ab3K2CGq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Nov 2013 21:06:46 -0500
-Message-ID: <5297F3FB.6030808@intel.com>
-Date: Fri, 29 Nov 2013 09:55:07 +0800
-From: Lan Tianyu <tianyu.lan@intel.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:50029 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752446Ab3K0Sqy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 13:46:54 -0500
+Date: Wed, 27 Nov 2013 10:46:52 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Neil Horman <nhorman@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: export MSI mode using attributes, not kobjects
+Message-ID: <20131127184652.GA1856@kroah.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Aaron Lu <aaron.lu@intel.com>, Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org,
-	linux-usb@vger.kernel.org
-Subject: Re: [PATCH 1/3] ACPI / bind: Rework struct acpi_bus_type
-References: <4501334.ovACrGogrl@vostro.rjw.lan> <2273591.1tQV675JFy@vostro.rjw.lan>
-In-Reply-To: <2273591.1tQV675JFy@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013年11月29日 08:37, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Replace the .find_device function pointer in struct acpi_bus_type
-> with a new one, .find_copmanion, that is supposed to point to a
--------------------------^
-A typo
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-> function returning struct acpi_device pointer (instead of an int)
-> and takes one argument (instead of two).  This way the role of
-> this callback is more clear and the implementation of it can
-> be more straightforward.
-> 
-> Update all of the users of struct acpi_bus_type (PCI, PNP/ACPI and
-> USB) to reflect the structure change.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/acpi/glue.c         |   12 +++++++-----
->  drivers/pci/pci-acpi.c      |   12 +++---------
->  drivers/pnp/pnpacpi/core.c  |   19 +++++--------------
->  drivers/usb/core/usb-acpi.c |   40 ++++++++++++++++++++--------------------
->  include/acpi/acpi_bus.h     |    2 +-
->  5 files changed, 36 insertions(+), 49 deletions(-)
-> 
-> Index: linux-pm/include/acpi/acpi_bus.h
-> ===================================================================
-> --- linux-pm.orig/include/acpi/acpi_bus.h
-> +++ linux-pm/include/acpi/acpi_bus.h
-> @@ -414,7 +414,7 @@ struct acpi_bus_type {
->  	struct list_head list;
->  	const char *name;
->  	bool (*match)(struct device *dev);
-> -	int (*find_device) (struct device *, acpi_handle *);
-> +	struct acpi_device * (*find_companion)(struct device *);
->  	void (*setup)(struct device *);
->  	void (*cleanup)(struct device *);
->  };
-> Index: linux-pm/drivers/acpi/glue.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/glue.c
-> +++ linux-pm/drivers/acpi/glue.c
-> @@ -37,7 +37,7 @@ int register_acpi_bus_type(struct acpi_b
->  {
->  	if (acpi_disabled)
->  		return -ENODEV;
-> -	if (type && type->match && type->find_device) {
-> +	if (type && type->match && type->find_companion) {
->  		down_write(&bus_type_sem);
->  		list_add_tail(&type->list, &bus_type_list);
->  		up_write(&bus_type_sem);
-> @@ -302,17 +302,19 @@ EXPORT_SYMBOL_GPL(acpi_unbind_one);
->  static int acpi_platform_notify(struct device *dev)
->  {
->  	struct acpi_bus_type *type = acpi_get_bus_type(dev);
-> -	acpi_handle handle;
->  	int ret;
->  
->  	ret = acpi_bind_one(dev, NULL);
->  	if (ret && type) {
-> -		ret = type->find_device(dev, &handle);
-> -		if (ret) {
-> +		struct acpi_device *adev;
-> +
-> +		adev = type->find_companion(dev);
-> +		if (!adev) {
->  			DBG("Unable to get handle for %s\n", dev_name(dev));
-> +			ret = -ENODEV;
->  			goto out;
->  		}
-> -		ret = acpi_bind_one(dev, handle);
-> +		ret = acpi_bind_one(dev, adev->handle);
->  		if (ret)
->  			goto out;
->  	}
-> Index: linux-pm/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -306,10 +306,9 @@ void acpi_pci_remove_bus(struct pci_bus
->  }
->  
->  /* ACPI bus type */
-> -static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
-> +static struct acpi_device *acpi_pci_find_companion(struct device *dev)
->  {
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
-> -	struct acpi_device *adev;
->  	bool check_children;
->  	u64 addr;
->  
-> @@ -322,13 +321,8 @@ static int acpi_pci_find_device(struct d
->  			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
->  	/* Please ref to ACPI spec for the syntax of _ADR */
->  	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
-> -	adev = acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
-> +	return acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
->  				      check_children);
-> -	if (adev) {
-> -		*handle = adev->handle;
-> -		return 0;
-> -	}
-> -	return -ENODEV;
->  }
->  
->  static void pci_acpi_setup(struct device *dev)
-> @@ -368,7 +362,7 @@ static bool pci_acpi_bus_match(struct de
->  static struct acpi_bus_type acpi_pci_bus = {
->  	.name = "PCI",
->  	.match = pci_acpi_bus_match,
-> -	.find_device = acpi_pci_find_device,
-> +	.find_companion = acpi_pci_find_companion,
->  	.setup = pci_acpi_setup,
->  	.cleanup = pci_acpi_cleanup,
->  };
-> Index: linux-pm/drivers/pnp/pnpacpi/core.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pnp/pnpacpi/core.c
-> +++ linux-pm/drivers/pnp/pnpacpi/core.c
-> @@ -329,20 +329,11 @@ static int __init acpi_pnp_match(struct
->  	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
->  }
->  
-> -static int __init acpi_pnp_find_device(struct device *dev, acpi_handle * handle)
-> +static struct acpi_device * __init acpi_pnp_find_companion(struct device *dev)
->  {
-> -	struct device *adev;
-> -	struct acpi_device *acpi;
-> -
-> -	adev = bus_find_device(&acpi_bus_type, NULL,
-> -			       to_pnp_dev(dev), acpi_pnp_match);
-> -	if (!adev)
-> -		return -ENODEV;
-> -
-> -	acpi = to_acpi_device(adev);
-> -	*handle = acpi->handle;
-> -	put_device(adev);
-> -	return 0;
-> +	dev = bus_find_device(&acpi_bus_type, NULL, to_pnp_dev(dev),
-> +			      acpi_pnp_match);
+The PCI MSI sysfs code is a mess with kobjects for things that don't
+really need to be kobjects.  This patch creates attributes dynamically
+for the MSI interrupts instead of using kobjects.
 
-Why remove put_device here?
-bus_find_device() increase dev's reference count when a dev is matched.
+Note, this removes a directory from the current MSI interrupt sysfs
+code:
 
-> +	return dev ? to_acpi_device(dev) : NULL;
->  }
->  
->  /* complete initialization of a PNPACPI device includes having
-> @@ -356,7 +347,7 @@ static bool acpi_pnp_bus_match(struct de
->  static struct acpi_bus_type __initdata acpi_pnp_bus = {
->  	.name	     = "PNP",
->  	.match	     = acpi_pnp_bus_match,
-> -	.find_device = acpi_pnp_find_device,
-> +	.find_companion = acpi_pnp_find_companion,
->  };
->  
->  int pnpacpi_disabled __initdata;
-> Index: linux-pm/drivers/usb/core/usb-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/usb/core/usb-acpi.c
-> +++ linux-pm/drivers/usb/core/usb-acpi.c
-> @@ -127,7 +127,7 @@ out:
->  	return ret;
->  }
->  
-> -static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
-> +static struct acpi_device *usb_acpi_find_companion(struct device *dev)
->  {
->  	struct usb_device *udev;
->  	acpi_handle *parent_handle;
-> @@ -169,16 +169,15 @@ static int usb_acpi_find_device(struct d
->  				break;
->  			}
->  
-> -			return -ENODEV;
-> +			return NULL;
->  		}
->  
->  		/* root hub's parent is the usb hcd. */
-> -		parent_handle = ACPI_HANDLE(dev->parent);
-> -		*handle = acpi_get_child(parent_handle, udev->portnum);
-> -		if (!*handle)
-> -			return -ENODEV;
-> -		return 0;
-> +		return acpi_find_child_device(ACPI_COMPANION(dev->parent),
-> +					      udev->portnum, false);
->  	} else if (is_usb_port(dev)) {
-> +		struct acpi_device *adev = NULL;
-> +
->  		sscanf(dev_name(dev), "port%d", &port_num);
->  		/* Get the struct usb_device point of port's hub */
->  		udev = to_usb_device(dev->parent->parent);
-> @@ -194,26 +193,27 @@ static int usb_acpi_find_device(struct d
->  
->  			raw_port_num = usb_hcd_find_raw_port_number(hcd,
->  				port_num);
-> -			*handle = acpi_get_child(ACPI_HANDLE(&udev->dev),
-> -				raw_port_num);
-> -			if (!*handle)
-> -				return -ENODEV;
-> +			adev = acpi_find_child_device(ACPI_COMPANION(&udev->dev),
-> +						      raw_port_num, false);
-> +			if (!adev)
-> +				return NULL;
->  		} else {
->  			parent_handle =
->  				usb_get_hub_port_acpi_handle(udev->parent,
->  				udev->portnum);
->  			if (!parent_handle)
-> -				return -ENODEV;
-> +				return NULL;
->  
-> -			*handle = acpi_get_child(parent_handle,	port_num);
-> -			if (!*handle)
-> -				return -ENODEV;
-> +			acpi_bus_get_device(parent_handle, &adev);
-> +			adev = acpi_find_child_device(adev, port_num, false);
-> +			if (!adev)
-> +				return NULL;
->  		}
-> -		usb_acpi_check_port_connect_type(udev, *handle, port_num);
-> -	} else
-> -		return -ENODEV;
-> +		usb_acpi_check_port_connect_type(udev, adev->handle, port_num);
-> +		return adev;
-> +	}
->  
-> -	return 0;
-> +	return NULL;
->  }
->  
->  static bool usb_acpi_bus_match(struct device *dev)
-> @@ -224,7 +224,7 @@ static bool usb_acpi_bus_match(struct de
->  static struct acpi_bus_type usb_acpi_bus = {
->  	.name = "USB",
->  	.match = usb_acpi_bus_match,
-> -	.find_device = usb_acpi_find_device,
-> +	.find_companion = usb_acpi_find_companion,
->  };
->  
->  int usb_acpi_register(void)
-> 
+old MSI kobjects:
+pci_device
+   └── msi_irqs
+       └── 40
+           └── mode
 
+new MSI attributes:
+pci_device
+   └── msi_irqs
+       └── 40
 
--- 
-Best regards
-Tianyu Lan
+As there was only one file "mode" with the kobject model, the interrupt
+number is now a file that returns the "mode" of the interrupt (msi vs.
+msix).
+
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+
+Neil, can you test this patch to see if irqbalance works as-is or not?
+
+thanks,
+
+greg k-h
+
+ drivers/pci/msi.c   |  152 +++++++++++++++++++++++++---------------------------
+ include/linux/pci.h |    2 
+ 2 files changed, 76 insertions(+), 78 deletions(-)
+
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -363,6 +363,9 @@ void write_msi_msg(unsigned int irq, str
+ static void free_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry, *tmp;
++	struct attribute **msi_attrs;
++	struct device_attribute *dev_attr;
++	int count = 0;
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+ 		int i, nvec;
+@@ -398,6 +401,22 @@ static void free_msi_irqs(struct pci_dev
+ 		list_del(&entry->list);
+ 		kfree(entry);
+ 	}
++
++	if (dev->msi_irq_groups) {
++		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
++		msi_attrs = dev->msi_irq_groups[0]->attrs;
++		list_for_each_entry(entry, &dev->msi_list, list) {
++			dev_attr = container_of(msi_attrs[count],
++						struct device_attribute, attr);
++			kfree(dev_attr->attr.name);
++			kfree(dev_attr);
++			++count;
++		}
++		kfree(msi_attrs);
++		kfree(dev->msi_irq_groups[0]);
++		kfree(dev->msi_irq_groups);
++		dev->msi_irq_groups = NULL;
++	}
+ }
+ 
+ static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
+@@ -471,96 +490,79 @@ void pci_restore_msi_state(struct pci_de
+ }
+ EXPORT_SYMBOL_GPL(pci_restore_msi_state);
+ 
+-
+-#define to_msi_attr(obj) container_of(obj, struct msi_attribute, attr)
+-#define to_msi_desc(obj) container_of(obj, struct msi_desc, kobj)
+-
+-struct msi_attribute {
+-	struct attribute        attr;
+-	ssize_t (*show)(struct msi_desc *entry, struct msi_attribute *attr,
+-			char *buf);
+-	ssize_t (*store)(struct msi_desc *entry, struct msi_attribute *attr,
+-			 const char *buf, size_t count);
+-};
+-
+-static ssize_t show_msi_mode(struct msi_desc *entry, struct msi_attribute *atr,
++static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+ {
+-	return sprintf(buf, "%s\n", entry->msi_attrib.is_msix ? "msix" : "msi");
+-}
+-
+-static ssize_t msi_irq_attr_show(struct kobject *kobj,
+-				 struct attribute *attr, char *buf)
+-{
+-	struct msi_attribute *attribute = to_msi_attr(attr);
+-	struct msi_desc *entry = to_msi_desc(kobj);
+-
+-	if (!attribute->show)
+-		return -EIO;
+-
+-	return attribute->show(entry, attribute, buf);
+-}
+-
+-static const struct sysfs_ops msi_irq_sysfs_ops = {
+-	.show = msi_irq_attr_show,
+-};
+-
+-static struct msi_attribute mode_attribute =
+-	__ATTR(mode, S_IRUGO, show_msi_mode, NULL);
+-
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct msi_desc *entry;
++	unsigned long irq;
++	int retval;
+ 
+-static struct attribute *msi_irq_default_attrs[] = {
+-	&mode_attribute.attr,
+-	NULL
+-};
++	retval = kstrtoul(attr->attr.name, 10, &irq);
++	if (retval)
++		return retval;
+ 
+-static void msi_kobj_release(struct kobject *kobj)
+-{
+-	struct msi_desc *entry = to_msi_desc(kobj);
+-
+-	pci_dev_put(entry->dev);
++	list_for_each_entry(entry, &pdev->msi_list, list) {
++		if (entry->irq == irq) {
++			return sprintf(buf, "%s\n",
++				       entry->msi_attrib.is_msix ? "msix" : "msi");
++		}
++	}
++	return -ENODEV;
+ }
+ 
+-static struct kobj_type msi_irq_ktype = {
+-	.release = msi_kobj_release,
+-	.sysfs_ops = &msi_irq_sysfs_ops,
+-	.default_attrs = msi_irq_default_attrs,
+-};
+-
+ static int populate_msi_sysfs(struct pci_dev *pdev)
+ {
++	struct attribute **msi_attrs;
++	struct device_attribute *msi_dev_attr;
++	struct attribute_group *msi_irq_group;
++	const struct attribute_group **msi_irq_groups;
+ 	struct msi_desc *entry;
+-	struct kobject *kobj;
+ 	int ret;
++	int num_msi = 0;
+ 	int count = 0;
+ 
+-	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
+-	if (!pdev->msi_kset)
+-		return -ENOMEM;
+-
++	/* Determine how many msi entries we have */
+ 	list_for_each_entry(entry, &pdev->msi_list, list) {
+-		kobj = &entry->kobj;
+-		kobj->kset = pdev->msi_kset;
+-		pci_dev_get(pdev);
+-		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+-				     "%u", entry->irq);
+-		if (ret)
+-			goto out_unroll;
+-
+-		count++;
++		++num_msi;
+ 	}
++	if (!num_msi)
++		return 0;
+ 
+-	return 0;
+-
+-out_unroll:
++	/* Dynamically create the MSI attributes for the PCI device */
++	msi_attrs = kzalloc(sizeof(void *) * (num_msi + 1), GFP_KERNEL);
++	if (!msi_attrs)
++		return -ENOMEM;
+ 	list_for_each_entry(entry, &pdev->msi_list, list) {
+-		if (!count)
+-			break;
+-		kobject_del(&entry->kobj);
+-		kobject_put(&entry->kobj);
+-		count--;
++		char *name = kmalloc(20, GFP_KERNEL);
++		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
++		if (!msi_dev_attr)
++			return -ENOMEM;
++		sprintf(name, "%d", entry->irq);
++		msi_dev_attr->attr.name = name;
++		msi_dev_attr->attr.mode = S_IRUGO;
++		msi_dev_attr->show = msi_mode_show;
++		msi_attrs[count] = &msi_dev_attr->attr;
++		++count;
+ 	}
+-	return ret;
++
++	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
++	if (!msi_irq_group)
++		return -ENOMEM;
++	msi_irq_group->name = "msi_irqs";
++	msi_irq_group->attrs = msi_attrs;
++
++	msi_irq_groups = kzalloc(sizeof(void *) * 2, GFP_KERNEL);
++	if (!msi_irq_groups)
++		return -ENOMEM;
++	msi_irq_groups[0] = msi_irq_group;
++
++	ret = sysfs_create_groups(&pdev->dev.kobj, msi_irq_groups);
++	if (ret)
++		return ret;
++	pdev->msi_irq_groups = msi_irq_groups;
++
++	return 0;
+ }
+ 
+ /**
+@@ -925,8 +927,6 @@ void pci_disable_msi(struct pci_dev *dev
+ 
+ 	pci_msi_shutdown(dev);
+ 	free_msi_irqs(dev);
+-	kset_unregister(dev->msi_kset);
+-	dev->msi_kset = NULL;
+ }
+ EXPORT_SYMBOL(pci_disable_msi);
+ 
+@@ -1023,8 +1023,6 @@ void pci_disable_msix(struct pci_dev *de
+ 
+ 	pci_msix_shutdown(dev);
+ 	free_msi_irqs(dev);
+-	kset_unregister(dev->msi_kset);
+-	dev->msi_kset = NULL;
+ }
+ EXPORT_SYMBOL(pci_disable_msix);
+ 
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -351,7 +351,7 @@ struct pci_dev {
+ 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
+ #ifdef CONFIG_PCI_MSI
+ 	struct list_head msi_list;
+-	struct kset *msi_kset;
++	const struct attribute_group **msi_irq_groups;
+ #endif
+ 	struct pci_vpd *vpd;
+ #ifdef CONFIG_PCI_ATS
