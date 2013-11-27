@@ -1,45 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout10.yourhostingaccount.com ([65.254.253.86]:56414 "EHLO
-	mailout10.yourhostingaccount.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755203Ab3KESKg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 13:10:36 -0500
-Message-ID: <52792C5E.6030008@writeme.com>
-Date: Tue, 05 Nov 2013 12:35:26 -0500
-From: Sinan Akman <sinan@writeme.com>
-MIME-Version: 1.0
-To: Tim Harvey <tharvey@gateworks.com>
-CC: Zhu Richard-R65037 <r65037@freescale.com>,
-	=?windows-1252?Q?Marek_V?= =?windows-1252?Q?a=9Aut?=
-	<marex@denx.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@st.com>,
+Received: from v094114.home.net.pl ([79.96.170.134]:61634 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759041Ab3K0BE6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 20:04:58 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v6 3/3] PCI: imx6: Add support for i.MX6 PCIe controller
-References: <1379319655-20210-1-git-send-email-xobs@kosagi.com> <1379319655-20210-4-git-send-email-xobs@kosagi.com> <CAJ+vNU36neHP77dVnqSP=+oMxaU=-6PxWQ8Afni-tTRjNTkM_A@mail.gmail.com> <0E83723C55F66F43A6041464FE31119D40FC99@039-SN2MPN1-011.039d.mgd.msft.net> <CAJ+vNU13FA5s7tt-yEnBYNSBV+FHmHqZNoykFq8aF=O=TvqTnA@mail.gmail.com> <0E83723C55F66F43A6041464FE31119D40FD55@039-SN2MPN1-011.039d.mgd.msft.net> <CAJ+vNU2ifxfprYsgcQs+Kkgu37+diXHJS6DEqs4d51+U3F4sLQ@mail.gmail.com>
-In-Reply-To: <CAJ+vNU2ifxfprYsgcQs+Kkgu37+diXHJS6DEqs4d51+U3F4sLQ@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
+Date: Wed, 27 Nov 2013 02:17:46 +0100
+Message-ID: <3015487.b22pj19pkk@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQW0_0Mi1WLk2o0phdG22LC6imeO62LG7Jsn7D7e0e_Vhg@mail.gmail.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <CAErSpo7umvs=U1_X--Vxx29hf6+pnm8KQ0bUKG4FZkNS+ffR8Q@mail.gmail.com> <CAE9FiQW0_0Mi1WLk2o0phdG22LC6imeO62LG7Jsn7D7e0e_Vhg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/18/2013 11:34 AM, Tim Harvey wrote:
-> On Fri, Oct 18, 2013 at 12:45 AM, Zhu Richard-R65037
-> [...]
-> How about with the upstream driver?  I have 'my own driver' as well
-> (based on Freescale's BSP) which works, but I'm very interested in
-> getting this upstream driver to work so we don't have to keep
-> maintaining our own drivers.  Can you please test with this upstream
-> driver?
+On Tuesday, November 26, 2013 11:34:24 AM Yinghai Lu wrote:
+> On Mon, Nov 25, 2013 at 7:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> Mutliple removing via /sys will call pci_destroy_dev two times.
+> >>
+> >> | When concurent removing pci devices which are in the same pci subtree
+> >> | via sysfs, such as:
+> >> | echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
+> >> | /sys/bus/pci/devices/0000\:1a\:01.0/remove
+> >> | (1a:01.0 device is downstream from the 10:00.0 bridge)
+> >> |
+> >> | the following warning will show:
+> >> | [ 1799.280918] ------------[ cut here ]------------
+> >> | [ 1799.336199] WARNING: CPU: 7 PID: 126 at lib/list_debug.c:53 __list_del_entry+0x63/0xd0()
+> >> | [ 1799.433093] list_del corruption, ffff8807b4a7c000->next is LIST_POISON1 (dead000000100100)
+> >> | [ 1800.276623] CPU: 7 PID: 126 Comm: kworker/u512:1 Tainted: G        W    3.12.0-rc5+ #196
+> >> | [ 1800.508918] Workqueue: sysfsd sysfs_schedule_callback_work
+> >> | [ 1800.574703]  0000000000000009 ffff8807adbadbd8 ffffffff8168b26c ffff8807c27d08a8
+> >> | [ 1800.663860]  ffff8807adbadc28 ffff8807adbadc18 ffffffff810711dc ffff8807adbadc68
+> >> | [ 1800.753130]  ffff8807b4a7c000 ffff8807b4a7c000 ffff8807ad089c00 0000000000000000
+> >> | [ 1800.842282] Call Trace:
+> >> | [ 1800.871651]  [<ffffffff8168b26c>] dump_stack+0x55/0x76
+> >> | [ 1800.933301]  [<ffffffff810711dc>] warn_slowpath_common+0x8c/0xc0
+> >> | [ 1801.005283]  [<ffffffff810712c6>] warn_slowpath_fmt+0x46/0x50
+> >> | [ 1801.074081]  [<ffffffff8135a343>] __list_del_entry+0x63/0xd0
+> >> | [ 1801.141839]  [<ffffffff8135a3c1>] list_del+0x11/0x40
+> >> | [ 1801.201320]  [<ffffffff813734da>] pci_remove_bus_device+0x6a/0xe0
+> >> | [ 1801.274279]  [<ffffffff8137356e>] pci_stop_and_remove_bus_device+0x1e/0x30
+> >> | [ 1801.356606]  [<ffffffff8137b20b>] remove_callback+0x2b/0x40
+> >> | [ 1801.423412]  [<ffffffff81251848>] sysfs_schedule_callback_work+0x18/0x60
+> >> | [ 1801.503744]  [<ffffffff8108eab5>] process_one_work+0x1f5/0x540
+> >> | [ 1801.573640]  [<ffffffff8108ea53>] ? process_one_work+0x193/0x540
+> >> | [ 1801.645616]  [<ffffffff8108f2ac>] worker_thread+0x11c/0x370
+> >> | [ 1801.712337]  [<ffffffff8108f190>] ? rescuer_thread+0x350/0x350
+> >> | [ 1801.782178]  [<ffffffff8109731d>] kthread+0xed/0x100
+> >> | [ 1801.841661]  [<ffffffff81097230>] ? kthread_create_on_node+0x160/0x160
+> >> | [ 1801.919919]  [<ffffffff8169cc3c>] ret_from_fork+0x7c/0xb0
+> >> | [ 1801.984608]  [<ffffffff81097230>] ? kthread_create_on_node+0x160/0x160
+> >> | [ 1802.062825] ---[ end trace d77f2054de000fb7 ]---
+> >> |
+> >> | This issue is related to the bug 54411:
+> >> | https://bugzilla.kernel.org/show_bug.cgi?id=54411
+> >>
+> >> Add is_removed to record if pci_destroy_dev is called already.
+> >>
+> >> During second calling, still have extra dev ref hold via
+> >> device_schedule_call, so we are safe to check dev->is_removed.
+> >>
+> >> It fixs the problem In Gu's test.
+> >>
+> >> -v2: add partial changelog from Gu Zheng <guz.fnst@cn.fujitsu.com>
+> >>      refresh after patch of moving device_del from Rafael.
+> >>
+> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> >> ---
+> >>  drivers/pci/remove.c | 8 +++++---
+> >>  include/linux/pci.h  | 1 +
+> >>  2 files changed, 6 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> >> index f452148..b090cec 100644
+> >> --- a/drivers/pci/remove.c
+> >> +++ b/drivers/pci/remove.c
+> >> @@ -20,9 +20,11 @@ static void pci_stop_dev(struct pci_dev *dev)
+> >>
+> >>  static void pci_destroy_dev(struct pci_dev *dev)
+> >>  {
+> >> -       device_del(&dev->dev);
+> >> -
+> >> -       put_device(&dev->dev);
+> >> +       if (!dev->is_removed) {
+> >> +               device_del(&dev->dev);
+> >> +               dev->is_removed = 1;
+> >
+> > As Rafael pointed out, this looks like a race.  What prevents two
+> > concurrent calls to pci_destroy_dev() from seeing "dev->is_removed ==
+> > 0" and both calling device_del() on the same device?
+> 
+> I don't think that is going to happen. as those two pci_destroy_dev is
+> serialized
+> during
+>  echo -n 1 > /sys/bus/pci/devices/0000\:10\:00.0/remove ; echo -n 1 >
+>      /sys/bus/pci/devices/0000\:1a\:01.0/remove
+> is called.
 
-   Tim, Sean what is the status of this patch ? Is it part of any tree 
-already ? I'd like to test few things.
+And what exactly does serialize that with the removals started via
+trim_stale_devices() from acpiphp_check_bridge()?
 
-   Thanks
+Rafael
 
-   Sinan Akman
