@@ -1,40 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f43.google.com ([209.85.128.43]:36104 "EHLO
-	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932382Ab3KZVAd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:00:33 -0500
-Date: Tue, 26 Nov 2013 16:00:26 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 00/11] Introduce pcim_enable_msi*() family helpers
-Message-ID: <20131126210026.GB8588@mtj.dyndns.org>
-References: <cover.1385399393.git.agordeev@redhat.com>
+Received: from eu1sys200aog121.obsmtp.com ([207.126.144.151]:34888 "EHLO
+	eu1sys200aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752640Ab3K0Ihd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 03:37:33 -0500
+Date: Wed, 27 Nov 2013 14:06:37 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Marek Vasut <marex@denx.de>, Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+Cc: Tim Harvey <tharvey@gateworks.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Message-ID: <20131127083637.GD12773@pratyush-vbox>
+References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com>
+ <201311262146.09780.marex@denx.de>
+ <20131127035056.GA12773@pratyush-vbox>
+ <201311270924.47277.marex@denx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201311270924.47277.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Wed, Nov 27, 2013 at 04:24:47PM +0800, Marek Vasut wrote:
+> Dear Pratyush Anand,
+> 
+> > On Wed, Nov 27, 2013 at 04:46:09AM +0800, Marek Vasut wrote:
+> > > Dear Pratyush Anand,
+> > > 
+> > > > Hi,
+> > > > 
+> > > > On Wed, Oct 23, 2013 at 12:55:43PM +0800, Tim Harvey wrote:
+> > > > > The IMX6 iATU is used for address translation between the AXI bus
+> > > > > address space and PCI address space.  This is used for type0 and
+> > > > > type1 config cycles but is not necessary for outbound io/mem
+> > > > > regions.
+> > > > > 
+> > > > > This patch removes the calls that inappropriately re-configures the
+> > > > > ATU viewport for outbound memory and IO after config cycles and
+> > > > > removes them altogether as they are not necessary.
+> > > > > 
+> > > > > This resolves issues with PCI devices behind switches and has been
+> > > > > tested with a Gige device behind a PLX PEX860x switch.  More testing
+> > > > > is needed for other configurations.
+> > > > 
+> > > > It seems to me that in your controller you have only one view port.
+> > > > Also mem_base and mem_bus_addr is same. Thats why it works in your
+> > > > case.
+> > > 
+> > > MX6 has 4 In/4 Out viewports AFAICT.
+> > 
+> > Then if I do not miss anything, MX6 should work even without this patch.
+> 
+> Yes, yet, it does not. On the other hand, this defect is only problematic if you 
+> use the devices behind a switch. Do you use a PCIe switch on your platform 
+> please?
 
-On Tue, Nov 26, 2013 at 10:09:49AM +0100, Alexander Gordeev wrote:
-> Tejun, due to last three changes will you keep your "Acked-By" and
-> "Reviewed-by" on these patches?
->   PCI/MSI: Factor out pci_get_msi_cap() interface
->   PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
->   PCI/MSI: Convert pci_msix_table_size() to a public interface
->   PCI/MSI: Introduce pcim_enable_msi*() family helpers
+I had tested with device under bridge.
+Mohit is in process of validating SPEAr patches with latest kernel.
+Mohit, see if we can arrange a switch and test, once SPEAr platform is
+ready with latest kernel.
 
-Sure, the whole series looks good to me.
-
-Thanks for doing this!
-
--- 
-tejun
+Regards
+Pratyush
+> 
+> Best regards,
+> Marek Vasut
