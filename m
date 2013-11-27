@@ -1,59 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:39470 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750889Ab3KMMdz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Nov 2013 07:33:55 -0500
+Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:7459 "EHLO
+	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750842Ab3K0HDH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 02:03:07 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: pciehp LinkState
+Date: Wed, 27 Nov 2013 07:02:59 +0000
+Message-ID: <8446b1354b434e759cd37ddb5f8b6cc5@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <528D4739.80700@fold.natur.cuni.cz>
+	 <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
+	 <01b89ce965ed454fb9f0e0cf52ba622e@BLUPR05MB118.namprd05.prod.outlook.com>
+	 <20131125194044.GA9710@google.com> <5293F3FB.6000401@fold.natur.cuni.cz>
+	 <20131126031317.GA6258@google.com>
+	 <cfeb9976fbb74028b600c9f86fcdd9ad@BLUPR05MB118.namprd05.prod.outlook.com>
+	 <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
+	 <55dfa94fa7224bafa14d52c5835ea1ca@BLUPR05MB118.namprd05.prod.outlook.com>
+	 <CAErSpo5BSzUJofyuNH5wKqYfcydOXEtrnJSq0xpssafomqHWrQ@mail.gmail.com>
+ <1385507535.25738.74.camel@ul30vt.home>
+In-Reply-To: <1385507535.25738.74.camel@ul30vt.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301E002F0@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E00262@HASMSX103.ger.corp.intel.com>
- <CALkVjQZfc3SHv8j1Kp-N1_+nQ5_WUsk6mf1BBG9MikzkaHZECA@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301E002F0@HASMSX103.ger.corp.intel.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Wed, 13 Nov 2013 20:33:39 +0800
-Message-ID: <CALkVjQbGtXYG=ETs0aNstdma68FgRAVQ0MXUZ6_eQ_oMb+widg@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/11/13 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
->> Unsafe means battery blows up like a Samsung? :-)
->>
->
-> You already blew your warranty the minute your installed Linux, didn't you? :)
->
+DQoNCj4gPiA+PiA+IEN1cnJlbnRseSBpbiBteSBwYXRjaCwgdGhlIHBjaWVocF91c2VfbGlua19l
+dmVudHM9MSBpcyB1c2VkIHRvDQo+ID4gPj4gPiBvbmx5DQo+ID4gPj4gZW5hYmxlIGxpbmsgc3Rh
+dGUgY2hhbmdlIG5vdGlmaWNhdGlvbnMsIGJ1dCBpbiBjYXNlIHBjaWVfaXNyKCkNCj4gPiA+PiBm
+aW5kcyAiRExMIGNoYW5nZWQiIGJpdCBzZXQgaW4gIlNsb3Qgc3RhdHVzIiwgaXQgcHJvY2Vzc2Vz
+IHRoZSBsaW5rDQo+ID4gPj4gc3RhdGUgY2hhbmdlLiBJJ2xsIG1ha2UgdGhlIHNpbmdsZSBsaW5l
+IGNoYW5nZSB0byBwY2llX2lzcigpIHRvDQo+ID4gPj4gcHJvY2VzcyB0aGUgZXZlbnQgb25seSBp
+ZiBwY2llaHBfdXNlX2xpbmtfZXZlbnRzPTEuIExldCBtZSBrbm93IGlmDQo+ID4gPj4gdGhpcyBz
+b3VuZHMgYWxyaWdodC4NCj4gPiA+Pg0KPiA+ID4+IElmIHdlIGNhbiBhdm9pZCBpdCwgSSdkIHBy
+ZWZlciBub3QgdG8gYWRkIHRoZQ0KPiAicGNpZWhwX3VzZV9saW5rX2V2ZW50cyINCj4gPiA+PiBt
+b2R1bGUgcGFyYW1ldGVyLiAgV2hhdCB3b3VsZCBicmVhayBpZiB3ZSBqdXN0ICphbHdheXMqIHVz
+ZWQgbGluaw0KPiA+ID4+IGV2ZW50cz8NCj4gPiA+DQo+ID4gPiBOb3QgcmVhbGx5ICJicmVhayIs
+IGJ1dCBJJ2QgdGhpbmsgc29tZSBjaGFuZ2VzIGluIGJlaGF2aW9yIHNoYWxsIGJlDQo+IHZpc2li
+bGU6DQo+ID4gPg0KPiA+ID4gMSkgV2hlbiBhIGNhcmQgaXMgcHVsbGVkIG91dCAodGh1cyBjYXVz
+aW5nIHRoZSBsaW5rIHRvIGdvIGRvd24pLCBpdA0KPiBzaGFsbCBhbHdheXMgYmUgZGlzYWJsZWQg
+LSB3aGV0aGVyIG9yIG5vdCBpdCBzdXBwb3J0cyAic3VycHJpc2UgcmVtb3ZhbCINCj4gKGluIHRo
+ZSBjYXBhYmlsaXRpZXMpLiBJIHRoaW5rIHRoaXMgd291bGQgYmUgdGhlIHJpZ2h0IHRoaW5nIHRv
+IGRvIGluDQo+IHRoaXMgc2l0dWF0aW9uLg0KPiA+DQo+ID4gWWVwLCB0aGlzIHNvdW5kcyBsaWtl
+IGl0IHdvdWxkIGJlIE9LLg0KPiA+DQo+ID4gPiAyKSBFdmVuIG90aGVyIHNjZW5hcmlvcyB3aGVy
+ZSB0aGUgbGluayBtYXkgZ28gZG93biAtIGUuZy4gZGV2aWNlDQo+IHJlc2V0IHVzaW5nIGFuIGV4
+dGVybmFsIHJlc2V0IHBpbiwgb3IgYSBmaXJtd2FyZSBpbml0aWF0ZWQgcmVzZXQgZXRjLA0KPiBz
+aGFsbCBjYXVzZSB0aGUgZGV2aWNlIHRvIGJlIGltbWVkaWF0ZWx5IHJlbW92ZWQgYW5kIHJlLWFk
+ZGVkIGFnYWluIHdoZW4NCj4gdGhlIGxpbmsgY29tZXMgYmFjayB1cCkuIFRoaXMgbWF5IGFsc28g
+YmUgZGVzaXJlZC4NCj4gPg0KPiA+IFRoaXMgc291bmRzIE9LLCB0b28uICBUaGVyZSdzIGFscmVh
+ZHkgc29tZSBmYW5jeSBkYW5jaW5nIGZvciBzaW1pbGFyDQo+ID4gc2NlbmFyaW9zIGluIHBjaWVo
+cF9yZXNldF9zbG90KCk7IG1heWJlIHRoYXQgd291bGQgaGF2ZSB0byBiZQ0KPiA+IGV4dGVuZGVk
+LiAgQWxleCBtaWdodCBoYXZlIGlucHV0IGhlcmUuDQo+IA0KPiBTbyBsb25nIGFzIHJlc2V0IGlu
+aXRpYXRlZCB0aHJvdWdoIHBjaS1jb3JlIGRvZXNuJ3QgY2F1c2UgYSBob3RwbHVnIEkNCj4gdGhp
+bmsgSSdtIG9rIHdpdGggaXQuICBJIHNhdyBjb2RlIHdhcyBhbHJlYWR5IGJlaW5nIGFkZGVkIGFy
+b3VuZCBzbG90DQo+IHJlc2V0IHRvIG1hc2sgbGluayBjaGFuZ2VzLCBqdXN0IGxpa2Ugd2UgZG8g
+d2l0aCBwcmVzZW5jZSBkZXRlY3Rpb24uDQoNClRoYW5rcyBBbGV4IGZvciB0YWtpbmcgYSBsb29r
+IGF0IG15IHBhdGNoLiBZZXMsIEkgaGF2ZSB0YWtlbiBjYXJlIGluIHRoZSBwY2llaHBfcmVzZXRf
+c2xvdCgpLg0KDQo+IFRoYW5rcywNCj4gDQo+IEFsZXgNCj4gDQo+ID4gPiAzKSBJZiB0aGUgbGlu
+ayBjb21lcyB1cCBhdXRvbWF0aWNhbGx5IGFzIHNvb24gYXMgYSBjYXJkIGlzIHBsdWdnZWQNCj4g
+aW4gKGkuZS4gd2l0aG91dCB0aGUgbmVlZCB0byB0dXJuIG9uIHBvd2VyIG9yIGRvIGFueXRoaW5n
+IGVsc2UgZnJvbSBTVyksDQo+IHRoZSBjYXJkIHNoYWxsIGJlIGltbWVkaWF0ZWx5IGFkZGVkIC0g
+ZXZlbiBpZiBzdXJwcmlzZSBjYXBhYmlsaXR5IGlzIG5vdA0KPiBwcmVzZW50LiBJJ20gbm90IHN1
+cmUgaWYgdGhpcyBpcyBkZXNpcmVkLiBUaGF0J3MgYmVjYXVzZSB0aGUgY3VycmVudA0KPiBiZWhh
+dmlvciBpcyB0aGF0IGZvciBzbG90cyB0aGF0IGRvIG5vdCBzdXBwb3J0IHN1cnByaXNlIGV2ZW50
+cywgdGhlIHVzZXINCj4gaGFzIHRvIGluaXRpYXRlIHRoZSBob3QtYWRkIHVzaW5nIHRoZSBhdHRl
+bnRpb24gYnV0dG9uLiBFdmVuIGFmdGVyIHRoYXQsDQo+IGhlIGdldHMgYSA1IHNlY29uZCB0aW1l
+IHRvIGNhbmNlbCB0aGUgb3BlcmF0aW9uIGluIGNhc2UgaGUgd2lzaGVzLiBUaGlzDQo+IHdpbGwg
+bm8gbG9uZ2VyIGJlIHRoZSBjYXNlLCBpZiB1c2Ugb2YgbGluayBldmVudHMgaXMgYWx3YXlzIGVu
+YWJsZWQuDQo+ID4NCj4gPiBUaGlzIG9uZSBzb3VuZHMgbGlrZSBhIHByb2JsZW0uICBCdXQgSSB0
+aGluayB3ZSBjb3VsZCBtYW5hZ2UgdGhpcywNCj4gPiBlLmcuLCBieSBub3RpY2luZyB0aGUgbGlu
+ay11cCBpbnRlcnJ1cHQsIGJ1dCB3YWl0aW5nIGZvciB0aGUgNS1zZWNvbmQNCj4gPiB0aW1lb3V0
+IGlmIGFuIGF0dGVudGlvbiBidXR0b24gaXMgcHJlc2VudC4NCg0KSSB0aGluayB0aGF0IG9uZSBh
+c3BlY3QgbWlnaHQgc3RpbGwgbm90IGJlIHJpZ2h0LiBUaGUgc3BlYyBzZWVtcyB0byBpbmRpY2F0
+ZSB0aGF0IHRoZSBob3QtcGx1ZyBzaG91bGQgYmUgKmluaXRpYXRlZCogYnkgdGhlIHByZXNzIG9m
+IGF0dGVudGlvbiBidXR0b24sIGFuZCBhZnRlciBhdHRlbnRpb24gYnV0dG9uIHByZXNzIHVzZXIg
+aGFzIGEgdGltZSBvZiA1IHNlY29uZHMuIFNvIEkgdGhpbmsgaWYgd2Ugd2FudCB0byByZW1vdmUg
+dGhhdCBtb2R1bGUgcGFyYW1ldGVyIGFuZCBhbHNvIHJldGFpbiBhdHRlbnRpb24gYnV0dG9uIGJl
+aGF2aW9yLCBvdXIgb3B0aW9ucyBtaWdodCBiZToNCg0KKiBJZiBhdHRlbnRpb24gYnV0dG9uIGlz
+IHByZXNlbnQsIGRvIG5vdCB1c2UgbGluayBzdGF0ZSBldmVudHMgYWxsIHRvZ2V0aGVyLiAoaS5l
+LiB1c2VyIGhhcyB0byB1c2UgYXR0ZW50aW9uIGJ1dHRvbiBhbHdheXMgdG8gaW5pdGlhdGUgZW5h
+Ymxpbmcgb3IgZGlzYWJsaW5nIGRldmljZS4gVGhpcydkIGJlIGNvbXBsaWFudCB3aXRoIGN1cnJl
+bnQgYmVoYXZpb3IgYW5kIGV4cGVjdGF0aW9ucyBJIGd1ZXNzKS4gSW4gYWxsIHRoZSByZW1haW5p
+bmcgY2FzZXMsIHRoZSBsaW5rIGV2ZW50cyBjYW4gYmUgdXNlZCBqdXN0IGZpbmUuDQoNCiogSWYg
+YXR0ZW50aW9uIGJ1dHRvbiBpcyBwcmVzZW50LCBwcm9jZXNzIExJTkstRE9XTiBldmVudHMsIGJ1
+dCBub3QgTElOSy1VUCBldmVudHMuIEFueSBkZXZpY2VzIHdob3NlIGxpbmsgc3VkZGVubHkgZ29l
+cyBkb3duLCB3aWxsIGJlIGRpc2FibGVkIChzb3VuZHMgcXVpdGUgcmlnaHQpLiBCdXQgd2hlbiBM
+aW5rIGNvbWVzIGJhY2sgdXAsIHRoZXknbGwgbm90IGJlIGVuYWJsZWQgKGFsdGhvdWdoIHRoaXMg
+bWF5IG5vdCBzb3VuZCByaWdodCwgYnV0IHRoaXMgY29tcGxpZXMgd2l0aCB0aGUgY3VycmVudCBi
+ZWhhdmlvciBhbmQgdGhlIHNlbWFudGljcyBvZiBhdHRlbnRpb24gYnV0dG9uKS4NCg0KT3IgZWxz
+ZSwgd2UgY2FuIGxlYXZlIHRoZSBtb2R1bGUgcGFyYW1ldGVyIGluIHBsYWNlLg0KDQpCVFcsIHdo
+YXQgYXJlIHRoZSBvZGRzIG9mIGNvbWluZyBhY3Jvc3MgYSBzbG90IHdoZXJlIHRoZSBsaW5rIGNv
+bWVzIHVwIGF1dG9tYXRpY2FsbHkgd2l0aG91dCB0aGUgbmVlZCBmb3IgU1cgdG8gZG8gYW55dGhp
+bmcgKGRlc3BpdGUgaGF2aW5nIGFuIGF0dGVudGlvbiBidXR0b24gdGhlcmUpLCBidXQgInN1cnBy
+aXNlIiBldmVudHMgYXJlIG5vdCBzdXBwb3J0ZWQgOi0pPyBKdXN0IHdvbmRlcmluZyBpZiB3ZSBh
+cmUgZGlzY3Vzc2luZyBhIHJlYWxpc3RpYyBzY2VuYXJpby4gSWYgd2UgZG9uJ3Qgc2VlIHRoaXMg
+YXMgcmVhbGlzdGljLCB0aGVuIHdlIGNhbiBzYWZlbHkgZHJvcCB0aGUgbW9kdWxlIHBhcmFtZXRl
+ciBJTUhPLiANCg0KVGhhbmtzLA0KDQpSYWphdA0KDQoNCg0KDQo+ID4NCj4gPiA+IEkgdGhpbmsg
+aXQgd291bGQgYmUgZmFpciB0byBzYXkgdGhhdCBpZiB1c2Ugb2YgbGluayBldmVudHMgaXMgYWx3
+YXlzDQo+IHN1cHBvcnRlZCwgaXQgd291bGQgYmUgcm91Z2hseSBlcXVpdmFsZW50IHRvIGEgc2xv
+dCBzdXBwb3J0aW5nIHN1cnByaXNlDQo+IGV2ZW50cy4gKFN1cnByaXNlIGV2ZW50cyB3b3JrIG9u
+ICJwcmVzZW5jZSBkZXRlY3QiIHBpbiwgYW5kIHRoaXMgd2lsbA0KPiB3b3JrIG9uIHRoZSBsaW5r
+IHN0YXRlIGNoYW5nZXMpLg0KPiA+ID4NCj4gPiA+IFRoYW5rcywNCj4gPiA+DQo+ID4gPiBSYWph
+dA0KPiA+ID4NCj4gDQo+IA0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxp
+c3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4gdGhlIGJvZHkg
+b2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8g
+aW5mbw0KPiBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+
+IA0KDQo=
 
-Indeed. :-)
-
->> My laptop is now connected to classroom's WiFi (with setpci
->> workaround) and running on battery, it seems the power consumption is
->> acceptable ... at least not too much more than before.
->
-> Cool - we work for nothing - encouraging :)
-
-To be frank I really know little about hardware (i.e. I had never
-heard of "L1" "ASPM" and other HW terms before you talked about it...)
-but I'll keep an eye, see if "setpci" workaround (this disables L1 /
-ASPM?) has any side effects. (I hope not)
-
--- 
-wzyboy
