@@ -1,106 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:51148 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932624Ab3KZVLV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 16:11:21 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 5/7] PCI: imx6: Split away the link up wait loop
-Date: Tue, 26 Nov 2013 22:10:46 +0100
-Message-Id: <1385500248-6551-5-git-send-email-marex@denx.de>
-In-Reply-To: <1385500248-6551-1-git-send-email-marex@denx.de>
-References: <1385500248-6551-1-git-send-email-marex@denx.de>
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:24372
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751295Ab3K1KIV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Nov 2013 05:08:21 -0500
+From: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Scott Wood <scottwood@freescale.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/9 v2] pci:msi: add weak function for returning msi
+ region info
+Date: Thu, 28 Nov 2013 10:08:16 +0000
+Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D072363E5@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+ <1384838233-24847-2-git-send-email-Bharat.Bhushan@freescale.com>
+ <20131125233602.GA4066@google.com>
+In-Reply-To: <20131125233602.GA4066@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split the function that waits for the PCIe link to come up from the
-rest if the host init function. We will find this change useful in
-the subsequent patch, since this will be called twice then.
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host/pci-imx6.c | 32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index a9781e7..5d85fc2 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -304,6 +304,25 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- 			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
- }
- 
-+static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-+{
-+	int count = 200;
-+
-+	while (!dw_pcie_link_up(pp)) {
-+		usleep_range(100, 1000);
-+		if (--count)
-+			continue;
-+
-+		dev_err(pp->dev, "phy link never came up\n");
-+		dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-+			readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
-+			readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static void imx6_pcie_host_init(struct pcie_port *pp)
- {
- 	int count = 0;
-@@ -320,18 +339,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
- 
--	while (!dw_pcie_link_up(pp)) {
--		usleep_range(100, 1000);
--		count++;
--		if (count >= 200) {
--			dev_err(pp->dev, "phy link never came up\n");
--			dev_dbg(pp->dev,
--				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
--				readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
--				readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
--			break;
--		}
--	}
-+	imx6_pcie_wait_for_link(pp);
- 
- 	return;
- }
--- 
-1.8.4.3
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
+> On Behalf Of Bjorn Helgaas
+> Sent: Tuesday, November 26, 2013 5:06 AM
+> To: Bhushan Bharat-R65777
+> Cc: alex.williamson@redhat.com; joro@8bytes.org; agraf@suse.de; Wood Scott-
+> B07421; Yoder Stuart-B08248; iommu@lists.linux-foundation.org; linux-
+> pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
+> kernel@vger.kernel.org; Bhushan Bharat-R65777
+> Subject: Re: [PATCH 1/9 v2] pci:msi: add weak function for returning msi region
+> info
+> 
+> On Tue, Nov 19, 2013 at 10:47:05AM +0530, Bharat Bhushan wrote:
+> > In Aperture type of IOMMU (like FSL PAMU), VFIO-iommu system need to
+> > know the MSI region to map its window in h/w. This patch just defines
+> > the required weak functions only and will be used by followup patches.
+> >
+> > Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
+> > ---
+> > v1->v2
+> >  - Added description on "struct msi_region"
+> >
+> >  drivers/pci/msi.c   |   22 ++++++++++++++++++++++
+> >  include/linux/msi.h |   14 ++++++++++++++
+> >  2 files changed, 36 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c index
+> > d5f90d6..2643a29 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -67,6 +67,28 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int
+> nvec, int type)
+> >  	return chip->check_device(chip, dev, nvec, type);  }
+> >
+> > +int __weak arch_msi_get_region_count(void) {
+> > +	return 0;
+> > +}
+> > +
+> > +int __weak arch_msi_get_region(int region_num, struct msi_region
+> > +*region) {
+> > +	return 0;
+> > +}
+> > +
+> > +int msi_get_region_count(void)
+> > +{
+> > +	return arch_msi_get_region_count();
+> > +}
+> > +EXPORT_SYMBOL(msi_get_region_count);
+> > +
+> > +int msi_get_region(int region_num, struct msi_region *region) {
+> > +	return arch_msi_get_region(region_num, region); }
+> > +EXPORT_SYMBOL(msi_get_region);
+> > +
+> >  int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int
+> > type)  {
+> >  	struct msi_desc *entry;
+> > diff --git a/include/linux/msi.h b/include/linux/msi.h index
+> > b17ead8..ade1480 100644
+> > --- a/include/linux/msi.h
+> > +++ b/include/linux/msi.h
+> > @@ -51,6 +51,18 @@ struct msi_desc {
+> >  };
+> >
+> >  /*
+> > + * This structure is used to get
+> > + * - physical address
+> > + * - size
+> > + * of a msi region
+> > + */
+> > +struct msi_region {
+> > +	int region_num; /* MSI region number */
+> > +	dma_addr_t addr; /* Address of MSI region */
+> > +	size_t size; /* Size of MSI region */ };
+> > +
+> > +/*
+> >   * The arch hooks to setup up msi irqs. Those functions are
+> >   * implemented as weak symbols so that they /can/ be overriden by
+> >   * architecture specific code if needed.
+> > @@ -64,6 +76,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev, int
+> > irq);
+> >
+> >  void default_teardown_msi_irqs(struct pci_dev *dev);  void
+> > default_restore_msi_irqs(struct pci_dev *dev, int irq);
+> > +int arch_msi_get_region_count(void);
+> > +int arch_msi_get_region(int region_num, struct msi_region *region);
+> 
+> It doesn't look like any of this (struct msi_region, msi_get_region(),
+> msi_get_region_count()) is actually used by drivers/pci/msi.c, so I don't think
+> it needs to be declared in generic code.  It looks like it's only used in
+> drivers/vfio/vfio_iommu_fsl_pamu.c, where you already know you have an FSL
+> IOMMU, and you can just call FSL-specific interfaces directly.
+
+Thanks Bjorn,
+
+Want to be sure of what you are suggesting.
+
+What I understood is that we define these (struct msi_region, msi_get_region(), msi_get_region_count()) in arch/powerpc/include/fsl_msi.h (a new file). Include this header file directly in driver/vfio/vfio_iommu_fsl_pamu.c
+
+Same also applies for msi_set_iova() in patch-5 ?
+
+-Bharat
+
+> 
+> Bjorn
+> 
+> >
+> >  struct msi_chip {
+> >  	struct module *owner;
+> > --
+> > 1.7.0.4
+> >
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the body
+> of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+
 
