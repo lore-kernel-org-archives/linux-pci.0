@@ -1,64 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/3] ACPI / scan: Start matching drivers after trying scan handlers
-Date: Mon, 04 Nov 2013 01:18:50 +0100
-Message-ID: <3869743.TuXYQ2ebr5@vostro.rjw.lan>
-In-Reply-To: <5839747.7HXXGHmMBd@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:59908 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754154Ab3K1DML (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 22:12:11 -0500
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MWY00FCEE8A1J40@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 28 Nov 2013 12:12:10 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] PCI: PCIe portdrv: use DEFINE_PCI_DEVICE_TABLE macro
+Date: Thu, 28 Nov 2013 12:12:09 +0900
+Message-id: <002801ceebe7$a0293170$e07b9450$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This macro is used to create a struct pci_device_id array.
 
-ACPI scan handlers should always be attached to struct acpi_device
-objects before any ACPI drivers, but there is a window during which
-a driver may be attached to a struct acpi_device before checking if
-there is a matching scan handler.  Namely, that will happen if an
-ACPI driver module is loaded during acpi_bus_scan() right after
-the first namespace walk is complete and before the given device
-is processed by the second namespace walk.
-
-To prevent that from happening, set the match_driver flags of
-struct acpi_device objects right before running device_attach()
-for them in acpi_bus_device_attach().
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/acpi/scan.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/pci/pcie/portdrv_pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -1676,7 +1676,6 @@ void acpi_init_device_object(struct acpi
- 
- void acpi_device_add_finalize(struct acpi_device *device)
- {
--	device->flags.match_driver = true;
- 	dev_set_uevent_suppress(&device->dev, false);
- 	kobject_uevent(&device->dev.kobj, KOBJ_ADD);
- }
-@@ -1915,8 +1914,12 @@ static acpi_status acpi_bus_device_attac
- 		return AE_OK;
- 
- 	ret = acpi_scan_attach_handler(device);
--	if (ret)
--		return ret > 0 ? AE_OK : AE_CTRL_DEPTH;
-+	if (ret < 0)
-+		return AE_CTRL_DEPTH;
-+
-+	device->flags.match_driver = true;
-+	if (ret > 0)
-+		return AE_OK;
- 
- 	ret = device_attach(&device->dev);
- 	return ret >= 0 ? AE_OK : AE_CTRL_DEPTH;
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 0d8fdc4..5356902 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -368,7 +368,7 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
+ /*
+  * LINUX Device Driver Model
+  */
+-static const struct pci_device_id port_pci_ids[] = { {
++static DEFINE_PCI_DEVICE_TABLE(port_pci_ids) = { {
+ 	/* handle any PCI-Express port */
+ 	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
+ 	}, { /* end: all zeroes */ }
+-- 
+1.7.10.4
+
 
