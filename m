@@ -1,116 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29169 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751755Ab3KNIZk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Nov 2013 03:25:40 -0500
-Message-ID: <1384417538.30364.25.camel@yhuang-dev>
-Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM
- enabled for unbound PCI devices
-From: Huang Ying <ying.huang@intel.com>
-To: mike <qiudayu@linux.vnet.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-pm@vger.kernel.org, rjw@rjwysocki.net
-Date: Thu, 14 Nov 2013 16:25:38 +0800
-In-Reply-To: <528485EA.5080309@linux.vnet.ibm.com>
-References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org>
-	 <5284423D.4090907@linux.vnet.ibm.com> <1384408745.30364.8.camel@yhuang-dev>
-	 <5284799C.1010000@linux.vnet.ibm.com>
-	 <1384415609.30364.18.camel@yhuang-dev>
-	 <528485EA.5080309@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:47255 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213Ab3K1OSF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 09:18:05 -0500
+Date: Thu, 28 Nov 2013 14:15:13 +0000
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>, bhelgaas@google.com,
+	cl91tp@gmail.com, tianyu.lan@intel.com, khlebnikov@openvz.org,
+	indou.takao@jp.fujitsu.com, jility09@gmail.com, f.otti@gmx.at,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kexec@lists.infradead.org, stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: Clear Bus Master bit only on kexec reboot
+Message-ID: <20131128141513.3de95d04@alan.etchedpixels.co.uk>
+In-Reply-To: <20131127220106.GA21887@kroah.com>
+References: <1385579908-24608-1-git-send-email-khalid.aziz@oracle.com>
+	<87ob55my8z.fsf@xmission.com>
+	<52964F2C.1020803@oracle.com>
+	<20131127212227.GA31237@kroah.com>
+	<20131127215309.GA15320@srcf.ucam.org>
+	<20131127220106.GA21887@kroah.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-11-14 at 16:12 +0800, mike wrote:
-> On 11/14/2013 03:53 PM, Huang Ying wrote:
-> > On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
-> >> On 11/14/2013 01:59 PM, Huang Ying wrote:
-> >>> On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
-> >>>> On 11/14/2013 03:20 AM, Alan Stern wrote:
-> >>>>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
-> >>>>>
-> >>>>>> [+cc Rafael, linux-pm]
-> >>>>>>
-> >>>>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
-> >>>>>>> Hi Huang Ying,
-> >>>>>>>
-> >>>>>>> I see you are the author of this patch, commit id is:
-> >>>>>>> 967577b062417b4e4b8e27b711220f4124f5153a
-> >>>>>>>
-> >>>>>>> I have a question while I try to understand this patch,
-> >>>>>>> So I would very grateful if you or others can give me some reply.....
-> >>>>>>>
-> >>>>>>> ............
-> >>>>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
-> >>>>>>> +       pm_runtime_get_sync(dev);
-> >>>>>>> +       pci_dev->driver = pci_drv;
-> >>>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >>>>>>> I see here you make the driver to initialize before probe,
-> >>>>>>> But I have no idea of why you do this change.....
-> >>>>>>>
-> >>>>>>> and I look inside the code, it may be pm_runtime relate??
-> >>>>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
-> >>>>> doesn't do anything unless pci_dev->driver is set.  You can see this at
-> >>>>> the start of pci_pm_runtime_suspend().
-> >>>>>
-> >>>>> Since we want the driver's probe routine to be able to carry out
-> >>>>> runtime PM operations, we have to set pci_dev->driver before the probe
-> >>>>> routine runs.
-> >>>> Is there any situations , like in  probe state,  pci_dev->driver
-> >>>> has been set. the  pci_pm_runtime_xxx() has passed
-> >>>> pci_dev->driver NULL check, but at this point, probe fail
-> >>>> occurs, and  pci_dev->driver to be set to NULL.
-> >>>>
-> >>>> What will happen ? Or this situation will never happen?
-> >>>> I'm confuse about this.
-> >>> I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
-> >>> is called, so pci_pm_runtime_xxx() will not be called until
-> >>> pm_runtime_put_noidle() is called in ->probe().  And
-> >>>    should be done as one of the latest actions in
-> >>> ->probe(), after the normal probe actions succeeded.
-> >> OK, just as your description, it seems OK.
-> >> But this is really a issue as I explained in last email.
-> >>
-> >> So I want to know if there are any side-effect of changing the code
-> >> in pci_pm_runtime_xxx()
-> >>
-> >>    if (!pci_dev->driver)
-> >>           return 0;
-> >>    to
-> >>
-> >>    if (!dev->driver)
-> >>           return 0;
-> >>
-> > If you make this change, we can not put devices into low power state
-> > (runtime suspend the device) in ->probe().  That is expected in some
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> This means dev->driver is NULL ?? but pci_dev->driver is set???
-> 
-> Because if use pci_dev->driver can put into low power state, means
-> 
-> pci_dev->driver is set, but in the situation, use dev->driver will can't,
-> 
-> means dev->driver = null, but I have not find any case that
-> 
-> dev->driver = null, but pci_dev->driver != null;
+> Anyway, I really don't care either way, but this seems like something
+> that the drivers should be doing.  What suddenly changed that caused
+> this problem to occur that hasn't happened in the years prior to now
+> that drives this to be a stable-kernel issue?
 
-Sorry I make a mistake here.  The dev->driver != null in
-local_pci_probe().  We use pci_dev->driver instead of dev->driver in
-pci_pm_runtime_xxx() because we want device to be kept in normal power
-state (D0) and SUSPENDED state when unbound.  The
-pm_runtime_put/get_sync in pci_device_remove/local_pci_probe will not
-change the power state of the device because of the check in
-pci_pm_runtime_xxx().
+When this first went in I pointed out it was an utterly stupid idea.
+Since it went in lots of machines haven't rebooted properly or powered
+off right.
 
-> I know I always been a question guy, i apologize for spend a lot
-> time to reply this mail, but I really want to understand it,
+There are two problems
 
-Never mind.
+1. Clearing the busmaster bit is not well defined behaviour. It even
+freezes some hardware.
 
-Best Regards,
-Huang Ying
+2. Lots of PC class hardware has firmware which believes that it can
+access the hardware as it goes to reboot or poweroff and that someone
+won't have shut it down.
 
+Like it or not the firmware expected behaviour for such things is "what
+Windows did". The expected PC behaviour is subtle and magic - eg the fact
+D3 on some IDE disk controllers is terminal until power cycled because
+Windows didn't do that or that the BIOS goes off and chats to the disks
+in reboot without assuming the disk controller is completely
+uninitialized.
 
+kexec is a special cornercase and handling is as such (knowing it will
+bother to re-init appropriate devices) is very different to the current
+broken behaviour for PC systems.
+
+Alan
