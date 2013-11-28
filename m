@@ -1,88 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:49558 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751223Ab3KFSdR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 13:33:17 -0500
-Received: by mail-ie0-f181.google.com with SMTP id ar20so18529065iec.12
-        for <linux-pci@vger.kernel.org>; Wed, 06 Nov 2013 10:33:16 -0800 (PST)
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:58513
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753338Ab3K1A7D convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Nov 2013 19:59:03 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: pciehp LinkState
+Date: Thu, 28 Nov 2013 00:58:57 +0000
+Message-ID: <727e197baa7c4ff3ad4bc4a892208d13@BLUPR05MB118.namprd05.prod.outlook.com>
+References: <528D4739.80700@fold.natur.cuni.cz>
+ <CAErSpo7LcyL+K5rg+aNaaNzLXKyxvfAgeOPidb_3LqU3B2LXzA@mail.gmail.com>
+ <01b89ce965ed454fb9f0e0cf52ba622e@BLUPR05MB118.namprd05.prod.outlook.com>
+ <20131125194044.GA9710@google.com> <5293F3FB.6000401@fold.natur.cuni.cz>
+ <20131126031317.GA6258@google.com>
+ <cfeb9976fbb74028b600c9f86fcdd9ad@BLUPR05MB118.namprd05.prod.outlook.com>
+ <CAErSpo41KYXbgz5q=U9gfDD_tZNp9qFr0LGqMvnem2rQTLTL1g@mail.gmail.com>
+ <55dfa94fa7224bafa14d52c5835ea1ca@BLUPR05MB118.namprd05.prod.outlook.com>
+ <CAErSpo5BSzUJofyuNH5wKqYfcydOXEtrnJSq0xpssafomqHWrQ@mail.gmail.com>
+ <1385507535.25738.74.camel@ul30vt.home>
+ <8446b1354b434e759cd37ddb5f8b6cc5@BLUPR05MB118.namprd05.prod.outlook.com>
+ <CAErSpo5o=deCSd=61hV23CkY-PNMAaJ0OurWP7v2y4OmFDJaHA@mail.gmail.com>
+In-Reply-To: <CAErSpo5o=deCSd=61hV23CkY-PNMAaJ0OurWP7v2y4OmFDJaHA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <527A8166.6000701@gmail.com>
-References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com> <527A8166.6000701@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 Nov 2013 11:32:56 -0700
-Message-ID: <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: wzyboy <wzyboy@wzyboy.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 6, 2013 at 10:50 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Hi,
->
-> adding PCI folks.
-> Here is the story:
->
-> * Wzyboy has a Lenovo laptop with _OSC control *not* granted
-> * L1 Active is enabled
-> * kernel: 3.12.0
-> * Nic is PCIe (Gen2 but not sure...)
->
-> At some random point, the driver loses access to the NIC: all readl
-> operation return 0xff.
-> Even lspci returns 0xff:
->
-> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev ff)
-> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->
-> here is the output of lspci *before* the issue hits:
->
-> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
-> 00: 86 80 b2 08 06 04 10 00 6b 00 80 02 10 00 00 00
-> 10: 04 00 40 f0 00 00 00 00 00 00 00 00 00 00 00 00
-> 20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 62 c2
-> 30: 00 00 00 00 c8 00 00 00 00 00 00 00 09 01 00 00
->
-> have you any idea of what we can do to understand what it going wrong here?
+> >>
+> >> > > 3) If the link comes up automatically as soon as a card is
+> >> > > plugged
+> >> in (i.e. without the need to turn on power or do anything else from
+> >> SW), the card shall be immediately added - even if surprise
+> >> capability is not present. I'm not sure if this is desired. That's
+> >> because the current behavior is that for slots that do not support
+> >> surprise events, the user has to initiate the hot-add using the
+> >> attention button. Even after that, he gets a 5 second time to cancel
+> >> the operation in case he wishes. This will no longer be the case, if
+> use of link events is always enabled.
+> >> >
+> >> > This one sounds like a problem.  But I think we could manage this,
+> >> > e.g., by noticing the link-up interrupt, but waiting for the
+> >> > 5-second timeout if an attention button is present.
+> >
+> > I think that one aspect might still not be right. The spec seems to
+> indicate that the hot-plug should be *initiated* by the press of
+> attention button, and after attention button press user has a time of 5
+> seconds.
+> 
+> Yes, sorry, my response didn't make sense.  BTW, what spec are you
+> reading that describes the hot-plug flow?  I don't see many details in
+> the PCIe spec, so I'm looking at the Standard Hot-Plug Controller
+> Specification, rev 1.0.  I think PCIe hotplug is modeled after that and
+> keeps the same UI model.  It might be nice if we had a summary in
+> Documentation/PCI with pointers to the specs.  The model feels a bit
+> like folklore that everybody is "supposed to know" but I don't know how
+> everybody is supposed to learn it.
 
-Do you have any more details?  Maybe open a bugzilla.kernel.org report
-and attach:
+Ha Ha. Actually right. My knowledge of "spec" is also based mostly on folklore, and reading between the lines of PCIe and SHPC specs.
 
-  - complete dmesg log
-  - lspci -vvxxx output for entire system before issue occurs
-  - lspci -vvxxx output for entire system after issue occurs
+> 
+> As I read the SHPC spec, the attention button is basically a request to
+> apply power to the slot:
+> 
+>   - user inserts a card into a powered-off slot,
+>   - user presses attention button,
+>   - OS blinks power indicator,
+>   - after 5 seconds, OS applies power
+>   - link becomes up,
+>   - OS enumerates device,
+>   - OS turns power indicator on
+> 
+> If user presses attention button during 5-second interval while power
+> indicator is blinking, operation is cancelled and OS turns off power
+> indicator and leaves slot powered off.
+> 
+> > So I think if we want to remove that module parameter and also retain
+> attention button behavior, our options might be:
+> >
+> > * If attention button is present, do not use link state events all
+> together. (i.e. user has to use attention button always to initiate
+> enabling or disabling device. This'd be compliant with current behavior
+> and expectations I guess). In all the remaining cases, the link events
+> can be used just fine.
+> >
+> > * If attention button is present, process LINK-DOWN events, but not
+> LINK-UP events. Any devices whose link suddenly goes down, will be
+> disabled (sounds quite right). But when Link comes back up, they'll not
+> be enabled (although this may not sound right, but this complies with
+> the current behavior and the semantics of attention button).
+> >
+> > Or else, we can leave the module parameter in place.
+> >
+> > BTW, what are the odds of coming across a slot where the link comes up
+> automatically without the need for SW to do anything (despite having an
+> attention button there), but "surprise" events are not supported :-)?
+> Just wondering if we are discussing a realistic scenario. If we don't
+> see this as realistic, then we can safely drop the module parameter
+> IMHO.
+> 
+> If the link comes up, that means power is applied already, and I don't
+> know what else the OS could or should do before enumerating the device.
+> It seems like this is the case regardless of whether there's an
+> attention button or other hardware.  So my vote is to just drop the
+> module parameter.
 
-Bjorn
+I concur. I'd drop the module parameter. 
 
-> On 11/06/2013 09:12 AM, wzyboy wrote:
->> 2013/11/6 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
->>> Wait - you mean that after the bug occurred before you rebooted, lspci -xxx show all 00?
->>> I can see 0xff here.
->>> Anyway - this is very bad... checking with HW guys...
->>
->>
->> Sorry, that's my typo. They are all 0xff... (I don't know what do they
->> mean but it look bad...)
->>
->> Thanks for your effort! I'm waiting for good news from you and HW guys. :-)
->>
+Thanks,
+
+Rajat
+
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info
+> at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
