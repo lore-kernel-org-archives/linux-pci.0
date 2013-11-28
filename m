@@ -1,113 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:52474 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807Ab3KKWon (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 17:44:43 -0500
-Received: by mail-ie0-f181.google.com with SMTP id tp5so2359138ieb.12
-        for <linux-pci@vger.kernel.org>; Mon, 11 Nov 2013 14:44:43 -0800 (PST)
-Date: Mon, 11 Nov 2013 15:44:39 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Message-ID: <20131111224439.GA30638@google.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+Received: from mail-db9lp0251.outbound.messaging.microsoft.com ([213.199.154.251]:44205
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751016Ab3K1JTR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 04:19:17 -0500
+From: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+To: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+CC: Scott Wood <scottwood@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Thu, 28 Nov 2013 09:19:10 +0000
+Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D0723624C@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+	 <1385067648.2879.421.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+ <1385397493.2879.557.camel@ul30vt.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 09, 2013 at 10:46:21AM +0800, wzyboy wrote:
-> 2013/11/9 Bjorn Helgaas <bhelgaas@google.com>:
-> > Thanks.  But can you please attach the output of "lspci -vvxxx" (not
-> > "-vxxxx") for the entire system before the problem occurs?
-> 
-> 
-> Sorry I used the wrong command...
-> 
-> I've attached the output of -vvxxx below.
-> 
-> There are three files:
-> 
-> * lspci.vvxxx.normal.txt: When the interface is "state DOWN" in "ip link".
-> * lspci.vvxxx.normal2.txt: When the interface is "state UP" in "ip
-> link" after I ran "ip link set wlan0 up".
-> * lspci.vvxxx.normal3.txt" When the interface is connected to the
-> Wi-Fi of my dormitory and got an address (but without default
-> gateway, I'm using wired network now).
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmh1c2hhbiBCaGFyYXQt
+UjY1Nzc3DQo+IFNlbnQ6IFdlZG5lc2RheSwgTm92ZW1iZXIgMjcsIDIwMTMgOTozOSBQTQ0KPiBU
+bzogJ0FsZXggV2lsbGlhbXNvbicNCj4gQ2M6IFdvb2QgU2NvdHQtQjA3NDIxOyBsaW51eC1wY2lA
+dmdlci5rZXJuZWwub3JnOyBhZ3JhZkBzdXNlLmRlOyBZb2RlciBTdHVhcnQtDQo+IEIwODI0ODsg
+aW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IGxp
+bnV4cHBjLQ0KPiBkZXZAbGlzdHMub3psYWJzLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVs
+Lm9yZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIDAvOSB2Ml0gdmZpby1wY2k6IGFkZCBzdXBwb3J0
+IGZvciBGcmVlc2NhbGUgSU9NTVUgKFBBTVUpDQo+IA0KPiANCj4gDQo+ID4gLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCj4gPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21haWx0bzphbGV4Lndp
+bGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gPiBTZW50OiBNb25kYXksIE5vdmVtYmVyIDI1LCAyMDEz
+IDEwOjA4IFBNDQo+ID4gVG86IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiA+IENjOiBXb29kIFNj
+b3R0LUIwNzQyMTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgYWdyYWZAc3VzZS5kZTsgWW9k
+ZXINCj4gPiBTdHVhcnQtIEIwODI0ODsgaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmc7
+IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+ID4gbGludXhwcGMtIGRldkBsaXN0cy5vemxhYnMub3Jn
+OyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+ID4gU3ViamVjdDogUmU6IFtQQVRDSCAw
+LzkgdjJdIHZmaW8tcGNpOiBhZGQgc3VwcG9ydCBmb3IgRnJlZXNjYWxlIElPTU1VDQo+ID4gKFBB
+TVUpDQo+ID4NCj4gPiBPbiBNb24sIDIwMTMtMTEtMjUgYXQgMDU6MzMgKzAwMDAsIEJoYXJhdCBC
+aHVzaGFuIHdyb3RlOg0KPiA+ID4NCj4gPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0N
+Cj4gPiA+ID4gRnJvbTogQWxleCBXaWxsaWFtc29uIFttYWlsdG86YWxleC53aWxsaWFtc29uQHJl
+ZGhhdC5jb21dDQo+ID4gPiA+IFNlbnQ6IEZyaWRheSwgTm92ZW1iZXIgMjIsIDIwMTMgMjozMSBB
+TQ0KPiA+ID4gPiBUbzogV29vZCBTY290dC1CMDc0MjENCj4gPiA+ID4gQ2M6IEJodXNoYW4gQmhh
+cmF0LVI2NTc3NzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+ID4gYWdyYWZAc3Vz
+ZS5kZTsgWW9kZXIgU3R1YXJ0LUIwODI0ODsNCj4gPiA+ID4gaW9tbXVAbGlzdHMubGludXgtZm91
+bmRhdGlvbi5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IGxpbnV4cHBjLQ0KPiA+ID4gPiBkZXZA
+bGlzdHMub3psYWJzLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gPiBT
+dWJqZWN0OiBSZTogW1BBVENIIDAvOSB2Ml0gdmZpby1wY2k6IGFkZCBzdXBwb3J0IGZvciBGcmVl
+c2NhbGUNCj4gPiA+ID4gSU9NTVUgKFBBTVUpDQo+ID4gPiA+DQo+ID4gPiA+IE9uIFRodSwgMjAx
+My0xMS0yMSBhdCAxNDo0NyAtMDYwMCwgU2NvdHQgV29vZCB3cm90ZToNCj4gPiA+ID4gPiBPbiBU
+aHUsIDIwMTMtMTEtMjEgYXQgMTM6NDMgLTA3MDAsIEFsZXggV2lsbGlhbXNvbiB3cm90ZToNCj4g
+PiA+ID4gPiA+IE9uIFRodSwgMjAxMy0xMS0yMSBhdCAxMToyMCArMDAwMCwgQmhhcmF0IEJodXNo
+YW4gd3JvdGU6DQo+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gPiA+ID4gPiA+ID4gPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21haWx0
+bzphbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbV0NCj4gPiA+ID4gPiA+ID4gPiBTZW50OiBUaHVy
+c2RheSwgTm92ZW1iZXIgMjEsIDIwMTMgMTI6MTcgQU0NCj4gPiA+ID4gPiA+ID4gPiBUbzogQmh1
+c2hhbiBCaGFyYXQtUjY1Nzc3DQo+ID4gPiA+ID4gPiA+ID4gQ2M6IGpvcm9AOGJ5dGVzLm9yZzsg
+YmhlbGdhYXNAZ29vZ2xlLmNvbTsgYWdyYWZAc3VzZS5kZTsNCj4gPiA+ID4gPiA+ID4gPiBXb29k
+IFNjb3R0LUIwNzQyMTsgWW9kZXIgU3R1YXJ0LUIwODI0ODsNCj4gPiA+ID4gPiA+ID4gPiBpb21t
+dUBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZzsgbGludXgtDQo+ID4gPiA+ID4gPiA+ID4gcGNp
+QHZnZXIua2VybmVsLm9yZzsgbGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmc7IGxpbnV4LQ0K
+PiA+ID4gPiA+ID4gPiA+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEJodXNoYW4gQmhhcmF0LVI2
+NTc3Nw0KPiA+ID4gPiA+ID4gPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMC85IHYyXSB2ZmlvLXBj
+aTogYWRkIHN1cHBvcnQgZm9yDQo+ID4gPiA+ID4gPiA+ID4gRnJlZXNjYWxlIElPTU1VIChQQU1V
+KQ0KPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4gSXMgVkZJT19JT01NVV9QQU1VX0dF
+VF9NU0lfQkFOS19DT1VOVCBwZXIgYXBlcnR1cmUgKGllLg0KPiA+ID4gPiA+ID4gPiA+IGVhY2gg
+dmZpbyB1c2VyIGhhcyAkQ09VTlQgcmVnaW9ucyBhdCB0aGVpciBkaXNwb3NhbCBleGNsdXNpdmVs
+eSk/DQo+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+IE51bWJlciBvZiBtc2ktYmFuayBjb3Vu
+dCBpcyBzeXN0ZW0gd2lkZSBhbmQgbm90IHBlcg0KPiA+ID4gPiA+ID4gPiBhcGVydHVyZSwgQnV0
+IHdpbGwgYmUNCj4gPiA+ID4gc2V0dGluZyB3aW5kb3dzIGZvciBiYW5rcyBpbiB0aGUgZGV2aWNl
+IGFwZXJ0dXJlLg0KPiA+ID4gPiA+ID4gPiBTbyBzYXkgaWYgd2UgYXJlIGRpcmVjdCBhc3NpZ25p
+bmcgMiBwY2kgZGV2aWNlIChib3RoIGhhdmUNCj4gPiA+ID4gPiA+ID4gZGlmZmVyZW50IGlvbW11
+DQo+ID4gPiA+IGdyb3VwLCBzbyAyIGFwZXJ0dXJlIGluIGlvbW11KSB0byBWTS4NCj4gPiA+ID4g
+PiA+ID4gTm93IHFlbXUgY2FuIG1ha2Ugb25seSBvbmUgY2FsbCB0byBrbm93IGhvdyBtYW55IG1z
+aS1iYW5rcw0KPiA+ID4gPiA+ID4gPiBhcmUgdGhlcmUgYnV0DQo+ID4gPiA+IGl0IG11c3Qgc2V0
+IHN1Yi13aW5kb3dzIGZvciBhbGwgYmFua3MgZm9yIGJvdGggcGNpIGRldmljZSBpbiBpdHMNCj4g
+PiA+ID4gcmVzcGVjdGl2ZSBhcGVydHVyZS4NCj4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiBJJ20g
+c3RpbGwgY29uZnVzZWQuICBXaGF0IEkgd2FudCB0byBtYWtlIHN1cmUgb2YgaXMgdGhhdCB0aGUN
+Cj4gPiA+ID4gPiA+IGJhbmtzIGFyZSBpbmRlcGVuZGVudCBwZXIgYXBlcnR1cmUuICBGb3IgaW5z
+dGFuY2UsIGlmIHdlIGhhdmUNCj4gPiA+ID4gPiA+IHR3byBzZXBhcmF0ZSB1c2Vyc3BhY2UgcHJv
+Y2Vzc2VzIG9wZXJhdGluZyBpbmRlcGVuZGVudGx5IGFuZA0KPiA+ID4gPiA+ID4gdGhleSBib3Ro
+IGNob3NlIHRvIHVzZSBtc2kgYmFuayB6ZXJvIGZvciB0aGVpciBkZXZpY2UsIHRoYXQncw0KPiA+
+ID4gPiA+ID4gYmFuayB6ZXJvIHdpdGhpbiBlYWNoIGFwZXJ0dXJlIGFuZCBkb2Vzbid0IGludGVy
+ZmVyZS4gIE9yDQo+ID4gPiA+ID4gPiBhbm90aGVyIHdheSB0byBhc2sgaXMgY2FuIGEgbWFsaWNp
+b3VzIHVzZXIgaW50ZXJmZXJlIHdpdGgNCj4gPiA+ID4gPiA+IG90aGVyIHVzZXJzIGJ5DQo+ID4g
+dXNpbmcgdGhlIHdyb25nIGJhbmsuDQo+ID4gPiA+ID4gPiBUaGFua3MsDQo+ID4gPiA+ID4NCj4g
+PiA+ID4gPiBUaGV5IGNhbiBpbnRlcmZlcmUuDQo+ID4gPg0KPiA+ID4gV2FudCB0byBiZSBzdXJl
+IG9mIGhvdyB0aGV5IGNhbiBpbnRlcmZlcmU/DQo+ID4NCj4gPiBXaGF0IGhhcHBlbnMgaWYgbW9y
+ZSB0aGFuIG9uZSB1c2VyIHNlbGVjdHMgdGhlIHNhbWUgTVNJIGJhbms/DQo+ID4gTWluaW1hbGx5
+LCB3b3VsZG4ndCB0aGF0IHJlc3VsdCBpbiB0aGUgSU9NTVUgYmxvY2tpbmcgdHJhbnNhY3Rpb25z
+DQo+ID4gZnJvbSB0aGUgcHJldmlvdXMgdXNlciBvbmNlIHRoZSBuZXcgdXNlciBhY3RpdmF0ZXMg
+dGhlaXIgbWFwcGluZz8NCj4gDQo+IFllcyBhbmQgbm87IFdpdGggY3VycmVudCBpbXBsZW1lbnRh
+dGlvbiB5ZXMgYnV0IHdpdGggYSBtaW5vciBjaGFuZ2Ugbm8uIExhdGVyIGluDQo+IHRoaXMgcmVz
+cG9uc2UgSSB3aWxsIGV4cGxhaW4gaG93Lg0KPiANCj4gPg0KPiA+ID4gPj4gIFdpdGggdGhpcyBo
+YXJkd2FyZSwgdGhlIG9ubHkgd2F5IHRvIHByZXZlbnQgdGhhdA0KPiA+ID4gPiA+IGlzIHRvIG1h
+a2Ugc3VyZSB0aGF0IGEgYmFuayBpcyBub3Qgc2hhcmVkIGJ5IG11bHRpcGxlIHByb3RlY3Rpb24N
+Cj4gY29udGV4dHMuDQo+ID4gPiA+ID4gRm9yIHNvbWUgb2Ygb3VyIHVzZXJzLCB0aG91Z2gsIEkg
+YmVsaWV2ZSBwcmV2ZW50aW5nIHRoaXMgaXMgbGVzcw0KPiA+ID4gPiA+IGltcG9ydGFudCB0aGFu
+IHRoZSBwZXJmb3JtYW5jZSBiZW5lZml0Lg0KPiA+ID4NCj4gPiA+IFNvIHNob3VsZCB3ZSBsZXQg
+dGhpcyBwYXRjaCBzZXJpZXMgaW4gd2l0aG91dCBwcm90ZWN0aW9uPw0KPiA+DQo+ID4gTm8uDQo+
+ID4NCj4gPiA+ID4NCj4gPiA+ID4gSSB0aGluayB3ZSBuZWVkIHNvbWUgc29ydCBvZiBvd25lcnNo
+aXAgbW9kZWwgYXJvdW5kIHRoZSBtc2kgYmFua3MgdGhlbi4NCj4gPiA+ID4gT3RoZXJ3aXNlIHRo
+ZXJlJ3Mgbm90aGluZyBwcmV2ZW50aW5nIGFub3RoZXIgdXNlcnNwYWNlIGZyb20NCj4gPiA+ID4g
+YXR0ZW1wdGluZyBhbiBNU0kgYmFzZWQgYXR0YWNrIG9uIG90aGVyIHVzZXJzLCBvciBwZXJoYXBz
+IGV2ZW4gb24NCj4gPiA+ID4gdGhlIGhvc3QuICBWRklPIGNhbid0IGFsbG93IHRoYXQuICBUaGFu
+a3MsDQo+ID4gPg0KPiA+ID4gV2UgaGF2ZSB2ZXJ5IGZldyAoMyBNU0kgYmFuayBvbiBtb3N0IG9m
+IGNoaXBzKSwgc28gd2UgY2FuIG5vdCBhc3NpZ24NCj4gPiA+IG9uZSB0byBlYWNoIHVzZXJzcGFj
+ZS4gV2hhdCB3ZSBjYW4gZG8gaXMgaG9zdCBhbmQgdXNlcnNwYWNlIGRvZXMgbm90DQo+ID4gPiBz
+aGFyZSBhIE1TSSBiYW5rIHdoaWxlIHVzZXJzcGFjZSB3aWxsIHNoYXJlIGEgTVNJIGJhbmsuDQo+
+ID4NCj4gPiBUaGVuIHlvdSBwcm9iYWJseSBuZWVkIFZGSU8gdG8gIm93biIgdGhlIE1TSSBiYW5r
+IGFuZCBwcm9ncmFtIGRldmljZXMNCj4gPiBpbnRvIGl0IHJhdGhlciB0aGFuIGV4cG9zaW5nIHRo
+ZSBNU0kgYmFua3MgdG8gdXNlcnNwYWNlIHRvIGxldCB0aGVtIGhhdmUNCj4gZGlyZWN0IGFjY2Vz
+cy4NCj4gDQo+IE92ZXJhbGwgaWRlYSBvZiBleHBvc2luZyB0aGUgZGV0YWlscyBvZiBtc2kgcmVn
+aW9ucyB0byB1c2Vyc3BhY2UgYXJlDQo+ICAxKSBVc2VyIHNwYWNlIGNhbiBkZWZpbmUgdGhlIGFw
+ZXJ0dXJlIHNpemUgdG8gZml0IE1TSSBtYXBwaW5nIGluIElPTU1VLg0KPiAgMikgc2V0dXAgaW92
+YSBmb3IgYSBNU0kgYmFua3M7IHdoaWNoIGlzIGp1c3QgYWZ0ZXIgZ3Vlc3QgbWVtb3J5Lg0KPiAN
+Cj4gQnV0IGN1cnJlbnRseSB3ZSBleHBvc2UgdGhlICJzaXplIiBhbmQgImFkZHJlc3MiIG9mIE1T
+SSBiYW5rcywgcGFzc2luZyBhZGRyZXNzDQo+IGlzIG9mIG5vIHVzZSBhbmQgY2FuIGJlIHByb2Js
+ZW1hdGljLg0KDQpJIGFtIHNvcnJ5LCBhYm92ZSBpbmZvcm1hdGlvbiBpcyBub3QgY29ycmVjdC4g
+Q3VycmVudGx5IG5laXRoZXIgd2UgZXhwb3NlICJhZGRyZXNzIiBub3IgInNpemUiIHRvIHVzZXIg
+c3BhY2UuIFdlIG9ubHkgZXhwb3NlIG51bWJlciBvZiBNU0kgQkFOSyBjb3VudCBhbmQgdXNlcnNw
+YWNlIGFkZHMgb25lIHN1Yi13aW5kb3cgZm9yIGVhY2ggYmFuay4NCg0KPiBJZiB3ZSBqdXN0IHBy
+b3ZpZGUgdGhlIHNpemUgb2YgTVNJIGJhbmsgdG8gdXNlcnNwYWNlIHRoZW4gdXNlcnNwYWNlIGNh
+bm5vdCBkbw0KPiBhbnl0aGluZyB3cm9uZy4NCg0KU28gdXNlcnNwYWNlIGRvZXMgbm90IGtub3cg
+YWRkcmVzcywgc28gaXQgY2Fubm90IG1tYXAgYW5kIGNhdXNlIGFueSBpbnRlcmZlcmVuY2UgYnkg
+ZGlyZWN0bHkgcmVhZGluZy93cml0aW5nLg0KV2hlbiB1c2VyIHNwYWNlIG1ha2VzIFZGSU9fREVW
+SUNFX1NFVF9JUlFTIGlvY3RsIGZvciBNU0kgdHlwZSB0aGVuIFZGSU8gd2l0aCBNU0kgbGF5ZXIg
+Y29tcG9zZSBhbmQgd3JpdGUgTVNJIGFkZHJlc3MgYW5kIERhdGEgaW4gYWN0dWFsIGRldmljZS4g
+VGhpcyBpcyBhbGwgYWJzdHJhY3RlZCB3aXRoaW4gaG9zdCBrZXJuZWwuDQoNCkRvIHdlIHNlZSBh
+bnkgaXNzdWUgd2l0aCB0aGlzIGFwcHJvYWNoPw0KDQpUaGFua3MNCi1CaGFyYXQNCg0KPiANCj4g
+V2hpbGUgaXQgaXMgc3RpbGwgdGhlIHJlc3BvbnNpYmlsaXR5IG9mIGhvc3QgKE1TSStWRklPKSB0
+byBjb21wb3NlIE1TSS1hZGRyZXNzDQo+IGFuZCBNU0ktZGF0YTsgc28gSSB0aGluayB0aGlzIHNo
+b3VsZCBsb29rIGZpbmUuDQo+IA0KPiA+IFRoYW5rcywNCj4gPg0KPiA+IEFsZXgNCj4gPg0KDQo=
 
-The only interesting difference is this (between "normal" and "normal3"):
-
---- lspci.vvxxx.normal.txt      2013-11-11 14:42:14.000000000 -0700
-+++ lspci.vvxxx.normal3.txt     2013-11-11 14:42:14.000000000 -0700
-
- 00:1c.1 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 3 (rev e4) (prog-if 00 [Normal decode])
--               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-+               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train+ SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-
-In "normal3", the Link Training bit is set.  I'm not a hardware person,
-but my guess it this might be normal.  The spec says Link Training
-indicates that the "LTSSM is in the Configuration or Recovery state,"
-and Figure 5-1 shows that the transition from L1 to L0 goes through
-the Recovery state.  So we might just be seeing the device returning
-from L1 to L0.  Maybe Emmanuel can confirm this with the hardware guys.
-
-Comparing "lspci.vvxxx.normal.txt" with "lspci.vvxxx.patched.bug.txt",
-I see these changes in the 00:1c.1 Downstream Port (the bridge that
-leads to the 7260 NIC):
-
---- before      2013-11-11 15:24:04.755738964 -0700
-+++ after       2013-11-11 15:24:11.875722068 -0700
- 00:1c.1 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 3 (rev e4) (prog-if 00 [Normal decode])
--               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-+               DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
--               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-+               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
--               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
--                       Changed: MRL- PresDet- LinkState+
-+               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-+                       Changed: MRL- PresDet+ LinkState+
--               DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled ARIFwd-
-+               DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
-
-So when the bug occurs,
-
-  - Correctable Error Detected is set
-  - Data Link Layer Link Active is cleared
-  - Presence Detect State is cleared
-  - LTR Mechanism Enable is cleared (spec says this bit must be
-    reset to the default value when a Downstream Port goes to
-    DL_Down)
-
-This all seems consistent with the device being powered off.  Maybe
-the 7260 is on a daughterboard with a bad connection to the system
-board?  Any chance you can open up the box and make sure the
-connection is tight?
-
-It's possible there's some ASPM issue, but I would think Presence
-Detect would still work even if the 7260 had a problem with ASPM.
-Here's another experiment to try to rule out ASPM.  Run these
-commands as root after the driver is loaded but before the bug occurs:
-
-  setpci -s03:00.0 0x50.W=0x140
-  setpci -s00:1c.1 0x50.W=0x040
-  lspci -vv
-
-This should disable ASPM completely on that link, and the lspci output
-will help verify that.
-
-Bjorn
