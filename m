@@ -1,239 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:54949 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126Ab3K0IoK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 03:44:10 -0500
-From: Marek Vasut <marex@denx.de>
-To: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region mapping
-Date: Wed, 27 Nov 2013 09:44:09 +0100
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>,
+Received: from smtprelay.restena.lu ([158.64.1.62]:49526 "EHLO
+	smtprelay.restena.lu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008Ab3K1HaH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 02:30:07 -0500
+Date: Thu, 28 Nov 2013 08:22:31 +0100
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+To: David Herrmann <dh.herrmann@gmail.com>
+Cc: Dave Airlie <airlied@linux.ie>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-References: <1385500248-6551-1-git-send-email-marex@denx.de> <1385500248-6551-2-git-send-email-marex@denx.de> <20131127043009.GB12773@pratyush-vbox>
-In-Reply-To: <20131127043009.GB12773@pratyush-vbox>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311270944.09383.marex@denx.de>
+	Peter Jones <pjones@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	DRI mailing list <dri-devel@lists.freedesktop.org>
+Subject: Re: [RFC patch] PCI: Extend boot_vga sysfs attribute lookup to fix
+ X on MBA+EFI
+Message-ID: <20131128082231.0734bfc3@pluto.restena.lu>
+In-Reply-To: <CANq1E4QabD9Nba_s-oqBvZg8+Zo7iMFGCsOgg7LE7qnDm+pwNA@mail.gmail.com>
+References: <20131125205441.5046e0cb@neptune.home>
+	<CANq1E4QabD9Nba_s-oqBvZg8+Zo7iMFGCsOgg7LE7qnDm+pwNA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Pratyush Anand,
+Hi David,
 
-> Dear Marek Vasut,
-> 
-> Please replace imx6 with designware in subject line  of this patch.
-
-OK, this one has to be fixed anyway. We need to figure out why do we even need 
-this one.
-
-> On Wed, Nov 27, 2013 at 05:10:43AM +0800, Marek Vasut wrote:
-> > From: Tim Harvey <tharvey@gateworks.com>
-> > 
-> > The IMX6 iATU is used for address translation between the AXI bus
-> > address space and PCI address space.  This is used for type0 and type1
-> > config cycles but is not necessary for outbound io/mem regions.
-> > 
-> > This patch removes the calls that inappropriately re-configures the ATU
-> > viewport for outbound memory and IO after config cycles and removes them
-> > altogether as they are not necessary.
-> 
-> Yes, they are not necessary for all the cases where translation is one
-> to one. So so for sure all the platform till now introduced should
-> work.
-> But, what about a platform where memory translation is not one to one?
-> 
-> Existing code should work with all sort of memory translation on a
-> platform having atleast two viewports capable of programming any type
-> of outbound transaction.
-
-Full ACK, that's why it's called RFC.
-
-> > This resolves issues with PCI devices behind switches and has been tested
-> > with a Gige device behind a PLX PEX860x switch.  More testing is needed
-> > for other configurations.
-> 
-> I do not understand if MX6 has 4 Outbound Viewport then how this patch
-> helps?
-> -- PCI devices behind switches would not have been working because
-> CFG1 transaction would not have been correct.
-> -- It works with this patch. This patch changes viewport for CFG1 from
-> 1 to 0.
-> -- Can it be possible that MX6 has some restriction on viewport
-> programming capability. I mean,like only viewport0 can be programmed
-> for CFG0/1?
-
-Tim ?
-
-Here is the MX6 datasheet [1], the section 48.3.9.1.1 and 48.3.9.1.2 describe 
-the iATU configuration on MX6. My understanding from this description is that 
-the MX6 has 4 inbound and 4 outbound iATU regions. Am I wrong ?
-
-[1] http://cache.freescale.com/files/32bit/doc/ref_manual/IMX6DQRM.pdf
-
-> Otherwise I do not find any convincing reason that why this patch
-> helps in resolving issues with PCI devices behind switches.
-> 
-> 
-> Regards
-> Pratyush
-> 
-> > From: Tim Harvey <tharvey@gateworks.com>
-> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Frank Li <lznuaa@gmail.com>
-> > Cc: Harro Haan <hrhaan@gmail.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> > Cc: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Richard Zhu <r65037@freescale.com>
-> > Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> > Cc: Sean Cross <xobs@kosagi.com>
-> > Cc: Shawn Guo <shawn.guo@linaro.org>
-> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> > Cc: Tim Harvey <tharvey@gateworks.com>
-> > Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-> > Cc: Yinghai Lu <yinghai@kernel.org>
+On Wed, 27 Nov 2013 21:40:39 +0100 David Herrmann wrote:
+> On Mon, Nov 25, 2013 at 8:54 PM, Bruno Prémont wrote:
+> > On a MacBookAir2,1, booting to Linux with EFI though having
+> > no efifb built-in Xorg refuses to start with "no devices detected"
+> > because for the only VGA device available (NVidia Geforce 9400M)
+> > the sysfs attribute boot_vga is zero (instead of expected 1).
+> >
+> > When CONFIG_FB_EFI is selected, efifb does provide its own
+> > vga_default_device() to report the PCI device matching global
+> > screen_info as determined during efifb setup.
+> >
+> > Otherwise there is just a dummy or VGA_ARB's vga_default_device()
+> > that does not provide the right information.
+> >
+> > On the other hand, boot_vga_show() falls back to poking PCI
+> > resources to flag a PCI device as boot_vga if vga_default_device()
+> > returned no PCI device (NULL).
+> >
+> > To complement this PCI resource poking, this patch copies the
+> > validation code used to determine which PCI device to report as
+> > default VGA device by efifb into boot_vga_show().
+> >
+> > Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
 > > ---
-> > 
-> >  drivers/pci/host/pcie-designware.c | 41
-> >  +++----------------------------------- 1 file changed, 3 insertions(+),
-> >  38 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-designware.c
-> > b/drivers/pci/host/pcie-designware.c index ed9b11b..01d76ad 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -46,7 +46,6 @@
-> > 
-> >  #define PCIE_ATU_VIEWPORT		0x900
-> >  #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
-> >  #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
-> > 
-> > -#define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
-> > 
-> >  #define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
-> >  #define PCIE_ATU_CR1			0x904
-> >  #define PCIE_ATU_TYPE_MEM		(0x0 << 0)
-> > 
-> > @@ -494,8 +493,8 @@ static void dw_pcie_prog_viewport_cfg0(struct
-> > pcie_port *pp, u32 busdev)
-> > 
-> >  static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
-> >  {
-> > 
-> > -	/* Program viewport 1 : OUTBOUND : CFG1 */
-> > -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND |
-> > PCIE_ATU_REGION_INDEX1, +	/* Program viewport 0 : OUTBOUND : CFG1 */
-> > +	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND |
-> > PCIE_ATU_REGION_INDEX0,
-> > 
-> >  			  PCIE_ATU_VIEWPORT);
-> >  	
-> >  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
-> >  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> > 
-> > @@ -505,38 +504,8 @@ static void dw_pcie_prog_viewport_cfg1(struct
-> > pcie_port *pp, u32 busdev)
-> > 
-> >  			  PCIE_ATU_LIMIT);
-> >  	
-> >  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
-> >  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-> > 
-> > -}
-> > -
-> > -static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
-> > -{
-> > -	/* Program viewport 0 : OUTBOUND : MEM */
-> > -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND |
-> > PCIE_ATU_REGION_INDEX0, -			  PCIE_ATU_VIEWPORT);
-> > -	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
-> > -	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> > -	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
-> > -	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
-> > -	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
-> > -			  PCIE_ATU_LIMIT);
-> > -	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
-> > -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
-> > -			  PCIE_ATU_UPPER_TARGET);
-> > -}
-> > -
-> > -static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
-> > -{
-> > -	/* Program viewport 1 : OUTBOUND : IO */
-> > -	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND |
-> > PCIE_ATU_REGION_INDEX1, -			  PCIE_ATU_VIEWPORT);
-> > -	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
-> > +	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
-> > 
-> >  	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
-> > 
-> > -	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
-> > -	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
-> > -	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
-> > -			  PCIE_ATU_LIMIT);
-> > -	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
-> > -	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
-> > -			  PCIE_ATU_UPPER_TARGET);
-> > 
-> >  }
-> >  
-> >  static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus
-> >  *bus,
-> > 
-> > @@ -552,11 +521,9 @@ static int dw_pcie_rd_other_conf(struct pcie_port
-> > *pp, struct pci_bus *bus,
-> > 
-> >  	if (bus->parent->number == pp->root_bus_nr) {
-> >  	
-> >  		dw_pcie_prog_viewport_cfg0(pp, busdev);
-> >  		ret = cfg_read(pp->va_cfg0_base + address, where, size, val);
-> > 
-> > -		dw_pcie_prog_viewport_mem_outbound(pp);
-> > 
-> >  	} else {
-> >  	
-> >  		dw_pcie_prog_viewport_cfg1(pp, busdev);
-> >  		ret = cfg_read(pp->va_cfg1_base + address, where, size, val);
-> > 
-> > -		dw_pcie_prog_viewport_io_outbound(pp);
-> > 
-> >  	}
-> >  	
-> >  	return ret;
-> > 
-> > @@ -575,11 +542,9 @@ static int dw_pcie_wr_other_conf(struct pcie_port
-> > *pp, struct pci_bus *bus,
-> > 
-> >  	if (bus->parent->number == pp->root_bus_nr) {
-> >  	
-> >  		dw_pcie_prog_viewport_cfg0(pp, busdev);
-> >  		ret = cfg_write(pp->va_cfg0_base + address, where, size, val);
-> > 
-> > -		dw_pcie_prog_viewport_mem_outbound(pp);
-> > 
-> >  	} else {
-> >  	
-> >  		dw_pcie_prog_viewport_cfg1(pp, busdev);
-> >  		ret = cfg_write(pp->va_cfg1_base + address, where, size, val);
-> > 
-> > -		dw_pcie_prog_viewport_io_outbound(pp);
-> > 
-> >  	}
-> >  	
-> >  	return ret;
+> > Would it make sense to kill the corresponding code from efifb
+> > as it covers only a single case?
+> >
+> > The other EFI capable system I have (AMD Ilano based, Gigabyte
+> > mainboard does report boot_vga=1, possibly through the resources
+> > poking and there Xorg starts properly without efifb built in.
+> >
+> > Selecting CONFIG_X86_SYSFB (combined with CONFIG_FB_SIMPLE) does
+> > not help by itself, patching that one instead of PCI's boot_vga
+> > attribute directly would still not cover the case when neither
+> > of them is enabled.
+> 
+> How about moving the code from efifb to arch/x86/kernel/sysfb_efi.c?
+> efifb is x86 only so we don't break anything by this. And all the
+> other efi-quirks have already been moved. Imho this would be the
+> easiest fix right now. But if you can spend some time to clean up the
+> vga_default_device() mess, please go ahead.
+
+Well, I don't know how things work on other arches where GPU is
+a PCI device...
+
+Possibly the issue exists for any arch whose firmware does not cause
+  !!(pdev->resource[PCI_ROM_RESOURCE].flags & IORESOURCE_ROM_SHADOW)
+to be 1 and for which there is no magic vga_default_device()
+re-implementation.
+
+That's the reason why I don't think moving it to any arch/firmware
+place is such a good idea.
+
+
+I will cook the vga_default_device() cleanup over the weekend and
+post a follow-up patch by then.
+
+> Btw., thanks for tracking this down. It bothered me for quite some
+> while that Xorg ignores my cards if I boot via efi..
+
+I already hit it a year ago or so and did hide it by keeping
+efifb enabled on the MBA (had not been looking at the cause by then
+though, thinking it was some magic EFI poking needed on MBA as
+FB_EFI=n worked fine on a EFI PC system with radeon).
+
+Bruno
+
+
+> Thanks
+> David
+> 
+> >
+> >  drivers/pci/pci-sysfs.c | 21 +++++++++++++++++++++
+> >  1 file changed, 21 insertions(+)
+> >
+> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > index 7128cfd..91cac71 100644
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -28,6 +28,7 @@
+> >  #include <linux/pci-aspm.h>
+> >  #include <linux/slab.h>
+> >  #include <linux/vgaarb.h>
+> > +#include <linux/screen_info.h>
+> >  #include <linux/pm_runtime.h>
+> >  #include "pci.h"
+> >
+> > @@ -540,6 +541,26 @@ boot_vga_show(struct device *dev, struct device_attribute *attr, char *buf)
+> >         if (vga_dev)
+> >                 return sprintf(buf, "%u\n", (pdev == vga_dev));
+> >
+> > +       if ((pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA) {
+> > +               resource_size_t start, end;
+> > +               int i;
+> > +
+> > +               for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> > +                       if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+> > +                               continue;
+> > +
+> > +                       start = pci_resource_start(pdev, i);
+> > +                       end  = pci_resource_end(pdev, i);
+> > +
+> > +                       if (!start || !end)
+> > +                               continue;
+> > +
+> > +                       if (screen_info.lfb_base >= start &&
+> > +                               (screen_info.lfb_base + screen_info.lfb_size) < end)
+> > +                               return sprintf(buf, "1\n");
+> > +               }
+> > +       }
+> > +
+> >         return sprintf(buf, "%u\n",
+> >                 !!(pdev->resource[PCI_ROM_RESOURCE].flags &
+> >                    IORESOURCE_ROM_SHADOW));
+> > _______________________________________________
+> > dri-devel mailing list
+> > dri-devel@lists.freedesktop.org
+> > http://lists.freedesktop.org/mailman/listinfo/dri-devel
