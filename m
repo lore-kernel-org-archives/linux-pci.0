@@ -1,123 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61967 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751896Ab3KNIyX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Nov 2013 03:54:23 -0500
-Message-ID: <1384419260.30364.27.camel@yhuang-dev>
-Subject: Re: A question about the patch: [PATCH] PCI/PM: Keep runtime PM
- enabled for unbound PCI devices
-From: Huang Ying <ying.huang@intel.com>
-To: mike <qiudayu@linux.vnet.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-pm@vger.kernel.org, rjw@rjwysocki.net
-Date: Thu, 14 Nov 2013 16:54:20 +0800
-In-Reply-To: <52848BD9.1010704@linux.vnet.ibm.com>
-References: <Pine.LNX.4.44L0.1311131416110.1424-100000@iolanthe.rowland.org>
-	 <5284423D.4090907@linux.vnet.ibm.com> <1384408745.30364.8.camel@yhuang-dev>
-	 <5284799C.1010000@linux.vnet.ibm.com>
-		 <1384415609.30364.18.camel@yhuang-dev>
-	 <528485EA.5080309@linux.vnet.ibm.com>
-	 <1384417538.30364.25.camel@yhuang-dev>
-	 <52848BD9.1010704@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mailout3.samsung.com ([203.254.224.33]:53027 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754434Ab3K1Eia (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 23:38:30 -0500
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MWY0020VI7NSOA0@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 28 Nov 2013 13:38:11 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <002801ceebe7$a0293170$e07b9450$%han@samsung.com>
+In-reply-to: <002801ceebe7$a0293170$e07b9450$%han@samsung.com>
+Subject: Re: [PATCH] PCI: PCIe portdrv: use DEFINE_PCI_DEVICE_TABLE macro
+Date: Thu, 28 Nov 2013 13:38:10 +0900
+Message-id: <005501ceebf3$a4692ea0$ed3b8be0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-11-14 at 16:37 +0800, mike wrote:
-> On 11/14/2013 04:25 PM, Huang Ying wrote:
-> > On Thu, 2013-11-14 at 16:12 +0800, mike wrote:
-> >> On 11/14/2013 03:53 PM, Huang Ying wrote:
-> >>> On Thu, 2013-11-14 at 15:19 +0800, mike wrote:
-> >>>> On 11/14/2013 01:59 PM, Huang Ying wrote:
-> >>>>> On Thu, 2013-11-14 at 11:23 +0800, mike wrote:
-> >>>>>> On 11/14/2013 03:20 AM, Alan Stern wrote:
-> >>>>>>> On Wed, 13 Nov 2013, Bjorn Helgaas wrote:
-> >>>>>>>
-> >>>>>>>> [+cc Rafael, linux-pm]
-> >>>>>>>>
-> >>>>>>>> On Wed, Nov 13, 2013 at 6:09 AM, mike<qiudayu@linux.vnet.ibm.com>  wrote:
-> >>>>>>>>> Hi Huang Ying,
-> >>>>>>>>>
-> >>>>>>>>> I see you are the author of this patch, commit id is:
-> >>>>>>>>> 967577b062417b4e4b8e27b711220f4124f5153a
-> >>>>>>>>>
-> >>>>>>>>> I have a question while I try to understand this patch,
-> >>>>>>>>> So I would very grateful if you or others can give me some reply.....
-> >>>>>>>>>
-> >>>>>>>>> ............
-> >>>>>>>>> -       rc = ddi->drv->probe(ddi->dev, ddi->id);
-> >>>>>>>>> +       pm_runtime_get_sync(dev);
-> >>>>>>>>> +       pci_dev->driver = pci_drv;
-> >>>>>>>>> ^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >>>>>>>>> I see here you make the driver to initialize before probe,
-> >>>>>>>>> But I have no idea of why you do this change.....
-> >>>>>>>>>
-> >>>>>>>>> and I look inside the code, it may be pm_runtime relate??
-> >>>>>>> Yes, it is related to runtime PM.  In the PCI subsystem, runtime PM
-> >>>>>>> doesn't do anything unless pci_dev->driver is set.  You can see this at
-> >>>>>>> the start of pci_pm_runtime_suspend().
-> >>>>>>>
-> >>>>>>> Since we want the driver's probe routine to be able to carry out
-> >>>>>>> runtime PM operations, we have to set pci_dev->driver before the probe
-> >>>>>>> routine runs.
-> >>>>>> Is there any situations , like in  probe state,  pci_dev->driver
-> >>>>>> has been set. the  pci_pm_runtime_xxx() has passed
-> >>>>>> pci_dev->driver NULL check, but at this point, probe fail
-> >>>>>> occurs, and  pci_dev->driver to be set to NULL.
-> >>>>>>
-> >>>>>> What will happen ? Or this situation will never happen?
-> >>>>>> I'm confuse about this.
-> >>>>> I think that will never happen.  Before ->probe(), pm_runtime_get_sync()
-> >>>>> is called, so pci_pm_runtime_xxx() will not be called until
-> >>>>> pm_runtime_put_noidle() is called in ->probe().  And
-> >>>>>     should be done as one of the latest actions in
-> >>>>> ->probe(), after the normal probe actions succeeded.
-> >>>> OK, just as your description, it seems OK.
-> >>>> But this is really a issue as I explained in last email.
-> >>>>
-> >>>> So I want to know if there are any side-effect of changing the code
-> >>>> in pci_pm_runtime_xxx()
-> >>>>
-> >>>>     if (!pci_dev->driver)
-> >>>>            return 0;
-> >>>>     to
-> >>>>
-> >>>>     if (!dev->driver)
-> >>>>            return 0;
-> >>>>
-> >>> If you make this change, we can not put devices into low power state
-> >>> (runtime suspend the device) in ->probe().  That is expected in some
-> >> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >> This means dev->driver is NULL ?? but pci_dev->driver is set???
-> >>
-> >> Because if use pci_dev->driver can put into low power state, means
-> >>
-> >> pci_dev->driver is set, but in the situation, use dev->driver will can't,
-> >>
-> >> means dev->driver = null, but I have not find any case that
-> >>
-> >> dev->driver = null, but pci_dev->driver != null;
-> > Sorry I make a mistake here.  The dev->driver != null in
-> > local_pci_probe().  We use pci_dev->driver instead of dev->driver in
-> > pci_pm_runtime_xxx() because we want device to be kept in normal power
-> > state (D0) and SUSPENDED state when unbound.The
-> > pm_runtime_put/get_sync in pci_device_remove/local_pci_probe will not
-> > change the power state of the device because of the check in
-> > pci_pm_runtime_xxx().
-> Yes, you are right, but what am I confuse is that, why check dev->driver
-> in pci_pm_runtime_xxx() can't keep the device in normal power
-> state (D0) and SUSPENDED state when unbound.
+On Thursday, November 28, 2013 12:12 PM, Jingoo Han wrote:
 > 
-> May be logic issue ?
+> This macro is used to create a struct pci_device_id array.
+> 
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-Because dev->driver is set before local_pci_probe() and cleared after
-pci_device_remove().  But we need a flag to be changed in
-local_pci_probe() and pci_device_remove().
+Please, ignore this patch.
+According to the Greg Kroah-Hartman, 
 
-Best Regards,
-Huang Ying
+"Yeah, and it's a horrid macro that deserves to be removed, please don't
+use it in more places.
+
+Actually, if you could just remove it, that would be best, sorry, I'm
+not going to take these patches."
+
+So, I will send the patch to remove 'DEFINE_PCI_DEVICE_TABLE' instead.
+Sorry for annoying. :-)
+
+Best regards,
+Jingoo Han
+
+> ---
+>  drivers/pci/pcie/portdrv_pci.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 0d8fdc4..5356902 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -368,7 +368,7 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
+>  /*
+>   * LINUX Device Driver Model
+>   */
+> -static const struct pci_device_id port_pci_ids[] = { {
+> +static DEFINE_PCI_DEVICE_TABLE(port_pci_ids) = { {
+>  	/* handle any PCI-Express port */
+>  	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
+>  	}, { /* end: all zeroes */ }
+> --
+> 1.7.10.4
 
 
