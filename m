@@ -1,103 +1,291 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:58572 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752162Ab3KSNIa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 08:08:30 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	linux-usb@vger.kernel.org, Kevin Hilman <khilman@linaro.org>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during system suspend
-Date: Tue, 19 Nov 2013 14:21:08 +0100
-Message-ID: <7271853.iqRc6SUNTz@vostro.rjw.lan>
-In-Reply-To: <CAPDyKFpypLVKiOZEweWMig9LrNHcOpNQnm+J3KJ3KzCDBgkv9A@mail.gmail.com>
-References: <CAPDyKFrushEwW7x_VguPjOnP8BuSO=+tD=DxS9J0JQVfYTgOYA@mail.gmail.com> <Pine.LNX.4.44L0.1311181010080.1421-100000@iolanthe.rowland.org> <CAPDyKFpypLVKiOZEweWMig9LrNHcOpNQnm+J3KJ3KzCDBgkv9A@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46684 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752042Ab3K2JoW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Nov 2013 04:44:22 -0500
+Date: Fri, 29 Nov 2013 10:41:37 +0100
+From: Veaceslav Falico <vfalico@redhat.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Neil Horman <nhorman@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
+Message-ID: <20131129094137.GC3028@redhat.com>
+References: <20131127184652.GA1856@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20131127184652.GA1856@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 19, 2013 01:21:57 PM Ulf Hansson wrote:
-> On 18 November 2013 16:17, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > On Mon, 18 Nov 2013, Ulf Hansson wrote:
-> >
-> >> I favour the pm_runtime_no_prevent_suspend API approach, since it
-> >> would mean a change in behaviour of the PM core.
-> >
-> > That's exactly why I don't favor it!  :-)
-> 
-> I will try my best to convince you then. :-)
-> 
-> >
-> >>  I also think that in
-> >> some cases it could make runtime PM better understandable, for those
-> >> who are deploying it.
-> >
-> > I don't see how it would make runtime PM either more or less
-> > understandable, since the proposed change affects system PM, not
-> > runtime PM.  On the other hand, it would make the Runtime PM
-> > documentation more complicated.
-> 
-> At the moment, system PM is already affecting behaviour of runtime PM
-> since it is preventing runtime suspend during system suspend.
-> 
-> To me and and those driver authors, that don't see the direct need for
-> why the PM core behaves like this (because we are not working with PCI
-> drivers for example), I would guess this is probably the piece in the
-> documentation we have more difficult to understand and adapt to.
-> 
-> I can point at some examples, were I believe drivers that use runtime
-> PM, tries to adapt to the PM core behaviour, but I fear they for too
-> many times have got it wrong. Here are some various examples I have
-> found, which made me think like this.
-> 
-> 1.
-> Not many are using the .suspend_late callback at all, which should be
-> the most proper solution to use.
+On Wed, Nov 27, 2013 at 10:46:52AM -0800, Greg Kroah-Hartman wrote:
+>From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+>The PCI MSI sysfs code is a mess with kobjects for things that don't
+>really need to be kobjects.  This patch creates attributes dynamically
+>for the MSI interrupts instead of using kobjects.
+>
+>Note, this removes a directory from the current MSI interrupt sysfs
+>code:
+>
+>old MSI kobjects:
+>pci_device
+>   └── msi_irqs
+>       └── 40
+>           └── mode
+>
+>new MSI attributes:
+>pci_device
+>   └── msi_irqs
+>       └── 40
+>
+>As there was only one file "mode" with the kobject model, the interrupt
+>number is now a file that returns the "mode" of the interrupt (msi vs.
+>msix).
+>
+>Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Yes.
+Works like a charm for me.
 
-> 2.
-> Drivers are using the synchronise pm_runtime_put_sync in their
-> .suspend callbacks.
-> 
-> 3.
-> Drivers do "pm_runtime_get_sync" from their .suspend callbacks, but
-> don't put the device into inactive state from anywhere as a part of
-> the system suspend.
-> 
-> 4.
-> Drivers only handles system suspend tasks from it's .suspend callbacks
-> and don't implement .suspend_late, thus the device will not be fully
-> inactivated.
-> 
-> 5.
-> Drivers relies on pm_runtime_suspended or worse
-> pm_runtime_status_suspend, to check if they shall put their device
-> into inactive state from their .suspend callbacks or leave it as is.
-> While they put the device into inactive state, the runtime state is
-> not properly updated to reflect this. Most important, at this point
-> runtime PM has not yet been disabled from the PM core.
+FWIW,
 
-All 2 and 5 are bugs in the drviers that should be fixed.  Whether or
-not 4 is a bug depends on what the bus type does.
+Reviewed-by: Veaceslav Falico <vfalico@redhat.com>
 
-There's one more problem here, which is the expectation that drivers should
-be responsible for the entire handling of suspend/resume of their devices.
-This is misguided, because it forces the knowledge about particular platforms
-into the drivers.  Ideally, the suspend and resume of a device should be
-divided into a device-specific part handled by the driver and a bus-specific
-or platform-specific part handled by the bus type or a PM domain, respectively.
-The driver should only be concerned about the device-specific part.
-
-That applies to both system suspend/resume and runtime PM, though.
-
-Thanks!
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>
+>---
+>
+>Neil, can you test this patch to see if irqbalance works as-is or not?
+>
+>thanks,
+>
+>greg k-h
+>
+> drivers/pci/msi.c   |  152 +++++++++++++++++++++++++---------------------------
+> include/linux/pci.h |    2
+> 2 files changed, 76 insertions(+), 78 deletions(-)
+>
+>--- a/drivers/pci/msi.c
+>+++ b/drivers/pci/msi.c
+>@@ -363,6 +363,9 @@ void write_msi_msg(unsigned int irq, str
+> static void free_msi_irqs(struct pci_dev *dev)
+> {
+> 	struct msi_desc *entry, *tmp;
+>+	struct attribute **msi_attrs;
+>+	struct device_attribute *dev_attr;
+>+	int count = 0;
+>
+> 	list_for_each_entry(entry, &dev->msi_list, list) {
+> 		int i, nvec;
+>@@ -398,6 +401,22 @@ static void free_msi_irqs(struct pci_dev
+> 		list_del(&entry->list);
+> 		kfree(entry);
+> 	}
+>+
+>+	if (dev->msi_irq_groups) {
+>+		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
+>+		msi_attrs = dev->msi_irq_groups[0]->attrs;
+>+		list_for_each_entry(entry, &dev->msi_list, list) {
+>+			dev_attr = container_of(msi_attrs[count],
+>+						struct device_attribute, attr);
+>+			kfree(dev_attr->attr.name);
+>+			kfree(dev_attr);
+>+			++count;
+>+		}
+>+		kfree(msi_attrs);
+>+		kfree(dev->msi_irq_groups[0]);
+>+		kfree(dev->msi_irq_groups);
+>+		dev->msi_irq_groups = NULL;
+>+	}
+> }
+>
+> static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
+>@@ -471,96 +490,79 @@ void pci_restore_msi_state(struct pci_de
+> }
+> EXPORT_SYMBOL_GPL(pci_restore_msi_state);
+>
+>-
+>-#define to_msi_attr(obj) container_of(obj, struct msi_attribute, attr)
+>-#define to_msi_desc(obj) container_of(obj, struct msi_desc, kobj)
+>-
+>-struct msi_attribute {
+>-	struct attribute        attr;
+>-	ssize_t (*show)(struct msi_desc *entry, struct msi_attribute *attr,
+>-			char *buf);
+>-	ssize_t (*store)(struct msi_desc *entry, struct msi_attribute *attr,
+>-			 const char *buf, size_t count);
+>-};
+>-
+>-static ssize_t show_msi_mode(struct msi_desc *entry, struct msi_attribute *atr,
+>+static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
+> 			     char *buf)
+> {
+>-	return sprintf(buf, "%s\n", entry->msi_attrib.is_msix ? "msix" : "msi");
+>-}
+>-
+>-static ssize_t msi_irq_attr_show(struct kobject *kobj,
+>-				 struct attribute *attr, char *buf)
+>-{
+>-	struct msi_attribute *attribute = to_msi_attr(attr);
+>-	struct msi_desc *entry = to_msi_desc(kobj);
+>-
+>-	if (!attribute->show)
+>-		return -EIO;
+>-
+>-	return attribute->show(entry, attribute, buf);
+>-}
+>-
+>-static const struct sysfs_ops msi_irq_sysfs_ops = {
+>-	.show = msi_irq_attr_show,
+>-};
+>-
+>-static struct msi_attribute mode_attribute =
+>-	__ATTR(mode, S_IRUGO, show_msi_mode, NULL);
+>-
+>+	struct pci_dev *pdev = to_pci_dev(dev);
+>+	struct msi_desc *entry;
+>+	unsigned long irq;
+>+	int retval;
+>
+>-static struct attribute *msi_irq_default_attrs[] = {
+>-	&mode_attribute.attr,
+>-	NULL
+>-};
+>+	retval = kstrtoul(attr->attr.name, 10, &irq);
+>+	if (retval)
+>+		return retval;
+>
+>-static void msi_kobj_release(struct kobject *kobj)
+>-{
+>-	struct msi_desc *entry = to_msi_desc(kobj);
+>-
+>-	pci_dev_put(entry->dev);
+>+	list_for_each_entry(entry, &pdev->msi_list, list) {
+>+		if (entry->irq == irq) {
+>+			return sprintf(buf, "%s\n",
+>+				       entry->msi_attrib.is_msix ? "msix" : "msi");
+>+		}
+>+	}
+>+	return -ENODEV;
+> }
+>
+>-static struct kobj_type msi_irq_ktype = {
+>-	.release = msi_kobj_release,
+>-	.sysfs_ops = &msi_irq_sysfs_ops,
+>-	.default_attrs = msi_irq_default_attrs,
+>-};
+>-
+> static int populate_msi_sysfs(struct pci_dev *pdev)
+> {
+>+	struct attribute **msi_attrs;
+>+	struct device_attribute *msi_dev_attr;
+>+	struct attribute_group *msi_irq_group;
+>+	const struct attribute_group **msi_irq_groups;
+> 	struct msi_desc *entry;
+>-	struct kobject *kobj;
+> 	int ret;
+>+	int num_msi = 0;
+> 	int count = 0;
+>
+>-	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
+>-	if (!pdev->msi_kset)
+>-		return -ENOMEM;
+>-
+>+	/* Determine how many msi entries we have */
+> 	list_for_each_entry(entry, &pdev->msi_list, list) {
+>-		kobj = &entry->kobj;
+>-		kobj->kset = pdev->msi_kset;
+>-		pci_dev_get(pdev);
+>-		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+>-				     "%u", entry->irq);
+>-		if (ret)
+>-			goto out_unroll;
+>-
+>-		count++;
+>+		++num_msi;
+> 	}
+>+	if (!num_msi)
+>+		return 0;
+>
+>-	return 0;
+>-
+>-out_unroll:
+>+	/* Dynamically create the MSI attributes for the PCI device */
+>+	msi_attrs = kzalloc(sizeof(void *) * (num_msi + 1), GFP_KERNEL);
+>+	if (!msi_attrs)
+>+		return -ENOMEM;
+> 	list_for_each_entry(entry, &pdev->msi_list, list) {
+>-		if (!count)
+>-			break;
+>-		kobject_del(&entry->kobj);
+>-		kobject_put(&entry->kobj);
+>-		count--;
+>+		char *name = kmalloc(20, GFP_KERNEL);
+>+		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+>+		if (!msi_dev_attr)
+>+			return -ENOMEM;
+>+		sprintf(name, "%d", entry->irq);
+>+		msi_dev_attr->attr.name = name;
+>+		msi_dev_attr->attr.mode = S_IRUGO;
+>+		msi_dev_attr->show = msi_mode_show;
+>+		msi_attrs[count] = &msi_dev_attr->attr;
+>+		++count;
+> 	}
+>-	return ret;
+>+
+>+	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
+>+	if (!msi_irq_group)
+>+		return -ENOMEM;
+>+	msi_irq_group->name = "msi_irqs";
+>+	msi_irq_group->attrs = msi_attrs;
+>+
+>+	msi_irq_groups = kzalloc(sizeof(void *) * 2, GFP_KERNEL);
+>+	if (!msi_irq_groups)
+>+		return -ENOMEM;
+>+	msi_irq_groups[0] = msi_irq_group;
+>+
+>+	ret = sysfs_create_groups(&pdev->dev.kobj, msi_irq_groups);
+>+	if (ret)
+>+		return ret;
+>+	pdev->msi_irq_groups = msi_irq_groups;
+>+
+>+	return 0;
+> }
+>
+> /**
+>@@ -925,8 +927,6 @@ void pci_disable_msi(struct pci_dev *dev
+>
+> 	pci_msi_shutdown(dev);
+> 	free_msi_irqs(dev);
+>-	kset_unregister(dev->msi_kset);
+>-	dev->msi_kset = NULL;
+> }
+> EXPORT_SYMBOL(pci_disable_msi);
+>
+>@@ -1023,8 +1023,6 @@ void pci_disable_msix(struct pci_dev *de
+>
+> 	pci_msix_shutdown(dev);
+> 	free_msi_irqs(dev);
+>-	kset_unregister(dev->msi_kset);
+>-	dev->msi_kset = NULL;
+> }
+> EXPORT_SYMBOL(pci_disable_msix);
+>
+>--- a/include/linux/pci.h
+>+++ b/include/linux/pci.h
+>@@ -351,7 +351,7 @@ struct pci_dev {
+> 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
+> #ifdef CONFIG_PCI_MSI
+> 	struct list_head msi_list;
+>-	struct kset *msi_kset;
+>+	const struct attribute_group **msi_irq_groups;
+> #endif
+> 	struct pci_vpd *vpd;
+> #ifdef CONFIG_PCI_ATS
