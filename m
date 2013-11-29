@@ -1,79 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:49501 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752741Ab3K2PBf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 10:01:35 -0500
+Date: Fri, 29 Nov 2013 16:00:47 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Eric Brower <ebrower@nvidia.com>, linux-pci@vger.kernel.org,
+	swarren@wwwdotorg.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH] PCI: Disable Gen2 for Tegra20 and Tegra30
+Message-ID: <20131129150046.GL9712@ulmo.nvidia.com>
+References: <1384815306-3149-1-git-send-email-ebrower@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <528C0CF9.3020906@huawei.com>
-References: <CAErSpo4KU9VAC=SnKuYH3EPz8NuozixAhUQBKv+=Y=76wywdTg@mail.gmail.com>
- <20131015024452.GA31951@srcf.ucam.org> <20131016202123.GA17866@google.com>
- <CAMxnaaV1DhaxKo6h85Upa8sPQz2jSYSaW1OJ7+JtvR5F9sAYZw@mail.gmail.com>
- <CAErSpo4q0rcvkHX3_L2rcJrwT-Ofu4My8JXxtxH8gyULLxTDEw@mail.gmail.com>
- <CAE9FiQUMKSak4tWiyZ-N1_50M5ytUp-JAhb7GTG29Y1aRBPuSQ@mail.gmail.com>
- <CAErSpo5yhg1EgJmmOtJeh0myd50tJuu6qVMdVnwR276WTxL8kg@mail.gmail.com>
- <20131115115235.GA2281@intel.com> <20131119013343.GA17294@google.com>
- <528AC4F2.40708@huawei.com> <20131119171850.GA4261@google.com> <528C0CF9.3020906@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 19 Nov 2013 18:20:51 -0700
-Message-ID: <CAErSpo7nKXR9NBbjs8K__T2TCONW6N76ytevTH-bxcs-NH3+Zg@mail.gmail.com>
-Subject: Re: [3.11.4] Thunderbolt/PCI unplug oops in pci_pme_list_scan
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="CqfQkoYPE/jGoa5Q"
+In-Reply-To: <1384815306-3149-1-git-send-email-ebrower@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 19, 2013 at 6:14 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>> [bhelgaas: changelog, tag for stable]
->>>> Reported-by: David Bulkow <David.Bulkow@stratus.com>
->>>> Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>> CC: stable@vger.kernel.org  # v2.6.32+
->>>
->>> Hi Bjorn,
->>>    This issue in X86 seems to be introduced after commit 928bea9 "PCI: Delay enabling bridges until they're needed"
->>> So this patch needs to back port to 2.6.32+ ?
->>
->> 928bea9 might have made it more visible, but the underlying problem is that
->> we enable the device once in the probe path, and disable it twice in the
->> remove path.  That problem exists in 2.6.32.61:
->>
->>   pcie_portdrv_probe                # .probe() method
->>     pcie_port_device_register
->>       pci_enable_device             <-- enable
->>
->>   pcie_portdrv_remove               # .remove() method
->>     pcie_port_device_remove
->>       pci_disable_device            <-- disable #1
->>     pci_disable_device              <-- disable #2
->
-> During assign unassigned resources, we also enable the port device,
->
-> fs_initcall(pcibios_assign_resources);
->   pci_assign_unassigned_resources;
->     pci_enable_bridges()
->       pci_enable_device()
->
->
-> So I think before the commit 928bea9 , the pci bridge device enable and disable is symmetrical.
-> After the commit 928bea9, we only enable bridge once, but still remove twice.
 
-The port driver should be symmetrical, regardless of what happens
-outside it.  We have to be able to bind/unbind/bind/unbind
-indefinitely.
+--CqfQkoYPE/jGoa5Q
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Do you think the patch is a problem for current upstream, or are you
-just saying it doesn't need to be backported as far as 2.6.32?  I
-frankly don't care that much if those old kernels pick it up or not.
-All I'm saying is that the problem this fixes is present that far
-back.
+On Mon, Nov 18, 2013 at 02:55:06PM -0800, Eric Brower wrote:
+> Tegra20 and Tegra30 do not support gen2 PCIe, so correct the
+> register setting to disable it.
+>=20
+> Signed-off-by: Eric Brower <ebrower@nvidia.com>
+> ---
+>  drivers/pci/host/pci-tegra.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 0afbbbc..b8ba2f7 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -805,7 +805,7 @@ static int tegra_pcie_enable_controller(struct tegra_=
+pcie *pcie)
+>  	afi_writel(pcie, value, AFI_PCIE_CONFIG);
+> =20
+>  	value =3D afi_readl(pcie, AFI_FUSE);
+> -	value &=3D ~AFI_FUSE_PCIE_T0_GEN2_DIS;
+> +	value |=3D AFI_FUSE_PCIE_T0_GEN2_DIS;
+>  	afi_writel(pcie, value, AFI_FUSE);
+> =20
+>  	/* initialize internal PHY, enable up to 16 PCIE lanes */
 
-I'm not really interested in doing a lot more digging about ancient
-kernels, unless you think it's going to break something if applied to
-them.
+Bjorn: can you pick this up directly or would you rather have me prepare
+a branch? It's the only one for Tegra so far, so a branch wouldn't be
+all that useful. In case you want to pick it up directly:
 
-Bjorn
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+--CqfQkoYPE/jGoa5Q
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSmKweAAoJEN0jrNd/PrOhEsEQAJXHHFNKNHmUfx7ptV8ZWxjV
+UUgsge38AIpPJw61EPcNSlRiCEW2g7UbnEZLGfIoKO4iRMZln7NyZMTpP2KmAXDa
+/FIMcSr3J2L5Iml4gCMNqbdCPsfpEcGB+U5wcP2MlADFYhx8X2kn5tAveHzY0ztX
+4kIynzCEJ0knfruMu4SBZeWBYdh7IjlMGeRw6nZXxzTZBDw6Y77mj4WHIDtcoOOr
+MG0Dlnp2dDgNRGviRbCM/vsQPSEThXoNbAeLXJtlGYJnc9R6aY4u6BnveMM5dOYF
+eGcT4WFuV7via/bBX/iNLN4MBQHQi0+gspt5MzHzap9vpg8bK1ZrL987ljJP/jVp
+5MnkRZ1wpf1L66fHeR7+ax3bbPJ43KsLynQmECNLlEzabzf8YaUQ1qm/vS++3bdZ
+uXP16ctkPzTLvtk06PNkAcJ/BxtQR11CQ48hjnMR78caMzUGBRKO+sSHQ3WH3GRq
+z5KUpJbhno7W08mySwryOv8M0Pvi9OWJ4wCEeH73j04KeByQehApclrJfh7g5HXZ
+Th+kH3GZz4l7Yv34GAHcGyb5rqH+P7BPthY2tKv0HS8XCXWrOLEJMMNjmvS54Aq/
+iSHs71JbMJ7xoRSzFryIDSHtRVT6lsuGbapdtnt3NkJhow+dxeR0Q1j+4wsUr4y4
+g3qXC8lgbSZe593fZI7D
+=Aqts
+-----END PGP SIGNATURE-----
+
+--CqfQkoYPE/jGoa5Q--
