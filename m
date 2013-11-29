@@ -1,97 +1,240 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44541 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752684Ab3KUPyB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Nov 2013 10:54:01 -0500
-Date: Thu, 21 Nov 2013 10:54:00 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-cc: Kevin Hilman <khilman@linaro.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
- system suspend
-In-Reply-To: <CAPDyKFrJ34oWhPosqqfh-cCpoQnAY9Q90wP7nn60RAh87ZCPAw@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1311211046160.1301-100000@iolanthe.rowland.org>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 0/4] ACPI / bind: Simplify child devices lookup
+Date: Fri, 29 Nov 2013 01:27:17 +0100
+Message-ID: <1428241.LXfdTjYkng@vostro.rjw.lan>
+In-Reply-To: <2569408.tI2CNPgMRh@vostro.rjw.lan>
+References: <2610478.KxPMyuOMok@vostro.rjw.lan> <1385516428.1791.198.camel@misato.fc.hp.com> <2569408.tI2CNPgMRh@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 21 Nov 2013, Ulf Hansson wrote:
+On Wednesday, November 27, 2013 02:58:54 AM Rafael J. Wysocki wrote:
+> On Tuesday, November 26, 2013 06:40:28 PM Toshi Kani wrote:
 
-> >> As Rafael mentioned, there is bus/pm_domain code that comes into play
-> >> here, so I'm not sure it's always a bug.
-> >>
-> >> IMO, it's not a bug for the driver to depend on runtime PM if the
-> >> bus/pm_domain is handling the details.
-> >>
-> >> On OMAP, we handle all the SoC on-chip devices with a pm_domain since
-> >> the low-level PM operations that need to happen are bus-level things not
-> >> device-level things.  Therefore, drivers for these devices can rely
-> >> entirely on runtime PM, even for system suspend.  The late/early
-> >> callbacks in the pm_domain can see if the device is runtime suspended
-> >> already or not and behave accordingly.
-> >>
-> >> So, this all *can* work by handling it at the bus/pm_domain level, but
-> >> as Ulf has mentioned (and I agree) it seems like a clunky workaround
-> >> because the PM core is preventing it from happening as one might expect.
-> >
-> > The problem is that userspace can disable runtime PM at any time by
-> > writing "on" to /sys/.../power/control.  Once that's done, you can't
-> > depend on runtime PM to put the device into a low-power state during
-> > system suspend.
-> >
-> > Now, if the bus-level code always takes care of putting the device into
-> > low power during system suspend, then the driver doesn't have to worry
-> > about it at all.  That's perfectly fine -- but I would hardly describe
-> > the situation by saying the driver relies on runtime PM for system
-> > suspend.
+[...]
+
+> > 
+> > Yes, the system booted fine with 3/4 & 4/4. :-)
 > 
-> But they are, since that is exactly what these driver depends on
-> during system suspend.
+> Thanks for the verification!
 
-Not at all.  These drivers rely on the bus-level code's suspend 
-routine to handle system suspend.  They don't rely on runtime PM.
+In fact, I've made one more mistake in that patch.  Namely, acpi_find_child()
+has to return an ACPI handle and it returned a pointer to struct acpi_device
+after it.
 
->  And since the power domain invokes the runtime
-> callbacks, normally CONFIG_PM_RUNTIME is needed for the callbacks to
-> be set up from in the bus/driver.
+That has been fixed in my tree already, but the updated patch follows for
+completness (it requires patch [3/4] to be changed, but that is just a trivial
+rebase, so I don't think it is necessary to resend it too).
 
-No, it isn't.  You can always write callbacks that get compiled even
-when CONFIG_PM_RUNTIME isn't enabled.  It's very easy -- all you have
-to do is change
+Thanks,
+Rafael
 
-	#ifdef CONFIG_PM_RUNTIME
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / bind: Simplify child device lookups
 
-to
+Now that we create a struct acpi_device object for every ACPI
+namespace node representing a device, it is not necessary to
+use acpi_walk_namespace() for child device lookup in
+acpi_find_child() any more.  Instead, we can simply walk the
+list of children of the given struct acpi_device object and
+return the matching one (or the one which is the best match if
+there are more of them).  The checks done during the matching
+loop can be simplified too so that the secondary namespace walks
+in find_child_checks() are not necessary any more.
 
-	#ifdef CONFIG_PM
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/glue.c     |  135 +++++++++++++++++++-----------------------------
+ include/acpi/acpi_bus.h |    3 +
+ 2 files changed, 57 insertions(+), 81 deletions(-)
 
-> I suppose that the OMAP SoC maintainers were accepting that this
-> dependency were allowed to exist, since that was the only solution to
-> their problem at that point.
-> 
-> Today, several years later, we are still indirectly pushing those SoC
-> maintainers that faces similar issues, to accept this dependency
-> between system suspend and runtime suspend. I see a conflict here. :-)
-
-It's only a misunderstanding.  There is no dependency.
-
-
-> I started drafting a new RFC according to your suggestion. Soon I
-> realized that using such a callback for .suspend_late will make
-> drivers/buses system suspend to depend on runtime suspend, (which my
-> RFC also has problem with). So I guess this is not a recommended set
-> up from the PM maintainers. Wandering in circles... :-)
-
-Same misunderstanding as before.  The drivers merely need to be written 
-so that the callbacks are compiled whenever CONFIG_PM is enabled rather 
-than CONFIG_PM_RUNTIME.
-
-Alan Stern
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -82,107 +82,80 @@ static struct acpi_bus_type *acpi_get_bu
+ #define FIND_CHILD_MIN_SCORE	1
+ #define FIND_CHILD_MAX_SCORE	2
+ 
+-static acpi_status acpi_dev_present(acpi_handle handle, u32 lvl_not_used,
+-				  void *not_used, void **ret_p)
+-{
+-	struct acpi_device *adev = NULL;
+-
+-	acpi_bus_get_device(handle, &adev);
+-	if (adev) {
+-		*ret_p = handle;
+-		return AE_CTRL_TERMINATE;
+-	}
+-	return AE_OK;
+-}
+-
+-static int do_find_child_checks(acpi_handle handle, bool is_bridge)
++static int find_child_checks(struct acpi_device *adev, bool check_children)
+ {
+ 	bool sta_present = true;
+ 	unsigned long long sta;
+ 	acpi_status status;
+ 
+-	status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++	status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
+ 	if (status == AE_NOT_FOUND)
+ 		sta_present = false;
+ 	else if (ACPI_FAILURE(status) || !(sta & ACPI_STA_DEVICE_ENABLED))
+ 		return -ENODEV;
+ 
+-	if (is_bridge) {
+-		void *test = NULL;
++	if (check_children && list_empty(&adev->children))
++		return -ENODEV;
+ 
+-		/* Check if this object has at least one child device. */
+-		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
+-				    acpi_dev_present, NULL, NULL, &test);
+-		if (!test)
+-			return -ENODEV;
+-	}
+ 	return sta_present ? FIND_CHILD_MAX_SCORE : FIND_CHILD_MIN_SCORE;
+ }
+ 
+-struct find_child_context {
+-	u64 addr;
+-	bool is_bridge;
+-	acpi_handle ret;
+-	int ret_score;
+-};
+-
+-static acpi_status do_find_child(acpi_handle handle, u32 lvl_not_used,
+-				 void *data, void **not_used)
++struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
++					   u64 address, bool check_children)
+ {
+-	struct find_child_context *context = data;
+-	unsigned long long addr;
+-	acpi_status status;
+-	int score;
++	struct acpi_device *adev, *ret = NULL;
++	int ret_score = 0;
+ 
+-	status = acpi_evaluate_integer(handle, METHOD_NAME__ADR, NULL, &addr);
+-	if (ACPI_FAILURE(status) || addr != context->addr)
+-		return AE_OK;
+-
+-	if (!context->ret) {
+-		/* This is the first matching object.  Save its handle. */
+-		context->ret = handle;
+-		return AE_OK;
+-	}
+-	/*
+-	 * There is more than one matching object with the same _ADR value.
+-	 * That really is unexpected, so we are kind of beyond the scope of the
+-	 * spec here.  We have to choose which one to return, though.
+-	 *
+-	 * First, check if the previously found object is good enough and return
+-	 * its handle if so.  Second, check the same for the object that we've
+-	 * just found.
+-	 */
+-	if (!context->ret_score) {
+-		score = do_find_child_checks(context->ret, context->is_bridge);
+-		if (score == FIND_CHILD_MAX_SCORE)
+-			return AE_CTRL_TERMINATE;
+-		else
+-			context->ret_score = score;
+-	}
+-	score = do_find_child_checks(handle, context->is_bridge);
+-	if (score == FIND_CHILD_MAX_SCORE) {
+-		context->ret = handle;
+-		return AE_CTRL_TERMINATE;
+-	} else if (score > context->ret_score) {
+-		context->ret = handle;
+-		context->ret_score = score;
++	list_for_each_entry(adev, &parent->children, node) {
++		unsigned long long addr;
++		acpi_status status;
++		int score;
++
++		status = acpi_evaluate_integer(adev->handle, METHOD_NAME__ADR,
++					       NULL, &addr);
++		if (ACPI_FAILURE(status) || addr != address)
++			continue;
++
++		if (!ret) {
++			/* This is the first matching object.  Save it. */
++			ret = adev;
++			continue;
++		}
++		/*
++		 * There is more than one matching device object with the same
++		 * _ADR value.  That really is unexpected, so we are kind of
++		 * beyond the scope of the spec here.  We have to choose which
++		 * one to return, though.
++		 *
++		 * First, check if the previously found object is good enough
++		 * and return it if so.  Second, do the same for the object that
++		 * we've just found.
++		 */
++		if (!ret_score) {
++			ret_score = find_child_checks(ret, check_children);
++			if (ret_score == FIND_CHILD_MAX_SCORE)
++				return ret;
++		}
++		score = find_child_checks(adev, check_children);
++		if (score == FIND_CHILD_MAX_SCORE) {
++			return adev;
++		} else if (score > ret_score) {
++			ret = adev;
++			ret_score = score;
++		}
+ 	}
+-	return AE_OK;
++	return ret;
+ }
+ 
+-acpi_handle acpi_find_child(acpi_handle parent, u64 addr, bool is_bridge)
++acpi_handle acpi_find_child(acpi_handle handle, u64 addr, bool is_bridge)
+ {
+-	if (parent) {
+-		struct find_child_context context = {
+-			.addr = addr,
+-			.is_bridge = is_bridge,
+-		};
+-
+-		acpi_walk_namespace(ACPI_TYPE_DEVICE, parent, 1, do_find_child,
+-				    NULL, &context, NULL);
+-		return context.ret;
+-	}
+-	return NULL;
++	struct acpi_device *adev;
++
++	if (!handle || acpi_bus_get_device(handle, &adev))
++		return NULL;
++
++	adev = acpi_find_child_device(adev, addr, is_bridge);
++	return adev ? adev->handle : NULL;
+ }
+ EXPORT_SYMBOL_GPL(acpi_find_child);
+ 
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -433,6 +433,9 @@ struct acpi_pci_root {
+ };
+ 
+ /* helper */
++
++struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
++					   u64 address, bool check_children);
+ acpi_handle acpi_find_child(acpi_handle, u64, bool);
+ static inline acpi_handle acpi_get_child(acpi_handle handle, u64 addr)
+ {
 
