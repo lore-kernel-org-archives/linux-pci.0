@@ -1,81 +1,253 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:40026 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753196Ab3KODHP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Nov 2013 22:07:15 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Aaron Lu <aaron.lu@intel.com>, Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org,
+	linux-usb@vger.kernel.org, Lan Tianyu <tianyu.lan@intel.com>
+Subject: [PATCH 1/3] ACPI / bind: Rework struct acpi_bus_type
+Date: Fri, 29 Nov 2013 01:37:40 +0100
+Message-ID: <2273591.1tQV675JFy@vostro.rjw.lan>
+In-Reply-To: <4501334.ovACrGogrl@vostro.rjw.lan>
+References: <4501334.ovACrGogrl@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com> <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Fri, 15 Nov 2013 11:06:58 +0800
-Message-ID: <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/11/15 Bjorn Helgaas <bhelgaas@google.com>:
-> Why would it be unlikely to fix the driver?  Do people think the
-> problem is not actually in the driver?
->
-> Asking Lenovo how to disable L1 PM substates is really a non-answer.
-> Only the extremely technical and extremely patient user (hi wzyboy :))
-> will even bother to investigate why wifi works fine with Windows but
-> not with Linux.  The only thing Lenovo *could* do is to release a new
-> BIOS with a switch to control L1 PM Substates.  If I were Lenovo, I
-> would never do that because then I would have to tell customers
-> "disable this for Linux, enable this for Windows," and I'd have to
-> deal with support calls about devices using more power than they
-> should, battery life being shorter, etc.  Plus you'd have to ask every
-> Linux user to upgrade their BIOS.  That's all just a terrible user
-> experience.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+Replace the .find_device function pointer in struct acpi_bus_type
+with a new one, .find_copmanion, that is supposed to point to a
+function returning struct acpi_device pointer (instead of an int)
+and takes one argument (instead of two).  This way the role of
+this callback is more clear and the implementation of it can
+be more straightforward.
 
-I am a little confused. There are two sets of "setpci" commands, both
-of which can make me use my NIC reliably. But you two say they are
-just workarounds, not real fixes.
+Update all of the users of struct acpi_bus_type (PCI, PNP/ACPI and
+USB) to reflect the structure change.
 
-I know the "side effect" of first two "setpci" commands is consuming
-more power. (Actually by my experience of running on battery, I did
-not notice ...)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/glue.c         |   12 +++++++-----
+ drivers/pci/pci-acpi.c      |   12 +++---------
+ drivers/pnp/pnpacpi/core.c  |   19 +++++--------------
+ drivers/usb/core/usb-acpi.c |   40 ++++++++++++++++++++--------------------
+ include/acpi/acpi_bus.h     |    2 +-
+ 5 files changed, 36 insertions(+), 49 deletions(-)
 
-But Grumbach said after the second two "setpci" commands enables "L1".
-Does it mean it saves power? So what's the "side effect" of second two
-"setpci" commands?
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -414,7 +414,7 @@ struct acpi_bus_type {
+ 	struct list_head list;
+ 	const char *name;
+ 	bool (*match)(struct device *dev);
+-	int (*find_device) (struct device *, acpi_handle *);
++	struct acpi_device * (*find_companion)(struct device *);
+ 	void (*setup)(struct device *);
+ 	void (*cleanup)(struct device *);
+ };
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -37,7 +37,7 @@ int register_acpi_bus_type(struct acpi_b
+ {
+ 	if (acpi_disabled)
+ 		return -ENODEV;
+-	if (type && type->match && type->find_device) {
++	if (type && type->match && type->find_companion) {
+ 		down_write(&bus_type_sem);
+ 		list_add_tail(&type->list, &bus_type_list);
+ 		up_write(&bus_type_sem);
+@@ -302,17 +302,19 @@ EXPORT_SYMBOL_GPL(acpi_unbind_one);
+ static int acpi_platform_notify(struct device *dev)
+ {
+ 	struct acpi_bus_type *type = acpi_get_bus_type(dev);
+-	acpi_handle handle;
+ 	int ret;
+ 
+ 	ret = acpi_bind_one(dev, NULL);
+ 	if (ret && type) {
+-		ret = type->find_device(dev, &handle);
+-		if (ret) {
++		struct acpi_device *adev;
++
++		adev = type->find_companion(dev);
++		if (!adev) {
+ 			DBG("Unable to get handle for %s\n", dev_name(dev));
++			ret = -ENODEV;
+ 			goto out;
+ 		}
+-		ret = acpi_bind_one(dev, handle);
++		ret = acpi_bind_one(dev, adev->handle);
+ 		if (ret)
+ 			goto out;
+ 	}
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -306,10 +306,9 @@ void acpi_pci_remove_bus(struct pci_bus
+ }
+ 
+ /* ACPI bus type */
+-static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
++static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	struct acpi_device *adev;
+ 	bool check_children;
+ 	u64 addr;
+ 
+@@ -322,13 +321,8 @@ static int acpi_pci_find_device(struct d
+ 			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+ 	/* Please ref to ACPI spec for the syntax of _ADR */
+ 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+-	adev = acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
++	return acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
+ 				      check_children);
+-	if (adev) {
+-		*handle = adev->handle;
+-		return 0;
+-	}
+-	return -ENODEV;
+ }
+ 
+ static void pci_acpi_setup(struct device *dev)
+@@ -368,7 +362,7 @@ static bool pci_acpi_bus_match(struct de
+ static struct acpi_bus_type acpi_pci_bus = {
+ 	.name = "PCI",
+ 	.match = pci_acpi_bus_match,
+-	.find_device = acpi_pci_find_device,
++	.find_companion = acpi_pci_find_companion,
+ 	.setup = pci_acpi_setup,
+ 	.cleanup = pci_acpi_cleanup,
+ };
+Index: linux-pm/drivers/pnp/pnpacpi/core.c
+===================================================================
+--- linux-pm.orig/drivers/pnp/pnpacpi/core.c
++++ linux-pm/drivers/pnp/pnpacpi/core.c
+@@ -329,20 +329,11 @@ static int __init acpi_pnp_match(struct
+ 	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
+ }
+ 
+-static int __init acpi_pnp_find_device(struct device *dev, acpi_handle * handle)
++static struct acpi_device * __init acpi_pnp_find_companion(struct device *dev)
+ {
+-	struct device *adev;
+-	struct acpi_device *acpi;
+-
+-	adev = bus_find_device(&acpi_bus_type, NULL,
+-			       to_pnp_dev(dev), acpi_pnp_match);
+-	if (!adev)
+-		return -ENODEV;
+-
+-	acpi = to_acpi_device(adev);
+-	*handle = acpi->handle;
+-	put_device(adev);
+-	return 0;
++	dev = bus_find_device(&acpi_bus_type, NULL, to_pnp_dev(dev),
++			      acpi_pnp_match);
++	return dev ? to_acpi_device(dev) : NULL;
+ }
+ 
+ /* complete initialization of a PNPACPI device includes having
+@@ -356,7 +347,7 @@ static bool acpi_pnp_bus_match(struct de
+ static struct acpi_bus_type __initdata acpi_pnp_bus = {
+ 	.name	     = "PNP",
+ 	.match	     = acpi_pnp_bus_match,
+-	.find_device = acpi_pnp_find_device,
++	.find_companion = acpi_pnp_find_companion,
+ };
+ 
+ int pnpacpi_disabled __initdata;
+Index: linux-pm/drivers/usb/core/usb-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/usb/core/usb-acpi.c
++++ linux-pm/drivers/usb/core/usb-acpi.c
+@@ -127,7 +127,7 @@ out:
+ 	return ret;
+ }
+ 
+-static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
++static struct acpi_device *usb_acpi_find_companion(struct device *dev)
+ {
+ 	struct usb_device *udev;
+ 	acpi_handle *parent_handle;
+@@ -169,16 +169,15 @@ static int usb_acpi_find_device(struct d
+ 				break;
+ 			}
+ 
+-			return -ENODEV;
++			return NULL;
+ 		}
+ 
+ 		/* root hub's parent is the usb hcd. */
+-		parent_handle = ACPI_HANDLE(dev->parent);
+-		*handle = acpi_get_child(parent_handle, udev->portnum);
+-		if (!*handle)
+-			return -ENODEV;
+-		return 0;
++		return acpi_find_child_device(ACPI_COMPANION(dev->parent),
++					      udev->portnum, false);
+ 	} else if (is_usb_port(dev)) {
++		struct acpi_device *adev = NULL;
++
+ 		sscanf(dev_name(dev), "port%d", &port_num);
+ 		/* Get the struct usb_device point of port's hub */
+ 		udev = to_usb_device(dev->parent->parent);
+@@ -194,26 +193,27 @@ static int usb_acpi_find_device(struct d
+ 
+ 			raw_port_num = usb_hcd_find_raw_port_number(hcd,
+ 				port_num);
+-			*handle = acpi_get_child(ACPI_HANDLE(&udev->dev),
+-				raw_port_num);
+-			if (!*handle)
+-				return -ENODEV;
++			adev = acpi_find_child_device(ACPI_COMPANION(&udev->dev),
++						      raw_port_num, false);
++			if (!adev)
++				return NULL;
+ 		} else {
+ 			parent_handle =
+ 				usb_get_hub_port_acpi_handle(udev->parent,
+ 				udev->portnum);
+ 			if (!parent_handle)
+-				return -ENODEV;
++				return NULL;
+ 
+-			*handle = acpi_get_child(parent_handle,	port_num);
+-			if (!*handle)
+-				return -ENODEV;
++			acpi_bus_get_device(parent_handle, &adev);
++			adev = acpi_find_child_device(adev, port_num, false);
++			if (!adev)
++				return NULL;
+ 		}
+-		usb_acpi_check_port_connect_type(udev, *handle, port_num);
+-	} else
+-		return -ENODEV;
++		usb_acpi_check_port_connect_type(udev, adev->handle, port_num);
++		return adev;
++	}
+ 
+-	return 0;
++	return NULL;
+ }
+ 
+ static bool usb_acpi_bus_match(struct device *dev)
+@@ -224,7 +224,7 @@ static bool usb_acpi_bus_match(struct de
+ static struct acpi_bus_type usb_acpi_bus = {
+ 	.name = "USB",
+ 	.match = usb_acpi_bus_match,
+-	.find_device = usb_acpi_find_device,
++	.find_companion = usb_acpi_find_companion,
+ };
+ 
+ int usb_acpi_register(void)
 
-IMHO, if this could user use their NIC reliably, maybe Grumbach may
-write these commands to iwlwifi driver and run them when 7260 is
-detected...
-
-BTW, no replies from Lenovo, yet.
-
---
-wzyboy
