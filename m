@@ -1,126 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:60086 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975Ab3KVITd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Nov 2013 03:19:33 -0500
-Received: by mail-qa0-f49.google.com with SMTP id ii20so3489552qab.15
-        for <linux-pci@vger.kernel.org>; Fri, 22 Nov 2013 00:19:32 -0800 (PST)
+Received: from youngberry.canonical.com ([91.189.89.112]:56733 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543Ab3K2SPH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 13:15:07 -0500
+Message-ID: <5298D99A.5040304@canonical.com>
+Date: Fri, 29 Nov 2013 13:14:50 -0500
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1311211046160.1301-100000@iolanthe.rowland.org>
-References: <CAPDyKFrJ34oWhPosqqfh-cCpoQnAY9Q90wP7nn60RAh87ZCPAw@mail.gmail.com>
-	<Pine.LNX.4.44L0.1311211046160.1301-100000@iolanthe.rowland.org>
-Date: Fri, 22 Nov 2013 09:19:32 +0100
-Message-ID: <CAPDyKFo9vzCVtMFzZaCjkGosPve72=RbWtLXaSzzX8Wq2O5ptA@mail.gmail.com>
-Subject: Re: [RFC PATCH] PM / Runtime: Allow to inactivate devices during
- system suspend
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Kevin Hilman <khilman@linaro.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	linux-usb@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+Subject: Re: [REGRESSION][v3.4-rc1] PCI: add a PCI resource reallocation config
+ option
+References: <52965493.8060208@canonical.com> <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
+In-Reply-To: <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21 November 2013 16:54, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Thu, 21 Nov 2013, Ulf Hansson wrote:
->
->> >> As Rafael mentioned, there is bus/pm_domain code that comes into play
->> >> here, so I'm not sure it's always a bug.
->> >>
->> >> IMO, it's not a bug for the driver to depend on runtime PM if the
->> >> bus/pm_domain is handling the details.
->> >>
->> >> On OMAP, we handle all the SoC on-chip devices with a pm_domain since
->> >> the low-level PM operations that need to happen are bus-level things not
->> >> device-level things.  Therefore, drivers for these devices can rely
->> >> entirely on runtime PM, even for system suspend.  The late/early
->> >> callbacks in the pm_domain can see if the device is runtime suspended
->> >> already or not and behave accordingly.
->> >>
->> >> So, this all *can* work by handling it at the bus/pm_domain level, but
->> >> as Ulf has mentioned (and I agree) it seems like a clunky workaround
->> >> because the PM core is preventing it from happening as one might expect.
->> >
->> > The problem is that userspace can disable runtime PM at any time by
->> > writing "on" to /sys/.../power/control.  Once that's done, you can't
->> > depend on runtime PM to put the device into a low-power state during
->> > system suspend.
->> >
->> > Now, if the bus-level code always takes care of putting the device into
->> > low power during system suspend, then the driver doesn't have to worry
->> > about it at all.  That's perfectly fine -- but I would hardly describe
->> > the situation by saying the driver relies on runtime PM for system
->> > suspend.
+On 11/28/2013 02:17 AM, Yinghai Lu wrote:
+> On Wed, Nov 27, 2013 at 12:22 PM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> Hi Yinghai,
 >>
->> But they are, since that is exactly what these driver depends on
->> during system suspend.
->
-> Not at all.  These drivers rely on the bus-level code's suspend
-> routine to handle system suspend.  They don't rely on runtime PM.
->
->>  And since the power domain invokes the runtime
->> callbacks, normally CONFIG_PM_RUNTIME is needed for the callbacks to
->> be set up from in the bus/driver.
->
-> No, it isn't.  You can always write callbacks that get compiled even
-> when CONFIG_PM_RUNTIME isn't enabled.  It's very easy -- all you have
-> to do is change
->
->         #ifdef CONFIG_PM_RUNTIME
->
-> to
->
->         #ifdef CONFIG_PM
-
-You nailed it here! Since you consider this to be allowed from
-dependency point of view, all my problems described would be
-"solvable". :-)
-
-Regarding the SET_RUNTIME_PM_OPS macro, which today relies on
-CONFIG_PM_RUNTIME should then be moved to CONFIG_PM instead. As
-prerequisites, drivers using this macro, obviously need to implement
-the runtime PM callbacks within CONFIG_PM as well. If that makes sense
-to you as well, I will start working on converting them that needs.
-
->
->> I suppose that the OMAP SoC maintainers were accepting that this
->> dependency were allowed to exist, since that was the only solution to
->> their problem at that point.
+>> A kernel bug was opened against Ubuntu [0].  After a kernel bisect, it
+>> was found that the following commit introduced the bug:
 >>
->> Today, several years later, we are still indirectly pushing those SoC
->> maintainers that faces similar issues, to accept this dependency
->> between system suspend and runtime suspend. I see a conflict here. :-)
+>> commit b07f2ebc109b607789f648dedcff4b125f9afec6
+>> Author: Yinghai Lu <yinghai@kernel.org>
+>> Date:   Thu Feb 23 19:23:32 2012 -0800
+>>
+>>     PCI: add a PCI resource reallocation config option
+>>
+>>
+>>
+>> The regression was introduced as of v3.4-rc1 and also exists in current
+>> mainline.
+>>
+>> The bug seems platform specific since we have not had allot of other
+>> reports.  The bug is preventing ixgbe to probe Intel x520 NIC's.
+>>
+>> It would be easy enough to disable the PCI_REALLOC_ENABLE_AUTO config
+>> option, but I wanted to get your feedback since you are the author.  It
+>> looks like the bug reporter may also be able to work around the problem
+>> with the pci=realloc=.
+> The bios has problem to have two functions rom bar to same place, and
+> root bus does
+> not enough mmio range and confuse realloc logic.
 >
-> It's only a misunderstanding.  There is no dependency.
+> Please try attached patches to top of linus's tree, or your internal tree.
 >
+> Thanks
 >
->> I started drafting a new RFC according to your suggestion. Soon I
->> realized that using such a callback for .suspend_late will make
->> drivers/buses system suspend to depend on runtime suspend, (which my
->> RFC also has problem with). So I guess this is not a recommended set
->> up from the PM maintainers. Wandering in circles... :-)
->
-> Same misunderstanding as before.  The drivers merely need to be written
-> so that the callbacks are compiled whenever CONFIG_PM is enabled rather
-> than CONFIG_PM_RUNTIME.
+> Yinghai
+Thanks so much for the patches, Yinghai.  I'll report back with the
+testing results.
 
-I will submit a patch for a "generic suspend late" asap.
+Thanks,
 
-I noticed the pm_generic_suspend_late already existed in similar form
-as the other generic functions, so I suggest we leave that as is. We
-name this new one as, "pm_generic_suspend_late_runtime", to indicate
-some relationship with runtime PM.
-
-If you have other suggestions, please advise me.
-
-Kind regards
-Ulf Hansson
-
->
-> Alan Stern
->
+Joe
