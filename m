@@ -1,323 +1,417 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:43758 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752929Ab3KZG75 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 01:59:57 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <yan@linux.vnet.ibm.com>;
-	Tue, 26 Nov 2013 16:59:54 +1000
-Date: Tue, 26 Nov 2013 14:59:44 +0800
-From: Guo Chao <yan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 08/10] PCI: Try best to allocate pref mmio 64bit above
- 4g
-Message-ID: <20131126065944.GA13781@yanx>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
- <1385429290-25397-9-git-send-email-yinghai@kernel.org>
- <CAErSpo5bxRJpiO8QmEQBkRGGKkTOEjnQBFRsZJG8CsaJ5JJkJg@mail.gmail.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:61702 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753191Ab3K2MGd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 07:06:33 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lan Tianyu <tianyu.lan@intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Aaron Lu <aaron.lu@intel.com>, Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org,
+	linux-usb@vger.kernel.org
+Subject: Re: [PATCH 1/3] ACPI / bind: Rework struct acpi_bus_type
+Date: Fri, 29 Nov 2013 13:19:24 +0100
+Message-ID: <1930953.ZacyFLFM6D@vostro.rjw.lan>
+In-Reply-To: <5297F3FB.6030808@intel.com>
+References: <4501334.ovACrGogrl@vostro.rjw.lan> <2273591.1tQV675JFy@vostro.rjw.lan> <5297F3FB.6030808@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5bxRJpiO8QmEQBkRGGKkTOEjnQBFRsZJG8CsaJ5JJkJg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Bjorn:
+On Friday, November 29, 2013 09:55:07 AM Lan Tianyu wrote:
+> On 2013年11月29日 08:37, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Replace the .find_device function pointer in struct acpi_bus_type
+> > with a new one, .find_copmanion, that is supposed to point to a
+> -------------------------^
+> A typo
 
-On Mon, Nov 25, 2013 at 09:17:11PM -0700, Bjorn Helgaas wrote:
-> On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > When one of children resources does not support MEM_64, MEM_64 for
-> > bridge get reset, so pull down whole pref resource on the bridge under 4G.
-> >
-> > If the bridge support pref mem 64, will only allocate that with pref mem64 to
-> > children that support it.
-> > For children resources if they only support pref mem 32, will allocate them
-> > from non pref mem instead.
-> >
-> > If the bridge only support 32bit pref mmio, will still have all children pref
-> > mmio under that.
+Yeah, thanks!
+
+> > function returning struct acpi_device pointer (instead of an int)
+> > and takes one argument (instead of two).  This way the role of
+> > this callback is more clear and the implementation of it can
+> > be more straightforward.
+> > 
+> > Update all of the users of struct acpi_bus_type (PCI, PNP/ACPI and
+> > USB) to reflect the structure change.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/acpi/glue.c         |   12 +++++++-----
+> >  drivers/pci/pci-acpi.c      |   12 +++---------
+> >  drivers/pnp/pnpacpi/core.c  |   19 +++++--------------
+> >  drivers/usb/core/usb-acpi.c |   40 ++++++++++++++++++++--------------------
+> >  include/acpi/acpi_bus.h     |    2 +-
+> >  5 files changed, 36 insertions(+), 49 deletions(-)
+> > 
+> > Index: linux-pm/include/acpi/acpi_bus.h
+> > ===================================================================
+> > --- linux-pm.orig/include/acpi/acpi_bus.h
+> > +++ linux-pm/include/acpi/acpi_bus.h
+> > @@ -414,7 +414,7 @@ struct acpi_bus_type {
+> >  	struct list_head list;
+> >  	const char *name;
+> >  	bool (*match)(struct device *dev);
+> > -	int (*find_device) (struct device *, acpi_handle *);
+> > +	struct acpi_device * (*find_companion)(struct device *);
+> >  	void (*setup)(struct device *);
+> >  	void (*cleanup)(struct device *);
+> >  };
+> > Index: linux-pm/drivers/acpi/glue.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/acpi/glue.c
+> > +++ linux-pm/drivers/acpi/glue.c
+> > @@ -37,7 +37,7 @@ int register_acpi_bus_type(struct acpi_b
+> >  {
+> >  	if (acpi_disabled)
+> >  		return -ENODEV;
+> > -	if (type && type->match && type->find_device) {
+> > +	if (type && type->match && type->find_companion) {
+> >  		down_write(&bus_type_sem);
+> >  		list_add_tail(&type->list, &bus_type_list);
+> >  		up_write(&bus_type_sem);
+> > @@ -302,17 +302,19 @@ EXPORT_SYMBOL_GPL(acpi_unbind_one);
+> >  static int acpi_platform_notify(struct device *dev)
+> >  {
+> >  	struct acpi_bus_type *type = acpi_get_bus_type(dev);
+> > -	acpi_handle handle;
+> >  	int ret;
+> >  
+> >  	ret = acpi_bind_one(dev, NULL);
+> >  	if (ret && type) {
+> > -		ret = type->find_device(dev, &handle);
+> > -		if (ret) {
+> > +		struct acpi_device *adev;
+> > +
+> > +		adev = type->find_companion(dev);
+> > +		if (!adev) {
+> >  			DBG("Unable to get handle for %s\n", dev_name(dev));
+> > +			ret = -ENODEV;
+> >  			goto out;
+> >  		}
+> > -		ret = acpi_bind_one(dev, handle);
+> > +		ret = acpi_bind_one(dev, adev->handle);
+> >  		if (ret)
+> >  			goto out;
+> >  	}
+> > Index: linux-pm/drivers/pci/pci-acpi.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pci/pci-acpi.c
+> > +++ linux-pm/drivers/pci/pci-acpi.c
+> > @@ -306,10 +306,9 @@ void acpi_pci_remove_bus(struct pci_bus
+> >  }
+> >  
+> >  /* ACPI bus type */
+> > -static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+> > +static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+> >  {
+> >  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> > -	struct acpi_device *adev;
+> >  	bool check_children;
+> >  	u64 addr;
+> >  
+> > @@ -322,13 +321,8 @@ static int acpi_pci_find_device(struct d
+> >  			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+> >  	/* Please ref to ACPI spec for the syntax of _ADR */
+> >  	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+> > -	adev = acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
+> > +	return acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
+> >  				      check_children);
+> > -	if (adev) {
+> > -		*handle = adev->handle;
+> > -		return 0;
+> > -	}
+> > -	return -ENODEV;
+> >  }
+> >  
+> >  static void pci_acpi_setup(struct device *dev)
+> > @@ -368,7 +362,7 @@ static bool pci_acpi_bus_match(struct de
+> >  static struct acpi_bus_type acpi_pci_bus = {
+> >  	.name = "PCI",
+> >  	.match = pci_acpi_bus_match,
+> > -	.find_device = acpi_pci_find_device,
+> > +	.find_companion = acpi_pci_find_companion,
+> >  	.setup = pci_acpi_setup,
+> >  	.cleanup = pci_acpi_cleanup,
+> >  };
+> > Index: linux-pm/drivers/pnp/pnpacpi/core.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pnp/pnpacpi/core.c
+> > +++ linux-pm/drivers/pnp/pnpacpi/core.c
+> > @@ -329,20 +329,11 @@ static int __init acpi_pnp_match(struct
+> >  	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
+> >  }
+> >  
+> > -static int __init acpi_pnp_find_device(struct device *dev, acpi_handle * handle)
+> > +static struct acpi_device * __init acpi_pnp_find_companion(struct device *dev)
+> >  {
+> > -	struct device *adev;
+> > -	struct acpi_device *acpi;
+> > -
+> > -	adev = bus_find_device(&acpi_bus_type, NULL,
+> > -			       to_pnp_dev(dev), acpi_pnp_match);
+> > -	if (!adev)
+> > -		return -ENODEV;
+> > -
+> > -	acpi = to_acpi_device(adev);
+> > -	*handle = acpi->handle;
+> > -	put_device(adev);
+> > -	return 0;
+> > +	dev = bus_find_device(&acpi_bus_type, NULL, to_pnp_dev(dev),
+> > +			      acpi_pnp_match);
 > 
-> I can't figure out if this is supposed to fix a problem, and if so,
-> what problem it is.  Can you include a URL for a bugzilla or other
-> problem description?
->
+> Why remove put_device here?
+> bus_find_device() increase dev's reference count when a dev is matched.
 
-This is intended to fix resource allocation problem when we expose
-64-bit MMIO window in PowerNV platform. Please see issue 3 in:
+By mistake.  Thanks for catching this!
 
-http://www.spinics.net/lists/linux-pci/msg26472.html
-
-Without this, any 32-bit prefetchable BARs will pull down the
-prefetahable window to allocate resource from 32-bit non-prefetchable
-range, preventing 64-bit MMIO from being used at all.
-
-What's worse, in some machines, 32-bit range is too small to provide
-fall back space for prefetchable window, causing all prefetchable
-BAR failing to get address.
-
-64-bit MMIO on PowerNV is still pending (but definitely in plan).
-So if no one else complained, it seems not fix any problems in upstream.
+Update patch follows.
 
 Thanks,
-Guo Chao
+Rafael
 
-> > -v2: Add release bridge res support with bridge mem res for pref_mem children res.
-> > -v3: refresh and make it can be applied early before for_each_dev_res patchset.
-> >
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
-> > ---
-> >  drivers/pci/setup-bus.c | 133 ++++++++++++++++++++++++++++++++----------------
-> >  drivers/pci/setup-res.c |  14 ++++-
-> >  2 files changed, 101 insertions(+), 46 deletions(-)
-> >
-> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > index 219a410..b98419e 100644
-> > --- a/drivers/pci/setup-bus.c
-> > +++ b/drivers/pci/setup-bus.c
-> > @@ -711,12 +711,11 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
-> >     bus resource of a given type. Note: we intentionally skip
-> >     the bus resources which have already been assigned (that is,
-> >     have non-NULL parent resource). */
-> > -static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
-> > +static struct resource *find_free_bus_resource(struct pci_bus *bus,
-> > +                        unsigned long type_mask, unsigned long type)
-> >  {
-> >         int i;
-> >         struct resource *r;
-> > -       unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> > -                                 IORESOURCE_PREFETCH;
-> >
-> >         pci_bus_for_each_resource(bus, r, i) {
-> >                 if (r == &ioport_resource || r == &iomem_resource)
-> > @@ -813,7 +812,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> >                 resource_size_t add_size, struct list_head *realloc_head)
-> >  {
-> >         struct pci_dev *dev;
-> > -       struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
-> > +       struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
-> > +                                                       IORESOURCE_IO);
-> >         resource_size_t size = 0, size0 = 0, size1 = 0;
-> >         resource_size_t children_add_size = 0;
-> >         resource_size_t min_align, align;
-> > @@ -913,15 +913,16 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
-> >   * guarantees that all child resources fit in this size.
-> >   */
-> >  static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
-> > -                        unsigned long type, resource_size_t min_size,
-> > -                       resource_size_t add_size,
-> > -                       struct list_head *realloc_head)
-> > +                        unsigned long type, unsigned long type2,
-> > +                        resource_size_t min_size, resource_size_t add_size,
-> > +                        struct list_head *realloc_head)
-> >  {
-> >         struct pci_dev *dev;
-> >         resource_size_t min_align, align, size, size0, size1;
-> >         resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
-> >         int order, max_order;
-> > -       struct resource *b_res = find_free_bus_resource(bus, type);
-> > +       struct resource *b_res = find_free_bus_resource(bus,
-> > +                                        mask | IORESOURCE_PREFETCH, type);
-> >         unsigned int mem64_mask = 0;
-> >         resource_size_t children_add_size = 0;
-> >
-> > @@ -942,7 +943,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
-> >                         struct resource *r = &dev->resource[i];
-> >                         resource_size_t r_size;
-> >
-> > -                       if (r->parent || (r->flags & mask) != type)
-> > +                       if (r->parent || ((r->flags & mask) != type &&
-> > +                                         (r->flags & mask) != type2))
-> >                                 continue;
-> >                         r_size = resource_size(r);
-> >  #ifdef CONFIG_PCI_IOV
-> > @@ -1115,8 +1117,9 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-> >                         struct list_head *realloc_head)
-> >  {
-> >         struct pci_dev *dev;
-> > -       unsigned long mask, prefmask;
-> > +       unsigned long mask, prefmask, type2 = 0;
-> >         resource_size_t additional_mem_size = 0, additional_io_size = 0;
-> > +       struct resource *b_res;
-> >
-> >         list_for_each_entry(dev, &bus->devices, bus_list) {
-> >                 struct pci_bus *b = dev->subordinate;
-> > @@ -1161,15 +1164,31 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-> >                    has already been allocated by arch code, try
-> >                    non-prefetchable range for both types of PCI memory
-> >                    resources. */
-> > +               b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
-> >                 mask = IORESOURCE_MEM;
-> >                 prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
-> > -               if (pbus_size_mem(bus, prefmask, prefmask,
-> > +               if (b_res[2].flags & IORESOURCE_MEM_64) {
-> > +                       prefmask |= IORESOURCE_MEM_64;
-> > +                       if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
-> >                                   realloc_head ? 0 : additional_mem_size,
-> > -                                 additional_mem_size, realloc_head))
-> > -                       mask = prefmask; /* Success, size non-prefetch only. */
-> > -               else
-> > -                       additional_mem_size += additional_mem_size;
-> > -               pbus_size_mem(bus, mask, IORESOURCE_MEM,
-> > +                                 additional_mem_size, realloc_head)) {
-> > +                                       /* Success, size non-pref64 only. */
-> > +                                       mask = prefmask;
-> > +                                       type2 = prefmask & ~IORESOURCE_MEM_64;
-> > +                       }
-> > +               }
-> > +               if (!type2) {
-> > +                       prefmask &= ~IORESOURCE_MEM_64;
-> > +                       if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
-> > +                                        realloc_head ? 0 : additional_mem_size,
-> > +                                        additional_mem_size, realloc_head)) {
-> > +                               /* Success, size non-prefetch only. */
-> > +                               mask = prefmask;
-> > +                       } else
-> > +                               additional_mem_size += additional_mem_size;
-> > +                       type2 = IORESOURCE_MEM;
-> > +               }
-> > +               pbus_size_mem(bus, mask, IORESOURCE_MEM, type2,
-> >                                 realloc_head ? 0 : additional_mem_size,
-> >                                 additional_mem_size, realloc_head);
-> >                 break;
-> > @@ -1255,42 +1274,66 @@ static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
-> >  static void pci_bridge_release_resources(struct pci_bus *bus,
-> >                                           unsigned long type)
-> >  {
-> > -       int idx;
-> > -       bool changed = false;
-> > -       struct pci_dev *dev;
-> > +       struct pci_dev *dev = bus->self;
-> >         struct resource *r;
-> >         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> > -                                 IORESOURCE_PREFETCH;
-> > +                                 IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-> > +       unsigned old_flags = 0;
-> > +       struct resource *b_res;
-> > +       int idx = 1;
-> >
-> > -       dev = bus->self;
-> > -       for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
-> > -            idx++) {
-> > -               r = &dev->resource[idx];
-> > -               if ((r->flags & type_mask) != type)
-> > -                       continue;
-> > -               if (!r->parent)
-> > -                       continue;
-> > -               /*
-> > -                * if there are children under that, we should release them
-> > -                *  all
-> > -                */
-> > -               release_child_resources(r);
-> > -               if (!release_resource(r)) {
-> > -                       dev_printk(KERN_DEBUG, &dev->dev,
-> > -                                "resource %d %pR released\n", idx, r);
-> > -                       /* keep the old size */
-> > -                       r->end = resource_size(r) - 1;
-> > -                       r->start = 0;
-> > -                       r->flags = 0;
-> > -                       changed = true;
-> > -               }
-> > -       }
-> > +       b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
-> > +
-> > +       /*
-> > +        *     1. if there is io port assign fail, will release bridge
-> > +        *        io port.
-> > +        *     2. if there is non pref mmio assign fail, release bridge
-> > +        *        nonpref mmio.
-> > +        *     3. if there is 64bit pref mmio assign fail, and bridge pref
-> > +        *        is 64bit, release bridge pref mmio.
-> > +        *     4. if there is pref mmio assign fail, and bridge pref is
-> > +        *        32bit mmio, release bridge pref mmio
-> > +        *     5. if there is pref mmio assign fail, and bridge pref is not
-> > +        *        assigned, release bridge nonpref mmio.
-> > +        */
-> > +       if (type & IORESOURCE_IO)
-> > +               idx = 0;
-> > +       else if (!(type & IORESOURCE_PREFETCH))
-> > +               idx = 1;
-> > +       else if ((type & IORESOURCE_MEM_64) &&
-> > +                (b_res[2].flags & IORESOURCE_MEM_64))
-> > +               idx = 2;
-> > +       else if (!(b_res[2].flags & IORESOURCE_MEM_64) &&
-> > +                (b_res[2].flags & IORESOURCE_PREFETCH))
-> > +               idx = 2;
-> > +       else
-> > +               idx = 1;
-> > +
-> > +       r = &b_res[idx];
-> > +
-> > +       if (!r->parent)
-> > +               return;
-> > +
-> > +       /*
-> > +        * if there are children under that, we should release them
-> > +        *  all
-> > +        */
-> > +       release_child_resources(r);
-> > +       if (!release_resource(r)) {
-> > +               type = old_flags = r->flags & type_mask;
-> > +               dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-> > +                                       PCI_BRIDGE_RESOURCES + idx, r);
-> > +               /* keep the old size */
-> > +               r->end = resource_size(r) - 1;
-> > +               r->start = 0;
-> > +               r->flags = 0;
-> >
-> > -       if (changed) {
-> >                 /* avoiding touch the one without PREF */
-> >                 if (type & IORESOURCE_PREFETCH)
-> >                         type = IORESOURCE_PREFETCH;
-> >                 __pci_setup_bridge(bus, type);
-> > +               /* for next child res under same bridge */
-> > +               r->flags = old_flags;
-> >         }
-> >  }
-> >
-> > @@ -1469,7 +1512,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
-> >         LIST_HEAD(fail_head);
-> >         struct pci_dev_resource *fail_res;
-> >         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> > -                                 IORESOURCE_PREFETCH;
-> > +                                 IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-> >         int pci_try_num = 1;
-> >         enum enable_type enable_local;
-> >
-> > diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> > index 83c4d3b..e968412 100644
-> > --- a/drivers/pci/setup-res.c
-> > +++ b/drivers/pci/setup-res.c
-> > @@ -208,9 +208,21 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
-> >
-> >         /* First, try exact prefetching match.. */
-> >         ret = pci_bus_alloc_resource(bus, res, size, align, min,
-> > -                                    IORESOURCE_PREFETCH,
-> > +                                    IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
-> >                                      pcibios_align_resource, dev);
-> >
-> > +       if (ret < 0 &&
-> > +           (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
-> > +               /*
-> > +                * That failed.
-> > +                *
-> > +                * Try below 4g pref
-> > +                */
-> > +               ret = pci_bus_alloc_resource(bus, res, size, align, min,
-> > +                                            IORESOURCE_PREFETCH,
-> > +                                            pcibios_align_resource, dev);
-> > +       }
-> > +
-> >         if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
-> >                 /*
-> >                  * That failed.
-> > --
-> > 1.8.1.4
-> >
-> 
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / bind: Rework struct acpi_bus_type
+
+Replace the .find_device function pointer in struct acpi_bus_type
+with a new one, .find_companion, that is supposed to point to a
+function returning struct acpi_device pointer (instead of an int)
+and takes one argument (instead of two).  This way the role of
+this callback is more clear and the implementation of it can
+be more straightforward.
+
+Update all of the users of struct acpi_bus_type (PCI, PNP/ACPI and
+USB) to reflect the structure change.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/glue.c         |   12 +++++++-----
+ drivers/pci/pci-acpi.c      |   12 +++---------
+ drivers/pnp/pnpacpi/core.c  |   21 ++++++++-------------
+ drivers/usb/core/usb-acpi.c |   40 ++++++++++++++++++++--------------------
+ include/acpi/acpi_bus.h     |    2 +-
+ 5 files changed, 39 insertions(+), 48 deletions(-)
+
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -414,7 +414,7 @@ struct acpi_bus_type {
+ 	struct list_head list;
+ 	const char *name;
+ 	bool (*match)(struct device *dev);
+-	int (*find_device) (struct device *, acpi_handle *);
++	struct acpi_device * (*find_companion)(struct device *);
+ 	void (*setup)(struct device *);
+ 	void (*cleanup)(struct device *);
+ };
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -37,7 +37,7 @@ int register_acpi_bus_type(struct acpi_b
+ {
+ 	if (acpi_disabled)
+ 		return -ENODEV;
+-	if (type && type->match && type->find_device) {
++	if (type && type->match && type->find_companion) {
+ 		down_write(&bus_type_sem);
+ 		list_add_tail(&type->list, &bus_type_list);
+ 		up_write(&bus_type_sem);
+@@ -302,17 +302,19 @@ EXPORT_SYMBOL_GPL(acpi_unbind_one);
+ static int acpi_platform_notify(struct device *dev)
+ {
+ 	struct acpi_bus_type *type = acpi_get_bus_type(dev);
+-	acpi_handle handle;
+ 	int ret;
+ 
+ 	ret = acpi_bind_one(dev, NULL);
+ 	if (ret && type) {
+-		ret = type->find_device(dev, &handle);
+-		if (ret) {
++		struct acpi_device *adev;
++
++		adev = type->find_companion(dev);
++		if (!adev) {
+ 			DBG("Unable to get handle for %s\n", dev_name(dev));
++			ret = -ENODEV;
+ 			goto out;
+ 		}
+-		ret = acpi_bind_one(dev, handle);
++		ret = acpi_bind_one(dev, adev->handle);
+ 		if (ret)
+ 			goto out;
+ 	}
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -306,10 +306,9 @@ void acpi_pci_remove_bus(struct pci_bus
+ }
+ 
+ /* ACPI bus type */
+-static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
++static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	struct acpi_device *adev;
+ 	bool check_children;
+ 	u64 addr;
+ 
+@@ -322,13 +321,8 @@ static int acpi_pci_find_device(struct d
+ 			|| pci_dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+ 	/* Please ref to ACPI spec for the syntax of _ADR */
+ 	addr = (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+-	adev = acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
++	return acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
+ 				      check_children);
+-	if (adev) {
+-		*handle = adev->handle;
+-		return 0;
+-	}
+-	return -ENODEV;
+ }
+ 
+ static void pci_acpi_setup(struct device *dev)
+@@ -368,7 +362,7 @@ static bool pci_acpi_bus_match(struct de
+ static struct acpi_bus_type acpi_pci_bus = {
+ 	.name = "PCI",
+ 	.match = pci_acpi_bus_match,
+-	.find_device = acpi_pci_find_device,
++	.find_companion = acpi_pci_find_companion,
+ 	.setup = pci_acpi_setup,
+ 	.cleanup = pci_acpi_cleanup,
+ };
+Index: linux-pm/drivers/pnp/pnpacpi/core.c
+===================================================================
+--- linux-pm.orig/drivers/pnp/pnpacpi/core.c
++++ linux-pm/drivers/pnp/pnpacpi/core.c
+@@ -329,20 +329,15 @@ static int __init acpi_pnp_match(struct
+ 	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
+ }
+ 
+-static int __init acpi_pnp_find_device(struct device *dev, acpi_handle * handle)
++static struct acpi_device * __init acpi_pnp_find_companion(struct device *dev)
+ {
+-	struct device *adev;
+-	struct acpi_device *acpi;
++	dev = bus_find_device(&acpi_bus_type, NULL, to_pnp_dev(dev),
++			      acpi_pnp_match);
++	if (!dev)
++		return NULL;
+ 
+-	adev = bus_find_device(&acpi_bus_type, NULL,
+-			       to_pnp_dev(dev), acpi_pnp_match);
+-	if (!adev)
+-		return -ENODEV;
+-
+-	acpi = to_acpi_device(adev);
+-	*handle = acpi->handle;
+-	put_device(adev);
+-	return 0;
++	put_device(dev);
++	return to_acpi_device(dev);
+ }
+ 
+ /* complete initialization of a PNPACPI device includes having
+@@ -356,7 +351,7 @@ static bool acpi_pnp_bus_match(struct de
+ static struct acpi_bus_type __initdata acpi_pnp_bus = {
+ 	.name	     = "PNP",
+ 	.match	     = acpi_pnp_bus_match,
+-	.find_device = acpi_pnp_find_device,
++	.find_companion = acpi_pnp_find_companion,
+ };
+ 
+ int pnpacpi_disabled __initdata;
+Index: linux-pm/drivers/usb/core/usb-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/usb/core/usb-acpi.c
++++ linux-pm/drivers/usb/core/usb-acpi.c
+@@ -127,7 +127,7 @@ out:
+ 	return ret;
+ }
+ 
+-static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
++static struct acpi_device *usb_acpi_find_companion(struct device *dev)
+ {
+ 	struct usb_device *udev;
+ 	acpi_handle *parent_handle;
+@@ -169,16 +169,15 @@ static int usb_acpi_find_device(struct d
+ 				break;
+ 			}
+ 
+-			return -ENODEV;
++			return NULL;
+ 		}
+ 
+ 		/* root hub's parent is the usb hcd. */
+-		parent_handle = ACPI_HANDLE(dev->parent);
+-		*handle = acpi_get_child(parent_handle, udev->portnum);
+-		if (!*handle)
+-			return -ENODEV;
+-		return 0;
++		return acpi_find_child_device(ACPI_COMPANION(dev->parent),
++					      udev->portnum, false);
+ 	} else if (is_usb_port(dev)) {
++		struct acpi_device *adev = NULL;
++
+ 		sscanf(dev_name(dev), "port%d", &port_num);
+ 		/* Get the struct usb_device point of port's hub */
+ 		udev = to_usb_device(dev->parent->parent);
+@@ -194,26 +193,27 @@ static int usb_acpi_find_device(struct d
+ 
+ 			raw_port_num = usb_hcd_find_raw_port_number(hcd,
+ 				port_num);
+-			*handle = acpi_get_child(ACPI_HANDLE(&udev->dev),
+-				raw_port_num);
+-			if (!*handle)
+-				return -ENODEV;
++			adev = acpi_find_child_device(ACPI_COMPANION(&udev->dev),
++						      raw_port_num, false);
++			if (!adev)
++				return NULL;
+ 		} else {
+ 			parent_handle =
+ 				usb_get_hub_port_acpi_handle(udev->parent,
+ 				udev->portnum);
+ 			if (!parent_handle)
+-				return -ENODEV;
++				return NULL;
+ 
+-			*handle = acpi_get_child(parent_handle,	port_num);
+-			if (!*handle)
+-				return -ENODEV;
++			acpi_bus_get_device(parent_handle, &adev);
++			adev = acpi_find_child_device(adev, port_num, false);
++			if (!adev)
++				return NULL;
+ 		}
+-		usb_acpi_check_port_connect_type(udev, *handle, port_num);
+-	} else
+-		return -ENODEV;
++		usb_acpi_check_port_connect_type(udev, adev->handle, port_num);
++		return adev;
++	}
+ 
+-	return 0;
++	return NULL;
+ }
+ 
+ static bool usb_acpi_bus_match(struct device *dev)
+@@ -224,7 +224,7 @@ static bool usb_acpi_bus_match(struct de
+ static struct acpi_bus_type usb_acpi_bus = {
+ 	.name = "USB",
+ 	.match = usb_acpi_bus_match,
+-	.find_device = usb_acpi_find_device,
++	.find_companion = usb_acpi_find_companion,
+ };
+ 
+ int usb_acpi_register(void)
 
