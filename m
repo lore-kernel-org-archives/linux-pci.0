@@ -1,32 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:39415 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758458Ab3KMHZZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Nov 2013 02:25:25 -0500
+Received: from smtp.domeneshop.no ([194.63.252.54]:55395 "EHLO
+	smtp.domeneshop.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754937Ab3K2N6H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 08:58:07 -0500
+From: =?UTF-8?q?Bj=C3=B8rn=20Erik=20Nilsen?= <ben@datarespons.no>
+To: jg1.han@samsung.com
+Cc: marex@denx.de, pratyush.anand@gmail.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, kishon@ti.com, Mohit.KUMAR@st.com,
+	ajay.khandelwal@st.com, tharvey@gateworks.com,
+	Eric.Nelson@boundarydevices.com, troy.kisky@boundarydevices.com,
+	=?UTF-8?q?Bj=C3=B8rn=20Erik=20Nilsen?= <ben@datarespons.no>
+Subject: Re: [PATCH v5 0/2] Kernel oops from pci_disable_msi
+Date: Fri, 29 Nov 2013 14:35:23 +0100
+Message-Id: <1385732125-28630-1-git-send-email-ben@datarespons.no>
+In-Reply-To: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com>
+References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DFBCB5@HASMSX103.ger.corp.intel.com>
-References: <CALkVjQb-Mg23YSqzwfN6bipadzTVm_aqzM4U_Bgu90=57UyOgg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DFBCB5@HASMSX103.ger.corp.intel.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Wed, 13 Nov 2013 15:25:08 +0800
-Message-ID: <CALkVjQZ5wn5LsLcH=TaKrE6KdFSCMeFMr1_oFEAPCodVw5JWJA@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/11/13 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
-> It'll work on any kernel, including 3.11 you had before
->
-> Sent from my phone.
+This patchset address Marek Vasut's comments on the previous
+patches. I decided to split into two separate commits as they are
+unrelated.
 
-Thanks Grumbach. I'm now in Linux 3.12 without your patch. The
-"setpci" workaround still works!
+Bjørn Erik Nilsen (2):
+  PCI: designware: Fix crash in dw_msi_teardown_irq
+  PCI: designware: Remove redundant call to pci_write_config
+
+ drivers/pci/host/pcie-designware.c | 57 +++++++++++++++++++++++++++-----------
+ 1 file changed, 41 insertions(+), 16 deletions(-)
 
 -- 
-wzyboy
+1.8.4.4
+
