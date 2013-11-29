@@ -1,86 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:37958 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754579Ab3KFUdb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 15:33:31 -0500
-Received: by mail-ie0-f175.google.com with SMTP id aq17so51315iec.20
-        for <linux-pci@vger.kernel.org>; Wed, 06 Nov 2013 12:33:31 -0800 (PST)
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:36944 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752574Ab3K2Naq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 08:30:46 -0500
+Date: Fri, 29 Nov 2013 14:29:58 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Stephen Warren <swarren@nvidia.com>, treding@nvidia.com,
+	pdeschrijver@nvidia.com, linux-tegra@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 08/31] pci: tegra: use reset framework
+Message-ID: <20131129132957.GU22771@ulmo.nvidia.com>
+References: <1384548866-13141-1-git-send-email-swarren@wwwdotorg.org>
+ <1384548866-13141-9-git-send-email-swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <20131106201239.GA8971@google.com>
-References: <20131105232903.3790.8738.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<CAE9FiQX74B32iD2LAaWxwOAH62YAFWkt2=hK9pVDCDUnfrEaNw@mail.gmail.com>
-	<20131106181558.GA14444@google.com>
-	<CAE9FiQU4V0waWNvMFgEjKv90KuCCQ2CYJU2UsnDP0+WDS9zb1Q@mail.gmail.com>
-	<20131106201239.GA8971@google.com>
-Date: Wed, 6 Nov 2013 12:33:31 -0800
-Message-ID: <CAE9FiQWxGdiRjZSt8OhVkJAGJ3p4zZ+Tza9HFiKtZZSa01kztA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Use pci_is_root_bus() to check for root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Nishank Trivedi <nistrive@cisco.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ULJ2Z7kCM1hyNsWd"
+In-Reply-To: <1384548866-13141-9-git-send-email-swarren@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> > commit 4e5415f02e32c85e902cd9692eab18200e14b347
->> > Author: Bjorn Helgaas <bhelgaas@google.com>
->> > Date:   Wed Nov 6 10:00:51 2013 -0700
->> >
->> >     PCI: Enable upstream bridges even for VFs on virtual buses
->> >
->> >     Previously we enabled the upstream PCI-to-PCI bridge only when
->> >     "dev->bus->self != NULL".  In the case of a VF on a virtual bus, where
->> >     "bus->self == NULL", we didn't enable the upstream bridge.
->> >
->> >     This fixes that by enabling the upstream bridge of the PF corresponding to
->> >     the VF.
->> >
->> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> >
->> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> > index ac40f90..744dc26 100644
->> > --- a/drivers/pci/pci.c
->> > +++ b/drivers/pci/pci.c
->> > @@ -1150,10 +1150,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
->> >  {
->> >         int retval;
->> >
->> > -       if (!dev)
->> > -               return;
->> > -
->> > -       pci_enable_bridge(dev->bus->self);
->> > +       if (!pci_is_root_bus(dev->bus))
->> > +               pci_enable_bridge(pci_upstream_bridge(dev));
->> >
->> >         if (pci_is_enabled(dev)) {
->> >                 if (!dev->is_busmaster)
->> > @@ -1188,7 +1186,8 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->> >         if (atomic_inc_return(&dev->enable_cnt) > 1)
->> >                 return 0;               /* already enabled */
->> >
->> > -       pci_enable_bridge(dev->bus->self);
->> > +       if (!pci_is_root_bus(dev->bus))
->> > +               pci_enable_bridge(pci_upstream_bridge(dev));
->> >
->> >         /* only skip sriov related */
->> >         for (i = 0; i <= PCI_ROM_RESOURCE; i++)
->>
->> still have problem.
->>
->> pci_upstream_bridge() could return NULL. so later pci_enable_bridge()
->> referring dev->bus could panic, as you remove !dev checking.
->
-> pci_upstream_bridge(dev) can only return NULL if dev is on a root bus,
-> and we never call pci_enable_bridge() in that case.  So I don't see
-> the problem.
 
-how about it is VF and it is on it's own virtual bus ?
-and it will pass !pci_is_root_bus(dev->bus) checking and get into
-pci_enable_bridge(pci_upstream_bridge(dev));
+--ULJ2Z7kCM1hyNsWd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+On Fri, Nov 15, 2013 at 01:54:03PM -0700, Stephen Warren wrote:
+[...]
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 0afbbbc55c81..174a5bc2d993 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -39,6 +39,7 @@
+>  #include <linux/of_platform.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/reset.h>
 
-Thanks
+Can't you also remove the linux/clk/tegra.h include now that none of the
+functions it declares are used anymore?
 
-Yinghai
+Otherwise looks good to me:
+
+Reviewed-by: Thierry Reding <treding@nvidia.com>
+
+--ULJ2Z7kCM1hyNsWd
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSmJbVAAoJEN0jrNd/PrOhDHwQAIc9/Y/paQQ8HQ1EvLTwh6jr
+ZEjpYkzQzXhkO65mU1PWY5JXyB7D3WmCAhBXDnoHmXSnj1qmhQdlC+RXFcAIsMJQ
+wXPlo+aeXHEnw+RehQvevJPSAIuXTXbcQeHfmRFqoh1EBqC+ccXzvVmy2+zV6+jq
+T7wPPBiT5/ld3IxvZiGtZeM/MCH27iAb0KYkhcFUaY96Z2s9gbzOwzQebjM6Fgcn
+gmX6mpVW/M1/cvlwWcEwoJ4pum5D2uqX2ys1uGfQ+HPGMub0cIpsi/uXrLMiJ+O+
+exAwjj3Y2RRME9RgvX+tr8g+QBJLURkfH23Fw9wFjBkgXezMFcJNALk2Wy9qs5/N
+98Lly/Y+YAXiUIJyfmZQkte4JH253JBtIZWYoGbnF41EVOyxrVJ65ZlnieP08aGb
+LEtmELZyT7yNh6N6nrDhm7saT1WhsXGT4QLAiMOJfflvIMI/T2T/ZO90uDfaa7HO
+b5vRyUfoKZBElYjwqqFQNWdydpeFO/BssWgH8OMAbrjEChT2GnSPQFAExddDOrCi
+PkXv0Df9RsIcBPjHNnfC3UB2v6hd5WAQjWYitih0iSpRQLp1NlkkXI6pe68qVlZG
+cT9UVnsh18TL5MmAflzSknTDstQmoTgBVj4tF+anEc1Ijl0/CdRkyWUsAhNNkx9H
+Y9ChG/vPwoY2gxp2k6M+
+=3mjw
+-----END PGP SIGNATURE-----
+
+--ULJ2Z7kCM1hyNsWd--
