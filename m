@@ -1,109 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:41991 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755549Ab3KEX0m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 18:26:42 -0500
-Received: by mail-ie0-f177.google.com with SMTP id e14so16241323iej.36
-        for <linux-pci@vger.kernel.org>; Tue, 05 Nov 2013 15:26:42 -0800 (PST)
-Date: Tue, 5 Nov 2013 16:26:38 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Workaround missing pci_set_master in pci drivers
-Message-ID: <20131105232638.GA3359@google.com>
-References: <CAE9FiQV8ipnQ_vV68S-QHMrUrQTWQT_XObxyBeR=dOuw6fG1eg@mail.gmail.com>
- <1380399187-4962-1-git-send-email-yinghai@kernel.org>
- <20131003220628.GA14835@google.com>
- <CAE9FiQVYZ2pRTs5Xsc2MKgUiWfLbSExLA-vF0HK2iy=tVw2OHA@mail.gmail.com>
- <CAErSpo79xHn7RNNrbQBa49M464xryqjwi_iTPjTCnhEphkCvEg@mail.gmail.com>
- <1383569048.9623.16.camel@x220.thuisdomein>
+Received: from mail-out.m-online.net ([212.18.0.10]:54447 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448Ab3K2OcO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 09:32:14 -0500
+From: Marek Vasut <marex@denx.de>
+To: =?iso-8859-1?q?Bj=F8rn_Erik_Nilsen?= <ben@datarespons.no>
+Subject: Re: [PATCH v5 1/2] PCI: designware: Fix crash in dw_msi_teardown_irq
+Date: Fri, 29 Nov 2013 15:32:08 +0100
+Cc: jg1.han@samsung.com, pratyush.anand@gmail.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, kishon@ti.com, Mohit.KUMAR@st.com,
+	ajay.khandelwal@st.com, tharvey@gateworks.com,
+	Eric.Nelson@boundarydevices.com, troy.kisky@boundarydevices.com
+References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com> <1385732125-28630-1-git-send-email-ben@datarespons.no> <1385732125-28630-2-git-send-email-ben@datarespons.no>
+In-Reply-To: <1385732125-28630-2-git-send-email-ben@datarespons.no>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1383569048.9623.16.camel@x220.thuisdomein>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201311291532.08758.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 04, 2013 at 01:44:08PM +0100, Paul Bolle wrote:
-> On Fri, 2013-10-04 at 09:55 -0600, Bjorn Helgaas wrote:
-> > On Thu, Oct 3, 2013 at 5:35 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > > On Thu, Oct 3, 2013 at 3:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > >> On Sat, Sep 28, 2013 at 01:13:07PM -0700, Yinghai Lu wrote:
-> > >>> @@ -1156,8 +1156,14 @@ static void pci_enable_bridge(struct pci
-> > >>>
-> > >>>       pci_enable_bridge(dev->bus->self);
-> > >>>
-> > >>> -     if (pci_is_enabled(dev))
-> > >>> +     if (pci_is_enabled(dev)) {
-> > >>> +             if (!dev->is_busmaster) {
-> > >>> +                     dev_warn(&dev->dev, "driver skip pci_set_master, fix it!\n");
-> > >>
-> > >> I know this is already in Linus' tree, but if we're going to enable
-> > >> bus mastering here, what's the point of the warning?  If somebody
-> > >> fixes the driver by adding a pci_set_master() call there, does that
-> > >> improve something?
-> > >
-> > > Help us to catch other offender and fix them.
-> > 
-> > What is improved by doing it in the driver instead of here?
+Dear Bjørn Erik Nilsen,
+
+I will be a nitpicking bastard below, sorry ;-/
+
+> "PCI: designware: Add irq_create_mapping()" resulted
+> in pre-allocated irq descs. Problem was that in assign_irq()
+> these descs were explicitly allocated and hence also freed,
+> resulting in a crash. We also need to clear the entire irq
+> range in teardown. With this commit the teardown basically
+> does exactly the opposite of what was done in setup.
 > 
-> After booting v3.12 for the first time on a laptop I noticed two new
-> warnings: 
->     <4>[    4.427959] pcieport 0000:00:1c.4: driver skip pci_set_master, fix it!
->     <4>[    4.448630] pcieport 0000:00:1c.1: driver skip pci_set_master, fix it!
+> Signed-off-by: Bjørn Erik Nilsen <ben@datarespons.no>
+
+You can stuff your CC list here, like this, if it's more convenient for you then 
+to type all these people on the command line:
+
+Cc: Exa Mple <user@example.com>
+
+The git send-email will automatically send email to this address.
+
+> ---
+>  drivers/pci/host/pcie-designware.c | 49
+> ++++++++++++++++++++++++++++---------- 1 file changed, 37 insertions(+),
+> 12 deletions(-)
 > 
-> These warnings aren't entirely clear, but luckily they are easily
-> greppable. It turns out they can be traced back to this patch.
+> diff --git a/drivers/pci/host/pcie-designware.c
+> b/drivers/pci/host/pcie-designware.c index e33b68b..61345a1 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -209,6 +209,25 @@ static int find_valid_pos0(struct pcie_port *pp, int
+> msgvec, int pos, int *pos0) return 0;
+>  }
 > 
-> So some further grepping, looking at the code, etc. suggests these
-> warnings could be silenced by calling pci_set_master() before calling
-> pci_enable_device(). Ie, reverse the current order of those calls in
-> drivers/pci/pcie/portdrv_core.c:pcie_port_device_register(). Is that
-> correct? But what should then be done if pci_enable_device() fails?
+> +static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+> +                            unsigned int nvec, unsigned int pos)
+> +{
+> +	unsigned int i, res, bit, val;
+> +
+> +	i = 0;
+> +	while (i < nvec) {
+
+Won't simple
+
+for (i = 0; i < nvec; i++) {
+
+do here?
+
+> +		irq_set_msi_desc_off(irq_base, i, NULL);
+
+This one returns a return value, please handle it.
+ret = irq_set(...);
+if (ret)
+ goto fail;
+
+
+> +		clear_bit(pos + i, pp->msi_irq_in_use);
+> +		/* Disable corresponding interrupt on MSI interrupt controller 
+*/
+> +		res = ((pos + i) / 32) * 12;
+> +		bit = (pos + i) % 32;
+> +		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+> +		val &= ~(1 << bit);
+> +		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+> +		++i;
+> +	}
+
+fail:
+ for (--i; i >=0; i--)
+   irq...
+return ret;
+
+> +}
+> +
+>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>  {
+>  	int res, bit, irq, pos0, pos1, i;
+> @@ -242,11 +261,20 @@ static int assign_irq(int no_irqs, struct msi_desc
+> *desc, int *pos) if (!irq)
+>  		goto no_valid_irq;
 > 
-> And Bjorn's question - what's the point of this warning if
-> pci_set_master() will be called anyway - also came up when I looked at
-> that code segment for the first time. But I'm not familiar with the PCI
-> code.
-
-Unless somebody can point out a problem with doing the pci_set_master()
-inside pci_enable_bridges(), I plan to merge the following patch to
-remove the warning.
-
-
-PCI: Drop warning about drivers that don't use pci_set_master()
-
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-f41f064cf4 ("PCI: Workaround missing pci_set_master in pci drivers") made
-pci_enable_bridge() turn on bus mastering if the driver hadn't done so
-already.  It also added a warning in this case.  But there's no reason to
-warn about it unless it's actually a problem to enable bus mastering here.
-
-This patch drops the warning because I'm not aware of any such problem.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Paul Bolle <pebolle@tiscali.nl>
----
- drivers/pci/pci.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7a92d81..ac40f90 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1156,10 +1156,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 	pci_enable_bridge(dev->bus->self);
- 
- 	if (pci_is_enabled(dev)) {
--		if (!dev->is_busmaster) {
--			dev_warn(&dev->dev, "driver skip pci_set_master, fix it!\n");
-+		if (!dev->is_busmaster)
- 			pci_set_master(dev);
--		}
- 		return;
- 	}
- 
+> +	/*
+> +	 * irq_create_mapping (called from dw_pcie_host_init) pre-allocates
+> +	 * descs so there is no need to allocate descs here. We can therefore
+> +	 * assume that if irq_find_mapping above returns non-zero, then the
+> +	 * descs are also successfully allocated.
+> +	 */
+> +
+>  	i = 0;
+>  	while (i < no_irqs) {
+> +		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
+> +			clear_irq_range(pp, irq, i, pos0);
+> +			goto no_valid_irq;
+> +		}
+>  		set_bit(pos0 + i, pp->msi_irq_in_use);
+> -		irq_alloc_descs((irq + i), (irq + i), 1, 0);
+> -		irq_set_msi_desc(irq + i, desc);
+>  		/*Enable corresponding interrupt in MSI interrupt controller */
+>  		res = ((pos0 + i) / 32) * 12;
+>  		bit = (pos0 + i) % 32;
+> @@ -266,7 +294,7 @@ no_valid_irq:
+> 
+>  static void clear_irq(unsigned int irq)
+>  {
+> -	int res, bit, val, pos;
+> +	unsigned int pos, nvec;
+>  	struct irq_desc *desc;
+>  	struct msi_desc *msi;
+>  	struct pcie_port *pp;
+> @@ -281,18 +309,15 @@ static void clear_irq(unsigned int irq)
+>  		return;
+>  	}
+> 
+> +	/* undo what was done in assign_irq */
+>  	pos = data->hwirq;
+> +	nvec = 1 << msi->msi_attrib.multiple;
+> 
+> -	irq_free_desc(irq);
+> -
+> -	clear_bit(pos, pp->msi_irq_in_use);
+> +	clear_irq_range(pp, irq, nvec, pos);
+> 
+> -	/* Disable corresponding interrupt on MSI interrupt controller */
+> -	res = (pos / 32) * 12;
+> -	bit = pos % 32;
+> -	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+> -	val &= ~(1 << bit);
+> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+> +	/* all irqs cleared; reset attributes */
+> +	msi->irq = 0;
+> +	msi->msi_attrib.multiple = 0;
+>  }
+> 
+>  static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
