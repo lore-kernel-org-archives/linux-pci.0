@@ -1,88 +1,150 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Bhushan <r65777@freescale.com>
-To: <alex.williamson@redhat.com>, <joro@8bytes.org>,
-	<bhelgaas@google.com>, <agraf@suse.de>, <scottwood@freescale.com>,
-	<stuart.yoder@freescale.com>, <iommu@lists.linux-foundation.org>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-kernel@vger.kernel.org>
-CC: Bharat Bhushan <Bharat.Bhushan@freescale.com>,
-	Bharat Bhushan <bharat.bhushan@freescale.com>
-Subject: [PATCH 5/9 v2] pci/msi: interface to set an iova for a msi region
-Date: Tue, 19 Nov 2013 10:47:09 +0530
-Message-ID: <1384838233-24847-6-git-send-email-Bharat.Bhushan@freescale.com>
-In-Reply-To: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:31751 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751872Ab3K2Bdm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 20:33:42 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Joe Perches' <joe@perches.com>,
+	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	'Andrew Morton' <akpm@linux-foundation.org>,
+	'Andy Whitcroft' <apw@canonical.com>,
+	linux-serial@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <000601ceebdc$ee148de0$ca3da9a0$%han@samsung.com>
+ <20131128040750.GA29917@kroah.com>
+ <006001ceebfa$c85a1020$590e3060$%han@samsung.com>
+ <1385617213.12210.5.camel@joe-AO722> <20131128055328.GA565@kroah.com>
+ <1385619863.12210.14.camel@joe-AO722>
+In-reply-to: <1385619863.12210.14.camel@joe-AO722>
+Subject: Re: [PATCH 1/5] serial: 8250_pci: use DEFINE_PCI_DEVICE_TABLE macro
+Date: Fri, 29 Nov 2013 10:33:35 +0900
+Message-id: <001d01ceeca3$0557d630$10078290$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch defines an interface by which a msi page
-can be mapped to a specific iova page.
+On Thursday, November 28, 2013 3:24 PM, Joe Perches wrote:
+>On Wed, 2013-11-27 at 21:53 -0800, 'Greg Kroah-Hartman' wrote:
+>>On Wed, Nov 27, 2013 at 09:40:13PM -0800, Joe Perches wrote:
+>>>On Thu, 2013-11-28 at 14:29 +0900, Jingoo Han wrote:
+>>>>On Thursday, November 28, 2013 1:08 PM, Greg Kroah-Hartman wrote:
+>>>>>On Thu, Nov 28, 2013 at 10:55:35AM +0900, Jingoo Han wrote:
+>>>>>> This macro is used to create a struct pci_device_id array.
+>>>>>
+>>>>> Yeah, and it's a horrid macro that deserves to be removed, please don't
+>>>>> use it in more places.
+>>>>>
+>>>>> Actually, if you could just remove it, that would be best, sorry, I'm
+>>>>> not going to take these patches.
+>>>>
+>>>> (+cc Joe Perches, Andrew Morton, Andy Whitcroft)
+>>>>
+>>>> Hi Joe Perches,
+>>>>
+>>>> Would you fix checkpatch.pl about DEFINE_PCI_DEVICE_TABLE?
+>>>> Currently, checkpatch.pl guides to use DEFINE_PCI_DEVICE_TABLE
+>>>> as below.
+>>>>
+>>>>   WARNING: Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id
+>>>>   #331: FILE: drivers/usb/host/ehci-pci.c:331:
+>>>>   +static const struct pci_device_id pci_ids [] = { {
+>>>>
+>>>> However, Greg Kroah-Hartman mentioned that DEFINE_PCI_DEVICE_TABLE
+>>>> shouldn't be used anymore.
+>>>>
+>>>> So, would you change checkpatch.pl in order to guide to use
+>>>> struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE?
+>>>>
+>>>> For example,
+>>>>   WARNING: Use struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE
+>>>
+>>> The documentation doesn't agree with Greg.
+>[]
+>> I say just remove it, I should have done that years ago when I was the
+>> PCI maintainer, just never got around to it.  No other bus has something
+>> like this for their device ids, why should PCI be "special"?
+>
+>Anyone else have an opinion?
+>
+>I don't care one way or another, but please, one way
+>not two.
 
-This is a requirement in aperture type of IOMMUs (like Freescale PAMU),
-where we map msi iova page just after guest memory iova address.
+(+cc Bjorn Helgaas, linux-pci)
 
-Signed-off-by: Bharat Bhushan <bharat.bhushan@freescale.com>
----
-v2
- - new patch
+Then, how about the following steps?
 
- drivers/pci/msi.c   |   13 +++++++++++++
- include/linux/pci.h |    8 ++++++++
- 2 files changed, 21 insertions(+), 0 deletions(-)
+1. Fix ./Documentation/PCI/pci.txt as below.
+   (Jingoo Han)
+   The ID table is an array of struct pci_device_id entries ending with an
+   -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
+   -method of declaring the table.  Each entry consists of:
+   +all-zero entry; Each entry consists of:
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 2643a29..040609f 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -77,6 +77,19 @@ int __weak arch_msi_get_region(int region_num, struct msi_region *region)
- 	return 0;
- }
- 
-+int __weak arch_msi_set_iova(struct pci_dev *pdev, int region_num,
-+			     dma_addr_t iova, bool set)
-+{
-+	return 0;
-+}
-+
-+int msi_set_iova(struct pci_dev *pdev, int region_num,
-+		 dma_addr_t iova, bool set)
-+{
-+	return arch_msi_set_iova(pdev, region_num, iova, set);
-+}
-+EXPORT_SYMBOL(msi_set_iova);
-+
- int msi_get_region_count(void)
- {
- 	return arch_msi_get_region_count();
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c587034..c6d3e58 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1195,6 +1195,12 @@ static inline int msi_get_region(int region_num, struct msi_region *region)
- {
- 	return 0;
- }
-+
-+static inline int msi_set_iova(struct pci_dev *pdev, int region_num,
-+			       dma_addr_t iova, bool set)
-+{
-+	return 0;
-+}
- #else
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
-@@ -1209,6 +1215,8 @@ void pci_restore_msi_state(struct pci_dev *dev);
- int pci_msi_enabled(void);
- int msi_get_region_count(void);
- int msi_get_region(int region_num, struct msi_region *region);
-+int msi_set_iova(struct pci_dev *pdev, int region_num,
-+		 dma_addr_t iova, bool set);
- #endif
- 
- #ifdef CONFIG_PCIEPORTBUS
--- 
-1.7.0.4
+2. Fix ./scripts/checkpatch.pl in order to guide to use
+    struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE.
+    (Joe Perches)
 
+3. Replace DEFINE_PCI_DEVICE_TABLE of ./drivers/*
+    with 'const struct pci_device_id'.
+   (Jingoo Han)
+
+4. These patches will be merged through 'driver-core.git'
+    with 'Acked-by' of each subsystem maintainer.
+   (Greg Kroah-Hartman)
+
+Best regards,
+Jingoo Han
+
+>Changing checkpatch is a trifle, but there are a _lot_
+>of maintainers to work through if it's to be removed.
+>
+>It'll probably take several releases.
+>
+>$ git grep --name-only -w DEFINE_PCI_DEVICE_TABLE | \
+>  cut -f1,2 -d/ | uniq -c
+>      1 Documentation/PCI
+>      1 arch/x86
+>      1 drivers/bcma
+>      3 drivers/block
+>      1 drivers/char
+>      1 drivers/cpufreq
+>      2 drivers/dma
+>     18 drivers/edac
+>      6 drivers/gpio
+>      6 drivers/gpu
+>      6 drivers/hwmon
+>     20 drivers/i2c
+>      2 drivers/infiniband
+>      1 drivers/ipack
+>      1 drivers/leds
+>      3 drivers/media
+>     10 drivers/mfd
+>      2 drivers/misc
+>      1 drivers/mmc
+>      1 drivers/mtd
+>    132 drivers/net
+>      1 drivers/ntb
+>      1 drivers/pci
+>      5 drivers/pcmcia
+>      2 drivers/platform
+>      1 drivers/ptp
+>      1 drivers/rapidio
+>      7 drivers/scsi
+>      3 drivers/spi
+>     65 drivers/staging
+>      3 drivers/tty
+>      1 drivers/uio
+>      5 drivers/usb
+>      1 drivers/video
+>      1 drivers/virtio
+>      3 drivers/vme
+>      9 drivers/watchdog
+>      1 drivers/xen
+>      1 include/linux
+>      1 scripts/checkpatch.pl
+>      1 scripts/tags.sh
+>      1 sound/oss
+>     67 sound/pci
 
