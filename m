@@ -1,136 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:49126 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571Ab3KGDBD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2013 22:01:03 -0500
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 7 Nov 2013 08:31:00 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id C047F394004D
-	for <linux-pci@vger.kernel.org>; Thu,  7 Nov 2013 08:30:33 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay02.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id rA730o5d30212188
-	for <linux-pci@vger.kernel.org>; Thu, 7 Nov 2013 08:30:50 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id rA730uHe005020
-	for <linux-pci@vger.kernel.org>; Thu, 7 Nov 2013 08:30:56 +0530
-Date: Thu, 7 Nov 2013 11:00:54 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Nishank Trivedi <nistrive@cisco.com>
-Subject: Re: [PATCH] PCI: Use pci_is_root_bus() to check for root bus
-Message-ID: <20131107030054.GA11245@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20131105232903.3790.8738.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAE9FiQX74B32iD2LAaWxwOAH62YAFWkt2=hK9pVDCDUnfrEaNw@mail.gmail.com>
- <20131106181558.GA14444@google.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:55792 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752545Ab3K2A0r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 19:26:47 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Aaron Lu <aaron.lu@intel.com>, Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org,
+	linux-usb@vger.kernel.org, Lan Tianyu <tianyu.lan@intel.com>
+Subject: [PATCH 0/3] ACPI / bind: Use struct acpi_device pointers instead of ACPI handles
+Date: Fri, 29 Nov 2013 01:36:48 +0100
+Message-ID: <4501334.ovACrGogrl@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20131106181558.GA14444@google.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 06, 2013 at 11:15:58AM -0700, Bjorn Helgaas wrote:
->[+cc Nishank]
->
->On Tue, Nov 05, 2013 at 07:39:10PM -0800, Yinghai Lu wrote:
->> On Tue, Nov 5, 2013 at 3:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> > pci_enable_device_flags() and pci_enable_bridge() assume that
->> > "bus->self == NULL" means that "bus" is a root bus.  That assumption is
->> > false; see 2ba29e270e97 ("PCI: Use pci_is_root_bus() to check for root
->> > bus") for details.
->> >
->> > This patch changes them to use pci_is_root_bus() instead.
->> >
->> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> > ---
->> >  drivers/pci/pci.c |    9 ++++-----
->> >  1 file changed, 4 insertions(+), 5 deletions(-)
->> >
->> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> > index ac40f90..de65bf7 100644
->> > --- a/drivers/pci/pci.c
->> > +++ b/drivers/pci/pci.c
->> > @@ -1150,10 +1150,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
->> >  {
->> >         int retval;
->> >
->> > -       if (!dev)
->> > -               return;
->> > -
->> 
->> May need to keep this checking.
->> 
->> virtual bus (for sriov virtual function) could have bus->self == NULL.
->
->Ah, you're right, thanks!  When "dev" is a VF, "dev->bus->self" may be
->NULL.  If we call pci_enable_device() on a VF, "dev->bus" is not a root
->bus, so we'll call pci_enable_bridge(dev->bus->self) when
->"dev->bus->self" is NULL, so we'll dereference a NULL pointer.
->
->But currently we just return when "dev == NULL", and I think that masks
->a deeper problem: what if we enable IOV but never call
->pci_enable_device(PF)?  In that case, the upstream bridge may not be
->enabled, and when we call pci_enable_device(VF), we'll do nothing, so
->the upstream bridge remains disabled.
->
->I didn't see anywhere the core requires the PF to be enabled before IOV
->is enabled.  I checked all the current callers of pci_enable_sriov(),
->and they all call pci_enable_device(PF) first.  But I don't think
->anything *prevents* a driver from calling pci_enable_sriov(PF) without
->doing pci_enable_device(PF).
->
->Or the PCI core could enable VFs even with no driver attached, e.g., if
->we called pci_enable_sriov() from sriov_numvfs_store() (for the sysfs
->"sriov_numvfs" file).  We talked about that a bit at the PCI miniconf in
->New Orleans.  IIRC, there are some Cisco boxes where the firmware
->enables IOV, so the VFs are enabled before Linux even sees the PF, and a
->driver could bind to a VF and do pci_enable_device(VF) even if there's
->no PF driver at all.  If that VF is on a virtual bus, we won't enable
->the upstream bridge, and the VF may not work.
->
->What do you think of the patches below?
->
+Hi,
 
-Thanks Bjorn, this is really a potential problme. And your patches fix this
-problem.
+Now that we store a pointer to struct acpi_device as the ACPI companion in
+struct device, the code making associations between "physical" devices and
+ACPI device objects can be modified to work with struct acpi_device pointers
+instead of ACPI handles too.  The first two of the following patches make these
+changes and the third one is just a related cleanup.
 
-While I did a small change on the seconde one like this. Hope you like it :-)
+[1/3] ACPI / bind: Replace .find_device in struct acpi_bus_type with .find_companion
+[2/3] ACPI / bind: Modify acpi_bind_one() to take a struct acpi_device pointer as
+      the second argument.
+[3/3] ACPI / bind: Move acpi_get_child() to ide-acpi.c which is the only remaining
+      user of that function.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index bdd64b1..8d0ce48 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1153,7 +1153,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
-        if (!dev)
-                return;
- 
--       pci_enable_bridge(dev->bus->self);
-+       pci_enable_bridge(pci_upstream_bridge(dev));
- 
-        if (pci_is_enabled(dev)) {
-                if (!dev->is_busmaster) {
-@@ -1190,7 +1190,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-        if (atomic_inc_return(&dev->enable_cnt) > 1)
-                return 0;               /* already enabled */
- 
--       pci_enable_bridge(dev->bus->self);
-+       pci_enable_bridge(pci_upstream_bridge(dev));
- 
-        /* only skip sriov related */
-        for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+The patches are on top of linux-pm.git/linux-next.  Please let me know if you see
+any problems in them.
 
+Thanks!
 
-BTW, pci_enable_bridge() is only called in pci_enable_device_flags(). After
-change in these two patches, we pass a 'upstream bridge' to
-pci_enable_bridge(). I am not sure whether this 'upstream bridge' could be a
-VF? I took a look at the SPEC again, but not find clear clause.
-
-In case the 'upstream bridge' is always a PF, maybe we could simplize the
-logic in pci_enable_bridge(). While current logic is reasonable and clear.
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
