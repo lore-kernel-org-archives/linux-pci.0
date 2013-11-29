@@ -1,179 +1,110 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
+To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
 	Linux PCI <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>, Yinghai Lu <yinghai@kernel.org>
-Subject: [Update][PATCH 6/6] ACPI / hotplug: Merge device hot-removal routines
-Date: Mon, 04 Nov 2013 14:36:58 +0100
-Message-ID: <7014358.W2jKmobrlg@vostro.rjw.lan>
-In-Reply-To: <2970389.SeMGM45Qln@vostro.rjw.lan>
-References: <5839747.7HXXGHmMBd@vostro.rjw.lan> <2970389.SeMGM45Qln@vostro.rjw.lan>
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
+Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out of the core
+Date: Fri, 29 Nov 2013 14:08:08 +0100
+Message-ID: <1554480.uCR6qUxJk9@vostro.rjw.lan>
+In-Reply-To: <5297FDC7.6000007@jp.fujitsu.com>
+References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <2547688.l8Q1XKb3Ol@vostro.rjw.lan> <5297FDC7.6000007@jp.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Friday, November 29, 2013 11:36:55 AM Yasuaki Ishimatsu wrote:
+> Hi Rafael,
 
-There is no real reasn why acpi_bus_device_eject() and
-acpi_bus_hot_remove_device() should work differently, so rework
-acpi_bus_device_eject() so that it can be called internally by
-both acpi_bus_hot_remove_device() and acpi_eject_store_work().
-Accordingly, rework acpi_hotplug_notify_cb() to queue up the
-execution of acpi_bus_hot_remove_device() through
-acpi_os_hotplug_execute() on eject request notifications.
+Hi,
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c |   84 +++++++++++++++++++++++-----------------------------
- 1 file changed, 38 insertions(+), 46 deletions(-)
+> Replying to this mail may be wrong.
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -285,10 +285,9 @@ static int acpi_scan_hot_remove(struct a
- 	return 0;
- }
- 
--static void acpi_bus_device_eject(void *context)
-+static void acpi_bus_device_eject(struct acpi_device *device, u32 ost_src)
- {
--	acpi_handle handle = context;
--	struct acpi_device *device = NULL;
-+	acpi_handle handle = device->handle;
- 	struct acpi_scan_handler *handler;
- 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
- 	int error;
-@@ -296,20 +295,19 @@ static void acpi_bus_device_eject(void *
- 	lock_device_hotplug();
- 	mutex_lock(&acpi_scan_lock);
- 
--	acpi_bus_get_device(handle, &device);
--	if (!device)
--		goto err_out;
--
- 	handler = device->handler;
--	if (!handler || !handler->hotplug.enabled)
-+	if (!handler || !handler->hotplug.enabled) {
-+		put_device(&device->dev);
- 		goto err_support;
-+	}
-+
-+	if (ost_src == ACPI_NOTIFY_EJECT_REQUEST)
-+		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
-+					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
- 
--	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
--				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
- 	if (handler->hotplug.mode == AHM_CONTAINER)
- 		kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
- 
--	get_device(&device->dev);
- 	error = acpi_scan_hot_remove(device);
- 	if (error == -EPERM) {
- 		goto err_support;
-@@ -325,8 +323,7 @@ static void acpi_bus_device_eject(void *
-  err_support:
- 	ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
-  err_out:
--	acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST, ost_code,
--				  NULL);
-+	acpi_evaluate_hotplug_ost(handle, ost_src, ost_code, NULL);
- 	goto out;
- }
- 
-@@ -408,10 +405,20 @@ static void acpi_hotplug_unsupported(acp
- 	acpi_evaluate_hotplug_ost(handle, type, ost_status, NULL);
- }
- 
-+/**
-+ * acpi_bus_hot_remove_device: Hot-remove a device and its children.
-+ * @context: Address of the ACPI device object to hot-remove.
-+ */
-+void acpi_bus_hot_remove_device(void *context)
-+{
-+	acpi_bus_device_eject(context, ACPI_NOTIFY_EJECT_REQUEST);
-+}
-+
- static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
- {
- 	acpi_osd_exec_callback callback;
- 	struct acpi_scan_handler *handler = data;
-+	struct acpi_device *adev;
- 	acpi_status status;
- 
- 	if (!handler->hotplug.enabled)
-@@ -428,44 +435,29 @@ static void acpi_hotplug_notify_cb(acpi_
- 		break;
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
--		callback = acpi_bus_device_eject;
--		break;
-+		status = acpi_bus_get_device(handle, &adev);
-+		if (ACPI_FAILURE(status))
-+			goto err_out;
-+
-+		get_device(&adev->dev);
-+		callback = acpi_bus_hot_remove_device;
-+		status = acpi_os_hotplug_execute(callback, adev);
-+		if (ACPI_SUCCESS(status))
-+			return;
-+
-+		put_device(&adev->dev);
-+		goto err_out;
- 	default:
- 		/* non-hotplug event; possibly handled by other handler */
- 		return;
- 	}
- 	status = acpi_os_hotplug_execute(callback, handle);
--	if (ACPI_FAILURE(status))
--		acpi_evaluate_hotplug_ost(handle, type,
--					  ACPI_OST_SC_NON_SPECIFIC_FAILURE,
--					  NULL);
--}
--
--void __acpi_bus_hot_remove_device(struct acpi_device *device, u32 ost_src)
--{
--	acpi_handle handle = device->handle;
--	int error;
--
--	lock_device_hotplug();
--	mutex_lock(&acpi_scan_lock);
--
--	error = acpi_scan_hot_remove(device);
--	if (error && handle)
--		acpi_evaluate_hotplug_ost(handle, ost_src,
--					  ACPI_OST_SC_NON_SPECIFIC_FAILURE,
--					  NULL);
--
--	mutex_unlock(&acpi_scan_lock);
--	unlock_device_hotplug();
--}
-+	if (ACPI_SUCCESS(status))
-+		return;
- 
--/**
-- * acpi_bus_hot_remove_device: Hot-remove a device and its children.
-- * @context: Address of the ACPI device object to hot-remove.
-- */
--void acpi_bus_hot_remove_device(void *context)
--{
--	__acpi_bus_hot_remove_device(context, ACPI_NOTIFY_EJECT_REQUEST);
-+ err_out:
-+	acpi_evaluate_hotplug_ost(handle, type,
-+				  ACPI_OST_SC_NON_SPECIFIC_FAILURE, NULL);
- }
- 
- static ssize_t real_power_state_show(struct device *dev,
-@@ -496,7 +488,7 @@ static DEVICE_ATTR(power_state, 0444, po
- 
- static void acpi_eject_store_work(void *context)
- {
--	__acpi_bus_hot_remove_device(context, ACPI_OST_EC_OSPM_EJECT);
-+	acpi_bus_device_eject(context, ACPI_OST_EC_OSPM_EJECT);
- }
- 
- static ssize_t
+OK, so this particular patch doesn't break things any more?
+
+> Do you remember following your patch?
+> http://lkml.org/lkml/2013/2/23/97
+> 
+> I want to add autoeject variable in acpi_hotplug_profile structure and
+> set autoecjet of container device "false".
+
+Then after the series the $subject patch belongs to it will work almost the
+same way as /sys/firmware/acpi/container/enabled (hot add will still work after
+patch [4/10] if "enabled" is 0), but only for containers.
+
+> Currently, I have a problem on ejecting container device. Since linux-3.12,
+> container device is removed by acpi_scan_hot_remove.
+> 
+> I think this has two problems.
+> 
+>    1. easily fail
+>       My container device has CPU device and Memory device, and maximum size of
+>       memory is 3Tbyte. In my environment, hot removing container device fails
+>       on offlining memory if memory is used by application.
+>       I think if offlininig memory, we must retly to offline memory several
+>       times.
+
+Yes, that's correct.  But then you can try to offline the memory upfront
+and only remove the container after that has been successful.
+
+>    2. cannot work with userland's application
+>       Hot removing CPU and memory on container device, we need take care of
+>       userland application. Before linux-3.12, container device just notifies
+>       KOBJ_OFFLINE to udev. So by using udev, if application binds to removed
+>       CPU or node, applications can change them before hot removing container
+>       device.
+>       Currently, KOBJ_OFFLINE is notified to udev. But acpi_scan_hot_remove
+>       also runs simultaneously for hot removing container device. So when
+>       applications runs for corresponding to the deletion of the devices,
+>       the devices may have been deleted.
+
+So the expectation is that the container will refuse to offline, but instead
+it will emit KOBJ_OFFLINE so that user space can do some cleanup and offline
+it through the "eject" attribute, right?
+
+> I don't know what devices are on hotpluggable conatainer device of other
+> vendors. At least, my container device cannot be hot removed correctly.
+> Then I want to add autoeject variable in acpi_hotplug_profile so that user
+> can change the parameter to "true" or "false".
+
+I have a different idea.
+
+Why don't we create a bus type for containers in analogy with CPUs and memory
+and make it support offline.  Then, the container scan handler will create a
+"physical" container device under that bus type and the new bus type code will
+implement the logic you need (that is, it will have a sysfs flag that will
+cause the offline to fail emitting a uevent of some sort if set and will allow
+the offline to happen when unset).  That "physical" container device will go
+away (again, via the container scan handler) during container removal.
+
+The eject work flow can be:
+  (1) an eject event occurs,
+  (2) the container "physical" device fails offline in acpi_scan_hot_remove()
+      emmitting, say, KOBJ_CHANGE for the "physical" device,
+  (3) user space notices the KOBJ_CHANGE and does the cleanup as needed,
+  (4) user space changes the "physical" container device flag controlling
+      offline to 0,
+  (5) user space uses the sysfs "eject" attribute of the ACPI container object
+      to finally eject the container,
+  (6) the offline in acpi_scan_hot_remove() is now successful, because the
+      flag controlling it has been set to 0 in step (4),
+  (7) the "physical" container device goes away before executing _EJ0,
+  (8) the container is ejected.
+
+Of course, if the flag controlling container offline is 0 to start with, step
+(6) will now occur directly after (1), so whoever wants containers to be
+hot-removed automatically may just clear that flag for all of them on boot.
+
+How does that sound?
+
+Rafael
+
