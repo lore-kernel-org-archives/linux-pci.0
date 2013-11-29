@@ -1,79 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:55618 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759548Ab3K0BUF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 20:20:05 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH 0/4] ACPI / bind: Simplify child devices lookup
-Date: Wed, 27 Nov 2013 02:32:53 +0100
-Message-ID: <6140633.otq91cJcVd@vostro.rjw.lan>
-In-Reply-To: <1385514717.1791.197.camel@misato.fc.hp.com>
-References: <2610478.KxPMyuOMok@vostro.rjw.lan> <8065346.ZtkoVh8DW8@vostro.rjw.lan> <1385514717.1791.197.camel@misato.fc.hp.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:45403 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135Ab3K2CVe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Nov 2013 21:21:34 -0500
+From: Marek Vasut <marex@denx.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Date: Fri, 29 Nov 2013 03:21:22 +0100
+Cc: "'Pratyush Anand'" <pratyush.anand@st.com>,
+	"'Mohit KUMAR DCG'" <Mohit.KUMAR@st.com>,
+	"'Tim Harvey'" <tharvey@gateworks.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Frank Li'" <lznuaa@gmail.com>,
+	"'Richard Zhu'" <r65037@freescale.com>,
+	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Shawn Guo'" <shawn.guo@linaro.org>,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Srikanth T Shivanand'" <ts.srikanth@samsung.com>,
+	"'Troy Kisky'" <troy.kisky@boundarydevices.com>,
+	"'Yinghai Lu'" <yinghai@kernel.org>
+References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com> <20131127083637.GD12773@pratyush-vbox> <006401ceebfe$47ab6b00$d7024100$%han@samsung.com>
+In-Reply-To: <006401ceebfe$47ab6b00$d7024100$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311290321.22415.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 26, 2013 06:11:57 PM Toshi Kani wrote:
-> On Wed, 2013-11-27 at 02:02 +0100, Rafael J. Wysocki wrote:
-> > On Tuesday, November 26, 2013 05:33:28 PM Toshi Kani wrote:
-> > > On Wed, 2013-11-27 at 01:27 +0100, Rafael J. Wysocki wrote:
-> > > > On Tuesday, November 26, 2013 05:00:42 PM Toshi Kani wrote:
-> > > > > On Mon, 2013-11-25 at 01:09 +0100, Rafael J. Wysocki wrote:
+Dear Jingoo Han,
+
+> On Wednesday, November 27, 2013 5:37 PM, Pratyush Anand wrote:
+> > On Wed, Nov 27, 2013 at 04:24:47PM +0800, Marek Vasut wrote:
+> > > > On Wed, Nov 27, 2013 at 04:46:09AM +0800, Marek Vasut wrote:
+> > > > > Dear Pratyush Anand,
+> > > > > 
 > > > > > > Hi,
 > > > > > > 
-> > > > > > The following series of four patches (on top of current linux-pm.git/bleeding-edge)
-> > > > > > rework child device lookup in drivers/acpi/glue.c and related things:
+> > > > > > On Wed, Oct 23, 2013 at 12:55:43PM +0800, Tim Harvey wrote:
+> > > > > > > The IMX6 iATU is used for address translation between the AXI
+> > > > > > > bus address space and PCI address space.  This is used for
+> > > > > > > type0 and type1 config cycles but is not necessary for
+> > > > > > > outbound io/mem regions.
+> > > > > > > 
+> > > > > > > This patch removes the calls that inappropriately re-configures
+> > > > > > > the ATU viewport for outbound memory and IO after config
+> > > > > > > cycles and removes them altogether as they are not necessary.
+> > > > > > > 
+> > > > > > > This resolves issues with PCI devices behind switches and has
+> > > > > > > been tested with a Gige device behind a PLX PEX860x switch. 
+> > > > > > > More testing is needed for other configurations.
 > > > > > > 
-> > > > > > [1/4] ACPI / bind: Simplify child device lookup
-> > > > > > [2/4] PCI/ ACPI: Use acpi_find_child_device() for child device lookup
-> > > > > > [3/4] ACPI / bind: Redefine acpi_get_child()
-> > > > > > [4/4] ACPI / bind: Redefine acpi_preset_companion()
+> > > > > > It seems to me that in your controller you have only one view
+> > > > > > port. Also mem_base and mem_bus_addr is same. Thats why it works
+> > > > > > in your case.
 > > > > > 
-> > > > > This patchset caused the attached panic during boot on a system.
-> > > > > acpi_pci_find_device() called acpi_find_child_device() with
-> > > > > ACPI_COMPANION(dev->parent) being a NULL pointer when scanning bus 0xf.
-> > > > > 
-> > > > > This bus 0xf seems to be a chipset internal bus, which is not intended
-> > > > > for the OS to use.  Therefore, ACPI does not list its PCI bridge device.
-> > > > > 
-> > > > > # lspci -tv
-> > > > >    :
-> > > > >  +-[0000:0f]-+-08.0  Intel Corporation Ivytown QPI Link 0
-> > > > >  |           +-08.2  Intel Corporation Ivytown QPI Link 0
-> > > > >    :
-> > > > > 
-> > > > > However, pcibios_fixup_peer_bridges(), called from pci_subsys_init(),
-> > > > > finds this bus as it scans all the buses from 0 to pcibios_last_bus.
-> > > > > Hence, this dev->parent does not have an associated ACPI device object. 
+> > > > > MX6 has 4 In/4 Out viewports AFAICT.
 > > > > 
-> > > > Thanks for the report!
-> > > > 
-> > > > I've dropped the patches from bleeding-edge for now.
-> > > > 
-> > > > Does "[1/4] ACPI / bind: Simplify child device lookup" alone work on that
-> > > > system?
+> > > > Then if I do not miss anything, MX6 should work even without this
+> > > > patch.
 > > > 
-> > > Yes, the system boots fine with 1/4 alone.
+> > > Yes, yet, it does not. On the other hand, this defect is only
+> > > problematic if you use the devices behind a switch. Do you use a PCIe
+> > > switch on your platform please?
 > > 
-> > Thanks!
-> > 
-> > Can you please check if the following modified [2/4] also works on top of it?
+> > I had tested with device under bridge.
+> > Mohit is in process of validating SPEAr patches with latest kernel.
+> > Mohit, see if we can arrange a switch and test, once SPEAr platform is
+> > ready with latest kernel.
 > 
-> Yes, it works fine.
+> I agree with Pratyush Anand's opinion.
+> One of our engineers had tested PCI cards under switch.
+> As far as I know, there was no issue about this.
+> However, currently, I don't have any switches. So, I
+> Cannot test this on Exynos platform.
+
+OK, I will wait for Richard to come up with confirmation if possible. Looks like 
+he's out of the office, so it might take a bit.
+
+> Mohit,
+> If you test a switch on SPEAr platform, it will be
+> very helpful. Thank you.
 > 
-> Thanks for the quick fix!
+> Best regards,
+> Jingoo Han
 
-No problem. :-)
-
-[3/4] and [4/4] on top of this one should work too.
-
-Thanks,
-Rafael
-
+Best regards,
+Marek Vasut
