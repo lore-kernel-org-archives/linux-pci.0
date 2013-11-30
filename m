@@ -1,130 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:50605 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752135Ab3K0OWd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Nov 2013 09:22:33 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [GIT PULL] ACPI and power management fixes for v3.13-rc2
-Date: Wed, 27 Nov 2013 15:35:22 +0100
-Message-ID: <1656039.n8p00yR1CA@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:21678 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559Ab3K3Wk5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 17:40:57 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	David Airlie <airlied@linux.ie>
+Subject: [PATCH v3 12/12] intel-gtt: Read 64bit for gmar_bus_addr
+Date: Sat, 30 Nov 2013 14:40:38 -0800
+Message-Id: <1385851238-21085-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+That bar could be 64bit pref mem and above 4G.
 
-Please pull from the git repository at
+-v2: refresh to 3.13-rc1
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-3.13-rc2
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Airlie <airlied@linux.ie>
+Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+---
+ drivers/char/agp/intel-gtt.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-to receive ACPI and power management fixes for v3.13-rc2 with
-top-most commit b90f7b8af985739facce48d64050a023e7df3858
-
-  Merge branch 'pm-tools'
-
-on top of commit 6ce4eac1f600b34f2f7f58f9cd8f0503d79e42ae
-
-  Linux Linux 3.13-rc1
-
-These commits fix one cpufreq bug introduced recently and a few bugs all over
-(ACPI mostly) that have been around for quite some time.  They also clean up
-a couple of things.
-
-If you don't like the octopus merge, please let me know. :-)
-
-Specifics:
-
- - Fix for a recent regression in the Tegra cpufreq driver causing
-   excess error messages to be printed from Stephen Warren.
-
- - ACPI-based device hotplug fix to prevent conflicting notify handlers
-   from being installed for PCI host bridge objects.  From Toshi Kani.
-
- - ACPICA update to upstream version 20131115.  This contains bug fixes
-   mostly (loop termination fix for the get AML length function, fixes
-   related to namespace node removal and debug output).  From Bob Moore,
-   Tomasz Nowicki and Lv Zheng.
-
- - Removal of incorrect inclusions of internal ACPICA header files by
-   non-ACPICA code from Lv Zheng.
-
- - Fixes for the ACPI sysfs interface exposing tables to user space
-   from Daisuke Hatayama and Jeremy Compostella.
-
- - Assorted ACPI and cpufreq cleanups from Sachin Kamat and Al Stone.
-
- - cpupower tool fix and man page from Thomas Renninger.
-
-Thanks!
-
-
----------------
-
-Al Stone (1):
-      ACPI / sleep: clean up compiler warning about uninitialized field
-
-Bob Moore (3):
-      ACPICA: Debug output: Do not emit function nesting level for kernel build.
-      ACPICA: Add support to delete all objects attached to the root namespace node.
-      ACPICA: Update version to 20131115.
-
-Daisuke HATAYAMA (1):
-      ACPI / sysfs: Set file size for each exposed ACPI table
-
-Jeremy Compostella (1):
-      ACPI / sysfs: Fix incorrect ACPI tables walk in acpi_tables_sysfs_init()
-
-Lv Zheng (3):
-      ACPICA: Tests: Add CHECKSUM_ABORT protection for test utilities.
-      ACPICA: Resources: Fix loop termination for the get AML length function.
-      ACPI: Clean up incorrect inclusions of ACPICA headers
-
-Sachin Kamat (1):
-      cpufreq: exynos: Remove unwanted EXPORT_SYMBOL
-
-Stephen Warren (1):
-      cpufreq: tegra: don't error target() when suspended
-
-Thomas Renninger (2):
-      tools: cpupower: Add cpupower-idle-set(1) manpage
-      tools: cpupower: fix wrong err msg not supported vs not available
-
-Tomasz Nowicki (1):
-      ACPICA: Delete all attached data objects during namespace node deletion.
-
-Toshi Kani (1):
-      ACPI / hotplug: Fix conflicted PCI bridge notify handlers
-
----------------
-
- drivers/acpi/acpica/acresrc.h                 |    6 +--
- drivers/acpi/acpica/nsalloc.c                 |   18 +++++--
- drivers/acpi/acpica/nsutils.c                 |   18 ++++---
- drivers/acpi/acpica/rscalc.c                  |    9 +++-
- drivers/acpi/acpica/rscreate.c                |   36 ++++++-------
- drivers/acpi/acpica/rsutils.c                 |    2 +-
- drivers/acpi/acpica/utdebug.c                 |   31 ++++++++---
- drivers/acpi/nvs.c                            |    1 -
- drivers/acpi/pci_root.c                       |    3 ++
- drivers/acpi/scan.c                           |    2 +-
- drivers/acpi/sleep.c                          |    2 +-
- drivers/acpi/sysfs.c                          |   54 ++++++++++---------
- drivers/cpufreq/exynos4210-cpufreq.c          |    1 -
- drivers/cpufreq/exynos4x12-cpufreq.c          |    1 -
- drivers/cpufreq/exynos5250-cpufreq.c          |    1 -
- drivers/cpufreq/tegra-cpufreq.c               |    4 +-
- drivers/hwmon/asus_atk0110.c                  |    1 -
- include/acpi/acconfig.h                       |    2 +
- include/acpi/acpi_bus.h                       |    1 +
- include/acpi/acpixf.h                         |    2 +-
- tools/power/cpupower/man/cpupower-idle-info.1 |    3 +-
- tools/power/cpupower/man/cpupower-idle-set.1  |   71 +++++++++++++++++++++++++
- tools/power/cpupower/utils/helpers/sysfs.c    |    4 +-
- 23 files changed, 189 insertions(+), 84 deletions(-)
+diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+index b8e2014..b929e9d 100644
+--- a/drivers/char/agp/intel-gtt.c
++++ b/drivers/char/agp/intel-gtt.c
+@@ -609,8 +609,10 @@ static bool intel_gtt_can_wc(void)
+ static int intel_gtt_init(void)
+ {
+ 	u32 gma_addr;
++	u32 addr_hi = 0;
+ 	u32 gtt_map_size;
+ 	int ret;
++	int pos;
+ 
+ 	ret = intel_private.driver->setup();
+ 	if (ret != 0)
+@@ -660,13 +662,17 @@ static int intel_gtt_init(void)
+ 	}
+ 
+ 	if (INTEL_GTT_GEN <= 2)
+-		pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
+-				      &gma_addr);
++		pos = I810_GMADDR;
+ 	else
+-		pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
+-				      &gma_addr);
++		pos = I915_GMADDR;
++
++	pci_read_config_dword(intel_private.pcidev, pos, &gma_addr);
++
++	if (gma_addr & PCI_BASE_ADDRESS_MEM_TYPE_64)
++		pci_read_config_dword(intel_private.pcidev, pos + 4, &addr_hi);
+ 
+ 	intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
++	intel_private.gma_bus_addr |= (u64)addr_hi << 32;
+ 
+ 	return 0;
+ }
+-- 
+1.8.1.4
 
