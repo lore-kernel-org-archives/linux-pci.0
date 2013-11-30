@@ -1,112 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:48982 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753312Ab3KKPAq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2013 10:00:46 -0500
-Date: Mon, 11 Nov 2013 07:03:18 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Lan Tianyu <tianyu.lan@intel.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Luck, Tony" <tony.luck@intel.com>
-Subject: Re: [PATCH] ACPI / driver core: Store a device pointer in struct
- acpi_dev_node
-Message-ID: <20131111150318.GB16112@kroah.com>
-References: <3268437.YsusHvklcv@vostro.rjw.lan>
- <52803124.7000304@intel.com>
- <1683079.zjqzsOAjXB@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1683079.zjqzsOAjXB@vostro.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 11/12] PCI: Sort pci root bus resources list
+Date: Sat, 30 Nov 2013 14:40:37 -0800
+Message-Id: <1385851238-21085-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 11, 2013 at 02:45:39PM +0100, Rafael J. Wysocki wrote:
-> On Monday, November 11, 2013 09:21:40 AM Lan Tianyu wrote:
-> > On 2013年11月10日 08:58, Rafael J. Wysocki wrote:
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > 
-> > > Modify struct acpi_dev_node to contain a pointer to struct device
-> > > ambedded in the struct acpi_device associated with the given device
-> > > object (that is, its ACPI companion device) instead of an ACPI handle
-> > > corresponding to that struct acpi_device.  Introduce two new macros
-> > > for manipulating that pointer in a CONFIG_ACPI-safe way,
-> > > ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
-> > > ACPI_HANDLE() macro to take the above changes into account.
-> > > Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
-> > > use ACPI_COMPANION_SET() instead.  For some of them who used to
-> > > pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
-> > > introduce a helper routine acpi_preset_companion() doing an
-> > > equivalent thing.
-> > > 
-> > > The rationale for using a struct device pointer instead of a
-> > > struct acpi_device one as the member of struct acpi_dev_node is
-> > > that it allows device.h to avoid including linux/acpi.h which would
-> > > introduce quite a bit of compilation overhead for stuff that doesn't
-> > > care about ACPI.
-> > > In turn, moving the macros to linux/acpi.h forces
-> > > the stuff that does care about ACPI to include that file as
-> > > appropriate anyway.
-> > 
-> > How about declaring "struct acpi_device" in the device.h? This can help
-> > to use struct acpi_device without including linux/acpi.h.
-> > 
-> > struct iommu_ops and struct iommu_group have been used by the same way
-> > in the device.h.
-> 
-> Yes, they are.  Well, that appears to work too.
-> 
-> Updated patch is appended.  It also contains some fixes for problems reported
-> by the auto build system and it's been tested on x86-64 now, so it should be
-> reasonably close to final.
-> 
-> Thanks,
-> Rafael
-> 
-> 
-> ---
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
-> 
-> Modify struct acpi_dev_node to contain a pointer to struct acpi_device
-> associated with the given device object (that is, its ACPI companion
-> device) instead of an ACPI handle corresponding to it.  Introduce two
-> new macros for manipulating that pointer in a CONFIG_ACPI-safe way,
-> ACPI_COMPANION() and ACPI_COMPANION_SET(), and rework the
-> ACPI_HANDLE() macro to take the above changes into account.
-> Drop the ACPI_HANDLE_SET() macro entirely and rework its users to
-> use ACPI_COMPANION_SET() instead.  For some of them who used to
-> pass the result of acpi_get_child() directly to ACPI_HANDLE_SET()
-> introduce a helper routine acpi_preset_companion() doing an
-> equivalent thing.
-> 
-> The main motivation for doing this is that there are things
-> represented by struct acpi_device objects that don't have valid
-> ACPI handles (so called fixed ACPI hardware features, such as
-> power and sleep buttons) and we would like to create platform
-> device objects for them and "glue" them to their ACPI companions
-> in the usual way (which currently is impossible due to the
-> lack of valid ACPI handles).  However, there are more reasons
-> why it may be useful.
-> 
-> First, struct acpi_device pointers allow of much better type checking
-> than void pointers which are ACPI handles, so it should be more
-> difficult to write buggy code using modified struct acpi_dev_node
-> and the new macros.  Second, the change should help to reduce (over
-> time) the number of places in which the result of ACPI_HANDLE() is
-> passed to acpi_bus_get_device() in order to obtain a pointer to the
-> struct acpi_device associated with the given "physical" device,
-> because now that pointer is returned by ACPI_COMPANION() directly.
-> Finally, the change should make it easier to write generic code that
-> will build both for CONFIG_ACPI set and unset without adding explicit
-> compiler directives to it.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Some x86 systems expose above 4G 64bit mmio in _CRS as non-pref mmio range.
+[   49.415281] PCI host bridge to bus 0000:00
+[   49.419921] pci_bus 0000:00: root bus resource [bus 00-1e]
+[   49.426107] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+[   49.433041] pci_bus 0000:00: root bus resource [io  0x1000-0x5fff]
+[   49.440010] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+[   49.447768] pci_bus 0000:00: root bus resource [mem 0xfed8c000-0xfedfffff]
+[   49.455532] pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffbfff]
+[   49.463259] pci_bus 0000:00: root bus resource [mem 0x380000000000-0x381fffffffff]
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+During assign unassigned 64bit mmio resource, it will go through
+every non-pref mmio for root bus in pci_bus_alloc_resource().
+As the loop is with pci_bus_for_each_resource(), and could have chance
+to use under 4G mmio range instead of above 4G mmio range if the requested
+range is not big enough, even it could handle above 4G 64bit pref mmio.
+
+For root bus, we can order list from high to low in pci_add_resource_offset(),
+during creating root bus, it will still keep the same order in final bus
+resource list.
+	pci_acpi_scan_root
+		==> add_resources
+			==> pci_add_resource_offset: # Add to temp resources
+		==> pci_create_root_bus
+			==> pci_bus_add_resource # add to final bus resources.
+
+After that, we can make sure 64bit pref mmio for pci bridges will be allocated
+higest of mmio non-pref, and in this case it is above 4G instead of under 4G.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 82eb234..30993ab 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -21,7 +21,8 @@
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 			     resource_size_t offset)
+ {
+-	struct pci_host_bridge_window *window;
++	struct pci_host_bridge_window *window, *tmp;
++	struct list_head *n;
+ 
+ 	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
+ 	if (!window) {
+@@ -31,7 +32,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 
+ 	window->res = res;
+ 	window->offset = offset;
+-	list_add_tail(&window->list, resources);
++
++	/* sorted it according to res end */
++	n = resources;
++	list_for_each_entry(tmp, resources, list)
++		if (window->res->end > tmp->res->end) {
++			n = &tmp->list;
++			break;
++		}
++
++	/* Insert it just before n */
++	list_add_tail(&window->list, n);
+ }
+ EXPORT_SYMBOL(pci_add_resource_offset);
+ 
+-- 
+1.8.1.4
+
