@@ -1,121 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:63839 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754987Ab3KTV2z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Nov 2013 16:28:55 -0500
-Received: by mail-ie0-f178.google.com with SMTP id lx4so6715966iec.9
-        for <linux-pci@vger.kernel.org>; Wed, 20 Nov 2013 13:28:54 -0800 (PST)
-Date: Wed, 20 Nov 2013 14:28:51 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: [GIT PULL] PCI updates for v3.13
-Message-ID: <20131120212851.GA3658@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from userp1040.oracle.com ([156.151.31.81]:21636 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455Ab3K3Wkq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 17:40:46 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 08/12] PCI: Try to allocate mem64 above 4G at first
+Date: Sat, 30 Nov 2013 14:40:34 -0800
+Message-Id: <1385851238-21085-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following changes since commit 4fbf888accb39af423f271111d44e8186f053723:
+On system with more pcie cards, we do not have enough range under 4G
+to allocate those pci devices.
 
-  Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4 (2013-11-14 17:19:58 +0900)
+On 64bit system, we could try to allocate mem64 above 4G at first,
+and fall back to below 4g if it can not find any above 4g.
 
-are available in the git repository at:
+x86 32bit without X86_PAE support will have bottom set to 0, because
+resource_size_t is 32bit.
+For 32bit kernel that resource_size_t is 64bit when pae is support.
+we are safe because iomem_resource is limited to 32bit according to
+x86_phys_bits.
 
+-v2: update bottom assigning to make it clear for non-pae support machine.
+-v3: Bjorn's change:
+        use MAX_RESOURCE instead of -1
+        use start/end instead of bottom/max
+        for all arch instead of just x86_64
+-v4: updated after PCI_MAX_RESOURCE_32 change.
+-v5: restore io handling to use PCI_MAX_RESOURCE_32 as limit.
+-v6: checking pcibios_resource_to_bus return for every bus res, to decide it
+	if we need to try high at first.
+     It supports all arches instead of just x86_64.
+-v7: split 4G limit change out to another patch according to Bjorn.
+     also use pci_clip_resource instead.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.13-fixes-1
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-for you to fetch changes up to 30b7fc1277c74667d0d5421526dc5f7a7fa926c5:
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index e75bb17..82eb234 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -99,6 +99,8 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+ }
+ 
+ static struct pci_bus_region pci_mem_32 = {0, 0xffffffff};
++static struct pci_bus_region pci_mem_64 = {(resource_size_t)(1ULL<<32),
++					   (resource_size_t)(-1ULL)};
+ 
+ static void pci_clip_resource(struct resource *res, struct pci_bus *bus,
+ 			      struct pci_bus_region *region)
+@@ -149,6 +151,7 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		struct resource avail;
++		int try_again = 0;
+ 
+ 		if (!r)
+ 			continue;
+@@ -165,15 +168,23 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ 		/*
+ 		 * don't allocate too high if the pref mem doesn't
+-		 * support 64bit.
++		 * support 64bit, also if this is a 64-bit mem
++		 * resource, try above 4GB first
+ 		 */
+ 		avail = *r;
+-		if (!(res->flags & IORESOURCE_MEM_64)) {
++		if (res->flags & IORESOURCE_MEM_64) {
++			pci_clip_resource(&avail, bus, &pci_mem_64);
++			if (!resource_size(&avail))
++				avail = *r;
++			else
++				try_again = 1;
++		} else {
+ 			pci_clip_resource(&avail, bus, &pci_mem_32);
+ 			if (!resource_size(&avail))
+ 				continue;
+ 		}
+ 
++again:
+ 		/* Ok, try it out.. */
+ 		ret = allocate_resource(r, res, size,
+ 					max(avail.start, r->start ? : min),
+@@ -181,6 +192,12 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 					alignf, alignf_data);
+ 		if (ret == 0)
+ 			break;
++
++		if (try_again) {
++			avail = *r;
++			try_again = 0;
++			goto again;
++		}
+ 	}
+ 	return ret;
+ }
+-- 
+1.8.1.4
 
-  PCI: Remove duplicate pci_disable_device() from pcie_portdrv_remove() (2013-11-18 17:02:45 -0700)
-
-----------------------------------------------------------------
-PCI updates for v3.13:
-
-  Miscellaneous
-    - Avoid CPU switch for .probe() methods (Alexander Duyck)
-    - Restore work_on_cpu() lockdep annotation (Bjorn Helgaas)
-    - Remove duplicate disable from pcie_portdrv_remove() (Yinghai Lu)
-    - Fix whitespace, capitalization, and spelling errors (Bjorn Helgaas)
-
-----------------------------------------------------------------
-Alexander Duyck (1):
-      PCI: Avoid unnecessary CPU switch when calling driver .probe() method
-
-Bjorn Helgaas (2):
-      PCI: Fix whitespace, capitalization, and spelling errors
-      Revert "workqueue: allow work_on_cpu() to be called recursively"
-
-Yinghai Lu (1):
-      PCI: Remove duplicate pci_disable_device() from pcie_portdrv_remove()
-
- drivers/pci/ats.c                       |   2 +-
- drivers/pci/host/pci-tegra.c            |  12 ++--
- drivers/pci/host/pcie-designware.c      |   2 +-
- drivers/pci/hotplug/Kconfig             |   4 +-
- drivers/pci/hotplug/Makefile            |   2 +-
- drivers/pci/hotplug/acpiphp_core.c      |  12 ++--
- drivers/pci/hotplug/acpiphp_glue.c      |   2 +-
- drivers/pci/hotplug/acpiphp_ibm.c       |  14 ++--
- drivers/pci/hotplug/cpci_hotplug_core.c |   2 +-
- drivers/pci/hotplug/cpci_hotplug_pci.c  |   2 +-
- drivers/pci/hotplug/cpcihp_generic.c    |  20 +++---
- drivers/pci/hotplug/cpcihp_zt5550.c     |  22 +++----
- drivers/pci/hotplug/cpcihp_zt5550.h     |  18 +++---
- drivers/pci/hotplug/cpqphp_core.c       |   4 +-
- drivers/pci/hotplug/cpqphp_ctrl.c       |  10 +--
- drivers/pci/hotplug/cpqphp_pci.c        |   5 +-
- drivers/pci/hotplug/ibmphp.h            |  12 ++--
- drivers/pci/hotplug/ibmphp_core.c       | 109 ++++++++++++++++----------------
- drivers/pci/hotplug/ibmphp_ebda.c       | 103 +++++++++++++++---------------
- drivers/pci/hotplug/ibmphp_hpc.c        |  24 +++----
- drivers/pci/hotplug/ibmphp_pci.c        |  71 ++++++++++-----------
- drivers/pci/hotplug/ibmphp_res.c        |  76 +++++++++++-----------
- drivers/pci/hotplug/pci_hotplug_core.c  |   8 +--
- drivers/pci/hotplug/pciehp.h            |   2 +-
- drivers/pci/hotplug/pciehp_acpi.c       |   2 +-
- drivers/pci/hotplug/pciehp_core.c       |   4 +-
- drivers/pci/hotplug/pciehp_hpc.c        |   6 +-
- drivers/pci/hotplug/pcihp_skeleton.c    |   8 +--
- drivers/pci/hotplug/rpadlpar_core.c     |   2 +-
- drivers/pci/hotplug/rpaphp.h            |   6 +-
- drivers/pci/hotplug/rpaphp_core.c       |   8 +--
- drivers/pci/hotplug/rpaphp_pci.c        |   3 +-
- drivers/pci/hotplug/rpaphp_slot.c       |  19 +++---
- drivers/pci/hotplug/shpchp.h            |   8 +--
- drivers/pci/hotplug/shpchp_core.c       |  10 +--
- drivers/pci/hotplug/shpchp_hpc.c        |   2 +-
- drivers/pci/iov.c                       |   2 +-
- drivers/pci/irq.c                       |   2 +-
- drivers/pci/msi.c                       |   2 +-
- drivers/pci/pci-acpi.c                  |   2 +-
- drivers/pci/pci-driver.c                |  40 ++++++++----
- drivers/pci/pci-stub.c                  |   4 +-
- drivers/pci/pci-sysfs.c                 |  28 ++++----
- drivers/pci/pci.c                       |  46 +++++++-------
- drivers/pci/pcie/aer/aerdrv_core.c      |   2 +-
- drivers/pci/pcie/aspm.c                 |   2 +-
- drivers/pci/pcie/pme.c                  |   4 +-
- drivers/pci/pcie/portdrv.h              |   2 +-
- drivers/pci/pcie/portdrv_bus.c          |   4 +-
- drivers/pci/pcie/portdrv_core.c         |   2 +-
- drivers/pci/pcie/portdrv_pci.c          |   7 +-
- drivers/pci/probe.c                     |  10 +--
- drivers/pci/proc.c                      |   2 +-
- drivers/pci/quirks.c                    | 104 +++++++++++++++---------------
- drivers/pci/remove.c                    |   2 +-
- drivers/pci/search.c                    |  12 ++--
- drivers/pci/setup-bus.c                 |  18 +++---
- drivers/pci/setup-res.c                 |   2 +-
- drivers/pci/slot.c                      |   2 +-
- drivers/pci/syscall.c                   |   2 +-
- include/linux/msi.h                     |  10 +--
- include/linux/pci.h                     |  55 ++++++++--------
- include/linux/pci_hotplug.h             |   5 +-
- include/linux/pcieport_if.h             |   2 +-
- include/uapi/linux/pci_regs.h           |  72 ++++++++++-----------
- kernel/workqueue.c                      |  32 +++-------
- 66 files changed, 547 insertions(+), 548 deletions(-)
