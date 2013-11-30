@@ -1,34 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 14 Nov 2013 11:44:07 +0900
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Jarkko Nikula <jarkko.nikula@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Luck, Tony" <tony.luck@intel.com>
-Subject: Re: [PATCH 1/2] ACPI: Eliminate the DEVICE_ACPI_HANDLE() macro
-Message-ID: <20131114024407.GB9899@kroah.com>
-References: <3268437.YsusHvklcv@vostro.rjw.lan>
- <1803808.ghCmmaO2Cj@vostro.rjw.lan>
- <5216191.8B6uiYXXe4@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5216191.8B6uiYXXe4@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 01/12] PCI: Use device_release_driver in pci_stop_root_bus
+Date: Sat, 30 Nov 2013 14:40:27 -0800
+Message-Id: <1385851238-21085-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 14, 2013 at 12:26:00AM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Since DEVICE_ACPI_HANDLE() is now literally identical to
-> ACPI_HANDLE(), replace it with the latter everywhere and drop its
-> definition from include/acpi.h.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+To be consistent with change in
+| PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Use device_release_driver for root bus/hostbridge.
+
+Also use device_unregister() in pci_remove_root_bus() instead of
+device_del/put_device, that will be corresponding device_register()
+for pci_create_root_bus for hostbridge.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/remove.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index cc9337a..692f4c3 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -128,7 +128,7 @@ void pci_stop_root_bus(struct pci_bus *bus)
+ 		pci_stop_bus_device(child);
+ 
+ 	/* stop the host bridge */
+-	device_del(&host_bridge->dev);
++	device_release_driver(&host_bridge->dev);
+ }
+ 
+ void pci_remove_root_bus(struct pci_bus *bus)
+@@ -147,5 +147,5 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	host_bridge->bus = NULL;
+ 
+ 	/* remove the host bridge */
+-	put_device(&host_bridge->dev);
++	device_unregister(&host_bridge->dev);
+ }
+-- 
+1.8.1.4
+
