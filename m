@@ -1,154 +1,279 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51142 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753085Ab3K2XZe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Nov 2013 18:25:34 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
 	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
-Date: Sat, 30 Nov 2013 00:38:26 +0100
-Message-ID: <461934992.nFRx8soJrp@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXevSPmPEvxzXjC-CFhpYHic0v+vN5+JV3j5kmX-wv_GQ@mail.gmail.com>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1559825.A4S6KeB0yX@vostro.rjw.lan> <CAE9FiQXevSPmPEvxzXjC-CFhpYHic0v+vN5+JV3j5kmX-wv_GQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 10/12] PCI: Try best to allocate pref mmio 64bit above 4g
+Date: Sat, 30 Nov 2013 14:40:36 -0800
+Message-Id: <1385851238-21085-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 26, 2013 06:26:54 PM Yinghai Lu wrote:
-> On Tue, Nov 26, 2013 at 5:24 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >
-> > So assume pci_destroy_dev() is called twice in parallel for the same dev
-> > by two different threads.  Thread 1 does the atomic_inc_and_test() and
-> > finds that it is OK to do the device_del() and put_device() which causes
-> > the device object to be freed.  Then thread 2 does the atomic_inc_and_test()
-> > on the already freed device object and crashes the kernel.
-> >
-> thread2 should still hold one extra reference.
-> that is in
->   device_schedule_callback
->      ==> sysfs_schedule_callback
->          ==> kobject_get(kobj)
-> 
-> pci_destroy_dev for thread2 is called at this point.
-> 
-> and that reference will be released from
->         sysfs_schedule_callback
->         ==> kobject_put()...
+When one of children resources does not support MEM_64, MEM_64 for
+bridge get reset, so pull down whole pref resource on the bridge under 4G.
 
-Well, that would be the case if thread 2 was started by device_schedule_callback(),
-but again, for example, it may be trim_stale_devices() started by acpiphp_check_bridge()
-that doesn't hold extra references to the pci_dev.  [Well, that piece of code
-is racy anyway, because it walks bus->devices without locking.  Which is my
-fault too, because I overlooked that.  Shame, shame.]
+If the bridge support pref mem 64, will only allocate that with pref mem64 to
+children that support it.
+For children resources if they only support pref mem 32, will allocate them
+from non pref mem instead.
 
-Perhaps we can do something like the (untested) patch below (in addition to the
-$subject patch).  Do you see any immediate problems with it?
+If the bridge only support 32bit pref mmio, will still have all children pref
+mmio under that.
 
-Also I wonder if it is safe to do pci_stop_and_remove_device() in acpiphp_glue.c
-without putting it under pci_remove_rescan_mutex?
+-v2: Add release bridge res support with bridge mem res for pref_mem children res.
+-v3: refresh and make it can be applied early before for_each_dev_res patchset.
 
-Rafael
-
-
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   47 +++++++++++++++++++++++++------------
- 1 file changed, 33 insertions(+), 14 deletions(-)
+ drivers/pci/setup-bus.c | 133 ++++++++++++++++++++++++++++++++----------------
+ drivers/pci/setup-res.c |  14 ++++-
+ 2 files changed, 101 insertions(+), 46 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -687,10 +687,11 @@ static unsigned int get_slot_status(stru
- }
- 
- /**
-- * trim_stale_devices - remove PCI devices that are not responding.
-+ * find_stale_devices - Select PCI devices that are not responding for removal.
-  * @dev: PCI device to start walking the hierarchy from.
-+ * @trim_list: List of devices to remove.
-  */
--static void trim_stale_devices(struct pci_dev *dev)
-+static void find_stale_devices(struct pci_dev *dev, struct list_head *trim_list)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f9e6efb..6f38e66 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -711,12 +711,11 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+    bus resource of a given type. Note: we intentionally skip
+    the bus resources which have already been assigned (that is,
+    have non-NULL parent resource). */
+-static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
++static struct resource *find_free_bus_resource(struct pci_bus *bus,
++			 unsigned long type_mask, unsigned long type)
  {
- 	acpi_handle handle = ACPI_HANDLE(&dev->dev);
- 	struct pci_bus *bus = dev->subordinate;
-@@ -710,21 +711,46 @@ static void trim_stale_devices(struct pc
- 		alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &v, 0);
- 	}
- 	if (!alive) {
--		pci_stop_and_remove_bus_device(dev);
--		if (handle)
--			acpiphp_bus_trim(handle);
-+		pci_dev_get(dev);
-+		list_move(&dev->bus_list, trim_list);
- 	} else if (bus) {
- 		struct pci_dev *child, *tmp;
+ 	int i;
+ 	struct resource *r;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH;
  
- 		/* The device is a bridge. so check the bus below it. */
- 		pm_runtime_get_sync(&dev->dev);
- 		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
--			trim_stale_devices(child);
-+			find_stale_devices(child, trim_list);
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		if (r == &ioport_resource || r == &iomem_resource)
+@@ -813,7 +812,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		resource_size_t add_size, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+-	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
++	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
++							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+ 	resource_size_t children_add_size = 0;
+ 	resource_size_t min_align, align;
+@@ -913,15 +913,16 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+  * guarantees that all child resources fit in this size.
+  */
+ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+-			 unsigned long type, resource_size_t min_size,
+-			resource_size_t add_size,
+-			struct list_head *realloc_head)
++			 unsigned long type, unsigned long type2,
++			 resource_size_t min_size, resource_size_t add_size,
++			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_align, align, size, size0, size1;
+ 	resource_size_t aligns[12];	/* Alignments from 1Mb to 2Gb */
+ 	int order, max_order;
+-	struct resource *b_res = find_free_bus_resource(bus, type);
++	struct resource *b_res = find_free_bus_resource(bus,
++					 mask | IORESOURCE_PREFETCH, type);
+ 	unsigned int mem64_mask = 0;
+ 	resource_size_t children_add_size = 0;
  
- 		pm_runtime_put(&dev->dev);
+@@ -942,7 +943,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			struct resource *r = &dev->resource[i];
+ 			resource_size_t r_size;
+ 
+-			if (r->parent || (r->flags & mask) != type)
++			if (r->parent || ((r->flags & mask) != type &&
++					  (r->flags & mask) != type2))
+ 				continue;
+ 			r_size = resource_size(r);
+ #ifdef CONFIG_PCI_IOV
+@@ -1115,8 +1117,9 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 			struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+-	unsigned long mask, prefmask;
++	unsigned long mask, prefmask, type2 = 0;
+ 	resource_size_t additional_mem_size = 0, additional_io_size = 0;
++	struct resource *b_res;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+@@ -1161,15 +1164,31 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ 		   has already been allocated by arch code, try
+ 		   non-prefetchable range for both types of PCI memory
+ 		   resources. */
++		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (pbus_size_mem(bus, prefmask, prefmask,
++		if (b_res[2].flags & IORESOURCE_MEM_64) {
++			prefmask |= IORESOURCE_MEM_64;
++			if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
+ 				  realloc_head ? 0 : additional_mem_size,
+-				  additional_mem_size, realloc_head))
+-			mask = prefmask; /* Success, size non-prefetch only. */
+-		else
+-			additional_mem_size += additional_mem_size;
+-		pbus_size_mem(bus, mask, IORESOURCE_MEM,
++				  additional_mem_size, realloc_head)) {
++					/* Success, size non-pref64 only. */
++					mask = prefmask;
++					type2 = prefmask & ~IORESOURCE_MEM_64;
++			}
++		}
++		if (!type2) {
++			prefmask &= ~IORESOURCE_MEM_64;
++			if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
++					 realloc_head ? 0 : additional_mem_size,
++					 additional_mem_size, realloc_head)) {
++				/* Success, size non-prefetch only. */
++				mask = prefmask;
++			} else
++				additional_mem_size += additional_mem_size;
++			type2 = IORESOURCE_MEM;
++		}
++		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2,
+ 				realloc_head ? 0 : additional_mem_size,
+ 				additional_mem_size, realloc_head);
+ 		break;
+@@ -1255,42 +1274,66 @@ static void __ref __pci_bridge_assign_resources(const struct pci_dev *bridge,
+ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 					  unsigned long type)
+ {
+-	int idx;
+-	bool changed = false;
+-	struct pci_dev *dev;
++	struct pci_dev *dev = bus->self;
+ 	struct resource *r;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH;
++				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
++	unsigned old_flags = 0;
++	struct resource *b_res;
++	int idx = 1;
+ 
+-	dev = bus->self;
+-	for (idx = PCI_BRIDGE_RESOURCES; idx <= PCI_BRIDGE_RESOURCE_END;
+-	     idx++) {
+-		r = &dev->resource[idx];
+-		if ((r->flags & type_mask) != type)
+-			continue;
+-		if (!r->parent)
+-			continue;
+-		/*
+-		 * if there are children under that, we should release them
+-		 *  all
+-		 */
+-		release_child_resources(r);
+-		if (!release_resource(r)) {
+-			dev_printk(KERN_DEBUG, &dev->dev,
+-				 "resource %d %pR released\n", idx, r);
+-			/* keep the old size */
+-			r->end = resource_size(r) - 1;
+-			r->start = 0;
+-			r->flags = 0;
+-			changed = true;
+-		}
+-	}
++	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
++
++	/*
++	 *     1. if there is io port assign fail, will release bridge
++	 *	  io port.
++	 *     2. if there is non pref mmio assign fail, release bridge
++	 *	  nonpref mmio.
++	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
++	 *	  is 64bit, release bridge pref mmio.
++	 *     4. if there is pref mmio assign fail, and bridge pref is
++	 *	  32bit mmio, release bridge pref mmio
++	 *     5. if there is pref mmio assign fail, and bridge pref is not
++	 *	  assigned, release bridge nonpref mmio.
++	 */
++	if (type & IORESOURCE_IO)
++		idx = 0;
++	else if (!(type & IORESOURCE_PREFETCH))
++		idx = 1;
++	else if ((type & IORESOURCE_MEM_64) &&
++		 (b_res[2].flags & IORESOURCE_MEM_64))
++		idx = 2;
++	else if (!(b_res[2].flags & IORESOURCE_MEM_64) &&
++		 (b_res[2].flags & IORESOURCE_PREFETCH))
++		idx = 2;
++	else
++		idx = 1;
++
++	r = &b_res[idx];
++
++	if (!r->parent)
++		return;
++
++	/*
++	 * if there are children under that, we should release them
++	 *  all
++	 */
++	release_child_resources(r);
++	if (!release_resource(r)) {
++		type = old_flags = r->flags & type_mask;
++		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
++					PCI_BRIDGE_RESOURCES + idx, r);
++		/* keep the old size */
++		r->end = resource_size(r) - 1;
++		r->start = 0;
++		r->flags = 0;
+ 
+-	if (changed) {
+ 		/* avoiding touch the one without PREF */
+ 		if (type & IORESOURCE_PREFETCH)
+ 			type = IORESOURCE_PREFETCH;
+ 		__pci_setup_bridge(bus, type);
++		/* for next child res under same bridge */
++		r->flags = old_flags;
  	}
  }
  
-+void acpiphp_trim_stale_devices(struct acpiphp_slot *slot)
-+{
-+	struct pci_bus *bus = slot->bus;
-+	struct pci_dev *dev, *tmp;
-+	LIST_HEAD(trim_list);
-+
-+	down_write(&pci_bus_sem);
-+
-+	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
-+		if (PCI_SLOT(dev->devfn) == slot->device)
-+			find_stale_devices(dev, &trim_list);
-+
-+	up_write(&pci_bus_sem);
-+
-+	while (!list_empty(&trim_list)) {
-+		acpi_handle handle;
-+
-+		dev = list_first_entry(&trim_list, struct pci_dev, bus_list);
-+		handle = ACPI_HANDLE(&dev->dev);
-+		pci_stop_and_remove_bus_device(dev);
-+		pci_dev_put(dev);
-+		if (handle)
-+			acpiphp_bus_trim(handle);
-+	}
-+}
-+
- /**
-  * acpiphp_check_bridge - re-enumerate devices
-  * @bridge: where to begin re-enumeration
-@@ -737,18 +763,11 @@ static void acpiphp_check_bridge(struct
- 	struct acpiphp_slot *slot;
+@@ -1491,7 +1534,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH;
++				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 	int pci_try_num = 1;
+ 	enum enable_type enable_local;
  
- 	list_for_each_entry(slot, &bridge->slots, node) {
--		struct pci_bus *bus = slot->bus;
--		struct pci_dev *dev, *tmp;
--
- 		mutex_lock(&slot->crit_sect);
- 		/* wake up all functions */
- 		if (get_slot_status(slot) == ACPI_STA_ALL) {
- 			/* remove stale devices if any */
--			list_for_each_entry_safe(dev, tmp, &bus->devices,
--						 bus_list)
--				if (PCI_SLOT(dev->devfn) == slot->device)
--					trim_stale_devices(dev);
--
-+			acpiphp_trim_stale_devices(slot);
- 			/* configure all functions */
- 			enable_slot(slot);
- 		} else {
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 83c4d3b..e968412 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -208,9 +208,21 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 
+ 	/* First, try exact prefetching match.. */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+-				     IORESOURCE_PREFETCH,
++				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
+ 				     pcibios_align_resource, dev);
+ 
++	if (ret < 0 &&
++	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
++		/*
++		 * That failed.
++		 *
++		 * Try below 4g pref
++		 */
++		ret = pci_bus_alloc_resource(bus, res, size, align, min,
++					     IORESOURCE_PREFETCH,
++					     pcibios_align_resource, dev);
++	}
++
+ 	if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
+ 		/*
+ 		 * That failed.
+-- 
+1.8.1.4
 
