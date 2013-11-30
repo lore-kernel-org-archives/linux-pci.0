@@ -1,257 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f43.google.com ([209.85.212.43]:37908 "EHLO
-	mail-vb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160Ab3KFCiy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2013 21:38:54 -0500
-MIME-Version: 1.0
-In-Reply-To: <20131106002505.GC3359@google.com>
-References: <52797238.8070304@gmail.com>
-	<20131106002505.GC3359@google.com>
-Date: Tue, 5 Nov 2013 18:38:51 -0800
-Message-ID: <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51852 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751477Ab3K3Wks (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 17:40:48 -0500
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-hotplug@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Tom Nguyen <tom.l.nguyen@intel.com>,
-	Kristen Accardi <kristen.c.accardi@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 06/12] PCI: Only enable realloc auto when root bus has 64bit mmio
+Date: Sat, 30 Nov 2013 14:40:32 -0800
+Message-Id: <1385851238-21085-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+Joseph found
+| commit b07f2ebc109b607789f648dedcff4b125f9afec6
+| Date:   Thu Feb 23 19:23:32 2012 -0800
+|
+|    PCI: add a PCI resource reallocation config option
 
-On Tue, Nov 5, 2013 at 4:25 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Nov 05, 2013 at 02:33:28PM -0800, Rajat Jain wrote:
->> In case of a spurious "cmd completed", pcie_write_cmd() does not
->> clear it, but yet expects more "cmd completed" events to be generated.
->> This does not happen because the previous (spurious) event has not
->> been acknowledged. Fix that.
->>
->> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
->> Signed-off-by: Guenter Roeck <groeck@juniper.net>
->> ---
->> This is how I saw it in action: my controller does not implement any
->> hot-plug elements (LED, power ctrl, EMI etc) but still supports Command
->> completed bit.
->>  - During initialization,
->>       pcie_disable_notification()
->>       -> pcie_write_cmd()
->>          -> writes to Slot control register
->>             -> which causes PCI_EXP_SLTSTA_CC to get set, which is not
->>                cleared, because IRQ is not generated (we just disabled
->>                notifications).
->>  - After some time,
->>       pcie_enable_notification()
->>       -> pcie_write_cmd()
->>           -> finds PCI_EXP_SLTSTA_CC is set, assumes it is spurious.
->>           -> Does not clear it, yet expects more command completed
->>              events to be generated (never happens).
->
-> I'm not sure this "cmd completed" is actually spurious.  Spec section
-> 7.8.10 is very clear that any write to Slot Control must cause a
-> hot-plug command to be generated (if the port is hot-plug capable).
+cause one system can not load driver for Intel x520 NIC's.
 
-I agree, and I think I am witnessing a "genuine" command completion
-(caused by disabling of notifications).
+The root resource:
+[    1.212470] PCI host bridge to bus 0000:20
+[    1.212475] pci_bus 0000:20: root bus resource [bus 20-3e]
+[    1.212479] pci_bus 0000:20: root bus resource [io  0xc000-0xdfff]
+[    1.212483] pci_bus 0000:20: root bus resource [mem 0xfecc0000-0xfecfffff]
+[    1.212487] pci_bus 0000:20: root bus resource [mem 0xe9400000-0xe97fffff]
 
->
-> Can you collect "lspci -vv" output for your controller?
- >
+and bios does not assign sriov, also have two function ROM bar point to same
+position.
+[    1.213197] pci 0000:22:00.0: [8086:10fb] type 00 class 0x020000
+...
+[    1.213240] pci 0000:22:00.0: reg 0x30: [mem 0xe9500000-0xe957ffff pref]
+[    1.213303] pci 0000:22:00.0: reg 0x184: [mem 0x00000000-0x00003fff 64bit]
+[    1.213317] pci 0000:22:00.0: reg 0x190: [mem 0x00000000-0x00003fff 64bit]
+[    1.213366] pci 0000:22:00.1: [8086:10fb] type 00 class 0x020000
+...
+[    1.213408] pci 0000:22:00.1: reg 0x30: [mem 0xe9500000-0xe957ffff pref]
+[    1.213468] pci 0000:22:00.1: reg 0x184: [mem 0x00000000-0x00003fff 64bit]
+[    1.213481] pci 0000:22:00.1: reg 0x190: [mem 0x00000000-0x00003fff 64bit]
+[    1.218527] pci 0000:20:03.0: PCI bridge to [bus 22]
+[    1.218534] pci 0000:20:03.0:   bridge window [io  0xd000-0xdfff]
+[    1.218537] pci 0000:20:03.0:   bridge window [mem 0xe9400000-0xe95fffff]
+...
+[    1.254103] pci 0000:22:00.1: address space collision: [mem 0xe9500000-0xe957ffff pref] conflicts with 0000:22:00.0 [mem 0xe9500000-0xe957ffff pref]
+[    1.254111] pci 0000:23:00.1: address space collision: [mem 0xe9700000-0xe977ffff pref] conflicts with 0000:23:00.0 [mem 0xe9700000-0xe977ffff pref]
 
-Sure:
+We don't need to enable realloc for this case, as we can not alter root bus mmio
+range to get big one to hold two rom bar, and sriov under 4G.
 
-PCI bridge: Integrated Device Technology, Inc. Device 807a (rev 02)
-(prog-if 00 [Normal decode])
-Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx+
-Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-Latency: 0
-Bus: primary=02, secondary=50, subordinate=5f, sec-latency=0
-I/O behind bridge: 00003000-00003fff
-Memory behind bridge: 8c000000-8fffffff
-Prefetchable memory behind bridge: 00000000b0600000-00000000b07fffff
-Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- <SERR- <PERR-
-BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-        PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-Capabilities: [40] Express (v2) Downstream Port (Slot+), MSI 00
-        DevCap: MaxPayload 2048 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                ExtTag+ RBE+ FLReset-
-        DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                MaxPayload 128 bytes, MaxReadReq 128 bytes
-        DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-        LnkCap: Port #3, Speed 5GT/s, Width x4, ASPM L0s L1, Latency
-L0 <4us, L1 <4us
-                ClockPM- Surprise+ LLActRep+ BwNot+
-        LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
-                ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-        LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk-
-DLActive- BWMgmt- ABWMgmt-
-        SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise-
-                Slot #3, PowerLimit 0.000W; Interlock- NoCompl-
-        SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt+ HPIrq+ LinkChg+
-                Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-        SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt+ PresDet- Interlock-
-                Changed: MRL- PresDet- LinkState-
-        DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR-,
-OBFF Not Supported ARIFwd+
-        DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-,
-OBFF Disabled ARIFwd-
-        LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-,
-Selectable De-emphasis: -6dB
-                 Transmit Margin: Normal Operating Range,
-EnterModifiedCompliance- ComplianceSOS-
-                 Compliance De-emphasis: -6dB
-        LnkSta2: Current De-emphasis Level: -6dB,
-EqualizationComplete-, EqualizationPhase1-
-                 EqualizationPhase2-, EqualizationPhase3-,
-LinkEqualizationRequest-
-Capabilities: [c0] Power Management version 3
-        Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0+,D1-,D2-,D3hot+,D3cold+)
-        Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-        Address: 00000000ff041740  Data: 0003
-Capabilities: [100 v1] Advanced Error Reporting
-        UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
-RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-        UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
-RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-        UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
-RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-        CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-        CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-        AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-Capabilities: [200 v1] Virtual Channel
-        Caps:   LPEVC=0 RefClk=100ns PATEntryBits=4
-        Arb:    Fixed- WRR32- WRR64- WRR128-
-        Ctrl:   ArbSelect=Fixed
-        Status: InProgress-
-        VC0:    Caps:   PATOffset=04 MaxTimeSlots=1 RejSnoopTrans-
-                Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
-                Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                Status: NegoPending- InProgress-
-                Port Arbitration Table <?>
-Capabilities: [320 v1] Access Control Services
-        ACSCap: SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+
-EgressCtrl+ DirectTrans+
-        ACSCtl: SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd-
-EgressCtrl- DirectTrans-
-Capabilities: [330 v1] #12
-Kernel driver in use: pcieport
+Add checking if pci root bus have 4G above mmio res, and don't enable
+realloc auto accordingly.
 
-In addition, here is what the pciehp driver spews out:
+bug report at: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1245938
 
-Hotplug Controller:
-  Seg/Bus/Dev/Func/IRQ : 0000:02:03.0 IRQ 21
-  Vendor ID            : 0x111d
-  Device ID            : 0x807a
-  Subsystem ID         : 0x0000
-  Subsystem Vendor ID  : 0x0000
-  PCIe Cap offset      : 0x40
-  PCI resource [7]     : [io  0x13000-0x13fff]
-  PCI resource [8]     : [mem 0xc0c000000-0xc0fffffff]
-  PCI resource [9]     : [mem 0xc30600000-0xc307fffff 64bit pref]
-Slot Capabilities      : 0x00180040
-  Physical Slot Number : 3
-  Attention Button     :  no
-  Power Controller     :  no
-  MRL Sensor           :  no
-  Attention Indicator  :  no
-  Power Indicator      :  no
-  Hot-Plug Surprise    :  no
-  EMI Present          :  no
-  Command Completed    : yes
-Slot Status            : 0x0010
-Slot Control           : 0x0000
-Link Active Reporting supported
-HPC vendor_id 111d device_id 807a ss_vid 0 ss_did 0
-Registering domain:bus:dev=0000:50:00 sun=3
-Unexpected CMD_COMPLETED. Need to wait for command completed event.
-Command not completed in 1000 msec
+Reported-by: Joseph Salisbury <joseph.salisbury@canonical.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++-----
+ 1 file changed, 27 insertions(+), 5 deletions(-)
 
-The last two output lines are part of the problem. Each controller
-takes 1 second to initialized as the message shows.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 219a410..f9e6efb 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1432,17 +1432,39 @@ static int iov_resources_unassigned(struct pci_dev *dev, void *data)
+ 	return 0;
+ }
+ 
++static bool pci_bus_mem_above_4g(struct pci_bus *bus)
++{
++	int i;
++	struct resource *res;
++
++	pci_bus_for_each_resource(bus, res, i) {
++		struct pci_bus_region region;
++
++		if (!res || !(res->flags & IORESOURCE_MEM))
++			continue;
++
++		__pcibios_resource_to_bus(bus, &region, res);
++		if (region.end > 0xffffffff)
++			return true;
++	}
++
++	return false;
++}
++
+ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
+ 			 enum enable_type enable_local)
+ {
+-	bool unassigned = false;
+-
+ 	if (enable_local != undefined)
+ 		return enable_local;
+ 
+-	pci_walk_bus(bus, iov_resources_unassigned, &unassigned);
+-	if (unassigned)
+-		return auto_enabled;
++	/* only enable auto when root bus does support 64bit mmio */
++	if (pci_bus_mem_above_4g(bus)) {
++		bool unassigned = false;
++
++		pci_walk_bus(bus, iov_resources_unassigned, &unassigned);
++		if (unassigned)
++			return auto_enabled;
++	}
+ 
+ 	return enable_local;
+ }
+-- 
+1.8.1.4
 
->  I assume
-> you're hitting this case in pcie_init() (added by 5808639bfa98
-> ("pciehp: fix slow probing")):
->
->         /*
->          * Controller doesn't notify of command completion if the "No
->          * Command Completed Support" bit is set in Slot Capability
->          * register or the controller supports none of power
->          * controller, attention led, power led and EMI.
->          */
->         if (NO_CMD_CMPL(ctrl) ||
->             !(POWER_CTRL(ctrl) | ATTN_LED(ctrl) | PWR_LED(ctrl) | EMI(ctrl)))
->             ctrl->no_cmd_complete = 1;
->
-> and we're setting "no_cmd_complete = 1" for your controller, which
-> keeps us from waiting for completion in pcie_write_cmd().
->
-> I'm dubious about the assertion that a controller without power
-> control, attention LED, power LED, or EMI can't support command
-> completion.  I don't see anything in the spec to that effect.
-
-I agree, specially since I am seeing this contrary behavior (to that
-assertion) in action :-)
-
->
-> Since you're seeing PCI_EXP_SLTSTA_CC=1, your controller *should*
-> support Command Completion notification and PCI_EXP_SLTCAP_NCCS should
-> be 0 (per Table 7-20), so I wonder what happens on your system if you
-> change pcie_init() so it leaves "ctrl->no_cmd_complete = 0" instead?
-> Does it work correctly then?
-
-Yes, it work well after that (Both the error output lines go away as
-well). And the 1 second delay per controller is also gone.
-
->
-> I know we can't just drop the "!(POWER_CTRL(ctrl) | ...)" tests
-> because we don't want to reintroduce the problem fixed by
-> 5808639bfa98, but I wonder if we can find a better fix that addresses
-> both problems.
-
-Please let me know if any one has any suggestions? IMHO, this patch
-should yet not cause the original problem to reappear because we are
-clearing the bit *only* when we know that it is already set (and no
-way to clear it because at least in my controller no subsequent
-interrupts can be generated). But I do not have enough understanding,
-and will be glad to get any pointers.
-
-Thanks,
-
-- Rajat
-
->
-> Bjorn
->
->>
->>  drivers/pci/hotplug/pciehp_hpc.c |    1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
->> index 5b8d749..ba8e06f 100644
->> --- a/drivers/pci/hotplug/pciehp_hpc.c
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->> @@ -185,6 +185,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
->>       }
->>
->>       if (slot_status & PCI_EXP_SLTSTA_CC) {
->> +             pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_CC);
->>               if (!ctrl->no_cmd_complete) {
->>                       /*
->>                        * After 1 sec and CMD_COMPLETED still not set, just
->> --
->> 1.7.9.5
->>
