@@ -1,143 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:52468 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752492Ab3KZUvD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Nov 2013 15:51:03 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Received: from v094114.home.net.pl ([79.96.170.134]:52333 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751403Ab3LABVo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Nov 2013 20:21:44 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: netdev@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 04/11] PCI/MSI/pSeries: Make quota traversing and requesting race-safe
-Date: Tue, 26 Nov 2013 10:09:53 +0100
-Message-Id: <97749db3e9562eb05fb3ee22a0be0ed7a93a0615.1385399393.git.agordeev@redhat.com>
-In-Reply-To: <cover.1385399393.git.agordeev@redhat.com>
-References: <cover.1385399393.git.agordeev@redhat.com>
+	Nithin Nayak Sujir <nsujir@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>,
+	David Miller <davem@davemloft.net>
+Subject: [PATCH] PCI / tg3: Give up chip reset and carrier loss handling if PCI device is not present
+Date: Sun, 01 Dec 2013 02:34:37 +0100
+Message-ID: <7807315.7cU9KldDtM@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current MSI quota handling is not race-safe and might lead
-to incoherent number of MSIs allocated between the firmware and
-Linux MSI data structures. I.e. if the following chain is called
-from concurrently loading drivers: rtas_setup_msi_irqs() ->
-msi_quota_for_device() -> traverse_pci_devices() a driver might
-get a stalled value of MSI limit for its device or possibly even
-crash.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This update introduces "rtas_quota_mutex" and serializes all
-accesses to msi_quota_for_device() function. As result, no driver
-could eat into other device's MSI limit.
+Modify tg3_chip_reset() and tg3_close() to check if the PCI network
+adapter device is accessible at all in order to skip poking it or
+trying to handle a carrier loss in vain when that's not the case.
+Introduce a special PCI helper function pci_device_is_present()
+for this purpose.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Of course, this uncovers the lack of the appropriate RTNL locking
+in tg3_suspend() and tg3_resume(), so add that locking in there
+too.
+
+These changes prevent tg3 from burning a CPU at 100% load level for
+solid several seconds after the Thunderbolt link is disconnected from
+a Matrox DS1 docking station.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/powerpc/platforms/pseries/msi.c |   24 ++++++++++++++++++++++--
- 1 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/net/ethernet/broadcom/tg3.c |   26 +++++++++++++++++++-------
+ drivers/pci/pci.c                   |    8 ++++++++
+ include/linux/pci.h                 |    1 +
+ 3 files changed, 28 insertions(+), 7 deletions(-)
 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 009ec73..0e1d288 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -26,6 +26,8 @@ static int query_token, change_token;
- #define RTAS_CHANGE_MSIX_FN	4
- #define RTAS_CHANGE_32MSI_FN	5
+Index: linux-pm/drivers/net/ethernet/broadcom/tg3.c
+===================================================================
+--- linux-pm.orig/drivers/net/ethernet/broadcom/tg3.c
++++ linux-pm/drivers/net/ethernet/broadcom/tg3.c
+@@ -8932,6 +8932,9 @@ static int tg3_chip_reset(struct tg3 *tp
+ 	void (*write_op)(struct tg3 *, u32, u32);
+ 	int i, err;
  
-+static DEFINE_MUTEX(rtas_quota_mutex);
++	if (!pci_device_is_present(tp->pdev))
++		return -ENODEV;
 +
- /* RTAS Helpers */
+ 	tg3_nvram_lock(tp);
  
- static int rtas_change_msi(struct pci_dn *pdn, u32 func, u32 num_irqs)
-@@ -345,7 +347,9 @@ static int rtas_msi_check_device(struct pci_dev *pdev, int nvec, int type)
- 	if (rc)
- 		return rc;
+ 	tg3_ape_lock(tp, TG3_APE_LOCK_GRC);
+@@ -11594,10 +11597,11 @@ static int tg3_close(struct net_device *
+ 	memset(&tp->net_stats_prev, 0, sizeof(tp->net_stats_prev));
+ 	memset(&tp->estats_prev, 0, sizeof(tp->estats_prev));
  
-+	mutex_lock(&rtas_quota_mutex);
- 	quota = msi_quota_for_device(pdev, nvec);
-+	mutex_unlock(&rtas_quota_mutex);
+-	tg3_power_down_prepare(tp);
+-
+-	tg3_carrier_off(tp);
++	if (pci_device_is_present(tp->pdev)) {
++		tg3_power_down_prepare(tp);
  
- 	if (quota && quota < nvec)
- 		return quota;
-@@ -399,6 +403,7 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
- 	struct msi_msg msg;
- 	int nvec = nvec_in;
- 	int use_32bit_msi_hack = 0;
-+	int quota;
- 
- 	pdn = pci_get_pdn(pdev);
- 	if (!pdn)
-@@ -407,13 +412,21 @@ static int rtas_setup_msi_irqs(struct pci_dev *pdev, int nvec_in, int type)
- 	if (type == PCI_CAP_ID_MSIX && check_msix_entries(pdev))
- 		return -EINVAL;
- 
-+	mutex_lock(&rtas_quota_mutex);
-+
-+	quota = msi_quota_for_device(pdev, nvec);
-+	if (quota && quota < nvec) {
-+		mutex_unlock(&rtas_quota_mutex);
-+		return quota;
++		tg3_carrier_off(tp);
 +	}
-+
- 	/*
- 	 * Firmware currently refuse any non power of two allocation
- 	 * so we round up if the quota will allow it.
- 	 */
- 	if (type == PCI_CAP_ID_MSIX) {
- 		int m = roundup_pow_of_two(nvec);
--		int quota = msi_quota_for_device(pdev, m);
-+		quota = msi_quota_for_device(pdev, m);
- 
- 		if (quota >= m)
- 			nvec = m;
-@@ -433,8 +446,11 @@ again:
- 				 * We only want to run the 32 bit MSI hack below if
- 				 * the max bus speed is Gen2 speed
- 				 */
--				if (pdev->bus->max_bus_speed != PCIE_SPEED_5_0GT)
-+				if (pdev->bus->max_bus_speed !=
-+				    PCIE_SPEED_5_0GT) {
-+					mutex_unlock(&rtas_quota_mutex);
- 					return rc;
-+				}
- 
- 				use_32bit_msi_hack = 1;
- 			}
-@@ -459,6 +475,7 @@ again:
- 			nvec = nvec_in;
- 			goto again;
- 		}
-+		mutex_unlock(&rtas_quota_mutex);
- 		pr_debug("rtas_msi: rtas_change_msi() failed\n");
- 		return rc;
- 	}
-@@ -467,6 +484,7 @@ again:
- 	list_for_each_entry(entry, &pdev->msi_list, list) {
- 		hwirq = rtas_query_irq_number(pdn, i++);
- 		if (hwirq < 0) {
-+			mutex_unlock(&rtas_quota_mutex);
- 			pr_debug("rtas_msi: error (%d) getting hwirq\n", hwirq);
- 			return hwirq;
- 		}
-@@ -474,6 +492,7 @@ again:
- 		virq = irq_create_mapping(NULL, hwirq);
- 
- 		if (virq == NO_IRQ) {
-+			mutex_unlock(&rtas_quota_mutex);
- 			pr_debug("rtas_msi: Failed mapping hwirq %d\n", hwirq);
- 			return -ENOSPC;
- 		}
-@@ -486,6 +505,7 @@ again:
- 		entry->msg = msg;
- 	}
- 
-+	mutex_unlock(&rtas_quota_mutex);
  	return 0;
  }
  
--- 
-1.7.7.6
+@@ -17739,10 +17743,12 @@ static int tg3_suspend(struct device *de
+ 	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct net_device *dev = pci_get_drvdata(pdev);
+ 	struct tg3 *tp = netdev_priv(dev);
+-	int err;
++	int err = 0;
++
++	rtnl_lock();
+ 
+ 	if (!netif_running(dev))
+-		return 0;
++		goto unlock;
+ 
+ 	tg3_reset_task_cancel(tp);
+ 	tg3_phy_stop(tp);
+@@ -17784,6 +17790,8 @@ out:
+ 			tg3_phy_start(tp);
+ 	}
+ 
++unlock:
++	rtnl_unlock();
+ 	return err;
+ }
+ 
+@@ -17792,10 +17800,12 @@ static int tg3_resume(struct device *dev
+ 	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct net_device *dev = pci_get_drvdata(pdev);
+ 	struct tg3 *tp = netdev_priv(dev);
+-	int err;
++	int err = 0;
++
++	rtnl_lock();
+ 
+ 	if (!netif_running(dev))
+-		return 0;
++		goto unlock;
+ 
+ 	netif_device_attach(dev);
+ 
+@@ -17819,6 +17829,8 @@ out:
+ 	if (!err)
+ 		tg3_phy_start(tp);
+ 
++unlock:
++	rtnl_unlock();
+ 	return err;
+ }
+ #endif /* CONFIG_PM_SLEEP */
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -4171,6 +4171,14 @@ int pci_set_vga_state(struct pci_dev *de
+ 	return 0;
+ }
+ 
++bool pci_device_is_present(struct pci_dev *pdev)
++{
++	u32 v;
++
++	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
++}
++EXPORT_SYMBOL_GPL(pci_device_is_present);
++
+ #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
+ static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
+ static DEFINE_SPINLOCK(resource_alignment_lock);
+Index: linux-pm/include/linux/pci.h
+===================================================================
+--- linux-pm.orig/include/linux/pci.h
++++ linux-pm/include/linux/pci.h
+@@ -961,6 +961,7 @@ void pci_update_resource(struct pci_dev
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
++bool pci_device_is_present(struct pci_dev *pdev);
+ 
+ /* ROM control related routines */
+ int pci_enable_rom(struct pci_dev *pdev);
 
