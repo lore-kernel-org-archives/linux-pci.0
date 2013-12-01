@@ -1,50 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1633 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754261Ab3LFDUm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Dec 2013 22:20:42 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part1 V2 04/20] iommu/vt-d: fix resource leakage on error recovery path in iommu_init_domains()
-Date: Fri,  6 Dec 2013 11:21:07 +0800
-Message-Id: <1386300083-6882-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1752368Ab3LAUji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 1 Dec 2013 15:39:38 -0500
+Subject: Re: [PATCH] PCI / tg3: Give up chip reset and carrier loss
+ handling if PCI device is not present
+From: "Michael Chan" <mchan@broadcom.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+cc: netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"Linux PM list" <linux-pm@vger.kernel.org>,
+	"Linux PCI" <linux-pci@vger.kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"Nithin Nayak Sujir" <nsujir@broadcom.com>,
+	"David Miller" <davem@davemloft.net>
+In-Reply-To: <7807315.7cU9KldDtM@vostro.rjw.lan>
+References: <7807315.7cU9KldDtM@vostro.rjw.lan>
+Date: Sun, 1 Dec 2013 12:39:19 -0800
+Message-ID: <1385930359.6988.7.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=cp1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Release allocated resources on error recovery path in function
-iommu_init_domains().
+On Sun, 2013-12-01 at 02:34 +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Modify tg3_chip_reset() and tg3_close() to check if the PCI network
+> adapter device is accessible at all in order to skip poking it or
+> trying to handle a carrier loss in vain when that's not the case.
+> Introduce a special PCI helper function pci_device_is_present()
+> for this purpose.
+> 
+> Of course, this uncovers the lack of the appropriate RTNL locking
+> in tg3_suspend() and tg3_resume(), so add that locking in there
+> too.
+> 
+> These changes prevent tg3 from burning a CPU at 100% load level for
+> solid several seconds after the Thunderbolt link is disconnected from
+> a Matrox DS1 docking station. 
 
-Acked-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    2 ++
- 1 file changed, 2 insertions(+)
+I'm not familiar with the DS1.  Does the tg3 device get removed through
+tg3_remove_one() in this case?  What happens when you reconnect the DS1?
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index b8e3b48..2398876 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1273,6 +1273,8 @@ static int iommu_init_domains(struct intel_iommu *iommu)
- 			GFP_KERNEL);
- 	if (!iommu->domains) {
- 		printk(KERN_ERR "Allocating domain array failed\n");
-+		kfree(iommu->domain_ids);
-+		iommu->domain_ids = NULL;
- 		return -ENOMEM;
- 	}
- 
--- 
-1.7.10.4
 
