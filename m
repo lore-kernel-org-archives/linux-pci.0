@@ -1,109 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:57221 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753479Ab3LZPwo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Dec 2013 10:52:44 -0500
-Date: Thu, 26 Dec 2013 16:52:41 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:58717 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075Ab3LARFC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 12:05:02 -0500
+MIME-Version: 1.0
+In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+Date: Sun, 1 Dec 2013 10:05:00 -0700
+Message-ID: <CAL-B5D3t=K-m5Y=Vvgv=SnrOLni8rAJC5eW8J1CEBsgafjTemA@mail.gmail.com>
+Subject: Re: [PATCH v3 00/12] PCI: Double removing fix and allocate 64bit mmio pref
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: Issue with the emulated PCI bridge implementation
-Message-ID: <20131226165241.2c50b244@skate>
-In-Reply-To: <20131226160534.36cc4203@skate>
-References: <20131226160534.36cc4203@skate>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jason,
+Yinghai:
 
-On Thu, 26 Dec 2013 16:05:34 +0100, Thomas Petazzoni wrote:
+Would you please consider *not* bundling unrelated, or at least
+non-dependent, patches together in one series.  As a distrobution
+subsystem maintainer, this type of bundling really complicates trying
+to identify and isolate key material for bringing in.  It also makes
+trying to identify the core content for key fixes, which can occur
+many months or years later, significantly more difficult when they
+were buried within a series with other unrelated content
 
-> For now, my only idea would be to do the pci_ioremap_io()
-> unconditionally for all PCIe interfaces when the PCIe host controller
-> driver is initialized. We know the maximum size of the I/O region for
-> each PCIe interface, and this size is small (64 KB). We can keep the
-> creation of the corresponding MBus window as something dynamic done by
-> the bridge.
+Thanks,
+ Myron.
 
-Here is an implementation of this idea, tested to work with an e1000e
-card, with the driver modified to do a few read/write to the I/O
-region. What do you think about it?
-
-Thanks!
-
-Thomas
-
->From c062af329fa07ddc6d0ca305b4c9633f7e1dca00 Mon Sep 17 00:00:00 2001
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Date: Thu, 26 Dec 2013 16:46:24 +0100
-Subject: [PATCH] pci: mvebu: call pci_ioremap_io() at startup instead of
- dynamically
-
-The mvebu PCI host controller driver uses an emulated PCI-to-PCI
-bridge to leverage the core PCI kernel enumeration logic to
-dynamically create and remove the MBus windows needed to access the
-memory and I/O regions of each PCI interface.
-
-In the context of this PCI-to-PCI bridge emulation, the driver
-emulates all reads and writes to the PCI bridge registers. Upon a
-write to the registers conguring the I/O base and limit, the driver
-was creating the MBus window, and calling pci_ioremap_io() to setup
-the mapping.
-
-However, it turns out that accesses to these registers are made in an
-IRQ disabled context, while pci_ioremap_io() is a potentially sleeping
-function. Not only this is wrong, but it is causing so fairly loud
-warnings at boot time when the appropriate kernel hacking options are
-enabled.
-
-This patch solves this by moving the pci_ioremap_io() call at the
-startup of the driver. At this point, we don't know how many PCI
-interfaces will be enabled, so we are simply remapping the entire PCI
-I/O space to virtual addresses. This is reasonable since this I/O
-space is limited to 1 MB in size, and also because the MBus windows
-continue to be created in a dynamic fashion only when devices need
-them.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 2aa7b77c..476dd72 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -330,8 +330,6 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
- 	mvebu_mbus_add_window_remap_by_id(port->io_target, port->io_attr,
- 					  port->iowin_base, port->iowin_size,
- 					  iobase);
--
--	pci_ioremap_io(iobase, port->iowin_base);
- }
- 
- static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
-@@ -969,6 +967,10 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	pcie->nports = i;
-+
-+	for (i = 0; i < (IO_SPACE_LIMIT - SZ_64K); i += SZ_64K)
-+		pci_ioremap_io(i, pcie->io.start + i);
-+
- 	mvebu_pcie_msi_enable(pcie);
- 	mvebu_pcie_enable(pcie);
- 
--- 
-1.8.3.2
-
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+On Sat, Nov 30, 2013 at 3:40 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> First 4 are for Gu Zheng <guz.fnst@cn.fujitsu.com> to help double pci
+> device removing via sysfs.
+> For patch 4, rafael like to have use lock instead of atomic.
+>
+> Patch 6 are for not enabling realloc auto when 64bit mmio is not there for
+> root bus.
+>
+> Others are about mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
+> It will try to assign 64 bit resource above 4g at first.
+>
+> Patch 1-4 and Patch 5-12 could be appliey seperatedly.
+>
+> Could be found:
+>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-3.14
+>
+> And it is based on current pci/for-linus.
+>
+> -v2: update after patch that move device_del down to pci_destroy_dev.
+>      add "Try best to allocate pref mmio 64bit above 4G"
+>
+> -v3: refresh and send out after pci_clip_resource() changes,
+>      as Bjorn is not happy with attachments.
+>
+> Yinghai Lu (12):
+>   PCI: Use device_release_driver in pci_stop_root_bus
+>   PCI: Move back pci_proc_attach_devices calling
+>   PCI: Move resources and bus_list releasing to pci_release_dev
+>   PCI: Destroy pci dev only once
+>   PCI: pcibus address to resource converting take bus instead of dev
+>   PCI: Only enable realloc auto when root bus has 64bit mmio
+>   PCI: Don't use 4G bus address directly in resource allocation
+>   PCI: Try to allocate mem64 above 4G at first
+>   PCI: Kill PCIBIOS_MAX_MEM_32
+>   PCI: Try best to allocate pref mmio 64bit above 4g
+>   PCI: Sort pci root bus resources list
+>   intel-gtt: Read 64bit for gmar_bus_addr
+>
+>  arch/x86/include/asm/pci.h   |   1 -
+>  drivers/char/agp/intel-gtt.c |  14 ++--
+>  drivers/pci/bus.c            |  74 ++++++++++++++++---
+>  drivers/pci/host-bridge.c    |  34 +++++----
+>  drivers/pci/probe.c          |  23 +++++-
+>  drivers/pci/remove.c         |  31 ++------
+>  drivers/pci/setup-bus.c      | 165 ++++++++++++++++++++++++++++++-------------
+>  drivers/pci/setup-res.c      |  14 +++-
+>  include/linux/pci.h          |  10 +--
+>  9 files changed, 257 insertions(+), 109 deletions(-)
+>
+> --
+> 1.8.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
