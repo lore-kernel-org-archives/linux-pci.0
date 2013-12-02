@@ -1,108 +1,178 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lv Zheng <lv.zheng@intel.com>
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <len.brown@intel.com>
-Cc: Lv Zheng <lv.zheng@intel.com>, Lv Zheng <zetalog@gmail.com>,
-	<linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>, Feng Tang <feng.tang@intel.com>,
-	sfi-devel@simplefirmware.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/3] ACPI/SFI: Fix wrong <acpi/acpi.h> inclusion in SFI/ACPI wrapper - acpi_disabled linkage.
-Date: Wed,  4 Dec 2013 08:38:21 +0800
-Message-Id: <a65e60de44632715aaf4488ed190125ed0bb6820.1386116927.git.lv.zheng@intel.com>
-In-Reply-To: <cover.1386116927.git.lv.zheng@intel.com>
-References: <cover.1385094640.git.lv.zheng@intel.com> <cover.1386116927.git.lv.zheng@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:39544 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874Ab3LBFFS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 00:05:18 -0500
+MIME-Version: 1.0
+In-Reply-To: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+Date: Mon, 2 Dec 2013 13:05:16 +0800
+Message-ID: <CANVTcTaP18CiGOSEcX5Ch_wPw9mEhkgokfp+d+ZOMFD+Ce4juA@mail.gmail.com>
+Subject: Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
+From: rui wang <ruiv.wang@gmail.com>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@intel.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gong.chen@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In Linux kernel, ACPICA is wrapped and safely exported by CONFIG_ACPI.  So
-all external modules should depend on CONFIG_ACPI rather than using ACPICA
-header directly for stubbing.  But if we moves <acpi/acpi.h> inclusions
-into "#ifdef CONFIG_ACPI", build breakge can help to detect wrong ACPICA
-dependent modules.
+On 1/17/13, Lance Ortiz <lance.ortiz@hp.com> wrote:
+> This header file will define a new trace event that will be triggered when
+> a AER event occurs.  The following data will be provided to the trace
+> event.
+>
+> char * dev_name - The name of the slot where the device resides
+>                   ([domain:]bus:device.function).
+>
+> u32 status - Either the correctable or uncorrectable register
+>              indicating what error or errors have been see.
+>
+> u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+>
+> The trace event will also provide a trace string that may look like:
+>
+> "0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
+> TLP"
+>
+> v1-v2 Move header from include/ras/aer_event.h to
+> include/trace/events/ras.h
+> v3-v4 Cleaned up comments and commit header
+> v4-v5 More cleanup remove () from if statement in print.
+>       Renamed string define to be more specific.
+> v5-v6 change TRACE_SYSTEM define to be ras and not aer.
+>
+> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+> Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+> Acked-by: Tony Luck <tony.luck@intel.com>
+> ---
+>
+>  include/trace/events/ras.h |   77
+> ++++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 77 insertions(+), 0 deletions(-)
+>  create mode 100644 include/trace/events/ras.h
+>
+> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+> new file mode 100644
+> index 0000000..88b8783
+> --- /dev/null
+> +++ b/include/trace/events/ras.h
+> @@ -0,0 +1,77 @@
+> +#undef TRACE_SYSTEM
+> +#define TRACE_SYSTEM ras
+> +
+> +#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
+> +#define _TRACE_AER_H
+> +
+> +#include <linux/tracepoint.h>
+> +#include <linux/edac.h>
+> +
+> +
+> +/*
+> + * PCIe AER Trace event
+> + *
+> + * These events are generated when hardware detects a corrected or
+> + * uncorrected event on a PCIe device. The event report has
+> + * the following structure:
+> + *
+> + * char * dev_name -	The name of the slot where the device resides
+> + *			([domain:]bus:device.function).
+> + * u32 status -		Either the correctable or uncorrectable register
+> + *			indicating what error or errors have been seen
+> + * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+> + */
+> +
+> +#define aer_correctable_errors		\
+> +	{BIT(0),	"Receiver Error"},		\
+> +	{BIT(6),	"Bad TLP"},			\
+> +	{BIT(7),	"Bad DLLP"},			\
+> +	{BIT(8),	"RELAY_NUM Rollover"},		\
+> +	{BIT(12),	"Replay Timer Timeout"},	\
+> +	{BIT(13),	"Advisory Non-Fatal"}
+> +
+> +#define aer_uncorrectable_errors		\
+> +	{BIT(4),	"Data Link Protocol"},		\
+> +	{BIT(12),	"Poisoned TLP"},		\
+> +	{BIT(13),	"Flow Control Protocol"},	\
+> +	{BIT(14),	"Completion Timeout"},		\
+> +	{BIT(15),	"Completer Abort"},		\
+> +	{BIT(16),	"Unexpected Completion"},	\
+> +	{BIT(17),	"Receiver Overflow"},		\
+> +	{BIT(18),	"Malformed TLP"},		\
+> +	{BIT(19),	"ECRC"},			\
+> +	{BIT(20),	"Unsupported Request"}
+> +
+> +TRACE_EVENT(aer_event,
+> +	TP_PROTO(const char *dev_name,
+> +		 const u32 status,
+> +		 const u8 severity),
+> +
+> +	TP_ARGS(dev_name, status, severity),
+> +
+> +	TP_STRUCT__entry(
+> +		__string(	dev_name,	dev_name	)
+> +		__field(	u32,		status		)
+> +		__field(	u8,		severity	)
+> +	),
+> +
+> +	TP_fast_assign(
+> +		__assign_str(dev_name, dev_name);
+> +		__entry->status		= status;
+> +		__entry->severity	= severity;
+> +	),
+> +
+> +	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+> +		__get_str(dev_name),
+> +		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
+> +			__entry->severity == HW_EVENT_ERR_FATAL ?
+> +			"Fatal" : "Uncorrected",
+> +		__entry->severity == HW_EVENT_ERR_CORRECTED ?
+> +		__print_flags(__entry->status, "|", aer_correctable_errors) :
+> +		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
+> +);
 
-One of the build breakage is:
-arch/x86/pci/mmconfig-shared.c:389:1: error: unknown type name 'acpi_status'
-arch/x86/pci/mmconfig-shared.c:389:47: warning: 'struct acpi_resource' declared inside parameter list [enabled by default]
-arch/x86/pci/mmconfig-shared.c:389:47: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
-arch/x86/pci/mmconfig-shared.c: In function 'check_mcfg_resource':
-arch/x86/pci/mmconfig-shared.c:392:33: error: storage size of 'address' isn't known
-arch/x86/pci/mmconfig-shared.c:393:2: error: unknown type name 'acpi_status'
-arch/x86/pci/mmconfig-shared.c:395:9: error: dereferencing pointer to incomplete type
-arch/x86/pci/mmconfig-shared.c:395:19: error: 'ACPI_RESOURCE_TYPE_FIXED_MEMORY32' undeclared (first use in this function)
-arch/x86/pci/mmconfig-shared.c:395:19: note: each undeclared identifier is reported only once for each function it appears in
-arch/x86/pci/mmconfig-shared.c:397:8: error: dereferencing pointer to incomplete type
-arch/x86/pci/mmconfig-shared.c:399:11: error: 'AE_OK' undeclared (first use in this function)
-arch/x86/pci/mmconfig-shared.c:400:35: error: dereferencing pointer to incomplete type
-arch/x86/pci/mmconfig-shared.c:401:33: error: dereferencing pointer to incomplete type
-arch/x86/pci/mmconfig-shared.c:402:19: error: dereferencing pointer to incomplete type
-arch/x86/pci/mmconfig-shared.c:404:11: error: 'AE_CTRL_TERMINATE' undeclared (first use in this function)
-arch/x86/pci/mmconfig-shared.c:407:10: error: dereferencing pointer to incomplete type
-arch/x86/pci/mmconfig-shared.c:407:20: error: 'ACPI_RESOURCE_TYPE_ADDRESS32' undeclared (first use in this function)
-arch/x86/pci/mmconfig-shared.c:408:10: error: dereferencing pointer to incomplete type
-arch/x86/pci/mmconfig-shared.c:408:20: error: 'ACPI_RESOURCE_TYPE_ADDRESS64' undeclared (first use in this function)
-arch/x86/pci/mmconfig-shared.c:411:2: error: implicit declaration of function 'acpi_resource_to_address64' [-Werror=implicit-function-declaration]
-arch/x86/pci/mmconfig-shared.c:412:2: error: implicit declaration of function 'ACPI_FAILURE' [-Werror=implicit-function-declaration]
-arch/x86/pci/mmconfig-shared.c:414:31: error: 'ACPI_MEMORY_RANGE' undeclared (first use in this function)
-arch/x86/pci/mmconfig-shared.c:392:33: warning: unused variable 'address' [-Wunused-variable]
-arch/x86/pci/mmconfig-shared.c: At top level:
-arch/x86/pci/mmconfig-shared.c:425:1: error: unknown type name 'acpi_status'
-arch/x86/pci/mmconfig-shared.c:425:41: error: unknown type name 'acpi_handle'
-arch/x86/pci/mmconfig-shared.c: In function 'is_acpi_reserved':
-arch/x86/pci/mmconfig-shared.c:447:2: error: implicit declaration of function 'acpi_get_devices' [-Werror=implicit-function-declaration]
-arch/x86/pci/mmconfig-shared.c:447:30: error: 'find_mboard_resource' undeclared (first use in this function)
-arch/x86/pci/mmconfig-shared.c: At top level:
-arch/x86/pci/mmconfig-shared.c:389:20: warning: 'check_mcfg_resource' defined but not used [-Wunused-function]
+This causes inconsistency between dmesg and the trace event output.
+When dmesg says "severity=Corrected", the trace event says
+"severity=Fatal". What happens is that HW_EVENT_ERR_CORRECTED is
+defined in edac.h:
 
-The root cause of this breakage is:
-1. The following commit doesn't protect ACPICA functions like
-   acpi_get_devices()/acpi_walk_resources()/acpi_resource_to_address64() in
-   CONFIG_SFI=y and CONFIG_ACPI=n environment:
-    Commit: 5f0db7a2fb78895a197f64e548333b3bbd433996
-    Author: Feng Tang <feng.tang@intel.com>
-    Subject: SFI: Hook PCI MMCONFIG
-    First check ACPI, and if that fails, ask SFI to find the MCFG.
-   So it actually depends on the logic that in !CONFIG_ACPI builds, code
-   blocks under "if (!acpi_disabled)" will not be linked in.
+enum hw_event_mc_err_type {
+        HW_EVENT_ERR_CORRECTED,
+        HW_EVENT_ERR_UNCORRECTED,
+        HW_EVENT_ERR_FATAL,
+        HW_EVENT_ERR_INFO,
+};
 
-This patch fixes this issue by introducing a stub for MCFG entry checker
-is_acpi_reserved() in !CONFIG_ACPI builds.
+while aer_print_error() uses aer_error_severity_string[] defined as:
 
-Signed-off-by: Lv Zheng <lv.zheng@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Len Brown <lenb@kernel.org>
-Cc: Feng Tang <feng.tang@intel.com>
-Cc: sfi-devel@simplefirmware.org
-Cc: linux-pci@vger.kernel.org
----
- arch/x86/pci/mmconfig-shared.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+static const char *aer_error_severity_string[] = {
+        "Uncorrected (Non-Fatal)",
+        "Uncorrected (Fatal)",
+        "Corrected"
+};
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 082e881..9f23a77 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -370,6 +370,7 @@ static int __init pci_mmcfg_check_hostbridge(void)
- 	return !list_empty(&pci_mmcfg_list);
- }
- 
-+#ifdef CONFIG_ACPI
- static acpi_status check_mcfg_resource(struct acpi_resource *res, void *data)
- {
- 	struct resource *mcfg_res = data;
-@@ -436,6 +437,12 @@ static int is_acpi_reserved(u64 start, u64 end, unsigned not_used)
- 
- 	return mcfg_res.flags;
- }
-+#else
-+static inline int is_acpi_reserved(u64 start, u64 end, unsigned not_used)
-+{
-+	return 0;
-+}
-+#endif
- 
- typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
- 
--- 
-1.7.10
+In this case dmesg is correct because info->severity is assigned in
+aer_isr_one_error() using the definitions in include/linux/ras.h:
+#define AER_NONFATAL                    0
+#define AER_FATAL                       1
+#define AER_CORRECTABLE                 2
 
+So which one is the standard? Is there a plan to unify all these names?
+
+Thanks
+Rui Wang
+> +
+> +#endif /* _TRACE_AER_H */
+> +
+> +/* This part must be outside protection */
+> +#include <trace/define_trace.h>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
