@@ -1,93 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog104.obsmtp.com ([207.126.144.117]:36577 "EHLO
-	eu1sys200aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751030Ab3LKJj4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:39:56 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	<spear-devel@list.st.com>
-Subject: [PATCH 10/12] SPEAr13xx: defconfig: Update
-Date: Wed, 11 Dec 2013 15:08:35 +0530
-Message-ID: <3bc935718da3e0118c57ebee80c1363aac4a48a5.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from youngberry.canonical.com ([91.189.89.112]:46298 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881Ab3LBVix (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 16:38:53 -0500
+Message-ID: <529CFDE4.9070409@canonical.com>
+Date: Mon, 02 Dec 2013 16:38:44 -0500
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+Subject: Re: [REGRESSION][v3.4-rc1] PCI: add a PCI resource reallocation config
+ option
+References: <52965493.8060208@canonical.com> <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
+In-Reply-To: <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable EABI, OEABI, VFP and NFS configs in default configuration file for
-SPEAr13xx.
+On 11/28/2013 02:17 AM, Yinghai Lu wrote:
+> On Wed, Nov 27, 2013 at 12:22 PM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> Hi Yinghai,
+>>
+>> A kernel bug was opened against Ubuntu [0].  After a kernel bisect, it
+>> was found that the following commit introduced the bug:
+>>
+>> commit b07f2ebc109b607789f648dedcff4b125f9afec6
+>> Author: Yinghai Lu <yinghai@kernel.org>
+>> Date:   Thu Feb 23 19:23:32 2012 -0800
+>>
+>>     PCI: add a PCI resource reallocation config option
+>>
+>>
+>>
+>> The regression was introduced as of v3.4-rc1 and also exists in current
+>> mainline.
+>>
+>> The bug seems platform specific since we have not had allot of other
+>> reports.  The bug is preventing ixgbe to probe Intel x520 NIC's.
+>>
+>> It would be easy enough to disable the PCI_REALLOC_ENABLE_AUTO config
+>> option, but I wanted to get your feedback since you are the author.  It
+>> looks like the bug reporter may also be able to work around the problem
+>> with the pci=realloc=.
+> The bios has problem to have two functions rom bar to same place, and
+> root bus does
+> not enough mmio range and confuse realloc logic.
+>
+> Please try attached patches to top of linus's tree, or your internal tree.
+>
+> Thanks
+>
+> Yinghai
 
-Enable PCIe support for SPEAr13xx.
+Hi Yinghai,
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Viresh Kumar <viresh.linux@gmail.com>
-Cc: spear-devel@list.st.com
-Cc: linux-arm-kernel@lists.infradead.org
----
- arch/arm/configs/spear13xx_defconfig |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+Your patches were tested against the 3.5 tree.  The patches did fix the
+bug, and allowed the Intel x520 NIC's to work properly.  We were unable
+to test this with Linus' tree due to another bug, which prevents the
+system from booting.  We are looking deeper into that bug and should be
+able to test the mainline tree at some point.
 
-diff --git a/arch/arm/configs/spear13xx_defconfig b/arch/arm/configs/spear13xx_defconfig
-index 82eaa55..83882c0 100644
---- a/arch/arm/configs/spear13xx_defconfig
-+++ b/arch/arm/configs/spear13xx_defconfig
-@@ -11,13 +11,24 @@ CONFIG_ARCH_SPEAR13XX=y
- CONFIG_MACH_SPEAR1310=y
- CONFIG_MACH_SPEAR1340=y
- # CONFIG_SWP_EMULATE is not set
-+CONFIG_PCI_MSI=y
-+CONFIG_PCIE_SPEAR13XX=y
- CONFIG_SMP=y
- # CONFIG_SMP_ON_UP is not set
- # CONFIG_ARM_CPU_TOPOLOGY is not set
-+CONFIG_AEABI=y
-+CONFIG_OABI_COMPAT=y
- CONFIG_ARM_APPENDED_DTB=y
- CONFIG_ARM_ATAG_DTB_COMPAT=y
-+CONFIG_VFP=y
- CONFIG_BINFMT_MISC=y
- CONFIG_NET=y
-+CONFIG_UNIX=y
-+CONFIG_INET=y
-+CONFIG_IP_PNP=y
-+CONFIG_IP_PNP_DHCP=y
-+CONFIG_IP_PNP_BOOTP=y
-+CONFIG_NET_IPIP=y
- CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
- CONFIG_MTD=y
- CONFIG_MTD_OF_PARTS=y
-@@ -27,6 +38,7 @@ CONFIG_MTD_NAND=y
- CONFIG_MTD_NAND_FSMC=y
- CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=16384
-+CONFIG_BLK_DEV_SD=y
- CONFIG_ATA=y
- # CONFIG_SATA_PMP is not set
- CONFIG_SATA_AHCI_PLATFORM=y
-@@ -66,6 +78,7 @@ CONFIG_USB=y
- # CONFIG_USB_DEVICE_CLASS is not set
- CONFIG_USB_EHCI_HCD=y
- CONFIG_USB_OHCI_HCD=y
-+CONFIG_USB_STORAGE=y
- CONFIG_MMC=y
- CONFIG_MMC_SDHCI=y
- CONFIG_MMC_SDHCI_SPEAR=y
-@@ -84,6 +97,8 @@ CONFIG_VFAT_FS=m
- CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
- CONFIG_TMPFS=y
- CONFIG_JFFS2_FS=y
-+CONFIG_NFS_FS=y
-+CONFIG_ROOT_NFS=y
- CONFIG_NLS_DEFAULT="utf8"
- CONFIG_NLS_CODEPAGE_437=y
- CONFIG_NLS_ASCII=m
--- 
-1.7.0.1
+Testing against the 3.5 tree required that I cherry-pick the following
+commits: ff35147, 55ed83a, 967260c and 223d96f.  However, that shouldn't
+affect the test results of your patches.
+
+Thanks for your assistance with this!
+
+
+Joe
 
