@@ -1,65 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44570 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705Ab3LCDgM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 22:36:12 -0500
-Date: Mon, 2 Dec 2013 19:37:12 -0800
-From: Greg KH <greg@kroah.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: update MSI attribute file documentation
-Message-ID: <20131203033712.GA8525@kroah.com>
-References: <20131129031419.GB5889@neilslaptop.think-freely.org>
- <20131129094137.GC3028@redhat.com>
- <20131129175336.GA6152@kroah.com>
- <CAErSpo44sQU2PbufCYF+wzpMtMPC97_FgAMQgruX9Nw3XbmL8g@mail.gmail.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:60637 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919Ab3LCJcu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 04:32:50 -0500
+From: Marek Vasut <marex@denx.de>
+To: Harro Haan <hrhaan@gmail.com>
+Subject: Re: [PATCH 4/7] PCI: imx6: Split away the PHY reset
+Date: Tue, 3 Dec 2013 00:36:09 +0100
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1385500248-6551-1-git-send-email-marex@denx.de> <1385500248-6551-4-git-send-email-marex@denx.de> <CAB5oZtCTDJEWFxr-f1YJg7ihw0aCuiJiYvrHV597oNb6cZz92Q@mail.gmail.com>
+In-Reply-To: <CAB5oZtCTDJEWFxr-f1YJg7ihw0aCuiJiYvrHV597oNb6cZz92Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo44sQU2PbufCYF+wzpMtMPC97_FgAMQgruX9Nw3XbmL8g@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201312030036.09886.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Dear Harro Haan,
 
-Now that the MSI modes are now attribute files in sysfs, not
-subdirectories, update the documentation to reflect this.
+> On 26 November 2013 22:10, Marek Vasut <marex@denx.de> wrote:
+> > Split the PCIe PHY reset from the link up function to make
+> > the code a little more structured.
+> > 
+> > Signed-off-by: Marek Vasut <marex@denx.de>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Frank Li <lznuaa@gmail.com>
+> > Cc: Harro Haan <hrhaan@gmail.com>
+> > Cc: Jingoo Han <jg1.han@samsung.com>
+> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> > Cc: Pratyush Anand <pratyush.anand@st.com>
+> > Cc: Richard Zhu <r65037@freescale.com>
+> > Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> > Cc: Sean Cross <xobs@kosagi.com>
+> > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> > Cc: Tim Harvey <tharvey@gateworks.com>
+> > Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+> > Cc: Yinghai Lu <yinghai@kernel.org>
+> > ---
+> > 
+> >  drivers/pci/host/pci-imx6.c | 33 ++++++++++++++++++---------------
+> >  1 file changed, 18 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index 4d5be4e..a9781e7 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -336,6 +336,23 @@ static void imx6_pcie_host_init(struct pcie_port
+> > *pp)
+> > 
+> >         return;
+> >  
+> >  }
+> > 
+> > +static void imx6_pcie_reset_phy(struct pcie_port *pp)
+> > +{
+> > +       uint32_t temp;
+> > +
+> > +       pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
+> > +       temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+> > +                PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> > +       pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
+> > +
+> > +       usleep_range(2000, 3000);
+> > +
+> > +       pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
+> > +       temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+> > +                 PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> > +       pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
+> > +}
+> > +
+> > 
+> >  static int imx6_pcie_link_up(struct pcie_port *pp)
+> >  {
+> >  
+> >         u32 rc, ltssm, rx_valid, temp;
+> > 
+> > @@ -370,21 +387,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+> > 
+> >         dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+> > 
+> > -       pcie_phy_read(pp->dbi_base,
+> > -               PHY_RX_OVRD_IN_LO, &temp);
+> > -       temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN
+> > -               | PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> > -       pcie_phy_write(pp->dbi_base,
+> > -               PHY_RX_OVRD_IN_LO, temp);
+> > -
+> > -       usleep_range(2000, 3000);
+> > -
+> > -       pcie_phy_read(pp->dbi_base,
+> > -               PHY_RX_OVRD_IN_LO, &temp);
+> > -       temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN
+> > -               | PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+> > -       pcie_phy_write(pp->dbi_base,
+> > -               PHY_RX_OVRD_IN_LO, temp);
+> > +       imx6_pcie_reset_phy(pp);
+> > 
+> >         return 0;
+> >  
+> >  }
+> > 
+> > --
+> > 1.8.4.3
+> 
+> Thanks Marek,
+> 
+> A minor:
+> drivers/pci/host/pci-imx6.c: In function 'imx6_pcie_link_up':
+> drivers/pci/host/pci-imx6.c:353:27: warning: unused variable 'temp'
+> [-Wunused-variable]
+> 
+> See the following mail for more info which tests I did with patch 1/7,
+> 3/7, 4/7, 5/7 and 6/7:
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2013-November/214640.
+> html
 
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 5210a51c90fd..a3c5a6685036 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -70,18 +70,15 @@ Date:		September, 2011
- Contact:	Neil Horman <nhorman@tuxdriver.com>
- Description:
- 		The /sys/devices/.../msi_irqs directory contains a variable set
--		of sub-directories, with each sub-directory being named after a
--		corresponding msi irq vector allocated to that device.  Each
--		numbered sub-directory N contains attributes of that irq.
--		Note that this directory is not created for device drivers which
--		do not support msi irqs
-+		of files, with each file being named after a corresponding msi
-+		irq vector allocated to that device.
- 
--What:		/sys/bus/pci/devices/.../msi_irqs/<N>/mode
-+What:		/sys/bus/pci/devices/.../msi_irqs/<N>
- Date:		September 2011
- Contact:	Neil Horman <nhorman@tuxdriver.com>
- Description:
- 		This attribute indicates the mode that the irq vector named by
--		the parent directory is in (msi vs. msix)
-+		the file is in (msi vs. msix)
- 
- What:		/sys/bus/pci/devices/.../remove
- Date:		January 2009
+Thanks for the find and testing!
