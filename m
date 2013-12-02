@@ -1,58 +1,29 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49596 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab3LPPFs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 10:05:48 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: axboe@kernel.dk, stefano.stabellini@eu.citrix.com,
-	ian.campbell@citrix.com, xen-devel@lists.xenproject.org,
-	linux-kernel@vger.kernel.org, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, leosilva@linux.vnet.ibm.com,
-	ashley@ashleylai.com, peterhuewe@gmx.de, mail@srajiv.net,
-	tpmdd@selhorst.net, dmitry.torokhov@gmail.com, bhelgaas@google.com,
-	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
-	tpmdd-devel@lists.sourceforge.net, linux-input@vger.kernel.org,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-fbdev@vger.kernel.org
-Subject: [PATCH v3] if xen_platform_pci=0 is set don't blow up.
-Date: Mon, 16 Dec 2013 10:04:08 -0500
-Message-Id: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:52934 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab3LBSsc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 13:48:32 -0500
+Date: Mon, 02 Dec 2013 13:48:29 -0500 (EST)
+Message-Id: <20131202.134829.2041194874847967680.davem@davemloft.net>
+To: mchan@broadcom.com
+Cc: rjw@rjwysocki.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, nsujir@broadcom.com
+Subject: Re: [PATCH] PCI / tg3: Give up chip reset and carrier loss
+ handling if PCI device is not present
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1385930359.6988.7.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+References: <7807315.7cU9KldDtM@vostro.rjw.lan>
+	<1385930359.6988.7.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The first patch:
- [PATCH v3 1/2] xen/pvhvm: If xen_platform_pci=0 is set don't blow up
+From: "Michael Chan" <mchan@broadcom.com>
+Date: Sun, 1 Dec 2013 12:39:19 -0800
 
-I would like to commit to stable as it is fixing an eggregious bug -
-where we blow up if the guest config has: "xen_platform_pci=0" setup.
-This bug has been in existence for years and it is time to stamp it out.
+> I'm not familiar with the DS1.  Does the tg3 device get removed through
+> tg3_remove_one() in this case?  What happens when you reconnect the DS1?
 
-The second patch is a cleanup - not a stable candidate.
-
-It touches all of the Xen frontend drivers and adds the logic of:
-"if user disabled us, don't init" - with variations. As you can
-specify exactly which ones you want to init and which ones
-not (Linux runtime parameter 'xen_emul_unplug'). But for the majority
-of drivers - it is just an on/off switch.
-
-Since it touches a lot of maintainers I figured I would send it
-to Linus on Wednesday or Thursday.
-
-Thank you!
-
- arch/x86/xen/platform-pci-unplug.c         | 79 ++++++++++++++++++++++++++++--
- drivers/block/xen-blkfront.c               |  4 +-
- drivers/char/tpm/xen-tpmfront.c            |  4 ++
- drivers/input/misc/xen-kbdfront.c          |  4 ++
- drivers/net/xen-netfront.c                 |  2 +-
- drivers/pci/xen-pcifront.c                 |  4 ++
- drivers/video/xen-fbfront.c                |  4 ++
- drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
- include/xen/platform_pci.h                 | 25 +++++++++-
- 9 files changed, 119 insertions(+), 9 deletions(-)
-
-
-Konrad Rzeszutek Wilk (2):
-      xen/pvhvm: If xen_platform_pci=0 is set don't blow up (v3).
-      xen/pvhvm: Remove the xen_platform_pci int.
-
+Michael, is Rafael's explanation sufficient for you?
