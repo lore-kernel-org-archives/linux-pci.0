@@ -1,116 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:51869 "EHLO
-	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752727Ab3LFJMc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 04:12:32 -0500
-Date: Fri, 6 Dec 2013 14:42:09 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Marek Vasut <marex@denx.de>,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>
-Subject: Re: [Query/Discussion]: IO translation with designware PCIe
- controller
-Message-ID: <20131206091209.GC2298@pratyush-vbox>
-References: <20131205050424.GA2298@pratyush-vbox>
- <201312052233.13169.arnd@arndb.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201312052233.13169.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1385851238-21085-12-git-send-email-yinghai@kernel.org>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org> <1385851238-21085-12-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 2 Dec 2013 16:11:16 -0700
+Message-ID: <CAErSpo7R4nsP7G0DQ+1yzgd-8ZRLJfvzUZk4gno-x2yhhEMqOA@mail.gmail.com>
+Subject: Re: [PATCH v3 11/12] PCI: Sort pci root bus resources list
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Sat, Nov 30, 2013 at 3:40 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Some x86 systems expose above 4G 64bit mmio in _CRS as non-pref mmio range.
+> [   49.415281] PCI host bridge to bus 0000:00
+> [   49.419921] pci_bus 0000:00: root bus resource [bus 00-1e]
+> [   49.426107] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+> [   49.433041] pci_bus 0000:00: root bus resource [io  0x1000-0x5fff]
+> [   49.440010] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+> [   49.447768] pci_bus 0000:00: root bus resource [mem 0xfed8c000-0xfedfffff]
+> [   49.455532] pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffbfff]
+> [   49.463259] pci_bus 0000:00: root bus resource [mem 0x380000000000-0x381fffffffff]
+>
+> During assign unassigned 64bit mmio resource, it will go through
+> every non-pref mmio for root bus in pci_bus_alloc_resource().
+> As the loop is with pci_bus_for_each_resource(), and could have chance
+> to use under 4G mmio range instead of above 4G mmio range if the requested
+> range is not big enough, even it could handle above 4G 64bit pref mmio.
+>
+> For root bus, we can order list from high to low in pci_add_resource_offset(),
+> during creating root bus, it will still keep the same order in final bus
+> resource list.
+>         pci_acpi_scan_root
+>                 ==> add_resources
+>                         ==> pci_add_resource_offset: # Add to temp resources
+>                 ==> pci_create_root_bus
+>                         ==> pci_bus_add_resource # add to final bus resources.
+>
+> After that, we can make sure 64bit pref mmio for pci bridges will be allocated
+> higest of mmio non-pref, and in this case it is above 4G instead of under 4G.
 
-Thanks a lot for detailed explanation.
+It really irritates me when I ask a question [1] and you just repost
+the patch without even trying to answer it.
 
-On Fri, Dec 06, 2013 at 05:33:12AM +0800, Arnd Bergmann wrote:
-> On Thursday 05 December 2013, Pratyush Anand wrote:
-> > Hi Arnd / Jingoo,
-> > 
-> > Sorry for not able to follow earlier discussion you had on this
-> > topic while initial reviews of patches from Jingoo.
-> > 
-> > I have few doubts that how will it actually work.
-> > 
-> > As per my understanding under current implementation:
-> > 
-> > 1. Physical IO addresses are in the range of 0x1000 to 0xfffff.
-> > 2. They are mapped to fixed virtual address 0xFEE00000 using
-> > pci_ioremap_io.
-> > 3. IO resource addresses to any PCIe device will be allocated in above
-> > range.
-> > 4. Driver for that PCIe device will write in the above range only for
-> > IO transaction to the device.
-> > 5. As per current IO translation programming, its one to one
-> > translation. It means PCIe translation unit will have both input and
-> > output address in the range of 0x1000 to 0xfffff.
-> > 
-> > Did I miss something, or if above statements are correct, then what I
-> > do not understand is how can designware PCIe translation unit accept
-> > input address in the range of 0x1000 to 0xfffff?
-> 
-> Hi Pratyush,
-> 
-> I think the part that you are missing is that there are four, not two
-> address spaces involved:
-> 
-> 1. The "bus" I/O port address, in the range between 0x1000 and 0xffff
-> (65535). This is the address used in data frames in the actual bus
-> transaction going over the PCIe wires. If you have more than one PCIe
-> host bridge, each of them can normally have a range of up to 65536
-> addresses. The bus addresses get written into BAR registers of the
-> device.
+[1] http://lkml.kernel.org/r/CAErSpo4r6eJhgmfpth7haKDiKzDB+ZnEq0p_qdfTPo+kqySGgg@mail.gmail.com
 
-Correct. Got this point. So this address should be output of
-designware outbound address translation unit.
-
-> 
-> 2. The Linux I/O port numbers, between 0x00000 and 0xfffff (1048575).
-> This is a logical number space that aggregates all bus I/O port numbers.
-> The first 4096 ports are normally reserved for ISA devices and are
-> not available for PCIe resources. Each PCI or PCIe host bridge can have
-> a 0x10000 byte naturally aligned range in here. The common case is that
-> you have only one host bridge using the range 0x1000-0xffff. If you have
-> more than one, there may be an offset between them, e.g. the second PCIe
-> host may have io_offset set to 0x10000, which means that its bus range
-> 0x1000-0xffff gets translated to Linux port number 0x11000-0x1ffff.
-> Linux port numbers are visible e.g. in /proc/ioport and /dev/port
-
-Ok, got it. To know more, which binding function maps this logical
-number space to address space in 4?
-
-> 
-> 3. The CPU physical address space: Each PCIe host normally has its
-> bus I/O port space mapped into PCU visible addresses, either hardwired
-> or (in case of dw_pcie) set up using an outbound translation window.
-> These addresses are what get passed to pci_ioremap_io.
-
-OK.
-
-> 
-> 4. The CPU virtual address space: This is an implementation detail
-> of the kernel, which results in the Linux I/O port numbers 0x0-0xfffff
-> to be mapped at 0xfee00000-0xfeefffff.
-> 
-> > For example in SPEAr1340, physically RAM is mapped on above addresses.
-> > PCIe address translation unit can accept address only in the range of
-> > core addresses which are assigned to PCIe RC ie 0x80000000-0x8FFFFFFF.
-> 
-> Since this is a physical address, it corresponds to address space 3 in
-> my list above, and the address you pick here is what you pass to
-> pci_ioremap_io.
-
-This is what I was expecting. But currently designware driver does not
-pass this address to pci_ioremap_io.
-OK.. We will fix it and will send patch.
-
-Regards
-Pratyush
-
-> 
-> 	Arnd
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/bus.c | 15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 82eb234..30993ab 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -21,7 +21,8 @@
+>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+>                              resource_size_t offset)
+>  {
+> -       struct pci_host_bridge_window *window;
+> +       struct pci_host_bridge_window *window, *tmp;
+> +       struct list_head *n;
+>
+>         window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
+>         if (!window) {
+> @@ -31,7 +32,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+>
+>         window->res = res;
+>         window->offset = offset;
+> -       list_add_tail(&window->list, resources);
+> +
+> +       /* sorted it according to res end */
+> +       n = resources;
+> +       list_for_each_entry(tmp, resources, list)
+> +               if (window->res->end > tmp->res->end) {
+> +                       n = &tmp->list;
+> +                       break;
+> +               }
+> +
+> +       /* Insert it just before n */
+> +       list_add_tail(&window->list, n);
+>  }
+>  EXPORT_SYMBOL(pci_add_resource_offset);
+>
+> --
+> 1.8.1.4
+>
