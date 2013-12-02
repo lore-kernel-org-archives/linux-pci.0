@@ -1,116 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:39921 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781Ab3LEVp1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 16:45:27 -0500
-Received: by mail-vc0-f171.google.com with SMTP id ik5so13516644vcb.2
-        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 13:45:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo716DEk07izC_d_bj8xyDdYQFdEnqtJSirMp1bMmSdURA@mail.gmail.com>
-References: <CANN5nGKvaHCzWKMNyUhNfSfTfZBcVxG9RfeuQaOAFS9TghF=0w@mail.gmail.com>
-	<CAErSpo6SeyZpta+MuB5EnS-Rx80bAYmLkCaQgt5q_jgbtL4X6w@mail.gmail.com>
-	<CAErSpo716DEk07izC_d_bj8xyDdYQFdEnqtJSirMp1bMmSdURA@mail.gmail.com>
-Date: Thu, 5 Dec 2013 15:45:26 -0600
-Message-ID: <CANN5nGJ6NN2C5G2ioCfxCMbXWk78XRRwSip=_Qp7fuSi2DztFg@mail.gmail.com>
-Subject: Re: error loading iwlwifi on sony vaio
-From: Aaron McSorley <a@aaronmcsorley.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtprelay0242.hostedemail.com ([216.40.44.242]:49651 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751024Ab3LBFsT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 00:48:19 -0500
+Message-ID: <1385963295.2680.2.camel@joe-AO722>
+Subject: Re: [PATCH 1/5] serial: 8250_pci: use DEFINE_PCI_DEVICE_TABLE macro
+From: Joe Perches <joe@perches.com>
+To: Jingoo Han <jg1.han@samsung.com>, Jonas Bonn <jonas@southpole.se>
+Cc: 'Guenter Roeck' <linux@roeck-us.net>,
+	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	'Andrew Morton' <akpm@linux-foundation.org>,
+	'Andy Whitcroft' <apw@canonical.com>,
+	linux-serial@vger.kernel.org
+Date: Sun, 01 Dec 2013 21:48:15 -0800
+In-Reply-To: <001001ceef13$7fa3ee70$7eebcb50$%han@samsung.com>
+References: <000601ceebdc$ee148de0$ca3da9a0$%han@samsung.com>
+	 <20131128040750.GA29917@kroah.com>
+	 <006001ceebfa$c85a1020$590e3060$%han@samsung.com>
+	 <1385617213.12210.5.camel@joe-AO722> <20131128055328.GA565@kroah.com>
+	 <1385619863.12210.14.camel@joe-AO722> <529C026E.2000302@roeck-us.net>
+	 <000f01ceef11$a14acf00$e3e06d00$%han@samsung.com>
+	 <529C04C7.9050506@roeck-us.net>
+	 <001001ceef13$7fa3ee70$7eebcb50$%han@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-the dmesg
-http://pastebin.com/Y7dKDjAi
+(Adding Jonas Bonn to list as he added the macro in the first place...)
 
-and lspci
-http://pastebin.com/SVGcfY2F
+On Mon, 2013-12-02 at 13:03 +0900, Jingoo Han wrote:
+> On Monday, December 02, 2013 12:56 PM, Guenter Roeck wrote:
+> > On 12/01/2013 07:50 PM, Jingoo Han wrote:
+> > > On Monday, December 02, 2013 12:46 PM, Guenter Roeck wrote:
+> > >> On 12/01/2013 04:07 PM, Jingoo Han wrote:
+> > >>> On Friday, November 29, 2013 10:34 AM, Jingoo Han wrote:
+> > >>>> On Thursday, November 28, 2013 3:24 PM, Joe Perches wrote:
+> > >>>>> On Wed, 2013-11-27 at 21:53 -0800, 'Greg Kroah-Hartman' wrote:
+> > >>>>>> On Wed, Nov 27, 2013 at 09:40:13PM -0800, Joe Perches wrote:
+> > >>>>>>> On Thu, 2013-11-28 at 14:29 +0900, Jingoo Han wrote:
+> > >>>>>>>> On Thursday, November 28, 2013 1:08 PM, Greg Kroah-Hartman wrote:
+> > >>>>>>>>> On Thu, Nov 28, 2013 at 10:55:35AM +0900, Jingoo Han wrote:
+> > >>>>>>>>>> This macro is used to create a struct pci_device_id array.
+> > >>>>>>>>>
+> > >>>>>>>>> Yeah, and it's a horrid macro that deserves to be removed, please don't
+> > >>>>>>>>> use it in more places.
+> > >>>>>>>>>
+> > >>>>>>>>> Actually, if you could just remove it, that would be best, sorry, I'm
+> > >>>>>>>>> not going to take these patches.
+> > >>>>>>>>
+> > >>>>>>>> (+cc Joe Perches, Andrew Morton, Andy Whitcroft)
+> > >>>>>>>>
+> > >>>>>>>> Hi Joe Perches,
+> > >>>>>>>>
+> > >>>>>>>> Would you fix checkpatch.pl about DEFINE_PCI_DEVICE_TABLE?
+> > >>>>>>>> Currently, checkpatch.pl guides to use DEFINE_PCI_DEVICE_TABLE
+> > >>>>>>>> as below.
+> > >>>>>>>>
+> > >>>>>>>>     WARNING: Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id
+> > >>>>>>>>     #331: FILE: drivers/usb/host/ehci-pci.c:331:
+> > >>>>>>>>     +static const struct pci_device_id pci_ids [] = { {
+> > >>>>>>>>
+> > >>>>>>>> However, Greg Kroah-Hartman mentioned that DEFINE_PCI_DEVICE_TABLE
+> > >>>>>>>> shouldn't be used anymore.
+> > >>>>>>>>
+> > >>>>>>>> So, would you change checkpatch.pl in order to guide to use
+> > >>>>>>>> struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE?
+> > >>>>>>>>
+> > >>>>>>>> For example,
+> > >>>>>>>>     WARNING: Use struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE
+> > >>>>>>>
+> > >>>>>>> The documentation doesn't agree with Greg.
+> > >>>>> []
+> > >>>>>> I say just remove it, I should have done that years ago when I was the
+> > >>>>>> PCI maintainer, just never got around to it.  No other bus has something
+> > >>>>>> like this for their device ids, why should PCI be "special"?
+> > >>>>>
+> > >>>>> Anyone else have an opinion?
+> > >>>>>
+> > >>>>> I don't care one way or another, but please, one way
+> > >>>>> not two.
+> > >>>>
+> > >>
+> > >> Same here.
+> > >>
+> > >>>> (+cc Bjorn Helgaas, linux-pci)
+> > >>>>
+> > >>>> Then, how about the following steps?
+> > >>>>
+> > >>>> 1. Fix ./Documentation/PCI/pci.txt as below.
+> > >>>>      (Jingoo Han)
+> > >>>>      The ID table is an array of struct pci_device_id entries ending with an
+> > >>>>      -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
+> > >>>>      -method of declaring the table.  Each entry consists of:
+> > >>>>      +all-zero entry; Each entry consists of:
+> > >>>>
+> > >>>> 2. Fix ./scripts/checkpatch.pl in order to guide to use
+> > >>>>       struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE.
+> > >>>>       (Joe Perches)
+> > >>>
+> > >>> If all DEFINE_PCI_DEVICE_TABLEs are replaced with 'const struct pci_device_id'
+> > >>> and these patches are merged through 'driver-core.git', it will be not
+> > >>> necessary to fix ./scripts/checkpatch.pl.
+> > >>>
+> > >> Why not ?
+> > >
+> > > I will replace all DEFINE_PCI_DEVICE_TABLEs with 'const struct pci_device_id',
+> > > and remove the definition of DEFINE_PCI_DEVICE_TABLE macro.
+> > >
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -631,16 +631,6 @@ struct pci_driver {
+> > >   #define        to_pci_driver(drv) container_of(drv, struct pci_driver, driver)
+> > >
+> > >   /**
+> > > - * DEFINE_PCI_DEVICE_TABLE - macro used to describe a pci device table
+> > > - * @_table: device table name
+> > > - *
+> > > - * This macro is used to create a struct pci_device_id array (a device table)
+> > > - * in a generic manner.
+> > > - */
+> > > -#define DEFINE_PCI_DEVICE_TABLE(_table) \
+> > > -       const struct pci_device_id _table[]
+> > > -
+> > > -/**
+> > >
+> > > In this case, there is no DEFINE_PCI_DEVICE_TABLE usage
+> > > in the kernel. If someone uses DEFINE_PCI_DEVICE_TABLE macro,
+> > > it will make  build error.
+> > >
+> > 
+> > And that will make the checkpatch warning go away ?
+> > That seems to be very unlikely.
+> 
+> OK, I will ask Joe Perches to remove the following checkpatch
+> warning.
+> 
+>     WARNING: Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id
+> 
+> Best regards,
+> Jingoo Han
+> 
 
-and, Thanks
 
-On Thu, Dec 5, 2013 at 2:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [Fix Jiang's email address, please respond to this, not the previous message]
->
-> On Thu, Dec 5, 2013 at 1:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc Jiang, Ben]
->>
->> On Thu, Dec 5, 2013 at 8:24 AM, Aaron McSorley <a@aaronmcsorley.com> wrote:
->>> Hello, I'm getting this message when trying to load iwlwifi in our
->>> debian live image running kernel 3.8.5, this is on a Sony SVS13AA11L,
->>> please advise on how to debug this, or any additional information you
->>> need, any help is much appreciated, and thanks in advance
->>
->> Thanks, Aaron.  Can you collect the complete dmesg log and output of
->> "lspci -vv" (run as root)?
->>
->> I know this is a Debian kernel, but the upstream kernel likely still
->> has the same problem, so it'd be good if you opened a bug report at
->> http://bugzilla.kernel.org (drivers/pci category).
->>
->> Is there any hotplug involved here?  Since this doesn't seem to be a
->> problem every iwlwifi user sees, possibly we didn't assign resources
->> to the iwlwifi device in this case.
->>
->> Bjorn
->>
->>> [ 1387.804146] iwlwifi 0000:02:00.0: pci_ioremap_bar failed
->>> [ 1387.804206] iwlwifi: probe of 0000:02:00.0 failed with error -12
->>> [ 1978.637526] Intel(R) Wireless WiFi driver for Linux, in-tree:
->>> [ 1978.637531] Copyright(c) 2003-2012 Intel Corporation
->>> [ 1978.637685] ------------[ cut here ]------------
->>> [ 1978.637695] WARNING: at /build/linux/drivers/pci/pci.c:130
->>> pci_ioremap_bar+0x4a/0x4e()
->>> [ 1978.637697] Hardware name: SVS13A12FXB
->>> [ 1978.637699] Modules linked in: iwlwifi(+) joydev coretemp kvm
->>> tpm_infineon crc32c_intel uvc
->>> video aesni_intel aes_i586 videobuf2_vmalloc cfg80211 xts
->>> videobuf2_memops lrw btusb tpm_tis b
->>> luetooth videobuf2_core gf128mul iTCO_wdt ablk_helper videodev
->>> acpi_cpufreq tpm iTCO_vendor_su
->>> pport psmouse i2c_i801 cryptd sony_laptop crc16 mperf media tpm_bios
->>> of_i2c serio_raw lpc_ich
->>> rfkill battery evdev processor ac mei fuse squashfs loop aufs(C)
->>> nls_utf8 isofs dm_mirror dm_r
->>> egion_hash dm_log dm_mod radeon sg sr_mod sd_mod crc_t10dif cdrom
->>> usb_storage thermal nouveau
->>> mxm_wmi wmi r8169 mii rtsx_pci ttm microcode i915 ahci libahci
->>> ehci_pci ehci_hcd xhci_hcd vide
->>> o libata usbcore button i2c_algo_bit drm_kms_helper scsi_mod
->>> usb_common drm i2c_core thermal_s
->>> ys [last unloaded: iwlwifi]
->>> [ 1978.637759] Pid: 2896, comm: modprobe Tainted: P        WC O
->>> 3.8-0baureo1-486 #1 Debian 3.8.5-1~experimental.1~baureo1
->>> [ 1978.637761] Call Trace:
->>> [ 1978.637768]  [<c1021361>] ? warn_slowpath_common+0x68/0x79
->>> [ 1978.637773]  [<c115b85d>] ? pci_ioremap_bar+0x4a/0x4e
->>> [ 1978.637777]  [<c102137f>] ? warn_slowpath_null+0xd/0x10
->>> [ 1978.637781]  [<c115b85d>] ? pci_ioremap_bar+0x4a/0x4e
->>> [ 1978.637804]  [<f89136c2>] ? iwl_trans_pcie_alloc+0x113/0x271 [iwlwifi]
->>> [ 1978.637822]  [<f890f313>] ? iwl_pci_probe+0xf/0x7e [iwlwifi]
->>> [ 1978.637826]  [<c115e50e>] ? pci_device_probe+0x4e/0x85
->>> [ 1978.637833]  [<c11d958b>] ? driver_probe_device+0x78/0x163
->>> [ 1978.637838]  [<c11d96ba>] ? __driver_attach+0x44/0x5f
->>> [ 1978.637842]  [<c11d8357>] ? bus_for_each_dev+0x37/0x61
->>> [ 1978.637846]  [<c11d91ca>] ? driver_attach+0x11/0x13
->>> [ 1978.637851]  [<c11d9676>] ? driver_probe_device+0x163/0x163
->>> [ 1978.637855]  [<c11d8f40>] ? bus_add_driver+0xb0/0x1a7
->>> [ 1978.637861]  [<f891d000>] ? 0xf891cfff
->>> [ 1978.637866]  [<c11d9ae6>] ? driver_register+0x70/0xdb
->>> [ 1978.637871]  [<f891d000>] ? 0xf891cfff
->>> [ 1978.637876]  [<f891d000>] ? 0xf891cfff
->>> [ 1978.637891]  [<f890f3f5>] ? iwl_pci_register_driver+0x15/0x2a [iwlwifi]
->>> [ 1978.637896]  [<f891d000>] ? 0xf891cfff
->>> [ 1978.637900]  [<c100116f>] ? do_one_initcall+0x65/0x10a
->>> [ 1978.637904]  [<f891d000>] ? 0xf891cfff
->>> [ 1978.637910]  [<c1055ea0>] ? load_module+0x1610/0x18e6
->>> [ 1978.637918]  [<c10561e2>] ? sys_init_module+0x6c/0x80
->>> [ 1978.637933]  [<c12aa12f>] ? syscall_call+0x7/0xb
->>> [ 1978.637937] ---[ end trace 57fa059f8cbca6fc ]---
->>> [ 1978.637941] iwlwifi 0000:02:00.0: pci_ioremap_bar failed
->>> [ 1978.638002] iwlwifi: probe of 0000:02:00.0 failed with error -12
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
