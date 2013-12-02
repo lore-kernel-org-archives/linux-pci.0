@@ -1,53 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:39917 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751650Ab3L2LpV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Dec 2013 06:45:21 -0500
+Received: from szxga02-in.huawei.com ([119.145.14.65]:22165 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495Ab3LBBnH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 20:43:07 -0500
+Message-ID: <529BE547.9030508@huawei.com>
+Date: Mon, 2 Dec 2013 09:41:27 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
-	<CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-	<52828364.6080103@gmail.com>
-	<CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
-	<CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
-	<CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
-	<CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
-	<CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
-	<CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
-	<CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
-	<CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
-	<5285E028.20906@gmail.com>
-	<CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
-	<CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
-	<CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
-	<CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
-	<CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
-Date: Sun, 29 Dec 2013 13:45:19 +0200
-Message-ID: <CANUX_P21k4Tm460u1_SSD6Xrv2huDZR_EdZjOPh5wdhUfkqZGg@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"Dan Williams" <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <dmaengine@vger.kernel.org>
+Subject: Re: [Patch Part1 V2 04/17] iommu/vt-d: fix resource leakage on error
+ recovery path in iommu_init_domains()
+References: <1385715030-20553-1-git-send-email-jiang.liu@linux.intel.com> <1385715030-20553-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1385715030-20553-5-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->
->
-> Here are the output of "PCI" and "PCI Index" of Intel Wireless.
->
->
+On 2013/11/29 16:50, Jiang Liu wrote:
+> Release allocated resources on error recovery path in function
+> iommu_init_domains().
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/iommu/intel-iommu.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index b8e3b48..2398876 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -1273,6 +1273,8 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+>  			GFP_KERNEL);
+>  	if (!iommu->domains) {
+>  		printk(KERN_ERR "Allocating domain array failed\n");
+> +		kfree(iommu->domain_ids);
+> +		iommu->domain_ids = NULL;
+>  		return -ENOMEM;
+>  	}
+>  
+> 
 
-looks like all the power features are enabled... including the ones I
-told you to disable.
-I am lost now...
+Acked-by: Yijing Wang <wangyijing@huawei.com>
+
+-- 
+Thanks!
+Yijing
+
