@@ -1,48 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:8643 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045Ab3LMPcm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 10:32:42 -0500
-From: Betty Dall <betty.dall@hp.com>
-To: lenb@kernel.org, rjw@rjwysocki.net, bhelgaas@google.com
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Betty Dall <betty.dall@hp.com>
-Subject: [PATCH] PCI AER: Handle non-AER HEST error sources in aer_hest_parse()
-Date: Fri, 13 Dec 2013 08:23:16 -0700
-Message-Id: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:33362 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753168Ab3LBSBw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 13:01:52 -0500
+Date: Mon, 2 Dec 2013 10:01:47 -0800
+From: Guenter Roeck <linux@roeck-us.net>
+To: Joe Perches <joe@perches.com>
+Cc: Jonas Bonn <jonas@southpole.se>, Jingoo Han <jg1.han@samsung.com>,
+	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	'Andrew Morton' <akpm@linux-foundation.org>,
+	'Andy Whitcroft' <apw@canonical.com>,
+	linux-serial@vger.kernel.org
+Subject: Re: [PATCH] pci/checkpatch: Deprecate DEFINE_PCI_DEVICE_TABLE
+Message-ID: <20131202180147.GB31606@roeck-us.net>
+References: <1385617213.12210.5.camel@joe-AO722>
+ <20131128055328.GA565@kroah.com>
+ <1385619863.12210.14.camel@joe-AO722>
+ <529C026E.2000302@roeck-us.net>
+ <000f01ceef11$a14acf00$e3e06d00$%han@samsung.com>
+ <529C04C7.9050506@roeck-us.net>
+ <001001ceef13$7fa3ee70$7eebcb50$%han@samsung.com>
+ <1385963295.2680.2.camel@joe-AO722>
+ <529C6495.3020305@southpole.se>
+ <1386006217.2680.13.camel@joe-AO722>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1386006217.2680.13.camel@joe-AO722>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-aer_hest_parse() could pass a non-AER HEST error source to the function
-hest_match_pci(). hest_match_pci() assumes that the HEST error source is
-type ACPI_HEST_TYPE_AER_ROOT_PORT, ACPI_HEST_TYPE_AER_ENDPOINT, or
-ACPI_HEST_TYPE_AER_BRIDGE. I have a platform that has some
-ACPI_HEST_TYPE_GENERIC error sources where hest_match_pci() was trying to
-access the structure as if it had the acpi_hest_aer_common fields.
+On Mon, Dec 02, 2013 at 09:43:37AM -0800, Joe Perches wrote:
+> Prefer use of the direct definition of struct pci_device_id
 
-aer_hest_parse() is only ever interested in the AER type HEST error
-sources. Add a check on the type of the error souce at the beginning of
-aer_hest_parse().
+Add 'const' ?
 
-Signed-off-by: Betty Dall <betty.dall@hp.com>
----
+> instead of indirection via macro DEFINE_PCI_DEVICE_TABLE.
+> 
+> Update the PCI documentation to deprecate DEFINE_PCI_DEVICE_TABLE.
+> Update checkpatch adding --fix option.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  Documentation/PCI/pci.txt |  6 ++++--
+>  include/linux/pci.h       |  3 +--
+>  scripts/checkpatch.pl     | 11 +++++++----
+>  3 files changed, 12 insertions(+), 8 deletions(-)
+> 
+> diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.txt
+> index 6f45856..9518006 100644
+> --- a/Documentation/PCI/pci.txt
+> +++ b/Documentation/PCI/pci.txt
+> @@ -123,8 +123,10 @@ initialization with a pointer to a structure describing the driver
+>  
+>  
+>  The ID table is an array of struct pci_device_id entries ending with an
+> -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
+> -method of declaring the table.  Each entry consists of:
+> +all-zero entry.  Definitions with static const are generally preferred.
+> +Use of the deprecated macro DEFINE_PCI_DEVICE_TABLE should be avoided.
+> +
+> +Each entry consists of:
+>  
+>  	vendor,device	Vendor and device ID to match (or PCI_ANY_ID)
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1084a15..88674b0 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -634,8 +634,7 @@ struct pci_driver {
+>   * DEFINE_PCI_DEVICE_TABLE - macro used to describe a pci device table
+>   * @_table: device table name
+>   *
+> - * This macro is used to create a struct pci_device_id array (a device table)
+> - * in a generic manner.
+> + * This macro is deprecated and should not be used in new code.
+>   */
+>  #define DEFINE_PCI_DEVICE_TABLE(_table) \
+>  	const struct pci_device_id _table[]
+> diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+> index 38be5d5..6f883f0 100755
+> --- a/scripts/checkpatch.pl
+> +++ b/scripts/checkpatch.pl
+> @@ -2643,10 +2643,13 @@ sub process {
+>  			}
+>  		}
+>  
+> -# check for declarations of struct pci_device_id
+> -		if ($line =~ /\bstruct\s+pci_device_id\s+\w+\s*\[\s*\]\s*\=\s*\{/) {
+> -			WARN("DEFINE_PCI_DEVICE_TABLE",
+> -			     "Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id\n" . $herecurr);
+> +# check for uses of DEFINE_PCI_DEVICE_TABLE
+> +		if ($line =~ /\bDEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=/) {
+> +			if (WARN("DEFINE_PCI_DEVICE_TABLE",
+> +				 "Prefer struct pci_device_id over deprecated DEFINE_PCI_DEVICE_TABLE\n" . $herecurr) &&
 
- drivers/pci/pcie/aer/aerdrv_acpi.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Add 'const' ?
 
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index cf611ab..39186e3 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -56,6 +56,10 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
- 	struct acpi_hest_aer_common *p;
- 	int ff;
- 
-+	if (hest_hdr->type != ACPI_HEST_TYPE_AER_ROOT_PORT &&
-+		hest_hdr->type != ACPI_HEST_TYPE_AER_ENDPOINT &&
-+		hest_hdr->type != ACPI_HEST_TYPE_AER_BRIDGE)
-+		return 0;
- 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
- 	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
- 	if (p->flags & ACPI_HEST_GLOBAL) {
+Guenter
