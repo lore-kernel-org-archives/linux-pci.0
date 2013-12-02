@@ -1,97 +1,404 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Scott Wood <scottwood@freescale.com>
-CC: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:51502 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752199Ab3LBBQw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 20:16:52 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-Date: Tue, 10 Dec 2013 05:37:11 +0000
-Message-ID: <326a93628a9141a9abce97b7bb4e04fd@BN1PR03MB266.namprd03.prod.outlook.com>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1384973243.2879.361.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385066603.2879.414.camel@ul30vt.home>
-	 <1385066835.1403.489.camel@snotra.buserror.net>
-	 <1385067648.2879.421.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385397493.2879.557.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0723624C@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1386289316.7375.107.camel@snotra.buserror.net>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D07251EE4@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1386356393.7375.118.camel@snotra.buserror.net>
- <1386358226.25738.506.camel@ul30vt.home>
-In-Reply-To: <1386358226.25738.506.camel@ul30vt.home>
-Content-Type: text/plain; charset="utf-8"
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>
+Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
+Date: Mon, 02 Dec 2013 02:29:46 +0100
+Message-ID: <5750980.G76cQES87j@vostro.rjw.lan>
+In-Reply-To: <3611889.9a0SszCTpv@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <CAE9FiQUG-WV26o5MtM=QPfN1kEDGs4Li2wdGB88T==yrxGum_w@mail.gmail.com> <3611889.9a0SszCTpv@vostro.rjw.lan>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
-IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFNhdHVyZGF5LCBE
-ZWNlbWJlciAwNywgMjAxMyAxOjAwIEFNDQo+IFRvOiBXb29kIFNjb3R0LUIwNzQyMQ0KPiBDYzog
-Qmh1c2hhbiBCaGFyYXQtUjY1Nzc3OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBhZ3JhZkBz
-dXNlLmRlOyBZb2Rlcg0KPiBTdHVhcnQtQjA4MjQ4OyBpb21tdUBsaXN0cy5saW51eC1mb3VuZGF0
-aW9uLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXhwcGMtDQo+IGRldkBsaXN0cy5vemxh
-YnMub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFU
-Q0ggMC85IHYyXSB2ZmlvLXBjaTogYWRkIHN1cHBvcnQgZm9yIEZyZWVzY2FsZSBJT01NVSAoUEFN
-VSkNCj4gDQo+IE9uIEZyaSwgMjAxMy0xMi0wNiBhdCAxMjo1OSAtMDYwMCwgU2NvdHQgV29vZCB3
-cm90ZToNCj4gPiBPbiBUaHUsIDIwMTMtMTItMDUgYXQgMjI6MTEgLTA2MDAsIEJoYXJhdCBCaHVz
-aGFuIHdyb3RlOg0KPiA+ID4NCj4gPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4g
-PiA+ID4gRnJvbTogV29vZCBTY290dC1CMDc0MjENCj4gPiA+ID4gU2VudDogRnJpZGF5LCBEZWNl
-bWJlciAwNiwgMjAxMyA1OjUyIEFNDQo+ID4gPiA+IFRvOiBCaHVzaGFuIEJoYXJhdC1SNjU3NzcN
-Cj4gPiA+ID4gQ2M6IEFsZXggV2lsbGlhbXNvbjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsg
-YWdyYWZAc3VzZS5kZTsNCj4gPiA+ID4gWW9kZXIgU3R1YXJ0LSBCMDgyNDg7IGlvbW11QGxpc3Rz
-LmxpbnV4LWZvdW5kYXRpb24ub3JnOw0KPiA+ID4gPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51
-eHBwYy0gZGV2QGxpc3RzLm96bGFicy5vcmc7DQo+ID4gPiA+IGxpbnV4LWtlcm5lbEB2Z2VyLmtl
-cm5lbC5vcmcNCj4gPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCAwLzkgdjJdIHZmaW8tcGNpOiBh
-ZGQgc3VwcG9ydCBmb3IgRnJlZXNjYWxlDQo+ID4gPiA+IElPTU1VIChQQU1VKQ0KPiA+ID4gPg0K
-PiA+ID4gPiBPbiBUaHUsIDIwMTMtMTEtMjggYXQgMDM6MTkgLTA2MDAsIEJoYXJhdCBCaHVzaGFu
-IHdyb3RlOg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0t
-LQ0KPiA+ID4gPiA+ID4gRnJvbTogQmh1c2hhbiBCaGFyYXQtUjY1Nzc3DQo+ID4gPiA+ID4gPiBT
-ZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDI3LCAyMDEzIDk6MzkgUE0NCj4gPiA+ID4gPiA+IFRv
-OiAnQWxleCBXaWxsaWFtc29uJw0KPiA+ID4gPiA+ID4gQ2M6IFdvb2QgU2NvdHQtQjA3NDIxOyBs
-aW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4gPiA+ID4gYWdyYWZAc3VzZS5kZTsgWW9k
-ZXIgU3R1YXJ0LSBCMDgyNDg7DQo+ID4gPiA+ID4gPiBpb21tdUBsaXN0cy5saW51eC1mb3VuZGF0
-aW9uLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4gPiA+ID4gPiA+IGxpbnV4cHBjLSBkZXZA
-bGlzdHMub3psYWJzLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gPiA+
-ID4gU3ViamVjdDogUkU6IFtQQVRDSCAwLzkgdjJdIHZmaW8tcGNpOiBhZGQgc3VwcG9ydCBmb3IN
-Cj4gPiA+ID4gPiA+IEZyZWVzY2FsZSBJT01NVSAoUEFNVSkNCj4gPiA+ID4gPiA+DQo+ID4gPiA+
-ID4gPiBJZiB3ZSBqdXN0IHByb3ZpZGUgdGhlIHNpemUgb2YgTVNJIGJhbmsgdG8gdXNlcnNwYWNl
-IHRoZW4NCj4gPiA+ID4gPiA+IHVzZXJzcGFjZSBjYW5ub3QgZG8gYW55dGhpbmcgd3JvbmcuDQo+
-ID4gPiA+ID4NCj4gPiA+ID4gPiBTbyB1c2Vyc3BhY2UgZG9lcyBub3Qga25vdyBhZGRyZXNzLCBz
-byBpdCBjYW5ub3QgbW1hcCBhbmQgY2F1c2UNCj4gPiA+ID4gPiBhbnkNCj4gPiA+ID4gaW50ZXJm
-ZXJlbmNlIGJ5IGRpcmVjdGx5IHJlYWRpbmcvd3JpdGluZy4NCj4gPiA+ID4NCj4gPiA+ID4gVGhh
-dCdzIHNlY3VyaXR5IHRocm91Z2ggb2JzY3VyaXR5Li4uICBDb3VsZG4ndCB0aGUgbWFsaWNpb3Vz
-IHVzZXINCj4gPiA+ID4gZmluZCBvdXQgdGhlIGFkZHJlc3MgdmlhIG90aGVyIG1lYW5zLCBzdWNo
-IGFzIGV4cGVyaW1lbnRhdGlvbiBvbg0KPiA+ID4gPiBhbm90aGVyIHN5c3RlbSBvdmVyIHdoaWNo
-IHRoZXkgaGF2ZSBmdWxsIGNvbnRyb2w/ICBXaGF0IHdvdWxkDQo+ID4gPiA+IGhhcHBlbiBpZiB0
-aGUgdXNlciByZWFkcyBmcm9tIHRoZWlyIGRldmljZSdzIFBDSSBjb25maWcgc3BhY2U/ICBPcg0K
-PiA+ID4gPiBnZXRzIHRoZSBpbmZvcm1hdGlvbiB2aWEgc29tZSBiYWNrIGRvb3IgaW4gdGhlIFBD
-SSBkZXZpY2UgdGhleQ0KPiA+ID4gPiBvd24/ICBPciBwb2tlcyB0aHJvdWdob3V0IHRoZSBhZGRy
-ZXNzIHNwYWNlIGxvb2tpbmcgZm9yIHNvbWV0aGluZyB0aGF0DQo+IGdlbmVyYXRlcyBhbiBpbnRl
-cnJ1cHQgdG8gaXRzIG93biBkZXZpY2U/DQo+ID4gPg0KPiA+ID4gU28gaG93IHRvIHNvbHZlIHRo
-aXMgcHJvYmxlbSwgQW55IHN1Z2dlc3Rpb24gPw0KPiA+ID4NCj4gPiA+IFdlIGhhdmUgdG8gbWFw
-IG9uZSB3aW5kb3cgaW4gUEFNVSBmb3IgTVNJcyBhbmQgYSBtYWxpY2lvdXMgdXNlciBjYW4NCj4g
-PiA+IGFzayBpdHMgZGV2aWNlIHRvIGRvIERNQSB0byBNU0kgd2luZG93IHJlZ2lvbiB3aXRoIGFu
-eSBwYWlyIG9mDQo+ID4gPiBhZGRyZXNzIGFuZCBkYXRhLCB3aGljaCBjYW4gbGVhZCB0byB1bmV4
-cGVjdGVkIE1TSXMgaW4gc3lzdGVtPw0KPiA+DQo+ID4gSSBkb24ndCB0aGluayB0aGVyZSBhcmUg
-YW55IHNvbHV0aW9ucyBvdGhlciB0aGFuIHRvIGxpbWl0IGVhY2ggYmFuayB0bw0KPiA+IG9uZSB1
-c2VyLCB1bmxlc3MgdGhlIGFkbWluIHR1cm5zIHNvbWUga25vYiB0aGF0IHNheXMgdGhleSdyZSBP
-SyB3aXRoDQo+ID4gdGhlIHBhcnRpYWwgbG9zcyBvZiBpc29sYXRpb24uDQo+IA0KPiBFdmVuIGlm
-IHRoZSBhZG1pbiBkb2VzIG9wdC1pbiB0byBhbiBhbGxvd191bnNhZmVfaW50ZXJydXB0cyBvcHRp
-b25zLCBpdCBzaG91bGQNCj4gc3RpbGwgYmUgcmVhc29uYWJseSBkaWZmaWN1bHQgZm9yIG9uZSBn
-dWVzdCB0byBpbnRlcmZlcmUgd2l0aCB0aGUgb3RoZXIuICBJDQo+IGRvbid0IHRoaW5rIHdlIHdh
-bnQgdG8gcmVseSBvbiB0aGUgYmxpbmQgbHVjayBvZiBtYWtpbmcgdGhlIGZ1bGwgTVNJIGJhbmsN
-Cj4gYWNjZXNzaWJsZSB0byBtdWx0aXBsZSBndWVzdHMgYW5kIGhvcGluZyB0aGV5IGRvbid0IHN0
-ZXAgb24gZWFjaCBvdGhlci4NCg0KTm90IHN1cmUgaG93IHRvIHNvbHZlIGluIHRoaXMgY2FzZSAo
-c2hhcmluZyBNU0kgcGFnZSkNCg0KPiAgVGhhdCBwcm9iYWJseSBtZWFucyB0aGF0IHZmaW8gbmVl
-ZHMgdG8gbWFuYWdlIHRoZSBzcGFjZSByYXRoZXIgdGhhbiB0aGUgZ3Vlc3QuDQoNCldoYXQgeW91
-IG1lYW4gYnkgIiB2ZmlvIG5lZWRzIHRvIG1hbmFnZSB0aGUgc3BhY2UgcmF0aGVyIHRoYW4gdGhl
-IGd1ZXN0Ij8NCg0KVGhhbmtzDQotQmhhcmF0DQoNCj4gVGhhbmtzLA0KPiANCj4gQWxleA0KPiAN
-Cg0K
+On Sunday, December 01, 2013 02:24:33 AM Rafael J. Wysocki wrote:
+> On Saturday, November 30, 2013 02:27:15 PM Yinghai Lu wrote:
+> > On Sat, Nov 30, 2013 at 1:37 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > > On Saturday, November 30, 2013 01:31:33 AM Rafael J. Wysocki wrote:
+> > >> On Saturday, November 30, 2013 12:45:55 AM Rafael J. Wysocki wrote:
+> > >> > On Saturday, November 30, 2013 12:38:26 AM Rafael J. Wysocki wrote:
+> > >> > > On Tuesday, November 26, 2013 06:26:54 PM Yinghai Lu wrote:
+> > >> > > > On Tue, Nov 26, 2013 at 5:24 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > >> > > > >
+> > >> > > > > So assume pci_destroy_dev() is called twice in parallel for the same dev
+> > >> > > > > by two different threads.  Thread 1 does the atomic_inc_and_test() and
+> > >> > > > > finds that it is OK to do the device_del() and put_device() which causes
+> > >> > > > > the device object to be freed.  Then thread 2 does the atomic_inc_and_test()
+> > >> > > > > on the already freed device object and crashes the kernel.
+> > >> > > > >
+> > >> > > > thread2 should still hold one extra reference.
+> > >> > > > that is in
+> > >> > > >   device_schedule_callback
+> > >> > > >      ==> sysfs_schedule_callback
+> > >> > > >          ==> kobject_get(kobj)
+> > >> > > >
+> > >> > > > pci_destroy_dev for thread2 is called at this point.
+> > >> > > >
+> > >> > > > and that reference will be released from
+> > >> > > >         sysfs_schedule_callback
+> > >> > > >         ==> kobject_put()...
+> > >> > >
+> > >> > > Well, that would be the case if thread 2 was started by device_schedule_callback(),
+> > >> > > but again, for example, it may be trim_stale_devices() started by acpiphp_check_bridge()
+> > >> > > that doesn't hold extra references to the pci_dev.  [Well, that piece of code
+> > >> > > is racy anyway, because it walks bus->devices without locking.  Which is my
+> > >> > > fault too, because I overlooked that.  Shame, shame.]
+> > >> > >
+> > 
+> > can you add extra reference to that path?
+> 
+> hotplug_event_work()
+> 	hotplug_event()
+> 		acpiphp_check_bridge()
+> 			trim_stale_devices()
+> 				pci_stop_and_remove_bus_device()
+> 
+> Yes, it should hold a reference to dev, but adding it there doesn't really help,
+> because there are list walks over &bus->devices in acpiphp_check_bridge() and
+> trim_stale_devices() that are racy with respect to pci_stop_and_remove_bus_device()
+> run from device_schedule_callback().
+> 
+> > >> > > Perhaps we can do something like the (untested) patch below (in addition to the
+> > >> > > $subject patch).  Do you see any immediate problems with it?
+> > >> >
+> > >> > Ah, I see one.  It will break pci_stop_bus_device() and pci_remove_bus_device().
+> > >> > So much for being clever.
+> > >> >
+> > >> > Moreover, it looks like those two routines above are racy too for the same
+> > >> > reason?
+> > >>
+> > >> The (still untested) patch below is what I have come up with for now.  The
+> > >> is_gone flag is now only operated under pci_remove_rescan_mutex, so it need
+> > >> not be atomic.  Of course, whoever calls pci_stop_and_remove_bus_device()
+> > >> (the "locked" one) should hold a ref to the device being removed to avoid
+> > >> use-after-free (the callers need to be audited for that).
+> > 
+> > if you can use device_schedule_...,
+> 
+> No, I can't.  I need to hold acpi_scan_lock taken in hotplug_event_work()
+> throughout all bus trimming/scanning and I need to protect list walks over
+> &bus->devices too.
+> 
+> > should have hold reference may be
+> > atomic would be better than lock/unlock everywhere?
+> 
+> The locking is necessary not only for the device removal itself, but also for
+> the safety of the &bus->devices list walks.
+> 
+> Besides, remove_callback() in remove.c already holds pci_remove_rescan_mutex
+> around pci_stop_and_remove_bus_device() and I don't see how it would be safe
+> to run pci_stop_and_remove_bus_device() without holding that mutex from
+> anywhere else.
+> 
+> For one example, pci_stop_and_remove_bus_device() that is not run under
+> pci_remove_rescan_mutex can race with the stuff called under that mutex
+> in dev_bus_rescan_store() (and elsewhere in pci-sysfs.c).
+> 
+> So either pci_remove_rescan_mutex is useless and should be dropped, or
+> it is there for a purpose, in which case it needs to be used around
+> pci_stop_and_remove_bus_device() everywhere.  There's no other possibility
+> and to my eyes that mutex is necessary.
+
+So below is a new version of the patch (which has been tested on my Thunderbolt
+rig without visibly breaking anything) with the description of all the problems
+it attempts to address.  If any of the scenarios described in the changelog are
+not possible for some reason, please tell me why that is the case.  I couldn't
+find such reasons myself.
+
+Thanks,
+Rafael
+
+
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: PCI / hotplug / ACPI: Fix concurrency problems related to device removal
+
+The following are concurrency problems related to the PCI device
+removal code in pci-sysfs.c and in ACPIPHP present in the current
+mainline kernel:
+
+Scenario 1: pci_stop_and_remove_bus_device() run concurrently for
+  the same top device from remove_callback() in pci-sysfs.c and
+  from trim_stale_devices() in acpiphp_glue.c.
+
+  In this scenario the second code path is executed without
+  pci_remove_rescan_mutex locked, so the &bus->devices list
+  walks in either trim_stale_devices() itself or in
+  acpiphp_check_bridge() can suffer from list corruption while the
+  first code path is executing pci_destroy_dev() for one of the
+  devices on those lists.
+
+  Moreover, if any of the device objects in question is freed
+  after pci_destroy_dev() executed by the first code path, the
+  second code path may suffer a use-after-free problem while
+  trying to access that device object.
+
+  Conversely, the second code path may execute pci_destroy_dev()
+  for one of the devices in question such that one of the
+  &bus->devices list walks in pci_stop_bus_device()
+  or pci_remove_bus_device() executed by the first code path will
+  suffer from a list corruption.
+
+  Moreover, use-after-free is also possible if one of the device
+  objects in question is freed as a result of calling
+  pci_destroy_dev() by the second code path and then the first
+  code path tries to access it (the first code path only holds
+  an extra reference to the device it has been run for, but not
+  for its child devices).
+
+Scenario 2: ACPI hotplug event occurs for a device under a bridge
+  being removed by pci_stop_and_remove_bus_device() run from
+  remove_callback() in pci-sysfs.c.
+
+  In that case it doesn't make sense to handle the hotplug event,
+  because the device in question will be removed anyway along with
+  its parent bridge and that will cause the context objects needed
+  for hotplug handling to be freed as well.
+
+  Moreover, if the event is handled regardless, it may cause one
+  or more devices already removed by pci_stop_and_remove_bus_device()
+  to be added again by the code handling the event, which will
+  conflict with the bridge removal.
+
+Scenario 3: pci_stop_and_remove_bus_device() is run from
+  trim_stale_devices() (as a result of an ACPI hotplug event) in
+  parallel with dev_bus_rescan_store() or bus_rescan_store(),
+  or dev_rescan_store().
+
+  In that scenario the second code path may attempt to operate
+  on device objects being removed by the first code path which
+  may lead to many interesting types of breakage.
+
+Scenario 4: acpi_pci_root_remove() run (as a result of an ACPI PCI
+  host bridge removal event) in  parallel with bus_rescan_store(),
+  dev_bus_rescan_store(), dev_rescan_store(), or remove_callback()
+  for any devices under the host bridge in question.
+
+  In that case the same symptoms as in Scenarios 1 and 3 may occur
+  depending on which code path wins the races involved.
+
+Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
+  for a device and its parent bridge via remove_callback().
+
+  In that case both code paths attempt to acquire
+  pci_remove_rescan_mutex.  If the child device removal acquires
+  it first, there will be no problems.  However, if the parent
+  bridge removal acquires it first, it will eventually execute
+  pci_destroy_dev() for the child device, but that device will
+  not be freed yet due to the reference held by the concurrent
+  child removal.  Consequently, both pci_stop_bus_device() and
+  pci_remove_bus_device() will be executed for that device
+  unnecessarily and pci_destroy_dev() will see a corrupted list
+  head in that object.  Moreover, an excess put_device() will
+  be executed for that device in that case which may lead to a
+  use-after-free in the final kobject_put() done by
+  sysfs_schedule_callback_work().
+
+All of these scenarios are addressed by the patch below as follows.
+
+(1) To prevent Scenarios 1 and 3 from happening hold
+    pci_remove_rescan_mutex around hotplug_event() in
+    hotplug_event_work(() (acpiphp_glue.c).
+
+(2) To prevent Scenario 2 from happening, add an ACPIPHP bridge
+    flag is_going_away indicating that hotplug events should be
+    ignored for children below that bridge.  That flag is set
+    by cleanup_bridge() that for non-root bridges should be run
+    under pci_remove_rescan_mutex (for root bridges it is only
+    run under acpi_scan_lock anyway).
+
+(3) To prevent Scenario 4 from happening, hold
+    pci_remove_rescan_mutex around pci_stop_root_bus() and
+    pci_remove_root_bus() in acpi_pci_root_remove().
+
+(4) To prevent Scenario 5 from happening, add an new is_gone
+    flag to struct pci_dev that will be set by pci_destroy_dev()
+    and checked by pci_stop_and_remove_bus_device().  That only
+    covers cases in which pci_stop_and_remove_bus_device() is
+    run under pci_remove_rescan_mutex, but the other existing
+    cases need to be fixed to use that mutex anyway for other
+    reasons (analogous to Scenarios 1 and 3, for example).
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/pci_root.c            |    4 ++++
+ drivers/pci/hotplug/acpiphp.h      |    1 +
+ drivers/pci/hotplug/acpiphp_glue.c |   22 ++++++++++++++++++++--
+ drivers/pci/pci-sysfs.c            |   11 +++++++++++
+ drivers/pci/remove.c               |    7 +++++--
+ include/linux/pci.h                |    3 +++
+ 6 files changed, 44 insertions(+), 4 deletions(-)
+
+Index: linux-pm/include/linux/pci.h
+===================================================================
+--- linux-pm.orig/include/linux/pci.h
++++ linux-pm/include/linux/pci.h
+@@ -321,6 +321,7 @@ struct pci_dev {
+ 	unsigned int	multifunction:1;/* Part of multi-function device */
+ 	/* keep track of device state */
+ 	unsigned int	is_added:1;
++	unsigned int	is_gone:1;
+ 	unsigned int	is_busmaster:1; /* device is busmaster */
+ 	unsigned int	no_msi:1;	/* device may not use msi */
+ 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
+@@ -1021,6 +1022,8 @@ void set_pcie_hotplug_bridge(struct pci_
+ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap);
+ unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge);
+ unsigned int pci_rescan_bus(struct pci_bus *bus);
++void lock_pci_remove_rescan(void);
++void unlock_pci_remove_rescan(void);
+ 
+ /* Vital product data routines */
+ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+Index: linux-pm/drivers/pci/pci-sysfs.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-sysfs.c
++++ linux-pm/drivers/pci/pci-sysfs.c
+@@ -298,6 +298,17 @@ msi_bus_store(struct device *dev, struct
+ static DEVICE_ATTR_RW(msi_bus);
+ 
+ static DEFINE_MUTEX(pci_remove_rescan_mutex);
++
++void lock_pci_remove_rescan(void)
++{
++	mutex_lock(&pci_remove_rescan_mutex);
++}
++
++void unlock_pci_remove_rescan(void)
++{
++	mutex_unlock(&pci_remove_rescan_mutex);
++}
++
+ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 				size_t count)
+ {
+Index: linux-pm/drivers/pci/remove.c
+===================================================================
+--- linux-pm.orig/drivers/pci/remove.c
++++ linux-pm/drivers/pci/remove.c
+@@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
+ 
+ static void pci_destroy_dev(struct pci_dev *dev)
+ {
++	dev->is_gone = 1;
+ 	device_del(&dev->dev);
+ 
+ 	down_write(&pci_bus_sem);
+@@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
+  */
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ {
+-	pci_stop_bus_device(dev);
+-	pci_remove_bus_device(dev);
++	if (!dev->is_gone) {
++		pci_stop_bus_device(dev);
++		pci_remove_bus_device(dev);
++	}
+ }
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -71,6 +71,7 @@ struct acpiphp_bridge {
+ 	struct acpiphp_context *context;
+ 
+ 	int nr_slots;
++	bool is_going_away;
+ 
+ 	/* This bus (host bridge) or Secondary bus (PCI-to-PCI bridge) */
+ 	struct pci_bus *pci_bus;
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -439,6 +439,13 @@ static void cleanup_bridge(struct acpiph
+ 	mutex_lock(&bridge_mutex);
+ 	list_del(&bridge->list);
+ 	mutex_unlock(&bridge_mutex);
++
++	/*
++	 * For non-root bridges this flag is protected by the PCI remove/rescan
++	 * locking.  For root bridges it is only operated under acpi_scan_lock
++	 * anyway.
++	 */
++	bridge->is_going_away = true;
+ }
+ 
+ /**
+@@ -733,11 +740,17 @@ static void trim_stale_devices(struct pc
+  *
+  * Iterate over all slots under this bridge and make sure that if a
+  * card is present they are enabled, and if not they are disabled.
++ *
++ * For non-root bridges call under the PCI remove/rescan mutex.
+  */
+ static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
+ {
+ 	struct acpiphp_slot *slot;
+ 
++	/* Bail out if the bridge is going away. */
++	if (bridge->is_going_away)
++		return;
++
+ 	list_for_each_entry(slot, &bridge->slots, node) {
+ 		struct pci_bus *bus = slot->bus;
+ 		struct pci_dev *dev, *tmp;
+@@ -878,14 +891,19 @@ static void hotplug_event_work(void *dat
+ {
+ 	struct acpiphp_context *context = data;
+ 	acpi_handle handle = context->handle;
++	struct acpiphp_bridge *bridge = context->func.parent;
+ 
+ 	acpi_scan_lock_acquire();
++	lock_pci_remove_rescan();
+ 
+-	hotplug_event(handle, type, context);
++	/* Bail out if the parent bridge is going away. */
++	if (!bridge->is_going_away)
++		hotplug_event(handle, type, context);
+ 
++	unlock_pci_remove_rescan();
+ 	acpi_scan_lock_release();
+ 	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
+-	put_bridge(context->func.parent);
++	put_bridge(bridge);
+ }
+ 
+ /**
+Index: linux-pm/drivers/acpi/pci_root.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_root.c
++++ linux-pm/drivers/acpi/pci_root.c
+@@ -616,6 +616,8 @@ static void acpi_pci_root_remove(struct
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 
++	lock_pci_remove_rescan();
++
+ 	pci_stop_root_bus(root->bus);
+ 
+ 	device_set_run_wake(root->bus->bridge, false);
+@@ -623,6 +625,8 @@ static void acpi_pci_root_remove(struct
+ 
+ 	pci_remove_root_bus(root->bus);
+ 
++	unlock_pci_remove_rescan();
++
+ 	kfree(root);
+ }
+ 
+
