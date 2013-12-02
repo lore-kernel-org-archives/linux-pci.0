@@ -1,72 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:59733 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752030Ab3LPHNU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 02:13:20 -0500
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Mon, 16 Dec 2013 12:43:11 +0530
-Date: Mon, 16 Dec 2013 15:13:05 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>,
-	Scott Wood <scottwood@freescale.com>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 6/9] powerpc/pci: Use dev_is_pci() to check whether it is
- pci device
-Message-ID: <20131216071305.GA16842@weiyang.vnet.ibm.com>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1386244880-22300-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1386244880-22300-1-git-send-email-wangyijing@huawei.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:19069 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439Ab3LBDu0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 22:50:26 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Guenter Roeck' <linux@roeck-us.net>
+Cc: 'Joe Perches' <joe@perches.com>,
+	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	'Andrew Morton' <akpm@linux-foundation.org>,
+	'Andy Whitcroft' <apw@canonical.com>,
+	linux-serial@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <000601ceebdc$ee148de0$ca3da9a0$%han@samsung.com>
+ <20131128040750.GA29917@kroah.com>
+ <006001ceebfa$c85a1020$590e3060$%han@samsung.com>
+ <1385617213.12210.5.camel@joe-AO722> <20131128055328.GA565@kroah.com>
+ <1385619863.12210.14.camel@joe-AO722> <529C026E.2000302@roeck-us.net>
+In-reply-to: <529C026E.2000302@roeck-us.net>
+Subject: Re: [PATCH 1/5] serial: 8250_pci: use DEFINE_PCI_DEVICE_TABLE macro
+Date: Mon, 02 Dec 2013 12:50:23 +0900
+Message-id: <000f01ceef11$a14acf00$e3e06d00$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yijing,
+On Monday, December 02, 2013 12:46 PM, Guenter Roeck wrote:
+> On 12/01/2013 04:07 PM, Jingoo Han wrote:
+> > On Friday, November 29, 2013 10:34 AM, Jingoo Han wrote:
+> >> On Thursday, November 28, 2013 3:24 PM, Joe Perches wrote:
+> >>> On Wed, 2013-11-27 at 21:53 -0800, 'Greg Kroah-Hartman' wrote:
+> >>>> On Wed, Nov 27, 2013 at 09:40:13PM -0800, Joe Perches wrote:
+> >>>>> On Thu, 2013-11-28 at 14:29 +0900, Jingoo Han wrote:
+> >>>>>> On Thursday, November 28, 2013 1:08 PM, Greg Kroah-Hartman wrote:
+> >>>>>>> On Thu, Nov 28, 2013 at 10:55:35AM +0900, Jingoo Han wrote:
+> >>>>>>>> This macro is used to create a struct pci_device_id array.
+> >>>>>>>
+> >>>>>>> Yeah, and it's a horrid macro that deserves to be removed, please don't
+> >>>>>>> use it in more places.
+> >>>>>>>
+> >>>>>>> Actually, if you could just remove it, that would be best, sorry, I'm
+> >>>>>>> not going to take these patches.
+> >>>>>>
+> >>>>>> (+cc Joe Perches, Andrew Morton, Andy Whitcroft)
+> >>>>>>
+> >>>>>> Hi Joe Perches,
+> >>>>>>
+> >>>>>> Would you fix checkpatch.pl about DEFINE_PCI_DEVICE_TABLE?
+> >>>>>> Currently, checkpatch.pl guides to use DEFINE_PCI_DEVICE_TABLE
+> >>>>>> as below.
+> >>>>>>
+> >>>>>>    WARNING: Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id
+> >>>>>>    #331: FILE: drivers/usb/host/ehci-pci.c:331:
+> >>>>>>    +static const struct pci_device_id pci_ids [] = { {
+> >>>>>>
+> >>>>>> However, Greg Kroah-Hartman mentioned that DEFINE_PCI_DEVICE_TABLE
+> >>>>>> shouldn't be used anymore.
+> >>>>>>
+> >>>>>> So, would you change checkpatch.pl in order to guide to use
+> >>>>>> struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE?
+> >>>>>>
+> >>>>>> For example,
+> >>>>>>    WARNING: Use struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE
+> >>>>>
+> >>>>> The documentation doesn't agree with Greg.
+> >>> []
+> >>>> I say just remove it, I should have done that years ago when I was the
+> >>>> PCI maintainer, just never got around to it.  No other bus has something
+> >>>> like this for their device ids, why should PCI be "special"?
+> >>>
+> >>> Anyone else have an opinion?
+> >>>
+> >>> I don't care one way or another, but please, one way
+> >>> not two.
+> >>
+> 
+> Same here.
+> 
+> >> (+cc Bjorn Helgaas, linux-pci)
+> >>
+> >> Then, how about the following steps?
+> >>
+> >> 1. Fix ./Documentation/PCI/pci.txt as below.
+> >>     (Jingoo Han)
+> >>     The ID table is an array of struct pci_device_id entries ending with an
+> >>     -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
+> >>     -method of declaring the table.  Each entry consists of:
+> >>     +all-zero entry; Each entry consists of:
+> >>
+> >> 2. Fix ./scripts/checkpatch.pl in order to guide to use
+> >>      struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE.
+> >>      (Joe Perches)
+> >
+> > If all DEFINE_PCI_DEVICE_TABLEs are replaced with 'const struct pci_device_id'
+> > and these patches are merged through 'driver-core.git', it will be not
+> > necessary to fix ./scripts/checkpatch.pl.
+> >
+> Why not ?
 
-This one looks good.
+I will replace all DEFINE_PCI_DEVICE_TABLEs with 'const struct pci_device_id',
+and remove the definition of DEFINE_PCI_DEVICE_TABLE macro.
 
-While I take a look at the source code, there are around 20 places with
-similar style. Do you think it would be good to change all these places
-in one patch?
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -631,16 +631,6 @@ struct pci_driver {
+ #define        to_pci_driver(drv) container_of(drv, struct pci_driver, driver)
 
-On Thu, Dec 05, 2013 at 08:01:20PM +0800, Yijing Wang wrote:
->Use PCI standard marco dev_is_pci() instead of directly compare
->pci_bus_type to check whether it is pci device.
->
->Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->---
-> arch/powerpc/sysdev/fsl_pci.c |    2 +-
-> 1 files changed, 1 insertions(+), 1 deletions(-)
->
->diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
->index 4dfd61d..7066e52 100644
->--- a/arch/powerpc/sysdev/fsl_pci.c
->+++ b/arch/powerpc/sysdev/fsl_pci.c
->@@ -122,7 +122,7 @@ static int fsl_pci_dma_set_mask(struct device *dev, u64 dma_mask)
-> 	 * address width of the SoC such that we can address any internal
-> 	 * SoC address from across PCI if needed
-> 	 */
->-	if ((dev->bus == &pci_bus_type) &&
->+	if ((dev_is_pci(dev)) &&
-> 	    dma_mask >= DMA_BIT_MASK(MAX_PHYS_ADDR_BITS)) {
-> 		set_dma_ops(dev, &dma_direct_ops);
-> 		set_dma_offset(dev, pci64_dma_offset);
->-- 
->1.7.1
->
->
->_______________________________________________
->Linuxppc-dev mailing list
->Linuxppc-dev@lists.ozlabs.org
->https://lists.ozlabs.org/listinfo/linuxppc-dev
+ /**
+- * DEFINE_PCI_DEVICE_TABLE - macro used to describe a pci device table
+- * @_table: device table name
+- *
+- * This macro is used to create a struct pci_device_id array (a device table)
+- * in a generic manner.
+- */
+-#define DEFINE_PCI_DEVICE_TABLE(_table) \
+-       const struct pci_device_id _table[]
+-
+-/**
 
--- 
-Richard Yang
-Help you, Help me
+In this case, there is no DEFINE_PCI_DEVICE_TABLE usage
+in the kernel. If someone uses DEFINE_PCI_DEVICE_TABLE macro,
+it will make  build error.
+
+Best regards,
+Jingoo Han
 
