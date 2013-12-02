@@ -1,63 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:37475 "EHLO
-	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751155Ab3LKLPO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 06:15:14 -0500
-Message-ID: <52A84921.4010807@st.com>
-Date: Wed, 11 Dec 2013 16:44:41 +0530
-From: Rajeev kumar <rajeev-dlh.kumar@st.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:37223 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752322Ab3LBIKb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 03:10:31 -0500
+From: Marek Vasut <marex@denx.de>
+To: =?iso-8859-1?q?Bj=F8rn_Erik_Nilsen?= <ben@datarespons.no>
+Subject: Re: [PATCH v5 1/2] PCI: designware: Fix crash in dw_msi_teardown_irq
+Date: Mon, 2 Dec 2013 09:10:26 +0100
+Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"kishon@ti.com" <kishon@ti.com>,
+	"Mohit.KUMAR@st.com" <Mohit.KUMAR@st.com>,
+	"ajay.khandelwal@st.com" <ajay.khandelwal@st.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>,
+	"Eric.Nelson@boundarydevices.com" <Eric.Nelson@boundarydevices.com>,
+	"troy.kisky@boundarydevices.com" <troy.kisky@boundarydevices.com>
+References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com> <201311291802.53655.marex@denx.de> <cmu-lmtpd-8418-1385750273-5@frontend1.mail.m-online.net>
+In-Reply-To: <cmu-lmtpd-8418-1385750273-5@frontend1.mail.m-online.net>
 MIME-Version: 1.0
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 01/12] SPEAr13xx: Correct dt field name for stmmac phy-addr
-References: <cover.1386752447.git.mohit.kumar@st.com> <1078549fa412fb34ab2c95a6232096570abee12d.1386752447.git.mohit.kumar@st.com> <52A847D1.5000409@st.com>
-In-Reply-To: <52A847D1.5000409@st.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201312020910.26538.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Dear Bjørn Erik Nilsen,
 
-Recheck the subject line, you are not doing any correction.
+> 29. nov. 2013 kl. 18:02 skrev Marek Vasut <marex@denx.de>:
+> > Dear Bjørn Erik Nilsen,
+> > 
+> >> Dear Marek Vasut,
+> >> 
+> >> On Fri, 2013-11-29 at 16:36 +0100, Marek Vasut wrote:
+> >>> Dear Bjørn Erik Nilsen,
+> >>> [...]
+> >>> 
+> >>>>> Won't simple
+> >>>>> 
+> >>>>> for (i = 0; i < nvec; i++) {
+> >>>>> 
+> >>>>> do here?
+> >>>> 
+> >>>> Yes.
+> >>>> 
+> >>>> The very same syntax ('while i < nvec') is used in assign_irq. That is
+> >>>> why I wanted to keep it like that to avoid adding too much confusion,
+> >>>> or at least make it easy to recognize the same pattern.
+> >>>> 
+> >>>> You still want me to change it?
+> >>> 
+> >>> Your loop does exactly what a for() loop would do, there's no need to
+> >>> emulate it with a while() loop. If you can fix the other one, fix the
+> >>> other one as well please.
+> >> 
+> >> Yes, it is syntax sugar indeed and I did it purely for readability as
+> >> explained. You don't seem to agree with me on the readability argument,
+> >> so I can make the new code use a for-loop. And then in an unrelated
+> >> commit (which would look awfully silly) I can change the other
+> >> while-loop too.
+> > 
+> > Either way is fine with me, I'm just more inclined to the for loop ;-)
+> > Let's wait for what the others have to say, they can judge this
+> > argument.
+> > 
+> >>>> As for the other nitpick, I don't agree with you.
+> >>>> 
+> >>>> In fact, dw_msi_teardown_irq has no return value itself. Moreover, if
+> >>>> setting the msi desc to NULL fails, then it simply means there is no
+> >>>> irq desc and there is nothing to unwind. Also, skipping the other
+> >>>> unwind operations just because that single operation failed would
+> >>>> leave the driver in a much worse state. At least in my opinion.
+> >>>> 
+> >>>> What's your opinion on that?
+> >>> 
+> >>> I see this:
+> >>> 
+> >>> $ git grep irq_set_msi_desc_off include/
+> >>> include/linux/irq.h:extern int irq_set_msi_desc_off(unsigned int
+> >>> irq_base, unsigned int irq_offset,
+> >>> 
+> >>> So it has a return value which needs to be handled. Sorry if I wasn't
+> >>> clear on the first try.
+> >> 
+> >> I agree that return values should be checked.
+> >> 
+> >> However based on my reasoning there is absolutely nothing to do with the
+> >> return value in this particular case, and in fact bailing out will leave
+> >> the driver in a much worse state (as other unwind operations will be
+> >> skipped).
+> >> 
+> >> That is what I kindly asked you to comment on.
+> > 
+> > How come you cannot unwind what you did thus far and bail out ? That
+> > means the design here is seriously broken, don't you think ?
+> 
+> Maybe you need to take a closer look at the patch because the code in
+> question is *the* unwinding code. So bailing out from there  doesn't make
+> much sense.
+> 
+> Also note that I do check the return value of the same function call in
+> setup, but the one you are complaining is for unwinding stuff that has
+> already been setup.
+> 
+> I hope this helps :-)
 
-On 12/11/2013 4:39 PM, Rajeev KUMAR wrote:
-> On 12/11/2013 3:08 PM, Mohit KUMAR wrote:
->> DT field name for the phy address changed since kernel 3.10. Set the
->> snps,phy-addr to 0xffffffff so that the driver probes for the phy.
->>
->> Signed-off-by: Mohit Kumar<mohit.kumar@st.com>
->> Cc: Pratyush Anand<pratyush.anand@st.com>
->> Cc: Viresh Kumar<viresh.linux@gmail.com>
->> Cc: spear-devel@list.st.com
->> Cc: linux-arm-kernel@lists.infradead.org
->> Cc: devicetree@vger.kernel.org
->> ---
->>    arch/arm/boot/dts/spear13xx.dtsi |    1 +
->>    1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/arch/arm/boot/dts/spear13xx.dtsi b/arch/arm/boot/dts/spear13xx.dtsi
->> index 4382547..3518803 100644
->> --- a/arch/arm/boot/dts/spear13xx.dtsi
->> +++ b/arch/arm/boot/dts/spear13xx.dtsi
->> @@ -155,6 +155,7 @@
->>
->>    		gmac0: eth@e2000000 {
->>    			compatible = "st,spear600-gmac";
->> +			snps,phy-addr =<0xffffffff>;
->
-> Don't you think it should be st,phy-addr =<0xffffffff>, as the
-> manufacturer is 'st' as the compatible suggest
->
-> ~Rajeev
->
->
->>    			reg =<0xe2000000 0x8000>;
->>    			interrupts =<0 33 0x4
->>    				      0 34 0x4>;
->
+Please consider me stupid and blind, sorry. I think maybe a WARN_ON(ret) might 
+be a good sign things have gone severely awry here at least. What do you think?
 
+Best regards,
