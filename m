@@ -1,64 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.active-venture.com ([67.228.131.205]:55841 "EHLO
+	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752711Ab3LBDpw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 22:45:52 -0500
+Message-ID: <529C026E.2000302@roeck-us.net>
+Date: Sun, 01 Dec 2013 19:45:50 -0800
+From: Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
-In-Reply-To: <CAMxnaaVEzSuEXRyX5KKKvUJFKTGikP_hfQddT6Ke7Dx6boOuKQ@mail.gmail.com>
-References: <CAMxnaaWgUPRb3L2aKpUu62F73GR2iXOfd6LUnTkU0O=Gq-E_sQ@mail.gmail.com>
- <CAE9FiQUtqtBLx3_pdhs=CjgqViGrDL9xdCjLKgs66jA-apHdQA@mail.gmail.com> <CAMxnaaVEzSuEXRyX5KKKvUJFKTGikP_hfQddT6Ke7Dx6boOuKQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 13 Dec 2013 10:09:54 -0700
-Message-ID: <CAErSpo6gy9ZMcv=2+aWbT1CeZ=1kkvu74eNgMrU1y4Nxs40eAw@mail.gmail.com>
-Subject: Re: How to reserve pci bus numbers for hotplug?
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jingoo Han <jg1.han@samsung.com>, 'Joe Perches' <joe@perches.com>,
+	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	'Andrew Morton' <akpm@linux-foundation.org>,
+	'Andy Whitcroft' <apw@canonical.com>,
+	linux-serial@vger.kernel.org
+Subject: Re: [PATCH 1/5] serial: 8250_pci: use DEFINE_PCI_DEVICE_TABLE macro
+References: <000601ceebdc$ee148de0$ca3da9a0$%han@samsung.com> <20131128040750.GA29917@kroah.com> <006001ceebfa$c85a1020$590e3060$%han@samsung.com> <1385617213.12210.5.camel@joe-AO722> <20131128055328.GA565@kroah.com> <1385619863.12210.14.camel@joe-AO722> <001d01ceec <000801ceeef2$71d23160$55769420$%han@samsung.com>
+In-Reply-To: <000801ceeef2$71d23160$55769420$%han@samsung.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 12, 2013 at 12:56 PM, Andreas Noever
-<andreas.noever@gmail.com> wrote:
-> On Thu, Dec 12, 2013 at 1:21 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Wed, Dec 11, 2013 at 3:37 PM, Andreas Noever
->> <andreas.noever@gmail.com> wrote:
+On 12/01/2013 04:07 PM, Jingoo Han wrote:
+> On Friday, November 29, 2013 10:34 AM, Jingoo Han wrote:
+>> On Thursday, November 28, 2013 3:24 PM, Joe Perches wrote:
+>>> On Wed, 2013-11-27 at 21:53 -0800, 'Greg Kroah-Hartman' wrote:
+>>>> On Wed, Nov 27, 2013 at 09:40:13PM -0800, Joe Perches wrote:
+>>>>> On Thu, 2013-11-28 at 14:29 +0900, Jingoo Han wrote:
+>>>>>> On Thursday, November 28, 2013 1:08 PM, Greg Kroah-Hartman wrote:
+>>>>>>> On Thu, Nov 28, 2013 at 10:55:35AM +0900, Jingoo Han wrote:
+>>>>>>>> This macro is used to create a struct pci_device_id array.
+>>>>>>>
+>>>>>>> Yeah, and it's a horrid macro that deserves to be removed, please don't
+>>>>>>> use it in more places.
+>>>>>>>
+>>>>>>> Actually, if you could just remove it, that would be best, sorry, I'm
+>>>>>>> not going to take these patches.
+>>>>>>
+>>>>>> (+cc Joe Perches, Andrew Morton, Andy Whitcroft)
+>>>>>>
+>>>>>> Hi Joe Perches,
+>>>>>>
+>>>>>> Would you fix checkpatch.pl about DEFINE_PCI_DEVICE_TABLE?
+>>>>>> Currently, checkpatch.pl guides to use DEFINE_PCI_DEVICE_TABLE
+>>>>>> as below.
+>>>>>>
+>>>>>>    WARNING: Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id
+>>>>>>    #331: FILE: drivers/usb/host/ehci-pci.c:331:
+>>>>>>    +static const struct pci_device_id pci_ids [] = { {
+>>>>>>
+>>>>>> However, Greg Kroah-Hartman mentioned that DEFINE_PCI_DEVICE_TABLE
+>>>>>> shouldn't be used anymore.
+>>>>>>
+>>>>>> So, would you change checkpatch.pl in order to guide to use
+>>>>>> struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE?
+>>>>>>
+>>>>>> For example,
+>>>>>>    WARNING: Use struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE
+>>>>>
+>>>>> The documentation doesn't agree with Greg.
+>>> []
+>>>> I say just remove it, I should have done that years ago when I was the
+>>>> PCI maintainer, just never got around to it.  No other bus has something
+>>>> like this for their device ids, why should PCI be "special"?
+>>>
+>>> Anyone else have an opinion?
+>>>
+>>> I don't care one way or another, but please, one way
+>>> not two.
 >>
->>> If I could get Linux to assign enough resources (bus numbers for now)
->>> then I could drop the acpi_osi parameter and make thunderbolt work
->>> after suspend... So, is there an easy way to fix this? (Quirks,
->>> reconfiguring bus number assignments from a platform driver, ...?)
->>
->> please check if busn_alloc at
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->> for-pci-busn-alloc-3.14
->>
->> could help.
->
-> It seems to help. The initial assignment looks good:
->            +-01.1-[05-9b]----00.0-[06-27]--+-00.0-[07]----00.0  Intel
-> Corporation DSL3510 Thunderbolt Port [Cactus Ridge]
->            |                               +-03.0-[08-0f]--
->            |                               +-04.0-[10-17]--
->            |                               +-05.0-[18-1f]--
->            |                               \-06.0-[20-27]--
-> After hotplug it looks like this:
->            +-01.1-[05-9b]----00.0-[06-29]--+-00.0-[07]----00.0  Intel
-> Corporation DSL3510 Thunderbolt Port [Cactus Ridge]
->            |
-> +-03.0-[08-11]----00.0-[09-11]----00.0-[0a-11]----00.0  Broadcom
-> Corporation NetXtreme BCM57762 Gigabit Ethernet PCIe
->            |                               +-04.0-[10-17]--
->            |                               +-05.0-[18-1f]--
->            |                               \-06.0-[20-27]--
-> (Note that the bridge numbers are not disjoint)
->
-> dmesg is attached.
->
-> What is the status of the patch? Will it be merged for 3.14?
 
-It's not on my radar yet, so likely won't make it for v3.14.
+Same here.
 
-Can you open a report at http://bugzilla.kernel.org and attach
-complete dmesg logs without and with Yinghai's patches, and also the
-complete "lspci -vv" output?
+>> (+cc Bjorn Helgaas, linux-pci)
+>>
+>> Then, how about the following steps?
+>>
+>> 1. Fix ./Documentation/PCI/pci.txt as below.
+>>     (Jingoo Han)
+>>     The ID table is an array of struct pci_device_id entries ending with an
+>>     -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
+>>     -method of declaring the table.  Each entry consists of:
+>>     +all-zero entry; Each entry consists of:
+>>
+>> 2. Fix ./scripts/checkpatch.pl in order to guide to use
+>>      struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE.
+>>      (Joe Perches)
+>
+> If all DEFINE_PCI_DEVICE_TABLEs are replaced with 'const struct pci_device_id'
+> and these patches are merged through 'driver-core.git', it will be not
+> necessary to fix ./scripts/checkpatch.pl.
+>
+Why not ?
 
-Bjorn
+Guenter
+
