@@ -1,92 +1,139 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <52A6C4E8.5030003@huawei.com>
-Date: Tue, 10 Dec 2013 15:38:16 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:59995 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752895Ab3LCNCu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 08:02:50 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
+Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out of the core
+Date: Tue, 03 Dec 2013 14:15:47 +0100
+Message-ID: <81535269.SKoBMiGyoU@vostro.rjw.lan>
+In-Reply-To: <529D4600.6040601@jp.fujitsu.com>
+References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <1554480.uCR6qUxJk9@vostro.rjw.lan> <529D4600.6040601@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	<linux-alpha@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-ia64@vger.kernel.org>, <linux-parisc@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <sparclinux@vger.kernel.org>
-Subject: Re: [PATCH 1/9] PCI: Use dev_is_pci() to check whether it is pci
- device
-References: <1386244373-35796-1-git-send-email-wangyijing@huawei.com> <20131210000154.GE4699@google.com>
-In-Reply-To: <20131210000154.GE4699@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/12/10 8:01, Bjorn Helgaas wrote:
-> [+cc arch lists]
+On Tuesday, December 03, 2013 11:46:24 AM Yasuaki Ishimatsu wrote:
+> (2013/11/29 22:08), Rafael J. Wysocki wrote:
+> > On Friday, November 29, 2013 11:36:55 AM Yasuaki Ishimatsu wrote:
+> >> Hi Rafael,
+> >
+> > Hi,
+> >
+> >> Replying to this mail may be wrong.
+> >
+> > OK, so this particular patch doesn't break things any more?
 > 
-> On Thu, Dec 05, 2013 at 07:52:53PM +0800, Yijing Wang wrote:
->> Use dev_is_pci() instead of directly compare
->> pci_bus_type to check whether it is pci device.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Yes.
 > 
-> I applied all these to my pci/yijing-dev_is_pci branch for v3.14, thanks!
+> >
+> >> Do you remember following your patch?
+> >> http://lkml.org/lkml/2013/2/23/97
+> >>
+> >> I want to add autoeject variable in acpi_hotplug_profile structure and
+> >> set autoecjet of container device "false".
+> >
+> > Then after the series the $subject patch belongs to it will work almost the
+> > same way as /sys/firmware/acpi/container/enabled (hot add will still work after
+> > patch [4/10] if "enabled" is 0), but only for containers.
+> >
+> >> Currently, I have a problem on ejecting container device. Since linux-3.12,
+> >> container device is removed by acpi_scan_hot_remove.
+> >>
+> >> I think this has two problems.
+> >>
+> >>     1. easily fail
+> >>        My container device has CPU device and Memory device, and maximum size of
+> >>        memory is 3Tbyte. In my environment, hot removing container device fails
+> >>        on offlining memory if memory is used by application.
+> >>        I think if offlininig memory, we must retly to offline memory several
+> >>        times.
+> >
+> > Yes, that's correct.  But then you can try to offline the memory upfront
+> > and only remove the container after that has been successful.
+> >
+> >>     2. cannot work with userland's application
+> >>        Hot removing CPU and memory on container device, we need take care of
+> >>        userland application. Before linux-3.12, container device just notifies
+> >>        KOBJ_OFFLINE to udev. So by using udev, if application binds to removed
+> >>        CPU or node, applications can change them before hot removing container
+> >>        device.
+> >>        Currently, KOBJ_OFFLINE is notified to udev. But acpi_scan_hot_remove
+> >>        also runs simultaneously for hot removing container device. So when
+> >>        applications runs for corresponding to the deletion of the devices,
+> >>        the devices may have been deleted.
+> >
 > 
-> Browse them here: http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/yijing-dev_is_pci
+> > So the expectation is that the container will refuse to offline, but instead
+> > it will emit KOBJ_OFFLINE so that user space can do some cleanup and offline
+> > it through the "eject" attribute, right?
+> 
+> Yes, that's right.
+> 
+> >
+> >> I don't know what devices are on hotpluggable conatainer device of other
+> >> vendors. At least, my container device cannot be hot removed correctly.
+> >> Then I want to add autoeject variable in acpi_hotplug_profile so that user
+> >> can change the parameter to "true" or "false".
+> >
+> > I have a different idea.
+> >
+> > Why don't we create a bus type for containers in analogy with CPUs and memory
+> > and make it support offline.  Then, the container scan handler will create a
+> > "physical" container device under that bus type and the new bus type code will
+> > implement the logic you need (that is, it will have a sysfs flag that will
+> > cause the offline to fail emitting a uevent of some sort if set and will allow
+> > the offline to happen when unset).  That "physical" container device will go
+> > away (again, via the container scan handler) during container removal.
+> >
+> 
+> > The eject work flow can be:
+> >    (1) an eject event occurs,
+> >    (2) the container "physical" device fails offline in acpi_scan_hot_remove()
+> >        emmitting, say, KOBJ_CHANGE for the "physical" device,
+> >    (3) user space notices the KOBJ_CHANGE and does the cleanup as needed,
+> >    (4) user space changes the "physical" container device flag controlling
+> >        offline to 0,
+> >    (5) user space uses the sysfs "eject" attribute of the ACPI container object
+> >        to finally eject the container,
+> >    (6) the offline in acpi_scan_hot_remove() is now successful, because the
+> >        flag controlling it has been set to 0 in step (4),
+> >    (7) the "physical" container device goes away before executing _EJ0,
+> >    (8) the container is ejected.
+> >
+> > Of course, if the flag controlling container offline is 0 to start with, step
+> > (6) will now occur directly after (1), so whoever wants containers to be
+> > hot-removed automatically may just clear that flag for all of them on boot.
+> >
+> > How does that sound?
+> 
+> 
+> The above ideas are almost O.K. I want kernel to notify user space of KOBJ_OFFLINE.
+> Even if user space catches "KOBJ_CHANGE", user doesn't know whether the notification
+> is offline or not.
 
-Thanks!
-Bjorn, I sent the "[patch v2 4/9] sparc/PCI: Use dev_is_pci() to identify PCI devices" to
-correct build error found by kbuild test, Because I have no sparc platform, I guess the build error was introduced
-by I remove the CONFIG_PCI #ifdef in that patch. Now I keep the CONFIG_PCI code and that patch should be no functional change.
+It is easy to figure out, though.  Since the KOBJ_CHANGE will be emitted for
+container devices only in that situation, user space can see that (1) it is
+from a container and (2) it is KOBJ_CHANGE, so it must mean "container offline
+has been attempted".
 
+My concern with using KOBJ_OFFLINE for that is that device_offline() emits it
+too on success and it may be easily confused with the one emitted on failure
+for containers.
 
-> 
-> This should be no functional change.
-> 
->  arch/alpha/kernel/pci_iommu.c        |    2 +-
->  arch/arm/common/it8152.c             |    4 ++--
->  arch/arm/mach-ixp4xx/common-pci.c    |    6 +++---
->  arch/ia64/hp/common/sba_iommu.c      |    2 +-
->  arch/ia64/sn/pci/pci_dma.c           |   24 ++++++++++++------------
->  arch/parisc/kernel/drivers.c         |   22 +++++-----------------
->  arch/powerpc/sysdev/fsl_pci.c        |    2 +-
->  arch/sparc/include/asm/dma-mapping.h |   10 ++++------
->  arch/sparc/kernel/iommu.c            |    2 +-
->  arch/sparc/kernel/ioport.c           |    4 +---
->  arch/x86/kernel/acpi/boot.c          |    4 +---
->  drivers/pci/pci-acpi.c               |    2 +-
->  12 files changed, 33 insertions(+), 51 deletions(-)
-> 
-> Bjorn
-> 
->> ---
->>  drivers/pci/pci-acpi.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->> index 577074e..e0431f1 100644
->> --- a/drivers/pci/pci-acpi.c
->> +++ b/drivers/pci/pci-acpi.c
->> @@ -358,7 +358,7 @@ static void pci_acpi_cleanup(struct device *dev)
->>  
->>  static bool pci_acpi_bus_match(struct device *dev)
->>  {
->> -	return dev->bus == &pci_bus_type;
->> +	return dev_is_pci(dev);
->>  }
->>  
->>  static struct acpi_bus_type acpi_pci_bus = {
->> -- 
->> 1.7.1
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
+Thanks,
+Rafael
 
