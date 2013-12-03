@@ -1,83 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33533 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700Ab3LTQJl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Dec 2013 11:09:41 -0500
-Received: by mail-ie0-f170.google.com with SMTP id qd12so3373979ieb.29
-        for <linux-pci@vger.kernel.org>; Fri, 20 Dec 2013 08:09:40 -0800 (PST)
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:37796 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755309Ab3LCWb4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 17:31:56 -0500
+Message-ID: <529E5BD8.5090709@gmail.com>
+Date: Tue, 03 Dec 2013 14:31:52 -0800
+From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <003201cefd2d$0c7cbc60$25763520$%han@samsung.com>
-References: <20131212182903.409515738@gmail.com> <005b01cef9f9$52022bd0$f6068370$%han@samsung.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189F95F6A22@EAPEX1MAIL1.st.com> <003201cefd2d$0c7cbc60$25763520$%han@samsung.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 20 Dec 2013 09:09:20 -0700
-Message-ID: <CAErSpo5Kjq4=nTP1DaCjiPSPqAKYyFUBNB6r9tfLm6aF_U-qNA@mail.gmail.com>
-Subject: Re: [PATCH] pci: designware: fix missing msi irqs
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Harro Haan <hrhaan@gmail.com>, Marek Vasut <marex@denx.de>,
-	Richard Zhu <hong-xing.zhu@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Juergen Beisert <jbe@pengutronix.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Sean Cross <xobs@kosagi.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>
+CC: Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH v2 0/4] Allow Link state changes for Hot-Plug
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 19, 2013 at 7:41 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Monday, December 16, 2013 3:49 PM, Mohit KUMAR DCG wrote:
->> On Monday, December 16, 2013 6:24 AM, Jingoo Han wrote:
->> > On Friday, December 13, 2013 3:29 AM, Harro Haan wrote:
->> > >
->> > > The interrupts were cleared after the irq handler was called.
->> > > This means that new interrupts that occur after the handler handled
->> > > the previous irq but before the interrupt is cleared will be missed.
->> > >
->> > > Signed-off-by: Harro Haan <hrhaan@gmail.com>
->> > > Cc: Mohit Kumar <mohit.kumar@st.com>
->> > > Cc: Jingoo Han <jg1.han@samsung.com>
->> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> > > Cc: Marek Vasut <marex@denx.de>
->> > > Cc: Richard Zhu <hong-xing.zhu@freescale.com>
->> > > Cc: Shawn Guo <shawn.guo@linaro.org>
->> > > Cc: Pratyush Anand <pratyush.anand@st.com>
->> > > Cc: Tim Harvey <tharvey@gateworks.com>
->> > > Cc: Juergen Beisert <jbe@pengutronix.de>
->> > > Cc: Arnd Bergmann <arnd@arndb.de>
->> > > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
->> > > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
->> > > Cc: Sean Cross <xobs@kosagi.com>
->> > > Cc: linux-pci@vger.kernel.org
->> > > Cc: linux-arm-kernel@lists.infradead.org
->> >
->> > Acked-by: Jingoo Han <jg1.han@samsung.com>
->> >
->> > I was not able to reproduce the problem, however it looks good. Also, there
->> > is no side effect on Exynos platform.
->> >
->> > Mohit,
->> > If you have some comments, please let us know.
->>
->> - Quickly tested on SPEAr1310, working fine without any side effect. So is,
->> Acked-by: Mohit Kumar <mohit.kumar@st.com>
->
-> Hi Bjorn Helgaas,
->
-> Would you apply this patch to your 'pci/host-designware' branch
-> with the following Tested-by and Acked-by?
->
-> Tested-by: Marek Vasut <marex@denx.de>
-> Tested-by:  Matthias Mann <m.mann@arkona-technologies.de>
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
-> Acked-by: Mohit Kumar <mohit.kumar@st.com>
+Hello,
 
-Applied to pci/host-designware for v3.14, thanks for the reminder!
+I had sent out this patchset as an "RFC" a few weeks back. It was briefly
+discussed last week ( http://marc.info/?t=138513966800006&r=1&w=2 ). I was
+wondering if you got a chance to look at this, and would appreciate it a 
+lot if this could be reviewed for inclusion in the tree.
 
-Bjorn
+In v2, I have dropped the use of module parameter as suggested by Bjorn.
+
+This patch set enables the use of PCI Express link up and link down events
+for Hotplug or Unplug. The requirement of such a feature was originally
+discussed here:
+
+http://www.spinics.net/lists/linux-pci/msg05783.html
+http://www.spinics.net/lists/hotplug/msg05801.html
+
+Patch [1/4]: makes a function non-static for use by patch 2.
+Patch [2/4]: Contains the bulk logic to allow link events to be used
+             for hotplug and removal.
+Patch [3/4]: Makes the pciehp_power_thread() lock free by making it
+             look at a work info->req instead of slot->state.
+Patch [4/4]: Introduce slot->hotplug_lock to serialize the hotplug
+             operations.
+
+(As a side effect, this patch also fixes the bug 
+https://bugzilla.kernel.org/show_bug.cgi?id=65521 )
+
+I'd appreciate if you could please review and provide me with any comments.
+
+Thanks,
+
+Rajat
+
+Rajat Jain (4):
+  pciehp: Make check_link_active() non-static
+  pciehp: Use link change notifications for hot-plug and removal
+  pciehp: Ensure very fast hotplug events are also processed.
+  pciehp: Introduce hotplug_lock to serialize HP events
+
+ drivers/pci/hotplug/pciehp.h      |    5 ++
+ drivers/pci/hotplug/pciehp_core.c |    7 +-
+ drivers/pci/hotplug/pciehp_ctrl.c |  179 ++++++++++++++++++++++++++++++++-----
+ drivers/pci/hotplug/pciehp_hpc.c  |   63 +++++++------
+ 4 files changed, 200 insertions(+), 54 deletions(-)
+
+-- 
+1.7.9.5
+
