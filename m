@@ -1,314 +1,291 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45920 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755619Ab3LSUaP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 15:30:15 -0500
-Date: Thu, 19 Dec 2013 12:30:17 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Neil Horman <nhorman@tuxdriver.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3] PCI: export MSI mode using attributes, not kobjects
-Message-ID: <20131219203017.GA1768@kroah.com>
+Received: from mail-we0-f182.google.com ([74.125.82.182]:49753 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755140Ab3LCUOw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 15:14:52 -0500
+Received: by mail-we0-f182.google.com with SMTP id q59so14343066wes.27
+        for <linux-pci@vger.kernel.org>; Tue, 03 Dec 2013 12:14:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201311270944.09383.marex@denx.de>
+References: <1385500248-6551-1-git-send-email-marex@denx.de>
+	<1385500248-6551-2-git-send-email-marex@denx.de>
+	<20131127043009.GB12773@pratyush-vbox>
+	<201311270944.09383.marex@denx.de>
+Date: Tue, 3 Dec 2013 12:14:47 -0800
+Message-ID: <CAJ+vNU050mtdiyXBXue_JGFJhFLiKCvoyf031Uda2e5U+vA12g@mail.gmail.com>
+Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+From: Tim Harvey <tharvey@gateworks.com>
+To: Marek Vasut <marex@denx.de>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Wed, Nov 27, 2013 at 12:44 AM, Marek Vasut <marex@denx.de> wrote:
+> Dear Pratyush Anand,
+>
+>> Dear Marek Vasut,
+>>
+>> Please replace imx6 with designware in subject line  of this patch.
+>
+> OK, this one has to be fixed anyway. We need to figure out why do we even need
+> this one.
+>
+>> On Wed, Nov 27, 2013 at 05:10:43AM +0800, Marek Vasut wrote:
+>> > From: Tim Harvey <tharvey@gateworks.com>
+>> >
+>> > The IMX6 iATU is used for address translation between the AXI bus
+>> > address space and PCI address space.  This is used for type0 and type1
+>> > config cycles but is not necessary for outbound io/mem regions.
+>> >
+>> > This patch removes the calls that inappropriately re-configures the ATU
+>> > viewport for outbound memory and IO after config cycles and removes them
+>> > altogether as they are not necessary.
+>>
+>> Yes, they are not necessary for all the cases where translation is one
+>> to one. So so for sure all the platform till now introduced should
+>> work.
+>> But, what about a platform where memory translation is not one to one?
+>>
+>> Existing code should work with all sort of memory translation on a
+>> platform having atleast two viewports capable of programming any type
+>> of outbound transaction.
+>
+> Full ACK, that's why it's called RFC.
+>
+>> > This resolves issues with PCI devices behind switches and has been tested
+>> > with a Gige device behind a PLX PEX860x switch.  More testing is needed
+>> > for other configurations.
+>>
+>> I do not understand if MX6 has 4 Outbound Viewport then how this patch
+>> helps?
+>> -- PCI devices behind switches would not have been working because
+>> CFG1 transaction would not have been correct.
+>> -- It works with this patch. This patch changes viewport for CFG1 from
+>> 1 to 0.
+>> -- Can it be possible that MX6 has some restriction on viewport
+>> programming capability. I mean,like only viewport0 can be programmed
+>> for CFG0/1?
+>
+> Tim ?
+>
+> Here is the MX6 datasheet [1], the section 48.3.9.1.1 and 48.3.9.1.2 describe
+> the iATU configuration on MX6. My understanding from this description is that
+> the MX6 has 4 inbound and 4 outbound iATU regions. Am I wrong ?
+>
+> [1] http://cache.freescale.com/files/32bit/doc/ref_manual/IMX6DQRM.pdf
+>
+>> Otherwise I do not find any convincing reason that why this patch
+>> helps in resolving issues with PCI devices behind switches.
 
-The PCI MSI sysfs code is a mess with kobjects for things that don't
-really need to be kobjects.  This patch creates attributes dynamically
-for the MSI interrupts instead of using kobjects.
+In my configuration I have a PLX switch off the IMX root complex with
+several devices behind it.  I find that the devices enumerate
+correctly but as soon as data is transferred to or from (not sure
+which) the device the system hangs (INFO: rcu_sched detected stalls on
+CPUs/tasks: { 0} (detected by 3, t=2135 jiffies, g=20, c=19, q=66)).
+My current test case is a GigE ethernet device and when I connect a
+network to the device I hange when a packet is responded to.
 
-Note, this removes a directory from the current MSI interrupt sysfs
-code:
+I can't claim to fully understand PCI resource mappings or the iATU
+and I don't understand why dw_pcie_rd_other_conf/dw_pcie_wr_other_conf
+need to change the viewport then change it back instead of using
+multiple viewports (perhaps because some hardware may not have more
+than the 2 viewports currently being used?).  The current driver uses
+viewport0 for cfg0 and mem and viewport1 for cfg1 and io.  If I remove
+the call to dw_pcie_prog_viewport_io_outbound to reconfigure viewport1
+for io after its altered for type1 cfg cycles, devices behind the
+bridge work for me:
 
-old MSI kobjects:
-pci_device
-   └── msi_irqs
-       └── 40
-           └── mode
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designwa
+index e33b68b..a064bc5 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -556,7 +556,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struc
+        } else {
+                dw_pcie_prog_viewport_cfg1(pp, busdev);
+                ret = cfg_read(pp->va_cfg1_base + address, where, size, val);
+-               dw_pcie_prog_viewport_io_outbound(pp);
++//               dw_pcie_prog_viewport_io_outbound(pp);
+        }
 
-new MSI attributes:
-pci_device
-   └── msi_irqs
-       └── 40
+        return ret;
+@@ -579,7 +579,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struc
+        } else {
+                dw_pcie_prog_viewport_cfg1(pp, busdev);
+                ret = cfg_write(pp->va_cfg1_base + address, where, size, val);
+-               dw_pcie_prog_viewport_io_outbound(pp);
++//               dw_pcie_prog_viewport_io_outbound(pp);
+        }
 
-As there was only one file "mode" with the kobject model, the interrupt
-number is now a file that returns the "mode" of the interrupt (msi vs.
-msix).
+Can anyone explain whats going on here?   I would think this would
+perhaps break devices that use IO resources?
 
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Thanks,
 
----
-v3: attribute creation properly tagged for lockdep.
-    error handling if creation of attributes fails.
+Tim
 
-v2: add documentation for sysfs attributes
-
- Documentation/ABI/testing/sysfs-bus-pci |   11 --
- drivers/pci/msi.c                       |  166 +++++++++++++++++---------------
- include/linux/pci.h                     |    2 
- 3 files changed, 96 insertions(+), 83 deletions(-)
-
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -70,18 +70,15 @@ Date:		September, 2011
- Contact:	Neil Horman <nhorman@tuxdriver.com>
- Description:
- 		The /sys/devices/.../msi_irqs directory contains a variable set
--		of sub-directories, with each sub-directory being named after a
--		corresponding msi irq vector allocated to that device.  Each
--		numbered sub-directory N contains attributes of that irq.
--		Note that this directory is not created for device drivers which
--		do not support msi irqs
-+		of files, with each file being named after a corresponding msi
-+		irq vector allocated to that device.
- 
--What:		/sys/bus/pci/devices/.../msi_irqs/<N>/mode
-+What:		/sys/bus/pci/devices/.../msi_irqs/<N>
- Date:		September 2011
- Contact:	Neil Horman <nhorman@tuxdriver.com>
- Description:
- 		This attribute indicates the mode that the irq vector named by
--		the parent directory is in (msi vs. msix)
-+		the file is in (msi vs. msix)
- 
- What:		/sys/bus/pci/devices/.../remove
- Date:		January 2009
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -363,6 +363,9 @@ void write_msi_msg(unsigned int irq, str
- static void free_msi_irqs(struct pci_dev *dev)
- {
- 	struct msi_desc *entry, *tmp;
-+	struct attribute **msi_attrs;
-+	struct device_attribute *dev_attr;
-+	int count = 0;
- 
- 	list_for_each_entry(entry, &dev->msi_list, list) {
- 		int i, nvec;
-@@ -398,6 +401,22 @@ static void free_msi_irqs(struct pci_dev
- 		list_del(&entry->list);
- 		kfree(entry);
- 	}
-+
-+	if (dev->msi_irq_groups) {
-+		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
-+		msi_attrs = dev->msi_irq_groups[0]->attrs;
-+		list_for_each_entry(entry, &dev->msi_list, list) {
-+			dev_attr = container_of(msi_attrs[count],
-+						struct device_attribute, attr);
-+			kfree(dev_attr->attr.name);
-+			kfree(dev_attr);
-+			++count;
-+		}
-+		kfree(msi_attrs);
-+		kfree(dev->msi_irq_groups[0]);
-+		kfree(dev->msi_irq_groups);
-+		dev->msi_irq_groups = NULL;
-+	}
- }
- 
- static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
-@@ -471,94 +490,95 @@ void pci_restore_msi_state(struct pci_de
- }
- EXPORT_SYMBOL_GPL(pci_restore_msi_state);
- 
--
--#define to_msi_attr(obj) container_of(obj, struct msi_attribute, attr)
--#define to_msi_desc(obj) container_of(obj, struct msi_desc, kobj)
--
--struct msi_attribute {
--	struct attribute        attr;
--	ssize_t (*show)(struct msi_desc *entry, struct msi_attribute *attr,
--			char *buf);
--	ssize_t (*store)(struct msi_desc *entry, struct msi_attribute *attr,
--			 const char *buf, size_t count);
--};
--
--static ssize_t show_msi_mode(struct msi_desc *entry, struct msi_attribute *atr,
-+static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
- {
--	return sprintf(buf, "%s\n", entry->msi_attrib.is_msix ? "msix" : "msi");
--}
--
--static ssize_t msi_irq_attr_show(struct kobject *kobj,
--				 struct attribute *attr, char *buf)
--{
--	struct msi_attribute *attribute = to_msi_attr(attr);
--	struct msi_desc *entry = to_msi_desc(kobj);
--
--	if (!attribute->show)
--		return -EIO;
--
--	return attribute->show(entry, attribute, buf);
--}
--
--static const struct sysfs_ops msi_irq_sysfs_ops = {
--	.show = msi_irq_attr_show,
--};
--
--static struct msi_attribute mode_attribute =
--	__ATTR(mode, S_IRUGO, show_msi_mode, NULL);
--
--
--static struct attribute *msi_irq_default_attrs[] = {
--	&mode_attribute.attr,
--	NULL
--};
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct msi_desc *entry;
-+	unsigned long irq;
-+	int retval;
- 
--static void msi_kobj_release(struct kobject *kobj)
--{
--	struct msi_desc *entry = to_msi_desc(kobj);
-+	retval = kstrtoul(attr->attr.name, 10, &irq);
-+	if (retval)
-+		return retval;
- 
--	pci_dev_put(entry->dev);
-+	list_for_each_entry(entry, &pdev->msi_list, list) {
-+		if (entry->irq == irq) {
-+			return sprintf(buf, "%s\n",
-+				       entry->msi_attrib.is_msix ? "msix" : "msi");
-+		}
-+	}
-+	return -ENODEV;
- }
- 
--static struct kobj_type msi_irq_ktype = {
--	.release = msi_kobj_release,
--	.sysfs_ops = &msi_irq_sysfs_ops,
--	.default_attrs = msi_irq_default_attrs,
--};
--
- static int populate_msi_sysfs(struct pci_dev *pdev)
- {
-+	struct attribute **msi_attrs;
-+	struct attribute *msi_attr;
-+	struct device_attribute *msi_dev_attr;
-+	struct attribute_group *msi_irq_group;
-+	const struct attribute_group **msi_irq_groups;
- 	struct msi_desc *entry;
--	struct kobject *kobj;
--	int ret;
-+	int ret = -ENOMEM;
-+	int num_msi = 0;
- 	int count = 0;
- 
--	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
--	if (!pdev->msi_kset)
--		return -ENOMEM;
-+	/* Determine how many msi entries we have */
-+	list_for_each_entry(entry, &pdev->msi_list, list) {
-+		++num_msi;
-+	}
-+	if (!num_msi)
-+		return 0;
- 
-+	/* Dynamically create the MSI attributes for the PCI device */
-+	msi_attrs = kzalloc(sizeof(void *) * (num_msi + 1), GFP_KERNEL);
-+	if (!msi_attrs)
-+		return -ENOMEM;
- 	list_for_each_entry(entry, &pdev->msi_list, list) {
--		kobj = &entry->kobj;
--		kobj->kset = pdev->msi_kset;
--		pci_dev_get(pdev);
--		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
--				     "%u", entry->irq);
--		if (ret)
--			goto out_unroll;
-+		char *name = kmalloc(20, GFP_KERNEL);
-+		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-+		if (!msi_dev_attr)
-+			goto error_attrs;
-+		sprintf(name, "%d", entry->irq);
-+		sysfs_attr_init(&msi_dev_attr->attr);
-+		msi_dev_attr->attr.name = name;
-+		msi_dev_attr->attr.mode = S_IRUGO;
-+		msi_dev_attr->show = msi_mode_show;
-+		msi_attrs[count] = &msi_dev_attr->attr;
-+		++count;
-+	}
-+
-+	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
-+	if (!msi_irq_group)
-+		goto error_attrs;
-+	msi_irq_group->name = "msi_irqs";
-+	msi_irq_group->attrs = msi_attrs;
-+
-+	msi_irq_groups = kzalloc(sizeof(void *) * 2, GFP_KERNEL);
-+	if (!msi_irq_groups)
-+		goto error_irq_group;
-+	msi_irq_groups[0] = msi_irq_group;
- 
--		count++;
--	}
-+	ret = sysfs_create_groups(&pdev->dev.kobj, msi_irq_groups);
-+	if (ret)
-+		goto error_irq_groups;
-+	pdev->msi_irq_groups = msi_irq_groups;
- 
- 	return 0;
- 
--out_unroll:
--	list_for_each_entry(entry, &pdev->msi_list, list) {
--		if (!count)
--			break;
--		kobject_del(&entry->kobj);
--		kobject_put(&entry->kobj);
--		count--;
-+error_irq_groups:
-+	kfree(msi_irq_groups);
-+error_irq_group:
-+	kfree(msi_irq_group);
-+error_attrs:
-+	count = 0;
-+	msi_attr = msi_attrs[count];
-+	while (msi_attr) {
-+		msi_dev_attr = container_of(msi_attr, struct device_attribute, attr);
-+		kfree(msi_attr->name);
-+		kfree(msi_dev_attr);
-+		++count;
-+		msi_attr = msi_attrs[count];
- 	}
- 	return ret;
- }
-@@ -925,8 +945,6 @@ void pci_disable_msi(struct pci_dev *dev
- 
- 	pci_msi_shutdown(dev);
- 	free_msi_irqs(dev);
--	kset_unregister(dev->msi_kset);
--	dev->msi_kset = NULL;
- }
- EXPORT_SYMBOL(pci_disable_msi);
- 
-@@ -1023,8 +1041,6 @@ void pci_disable_msix(struct pci_dev *de
- 
- 	pci_msix_shutdown(dev);
- 	free_msi_irqs(dev);
--	kset_unregister(dev->msi_kset);
--	dev->msi_kset = NULL;
- }
- EXPORT_SYMBOL(pci_disable_msix);
- 
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -351,7 +351,7 @@ struct pci_dev {
- 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
- #ifdef CONFIG_PCI_MSI
- 	struct list_head msi_list;
--	struct kset *msi_kset;
-+	const struct attribute_group **msi_irq_groups;
- #endif
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
+>>
+>>
+>> Regards
+>> Pratyush
+>>
+>> > From: Tim Harvey <tharvey@gateworks.com>
+>> > Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+>> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > Cc: Frank Li <lznuaa@gmail.com>
+>> > Cc: Harro Haan <hrhaan@gmail.com>
+>> > Cc: Jingoo Han <jg1.han@samsung.com>
+>> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+>> > Cc: Pratyush Anand <pratyush.anand@st.com>
+>> > Cc: Richard Zhu <r65037@freescale.com>
+>> > Cc: Sascha Hauer <s.hauer@pengutronix.de>
+>> > Cc: Sean Cross <xobs@kosagi.com>
+>> > Cc: Shawn Guo <shawn.guo@linaro.org>
+>> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+>> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+>> > Cc: Tim Harvey <tharvey@gateworks.com>
+>> > Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+>> > Cc: Yinghai Lu <yinghai@kernel.org>
+>> > ---
+>> >
+>> >  drivers/pci/host/pcie-designware.c | 41
+>> >  +++----------------------------------- 1 file changed, 3 insertions(+),
+>> >  38 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/host/pcie-designware.c
+>> > b/drivers/pci/host/pcie-designware.c index ed9b11b..01d76ad 100644
+>> > --- a/drivers/pci/host/pcie-designware.c
+>> > +++ b/drivers/pci/host/pcie-designware.c
+>> > @@ -46,7 +46,6 @@
+>> >
+>> >  #define PCIE_ATU_VIEWPORT          0x900
+>> >  #define PCIE_ATU_REGION_INBOUND            (0x1 << 31)
+>> >  #define PCIE_ATU_REGION_OUTBOUND   (0x0 << 31)
+>> >
+>> > -#define PCIE_ATU_REGION_INDEX1             (0x1 << 0)
+>> >
+>> >  #define PCIE_ATU_REGION_INDEX0             (0x0 << 0)
+>> >  #define PCIE_ATU_CR1                       0x904
+>> >  #define PCIE_ATU_TYPE_MEM          (0x0 << 0)
+>> >
+>> > @@ -494,8 +493,8 @@ static void dw_pcie_prog_viewport_cfg0(struct
+>> > pcie_port *pp, u32 busdev)
+>> >
+>> >  static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
+>> >  {
+>> >
+>> > -   /* Program viewport 1 : OUTBOUND : CFG1 */
+>> > -   dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND |
+>> > PCIE_ATU_REGION_INDEX1, +   /* Program viewport 0 : OUTBOUND : CFG1 */
+>> > +   dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND |
+>> > PCIE_ATU_REGION_INDEX0,
+>> >
+>> >                       PCIE_ATU_VIEWPORT);
+>> >
+>> >     dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
+>> >     dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+>> >
+>> > @@ -505,38 +504,8 @@ static void dw_pcie_prog_viewport_cfg1(struct
+>> > pcie_port *pp, u32 busdev)
+>> >
+>> >                       PCIE_ATU_LIMIT);
+>> >
+>> >     dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+>> >     dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
+>> >
+>> > -}
+>> > -
+>> > -static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+>> > -{
+>> > -   /* Program viewport 0 : OUTBOUND : MEM */
+>> > -   dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND |
+>> > PCIE_ATU_REGION_INDEX0, -                     PCIE_ATU_VIEWPORT);
+>> > -   dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
+>> > -   dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+>> > -   dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
+>> > -   dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
+>> > -   dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
+>> > -                     PCIE_ATU_LIMIT);
+>> > -   dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
+>> > -   dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
+>> > -                     PCIE_ATU_UPPER_TARGET);
+>> > -}
+>> > -
+>> > -static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
+>> > -{
+>> > -   /* Program viewport 1 : OUTBOUND : IO */
+>> > -   dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND |
+>> > PCIE_ATU_REGION_INDEX1, -                     PCIE_ATU_VIEWPORT);
+>> > -   dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
+>> > +   dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
+>> >
+>> >     dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+>> >
+>> > -   dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
+>> > -   dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
+>> > -   dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
+>> > -                     PCIE_ATU_LIMIT);
+>> > -   dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
+>> > -   dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
+>> > -                     PCIE_ATU_UPPER_TARGET);
+>> >
+>> >  }
+>> >
+>> >  static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus
+>> >  *bus,
+>> >
+>> > @@ -552,11 +521,9 @@ static int dw_pcie_rd_other_conf(struct pcie_port
+>> > *pp, struct pci_bus *bus,
+>> >
+>> >     if (bus->parent->number == pp->root_bus_nr) {
+>> >
+>> >             dw_pcie_prog_viewport_cfg0(pp, busdev);
+>> >             ret = cfg_read(pp->va_cfg0_base + address, where, size, val);
+>> >
+>> > -           dw_pcie_prog_viewport_mem_outbound(pp);
+>> >
+>> >     } else {
+>> >
+>> >             dw_pcie_prog_viewport_cfg1(pp, busdev);
+>> >             ret = cfg_read(pp->va_cfg1_base + address, where, size, val);
+>> >
+>> > -           dw_pcie_prog_viewport_io_outbound(pp);
+>> >
+>> >     }
+>> >
+>> >     return ret;
+>> >
+>> > @@ -575,11 +542,9 @@ static int dw_pcie_wr_other_conf(struct pcie_port
+>> > *pp, struct pci_bus *bus,
+>> >
+>> >     if (bus->parent->number == pp->root_bus_nr) {
+>> >
+>> >             dw_pcie_prog_viewport_cfg0(pp, busdev);
+>> >             ret = cfg_write(pp->va_cfg0_base + address, where, size, val);
+>> >
+>> > -           dw_pcie_prog_viewport_mem_outbound(pp);
+>> >
+>> >     } else {
+>> >
+>> >             dw_pcie_prog_viewport_cfg1(pp, busdev);
+>> >             ret = cfg_write(pp->va_cfg1_base + address, where, size, val);
+>> >
+>> > -           dw_pcie_prog_viewport_io_outbound(pp);
+>> >
+>> >     }
+>> >
+>> >     return ret;
