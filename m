@@ -1,164 +1,381 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:3141 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031Ab3LTCuW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 21:50:22 -0500
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com
-Subject: [PATCHv2 0/6] Crashdump Accepting Active IOMMU
-Date: Thu, 19 Dec 2013 19:49:41 -0700
-Message-Id: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+Received: from mail-pb0-f43.google.com ([209.85.160.43]:47966 "EHLO
+	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755310Ab3LCWcv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 17:32:51 -0500
+Message-ID: <529E5C0E.80903@gmail.com>
+Date: Tue, 03 Dec 2013 14:32:46 -0800
+From: Rajat Jain <rajatjain.linux@gmail.com>
+MIME-Version: 1.0
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>
+CC: Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
+ and removal
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+A lot of systems do not have the fancy buttons and LEDs, and instead
+want to rely only on the Link state change events to drive the hotplug
+and removal state machinery.
+(http://www.spinics.net/lists/hotplug/msg05802.html)
 
-Changes from previous submission:
-1. Moved up to Linux kernel top-of-tree of this week.
-2. Expanded the comments section of each patch so that the documentation
-   will appear in the commit logs. (Requested by Alex Williamson and one
-   internal reviewer)
-3. Corrected one line in the table which drives the diagnostic printing
-   of the IOMMU registers (Requested by one internal reviewer)
+This patch adds support for that functionality. Here are the details
+about the patch itself:
 
-Notes:
-1. This patch set is ready for extensive testing by the Linux community,
-   for discussion, and hopefully for acceptance into Linux mainstream.
-2. In order to support this testing, I have left a modest amount of
-   debug print enabled.  For testing, the amount of print can be increased
-   or decreased easily; and for production, can be completely turned-off.
-   Please see the bit-flags in struct 'pr_dbg'
+* Define and use interrupt events for linkup / linkdown.
 
-Testing:
-1. This patch set was re-tested on the machine that reproduced the problem
-   a. Without this patch set, crashdump console sees a large number of:
-      "dmar: DMAR:[DMA Write] Request device [04:00.0] fault addr fff69000
-      "DMAR:[fault reason 01] Present bit in root entry is clear"
-   b. With this patch set, none of the above messages are seen.
-2. This patch set has not yet been tested with hardware pass-through enabled.
+* Introduce the functions to handle link-up and link-down events and
+  queue the work in the slot->wq to be processed by pciehp_power_thread
 
+* The current code bails out from device removal, if an adapter is not
+  detected. That is not right, because if an adapter is not present at
+  all, it provides all the more reason to REMOVE the device. This is
+  specially a problem for link state hot-plug, because some ports use
+  in band mechanism to detect the presence detection. Thus when link
+  goes down, presence detect also goes down. We _want_ that the devices
+  should be removed in this case.
 
-Patch 0 file from previous submission:
-The following series implements a fix for:
-A kdump problem about DMA that has been discussed for a long time. That is,
-when a kernel panics and boots into the kdump kernel, DMA started by the 
-panicked kernel is not stopped before the kdump kernel is booted and the 
-kdump kernel disables the IOMMU while this DMA continues.  This causes the
-IOMMU to stop translating the DMA addresses as IOVAs and begin to treat them 
-as physical memory addresses -- which causes the DMA to either:
-(1) generate DMAR errors or (2) generate PCI SERR errors or (3) transfer  
-data to or from incorrect areas of memory. Often this causes the dump to fail.
+* The current pciehp driver disabled the link in case of a hot-removal.
+  Since for link change based hot-plug to work, we need that enabled,
+  hence make sure to not disable the link permanently if link state
+  based hot-plug is to be used. Also have to remove
+  pciehp_link_disable() and pcie_wait_link_not_active() static functions
+  since they are not being used anywhere else.
 
-This patch set modifies the behavior of the iommu in the (new) crashdump kernel: 
-1. to accept the iommu hardware in an active state, 
-2. to leave the current translations in-place so that legacy DMA will continue
-   using its current buffers until the device drivers in the crashdump kernel
-   initialize and initialize their devices,
-3. to use different portions of the iova address ranges for the device drivers
-   in the crashdump kernel than the iova ranges that were in-use at the time
-   of the panic.  
+* pciehp_reset_slot - reset of secondary bus may cause undesirable
+  spurious link notifications. Thus disable these around the secondary
+  bus reset.
 
-Advantages of this approach:
-1. All manipulation of the IO-device is done by the Linux device-driver
-   for that device.
-2. This approach behaves in a manner very similar to operation without an
-   active iommu.
-3. Any activity between the IO-device and its RMRR areas is handled by the
-   device-driver in the same manner as during a non-kdump boot.
-4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
-   This supports the practice of creating a special kdump kernel without
-   drivers for any devices that are not required for taking a crashdump. 
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+ v2: - drop the use_link_state_events module parameter as discussed here:
+       http://marc.info/?t=138513966800006&r=1&w=2
+     - removed the static functions left unused after this patch.
+     - make the pciehp_handle_linkstate_change() return void.
+     - dropped the "RFC" from subject, and added Guenter's signature
 
-Changes since the RFC version of this patch:
-1. Consolidated all of the operational code into the "copy..." functions.
-   The "process..." functions were primarily used for diagnostics and
-   exploration; however, there was a small amount of operational code that
-   used the "process..." functions.
-   This operational code has been moved into the "copy..." functions.
+ drivers/pci/hotplug/pciehp.h      |    3 +
+ drivers/pci/hotplug/pciehp_ctrl.c |  130 ++++++++++++++++++++++++++++++++++---
+ drivers/pci/hotplug/pciehp_hpc.c  |   56 ++++++++--------
+ 3 files changed, 150 insertions(+), 39 deletions(-)
 
-2. Removed the "Process ..." functions and the diagnostic code that ran
-   on that function set.  This removed about 1/4 of the code -- which this
-   operational patch set no longer needs.  These portions of the RFC patch
-   could be formatted as a separate patch and submitted independently
-   at a later date. 
-
-3. Re-formatted the code to the Linux Coding Standards.
-   The checkpatch script still finds some lines to complain about;
-   however most of these lines are either (1) lines that I did not change,
-   or (2) lines that only changed by adding a level of indent which pushed
-   them over 80-characters, or (3) new lines whose intent is far clearer when
-   longer than 80-characters.
-
-4. Updated the remaining debug print to be significantly more flexible.
-   This allows control over the amount of debug print to the console --
-   which can vary widely.
-
-5. Fixed a couple of minor bugs found by testing on a machine with a
-   very large IO configuration.
-
-At a high level, this code operates primarily during iommu initialization
-and device-driver initialization
-
-During intel-iommu hardware initialization:
-In intel_iommu_init(void)
-* If (This is the crash kernel)
-  .  Set flag: crashdump_accepting_active_iommu (all changes below check this)
-  .  Skip disabling the iommu hardware translations
-
-In init_dmars()
-* Duplicate the intel iommu translation tables from the old kernel
-  in the new kernel
-  . The root-entry table, all context-entry tables,
-    and all page-translation-entry tables
-  . The duplicate tables contain updated physical addresses to link them together.
-  . The duplicate tables are mapped into kernel virtual addresses
-    in the new kernel which allows most of the existing iommu code
-    to operate without change.
-  . Do some minimal sanity-checks during the copy
-  . Place the address of the new root-entry structure into "struct intel_iommu"
-
-* Skip setting-up new domains for 'si', 'rmrr', 'isa' 
-  . Translations for 'rmrr' and 'isa' ranges have been copied from the old kernel
-  . This patch has not yet been tested with iommu pass-through enabled
-
-* Existing (unchanged) code near the end of dmar_init:
-  . Loads the address of the (now new) root-entry structure from
-    "struct intel_iommu" into the iommu hardware and does the hardware flushes.
-    This changes the active translation tables from the ones in the old kernel
-    to the copies in the new kernel.
-  . This is legal because the translations in the two sets of tables are
-    currently identical:
-      Virtualization Technology for Directed I/O. Architecture Specification,
-      February 2011, Rev. 1.3  (section 11.2, paragraph 2) 
-
-In iommu_init_domains()
-* Mark as in-use all domain-id's from the old kernel
-  . In case the new kernel contains a device that was not in the old kernel
-    and a new, unused domain-id is actually needed, the bitmap will give us one.
-
-When a new domain is created for a device:
-* If (this device has a context in the old kernel)
-  . Get domain-id, address-width, and IOVA ranges from the old kernel context;
-  . Get address(page-entry-tables) from the copy in the new kernel;
-  . And apply all of the above values to the new domain structure.
-* Else
-  . Create a new domain as normal
-
-
-Bill Sumner (6):
-  Crashdump-Accepting-Active-IOMMU-Flags-and-Prototype
-  Crashdump-Accepting-Active-IOMMU-Utility-functions
-  Crashdump-Accepting-Active-IOMMU-Domain-Interfaces
-  Crashdump-Accepting-Active-IOMMU-Copy-Translations
-  Crashdump-Accepting-Active-IOMMU-Debug-Print-IOMMU
-  Crashdump-Accepting-Active-IOMMU-Call-From-Mainline
-
- drivers/iommu/intel-iommu.c | 1292 ++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 1224 insertions(+), 68 deletions(-)
-
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index fc322ed..353edda 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -110,6 +110,8 @@ struct controller {
+ #define INT_BUTTON_PRESS		7
+ #define INT_BUTTON_RELEASE		8
+ #define INT_BUTTON_CANCEL		9
++#define INT_LINK_UP			10
++#define INT_LINK_DOWN			11
+ 
+ #define STATIC_STATE			0
+ #define BLINKINGON_STATE		1
+@@ -133,6 +135,7 @@ u8 pciehp_handle_attention_button(struct slot *p_slot);
+ u8 pciehp_handle_switch_change(struct slot *p_slot);
+ u8 pciehp_handle_presence_change(struct slot *p_slot);
+ u8 pciehp_handle_power_fault(struct slot *p_slot);
++void pciehp_handle_linkstate_change(struct slot *p_slot);
+ int pciehp_configure_device(struct slot *p_slot);
+ int pciehp_unconfigure_device(struct slot *p_slot);
+ void pciehp_queue_pushbutton_work(struct work_struct *work);
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 38f0186..4c2544c 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -150,6 +150,27 @@ u8 pciehp_handle_power_fault(struct slot *p_slot)
+ 	return 1;
+ }
+ 
++void pciehp_handle_linkstate_change(struct slot *p_slot)
++{
++	u32 event_type;
++	struct controller *ctrl = p_slot->ctrl;
++
++	/* Link Status Change */
++	ctrl_dbg(ctrl, "Data Link Layer State change\n");
++
++	if (pciehp_check_link_active(ctrl)) {
++		ctrl_info(ctrl, "slot(%s): Link Up event\n",
++			  slot_name(p_slot));
++		event_type = INT_LINK_UP;
++	} else {
++		ctrl_info(ctrl, "slot(%s): Link Down event\n",
++			  slot_name(p_slot));
++		event_type = INT_LINK_DOWN;
++	}
++
++	queue_interrupt_event(p_slot, event_type);
++}
++
+ /* The following routines constitute the bulk of the
+    hotplug controller logic
+  */
+@@ -442,6 +463,100 @@ static void handle_surprise_event(struct slot *p_slot)
+ 	queue_work(p_slot->wq, &info->work);
+ }
+ 
++/*
++ * Note: This function must be called with slot->lock held
++ */
++static void handle_link_up_event(struct slot *p_slot)
++{
++	struct controller *ctrl = p_slot->ctrl;
++	struct power_work_info *info;
++
++	info = kmalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
++			 __func__);
++		return;
++	}
++	info->p_slot = p_slot;
++	INIT_WORK(&info->work, pciehp_power_thread);
++
++	switch (p_slot->state) {
++	case BLINKINGON_STATE:
++	case BLINKINGOFF_STATE:
++		cancel_delayed_work(&p_slot->work);
++		/* Fall through */
++	case STATIC_STATE:
++		p_slot->state = POWERON_STATE;
++		queue_work(p_slot->wq, &info->work);
++		break;
++	case POWERON_STATE:
++		ctrl_info(ctrl,
++			  "Link Up event ignored on slot(%s): already powering on\n",
++			  slot_name(p_slot));
++		kfree(info);
++		break;
++	case POWEROFF_STATE:
++		ctrl_info(ctrl,
++			  "Link Up event queued on slot(%s): currently getting powered off\n",
++			  slot_name(p_slot));
++		p_slot->state = POWERON_STATE;
++		queue_work(p_slot->wq, &info->work);
++		break;
++	default:
++		ctrl_err(ctrl, "Not a valid state on slot(%s)\n",
++			 slot_name(p_slot));
++		kfree(info);
++		break;
++	}
++}
++
++/*
++ * Note: This function must be called with slot->lock held
++ */
++static void handle_link_down_event(struct slot *p_slot)
++{
++	struct controller *ctrl = p_slot->ctrl;
++	struct power_work_info *info;
++
++	info = kmalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
++			 __func__);
++		return;
++	}
++	info->p_slot = p_slot;
++	INIT_WORK(&info->work, pciehp_power_thread);
++
++	switch (p_slot->state) {
++	case BLINKINGON_STATE:
++	case BLINKINGOFF_STATE:
++		cancel_delayed_work(&p_slot->work);
++		/* Fall through */
++	case STATIC_STATE:
++		p_slot->state = POWEROFF_STATE;
++		queue_work(p_slot->wq, &info->work);
++		break;
++	case POWEROFF_STATE:
++		ctrl_info(ctrl,
++			  "Link Down event ignored on slot(%s): already powering off\n",
++			  slot_name(p_slot));
++		kfree(info);
++		break;
++	case POWERON_STATE:
++		ctrl_info(ctrl,
++			  "Link Down event queued on slot(%s): currently getting powered on\n",
++			  slot_name(p_slot));
++		p_slot->state = POWEROFF_STATE;
++		queue_work(p_slot->wq, &info->work);
++		break;
++	default:
++		ctrl_err(ctrl, "Not a valid state on slot %s\n",
++			 slot_name(p_slot));
++		kfree(info);
++		break;
++	}
++}
++
+ static void interrupt_event_handler(struct work_struct *work)
+ {
+ 	struct event_info *info = container_of(work, struct event_info, work);
+@@ -468,6 +583,12 @@ static void interrupt_event_handler(struct work_struct *work)
+ 		ctrl_dbg(ctrl, "Surprise Removal\n");
+ 		handle_surprise_event(p_slot);
+ 		break;
++	case INT_LINK_UP:
++		handle_link_up_event(p_slot);
++		break;
++	case INT_LINK_DOWN:
++		handle_link_down_event(p_slot);
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -524,15 +645,6 @@ int pciehp_disable_slot(struct slot *p_slot)
+ 	if (!p_slot->ctrl)
+ 		return 1;
+ 
+-	if (!HP_SUPR_RM(p_slot->ctrl)) {
+-		ret = pciehp_get_adapter_status(p_slot, &getstatus);
+-		if (ret || !getstatus) {
+-			ctrl_info(ctrl, "No adapter on slot(%s)\n",
+-				  slot_name(p_slot));
+-			return -ENODEV;
+-		}
+-	}
+-
+ 	if (MRL_SENS(p_slot->ctrl)) {
+ 		ret = pciehp_get_latch_status(p_slot, &getstatus);
+ 		if (ret || getstatus) {
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 3a5eee7..1f152f3 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -278,11 +278,6 @@ static void pcie_wait_link_active(struct controller *ctrl)
+ 	__pcie_wait_link_active(ctrl, true);
+ }
+ 
+-static void pcie_wait_link_not_active(struct controller *ctrl)
+-{
+-	__pcie_wait_link_active(ctrl, false);
+-}
+-
+ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+ {
+ 	u32 l;
+@@ -383,11 +378,6 @@ static int pciehp_link_enable(struct controller *ctrl)
+ 	return __pciehp_link_set(ctrl, true);
+ }
+ 
+-static int pciehp_link_disable(struct controller *ctrl)
+-{
+-	return __pciehp_link_set(ctrl, false);
+-}
+-
+ int pciehp_get_attention_status(struct slot *slot, u8 *status)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+@@ -620,13 +610,10 @@ int pciehp_power_off_slot(struct slot * slot)
+ 	u16 cmd_mask;
+ 	int retval;
+ 
+-	/* Disable the link at first */
+-	pciehp_link_disable(ctrl);
+-	/* wait the link is down */
+-	if (ctrl->link_active_reporting)
+-		pcie_wait_link_not_active(ctrl);
+-	else
+-		msleep(1000);
++	/*
++	 * We do not disable the link, since a future link-up event can now
++	 * be used to initiate hot-plug
++	 */
+ 
+ 	slot_cmd = POWER_OFF;
+ 	cmd_mask = PCI_EXP_SLTCTL_PCC;
+@@ -661,7 +648,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 
+ 		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+ 			     PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+-			     PCI_EXP_SLTSTA_CC);
++			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+ 		detected &= ~intr_loc;
+ 		intr_loc |= detected;
+ 		if (!intr_loc)
+@@ -702,6 +689,10 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 		ctrl->power_fault_detected = 1;
+ 		pciehp_handle_power_fault(slot);
+ 	}
++
++	if (intr_loc & PCI_EXP_SLTSTA_DLLSC)
++		pciehp_handle_linkstate_change(slot);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -719,7 +710,7 @@ int pcie_enable_notification(struct controller *ctrl)
+ 	 * when it is cleared in the interrupt service routine, and
+ 	 * next power fault detected interrupt was notified again.
+ 	 */
+-	cmd = PCI_EXP_SLTCTL_PDCE;
++	cmd = PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_DLLSCE;
+ 	if (ATTN_BUTTN(ctrl))
+ 		cmd |= PCI_EXP_SLTCTL_ABPE;
+ 	if (MRL_SENS(ctrl))
+@@ -751,31 +742,36 @@ static void pcie_disable_notification(struct controller *ctrl)
+ 
+ /*
+  * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
+- * bus reset of the bridge, but if the slot supports surprise removal we need
+- * to disable presence detection around the bus reset and clear any spurious
++ * bus reset of the bridge, but if the slot supports surprise removal (or
++ * link state change based hotplug), we need to disable presence detection
++ * (or link state notifications) around the bus reset and clear any spurious
+  * events after.
+  */
+ int pciehp_reset_slot(struct slot *slot, int probe)
+ {
+ 	struct controller *ctrl = slot->ctrl;
++	u16 stat_mask = 0, ctrl_mask = 0;
+ 
+ 	if (probe)
+ 		return 0;
+ 
+ 	if (HP_SUPR_RM(ctrl)) {
+-		pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_PDCE);
+-		if (pciehp_poll_mode)
+-			del_timer_sync(&ctrl->poll_timer);
++		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
++		stat_mask |= PCI_EXP_SLTSTA_PDC;
+ 	}
++	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
++	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
++
++	pcie_write_cmd(ctrl, 0, ctrl_mask);
++	if (pciehp_poll_mode)
++		del_timer_sync(&ctrl->poll_timer);
+ 
+ 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
+ 
+-	if (HP_SUPR_RM(ctrl)) {
+-		pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_PDC);
+-		pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PDCE, PCI_EXP_SLTCTL_PDCE);
+-		if (pciehp_poll_mode)
+-			int_poll_timeout(ctrl->poll_timer.data);
+-	}
++	pciehp_writew(ctrl, PCI_EXP_SLTSTA, stat_mask);
++	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
++	if (pciehp_poll_mode)
++		int_poll_timeout(ctrl->poll_timer.data);
+ 
+ 	return 0;
+ }
 -- 
-Bill Sumner <bill.sumner@hp.com>
+1.7.9.5
+
