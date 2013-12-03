@@ -1,113 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:11008 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752947Ab3LCBxB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 20:53:01 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Joe Perches' <joe@perches.com>
-Cc: 'Jonas Bonn' <jonas@southpole.se>,
-	'Guenter Roeck' <linux@roeck-us.net>,
-	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	'Andrew Morton' <akpm@linux-foundation.org>,
-	'Andy Whitcroft' <apw@canonical.com>,
-	linux-serial@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <000601ceebdc$ee148de0$ca3da9a0$%han@samsung.com>
- <20131128040750.GA29917@kroah.com>
- <006001ceebfa$c85a1020$590e3060$%han@samsung.com>
- <1385617213.12210.5.camel@joe-AO722> <20131128055328.GA565@kroah.com>
- <1385619863.12210.14.camel@joe-AO722> <529C026E.2000302@roeck-us.net>
- <000f01ceef11$a14acf00$e3e06d00$%han@samsung.com>
- <529C04C7.9050506@roeck-us.net>
- <001001ceef13$7fa3ee70$7eebcb50$%han@samsung.com>
- <1385963295.2680.2.camel@joe-AO722> <529C6495.3020305@southpole.se>
- <1386006217.2680.13.camel@joe-AO722>
-In-reply-to: <1386006217.2680.13.camel@joe-AO722>
-Subject: Re: [PATCH] pci/checkpatch: Deprecate DEFINE_PCI_DEVICE_TABLE
-Date: Tue, 03 Dec 2013 10:52:49 +0900
-Message-id: <004501ceefca$5f35b2b0$1da11810$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:60519 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753737Ab3LCSYN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 13:24:13 -0500
+Received: by mail-ie0-f179.google.com with SMTP id x13so25015452ief.10
+        for <linux-pci@vger.kernel.org>; Tue, 03 Dec 2013 10:24:12 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131203033712.GA8525@kroah.com>
+References: <20131129031419.GB5889@neilslaptop.think-freely.org>
+ <20131129094137.GC3028@redhat.com> <20131129175336.GA6152@kroah.com>
+ <CAErSpo44sQU2PbufCYF+wzpMtMPC97_FgAMQgruX9Nw3XbmL8g@mail.gmail.com> <20131203033712.GA8525@kroah.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 3 Dec 2013 11:23:51 -0700
+Message-ID: <CAErSpo42MJ1VkhDdJ_AM-5hsidakcE_GQzWfV9UVT36nK_5a5A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: update MSI attribute file documentation
+To: Greg KH <greg@kroah.com>
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 03, 2013 2:44 AM, Joe Perches
-> 
-> Prefer use of the direct definition of struct pci_device_id
-> instead of indirection via macro DEFINE_PCI_DEVICE_TABLE.
-> 
-> Update the PCI documentation to deprecate DEFINE_PCI_DEVICE_TABLE.
-> Update checkpatch adding --fix option.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+On Mon, Dec 2, 2013 at 8:37 PM, Greg KH <greg@kroah.com> wrote:
+> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+> Now that the MSI modes are now attribute files in sysfs, not
+> subdirectories, update the documentation to reflect this.
+>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Reviewed-by: Jingoo Han <jg1.han@samsung.com>
+Thanks, I'll fold this into the patch that makes the code change, if
+you don't mind.
 
-Best regards,
-Jingoo Han
+Bjorn
 
-> ---
->  Documentation/PCI/pci.txt |  6 ++++--
->  include/linux/pci.h       |  3 +--
->  scripts/checkpatch.pl     | 11 +++++++----
->  3 files changed, 12 insertions(+), 8 deletions(-)
-> 
-> diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.txt
-> index 6f45856..9518006 100644
-> --- a/Documentation/PCI/pci.txt
-> +++ b/Documentation/PCI/pci.txt
-> @@ -123,8 +123,10 @@ initialization with a pointer to a structure describing the driver
-> 
-> 
->  The ID table is an array of struct pci_device_id entries ending with an
-> -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
-> -method of declaring the table.  Each entry consists of:
-> +all-zero entry.  Definitions with static const are generally preferred.
-> +Use of the deprecated macro DEFINE_PCI_DEVICE_TABLE should be avoided.
-> +
-> +Each entry consists of:
-> 
->  	vendor,device	Vendor and device ID to match (or PCI_ANY_ID)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1084a15..88674b0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -634,8 +634,7 @@ struct pci_driver {
->   * DEFINE_PCI_DEVICE_TABLE - macro used to describe a pci device table
->   * @_table: device table name
->   *
-> - * This macro is used to create a struct pci_device_id array (a device table)
-> - * in a generic manner.
-> + * This macro is deprecated and should not be used in new code.
->   */
->  #define DEFINE_PCI_DEVICE_TABLE(_table) \
->  	const struct pci_device_id _table[]
-> diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-> index 38be5d5..6f883f0 100755
-> --- a/scripts/checkpatch.pl
-> +++ b/scripts/checkpatch.pl
-> @@ -2643,10 +2643,13 @@ sub process {
->  			}
->  		}
-> 
-> -# check for declarations of struct pci_device_id
-> -		if ($line =~ /\bstruct\s+pci_device_id\s+\w+\s*\[\s*\]\s*\=\s*\{/) {
-> -			WARN("DEFINE_PCI_DEVICE_TABLE",
-> -			     "Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id\n" . $herecurr);
-> +# check for uses of DEFINE_PCI_DEVICE_TABLE
-> +		if ($line =~ /\bDEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=/) {
-> +			if (WARN("DEFINE_PCI_DEVICE_TABLE",
-> +				 "Prefer struct pci_device_id over deprecated DEFINE_PCI_DEVICE_TABLE\n" .
-> $herecurr) &&
-> +			    $fix) {
-> +				$fixed[$linenr - 1] =~
-> s/\b(?:static\s+|)DEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=\s*/static const struct pci_device_id
-> $1\[\] = /;
-> +			}
->  		}
-> 
->  # check for new typedefs, only function parameters and sparse annotations
-
-
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 5210a51c90fd..a3c5a6685036 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -70,18 +70,15 @@ Date:               September, 2011
+>  Contact:       Neil Horman <nhorman@tuxdriver.com>
+>  Description:
+>                 The /sys/devices/.../msi_irqs directory contains a variable set
+> -               of sub-directories, with each sub-directory being named after a
+> -               corresponding msi irq vector allocated to that device.  Each
+> -               numbered sub-directory N contains attributes of that irq.
+> -               Note that this directory is not created for device drivers which
+> -               do not support msi irqs
+> +               of files, with each file being named after a corresponding msi
+> +               irq vector allocated to that device.
+>
+> -What:          /sys/bus/pci/devices/.../msi_irqs/<N>/mode
+> +What:          /sys/bus/pci/devices/.../msi_irqs/<N>
+>  Date:          September 2011
+>  Contact:       Neil Horman <nhorman@tuxdriver.com>
+>  Description:
+>                 This attribute indicates the mode that the irq vector named by
+> -               the parent directory is in (msi vs. msix)
+> +               the file is in (msi vs. msix)
+>
+>  What:          /sys/bus/pci/devices/.../remove
+>  Date:          January 2009
