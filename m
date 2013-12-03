@@ -1,45 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:42482 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751726Ab3LLVRF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:17:05 -0500
-Received: by mail-ig0-f182.google.com with SMTP id c10so213595igq.3
-        for <linux-pci@vger.kernel.org>; Thu, 12 Dec 2013 13:17:04 -0800 (PST)
+Received: from mail.linuxfoundation.org ([140.211.169.12]:44570 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752705Ab3LCDgM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 22:36:12 -0500
+Date: Mon, 2 Dec 2013 19:37:12 -0800
+From: Greg KH <greg@kroah.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: update MSI attribute file documentation
+Message-ID: <20131203033712.GA8525@kroah.com>
+References: <20131129031419.GB5889@neilslaptop.think-freely.org>
+ <20131129094137.GC3028@redhat.com>
+ <20131129175336.GA6152@kroah.com>
+ <CAErSpo44sQU2PbufCYF+wzpMtMPC97_FgAMQgruX9Nw3XbmL8g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20131212161107.GI32683@htj.dyndns.org>
-References: <cover.1385399393.git.agordeev@redhat.com> <086bc30b22688c629911d02e230d1bc876fb946f.1385399393.git.agordeev@redhat.com>
- <20131210231602.GH4699@google.com> <20131212161100.GB14655@dhcp-26-207.brq.redhat.com>
- <20131212161107.GI32683@htj.dyndns.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 12 Dec 2013 14:16:44 -0700
-Message-ID: <CAErSpo6p9tnKFQ7WpjpDtYLj0NmVZjexkJaMLwy607i3zHL8=A@mail.gmail.com>
-Subject: Re: [PATCH v3 11/11] PCI/MSI: Introduce pcim_enable_msi*() family helpers
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@aculab.com>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo44sQU2PbufCYF+wzpMtMPC97_FgAMQgruX9Nw3XbmL8g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 12, 2013 at 9:11 AM, Tejun Heo <tj@kernel.org> wrote:
-> On Thu, Dec 12, 2013 at 05:11:01PM +0100, Alexander Gordeev wrote:
->> On Tue, Dec 10, 2013 at 04:16:02PM -0700, Bjorn Helgaas wrote:
->> > What's the reason for using the "pcim_" prefix?  To me, that suggests that
->> > this is a "managed" interface in the sense described in
->> > Documentation/driver-model/devres.txt, where resources are automatically
->> > deallocated when the driver detaches.  But I don't see anything like that
->> > happening in this patch.
->>
->> Oh.. right. What about pci_auto_ prefix to indicate automatic fallback
->> logic? Or may be even pcia_ ?
->
-> I'd vote for pci_auto, one-off single char pre/postfixes usually get
-> pretty confusing.
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Sounds good to me.
+Now that the MSI modes are now attribute files in sysfs, not
+subdirectories, update the documentation to reflect this.
+
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 5210a51c90fd..a3c5a6685036 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -70,18 +70,15 @@ Date:		September, 2011
+ Contact:	Neil Horman <nhorman@tuxdriver.com>
+ Description:
+ 		The /sys/devices/.../msi_irqs directory contains a variable set
+-		of sub-directories, with each sub-directory being named after a
+-		corresponding msi irq vector allocated to that device.  Each
+-		numbered sub-directory N contains attributes of that irq.
+-		Note that this directory is not created for device drivers which
+-		do not support msi irqs
++		of files, with each file being named after a corresponding msi
++		irq vector allocated to that device.
+ 
+-What:		/sys/bus/pci/devices/.../msi_irqs/<N>/mode
++What:		/sys/bus/pci/devices/.../msi_irqs/<N>
+ Date:		September 2011
+ Contact:	Neil Horman <nhorman@tuxdriver.com>
+ Description:
+ 		This attribute indicates the mode that the irq vector named by
+-		the parent directory is in (msi vs. msix)
++		the file is in (msi vs. msix)
+ 
+ What:		/sys/bus/pci/devices/.../remove
+ Date:		January 2009
