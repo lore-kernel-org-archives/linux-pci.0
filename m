@@ -1,33 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:54192 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996Ab3LKWnQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 17:43:16 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 05/12] clk: SPEAr13xx: Fix pcie clock name
-Date: Wed, 11 Dec 2013 23:42:43 +0100
-Cc: Mohit Kumar <mohit.kumar@st.com>, linux-pci@vger.kernel.org,
-	Pratyush Anand <pratyush.anand@st.com>,
-	spear-devel@list.st.com, Viresh Kumar <viresh.linux@gmail.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <aeeefe3537089f0d0a2f8f5662d50dfca2aadf29.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <aeeefe3537089f0d0a2f8f5662d50dfca2aadf29.1386752447.git.mohit.kumar@st.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53016 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753947Ab3LCSfF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 13:35:05 -0500
+Date: Tue, 3 Dec 2013 10:36:07 -0800
+From: Greg KH <greg@kroah.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: update MSI attribute file documentation
+Message-ID: <20131203183607.GA19504@kroah.com>
+References: <20131129031419.GB5889@neilslaptop.think-freely.org>
+ <20131129094137.GC3028@redhat.com>
+ <20131129175336.GA6152@kroah.com>
+ <CAErSpo44sQU2PbufCYF+wzpMtMPC97_FgAMQgruX9Nw3XbmL8g@mail.gmail.com>
+ <20131203033712.GA8525@kroah.com>
+ <CAErSpo42MJ1VkhDdJ_AM-5hsidakcE_GQzWfV9UVT36nK_5a5A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312112342.43840.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo42MJ1VkhDdJ_AM-5hsidakcE_GQzWfV9UVT36nK_5a5A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 11 December 2013, Mohit Kumar wrote:
-> From: Pratyush Anand <pratyush.anand@st.com>
+On Tue, Dec 03, 2013 at 11:23:51AM -0700, Bjorn Helgaas wrote:
+> On Mon, Dec 2, 2013 at 8:37 PM, Greg KH <greg@kroah.com> wrote:
+> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >
+> > Now that the MSI modes are now attribute files in sysfs, not
+> > subdirectories, update the documentation to reflect this.
+> >
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > 
-> Follow dt clock naming convention for PCIe clocks.
-> 
+> Thanks, I'll fold this into the patch that makes the code change, if
+> you don't mind.
 
-I think in the future, the spear clocks really need to get
-moved into DT representations, as we do for other platforms,
-which will get rid of a lot of code in drivers/clk, including
-all the clkdev registration.
+I don't mind at all, thanks.
 
-	Arnd
