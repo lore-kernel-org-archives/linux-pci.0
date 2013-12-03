@@ -1,79 +1,27 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25554 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45293 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751819Ab3LTFmD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Dec 2013 00:42:03 -0500
-Date: Fri, 20 Dec 2013 13:41:22 +0800
-From: Baoquan He <bhe@redhat.com>
+	id S1753487Ab3LCUBZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Dec 2013 15:01:25 -0500
+Message-ID: <1386100843.25738.284.camel@ul30vt.home>
+Subject: Re: [PATCH 0/6] Crashdump Accepting Active IOMMU
+From: Alex Williamson <alex.williamson@redhat.com>
 To: Bill Sumner <bill.sumner@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com,
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
 	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, kexec-kdump-list@redhat.com
-Subject: Re: [PATCHv2 0/6] Crashdump Accepting Active IOMMU
-Message-ID: <20131220053959.GA32194@dhcp-16-116.nay.redhat.com>
-References: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, doug.hatch@hp.com
+Date: Tue, 03 Dec 2013 13:00:43 -0700
+In-Reply-To: <1386099694-4190-1-git-send-email-bill.sumner@hp.com>
+References: <Crashdump-Accepting-Active-IOMMU>
+	 <1386099694-4190-1-git-send-email-bill.sumner@hp.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-I have reviewed and tested this patchset. Without it the DMAR error
-always occured as below. With this patchset, no error is reported and
-kdump can work successfully.
-
-This patchset is awesome, it get to the root of the problem when enable
-intel-iommu in kdump and fix it. And from code no harm would come to 1st
-kernel, surely people's review can guarantee this better and is very
-important.
-
-Hi Bill,
-
-Thanks a lot for your effort. 
-
-I have several comments. I think for a formal patch the debug print
-need be erased. Or you can split it from this patchset and post it
-separately. Then people who review and test your patchset can use the
-debug utility.
-
-A bug is found when I test it. please see the inline comment.
-
-Baoquan
-Thanks
-
-
-On 12/19/13 at 07:49pm, Bill Sumner wrote:
-> 
-> Changes from previous submission:
-> 1. Moved up to Linux kernel top-of-tree of this week.
-> 2. Expanded the comments section of each patch so that the documentation
->    will appear in the commit logs. (Requested by Alex Williamson and one
->    internal reviewer)
-> 3. Corrected one line in the table which drives the diagnostic printing
->    of the IOMMU registers (Requested by one internal reviewer)
-> 
-> Notes:
-> 1. This patch set is ready for extensive testing by the Linux community,
->    for discussion, and hopefully for acceptance into Linux mainstream.
-> 2. In order to support this testing, I have left a modest amount of
->    debug print enabled.  For testing, the amount of print can be increased
->    or decreased easily; and for production, can be completely turned-off.
->    Please see the bit-flags in struct 'pr_dbg'
-> 
-> Testing:
-> 1. This patch set was re-tested on the machine that reproduced the problem
->    a. Without this patch set, crashdump console sees a large number of:
->       "dmar: DMAR:[DMA Write] Request device [04:00.0] fault addr fff69000
->       "DMAR:[fault reason 01] Present bit in root entry is clear"
->    b. With this patch set, none of the above messages are seen.
-> 2. This patch set has not yet been tested with hardware pass-through enabled.
-> 
-> 
-> Patch 0 file from previous submission:
+On Tue, 2013-12-03 at 12:41 -0700, Bill Sumner wrote:
 > The following series implements a fix for:
 > A kdump problem about DMA that has been discussed for a long time. That is,
 > when a kernel panics and boots into the kdump kernel, DMA started by the 
@@ -83,6 +31,13 @@ On 12/19/13 at 07:49pm, Bill Sumner wrote:
 > as physical memory addresses -- which causes the DMA to either:
 > (1) generate DMAR errors or (2) generate PCI SERR errors or (3) transfer  
 > data to or from incorrect areas of memory. Often this causes the dump to fail.
+
+I didn't review the content, but please add commit logs per patch.  You
+have a very thorough description here in the cover letter, but the cover
+letter doesn't get stored in the code base.  Thanks,
+
+Alex
+
 > 
 > This patch set modifies the behavior of the iommu in the (new) crashdump kernel: 
 > 1. to accept the iommu hardware in an active state, 
@@ -179,9 +134,11 @@ On 12/19/13 at 07:49pm, Bill Sumner wrote:
 > * Else
 >   . Create a new domain as normal
 > 
+> --- 
+> Signed-off-by: Bill Sumner <bill.sumner@hp.com>
 > 
 > Bill Sumner (6):
->   Crashdump-Accepting-Active-IOMMU-Flags-and-Prototype
+>   Crashdump-Accepting-Active-IOMMU-Flags-and-Prototypes
 >   Crashdump-Accepting-Active-IOMMU-Utility-functions
 >   Crashdump-Accepting-Active-IOMMU-Domain-Interfaces
 >   Crashdump-Accepting-Active-IOMMU-Copy-Translations
@@ -191,5 +148,6 @@ On 12/19/13 at 07:49pm, Bill Sumner wrote:
 >  drivers/iommu/intel-iommu.c | 1292 ++++++++++++++++++++++++++++++++++++++++---
 >  1 file changed, 1224 insertions(+), 68 deletions(-)
 > 
-> -- 
-> Bill Sumner <bill.sumner@hp.com>
+
+
+
