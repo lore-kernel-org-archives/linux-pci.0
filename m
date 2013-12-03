@@ -1,81 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1386949306-30601-1-git-send-email-betty.dall@hp.com>
-References: <1386949306-30601-1-git-send-email-betty.dall@hp.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 13 Dec 2013 15:35:15 -0700
-Message-ID: <CAErSpo4tswv8PHGOQDviFj6Rc7QMYkWQ5rhMCFmHZFL9jM6oBQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI AER: handle pci_cleanup_aer_uncorrect_error_status()
- in firmware first mode
-To: Betty Dall <betty.dall@hp.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:54517 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821Ab3LCBPJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 20:15:09 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Joe Perches' <joe@perches.com>,
+	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <001501ceefb1$69c96820$3d5c3860$%han@samsung.com>
+ <003b01ceefb6$bca43ed0$35ecbc70$%han@samsung.com>
+ <1386028330.15309.13.camel@joe-AO722>
+In-reply-to: <1386028330.15309.13.camel@joe-AO722>
+Subject: Re: [PATCH 38/39] PCI: remove DEFINE_PCI_DEVICE_TABLE macro
+Date: Tue, 03 Dec 2013 10:15:06 +0900
+Message-id: <003e01ceefc5$1a6f9880$4f4ec980$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 13, 2013 at 8:41 AM, Betty Dall <betty.dall@hp.com> wrote:
-> There are three functions exported from aerdrv_core.c that could be
-> called when the system is in firmware first mode:
-> pci_enable_pcie_error_reporting(), pci_disable_pcie_error_reporting, and
-> pci_cleanup_aer_uncorrect_error_status(). The first two functions check if
-> we are in firmware first mode and return immediately.
-> pci_cleanup_aer_uncorrect_error_status() does not check firmware first
-> mode. The problem is that all of these functions should not access the AER
-> registers in firmware first mode because the firmware has not granted OS
-> control of the AER registers through the _OSC.
+On Tuesday, December 03, 2013 8:52 AM, Joe Perches wrote:
+> On Tue, 2013-12-03 at 08:32 +0900, Jingoo Han wrote:
+> > Don't use DEFINE_PCI_DEVICE_TABLE macro, because this macro
+> > is not preferred. Also, the definition of DEFINE_PCI_DEVICE_TABLE
+> > macro is removed.
+> 
+> These sorts of treewide conversions are almost never
+> applied wholesale.
+> 
+> This patch is not appropriate until there are no more
+> uses of DEFINE_PCI_DEVICE_TABLE in Linus' tree.
+> 
+> Just marking the function as deprecated in the
+> documentation and the pci.h file is probably good
+> enough for now.
+> 
+> see:  http://lkml.org/lkml/2013/12/2/400
 
-This looks like a good fix to me.  If I read aer_acpi_firmware_first()
-correctly, we don't even *ask* for control of AER if
-ACPI_HEST_FIRMWARE_FIRST appears anywhere in the HEST.  Does that
-match your understanding?
+Actually, I want to remove all DEFINE_PCI_DEVICE_TABLEs from the
+next 3.14-rc1 kernel, by merging all patches through Greg's tree.
 
-> Many drivers call this
-> function in their pci_error_handlers in firmware first mode.
+Greg,
+How about you?
 
-Drivers don't have any idea whether their device is in firmware-first
-mode, do they?
+Best regards,
+Jingoo Han
 
-> The fix is to change pci_cleanup_aer_uncorrect_error_status() to check
-> firmware first mode before accessing the AER registers. If it is in firmware
-> first mode, return 0. I considered returning -EIO, but decided the status
-> has been cleaned up appropriately for firmware first. Returning 0 also avoids
-> an error message. Not many places check the return of this function, and the
-> ones that do, print an error message and continue such as:
->    err = pci_cleanup_aer_uncorrect_error_status(pdev);
->    if (err) {
->        dev_err(&pdev->dev,
->            "pci_cleanup_aer_uncorrect_error_status failed 0x%0x\n",
->             err); /* non-fatal, continue */
->    }
-> That error message is how I found this problem, and it is not applicable
-> for the firmware first recovery path.
-
-I'm curious -- did you find this problem because you saw a message
-when pci_cleanup_aer_uncorrect_error_status() returned failure?  The
-only way it can return failure is if there is no AER capability, and
-that should be completely independent of whether we're in
-firmware-first mode.
-
-> Signed-off-by: Betty Dall <betty.dall@hp.com>
-> ---
->
->  drivers/pci/pcie/aer/aerdrv_core.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->
->
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index b2c8881..1f60408 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -62,6 +62,9 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->         int pos;
->         u32 status;
->
-> +       if (pcie_aer_get_firmware_first(dev))
-> +               return 0;
-> +
->         pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
->         if (!pos)
->                 return -EIO;
