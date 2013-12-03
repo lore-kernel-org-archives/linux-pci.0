@@ -1,46 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:64774 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753546Ab3LTGPm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Dec 2013 01:15:42 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <529E5BEA.5040208@gmail.com>
+Date: Tue, 03 Dec 2013 14:32:10 -0800
+From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20131219221019.GB15201@google.com>
-References: <1387465612-3673-33-git-send-email-levex@linux.com>
-	<20131219221019.GB15201@google.com>
-Date: Thu, 19 Dec 2013 22:15:41 -0800
-Message-ID: <CAE9FiQUrjCX=YzSni8YsbH-aFKtOLZ_v3-A6EcHzFY3esRb0Rw@mail.gmail.com>
-Subject: Re: [PATCH 32/38] pcie: add missing put_device call
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Levente Kurusa <levex@linux.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Murray <amurray@embedded-bits.co.uk>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>
+CC: Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH v2 1/4] pciehp: Make check_link_active() non-static
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 19, 2013 at 2:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Greg, Yinghai]
->
-> On Thu, Dec 19, 2013 at 04:06:46PM +0100, Levente Kurusa wrote:
->> This is required so that we give up the last reference to the device.
->> Removed the kfree() as put_device will result in release_pcie_device being
->> called and hence the container of the device will be kfree'd.
->>
->> Signed-off-by: Levente Kurusa <levex@linux.com>
->
-> Thanks, I applied a slightly modified version of this to my pci/deletion
-> branch for v3.14.
->
-> I think the get_device() after device_register() succeeds and the
-> put_device() before device_unregister() are superfluous, so I propose the
-> series included below.  Any comments?
+check_link_active() functionality needs to be used by subsequent patches
+(that introduce link state change based hotplug). Thus make the function
+non-static, and rename it to pciehp_check_link_active() so as to be
+consistent with other non-static functions.
 
-Nice cleanup.
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+ v2: Same as v1, dropped the "RFC" from subject, and added Guenter's signature
 
-Thanks
+ drivers/pci/hotplug/pciehp.h     |    1 +
+ drivers/pci/hotplug/pciehp_hpc.c |    6 +++---
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-Yinghai
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 541bbe6..fc322ed 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -154,6 +154,7 @@ void pciehp_green_led_on(struct slot *slot);
+ void pciehp_green_led_off(struct slot *slot);
+ void pciehp_green_led_blink(struct slot *slot);
+ int pciehp_check_link_status(struct controller *ctrl);
++bool pciehp_check_link_active(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
+ int pciehp_reset_slot(struct slot *slot, int probe);
+ 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 51f56ef..3a5eee7 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -241,7 +241,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+ 	return retval;
+ }
+ 
+-static bool check_link_active(struct controller *ctrl)
++bool pciehp_check_link_active(struct controller *ctrl)
+ {
+ 	bool ret = false;
+ 	u16 lnk_status;
+@@ -261,12 +261,12 @@ static void __pcie_wait_link_active(struct controller *ctrl, bool active)
+ {
+ 	int timeout = 1000;
+ 
+-	if (check_link_active(ctrl) == active)
++	if (pciehp_check_link_active(ctrl) == active)
+ 		return;
+ 	while (timeout > 0) {
+ 		msleep(10);
+ 		timeout -= 10;
+-		if (check_link_active(ctrl) == active)
++		if (pciehp_check_link_active(ctrl) == active)
+ 			return;
+ 	}
+ 	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+-- 
+1.7.9.5
+
