@@ -1,223 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:58698 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756199Ab3LEB7p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 20:59:45 -0500
-From: Marek Vasut <marex@denx.de>
-To: Richard Zhu <Hong-Xing.Zhu@freescale.com>
-Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region mapping
-Date: Thu, 5 Dec 2013 02:59:33 +0100
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	"'Tim Harvey'" <tharvey@gateworks.com>,
-	"'Pratyush Anand'" <pratyush.anand@st.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Frank Li'" <lznuaa@gmail.com>, "'Harro Haan'" <hrhaan@gmail.com>,
-	"'Mohit KUMAR DCG'" <Mohit.KUMAR@st.com>,
-	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
-	"'Sean Cross'" <xobs@kosagi.com>,
-	"'Shawn Guo'" <shawn.guo@linaro.org>,
-	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
-	"'Srikanth T Shivanand'" <ts.srikanth@samsung.com>,
-	"'Troy Kisky'" <troy.kisky@boundarydevices.com>,
-	"'Yinghai Lu'" <yinghai@kernel.org>
-References: <1385500248-6551-1-git-send-email-marex@denx.de> <0E83723C55F66F43A6041464FE31119D47C9FA@039-SN2MPN1-013.039d.mgd.msft.net> <0E83723C55F66F43A6041464FE31119D47CA7F@039-SN2MPN1-013.039d.mgd.msft.net>
-In-Reply-To: <0E83723C55F66F43A6041464FE31119D47CA7F@039-SN2MPN1-013.039d.mgd.msft.net>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1386155291.17466.19.camel@kazak.uk.xensource.com>
+Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
+From: Ian Campbell <Ian.Campbell@citrix.com>
+To: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
+	<boris.ostrovsky@oracle.com>, <david.vrabel@citrix.com>,
+	<leosilva@linux.vnet.ibm.com>, <ashley@ashleylai.com>,
+	<peterhuewe@gmx.de>, <mail@srajiv.net>, <tpmdd@selhorst.net>,
+	<tpmdd@sirrix.com>, <dmitry.torokhov@gmail.com>,
+	<bhelgaas@google.com>, <plagnioj@jcrosoft.com>,
+	<tomi.valkeinen@ti.com>, <tpmdd-devel@lists.sourceforge.net>,
+	<linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-fbdev@vger.kernel.org>
+Date: Wed, 4 Dec 2013 11:08:11 +0000
+In-Reply-To: <alpine.DEB.2.02.1312041104110.7093@kaball.uk.xensource.com>
+References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
+	  <1386149848.13256.86.camel@kazak.uk.xensource.com>
+	  <alpine.DEB.2.02.1312041049310.7093@kaball.uk.xensource.com>
+	 <1386154783.17466.14.camel@kazak.uk.xensource.com>
+	 <alpine.DEB.2.02.1312041104110.7093@kaball.uk.xensource.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201312050259.33823.marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 05, 2013 at 02:05:40 AM, Richard Zhu wrote:
-> Hi Merak:
-> > -----Original Message-----
-> > From: linux-pci-owner@vger.kernel.org
-> > [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Richard Zhu
-> > Sent: Thursday, December 05, 2013 8:45 AM
-> > To: Marek Vasut
-> > Cc: Jingoo Han; 'Tim Harvey'; 'Pratyush Anand'; linux-arm-
-> > kernel@lists.infradead.org; linux-pci@vger.kernel.org; 'Bjorn Helgaas';
-> > 'Frank Li'; 'Harro Haan'; 'Mohit KUMAR DCG'; 'Sascha Hauer'; 'Sean
-> > Cross'; 'Shawn Guo'; 'Siva Reddy Kallam'; 'Srikanth T Shivanand'; 'Troy
-> > Kisky'; 'Yinghai Lu' Subject: RE: [PATCH 2/7] [RFC] PCI: imx6: remove
-> > outbound io/mem ATU region mapping
-> > 
-> > Hi Marek:
-> > > -----Original Message-----
-> > > From: Marek Vasut [mailto:marex@denx.de]
-> > > Sent: Wednesday, December 04, 2013 3:52 PM
-> > > To: Zhu Richard-R65037
-> > > Cc: Jingoo Han; 'Tim Harvey'; 'Pratyush Anand'; linux-arm-
-> > > kernel@lists.infradead.org; linux-pci@vger.kernel.org; 'Bjorn
-> > > Helgaas'; 'Frank Li'; 'Harro Haan'; 'Mohit KUMAR DCG'; 'Sascha Hauer';
-> > > 'Sean Cross'; 'Shawn Guo'; 'Siva Reddy Kallam'; 'Srikanth T Shivanand';
-> > 
-> > 'Troy Kisky'; 'Yinghai Lu'
-> > 
-> > > Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU
-> > > region mapping
-> > > 
-> > > On Wednesday, December 04, 2013 at 06:49:55 AM, Richard Zhu wrote:
-> > > > Hi Marek:
+On Wed, 2013-12-04 at 11:05 +0000, Stefano Stabellini wrote:
+> On Wed, 4 Dec 2013, Ian Campbell wrote:
+> > On Wed, 2013-12-04 at 10:51 +0000, Stefano Stabellini wrote:
+> > > On Wed, 4 Dec 2013, Ian Campbell wrote:
+> > > > > +bool xen_has_pv_devices(void)
+> > > > > +{
+> > > > > +	if (!xen_domain())
+> > > > > +		return false;
+> > > > > +
+> > > > > +	if (xen_hvm_domain()) {
+> > > > > +		/* User requested no unplug, so no PV drivers. */
+> > > > > +		if (xen_emul_unplug & XEN_UNPLUG_NEVER)
+> > > > > +			return false;
 > > > > 
-> > > > Best Regards
-> > > > Richard Zhu
-> > > > 
-> > > > > -----Original Message-----
-> > > > > From: Marek Vasut [mailto:marex@denx.de]
-> > > > > Sent: Friday, November 29, 2013 1:56 AM
-> > > > > To: Jingoo Han
-> > > > > Cc: 'Tim Harvey'; 'Pratyush Anand';
-> > > > > linux-arm-kernel@lists.infradead.org;
-> > > > > linux-pci@vger.kernel.org; 'Bjorn Helgaas'; 'Frank Li'; 'Harro
-> > > > > Haan'; 'Mohit KUMAR DCG'; Zhu Richard-R65037; 'Sascha Hauer';
-> > > > > 'Sean Cross'; 'Shawn Guo'; 'Siva Reddy Kallam'; 'Srikanth T
-> > > > > Shivanand'; 'Troy Kisky'; 'Yinghai Lu' Subject: Re: [PATCH 2/7]
-> > > > > [RFC]
-> > 
-> > PCI: imx6:
-> > > > > remove outbound io/mem ATU region mapping
-> > > > > 
-> > > > > Dear Jingoo Han,
-> > > > > 
-> > > > > > On Wednesday, November 27, 2013 5:44 PM, Marek Vasut wrote:
-> > > > > > > Wednesday, November 27, 2013 1:30 PM, Pratyush Anand wrote:
-> > > > > > > > On Wed, Nov 27, 2013 at 05:10:43AM +0800, Marek Vasut wrote:
-> > > > > > > > > From: Tim Harvey <tharvey@gateworks.com>
-> > > > > > > > > 
-> > > > > > > > > The IMX6 iATU is used for address translation between the
-> > > > > > > > > AXI bus address space and PCI address space.  This is used
-> > > > > > > > > for type0 and
-> > > > > > > > > type1 config cycles but is not necessary for outbound
-> > > > > > > > > io/mem regions.
-> > > > > > > > > 
-> > > > > > > > > This patch removes the calls that inappropriately
-> > > > > > > > > re-configures the ATU viewport for outbound memory and IO
-> > > > > > > > > after config cycles and removes them altogether as they
-> > > > > > > > > are not
+> > > > I think you need
+> > > > 		if (xen_emul_unpug & XEN_UNPLUG_UNNECESSARY)
+> > > > 			return true;
+> > > > don't you?
 > > > 
-> > > necessary.
+> > > XEN_UNPLUG_UNNECESSARY was introduced to enable the platform PCI device
+> > > even if it didn't respond properly to the unplug protocol.
+> > > The corresponding parameter is called "unnecessary" because if you pass
+> > > it to the kernel you mean that it is unnecessary to unplug the emulated
+> > > devices but you can use the pv devices anyway.
 > > > 
-> > > > > > > > Yes, they are not necessary for all the cases where
-> > > > > > > > translation is one to one. So so for sure all the platform
-> > > > > > > > till now introduced should work.
-> > > > > > > > But, what about a platform where memory translation is not
-> > > > > > > > one to one?
-> > > > > > > > 
-> > > > > > > > Existing code should work with all sort of memory
-> > > > > > > > translation on a platform having atleast two viewports
-> > > > > > > > capable of programming any type of outbound transaction.
-> > > > > > > 
-> > > > > > > Full ACK, that's why it's called RFC.
-> > > > > > > 
-> > > > > > > > > This resolves issues with PCI devices behind switches and
-> > > > > > > > > has been tested with a Gige device behind a PLX PEX860x
-> > > > > > > > > switch. More testing is needed for other configurations.
-> > > > > > > > 
-> > > > > > > > I do not understand if MX6 has 4 Outbound Viewport then how
-> > > > > > > > this patch helps?
-> > > > > > > > -- PCI devices behind switches would not have been working
-> > > > > > > > because
-> > > > > > > > CFG1 transaction would not have been correct.
-> > > > > > > > -- It works with this patch. This patch changes viewport for
-> > > > > > > > CFG1 from
-> > > > > > > > 1 to 0.
-> > > > > > > > -- Can it be possible that MX6 has some restriction on
-> > > > > > > > viewport programming capability. I mean,like only viewport0
-> > > > > > > > can be programmed for CFG0/1?
-> > > > > > > 
-> > > > > > > Tim ?
-> > > > > > > 
-> > > > > > > Here is the MX6 datasheet [1], the section 48.3.9.1.1 and
-> > > > > > > 48.3.9.1.2 describe the iATU configuration on MX6. My
-> > > > > > > understanding from this description is that the MX6 has 4
-> > > > > > > inbound and 4 outbound iATU regions. Am I wrong ?
-> > > > > > 
-> > > > > > The numbers of inbound and outbound are hardware-configurable
-> > > > > > features. Thus, these numbers  can be confirmed by Freescale 
-> > > > > > hardware engineers. How about asking Freescale hardware
-> > > > > > engineers, if possible?
-> > > > > 
-> > > > > Richard is on the CC. Richard, can you please confirm those?
-> > > > 
-> > > > [Richard] One Pericom PI7C9X2G303EL pcie switch, and two pcie ep
-> > > > deivces(one is intel e1000e nic, the other is one xhci device) are
-> > > > tested on imx6q sabresd board. Without removing outbound io/mem
-> > > > regions view map during the cfg0/1 read/write cycle, both of these
-> > > > devices can't work well at my side. Works well after remove them
-> > > > during the cfg0/1 read/write cycles.
-> > > > Same to Tim's situation about switch implementation.
-> > > 
-> > > Thanks Richard! I am just wondering what kind of conclusion can we
-> > > draw from this. Let me reiterate what we have:
-> > > 
-> > > - i.MX6 has 4 inbound and 4 outbound iATU regions, is that correct,
-> > > Richard? - If we program the iATU regions, the i.MX6 PCIe doesn't work
-> > > with switch.
-> > > 
-> > > Is there some special sause to the iATU on MX6 maybe ?
+> > > So no, we shouldn't check for XEN_UNPLUG_UNNECESSARY here.
 > > 
-> > [Richard] welcome, it's correct, imx6 pcie has 4 inbount and 4 outbound
-> > iATU regions.
-> > Imx6 pcie doesn't work with switch if the following view switches are not
-> > removed in The cfg0/1 read/write cycles.
+> > Oh, we will eventually fall through to the return true, so it does
+> > actually work out OK.
 > > 
-> > @@ -516,9 +560,11 @@ static int dw_pcie_rd_other_conf(struct pcie_port
-> > *pp, struct pci_bus *bus,
-> > 
-> >         if (bus->parent->number == pp->root_bus_nr) {
-> >         
-> >                 dw_pcie_prog_viewport_cfg0(pp, busdev);
-> >                 ret = cfg_read(pp->va_cfg0_base + address, where, size,
-> >                 val);
-> > 
-> > +               // dw_pcie_prog_viewport_mem_outbound(pp);
-> > 
-> >         } else {
-> >         
-> >                 dw_pcie_prog_viewport_cfg1(pp, busdev);
-> >                 ret = cfg_read(pp->va_cfg1_base + address, where, size,
-> >                 val);
-> > 
-> > +               // dw_pcie_prog_viewport_io_outbound(pp);
-> > 
-> >         }
-> >         
-> >         return ret;
-> > 
-> > @@ -537,9 +583,11 @@ static int dw_pcie_wr_other_conf(struct pcie_port
-> > *pp, struct pci_bus *bus,
-> > 
-> >         if (bus->parent->number == pp->root_bus_nr) {
-> >         
-> >                 dw_pcie_prog_viewport_cfg0(pp, busdev);
-> >                 ret = cfg_write(pp->va_cfg0_base + address, where, size,
-> >                 val);
-> > 
-> > +               // dw_pcie_prog_viewport_mem_outbound(pp);
-> > 
-> >         } else {
-> >         
-> >                 dw_pcie_prog_viewport_cfg1(pp, busdev);
-> >                 ret = cfg_write(pp->va_cfg1_base + address, where, size,
-> >                 val);
-> > 
-> > +               // dw_pcie_prog_viewport_io_outbound(pp);
-> > 
-> >         }
-> >         
-> >         return ret;
-> > 
-> > Best Regards
-> > Richard Zhu
+> > I'd still be in favour of handling each option explicitly, for clarity.
+> > Which means checking for XEN_UNPLUG_UNNECESSARY.
 > 
-> [Richard] Bisect the code-modifications, only the
-> dw_pcie_prog_viewport_io_outbound() should be masked if I want the switch
-> works in my imx6 pcie switch support tests. Suspect that the mem emulated
-> io space introduce this problem, debug is on-going.
+> I think is wrong to check for any xen_emul_unpug options in this function.
+> The xen_emul_unpug options should be used to set the right value of
+> xen_platform_pci_unplug. (See my other reply.)
 
-Freescale is now looking into this issue ? Cool, thanks! :)
+Whichever one we check we should still be checking explicitly for the
+"unnecessary" case, for clarity if nothing else.
+
+TBH I think the split between xen_emul_unplug and
+xen_platform_pci_unplug is a bit artificial. There should be one value
+which is static to platform-pci-unplug.c and accessor functions should
+be provided for other code to use. Open coding all those accesses to
+xen_platform_pci_unplug in every driver is just too error prone.
+
+Ian.
+
