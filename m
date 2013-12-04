@@ -1,60 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:60042 "EHLO
-	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750917Ab3LLEzf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Dec 2013 23:55:35 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Jingoo Han <jg1.han@samsung.com>, 'Arnd Bergmann' <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	'Jagan Teki' <jagannadh.teki@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Pratyush ANAND <pratyush.anand@st.com>
-Date: Thu, 12 Dec 2013 12:55:00 +0800
-Subject: RE: [PATCH 06/12] pcie: designware: Move register definition to the
- header file
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F6426@EAPEX1MAIL1.st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
- <CAD6G_RTrETj9p+YNPjRMEFsO7Ggf3LfnuaPOSwO2brUcusNUJw@mail.gmail.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
- <201312112231.36039.arnd@arndb.de>
- <001001cef6c3$2c5a3cd0$850eb670$%han@samsung.com>
-In-Reply-To: <001001cef6c3$2c5a3cd0$850eb670$%han@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
+References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
+Date: Wed, 4 Dec 2013 13:03:35 +1300
+Message-ID: <CAD3CandHsEu_WAC2VGrwYoN=hh-PkBuORNBtR7r3dWg6e7i2dQ@mail.gmail.com>
+Subject: Re: [Xen-devel] [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't
+ blow up.
+From: Matthew Daley <mattd@bugfuzz.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+	Ian Campbell <ian.campbell@citrix.com>,
+	xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	leosilva@linux.vnet.ibm.com, ashley@ashleylai.com,
+	peterhuewe@gmx.de, mail@srajiv.net, tpmdd@selhorst.net,
+	tpmdd@sirrix.com, dmitry.torokhov@gmail.com, bhelgaas@google.com,
+	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
+	tpmdd-devel@lists.sourceforge.net, linux-input@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Arnd,
+On Wed, Dec 4, 2013 at 10:14 AM, Konrad Rzeszutek Wilk
+<konrad.wilk@oracle.com> wrote:
+> The user has the option of disabling the platform driver:
+> 00:02.0 Unassigned class [ff80]: XenSource, Inc. Xen Platform Device (rev 01)
+>
+> which is used to unplug the emulated drivers (IDE, Realtek 8169, etc)
+> and allow the PV drivers to take over. If the user wishes
+> to disable that they can set:
+>
+>   xen_platform_pci=0
+>   (in the guest config file)
+>
+> or
+>   xen_emul_unplug=never
+>   (on the Linux command line)
+>
+> except it does not work properly. The PV drivers still try to
+> load and since the Xen platform driver is not run - and it
+> has not initialized the grant tables, most of the PV drivers
+> stumble upon:
+>
+> input: Xen Virtual Keyboard as /devices/virtual/input/input5
+> input: Xen Virtual Pointer as /devices/virtual/input/input6M
+> ------------[ cut here ]------------
+> kernel BUG at /home/konrad/ssd/konrad/linux/drivers/xen/grant-table.c:1206!
+> invalid opcode: 0000 [#1] SMP
+> Modules linked in: xen_kbdfront(+) xenfs xen_privcmd
+> CPU: 6 PID: 1389 Comm: modprobe Not tainted 3.13.0-rc1upstream-00021-ga6c892b-dirty #1
+> Hardware name: Xen HVM domU, BIOS 4.4-unstable 11/26/2013
+> RIP: 0010:[<ffffffff813ddc40>]  [<ffffffff813ddc40>] get_free_entries+0x2e0/0x300
+> Call Trace:
+>  [<ffffffff8150d9a3>] ? evdev_connect+0x1e3/0x240
+>  [<ffffffff813ddd0e>] gnttab_grant_foreign_access+0x2e/0x70
+>  [<ffffffffa0010081>] xenkbd_connect_backend+0x41/0x290 [xen_kbdfront]
+>  [<ffffffffa0010a12>] xenkbd_probe+0x2f2/0x324 [xen_kbdfront]
+>  [<ffffffff813e5757>] xenbus_dev_probe+0x77/0x130
+>  [<ffffffff813e7217>] xenbus_frontend_dev_probe+0x47/0x50
+>  [<ffffffff8145e9a9>] driver_probe_device+0x89/0x230
+>  [<ffffffff8145ebeb>] __driver_attach+0x9b/0xa0
+>  [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
+>  [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
+>  [<ffffffff8145cf1c>] bus_for_each_dev+0x8c/0xb0
+>  [<ffffffff8145e7d9>] driver_attach+0x19/0x20
+>  [<ffffffff8145e260>] bus_add_driver+0x1a0/0x220
+>  [<ffffffff8145f1ff>] driver_register+0x5f/0xf0
+>  [<ffffffff813e55c5>] xenbus_register_driver_common+0x15/0x20
+>  [<ffffffff813e76b3>] xenbus_register_frontend+0x23/0x40
+>  [<ffffffffa0015000>] ? 0xffffffffa0014fff
+>  [<ffffffffa001502b>] xenkbd_init+0x2b/0x1000 [xen_kbdfront]
+>  [<ffffffff81002049>] do_one_initcall+0x49/0x170
+>
+> .. snip..
+>
+> which is hardly nice. This patch fixes this by having each
+> PV driver check for:
+>  - if running in PV, then it is fine to execute (as that is their
+>    native environment).
+>  - if running in HVM, check if user wanted 'xen_emul_unplug=never',
+>    in which case bail out and don't load PV drivers.
+>  - if running in HVM, and if PCI device 5853:0001 (xen_platform_pci)
+>    does not exist, then bail out and not load PV drivers.
+>
+> P.S.
+> Ian Campbell suggested getting rid of 'xen_platform_pci_unplug'
+> but unfortunatly the xen-blkfront driver is using it, so we
+> cannot do it.
+>
+> Reported-by: Sander Eikelenboom <linux@eikelenboom.it
+> Reported-by: Anthony PERARD <anthony.perard@citrix.com>
+> Reported-by: Fabio Fantoni <fabio.fantoni@m2r.biz>
 
-> -----Original Message-----
-> From: Jingoo Han [mailto:jg1.han@samsung.com]
-> Sent: Thursday, December 12, 2013 4:19 AM
-> To: Mohit KUMAR DCG; 'Arnd Bergmann'
-> Cc: linux-arm-kernel@lists.infradead.org; 'Jagan Teki'; linux-
-> pci@vger.kernel.org; spear-devel; Pratyush ANAND; 'Jingoo Han'
-> Subject: Re: [PATCH 06/12] pcie: designware: Move register definition to the
-> header file
-> 
-> On Thursday, December 12, 2013 6:32 AM, Arnd Bergmann wrote:
-> > On Wednesday 11 December 2013, Mohit KUMAR DCG wrote:
-> > > >
-> > > > Seems like none were using these headers except pcie-designware.c
-> > > > - if ie the case better to place it same place as before.
-> > >
-> > > - We have include these and used few like '
-> > > PCIE_LINK_WIDTH_SPEED_CONTROL '  for SPEAr13xx platform, so move
-> these to the separate header  file.
-> >
-> > I think it's better not to touch any of the registers from a
-> > platform-specific driver. Better make a high-level function in the
-> > common code that the spear driver can call to change this register.
-> 
-> I also agree with Arnd's opinion.
+I think you forgot your Signed-off-by line.
 
-- As suggested, I will implement required functions in dw driver and hence no need to move register definitions.
-
-Regards
-Mohit 
+- Matthew
