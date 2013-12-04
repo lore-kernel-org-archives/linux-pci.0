@@ -1,134 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:62210 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754474Ab3LIRig (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 12:38:36 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so6635265iec.41
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 09:38:36 -0800 (PST)
+Received: from mail-ve0-f176.google.com ([209.85.128.176]:39936 "EHLO
+	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752889Ab3LDSb6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 13:31:58 -0500
+Received: by mail-ve0-f176.google.com with SMTP id oz11so12302204veb.21
+        for <linux-pci@vger.kernel.org>; Wed, 04 Dec 2013 10:31:57 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.03.1311201223540.7889@AMR>
-References: <1384968417-31856-1-git-send-email-keith.busch@intel.com>
- <CAErSpo70JVQitPxUGYwRqSH1-2f41VMtDc=RcN3=+u8RPnCHUA@mail.gmail.com>
- <1384975376.2879.377.camel@ul30vt.home> <alpine.LRH.2.03.1311201223540.7889@AMR>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 10:38:15 -0700
-Message-ID: <CAErSpo7P=9gMffa6-i7K6yYK8z_e4XaW3ag9FVTMYRyO5BZAKQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: add function reset callback to pci_driver
-To: Keith Busch <keith.busch@intel.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <201312020908.31316.marex@denx.de>
+References: <1385955575-25270-1-git-send-email-festevam@gmail.com>
+	<1385955575-25270-2-git-send-email-festevam@gmail.com>
+	<201312020908.31316.marex@denx.de>
+Date: Wed, 4 Dec 2013 16:31:57 -0200
+Message-ID: <CAOMZO5B26G0nAqjAsuR4mkRMtfE6jbSQHfa=ZSLGGEbOP-1smQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: imx6: Remove unneeded 'goto err'
+From: Fabio Estevam <festevam@gmail.com>
+To: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 12:39 PM, Keith Busch <keith.busch@intel.com> wrote:
-> On Wed, 20 Nov 2013, Alex Williamson wrote:
->>
->> On Wed, 2013-11-20 at 12:00 -0700, Bjorn Helgaas wrote:
->>>
->>> [+cc Alex]
->>>
->>> On Wed, Nov 20, 2013 at 10:26 AM, Keith Busch <keith.busch@intel.com>
->>> wrote:
->>>>
->>>> A user can issue a pci function level reset to a device using sysfs
->>>> entry /sys/bus/pci/devices/.../reset. A kernel driver handling the
->>>> pci device probably would like to know that such a reset has occured,
->>>> so this patch adds a callback in to pci_driver's pci_error_handler.
->>
->>
->> Seems reasonable to me, but I'd like to see what useful thing you're
->> going to do in the driver when this is triggered too.  Thanks,
->>
->> Alex
+Hi Marek,
+
+On Mon, Dec 2, 2013 at 6:08 AM, Marek Vasut <marex@denx.de> wrote:
+
+> I am a bit worried about unwinding of the installation of the DABT hook:
 >
+> 424         /* Added for PCI abort handling */
+> 425         hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
+> 426                 "imprecise external abort");
 >
-> Sure, a lot of devices require a driver reinitialize it after a function
-> level reset. I specifically develop NVM-Express and the nvme driver
-> currently sees the device as simply unresponsive after a user hits the
-> reset sysfs file, and it doesn't know why its stopped completing commands,
-> so the driver considers them all failed. If this callback is okay, I'd
-> have the nvme driver take a short-cut to reinitialize the controller to
-> a ready state rather than fail everything after long timeouts.
+> This is not handled in the fail path. Instead of this patch, would it be
+> possible for you to fix the failpath to take this part into consideration?
+
+IMHO this would be subject of a separate patch. This one does not
+change any current behavior.
+
 >
->
->>>> Signed-off-by: Keith Busch <keith.busch@intel.com>
->>>> ---
->>>> Assuming this is a good idea, is this the right place to invoke the
->>>> reset callback, or should it be up the call stack closer to the sysfs
->>>> reset entry point? Or somewhere else entirely?
->>>>
->>>>  drivers/pci/pci.c   |    6 ++++++
->>>>  include/linux/pci.h |    3 +++
->>>>  2 files changed, 9 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index b127fbda..5ee6fc0 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>>> @@ -3435,6 +3435,12 @@ static int __pci_dev_reset(struct pci_dev *dev,
->>>> int probe)
->>>>
->>>>         rc = pci_parent_bus_reset(dev, probe);
->>>>  done:
->>>> +       if (rc != -ENOTTY && !probe) {
->>>> +               struct pci_error_handlers *err_handler =
->>>> +                               dev->driver ? dev->driver->err_handler :
->>>> NULL;
->>>> +               if (err_handler && err_handler->function_reset)
->>>> +                       err_handler->function_reset(dev);
->>>> +       }
->>>>         return rc;
->>>>  }
->>>>
->>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>> index 835ec7b..d1f100e 100644
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -605,6 +605,9 @@ struct pci_error_handlers {
->>>>         /* PCI slot has been reset */
->>>>         pci_ers_result_t (*slot_reset)(struct pci_dev *dev);
->>>>
->>>> +       /* PCI function has been reset */
->>>> +       pci_ers_result_t (*function_reset)(struct pci_dev *dev);
+> Another option, and I think even a better one, would be to move this DABT
+> handler installation just before imx6_add_pcie_port() call. You'd still need to
+> handle it's de-installation in remove(), but you won't have so many functions in
+> probe() goto-ing to fail path.
 
-Your intent makes perfect sense.  Surely we should tell the driver
-when we reset its device.
+How do we 'uninstall' this DABT handler installation?
 
-But I wonder whether we really need or want both "slot_reset" and
-"function_reset"?  I know some resets affect more than one device, but
-it looks to me like "slot_reset" is already used to notify the driver
-for each affected function.
+Regards,
 
-It looks to me like "slot_reset" is really a function-oriented
-interface just like most of the rest of PCI.  Maybe you could just use
-it rather than adding a new one?
-
-When you sort this out, please post this patch along with the nvme
-patch to take advantage of it.  That way we can see the whole picture
-and have some hope that the new hook has been tested and does what you
-intend.
-
-Bjorn
-
->>>>         /* Device driver may resume normal operations */
->>>>         void (*resume)(struct pci_dev *dev);
->>>>  };
->>>> --
->>>> 1.7.10.4
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->>
->>
->
+Fabio Estevam
