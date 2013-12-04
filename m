@@ -1,37 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:60558 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760229Ab3LIDJ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 8 Dec 2013 22:09:59 -0500
-Message-ID: <1386558448.5159.10.camel@pasglop>
-Subject: Re: [PATCH] PCI/portdrv: Set master earlier
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jean Delvare <jdelvare@suse.de>,
+Received: from mail-out.m-online.net ([212.18.0.9]:47902 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754619Ab3LDIJ4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 03:09:56 -0500
+From: Marek Vasut <marex@denx.de>
+To: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Date: Wed, 4 Dec 2013 08:52:01 +0100
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	"'Tim Harvey'" <tharvey@gateworks.com>,
+	"'Pratyush Anand'" <pratyush.anand@st.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Takashi Iwai <tiwai@suse.de>
-Date: Mon, 09 Dec 2013 14:07:28 +1100
-In-Reply-To: <CAE9FiQWGWPVO0W5e9qtbMx7PTEKDq8kUPi1RRT8tucMEy7prYw@mail.gmail.com>
-References: <20131009163304.62b439a9@endymion.delvare>
-	 <CAErSpo6ikaTXXvWzX_Z0=mabwD4aedoLoSVjsd+_E5kV9YJpuA@mail.gmail.com>
-	 <CAE9FiQWGWPVO0W5e9qtbMx7PTEKDq8kUPi1RRT8tucMEy7prYw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Frank Li'" <lznuaa@gmail.com>, "'Harro Haan'" <hrhaan@gmail.com>,
+	"'Mohit KUMAR DCG'" <Mohit.KUMAR@st.com>,
+	"'Sascha Hauer'" <s.hauer@pengutronix.de>,
+	"'Sean Cross'" <xobs@kosagi.com>,
+	"'Shawn Guo'" <shawn.guo@linaro.org>,
+	"'Siva Reddy Kallam'" <siva.kallam@samsung.com>,
+	"'Srikanth T Shivanand'" <ts.srikanth@samsung.com>,
+	"'Troy Kisky'" <troy.kisky@boundarydevices.com>,
+	"'Yinghai Lu'" <yinghai@kernel.org>
+References: <1385500248-6551-1-git-send-email-marex@denx.de> <201311281856.10139.marex@denx.de> <0E83723C55F66F43A6041464FE31119D47BDD2@039-SN2MPN1-013.039d.mgd.msft.net>
+In-Reply-To: <0E83723C55F66F43A6041464FE31119D47BDD2@039-SN2MPN1-013.039d.mgd.msft.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201312040852.01269.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2013-12-07 at 19:26 -0800, Yinghai Lu wrote:
-> BenH mentioned that get_port_device_capability have some problem on
-> powerpc and will return null.
+On Wednesday, December 04, 2013 at 06:49:55 AM, Richard Zhu wrote:
+> Hi Marek:
+> 
+> Best Regards
+> Richard Zhu
+> 
+> > -----Original Message-----
+> > From: Marek Vasut [mailto:marex@denx.de]
+> > Sent: Friday, November 29, 2013 1:56 AM
+> > To: Jingoo Han
+> > Cc: 'Tim Harvey'; 'Pratyush Anand'; linux-arm-kernel@lists.infradead.org;
+> > linux-pci@vger.kernel.org; 'Bjorn Helgaas'; 'Frank Li'; 'Harro Haan';
+> > 'Mohit KUMAR DCG'; Zhu Richard-R65037; 'Sascha Hauer'; 'Sean Cross';
+> > 'Shawn Guo'; 'Siva Reddy Kallam'; 'Srikanth T Shivanand'; 'Troy Kisky';
+> > 'Yinghai Lu' Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound
+> > io/mem ATU region mapping
+> > 
+> > Dear Jingoo Han,
+> > 
+> > > On Wednesday, November 27, 2013 5:44 PM, Marek Vasut wrote:
+> > > > Wednesday, November 27, 2013 1:30 PM, Pratyush Anand wrote:
+> > > > > On Wed, Nov 27, 2013 at 05:10:43AM +0800, Marek Vasut wrote:
+> > > > > > From: Tim Harvey <tharvey@gateworks.com>
+> > > > > > 
+> > > > > > The IMX6 iATU is used for address translation between the AXI
+> > > > > > bus address space and PCI address space.  This is used for type0
+> > > > > > and
+> > > > > > type1 config cycles but is not necessary for outbound io/mem
+> > > > > > regions.
+> > > > > > 
+> > > > > > This patch removes the calls that inappropriately re-configures
+> > > > > > the ATU viewport for outbound memory and IO after config cycles
+> > > > > > and removes them altogether as they are not necessary.
+> > > > > 
+> > > > > Yes, they are not necessary for all the cases where translation is
+> > > > > one to one. So so for sure all the platform till now introduced
+> > > > > should work.
+> > > > > But, what about a platform where memory translation is not one to
+> > > > > one?
+> > > > > 
+> > > > > Existing code should work with all sort of memory translation on a
+> > > > > platform having atleast two viewports capable of programming any
+> > > > > type of outbound transaction.
+> > > > 
+> > > > Full ACK, that's why it's called RFC.
+> > > > 
+> > > > > > This resolves issues with PCI devices behind switches and has
+> > > > > > been tested with a Gige device behind a PLX PEX860x switch.
+> > > > > > More testing is needed for other configurations.
+> > > > > 
+> > > > > I do not understand if MX6 has 4 Outbound Viewport then how this
+> > > > > patch helps?
+> > > > > -- PCI devices behind switches would not have been working because
+> > > > > CFG1 transaction would not have been correct.
+> > > > > -- It works with this patch. This patch changes viewport for CFG1
+> > > > > from
+> > > > > 1 to 0.
+> > > > > -- Can it be possible that MX6 has some restriction on viewport
+> > > > > programming capability. I mean,like only viewport0 can be
+> > > > > programmed for CFG0/1?
+> > > > 
+> > > > Tim ?
+> > > > 
+> > > > Here is the MX6 datasheet [1], the section 48.3.9.1.1 and 48.3.9.1.2
+> > > > describe the iATU configuration on MX6. My understanding from this
+> > > > description is that the MX6 has 4 inbound and 4 outbound iATU
+> > > > regions. Am I wrong ?
+> > > 
+> > > The numbers of inbound and outbound are hardware-configurable features.
+> > > Thus, these numbers  can be confirmed by Freescale  hardware engineers.
+> > > How about asking Freescale hardware engineers, if possible?
+> > 
+> > Richard is on the CC. Richard, can you please confirm those?
+> 
+> [Richard] One Pericom PI7C9X2G303EL pcie switch, and two pcie ep
+> deivces(one is intel e1000e nic, the other is one xhci device) are tested
+> on imx6q sabresd board. Without removing outbound io/mem regions view map
+> during the cfg0/1 read/write cycle, both of these devices can't work well
+> at my side. Works well after remove them during the cfg0/1 read/write
+> cycles.
+> Same to Tim's situation about switch implementation.
 
-Well, it has problems on anything that doesn't have ACPI :-)
+Thanks Richard! I am just wondering what kind of conclusion can we draw from 
+this. Let me reiterate what we have:
 
-I don't care what the "right" fix is but we need to makes sure nobody
-does a pci_enable_device() on a bridge and doesn't also enable bus
-master, otherwise the bridge bus master will never be set. This is what
-was happening an breaking us.
+- i.MX6 has 4 inbound and 4 outbound iATU regions, is that correct, Richard?
+- If we program the iATU regions, the i.MX6 PCIe doesn't work with switch.
 
-Ben.
-
-
+Is there some special sause to the iATU on MX6 maybe ?
