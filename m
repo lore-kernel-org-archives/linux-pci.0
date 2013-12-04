@@ -1,248 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26908 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751430Ab3LPUC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Dec 2013 15:02:59 -0500
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
-Cc: bhelgaas@google.com, david.a.cohen@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Fei Yang <fei.yang@intel.com>
-Subject: [PATCH v2 2/4] x86: intel-mid: add Clovertrail platform support
-Date: Mon, 16 Dec 2013 12:07:37 -0800
-Message-Id: <1387224459-25746-3-git-send-email-david.a.cohen@linux.intel.com>
-In-Reply-To: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:61519 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400Ab3LDGU0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 01:20:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4DNqUpA6Cb_tanW3uRJ3J-4utCQwtRz3eYZETCMtniUQ@mail.gmail.com>
+References: <CAD6G_RT0S43BrOeXxJ6d3p1ALbXkGumZCSPBaK1Bz=2pX3hHYQ@mail.gmail.com>
+	<CAErSpo4DNqUpA6Cb_tanW3uRJ3J-4utCQwtRz3eYZETCMtniUQ@mail.gmail.com>
+Date: Wed, 4 Dec 2013 11:50:26 +0530
+Message-ID: <CAD6G_RR=toq_6tCav6Y9=EprK9LC3YfGO=scvWpcGfDpWwJbRA@mail.gmail.com>
+Subject: Re: Need help on Linux PCIe
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Thanks for your quick response.
+Please find my comments below.
 
-This patch adds Clovertrail support on intel-mid and makes it more
-flexible to support other SoCs.
+On Tue, Dec 3, 2013 at 11:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Dec 3, 2013 at 4:24 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
+>> Hi,
+>>
+>> I have few question on Linux PCIe subsystem, I am trying to understand
+>> the PCIe on ARM platform.
+>> 1. Compared to PCI, PCIe have an extra port functionalists/services
+>> which is implemented drivers/pci/pcie/* is it true?
+>
+> Yes.
+>
+>> 2. PCIe root complex is same as Host controller drivers in linux drivers/host/*
+>
+> Yes.
+>
+>> 3. As individual endpoint drivers are registered to pci_core as
+>> pci_driver_register, then what is the common call for registering
+>> individual HC driver to pci-core?
+>
+> The host controller-PCI core interface is not as mature as the
+> pci_register_driver() interface.  The basic interface is
+> pci_scan_root_bus().  If you skim through the drivers in
+> drivers/pci/host/* and drivers/acpi/pci_root.c, the interface to the
+> PCI core will be fairly obvious.  And you'll learn what the existing
+> practices are in case you need to add or modify something.
 
-Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Signed-off-by: Fei Yang <fei.yang@intel.com>
----
- arch/x86/include/asm/intel-mid.h                   | 46 +++++++++++++++++++++-
- arch/x86/platform/intel-mid/intel-mid.c            | 39 ++++++++++++++++--
- arch/x86/platform/intel-mid/intel_mid_weak_decls.h |  7 +++-
- arch/x86/platform/intel-mid/mfld.c                 | 32 +++++++++++++--
- 4 files changed, 113 insertions(+), 11 deletions(-)
+OK.
 
-diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
-index 459769d39263..f8a831431fe0 100644
---- a/arch/x86/include/asm/intel-mid.h
-+++ b/arch/x86/include/asm/intel-mid.h
-@@ -51,10 +51,39 @@ struct devs_id {
- enum intel_mid_cpu_type {
- 	/* 1 was Moorestown */
- 	INTEL_MID_CPU_CHIP_PENWELL = 2,
-+	INTEL_MID_CPU_CHIP_CLOVERVIEW,
- };
- 
- extern enum intel_mid_cpu_type __intel_mid_cpu_chip;
- 
-+/**
-+ * struct intel_mid_ops - Interface between intel-mid & sub archs
-+ * @arch_setup: arch_setup function to re-initialize platform
-+ *             structures (x86_init, x86_platform_init)
-+ *
-+ * This structure can be extended if any new interface is required
-+ * between intel-mid & its sub arch files.
-+ */
-+struct intel_mid_ops {
-+	void (*arch_setup)(void);
-+};
-+
-+/* Helper API's for INTEL_MID_OPS_INIT */
-+#define DECLARE_INTEL_MID_OPS_INIT(cpuname, cpuid)	\
-+				[cpuid] = get_##cpuname##_ops
-+
-+/* Maximum number of CPU ops */
-+#define MAX_CPU_OPS(a) (sizeof(a)/sizeof(void *))
-+
-+/*
-+ * For every new cpu addition, a weak get_<cpuname>_ops() function needs be
-+ * declared in arch/x86/platform/intel_mid/intel_mid_weak_decls.h.
-+ */
-+#define INTEL_MID_OPS_INIT {\
-+	DECLARE_INTEL_MID_OPS_INIT(penwell, INTEL_MID_CPU_CHIP_PENWELL), \
-+	DECLARE_INTEL_MID_OPS_INIT(cloverview, INTEL_MID_CPU_CHIP_CLOVERVIEW), \
-+};
-+
- #ifdef CONFIG_X86_INTEL_MID
- 
- static inline enum intel_mid_cpu_type intel_mid_identify_cpu(void)
-@@ -86,8 +115,21 @@ extern enum intel_mid_timer_options intel_mid_timer_options;
-  * Penwell uses spread spectrum clock, so the freq number is not exactly
-  * the same as reported by MSR based on SDM.
-  */
--#define PENWELL_FSB_FREQ_83SKU         83200
--#define PENWELL_FSB_FREQ_100SKU        99840
-+#define FSB_FREQ_83SKU	83200
-+#define FSB_FREQ_100SKU	99840
-+#define FSB_FREQ_133SKU	133000
-+
-+#define FSB_FREQ_167SKU	167000
-+#define FSB_FREQ_200SKU	200000
-+#define FSB_FREQ_267SKU	267000
-+#define FSB_FREQ_333SKU	333000
-+#define FSB_FREQ_400SKU	400000
-+
-+/* Bus Select SoC Fuse value */
-+#define BSEL_SOC_FUSE_MASK	0x7
-+#define BSEL_SOC_FUSE_001	0x1 /* FSB 133MHz */
-+#define BSEL_SOC_FUSE_101	0x5 /* FSB 100MHz */
-+#define BSEL_SOC_FUSE_111	0x7 /* FSB 83MHz */
- 
- #define SFI_MTMR_MAX_NUM 8
- #define SFI_MRTC_MAX	8
-diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
-index 527d6d50643d..40955841bb32 100644
---- a/arch/x86/platform/intel-mid/intel-mid.c
-+++ b/arch/x86/platform/intel-mid/intel-mid.c
-@@ -60,14 +60,27 @@
- 
- enum intel_mid_timer_options intel_mid_timer_options;
- 
-+/* intel_mid_ops to store sub arch ops */
-+struct intel_mid_ops *intel_mid_ops;
-+/* getter function for sub arch ops*/
-+static void *(*get_intel_mid_ops[])(void) = INTEL_MID_OPS_INIT;
- enum intel_mid_cpu_type __intel_mid_cpu_chip;
- EXPORT_SYMBOL_GPL(__intel_mid_cpu_chip);
- 
-+static void intel_mid_power_off(void)
-+{
-+};
-+
- static void intel_mid_reboot(void)
- {
- 	intel_scu_ipc_simple_command(IPCMSG_COLD_BOOT, 0);
- }
- 
-+static unsigned long __init intel_mid_calibrate_tsc(void)
-+{
-+	return 0;
-+}
-+
- static void __init intel_mid_time_init(void)
- {
- 	sfi_table_parse(SFI_SIG_MTMR, NULL, NULL, sfi_parse_mtmr);
-@@ -92,13 +105,33 @@ static void __init intel_mid_time_init(void)
- 
- static void intel_mid_arch_setup(void)
- {
--	if (boot_cpu_data.x86 == 6 && boot_cpu_data.x86_model == 0x27)
--		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_PENWELL;
--	else {
-+	if (boot_cpu_data.x86 != 6) {
- 		pr_err("Unknown Intel MID CPU (%d:%d), default to Penwell\n",
- 			boot_cpu_data.x86, boot_cpu_data.x86_model);
- 		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_PENWELL;
-+		goto out;
-+	}
-+
-+	switch (boot_cpu_data.x86_model) {
-+	case 0x35:
-+		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_CLOVERVIEW;
-+		break;
-+	case 0x27:
-+	default:
-+		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_PENWELL;
-+		break;
- 	}
-+
-+	if (__intel_mid_cpu_chip < MAX_CPU_OPS(get_intel_mid_ops))
-+		intel_mid_ops = get_intel_mid_ops[__intel_mid_cpu_chip]();
-+	else {
-+		intel_mid_ops = get_intel_mid_ops[INTEL_MID_CPU_CHIP_PENWELL]();
-+		pr_info("ARCH: Uknown SoC, assuming PENWELL!\n");
-+	}
-+
-+out:
-+	if (intel_mid_ops->arch_setup)
-+		intel_mid_ops->arch_setup();
- }
- 
- /* MID systems don't have i8042 controller */
-diff --git a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
-index 519beb75ba4c..9ebce0447edf 100644
---- a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
-+++ b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
-@@ -11,5 +11,8 @@
- 
- 
- /* __attribute__((weak)) makes these declarations overridable */
--extern void intel_mid_power_off(void) __attribute__((weak));
--extern unsigned long __init intel_mid_calibrate_tsc(void) __attribute__((weak));
-+/* For every CPU addition a new get_<cpuname>_ops interface needs
-+ * to be added.
-+ */
-+extern void * __cpuinit get_penwell_ops(void) __attribute__((weak));
-+extern void * __cpuinit get_cloverview_ops(void) __attribute__((weak));
-diff --git a/arch/x86/platform/intel-mid/mfld.c b/arch/x86/platform/intel-mid/mfld.c
-index c7ff83c4576d..4f7884eebc14 100644
---- a/arch/x86/platform/intel-mid/mfld.c
-+++ b/arch/x86/platform/intel-mid/mfld.c
-@@ -15,11 +15,19 @@
- #include <asm/intel-mid.h>
- #include <asm/intel_mid_vrtc.h>
- 
--void intel_mid_power_off(void)
-+#include "intel_mid_weak_decls.h"
-+
-+static void penwell_arch_setup(void);
-+/* penwell arch ops */
-+static struct intel_mid_ops penwell_ops = {
-+	.arch_setup = penwell_arch_setup,
-+};
-+
-+static void mfld_power_off(void)
- {
- }
- 
--unsigned long __init intel_mid_calibrate_tsc(void)
-+static unsigned long __init mfld_calibrate_tsc(void)
- {
- 	unsigned long fast_calibrate;
- 	u32 lo, hi, ratio, fsb;
-@@ -35,9 +43,9 @@ unsigned long __init intel_mid_calibrate_tsc(void)
- 	}
- 	rdmsr(MSR_FSB_FREQ, lo, hi);
- 	if ((lo & 0x7) == 0x7)
--		fsb = PENWELL_FSB_FREQ_83SKU;
-+		fsb = FSB_FREQ_83SKU;
- 	else
--		fsb = PENWELL_FSB_FREQ_100SKU;
-+		fsb = FSB_FREQ_100SKU;
- 	fast_calibrate = ratio * fsb;
- 	pr_debug("read penwell tsc %lu khz\n", fast_calibrate);
- 	lapic_timer_frequency = fsb * 1000 / HZ;
-@@ -49,3 +57,19 @@ unsigned long __init intel_mid_calibrate_tsc(void)
- 
- 	return 0;
- }
-+
-+static void __init penwell_arch_setup()
-+{
-+	x86_platform.calibrate_tsc = mfld_calibrate_tsc;
-+	pm_power_off = mfld_power_off;
-+}
-+
-+void * __cpuinit get_penwell_ops()
-+{
-+	return &penwell_ops;
-+}
-+
-+void * __cpuinit get_cloverview_ops()
-+{
-+	return &penwell_ops;
-+}
+I understand the flow as below - please correct if am wrong.
+
+>From low level (hw) - HC driver has a platform registration using
+platform_driver_register() to lower layer
+and then pci_scan_root_bus() --> pci_common_init_dev() registration to
+upper layer as PCI - BIOS and then ends.
+
+>From upper level (app) - each endpoint driver has
+pci_driver_register() call to PCI Core for lower level and then the
+upper
+level registration is based on endpoint().
+
+What is the connection here for PCI-BIOS and PCI-Core here, does these
+are two different entities means there is no common call for these?
+I see for ARM - "arch/arm/kernel/bios32.c" is PCI-BIOS is it correct?
+does we have separate BIOS codes for architectures?
+
 -- 
-1.8.4.2
-
+Thanks,
+Jagan.
+--------
+Jagannadha Sutradharudu Teki,
+E: jagannadh.teki@gmail.com, P: +91-9676773388
+Engineer - System Software Hacker
+U-boot - SPI Custodian and Zynq APSOC
+Ln: http://www.linkedin.com/in/jaganteki
