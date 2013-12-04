@@ -1,44 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:59889 "EHLO
-	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751832Ab3LTDsT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 22:48:19 -0500
-Date: Fri, 20 Dec 2013 09:17:33 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: 'Jagan Teki' <jagannadh.teki@gmail.com>,
-	'Marek Vasut' <marex@denx.de>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
-	spear-devel <spear-devel@list.st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 08/12] pcie: designware: Fix IO transfers
-Message-ID: <20131220034733.GA2291@pratyush-vbox>
-References: <cover.1386752447.git.mohit.kumar@st.com>
- <6b4282b9e793ec89ba0c20f3362d41f6133a8132.1386752447.git.mohit.kumar@st.com>
- <201312111103.28568.marex@denx.de>
- <CAD6G_RSBhHoXMdw=pK_riXN6ozUtK32uUeAJH5uuox_PQxmi7g@mail.gmail.com>
- <002401cef6d7$e6d89c00$b489d400$%han@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <002401cef6d7$e6d89c00$b489d400$%han@samsung.com>
+Received: from vps0.lunn.ch ([178.209.37.122]:56849 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932729Ab3LDRbL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Dec 2013 12:31:11 -0500
+From: Andrew Lunn <andrew@lunn.ch>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	bhelgaas@google.com
+Cc: Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	Andrew Lunn <andrew@lunn.ch>
+Subject: [PATCH] PCI: MVEBU: Remove duplicate clock get
+Date: Wed,  4 Dec 2013 18:30:41 +0100
+Message-Id: <1386178241-10453-1-git-send-email-andrew@lunn.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Probably due to a merge conflict resolution gone bad, the pci clock is
+got twice. Remove the second redundent of_clk_get_by_name().
 
-On Thu, Dec 12, 2013 at 09:17:19AM +0800, Jingoo Han wrote:
-> On Wednesday, December 11, 2013 8:30 PM, Jagan Teki wrote:
-> > On Wed, Dec 11, 2013 at 3:33 PM, Marek Vasut <marex@denx.de> wrote:
-> > > On Wednesday, December 11, 2013 at 10:38:33 AM, Mohit Kumar wrote:
-> > >> From: Pratyush Anand <pratyush.anand@st.com>
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+---
+ drivers/pci/host/pci-mvebu.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-May be you can apply this patch along with 07/12 of this series.
-V2 of other patches might get delayed because of vacations.
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index c269e430c760..96352be58cc9 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -949,14 +949,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 
+ 		mvebu_pcie_set_local_dev_nr(port, 1);
+ 
+-		port->clk = of_clk_get_by_name(child, NULL);
+-		if (IS_ERR(port->clk)) {
+-			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
+-			       port->port, port->lane);
+-			iounmap(port->base);
+-			continue;
+-		}
+-
+ 		port->dn = child;
+ 		spin_lock_init(&port->conf_lock);
+ 		mvebu_sw_pci_bridge_init(port);
+-- 
+1.8.5
 
-Regards
-Pratyush
