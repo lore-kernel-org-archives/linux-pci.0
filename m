@@ -1,47 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:35516 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787Ab3LJFyD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 00:54:03 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MXK00F1VTQ02R50@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Tue, 10 Dec 2013 14:54:01 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Fabio Estevam' <festevam@gmail.com>
-Cc: 'Marek Vasut' <marex@denx.de>, linux-pci@vger.kernel.org,
-	'Fabio Estevam' <fabio.estevam@freescale.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1385955575-25270-1-git-send-email-festevam@gmail.com>
- <1385955575-25270-2-git-send-email-festevam@gmail.com>
- <20131209223824.GD2135@google.com>
-In-reply-to: <20131209223824.GD2135@google.com>
-Subject: Re: [PATCH 2/2] PCI: imx6: Remove unneeded 'goto err'
-Date: Tue, 10 Dec 2013 14:54:00 +0900
-Message-id: <000301cef56c$38fd71d0$aaf85570$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:45490 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932404Ab3LDQdj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 11:33:39 -0500
+Received: by mail-lb0-f172.google.com with SMTP id z5so9606472lbh.3
+        for <linux-pci@vger.kernel.org>; Wed, 04 Dec 2013 08:33:38 -0800 (PST)
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+To: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] pci: pci-rcar-gen2: Add runtime PM support
+Date: Wed,  4 Dec 2013 20:33:35 +0400
+Message-Id: <1386174815-4647-1-git-send-email-valentine.barshak@cogentembedded.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 10, 2013 7:38 AM, Bjorn Helgaas wrote:
-> On Mon, Dec 02, 2013 at 01:39:35AM -0200, Fabio Estevam wrote:
-> > From: Fabio Estevam <fabio.estevam@freescale.com>
-> >
-> > There is no need to use 'goto err' as we can directly return the errors.
-> >
-> > Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> Since there's no functional change, I also applied this one to
-> pci/host-imx6 for v3.14.  I agree that leaving the DABT handler installed
-> is a bug and should be fixed by another patch.
+If runtime PM is enabled in the kernel config, the PCI clocks
+are not forced on at start-up, and thus, are never enabled.
+Use pm_runtime_get_sync to enable the clocks.
 
-I also agree with Bjorn's opinion. :-)
-Fixing the DABT handler problem can be sent as another patch.
+While at it, use dev_info instead of pr_info since now we have
+the device pointer available in the PCI setup callback.
 
-Best regards,
-Jingoo Han
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+---
+ drivers/pci/host/pci-rcar-gen2.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index cbaa5c4..f74228f 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -17,6 +17,7 @@
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
+ /* AHB-PCI Bridge PCI communication registers */
+@@ -77,6 +78,7 @@
+ #define RCAR_PCI_NR_CONTROLLERS		3
+ 
+ struct rcar_pci_priv {
++	struct device *dev;
+ 	void __iomem *reg;
+ 	struct resource io_res;
+ 	struct resource mem_res;
+@@ -169,8 +171,11 @@ static int __init rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ 	void __iomem *reg = priv->reg;
+ 	u32 val;
+ 
++	pm_runtime_enable(priv->dev);
++	pm_runtime_get_sync(priv->dev);
++
+ 	val = ioread32(reg + RCAR_PCI_UNIT_REV_REG);
+-	pr_info("PCI: bus%u revision %x\n", sys->busnr, val);
++	dev_info(priv->dev, "PCI: bus%u revision %x\n", sys->busnr, val);
+ 
+ 	/* Disable Direct Power Down State and assert reset */
+ 	val = ioread32(reg + RCAR_USBCTR_REG) & ~RCAR_USBCTR_DIRPD;
+@@ -301,6 +306,7 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
+ 
+ 	priv->irq = platform_get_irq(pdev, 0);
+ 	priv->reg = reg;
++	priv->dev = &pdev->dev;
+ 
+ 	return rcar_pci_add_controller(priv);
+ }
+-- 
+1.8.3.1
 
