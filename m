@@ -1,82 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:46373 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983Ab3LJVoB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 16:44:01 -0500
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:40404 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505Ab3LDCT3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 21:19:29 -0500
 MIME-Version: 1.0
-In-Reply-To: <0a097fcaf4624bc997fc113baae9b3d1@CO1PR05MB523.namprd05.prod.outlook.com>
-References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
-	<aaaa948b964642859fa142779846211f@DM2PR05MB671.namprd05.prod.outlook.com>
-	<CABawtvPMSGc+7HqqtE9NXxCo11Vp-Yu+feF6UqS18k+jwPxoVw@mail.gmail.com>
-	<c2a37fdd0e654fa3adccb0bcc38adb09@DM2PR05MB671.namprd05.prod.outlook.com>
-	<CAE9FiQU7gM3gQkhWMXCTrJUqL137TW2TBL_gW=N2s3cbHr+5EA@mail.gmail.com>
-	<8833f61075af4c97895aadc42c3f7335@DM2PR05MB671.namprd05.prod.outlook.com>
-	<CAE9FiQXCpqFjCQhWCmK=pJGoef4nBRZtxJuufPSoG9OLjoKLNg@mail.gmail.com>
-	<0a097fcaf4624bc997fc113baae9b3d1@CO1PR05MB523.namprd05.prod.outlook.com>
-Date: Tue, 10 Dec 2013 13:44:00 -0800
-Message-ID: <CAE9FiQXTumAr_0jVFnZXuEQF2PvVn2JgK73u-LO=zPnRdVJg7w@mail.gmail.com>
-Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
+In-Reply-To: <2691826.V0kc3nrim3@vostro.rjw.lan>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
+	<1385851238-21085-5-git-send-email-yinghai@kernel.org>
+	<2691826.V0kc3nrim3@vostro.rjw.lan>
+Date: Tue, 3 Dec 2013 18:19:28 -0800
+Message-ID: <CAE9FiQUURT40gXGFhPxqHvWTxVdWbm=70uh14U=dp=FgTOGt-g@mail.gmail.com>
+Subject: Re: [PATCH v3 04/12] PCI: Destroy pci dev only once
 From: Yinghai Lu <yinghai@kernel.org>
-To: Guenter Roeck <groeck@juniper.net>
-Cc: Rajat Jain <rajatjain@juniper.net>,
-	Ethan Zhao <ethan.kernel@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 4:34 PM, Guenter Roeck <groeck@juniper.net> wrote:
->> > Actually there are situations where the presence detect signal does
->> not make much sense, because the card is not really plugged out
->> physically. For e.g. how do we deal with PCIe end points that may be on
->> the board itself, but say come out of reset after the bootup? Or go
->> down during a firmware upgrade and again come back up after the
->> upgrade?
->> >
->>
->> That is driver's job.
->> mpt2sas driver does diag_reset.
->>
-> Possibly, but quite frankly, after looking into that code, it seems quite dirty
-> to me. Of course, that is my personal opinion only. It may suggest, however,
-> assuming that the mpt2sas driver's resent handler causes a link down/link up
-> sequence of events, that there is a valid case for the boot option.
-> I don't entirely understand, though, how that driver manages to reset its
-> PCIe interface without the need to re-initialize it, but maybe I am just
-> missing something.
+On Sat, Nov 30, 2013 at 5:05 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Saturday, November 30, 2013 02:40:30 PM Yinghai Lu wrote:
 >
-> There are a number of other problems with the in-driver approach.
-> For example, it would require the driver to re-program the chip's PCIe
-> configuration space, as it will be 'vanilla' after the reset. Not even
-> sure how this can work, since that includes the chip BAR registers
-> and various other configuration registers which are normally set by the
-> PCIe subsystem. I'd rather handle this through the PCIe subsystem
-> instead of kludging around the problem in the driver.
+> And this is not enough as I said, can you please stop ignoring me openly?
 >
-> Another problem is resulting boot delays. If link up/down is handled through
-> the PCIe subsystem, we can have the driver return -EPROBE_DEFER in the initial
-> probe, and everything just works automatically like magic. Waiting in probe
-> for the chip to re-initialize itself would add substantial delay to the boot
-> sequence. With several such chips in the system that can add up to a lot.
->
-> Even if we manage to implement all this, we still didn't solve our other
-> problems, which include chips which are activated after initial PCIe scan,
-> chips which (unfortunately) tend to hang up themselves without notice,
-> and real OIR devices which don't implement "correct" PCIe OIR handling.
->
-> Rajat's patch solves all those problems, and in my opinion it does so
-> quite elegantly.
+> You've already commented the last patch I posted, so why don't we finish
+> that discussion first?
 
-According to your description, i think you can do them with scripts in user
-land and your driver.
-Your driver should have provide interface to load fw.
-Have a scripts and load fw, and from /sys stop and remove related pci devices.
-then rescan corresponding bridge later.
+No, i did not mean that.
 
-In that case, you don't even to add dummy pcie slot cap...to get pciehp loaded.
+I resent the whole patchset as I added pci_clip_resource() and that
+will need to revise several critial patches, and Bjorn does not like
+to have patches to be attached format.
+
+Also in the patcheset head mail, i did state that you have another
+solution using
+lock.
+
+And your patch is quite big, please give me some time to digest it.
+
+Thanks
 
 Yinghai
