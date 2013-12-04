@@ -1,70 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:63975 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754862Ab3LHDTo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 22:19:44 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <529EC0FC.1010400@jp.fujitsu.com>
+Date: Wed, 4 Dec 2013 14:43:24 +0900
+From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
-References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
-Date: Sat, 7 Dec 2013 19:19:43 -0800
-Message-ID: <CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
-Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
+Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out
+ of the core
+References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <1554480.uCR6qUxJk9@vostro.rjw.lan> <529D4600.6040601@jp.fujitsu.com> <81535269.SKoBMiGyoU@vostro.rjw.lan>
+In-Reply-To: <81535269.SKoBMiGyoU@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 7, 2013 at 10:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+(2013/12/03 22:15), Rafael J. Wysocki wrote:
+> On Tuesday, December 03, 2013 11:46:24 AM Yasuaki Ishimatsu wrote:
+>> (2013/11/29 22:08), Rafael J. Wysocki wrote:
+>>> On Friday, November 29, 2013 11:36:55 AM Yasuaki Ishimatsu wrote:
+>>>> Hi Rafael,
+>>>
+>>> Hi,
+>>>
+>>>> Replying to this mail may be wrong.
+>>>
+>>> OK, so this particular patch doesn't break things any more?
+>>
+>> Yes.
+>>
+>>>
+>>>> Do you remember following your patch?
+>>>> http://lkml.org/lkml/2013/2/23/97
+>>>>
+>>>> I want to add autoeject variable in acpi_hotplug_profile structure and
+>>>> set autoecjet of container device "false".
+>>>
+>>> Then after the series the $subject patch belongs to it will work almost the
+>>> same way as /sys/firmware/acpi/container/enabled (hot add will still work after
+>>> patch [4/10] if "enabled" is 0), but only for containers.
+>>>
+>>>> Currently, I have a problem on ejecting container device. Since linux-3.12,
+>>>> container device is removed by acpi_scan_hot_remove.
+>>>>
+>>>> I think this has two problems.
+>>>>
+>>>>      1. easily fail
+>>>>         My container device has CPU device and Memory device, and maximum size of
+>>>>         memory is 3Tbyte. In my environment, hot removing container device fails
+>>>>         on offlining memory if memory is used by application.
+>>>>         I think if offlininig memory, we must retly to offline memory several
+>>>>         times.
+>>>
+>>> Yes, that's correct.  But then you can try to offline the memory upfront
+>>> and only remove the container after that has been successful.
+>>>
+>>>>      2. cannot work with userland's application
+>>>>         Hot removing CPU and memory on container device, we need take care of
+>>>>         userland application. Before linux-3.12, container device just notifies
+>>>>         KOBJ_OFFLINE to udev. So by using udev, if application binds to removed
+>>>>         CPU or node, applications can change them before hot removing container
+>>>>         device.
+>>>>         Currently, KOBJ_OFFLINE is notified to udev. But acpi_scan_hot_remove
+>>>>         also runs simultaneously for hot removing container device. So when
+>>>>         applications runs for corresponding to the deletion of the devices,
+>>>>         the devices may have been deleted.
+>>>
+>>
+>>> So the expectation is that the container will refuse to offline, but instead
+>>> it will emit KOBJ_OFFLINE so that user space can do some cleanup and offline
+>>> it through the "eject" attribute, right?
+>>
+>> Yes, that's right.
+>>
+>>>
+>>>> I don't know what devices are on hotpluggable conatainer device of other
+>>>> vendors. At least, my container device cannot be hot removed correctly.
+>>>> Then I want to add autoeject variable in acpi_hotplug_profile so that user
+>>>> can change the parameter to "true" or "false".
+>>>
+>>> I have a different idea.
+>>>
+>>> Why don't we create a bus type for containers in analogy with CPUs and memory
+>>> and make it support offline.  Then, the container scan handler will create a
+>>> "physical" container device under that bus type and the new bus type code will
+>>> implement the logic you need (that is, it will have a sysfs flag that will
+>>> cause the offline to fail emitting a uevent of some sort if set and will allow
+>>> the offline to happen when unset).  That "physical" container device will go
+>>> away (again, via the container scan handler) during container removal.
+>>>
+>>
+>>> The eject work flow can be:
+>>>     (1) an eject event occurs,
+>>>     (2) the container "physical" device fails offline in acpi_scan_hot_remove()
+>>>         emmitting, say, KOBJ_CHANGE for the "physical" device,
+>>>     (3) user space notices the KOBJ_CHANGE and does the cleanup as needed,
+>>>     (4) user space changes the "physical" container device flag controlling
+>>>         offline to 0,
+>>>     (5) user space uses the sysfs "eject" attribute of the ACPI container object
+>>>         to finally eject the container,
+>>>     (6) the offline in acpi_scan_hot_remove() is now successful, because the
+>>>         flag controlling it has been set to 0 in step (4),
+>>>     (7) the "physical" container device goes away before executing _EJ0,
+>>>     (8) the container is ejected.
+>>>
+>>> Of course, if the flag controlling container offline is 0 to start with, step
+>>> (6) will now occur directly after (1), so whoever wants containers to be
+>>> hot-removed automatically may just clear that flag for all of them on boot.
+>>>
+>>> How does that sound?
+>>
+>>
+>> The above ideas are almost O.K. I want kernel to notify user space of KOBJ_OFFLINE.
+>> Even if user space catches "KOBJ_CHANGE", user doesn't know whether the notification
+>> is offline or not.
 >
-> This doesn't sound like a chipset bug.  It sounds like exactly what
-> the spec describes: "Presence Detect State – This bit indicates the
-> presence of an adapter in the slot, reflected by the logical “OR” of
-> the Physical Layer in-band presence detect mechanism and, if present,
-> any out-of-band presence detect mechanism defined for the slot’s
-> corresponding form factor" (PCIe 3.0, sec 7.8.11).
 
-Not sure. the silicon does not report in-band correctly if we turn off
-pcie link before turn the power of card.
+> It is easy to figure out, though.  Since the KOBJ_CHANGE will be emitted for
+> container devices only in that situation, user space can see that (1) it is
+> from a container and (2) it is KOBJ_CHANGE, so it must mean "container offline
+> has been attempted".
+>
+> My concern with using KOBJ_OFFLINE for that is that device_offline() emits it
+> too on success and it may be easily confused with the one emitted on failure
+> for containers.
 
-case 1:
-a. disable pci link
-b. turn off power of pci cards
-c. Present bit: card present.
-d. remove the card.
-e. Present bit: card is present.
+I have no objection.
 
-case 2:
-a. turn off power of pci cards
-b. disable pci link
-c. Present bit: card present.
-d. remove the card.
-e. Present bit: card is NOT present.
-
-case 3:
-a. disable pci link
-b. turn off power of pci cards
-c. Present bit: card present.
-d. turn on pcie link
-e. wait 20ms
-f. turn off pcie link
-g. remove the card.
-h. Present bit: card is NOT present.
+Thanks,
+Yasuaki Ishimatsu
 
 >
-> So I want to fix this pciehp problem, but between 2debd9289997 and
-> this patch, pciehp_power_off_slot() is accumulating warts that make it
-> look like we're just reacting to things that break rather than making
-> a robust design to start with.
+> Thanks,
+> Rafael
+>
 
-We have 2debd9289997 (turn off link before turn off power) to avoid
-some AER ....
 
-with this patch we still keep that and link off
-also have presence detect work correctly.
-
-Yinghai
