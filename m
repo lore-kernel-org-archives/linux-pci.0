@@ -1,100 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe005.messaging.microsoft.com ([216.32.180.188]:45446
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751963Ab3LRDVF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 22:21:05 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yhlu.kernel@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>
-Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
- during removal
-Date: Wed, 18 Dec 2013 03:20:58 +0000
-Message-ID: <41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
-In-Reply-To: <20131218010207.GC15119@google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:40212 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753994Ab3LDPLZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 10:11:25 -0500
+Received: by mail-ie0-f176.google.com with SMTP id at1so26265113iec.21
+        for <linux-pci@vger.kernel.org>; Wed, 04 Dec 2013 07:11:25 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAD6G_RR=toq_6tCav6Y9=EprK9LC3YfGO=scvWpcGfDpWwJbRA@mail.gmail.com>
+References: <CAD6G_RT0S43BrOeXxJ6d3p1ALbXkGumZCSPBaK1Bz=2pX3hHYQ@mail.gmail.com>
+ <CAErSpo4DNqUpA6Cb_tanW3uRJ3J-4utCQwtRz3eYZETCMtniUQ@mail.gmail.com> <CAD6G_RR=toq_6tCav6Y9=EprK9LC3YfGO=scvWpcGfDpWwJbRA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 4 Dec 2013 08:11:04 -0700
+Message-ID: <CAErSpo57gPPY73nCHbfGVynZRde0jj9_kjpR=FKwY-uTXzY2cw@mail.gmail.com>
+Subject: Re: Need help on Linux PCIe
+To: Jagan Teki <jagannadh.teki@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
-bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IA0KPiBbK2NjIHlpbmdoYWlAa2VybmVsLm9y
-ZyAoc2VlbXMgdG8gYmUgWWluZ2hhaSdzIHByZWZlcnJlZCBlbWFpbF0NCj4gDQo+IE9uIFR1ZSwg
-RGVjIDE3LCAyMDEzIGF0IDEyOjA2OjA1UE0gLTA4MDAsIFJhamF0IEphaW4gd3JvdGU6DQo+ID4g
-V2UgbmVlZCBmdXR1cmUgbGluayB1cCBldmVudHMgZm9yIGhvdC1hZGQsIHRodXMgZG9uJ3QgZGlz
-YWJsZSB0aGUgbGluaw0KPiA+IHBlcm1hbmVudGx5IGR1cmluZyBkZXZpY2UgcmVtb3ZhbC4gQWxz
-bywgcmVtb3ZlIHRoZSBzdGF0aWMgZnVuY3Rpb25zDQo+ID4gdGhhdCBhcmUgbm93IGxlZnQgdW51
-c2VkLg0KPiANCj4gVGhlIGNoYW5nZWxvZyBzaG91bGQgbWVudGlvbiB0aGF0IHRoaXMgcmV2ZXJ0
-cyBwYXJ0IG9mIDJkZWJkOTI4OTk5Nw0KPiAoIlBDSToNCj4gcGNpZWhwOiBEaXNhYmxlL2VuYWJs
-ZSBsaW5rIGR1cmluZyBzbG90IHBvd2VyIG9mZi9vbiIpLg0KDQpTdXJlLCBJJ2xsIGFkZCB0aGF0
-LiANCg0KPiANCj4gWWluZ2hhaSwgY2FuIHlvdSB0ZWxsIHVzIHdoZXRoZXIgdGhpcyBpcyBhbiBp
-c3N1ZSBvbiB5b3VyIHN5c3RlbXM/DQo+DQoNClRoYW5rcyBpbiBhZHZhbmNlIFlpbmdoYWkuIA0K
-DQpBY3R1YWxseSBJIGRpZCBub3QgdW5kZXJzdGFuZCB0aGUgb3JpZ2luYWwgcHJvYmxlbSBhbmQg
-dGhlIHNvbHV0aW9uIGluIHRoZSBmaXJzdA0KcGxhY2UgKHNvIEkgYWxzbyBkbyBub3QgdW5kZXJz
-dGFuZCBob3cgbWlnaHQgZGlzYWJsaW5nIG9mIHByZXNlbmNlIGRldGVjdCBub3RpZmljYXRpb24N
-CmhlbHApLiBJZiB5b3UgY2FuIGdpdmUgbW9yZSBkZXRhaWxzIG9uIHRoZSBvcmlnaW5hbCBwcm9i
-bGVtIHRoYXQgc2hhbGwgYmUgZ3JlYXQuIEhlcmUNCmlzIHdoYXQgSSB1bmRlcnN0b29kIGZyb20g
-dGhlIGNvbW1pdCBsb2c6DQoNClRoZSBiZWxpZXZlIHRoZSBIVyBsb29rcyBsaWtlIHRoaXM6DQoN
-ClBDSWUgcG9ydCA8LS0tLT4gUmVwZWF0ZXIgPC0tLS0+IERldmljZS4NCg0KQW4gaW4gYWRkaXRp
-b24gdGhlcmUgaXMgdGhlIHByZXNlbmNlIGRldGVjdCBwaW4gdGhhdCBpcyBjb25uZWN0ZWQgZGly
-ZWN0bHkgZnJvbQ0KVGhlIHBvcnQgdG8gdGhlIGRldmljZS4gTm93LCB3aGVuIHRoZSBkZXZpY2Ug
-aXMgcGx1Z2dlZCBvdXQsIHRoZSBwaW4gaW5kaWNhdGVzDQpObyBwcmVzZW5jZS4gQnV0IGFyZSB5
-b3Ugc2F5aW5nIHRoZSBQQ0llIGxpbmsgZnJvbSBwb3J0IHRvIHJlcGVhdGVyIGlzIHN0aWxsIHVw
-Pw0KDQpQYXJ0IG9mIGxvZzoNCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0K
-ICAgIC4uLg0KICAgIEl0IHR1cm5zIG91dCB0aGUgcm9vdCBjb21wbGV4IGlzIGNvbnRpbnVhbGx5
-IHRyeWluZyB0byB0cmFpbiB0aGUgbGluayB0bw0KICAgIHRoZSByZXBlYXRlciBiZWNhdXNlIHRo
-ZSByZXBlYXRlciBoYXMgbm90IGJlZW4gcmVzZXQuDQoNCiAgICBUaGlzIHBhdGNoIHdpbGwgZGlz
-YWJsZSB0aGUgbGluayBhdCByZW1vdmFsIHRpbWUgdG8gYWxsb3cgdGhlIHJlcGVhdGVyDQogICAg
-dG8gYmUgcmVzZXQgcHJvcGVybHkuDQogICAgLi4uDQo9PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT0NCg0KMSkgSSBkaWQgbm90IHVuZGVyc3RhbmQgd2h5IHdvdWxkIHBvcnQgdHJ5
-IHRvIHJldHJhaW4gdG8gdGhlIGxpbmsgaW4gZWl0aGVyIGNhc2VzIC0NCldoZXRoZXIgdGhlIGxp
-bmsgdG8gdGhlIHJlcGVhdGVyIGlzIHVwIG9yIG5vdD8NCg0KMikgV2hlbiBubyBsaW5rIGlzIHNl
-ZW4sIGlzIFRIQVQgd2hhdCBjYXVzZXMgcmVwZWF0ZXIgdG8gZ28gZG93biBhbmQgaGVuY2Ugc29s
-dmUgdGhlDQpQcm9ibGVtPw0KDQozKSBJJ2QgZXhwZWN0IHlvdSdkIGNvbnRpbnVvdXNseSBnZXQg
-ImFkYXB0ZXIgbm90IHByZXNlbnQiIG1lc3NhZ2VzIGlmIHNvbWUgaG93DQpUaGUgZHJpdmVyIHdh
-cyB0cnlpbmcgdG8gYWRkIHRoZSBkZXZpY2UuIEJ1dCBJIGRpZCBub3QgdW5kZXJzdGFuZCB3aGVy
-ZSBkaWQNCiJhZGFwdGVyIHByZXNlbnQiIG1lc3NhZ2VzIGNhbWUgZnJvbT8NCg0KU29ycnksIGJ1
-dCBJIGd1ZXNzIEkgYW0gdG90YWxseSBjb25mdXNlZCBub3cuIEknbGwgcHJvYmFibHkgZ28gdG8g
-c2xlZXAgOi0pIA0KDQpKdXN0IHRyeWluZyB0byB1bmRlcnN0YW5kLg0KDQpUaGFua3MsDQoNClJh
-amF0DQoNCj4gPiBTaWduZWQtb2ZmLWJ5OiBSYWphdCBKYWluIDxyYWphdGphaW5AanVuaXBlci5u
-ZXQ+DQo+ID4gU2lnbmVkLW9mZi1ieTogR3VlbnRlciBSb2VjayA8Z3JvZWNrQGp1bmlwZXIubmV0
-Pg0KPiA+IC0tLQ0KPiA+IHYzOiBubyBjaGFuZ2UsIGNyZWF0ZWQgYnkgc3BsaXR0aW5nIHRoZSBw
-YXRjaCB2MiBbMi80XQ0KPiA+IHYyOiAobm9uIGV4aXN0ZW50KQ0KPiA+IHYxOiAobm9uIGV4aXN0
-ZW50KQ0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jIHwgICAxOCAt
-LS0tLS0tLS0tLS0tLS0tLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDE4IGRlbGV0aW9ucygtKQ0K
-PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jDQo+
-ID4gYi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiA+IGluZGV4IGI0NWI1Njgu
-LmFiMTI1NTUgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBj
-LmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiA+IEBAIC0y
-NzgsMTEgKzI3OCw2IEBAIHN0YXRpYyB2b2lkIHBjaWVfd2FpdF9saW5rX2FjdGl2ZShzdHJ1Y3QN
-Cj4gY29udHJvbGxlciAqY3RybCkNCj4gPiAgCV9fcGNpZV93YWl0X2xpbmtfYWN0aXZlKGN0cmws
-IHRydWUpOyAgfQ0KPiA+DQo+ID4gLXN0YXRpYyB2b2lkIHBjaWVfd2FpdF9saW5rX25vdF9hY3Rp
-dmUoc3RydWN0IGNvbnRyb2xsZXIgKmN0cmwpIC17DQo+ID4gLQlfX3BjaWVfd2FpdF9saW5rX2Fj
-dGl2ZShjdHJsLCBmYWxzZSk7DQo+ID4gLX0NCj4gPiAtDQo+ID4gIHN0YXRpYyBib29sIHBjaV9i
-dXNfY2hlY2tfZGV2KHN0cnVjdCBwY2lfYnVzICpidXMsIGludCBkZXZmbikgIHsNCj4gPiAgCXUz
-MiBsOw0KPiA+IEBAIC0zODMsMTEgKzM3OCw2IEBAIHN0YXRpYyBpbnQgcGNpZWhwX2xpbmtfZW5h
-YmxlKHN0cnVjdCBjb250cm9sbGVyDQo+ICpjdHJsKQ0KPiA+ICAJcmV0dXJuIF9fcGNpZWhwX2xp
-bmtfc2V0KGN0cmwsIHRydWUpOyAgfQ0KPiA+DQo+ID4gLXN0YXRpYyBpbnQgcGNpZWhwX2xpbmtf
-ZGlzYWJsZShzdHJ1Y3QgY29udHJvbGxlciAqY3RybCkgLXsNCj4gPiAtCXJldHVybiBfX3BjaWVo
-cF9saW5rX3NldChjdHJsLCBmYWxzZSk7DQo+ID4gLX0NCj4gPiAtDQo+ID4gIGludCBwY2llaHBf
-Z2V0X2F0dGVudGlvbl9zdGF0dXMoc3RydWN0IHNsb3QgKnNsb3QsIHU4ICpzdGF0dXMpICB7DQo+
-ID4gIAlzdHJ1Y3QgY29udHJvbGxlciAqY3RybCA9IHNsb3QtPmN0cmw7IEBAIC02MjAsMTQgKzYx
-MCw2IEBAIGludA0KPiA+IHBjaWVocF9wb3dlcl9vZmZfc2xvdChzdHJ1Y3Qgc2xvdCAqIHNsb3Qp
-DQo+ID4gIAl1MTYgY21kX21hc2s7DQo+ID4gIAlpbnQgcmV0dmFsOw0KPiA+DQo+ID4gLQkvKiBE
-aXNhYmxlIHRoZSBsaW5rIGF0IGZpcnN0ICovDQo+ID4gLQlwY2llaHBfbGlua19kaXNhYmxlKGN0
-cmwpOw0KPiA+IC0JLyogd2FpdCB0aGUgbGluayBpcyBkb3duICovDQo+ID4gLQlpZiAoY3RybC0+
-bGlua19hY3RpdmVfcmVwb3J0aW5nKQ0KPiA+IC0JCXBjaWVfd2FpdF9saW5rX25vdF9hY3RpdmUo
-Y3RybCk7DQo+ID4gLQllbHNlDQo+ID4gLQkJbXNsZWVwKDEwMDApOw0KPiA+IC0NCj4gPiAgCXNs
-b3RfY21kID0gUE9XRVJfT0ZGOw0KPiA+ICAJY21kX21hc2sgPSBQQ0lfRVhQX1NMVENUTF9QQ0M7
-DQo+ID4gIAlyZXR2YWwgPSBwY2llX3dyaXRlX2NtZChjdHJsLCBzbG90X2NtZCwgY21kX21hc2sp
-Ow0KPiA+IC0tDQo+ID4gMS43LjkuNQ0KPiA+DQo+IA0KDQo=
+On Tue, Dec 3, 2013 at 11:20 PM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
+> Thanks for your quick response.
+> Please find my comments below.
+>
+> On Tue, Dec 3, 2013 at 11:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Tue, Dec 3, 2013 at 4:24 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
+>>> Hi,
+>>>
+>>> I have few question on Linux PCIe subsystem, I am trying to understand
+>>> the PCIe on ARM platform.
+>>> 1. Compared to PCI, PCIe have an extra port functionalists/services
+>>> which is implemented drivers/pci/pcie/* is it true?
+>>
+>> Yes.
+>>
+>>> 2. PCIe root complex is same as Host controller drivers in linux drivers/host/*
+>>
+>> Yes.
+>>
+>>> 3. As individual endpoint drivers are registered to pci_core as
+>>> pci_driver_register, then what is the common call for registering
+>>> individual HC driver to pci-core?
+>>
+>> The host controller-PCI core interface is not as mature as the
+>> pci_register_driver() interface.  The basic interface is
+>> pci_scan_root_bus().  If you skim through the drivers in
+>> drivers/pci/host/* and drivers/acpi/pci_root.c, the interface to the
+>> PCI core will be fairly obvious.  And you'll learn what the existing
+>> practices are in case you need to add or modify something.
+>
+> OK.
+>
+> I understand the flow as below - please correct if am wrong.
+>
+> From low level (hw) - HC driver has a platform registration using
+> platform_driver_register() to lower layer
+> and then pci_scan_root_bus() --> pci_common_init_dev() registration to
+> upper layer as PCI - BIOS and then ends.
 
+Yes.  Sometime HC drivers use platform_driver_register(); other use
+something else depending on how the HC device is enumerated.  For
+example, drivers/acpi/pci_root.c uses something else to deal with host
+bridges in the ACPI namespace.
+
+> From upper level (app) - each endpoint driver has
+> pci_driver_register() call to PCI Core for lower level
+
+Yes.
+
+> and then the upper level registration is based on endpoint().
+
+I don't know what you mean here (I don't know of a function named
+"endpoint()").  But the driver model matches drivers to PCI functions
+based on vendor and device IDs.  A Linux "pci_dev" is what the PCI
+specs refer to as a "function."
+
+> What is the connection here for PCI-BIOS and PCI-Core here, does these
+> are two different entities means there is no common call for these?
+> I see for ARM - "arch/arm/kernel/bios32.c" is PCI-BIOS is it correct?
+> does we have separate BIOS codes for architectures?
+
+The "pcibios_*" functions are architecture-specific things called by
+the generic PCI core.  Generally, things specified by the PCI specs
+are architecture-independent and should be in the PCI core
+(drivers/pci/*).
+
+Bjorn
