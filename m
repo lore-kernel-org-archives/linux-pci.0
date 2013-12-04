@@ -1,70 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:59360 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756533Ab3LaUt4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Dec 2013 15:49:56 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to avoid sysfs warnings
-Date: Tue, 31 Dec 2013 22:03:33 +0100
-Message-ID: <6023795.zgEUjY5fWb@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQVEqnWm1j0GckuNsD_FTPxWahZpCnF79sNgKN-JnCDT+w@mail.gmail.com>
-References: <37552283.kG1L4S8Daa@vostro.rjw.lan> <31566676.sHXhScpSQ6@vostro.rjw.lan> <CAE9FiQVEqnWm1j0GckuNsD_FTPxWahZpCnF79sNgKN-JnCDT+w@mail.gmail.com>
+Received: from smtp.citrix.com ([66.165.176.89]:38361 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755369Ab3LDKsi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Dec 2013 05:48:38 -0500
+Date: Wed, 4 Dec 2013 10:48:17 +0000
+From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: <stefano.stabellini@eu.citrix.com>, <ian.campbell@citrix.com>,
+	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
+	<boris.ostrovsky@oracle.com>, <david.vrabel@citrix.com>,
+	<leosilva@linux.vnet.ibm.com>, <ashley@ashleylai.com>,
+	<peterhuewe@gmx.de>, <mail@srajiv.net>, <tpmdd@selhorst.net>,
+	<tpmdd@sirrix.com>, <dmitry.torokhov@gmail.com>,
+	<bhelgaas@google.com>, <plagnioj@jcrosoft.com>,
+	<tomi.valkeinen@ti.com>, <tpmdd-devel@lists.sourceforge.net>,
+	<linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-fbdev@vger.kernel.org>
+Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
+In-Reply-To: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
+Message-ID: <alpine.DEB.2.02.1312041047200.7093@kaball.uk.xensource.com>
+References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 31, 2013 10:45:46 AM Yinghai Lu wrote:
-> On Mon, Dec 30, 2013 at 5:15 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Monday, December 30, 2013 01:51:28 PM Rafael J. Wysocki wrote:
-> >> > We have patches that need to stop ioapic and iommu between
-> >> > pci_stop_root_bus and pci_remove_root_bus.
-> >
-> > BTW, what *exactly* do they need to be stopped between?  After these two patches:
-> 
-> need to stop regular pci drivers before stop "driver" for ioapic/dmar.
-> 
-> >
-> >> > Please check if the problem still happen after
-> >> >
-> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=c4a0a5d964e90b93eb4101c3927b788e083e530f
-> >> >
-> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=e3b439e1d315aff59c1b4f0fc43c5cd2d82b4138
-> >
-> > pci_stop_root_bus() is just a walk over devices on the root bus stopping
-> > them and pci_remove_root_bus() starts with the removal of those devices.
-> >
-> > Surely, those two list walks can be combined into one?
-> 
-> maybe ok, but we have to problem to make sure stop pci drivers before
-> "driver" for ioapic/dmar.
+On Tue, 3 Dec 2013, Konrad Rzeszutek Wilk wrote:
+> diff --git a/arch/x86/xen/platform-pci-unplug.c b/arch/x86/xen/platform-pci-unplug.c
+> index 0a78524..087dfeb 100644
+> --- a/arch/x86/xen/platform-pci-unplug.c
+> +++ b/arch/x86/xen/platform-pci-unplug.c
+> @@ -69,6 +69,24 @@ static int check_platform_magic(void)
+>  	return 0;
+>  }
+>  
+> +bool xen_has_pv_devices(void)
+> +{
+> +	if (!xen_domain())
+> +		return false;
+> +
+> +	if (xen_hvm_domain()) {
+> +		/* User requested no unplug, so no PV drivers. */
+> +		if (xen_emul_unplug & XEN_UNPLUG_NEVER)
+> +			return false;
 
-That's fine, but ioapic/dmar stopping need not happen between the stopping of
-drivers and removing of devices on the root bus I suppose?
+Considering that if (xen_emul_unplug & XEN_UNPLUG_NEVER) we never set
+xen_platform_pci_unplug, this check is redundant.
 
-Actually, I think that the ioapic/dmar stopping should be carried out after
-removing all of the root bus devices, or it can be racy with respect to a
-driver reload.  Isn't that the case?
 
-> also stop all first and remove all make it much cleaner.
-
-Well, I don't think that's worth special casing, though, because device removal
-may be triggered via sysfs anyway for any PCI device.  In my opinion it would
-be cleaner to use pci_stop_and_remove_bus_device() everywhere for PCI device
-removal.
-
-> and add path is two steps too. Add them all, and then attach driver for all.
-
-The removal need not mirror the probing ...
-
-Thanks,
-Rafael
-
+> +		/* And user has xen_platform_pci=0 set in guest config as
+> +		 * driver did not modify the value. */
+> +		if (!xen_platform_pci_unplug)
+> +			return false;
+> +	}
+> +	return true;
+> +}
+> +EXPORT_SYMBOL_GPL(xen_has_pv_devices);
+> +
+>  void xen_unplug_emulated_devices(void)
+>  {
+>  	int r;
