@@ -1,67 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:54515 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864Ab3LKKa7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 05:30:59 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 7/7] ARM: dts: imx6q-sabrelite: Enable PCI express
-Date: Wed, 11 Dec 2013 11:30:18 +0100
-Message-Id: <1386757818-5154-7-git-send-email-marex@denx.de>
-In-Reply-To: <1386757818-5154-1-git-send-email-marex@denx.de>
-References: <1386757818-5154-1-git-send-email-marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 4 Dec 2013 21:38:38 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: rui wang <ruiv.wang@gmail.com>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@intel.com, tony.luck@intel.com,
+	rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gong.chen@intel.com
+Subject: Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
+Message-ID: <20131204203837.GA7517@pd.tnic>
+References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+ <CANVTcTaP18CiGOSEcX5Ch_wPw9mEhkgokfp+d+ZOMFD+Ce4juA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CANVTcTaP18CiGOSEcX5Ch_wPw9mEhkgokfp+d+ZOMFD+Ce4juA@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- arch/arm/boot/dts/imx6q-sabrelite.dts | 4 ++++
- 1 file changed, 4 insertions(+)
+On Mon, Dec 02, 2013 at 01:05:16PM +0800, rui wang wrote:
+> > +	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+> > +		__get_str(dev_name),
+> > +		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
+> > +			__entry->severity == HW_EVENT_ERR_FATAL ?
+> > +			"Fatal" : "Uncorrected",
+> > +		__entry->severity == HW_EVENT_ERR_CORRECTED ?
+> > +		__print_flags(__entry->status, "|", aer_correctable_errors) :
+> > +		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
+> > +);
+> 
+> This causes inconsistency between dmesg and the trace event output.
+> When dmesg says "severity=Corrected", the trace event says
+> "severity=Fatal". What happens is that HW_EVENT_ERR_CORRECTED is
+> defined in edac.h:
+> 
+> enum hw_event_mc_err_type {
+>         HW_EVENT_ERR_CORRECTED,
+>         HW_EVENT_ERR_UNCORRECTED,
+>         HW_EVENT_ERR_FATAL,
+>         HW_EVENT_ERR_INFO,
+> };
+> 
+> while aer_print_error() uses aer_error_severity_string[] defined as:
+> 
+> static const char *aer_error_severity_string[] = {
+>         "Uncorrected (Non-Fatal)",
+>         "Uncorrected (Fatal)",
+>         "Corrected"
+> };
+> 
+> In this case dmesg is correct because info->severity is assigned in
+> aer_isr_one_error() using the definitions in include/linux/ras.h:
+> #define AER_NONFATAL                    0
+> #define AER_FATAL                       1
+> #define AER_CORRECTABLE                 2
+> 
+> So which one is the standard? Is there a plan to unify all these names?
 
-diff --git a/arch/arm/boot/dts/imx6q-sabrelite.dts b/arch/arm/boot/dts/imx6q-sabrelite.dts
-index fca8f220..f570ad5 100644
---- a/arch/arm/boot/dts/imx6q-sabrelite.dts
-+++ b/arch/arm/boot/dts/imx6q-sabrelite.dts
-@@ -190,6 +190,10 @@
- 	};
- };
- 
-+&pcie {
-+	status = "okay";
-+};
-+
- &sata {
- 	status = "okay";
- };
+Yes, the AER tracepoint above should use the AER_* defines and not the
+HW_EVENT_ERR_* ones which are for memory errors.
+
+Wanna send a fix?
+
+Thanks.
+
 -- 
-1.8.4.3
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
