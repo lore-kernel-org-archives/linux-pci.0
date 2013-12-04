@@ -1,70 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:64604 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab3LLMjS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 07:39:18 -0500
-Date: Thu, 12 Dec 2013 07:38:59 -0500
-From: Jason Cooper <jason@lakedaemon.net>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: 'Gregory CLEMENT' <gregory.clement@free-electrons.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	'Kuninori Morimoto' <kuninori.morimoto.gx@renesas.com>,
-	linux-samsung-soc@vger.kernel.org,
-	'Wei Yongjun' <weiyj.lk@gmail.com>,
-	'Simon Horman' <horms@verge.net.au>, linux-sh@vger.kernel.org,
-	'Magnus Damm' <magnus.damm@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	'Valentine Barshak' <valentine.barshak@cogentembedded.com>,
-	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	linux-tegra@vger.kernel.org, 'Shawn Guo' <shawn.guo@linaro.org>,
-	linux-arm-kernel@lists.infradead.org,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
- host maintainers
-Message-ID: <20131212123859.GH10053@titan.lakedaemon.net>
-References: <20131211183237.GI4699@google.com>
- <52A96877.90902@free-electrons.com>
- <001901cef71a$41f3a520$c5daef60$%han@samsung.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:51927 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933067Ab3LDTuH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 14:50:07 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 04/12] PCI: Destroy pci dev only once
+Date: Wed, 04 Dec 2013 21:03:05 +0100
+Message-ID: <1616994.RLUOIZgreK@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQUURT40gXGFhPxqHvWTxVdWbm=70uh14U=dp=FgTOGt-g@mail.gmail.com>
+References: <1385851238-21085-1-git-send-email-yinghai@kernel.org> <2691826.V0kc3nrim3@vostro.rjw.lan> <CAE9FiQUURT40gXGFhPxqHvWTxVdWbm=70uh14U=dp=FgTOGt-g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <001901cef71a$41f3a520$c5daef60$%han@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 12, 2013 at 06:12:18PM +0900, Jingoo Han wrote:
-> On Thursday, December 12, 2013 4:41 PM, Gregory CLEMENT wrote:
-> > On 11/12/2013 19:32, Bjorn Helgaas wrote:
-> > > If this looks reasonable, I'll merge it via the PCI tree for v3.13.
-> > >
-> > > Bjorn
+On Tuesday, December 03, 2013 06:19:28 PM Yinghai Lu wrote:
+> On Sat, Nov 30, 2013 at 5:05 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Saturday, November 30, 2013 02:40:30 PM Yinghai Lu wrote:
+> >
+> > And this is not enough as I said, can you please stop ignoring me openly?
+> >
+> > You've already commented the last patch I posted, so why don't we finish
+> > that discussion first?
 > 
-> [.....]
+> No, i did not mean that.
 > 
-> > > +PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
-> > > +M:	Jason Cooper <jason@lakedaemon.net>
-> > > +L:	linux-pci@vger.kernel.org
-> > > +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> > > +S:	Maintained
-> > > +F:	drivers/pci/host/*mvebu*
-> > 
-> > I think that Thomas Petazzoni would be more appropriate, he worked
-> > on the mvebu PCIe since 6 moths and now know very well the
-> > subject. Until now all the mvebu PCIe related questions were
-> > managed by Thomas.
-> 
-> I think so, too. :-)
-> 
-> Thomas Petazzoni is the author of the  mvebu PCIe. Also, he did
-> The basic foundation of PCIe Host with Thierry Reding.  I think
-> That he is the best person for the Maintainer of the mvebu PCIe.
+> I resent the whole patchset as I added pci_clip_resource() and that
+> will need to revise several critial patches, and Bjorn does not like
+> to have patches to be attached format.
 
-100% Ack.  Thanks for the nomination, but Thomas is the person best
-suited to review patches and maintain the driver.  If you want some
-patch wrangling, I don't mind helping out, but I'd prefer Thomas be the
-maintainer here.
+I see.
 
-thx,
+> Also in the patcheset head mail, i did state that you have another
+> solution using
+> lock.
+> 
+> And your patch is quite big, please give me some time to digest it.
 
-Jason.
+Yes, it is, please take your time. :-)
+
+Thanks,
+Rafael
+
