@@ -1,89 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:55546
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751996Ab3LREGk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 23:06:40 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Guenter Roeck <linux@roeck-us.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+Received: from mail-db9lp0253.outbound.messaging.microsoft.com ([213.199.154.253]:2475
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753423Ab3LDCiz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 3 Dec 2013 21:38:55 -0500
+From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+To: Marek Vasut <marex@denx.de>
+CC: Jingoo Han <jg1.han@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Y@jasper.es" <Y@jasper.es>
-Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
- during removal
-Date: Wed, 18 Dec 2013 04:06:07 +0000
-Message-ID: <7324b9d8069446db85352ccad59c87ae@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
- <41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
- <20131218034004.GA22858@roeck-us.net>
-In-Reply-To: <20131218034004.GA22858@roeck-us.net>
-Content-Type: text/plain; charset="utf-8"
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Frank Li' <lznuaa@gmail.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
+	'Troy Kisky' <troy.kisky@boundarydevices.com>,
+	'Yinghai Lu' <yinghai@kernel.org>
+Subject: RE: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Date: Wed, 4 Dec 2013 02:38:49 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D47AB51@039-SN2MPN1-013.039d.mgd.msft.net>
+References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com>
+ <201311290321.22415.marex@denx.de>
+ <0E83723C55F66F43A6041464FE31119D478F0C@039-SN2MPN1-013.039d.mgd.msft.net>
+ <201312031019.58708.marex@denx.de>
+In-Reply-To: <201312031019.58708.marex@denx.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogR3VlbnRlciBSb2VjayBb
-bWFpbHRvOmdyb2VjazdAZ21haWwuY29tXSBPbiBCZWhhbGYgT2YgR3VlbnRlcg0KPiBSb2Vjaw0K
-PiBTZW50OiBUdWVzZGF5LCBEZWNlbWJlciAxNywgMjAxMyA3OjQwIFBNDQo+IFRvOiBSYWphdCBK
-YWluDQo+IENjOiBCam9ybiBIZWxnYWFzOyBSYWphdCBKYWluOyBLZW5qaSBLYW5lc2hpZ2U7IEFs
-ZXggV2lsbGlhbXNvbjsgWWlqaW5nDQo+IFdhbmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
-IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+IFlAamFzcGVyLmVzDQo+IFN1YmplY3Q6
-IFJlOiBbUEFUQ0ggdjMgNC84XSBwY2llaHA6IERvbid0IGRpc2FibGUgdGhlIGxpbmsgcGVybWFu
-ZW50bHksDQo+IGR1cmluZyByZW1vdmFsDQo+IA0KPiBPbiBXZWQsIERlYyAxOCwgMjAxMyBhdCAw
-MzoyMDo1OEFNICswMDAwLCBSYWphdCBKYWluIHdyb3RlOg0KPiA+DQo+ID4NCj4gPiA+IC0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86
-YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gPiA+DQo+ID4gPiBbK2NjIHlpbmdoYWlAa2VybmVsLm9y
-ZyAoc2VlbXMgdG8gYmUgWWluZ2hhaSdzIHByZWZlcnJlZCBlbWFpbF0NCj4gPiA+DQo+ID4gPiBP
-biBUdWUsIERlYyAxNywgMjAxMyBhdCAxMjowNjowNVBNIC0wODAwLCBSYWphdCBKYWluIHdyb3Rl
-Og0KPiA+ID4gPiBXZSBuZWVkIGZ1dHVyZSBsaW5rIHVwIGV2ZW50cyBmb3IgaG90LWFkZCwgdGh1
-cyBkb24ndCBkaXNhYmxlIHRoZQ0KPiA+ID4gPiBsaW5rIHBlcm1hbmVudGx5IGR1cmluZyBkZXZp
-Y2UgcmVtb3ZhbC4gQWxzbywgcmVtb3ZlIHRoZSBzdGF0aWMNCj4gPiA+ID4gZnVuY3Rpb25zIHRo
-YXQgYXJlIG5vdyBsZWZ0IHVudXNlZC4NCj4gPiA+DQo+ID4gPiBUaGUgY2hhbmdlbG9nIHNob3Vs
-ZCBtZW50aW9uIHRoYXQgdGhpcyByZXZlcnRzIHBhcnQgb2YgMmRlYmQ5Mjg5OTk3DQo+ID4gPiAo
-IlBDSToNCj4gPiA+IHBjaWVocDogRGlzYWJsZS9lbmFibGUgbGluayBkdXJpbmcgc2xvdCBwb3dl
-ciBvZmYvb24iKS4NCj4gPg0KPiA+IFN1cmUsIEknbGwgYWRkIHRoYXQuDQo+ID4NCj4gPiA+DQo+
-ID4gPiBZaW5naGFpLCBjYW4geW91IHRlbGwgdXMgd2hldGhlciB0aGlzIGlzIGFuIGlzc3VlIG9u
-IHlvdXIgc3lzdGVtcz8NCj4gPiA+DQo+ID4NCj4gPiBUaGFua3MgaW4gYWR2YW5jZSBZaW5naGFp
-Lg0KPiA+DQo+ID4gQWN0dWFsbHkgSSBkaWQgbm90IHVuZGVyc3RhbmQgdGhlIG9yaWdpbmFsIHBy
-b2JsZW0gYW5kIHRoZSBzb2x1dGlvbiBpbg0KPiA+IHRoZSBmaXJzdCBwbGFjZSAoc28gSSBhbHNv
-IGRvIG5vdCB1bmRlcnN0YW5kIGhvdyBtaWdodCBkaXNhYmxpbmcgb2YNCj4gPiBwcmVzZW5jZSBk
-ZXRlY3Qgbm90aWZpY2F0aW9uIGhlbHApLiBJZiB5b3UgY2FuIGdpdmUgbW9yZSBkZXRhaWxzIG9u
-DQo+ID4gdGhlIG9yaWdpbmFsIHByb2JsZW0gdGhhdCBzaGFsbCBiZSBncmVhdC4gSGVyZSBpcyB3
-aGF0IEkgdW5kZXJzdG9vZA0KPiBmcm9tIHRoZSBjb21taXQgbG9nOg0KPiA+DQo+ID4gVGhlIGJl
-bGlldmUgdGhlIEhXIGxvb2tzIGxpa2UgdGhpczoNCj4gPg0KPiA+IFBDSWUgcG9ydCA8LS0tLT4g
-UmVwZWF0ZXIgPC0tLS0+IERldmljZS4NCj4gPg0KPiA+IEFuIGluIGFkZGl0aW9uIHRoZXJlIGlz
-IHRoZSBwcmVzZW5jZSBkZXRlY3QgcGluIHRoYXQgaXMgY29ubmVjdGVkDQo+ID4gZGlyZWN0bHkg
-ZnJvbSBUaGUgcG9ydCB0byB0aGUgZGV2aWNlLiBOb3csIHdoZW4gdGhlIGRldmljZSBpcyBwbHVn
-Z2VkDQo+ID4gb3V0LCB0aGUgcGluIGluZGljYXRlcyBObyBwcmVzZW5jZS4gQnV0IGFyZSB5b3Ug
-c2F5aW5nIHRoZSBQQ0llIGxpbmsNCj4gZnJvbSBwb3J0IHRvIHJlcGVhdGVyIGlzIHN0aWxsIHVw
-Pw0KPiA+DQo+ID4gUGFydCBvZiBsb2c6DQo+ID4gPT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09DQo+ID4gICAgIC4uLg0KPiA+ICAgICBJdCB0dXJucyBvdXQgdGhlIHJvb3QgY29t
-cGxleCBpcyBjb250aW51YWxseSB0cnlpbmcgdG8gdHJhaW4gdGhlDQo+IGxpbmsgdG8NCj4gPiAg
-ICAgdGhlIHJlcGVhdGVyIGJlY2F1c2UgdGhlIHJlcGVhdGVyIGhhcyBub3QgYmVlbiByZXNldC4N
-Cj4gPg0KPiA+ICAgICBUaGlzIHBhdGNoIHdpbGwgZGlzYWJsZSB0aGUgbGluayBhdCByZW1vdmFs
-IHRpbWUgdG8gYWxsb3cgdGhlDQo+IHJlcGVhdGVyDQo+ID4gICAgIHRvIGJlIHJlc2V0IHByb3Bl
-cmx5Lg0KPiA+ICAgICAuLi4NCj4gPiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT0NCj4gPg0KPiA+IDEpIEkgZGlkIG5vdCB1bmRlcnN0YW5kIHdoeSB3b3VsZCBwb3J0IHRyeSB0
-byByZXRyYWluIHRvIHRoZSBsaW5rIGluDQo+ID4gZWl0aGVyIGNhc2VzIC0gV2hldGhlciB0aGUg
-bGluayB0byB0aGUgcmVwZWF0ZXIgaXMgdXAgb3Igbm90Pw0KPiA+DQo+ID4gMikgV2hlbiBubyBs
-aW5rIGlzIHNlZW4sIGlzIFRIQVQgd2hhdCBjYXVzZXMgcmVwZWF0ZXIgdG8gZ28gZG93biBhbmQN
-Cj4gPiBoZW5jZSBzb2x2ZSB0aGUgUHJvYmxlbT8NCj4gPg0KPiA+IDMpIEknZCBleHBlY3QgeW91
-J2QgY29udGludW91c2x5IGdldCAiYWRhcHRlciBub3QgcHJlc2VudCIgbWVzc2FnZXMgaWYNCj4g
-PiBzb21lIGhvdyBUaGUgZHJpdmVyIHdhcyB0cnlpbmcgdG8gYWRkIHRoZSBkZXZpY2UuIEJ1dCBJ
-IGRpZCBub3QNCj4gPiB1bmRlcnN0YW5kIHdoZXJlIGRpZCAiYWRhcHRlciBwcmVzZW50IiBtZXNz
-YWdlcyBjYW1lIGZyb20/DQo+ID4NCj4gPiBTb3JyeSwgYnV0IEkgZ3Vlc3MgSSBhbSB0b3RhbGx5
-IGNvbmZ1c2VkIG5vdy4gSSdsbCBwcm9iYWJseSBnbyB0bw0KPiA+IHNsZWVwIDotKQ0KPiA+DQo+
-IA0KPiBXaGF0LCB0aGF0IGVhcmx5ID8gOi0pDQoNCkkgd2FzIHVwIHVudGlsIDMgQU0gbGFzdCBu
-aWdodC4gImdpdCIgKG9yIHRoZSBpZ25vcmFuY2Ugb2YgaXQpIGtlZXBzIG1lIGJ1c3kgSSBndWVz
-cyA6LSkNCg0KPiANCj4gSSB0aGluayB3ZSBtYXkgaGF2ZSBhIHNpbWlsYXIgc2V0dXAgb24gc29t
-ZSBvZiBvdXIgYm9hcmRzLiBNYXliZSB3ZSBjYW4NCj4gcmVwcm9kdWNlIHRoZSBzaXR1YXRpb24g
-KGFmdGVyIHdlIHVuZGVyc3RhbmQgd2hhdCBleGFjdGx5IGl0IGlzIGFuZCBob3cNCj4gdG8gdHJp
-Z2dlciBpdCkuDQo+IA0KPiBSZWxhdGVkIHRvIHRoaXMgcGF0Y2ggc2V0LCBJIGxlYXJuZWQgdG9k
-YXkgdGhhdCBvdXIgU3BhY2UgcHJvZHVjdCB1c2VzDQo+IG1wdDJzYXMuDQo+IEp1c3QgaW4gY2Fz
-ZSB3ZSBuZWVkIG9uZSBmb3IgdGVzdGluZyByZXNldCBmdW5jdGlvbmFsaXR5Lg0KPiANCj4gR3Vl
-bnRlcg0KPiANCg0K
+Hi Marek:
+
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
+> On Behalf Of Marek Vasut
+> Sent: Tuesday, December 03, 2013 5:20 PM
+> To: Zhu Richard-R65037
+> Cc: Jingoo Han; 'Pratyush Anand'; 'Mohit KUMAR DCG'; 'Tim Harvey'; 'Kishon
+> Vijay Abraham I'; linux-pci@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; 'Bjorn Helgaas'; 'Frank Li'; 'Sascha Hauer'; 'Sean
+> Cross'; 'Shawn Guo'; 'Siva Reddy Kallam'; 'Srikanth T Shivanand'; 'Troy Kisky';
+> 'Yinghai Lu'
+> Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+> 
+> Dear Richard Zhu,
+> 
+> > Hi Marek:
+> > > -----Original Message-----
+> > > From: Marek Vasut [mailto:marex@denx.de]
+> > > Sent: Friday, November 29, 2013 10:21 AM
+> > > To: Jingoo Han
+> > > Cc: 'Pratyush Anand'; 'Mohit KUMAR DCG'; 'Tim Harvey'; 'Kishon Vijay
+> > > Abraham I'; linux-pci@vger.kernel.org;
+> > > linux-arm-kernel@lists.infradead.org; 'Bjorn Helgaas'; 'Frank Li';
+> > > Zhu Richard-R65037; 'Sascha Hauer'; 'Sean Cross'; 'Shawn Guo'; 'Siva
+> > > Reddy Kallam'; 'Srikanth T Shivanand'; 'Troy Kisky'; 'Yinghai Lu' Subject:
+> Re:
+> > > [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+> > >
+> > > Dear Jingoo Han,
+> > >
+> > > > On Wednesday, November 27, 2013 5:37 PM, Pratyush Anand wrote:
+> > > > > On Wed, Nov 27, 2013 at 04:24:47PM +0800, Marek Vasut wrote:
+> > > > > > > On Wed, Nov 27, 2013 at 04:46:09AM +0800, Marek Vasut wrote:
+> > > > > > > > Dear Pratyush Anand,
+> > > > > > > >
+> > > > > > > > > Hi,
+> > > > > > > > >
+> > > > > > > > > On Wed, Oct 23, 2013 at 12:55:43PM +0800, Tim Harvey wrote:
+> > > > > > > > > > The IMX6 iATU is used for address translation between
+> > > > > > > > > > the AXI bus address space and PCI address space.  This
+> > > > > > > > > > is used for
+> > > > > > > > > > type0 and type1 config cycles but is not necessary for
+> > > > > > > > > > outbound io/mem regions.
+> > > > > > > > > >
+> > > > > > > > > > This patch removes the calls that inappropriately
+> > > > > > > > > > re-configures the ATU viewport for outbound memory and
+> > > > > > > > > > IO after config cycles and removes them altogether as
+> > > > > > > > > > they are not
+> > >
+> > > necessary.
+> > >
+> > > > > > > > > > This resolves issues with PCI devices behind switches
+> > > > > > > > > > and has been tested with a Gige device behind a PLX
+> > > > > > > > > > PEX860x switch. More testing is needed for other
+> configurations.
+> > > > > > > > >
+> > > > > > > > > It seems to me that in your controller you have only one
+> > > > > > > > > view port. Also mem_base and mem_bus_addr is same. Thats
+> > > > > > > > > why it works in your case.
+> > > > > > > >
+> > > > > > > > MX6 has 4 In/4 Out viewports AFAICT.
+> > > > > > >
+> > > > > > > Then if I do not miss anything, MX6 should work even without
+> > > > > > > this patch.
+> > > > > >
+> > > > > > Yes, yet, it does not. On the other hand, this defect is only
+> > > > > > problematic if you use the devices behind a switch. Do you use
+> > > > > > a PCIe switch on your platform please?
+> > > > >
+> > > > > I had tested with device under bridge.
+> > > > > Mohit is in process of validating SPEAr patches with latest kernel.
+> > > > > Mohit, see if we can arrange a switch and test, once SPEAr
+> > > > > platform is ready with latest kernel.
+> > > >
+> > > > I agree with Pratyush Anand's opinion.
+> > > > One of our engineers had tested PCI cards under switch.
+> > > > As far as I know, there was no issue about this.
+> > > > However, currently, I don't have any switches. So, I Cannot test
+> > > > this on Exynos platform.
+> > >
+> > > OK, I will wait for Richard to come up with confirmation if possible.
+> > > Looks like he's out of the office, so it might take a bit.
+> >
+> > [Richard] One Pericom PI7C9X2G303EL pcie switch, and two pcie ep
+> > deivces(one is intel e1000e nic, the other is one xhci device) are
+> > tested on imx6q sabresd board.
+> 
+> How/what does have such pericom switch and can be attached to an MX6 sabresdp ?
+> Where can I get it?
+[Richard] You can apply the example from Pericom.
+> 
+> > Without removing outbound io/mem regions view map during the cfg0/1
+> > read/write cycle, both of these devices can't work well at my side.
+> > Works well after remove them during the cfg0/1 read/write cycles.
+> 
+> Understood. Given that the iATU programming works on other CPUs (confirmed on
+> st spear and ti dra7xx), we might have some issues with the iATU on MX6 . Is
+> there anything special about the iATU on the MX6 ?
+[Richard] As I know that there is no anything special about the iATU on MX6.
+Let me to make a double check with IC team later.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+
+Best Regards
+Richard Zhu
+
 
