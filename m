@@ -1,79 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:34913 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756362Ab3LWBOM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Dec 2013 20:14:12 -0500
+Received: from smtp.citrix.com ([66.165.176.89]:8419 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755426Ab3LDK7r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Dec 2013 05:59:47 -0500
+Message-ID: <1386154783.17466.14.camel@kazak.uk.xensource.com>
+Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
+From: Ian Campbell <Ian.Campbell@citrix.com>
+To: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
+	<boris.ostrovsky@oracle.com>, <david.vrabel@citrix.com>,
+	<leosilva@linux.vnet.ibm.com>, <ashley@ashleylai.com>,
+	<peterhuewe@gmx.de>, <mail@srajiv.net>, <tpmdd@selhorst.net>,
+	<tpmdd@sirrix.com>, <dmitry.torokhov@gmail.com>,
+	<bhelgaas@google.com>, <plagnioj@jcrosoft.com>,
+	<tomi.valkeinen@ti.com>, <tpmdd-devel@lists.sourceforge.net>,
+	<linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-fbdev@vger.kernel.org>
+Date: Wed, 4 Dec 2013 10:59:43 +0000
+In-Reply-To: <alpine.DEB.2.02.1312041049310.7093@kaball.uk.xensource.com>
+References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
+	 <1386149848.13256.86.camel@kazak.uk.xensource.com>
+	 <alpine.DEB.2.02.1312041049310.7093@kaball.uk.xensource.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5VWREGptW0MU0wLJUa3h23DXMZPGkdJFMTx5WAGL8J6Q@mail.gmail.com>
-References: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
-	<1387485843-17403-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo5VWREGptW0MU0wLJUa3h23DXMZPGkdJFMTx5WAGL8J6Q@mail.gmail.com>
-Date: Sun, 22 Dec 2013 17:14:12 -0800
-Message-ID: <CAE9FiQU88EO=e+CR7RKnZ6r7ofSwi9J1QisnrnDyDz6Qh367YQ@mail.gmail.com>
-Subject: Re: [PATCH v6 2/2] PCI: Try best to allocate pref mmio 64bit above 4g
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 22, 2013 at 4:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Dec 19, 2013 at 1:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->
-> Let me see if I can figure out what you're trying to do here.  Please
-> correct me if I'm wrong:
->
->> When one of children resources does not support MEM_64, MEM_64 for
->> bridge get reset, so pull down whole pref resource on the bridge under 4G.
->
-> When we allocate space for a bridge's prefetchable window, we
-> currently look at the devices behind the bridge and put the window
-> below 4GB if any of those children has a 32-bit prefetchable BAR.
->
-> This maximizes the use of prefetch, at the cost of using more 32-bit
-> address space.
+On Wed, 2013-12-04 at 10:51 +0000, Stefano Stabellini wrote:
+> On Wed, 4 Dec 2013, Ian Campbell wrote:
+> > > +bool xen_has_pv_devices(void)
+> > > +{
+> > > +	if (!xen_domain())
+> > > +		return false;
+> > > +
+> > > +	if (xen_hvm_domain()) {
+> > > +		/* User requested no unplug, so no PV drivers. */
+> > > +		if (xen_emul_unplug & XEN_UNPLUG_NEVER)
+> > > +			return false;
+> > 
+> > I think you need
+> > 		if (xen_emul_unpug & XEN_UNPLUG_UNNECESSARY)
+> > 			return true;
+> > don't you?
+> 
+> XEN_UNPLUG_UNNECESSARY was introduced to enable the platform PCI device
+> even if it didn't respond properly to the unplug protocol.
+> The corresponding parameter is called "unnecessary" because if you pass
+> it to the kernel you mean that it is unnecessary to unplug the emulated
+> devices but you can use the pv devices anyway.
+> 
+> So no, we shouldn't check for XEN_UNPLUG_UNNECESSARY here.
 
-yes. and we have problem when we have 8 sockets or 32 sockets system,
-will have limit 32bit space.
-but we have enough above 4G 64bit mmio for prefetchable.
+Oh, we will eventually fall through to the return true, so it does
+actually work out OK.
 
->
->> If the bridge support pref mem 64, will only allocate that with pref mem64 to
->> children that support it.
->> For children resources if they only support pref mem 32, will allocate them
->> from non pref mem instead.
->
-> You are changing this so that we will always try to put a bridge's
-> 64-bit prefetchable window above 4GB, regardless of what devices are
-> behind the bridge.  If a device behind the bridge has a 32-bit
-> prefetchable BAR, we will place that BAR in the bridge's 32-bit
-> non-prefetchable window.
+I'd still be in favour of handling each option explicitly, for clarity.
+Which means checking for XEN_UNPLUG_UNNECESSARY.
 
-Yes. so we can keep IORESOURCE_MEM64 in the flags for PREF.
+> > > +		/* And user has xen_platform_pci=0 set in guest config as
+> > > +		 * driver did not modify the value. */
+> > > +		if (!xen_platform_pci_unplug)
+> > > +			return false;
 
->
-> This minimizes the use of the 32-bit address space, at the cost of not
-> being able to use prefetch as much.
->
->> If the bridge only support 32bit pref mmio, will still have all children pref
->> mmio under that.
->
-> Obviously, if a bridge has a prefetchable window that's only 32 bits,
-> 64-bit prefetchable BARs behind the bridge will have to be in that
-> 32-bit prefetchable window or the 32-bit non-prefetchable window.  And
-> if the bridge has no prefetchable window at all, every memory BAR
-> behind the bridge will have to be in the 32-bit non-prefetchable
-> window.
+I assume this check doesn't trigger if unnecessary has been specified?
 
-Yes.
+> > > +	}
+> > > +	return true;
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(xen_has_pv_devices);
+> > > +
+> > >  void xen_unplug_emulated_devices(void)
+> > >  {
+> > >  	int r;
+> > 
+> > 
 
->
-> I'll look at the actual patch later; I just want to make sure I
-> understand your intent first.
 
-Thanks
-
-Yinghai
