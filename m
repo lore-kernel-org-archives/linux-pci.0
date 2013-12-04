@@ -1,185 +1,256 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f49.google.com ([209.85.212.49]:49841 "EHLO
-	mail-vb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751265Ab3LJHnj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 02:43:39 -0500
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:57362 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932254Ab3LDP2N convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 10:28:13 -0500
 MIME-Version: 1.0
-In-Reply-To: <20131209190807.GA23877@kroah.com>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
-	<33026900.FbCAopDPFz@vostro.rjw.lan>
-	<CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com>
-	<1519414.GDlGZFCTSR@vostro.rjw.lan>
-	<CAE9FiQX0zvtfAW-0-aPjXyVuFzxg6PMtY9O_7csqEzyW2pr5Kw@mail.gmail.com>
-	<20131208035047.GB17629@kroah.com>
-	<CABawtvO91R0wBL5XZf6xM8Rmray50Fjc74=iA9Y+XdeD7FsNwg@mail.gmail.com>
-	<20131209190807.GA23877@kroah.com>
-Date: Tue, 10 Dec 2013 15:43:38 +0800
-Message-ID: <CABawtvMvkgQdL+eyFrCsC6GRyx6VDOG=Oh2cY7y=bdtNkmu2Vw@mail.gmail.com>
-Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
+In-Reply-To: <CANVTcTabw2pxUP0iinepviavSLHT7AAyaQvA7e-mv2simbX7ow@mail.gmail.com>
+References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+	<CANVTcTabw2pxUP0iinepviavSLHT7AAyaQvA7e-mv2simbX7ow@mail.gmail.com>
+Date: Wed, 4 Dec 2013 23:28:12 +0800
+Message-ID: <CABawtvP3m_dAKaOLxNqHXQobsgk92ysh6H881i3eDASLi+-WAg@mail.gmail.com>
+Subject: Re: [BUG] Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
 From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: rui wang <ruiv.wang@gmail.com>
+Cc: Lance Ortiz <lance.ortiz@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, lance_ortiz@hotmail.com,
+	jiang.liu@intel.com, tony.luck@intel.com, bp@alien8.de,
+	rostedt@goodmis.org, m.chehab@samsung.com,
+	linux-acpi@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, gong.chen@linux.intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 10, 2013 at 3:08 AM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Mon, Dec 09, 2013 at 11:24:04PM +0800, Ethan Zhao wrote:
->> On Sun, Dec 8, 2013 at 11:50 AM, Greg Kroah-Hartman
->> <gregkh@linuxfoundation.org> wrote:
->> > On Sat, Dec 07, 2013 at 07:31:21PM -0800, Yinghai Lu wrote:
->> >> [+ GregKH]
->> >>
->> >> On Fri, Dec 6, 2013 at 5:27 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> >> > On Thursday, December 05, 2013 10:52:36 PM Yinghai Lu wrote:
->> >> >> On Mon, Dec 2, 2013 at 6:49 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> >> >> >
->> >> >> > Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
->> >> >> >   for a device and its parent bridge via remove_callback().
->> >> >> >
->> >> >> >   In that case both code paths attempt to acquire
->> >> >> >   pci_remove_rescan_mutex.  If the child device removal acquires
->> >> >> >   it first, there will be no problems.  However, if the parent
->> >> >> >   bridge removal acquires it first, it will eventually execute
->> >> >> >   pci_destroy_dev() for the child device, but that device will
->> >> >> >   not be freed yet due to the reference held by the concurrent
->> >> >> >   child removal.  Consequently, both pci_stop_bus_device() and
->> >> >> >   pci_remove_bus_device() will be executed for that device
->> >> >> >   unnecessarily and pci_destroy_dev() will see a corrupted list
->> >> >> >   head in that object.  Moreover, an excess put_device() will
->> >> >> >   be executed for that device in that case which may lead to a
->> >> >> >   use-after-free in the final kobject_put() done by
->> >> >> >   sysfs_schedule_callback_work().
->> >> >> >
->> >> >> > Index: linux-pm/include/linux/pci.h
->> >> >> > ===================================================================
->> >> >> > --- linux-pm.orig/include/linux/pci.h
->> >> >> > +++ linux-pm/include/linux/pci.h
->> >> >> > @@ -321,6 +321,7 @@ struct pci_dev {
->> >> >> >         unsigned int    multifunction:1;/* Part of multi-function device */
->> >> >> >         /* keep track of device state */
->> >> >> >         unsigned int    is_added:1;
->> >> >> > +       unsigned int    is_gone:1;
->> >> >> >         unsigned int    is_busmaster:1; /* device is busmaster */
->> >> >> >         unsigned int    no_msi:1;       /* device may not use msi */
->> >> >> >         unsigned int    block_cfg_access:1;     /* config space access is blocked */
->> >> >> > Index: linux-pm/drivers/pci/remove.c
->> >> >> > ===================================================================
->> >> >> > --- linux-pm.orig/drivers/pci/remove.c
->> >> >> > +++ linux-pm/drivers/pci/remove.c
->> >> >> > @@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
->> >> >> >
->> >> >> >  static void pci_destroy_dev(struct pci_dev *dev)
->> >> >> >  {
->> >> >> > +       dev->is_gone = 1;
->> >> >> >         device_del(&dev->dev);
->> >> >> >
->> >> >> >         down_write(&pci_bus_sem);
->> >> >> > @@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
->> >> >> >   */
->> >> >> >  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
->> >> >> >  {
->> >> >> > -       pci_stop_bus_device(dev);
->> >> >> > -       pci_remove_bus_device(dev);
->> >> >> > +       if (!dev->is_gone) {
->> >> >> > +               pci_stop_bus_device(dev);
->> >> >> > +               pci_remove_bus_device(dev);
->> >> >> > +       }
->> >> >> >  }
->> >> >> >  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
->> >> >> >
->> >> >>
->> >> >> Yes, above change should address sys double remove problem.
->> >> >
->> >> > I've just realized that we don't need a new flag for that, though.
->> >> >
->> >> > It looks like we only need to check dev->dev.kobj.parent and return if that is
->> >> > NULL, because that means pci_destroy_dev() has run for that device already
->> >> > (I'm wondering why device_del() doesn't clear dev->parent, BTW, it looks like
->> >> > it should do that?).
->> >> >
->> >> > Of course, that still is going to be racy if we don't hold
->> >> > pci_remove_rescan_mutex around pci_stop_and_remove_bus_device() in every code
->> >> > path using it (or use another similar synchronization mechanism).
->> >>
->> >> Wonder if we can have safe way to check if device_del() is called already.
->> >
->> > Nope.
->> >
->> >> And those access_after_free should be addressed by driver core instead
->> >> of pci code?
->> >
->> > Nope, it's up to the bus to handle this.  It shouldn't be hard, you
->> > shouldn't actually care about this, if you do, something is wrong.
->> >
->> > How is this PCI code so hard to get right?  Look at USB for devices that
->> > disappear from anywhere at anytime as an example for how to handle
->> > this.  PCI should be doing the same thing, no need for this "is_gone"
->> > stuff.
->> Greg,
->>
->>   Don't agree USB is a good example to follow, do you never hit panic
->> when you pull out USB device from anywhere at anytime without unmount
->> or stop it via command ?
->
-> You shouldn't.  If you do, it's a bug, let us know and we will fix it.
+Rui,
+   Agree with that, there are really many such confusing error type definition
+need to be standardized or unified, some of them are
+ambiguous、inconsistent, some of them violates ACPI/PCI spec.
 
-Of coz, next time hit, bore you with a calltrace.
+  According to the ACPI spec, the 'FATAL' in fact, is a sub-category
+of 'UNCORRECTABLE' , the another one is 'NON-FATAL', then how to
+understand the bebow 'UNCORRECTABLE's ?  mean  uncorrectable-non-fatal
+? just guess, confusing.
 
->
->> that is not truth.  the truth is none regards it as enterprise level
->> interface to attach devices.
->
-> Huh?
+acpi\actbl1.h
 
-USB 3.0 still not fast enough for enterprise level.
->
->>   Is there a feature for an USB disk to tell the host you want to pull
->> out it and should sync all the data in cache and unmount the files
->> system then power it off ?
->
-> Nope, neither is there one for when I yank out my PCI storage device
-> without telling the OS about it either.  Everything better "just work",
-> with the exception of any lost data that might be in flight.
+#define ACPI_EINJ_PROCESSOR_CORRECTABLE     (1)
+#define ACPI_EINJ_PROCESSOR_UNCORRECTABLE   (1<<1)
+#define ACPI_EINJ_PROCESSOR_FATAL           (1<<2)
+#define ACPI_EINJ_MEMORY_CORRECTABLE        (1<<3)
+#define ACPI_EINJ_MEMORY_UNCORRECTABLE      (1<<4)
+#define ACPI_EINJ_MEMORY_FATAL              (1<<5)
+#define ACPI_EINJ_PCIX_CORRECTABLE          (1<<6)
+#define ACPI_EINJ_PCIX_UNCORRECTABLE        (1<<7)
+#define ACPI_EINJ_PCIX_FATAL                (1<<8)
+#define ACPI_EINJ_PLATFORM_CORRECTABLE      (1<<9)
+#define ACPI_EINJ_PLATFORM_UNCORRECTABLE    (1<<10)
+#define ACPI_EINJ_PLATFORM_FATAL            (1<<11)
 
-To a desktop, you do have option to issue 'sync, umount' and pull out
-the device and it 'just work',
-To a server, someone wouldn't stand for any data lost in flight.  USB
-need additional feature added
-for you to tell udev sync data etc without a console in hand.
+edac.h
 
->
->>   What USB could drive for us ? 40GB nic ? infiniband ? High end graphic card ?
->
-> I don't understand what that means at all.
+enum hw_event_mc_err_type {
+HW_EVENT_ERR_CORRECTED,
+HW_EVENT_ERR_UNCORRECTED,
+HW_EVENT_ERR_FATAL,
+HW_EVENT_ERR_INFO,
+};
 
-Don't be sleepy, man, you know USB is not powerful enough today, just
-as you said, someday,
-all the outdated thing will go away, just like those ISA, VESA, we
-don't care the low level data link layer anymore. but today, PCIe is
-still a little more complex/out than USB to handle.
+ghes.h
+enum {
+GHES_SEV_NO = 0x0,
+GHES_SEV_CORRECTED = 0x1,
+GHES_SEV_RECOVERABLE = 0x2,
+GHES_SEV_PANIC = 0x3,
+};
+
+What's the meaning of GHES_SEV_PANIC ? Why not 'FATAL' , just as
+described in ACPI spec section 18.3.2.6.1,
+"
+Error Severity 4 16 Identifies the error severity of the reported error:
+0 – Recoverable
+1 – Fatal
+2 – Corrected
+3 – None
+"
+If there is other intension, but could be seen translated into 'FATAL' later:
+
+case GHES_SEV_PANIC:
+  type = HW_EVENT_ERR_FATAL;
+
+And these looks reasonable,
+aer.h
+
+#define AER_NONFATAL 0
+#define AER_FATAL 1
+#define AER_CORRECTABLE 2
+
 
 Thanks,
 Ethan
+
+On Wed, Dec 4, 2013 at 11:10 AM, rui wang <ruiv.wang@gmail.com> wrote:
+> Resending adding Mauro's new Email address...
 >
-> We have USB network ethernet devices, I have a USB 3.0 one here that
-> works really well.  Infiniband is merely a transport, with some "verbs"
-> on top of it, that has nothing to do with PCI other than you can have a
-> IB PCI controller in the system.  And I have a USB graphics adapter here
-> that works just fine as well (people chain lots of them on one system.)
 >
-> So how does this apply to PCI at all?  It's the same thing, you have to
-> be able to handle a PCI device going away at any point in time, with or
-> without telling the OS ahead of time that you are going to remove it.
+> On 1/17/13, Lance Ortiz <lance.ortiz@hp.com> wrote:
+>> This header file will define a new trace event that will be triggered when
+>> a AER event occurs.  The following data will be provided to the trace
+>> event.
+>>
+>> char * dev_name - The name of the slot where the device resides
+>>                   ([domain:]bus:device.function).
+>>
+>> u32 status - Either the correctable or uncorrectable register
+>>              indicating what error or errors have been see.
+>>
+>> u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+>>
+>> The trace event will also provide a trace string that may look like:
+>>
+>> "0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
+>> TLP"
+>>
+>> v1-v2 Move header from include/ras/aer_event.h to
+>> include/trace/events/ras.h
+>> v3-v4 Cleaned up comments and commit header
+>> v4-v5 More cleanup remove () from if statement in print.
+>>       Renamed string define to be more specific.
+>> v5-v6 change TRACE_SYSTEM define to be ras and not aer.
+>>
+>> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+>> Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+>> Acked-by: Tony Luck <tony.luck@intel.com>
+>> ---
+>>
+>>  include/trace/events/ras.h |   77
+>> ++++++++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 77 insertions(+), 0 deletions(-)
+>>  create mode 100644 include/trace/events/ras.h
+>>
+>> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+>> new file mode 100644
+>> index 0000000..88b8783
+>> --- /dev/null
+>> +++ b/include/trace/events/ras.h
+>> @@ -0,0 +1,77 @@
+>> +#undef TRACE_SYSTEM
+>> +#define TRACE_SYSTEM ras
+>> +
+>> +#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
+>> +#define _TRACE_AER_H
+>> +
+>> +#include <linux/tracepoint.h>
+>> +#include <linux/edac.h>
+>> +
+>> +
+>> +/*
+>> + * PCIe AER Trace event
+>> + *
+>> + * These events are generated when hardware detects a corrected or
+>> + * uncorrected event on a PCIe device. The event report has
+>> + * the following structure:
+>> + *
+>> + * char * dev_name - The name of the slot where the device resides
+>> + *                   ([domain:]bus:device.function).
+>> + * u32 status -              Either the correctable or uncorrectable register
+>> + *                   indicating what error or errors have been seen
+>> + * u8 severity -     error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+>> + */
+>> +
+>> +#define aer_correctable_errors               \
+>> +     {BIT(0),        "Receiver Error"},              \
+>> +     {BIT(6),        "Bad TLP"},                     \
+>> +     {BIT(7),        "Bad DLLP"},                    \
+>> +     {BIT(8),        "RELAY_NUM Rollover"},          \
+>> +     {BIT(12),       "Replay Timer Timeout"},        \
+>> +     {BIT(13),       "Advisory Non-Fatal"}
+>> +
+>> +#define aer_uncorrectable_errors             \
+>> +     {BIT(4),        "Data Link Protocol"},          \
+>> +     {BIT(12),       "Poisoned TLP"},                \
+>> +     {BIT(13),       "Flow Control Protocol"},       \
+>> +     {BIT(14),       "Completion Timeout"},          \
+>> +     {BIT(15),       "Completer Abort"},             \
+>> +     {BIT(16),       "Unexpected Completion"},       \
+>> +     {BIT(17),       "Receiver Overflow"},           \
+>> +     {BIT(18),       "Malformed TLP"},               \
+>> +     {BIT(19),       "ECRC"},                        \
+>> +     {BIT(20),       "Unsupported Request"}
+>> +
+>> +TRACE_EVENT(aer_event,
+>> +     TP_PROTO(const char *dev_name,
+>> +              const u32 status,
+>> +              const u8 severity),
+>> +
+>> +     TP_ARGS(dev_name, status, severity),
+>> +
+>> +     TP_STRUCT__entry(
+>> +             __string(       dev_name,       dev_name        )
+>> +             __field(        u32,            status          )
+>> +             __field(        u8,             severity        )
+>> +     ),
+>> +
+>> +     TP_fast_assign(
+>> +             __assign_str(dev_name, dev_name);
+>> +             __entry->status         = status;
+>> +             __entry->severity       = severity;
+>> +     ),
+>> +
+>> +     TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+>> +             __get_str(dev_name),
+>> +             __entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
+>> +                     __entry->severity == HW_EVENT_ERR_FATAL ?
+>> +                     "Fatal" : "Uncorrected",
+>> +             __entry->severity == HW_EVENT_ERR_CORRECTED ?
+>> +             __print_flags(__entry->status, "|", aer_correctable_errors) :
+>> +             __print_flags(__entry->status, "|", aer_uncorrectable_errors))
+>> +);
 >
-> greg k-h
+> Here's a bug causing inconsistency between dmesg and the trace event output.
+> When dmesg says "severity=Corrected", the trace event says
+> "severity=Fatal". What happens is that HW_EVENT_ERR_CORRECTED is
+> defined in edac.h:
+>
+> enum hw_event_mc_err_type {
+>         HW_EVENT_ERR_CORRECTED,
+>         HW_EVENT_ERR_UNCORRECTED,
+>         HW_EVENT_ERR_FATAL,
+>         HW_EVENT_ERR_INFO,
+> };
+>
+> while aer_print_error() uses aer_error_severity_string[] defined as:
+>
+> static const char *aer_error_severity_string[] = {
+>         "Uncorrected (Non-Fatal)",
+>         "Uncorrected (Fatal)",
+>         "Corrected"
+> };
+>
+> In this case dmesg is correct because info->severity is assigned in
+> aer_isr_one_error() using the definitions in include/linux/ras.h:
+> #define AER_NONFATAL                    0
+> #define AER_FATAL                       1
+> #define AER_CORRECTABLE                 2
+>
+> So which one is the standard? Is there a plan to unify all these names?
+>
+> Thanks
+> Rui Wang
+>
+>> +
+>> +#endif /* _TRACE_AER_H */
+>> +
+>> +/* This part must be outside protection */
+>> +#include <trace/define_trace.h>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
