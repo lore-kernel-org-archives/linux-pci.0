@@ -1,107 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:35383 "EHLO
-	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751838Ab3LTEVZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 23:21:25 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Karicheri, Muralidharan" <m-karicheri2@ti.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Date: Fri, 20 Dec 2013 12:21:08 +0800
-Subject: RE: pcie designware question
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F96BAC51@EAPEX1MAIL1.st.com>
-References: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
- <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
-In-Reply-To: <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:37055 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932690Ab3LDRIn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 12:08:43 -0500
+Date: Wed, 4 Dec 2013 09:08:37 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: stefano.stabellini@eu.citrix.com, ian.campbell@citrix.com,
+	xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	leosilva@linux.vnet.ibm.com, ashley@ashleylai.com,
+	peterhuewe@gmx.de, mail@srajiv.net, tpmdd@selhorst.net,
+	tpmdd@sirrix.com, bhelgaas@google.com, plagnioj@jcrosoft.com,
+	tomi.valkeinen@ti.com, tpmdd-devel@lists.sourceforge.net,
+	linux-input@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-fbdev@vger.kernel.org
+Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
+Message-ID: <20131204170837.GB8838@core.coreip.homeip.net>
+References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
+ <20131204164218.GA8838@core.coreip.homeip.net>
+ <20131204164802.GG391@pegasus.dumpdata.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131204164802.GG391@pegasus.dumpdata.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gTXVyYWxpLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJq
-b3JuIEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiBTZW50OiBGcmlkYXks
-IERlY2VtYmVyIDIwLCAyMDEzIDQ6MjggQU0NCj4gVG86IEthcmljaGVyaSwgTXVyYWxpZGhhcmFu
-DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBNb2hpdCBLVU1BUiBEQ0c7IEppbmdv
-byBIYW4NCj4gU3ViamVjdDogUmU6IHBjaWUgZGVzaWdud2FyZSBxdWVzdGlvbg0KPiANCj4gWytj
-YyBNb2hpdCwgSmluZ29vXQ0KPiANCj4gT24gVGh1LCBEZWMgMTksIDIwMTMgYXQgMzowMSBQTSwg
-S2FyaWNoZXJpLCBNdXJhbGlkaGFyYW4gPG0tDQo+IGthcmljaGVyaTJAdGkuY29tPiB3cm90ZToN
-Cj4gPiBIaSwNCj4gPg0KPiA+IEkgYW0gd29ya2luZyB0byBwb3J0IG15IHBjaWUgZHJpdmVyIHRv
-IHBjaWUtZGVzaWdud2FyZSBjb3JlIGRyaXZlci4NCj4gPiBUaGUgcGNpZSBzdWIgc3lzdGVtICBv
-biBvdXIgcGxhdGZvcm0gIGhhcyAzMiBPVVRCT1VORCByZWdpb25zIGFuZCAyDQo+ID4gSU5CT1VO
-RCByZWdpb25zLiBJbiBteSBjdXJyZW50IGRyaXZlciwgSSB1c2UgaW50ZXJuYWwgbWVtb3J5IG1h
-cCBvZg0KPiA+IENQVSB0byBhY2Nlc3MgdGhlIFJDJ3MgY29uZmlnL2FwcGxpY2F0aW9uIHNwYWNl
-IGFzIHdlbGwgRVAncyBjb25maWcNCj4gPiBzcGFjZS4gYSA0SyByYW5nZSBpcyBhdmFpbGFibGUg
-dG8gYWNjZXNzIHRoZSBFUCdzIGNvbmZpZyBzcGFjZS4gVG8NCj4gPiBhbGxvdyB3cml0ZS9yZWFk
-IHRvIHRoZSBFUCdzIGNvbmZpZyBzcGFjZSwgdGhlIGRyaXZlciBiYXNpY2FsbHkgd3JpdGUgdGhl
-IGJ1cywNCj4gZGV2aWNlIGFuZCBmdW5jdGlvbiBudW1iZXIgdG8gdGhlICBhcHBsaWNhdGlvbiBD
-RkdfU0VUVVAgcmVnaXN0ZXIgYW5kIHRoZW4NCj4gYWNjZXNzIHRoZSBjb3JyZXNwb25kaW5nIEVQ
-J3MgY29uZmlnIHJlZ2lzdGVyLg0KPiA+DQo+ID4gSSBoYXZlIHJldmlld2VkIHRoZSBkZXNpZ253
-YXJlLmMgY29kZSBhbmQgdGhlIGdsdWUgbG9naWMgZHJpdmVyDQo+ID4gcGNpLWV4eW5vcy5jIGFu
-ZCBjb3VsZG4ndCB1bmRlcnN0YW5kIGZldyB0aGluZ3MuDQo+ID4NCj4gPiAxLiBPdXIgcGNpZSBz
-cyBpcyBiYXNlZCBvbiBkZXNpZ253YXJlIGNvcmUgYW5kIGZvbGxvd2luZyBhZGRyZXNzZXMgYXJl
-DQo+ID4gbm90IGxpc3RlZCBpbiBvdXIgSVAncyAgZGF0YSBtYW51YWwuIFdoZXJlIGlzIGRlZmlu
-ZWQ/IEl0IGRvZXMgc2hvdw0KPiA+IHRoZSByZXN0IG9mIHRoZSBvZmZzZXRzIGRlZmluZWQgaW4g
-IGRyaXZlcnMvcGNpL2hvc3QvZGVzaWdud2FyZS5jIGFuZA0KPiA+DQo+ID4gI2RlZmluZSBQQ0lF
-X0FUVV9WSUVXUE9SVCAgICAgICAgICAgICAgIDB4OTAwDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9S
-RUdJT05fSU5CT1VORCAgICAgICAgICgweDEgPDwgMzEpDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9S
-RUdJT05fT1VUQk9VTkQgICAgICAgICgweDAgPDwgMzEpDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9S
-RUdJT05fSU5ERVgxICAgICAgICAgICgweDEgPDwgMCkNCj4gPiAjZGVmaW5lIFBDSUVfQVRVX1JF
-R0lPTl9JTkRFWDAgICAgICAgICAgKDB4MCA8PCAwKQ0KPiA+ICNkZWZpbmUgUENJRV9BVFVfQ1Ix
-ICAgICAgICAgICAgICAgICAgICAweDkwNA0KPiA+ICNkZWZpbmUgUENJRV9BVFVfVFlQRV9NRU0g
-ICAgICAgICAgICAgICAoMHgwIDw8IDApDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9UWVBFX0lPICAg
-ICAgICAgICAgICAgICgweDIgPDwgMCkNCj4gPiAjZGVmaW5lIFBDSUVfQVRVX1RZUEVfQ0ZHMCAg
-ICAgICAgICAgICAgKDB4NCA8PCAwKQ0KPiA+ICNkZWZpbmUgUENJRV9BVFVfVFlQRV9DRkcxICAg
-ICAgICAgICAgICAoMHg1IDw8IDApDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9DUjIgICAgICAgICAg
-ICAgICAgICAgIDB4OTA4DQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9FTkFCTEUgICAgICAgICAgICAg
-ICAgICgweDEgPDwgMzEpDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9CQVJfTU9ERV9FTkFCTEUgICAg
-ICAgICgweDEgPDwgMzApDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9MT1dFUl9CQVNFICAgICAgICAg
-ICAgIDB4OTBDDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9VUFBFUl9CQVNFICAgICAgICAgICAgIDB4
-OTEwDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9MSU1JVCAgICAgICAgICAgICAgICAgIDB4OTE0DQo+
-ID4gI2RlZmluZSBQQ0lFX0FUVV9MT1dFUl9UQVJHRVQgICAgICAgICAgIDB4OTE4DQo+ID4gI2Rl
-ZmluZSBQQ0lFX0FUVV9CVVMoeCkgICAgICAgICAgICAgICAgICgoKHgpICYgMHhmZikgPDwgMjQp
-DQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9ERVYoeCkgICAgICAgICAgICAgICAgICgoKHgpICYgMHgx
-ZikgPDwgMTkpDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9GVU5DKHgpICAgICAgICAgICAgICAgICgo
-KHgpICYgMHg3KSA8PCAxNikNCj4gPiAjZGVmaW5lIFBDSUVfQVRVX1VQUEVSX1RBUkdFVCAgICAg
-ICAgICAgMHg5MUMNCg0KLSBUaGVzZSBhcmUgU3lub3BzeXMgc3BlY2lmaWMgcG9ydCBsb2dpYyBy
-ZWdpc3RlcnMuIFlvdSBjYW4gZmluZCB0aGVzZSByZWdpc3RlcnMgYXQgb2Zmc2V0IDB4MjAwDQog
-dW5kZXIgcG9ydCBsb2dpYyByZWdpc3RlcnMgc2VjdGlvbiBpbiBTeW5wc3lzIFBDSWUgRE0uICBU
-aGVyZSBjYW4gYmUgbWlub3IgZGlmZmVyZW5jZSBpbiB0aGUgbmFtZQ0KY29udmVudGlvbiBhcyBp
-dCBpcyBjYWxsZWQgJ2lBVFUgVmlld3BvcnQgUmVnaXN0ZXInIGluIGNvbnRyb2xsZXIgdmVyc2lv
-bjMuNzAgYW5kICdpQVRVIEluZGV4IFJlZ2lzdGVyJw0KIGluIHZlcnNpb24gNC4xMS4NCkJ5IHRo
-ZSB3YXkgd2hpY2ggdmVyc2lvbiBvZiBJUCBtYW51YWwgeW91IGFyZSByZWZlcnJpbmc/DQoNCj4g
-Pg0KPiA+IDIuIE15IHVuZGVyc3RhbmRpbmcgaXMgdGhhdCB0aGUgZGVzaWdud2FyZSBjb3JlIGN1
-cnJlbnRseSBzdXBwb3J0IDINCj4gPiBPVVRCT1VORCByZWdpb25zIGFuZCAyIElOQk9VTkQgcmVn
-aW9ucy4gSXMgdGhpcyB0cnVlPyBJcyB0aGVyZSBhIHBsYW4gdG8NCj4gc3VwcG9ydCBtb3JlIHRo
-YW4gMj8NCg0KLSB5ZXMgY3VycmVudGx5IHN1cHBvcnRpbmcgb25seSAyIHZpZXdwb3J0cyBhcyB0
-aGVyZSBhcmUgc29tZSBjb250cm9sbGVyIGhhdmluZyBvbmx5IHR3by4NCkFzIG9mIG5vdyBubyBw
-bGFuIHRvIGVuaGFuY2UgaXQuIEJ1dCBpZiB5b3Ugc2VuZCBhIHBhdGNoIGZvciB0aGlzIG1vZGlm
-aWNhdGlvbiwgd2UgY2FuIHJldmlldy4NCg0KPiA+IDMuIElzIHRoZXJlIGEgZG9jdW1lbnRhdGlv
-biBleHBsYWluaW5nIGhvdyB0aGUgQVRVIGhhbmRsaW5nIGNvZGUgaXMNCj4gPiBkZXNpZ25lZD8g
-QmFzaWNhbGx5IGFzIEkgY2FuJ3QgZmluZCBBVFUgc3BlY2lmaWMgcmVnaXN0ZXJzIGRlZmluZWQg
-aW4NCj4gPiB0aGUgc3Mgc3BlYywgSSBhbSBub3QgYWJsZSB0byB1bmRlcnN0YW5kIHRoaXMgY29k
-ZS4gSSBkbyBzZWUgdGhlDQo+ID4gYXBwbGljYXRpb24gc3BhY2UgaW4gb3VyIHNzIHNwZWMgZGVm
-aW5pbmcgT1VUQk9VTkQgSU5ERVgvT0ZGU0VUDQo+IHJlZ2lzdGVyIHRvIGNvbmZpZ3VyZSBPVVRC
-T1VORCByZWdpb25zIGFuZCBJQiByZWdpc3RlcnMgdG8gZGVmaW5lIHRoZQ0KPiBJTkJPVU5EIHJl
-Z2lvbi4NCg0KLSBBcyBtZW50aW9uZWQgcGxlYXNlIHJlZmVyIFN5bm9wc3lzIFBDSWUgRE0gYW5k
-IGZpbmQgdGhlc2UgcmVnaXN0ZXJzIHVuZGVyIHBvcnQgbG9naWMgc2VjdGlvbg0KIGF0IG9mZnNl
-dCAweDIwMC4NCg0KPiA+DQo+ID4gNC4gV2hhdCBpcyB0aGUgYmFzZSBhZGRyZXNzIHZhcmlhYmxl
-IHVzZWQgdG8gYWNjZXNzIFJDJ3MgYXBwbGljYXRpb24NCj4gPiByZWdpc3RlciBzcGFjZT8gZGJp
-X2Jhc2UgaW4gc3RydWN0IHBjaWVfcG9ydCA/IEFsc28gSSBhbSBhc3N1bWluZyB0aGlzDQo+ID4g
-aXMgdXNlZCBmb3IgYWNjZXNzaW5nIHRoaXMgc3BhY2UgZnJvbSBpbnRlcm5hbCBDUFUgYnVzIGFu
-ZCBjZmcwX2Jhc2UgYW5kDQo+IGNmZzFfYmFzZSBmb3IgYWNjZXNzaW5nIGl0IGZyb20gcGNpIGJ1
-cy4gSXMgdGhpcyByaWdodD8NCg0KLSBEQkkgU3BhY2U6IFRoaXMgc3BhY2UgaXMgdXNlZCB0byBy
-ZWFkL3dyaXRlIG93biBQQ0kgQ29uZmlndXJhdGlvbiBIZWFkZXIsDQogQ2FwYWJpbGl0eSBhbmQg
-UG9ydCBMb2dpYyAoUEwpIFJlZ2lzdGVycw0KIEVMQkkgc3BhY2U6IFRoZXNlIGFyZSBjb21wbGV0
-ZWx5IHBsYXRmb3JtIChTcGVhci9FeHlub3N5cyAuLi4pIHNwZWNpZmljIGFwcGxpY2F0aW9uIHJl
-Z2lzdGVycy4NCkNvbmZpZ3VyYXRpb24vSU8vTWVtb3J5IHNwYWNlOiBUaGVzZSBhZGRyZXNzZXMg
-Y2FuIGJlIHVzZWQgaW4gdmlld3BvcnQgcHJvZ3JhbW1pbmcgdG8NCiBnZW5lcmF0ZSBkaWZmZXJl
-bnQgdHlwZSBvZiBvdXRib3VuZCB0cmFuc2FjdGlvbi4NCg0KUmVnYXJkcw0KTW9oaXQNCg0KPiA+
-DQo+ID4gSSBhbSB0cnlpbmcgdG8gZmlndXJlIHRoaXMgb3V0IG15c2VsZiwgYnV0IGlmIHNvbWVv
-bmUgY291bGQgZXhwbGFpbiB0aGVzZSwNCj4gdGhhdCB3aWxsIGJlIGdyZWF0IQ0KPiA+DQo+ID4g
-VGhhbmtzLg0KPiA+DQo+ID4gTXVyYWxpIEthcmljaGVyaQ0KPiA+IExpbnV4IEtlcm5lbCwgU29m
-dHdhcmUgRGV2ZWxvcG1lbnQNCj4gPg0KPiA+DQo+ID4gLS0NCj4gPiBUbyB1bnN1YnNjcmliZSBm
-cm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIg0KPiA+
-IGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1v
-cmUNCj4gbWFqb3Jkb21vDQo+ID4gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpv
-cmRvbW8taW5mby5odG1sDQo=
+On Wed, Dec 04, 2013 at 11:48:03AM -0500, Konrad Rzeszutek Wilk wrote:
+> > > which is hardly nice. This patch fixes this by having each
+> > > PV driver check for:
+> > >  - if running in PV, then it is fine to execute (as that is their
+> > >    native environment).
+> > >  - if running in HVM, check if user wanted 'xen_emul_unplug=never',
+> > >    in which case bail out and don't load PV drivers.
+> > >  - if running in HVM, and if PCI device 5853:0001 (xen_platform_pci)
+> > >    does not exist, then bail out and not load PV drivers.
+> > > 
+> > > P.S.
+> > > Ian Campbell suggested getting rid of 'xen_platform_pci_unplug'
+> > > but unfortunatly the xen-blkfront driver is using it, so we
+> > > cannot do it.
+> > > 
+> > > Reported-by: Sander Eikelenboom <linux@eikelenboom.it
+> > > Reported-by: Anthony PERARD <anthony.perard@citrix.com>
+> > > Reported-by: Fabio Fantoni <fabio.fantoni@m2r.biz>
+> > 
+> > For input:
+> > 
+> > Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+> 
+> Thank you. I need to do some extra changes to the other subsystems but
+> for the fb/kbd itshould be still throught the same function as this
+> patch has exposed. I will repost it and include your Ack if you are OK
+> with that?
+
+Sure.
+
+-- 
+Dmitry
