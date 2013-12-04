@@ -1,63 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:57758 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755766Ab3LIRRM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 12:17:12 -0500
-Received: by mail-ie0-f174.google.com with SMTP id at1so6594746iec.33
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 09:17:12 -0800 (PST)
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:34287 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932576Ab3LDRAm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 12:00:42 -0500
 MIME-Version: 1.0
-In-Reply-To: <52A3DE0B.7020809@servergy.com>
-References: <52A26913.6030604@servergy.com> <52A3DE0B.7020809@servergy.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 10:11:29 -0700
-Message-ID: <CAErSpo7h7JjCtef6FMkd=T9hAGSMyfATAiEGUCx6EoGU_UALcQ@mail.gmail.com>
-Subject: Re: Question: 2 PCIE controllers
-To: Ruchika <ruchika.k@servergy.com>
+In-Reply-To: <CAErSpo57gPPY73nCHbfGVynZRde0jj9_kjpR=FKwY-uTXzY2cw@mail.gmail.com>
+References: <CAD6G_RT0S43BrOeXxJ6d3p1ALbXkGumZCSPBaK1Bz=2pX3hHYQ@mail.gmail.com>
+	<CAErSpo4DNqUpA6Cb_tanW3uRJ3J-4utCQwtRz3eYZETCMtniUQ@mail.gmail.com>
+	<CAD6G_RR=toq_6tCav6Y9=EprK9LC3YfGO=scvWpcGfDpWwJbRA@mail.gmail.com>
+	<CAErSpo57gPPY73nCHbfGVynZRde0jj9_kjpR=FKwY-uTXzY2cw@mail.gmail.com>
+Date: Wed, 4 Dec 2013 22:30:42 +0530
+Message-ID: <CAD6G_RTHNGg7XSnDMQ-H+hUzmh1RPn9gYUDf7vRdeETmTmTdzw@mail.gmail.com>
+Subject: Re: Need help on Linux PCIe
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+On Wed, Dec 4, 2013 at 8:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Dec 3, 2013 at 11:20 PM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
+>> Thanks for your quick response.
+>> Please find my comments below.
+>>
+>> On Tue, Dec 3, 2013 at 11:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Tue, Dec 3, 2013 at 4:24 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
+>>>> Hi,
+>>>>
+>>>> I have few question on Linux PCIe subsystem, I am trying to understand
+>>>> the PCIe on ARM platform.
+>>>> 1. Compared to PCI, PCIe have an extra port functionalists/services
+>>>> which is implemented drivers/pci/pcie/* is it true?
+>>>
+>>> Yes.
+>>>
+>>>> 2. PCIe root complex is same as Host controller drivers in linux drivers/host/*
+>>>
+>>> Yes.
+>>>
+>>>> 3. As individual endpoint drivers are registered to pci_core as
+>>>> pci_driver_register, then what is the common call for registering
+>>>> individual HC driver to pci-core?
+>>>
+>>> The host controller-PCI core interface is not as mature as the
+>>> pci_register_driver() interface.  The basic interface is
+>>> pci_scan_root_bus().  If you skim through the drivers in
+>>> drivers/pci/host/* and drivers/acpi/pci_root.c, the interface to the
+>>> PCI core will be fairly obvious.  And you'll learn what the existing
+>>> practices are in case you need to add or modify something.
+>>
+>> OK.
+>>
+>> I understand the flow as below - please correct if am wrong.
+>>
+>> From low level (hw) - HC driver has a platform registration using
+>> platform_driver_register() to lower layer
+>> and then pci_scan_root_bus() --> pci_common_init_dev() registration to
+>> upper layer as PCI - BIOS and then ends.
+>
+> Yes.  Sometime HC drivers use platform_driver_register(); other use
+> something else depending on how the HC device is enumerated.  For
+> example, drivers/acpi/pci_root.c uses something else to deal with host
+> bridges in the ACPI namespace.
+>
+>> From upper level (app) - each endpoint driver has
+>> pci_driver_register() call to PCI Core for lower level
+>
+> Yes.
+>
+>> and then the upper level registration is based on endpoint().
+>
+> I don't know what you mean here (I don't know of a function named
+> "endpoint()").  But the driver model matches drivers to PCI functions
+> based on vendor and device IDs.  A Linux "pci_dev" is what the PCI
+> specs refer to as a "function."
+Sorry it's typo - added ()
 
-On Sat, Dec 7, 2013 at 7:48 PM, Ruchika <ruchika.k@servergy.com> wrote:
 >
-> Hi,
-> I am working with an Soc with 3 PCIE controllers.
-> I need to have 2 configured.
+>> What is the connection here for PCI-BIOS and PCI-Core here, does these
+>> are two different entities means there is no common call for these?
+>> I see for ARM - "arch/arm/kernel/bios32.c" is PCI-BIOS is it correct?
+>> does we have separate BIOS codes for architectures?
 >
-> In uboot I have no problems scanning and discovering what is connected
-> to both bridges PCIE1 and PCIE2
->
-> For both uboot sets up the Primary, secondary and Subordinate bus
-> numbers to 0,1,1 respectively.
->
-> When linux boots up and probes the controllers, PCIE1 is probed and the
-> bridge scanned properly but PCIE2 is probed at the bridge but not
-> attempted a scan.
-> I see this message
-> "pci 0001:02:00.0: bridge configuration invalid ([bus 01-01]), reconfiguring
-> "
->
-> I updated uboot to set the secondary and subordinate numbers to 2 (left
-> the primary number to 0) and a subsequent kernel boot scanned the bus
-> for PCIE2 successfully.
-> I found these numbers to be very critical since the device tree blob
-> (bus-range) for pci is also based off these.
+> The "pcibios_*" functions are architecture-specific things called by
+> the generic PCI core.  Generally, things specified by the PCI specs
+> are architecture-independent and should be in the PCI core
+> (drivers/pci/*).
 
-Linux is not very good at reconfiguring bridges, as you've discovered.
- If the firmware or boot loader leaves things correctly configured,
-Linux usually won't mess it up, but we may not be able to configure
-things from scratch.  That's why Yinghai suggested having uboot set
-things up beforehand.  That's not a very satisfactory answer, but it
-is probably the easiest short-term solution.
+I have some good information to discuss from this thread.
+Can you please verify this Linux PCIe subsystem stack - comment
+whether my understanding is correct/not.
+(I just draw this based on driver calls flow - to accommodate with in
+the Linux cores)
+http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
 
-In the longer term, it'd be nice if somebody would fix Linux to handle
-this correctly, and one way to help that along would be to file a bug
-at http://bugzilla.kernel.org in the drivers/PCI category, and attach
-a complete dmesg log showing the problem.  If you can include a log or
-other info about how uboot enumerates everything, that would also
-help.
-
-Bjorn
+-- 
+Thanks,
+Jagan.
+--------
+Jagannadha Sutradharudu Teki,
+E: jagannadh.teki@gmail.com, P: +91-9676773388
+Engineer - System Software Hacker
+U-boot - SPI Custodian and Zynq APSOC
+Ln: http://www.linkedin.com/in/jaganteki
