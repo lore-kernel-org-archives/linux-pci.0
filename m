@@ -1,92 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:54234 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751805Ab3LMEnj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 23:43:39 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
-Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out of the core
-Date: Fri, 13 Dec 2013 05:56:47 +0100
-Message-ID: <4217831.DpCd0ng0jT@vostro.rjw.lan>
-In-Reply-To: <52AA7760.20603@jp.fujitsu.com>
-References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <81535269.SKoBMiGyoU@vostro.rjw.lan> <52AA7760.20603@jp.fujitsu.com>
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:35669 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750711Ab3LEFEx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 00:04:53 -0500
+Date: Thu, 5 Dec 2013 10:34:24 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	<linux-pci@vger.kernel.org>, Tim Harvey <tharvey@gateworks.com>
+Subject: [Query/Discussion]: IO translation with designware PCIe controller
+Message-ID: <20131205050424.GA2298@pratyush-vbox>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 13, 2013 11:56:32 AM Yasuaki Ishimatsu wrote:
-> Hi Rafael,
+Hi Arnd / Jingoo,
 
-Hi,
+Sorry for not able to follow earlier discussion you had on this
+topic while initial reviews of patches from Jingoo.
 
-> Please share your more detailed idea. I started to implement the following
-> idea. But the idea has one problem.
-> 
-> >>> The eject work flow can be:
-> >>>     (1) an eject event occurs,
-> >>>     (2) the container "physical" device fails offline in acpi_scan_hot_remove()
-> >>>         emmitting, say, KOBJ_CHANGE for the "physical" device,
-> >>>     (3) user space notices the KOBJ_CHANGE and does the cleanup as needed,
-> >>>     (4) user space changes the "physical" container device flag controlling
-> >>>         offline to 0,
-> >>>     (5) user space uses the sysfs "eject" attribute of the ACPI container object
-> >>>         to finally eject the container,
-> >>>     (6) the offline in acpi_scan_hot_remove() is now successful, because the
-> >>>         flag controlling it has been set to 0 in step (4),
-> >>>     (7) the "physical" container device goes away before executing _EJ0,
-> >>>     (8) the container is ejected.
-> 
-> I want to emit KOBJ_CHANGE before offlining devices on container device at (2).
-> But acpi_scan_hot_remove() offlines devices on container device at first.
-> So when offline container device, devices on container has been offlined.
-> 
-> Thus the idea cannot fulfill my necessary feature.
+I have few doubts that how will it actually work.
 
-Well, in that case we need to treat containers in a special way at the ACPI
-level.  Which is a bit unfortunate so to speak.
+As per my understanding under current implementation:
 
-To that end I'd try to add a new flag to struct acpi_hotplug_profile, say
-.verify_offline, such that if set, it would cause acpi_scan_hot_remove() to
-check if all of the "physical" companions of the top-level device are offline
-to start with, and if not, it would just emit KOBJ_CHANGE for the companions
-that are not offline and bail out.
+1. Physical IO addresses are in the range of 0x1000 to 0xfffff.
+2. They are mapped to fixed virtual address 0xFEE00000 using
+pci_ioremap_io.
+3. IO resource addresses to any PCIe device will be allocated in above
+range.
+4. Driver for that PCIe device will write in the above range only for
+IO transaction to the device.
+5. As per current IO translation programming, its one to one
+translation. It means PCIe translation unit will have both input and
+output address in the range of 0x1000 to 0xfffff.
 
-So the above algorithm would become:
+Did I miss something, or if above statements are correct, then what I
+do not understand is how can designware PCIe translation unit accept
+input address in the range of 0x1000 to 0xfffff?
 
-(1) an eject event occurs,
-(2) acpi_scan_hot_remove() checks the verify_offline flag in the target device's
-    scan_handler structure,
-(3) if set (it would always be set for containers), acpi_scan_hot_remove()
-    checks the status of the target device's "physical" companions; if at least
-    one of them is offline, KOBJ_CHANGE is emitted for that "physical" device,
-    and acpi_scan_hot_remove() returns, [I guess we can just emit KOBJ_CHANGE
-    for the first companion that is not offline at this point.]
-(4) user space notices the KOBJ_CHANGE and does the cleanup as needed; in the
-    process it carries out the offline operation for the container's "physical"
-    companion (there's only one such companion for each container), [That
-    operation for the container itself is trivial, but to succeed it requires
-    all devices below the container to be taken offline in advance.]
-(5) user space uses the sysfs "eject" attribute of the ACPI container object
-    to finally eject the container,
-(6) acpi_scan_hot_remove() is now successful, because the container's "physical"
-    companion is now offline,
-(7) the "physical" container device goes away before executing _EJ0,
-(8) the container is ejected.
+For example in SPEAr1340, physically RAM is mapped on above addresses.
+PCIe address translation unit can accept address only in the range of
+core addresses which are assigned to PCIe RC ie 0x80000000-0x8FFFFFFF.
 
-I think that should work for you.
-
-Thanks,
-Rafael
+Regards
+Pratyush
 
