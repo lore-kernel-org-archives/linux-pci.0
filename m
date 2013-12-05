@@ -1,95 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:52505 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758182Ab3LFOrE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 09:47:04 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [Query/Discussion]: IO translation with designware PCIe controller
-Date: Fri, 6 Dec 2013 15:46:23 +0100
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Marek Vasut <marex@denx.de>,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>
-References: <20131205050424.GA2298@pratyush-vbox> <201312052233.13169.arnd@arndb.de> <20131206091209.GC2298@pratyush-vbox>
-In-Reply-To: <20131206091209.GC2298@pratyush-vbox>
+Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:36598 "EHLO
+	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751392Ab3LEGsi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 01:48:38 -0500
+Date: Thu, 5 Dec 2013 12:18:22 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Jay Agarwal <jagarwal@nvidia.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"'yinghai@kernel.org'" <yinghai@kernel.org>,
+	Stephen Warren <swarren@nvidia.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Subject: Re: [Discussion]: ARM: PCIE: Setup bridges not happening with
+ portbus driver enabled
+Message-ID: <20131205064822.GB2298@pratyush-vbox>
+References: <C79B248886DD134989C8FF6B096A91AB92139701C7@BGMAIL01.nvidia.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312061546.23981.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <C79B248886DD134989C8FF6B096A91AB92139701C7@BGMAIL01.nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 06 December 2013, Pratyush Anand wrote:
-
-> > 
-> > 1. The "bus" I/O port address, in the range between 0x1000 and 0xffff
-> > (65535). This is the address used in data frames in the actual bus
-> > transaction going over the PCIe wires. If you have more than one PCIe
-> > host bridge, each of them can normally have a range of up to 65536
-> > addresses. The bus addresses get written into BAR registers of the
-> > device.
+On Thu, Dec 05, 2013 at 01:44:53PM +0800, Jay Agarwal wrote:
+> Hi All,
 > 
-> Correct. Got this point. So this address should be output of
-> designware outbound address translation unit.
-
-Right.
-
-> > 2. The Linux I/O port numbers, between 0x00000 and 0xfffff (1048575).
-> > This is a logical number space that aggregates all bus I/O port numbers.
-> > The first 4096 ports are normally reserved for ISA devices and are
-> > not available for PCIe resources. Each PCI or PCIe host bridge can have
-> > a 0x10000 byte naturally aligned range in here. The common case is that
-> > you have only one host bridge using the range 0x1000-0xffff. If you have
-> > more than one, there may be an offset between them, e.g. the second PCIe
-> > host may have io_offset set to 0x10000, which means that its bus range
-> > 0x1000-0xffff gets translated to Linux port number 0x11000-0x1ffff.
-> > Linux port numbers are visible e.g. in /proc/ioport and /dev/port
+> I am seeing below issue on an ARM platform with CONFIG_PCIEPORTBUS enabled in kernel
 > 
-> Ok, got it. To know more, which binding function maps this logical
-> number space to address space in 4?
-
-There is just a linear offset between the two: PCI_IO_VIRT_BASE.
-This offset is applied in the __io() macro when converting from
-a port number to a pointer in various places in the kernel (inb/outb
-as well as pci_iomap/ioport_map), and the offset is added
-in pci_ioremap_io() when creating the page table entries.
-
-> > 4. The CPU virtual address space: This is an implementation detail
-> > of the kernel, which results in the Linux I/O port numbers 0x0-0xfffff
-> > to be mapped at 0xfee00000-0xfeefffff.
-> > 
-> > > For example in SPEAr1340, physically RAM is mapped on above addresses.
-> > > PCIe address translation unit can accept address only in the range of
-> > > core addresses which are assigned to PCIe RC ie 0x80000000-0x8FFFFFFF.
-> > 
-> > Since this is a physical address, it corresponds to address space 3 in
-> > my list above, and the address you pick here is what you pass to
-> > pci_ioremap_io.
+> ISSUE:  Any memory access by devices fails
 > 
-> This is what I was expecting. But currently designware driver does not
-> pass this address to pci_ioremap_io.
-> OK.. We will fix it and will send patch.
+> FINDINGS:
+> 
+> 1. No bridge windows like below are setup and probably this is not allowing any memory access by devices
 
-I think it does handle this correctly, look at
+Does your RC driver calls pci_assign_unassigned_resources after
+pci_common_init?
 
-static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-{
-	...
-        if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-                sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-                pci_ioremap_io(sys->io_offset, pp->io.start);
-                global_io_offset += SZ_64K;
-                pci_add_resource_offset(&sys->resources, &pp->io,
-                                        sys->io_offset);
-        }
-	...
-}
+Regards
+Pratyush
 
-I believe this does the right thing, but you have to put the correct
-translation into the 'ranges' property of the host bridge node in DT.
-
-	Arnd
+> [    1.280324] pci 0000:00:00.0:   bridge window [mem 0xXXX00000-0xXXXfffff]
+> [    1.280350] pci 0000:00:00.0:   bridge window [mem 0xXXX00000-0xXXXfffff pref]
+> 
+> 2. On debugging, I see pci_enable_bridge(setup-bus.c) is not called because pci_is_enabled returns true. This is because pci_enable_device is already called for this bridge by portbus driver in pcie_port_device_register(portdrv_core.c).
+> 3. Below patch is resolving this issue without any visible side effects. In fact, I verified AER(which needs PORTBUS) also with this.
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c index 64a7de2..9b67fff 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1200,8 +1200,7 @@ void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+>  
+>                 switch (dev->class >> 8) {
+>                 case PCI_CLASS_BRIDGE_PCI:
+> -                       if (!pci_is_enabled(dev))
+> -                               pci_setup_bridge(b);
+> +                       pci_setup_bridge(b);
+>                         break;
+>  
+>                 case PCI_CLASS_BRIDGE_CARDBUS:
+> 
+> 3. This patch works without PORTBUS enabled also.
+> 
+> QUESTIONS:
+> 1. Does anybody see any problem with this patch? Any reason for pci_is_enabled check above?
+> 
+> With best,
+> Jay
+> -----------------------------------------------------------------------------------
+> This email message is for the sole use of the intended recipient(s) and may contain
+> confidential information.  Any unauthorized review, use, disclosure or distribution
+> is prohibited.  If you are not the intended recipient, please contact the sender by
+> reply email and destroy all copies of the original message.
+> -----------------------------------------------------------------------------------
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
