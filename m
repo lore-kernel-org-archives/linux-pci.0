@@ -1,142 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog121.obsmtp.com ([207.126.144.151]:54722 "EHLO
-	eu1sys200aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750751Ab3LJEe3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 23:34:29 -0500
-Date: Tue, 10 Dec 2013 10:04:09 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: Marek Vasut <marex@denx.de>,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>
-Subject: Re: [Query/Discussion]: IO translation with designware PCIe
- controller
-Message-ID: <20131210043409.GA2734@pratyush-vbox>
-References: <20131205050424.GA2298@pratyush-vbox>
- <201312061546.23981.arnd@arndb.de>
- <20131209071241.GA5760@pratyush-vbox>
- <201312091709.38013.arnd@arndb.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 5 Dec 2013 22:12:55 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Betty Dall <betty.dall@hp.com>
+Cc: Ethan Zhao <ethan.kernel@gmail.com>,
+	rui wang <ruiv.wang@gmail.com>,
+	Lance Ortiz <lance.ortiz@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, lance_ortiz@hotmail.com,
+	jiang.liu@intel.com, tony.luck@intel.com, rostedt@goodmis.org,
+	m.chehab@samsung.com, linux-acpi@vger.kernel.org,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, gong.chen@linux.intel.com
+Subject: Re: [BUG] Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
+Message-ID: <20131205211255.GG14407@pd.tnic>
+References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+ <CANVTcTabw2pxUP0iinepviavSLHT7AAyaQvA7e-mv2simbX7ow@mail.gmail.com>
+ <CABawtvP3m_dAKaOLxNqHXQobsgk92ysh6H881i3eDASLi+-WAg@mail.gmail.com>
+ <1386267670.18256.8.camel@ejdallLaptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201312091709.38013.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1386267670.18256.8.camel@ejdallLaptop>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 10, 2013 at 12:09:37AM +0800, Arnd Bergmann wrote:
-> On Monday 09 December 2013, Pratyush Anand wrote:
-> > > I think it does handle this correctly, look at
-> > > 
-> > > static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> > > {
-> > > 	...
-> > >         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> > >                 sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> > >                 pci_ioremap_io(sys->io_offset, pp->io.start);
-> > >                 global_io_offset += SZ_64K;
-> > >                 pci_add_resource_offset(&sys->resources, &pp->io,
-> > >                                         sys->io_offset);
-> > >         }
-> > > 	...
-> > > }
-> > > 
-> > > I believe this does the right thing, but you have to put the correct
-> > > translation into the 'ranges' property of the host bridge node in DT.
-> > 
-> > May be not exactly. pp->io is the  realio, and it is passed correctly
-> > to pci_add_resource_offset. But, as you had also
-> > said that pci_ioremap_io will receive cpu physical address space as
-> > input, therefore I think following modification will be needed to work
-> > io transaction properly.
-> 
-> I see. I think you are right.
-> 
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index be6ce30..cf68632 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >  					   + global_io_offset);
-> >  			pp->config.io_size = resource_size(&pp->io);
-> >  			pp->config.io_bus_addr = range.pci_addr;
-> > +			pp->io_base = range.cpu_addr;
-> >  		}
-> >  		if (restype == IORESOURCE_MEM) {
-> >  			of_pci_range_to_resource(&range, np, &pp->mem);
-> > @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >  
-> >  	pp->cfg0_base = pp->cfg.start;
-> >  	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> > -	pp->io_base = pp->io.start;
-> >  	pp->mem_base = pp->mem.start;
-> >  
-> >  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-> 
-> This looks correct to me and it seems to also fix a bug in
-> dw_pcie_prog_viewport_io_outbound if I read this correctly.
+On Thu, Dec 05, 2013 at 11:21:10AM -0700, Betty Dall wrote:
+> The definition of the GHES_SEV* matches up with the error severity
+> definition of the CPER records as defined in the UEFI spec section
+> N.2.1:
+> "Indicates the severity of the error condition. The severity of
+> the error record corresponds to the most severe error
+> section.
+> 0 - Recoverable (also called non-fatal uncorrected)
+> 1 - Fatal
+> 2 - Corrected
+> 3 - Informational
+> All other values are reserved.
+> Note that severity of "Informational" indicates that the record
+> could be safely ignored by error handling software."
 
-Yes, now outbound viewport for IO translation will get correct input
-address.
+Actually, we can go even one radical step further and drop
+ghes_severity() completely because GHES severity in the ACPI spec 5.0 is
+defined almost exactly the same:
 
-> 
-> > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> >  
-> >  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> >  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> > -		pci_ioremap_io(sys->io_offset, pp->io.start);
-> > +		pci_ioremap_io(sys->io_offset, pp->io_base);
-> >  		global_io_offset += SZ_64K;
-> >  		pci_add_resource_offset(&sys->resources, &pp->io,
-> >  					sys->io_offset);
-> 
-> I think there is still a related bug in here: we should pass global_io_offset rather
-> than sys->io_offset to pci_ioremap_io, so we map the new window into the first
-> available spot in the Linux view of the I/O space, rather than passing a number
-> that might be zero for any bus, if the 'ranges' are set up to have an identity
-> mapping between Linux I/O spaces and PCI I/O spaces. You should be able to verify
-> this by setting the I/O range for the bus to a random 4KB multiple in DT and
-> observe that Linux start allocating ports from 0x1000 but the raw BAR values
-> would contain the value you have chosen.
+"18.3.2.6.1 Generic Error Data
 
-OK.
+...
 
-@ Jingoo, Mohit
+Identifies the error severity of the reported error:
+0 – Recoverable
+1 – Fatal
+2 – Corrected
+3 – None
+Note: This is the error severity of the entire event. Each Generic
+Error Data Entry also includes its own Error Severity field."
 
-Is it possible for you to test following patch.
+I don't know which version of the spec dictated
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index be6ce30..b83f5e8 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 					   + global_io_offset);
- 			pp->config.io_size = resource_size(&pp->io);
- 			pp->config.io_bus_addr = range.pci_addr;
-+			pp->io_base = range.cpu_addr;
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
-@@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- 	pp->cfg0_base = pp->cfg.start;
- 	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
--	pp->io_base = pp->io.start;
- 	pp->mem_base = pp->mem.start;
- 
- 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-@@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- 
- 	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
- 		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
--		pci_ioremap_io(sys->io_offset, pp->io.start);
-+		pci_ioremap_io(global_io_offset, pp->io_base);
- 		global_io_offset += SZ_64K;
- 		pci_add_resource_offset(&sys->resources, &pp->io,
- 					sys->io_offset);
+enum {
+        GHES_SEV_NO = 0x0,
+        GHES_SEV_CORRECTED = 0x1,
+        GHES_SEV_RECOVERABLE = 0x2,
+        GHES_SEV_PANIC = 0x3,
+};
 
-Regards
-Pratyush
-> 
-> 	Arnd
+though and whether we're going to have to differentiate between the old
+and GHES numerical severity levels. Which, if we have to, would be very
+nasty...
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
