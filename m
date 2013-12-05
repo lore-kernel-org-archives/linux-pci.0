@@ -1,239 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jagannadha Sutradharudu Teki
-	<jagannadha.sutradharudu-teki@xilinx.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rob Landley <rob@landley.net>, <linux-pci@vger.kernel.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
-Subject: [PATCH v2 2/2] Documentation: pci: Add pcie-howto.txt
-Date: Thu, 12 Dec 2013 17:08:45 +0530
-In-Reply-To: <1386848325-21064-1-git-send-email-jaganna@xilinx.com>
-References: <1386848325-21064-1-git-send-email-jaganna@xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:36103
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756115Ab3LEAqN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 Dec 2013 19:46:13 -0500
+From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+To: Marek Vasut <marex@denx.de>
+CC: Jingoo Han <jg1.han@samsung.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Frank Li' <lznuaa@gmail.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
+	'Troy Kisky' <troy.kisky@boundarydevices.com>,
+	'Yinghai Lu' <yinghai@kernel.org>
+Subject: RE: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+Date: Thu, 5 Dec 2013 00:46:08 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D47CA2D@039-SN2MPN1-013.039d.mgd.msft.net>
+References: <1382504143-27915-1-git-send-email-tharvey@gateworks.com>
+ <201312031019.58708.marex@denx.de>
+ <0E83723C55F66F43A6041464FE31119D47AB51@039-SN2MPN1-013.039d.mgd.msft.net>
+ <201312041645.21028.marex@denx.de>
+In-Reply-To: <201312041645.21028.marex@denx.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <ced64bc2-ba6c-4bfc-bbc3-53cda681789c@CH1EHSMHS035.ehs.local>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Added pcie-howto.txt for describing the information
-on PCI Express basics and Root Complex driver.
+Hi Marek:
 
-Signed-off-by: Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
----
-Changes for v2:
-	- Fixed comments from "Randy Dunlap"
 
- Documentation/PCI/00-INDEX       |   2 +
- Documentation/PCI/pcie-howto.txt | 186 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 188 insertions(+)
- create mode 100644 Documentation/PCI/pcie-howto.txt
+> -----Original Message-----
+> From: Marek Vasut [mailto:marex@denx.de]
+> Sent: Wednesday, December 04, 2013 11:45 PM
+> To: Zhu Richard-R65037
+> Cc: Jingoo Han; 'Pratyush Anand'; 'Mohit KUMAR DCG'; 'Tim Harvey'; 'Kishon
+> Vijay Abraham I'; linux-pci@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; 'Bjorn Helgaas'; 'Frank Li'; 'Sascha Hauer'; 'Sean
+> Cross'; 'Shawn Guo'; 'Siva Reddy Kallam'; 'Srikanth T Shivanand'; 'Troy Kisky';
+> 'Yinghai Lu'
+> Subject: Re: [PATCH RFC] PCI: imx6: remove outbound io/mem ATU region mapping
+> 
+> On Wednesday, December 04, 2013 at 03:38:49 AM, Richard Zhu wrote:
+> [...]
+> > > > [Richard] One Pericom PI7C9X2G303EL pcie switch, and two pcie ep
+> > > > deivces(one is intel e1000e nic, the other is one xhci device) are
+> > > > tested on imx6q sabresd board.
+> > >
+> > > How/what does have such pericom switch and can be attached to an MX6
+> > > sabresdp ? Where can I get it?
+> >
+> > [Richard] You can apply the example from Pericom.
+> 
+> Which one? Please point me to a website or something here.
+> 
+[Richard] The model of the pcie switch used by me is PI7C9X2G303EL Ver3.0 provided by Pericom.
+Here is the url of this switch.
+http://www.pericom.com/products/pcie-switch/?part=PI7C9X2G303EL
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index b8b7721..d61e7b9 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -6,6 +6,8 @@ pci-error-recovery.txt
- 	- Info on PCI error recovery
- MSI-HOWTO.txt
- 	- The Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ
-+pcie-howto.txt
-+	- A guide describing the PCI Express basics and Root Complex driver
- pcie-portbus-howto.txt
- 	- A guide describing the PCI Express Port Bus driver
- pcie-aer-howto.txt
-diff --git a/Documentation/PCI/pcie-howto.txt b/Documentation/PCI/pcie-howto.txt
-new file mode 100644
-index 0000000..df464b5
---- /dev/null
-+++ b/Documentation/PCI/pcie-howto.txt
-@@ -0,0 +1,186 @@
-+	PCI Express HOWTO
-+	Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
-+	12/12/2013
-+
-+1. About this guide
-+
-+This guide describes the basics of the PCI Express bus and provides
-+information on what the Linux PCIe subsystem looks like and ends with
-+a brief description of PCI Host controller/Root complex driver along
-+with some sample code.
-+
-+2. Basic terminology and conventions
-+
-+PCI Express is
-+- A high performance IO interconnect for peripherals.
-+- Low hardware design overhead compared to PCI, as it uses less pins.
-+- A serial point-to-point interconnect between two devices.
-+- Implements packet-based protocol for data transfer.
-+- Supports features like Advanced power management, Advanced error
-+  reporting facility, and hot-plug.
-+					_________
-+				       |	 |
-+				       |   CPU   |
-+				       |_________|
-+					    |
-+			 ___________________|___________________________
-+			|						| 	  ________
-+			|		ROOT COMPLEX			|        |	  |
-+			|						|--------| Memory |
-+			|   Switch Port			Root port	|	 |________|
-+			|_______________________________________________|
-+					    |				  PCIe Bus0
-+		____________________________|______________________________________
-+				|		|		  |
-+	      ____	  ______|______		|	      ____|____
-+	     |	  |	 /	       \      __|__	     |	       |
-+	     | EP |-----|    SWITCH	|    |     |	     | BRIDGE  |
-+	     |____|	 \_____________/     | EP  |	     | PCIe -  |
-+			    |	    | 	     |_____|         | PCI/PCIe|
-+			  __|__   __|__ 		     |_________|
-+			 |     | |     |			  |	  PCIe Bus1
-+			 | EP  | | EP  | 		__________|________________
-+			 |_____| |_____| 		    |		  |
-+							  __|__		__|__
-+							 |     |       |     |
-+							 | EP  |       | EP  |
-+							 |_____|       |_____|
-+
-+Root Complex (RC)
-+Connects the CPU and memory subsystem to the PCIe fabric (A topology comprised of PCIe
-+nodes like Root Complex, Endpoint, Bridge or a Switch)
-+
-+Port
-+Interface between a PCIe component and the Link.
-+
-+Link
-+PCIe interconnect is referred as a Link, and connects two devices.
-+
-+Lane
-+A PCIe link consists of either 1, 2, 4, 8, 12, 16 or 32 signals in each direction
-+(each signal needs two wires - one for Tx and other for Rx). These signals are
-+referred to as Lanes.
-+
-+Upstream Port
-+Port that points in the direction of RC.
-+
-+Downstream Port
-+Port that points away from the RC.
-+
-+Root Port
-+Whose upstream port is RC and dowstream port should be an EP or Bridge.
-+
-+Switch Port
-+Whose upstream port is RC and dowstream port is always a switch.
-+
-+Endpoint (EP)
-+Devices other than RC, Switches and Bridges which either generate or terminate a PCIe
-+transaction. These are peripheral devices such as Ethernet, USB and graphics devices.
-+
-+Switch
-+PCIe device single upstream port as RC and multiple downstream ports as EP's,
-+Switches or Bridges.
-+
-+Bridge
-+Is for extending PCIe Bus segment - whose downstream port points to one more PCIe bus.
-+
-+3. Linux PCIe Subsystem
-+
-+					  ifconfig	open()/close/read()/write()	   /proc, /sys
-+					      ^		     ^		   ^			^
-+					      |		     |		   |			|
-+					      |		     |		   |			|
-+					      |              |		   |			V
-+					      |		     |		   |		PCIe Port Bus services
-+					      |		     |		   |		(AER, HP, PME, VC
-+					      |		     |		   |		 drivers/pci/pcie/
-+					      |		     |		   |		 drivers/pci/hotplug)
-+					      V		     V		   V			^
-+					    Socket 	    Block	 Char		        |
-+					    layer	 Subsystem	Subsystem		|
-+					      ^		     ^		   ^			| pcie_port_service_register()
-+					      |		     |		   |			|
-+					      |		     |		   |			|
-+					      V		     V		   V			V
-+					 Common net	    USB		 Input		  PCIe Port Core
-+					 device layer       Core	 Core    (drivers/pci/pcie/portdrv_core.c)
-+					      ^		     ^		   ^			^
-+					      |		     |		   |			| pcie_port_bus_register()
-+					      |		     |		   |			|
-+					 _____V_____	 ____V____     ____V_____      _________V___________
-+					|	    |	|         |   |		 |    | 		    |
-+			All these are	| GEM 	    |	| USB HC  |   | Mouse/KB/|    | PCIe Port Bus driver|
-+			PCI endpoint	| Controller|	| driver  |   | TS HC	 |    | (drivers/pci/pcie/  |
-+			drivers		| driver    |	|	  |   |	driver	 |    |	 portdrv_pci.c)     |
-+					|___________|	|_________|   |__________|    |_____________________|
-+					      ^	             ^             ^			^
-+					      |__________    |		   |	       _________|
-+							 |   |		   |	      |		 pci_register_driver()
-+	     ___________________  pci_bus_*()	       __V___V_____________V__________V______
-+	    |			| pci_scan_root_bus() |					     |
-+	    |	  PCI BIOS	|-------------------->|     	     PCI Core		     |
-+            | (arch/arm/kernel/ |<--------------------|          (drivers/pci/pci*	     |
-+      ----->|        bios32.c))	|<---     pcibios_*() |           drivers/pci/bus.c)	     |
-+      |     |___________________|   |		      |______________________________________|
-+      |		     ^		    |
-+      |		     |		    | pci_common_init_dev()
-+      |		     |		    |
-+  ____V___	 ____V___	 ___V____
-+ | 	  |     |	 |	|	 |
-+ | Renesas|	| Tegra  |	| Exynos |
-+ | PCI HC | 	| PCIe HC|	| PCIe HC| drivers/pci/host/
-+ | driver |	| driver |	| driver | All these are
-+ |________|	|________|	|________| PCI Root Complex drivers
-+     |		    |		    |
-+     |		    |		    |
-+     V		    V		    V
-+         platform_driver_register()
-+
-+Note:
-+Linux PCI subsystem is like above one without having a PCIe port bus stack.
-+For more details about this block see http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
-+
-+PCI HC/RC driver
-+- Low level initialization and configuration (board, SoC)
-+- Invokes PCI-BIOS - for bus enumerations so that the endpoints on bus are ready.
-+- Supplies struct pci_ops to read/write config space.
-+- Setup the resources like bus numbers, memory/IO space, Interrupt numbers, MSI.
-+- Register PCI-BIOS as pci_common_init_dev()
-+
-+PCI BIOS
-+- Architecture specific PCI
-+- Bus enumeration - Lane, Bus, Device, Memory, Interrupt.
-+- Successful completion of BIOS assures that all the endpoints in bus are
-+  assigned parts of available PCI resources and their respective Endpoint drivers
-+  can take control of them using the functionalities provided by PCI Core.
-+- Register to PCI core for common accessing of endpoint drivers.
-+- pci_scan_root_bus() and pci_bus_*()
-+
-+PCI Core
-+- Provides services to Lower level BIOS and Upper level endpoint layers.
-+- Creates device entries for proc/sysfs information.
-+- Linux kernel PCI bus and driver management code.
-+- Provides set of abstraction functions that endpoint drivers can use to
-+  initiate PCI communication with attached endpoints.
-+- Calls BIOS codes with pcibios_*
-+
-+PCI Endpoint driver
-+- Individual endpoint drivers from upper layer.
-+- Accessing config space upon respective endpoint enumeration done.
-+- Communicate over the endpoint for Tx/Rx transactions.
-+- Register to PCI core as pci_driver_register()
-+
-+PCIe Port Bus driver
-+- A logical PCI-PCI Bridge structure.
-+- Root Port and the Switch Port.
-+- See Documentation/PCI/pcie-portbus-howto.txt
-+
-+4. PCI HC/RC driver
-+
-+4.1 Description
-+
-+4.2 Sample code
-+
-+5. References
-+http://www.mindshare.com/files/ebooks/pci%20express%20system%20architecture.pdf
-+http://www.pcisig.com/developers/main/training_materials/
--- 
-1.8.3
+> > > > Without removing outbound io/mem regions view map during the
+> > > > cfg0/1 read/write cycle, both of these devices can't work well at my
+> side.
+> > > > Works well after remove them during the cfg0/1 read/write cycles.
+> > >
+> > > Understood. Given that the iATU programming works on other CPUs
+> > > (confirmed on st spear and ti dra7xx), we might have some issues
+> > > with the iATU on MX6 . Is there anything special about the iATU on the
+> MX6 ?
+> >
+> > [Richard] As I know that there is no anything special about the iATU
+> > on MX6. Let me to make a double check with IC team later.
+> 
+> Oh this would be absolutelly _amazing_ if you could do that. Thank you very
+> much!
+> [...]
+> Best regards,
+> Marek Vasut
+
+Best Regards
+Richard Zhu
 
 
