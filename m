@@ -1,185 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:40779 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752825Ab3LMXHC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 18:07:02 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so3817172iec.27
-        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 15:07:01 -0800 (PST)
-Date: Fri, 13 Dec 2013 16:06:57 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Betty Dall <betty.dall@hp.com>
-Cc: lenb@kernel.org, rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI AER: Handle non-AER HEST error sources in
- aer_hest_parse()
-Message-ID: <20131213230657.GD6746@google.com>
-References: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
- <20131213221616.GC6746@google.com>
- <1386974853.10497.64.camel@ejdallLaptop>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:18694 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752823Ab3LEInD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 03:43:03 -0500
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: 'Yinghai Lu' <yinghai@kernel.org>
+CC: Pratyush Anand <pratyush.anand@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Stephen Warren" <swarren@nvidia.com>,
+	Thierry Reding <treding@nvidia.com>,
+	"Krishna Thota" <kthota@nvidia.com>
+Date: Thu, 5 Dec 2013 14:11:22 +0530
+Subject: RE: [Discussion]: ARM: PCIE: Setup bridges not happening with
+ portbus driver enabled
+Message-ID: <C79B248886DD134989C8FF6B096A91AB92139701CA@BGMAIL01.nvidia.com>
+References: <C79B248886DD134989C8FF6B096A91AB92139701C7@BGMAIL01.nvidia.com>
+	<20131205064822.GB2298@pratyush-vbox>
+	<C79B248886DD134989C8FF6B096A91AB92139701C9@BGMAIL01.nvidia.com>
+ <CAE9FiQUqnSYFnmETkJcSeFh=5S9Qh5XsCuvA1YoXkU4608cXmQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQUqnSYFnmETkJcSeFh=5S9Qh5XsCuvA1YoXkU4608cXmQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1386974853.10497.64.camel@ejdallLaptop>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 13, 2013 at 03:47:33PM -0700, Betty Dall wrote:
-> Yes, that is more readable code. Thanks for revising it. I tested it on
-> my system that has non-AER error sources and it works fine. One nit is
-> that "Ignore" is misspelled in the subject line. 
-
-Thanks, fixed.
-
-I should have thought longer before hitting send.  I think it's worthwhile
-to use the same helper in aer_hest_parse_aff(), and once I did that, it
-became more obvious that aer_hest_parse() and aer_hest_parse_aff() are
-essentially similar, so I wonder if it's worth consolidating them, as
-below.  It doesn't reduce the number of lines of code, but maybe it's
-simpler for the reader?
-
-Bjorn
-
-commit 8e7f8d0b30d4e3e30007b10eb2916d970b5f8c93
-Author: Betty Dall <betty.dall@hp.com>
-Date:   Fri Dec 13 08:23:16 2013 -0700
-
-    PCI/AER: Ignore non-PCIe AER error sources in aer_hest_parse()
-    
-    aer_set_firmware_first() searches the HEST for an error source descriptor
-    matching the specified PCI device.  It uses the apei_hest_parse() iterator
-    to call aer_hest_parse() for every descriptor in the HEST.
-    
-    Previously, aer_hest_parse() incorrectly assumed every descriptor was for a
-    PCIe error source.  This patch adds a check to avoid that error.
-    
-    [bhelgaas: factor check into helper, use in aer_hest_parse_aff(), changelog]
-    Signed-off-by: Betty Dall <betty.dall@hp.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index cf611ab2193a..a23995749f1d 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -50,12 +50,24 @@ struct aer_hest_parse_info {
- 	int firmware_first;
- };
- 
-+static int hest_source_is_pcie_aer(struct acpi_hest_header *hest_hdr)
-+{
-+	if (hest_hdr->type == ACPI_HEST_TYPE_AER_ROOT_PORT ||
-+	    hest_hdr->type == ACPI_HEST_TYPE_AER_ENDPOINT ||
-+	    hest_hdr->type == ACPI_HEST_TYPE_AER_BRIDGE)
-+		return 1;
-+	return 0;
-+}
-+
- static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
- {
- 	struct aer_hest_parse_info *info = data;
- 	struct acpi_hest_aer_common *p;
- 	int ff;
- 
-+	if (!hest_source_is_pcie_aer(hest_hdr))
-+		return 0;
-+
- 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
- 	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
- 	if (p->flags & ACPI_HEST_GLOBAL) {
-@@ -104,15 +116,12 @@ static int aer_hest_parse_aff(struct acpi_hest_header *hest_hdr, void *data)
- 	if (aer_firmware_first)
- 		return 0;
- 
--	switch (hest_hdr->type) {
--	case ACPI_HEST_TYPE_AER_ROOT_PORT:
--	case ACPI_HEST_TYPE_AER_ENDPOINT:
--	case ACPI_HEST_TYPE_AER_BRIDGE:
--		p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
--		aer_firmware_first = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
--	default:
-+	if (!hest_source_is_pcie_aer(hest_hdr))
- 		return 0;
--	}
-+
-+	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
-+	aer_firmware_first = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
-+	return 0;
- }
- 
- /**
-commit 01600a1b034f93dab6f855c81626b8030b85aec0
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Dec 13 15:42:53 2013 -0700
-
-    PCI/AER: Consolidate HEST error source parsers
-    
-    aer_hest_parse() and aer_hest_parse_aff() are almost identical.
-    We use aer_hest_parse() to check the ACPI_HEST_FIRMWARE_FIRST flag for a
-    specific device, and we use aer_hest_parse_aff() to check to see if any
-    device sets the flag.
-    
-    This drops aer_hest_parse_aff() and enhances aer_hest_parse() so it
-    collects the union of the ACPI_HEST_FIRMWARE_FIRST flag setting when no
-    specific device is supplied.
-    
-    No functional change.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-index a23995749f1d..4d6991794fa2 100644
---- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-+++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-@@ -70,6 +70,17 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
- 
- 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
- 	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
-+
-+	/*
-+	 * If no specific device is supplied, determine whether
-+	 * FIRMWARE_FIRST is set for *any* PCIe device.
-+	 */
-+	if (!info->pci_dev) {
-+		info->firmware_first |= ff;
-+		return 0;
-+	}
-+
-+	/* Otherwise, check the specific device */
- 	if (p->flags & ACPI_HEST_GLOBAL) {
- 		if (hest_match_type(hest_hdr, info->pci_dev))
- 			info->firmware_first = ff;
-@@ -109,30 +120,20 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
- 
- static bool aer_firmware_first;
- 
--static int aer_hest_parse_aff(struct acpi_hest_header *hest_hdr, void *data)
--{
--	struct acpi_hest_aer_common *p;
--
--	if (aer_firmware_first)
--		return 0;
--
--	if (!hest_source_is_pcie_aer(hest_hdr))
--		return 0;
--
--	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
--	aer_firmware_first = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
--	return 0;
--}
--
- /**
-  * aer_acpi_firmware_first - Check if APEI should control AER.
-  */
- bool aer_acpi_firmware_first(void)
- {
- 	static bool parsed = false;
-+	struct aer_hest_parse_info info = {
-+		.pci_dev	= NULL,	/* Check all PCIe devices */
-+		.firmware_first	= 0,
-+	};
- 
- 	if (!parsed) {
--		apei_hest_parse(aer_hest_parse_aff, NULL);
-+		apei_hest_parse(aer_hest_parse, &info);
-+		aer_firmware_first = info.firmware_first;
- 		parsed = true;
- 	}
- 	return aer_firmware_first;
+> >> Does your RC driver calls pci_assign_unassigned_resources after
+> >> pci_common_init?
+> >>
+> > No it does not. Btw, I tried calling it but it also did not help and same
+> problem.
+> 
+> Please make sure you pci_assign_unassigned_resources get called via
+> fs_initcall().
+> 
+Calling fs_initcall(pci_assign_unassigned_resources)  just after pci_common_init also did not help.
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
