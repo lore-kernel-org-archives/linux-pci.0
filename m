@@ -1,194 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [RFC PATCH 2/3] arm64: dts: APM X-Gene PCIe device tree nodes
-Date: Mon, 23 Dec 2013 13:32:03 +0530
-Message-Id: <1387785725-24262-3-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:53882 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344Ab3LEGas (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 01:30:48 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5jLsvMwjuWMctwgvjUrP-RyzxykXG5AbAvTp8K0PezNg@mail.gmail.com>
+References: <CAD6G_RT0S43BrOeXxJ6d3p1ALbXkGumZCSPBaK1Bz=2pX3hHYQ@mail.gmail.com>
+	<CAErSpo4DNqUpA6Cb_tanW3uRJ3J-4utCQwtRz3eYZETCMtniUQ@mail.gmail.com>
+	<CAD6G_RR=toq_6tCav6Y9=EprK9LC3YfGO=scvWpcGfDpWwJbRA@mail.gmail.com>
+	<CAErSpo57gPPY73nCHbfGVynZRde0jj9_kjpR=FKwY-uTXzY2cw@mail.gmail.com>
+	<CAD6G_RTHNGg7XSnDMQ-H+hUzmh1RPn9gYUDf7vRdeETmTmTdzw@mail.gmail.com>
+	<CAErSpo5jLsvMwjuWMctwgvjUrP-RyzxykXG5AbAvTp8K0PezNg@mail.gmail.com>
+Date: Thu, 5 Dec 2013 12:00:48 +0530
+Message-ID: <CAD6G_RSvrHGa=OEBgoD_iM68eOzb_2Dq9FneuNjSX_+iTj0_zA@mail.gmail.com>
+Subject: Re: Need help on Linux PCIe
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree nodes for APM X-Gene PCIe controller and
-PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts nodes
-are added.
+On Wed, Dec 4, 2013 at 11:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Dec 4, 2013 at 10:00 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
+>> On Wed, Dec 4, 2013 at 8:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Tue, Dec 3, 2013 at 11:20 PM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
+>>>> Thanks for your quick response.
+>>>> Please find my comments below.
+>>>>
+>>>> On Tue, Dec 3, 2013 at 11:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>> On Tue, Dec 3, 2013 at 4:24 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> I have few question on Linux PCIe subsystem, I am trying to understand
+>>>>>> the PCIe on ARM platform.
+>>>>>> 1. Compared to PCI, PCIe have an extra port functionalists/services
+>>>>>> which is implemented drivers/pci/pcie/* is it true?
+>>>>>
+>>>>> Yes.
+>>>>>
+>>>>>> 2. PCIe root complex is same as Host controller drivers in linux drivers/host/*
+>>>>>
+>>>>> Yes.
+>>>>>
+>>>>>> 3. As individual endpoint drivers are registered to pci_core as
+>>>>>> pci_driver_register, then what is the common call for registering
+>>>>>> individual HC driver to pci-core?
+>>>>>
+>>>>> The host controller-PCI core interface is not as mature as the
+>>>>> pci_register_driver() interface.  The basic interface is
+>>>>> pci_scan_root_bus().  If you skim through the drivers in
+>>>>> drivers/pci/host/* and drivers/acpi/pci_root.c, the interface to the
+>>>>> PCI core will be fairly obvious.  And you'll learn what the existing
+>>>>> practices are in case you need to add or modify something.
+>>>>
+>>>> OK.
+>>>>
+>>>> I understand the flow as below - please correct if am wrong.
+>>>>
+>>>> From low level (hw) - HC driver has a platform registration using
+>>>> platform_driver_register() to lower layer
+>>>> and then pci_scan_root_bus() --> pci_common_init_dev() registration to
+>>>> upper layer as PCI - BIOS and then ends.
+>>>
+>>> Yes.  Sometime HC drivers use platform_driver_register(); other use
+>>> something else depending on how the HC device is enumerated.  For
+>>> example, drivers/acpi/pci_root.c uses something else to deal with host
+>>> bridges in the ACPI namespace.
+>>>
+>>>> From upper level (app) - each endpoint driver has
+>>>> pci_driver_register() call to PCI Core for lower level
+>>>
+>>> Yes.
+>>>
+>>>> and then the upper level registration is based on endpoint().
+>>>
+>>> I don't know what you mean here (I don't know of a function named
+>>> "endpoint()").  But the driver model matches drivers to PCI functions
+>>> based on vendor and device IDs.  A Linux "pci_dev" is what the PCI
+>>> specs refer to as a "function."
+>> Sorry it's typo - added ()
+>>
+>>>
+>>>> What is the connection here for PCI-BIOS and PCI-Core here, does these
+>>>> are two different entities means there is no common call for these?
+>>>> I see for ARM - "arch/arm/kernel/bios32.c" is PCI-BIOS is it correct?
+>>>> does we have separate BIOS codes for architectures?
+>>>
+>>> The "pcibios_*" functions are architecture-specific things called by
+>>> the generic PCI core.  Generally, things specified by the PCI specs
+>>> are architecture-independent and should be in the PCI core
+>>> (drivers/pci/*).
+>>
+>> I have some good information to discuss from this thread.
+>> Can you please verify this Linux PCIe subsystem stack - comment
+>> whether my understanding is correct/not.
+>> (I just draw this based on driver calls flow - to accommodate with in
+>> the Linux cores)
+>> http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
+>
+> Yes, that makes sense.  I wouldn't label the PCIBIOS - PCI core link
+> as "pci_bus_add_device()"; pci_bus_add_device() is part of the PCI
+> core's generic enumeration code and shouldn't be called by
+> arch-specific code.  The link going from PCI core to PCIBIOS is the
+> set of "pcibios_*()" functions.  Going from PCIBIOS to the PCI core,
+> it's mostly just pci_scan_root_bus().
+Yes - understand your point.
+I made few changes accordingly.
+http://jagannadhteki.blog.com/files/2013/12/Linux_PCIe_zynq.png
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/boot/dts/apm-mustang.dts |    4 +
- arch/arm64/boot/dts/apm-storm.dtsi  |  140 +++++++++++++++++++++++++++++++++++
- 2 files changed, 144 insertions(+)
+I am planning to document this subsystem into Documentation/PCI/*
+with brief description of important blocks, any comments?
 
-diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
-index 1247ca1..ab2b95f 100644
---- a/arch/arm64/boot/dts/apm-mustang.dts
-+++ b/arch/arm64/boot/dts/apm-mustang.dts
-@@ -24,3 +24,7 @@
- 		reg = < 0x1 0x00000000 0x0 0x80000000 >; /* Updated by bootloader */
- 	};
- };
-+
-+&pcie0 {
-+	status = "ok";
-+};
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index d37d736..b82f430 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,146 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			pcie0clk: pcie0clk@1f2bc000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "pcie0clk";
-+				reg = <0x0 0x1f2bc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie0clk";
-+			};
-+
-+			pcie1clk: pcie1clk@1f2cc000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "pcie1clk";
-+				reg = <0x0 0x1f2cc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie1clk";
-+			};
-+
-+			pcie2clk: pcie2clk@1f2dc000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "pcie2clk";
-+				reg = <0x0 0x1f2dc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie2clk";
-+			};
-+
-+			pcie3clk: pcie3clk@1f50c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "pcie3clk";
-+				reg = <0x0 0x1f50c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie3clk";
-+			};
-+
-+			pcie4clk: pcie4clk@1f51c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "pcie4clk";
-+				reg = <0x0 0x1f51c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie4clk";
-+			};
-+		};
-+
-+		pcie0: pcie@1f2b0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f2b0000 0x0 0x00010000>;
-+			ranges = <0x02000000 0x0 0x00000000 0xe0 0x00000000 0x0 0x10000000 /* mem*/
-+				  0x01000000 0x0 0x80000000 0xe0 0x80000000 0x0 0x00010000 /* io */
-+				  0x00000000 0x0 0xd0000000 0xe0 0xd0000000 0x0 0x00200000 /* cfg */
-+				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1>;
-+			clocks = <&pcie0clk 0>;
-+			clock-names = "pcieclk";
-+		};
-+
-+		pcie1: pcie@1f2c0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = <0x00 0x1f2c0000 0x0 0x00010000>;
-+			ranges = <0x02000000 0x0 0x00000000 0xd0 0x00000000 0x0 0x10000000 /* mem*/
-+				  0x01000000 0x0 0x80000000 0xd0 0x80000000 0x0 0x00010000 /* io */
-+				  0x00000000 0x0 0xd0000000 0xd0 0xd0000000 0x0 0x00200000 /* cfg */
-+				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1>;
-+			clocks = <&pcie1clk 0>;
-+			clock-names = "pcieclk";
-+		};
-+
-+		pcie2: pcie@1f2d0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg =  <0x00 0x1f2d0000 0x0 0x00010000>;
-+			ranges = <0x02000000 0x0 0x00000000 0x90 0x00000000 0x0 0x10000000 /* mem*/
-+				  0x01000000 0x0 0x80000000 0x90 0x80000000 0x0 0x00010000 /* io */
-+				  0x00000000 0x0 0xd0000000 0x90 0xd0000000 0x0 0x00200000 /* cfg */
-+				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1>;
-+			clocks = <&pcie3clk 0>;
-+			clock-names = "pcieclk";
-+		};
-+
-+		pcie3: pcie@1f500000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = <0x00 0x1f500000 0x0 0x00010000>;
-+			ranges = <0x02000000 0x0 0x00000000 0xa0 0x00000000 0x0 0x10000000 /* mem*/
-+				  0x01000000 0x0 0x80000000 0xa0 0x80000000 0x0 0x00010000 /* io */
-+				  0x00000000 0x0 0xd0000000 0xa0 0xd0000000 0x0 0x00200000 /* cfg */
-+				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1>;
-+			clocks = <&pcie3clk 0>;
-+			clock-names = "pcieclk";
-+		};
-+
-+		pcie4: pcie@1f510000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = <0x00 0x1f510000 0x0 0x00010000>;
-+			ranges = <0x02000000 0x0 0x00000000 0xc0 0x00000000 0x0 0x10000000 /* mem*/
-+				  0x01000000 0x0 0x80000000 0xc0 0x80000000 0x0 0x00010000 /* io */
-+				  0x00000000 0x0 0xd0000000 0xc0 0xd0000000 0x0 0x00200000 /* cfg */
-+				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1>;
-+			clocks = <&pcie4clk 0>;
-+			clock-names = "pcieclk";
- 		};
- 
- 		serial0: serial@1c020000 {
+> I also probably wouldn't put in links between VFS and AER, HP, PME,
+> and VC.  It's true that there are some sysfs files that influence the
+> operation of those PCIe features, but mostly for debugging and
+> administration.  They aren't something useful to ordinary user
+> programs.
+
 -- 
-1.7.9.5
-
+Thanks,
+Jagan.
+--------
+Jagannadha Sutradharudu Teki,
+E: jagannadh.teki@gmail.com, P: +91-9676773388
+Engineer - System Software Hacker
+U-boot - SPI Custodian and Zynq APSOC
+Ln: http://www.linkedin.com/in/jaganteki
