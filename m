@@ -1,40 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:49231 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602Ab3LLVa1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:30:27 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Subject: Re: [PATCH 05/12] clk: SPEAr13xx: Fix pcie clock name
-Date: Thu, 12 Dec 2013 22:30:21 +0100
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"spear-devel" <spear-devel@list.st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <201312112342.43840.arnd@arndb.de> <2CC2A0A4A178534D93D5159BF3BCB66189F95F642A@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189F95F642A@EAPEX1MAIL1.st.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:59218 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756250Ab3LECSl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 21:18:41 -0500
+From: Marek Vasut <marex@denx.de>
+To: Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH v5 0/2] Kernel oops from pci_disable_msi
+Date: Thu, 5 Dec 2013 03:18:39 +0100
+Cc: "=?iso-8859-1?q?=27Bj=F8rn_Erik?= Nilsen'" <ben@datarespons.no>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	"'Mohit KUMAR'" <Mohit.KUMAR@st.com>,
+	"'Ajay KHANDELWAL'" <ajay.khandelwal@st.com>,
+	"'Tim Harvey'" <tharvey@gateworks.com>,
+	"'Eric Nelson'" <Eric.Nelson@boundarydevices.com>,
+	"'Troy Kisky'" <troy.kisky@boundarydevices.com>
+References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com> <1385732125-28630-1-git-send-email-ben@datarespons.no> <000301cef15c$acf95630$06ec0290$%han@samsung.com>
+In-Reply-To: <000301cef15c$acf95630$06ec0290$%han@samsung.com>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201312122230.21828.arnd@arndb.de>
+Message-Id: <201312050318.39418.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 12 December 2013, Mohit KUMAR DCG wrote:
+On Thursday, December 05, 2013 at 02:52:38 AM, Jingoo Han wrote:
+> On Friday, November 29, 2013 10:35 PM, Bjørn Erik Nilsen wrote:
+> > This patchset address Marek Vasut's comments on the previous
+> > patches. I decided to split into two separate commits as they are
+> > unrelated.
 > > 
-> > I think in the future, the spear clocks really need to get moved into DT
-> > representations, as we do for other platforms, which will get rid of a lot of
-> > code in drivers/clk, including all the clkdev registration.
->
-> -  Let it be this way for now. May be we will improve it in next cycle
+> > Bjørn Erik Nilsen (2):
+> >   PCI: designware: Fix crash in dw_msi_teardown_irq
+> >   PCI: designware: Remove redundant call to pci_write_config
+> >  
+> >  drivers/pci/host/pcie-designware.c | 57
+> >  +++++++++++++++++++++++++++----------- 1 file changed, 41
+> >  insertions(+), 16 deletions(-)
+> 
+> I tested these patches on Exynos platform, and checked that
+> the kernel panic was resolved.
+> 
+> Marek Vasut, Bjørn Erik Nilsen,
+> Is there any issue for accepting these patches?
 
-Fair enough. This will be a major change that doesn't have to delay the PCIe
-driver, just make sure you can address the other comments I made for now.
+No issue on my end.
 
-The clock situation will have to be worked out though before the bindings
-can be considered stable, because you will have to add mandatory 'clocks'
-properties to a lot of them.
+Acked-by: Marek Vasut <marex@denx.de>
 
-	Arnd
+Best regards,
+Marek Vasut
