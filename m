@@ -1,136 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34121 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250Ab3LJGyz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 01:54:55 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 2/5] PCI: Don't use 4G bus address directly in resource allocation
-Date: Mon,  9 Dec 2013 22:54:41 -0800
-Message-Id: <1386658484-15774-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
-References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <linux-alpha@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"Hanjun Guo" <guohanjun@huawei.com>
+Subject: [PATCH 9/9] alpha/pci: Use dev_is_pci() to check whether it is pci device
+Date: Thu, 5 Dec 2013 20:04:41 +0800
+Message-ID: <1386245081-27912-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current we are using PCIBIOS_MAX_MEM_32 (4G limit) directly in the
-pci_bus_alloc_resource to make sure that don't allocate too high
-pref 64bit above 4G in the system that does not support that.
+Use PCI standard marco dev_is_pci() instead of directly compare
+pci_bus_type to check whether it is pci device.
 
-That is not right, as allocate_resource() should take resource limit.
-
-Add pci_clip_resource() and use it check the pci bus address limit.
-
-At last remove PCIBIOS_MAX_MEM_32.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/include/asm/pci.h |  1 -
- drivers/pci/bus.c          | 41 ++++++++++++++++++++++++++++++++++-------
- include/linux/pci.h        |  4 ----
- 3 files changed, 34 insertions(+), 12 deletions(-)
+ arch/alpha/kernel/pci_iommu.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 947b5c4..122c299 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -125,7 +125,6 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
- 
- /* generic pci stuff */
- #include <asm-generic/pci.h>
--#define PCIBIOS_MAX_MEM_32 0xffffffff
- 
- #ifdef CONFIG_NUMA
- /* Returns the node based on pci bus */
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index fc1b740..3ad4fd9 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -98,6 +98,25 @@ void pci_bus_remove_resources(struct pci_bus *bus)
- 	}
- }
- 
-+static struct pci_bus_region pci_mem_32 = {0, 0xffffffff};
-+
-+static void pci_clip_resource(struct resource *res, struct pci_bus *bus,
-+			      struct pci_bus_region *region)
-+{
-+	struct pci_bus_region r;
-+
-+	pcibios_resource_to_bus(bus, &r, res);
-+	if (r.start < region->start)
-+		r.start = region->start;
-+	if (r.end > region->end)
-+		r.end = region->end;
-+
-+	if (r.end < r.start)
-+		res->end = res->start - 1;
-+	else
-+		pcibios_bus_to_resource(bus, res, &r);
-+}
-+
- /**
-  * pci_bus_alloc_resource - allocate a resource from a parent bus
-  * @bus: PCI bus
-@@ -125,15 +144,12 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+diff --git a/arch/alpha/kernel/pci_iommu.c b/arch/alpha/kernel/pci_iommu.c
+index a21d0ab..eddee77 100644
+--- a/arch/alpha/kernel/pci_iommu.c
++++ b/arch/alpha/kernel/pci_iommu.c
+@@ -325,7 +325,7 @@ pci_map_single_1(struct pci_dev *pdev, void *cpu_addr, size_t size,
+ /* Helper for generic DMA-mapping functions. */
+ static struct pci_dev *alpha_gendev_to_pci(struct device *dev)
  {
- 	int i, ret = -ENOMEM;
- 	struct resource *r;
--	resource_size_t max = -1;
+-	if (dev && dev->bus == &pci_bus_type)
++	if (dev && dev_is_pci(dev))
+ 		return to_pci_dev(dev);
  
- 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
- 
--	/* don't allocate too high if the pref mem doesn't support 64bit*/
--	if (!(res->flags & IORESOURCE_MEM_64))
--		max = PCIBIOS_MAX_MEM_32;
--
- 	pci_bus_for_each_resource(bus, r, i) {
-+		struct resource avail;
-+
- 		if (!r)
- 			continue;
- 
-@@ -147,10 +163,21 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 		    !(res->flags & IORESOURCE_PREFETCH))
- 			continue;
- 
-+		/*
-+		 * don't allocate too high if the pref mem doesn't
-+		 * support 64bit.
-+		 */
-+		avail = *r;
-+		if (!(res->flags & IORESOURCE_MEM_64)) {
-+			pci_clip_resource(&avail, bus, &pci_mem_32);
-+			if (!resource_size(&avail))
-+				continue;
-+		}
-+
- 		/* Ok, try it out.. */
- 		ret = allocate_resource(r, res, size,
--					r->start ? : min,
--					max, align,
-+					max(avail.start, r->start ? : min),
-+					avail.end, align,
- 					alignf, alignf_data);
- 		if (ret == 0)
- 			break;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index da069fa..99e9040 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1485,10 +1485,6 @@ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
- 
- #include <asm/pci.h>
- 
--#ifndef PCIBIOS_MAX_MEM_32
--#define PCIBIOS_MAX_MEM_32 (-1)
--#endif
--
- /* these helpers provide future and backwards compatibility
-  * for accessing popular PCI BAR info */
- #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+ 	/* Assume that non-PCI devices asking for DMA are either ISA or EISA,
 -- 
-1.8.4
+1.7.1
+
 
