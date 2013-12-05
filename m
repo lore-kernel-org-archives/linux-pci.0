@@ -1,72 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:60519 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753737Ab3LCSYN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 13:24:13 -0500
-Received: by mail-ie0-f179.google.com with SMTP id x13so25015452ief.10
-        for <linux-pci@vger.kernel.org>; Tue, 03 Dec 2013 10:24:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131203033712.GA8525@kroah.com>
-References: <20131129031419.GB5889@neilslaptop.think-freely.org>
- <20131129094137.GC3028@redhat.com> <20131129175336.GA6152@kroah.com>
- <CAErSpo44sQU2PbufCYF+wzpMtMPC97_FgAMQgruX9Nw3XbmL8g@mail.gmail.com> <20131203033712.GA8525@kroah.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 3 Dec 2013 11:23:51 -0700
-Message-ID: <CAErSpo42MJ1VkhDdJ_AM-5hsidakcE_GQzWfV9UVT36nK_5a5A@mail.gmail.com>
-Subject: Re: [PATCH] PCI: update MSI attribute file documentation
-To: Greg KH <greg@kroah.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from szxga01-in.huawei.com ([119.145.14.64]:17572 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755656Ab3LEL47 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 06:56:59 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>
+CC: <linux-pci@vger.kernel.org>, <x86@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"Hanjun Guo" <guohanjun@huawei.com>
+Subject: [PATCH 2/9] x86/pci: Use dev_is_pci() to check whether it is pci device
+Date: Thu, 5 Dec 2013 19:54:34 +0800
+Message-ID: <1386244474-28312-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 2, 2013 at 8:37 PM, Greg KH <greg@kroah.com> wrote:
-> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
-> Now that the MSI modes are now attribute files in sysfs, not
-> subdirectories, update the documentation to reflect this.
->
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Use PCI standard marco dev_is_pci() instead of directly compare
+pci_bus_type to check whether it is pci device.
 
-Thanks, I'll fold this into the patch that makes the code change, if
-you don't mind.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/x86/kernel/acpi/boot.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Bjorn
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 6c0b43b..d359d0f 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -1034,9 +1034,7 @@ static int mp_config_acpi_gsi(struct device *dev, u32 gsi, int trigger,
+ 
+ 	if (!acpi_ioapic)
+ 		return 0;
+-	if (!dev)
+-		return 0;
+-	if (dev->bus != &pci_bus_type)
++	if (!dev || !dev_is_pci(dev))
+ 		return 0;
+ 
+ 	pdev = to_pci_dev(dev);
+-- 
+1.7.1
 
-> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-> index 5210a51c90fd..a3c5a6685036 100644
-> --- a/Documentation/ABI/testing/sysfs-bus-pci
-> +++ b/Documentation/ABI/testing/sysfs-bus-pci
-> @@ -70,18 +70,15 @@ Date:               September, 2011
->  Contact:       Neil Horman <nhorman@tuxdriver.com>
->  Description:
->                 The /sys/devices/.../msi_irqs directory contains a variable set
-> -               of sub-directories, with each sub-directory being named after a
-> -               corresponding msi irq vector allocated to that device.  Each
-> -               numbered sub-directory N contains attributes of that irq.
-> -               Note that this directory is not created for device drivers which
-> -               do not support msi irqs
-> +               of files, with each file being named after a corresponding msi
-> +               irq vector allocated to that device.
->
-> -What:          /sys/bus/pci/devices/.../msi_irqs/<N>/mode
-> +What:          /sys/bus/pci/devices/.../msi_irqs/<N>
->  Date:          September 2011
->  Contact:       Neil Horman <nhorman@tuxdriver.com>
->  Description:
->                 This attribute indicates the mode that the irq vector named by
-> -               the parent directory is in (msi vs. msix)
-> +               the file is in (msi vs. msix)
->
->  What:          /sys/bus/pci/devices/.../remove
->  Date:          January 2009
+
