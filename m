@@ -1,66 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 0/4] pci: virtual channel save/restore support
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
-Date: Tue, 17 Dec 2013 16:43:33 -0700
-Message-ID: <20131217233741.2310.78334.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:64614 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139Ab3LEWuF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 17:50:05 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so29618037ieb.8
+        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 14:50:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20131205091257.GA13010@ulmo.nvidia.com>
+References: <C79B248886DD134989C8FF6B096A91AB92139701C7@BGMAIL01.nvidia.com>
+	<20131205064822.GB2298@pratyush-vbox>
+	<C79B248886DD134989C8FF6B096A91AB92139701C9@BGMAIL01.nvidia.com>
+	<CAE9FiQUqnSYFnmETkJcSeFh=5S9Qh5XsCuvA1YoXkU4608cXmQ@mail.gmail.com>
+	<20131205091257.GA13010@ulmo.nvidia.com>
+Date: Thu, 5 Dec 2013 14:50:05 -0800
+Message-ID: <CAE9FiQWhzoM8FiuFdb_us0AYehiZN+cT4=fu9K8hYxciVtquXg@mail.gmail.com>
+Subject: Re: [Discussion]: ARM: PCIE: Setup bridges not happening with portbus
+ driver enabled
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Jay Agarwal <jagarwal@nvidia.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@nvidia.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v1->v2:
+On Thu, Dec 5, 2013 at 1:12 AM, Thierry Reding <thierry.reding@gmail.com> wrote:
+> On Thu, Dec 05, 2013 at 12:27:40AM -0800, Yinghai Lu wrote:
+>>
+>> Please make sure you pci_assign_unassigned_resources get called via
+>> fs_initcall().
+>
+> Why does this have to be called as fs_initcall() time? Does it have to
+> be exactly then or can it be at any later time?
 
-Address Bjorn's comments
- - split code out to vc.c
- - #defines for everything
- - rename VC defines
- - fix word access to PCI_VC_PORT_CTRL
+No, just need to make sure it is
+before any consumer like pcie driver try to use pci bar resources.
 
-It ended up getting a little bigger since I added function description
-comments, header, includes and misc lines here and there.
-
-v1:
-
-Turns out that even though we don't do much with virtual channel, we
-still need to save/restore it around reset.  The case where this comes
-into play currently is a card with a switch and multiple devices, all
-supporting VC (Nvidia GRID).  On some platforms the system firmware
-will leave all the virtual channel capabilities in their default
-state, where the VC0 TC/VC map is 0xff (TC0-7 enabled over VC0).
-Other systems decide to restrict the available traffic classes and
-configure 0x01 (only TC0 over VC0).  At handoff, everything works, but
-as soon as we do a device reset, especially if done via bus reset, the
-endpoint can be returned to the spec defined default rather than the
-platform default.  If such a device is then assigned to a guest, the
-guest driver sees multiple TCs enabled, attempts to use them, and it
-fails.  The failure mode depends on the platform, ranging from the
-driver in the guest failing to work to host panic from an unsupported
-transaction.
-
-This series attempts to implement full save/restore support for all
-types of virtual channel (VC, MFVC, and VC9).  The buffer sizing code
-will execute for any device with these capabilities, but of couse the
-actual save/restore is only done if a reset is requested for the
-device, which typically means assignment to a VM.  Thanks,
-
-Alex
-
----
-
-Alex Williamson (4):
-      pci: Generalize wait loop
-      pci: Add support for save/restore of extended capabilities
-      pci: Add Virtual Channel to save/restore support
-      pci: Rename PCI_VC_PORT_REG1/2 to PCI_VC_PORT_CAP1/2
-
-
- drivers/pci/Makefile               |    2 
- drivers/pci/pci.c                  |  102 ++++++--
- drivers/pci/vc.c                   |  434 ++++++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_config.c |   12 -
- include/linux/pci.h                |   15 +
- include/uapi/linux/pci_regs.h      |   29 ++
- 6 files changed, 549 insertions(+), 45 deletions(-)
- create mode 100644 drivers/pci/vc.c
+Yinghai
