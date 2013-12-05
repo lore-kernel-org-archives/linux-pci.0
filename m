@@ -1,95 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:54811 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753832Ab3LQUGx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 15:06:53 -0500
-Message-ID: <52B0AED9.6090402@gmail.com>
-Date: Tue, 17 Dec 2013 12:06:49 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:12477 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab3LEFpr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 00:45:47 -0500
+From: Jay Agarwal <jagarwal@nvidia.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"'yinghai@kernel.org'" <yinghai@kernel.org>
+CC: Stephen Warren <swarren@nvidia.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Krishna Thota <kthota@nvidia.com>
+Date: Thu, 5 Dec 2013 11:14:53 +0530
+Subject: [Discussion]: ARM: PCIE: Setup bridges not happening with portbus
+ driver enabled
+Message-ID: <C79B248886DD134989C8FF6B096A91AB92139701C7@BGMAIL01.nvidia.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v3 6/8] pciehp: Disabling the link notification across slot
- reset
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Disable the link notification (in addition to presence detect
-notifications) across the slot reset since it could potentialy flap
-the link and we don't want to treat it as hot unplug followed by a
-hotplug.
+Hi All,
 
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
-v3: * created by splitting the patch v2 [2/4]
-    * Add the ATTN BTN condition
-v2: (non existent)
-v1: (non existent)
+I am seeing below issue on an ARM platform with CONFIG_PCIEPORTBUS enabled in kernel
 
- drivers/pci/hotplug/pciehp_hpc.c |   29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+ISSUE:  Any memory access by devices fails
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index ab12555..c2f3e37 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -746,31 +746,36 @@ static void pcie_disable_notification(struct controller *ctrl)
- 
- /*
-  * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-- * bus reset of the bridge, but if the slot supports surprise removal we need
-- * to disable presence detection around the bus reset and clear any spurious
-+ * bus reset of the bridge, but if the slot supports surprise removal (or
-+ * link state change based hotplug), we need to disable presence detection
-+ * (or link state notifications) around the bus reset and clear any spurious
-  * events after.
-  */
- int pciehp_reset_slot(struct slot *slot, int probe)
- {
- 	struct controller *ctrl = slot->ctrl;
-+	u16 stat_mask = 0, ctrl_mask = 0;
- 
- 	if (probe)
- 		return 0;
- 
--	if (HP_SUPR_RM(ctrl)) {
--		pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_PDCE);
--		if (pciehp_poll_mode)
--			del_timer_sync(&ctrl->poll_timer);
-+	if (HP_SUPR_RM(ctrl) && !ATTN_BUTTN(ctrl)) {
-+		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
-+		stat_mask |= PCI_EXP_SLTSTA_PDC;
- 	}
-+	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
-+	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
-+
-+	pcie_write_cmd(ctrl, 0, ctrl_mask);
-+	if (pciehp_poll_mode)
-+		del_timer_sync(&ctrl->poll_timer);
- 
- 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
- 
--	if (HP_SUPR_RM(ctrl)) {
--		pciehp_writew(ctrl, PCI_EXP_SLTSTA, PCI_EXP_SLTSTA_PDC);
--		pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PDCE, PCI_EXP_SLTCTL_PDCE);
--		if (pciehp_poll_mode)
--			int_poll_timeout(ctrl->poll_timer.data);
--	}
-+	pciehp_writew(ctrl, PCI_EXP_SLTSTA, stat_mask);
-+	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
-+	if (pciehp_poll_mode)
-+		int_poll_timeout(ctrl->poll_timer.data);
- 
- 	return 0;
- }
--- 
-1.7.9.5
+FINDINGS:
 
+1. No bridge windows like below are setup and probably this is not allowing any memory access by devices
+[    1.280324] pci 0000:00:00.0:   bridge window [mem 0xXXX00000-0xXXXfffff]
+[    1.280350] pci 0000:00:00.0:   bridge window [mem 0xXXX00000-0xXXXfffff pref]
+
+2. On debugging, I see pci_enable_bridge(setup-bus.c) is not called because pci_is_enabled returns true. This is because pci_enable_device is already called for this bridge by portbus driver in pcie_port_device_register(portdrv_core.c).
+3. Below patch is resolving this issue without any visible side effects. In fact, I verified AER(which needs PORTBUS) also with this.
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c index 64a7de2..9b67fff 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1200,8 +1200,7 @@ void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+ 
+                switch (dev->class >> 8) {
+                case PCI_CLASS_BRIDGE_PCI:
+-                       if (!pci_is_enabled(dev))
+-                               pci_setup_bridge(b);
++                       pci_setup_bridge(b);
+                        break;
+ 
+                case PCI_CLASS_BRIDGE_CARDBUS:
+
+3. This patch works without PORTBUS enabled also.
+
+QUESTIONS:
+1. Does anybody see any problem with this patch? Any reason for pci_is_enabled check above?
+
+With best,
+Jay
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
