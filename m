@@ -1,284 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25128 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755151Ab3LCVoq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 16:44:46 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: stefano.stabellini@eu.citrix.com, ian.campbell@citrix.com,
-	xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	leosilva@linux.vnet.ibm.com, ashley@ashleylai.com,
-	peterhuewe@gmx.de, mail@srajiv.net, tpmdd@selhorst.net,
-	tpmdd@sirrix.com, dmitry.torokhov@gmail.com, bhelgaas@google.com,
-	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
-	tpmdd-devel@lists.sourceforge.net, linux-input@vger.kernel.org,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-fbdev@vger.kernel.org
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
-Date: Tue,  3 Dec 2013 16:14:06 -0500
-Message-Id: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
+Received: from mail-ve0-f173.google.com ([209.85.128.173]:36043 "EHLO
+	mail-ve0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754205Ab3LEWoD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 17:44:03 -0500
+Received: by mail-ve0-f173.google.com with SMTP id oz11so14812933veb.32
+        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 14:44:02 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4uPXMZnHQcoKSf3R3+aVzw2W-5vJZOkzFNmVZN=S4rRA@mail.gmail.com>
+References: <CANN5nGKvaHCzWKMNyUhNfSfTfZBcVxG9RfeuQaOAFS9TghF=0w@mail.gmail.com>
+	<CAErSpo6SeyZpta+MuB5EnS-Rx80bAYmLkCaQgt5q_jgbtL4X6w@mail.gmail.com>
+	<CAErSpo716DEk07izC_d_bj8xyDdYQFdEnqtJSirMp1bMmSdURA@mail.gmail.com>
+	<CANN5nGJ6NN2C5G2ioCfxCMbXWk78XRRwSip=_Qp7fuSi2DztFg@mail.gmail.com>
+	<CAErSpo4uPXMZnHQcoKSf3R3+aVzw2W-5vJZOkzFNmVZN=S4rRA@mail.gmail.com>
+Date: Thu, 5 Dec 2013 16:44:01 -0600
+Message-ID: <CANN5nG+9XuO85a1uuRA3Oq3UhMnzm4qkznWgPa8ML-NZ57iqcQ@mail.gmail.com>
+Subject: Re: error loading iwlwifi on sony vaio
+From: Aaron McSorley <a@aaronmcsorley.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The user has the option of disabling the platform driver:
-00:02.0 Unassigned class [ff80]: XenSource, Inc. Xen Platform Device (rev 01)
+Thanks for your replies guys, I loaded an ubuntu daily running 3.12.0
+kernel and the iwlwifi driver loads fine, I guess it's fixed somewhere
+between 3.8 and 3.12
 
-which is used to unplug the emulated drivers (IDE, Realtek 8169, etc)
-and allow the PV drivers to take over. If the user wishes
-to disable that they can set:
-
-  xen_platform_pci=0
-  (in the guest config file)
-
-or
-  xen_emul_unplug=never
-  (on the Linux command line)
-
-except it does not work properly. The PV drivers still try to
-load and since the Xen platform driver is not run - and it
-has not initialized the grant tables, most of the PV drivers
-stumble upon:
-
-input: Xen Virtual Keyboard as /devices/virtual/input/input5
-input: Xen Virtual Pointer as /devices/virtual/input/input6M
-------------[ cut here ]------------
-kernel BUG at /home/konrad/ssd/konrad/linux/drivers/xen/grant-table.c:1206!
-invalid opcode: 0000 [#1] SMP
-Modules linked in: xen_kbdfront(+) xenfs xen_privcmd
-CPU: 6 PID: 1389 Comm: modprobe Not tainted 3.13.0-rc1upstream-00021-ga6c892b-dirty #1
-Hardware name: Xen HVM domU, BIOS 4.4-unstable 11/26/2013
-RIP: 0010:[<ffffffff813ddc40>]  [<ffffffff813ddc40>] get_free_entries+0x2e0/0x300
-Call Trace:
- [<ffffffff8150d9a3>] ? evdev_connect+0x1e3/0x240
- [<ffffffff813ddd0e>] gnttab_grant_foreign_access+0x2e/0x70
- [<ffffffffa0010081>] xenkbd_connect_backend+0x41/0x290 [xen_kbdfront]
- [<ffffffffa0010a12>] xenkbd_probe+0x2f2/0x324 [xen_kbdfront]
- [<ffffffff813e5757>] xenbus_dev_probe+0x77/0x130
- [<ffffffff813e7217>] xenbus_frontend_dev_probe+0x47/0x50
- [<ffffffff8145e9a9>] driver_probe_device+0x89/0x230
- [<ffffffff8145ebeb>] __driver_attach+0x9b/0xa0
- [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
- [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
- [<ffffffff8145cf1c>] bus_for_each_dev+0x8c/0xb0
- [<ffffffff8145e7d9>] driver_attach+0x19/0x20
- [<ffffffff8145e260>] bus_add_driver+0x1a0/0x220
- [<ffffffff8145f1ff>] driver_register+0x5f/0xf0
- [<ffffffff813e55c5>] xenbus_register_driver_common+0x15/0x20
- [<ffffffff813e76b3>] xenbus_register_frontend+0x23/0x40
- [<ffffffffa0015000>] ? 0xffffffffa0014fff
- [<ffffffffa001502b>] xenkbd_init+0x2b/0x1000 [xen_kbdfront]
- [<ffffffff81002049>] do_one_initcall+0x49/0x170
-
-.. snip..
-
-which is hardly nice. This patch fixes this by having each
-PV driver check for:
- - if running in PV, then it is fine to execute (as that is their
-   native environment).
- - if running in HVM, check if user wanted 'xen_emul_unplug=never',
-   in which case bail out and don't load PV drivers.
- - if running in HVM, and if PCI device 5853:0001 (xen_platform_pci)
-   does not exist, then bail out and not load PV drivers.
-
-P.S.
-Ian Campbell suggested getting rid of 'xen_platform_pci_unplug'
-but unfortunatly the xen-blkfront driver is using it, so we
-cannot do it.
-
-Reported-by: Sander Eikelenboom <linux@eikelenboom.it
-Reported-by: Anthony PERARD <anthony.perard@citrix.com>
-Reported-by: Fabio Fantoni <fabio.fantoni@m2r.biz>
----
- arch/x86/xen/platform-pci-unplug.c         | 18 ++++++++++++++++++
- drivers/block/xen-blkfront.c               |  2 +-
- drivers/char/tpm/xen-tpmfront.c            |  4 ++++
- drivers/input/misc/xen-kbdfront.c          |  4 ++++
- drivers/net/xen-netfront.c                 |  2 +-
- drivers/pci/xen-pcifront.c                 |  4 ++++
- drivers/video/xen-fbfront.c                |  4 ++++
- drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
- include/xen/platform_pci.h                 | 13 ++++++++++++-
- 9 files changed, 49 insertions(+), 4 deletions(-)
-
-diff --git a/arch/x86/xen/platform-pci-unplug.c b/arch/x86/xen/platform-pci-unplug.c
-index 0a78524..087dfeb 100644
---- a/arch/x86/xen/platform-pci-unplug.c
-+++ b/arch/x86/xen/platform-pci-unplug.c
-@@ -69,6 +69,24 @@ static int check_platform_magic(void)
- 	return 0;
- }
- 
-+bool xen_has_pv_devices(void)
-+{
-+	if (!xen_domain())
-+		return false;
-+
-+	if (xen_hvm_domain()) {
-+		/* User requested no unplug, so no PV drivers. */
-+		if (xen_emul_unplug & XEN_UNPLUG_NEVER)
-+			return false;
-+		/* And user has xen_platform_pci=0 set in guest config as
-+		 * driver did not modify the value. */
-+		if (!xen_platform_pci_unplug)
-+			return false;
-+	}
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(xen_has_pv_devices);
-+
- void xen_unplug_emulated_devices(void)
- {
- 	int r;
-diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-index 432db1b..9616b81 100644
---- a/drivers/block/xen-blkfront.c
-+++ b/drivers/block/xen-blkfront.c
-@@ -2074,7 +2074,7 @@ static int __init xlblk_init(void)
- 	if (!xen_domain())
- 		return -ENODEV;
- 
--	if (xen_hvm_domain() && !xen_platform_pci_unplug)
-+	if (!xen_has_pv_devices())
- 		return -ENODEV;
- 
- 	if (register_blkdev(XENVBD_MAJOR, DEV_NAME)) {
-diff --git a/drivers/char/tpm/xen-tpmfront.c b/drivers/char/tpm/xen-tpmfront.c
-index c8ff4df..62e7d38 100644
---- a/drivers/char/tpm/xen-tpmfront.c
-+++ b/drivers/char/tpm/xen-tpmfront.c
-@@ -17,6 +17,7 @@
- #include <xen/xenbus.h>
- #include <xen/page.h>
- #include "tpm.h"
-+#include <xen/platform_pci.h>
- 
- struct tpm_private {
- 	struct tpm_chip *chip;
-@@ -421,6 +422,9 @@ static int __init xen_tpmfront_init(void)
- 	if (!xen_domain())
- 		return -ENODEV;
- 
-+	if (!xen_has_pv_devices())
-+		return -ENODEV;
-+
- 	return xenbus_register_frontend(&tpmfront_driver);
- }
- module_init(xen_tpmfront_init);
-diff --git a/drivers/input/misc/xen-kbdfront.c b/drivers/input/misc/xen-kbdfront.c
-index e21c181..fbfdc10 100644
---- a/drivers/input/misc/xen-kbdfront.c
-+++ b/drivers/input/misc/xen-kbdfront.c
-@@ -29,6 +29,7 @@
- #include <xen/interface/io/fbif.h>
- #include <xen/interface/io/kbdif.h>
- #include <xen/xenbus.h>
-+#include <xen/platform_pci.h>
- 
- struct xenkbd_info {
- 	struct input_dev *kbd;
-@@ -380,6 +381,9 @@ static int __init xenkbd_init(void)
- 	if (xen_initial_domain())
- 		return -ENODEV;
- 
-+	if (!xen_has_pv_devices())
-+		return -ENODEV;
-+
- 	return xenbus_register_frontend(&xenkbd_driver);
- }
- 
-diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index e59acb1..d4b52e9 100644
---- a/drivers/net/xen-netfront.c
-+++ b/drivers/net/xen-netfront.c
-@@ -2115,7 +2115,7 @@ static int __init netif_init(void)
- 	if (!xen_domain())
- 		return -ENODEV;
- 
--	if (xen_hvm_domain() && !xen_platform_pci_unplug)
-+	if (!xen_has_pv_devices())
- 		return -ENODEV;
- 
- 	pr_info("Initialising Xen virtual ethernet driver\n");
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index f7197a7..eae7cd9 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -20,6 +20,7 @@
- #include <linux/workqueue.h>
- #include <linux/bitops.h>
- #include <linux/time.h>
-+#include <xen/platform_pci.h>
- 
- #include <asm/xen/swiotlb-xen.h>
- #define INVALID_GRANT_REF (0)
-@@ -1138,6 +1139,9 @@ static int __init pcifront_init(void)
- 	if (!xen_pv_domain() || xen_initial_domain())
- 		return -ENODEV;
- 
-+	if (!xen_has_pv_devices())
-+		return -ENODEV;
-+
- 	pci_frontend_registrar(1 /* enable */);
- 
- 	return xenbus_register_frontend(&xenpci_driver);
-diff --git a/drivers/video/xen-fbfront.c b/drivers/video/xen-fbfront.c
-index cd005c2..4b2d3ab 100644
---- a/drivers/video/xen-fbfront.c
-+++ b/drivers/video/xen-fbfront.c
-@@ -35,6 +35,7 @@
- #include <xen/interface/io/fbif.h>
- #include <xen/interface/io/protocols.h>
- #include <xen/xenbus.h>
-+#include <xen/platform_pci.h>
- 
- struct xenfb_info {
- 	unsigned char		*fb;
-@@ -699,6 +700,9 @@ static int __init xenfb_init(void)
- 	if (xen_initial_domain())
- 		return -ENODEV;
- 
-+	if (!xen_has_pv_devices())
-+		return -ENODEV;
-+
- 	return xenbus_register_frontend(&xenfb_driver);
- }
- 
-diff --git a/drivers/xen/xenbus/xenbus_probe_frontend.c b/drivers/xen/xenbus/xenbus_probe_frontend.c
-index 129bf84..cb385c1 100644
---- a/drivers/xen/xenbus/xenbus_probe_frontend.c
-+++ b/drivers/xen/xenbus/xenbus_probe_frontend.c
-@@ -496,7 +496,7 @@ subsys_initcall(xenbus_probe_frontend_init);
- #ifndef MODULE
- static int __init boot_wait_for_devices(void)
- {
--	if (xen_hvm_domain() && !xen_platform_pci_unplug)
-+	if (!xen_has_pv_devices())
- 		return -ENODEV;
- 
- 	ready_to_wait_for_devices = 1;
-diff --git a/include/xen/platform_pci.h b/include/xen/platform_pci.h
-index 438c256..87bc59c 100644
---- a/include/xen/platform_pci.h
-+++ b/include/xen/platform_pci.h
-@@ -47,5 +47,16 @@ static inline int xen_must_unplug_disks(void) {
- }
- 
- extern int xen_platform_pci_unplug;
--
-+#if defined(CONFIG_XEN_PVHVM)
-+extern bool xen_has_pv_devices(void);
-+#else
-+static inline bool xen_has_pv_devices(void)
-+{
-+#if defined(CONFIG_XEN)
-+	return true;
-+#else
-+	return false;
-+#endif
-+}
-+#endif
- #endif /* _XEN_PLATFORM_PCI_H */
--- 
-1.8.3.1
-
+On Thu, Dec 5, 2013 at 4:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Yinghai]
+>
+> On Thu, Dec 5, 2013 at 2:45 PM, Aaron McSorley <a@aaronmcsorley.com> wrote:
+>> the dmesg
+>> http://pastebin.com/Y7dKDjAi
+>>
+>> and lspci
+>> http://pastebin.com/SVGcfY2F
+>
+> Looks like some dubious BIOS PCI configuration:
+>
+>     pci 0000:00:02.0: reg 10: [mem 0xb9000000-0xb93fffff 64bit]
+>     pci 0000:00:01.0: PCI bridge to [bus 01]
+>     pci 0000:00:01.0:   bridge window [io  0x6000-0x6fff]
+>     pci 0000:00:01.0:   bridge window [mem 0xb8000000-0xb8ffffff]
+>     pci 0000:00:01.0:   bridge window [mem 0xa0000000-0xb1ffffff 64bit pref]
+>     pci 0000:01:00.0: reg 10: [mem 0xb9000000-0xb9ffffff]  (not in
+> window and conflicts with 00:02.0 above)
+>     pci 0000:00:1c.0: PCI bridge to [bus 02]
+>     pci 0000:00:1c.0:   bridge window [io  0x5000-0x5fff]
+>     pci 0000:00:1c.0:   bridge window [mem 0xb7000000-0xb7ffffff]
+>     pci 0000:00:1c.0:   bridge window [mem 0xb2000000-0xb2ffffff 64bit pref]
+>     pci 0000:02:00.0: reg 10: [mem 0xb8000000-0xb8001fff 64bit]  (not
+> in window and conflicts with 00:01.0 bridge window)
+>
+> But Linux should be able to recover from this.  Any chance you can
+> reproduce this on a current upstream kernel (v3.12) so we can find out
+> whether this has already been fixed?
+>
+>> On Thu, Dec 5, 2013 at 2:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> [Fix Jiang's email address, please respond to this, not the previous message]
+>>>
+>>> On Thu, Dec 5, 2013 at 1:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> [+cc Jiang, Ben]
+>>>>
+>>>> On Thu, Dec 5, 2013 at 8:24 AM, Aaron McSorley <a@aaronmcsorley.com> wrote:
+>>>>> Hello, I'm getting this message when trying to load iwlwifi in our
+>>>>> debian live image running kernel 3.8.5, this is on a Sony SVS13AA11L,
+>>>>> please advise on how to debug this, or any additional information you
+>>>>> need, any help is much appreciated, and thanks in advance
+>>>>
+>>>> Thanks, Aaron.  Can you collect the complete dmesg log and output of
+>>>> "lspci -vv" (run as root)?
+>>>>
+>>>> I know this is a Debian kernel, but the upstream kernel likely still
+>>>> has the same problem, so it'd be good if you opened a bug report at
+>>>> http://bugzilla.kernel.org (drivers/pci category).
+>>>>
+>>>> Is there any hotplug involved here?  Since this doesn't seem to be a
+>>>> problem every iwlwifi user sees, possibly we didn't assign resources
+>>>> to the iwlwifi device in this case.
+>>>>
+>>>> Bjorn
+>>>>
+>>>>> [ 1387.804146] iwlwifi 0000:02:00.0: pci_ioremap_bar failed
+>>>>> [ 1387.804206] iwlwifi: probe of 0000:02:00.0 failed with error -12
+>>>>> [ 1978.637526] Intel(R) Wireless WiFi driver for Linux, in-tree:
+>>>>> [ 1978.637531] Copyright(c) 2003-2012 Intel Corporation
+>>>>> [ 1978.637685] ------------[ cut here ]------------
+>>>>> [ 1978.637695] WARNING: at /build/linux/drivers/pci/pci.c:130
+>>>>> pci_ioremap_bar+0x4a/0x4e()
+>>>>> [ 1978.637697] Hardware name: SVS13A12FXB
+>>>>> [ 1978.637699] Modules linked in: iwlwifi(+) joydev coretemp kvm
+>>>>> tpm_infineon crc32c_intel uvc
+>>>>> video aesni_intel aes_i586 videobuf2_vmalloc cfg80211 xts
+>>>>> videobuf2_memops lrw btusb tpm_tis b
+>>>>> luetooth videobuf2_core gf128mul iTCO_wdt ablk_helper videodev
+>>>>> acpi_cpufreq tpm iTCO_vendor_su
+>>>>> pport psmouse i2c_i801 cryptd sony_laptop crc16 mperf media tpm_bios
+>>>>> of_i2c serio_raw lpc_ich
+>>>>> rfkill battery evdev processor ac mei fuse squashfs loop aufs(C)
+>>>>> nls_utf8 isofs dm_mirror dm_r
+>>>>> egion_hash dm_log dm_mod radeon sg sr_mod sd_mod crc_t10dif cdrom
+>>>>> usb_storage thermal nouveau
+>>>>> mxm_wmi wmi r8169 mii rtsx_pci ttm microcode i915 ahci libahci
+>>>>> ehci_pci ehci_hcd xhci_hcd vide
+>>>>> o libata usbcore button i2c_algo_bit drm_kms_helper scsi_mod
+>>>>> usb_common drm i2c_core thermal_s
+>>>>> ys [last unloaded: iwlwifi]
+>>>>> [ 1978.637759] Pid: 2896, comm: modprobe Tainted: P        WC O
+>>>>> 3.8-0baureo1-486 #1 Debian 3.8.5-1~experimental.1~baureo1
+>>>>> [ 1978.637761] Call Trace:
+>>>>> [ 1978.637768]  [<c1021361>] ? warn_slowpath_common+0x68/0x79
+>>>>> [ 1978.637773]  [<c115b85d>] ? pci_ioremap_bar+0x4a/0x4e
+>>>>> [ 1978.637777]  [<c102137f>] ? warn_slowpath_null+0xd/0x10
+>>>>> [ 1978.637781]  [<c115b85d>] ? pci_ioremap_bar+0x4a/0x4e
+>>>>> [ 1978.637804]  [<f89136c2>] ? iwl_trans_pcie_alloc+0x113/0x271 [iwlwifi]
+>>>>> [ 1978.637822]  [<f890f313>] ? iwl_pci_probe+0xf/0x7e [iwlwifi]
+>>>>> [ 1978.637826]  [<c115e50e>] ? pci_device_probe+0x4e/0x85
+>>>>> [ 1978.637833]  [<c11d958b>] ? driver_probe_device+0x78/0x163
+>>>>> [ 1978.637838]  [<c11d96ba>] ? __driver_attach+0x44/0x5f
+>>>>> [ 1978.637842]  [<c11d8357>] ? bus_for_each_dev+0x37/0x61
+>>>>> [ 1978.637846]  [<c11d91ca>] ? driver_attach+0x11/0x13
+>>>>> [ 1978.637851]  [<c11d9676>] ? driver_probe_device+0x163/0x163
+>>>>> [ 1978.637855]  [<c11d8f40>] ? bus_add_driver+0xb0/0x1a7
+>>>>> [ 1978.637861]  [<f891d000>] ? 0xf891cfff
+>>>>> [ 1978.637866]  [<c11d9ae6>] ? driver_register+0x70/0xdb
+>>>>> [ 1978.637871]  [<f891d000>] ? 0xf891cfff
+>>>>> [ 1978.637876]  [<f891d000>] ? 0xf891cfff
+>>>>> [ 1978.637891]  [<f890f3f5>] ? iwl_pci_register_driver+0x15/0x2a [iwlwifi]
+>>>>> [ 1978.637896]  [<f891d000>] ? 0xf891cfff
+>>>>> [ 1978.637900]  [<c100116f>] ? do_one_initcall+0x65/0x10a
+>>>>> [ 1978.637904]  [<f891d000>] ? 0xf891cfff
+>>>>> [ 1978.637910]  [<c1055ea0>] ? load_module+0x1610/0x18e6
+>>>>> [ 1978.637918]  [<c10561e2>] ? sys_init_module+0x6c/0x80
+>>>>> [ 1978.637933]  [<c12aa12f>] ? syscall_call+0x7/0xb
+>>>>> [ 1978.637937] ---[ end trace 57fa059f8cbca6fc ]---
+>>>>> [ 1978.637941] iwlwifi 0000:02:00.0: pci_ioremap_bar failed
+>>>>> [ 1978.638002] iwlwifi: probe of 0000:02:00.0 failed with error -12
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
