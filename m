@@ -1,76 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:38595 "EHLO
-	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751399Ab3LLEAH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 23:00:07 -0500
-Message-ID: <52A934A2.8020101@st.com>
-Date: Thu, 12 Dec 2013 09:29:30 +0530
-From: Rajeev kumar <rajeev-dlh.kumar@st.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:37924 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932072Ab3LEL5T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 06:57:19 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH 3/9] IA64/PCI: Use dev_is_pci() to check whether it is pci device
+Date: Thu, 5 Dec 2013 19:56:39 +0800
+Message-ID: <1386244599-13468-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	'Viresh Kumar' <viresh.linux@gmail.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 01/12] SPEAr13xx: Correct dt field name for stmmac phy-addr
-References: <cover.1386752447.git.mohit.kumar@st.com> <1078549fa412fb34ab2c95a6232096570abee12d.1386752447.git.mohit.kumar@st.com> <52A847D1.5000409@st.com> <001b01cef6d2$9104f7b0$b30ee710$%han@samsung.com>
-In-Reply-To: <001b01cef6d2$9104f7b0$b30ee710$%han@samsung.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/12/2013 6:09 AM, Jingoo Han wrote:
-> On Wednesday, December 11, 2013 8:09 PM, Rajeev kumar wrote:
->> On 12/11/2013 3:08 PM, Mohit KUMAR wrote:
->>> DT field name for the phy address changed since kernel 3.10. Set the
->>> snps,phy-addr to 0xffffffff so that the driver probes for the phy.
->>>
->>> Signed-off-by: Mohit Kumar<mohit.kumar@st.com>
->>> Cc: Pratyush Anand<pratyush.anand@st.com>
->>> Cc: Viresh Kumar<viresh.linux@gmail.com>
->>> Cc: spear-devel@list.st.com
->>> Cc: linux-arm-kernel@lists.infradead.org
->>> Cc: devicetree@vger.kernel.org
->>> ---
->>>    arch/arm/boot/dts/spear13xx.dtsi |    1 +
->>>    1 files changed, 1 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/arch/arm/boot/dts/spear13xx.dtsi b/arch/arm/boot/dts/spear13xx.dtsi
->>> index 4382547..3518803 100644
->>> --- a/arch/arm/boot/dts/spear13xx.dtsi
->>> +++ b/arch/arm/boot/dts/spear13xx.dtsi
->>> @@ -155,6 +155,7 @@
->>>
->>>    		gmac0: eth@e2000000 {
->>>    			compatible = "st,spear600-gmac";
->>> +			snps,phy-addr =<0xffffffff>;
->>
->> Don't you think it should be st,phy-addr =<0xffffffff>, as the
->> manufacturer is 'st' as the compatible suggest
->
-> Hi Rajeev Kumar,
->
-> According to the Documentation, it guides to use 'snps' prefix.
->
-> In my humble opinion,
-> 'gmac' is a Synopsys based IP. Thus, if 'snps,phy-addr' is
-> not ST specific, 'snps' prefix can be used.
->
+Use PCI dev_is_pci() instead of directly compare
+pci_bus_type to check whether it is pci device.
 
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ arch/ia64/hp/common/sba_iommu.c |    2 +-
+ arch/ia64/sn/pci/pci_dma.c      |   24 ++++++++++++------------
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
-Very much true, I raise the point just becuase compatible = 
-"st,spear600-gmac". Check the manufacturer name here.
+diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+index 4c530a8..8e858b5 100644
+--- a/arch/ia64/hp/common/sba_iommu.c
++++ b/arch/ia64/hp/common/sba_iommu.c
+@@ -255,7 +255,7 @@ static u64 prefetch_spill_page;
+ #endif
+ 
+ #ifdef CONFIG_PCI
+-# define GET_IOC(dev)	(((dev)->bus == &pci_bus_type)						\
++# define GET_IOC(dev)	((dev_is_pci(dev))						\
+ 			 ? ((struct ioc *) PCI_CONTROLLER(to_pci_dev(dev))->iommu) : NULL)
+ #else
+ # define GET_IOC(dev)	NULL
+diff --git a/arch/ia64/sn/pci/pci_dma.c b/arch/ia64/sn/pci/pci_dma.c
+index 3290d6e..d0853e8 100644
+--- a/arch/ia64/sn/pci/pci_dma.c
++++ b/arch/ia64/sn/pci/pci_dma.c
+@@ -34,7 +34,7 @@
+  */
+ static int sn_dma_supported(struct device *dev, u64 mask)
+ {
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ 
+ 	if (mask < 0x7fffffff)
+ 		return 0;
+@@ -50,7 +50,7 @@ static int sn_dma_supported(struct device *dev, u64 mask)
+  */
+ int sn_dma_set_mask(struct device *dev, u64 dma_mask)
+ {
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ 
+ 	if (!sn_dma_supported(dev, dma_mask))
+ 		return 0;
+@@ -85,7 +85,7 @@ static void *sn_dma_alloc_coherent(struct device *dev, size_t size,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct sn_pcibus_provider *provider = SN_PCIDEV_BUSPROVIDER(pdev);
+ 
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ 
+ 	/*
+ 	 * Allocate the memory.
+@@ -143,7 +143,7 @@ static void sn_dma_free_coherent(struct device *dev, size_t size, void *cpu_addr
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct sn_pcibus_provider *provider = SN_PCIDEV_BUSPROVIDER(pdev);
+ 
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ 
+ 	provider->dma_unmap(pdev, dma_handle, 0);
+ 	free_pages((unsigned long)cpu_addr, get_order(size));
+@@ -187,7 +187,7 @@ static dma_addr_t sn_dma_map_page(struct device *dev, struct page *page,
+ 
+ 	dmabarr = dma_get_attr(DMA_ATTR_WRITE_BARRIER, attrs);
+ 
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ 
+ 	phys_addr = __pa(cpu_addr);
+ 	if (dmabarr)
+@@ -223,7 +223,7 @@ static void sn_dma_unmap_page(struct device *dev, dma_addr_t dma_addr,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct sn_pcibus_provider *provider = SN_PCIDEV_BUSPROVIDER(pdev);
+ 
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ 
+ 	provider->dma_unmap(pdev, dma_addr, dir);
+ }
+@@ -247,7 +247,7 @@ static void sn_dma_unmap_sg(struct device *dev, struct scatterlist *sgl,
+ 	struct sn_pcibus_provider *provider = SN_PCIDEV_BUSPROVIDER(pdev);
+ 	struct scatterlist *sg;
+ 
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ 
+ 	for_each_sg(sgl, sg, nhwentries, i) {
+ 		provider->dma_unmap(pdev, sg->dma_address, dir);
+@@ -284,7 +284,7 @@ static int sn_dma_map_sg(struct device *dev, struct scatterlist *sgl,
+ 
+ 	dmabarr = dma_get_attr(DMA_ATTR_WRITE_BARRIER, attrs);
+ 
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ 
+ 	/*
+ 	 * Setup a DMA address for each entry in the scatterlist.
+@@ -323,26 +323,26 @@ static int sn_dma_map_sg(struct device *dev, struct scatterlist *sgl,
+ static void sn_dma_sync_single_for_cpu(struct device *dev, dma_addr_t dma_handle,
+ 				       size_t size, enum dma_data_direction dir)
+ {
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ }
+ 
+ static void sn_dma_sync_single_for_device(struct device *dev, dma_addr_t dma_handle,
+ 					  size_t size,
+ 					  enum dma_data_direction dir)
+ {
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ }
+ 
+ static void sn_dma_sync_sg_for_cpu(struct device *dev, struct scatterlist *sg,
+ 				   int nelems, enum dma_data_direction dir)
+ {
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ }
+ 
+ static void sn_dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
+ 				      int nelems, enum dma_data_direction dir)
+ {
+-	BUG_ON(dev->bus != &pci_bus_type);
++	BUG_ON(!dev_is_pci(dev));
+ }
+ 
+ static int sn_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
+-- 
+1.7.1
 
-~Rajeev
-
-> ./Documentation/devicetree/bindings/net/stmmac.txt
-> - snps,phy-addr         phy address to connect to.
->
-> Best regards,
-> Jingoo Han
->
 
