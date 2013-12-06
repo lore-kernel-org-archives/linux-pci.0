@@ -1,40 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:54662 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932582Ab3LIUnz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:43:55 -0500
-Received: by mail-qa0-f52.google.com with SMTP id cm18so1377372qab.4
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 12:43:54 -0800 (PST)
-Date: Mon, 9 Dec 2013 13:43:49 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: =?iso-8859-1?Q?Bj=F8rn?= Erik Nilsen <ben@datarespons.no>
-Cc: jg1.han@samsung.com, marex@denx.de, pratyush.anand@gmail.com,
-	linux-pci@vger.kernel.org, kishon@ti.com, Mohit.KUMAR@st.com,
-	ajay.khandelwal@st.com, tharvey@gateworks.com,
-	Eric.Nelson@boundarydevices.com, troy.kisky@boundarydevices.com
-Subject: Re: [PATCH v5 0/2] Kernel oops from pci_disable_msi
-Message-ID: <20131209204349.GA2135@google.com>
-References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com>
- <1385732125-28630-1-git-send-email-ben@datarespons.no>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1385732125-28630-1-git-send-email-ben@datarespons.no>
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752879Ab3LFDVY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:21:24 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 16/20] iommu/vt-d: release invalidation queue when destroying IOMMU unit
+Date: Fri,  6 Dec 2013 11:21:19 +0800
+Message-Id: <1386300083-6882-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 29, 2013 at 02:35:23PM +0100, Bjørn Erik Nilsen wrote:
-> This patchset address Marek Vasut's comments on the previous
-> patches. I decided to split into two separate commits as they are
-> unrelated.
-> 
-> Bjørn Erik Nilsen (2):
->   PCI: designware: Fix crash in dw_msi_teardown_irq
->   PCI: designware: Remove redundant call to pci_write_config
+Release associated invalidation queue when destroying IOMMU unit
+to avoid memory leak.
 
-Hi Bjørn,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/dmar.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-There's been a fair amount of discussion about the first patch, so I'm
-ignoring these for now.  Please repost these (again) when that all settles
-down.
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 812b596..a9d9d0f 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -745,6 +745,12 @@ static void free_iommu(struct intel_iommu *iommu)
+ 		destroy_irq(iommu->irq);
+ 	}
+ 
++	if (iommu->qi) {
++		free_page((unsigned long)iommu->qi->desc);
++		kfree(iommu->qi->desc_status);
++		kfree(iommu->qi);
++	}
++
+ 	if (iommu->reg)
+ 		unmap_iommu(iommu);
+ 
+-- 
+1.7.10.4
 
-Bjorn
