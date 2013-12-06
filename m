@@ -1,79 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:47103 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956Ab3LFATu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 19:19:50 -0500
-Received: by mail-oa0-f51.google.com with SMTP id i7so19250755oag.38
-        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 16:19:49 -0800 (PST)
-Subject: [PATCH 1/2] PCI: Prevent bus conflicts while checking for bridge
- apertures
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Date: Thu, 05 Dec 2013 17:19:47 -0700
-Message-ID: <20131206001947.27659.14981.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755722Ab3LFDVS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:21:18 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 14/20] iommu/vt-d: avoid double free in error recovery path
+Date: Fri,  6 Dec 2013 11:21:17 +0800
+Message-Id: <1386300083-6882-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_bridge_check_ranges() determines whether the bridge supports an I/O
-aperture and a prefetchable memory aperture.
+The g_iommus array will be freed twice when failed to initialize IOMMU
+devices, which will cause system panic.
 
-Previously, if the I/O aperture was unsupported, disabled, or configured at
-[io 0x0000-0x0fff], we wrote 0xf0 to PCI_IO_BASE and PCI_IO_LIMIT, which,
-if the bridge supports it, enables the I/O aperture at [io 0xf000-0xffff].
-The enabled aperture may conflict with other devices in the system.
-
-Similarly, we wrote 0xfff0 to PCI_PREF_MEMORY_BASE and
-PCI_PREF_MEMORY_LIMIT, which enables the prefetchable memory aperture at
-[mem 0xfff00000-0xffffffff], and that may also conflict with other devices.
-
-All we need to know is whether the base and limit registers are writable,
-so we can use values that leave the apertures disabled, e.g., PCI_IO_BASE =
-0xf0, PCI_IO_LIMIT = 0xe0, PCI_PREF_MEMORY_BASE = 0xfff0,
-PCI_PREF_MEMORY_LIMIT = 0xffe0.
-
-Writing non-zero values to both the base and limit registers means we
-detect whether either or both are writable, as we did before.
-
-Reported-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Based-on-patch-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/setup-bus.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/iommu/intel-iommu.c |   14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 219a4106480a..80350299a6ea 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -665,21 +665,23 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index cbdb1ff..1a20171 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1293,19 +1293,10 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 	iommu->domains = NULL;
+ 	iommu->domain_ids = NULL;
  
- 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 	if (!io) {
--		pci_write_config_word(bridge, PCI_IO_BASE, 0xf0f0);
-+		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
- 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
- 	}
- 	if (io)
- 		b_res[0].flags |= IORESOURCE_IO;
+-	g_iommus[iommu->seq_id] = NULL;
+-
+-	/* if all iommus are freed, free g_iommus */
+-	for (i = 0; i < g_num_of_iommus; i++) {
+-		if (g_iommus[i])
+-			break;
+-	}
+-
+-	if (i == g_num_of_iommus)
+-		kfree(g_iommus);
+-
+ 	/* free context mapping */
+ 	free_context_table(iommu);
 +
- 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
- 	    disconnect boundary by one PCI data phase.
- 	    Workaround: do not use prefetching on this device. */
- 	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
- 		return;
-+
- 	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
- 	if (!pmem) {
- 		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
--					       0xfff0fff0);
-+					       0xffe0fff0);
- 		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
- 		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
- 	}
++	g_iommus[iommu->seq_id] = NULL;
+ }
+ 
+ static struct dmar_domain *alloc_domain(void)
+@@ -2621,6 +2612,7 @@ error:
+ 	for_each_active_iommu(iommu, drhd)
+ 		free_dmar_iommu(iommu);
+ 	kfree(g_iommus);
++	g_iommus = NULL;
+ 	return ret;
+ }
+ 
+-- 
+1.7.10.4
 
