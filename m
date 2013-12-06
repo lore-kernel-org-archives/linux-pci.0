@@ -1,52 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:46887 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908Ab3LPBPg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 20:15:36 -0500
-Received: by mail-ie0-f172.google.com with SMTP id qd12so5728346ieb.17
-        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2013 17:15:36 -0800 (PST)
-Received: from localhost (173-8-252-97-Colorado.hfc.comcastbusiness.net. [173.8.252.97])
-        by mx.google.com with ESMTPSA id y10sm13382914igl.4.2013.12.15.17.15.35
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-        Sun, 15 Dec 2013 17:15:36 -0800 (PST)
-Subject: [PATCH 6/8] PCI: pciehp: Use symbolic constants,
- not hard-coded bitmask
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 15 Dec 2013 18:15:35 -0700
-Message-ID: <20131216011535.7275.77761.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131216010946.7275.83547.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131216010946.7275.83547.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-db9lp0251.outbound.messaging.microsoft.com ([213.199.154.251]:28686
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751496Ab3LFDJ7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:09:59 -0500
+Received: from mail29-db9 (localhost [127.0.0.1])	by mail29-db9-R.bigfish.com
+ (Postfix) with ESMTP id 1D928140742	for <linux-pci@vger.kernel.org>; Fri,  6
+ Dec 2013 03:09:58 +0000 (UTC)
+Received: from DB9EHSMHS006.bigfish.com (unknown [10.174.16.227])	by
+ mail29-db9.bigfish.com (Postfix) with ESMTP id A57DD30007E	for
+ <linux-pci@vger.kernel.org>; Fri,  6 Dec 2013 03:09:55 +0000 (UTC)
+From: Guenter Roeck <groeck@juniper.net>
+To: Rajat Jain <rajatjain@juniper.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: Getting a new vendor ID / device ID added to
+ "include/linux/pci_ids.h"
+Date: Fri, 6 Dec 2013 03:09:49 +0000
+Message-ID: <f0f1cb7e25a04d5bb1ec9ccb3c423f5c@CO1PR05MB523.namprd05.prod.outlook.com>
+References: <393f524403744e7598b594c1a8b3dfeb@DM2PR05MB671.namprd05.prod.outlook.com>
+In-Reply-To: <393f524403744e7598b594c1a8b3dfeb@DM2PR05MB671.namprd05.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the PCI_EXP_SLTSTA definitions, not 0x1f, when clearing Slot Status
-bits.
+If it is needed in more than one upstream driver, you submit a patch. Otherwise keep it local.
 
-No functional change.
+Guenter
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pciehp_hpc.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+________________________________________
+From: Rajat Jain
+Sent: Thursday, December 05, 2013 6:16 PM
+To: linux-pci@vger.kernel.org
+Cc: Guenter Roeck
+Subject: Getting a new vendor ID / device ID added to "include/linux/pci_ids.h"
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index cb3100af7e8c..915bb35f9180 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -808,7 +808,10 @@ struct controller *pcie_init(struct pcie_device *dev)
-         }
- 
- 	/* Clear all remaining event bits in Slot Status register */
--	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, 0x1f);
-+	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-+		PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
-+		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
-+		PCI_EXP_SLTSTA_CC);
- 
- 	/* Disable software notification */
- 	pcie_disable_notification(ctrl);
+Hi,
+
+My company's vendor ID (Juniper Networks: 0x1304) shows up in:
+
+http://www.pcidatabase.com/vendor_details.php?id=410
+
+However, I do not see that in "include/linux/pci_ids.h".
+
+Can you please let me know what is the procedure to get a vendor / product ID added to this file? I'm assuming it's not as simple as submitting a patch?
+
+Thanks,
+
+Rajat
 
