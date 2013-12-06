@@ -1,216 +1,296 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:46117 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754836Ab3LPSNb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 13:13:31 -0500
-MIME-Version: 1.0
-In-Reply-To: <20131216082329.GA4926@yanx>
-References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
-	<1386658484-15774-5-git-send-email-yinghai@kernel.org>
-	<20131216082329.GA4926@yanx>
-Date: Mon, 16 Dec 2013 10:13:30 -0800
-Message-ID: <CAE9FiQWONC84f35_Jyvs=nwXdj4QWCBdokOgiFWDgWSSpcf_NA@mail.gmail.com>
-Subject: Re: [PATCH v4 4/5] PCI: Try best to allocate pref mmio 64bit above 4g
-From: Yinghai Lu <yinghai@kernel.org>
-To: Guo Chao <yan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from v094114.home.net.pl ([79.96.170.134]:60310 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751749Ab3LFBIv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 20:08:51 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>
+Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
+Date: Fri, 06 Dec 2013 02:21:50 +0100
+Message-ID: <1992931.Zv6xBcN8V4@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6edmz5nkSYogbYk1FFYsCCwNV_-rir2jGP2JBnvOx+iw@mail.gmail.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <33026900.FbCAopDPFz@vostro.rjw.lan> <CAErSpo6edmz5nkSYogbYk1FFYsCCwNV_-rir2jGP2JBnvOx+iw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 12:23 AM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
-> On Mon, Dec 09, 2013 at 10:54:43PM -0800, Yinghai Lu wrote:
->> When one of children resources does not support MEM_64, MEM_64 for
->> bridge get reset, so pull down whole pref resource on the bridge under 4G.
->>
->> If the bridge support pref mem 64, will only allocate that with pref mem64 to
->> children that support it.
->> For children resources if they only support pref mem 32, will allocate them
->> from non pref mem instead.
->>
->> If the bridge only support 32bit pref mmio, will still have all children pref
->> mmio under that.
->>
->> -v2: Add release bridge res support with bridge mem res for pref_mem children res.
->> -v3: refresh and make it can be applied early before for_each_dev_res patchset.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Tested-by: Guo Chao <yan@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/setup-bus.c | 133 ++++++++++++++++++++++++++++++++----------------
->>  drivers/pci/setup-res.c |  14 ++++-
->>  2 files changed, 101 insertions(+), 46 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 7933982..843764e 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -711,12 +711,11 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->>     bus resource of a given type. Note: we intentionally skip
->>     the bus resources which have already been assigned (that is,
->>     have non-NULL parent resource). */
->> -static struct resource *find_free_bus_resource(struct pci_bus *bus, unsigned long type)
->> +static struct resource *find_free_bus_resource(struct pci_bus *bus,
->> +                      unsigned long type_mask, unsigned long type)
->>  {
->>       int i;
->>       struct resource *r;
->> -     unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
->> -                               IORESOURCE_PREFETCH;
->>
->>       pci_bus_for_each_resource(bus, r, i) {
->>               if (r == &ioport_resource || r == &iomem_resource)
->> @@ -813,7 +812,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->>               resource_size_t add_size, struct list_head *realloc_head)
->>  {
->>       struct pci_dev *dev;
->> -     struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
->> +     struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
->> +                                                     IORESOURCE_IO);
->>       resource_size_t size = 0, size0 = 0, size1 = 0;
->>       resource_size_t children_add_size = 0;
->>       resource_size_t min_align, align;
->> @@ -913,15 +913,16 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
->>   * guarantees that all child resources fit in this size.
->>   */
->>  static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->> -                      unsigned long type, resource_size_t min_size,
->> -                     resource_size_t add_size,
->> -                     struct list_head *realloc_head)
->> +                      unsigned long type, unsigned long type2,
->> +                      resource_size_t min_size, resource_size_t add_size,
->> +                      struct list_head *realloc_head)
->>  {
->>       struct pci_dev *dev;
->>       resource_size_t min_align, align, size, size0, size1;
->>       resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
->>       int order, max_order;
->> -     struct resource *b_res = find_free_bus_resource(bus, type);
->> +     struct resource *b_res = find_free_bus_resource(bus,
->> +                                      mask | IORESOURCE_PREFETCH, type);
->>       unsigned int mem64_mask = 0;
->>       resource_size_t children_add_size = 0;
->>
->> @@ -942,7 +943,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>                       struct resource *r = &dev->resource[i];
->>                       resource_size_t r_size;
->>
->> -                     if (r->parent || (r->flags & mask) != type)
->> +                     if (r->parent || ((r->flags & mask) != type &&
->> +                                       (r->flags & mask) != type2))
->>                               continue;
->>                       r_size = resource_size(r);
->>  #ifdef CONFIG_PCI_IOV
->> @@ -1115,8 +1117,9 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
->>                       struct list_head *realloc_head)
->>  {
->>       struct pci_dev *dev;
->> -     unsigned long mask, prefmask;
->> +     unsigned long mask, prefmask, type2 = 0;
->>       resource_size_t additional_mem_size = 0, additional_io_size = 0;
->> +     struct resource *b_res;
->>
->>       list_for_each_entry(dev, &bus->devices, bus_list) {
->>               struct pci_bus *b = dev->subordinate;
->> @@ -1161,15 +1164,31 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
->>                  has already been allocated by arch code, try
->>                  non-prefetchable range for both types of PCI memory
->>                  resources. */
->> +             b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
->>               mask = IORESOURCE_MEM;
->>               prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
->> -             if (pbus_size_mem(bus, prefmask, prefmask,
->> +             if (b_res[2].flags & IORESOURCE_MEM_64) {
->> +                     prefmask |= IORESOURCE_MEM_64;
->> +                     if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
->>                                 realloc_head ? 0 : additional_mem_size,
->> -                               additional_mem_size, realloc_head))
->> -                     mask = prefmask; /* Success, size non-prefetch only. */
->> -             else
->> -                     additional_mem_size += additional_mem_size;
->> -             pbus_size_mem(bus, mask, IORESOURCE_MEM,
->> +                               additional_mem_size, realloc_head)) {
->> +                                     /* Success, size non-pref64 only. */
->> +                                     mask = prefmask;
->> +                                     type2 = prefmask & ~IORESOURCE_MEM_64;
->> +                     }
->> +             }
->> +             if (!type2) {
->> +                     prefmask &= ~IORESOURCE_MEM_64;
->> +                     if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
->> +                                      realloc_head ? 0 : additional_mem_size,
->> +                                      additional_mem_size, realloc_head)) {
->> +                             /* Success, size non-prefetch only. */
->> +                             mask = prefmask;
->> +                     } else
->> +                             additional_mem_size += additional_mem_size;
->> +                     type2 = IORESOURCE_MEM;
->> +             }
->> +             pbus_size_mem(bus, mask, IORESOURCE_MEM, type2,
->>                               realloc_head ? 0 : additional_mem_size,
->>                               additional_mem_size, realloc_head);
->>               break;
->
->
-> 64-bit non-prefetchable BARs are missed from caculation in the scheme,
-> causing assign failed eventually.
->
-> [    0.350882] pci 0002:00:00.0: BAR 14: assigned [mem
-> 0x3d04080000000-0x3d04080
-> 7fffff]
-> [    0.350941] pci 0002:01:00.4: BAR 2: assigned [mem
-> 0x3d04080000000-0x3d040807fffff 64bit]
-> [    0.351009] pci 0002:01:00.0: BAR 0: can't assign mem (size 0x40000)
-> [    0.351055] pci 0002:01:00.0: BAR 6: can't assign mem pref (size
-> 0x40000)
-> [    0.351101] pci 0002:01:00.1: BAR 0: can't assign mem (size 0x40000)
-> [    0.351148] pci 0002:01:00.1: BAR 6: can't assign mem pref (size
-> 0x40000)
-> [    0.351195] pci 0002:01:00.2: BAR 0: can't assign mem (size 0x40000)
-> [    0.351241] pci 0002:01:00.2: BAR 6: can't assign mem pref (size
-> 0x40000)
-> [    0.351286] pci 0002:01:00.3: BAR 0: can't assign mem (size 0x40000)
-> [    0.351335] pci 0002:01:00.3: BAR 6: can't assign mem pref (size
-> 0x40000)
-> [    0.351382] pci 0002:01:00.4: BAR 0: can't assign mem (size 0x40000)
-> [    0.351428] pci 0002:01:00.5: BAR 0: can't assign mem (size 0x40000)
-> [    0.351473] pci 0002:01:00.6: BAR 0: can't assign mem (size 0x40000)
-> [    0.351519] pci 0002:01:00.0: BAR 4: can't assign mem (size 0x2000)
-> [    0.351604] pci 0002:01:00.1: BAR 4: can't assign mem (size 0x2000)
-> [    0.351696] pci 0002:01:00.2: BAR 4: can't assign mem (size 0x2000)
-> [    0.351789] pci 0002:01:00.3: BAR 4: can't assign mem (size 0x2000)
-> [    0.351882] pci 0002:01:00.4: BAR 4: can't assign mem (size 0x2000)
-> [    0.351974] pci 0002:01:00.5: BAR 4: can't assign mem (size 0x2000)
-> [    0.352067] pci 0002:01:00.6: BAR 4: can't assign mem (size 0x2000)
->
->
-> Though I remember 64-bit BAR should always be prefetchable ... ...
+On Thursday, December 05, 2013 03:40:39 PM Bjorn Helgaas wrote:
+> On Mon, Dec 2, 2013 at 7:49 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > ...
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Subject: PCI / hotplug / ACPI: Fix concurrency problems related to device removal
+> >
+> > The following are concurrency problems related to the PCI device
+> > removal code in pci-sysfs.c and in ACPIPHP present in the current
+> > mainline kernel:
+> 
+> You've found a bunch of issues.  I don't think there's anything to
+> gain by fixing them all in a single patch, and I think it would be
+> useful to split them out to help us think about them and find other
+> places that have similar problems.
 
-Not really.
+The problem is that they are all related.  Whatever we decide to do with
+one of them will likely affect how we deal with the others.
 
-If the root bus has 64bit mmio non-pref, and devices on the root bus
-directly, could have
-64bit non-pref range.
+> > Scenario 1: pci_stop_and_remove_bus_device() run concurrently for
+> >   the same top device from remove_callback() in pci-sysfs.c and
+> >   from trim_stale_devices() in acpiphp_glue.c.
+> >
+> >   In this scenario the second code path is executed without
+> >   pci_remove_rescan_mutex locked, so the &bus->devices list
+> >   walks in either trim_stale_devices() itself or in
+> >   acpiphp_check_bridge() can suffer from list corruption while the
+> >   first code path is executing pci_destroy_dev() for one of the
+> >   devices on those lists.
+> 
+> Protecting &bus->devices is a generic problem, isn't it?
 
-but we don't need to do size bridge for root bus as we can not change
-root bus resource.
+Yes, it is.
 
-for pci bridge, according spec, it would support
-1. 32bit mmio non-pref
-2. 64bit mmio pref or 32 bit mmio pref.
+In fact, there are two sides of it.  One is with read-only users (that is,
+walking the list without modifying it) which should be done under read-locked
+pci_bus_sem and that's quite obvious.  It looks like the majority of users of
+that list are readers and they fall under this case.  That case is addressed
+by write-locking pci_bus_sem around the dev->bus_list deletion in pci_destroy_dev()
+(it will wait for all readers to complete their walks as long as they use
+pci_bus_sem correcty, but we may as well replace that with SRCU).
 
->
-> Will you figure out a better way to cover them or just add a 'type3' parameter?
+The second one is where someone is walking the list and *deleting* entires from
+it in the process, which has to be synchronized with other writers and the
+write-locking of pci_bus_sem in pci_destroy_dev() is not sufficient for that,
+because pci_bus_sem can't be read-locked around a bus->devices walk deleting
+entries from that list (exactly because pci_bus_sem is write-locked during
+device deletion).  So this is a special case and to fix races between different
+code paths that walk bus->devices *and* delete entries from there we need a
+separate lock to be held around the entire list walk.  Incidentally,
+pci_remove_rescan_mutex is already used in that context by the code in
+pci-sysfs.c, so it can be used for this purpose by all of the other code
+paths doing this thing, like for example acpiphp_check_bridge() and
+trim_stale_devices() (there's more).
 
-if the bridge's mmio pref support 64bit pref, we will only use them
-with above 4G 64bit support.
-other 32bit mmio pref from children will be under bridge 32bit mmio
-non-pref range.
+> There are about a zillion uses of it.  Many are in the pcibios_fixup_bus() path.
+>  I think we can get rid of most of those by integrating the work into
+> the pci_scan_device() path instead of doing it as a post-discovery
+> fixup, but there will be several other cases left.  If using
+> pci_remove_rescan_mutex to protect &bus->devices is the right generic
+> answer, we should document that and audit every place that uses the
+> list.
 
-Maybe I miss sth in this path. so please post whole boot log.
+No, we don't have to do that as explained above.  We only need it around
+code that walks the list in order to (possibly) delete entries from it
+and there are not too many of such places, so they can be audited quite easily.
+[Basically, wherever pci_stop_and_remove_bus_device() is called during a list
+walk over bus->devices.]
 
-Thanks
+And *if* we use pci_remove_rescan_mutex for that, it will *also* address some
+other synchronization problems.
 
-Yinghai
+> >   Moreover, if any of the device objects in question is freed
+> >   after pci_destroy_dev() executed by the first code path, the
+> >   second code path may suffer a use-after-free problem while
+> >   trying to access that device object.
+> >
+> >   Conversely, the second code path may execute pci_destroy_dev()
+> >   for one of the devices in question such that one of the
+> >   &bus->devices list walks in pci_stop_bus_device()
+> >   or pci_remove_bus_device() executed by the first code path will
+> >   suffer from a list corruption.
+> >
+> >   Moreover, use-after-free is also possible if one of the device
+> >   objects in question is freed as a result of calling
+> >   pci_destroy_dev() by the second code path and then the first
+> >   code path tries to access it (the first code path only holds
+> >   an extra reference to the device it has been run for, but not
+> >   for its child devices).
+> 
+> The use-after-free problems *sound* like a reference counting issue.
+> Yinghai's patch [1] should fix some of this; how much is left after
+> that?
+> 
+> [1] http://lkml.kernel.org/r/1385851238-21085-4-git-send-email-yinghai@kernel.org
+
+Hmm, no.  Do you mean https://patchwork.kernel.org/patch/3261171/ ?
+
+This patch doesn't fix the problem either, however, because in only fixes
+the one case described in Scenario 5 below.
+
+Suppose that (1) trim_stale_devices() calls pci_stop_amd_remove_bus_devices(X)
+and (2) remove_callback() calls pci_stop_and_remove_bus_devices(X) (i.e. for
+the same device) at the same time.
+
+Suppose that X is a leaf device for simplicity and say that code path (2)
+is executed first.  We run pci_stop_dev(X) and pci_destroy_dev(X), which
+does put_device(&X->dev) and then sysfs_schedule_callback_work() executes
+kobject_put() for the X's kobject.  The device pointed to by X is gone at this
+point.
+
+Now, code path (1) runs and and crashes with a great bang trying to access
+X->subordinate in pci_stop_bus_device().  This happens regardless of whether or
+not the Yinghai's patch has been applied.  QED
+
+Of course, you can argue that this is because code path (1) should have done
+a pci_dev_get(X) before running pci_stop_amd_remove_bus_devices(X) which
+would have avoided the crash.  I can agree with that, but *if* code path (1)
+had held pci_remove_rescan_mutex around the whole trim_stale_devices(), then
+it wouldn't have had to do that pci_dev_get(X), because the entire race
+above wouldn't have been possible (code path (2) already holds that mutex
+around pci_stop_and_remove_bus_devices(X)).
+
+OK, you can ask, but why the heck does code path (1) need to hold
+pci_remove_rescan_mutex around trim_stale_devices()?  Well, because it needs
+to synchronize the list walks in acpiphp_check_bridge() and trim_stale_devices()
+with the list_del() in pci_destroy_dev() executed by code path (2).
+
+That's why I'm proposing to acquire pci_remove_rescan_mutex in
+hotplug_event_work() and hold it around the whole hotplug_event().
+
+Of course, analogous races are possible for acpiphp_enable_slot() and
+acpiphp_disable_and_eject_slot() and they may be addressed analogously -
+by holding pci_remove_rescan_mutex around possible modifications of the PCI
+device hierarchy.
+
+> > Scenario 2: ACPI hotplug event occurs for a device under a bridge
+> >   being removed by pci_stop_and_remove_bus_device() run from
+> >   remove_callback() in pci-sysfs.c.
+> >
+> >   In that case it doesn't make sense to handle the hotplug event,
+> >   because the device in question will be removed anyway along with
+> >   its parent bridge and that will cause the context objects needed
+> >   for hotplug handling to be freed as well.
+> >
+> >   Moreover, if the event is handled regardless, it may cause one
+> >   or more devices already removed by pci_stop_and_remove_bus_device()
+> >   to be added again by the code handling the event, which will
+> >   conflict with the bridge removal.
+> 
+> We definitely need to serialize hotplug events from ACPI and sysfs
+> (and other sources, like other hotplug drivers).  Would that be
+> enough?  Adding the is_going_away flag is ACPI-specific and seems like
+> sort of a point workaround.
+
+Well, we basically need to prevent hotplug_event() from being run in that
+case, and since that function is ACPI-specific and the data structures
+hotplug_event_work() operates on are ACPI-specific, I'm using an ACPI-specific
+flag to achieve that goal.  If you can suggest any approach that would not
+be ACPI-specific to address this particular case, I'll be happy to use it. :-)
+
+> > Scenario 3: pci_stop_and_remove_bus_device() is run from
+> >   trim_stale_devices() (as a result of an ACPI hotplug event) in
+> >   parallel with dev_bus_rescan_store() or bus_rescan_store(),
+> >   or dev_rescan_store().
+> >
+> >   In that scenario the second code path may attempt to operate
+> >   on device objects being removed by the first code path which
+> >   may lead to many interesting types of breakage.
+> >
+> > Scenario 4: acpi_pci_root_remove() run (as a result of an ACPI PCI
+> >   host bridge removal event) in  parallel with bus_rescan_store(),
+> >   dev_bus_rescan_store(), dev_rescan_store(), or remove_callback()
+> >   for any devices under the host bridge in question.
+> >
+> >   In that case the same symptoms as in Scenarios 1 and 3 may occur
+> >   depending on which code path wins the races involved.
+> 
+> Scenarios 3 and 4 sound like more cases of hotplug operations needing
+> to be serialized, right?  If we serialized them sufficiently, would
+> there still be a problem?
+
+That depends on what exactly you mean by "sufficiently".  That is, what's
+the goal?  Different approaches may be sufficient to achieve specific goals,
+but not necessarily more than one of them.
+
+> Using pci_remove_rescan_mutex would
+> serialize *all* PCI hotplug operations, which is more than strictly
+> necessary, but maybe there's no reason to do anything finer-grained.
+
+My answer to this is yes, using pci_remove_rescan_mutex *will* serialize all
+PCI hotplug operations, which will be a very good first step.  Having done that,
+we can see how much we can relax things and how far we *want* to go with that.
+
+> > Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
+> >   for a device and its parent bridge via remove_callback().
+> >
+> >   In that case both code paths attempt to acquire
+> >   pci_remove_rescan_mutex.  If the child device removal acquires
+> >   it first, there will be no problems.  However, if the parent
+> >   bridge removal acquires it first, it will eventually execute
+> >   pci_destroy_dev() for the child device, but that device will
+> >   not be freed yet due to the reference held by the concurrent
+> >   child removal.  Consequently, both pci_stop_bus_device() and
+> >   pci_remove_bus_device() will be executed for that device
+> >   unnecessarily and pci_destroy_dev() will see a corrupted list
+> >   head in that object.  Moreover, an excess put_device() will
+> >   be executed for that device in that case which may lead to a
+> >   use-after-free in the final kobject_put() done by
+> >   sysfs_schedule_callback_work().
+> 
+> The corrupted list head should be fixed by Yinghai's patch [1].
+
+I think you really mean https://patchwork.kernel.org/patch/3261171/ :-)
+
+Generally, patches in that series would mitigate that problem somewhat.
+
+I actually stole the Yinghai's idea with the new PCI device flag (sorry,
+Yinghai), but I think it's better to check that flag to start with in
+pci_stop_and_remove_bus_device(), because then we avoid calling
+pci_stop_bus_device() unnecessarily as well (surely, the device was stopped
+before it has gone, wasn't it?).
+
+> Where is the extra put_device()?  I see the
+> kobject_get()/kobject_put() pair in sysfs_schedule_callback() and
+> sysfs_schedule_callback_work().  Oh, I see -- the remove_store() ->
+> remove_callback() path acquires no references, but it calls
+> pci_stop_and_remove_bus_device(), which ultimately does the
+> put_device() in pci_destroy_dev().
+> 
+> So if both the parent and the child removal manage to get to
+> remove_callback() and the parent acquires pci_remove_rescan_mutex
+> first, the child removal will do the extra put_device().
+> 
+> There are only six callers of device_schedule_callback(), and I think
+> five of them are susceptible to this same problem: they are sysfs
+> store methods, and they use device_schedule_callback() with a callback
+> that does a put_device() on the device:
+> 
+>   drivers/pci/pci-sysfs.c: remove_store()
+>   drivers/scsi/scsi_sysfs.c: sdev_store_delete()
+>   arch/s390/pci/pci_sysfs.c: store_recover()
+>   drivers/s390/block/dcssblk.c: dcssblk_shared_store()
+>   drivers/s390/cio/ccwgroup.c: ccwgroup_ungroup_store()
+> 
+> I don't know what the right fix is, but adding "is_gone" to struct
+> pci_dev only addresses one of the five places, of course.
+
+That's correct.
+
+I'm not sure if there *is* a generic solution to this problem, because
+sysfs_schedule_callback_work() doesn't know what the callback function is
+going to do.  In principle it can look at ss->kobj->parent and skip the
+execution of ss->func if that is NULL (which means that the kobject has
+been deleted and it is likely the last thing holding a reference to that
+kobject), but that still will be racy without extra synchronization in the
+users of device_schedule_callback().
+
+Which probably means that device_schedule_callback() is ill concieved in the
+first place, because it can't really do the work it is designed for in general.
+So perhaps it's better to use something simpler and PCI-specific for PCI and
+analogously in the other cases you mentioned.
+
+OK
+
+To be a bit more constructive, as the next step I'd try to use
+pci_remove_rescan_mutex to serialize all PCI hotplug operations (as I said
+above) without making the other changes made by my patch.  Does that sound
+reasonable?
+
+Rafael
+
