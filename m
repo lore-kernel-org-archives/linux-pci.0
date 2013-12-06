@@ -1,71 +1,110 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 4 Dec 2013 21:38:38 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: rui wang <ruiv.wang@gmail.com>
-Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
-	lance_ortiz@hotmail.com, jiang.liu@intel.com, tony.luck@intel.com,
-	rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gong.chen@intel.com
-Subject: Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
-Message-ID: <20131204203837.GA7517@pd.tnic>
-References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
- <CANVTcTaP18CiGOSEcX5Ch_wPw9mEhkgokfp+d+ZOMFD+Ce4juA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CANVTcTaP18CiGOSEcX5Ch_wPw9mEhkgokfp+d+ZOMFD+Ce4juA@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755457Ab3LFDVL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:21:11 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 12/20] iommu/vt-d: fix invalid memory access when freeing DMAR irq
+Date: Fri,  6 Dec 2013 11:21:15 +0800
+Message-Id: <1386300083-6882-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 02, 2013 at 01:05:16PM +0800, rui wang wrote:
-> > +	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-> > +		__get_str(dev_name),
-> > +		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
-> > +			__entry->severity == HW_EVENT_ERR_FATAL ?
-> > +			"Fatal" : "Uncorrected",
-> > +		__entry->severity == HW_EVENT_ERR_CORRECTED ?
-> > +		__print_flags(__entry->status, "|", aer_correctable_errors) :
-> > +		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
-> > +);
-> 
-> This causes inconsistency between dmesg and the trace event output.
-> When dmesg says "severity=Corrected", the trace event says
-> "severity=Fatal". What happens is that HW_EVENT_ERR_CORRECTED is
-> defined in edac.h:
-> 
-> enum hw_event_mc_err_type {
->         HW_EVENT_ERR_CORRECTED,
->         HW_EVENT_ERR_UNCORRECTED,
->         HW_EVENT_ERR_FATAL,
->         HW_EVENT_ERR_INFO,
-> };
-> 
-> while aer_print_error() uses aer_error_severity_string[] defined as:
-> 
-> static const char *aer_error_severity_string[] = {
->         "Uncorrected (Non-Fatal)",
->         "Uncorrected (Fatal)",
->         "Corrected"
-> };
-> 
-> In this case dmesg is correct because info->severity is assigned in
-> aer_isr_one_error() using the definitions in include/linux/ras.h:
-> #define AER_NONFATAL                    0
-> #define AER_FATAL                       1
-> #define AER_CORRECTABLE                 2
-> 
-> So which one is the standard? Is there a plan to unify all these names?
+In function free_dmar_iommu(), it sets IRQ handler data to NULL
+before calling free_irq(), which will cause invalid memory access
+because free_irq() will access IRQ handler data when calling
+function dmar_msi_mask(). So only set IRQ handler data to NULL
+after calling free_irq().
 
-Yes, the AER tracepoint above should use the AER_* defines and not the
-HW_EVENT_ERR_* ones which are for memory errors.
+Sample stack dump:
+[   13.094010] BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
+[   13.103215] IP: [<ffffffff810a97cd>] __lock_acquire+0x4d/0x12a0
+[   13.110104] PGD 0
+[   13.112614] Oops: 0000 [#1] SMP
+[   13.116585] Modules linked in:
+[   13.120260] CPU: 60 PID: 1 Comm: swapper/0 Tainted: G        W    3.13.0-rc1-gerry+ #9
+[   13.129367] Hardware name: Intel Corporation LH Pass ........../SVRBD-ROW_T, BIOS SE5C600.86B.99.99.x059.091020121352 09/10/2012
+[   13.142555] task: ffff88042dd38010 ti: ffff88042dd32000 task.ti: ffff88042dd32000
+[   13.151179] RIP: 0010:[<ffffffff810a97cd>]  [<ffffffff810a97cd>] __lock_acquire+0x4d/0x12a0
+[   13.160867] RSP: 0000:ffff88042dd33b78  EFLAGS: 00010046
+[   13.166969] RAX: 0000000000000046 RBX: 0000000000000002 RCX: 0000000000000000
+[   13.175122] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000048
+[   13.183274] RBP: ffff88042dd33bd8 R08: 0000000000000002 R09: 0000000000000001
+[   13.191417] R10: 0000000000000000 R11: 0000000000000001 R12: ffff88042dd38010
+[   13.199571] R13: 0000000000000000 R14: 0000000000000048 R15: 0000000000000000
+[   13.207725] FS:  0000000000000000(0000) GS:ffff88103f200000(0000) knlGS:0000000000000000
+[   13.217014] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   13.223596] CR2: 0000000000000048 CR3: 0000000001a0b000 CR4: 00000000000407e0
+[   13.231747] Stack:
+[   13.234160]  0000000000000004 0000000000000046 ffff88042dd33b98 ffffffff810a567d
+[   13.243059]  ffff88042dd33c08 ffffffff810bb14c ffffffff828995a0 0000000000000046
+[   13.251969]  0000000000000000 0000000000000000 0000000000000002 0000000000000000
+[   13.260862] Call Trace:
+[   13.263775]  [<ffffffff810a567d>] ? trace_hardirqs_off+0xd/0x10
+[   13.270571]  [<ffffffff810bb14c>] ? vprintk_emit+0x23c/0x570
+[   13.277058]  [<ffffffff810ab1e3>] lock_acquire+0x93/0x120
+[   13.283269]  [<ffffffff814623f7>] ? dmar_msi_mask+0x47/0x70
+[   13.289677]  [<ffffffff8156b449>] _raw_spin_lock_irqsave+0x49/0x90
+[   13.296748]  [<ffffffff814623f7>] ? dmar_msi_mask+0x47/0x70
+[   13.303153]  [<ffffffff814623f7>] dmar_msi_mask+0x47/0x70
+[   13.309354]  [<ffffffff810c0d93>] irq_shutdown+0x53/0x60
+[   13.315467]  [<ffffffff810bdd9d>] __free_irq+0x26d/0x280
+[   13.321580]  [<ffffffff810be920>] free_irq+0xf0/0x180
+[   13.327395]  [<ffffffff81466591>] free_dmar_iommu+0x271/0x2b0
+[   13.333996]  [<ffffffff810a947d>] ? trace_hardirqs_on+0xd/0x10
+[   13.340696]  [<ffffffff81461a17>] free_iommu+0x17/0x50
+[   13.346597]  [<ffffffff81dc75a5>] init_dmars+0x691/0x77a
+[   13.352711]  [<ffffffff81dc7afd>] intel_iommu_init+0x351/0x438
+[   13.359400]  [<ffffffff81d8a711>] ? iommu_setup+0x27d/0x27d
+[   13.365806]  [<ffffffff81d8a739>] pci_iommu_init+0x28/0x52
+[   13.372114]  [<ffffffff81000342>] do_one_initcall+0x122/0x180
+[   13.378707]  [<ffffffff81077738>] ? parse_args+0x1e8/0x320
+[   13.385016]  [<ffffffff81d850e8>] kernel_init_freeable+0x1e1/0x26c
+[   13.392100]  [<ffffffff81d84833>] ? do_early_param+0x88/0x88
+[   13.398596]  [<ffffffff8154f8b0>] ? rest_init+0xd0/0xd0
+[   13.404614]  [<ffffffff8154f8be>] kernel_init+0xe/0x130
+[   13.410626]  [<ffffffff81574d6c>] ret_from_fork+0x7c/0xb0
+[   13.416829]  [<ffffffff8154f8b0>] ? rest_init+0xd0/0xd0
+[   13.422842] Code: ec 99 00 85 c0 8b 05 53 05 a5 00 41 0f 45 d8 85 c0 0f 84 ff 00 00 00 8b 05 99 f9 7e 01 49 89 fe 41 89 f7 85 c0 0f 84 03 01 00 00 <49> 8b 06 be 01 00 00 00 48 3d c0 0e 01 82 0f 44 de 41 83 ff 01
+[   13.450191] RIP  [<ffffffff810a97cd>] __lock_acquire+0x4d/0x12a0
+[   13.458598]  RSP <ffff88042dd33b78>
+[   13.462671] CR2: 0000000000000048
+[   13.466551] ---[ end trace c5bd26a37c81d760 ]---
 
-Wanna send a fix?
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks.
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 0ec49da..426095e 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1289,9 +1289,9 @@ void free_dmar_iommu(struct intel_iommu *iommu)
+ 		iommu_disable_translation(iommu);
+ 
+ 	if (iommu->irq) {
+-		irq_set_handler_data(iommu->irq, NULL);
+ 		/* This will mask the irq */
+ 		free_irq(iommu->irq, iommu);
++		irq_set_handler_data(iommu->irq, NULL);
+ 		destroy_irq(iommu->irq);
+ 	}
+ 
 -- 
-Regards/Gruss,
-    Boris.
+1.7.10.4
 
-Sent from a fat crate under my desk. Formatting is fine.
---
