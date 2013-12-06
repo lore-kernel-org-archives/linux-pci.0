@@ -1,143 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f51.google.com ([209.85.128.51]:55080 "EHLO
-	mail-qe0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692Ab3LBDjt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 22:39:49 -0500
-Received: by mail-qe0-f51.google.com with SMTP id 1so10422817qee.24
-        for <linux-pci@vger.kernel.org>; Sun, 01 Dec 2013 19:39:49 -0800 (PST)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: marex@denx.de, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH 2/2] PCI: imx6: Remove unneeded 'goto err'
-Date: Mon,  2 Dec 2013 01:39:35 -0200
-Message-Id: <1385955575-25270-2-git-send-email-festevam@gmail.com>
-In-Reply-To: <1385955575-25270-1-git-send-email-festevam@gmail.com>
-References: <1385955575-25270-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20131204203837.GA7517@pd.tnic>
+References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+	<CANVTcTaP18CiGOSEcX5Ch_wPw9mEhkgokfp+d+ZOMFD+Ce4juA@mail.gmail.com>
+	<20131204203837.GA7517@pd.tnic>
+Date: Fri, 6 Dec 2013 17:06:10 +0800
+Message-ID: <CANVTcTYJS3eAUA4bHVCrKgz=7rQpJZHCiBcw3JM=j0FbCsgQJw@mail.gmail.com>
+Subject: Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
+From: rui wang <ruiv.wang@gmail.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@intel.com, tony.luck@intel.com,
+	rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, gong.chen@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On 12/5/13, Borislav Petkov <bp@alien8.de> wrote:
 
-There is no need to use 'goto err' as we can directly return the errors.
+> Yes, the AER tracepoint above should use the AER_* defines and not the
+> HW_EVENT_ERR_* ones which are for memory errors.
+>
+> Wanna send a fix?
+>
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Yes. Does it translate into something like this?
+
+From: Rui Wang <rui.y.wang@intel.com>
+Date: Fri, 6 Dec 2013 16:47:46 +0800
+Subject: [PATCH] Fix severity usage in aer trace event
+
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
 ---
- drivers/pci/host/pci-imx6.c | 34 ++++++++++++----------------------
- 1 file changed, 12 insertions(+), 22 deletions(-)
+ include/trace/events/ras.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 5002e23..9fc1cb6 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -427,10 +427,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 
- 	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
--	if (IS_ERR(pp->dbi_base)) {
--		ret = PTR_ERR(pp->dbi_base);
--		goto err;
--	}
-+	if (IS_ERR(pp->dbi_base))
-+		return PTR_ERR(pp->dbi_base);
- 
- 	/* Fetch GPIOs */
- 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-@@ -444,7 +442,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 				"PCIe reset");
- 	if (ret) {
- 		dev_err(&pdev->dev, "unable to get reset gpio\n");
--		goto err;
-+		return ret;
- 	}
- 
- 	imx6_pcie->power_on_gpio = of_get_named_gpio(np, "power-on-gpio", 0);
-@@ -455,7 +453,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 					"PCIe power enable");
- 		if (ret) {
- 			dev_err(&pdev->dev, "unable to get power-on gpio\n");
--			goto err;
-+			return ret;
- 		}
- 	}
- 
-@@ -467,7 +465,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 					"PCIe wake up");
- 		if (ret) {
- 			dev_err(&pdev->dev, "unable to get wake-up gpio\n");
--			goto err;
-+			return ret;
- 		}
- 	}
- 
-@@ -479,7 +477,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 					"PCIe disable endpoint");
- 		if (ret) {
- 			dev_err(&pdev->dev, "unable to get disable-ep gpio\n");
--			goto err;
-+			return ret;
- 		}
- 	}
- 
-@@ -488,32 +486,28 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(imx6_pcie->lvds_gate)) {
- 		dev_err(&pdev->dev,
- 			"lvds_gate clock select missing or invalid\n");
--		ret = PTR_ERR(imx6_pcie->lvds_gate);
--		goto err;
-+		return PTR_ERR(imx6_pcie->lvds_gate);
- 	}
- 
- 	imx6_pcie->sata_ref_100m = devm_clk_get(&pdev->dev, "sata_ref_100m");
- 	if (IS_ERR(imx6_pcie->sata_ref_100m)) {
- 		dev_err(&pdev->dev,
- 			"sata_ref_100m clock source missing or invalid\n");
--		ret = PTR_ERR(imx6_pcie->sata_ref_100m);
--		goto err;
-+		return PTR_ERR(imx6_pcie->sata_ref_100m);
- 	}
- 
- 	imx6_pcie->pcie_ref_125m = devm_clk_get(&pdev->dev, "pcie_ref_125m");
- 	if (IS_ERR(imx6_pcie->pcie_ref_125m)) {
- 		dev_err(&pdev->dev,
- 			"pcie_ref_125m clock source missing or invalid\n");
--		ret = PTR_ERR(imx6_pcie->pcie_ref_125m);
--		goto err;
-+		return PTR_ERR(imx6_pcie->pcie_ref_125m);
- 	}
- 
- 	imx6_pcie->pcie_axi = devm_clk_get(&pdev->dev, "pcie_axi");
- 	if (IS_ERR(imx6_pcie->pcie_axi)) {
- 		dev_err(&pdev->dev,
- 			"pcie_axi clock source missing or invalid\n");
--		ret = PTR_ERR(imx6_pcie->pcie_axi);
--		goto err;
-+		return PTR_ERR(imx6_pcie->pcie_axi);
- 	}
- 
- 	/* Grab GPR config register range */
-@@ -521,19 +515,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
- 	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
- 		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
--		ret = PTR_ERR(imx6_pcie->iomuxc_gpr);
--		goto err;
-+		return PTR_ERR(imx6_pcie->iomuxc_gpr);
- 	}
- 
- 	ret = imx6_add_pcie_port(pp, pdev);
- 	if (ret < 0)
--		goto err;
-+		return ret;
- 
- 	platform_set_drvdata(pdev, imx6_pcie);
- 	return 0;
--
--err:
--	return ret;
- }
- 
- static const struct of_device_id imx6_pcie_of_match[] = {
+diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+index 88b8783..e2a17d8 100644
+--- a/include/trace/events/ras.h
++++ b/include/trace/events/ras.h
+@@ -5,7 +5,7 @@
+ #define _TRACE_AER_H
+
+ #include <linux/tracepoint.h>
+-#include <linux/edac.h>
++#include <linux/aer.h>
+
+
+ /*
+@@ -63,10 +63,10 @@ TRACE_EVENT(aer_event,
+
+        TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+                __get_str(dev_name),
+-               __entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
+-                       __entry->severity == HW_EVENT_ERR_FATAL ?
++               __entry->severity == AER_CORRECTABLE ? "Corrected" :
++                       __entry->severity == AER_FATAL ?
+                        "Fatal" : "Uncorrected",
+-               __entry->severity == HW_EVENT_ERR_CORRECTED ?
++               __entry->severity == AER_CORRECTABLE ?
+                __print_flags(__entry->status, "|", aer_correctable_errors) :
+                __print_flags(__entry->status, "|", aer_uncorrectable_errors))
+ );
 -- 
-1.8.1.2
+1.7.5.4
 
+Regards,
+Rui
