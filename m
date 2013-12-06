@@ -1,77 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:35128 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036Ab3LJXVY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 18:21:24 -0500
-Received: by mail-ie0-f174.google.com with SMTP id at1so9527348iec.5
-        for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 15:21:24 -0800 (PST)
+Received: from mail-db8lp0189.outbound.messaging.microsoft.com ([213.199.154.189]:43548
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756607Ab3LFTAI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 14:00:08 -0500
+Message-ID: <1386356393.7375.118.camel@snotra.buserror.net>
+Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+From: Scott Wood <scottwood@freescale.com>
+To: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Fri, 6 Dec 2013 12:59:53 -0600
+In-Reply-To: <6A3DF150A5B70D4F9B66A25E3F7C888D07251EE4@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+	 <1385067648.2879.421.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385397493.2879.557.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0723624C@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1386289316.7375.107.camel@snotra.buserror.net>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D07251EE4@039-SN2MPN1-012.039d.mgd.msft.net>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <a8c8cc16a5424e45b226bb40425b3772@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <a8c8cc16a5424e45b226bb40425b3772@DM2PR05MB671.namprd05.prod.outlook.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 10 Dec 2013 16:21:04 -0700
-Message-ID: <CAErSpo7XQeMr+t3e93-vrFBNmF2w7aQ1UqY8bnSRxQcc+uah1w@mail.gmail.com>
-Subject: Re: Question about how PCI subsystem uses device trees
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc devicetree list; I'm devicetree-illiterate]
+On Thu, 2013-12-05 at 22:11 -0600, Bharat Bhushan wrote:
+> 
+> > -----Original Message-----
+> > From: Wood Scott-B07421
+> > Sent: Friday, December 06, 2013 5:52 AM
+> > To: Bhushan Bharat-R65777
+> > Cc: Alex Williamson; linux-pci@vger.kernel.org; agraf@suse.de; Yoder Stuart-
+> > B08248; iommu@lists.linux-foundation.org; bhelgaas@google.com; linuxppc-
+> > dev@lists.ozlabs.org; linux-kernel@vger.kernel.org
+> > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+> >
+> > On Thu, 2013-11-28 at 03:19 -0600, Bharat Bhushan wrote:
+> > >
+> > > > -----Original Message-----
+> > > > From: Bhushan Bharat-R65777
+> > > > Sent: Wednesday, November 27, 2013 9:39 PM
+> > > > To: 'Alex Williamson'
+> > > > Cc: Wood Scott-B07421; linux-pci@vger.kernel.org; agraf@suse.de;
+> > > > Yoder Stuart- B08248; iommu@lists.linux-foundation.org;
+> > > > bhelgaas@google.com; linuxppc- dev@lists.ozlabs.org;
+> > > > linux-kernel@vger.kernel.org
+> > > > Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale
+> > > > IOMMU (PAMU)
+> > > >
+> > > > If we just provide the size of MSI bank to userspace then userspace
+> > > > cannot do anything wrong.
+> > >
+> > > So userspace does not know address, so it cannot mmap and cause any
+> > interference by directly reading/writing.
+> >
+> > That's security through obscurity...  Couldn't the malicious user find out the
+> > address via other means, such as experimentation on another system over which
+> > they have full control?  What would happen if the user reads from their device's
+> > PCI config space?  Or gets the information via some back door in the PCI device
+> > they own?  Or pokes throughout the address space looking for something that
+> > generates an interrupt to its own device?
+> 
+> So how to solve this problem, Any suggestion ?
+> 
+> We have to map one window in PAMU for MSIs and a malicious user can ask
+> its device to do DMA to MSI window region with any pair of address and
+> data, which can lead to unexpected MSIs in system?
 
-On Tue, Dec 10, 2013 at 12:53 PM, Rajat Jain <rajatjain@juniper.net> wrote:
-> Hello,
->
-> I am trying to understand and create device tree for a new powerpc platform. (Please feel free to point out any problems with my device tree below.) My questions:
->
-> 1) For a PCI-PCI bridge that I'm representing like this:
->
-> pcie@2,3 {
->         vendor-id = <0x10b5>;
->       device-id = <0x8618>;
->       class-code = <0x060400>;
->       #size-cells = <2>;
->       #address-cells = <3>;
->       device_type = "pci";
->       bus-range = <0x20 0x2f>;
->       reg = <0x00021800 0x00000000 0x000000000        /* Cfg:2.3.0: */
->              0x00000000 0x00000000>;
->       ranges = <0x02000000 0x00000000 0xA0000000      /* Mem behind bridge: 0xA0000000 - 0xA03FFFFF */
->                 0x02000000 0x00000000 0xA0000000
->                 0x00000000 0x04000000>;
-> };
->
-> Is the above is only to _notify_ the kernel that this is how the firmware shall be setting the PCI bridge (Thus firmware has obligation of setting it like this before passing control to the kernel), and hence the kernel will merely take note of it and not really configure the bridge registers?
->
-> Or is the above telling the kernel that this is how the kernel should _setup_ the device (thus firmware does not set up the device, but rather the kernel use this info to setup the device)?
->
-> 2) For an PCI endpoint that I am representing like this:
->
->
-> xyz@20,0 {
->         vendor-id = ...
->       device-id = ...
->       class-code = <0x0880>;
->       compatible = ...
->         ...
->       reg = <0x00200000 0x00000000 0x00000000 /* Cfg:20.0.0: */
->              0x00000000 0x00000000
->              0x02200010 0x00000000 0xA0000000 /* Mem:20.0.0:(Bar0) 64MB@0xA0000000 */
->              0x00000000 0x04000000>;
->         ...
-> };
->
-> Does the above tell the kernel to _program_ the BAR0 register using the above address? Or does it cause the kernel to assume that the BAR0 has been programmed with this address?
->
-> 3) Lastly, what is the difference in behavior when I select PCI_PROBE_NORMAL over PCI_PROBE_DEVTREE?
->
-> Thanks,
->
-> Rajat
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I don't think there are any solutions other than to limit each bank to
+one user, unless the admin turns some knob that says they're OK with the
+partial loss of isolation.
+
+-Scott
+
+
+
