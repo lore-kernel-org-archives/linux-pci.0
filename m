@@ -1,45 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:33258 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896Ab3LYHwG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Dec 2013 02:52:06 -0500
-Received: by mail-qc0-f170.google.com with SMTP id x13so6810396qcv.29
-        for <linux-pci@vger.kernel.org>; Tue, 24 Dec 2013 23:52:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <52BA3A72.6080700@gmail.com>
-References: <CACaajQv1OWxxcGORBq=LN-4JQzATf4YmWBQymoeyovfY-rUpmw@mail.gmail.com>
- <CAErSpo4uZ1N7uKyKMGHERtq-gvcpQ7oHTE7U9fGiAzfziMJ+Ew@mail.gmail.com> <52BA3A72.6080700@gmail.com>
-From: Vasiliy Tolstov <v.tolstov@selfip.ru>
-Date: Wed, 25 Dec 2013 11:51:49 +0400
-Message-ID: <CACaajQv=UtqEfLU3vLPmixpvUf7u7D9NPZ-s6s_BMvPpSDVAig@mail.gmail.com>
-Subject: Re: tg3 and sd card reader at acer aspire
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755154Ab3LFDVE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:21:04 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiri Kosina <trivial@kernel.org>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 10/20] iommu/vt-d, trivial: use defined macro instead of hardcoding
+Date: Fri,  6 Dec 2013 11:21:13 +0800
+Message-Id: <1386300083-6882-11-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/12/25 Robert Hancock <hancockrwd@gmail.com>:
-> So apparently this machine got broken when we changed the behavior for the
-> ACPI ASPM-not-supported bit from forcing ASPM off for everything to leaving
-> ASPM in whatever state the BIOS left it in. And apparently for some reason
-> the device (devices?) doesn't work with ASPM enabled in Linux but does in
-> Windows. It's possible that some other workaround is being applied by the
-> Windows driver that allows it to work there.
->
-> I'm not too sure what the next step to debug that would be, unless maybe
-> someone has a contact at Broadcom. We could conceivably add a quirk to force
-> ASPM off for this device regardless of what the BIOS says, though.
+Use defined macro instead of hardcoding in function set_ioapic_sid()
+for readability.
 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks! I can contact with broadcom, but i don't known email address.
-Last my attempt then i have problems with their wifi card not
-successful =(.
-
-
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 41e5798..50fd55c 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -324,7 +324,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
+ 		return -1;
+ 	}
+ 
+-	set_irte_sid(irte, 1, 0, sid);
++	set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16, sid);
+ 
+ 	return 0;
+ }
 -- 
-Vasiliy Tolstov,
-e-mail: v.tolstov@selfip.ru
-jabber: vase@selfip.ru
+1.7.10.4
+
