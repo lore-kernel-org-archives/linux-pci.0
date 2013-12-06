@@ -1,80 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 20 Dec 2013 10:04:13 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@aculab.com>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
- helpers
-Message-ID: <20131220090412.GA28367@dhcp-26-207.brq.redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
- <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
- <20131218003002.GA15119@google.com>
- <20131218132349.GA29552@dhcp-26-207.brq.redhat.com>
- <CAErSpo6Km5N+Cfpaj5JEsb966rwcBjrAT4SFvG6Q9QkwkDFXCA@mail.gmail.com>
- <20131219134244.GA32238@dhcp-26-207.brq.redhat.com>
- <CAErSpo66Jh-8sbQr13r1LknfKWMt1zBd9xhm46XpCcW-X_TqnA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:51869 "EHLO
+	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752727Ab3LFJMc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 04:12:32 -0500
+Date: Fri, 6 Dec 2013 14:42:09 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Marek Vasut <marex@denx.de>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>
+Subject: Re: [Query/Discussion]: IO translation with designware PCIe
+ controller
+Message-ID: <20131206091209.GC2298@pratyush-vbox>
+References: <20131205050424.GA2298@pratyush-vbox>
+ <201312052233.13169.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo66Jh-8sbQr13r1LknfKWMt1zBd9xhm46XpCcW-X_TqnA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201312052233.13169.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 19, 2013 at 02:37:22PM -0700, Bjorn Helgaas wrote:
-> On Thu, Dec 19, 2013 at 6:42 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> > On Wed, Dec 18, 2013 at 11:58:47AM -0700, Bjorn Helgaas wrote:
-> >> If rc == 13 and the device can only use 8, the extra 5 would be
-> >> ignored and wasted.
-> >>
-> >> If the waste is unacceptable, the driver can try this:
-> >>
-> >>     rc = pci_enable_msix_range(dev->pdev, dev->irqs, 16, 16);
-> >>     if (rc < 0) {
-> >>         rc = pci_enable_msix_range(dev->pdev, dev->irqs, 8, 8);
-> >>         if (rc < 0) {
-> >>             rc = pci_enable_msix_range(dev->pdev, dev->irqs, 4, 4);
-> >>             ...
-> >>     }
-> >
-> > I have troubles with this fallback logic. On each failed step we get an
-> > error and we do not know if this is indeed an error or an indication of
-> > insufficient MSI resources. Even -ENOSPC would not tell much, since it
-> > could be thrown from a lower level.
-> >
-> > By contrast, with the tri-state return value we can distinguish and bail
-> > out on errors right away.
+Hi Arnd,
+
+Thanks a lot for detailed explanation.
+
+On Fri, Dec 06, 2013 at 05:33:12AM +0800, Arnd Bergmann wrote:
+> On Thursday 05 December 2013, Pratyush Anand wrote:
+> > Hi Arnd / Jingoo,
+> > 
+> > Sorry for not able to follow earlier discussion you had on this
+> > topic while initial reviews of patches from Jingoo.
+> > 
+> > I have few doubts that how will it actually work.
+> > 
+> > As per my understanding under current implementation:
+> > 
+> > 1. Physical IO addresses are in the range of 0x1000 to 0xfffff.
+> > 2. They are mapped to fixed virtual address 0xFEE00000 using
+> > pci_ioremap_io.
+> > 3. IO resource addresses to any PCIe device will be allocated in above
+> > range.
+> > 4. Driver for that PCIe device will write in the above range only for
+> > IO transaction to the device.
+> > 5. As per current IO translation programming, its one to one
+> > translation. It means PCIe translation unit will have both input and
+> > output address in the range of 0x1000 to 0xfffff.
+> > 
+> > Did I miss something, or if above statements are correct, then what I
+> > do not understand is how can designware PCIe translation unit accept
+> > input address in the range of 0x1000 to 0xfffff?
 > 
-> I thought the main point of this was to get rid of interfaces that
-> were prone to misuse, and tri-state return values was a big part of
-> that.  All we really care about in the driver is success/failure.  I'm
-> not sure there's much to be gained by analyzing *why* we failed, and I
-> think it tends to make uncommon error paths more complicated than
-> necessary.  If we fail four times instead of bailing out after the
-> first failure, well, that doesn't sound terrible to me.  The last
-> failure can log the errno, which is enough for debugging.
+> Hi Pratyush,
+> 
+> I think the part that you are missing is that there are four, not two
+> address spaces involved:
+> 
+> 1. The "bus" I/O port address, in the range between 0x1000 and 0xffff
+> (65535). This is the address used in data frames in the actual bus
+> transaction going over the PCIe wires. If you have more than one PCIe
+> host bridge, each of them can normally have a range of up to 65536
+> addresses. The bus addresses get written into BAR registers of the
+> device.
 
-Sure, the main point is to get rid of try-state interfaces. I just afraid
-to throw out the baby with the bath water for unusual devices (which we do
-not have in the tree).
+Correct. Got this point. So this address should be output of
+designware outbound address translation unit.
 
-I can only identify two downsides of the approach above - (a) repeated error
-logging in a platform code (i.e. caused by -ENOMEM) and (b) repeated attempts
-to enable MSI when the platform already reported a fatal error.
+> 
+> 2. The Linux I/O port numbers, between 0x00000 and 0xfffff (1048575).
+> This is a logical number space that aggregates all bus I/O port numbers.
+> The first 4096 ports are normally reserved for ISA devices and are
+> not available for PCIe resources. Each PCI or PCIe host bridge can have
+> a 0x10000 byte naturally aligned range in here. The common case is that
+> you have only one host bridge using the range 0x1000-0xffff. If you have
+> more than one, there may be an offset between them, e.g. the second PCIe
+> host may have io_offset set to 0x10000, which means that its bus range
+> 0x1000-0xffff gets translated to Linux port number 0x11000-0x1ffff.
+> Linux port numbers are visible e.g. in /proc/ioport and /dev/port
 
-I think if a device needs an extra magic to enable MSI (i.e. writing to
-specific registers etc.) it would be manageable with pci_enable_msix_range(),
-but may be I am missing something?
+Ok, got it. To know more, which binding function maps this logical
+number space to address space in 4?
 
-So my thought is may be we deprecate the tri-state interfaces, but do not
-do it immediately.
+> 
+> 3. The CPU physical address space: Each PCIe host normally has its
+> bus I/O port space mapped into PCU visible addresses, either hardwired
+> or (in case of dw_pcie) set up using an outbound translation window.
+> These addresses are what get passed to pci_ioremap_io.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+OK.
+
+> 
+> 4. The CPU virtual address space: This is an implementation detail
+> of the kernel, which results in the Linux I/O port numbers 0x0-0xfffff
+> to be mapped at 0xfee00000-0xfeefffff.
+> 
+> > For example in SPEAr1340, physically RAM is mapped on above addresses.
+> > PCIe address translation unit can accept address only in the range of
+> > core addresses which are assigned to PCIe RC ie 0x80000000-0x8FFFFFFF.
+> 
+> Since this is a physical address, it corresponds to address space 3 in
+> my list above, and the address you pick here is what you pass to
+> pci_ioremap_io.
+
+This is what I was expecting. But currently designware driver does not
+pass this address to pci_ioremap_io.
+OK.. We will fix it and will send patch.
+
+Regards
+Pratyush
+
+> 
+> 	Arnd
