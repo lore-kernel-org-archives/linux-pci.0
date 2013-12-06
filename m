@@ -1,47 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:34908 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003Ab3LQWYn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 17:24:43 -0500
-Received: by mail-ie0-f175.google.com with SMTP id x13so9301267ief.34
-        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2013 14:24:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1387318331.30327.16.camel@bling.home>
-References: <20131210183339.26294.14581.stgit@bling.home> <20131210184845.26294.81385.stgit@bling.home>
- <20131217004815.GA4781@google.com> <1387318331.30327.16.camel@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Dec 2013 15:24:22 -0700
-Message-ID: <CAErSpo6TH7QghPMhDxrohEz5rUtSiQEh_VR66f+jckPUWjey0g@mail.gmail.com>
-Subject: Re: [PATCH 3/3] pci: Add Virtual Channel to save/restore support
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752302Ab3LFDUd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:20:33 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 01/20] iommu/vt-d: use dedicated bitmap to track remapping entry allocation status
+Date: Fri,  6 Dec 2013 11:21:04 +0800
+Message-Id: <1386300083-6882-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 17, 2013 at 3:12 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Mon, 2013-12-16 at 17:48 -0700, Bjorn Helgaas wrote:
->> On Tue, Dec 10, 2013 at 11:48:45AM -0700, Alex Williamson wrote:
+Currently Intel interrupt remapping drivers uses the "present" flag bit
+in remapping entry to track whether an entry is allocated or not.
+It works as follow:
+1) allocate a remapping entry and set its "present" flag bit to 1
+2) compose other fields for the entry
+3) update the remapping entry with the composed value
 
->> > +static void pci_vc_load_arb_table(struct pci_dev *dev, int pos)
->> > +{
->> > +   u32 ctrl;
->> > +
->> > +   pci_read_config_dword(dev, pos + PCI_VC_PORT_CTRL, &ctrl);
->> > +   pci_write_config_dword(dev, pos + PCI_VC_PORT_CTRL, ctrl | 1);
->> > +   if (pci_wait_for_pending(dev, pos + PCI_VC_PORT_STATUS, 1))
+The remapping hardware may access the entry between step 1 and step 3,
+which then obervers an entry with the "present" flag set but random
+values in all other fields.
 
->> spec says these are 16-bit registers; shouldn't these be "word" accesses?
->
-> The control registers are 32-bit, the status registers are 16-bit.
-> pci_wait_for_pending uses word access.
+This patch introduces a dedicated bitmap to track remapping entry
+allocation status instead of sharing the "present" flag with hardware,
+thus eliminate the race window. It also simplifies the implementation.
 
-The "VC Resource Control Registers" at offset 14h + (n * 0Ch) are 32
-bits, but I was referring to the PCI_VC_PORT_CTRL accesses, sorry I
-didn't make that clear.  I'm looking at 7.11.4 "Port VC Control
-Register" at offset 12 (0Ch), and that one looks like 16 bits to me.
+Tested-and-reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |   51 +++++++++++++++++------------------
+ include/linux/intel-iommu.h         |    1 +
+ 2 files changed, 25 insertions(+), 27 deletions(-)
 
-Bjorn
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index bab10b1..282d392 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -72,7 +72,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
+ 	u16 index, start_index;
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+-	int i;
+ 
+ 	if (!count || !irq_iommu)
+ 		return -1;
+@@ -96,32 +95,17 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
+ 	}
+ 
+ 	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
+-	do {
+-		for (i = index; i < index + count; i++)
+-			if  (table->base[i].present)
+-				break;
+-		/* empty index found */
+-		if (i == index + count)
+-			break;
+-
+-		index = (index + count) % INTR_REMAP_TABLE_ENTRIES;
+-
+-		if (index == start_index) {
+-			raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+-			printk(KERN_ERR "can't allocate an IRTE\n");
+-			return -1;
+-		}
+-	} while (1);
+-
+-	for (i = index; i < index + count; i++)
+-		table->base[i].present = 1;
+-
+-	cfg->remapped = 1;
+-	irq_iommu->iommu = iommu;
+-	irq_iommu->irte_index =  index;
+-	irq_iommu->sub_handle = 0;
+-	irq_iommu->irte_mask = mask;
+-
++	index = bitmap_find_free_region(table->bitmap,
++					INTR_REMAP_TABLE_ENTRIES, mask);
++	if (index < 0) {
++		printk(KERN_ERR "can't allocate an IRTE\n");
++	} else {
++		cfg->remapped = 1;
++		irq_iommu->iommu = iommu;
++		irq_iommu->irte_index =  index;
++		irq_iommu->sub_handle = 0;
++		irq_iommu->irte_mask = mask;
++	}
+ 	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+ 
+ 	return index;
+@@ -254,6 +238,8 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 		set_64bit(&entry->low, 0);
+ 		set_64bit(&entry->high, 0);
+ 	}
++	bitmap_release_region(iommu->ir_table->bitmap, index,
++			      irq_iommu->irte_mask);
+ 
+ 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
+ }
+@@ -453,6 +439,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ {
+ 	struct ir_table *ir_table;
+ 	struct page *pages;
++	unsigned long *bitmap;
+ 
+ 	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
+ 					     GFP_ATOMIC);
+@@ -470,7 +457,17 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ 		return -ENOMEM;
+ 	}
+ 
++	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
++			 sizeof(long), GFP_ATOMIC);
++	if (bitmap == NULL) {
++		printk(KERN_ERR "failed to allocate bitmap\n");
++		__free_pages(pages, INTR_REMAP_PAGE_ORDER);
++		kfree(ir_table);
++		return -ENOMEM;
++	}
++
+ 	ir_table->base = page_address(pages);
++	ir_table->bitmap = bitmap;
+ 
+ 	iommu_set_irq_remapping(iommu, mode);
+ 	return 0;
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index d380c5e..de1e5e9 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -288,6 +288,7 @@ struct q_inval {
+ 
+ struct ir_table {
+ 	struct irte *base;
++	unsigned long *bitmap;
+ };
+ #endif
+ 
+-- 
+1.7.10.4
+
