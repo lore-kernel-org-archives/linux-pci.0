@@ -1,168 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33514 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752539Ab3LQXoA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Dec 2013 18:44:00 -0500
-Subject: [PATCH v2 4/4] pci: Rename PCI_VC_PORT_REG1/2 to PCI_VC_PORT_CAP1/2
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
-Date: Tue, 17 Dec 2013 16:43:57 -0700
-Message-ID: <20131217234357.2310.8530.stgit@bling.home>
-In-Reply-To: <20131217233741.2310.78334.stgit@bling.home>
-References: <20131217233741.2310.78334.stgit@bling.home>
-MIME-Version: 1.0
+Received: from [213.199.154.253] ([213.199.154.253]:44308 "EHLO
+	db9outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751145Ab3LFEMn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 23:12:43 -0500
+From: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+To: Scott Wood <scottwood@freescale.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Fri, 6 Dec 2013 04:11:13 +0000
+Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D07251EE4@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+	 <1385067648.2879.421.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385397493.2879.557.camel@ul30vt.home>
+	  <6A3DF150A5B70D4F9B66A25E3F7C888D0723624C@039-SN2MPN1-012.039d.mgd.msft.net>
+ <1386289316.7375.107.camel@snotra.buserror.net>
+In-Reply-To: <1386289316.7375.107.camel@snotra.buserror.net>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These are set of two capability registers, it's pretty much given that
-they're registers, so reflect their purpose in the name.
-
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/vc.c                   |   28 ++++++++++++++--------------
- drivers/vfio/pci/vfio_pci_config.c |   12 ++++++------
- include/uapi/linux/pci_regs.h      |   18 +++++++++---------
- 3 files changed, 29 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
-index c10567e4..7e1304d 100644
---- a/drivers/pci/vc.c
-+++ b/drivers/pci/vc.c
-@@ -104,7 +104,7 @@ static void pci_vc_load_port_arb_table(struct pci_dev *dev, int pos, int res)
- static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
- {
- 	int ctrl_pos, status_pos, id, pos2, evcc, i, ctrl_pos2, status_pos2;
--	u32 ctrl, header, reg1, ctrl2;
-+	u32 ctrl, header, cap1, ctrl2;
- 	struct pci_dev *link = NULL;
- 
- 	/* Enable VCs from the downstream device */
-@@ -129,8 +129,8 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
- 	if (!pos2)
- 		goto enable;
- 
--	pci_read_config_dword(dev->bus->self, pos2 + PCI_VC_PORT_REG1, &reg1);
--	evcc = reg1 & PCI_VC_REG1_EVCC;
-+	pci_read_config_dword(dev->bus->self, pos2 + PCI_VC_PORT_CAP1, &cap1);
-+	evcc = cap1 & PCI_VC_CAP1_EVCC;
- 
- 	/* VC0 is hardwired enabled, so we can start with 1 */
- 	for (i = 1; i < evcc + 1; i++) {
-@@ -188,7 +188,7 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
- 				 struct pci_cap_saved_state *save_state,
- 				 bool save)
- {
--	u32 reg1;
-+	u32 cap1;
- 	char evcc, lpevcc, parb_size;
- 	int i, len = 0;
- 	u8 *buf = save_state ? (u8 *)save_state->cap.data : NULL;
-@@ -201,13 +201,13 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
- 		return -ENOMEM;
- 	}
- 
--	pci_read_config_dword(dev, pos + PCI_VC_PORT_REG1, &reg1);
-+	pci_read_config_dword(dev, pos + PCI_VC_PORT_CAP1, &cap1);
- 	/* Extended VC Count (not counting VC0) */
--	evcc = reg1 & PCI_VC_REG1_EVCC;
-+	evcc = cap1 & PCI_VC_CAP1_EVCC;
- 	/* Low Priority Extended VC Count (not counting VC0) */
--	lpevcc = (reg1 & PCI_VC_REG1_LPEVCC) >> 4;
-+	lpevcc = (cap1 & PCI_VC_CAP1_LPEVCC) >> 4;
- 	/* Port Arbitration Table Entry Size (bits) */
--	parb_size = 1 << ((reg1 & PCI_VC_REG1_ARB_SIZE) >> 10);
-+	parb_size = 1 << ((cap1 & PCI_VC_CAP1_ARB_SIZE) >> 10);
- 
- 	/*
- 	 * Port VC Control Register contains VC Arbitration Select, which
-@@ -231,20 +231,20 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
- 	 * in Port VC Capability Register 2 then save/restore it next.
- 	 */
- 	if (lpevcc) {
--		u32 reg2;
-+		u32 cap2;
- 		int vcarb_offset;
- 
--		pci_read_config_dword(dev, pos + PCI_VC_PORT_REG2, &reg2);
--		vcarb_offset = ((reg2 & PCI_VC_REG2_ARB_OFF) >> 24) * 16;
-+		pci_read_config_dword(dev, pos + PCI_VC_PORT_CAP2, &cap2);
-+		vcarb_offset = ((cap2 & PCI_VC_CAP2_ARB_OFF) >> 24) * 16;
- 
- 		if (vcarb_offset) {
- 			int size, vcarb_phases = 0;
- 
--			if (reg2 & PCI_VC_REG2_128_PHASE)
-+			if (cap2 & PCI_VC_CAP2_128_PHASE)
- 				vcarb_phases = 128;
--			else if (reg2 & PCI_VC_REG2_64_PHASE)
-+			else if (cap2 & PCI_VC_CAP2_64_PHASE)
- 				vcarb_phases = 64;
--			else if (reg2 & PCI_VC_REG2_32_PHASE)
-+			else if (cap2 & PCI_VC_CAP2_32_PHASE)
- 				vcarb_phases = 32;
- 
- 			/* Fixed 4 bits per phase per lpevcc (plus VC0) */
-diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-index ffd0632..83cd157 100644
---- a/drivers/vfio/pci/vfio_pci_config.c
-+++ b/drivers/vfio/pci/vfio_pci_config.c
-@@ -975,20 +975,20 @@ static int vfio_vc_cap_len(struct vfio_pci_device *vdev, u16 pos)
- 	int ret, evcc, phases, vc_arb;
- 	int len = PCI_CAP_VC_BASE_SIZEOF;
- 
--	ret = pci_read_config_dword(pdev, pos + PCI_VC_PORT_REG1, &tmp);
-+	ret = pci_read_config_dword(pdev, pos + PCI_VC_PORT_CAP1, &tmp);
- 	if (ret)
- 		return pcibios_err_to_errno(ret);
- 
--	evcc = tmp & PCI_VC_REG1_EVCC; /* extended vc count */
--	ret = pci_read_config_dword(pdev, pos + PCI_VC_PORT_REG2, &tmp);
-+	evcc = tmp & PCI_VC_CAP1_EVCC; /* extended vc count */
-+	ret = pci_read_config_dword(pdev, pos + PCI_VC_PORT_CAP2, &tmp);
- 	if (ret)
- 		return pcibios_err_to_errno(ret);
- 
--	if (tmp & PCI_VC_REG2_128_PHASE)
-+	if (tmp & PCI_VC_CAP2_128_PHASE)
- 		phases = 128;
--	else if (tmp & PCI_VC_REG2_64_PHASE)
-+	else if (tmp & PCI_VC_CAP2_64_PHASE)
- 		phases = 64;
--	else if (tmp & PCI_VC_REG2_32_PHASE)
-+	else if (tmp & PCI_VC_CAP2_32_PHASE)
- 		phases = 32;
- 	else
- 		phases = 0;
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 5eefacd..d0160cc 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -677,15 +677,15 @@
- #define PCI_ERR_ROOT_ERR_SRC	52	/* Error Source Identification */
- 
- /* Virtual Channel */
--#define PCI_VC_PORT_REG1	4
--#define  PCI_VC_REG1_EVCC	0x00000007	/* extended VC count */
--#define  PCI_VC_REG1_LPEVCC	0x00000070	/* low prio extended VC count */
--#define  PCI_VC_REG1_ARB_SIZE	0x00000c00
--#define PCI_VC_PORT_REG2	8
--#define  PCI_VC_REG2_32_PHASE		0x00000002
--#define  PCI_VC_REG2_64_PHASE		0x00000004
--#define  PCI_VC_REG2_128_PHASE		0x00000008
--#define  PCI_VC_REG2_ARB_OFF		0xff000000
-+#define PCI_VC_PORT_CAP1	4
-+#define  PCI_VC_CAP1_EVCC	0x00000007	/* extended VC count */
-+#define  PCI_VC_CAP1_LPEVCC	0x00000070	/* low prio extended VC count */
-+#define  PCI_VC_CAP1_ARB_SIZE	0x00000c00
-+#define PCI_VC_PORT_CAP2	8
-+#define  PCI_VC_CAP2_32_PHASE		0x00000002
-+#define  PCI_VC_CAP2_64_PHASE		0x00000004
-+#define  PCI_VC_CAP2_128_PHASE		0x00000008
-+#define  PCI_VC_CAP2_ARB_OFF		0xff000000
- #define PCI_VC_PORT_CTRL	12
- #define  PCI_VC_PORT_CTRL_LOAD_TABLE	0x00000001
- #define PCI_VC_PORT_STATUS	14
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogV29vZCBTY290dC1CMDc0
+MjENCj4gU2VudDogRnJpZGF5LCBEZWNlbWJlciAwNiwgMjAxMyA1OjUyIEFNDQo+IFRvOiBCaHVz
+aGFuIEJoYXJhdC1SNjU3NzcNCj4gQ2M6IEFsZXggV2lsbGlhbXNvbjsgbGludXgtcGNpQHZnZXIu
+a2VybmVsLm9yZzsgYWdyYWZAc3VzZS5kZTsgWW9kZXIgU3R1YXJ0LQ0KPiBCMDgyNDg7IGlvbW11
+QGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51eHBw
+Yy0NCj4gZGV2QGxpc3RzLm96bGFicy5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcN
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAwLzkgdjJdIHZmaW8tcGNpOiBhZGQgc3VwcG9ydCBmb3Ig
+RnJlZXNjYWxlIElPTU1VIChQQU1VKQ0KPiANCj4gT24gVGh1LCAyMDEzLTExLTI4IGF0IDAzOjE5
+IC0wNjAwLCBCaGFyYXQgQmh1c2hhbiB3cm90ZToNCj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiA+ID4gU2Vu
+dDogV2VkbmVzZGF5LCBOb3ZlbWJlciAyNywgMjAxMyA5OjM5IFBNDQo+ID4gPiBUbzogJ0FsZXgg
+V2lsbGlhbXNvbicNCj4gPiA+IENjOiBXb29kIFNjb3R0LUIwNzQyMTsgbGludXgtcGNpQHZnZXIu
+a2VybmVsLm9yZzsgYWdyYWZAc3VzZS5kZTsNCj4gPiA+IFlvZGVyIFN0dWFydC0gQjA4MjQ4OyBp
+b21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZzsNCj4gPiA+IGJoZWxnYWFzQGdvb2dsZS5j
+b207IGxpbnV4cHBjLSBkZXZAbGlzdHMub3psYWJzLm9yZzsNCj4gPiA+IGxpbnV4LWtlcm5lbEB2
+Z2VyLmtlcm5lbC5vcmcNCj4gPiA+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggMC85IHYyXSB2ZmlvLXBj
+aTogYWRkIHN1cHBvcnQgZm9yIEZyZWVzY2FsZQ0KPiA+ID4gSU9NTVUgKFBBTVUpDQo+ID4gPg0K
+PiA+ID4NCj4gPiA+DQo+ID4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiA+
+IEZyb206IEFsZXggV2lsbGlhbXNvbiBbbWFpbHRvOmFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29t
+XQ0KPiA+ID4gPiBTZW50OiBNb25kYXksIE5vdmVtYmVyIDI1LCAyMDEzIDEwOjA4IFBNDQo+ID4g
+PiA+IFRvOiBCaHVzaGFuIEJoYXJhdC1SNjU3NzcNCj4gPiA+ID4gQ2M6IFdvb2QgU2NvdHQtQjA3
+NDIxOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBhZ3JhZkBzdXNlLmRlOw0KPiA+ID4gPiBZ
+b2Rlcg0KPiA+ID4gPiBTdHVhcnQtIEIwODI0ODsgaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlv
+bi5vcmc7DQo+ID4gPiA+IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+ID4gPiA+IGxpbnV4cHBjLSBk
+ZXZAbGlzdHMub3psYWJzLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiA+ID4g
+PiBTdWJqZWN0OiBSZTogW1BBVENIIDAvOSB2Ml0gdmZpby1wY2k6IGFkZCBzdXBwb3J0IGZvciBG
+cmVlc2NhbGUNCj4gPiA+ID4gSU9NTVUNCj4gPiA+ID4gKFBBTVUpDQo+ID4gPiA+DQo+ID4gPiA+
+IE9uIE1vbiwgMjAxMy0xMS0yNSBhdCAwNTozMyArMDAwMCwgQmhhcmF0IEJodXNoYW4gd3JvdGU6
+DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4g
+PiA+ID4gPiBGcm9tOiBBbGV4IFdpbGxpYW1zb24gW21haWx0bzphbGV4LndpbGxpYW1zb25AcmVk
+aGF0LmNvbV0NCj4gPiA+ID4gPiA+IFNlbnQ6IEZyaWRheSwgTm92ZW1iZXIgMjIsIDIwMTMgMjoz
+MSBBTQ0KPiA+ID4gPiA+ID4gVG86IFdvb2QgU2NvdHQtQjA3NDIxDQo+ID4gPiA+ID4gPiBDYzog
+Qmh1c2hhbiBCaGFyYXQtUjY1Nzc3OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4g
+PiA+ID4gYWdyYWZAc3VzZS5kZTsgWW9kZXIgU3R1YXJ0LUIwODI0ODsNCj4gPiA+ID4gPiA+IGlv
+bW11QGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOw0KPiA+
+ID4gPiA+ID4gbGludXhwcGMtIGRldkBsaXN0cy5vemxhYnMub3JnOyBsaW51eC1rZXJuZWxAdmdl
+ci5rZXJuZWwub3JnDQo+ID4gPiA+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIDAvOSB2Ml0gdmZp
+by1wY2k6IGFkZCBzdXBwb3J0IGZvcg0KPiA+ID4gPiA+ID4gRnJlZXNjYWxlIElPTU1VIChQQU1V
+KQ0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IE9uIFRodSwgMjAxMy0xMS0yMSBhdCAxNDo0NyAt
+MDYwMCwgU2NvdHQgV29vZCB3cm90ZToNCj4gPiA+ID4gPiA+ID4gT24gVGh1LCAyMDEzLTExLTIx
+IGF0IDEzOjQzIC0wNzAwLCBBbGV4IFdpbGxpYW1zb24gd3JvdGU6DQo+ID4gPiA+ID4gPiA+ID4g
+T24gVGh1LCAyMDEzLTExLTIxIGF0IDExOjIwICswMDAwLCBCaGFyYXQgQmh1c2hhbiB3cm90ZToN
+Cj4gPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4gPiA+IC0tLS0tT3JpZ2luYWwgTWVz
+c2FnZS0tLS0tDQo+ID4gPiA+ID4gPiA+ID4gPiA+IEZyb206IEFsZXggV2lsbGlhbXNvbg0KPiA+
+ID4gPiA+ID4gPiA+ID4gPiBbbWFpbHRvOmFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29tXQ0KPiA+
+ID4gPiA+ID4gPiA+ID4gPiBTZW50OiBUaHVyc2RheSwgTm92ZW1iZXIgMjEsIDIwMTMgMTI6MTcg
+QU0NCj4gPiA+ID4gPiA+ID4gPiA+ID4gVG86IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0KPiA+ID4g
+PiA+ID4gPiA+ID4gPiBDYzogam9yb0A4Ynl0ZXMub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOw0K
+PiA+ID4gPiA+ID4gPiA+ID4gPiBhZ3JhZkBzdXNlLmRlOyBXb29kIFNjb3R0LUIwNzQyMTsgWW9k
+ZXIgU3R1YXJ0LUIwODI0ODsNCj4gPiA+ID4gPiA+ID4gPiA+ID4gaW9tbXVAbGlzdHMubGludXgt
+Zm91bmRhdGlvbi5vcmc7IGxpbnV4LQ0KPiA+ID4gPiA+ID4gPiA+ID4gPiBwY2lAdmdlci5rZXJu
+ZWwub3JnOyBsaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZzsNCj4gPiA+ID4gPiA+ID4gPiA+
+ID4gbGludXgtIGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEJodXNoYW4gQmhhcmF0LVI2NTc3Nw0K
+PiA+ID4gPiA+ID4gPiA+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIDAvOSB2Ml0gdmZpby1wY2k6
+IGFkZCBzdXBwb3J0IGZvcg0KPiA+ID4gPiA+ID4gPiA+ID4gPiBGcmVlc2NhbGUgSU9NTVUgKFBB
+TVUpDQo+ID4gPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4gPiA+IElzIFZGSU9fSU9N
+TVVfUEFNVV9HRVRfTVNJX0JBTktfQ09VTlQgcGVyIGFwZXJ0dXJlIChpZS4NCj4gPiA+ID4gPiA+
+ID4gPiA+ID4gZWFjaCB2ZmlvIHVzZXIgaGFzICRDT1VOVCByZWdpb25zIGF0IHRoZWlyIGRpc3Bv
+c2FsDQo+IGV4Y2x1c2l2ZWx5KT8NCj4gPiA+ID4gPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+ID4g
+PiBOdW1iZXIgb2YgbXNpLWJhbmsgY291bnQgaXMgc3lzdGVtIHdpZGUgYW5kIG5vdCBwZXINCj4g
+PiA+ID4gPiA+ID4gPiA+IGFwZXJ0dXJlLCBCdXQgd2lsbCBiZQ0KPiA+ID4gPiA+ID4gc2V0dGlu
+ZyB3aW5kb3dzIGZvciBiYW5rcyBpbiB0aGUgZGV2aWNlIGFwZXJ0dXJlLg0KPiA+ID4gPiA+ID4g
+PiA+ID4gU28gc2F5IGlmIHdlIGFyZSBkaXJlY3QgYXNzaWduaW5nIDIgcGNpIGRldmljZSAoYm90
+aA0KPiA+ID4gPiA+ID4gPiA+ID4gaGF2ZSBkaWZmZXJlbnQgaW9tbXUNCj4gPiA+ID4gPiA+IGdy
+b3VwLCBzbyAyIGFwZXJ0dXJlIGluIGlvbW11KSB0byBWTS4NCj4gPiA+ID4gPiA+ID4gPiA+IE5v
+dyBxZW11IGNhbiBtYWtlIG9ubHkgb25lIGNhbGwgdG8ga25vdyBob3cgbWFueQ0KPiA+ID4gPiA+
+ID4gPiA+ID4gbXNpLWJhbmtzIGFyZSB0aGVyZSBidXQNCj4gPiA+ID4gPiA+IGl0IG11c3Qgc2V0
+IHN1Yi13aW5kb3dzIGZvciBhbGwgYmFua3MgZm9yIGJvdGggcGNpIGRldmljZSBpbg0KPiA+ID4g
+PiA+ID4gaXRzIHJlc3BlY3RpdmUgYXBlcnR1cmUuDQo+ID4gPiA+ID4gPiA+ID4NCj4gPiA+ID4g
+PiA+ID4gPiBJJ20gc3RpbGwgY29uZnVzZWQuICBXaGF0IEkgd2FudCB0byBtYWtlIHN1cmUgb2Yg
+aXMgdGhhdA0KPiA+ID4gPiA+ID4gPiA+IHRoZSBiYW5rcyBhcmUgaW5kZXBlbmRlbnQgcGVyIGFw
+ZXJ0dXJlLiAgRm9yIGluc3RhbmNlLCBpZg0KPiA+ID4gPiA+ID4gPiA+IHdlIGhhdmUgdHdvIHNl
+cGFyYXRlIHVzZXJzcGFjZSBwcm9jZXNzZXMgb3BlcmF0aW5nDQo+ID4gPiA+ID4gPiA+ID4gaW5k
+ZXBlbmRlbnRseSBhbmQgdGhleSBib3RoIGNob3NlIHRvIHVzZSBtc2kgYmFuayB6ZXJvIGZvcg0K
+PiA+ID4gPiA+ID4gPiA+IHRoZWlyIGRldmljZSwgdGhhdCdzIGJhbmsgemVybyB3aXRoaW4gZWFj
+aCBhcGVydHVyZSBhbmQNCj4gPiA+ID4gPiA+ID4gPiBkb2Vzbid0IGludGVyZmVyZS4gIE9yIGFu
+b3RoZXIgd2F5IHRvIGFzayBpcyBjYW4gYQ0KPiA+ID4gPiA+ID4gPiA+IG1hbGljaW91cyB1c2Vy
+IGludGVyZmVyZSB3aXRoIG90aGVyIHVzZXJzIGJ5DQo+ID4gPiA+IHVzaW5nIHRoZSB3cm9uZyBi
+YW5rLg0KPiA+ID4gPiA+ID4gPiA+IFRoYW5rcywNCj4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+
+ID4gVGhleSBjYW4gaW50ZXJmZXJlLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gV2FudCB0byBiZSBz
+dXJlIG9mIGhvdyB0aGV5IGNhbiBpbnRlcmZlcmU/DQo+ID4gPiA+DQo+ID4gPiA+IFdoYXQgaGFw
+cGVucyBpZiBtb3JlIHRoYW4gb25lIHVzZXIgc2VsZWN0cyB0aGUgc2FtZSBNU0kgYmFuaz8NCj4g
+PiA+ID4gTWluaW1hbGx5LCB3b3VsZG4ndCB0aGF0IHJlc3VsdCBpbiB0aGUgSU9NTVUgYmxvY2tp
+bmcgdHJhbnNhY3Rpb25zDQo+ID4gPiA+IGZyb20gdGhlIHByZXZpb3VzIHVzZXIgb25jZSB0aGUg
+bmV3IHVzZXIgYWN0aXZhdGVzIHRoZWlyIG1hcHBpbmc/DQo+ID4gPg0KPiA+ID4gWWVzIGFuZCBu
+bzsgV2l0aCBjdXJyZW50IGltcGxlbWVudGF0aW9uIHllcyBidXQgd2l0aCBhIG1pbm9yIGNoYW5n
+ZQ0KPiA+ID4gbm8uIExhdGVyIGluIHRoaXMgcmVzcG9uc2UgSSB3aWxsIGV4cGxhaW4gaG93Lg0K
+PiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4gPiA+PiAgV2l0aCB0aGlzIGhhcmR3YXJlLCB0aGUgb25s
+eSB3YXkgdG8gcHJldmVudCB0aGF0DQo+ID4gPiA+ID4gPiA+IGlzIHRvIG1ha2Ugc3VyZSB0aGF0
+IGEgYmFuayBpcyBub3Qgc2hhcmVkIGJ5IG11bHRpcGxlDQo+ID4gPiA+ID4gPiA+IHByb3RlY3Rp
+b24NCj4gPiA+IGNvbnRleHRzLg0KPiA+ID4gPiA+ID4gPiBGb3Igc29tZSBvZiBvdXIgdXNlcnMs
+IHRob3VnaCwgSSBiZWxpZXZlIHByZXZlbnRpbmcgdGhpcyBpcw0KPiA+ID4gPiA+ID4gPiBsZXNz
+IGltcG9ydGFudCB0aGFuIHRoZSBwZXJmb3JtYW5jZSBiZW5lZml0Lg0KPiA+ID4gPiA+DQo+ID4g
+PiA+ID4gU28gc2hvdWxkIHdlIGxldCB0aGlzIHBhdGNoIHNlcmllcyBpbiB3aXRob3V0IHByb3Rl
+Y3Rpb24/DQo+ID4gPiA+DQo+ID4gPiA+IE5vLg0KPiA+ID4gPg0KPiA+ID4gPiA+ID4NCj4gPiA+
+ID4gPiA+IEkgdGhpbmsgd2UgbmVlZCBzb21lIHNvcnQgb2Ygb3duZXJzaGlwIG1vZGVsIGFyb3Vu
+ZCB0aGUgbXNpIGJhbmtzDQo+IHRoZW4uDQo+ID4gPiA+ID4gPiBPdGhlcndpc2UgdGhlcmUncyBu
+b3RoaW5nIHByZXZlbnRpbmcgYW5vdGhlciB1c2Vyc3BhY2UgZnJvbQ0KPiA+ID4gPiA+ID4gYXR0
+ZW1wdGluZyBhbiBNU0kgYmFzZWQgYXR0YWNrIG9uIG90aGVyIHVzZXJzLCBvciBwZXJoYXBzIGV2
+ZW4NCj4gPiA+ID4gPiA+IG9uIHRoZSBob3N0LiAgVkZJTyBjYW4ndCBhbGxvdyB0aGF0LiAgVGhh
+bmtzLA0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gV2UgaGF2ZSB2ZXJ5IGZldyAoMyBNU0kgYmFuayBv
+biBtb3N0IG9mIGNoaXBzKSwgc28gd2UgY2FuIG5vdA0KPiA+ID4gPiA+IGFzc2lnbiBvbmUgdG8g
+ZWFjaCB1c2Vyc3BhY2UuIFdoYXQgd2UgY2FuIGRvIGlzIGhvc3QgYW5kDQo+ID4gPiA+ID4gdXNl
+cnNwYWNlIGRvZXMgbm90IHNoYXJlIGEgTVNJIGJhbmsgd2hpbGUgdXNlcnNwYWNlIHdpbGwgc2hh
+cmUgYSBNU0kNCj4gYmFuay4NCj4gPiA+ID4NCj4gPiA+ID4gVGhlbiB5b3UgcHJvYmFibHkgbmVl
+ZCBWRklPIHRvICJvd24iIHRoZSBNU0kgYmFuayBhbmQgcHJvZ3JhbQ0KPiA+ID4gPiBkZXZpY2Vz
+IGludG8gaXQgcmF0aGVyIHRoYW4gZXhwb3NpbmcgdGhlIE1TSSBiYW5rcyB0byB1c2Vyc3BhY2Ug
+dG8NCj4gPiA+ID4gbGV0IHRoZW0gaGF2ZQ0KPiA+ID4gZGlyZWN0IGFjY2Vzcy4NCj4gPiA+DQo+
+ID4gPiBPdmVyYWxsIGlkZWEgb2YgZXhwb3NpbmcgdGhlIGRldGFpbHMgb2YgbXNpIHJlZ2lvbnMg
+dG8gdXNlcnNwYWNlIGFyZQ0KPiA+ID4gIDEpIFVzZXIgc3BhY2UgY2FuIGRlZmluZSB0aGUgYXBl
+cnR1cmUgc2l6ZSB0byBmaXQgTVNJIG1hcHBpbmcgaW4gSU9NTVUuDQo+ID4gPiAgMikgc2V0dXAg
+aW92YSBmb3IgYSBNU0kgYmFua3M7IHdoaWNoIGlzIGp1c3QgYWZ0ZXIgZ3Vlc3QgbWVtb3J5Lg0K
+PiA+ID4NCj4gPiA+IEJ1dCBjdXJyZW50bHkgd2UgZXhwb3NlIHRoZSAic2l6ZSIgYW5kICJhZGRy
+ZXNzIiBvZiBNU0kgYmFua3MsDQo+ID4gPiBwYXNzaW5nIGFkZHJlc3MgaXMgb2Ygbm8gdXNlIGFu
+ZCBjYW4gYmUgcHJvYmxlbWF0aWMuDQo+ID4NCj4gPiBJIGFtIHNvcnJ5LCBhYm92ZSBpbmZvcm1h
+dGlvbiBpcyBub3QgY29ycmVjdC4gQ3VycmVudGx5IG5laXRoZXIgd2UgZXhwb3NlDQo+ICJhZGRy
+ZXNzIiBub3IgInNpemUiIHRvIHVzZXIgc3BhY2UuIFdlIG9ubHkgZXhwb3NlIG51bWJlciBvZiBN
+U0kgQkFOSyBjb3VudCBhbmQNCj4gdXNlcnNwYWNlIGFkZHMgb25lIHN1Yi13aW5kb3cgZm9yIGVh
+Y2ggYmFuay4NCj4gPg0KPiA+ID4gSWYgd2UganVzdCBwcm92aWRlIHRoZSBzaXplIG9mIE1TSSBi
+YW5rIHRvIHVzZXJzcGFjZSB0aGVuIHVzZXJzcGFjZQ0KPiA+ID4gY2Fubm90IGRvIGFueXRoaW5n
+IHdyb25nLg0KPiA+DQo+ID4gU28gdXNlcnNwYWNlIGRvZXMgbm90IGtub3cgYWRkcmVzcywgc28g
+aXQgY2Fubm90IG1tYXAgYW5kIGNhdXNlIGFueQ0KPiBpbnRlcmZlcmVuY2UgYnkgZGlyZWN0bHkg
+cmVhZGluZy93cml0aW5nLg0KPiANCj4gVGhhdCdzIHNlY3VyaXR5IHRocm91Z2ggb2JzY3VyaXR5
+Li4uICBDb3VsZG4ndCB0aGUgbWFsaWNpb3VzIHVzZXIgZmluZCBvdXQgdGhlDQo+IGFkZHJlc3Mg
+dmlhIG90aGVyIG1lYW5zLCBzdWNoIGFzIGV4cGVyaW1lbnRhdGlvbiBvbiBhbm90aGVyIHN5c3Rl
+bSBvdmVyIHdoaWNoDQo+IHRoZXkgaGF2ZSBmdWxsIGNvbnRyb2w/ICBXaGF0IHdvdWxkIGhhcHBl
+biBpZiB0aGUgdXNlciByZWFkcyBmcm9tIHRoZWlyIGRldmljZSdzDQo+IFBDSSBjb25maWcgc3Bh
+Y2U/ICBPciBnZXRzIHRoZSBpbmZvcm1hdGlvbiB2aWEgc29tZSBiYWNrIGRvb3IgaW4gdGhlIFBD
+SSBkZXZpY2UNCj4gdGhleSBvd24/ICBPciBwb2tlcyB0aHJvdWdob3V0IHRoZSBhZGRyZXNzIHNw
+YWNlIGxvb2tpbmcgZm9yIHNvbWV0aGluZyB0aGF0DQo+IGdlbmVyYXRlcyBhbiBpbnRlcnJ1cHQg
+dG8gaXRzIG93biBkZXZpY2U/DQoNClNvIGhvdyB0byBzb2x2ZSB0aGlzIHByb2JsZW0sIEFueSBz
+dWdnZXN0aW9uID8NCg0KV2UgaGF2ZSB0byBtYXAgb25lIHdpbmRvdyBpbiBQQU1VIGZvciBNU0lz
+IGFuZCBhIG1hbGljaW91cyB1c2VyIGNhbiBhc2sgaXRzIGRldmljZSB0byBkbyBETUEgdG8gTVNJ
+IHdpbmRvdyByZWdpb24gd2l0aCBhbnkgcGFpciBvZiBhZGRyZXNzIGFuZCBkYXRhLCB3aGljaCBj
+YW4gbGVhZCB0byB1bmV4cGVjdGVkIE1TSXMgaW4gc3lzdGVtPw0KDQpUaGFua3MNCi1CaGFyYXQN
+Cg0KPiANCj4gLVNjb3R0DQo+IA0KDQo=
 
