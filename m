@@ -1,46 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35722 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756038Ab3LSUnr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 15:43:47 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 0/2] PCI: allocate 64bit mmio pref
-Date: Thu, 19 Dec 2013 12:44:01 -0800
-Message-Id: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752828Ab3LFDUj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:20:39 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 03/20] iommu/vt-d: fix a race window in allocating domain ID for virtual machines
+Date: Fri,  6 Dec 2013 11:21:06 +0800
+Message-Id: <1386300083-6882-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
-It will try to assign 64 bit resource above 4g at first.
+Function intel_iommu_domain_init() may be concurrently called by upper
+layer without serialization, so use atomic_t to protect domain id
+allocation.
 
-And it is based on current pci/next and pci/resource.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
--v2: update after patch that move device_del down to pci_destroy_dev.
-     add "Try best to allocate pref mmio 64bit above 4G"
-
--v3: refresh and send out after pci_clip_resource() changes,
-     as Bjorn is not happy with attachments.
-
--v4: make pcibios_resource_to_bus take bus directly.
-
--v5: fix non-pref mmio64 allocation problem found by Guo Chao.
-     refresh last three as Bjorn update first two and put them in pci/resource
-
--v6: try above 4G at first, then restart again for under 4G.
-     so we can drop patch that sort pci root bus resource list.
-
-Yinghai Lu (2):
-  PCI: Try to allocate mem64 above 4G at first
-  PCI: Try best to allocate pref mmio 64bit above 4g
-
- drivers/pci/bus.c       |  34 ++++++++----
- drivers/pci/setup-bus.c | 138 ++++++++++++++++++++++++++++++++----------------
- drivers/pci/setup-res.c |  20 ++++++-
- 3 files changed, 135 insertions(+), 57 deletions(-)
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 43b9bfe..b8e3b48 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3877,7 +3877,7 @@ static void vm_domain_remove_all_dev_info(struct dmar_domain *domain)
+ }
+ 
+ /* domain id for virtual machine, it won't be set in context */
+-static unsigned long vm_domid;
++static atomic_t vm_domid = ATOMIC_INIT(0);
+ 
+ static struct dmar_domain *iommu_alloc_vm_domain(void)
+ {
+@@ -3887,7 +3887,7 @@ static struct dmar_domain *iommu_alloc_vm_domain(void)
+ 	if (!domain)
+ 		return NULL;
+ 
+-	domain->id = vm_domid++;
++	domain->id = atomic_inc_return(&vm_domid);
+ 	domain->nid = -1;
+ 	memset(domain->iommu_bmp, 0, sizeof(domain->iommu_bmp));
+ 	domain->flags = DOMAIN_FLAG_VIRTUAL_MACHINE;
 -- 
-1.8.4
+1.7.10.4
 
