@@ -1,87 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:40643 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751225Ab3LIRZy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 12:25:54 -0500
-Received: by mail-ie0-f175.google.com with SMTP id x13so6623631ief.34
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 09:25:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <52A4819A.50501@meshcoding.com>
-References: <20120526082551.GA2723@ritirata.org> <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com>
- <20120529083552.GN2604@amd.com> <20120529085648.GA13941@ritirata.org> <52A4819A.50501@meshcoding.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 10:25:33 -0700
-Message-ID: <CAErSpo5fzbxFuX_bqq-z1hpHyfMhLO0w+iuyii_6J3PxZn3p=A@mail.gmail.com>
-Subject: Re: warn_slowpath_common in drivers/pci/search.c:44 on linux-3.4.0
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: Joerg Roedel <joerg.roedel@amd.com>,
+Received: from moutng.kundenserver.de ([212.227.17.8]:52505 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758182Ab3LFOrE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 09:47:04 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [Query/Discussion]: IO translation with designware PCIe controller
+Date: Fri, 6 Dec 2013 15:46:23 +0100
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Marek Vasut <marex@denx.de>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tim Harvey <tharvey@gateworks.com>
+References: <20131205050424.GA2298@pratyush-vbox> <201312052233.13169.arnd@arndb.de> <20131206091209.GC2298@pratyush-vbox>
+In-Reply-To: <20131206091209.GC2298@pratyush-vbox>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201312061546.23981.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
+On Friday 06 December 2013, Pratyush Anand wrote:
 
-On Sun, Dec 8, 2013 at 7:26 AM, Antonio Quartulli
-<antonio@meshcoding.com> wrote:
-> On 29/05/12 10:56, Antonio Quartulli wrote:
->> On Tue, May 29, 2012 at 10:35:53 +0200, Joerg Roedel wrote:
->>> Hi Antonio,
->>>
->>> On Sat, May 26, 2012 at 09:09:52AM -0600, Bjorn Helgaas wrote:
->>>> On Sat, May 26, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> wrote:
->>>>> [    1.054279] WARNING: at drivers/pci/search.c:44 pci_find_upstream_pcie_bridge+0x5e/0x70()
->>>>> [    1.054385] Hardware name: Latitude E5420
->>>>> [    1.054457] Modules linked in:
->>>>> [    1.054568] Pid: 1, comm: swapper/0 Not tainted 3.4.0ordex+ #3
->>>>> [    1.054643] Call Trace:
->>>>> [    1.054716]  [<ffffffff81033d4a>] warn_slowpath_common+0x7a/0xb0
->>>>> [    1.054793]  [<ffffffff81033d95>] warn_slowpath_null+0x15/0x20
->>>>> [    1.054869]  [<ffffffff8123899e>] pci_find_upstream_pcie_bridge+0x5e/0x70
->>>>> [    1.054949]  [<ffffffff813babe7>] intel_iommu_device_group+0x77/0x100
->>>>> [    1.055027]  [<ffffffff813b52d5>] add_iommu_group+0x35/0x60
->>>>> [    1.055113]  [<ffffffff813b52a0>] ? bus_set_iommu+0x50/0x50
->>>>> [    1.055191]  [<ffffffff8132c586>] bus_for_each_dev+0x56/0x90
->>>>> [    1.055267]  [<ffffffff813b528b>] bus_set_iommu+0x3b/0x50
->>>>> [    1.055344]  [<ffffffff818c4920>] intel_iommu_init+0xab0/0xb3f
->>>>> [    1.055421]  [<ffffffff81120b26>] ? sys_mkdirat+0x76/0xd0
->>>>> [    1.055499]  [<ffffffff8189b0db>] ? memblock_find_dma_reserve+0x13d/0x13d
->>>>> [    1.055578]  [<ffffffff8189b0ee>] pci_iommu_init+0x13/0x3e
->>>>> [    1.055655]  [<ffffffff810001ca>] do_one_initcall+0x3a/0x170
->>>>> [    1.055732]  [<ffffffff81897c35>] kernel_init+0x148/0x1cc
->>>>> [    1.055807]  [<ffffffff81897588>] ? do_early_param+0x86/0x86
->>>>> [    1.055884]  [<ffffffff814fc914>] kernel_thread_helper+0x4/0x10
->>>>> [    1.055963]  [<ffffffff8105de60>] ? finish_task_switch+0x80/0x110
->>>>> [    1.056040]  [<ffffffff814fafdd>] ? retint_restore_args+0xe/0xe
->>>>> [    1.056126]  [<ffffffff81897aed>] ? start_kernel+0x30b/0x30b
->>>>> [    1.056203]  [<ffffffff814fc910>] ? gs_change+0xb/0xb
->>>
->>> Hmm, this looks like pci_find_upstream_pcie_bridge() found a PCIe device
->>> in the chain which is not a bridge. Can you please post the output of
->>> 'lspci -vvv' and 'lspci -t'?
->>>
->>
->> attached!
->> Some days ago I tried to put some printk in the code and, as far as I can
->> understand, you are right.
->>
->> I hope my lspci output will help!
->>
->> Cheers,
->>
->
-> Hi guys,
->
-> was there any progress about this?
-> Right now I am using linux-3.10.22 and the WARNING is still present.
-> The system seems to be working fine, but I don't know if this issue can
-> trigger side effects or not.
+> > 
+> > 1. The "bus" I/O port address, in the range between 0x1000 and 0xffff
+> > (65535). This is the address used in data frames in the actual bus
+> > transaction going over the PCIe wires. If you have more than one PCIe
+> > host bridge, each of them can normally have a range of up to 65536
+> > addresses. The bus addresses get written into BAR registers of the
+> > device.
+> 
+> Correct. Got this point. So this address should be output of
+> designware outbound address translation unit.
 
-Alex and I prototyped some IOMMU and PCI restructuring [1] to avoid
-this case, but I haven't heard anything lately.
+Right.
 
-Bjorn
+> > 2. The Linux I/O port numbers, between 0x00000 and 0xfffff (1048575).
+> > This is a logical number space that aggregates all bus I/O port numbers.
+> > The first 4096 ports are normally reserved for ISA devices and are
+> > not available for PCIe resources. Each PCI or PCIe host bridge can have
+> > a 0x10000 byte naturally aligned range in here. The common case is that
+> > you have only one host bridge using the range 0x1000-0xffff. If you have
+> > more than one, there may be an offset between them, e.g. the second PCIe
+> > host may have io_offset set to 0x10000, which means that its bus range
+> > 0x1000-0xffff gets translated to Linux port number 0x11000-0x1ffff.
+> > Linux port numbers are visible e.g. in /proc/ioport and /dev/port
+> 
+> Ok, got it. To know more, which binding function maps this logical
+> number space to address space in 4?
 
-[1] http://lkml.kernel.org/r/20130711210326.1701.56478.stgit@bling.home
+There is just a linear offset between the two: PCI_IO_VIRT_BASE.
+This offset is applied in the __io() macro when converting from
+a port number to a pointer in various places in the kernel (inb/outb
+as well as pci_iomap/ioport_map), and the offset is added
+in pci_ioremap_io() when creating the page table entries.
+
+> > 4. The CPU virtual address space: This is an implementation detail
+> > of the kernel, which results in the Linux I/O port numbers 0x0-0xfffff
+> > to be mapped at 0xfee00000-0xfeefffff.
+> > 
+> > > For example in SPEAr1340, physically RAM is mapped on above addresses.
+> > > PCIe address translation unit can accept address only in the range of
+> > > core addresses which are assigned to PCIe RC ie 0x80000000-0x8FFFFFFF.
+> > 
+> > Since this is a physical address, it corresponds to address space 3 in
+> > my list above, and the address you pick here is what you pass to
+> > pci_ioremap_io.
+> 
+> This is what I was expecting. But currently designware driver does not
+> pass this address to pci_ioremap_io.
+> OK.. We will fix it and will send patch.
+
+I think it does handle this correctly, look at
+
+static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+{
+	...
+        if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+                sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+                pci_ioremap_io(sys->io_offset, pp->io.start);
+                global_io_offset += SZ_64K;
+                pci_add_resource_offset(&sys->resources, &pp->io,
+                                        sys->io_offset);
+        }
+	...
+}
+
+I believe this does the right thing, but you have to put the correct
+translation into the 'ranges' property of the host bridge node in DT.
+
+	Arnd
