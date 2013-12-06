@@ -1,99 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:58205 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492Ab3LHGEX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2013 01:04:23 -0500
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:39614 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402Ab3LFDTs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 22:19:48 -0500
+Message-ID: <52A1424F.5060007@gmail.com>
+Date: Thu, 05 Dec 2013 19:19:43 -0800
+From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CABawtvPCf5LBd2j4hHv4iZRTzo4D3HU7vU+nveYOw4sBeoANeA@mail.gmail.com>
-References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
-	<CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
-	<CABawtvPCf5LBd2j4hHv4iZRTzo4D3HU7vU+nveYOw4sBeoANeA@mail.gmail.com>
-Date: Sat, 7 Dec 2013 22:04:22 -0800
-Message-ID: <CAE9FiQXxwzyXffALDDrm4F=9KovfywoqgtJPkn8UzrPzSLZcwg@mail.gmail.com>
-Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ethan Zhao <ethan.kernel@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+To: Yijing Wang <wangyijing@huawei.com>
+CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+	Alex Williamson <alex.williamson@redhat.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
+ and removal
+References: <529E5C0E.80903@gmail.com> <52A04235.9010801@huawei.com>
+In-Reply-To: <52A04235.9010801@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 7, 2013 at 8:55 PM, Ethan Zhao <ethan.kernel@gmail.com> wrote:
-> On Sun, Dec 8, 2013 at 11:19 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Sat, Dec 7, 2013 at 10:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>> This doesn't sound like a chipset bug.  It sounds like exactly what
->>> the spec describes: "Presence Detect State – This bit indicates the
->>> presence of an adapter in the slot, reflected by the logical “OR” of
->>> the Physical Layer in-band presence detect mechanism and, if present,
->>> any out-of-band presence detect mechanism defined for the slot’s
->>> corresponding form factor" (PCIe 3.0, sec 7.8.11).
->>
->> Not sure. the silicon does not report in-band correctly if we turn off
->> pcie link before turn the power of card.
->>
+On 12/05/2013 01:07 AM, Yijing Wang wrote:
+> 
+> handle_link_up_event() and handle_link_down_event() are almost the same,
+> what about use like:
+> handle_link_state_change_event(p_slot, event) to reuse the the common code ?
+> 
 >
-> Obvious there are both in-band and out-of band present detect
-> mechanism on Yinghai's test platform:
->
->> case 1:
->> a. disable pci link
->> b. turn off power of pci cards
->
-> in-band-present = should be 'off ', but still 'on'
-> the hardware/FPGA of Yinghai's test platform has special temper here,
-> it couldn't set in-band-present right if disable pci link first.
-> but other platform could work well when commit 2debd9289997 applied ?
-> non report that.
 
-It happens on all intel platform from nehalem, westmere, sandybridge,
-and ivybridge.
+Sure, I can combine both of them to make it look more like this. Let me know
+it this looks all right.
 
-If the users are careful enough then they would find the presence is
-still set even after
-card is removed.
+static void handle_link_event(struct slot *p_slot, unsigned int req)
+{
+	struct controller *ctrl = p_slot->ctrl;
+	struct power_work_info *info;
 
-but hotadd back later is still working, as attention button pressing
-will still generate interrupt,..
+	info = kmalloc(sizeof(*info), GFP_KERNEL);
+	if (!info) {
+		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
+			 __func__);
+		return;
+	}
+	info->p_slot = p_slot;
+	info->req = req;
+	INIT_WORK(&info->work, pciehp_power_thread);
 
->
->> c. Present bit: card present.
->> d. remove the card.
->
-> out-band-present = off
->
-> present = n-band-present  | out-band-present
->                  on | off
->                = on
-> not work well.
->> e. Present bit: card is present.
->>
->> case 2:
->> a. turn off power of pci cards
->> b. disable pci link
->
-> in-band-present = off
-> works well
->
->> c. Present bit: card present.
->> d. remove the card.
->
-> out-band-present = off
->
->> e. Present bit: card is NOT present.
->
-> present = n-band-present  | out-band-present
->                  off | off
->               = off
-> works well.
+	switch (p_slot->state) {
+	case BLINKINGON_STATE:
+	case BLINKINGOFF_STATE:
+		cancel_delayed_work(&p_slot->work);
+		/* Fall through */
+	case STATIC_STATE:
+		if (req == ENABLE_REQ)
+			p_slot->state = POWERON_STATE;
+		else
+			p_slot->state = POWEROFF_STATE;
 
-We can not check in-band presence directly.
+		queue_work(p_slot->wq, &info->work);
+		break;
+	case POWERON_STATE:
+		if (req == ENABLE_REQ) {
+			ctrl_info(ctrl,
+				  "Link Up ignored on slot(%s): already powering on\n",
+				  slot_name(p_slot));
+			kfree(info);
+		} else {
+			ctrl_info(ctrl,
+				  "Link Down queued on slot(%s): currently getting powered on\n",
+				  slot_name(p_slot));
+			p_slot->state = POWEROFF_STATE;
+			queue_work(p_slot->wq, &info->work);
+		}
+		break;
+	case POWEROFF_STATE:
+		if (req == ENABLE_REQ) {
+			ctrl_info(ctrl,
+				  "Link Up queued on slot(%s): currently getting powered off\n",
+				  slot_name(p_slot));
+			p_slot->state = POWERON_STATE;
+			queue_work(p_slot->wq, &info->work);
+		} else {
+			ctrl_info(ctrl,
+				  "Link Down ignored on slot(%s): already powering off\n",
+				  slot_name(p_slot));
+			kfree(info);
+		}
+		break;
+	default:
+		ctrl_err(ctrl, "Not a valid state on slot(%s)\n",
+			 slot_name(p_slot));
+		kfree(info);
+		break;
+	}
+}
 
-We only can check result after "OR", and out-band presence.
-and out-band presence from FPGA always report correctly.
+Bjorn: was wondering if you'd able to take a look at this patchset in
+this or next week some time. I'm eagerly waiting to address any comments.
 
-Yinghai
+Also, can you please let me know what is the protocol here? Should
+I resubmit just the "v3" of this patch? Or bump up the version of all
+the patches in the patchset to "v3" and resubmit them all?
+
+Thanks & Best Regards,
+
+Rajat
