@@ -1,65 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:58344 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894Ab3LLBzC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 20:55:02 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MXO0036B7ZPH580@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 12 Dec 2013 10:55:01 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Mohit Kumar' <mohit.kumar@st.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
- <0f924b2ad771dd5c3486c81ed524a3f6e7d813b9.1386752447.git.mohit.kumar@st.com>
-In-reply-to: <0f924b2ad771dd5c3486c81ed524a3f6e7d813b9.1386752447.git.mohit.kumar@st.com>
-Subject: Re: [PATCH 11/12] MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
-Date: Thu, 12 Dec 2013 10:55:00 +0900
-Message-id: <002601cef6dd$2adbdb60$80939220$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+Received: from co9ehsobe005.messaging.microsoft.com ([207.46.163.28]:59454
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751268Ab3LFERY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 23:17:24 -0500
+From: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+To: Scott Wood <scottwood@freescale.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Fri, 6 Dec 2013 04:17:15 +0000
+Message-ID: <6A3DF150A5B70D4F9B66A25E3F7C888D07251EFF@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+	 <1385067648.2879.421.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+ <1386288052.7375.100.camel@snotra.buserror.net>
+In-Reply-To: <1386288052.7375.100.camel@snotra.buserror.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 11, 2013 6:39 PM, Mohit Kumar wrote:
-> 
-> Add Mohit Kumar as maintainer for ST SPEAr13xx PCIe driver.
-> 
-> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: linux-pci@vger.kernel.org
-
-Acked-by: Jingoo Han <jg1.han@samsung.com>
-
-Best regards,
-Jingoo Han
-
-> ---
->  MAINTAINERS |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 8285ed4..fd03da6 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6462,6 +6462,12 @@ L:	linux-pci@vger.kernel.org
->  S:	Maintained
->  F:	drivers/pci/host/pci-exynos.c
-> 
-> +PCIE DRIVER FOR ST SPEAR13XX
-> +M:	Mohit Kumar <mohit.kumar@st.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Maintained
-> +F:	drivers/pci/host/pcie-spear13xx.c
-> +
->  PCMCIA SUBSYSTEM
->  P:	Linux PCMCIA Team
->  L:	linux-pcmcia@lists.infradead.org
-> --
-> 1.7.0.1
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogV29vZCBTY290dC1CMDc0
+MjENCj4gU2VudDogRnJpZGF5LCBEZWNlbWJlciAwNiwgMjAxMyA1OjMxIEFNDQo+IFRvOiBCaHVz
+aGFuIEJoYXJhdC1SNjU3NzcNCj4gQ2M6IEFsZXggV2lsbGlhbXNvbjsgbGludXgtcGNpQHZnZXIu
+a2VybmVsLm9yZzsgYWdyYWZAc3VzZS5kZTsgWW9kZXIgU3R1YXJ0LQ0KPiBCMDgyNDg7IGlvbW11
+QGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51eHBw
+Yy0NCj4gZGV2QGxpc3RzLm96bGFicy5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcN
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAwLzkgdjJdIHZmaW8tcGNpOiBhZGQgc3VwcG9ydCBmb3Ig
+RnJlZXNjYWxlIElPTU1VIChQQU1VKQ0KPiANCj4gT24gU3VuLCAyMDEzLTExLTI0IGF0IDIzOjMz
+IC0wNjAwLCBCaGFyYXQgQmh1c2hhbiB3cm90ZToNCj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEFsZXggV2lsbGlhbXNvbiBbbWFpbHRvOmFsZXgud2ls
+bGlhbXNvbkByZWRoYXQuY29tXQ0KPiA+ID4gU2VudDogRnJpZGF5LCBOb3ZlbWJlciAyMiwgMjAx
+MyAyOjMxIEFNDQo+ID4gPiBUbzogV29vZCBTY290dC1CMDc0MjENCj4gPiA+IENjOiBCaHVzaGFu
+IEJoYXJhdC1SNjU3Nzc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGFncmFmQHN1c2UuZGU7
+DQo+ID4gPiBZb2RlciBTdHVhcnQtQjA4MjQ4OyBpb21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9u
+Lm9yZzsNCj4gPiA+IGJoZWxnYWFzQGdvb2dsZS5jb207IGxpbnV4cHBjLSBkZXZAbGlzdHMub3ps
+YWJzLm9yZzsNCj4gPiA+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gPiA+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggMC85IHYyXSB2ZmlvLXBjaTogYWRkIHN1cHBvcnQgZm9yIEZyZWVzY2Fs
+ZQ0KPiA+ID4gSU9NTVUgKFBBTVUpDQo+ID4gPg0KPiA+ID4gT24gVGh1LCAyMDEzLTExLTIxIGF0
+IDE0OjQ3IC0wNjAwLCBTY290dCBXb29kIHdyb3RlOg0KPiA+ID4gPiBPbiBUaHUsIDIwMTMtMTEt
+MjEgYXQgMTM6NDMgLTA3MDAsIEFsZXggV2lsbGlhbXNvbiB3cm90ZToNCj4gPiA+ID4gPiBPbiBU
+aHUsIDIwMTMtMTEtMjEgYXQgMTE6MjAgKzAwMDAsIEJoYXJhdCBCaHVzaGFuIHdyb3RlOg0KPiA+
+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+
+ID4gPiA+ID4gRnJvbTogQWxleCBXaWxsaWFtc29uIFttYWlsdG86YWxleC53aWxsaWFtc29uQHJl
+ZGhhdC5jb21dDQo+ID4gPiA+ID4gPiA+IFNlbnQ6IFRodXJzZGF5LCBOb3ZlbWJlciAyMSwgMjAx
+MyAxMjoxNyBBTQ0KPiA+ID4gPiA+ID4gPiBUbzogQmh1c2hhbiBCaGFyYXQtUjY1Nzc3DQo+ID4g
+PiA+ID4gPiA+IENjOiBqb3JvQDhieXRlcy5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IGFncmFm
+QHN1c2UuZGU7DQo+ID4gPiA+ID4gPiA+IFdvb2QgU2NvdHQtQjA3NDIxOyBZb2RlciBTdHVhcnQt
+QjA4MjQ4Ow0KPiA+ID4gPiA+ID4gPiBpb21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZzsg
+bGludXgtDQo+ID4gPiA+ID4gPiA+IHBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4cHBjLWRldkBs
+aXN0cy5vemxhYnMub3JnOyBsaW51eC0NCj4gPiA+ID4gPiA+ID4ga2VybmVsQHZnZXIua2VybmVs
+Lm9yZzsgQmh1c2hhbiBCaGFyYXQtUjY1Nzc3DQo+ID4gPiA+ID4gPiA+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0ggMC85IHYyXSB2ZmlvLXBjaTogYWRkIHN1cHBvcnQgZm9yDQo+ID4gPiA+ID4gPiA+IEZy
+ZWVzY2FsZSBJT01NVSAoUEFNVSkNCj4gPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+ID4gSXMgVkZJ
+T19JT01NVV9QQU1VX0dFVF9NU0lfQkFOS19DT1VOVCBwZXIgYXBlcnR1cmUgKGllLiBlYWNoDQo+
+ID4gPiA+ID4gPiA+IHZmaW8gdXNlciBoYXMgJENPVU5UIHJlZ2lvbnMgYXQgdGhlaXIgZGlzcG9z
+YWwgZXhjbHVzaXZlbHkpPw0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IE51bWJlciBvZiBtc2kt
+YmFuayBjb3VudCBpcyBzeXN0ZW0gd2lkZSBhbmQgbm90IHBlciBhcGVydHVyZSwNCj4gPiA+ID4g
+PiA+IEJ1dCB3aWxsIGJlDQo+ID4gPiBzZXR0aW5nIHdpbmRvd3MgZm9yIGJhbmtzIGluIHRoZSBk
+ZXZpY2UgYXBlcnR1cmUuDQo+ID4gPiA+ID4gPiBTbyBzYXkgaWYgd2UgYXJlIGRpcmVjdCBhc3Np
+Z25pbmcgMiBwY2kgZGV2aWNlIChib3RoIGhhdmUNCj4gPiA+ID4gPiA+IGRpZmZlcmVudCBpb21t
+dQ0KPiA+ID4gZ3JvdXAsIHNvIDIgYXBlcnR1cmUgaW4gaW9tbXUpIHRvIFZNLg0KPiA+ID4gPiA+
+ID4gTm93IHFlbXUgY2FuIG1ha2Ugb25seSBvbmUgY2FsbCB0byBrbm93IGhvdyBtYW55IG1zaS1i
+YW5rcyBhcmUNCj4gPiA+ID4gPiA+IHRoZXJlIGJ1dA0KPiA+ID4gaXQgbXVzdCBzZXQgc3ViLXdp
+bmRvd3MgZm9yIGFsbCBiYW5rcyBmb3IgYm90aCBwY2kgZGV2aWNlIGluIGl0cw0KPiA+ID4gcmVz
+cGVjdGl2ZSBhcGVydHVyZS4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEknbSBzdGlsbCBjb25mdXNl
+ZC4gIFdoYXQgSSB3YW50IHRvIG1ha2Ugc3VyZSBvZiBpcyB0aGF0IHRoZQ0KPiA+ID4gPiA+IGJh
+bmtzIGFyZSBpbmRlcGVuZGVudCBwZXIgYXBlcnR1cmUuICBGb3IgaW5zdGFuY2UsIGlmIHdlIGhh
+dmUNCj4gPiA+ID4gPiB0d28gc2VwYXJhdGUgdXNlcnNwYWNlIHByb2Nlc3NlcyBvcGVyYXRpbmcg
+aW5kZXBlbmRlbnRseSBhbmQNCj4gPiA+ID4gPiB0aGV5IGJvdGggY2hvc2UgdG8gdXNlIG1zaSBi
+YW5rIHplcm8gZm9yIHRoZWlyIGRldmljZSwgdGhhdCdzDQo+ID4gPiA+ID4gYmFuayB6ZXJvIHdp
+dGhpbiBlYWNoIGFwZXJ0dXJlIGFuZCBkb2Vzbid0IGludGVyZmVyZS4gIE9yDQo+ID4gPiA+ID4g
+YW5vdGhlciB3YXkgdG8gYXNrIGlzIGNhbiBhIG1hbGljaW91cyB1c2VyIGludGVyZmVyZSB3aXRo
+IG90aGVyIHVzZXJzIGJ5DQo+IHVzaW5nIHRoZSB3cm9uZyBiYW5rLg0KPiA+ID4gPiA+IFRoYW5r
+cywNCj4gPiA+ID4NCj4gPiA+ID4gVGhleSBjYW4gaW50ZXJmZXJlLg0KPiA+DQo+ID4gV2FudCB0
+byBiZSBzdXJlIG9mIGhvdyB0aGV5IGNhbiBpbnRlcmZlcmU/DQo+IA0KPiBJZiBtb3JlIHRoYW4g
+b25lIFZGSU8gdXNlciBzaGFyZXMgdGhlIHNhbWUgTVNJIGdyb3VwLCBvbmUgb2YgdGhlIHVzZXJz
+IGNhbiBzZW5kDQo+IE1TSXMgdG8gYW5vdGhlciB1c2VyLCBieSB1c2luZyB0aGUgd3JvbmcgaW50
+ZXJydXB0IHdpdGhpbiB0aGUgYmFuay4gIFVuZXhwZWN0ZWQNCj4gTVNJcyBjb3VsZCBjYXVzZSBt
+aXNiZWhhdmlvciBvciBkZW5pYWwgb2Ygc2VydmljZS4NCj4gDQo+ID4gPj4gIFdpdGggdGhpcyBo
+YXJkd2FyZSwgdGhlIG9ubHkgd2F5IHRvIHByZXZlbnQgdGhhdA0KPiA+ID4gPiBpcyB0byBtYWtl
+IHN1cmUgdGhhdCBhIGJhbmsgaXMgbm90IHNoYXJlZCBieSBtdWx0aXBsZSBwcm90ZWN0aW9uIGNv
+bnRleHRzLg0KPiA+ID4gPiBGb3Igc29tZSBvZiBvdXIgdXNlcnMsIHRob3VnaCwgSSBiZWxpZXZl
+IHByZXZlbnRpbmcgdGhpcyBpcyBsZXNzDQo+ID4gPiA+IGltcG9ydGFudCB0aGFuIHRoZSBwZXJm
+b3JtYW5jZSBiZW5lZml0Lg0KPiA+DQo+ID4gU28gc2hvdWxkIHdlIGxldCB0aGlzIHBhdGNoIHNl
+cmllcyBpbiB3aXRob3V0IHByb3RlY3Rpb24/DQo+IA0KPiBObywgdGhlcmUgc2hvdWxkIGJlIHNv
+bWUgc29ydCBvZiBvcHQtaW4gbWVjaGFuaXNtIHNpbWlsYXIgdG8gSU9NTVUtbGVzcyBWRklPIC0t
+DQo+IGJ1dCBub3QgdGhlIHNhbWUgZXhhY3Qgb25lLCBzaW5jZSBvbmUgaXMgYSBtdWNoIG1vcmUg
+c2VyaW91cyBsb3NzIG9mIGlzb2xhdGlvbg0KPiB0aGFuIHRoZSBvdGhlci4NCg0KQ2FuIHlvdSBw
+bGVhc2UgZWxhYm9yYXRlICJvcHQtaW4gbWVjaGFuaXNtIj8NCg0KPiANCj4gPiA+IEkgdGhpbmsg
+d2UgbmVlZCBzb21lIHNvcnQgb2Ygb3duZXJzaGlwIG1vZGVsIGFyb3VuZCB0aGUgbXNpIGJhbmtz
+IHRoZW4uDQo+ID4gPiBPdGhlcndpc2UgdGhlcmUncyBub3RoaW5nIHByZXZlbnRpbmcgYW5vdGhl
+ciB1c2Vyc3BhY2UgZnJvbQ0KPiA+ID4gYXR0ZW1wdGluZyBhbiBNU0kgYmFzZWQgYXR0YWNrIG9u
+IG90aGVyIHVzZXJzLCBvciBwZXJoYXBzIGV2ZW4gb24NCj4gPiA+IHRoZSBob3N0LiAgVkZJTyBj
+YW4ndCBhbGxvdyB0aGF0LiAgVGhhbmtzLA0KPiA+DQo+ID4gV2UgaGF2ZSB2ZXJ5IGZldyAoMyBN
+U0kgYmFuayBvbiBtb3N0IG9mIGNoaXBzKSwgc28gd2UgY2FuIG5vdCBhc3NpZ24NCj4gPiBvbmUg
+dG8gZWFjaCB1c2Vyc3BhY2UuDQo+IA0KPiBUaGF0IGRlcGVuZHMgb24gaG93IG1hbnkgdXNlcnMg
+dGhlcmUgYXJlLg0KDQpXaGF0IEkgdGhpbmsgd2UgY2FuIGRvIGlzOg0KIC0gUmVzZXJ2ZSBvbmUg
+TVNJIHJlZ2lvbiBmb3IgaG9zdC4gSG9zdCB3aWxsIG5vdCBzaGFyZSBNU0kgcmVnaW9uIHdpdGgg
+R3Vlc3QuDQogLSBGb3IgdXB0byAyIEd1ZXN0IChNQVggbXNpIHdpdGggaG9zdCAtIDEpIGdpdmUg
+dGhlbiBzZXBhcmF0ZSBNU0kgc3ViIHJlZ2lvbnMNCiAtIEFkZGl0aW9uYWwgR3Vlc3Qgd2lsbCBz
+aGFyZSBNU0kgcmVnaW9uIHdpdGggb3RoZXIgZ3Vlc3QuDQoNCkFueSBiZXR0ZXIgc3VnZ2VzdGlv
+biBhcmUgbW9zdCB3ZWxjb21lLg0KDQpUaGFua3MNCi1CaGFyYXQNCj4gDQo+IC1TY290dA0KPiAN
+Cg0K
 
