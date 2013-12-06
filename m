@@ -1,43 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:50647 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756313Ab3LSWa3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 17:30:29 -0500
-Received: by mail-ie0-f170.google.com with SMTP id qd12so2257835ieb.29
-        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 14:30:28 -0800 (PST)
-Date: Thu, 19 Dec 2013 15:30:23 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 0/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
- helpers
-Message-ID: <20131219223023.GD15201@google.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
+Received: from mail-db8lp0185.outbound.messaging.microsoft.com ([213.199.154.185]:25874
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751807Ab3LFCQ7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 21:16:59 -0500
+Received: from mail130-db8 (localhost [127.0.0.1])	by
+ mail130-db8-R.bigfish.com (Postfix) with ESMTP id 70BF2804E2	for
+ <linux-pci@vger.kernel.org>; Fri,  6 Dec 2013 02:16:57 +0000 (UTC)
+Received: from DB8EHSMHS026.bigfish.com (unknown [10.174.8.254])	by
+ mail130-db8.bigfish.com (Postfix) with ESMTP id 7D25F20232	for
+ <linux-pci@vger.kernel.org>; Fri,  6 Dec 2013 02:16:55 +0000 (UTC)
+From: Rajat Jain <rajatjain@juniper.net>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Guenter Roeck <groeck@juniper.net>
+Subject: Getting a new vendor ID / device ID added to
+ "include/linux/pci_ids.h"
+Date: Fri, 6 Dec 2013 02:16:50 +0000
+Message-ID: <393f524403744e7598b594c1a8b3dfeb@DM2PR05MB671.namprd05.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 09:34:53AM +0100, Alexander Gordeev wrote:
-> Alexander Gordeev (9):
->   PCI/MSI/s390: Fix single MSI only check
->   PCI/MSI/s390: Remove superfluous check of MSI type
->   PCI/MSI: Fix return value when populate_msi_sysfs() failed
->   PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
->   PCI/MSI: Make pci_enable_msi/msix() 'nvec' argument type as int
+Hi,
 
-I applied the patches above to pci/msi for v3.14 to get them out of the
-way.
+My company's vendor ID (Juniper Networks: 0x1304) shows up in:
 
->   PCI/MSI: Factor out pci_get_msi_vec_count() interface
->   PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
->   PCI/MSI: Introduce pci_get_msix_vec_count() interface
->   PCI/MSI: Introduce pci_auto_enable_msi*() family helpers
+http://www.pcidatabase.com/vendor_details.php?id=410
+
+However, I do not see that in "include/linux/pci_ids.h".
+
+Can you please let me know what is the procedure to get a vendor / product ID added to this file? I'm assuming it's not as simple as submitting a patch?
+
+Thanks,
+
+Rajat
+
