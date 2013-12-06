@@ -1,75 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:32989 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751566Ab3LLUsh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 15:48:37 -0500
-Date: Thu, 12 Dec 2013 15:48:16 -0500
-From: Jason Cooper <jason@lakedaemon.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Wei Yongjun <weiyj.lk@gmail.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
-Subject: Re: [PATCH v2] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car
- PCI host maintainers
-Message-ID: <20131212204816.GA2609@titan.lakedaemon.net>
-References: <20131211183237.GI4699@google.com>
- <20131212204610.GK4699@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131212204610.GK4699@google.com>
+Received: from mga02.intel.com ([134.134.136.20]:55820 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753967Ab3LFIxQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 Dec 2013 03:53:16 -0500
+From: Lv Zheng <lv.zheng@intel.com>
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Len Brown <len.brown@intel.com>
+Cc: Lv Zheng <lv.zheng@intel.com>, Lv Zheng <zetalog@gmail.com>,
+	<linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>, Feng Tang <feng.tang@intel.com>,
+	sfi-devel@simplefirmware.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 5/6] ACPI/SFI: Fix wrong <acpi/acpi.h> inclusion in SFI/ACPI wrapper - acpi_disabled linkage.
+Date: Fri,  6 Dec 2013 16:52:12 +0800
+Message-Id: <ba1e799968e59a07964a7e693d623b41e6d62110.1386316208.git.lv.zheng@intel.com>
+In-Reply-To: <cover.1386316208.git.lv.zheng@intel.com>
+References: <cover.1385094640.git.lv.zheng@intel.com> <cover.1386316208.git.lv.zheng@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 12, 2013 at 01:46:10PM -0700, Bjorn Helgaas wrote:
-> [+cc Thomas]
-> 
-> On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
-> > If this looks reasonable, I'll merge it via the PCI tree for v3.13.
-> 
-> OK, here's another try.  I'm not actually trying to nominate anybody; I
-> just tried to write down the list we came up with in an earlier discussion [1].
-> 
-> I'd like confirmation from the following people that they approve of being
-> listed here:
-> 
->   Richard Zhu (IMX6)
->   Thomas Petazzoni (MVEBU)
->   Magnus Damm (R-CAR)
-> 
-> I think everybody else listed has already said they approve.
-> 
-> [1] http://lkml.kernel.org/r/CAErSpo5tN==4nSv2u3SUBe_L4VsWn4P7TN+LtrC172Qj1vhtog@mail.gmail.com
-> 
-> 
-> MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
-> 
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Add entries for PCI host controller drivers in drivers/pci/host/.
-> 
-> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>		(DesignWare)
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>	(DesignWare)
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Acked-by: Simon Horman <horms+renesas@verge.net.au>	(R-CAR)
-> Acked-by: Jason Cooper <jason@lakedaemon.net>		(MVEBU)
+In Linux kernel, ACPICA is wrapped and safely exported by CONFIG_ACPI.  So
+all external modules should depend on CONFIG_ACPI rather than using ACPICA
+header directly for stubbing.  But if we moves <acpi/acpi.h> inclusions
+into "#ifdef CONFIG_ACPI", build breakge can help to detect wrong ACPICA
+dependent modules.
 
-If Thomas is ok with it:
+One of the build breakage is:
+arch/x86/pci/mmconfig-shared.c:389:1: error: unknown type name 'acpi_status'
+arch/x86/pci/mmconfig-shared.c:389:47: warning: 'struct acpi_resource' declared inside parameter list [enabled by default]
+arch/x86/pci/mmconfig-shared.c:389:47: warning: its scope is only this definition or declaration, which is probably not what you want [enabled by default]
+arch/x86/pci/mmconfig-shared.c: In function 'check_mcfg_resource':
+arch/x86/pci/mmconfig-shared.c:392:33: error: storage size of 'address' isn't known
+arch/x86/pci/mmconfig-shared.c:393:2: error: unknown type name 'acpi_status'
+arch/x86/pci/mmconfig-shared.c:395:9: error: dereferencing pointer to incomplete type
+arch/x86/pci/mmconfig-shared.c:395:19: error: 'ACPI_RESOURCE_TYPE_FIXED_MEMORY32' undeclared (first use in this function)
+arch/x86/pci/mmconfig-shared.c:395:19: note: each undeclared identifier is reported only once for each function it appears in
+arch/x86/pci/mmconfig-shared.c:397:8: error: dereferencing pointer to incomplete type
+arch/x86/pci/mmconfig-shared.c:399:11: error: 'AE_OK' undeclared (first use in this function)
+arch/x86/pci/mmconfig-shared.c:400:35: error: dereferencing pointer to incomplete type
+arch/x86/pci/mmconfig-shared.c:401:33: error: dereferencing pointer to incomplete type
+arch/x86/pci/mmconfig-shared.c:402:19: error: dereferencing pointer to incomplete type
+arch/x86/pci/mmconfig-shared.c:404:11: error: 'AE_CTRL_TERMINATE' undeclared (first use in this function)
+arch/x86/pci/mmconfig-shared.c:407:10: error: dereferencing pointer to incomplete type
+arch/x86/pci/mmconfig-shared.c:407:20: error: 'ACPI_RESOURCE_TYPE_ADDRESS32' undeclared (first use in this function)
+arch/x86/pci/mmconfig-shared.c:408:10: error: dereferencing pointer to incomplete type
+arch/x86/pci/mmconfig-shared.c:408:20: error: 'ACPI_RESOURCE_TYPE_ADDRESS64' undeclared (first use in this function)
+arch/x86/pci/mmconfig-shared.c:411:2: error: implicit declaration of function 'acpi_resource_to_address64' [-Werror=implicit-function-declaration]
+arch/x86/pci/mmconfig-shared.c:412:2: error: implicit declaration of function 'ACPI_FAILURE' [-Werror=implicit-function-declaration]
+arch/x86/pci/mmconfig-shared.c:414:31: error: 'ACPI_MEMORY_RANGE' undeclared (first use in this function)
+arch/x86/pci/mmconfig-shared.c:392:33: warning: unused variable 'address' [-Wunused-variable]
+arch/x86/pci/mmconfig-shared.c: At top level:
+arch/x86/pci/mmconfig-shared.c:425:1: error: unknown type name 'acpi_status'
+arch/x86/pci/mmconfig-shared.c:425:41: error: unknown type name 'acpi_handle'
+arch/x86/pci/mmconfig-shared.c: In function 'is_acpi_reserved':
+arch/x86/pci/mmconfig-shared.c:447:2: error: implicit declaration of function 'acpi_get_devices' [-Werror=implicit-function-declaration]
+arch/x86/pci/mmconfig-shared.c:447:30: error: 'find_mboard_resource' undeclared (first use in this function)
+arch/x86/pci/mmconfig-shared.c: At top level:
+arch/x86/pci/mmconfig-shared.c:389:20: warning: 'check_mcfg_resource' defined but not used [-Wunused-function]
 
-Double-Plus-Acked-by: Jason Cooper <jason@lakedaemon.net>
+The root cause of this breakage is:
+1. The following commit doesn't protect ACPICA functions like
+   acpi_get_devices()/acpi_walk_resources()/acpi_resource_to_address64() in
+   CONFIG_SFI=y and CONFIG_ACPI=n environment:
+    Commit: 5f0db7a2fb78895a197f64e548333b3bbd433996
+    Author: Feng Tang <feng.tang@intel.com>
+    Subject: SFI: Hook PCI MMCONFIG
+    First check ACPI, and if that fails, ask SFI to find the MCFG.
+   So it actually depends on the logic that in !CONFIG_ACPI builds, code
+   blocks under "if (!acpi_disabled)" will not be linked in.
 
-for the mvebu bits.
+This patch fixes this issue by introducing a stub for MCFG entry checker
+is_acpi_reserved() in !CONFIG_ACPI builds.
 
-thx,
+Signed-off-by: Lv Zheng <lv.zheng@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: Feng Tang <feng.tang@intel.com>
+Cc: sfi-devel@simplefirmware.org
+Cc: linux-pci@vger.kernel.org
+---
+ arch/x86/pci/mmconfig-shared.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Jason.
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 248642f..2c04b22 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -369,6 +369,7 @@ static int __init pci_mmcfg_check_hostbridge(void)
+ 	return !list_empty(&pci_mmcfg_list);
+ }
+ 
++#ifdef CONFIG_ACPI
+ static acpi_status check_mcfg_resource(struct acpi_resource *res, void *data)
+ {
+ 	struct resource *mcfg_res = data;
+@@ -435,6 +436,12 @@ static int is_acpi_reserved(u64 start, u64 end, unsigned not_used)
+ 
+ 	return mcfg_res.flags;
+ }
++#else
++static inline int is_acpi_reserved(u64 start, u64 end, unsigned not_used)
++{
++	return 0;
++}
++#endif
+ 
+ typedef int (*check_reserved_t)(u64 start, u64 end, unsigned type);
+ 
+-- 
+1.7.10
+
