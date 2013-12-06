@@ -1,84 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:53558 "EHLO
-	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752326Ab3LPDqn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 22:46:43 -0500
-Date: Mon, 16 Dec 2013 09:15:44 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: Memory mapping of config space of pcie devices
-Message-ID: <20131216034544.GA2445@pratyush-vbox>
-References: <CAHH3p5+3Zy+YkgDS_1bJ7B84w5iHOh6-QG7LRJXo2WQHREcRHw@mail.gmail.com>
- <CAErSpo59htYoPBoouUfSXAVXwCUQPK-TB_zG0BkE-PLhV=KRbQ@mail.gmail.com>
- <CAHH3p5J7Se8zu64MfoSDkAN_NtOp=qv1DcvWBAa8jWKouo0TXg@mail.gmail.com>
- <CAErSpo5k1KZuaL7jYp1-5YaxjdZseDPrFo64mJcb2tu2PWJowA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <CAErSpo5k1KZuaL7jYp1-5YaxjdZseDPrFo64mJcb2tu2PWJowA@mail.gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754261Ab3LFDUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:20:46 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiri Kosina <trivial@kernel.org>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 05/20] iommu/vt-d, trivial: refine support of 64bit guest address
+Date: Fri,  6 Dec 2013 11:21:08 +0800
+Message-Id: <1386300083-6882-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 15, 2013 at 04:18:23AM +0800, Bjorn Helgaas wrote:
-> [+cc devicetree, linux-arm-kernel]
-> 
-> On Sat, Dec 14, 2013 at 1:05 PM, shiv prakash Agarwal
-> <chhotu.shiv@gmail.com> wrote:
-> > On Sun, Dec 15, 2013 at 12:29 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> On Sat, Dec 14, 2013 at 11:32 AM, shiv prakash Agarwal
-> >> <chhotu.shiv@gmail.com> wrote:
-> >>> Hi All,
-> >>>
-> >>> How devices config spaces are mapped to host memory?
-> >>> Is it being handled by core driver? I could not locate.
-> >>
-> >> The PCI core does not map config space into memory.  That's not even
-> >> possible for the legacy config access methods, e.g., using I/O ports
-> >> 0xcf8 and 0xcfc [1].
-> >>
-> >> If you're wondering about how Linux uses ECAM, that's mostly in
-> >> arch/x86/pci/mmconfig*.  That code does ioremap the ECAM area into
-> >> kernel virtual space, but only for access via pci_read_config_word(),
-> >> pci_write_config_word(), etc.
-> >>
-> >> Bjorn
-> >>
-> >> [1] http://en.wikipedia.org/wiki/PCI_configuration_space#Software_implementation
-> >
-> > Thanks Bjorn for quick reply,
-> >
-> > Above reference says:
-> > During system initialization, firmware determines the base address for
-> > this “stolen” address region and communicates it to the root complex
-> > and to the operating system. This communication method is
-> > implementation-specific, and not defined in the PCI Express
-> > specification.
-> >
-> > How above is implemented on ARM?
-> 
-> On x86, we learn the ECAM address via ACPI (the MCFG table or a host
-> bridge _CBA method).  I don't know how this is done on ARM.  I could
-> imagine it being done via device tree, but I really don't know.
-> Unfortunately both the address discovery and the actual ECAM accesses
-> are in arch-specific code.
+In Intel IOMMU driver, it calculate page table level from adjusted guest
+address width as 'level = (agaw - 30) / 9', which assumes (agaw -30)
+could be divided by 9. On the other hand, 64bit is a valid agaw and
+(64 - 30) can't be divided by 9, so it needs special handling.
 
-Yes, it comes from device tree. DT sends CPU address range allocated
-for cfg transfers. pci_read_config_word and pci_write_config_word
-send bdf and offset. Address translation unit of your RC driver should
-be programmed in such a way that it translates cpu address to the cfg
-address based on bdf and offset.
+This patch enhances Intel IOMMU driver to correctly handle 64bit agaw.
+It's mainly for code readability because there's no hardware supporting
+64bit agaw yet.
 
-You can see one such implementation in drivers/pci/host/pcie-designware.c
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Regards
-Pratyush
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 2398876..70bc071 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -63,6 +63,7 @@
+ #define DEFAULT_DOMAIN_ADDRESS_WIDTH 48
+ 
+ #define MAX_AGAW_WIDTH 64
++#define MAX_AGAW_PFN_WIDTH	(MAX_AGAW_WIDTH - VTD_PAGE_SHIFT)
+ 
+ #define __DOMAIN_MAX_PFN(gaw)  ((((uint64_t)1) << (gaw-VTD_PAGE_SHIFT)) - 1)
+ #define __DOMAIN_MAX_ADDR(gaw) ((((uint64_t)1) << gaw) - 1)
+@@ -106,12 +107,12 @@ static inline int agaw_to_level(int agaw)
+ 
+ static inline int agaw_to_width(int agaw)
+ {
+-	return 30 + agaw * LEVEL_STRIDE;
++	return min_t(int, 30 + agaw * LEVEL_STRIDE, MAX_AGAW_WIDTH);
+ }
+ 
+ static inline int width_to_agaw(int width)
+ {
+-	return (width - 30) / LEVEL_STRIDE;
++	return DIV_ROUND_UP(width - 30, LEVEL_STRIDE);
+ }
+ 
+ static inline unsigned int level_to_offset_bits(int level)
+@@ -141,7 +142,7 @@ static inline unsigned long align_to_level(unsigned long pfn, int level)
+ 
+ static inline unsigned long lvl_to_nr_pages(unsigned int lvl)
+ {
+-	return  1 << ((lvl - 1) * LEVEL_STRIDE);
++	return  1 << min_t(int, (lvl - 1) * LEVEL_STRIDE, MAX_AGAW_PFN_WIDTH);
+ }
+ 
+ /* VT-d pages must always be _smaller_ than MM pages. Otherwise things
+@@ -865,7 +866,6 @@ static int dma_pte_clear_range(struct dmar_domain *domain,
+ 	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
+ 	unsigned int large_page = 1;
+ 	struct dma_pte *first_pte, *pte;
+-	int order;
+ 
+ 	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
+ 	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
+@@ -890,8 +890,7 @@ static int dma_pte_clear_range(struct dmar_domain *domain,
+ 
+ 	} while (start_pfn && start_pfn <= last_pfn);
+ 
+-	order = (large_page - 1) * 9;
+-	return order;
++	return min_t(int, (large_page - 1) * 9, MAX_AGAW_PFN_WIDTH);
+ }
+ 
+ static void dma_pte_free_level(struct dmar_domain *domain, int level,
+-- 
+1.7.10.4
 
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
