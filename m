@@ -1,118 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
-References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com> <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:42746 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756520Ab3LFAiD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 19:38:03 -0500
+Received: by mail-ob0-f170.google.com with SMTP id wp18so3033obc.1
+        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 16:38:02 -0800 (PST)
+Subject: [PATCH v2 2/2] kobject: remove kset from sysfs immediately in
+ kset_unregister()
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 13 Dec 2013 06:21:59 -0700
-Message-ID: <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
- and removal
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Rajat Jain <rajatjain.linux@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Guenter Roeck <linux@roeck-us.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Neil Horman <nhorman@tuxdriver.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Zdenek Kabelac <zkabelac@redhat.com>
+Date: Thu, 05 Dec 2013 17:38:00 -0700
+Message-ID: <20131206003759.28684.63772.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20131206003508.28684.1337.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131206003508.28684.1337.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 12, 2013 at 11:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Dec 12, 2013 at 2:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+There's no "unlink from sysfs" interface for ksets, so I think callers of
+kset_unregister() expect the kset to be removed from sysfs immediately,
+without waiting for the last reference to be released.
 
->>> * Define and use interrupt events for linkup / linkdown.
->>
->> This seems like a reasonable idea.
->>
->> In the ExpressCard Standard (Rel 2.0, Feb 2009), Section 6.3.1 and Figure
->> 6-2 talk about a "Link Detect" or "Link Train Detected" interrupt being
->> used to trigger the ACPI hotplug flow for a non-PCIe-aware OS.  I'm not
->> sure what interrupt this refers to.  The Slot Control Data Link Layer State
->> Changed interrupt (which you're using) sounds similar, but my guess is that
->> "Link Detect" is a generic term for chipset-specific functionality to
->> generate an SMI for hotplug events.
->>
->> But then Section 6.3.1.1 suggests that a PCIe-aware OS would use "Presence
->> Detect Changed" instead.  I don't know why a different mechanism would be
->> suggested, although DLLSC was added after PCIe 1.0, so older hardware
->> wouldn't have a PCIe-standard link detection mechanism.
->>
->> In any event, I think having the Link Status Data Link Layer Link Active
->> bit set would certainly imply that a device is present, so it seems
->> reasonable to use DLLLA in addition to Presence Detect State.
->
-> Yes, if Attention attention is not there and Surprise removal is supported.
+This patch makes the sysfs removal happen immediately, so the caller may
+create a new kset with the same name as soon as kset_unregister() returns.
+Without this, every caller has to call "kobject_del(&kset->kobj)" first
+unless it knows it will never create a new kset with the same name.
 
-I'm not convinced that it's a good idea to make link state support
-conditional on the attention button and surprise removal bits.  That
-might cover Rajat's particular case, but I don't think there's a
-logical connection between link state and those bits, so making it
-conditional might just make the code more complicated and less general
-for no good reason.
+This sometimes shows up on module unload and reload, where the reload fails
+because it tries to create a kobject with the same name as one from the
+original load that still exists.  CONFIG_DEBUG_KOBJECT_RELEASE=y makes this
+problem easier to hit.
 
->>> @@ -620,13 +610,10 @@ int pciehp_power_off_slot(struct slot * slot)
->>>       u16 cmd_mask;
->>>       int retval;
->>>
->>> -     /* Disable the link at first */
->>> -     pciehp_link_disable(ctrl);
->>> -     /* wait the link is down */
->>> -     if (ctrl->link_active_reporting)
->>> -             pcie_wait_link_not_active(ctrl);
->>> -     else
->>> -             msleep(1000);
->>
->> 2debd9289997 ("PCI: pciehp: Disable/enable link during slot power off/on")
->> added this code that disables the link to fix problems.  So we need to make
->> sure we don't reintroduce those problems by leaving the link enabled.
->>
->> One problem was spurious "card present/not present" messages.  I suspect
->> that topology has an attention button, and I'm not sure it makes sense to
->> enable the presence detect interrupt in that case.  As far as I can tell,
->> if there's an attention button, the OS should not do anything on card
->> insertion or removal; it should only do something when the attention button
->> is pressed.  So maybe we can deal with the message issue that way.
->
-> Agreed.
->
->>
->> The changelog also hints that disabling the link might be needed to allow a
->> repeater to be reset, but I don't know the details.  I don't remember any
->> spec language that requires the link to be disabled on hotplug; maybe this
->> is a platform-specific quirk.
->
-> yes, that is workaround to to reset repeater in between.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ Documentation/kobject.txt |    5 ++++-
+ lib/kobject.c             |    1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-What does the "other OS" do about this repeater?  Did you verify that
-it disables the link when powering off the slot?  If we were smarter
-about presence detect, I wonder if that would be enough.
+diff --git a/Documentation/kobject.txt b/Documentation/kobject.txt
+index c5182bb2c16c..f87241dfed87 100644
+--- a/Documentation/kobject.txt
++++ b/Documentation/kobject.txt
+@@ -342,7 +342,10 @@ kset use:
+ 
+ When you are finished with the kset, call:
+   void kset_unregister(struct kset *kset);
+-to destroy it.
++to destroy it.  This removes the kset from sysfs and decrements its reference
++count.  When the reference count goes to zero, the kset will be released.
++Because other references to the kset may still exist, the release may happen
++after kset_unregister() returns.
+ 
+ An example of using a kset can be seen in the
+ samples/kobject/kset-example.c file in the kernel tree.
+diff --git a/lib/kobject.c b/lib/kobject.c
+index bc73312ac797..40e3b2c0abae 100644
+--- a/lib/kobject.c
++++ b/lib/kobject.c
+@@ -757,6 +757,7 @@ void kset_unregister(struct kset *k)
+ {
+ 	if (!k)
+ 		return;
++	kobject_del(&k->kobj);
+ 	kobject_put(&k->kobj);
+ }
+ 
 
-> Also we can get rid of annoying aer during power off slot.
-
-I don't know the details of this issue.  It may be possible to avoid
-the AER in some way other than turning off the link.
-
-> Also at least other os will turn on link after turn on the power,
-> as hotplug is working if BIOS have link disabled when boot system
-> without card inserted.
-
-If the link is disabled after turning on power, it certainly makes
-sense to me to enable the link.  I don't think Rajat changed the
-pciehp_power_on_slot() path, so this part should still work.
-
-> I suggest that link event handling will be enabled automatically when
-> attention button is not there and surprise removal is supported.
-> And when that enabled, should disable Present event handling.
-
-I think it should be as simple as possible, i.e., if we have an
-attention button, ignore presence detect.  If we make it more
-complicated that necessary, we run the risk of enforcing assumptions
-that may not hold in the future.
-
-Bjorn
