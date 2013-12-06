@@ -1,89 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Agustin Barto <abarto@gmail.com>
-Subject: [PATCH] PCI / ACPI: Install wakeup notify handlers for all PCI devs with ACPI
-Date: Fri, 27 Dec 2013 01:17:22 +0100
-Message-ID: <2145694.TZRgVXpeL1@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751749Ab3LFDUx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:20:53 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiri Kosina <trivial@kernel.org>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 07/20] iommu/vt-d, trivial: check suitable flag in function detect_intel_iommu()
+Date: Fri,  6 Dec 2013 11:21:10 +0800
+Message-Id: <1386300083-6882-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Flag irq_remapping_enabled is only set by intel_enable_irq_remapping(),
+which is called after detect_intel_iommu(). So we should check flag
+disable_irq_remap instead of irq_remapping_enabled in function
+detect_intel_iommu().
 
-It turns out that some BIOSes don't report wakeup GPEs through
-_PRW, but use them for signaling wakeup anyway, which causes GPE
-storms to occur on some systems after resume from system suspend.
-This issue has been uncovered by commit d2e5f0c16ad6 (ACPI / PCI:
-Rework the setup and cleanup of device wakeup) during the 3.9
-development cycle.
-
-Work around the problem by installing wakeup notify handlers for all
-PCI devices with ACPI support (i.e. having ACPI companions) regardless
-of whether or not the BIOS reports ACPI wakeup support for them.  The
-presence of the wakeup notify handlers alone is not harmful in any
-way if there are no events for them to handle (they are simply never
-executed then), but on some systems they are needed to take care of
-spurious events.
-
-Fixes: d2e5f0c16ad6 (ACPI / PCI: Rework the setup and cleanup of device wakeup)
-References: https://bugzilla.kernel.org/show_bug.cgi?id=63021
-Reported-and-tested-by: Agustin Barto <abarto@gmail.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/pci-acpi.c |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ drivers/iommu/dmar.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -325,29 +325,32 @@ static struct acpi_device *acpi_pci_find
- static void pci_acpi_setup(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	acpi_handle handle = ACPI_HANDLE(dev);
--	struct acpi_device *adev;
-+	struct acpi_device *adev = ACPI_COMPANION(dev);
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index c17dbf7..70612a9 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -560,7 +560,7 @@ int __init detect_intel_iommu(void)
  
--	if (acpi_bus_get_device(handle, &adev) || !adev->wakeup.flags.valid)
-+	if (!adev)
-+		return;
-+
-+	pci_acpi_add_pm_notifier(adev, pci_dev);
-+	if (!adev->wakeup.flags.valid)
- 		return;
+ 		dmar = (struct acpi_table_dmar *) dmar_tbl;
  
- 	device_set_wakeup_capable(dev, true);
- 	acpi_pci_sleep_wake(pci_dev, false);
--
--	pci_acpi_add_pm_notifier(adev, pci_dev);
- 	if (adev->wakeup.flags.run_wake)
- 		device_set_run_wake(dev, true);
- }
+-		if (ret && irq_remapping_enabled && cpu_has_x2apic &&
++		if (ret && !disable_irq_remap && cpu_has_x2apic &&
+ 		    dmar->flags & 0x1)
+ 			pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
  
- static void pci_acpi_cleanup(struct device *dev)
- {
--	acpi_handle handle = ACPI_HANDLE(dev);
--	struct acpi_device *adev;
-+	struct acpi_device *adev = ACPI_COMPANION(dev);
-+
-+	if (!adev)
-+		return;
- 
--	if (!acpi_bus_get_device(handle, &adev) && adev->wakeup.flags.valid) {
-+	pci_acpi_remove_pm_notifier(adev);
-+	if (adev->wakeup.flags.valid) {
- 		device_set_wakeup_capable(dev, false);
- 		device_set_run_wake(dev, false);
--		pci_acpi_remove_pm_notifier(adev);
- 	}
- }
- 
+-- 
+1.7.10.4
 
