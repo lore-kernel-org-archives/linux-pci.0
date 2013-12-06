@@ -1,90 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:55272 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822Ab3LMVOa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 16:14:30 -0500
-Received: by mail-ie0-f175.google.com with SMTP id x13so3642817ief.20
-        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 13:14:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com>
- <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
- <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com> <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 13 Dec 2013 14:14:10 -0700
-Message-ID: <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
- and removal
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
+Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755453Ab3LFDVV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 Dec 2013 22:21:21 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Guenter Roeck <linux@roeck-us.net>
-Content-Type: text/plain; charset=US-ASCII
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	dmaengine@vger.kernel.org
+Subject: [Patch Part1 V2 15/20] iommu/vt-d: fix access after free issue in function free_dmar_iommu()
+Date: Fri,  6 Dec 2013 11:21:18 +0800
+Message-Id: <1386300083-6882-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 13, 2013 at 12:04 PM, Rajat Jain <rajatjain@juniper.net> wrote:
->> On Thu, Dec 12, 2013 at 11:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > On Thu, Dec 12, 2013 at 2:44 PM, Bjorn Helgaas <bhelgaas@google.com>
+Function free_dmar_iommu() may access domain->iommu_lock by
+	spin_unlock_irqrestore(&domain->iommu_lock, flags);
+after freeing corresponding domain structure.
 
-> Also, I think the device removal should _always_ be initiated (if not done already) whenever the Link goes down for any reason (irrespective of whether the attention button is implemented or not, or whether the surprise events are supported or not). I think this is logical as it makes no sense for the software to think the device is accessible when in reality it is not. In fact I think we should also remove the checks in pciehp_disable_slot() that ensure that the adapter should be populated and latch should be closed.
+Sample stack dump:
+[    8.912818] =========================
+[    8.917072] [ BUG: held lock freed! ]
+[    8.921335] 3.13.0-rc1-gerry+ #12 Not tainted
+[    8.926375] -------------------------
+[    8.930629] swapper/0/1 is freeing memory ffff880c23b56040-ffff880c23b5613f, with a lock still held there!
+[    8.941675]  (&(&domain->iommu_lock)->rlock){......}, at: [<ffffffff81dc775c>] init_dmars+0x72c/0x95b
+[    8.952582] 1 lock held by swapper/0/1:
+[    8.957031]  #0:  (&(&domain->iommu_lock)->rlock){......}, at: [<ffffffff81dc775c>] init_dmars+0x72c/0x95b
+[    8.968487]
+[    8.968487] stack backtrace:
+[    8.973602] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.13.0-rc1-gerry+ #12
+[    8.981556] Hardware name: Intel Corporation LH Pass ........../SVRBD-ROW_T, BIOS SE5C600.86B.99.99.x059.091020121352 09/10/2012
+[    8.994742]  ffff880c23b56040 ffff88042dd33c98 ffffffff815617fd ffff88042dd38b28
+[    9.003566]  ffff88042dd33cd0 ffffffff810a977a ffff880c23b56040 0000000000000086
+[    9.012403]  ffff88102c4923c0 ffff88042ddb4800 ffffffff81b1e8c0 ffff88042dd33d28
+[    9.021240] Call Trace:
+[    9.024138]  [<ffffffff815617fd>] dump_stack+0x4d/0x66
+[    9.030057]  [<ffffffff810a977a>] debug_check_no_locks_freed+0x15a/0x160
+[    9.037723]  [<ffffffff811aa1c2>] kmem_cache_free+0x62/0x5b0
+[    9.044225]  [<ffffffff81465e27>] domain_exit+0x197/0x1c0
+[    9.050418]  [<ffffffff81dc7788>] init_dmars+0x758/0x95b
+[    9.056527]  [<ffffffff81dc7dfa>] intel_iommu_init+0x351/0x438
+[    9.063207]  [<ffffffff81d8a711>] ? iommu_setup+0x27d/0x27d
+[    9.069601]  [<ffffffff81d8a739>] pci_iommu_init+0x28/0x52
+[    9.075910]  [<ffffffff81000342>] do_one_initcall+0x122/0x180
+[    9.082509]  [<ffffffff81077738>] ? parse_args+0x1e8/0x320
+[    9.088815]  [<ffffffff81d850e8>] kernel_init_freeable+0x1e1/0x26c
+[    9.095895]  [<ffffffff81d84833>] ? do_early_param+0x88/0x88
+[    9.102396]  [<ffffffff8154f580>] ? rest_init+0xd0/0xd0
+[    9.108410]  [<ffffffff8154f58e>] kernel_init+0xe/0x130
+[    9.114423]  [<ffffffff81574a2c>] ret_from_fork+0x7c/0xb0
+[    9.120612]  [<ffffffff8154f580>] ? rest_init+0xd0/0xd0
 
-I agree.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
->> What does the "other OS" do about this repeater?  Did you verify that it
->> disables the link when powering off the slot?  If we were smarter about
->> presence detect, I wonder if that would be enough.
->>
->> > Also we can get rid of annoying aer during power off slot.
->>
->> I don't know the details of this issue.  It may be possible to avoid the
->> AER in some way other than turning off the link.
->
-> Sorry, I could not understand what we are talking about here. I'd appreciate if you could elaborate if you see this as a problem related to the patch?
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 1a20171..fc3473b 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1266,7 +1266,7 @@ static void vm_domain_exit(struct dmar_domain *domain);
+ static void free_dmar_iommu(struct intel_iommu *iommu)
+ {
+ 	struct dmar_domain *domain;
+-	int i;
++	int i, count;
+ 	unsigned long flags;
+ 
+ 	if ((iommu->domains) && (iommu->domain_ids)) {
+@@ -1275,13 +1275,14 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
+ 			clear_bit(i, iommu->domain_ids);
+ 
+ 			spin_lock_irqsave(&domain->iommu_lock, flags);
+-			if (--domain->iommu_count == 0) {
++			count = --domain->iommu_count;
++			spin_unlock_irqrestore(&domain->iommu_lock, flags);
++			if (count == 0) {
+ 				if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE)
+ 					vm_domain_exit(domain);
+ 				else
+ 					domain_exit(domain);
+ 			}
+-			spin_unlock_irqrestore(&domain->iommu_lock, flags);
+ 		}
+ 	}
+ 
+-- 
+1.7.10.4
 
-I assume Yinghai means that when we power off the slot, if AER is
-still enabled, it may report errors caused by the link going down.
-PCIe r3.0 sec. 3.2.1 says some of these cases must not be considered
-errors if the link is disabled, the port is associated with a
-hot-pluggable slot, etc.  Maybe his platform doesn't follow those
-rules, or maybe there's some other AER error that's not covered by
-them.
-
-It's related to your patch because you are removing the link disable,
-and Yinghai says that if we leave the link enabled, he gets unwanted
-AER errors when powering off the slot.  Sorry if this was all obvious
-to you.  I don't know any more details.  It'd be nice to know the
-exact AER errors and the PCIe capability info.  Then we might be able
-to figure out a way to leave the link enabled while still suppressing
-the AER errors.
-
-> Once again: the way I interpret this is:
-> * Always enable Link events.
-> * Disable presence events if attention button is present.
-
-That sounds like a good plan to me.
-
-I'm also dubious about this use of presence detect:
-
-    pciehp_power_thread
-      pciehp_enable_slot
-        pciehp_get_adapter_status
-          pciehp_readw(ctrl, PCI_EXP_SLTSTA, &slot_status)
-          *status = !!(slot_status & PCI_EXP_SLTSTA_PDS)
-        board_added
-          pciehp_power_on_slot
-
-because we apparently look at PCI_EXP_SLTSTA_PDS when the slot is
-powered off.  Only in-band presence detection is required by spec, and
-in-band detection only works when power is applied.  So I think this
-pciehp_get_adapter_status() call should probably just be removed.
-
-Bjorn
