@@ -1,58 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:43812 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623Ab3LLVua (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:30 -0500
-From: Marek Vasut <marex@denx.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/7] PCI: imx6: Make reset-gpio optional
-Date: Thu, 12 Dec 2013 22:38:28 +0100
-Cc: "Zhu Richard-R65037" <r65037@freescale.com>,
-	Tim Harvey <tharvey@gateworks.com>,
+Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:9252 "EHLO
+	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754427Ab3LFABC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 19:01:02 -0500
+Message-ID: <1386288052.7375.100.camel@snotra.buserror.net>
+Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+From: Scott Wood <scottwood@freescale.com>
+To: Bharat Bhushan <Bharat.Bhushan@freescale.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-References: <1386757818-5154-1-git-send-email-marex@denx.de> <CAErSpo7C4rJZBuBUDRN6L_fkQZNthfeY=_oJ=_WCcqAxoj2Xig@mail.gmail.com> <CAErSpo682q3TkjsZvtR4Qhvvwfmx7FUB2QZTfQV+3Q+nK0C-7w@mail.gmail.com>
-In-Reply-To: <CAErSpo682q3TkjsZvtR4Qhvvwfmx7FUB2QZTfQV+3Q+nK0C-7w@mail.gmail.com>
+	"agraf@suse.de" <agraf@suse.de>,
+	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Thu, 5 Dec 2013 18:00:52 -0600
+In-Reply-To: <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+	 <1385067648.2879.421.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201312122238.28413.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 12, 2013 at 10:20:30 PM, Bjorn Helgaas wrote:
-> On Thu, Dec 12, 2013 at 2:07 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Thu, Dec 12, 2013 at 11:25 AM, Marek Vasut <marex@denx.de> wrote:
-> >> Bjorn, would you mind picking 2/7...6/7 of this series so we are done
-> >> with those? I will re-post 1/7 as a self-standing patch afterwards, it
-> >> has no impact on the rest of the series.
-> > 
-> > Sure.  I can't really evaluate these myself, so I'm looking for acks
-> > from Richard or Shawn.
-> > 
-> > I noticed Pratyush, Tim, and Harro had some questions the first time
-> > around, and I don't know whether they got resolved.
+On Sun, 2013-11-24 at 23:33 -0600, Bharat Bhushan wrote:
 > 
-> By the way, I tried to apply patches 2-6 to my pci/host-imx6 branch,
-> but patch 6 ("PCI: imx6: Fix bugs in PCIe startup code") didn't apply
-> cleanly.
+> > -----Original Message-----
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Friday, November 22, 2013 2:31 AM
+> > To: Wood Scott-B07421
+> > Cc: Bhushan Bharat-R65777; linux-pci@vger.kernel.org; agraf@suse.de; Yoder
+> > Stuart-B08248; iommu@lists.linux-foundation.org; bhelgaas@google.com; linuxppc-
+> > dev@lists.ozlabs.org; linux-kernel@vger.kernel.org
+> > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+> >
+> > On Thu, 2013-11-21 at 14:47 -0600, Scott Wood wrote:
+> > > On Thu, 2013-11-21 at 13:43 -0700, Alex Williamson wrote:
+> > > > On Thu, 2013-11-21 at 11:20 +0000, Bharat Bhushan wrote:
+> > > > >
+> > > > > > -----Original Message-----
+> > > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > > > Sent: Thursday, November 21, 2013 12:17 AM
+> > > > > > To: Bhushan Bharat-R65777
+> > > > > > Cc: joro@8bytes.org; bhelgaas@google.com; agraf@suse.de; Wood
+> > > > > > Scott-B07421; Yoder Stuart-B08248;
+> > > > > > iommu@lists.linux-foundation.org; linux- pci@vger.kernel.org;
+> > > > > > linuxppc-dev@lists.ozlabs.org; linux- kernel@vger.kernel.org;
+> > > > > > Bhushan Bharat-R65777
+> > > > > > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale
+> > > > > > IOMMU (PAMU)
+> > > > > >
+> > > > > > Is VFIO_IOMMU_PAMU_GET_MSI_BANK_COUNT per aperture (ie. each
+> > > > > > vfio user has $COUNT regions at their disposal exclusively)?
+> > > > >
+> > > > > Number of msi-bank count is system wide and not per aperture, But will be
+> > setting windows for banks in the device aperture.
+> > > > > So say if we are direct assigning 2 pci device (both have different iommu
+> > group, so 2 aperture in iommu) to VM.
+> > > > > Now qemu can make only one call to know how many msi-banks are there but
+> > it must set sub-windows for all banks for both pci device in its respective
+> > aperture.
+> > > >
+> > > > I'm still confused.  What I want to make sure of is that the banks
+> > > > are independent per aperture.  For instance, if we have two separate
+> > > > userspace processes operating independently and they both chose to
+> > > > use msi bank zero for their device, that's bank zero within each
+> > > > aperture and doesn't interfere.  Or another way to ask is can a
+> > > > malicious user interfere with other users by using the wrong bank.
+> > > > Thanks,
+> > >
+> > > They can interfere.
 > 
-> I pushed the branch to
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host
-> -imx6 if you want to try it yourself.
+> Want to be sure of how they can interfere?
 
-That's because of Fabio's patch. I will rebase and repost, thanks.
+If more than one VFIO user shares the same MSI group, one of the users
+can send MSIs to another user, by using the wrong interrupt within the
+bank.  Unexpected MSIs could cause misbehavior or denial of service.
 
-Best regards,
-Marek Vasut
+> >>  With this hardware, the only way to prevent that
+> > > is to make sure that a bank is not shared by multiple protection contexts.
+> > > For some of our users, though, I believe preventing this is less
+> > > important than the performance benefit.
+> 
+> So should we let this patch series in without protection?
+
+No, there should be some sort of opt-in mechanism similar to IOMMU-less
+VFIO -- but not the same exact one, since one is a much more serious
+loss of isolation than the other.
+
+> > I think we need some sort of ownership model around the msi banks then.
+> > Otherwise there's nothing preventing another userspace from attempting an MSI
+> > based attack on other users, or perhaps even on the host.  VFIO can't allow
+> > that.  Thanks,
+> 
+> We have very few (3 MSI bank on most of chips), so we can not assign
+> one to each userspace.
+
+That depends on how many users there are.
+
+-Scott
+
+
+
