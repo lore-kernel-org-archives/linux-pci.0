@@ -1,151 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f51.google.com ([209.85.213.51]:57895 "EHLO
-	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836Ab3LJXIv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 18:08:51 -0500
-Received: by mail-yh0-f51.google.com with SMTP id c41so4446994yho.38
-        for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 15:08:51 -0800 (PST)
-Date: Tue, 10 Dec 2013 16:08:47 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 10/11] PCI/MSI: Convert pci_msix_table_size() to a
- public interface
-Message-ID: <20131210230847.GG4699@google.com>
-References: <cover.1385399393.git.agordeev@redhat.com>
- <4c879b0928ded8b4c9d2fab3fc413b98d34d8c7c.1385399393.git.agordeev@redhat.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:45248 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752301Ab3LFAfP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 19:35:15 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so30404426ieb.22
+        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 16:35:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4c879b0928ded8b4c9d2fab3fc413b98d34d8c7c.1385399393.git.agordeev@redhat.com>
+In-Reply-To: <20131206000117.GA21358@kroah.com>
+References: <20131008201915.19377.34185.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131008202016.19377.17182.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131203180425.GC15279@kroah.com> <20131203224143.GA19962@google.com> <20131206000117.GA21358@kroah.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 5 Dec 2013 17:34:54 -0700
+Message-ID: <CAErSpo5zWigf=b41uA=OBaFsCb3DNxXFj+2RoD1X8vSqTKDQ4g@mail.gmail.com>
+Subject: Re: [PATCH 1/2] kobject: remove kset from sysfs immediately in kset_unregister()
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Zdenek Kabelac <zkabelac@redhat.com>,
+	Matt Domsch <Matt_Domsch@dell.com>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 10:09:59AM +0100, Alexander Gordeev wrote:
-> Make pci_msix_table_size() function to return a negative errno
-> if device does not support MSI-X interrupts. After this update
-> pci_msix_table_size() can fail and callers must always check
-> the returned value.
-> 
-> This update is needed to create a consistent MSI-X counterpart
-> for pci_get_msi_cap() MSI interface. Device drivers can use this
-> function to obtain maximum number of MSI-X interrupts the device
-> supports and i.e. use that number in a following call to
-> pci_enable_msix() interface.
+On Thu, Dec 5, 2013 at 5:01 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Tue, Dec 03, 2013 at 03:41:43PM -0700, Bjorn Helgaas wrote:
+>> [+cc Matt, Tejun]
+>>
+>> On Tue, Dec 03, 2013 at 10:04:25AM -0800, Greg Kroah-Hartman wrote:
+>> > On Tue, Oct 08, 2013 at 02:20:16PM -0600, Bjorn Helgaas wrote:
+>> > > There's no explicit "unlink from sysfs" interface for ksets, so I think
+>> > > callers of kset_unregister() expect the kset to be removed from sysfs
+>> > > immediately, without waiting for the last reference to be released.
+>> > >
+>> > > This patch makes the sysfs removal happen immediately, so the caller may
+>> > > create a new kset with the same name as soon as kset_unregister() returns.
+>> > >
+>> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> >
+>> > With the PCI MSI attribute change, this patch is no longer needed,
+>> > right?
+>>
+>> Well, yes and no.  The attached patch extends Russell's delayed kobject
+>> release to make the delay somewhat random.  I *think* that should be
+>> valid, but correct me if I'm wrong.
+>
+> Heh, I like it, mind if I queue it up?
 
-If pci_msix_table_size() is a counterpart to pci_get_msi_cap(), can we make
-the names similar?
+Sure, that'd be fine.  I'll resend these two patches with my sign-off
+and updated changelogs.
 
-> The only user of pci_msix_table_size() function is PCI-Express
-> port driver, which is also updated by this change.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Reviewed-by: Tejun Heo <tj@kernel.org>
-> ---
->  Documentation/PCI/MSI-HOWTO.txt |   13 +++++++++++++
->  drivers/pci/msi.c               |   12 ++++++++++--
->  drivers/pci/pcie/portdrv_core.c |    5 +++--
->  include/linux/pci.h             |    2 +-
->  4 files changed, 27 insertions(+), 5 deletions(-)
-> 
-> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> index 1fe4900..5955389 100644
-> --- a/Documentation/PCI/MSI-HOWTO.txt
-> +++ b/Documentation/PCI/MSI-HOWTO.txt
-> @@ -243,6 +243,19 @@ MSI-X Table.  This address is mapped by the PCI subsystem, and should not
->  be accessed directly by the device driver.  If the driver wishes to
->  mask or unmask an interrupt, it should call disable_irq() / enable_irq().
->  
-> +4.3.4 pci_msix_table_size
-> +
-> +int pci_msix_table_size(struct pci_dev *dev)
-> +
-> +This function could be used to retrieve number of entries in the device
-> +MSI-X table.
-> +
-> +If this function returns a negative number, it indicates the device is
-> +not capable of sending MSI-Xs.
-> +
-> +If this function returns a positive number, it indicates the maximum
-> +number of MSI-X interrupt vectors that could be allocated.
-> +
->  4.4 Handling devices implementing both MSI and MSI-X capabilities
->  
->  If a device implements both MSI and MSI-X capabilities, it can
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index e4b02ac..6fe0add 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -932,17 +932,23 @@ EXPORT_SYMBOL(pci_disable_msi);
->  /**
->   * pci_msix_table_size - return the number of device's MSI-X table entries
->   * @dev: pointer to the pci_dev data structure of MSI-X device function
-> - */
-> +
-> + * This function returns the number of device's MSI-X table entries and
-> + * therefore the number of MSI-X vectors device is capable to send.
-> + * It returns a negative errno if the device is not capable sending MSI-X
-> + * interrupts.
-> + **/
->  int pci_msix_table_size(struct pci_dev *dev)
->  {
->  	u16 control;
->  
->  	if (!dev->msix_cap)
-> -		return 0;
-> +		return -EINVAL;
->  
->  	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
->  	return msix_table_size(control);
->  }
-> +EXPORT_SYMBOL(pci_msix_table_size);
->  
->  /**
->   * pci_enable_msix - configure device's MSI-X capability structure
-> @@ -972,6 +978,8 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
->  		return status;
->  
->  	nr_entries = pci_msix_table_size(dev);
-> +	if (nr_entries < 0)
-> +		return nr_entries;
->  	if (nvec > nr_entries)
->  		return nr_entries;
->  
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 08d131f..5bebeec 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -80,8 +80,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
->  	u32 reg32;
->  
->  	nr_entries = pci_msix_table_size(dev);
-> -	if (!nr_entries)
-> -		return -EINVAL;
-> +	if (nr_entries < 0)
-> +		return nr_entries;
-> +	BUG_ON(!nr_entries);
->  	if (nr_entries > PCIE_PORT_MAX_MSIX_ENTRIES)
->  		nr_entries = PCIE_PORT_MAX_MSIX_ENTRIES;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 9ab1692..8af1217 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1172,7 +1172,7 @@ static inline void pci_disable_msi(struct pci_dev *dev)
->  
->  static inline int pci_msix_table_size(struct pci_dev *dev)
->  {
-> -	return 0;
-> +	return -ENOSYS;
->  }
->  static inline int pci_enable_msix(struct pci_dev *dev,
->  				  struct msix_entry *entries, int nvec)
-> -- 
-> 1.7.7.6
-> 
+>> With the random delay patch, it's easy to trigger the "sysfs: cannot
+>> create duplicate filename" error, e.g., by unloading and reloading the
+>> edd module, because the module unload only waits for the /sys/module/edd
+>> object to be released.  Other objects, such as the /sys/firmware/edd
+>> kset, may be released later.
+>>
+>> Modules like edd could be changed to explicitly call kobject_del() on
+>> the kset kobject.  Maybe that's a better approach, so we consistently
+>> use kobject_del() to remove things from sysfs.  But I don't know whether
+>> it's really useful to allow the kset to hang around in sysfs after
+>> kset_unregister(), and it's sort of subtle to track down problems like
+>> this.
+>>
+>> Several other kset_unregister() callers have this situation, so if we
+>> don't change it to call kobject_del() internally, maybe we should add a
+>> note to Documentation/kobject.txt about calling kobject_del() first.
+>> The existing hint only talks about using it when you need a two-stage
+>> delete, which isn't really the case here.
+>>
+>> If we *do* decide to change kset_unregister(), I have an updated
+>> documentation patch that makes it more clear that the release may
+>> happen after kset_unregister() returns.
+>
+> Ok, I'll take this patch, it makes sense on the module unload path for
+> example.  Thanks for the explanation.
