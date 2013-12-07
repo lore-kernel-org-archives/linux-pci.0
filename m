@@ -1,97 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.active-venture.com ([67.228.131.205]:55841 "EHLO
-	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711Ab3LBDpw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 22:45:52 -0500
-Message-ID: <529C026E.2000302@roeck-us.net>
-Date: Sun, 01 Dec 2013 19:45:50 -0800
-From: Guenter Roeck <linux@roeck-us.net>
+Received: from mail.skyhub.de ([78.46.96.112]:34962 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753073Ab3LGRpp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 7 Dec 2013 12:45:45 -0500
+Date: Sat, 7 Dec 2013 18:45:42 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Ethan Zhao <ethan.kernel@gmail.com>
+Cc: rui wang <ruiv.wang@gmail.com>, Lance Ortiz <lance.ortiz@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, lance_ortiz@hotmail.com,
+	jiang.liu@intel.com, tony.luck@intel.com, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, gong.chen@intel.com
+Subject: Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
+Message-ID: <20131207174542.GB4183@pd.tnic>
+References: <CANVTcTYJS3eAUA4bHVCrKgz=7rQpJZHCiBcw3JM=j0FbCsgQJw@mail.gmail.com>
+ <CABawtvPz5sZxhFnQru8Uc6UwF-O8HyGred_RWqBBeT615Qj8sQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>, 'Joe Perches' <joe@perches.com>,
-	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	'Andrew Morton' <akpm@linux-foundation.org>,
-	'Andy Whitcroft' <apw@canonical.com>,
-	linux-serial@vger.kernel.org
-Subject: Re: [PATCH 1/5] serial: 8250_pci: use DEFINE_PCI_DEVICE_TABLE macro
-References: <000601ceebdc$ee148de0$ca3da9a0$%han@samsung.com> <20131128040750.GA29917@kroah.com> <006001ceebfa$c85a1020$590e3060$%han@samsung.com> <1385617213.12210.5.camel@joe-AO722> <20131128055328.GA565@kroah.com> <1385619863.12210.14.camel@joe-AO722> <001d01ceec <000801ceeef2$71d23160$55769420$%han@samsung.com>
-In-Reply-To: <000801ceeef2$71d23160$55769420$%han@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CABawtvPz5sZxhFnQru8Uc6UwF-O8HyGred_RWqBBeT615Qj8sQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/01/2013 04:07 PM, Jingoo Han wrote:
-> On Friday, November 29, 2013 10:34 AM, Jingoo Han wrote:
->> On Thursday, November 28, 2013 3:24 PM, Joe Perches wrote:
->>> On Wed, 2013-11-27 at 21:53 -0800, 'Greg Kroah-Hartman' wrote:
->>>> On Wed, Nov 27, 2013 at 09:40:13PM -0800, Joe Perches wrote:
->>>>> On Thu, 2013-11-28 at 14:29 +0900, Jingoo Han wrote:
->>>>>> On Thursday, November 28, 2013 1:08 PM, Greg Kroah-Hartman wrote:
->>>>>>> On Thu, Nov 28, 2013 at 10:55:35AM +0900, Jingoo Han wrote:
->>>>>>>> This macro is used to create a struct pci_device_id array.
->>>>>>>
->>>>>>> Yeah, and it's a horrid macro that deserves to be removed, please don't
->>>>>>> use it in more places.
->>>>>>>
->>>>>>> Actually, if you could just remove it, that would be best, sorry, I'm
->>>>>>> not going to take these patches.
->>>>>>
->>>>>> (+cc Joe Perches, Andrew Morton, Andy Whitcroft)
->>>>>>
->>>>>> Hi Joe Perches,
->>>>>>
->>>>>> Would you fix checkpatch.pl about DEFINE_PCI_DEVICE_TABLE?
->>>>>> Currently, checkpatch.pl guides to use DEFINE_PCI_DEVICE_TABLE
->>>>>> as below.
->>>>>>
->>>>>>    WARNING: Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id
->>>>>>    #331: FILE: drivers/usb/host/ehci-pci.c:331:
->>>>>>    +static const struct pci_device_id pci_ids [] = { {
->>>>>>
->>>>>> However, Greg Kroah-Hartman mentioned that DEFINE_PCI_DEVICE_TABLE
->>>>>> shouldn't be used anymore.
->>>>>>
->>>>>> So, would you change checkpatch.pl in order to guide to use
->>>>>> struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE?
->>>>>>
->>>>>> For example,
->>>>>>    WARNING: Use struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE
->>>>>
->>>>> The documentation doesn't agree with Greg.
->>> []
->>>> I say just remove it, I should have done that years ago when I was the
->>>> PCI maintainer, just never got around to it.  No other bus has something
->>>> like this for their device ids, why should PCI be "special"?
->>>
->>> Anyone else have an opinion?
->>>
->>> I don't care one way or another, but please, one way
->>> not two.
->>
+On Fri, Dec 06, 2013 at 11:11:07PM +0800, Ethan Zhao wrote:
+> > @@ -63,10 +63,10 @@ TRACE_EVENT(aer_event,
+> >
+> >         TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+> >                 __get_str(dev_name),
+> > -               __entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
+> > -                       __entry->severity == HW_EVENT_ERR_FATAL ?
+> > +               __entry->severity == AER_CORRECTABLE ? "Corrected" :
+> > +                       __entry->severity == AER_FATAL ?
+> >                         "Fatal" : "Uncorrected",
+> 
+> Why not             "Fatal" : "Non-fatal",   ?  per the PCIe spec,
+> 'Fatal' and 'Non-fatal' are sub-category of "
+> Uncorrected". But here "Uncorrected" means "Non-fatal".
 
-Same here.
+... and just to denote that, it'll probably be best to say:
 
->> (+cc Bjorn Helgaas, linux-pci)
->>
->> Then, how about the following steps?
->>
->> 1. Fix ./Documentation/PCI/pci.txt as below.
->>     (Jingoo Han)
->>     The ID table is an array of struct pci_device_id entries ending with an
->>     -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
->>     -method of declaring the table.  Each entry consists of:
->>     +all-zero entry; Each entry consists of:
->>
->> 2. Fix ./scripts/checkpatch.pl in order to guide to use
->>      struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE.
->>      (Joe Perches)
->
-> If all DEFINE_PCI_DEVICE_TABLEs are replaced with 'const struct pci_device_id'
-> and these patches are merged through 'driver-core.git', it will be not
-> necessary to fix ./scripts/checkpatch.pl.
->
-Why not ?
+		__entry->severity == AER_CORRECTABLE ? "Corrected" :
+			__entry->severity == AER_FATAL ?
+			   "Fatal" : "Uncorrected, non-fatal"
 
-Guenter
+right?
 
+Btw, Rui, you patch is whitespace-damaged so next time please try
+sending from a real mail client which doesn't mangle whitespace and not
+from the gmail web interface. Sending the patch to yourself and trying
+to apply it is always a good test for that.
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
