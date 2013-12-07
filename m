@@ -1,67 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:50213 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752357Ab3LTQUj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Dec 2013 11:20:39 -0500
-Message-ID: <52B46E4D.6020805@ti.com>
-Date: Fri, 20 Dec 2013 11:20:29 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:41959 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755562Ab3LGWXp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 17:23:45 -0500
+Received: by mail-ie0-f176.google.com with SMTP id at1so3695740iec.7
+        for <linux-pci@vger.kernel.org>; Sat, 07 Dec 2013 14:23:45 -0800 (PST)
 MIME-Version: 1.0
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: pcie designware question
-References: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com> <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com> <2CC2A0A4A178534D93D5159BF3BCB66189F96BAC51@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189F96BAC51@EAPEX1MAIL1.st.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <20131009163304.62b439a9@endymion.delvare>
+References: <20131009163304.62b439a9@endymion.delvare>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 7 Dec 2013 15:23:25 -0700
+Message-ID: <CAErSpo6ikaTXXvWzX_Z0=mabwD4aedoLoSVjsd+_E5kV9YJpuA@mail.gmail.com>
+Subject: Re: [PATCH] PCI/portdrv: Set master earlier
+To: Jean Delvare <jdelvare@suse.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Takashi Iwai <tiwai@suse.de>, Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/19/2013 11:21 PM, Mohit KUMAR DCG wrote:
->>> I have reviewed the designware.c code and the glue logic driver
->>> pci-exynos.c and couldn't understand few things.
->>>
->>> 1. Our pcie ss is based on designware core and following addresses are
->>> not listed in our IP's  data manual. Where is defined? It does show
->>> the rest of the offsets defined in  drivers/pci/host/designware.c and
->>>
->>> #define PCIE_ATU_VIEWPORT               0x900
->>> #define PCIE_ATU_REGION_INBOUND         (0x1 << 31)
->>> #define PCIE_ATU_REGION_OUTBOUND        (0x0 << 31)
->>> #define PCIE_ATU_REGION_INDEX1          (0x1 << 0)
->>> #define PCIE_ATU_REGION_INDEX0          (0x0 << 0)
->>> #define PCIE_ATU_CR1                    0x904
->>> #define PCIE_ATU_TYPE_MEM               (0x0 << 0)
->>> #define PCIE_ATU_TYPE_IO                (0x2 << 0)
->>> #define PCIE_ATU_TYPE_CFG0              (0x4 << 0)
->>> #define PCIE_ATU_TYPE_CFG1              (0x5 << 0)
->>> #define PCIE_ATU_CR2                    0x908
->>> #define PCIE_ATU_ENABLE                 (0x1 << 31)
->>> #define PCIE_ATU_BAR_MODE_ENABLE        (0x1 << 30)
->>> #define PCIE_ATU_LOWER_BASE             0x90C
->>> #define PCIE_ATU_UPPER_BASE             0x910
->>> #define PCIE_ATU_LIMIT                  0x914
->>> #define PCIE_ATU_LOWER_TARGET           0x918
->>> #define PCIE_ATU_BUS(x)                 (((x) & 0xff) << 24)
->>> #define PCIE_ATU_DEV(x)                 (((x) & 0x1f) << 19)
->>> #define PCIE_ATU_FUNC(x)                (((x) & 0x7) << 16)
->>> #define PCIE_ATU_UPPER_TARGET           0x91C
-> - These are Synopsys specific port logic registers. You can find these registers at offset 0x200
->   under port logic registers section in Synpsys PCIe DM.  There can be minor difference in the name
-> convention as it is called 'iATU Viewport Register' in controller version3.70 and 'iATU Index Register'
->   in version 4.11.
-> By the way which version of IP manual you are referring?
+[+cc Yinghai]
+
+On Wed, Oct 9, 2013 at 8:33 AM, Jean Delvare <jdelvare@suse.de> wrote:
+> Since kernel 3.12-rc3, I get the following warning messages at boot:
+> pcieport 0000:00:07.0: driver skip pci_set_master, fix it!
+> pcieport 0000:00:01.0: driver skip pci_set_master, fix it!
+
+cf3e1feba7f9 ("PCI: Workaround missing pci_set_master in pci drivers")
+added this warning and, at the same time, turned on bus mastering.
+
+There didn't seem to be any reason for the warning and no reason why
+bus mastering should be enabled in the driver rather than the core, so
+fbeeb822f6f4 ("PCI: Drop warning about drivers that don't use
+pci_set_master()") just dropped the warning.
+
+This should resolve the problem, so I don't think there's a need for
+this patch.  Let me know if otherwise.
+
+Bjorn
+
+> These are:
+> 00:01.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 1 (rev 13)
+> 00:07.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 7 (rev 13)
+>
+> Calling pci_set_master() immediately after pci_enable_device() makes
+> the warning messages go away.
+>
+> Signed-off-by: Jean Delvare <jdelvare@suse.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+> Please note that I am far from certain that this is the correct fix.
+> Another approach would be to disable the device if
+> get_port_device_capability() returns no capabilities. I suppose the
+> device would then be re-enabled later if really needed. What's the best
+> approach?
+>
+>  drivers/pci/pcie/portdrv_core.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- linux-3.12-rc4.orig/drivers/pci/pcie/portdrv_core.c 2013-09-24 00:41:09.000000000 +0200
+> +++ linux-3.12-rc4/drivers/pci/pcie/portdrv_core.c      2013-10-09 15:43:54.205943783 +0200
+> @@ -366,13 +366,13 @@ int pcie_port_device_register(struct pci
+>         status = pci_enable_device(dev);
+>         if (status)
+>                 return status;
+> +       pci_set_master(dev);
+>
+>         /* Get and check PCI Express port services */
+>         capabilities = get_port_device_capability(dev);
+>         if (!capabilities)
+>                 return 0;
+>
+> -       pci_set_master(dev);
+>         /*
+>          * Initialize service irqs. Don't use service devices that
+>          * require interrupts if there is no way to generate them.
 >
 >
-Mohit,
-
-I have checked with our hardware team and they confirmed that ATU 
-registers are not implemented in our PCIE
-SS. So we need to have  a way to disable this in the core driver so 
-that  we can handle it in our glue layer driver.
-But this will be a regression on the existing driver. How do we handle this?
-
-Murali
-
-
+> --
+> Jean Delvare
+> Suse L3 Support
