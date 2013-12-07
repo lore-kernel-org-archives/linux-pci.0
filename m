@@ -1,110 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51490 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751872Ab3LJGy7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 01:54:59 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 3/5] PCI: Try to allocate mem64 above 4G at first
-Date: Mon,  9 Dec 2013 22:54:42 -0800
-Message-Id: <1386658484-15774-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
-References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:44934 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754630Ab3LGSgH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 13:36:07 -0500
+Received: by mail-ie0-f171.google.com with SMTP id ar20so3636889iec.2
+        for <linux-pci@vger.kernel.org>; Sat, 07 Dec 2013 10:36:07 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
+References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 7 Dec 2013 11:35:46 -0700
+Message-ID: <CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
+Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On system with more pcie cards, we do not have enough range under 4G
-to allocate those pci devices.
+On Fri, Dec 6, 2013 at 1:22 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> During hotplug test on platform, found slot status register does not
+> report present status correctly. That present bit does not get cleared
+> even after that card is removed.
+>
+> That problem is caused by commit:
+> | commit 2debd9289997fc5d1c0043b41201a8b40d5e11d0
+> |
+> |    PCI: pciehp: Disable/enable link during slot power off/on
+>
+> It looks like chipset bug, that PresDet bit is "OR" operation between
+> sideband input from FPGA, and chipset inband detection from pcie link.
 
-On 64bit system, we could try to allocate mem64 above 4G at first,
-and fall back to below 4g if it can not find any above 4g.
+This doesn't sound like a chipset bug.  It sounds like exactly what
+the spec describes: "Presence Detect State – This bit indicates the
+presence of an adapter in the slot, reflected by the logical “OR” of
+the Physical Layer in-band presence detect mechanism and, if present,
+any out-of-band presence detect mechanism defined for the slot’s
+corresponding form factor" (PCIe 3.0, sec 7.8.11).
 
-x86 32bit without X86_PAE support will have bottom set to 0, because
-resource_size_t is 32bit.
-For 32bit kernel that resource_size_t is 64bit when pae is support.
-we are safe because iomem_resource is limited to 32bit according to
-x86_phys_bits.
+So I want to fix this pciehp problem, but between 2debd9289997 and
+this patch, pciehp_power_off_slot() is accumulating warts that make it
+look like we're just reacting to things that break rather than making
+a robust design to start with.
 
--v2: update bottom assigning to make it clear for non-pae support machine.
--v3: Bjorn's change:
-        use MAX_RESOURCE instead of -1
-        use start/end instead of bottom/max
-        for all arch instead of just x86_64
--v4: updated after PCI_MAX_RESOURCE_32 change.
--v5: restore io handling to use PCI_MAX_RESOURCE_32 as limit.
--v6: checking pcibios_resource_to_bus return for every bus res, to decide it
-	if we need to try high at first.
-     It supports all arches instead of just x86_64.
--v7: split 4G limit change out to another patch according to Bjorn.
-     also use pci_clip_resource instead.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 3ad4fd9..45d8de5 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -99,6 +99,8 @@ void pci_bus_remove_resources(struct pci_bus *bus)
- }
- 
- static struct pci_bus_region pci_mem_32 = {0, 0xffffffff};
-+static struct pci_bus_region pci_mem_64 = {(resource_size_t)(1ULL<<32),
-+					   (resource_size_t)(-1ULL)};
- 
- static void pci_clip_resource(struct resource *res, struct pci_bus *bus,
- 			      struct pci_bus_region *region)
-@@ -149,6 +151,7 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 
- 	pci_bus_for_each_resource(bus, r, i) {
- 		struct resource avail;
-+		int try_again = 0;
- 
- 		if (!r)
- 			continue;
-@@ -165,15 +168,23 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 
- 		/*
- 		 * don't allocate too high if the pref mem doesn't
--		 * support 64bit.
-+		 * support 64bit, also if this is a 64-bit mem
-+		 * resource, try above 4GB first
- 		 */
- 		avail = *r;
--		if (!(res->flags & IORESOURCE_MEM_64)) {
-+		if (res->flags & IORESOURCE_MEM_64) {
-+			pci_clip_resource(&avail, bus, &pci_mem_64);
-+			if (!resource_size(&avail))
-+				avail = *r;
-+			else
-+				try_again = 1;
-+		} else {
- 			pci_clip_resource(&avail, bus, &pci_mem_32);
- 			if (!resource_size(&avail))
- 				continue;
- 		}
- 
-+again:
- 		/* Ok, try it out.. */
- 		ret = allocate_resource(r, res, size,
- 					max(avail.start, r->start ? : min),
-@@ -181,6 +192,12 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 					alignf, alignf_data);
- 		if (ret == 0)
- 			break;
-+
-+		if (try_again) {
-+			avail = *r;
-+			try_again = 0;
-+			goto again;
-+		}
- 	}
- 	return ret;
- }
--- 
-1.8.4
-
+> It does not like if we disable pcie link at first and power off
+> other side device, and it has input from inband detection
+> always 1.
+>
+> Workaround: Try turn on link a while after power off.
+>
+> After this patch, PresDet report correct status when removing or adding
+> card later.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+> Cc: <stable@vger.kernel.org> 3.4+
+>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |    9 +++++++++
+>  1 file changed, 9 insertions(+)
+>
+> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
+> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -637,6 +637,15 @@ int pciehp_power_off_slot(struct slot *
+>         }
+>         ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>                  pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
+> +
+> +       /*
+> +        * Enable link for a while so chipset could settle down
+> +        * inband presence detection logic
+> +        */
+> +       pciehp_link_enable(ctrl);
+> +       msleep(20);
+> +       pciehp_link_disable(ctrl);
+> +
+>         return 0;
+>  }
+>
