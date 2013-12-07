@@ -1,51 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51927 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933067Ab3LDTuH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 14:50:07 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 04/12] PCI: Destroy pci dev only once
-Date: Wed, 04 Dec 2013 21:03:05 +0100
-Message-ID: <1616994.RLUOIZgreK@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQUURT40gXGFhPxqHvWTxVdWbm=70uh14U=dp=FgTOGt-g@mail.gmail.com>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org> <2691826.V0kc3nrim3@vostro.rjw.lan> <CAE9FiQUURT40gXGFhPxqHvWTxVdWbm=70uh14U=dp=FgTOGt-g@mail.gmail.com>
+Received: from mail-yh0-f52.google.com ([209.85.213.52]:56567 "EHLO
+	mail-yh0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754289Ab3LGWuS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 17:50:18 -0500
+Received: by mail-yh0-f52.google.com with SMTP id i72so1567689yha.11
+        for <linux-pci@vger.kernel.org>; Sat, 07 Dec 2013 14:50:18 -0800 (PST)
+Date: Sat, 7 Dec 2013 15:50:12 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: valentine.barshak@cogentembedded.com,
+	yongjun_wei@trendmicro.com.cn, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar: fix return value check in rcar_pci_probe()
+Message-ID: <20131207225012.GC7901@google.com>
+References: <CAPgLHd-XTnQXdK7H2uLbGW1ftxNB_nHwzcNCoiCjpXsB5X3HnA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPgLHd-XTnQXdK7H2uLbGW1ftxNB_nHwzcNCoiCjpXsB5X3HnA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 03, 2013 06:19:28 PM Yinghai Lu wrote:
-> On Sat, Nov 30, 2013 at 5:05 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Saturday, November 30, 2013 02:40:30 PM Yinghai Lu wrote:
-> >
-> > And this is not enough as I said, can you please stop ignoring me openly?
-> >
-> > You've already commented the last patch I posted, so why don't we finish
-> > that discussion first?
+On Tue, Nov 19, 2013 at 11:40:28AM +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > 
-> No, i did not mean that.
+> In case of error, the function devm_ioremap_resource() returns ERR_PTR()
+> and never returns NULL. The NULL test in the return value check should
+> be replaced with IS_ERR().
 > 
-> I resent the whole patchset as I added pci_clip_resource() and that
-> will need to revise several critial patches, and Bjorn does not like
-> to have patches to be attached format.
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-I see.
+Applied with Jingoo's reviewed-by to pci/host-rcar for v3.14, thanks!
 
-> Also in the patcheset head mail, i did state that you have another
-> solution using
-> lock.
+For drivers/pci/host/*, I normally look for an ack from the responsible
+person,  but this patch is trivial enough that I'm fine taking it without
+that.  But for more significant changes, I don't have any notes about who
+should own pci-rcar-gen2.c.  Valentine could be a candidate since he added
+it in the first place?  Or Jingoo?
+
+Bjorn
+
+> ---
+>  drivers/pci/host/pci-rcar-gen2.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> And your patch is quite big, please give me some time to digest it.
-
-Yes, it is, please take your time. :-)
-
-Thanks,
-Rafael
-
+> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+> index cbaa5c4..96d1182 100644
+> --- a/drivers/pci/host/pci-rcar-gen2.c
+> +++ b/drivers/pci/host/pci-rcar-gen2.c
+> @@ -276,8 +276,8 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
+>  
+>  	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>  	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
+> -	if (!reg)
+> -		return -ENODEV;
+> +	if (IS_ERR(reg))
+> +		return PTR_ERR(reg);
+>  
+>  	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>  	if (!mem_res || !mem_res->start)
+> 
