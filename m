@@ -1,116 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:53369
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756797Ab3LTKHK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Dec 2013 05:07:10 -0500
-From: Dongsheng Wang <dongsheng.wang@freescale.com>
-To: <rjw@rjwysocki.net>, <bhelgaas@google.com>
-CC: <roy.zang@freescale.com>, <scottwood@freescale.com>,
-	<galak@kernel.crashing.org>, <linux-pm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	Wang Dongsheng <dongsheng.wang@freescale.com>
-Subject: [RFC] linux/pci: move pci_platform_pm_ops to linux/pci.h
-Date: Fri, 20 Dec 2013 18:03:52 +0800
-Message-ID: <1387533832-34554-1-git-send-email-dongsheng.wang@freescale.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:54403 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754039Ab3LGBOt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 20:14:49 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>
+Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
+Date: Sat, 07 Dec 2013 02:27:51 +0100
+Message-ID: <1519414.GDlGZFCTSR@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <33026900.FbCAopDPFz@vostro.rjw.lan> <CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wang Dongsheng <dongsheng.wang@freescale.com>
+On Thursday, December 05, 2013 10:52:36 PM Yinghai Lu wrote:
+> On Mon, Dec 2, 2013 at 6:49 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >
+> > Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
+> >   for a device and its parent bridge via remove_callback().
+> >
+> >   In that case both code paths attempt to acquire
+> >   pci_remove_rescan_mutex.  If the child device removal acquires
+> >   it first, there will be no problems.  However, if the parent
+> >   bridge removal acquires it first, it will eventually execute
+> >   pci_destroy_dev() for the child device, but that device will
+> >   not be freed yet due to the reference held by the concurrent
+> >   child removal.  Consequently, both pci_stop_bus_device() and
+> >   pci_remove_bus_device() will be executed for that device
+> >   unnecessarily and pci_destroy_dev() will see a corrupted list
+> >   head in that object.  Moreover, an excess put_device() will
+> >   be executed for that device in that case which may lead to a
+> >   use-after-free in the final kobject_put() done by
+> >   sysfs_schedule_callback_work().
+> >
+> > Index: linux-pm/include/linux/pci.h
+> > ===================================================================
+> > --- linux-pm.orig/include/linux/pci.h
+> > +++ linux-pm/include/linux/pci.h
+> > @@ -321,6 +321,7 @@ struct pci_dev {
+> >         unsigned int    multifunction:1;/* Part of multi-function device */
+> >         /* keep track of device state */
+> >         unsigned int    is_added:1;
+> > +       unsigned int    is_gone:1;
+> >         unsigned int    is_busmaster:1; /* device is busmaster */
+> >         unsigned int    no_msi:1;       /* device may not use msi */
+> >         unsigned int    block_cfg_access:1;     /* config space access is blocked */
+> > Index: linux-pm/drivers/pci/remove.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/pci/remove.c
+> > +++ linux-pm/drivers/pci/remove.c
+> > @@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
+> >
+> >  static void pci_destroy_dev(struct pci_dev *dev)
+> >  {
+> > +       dev->is_gone = 1;
+> >         device_del(&dev->dev);
+> >
+> >         down_write(&pci_bus_sem);
+> > @@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
+> >   */
+> >  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+> >  {
+> > -       pci_stop_bus_device(dev);
+> > -       pci_remove_bus_device(dev);
+> > +       if (!dev->is_gone) {
+> > +               pci_stop_bus_device(dev);
+> > +               pci_remove_bus_device(dev);
+> > +       }
+> >  }
+> >  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+> >
+> 
+> Yes, above change should address sys double remove problem.
 
-make Freescale platform use pci_platform_pm_ops struct.
+I've just realized that we don't need a new flag for that, though.
 
-Signed-off-by: Wang Dongsheng <dongsheng.wang@freescale.com>
----
+It looks like we only need to check dev->dev.kobj.parent and return if that is
+NULL, because that means pci_destroy_dev() has run for that device already
+(I'm wondering why device_del() doesn't clear dev->parent, BTW, it looks like
+it should do that?).
 
-If device's not set power state, we will use this interface to put the
-device's into the correct state.
+Of course, that still is going to be racy if we don't hold
+pci_remove_rescan_mutex around pci_stop_and_remove_bus_device() in every code
+path using it (or use another similar synchronization mechanism).
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 9c91ecc..48f8b1a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -33,36 +33,6 @@ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
- #endif
- int pci_probe_reset_function(struct pci_dev *dev);
- 
--/**
-- * struct pci_platform_pm_ops - Firmware PM callbacks
-- *
-- * @is_manageable: returns 'true' if given device is power manageable by the
-- *                 platform firmware
-- *
-- * @set_state: invokes the platform firmware to set the device's power state
-- *
-- * @choose_state: returns PCI power state of given device preferred by the
-- *                platform; to be used during system-wide transitions from a
-- *                sleeping state to the working state and vice versa
-- *
-- * @sleep_wake: enables/disables the system wake up capability of given device
-- *
-- * @run_wake: enables/disables the platform to generate run-time wake-up events
-- *		for given device (the device's wake-up capability has to be
-- *		enabled by @sleep_wake for this feature to work)
-- *
-- * If given platform is generally capable of power managing PCI devices, all of
-- * these callbacks are mandatory.
-- */
--struct pci_platform_pm_ops {
--	bool (*is_manageable)(struct pci_dev *dev);
--	int (*set_state)(struct pci_dev *dev, pci_power_t state);
--	pci_power_t (*choose_state)(struct pci_dev *dev);
--	int (*sleep_wake)(struct pci_dev *dev, bool enable);
--	int (*run_wake)(struct pci_dev *dev, bool enable);
--};
--
--int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
- void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
- void pci_power_up(struct pci_dev *dev);
- void pci_disable_enabled_device(struct pci_dev *dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1084a15..20e07b8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -365,6 +365,37 @@ struct pci_dev {
- 	size_t romlen; /* Length of ROM if it's not from the BAR */
- };
- 
-+/**
-+ * struct pci_platform_pm_ops - Firmware PM callbacks
-+ *
-+ * @is_manageable: returns 'true' if given device is power manageable by the
-+ *                 platform firmware
-+ *
-+ * @set_state: invokes the platform firmware to set the device's power state
-+ *
-+ * @choose_state: returns PCI power state of given device preferred by the
-+ *                platform; to be used during system-wide transitions from a
-+ *                sleeping state to the working state and vice versa
-+ *
-+ * @sleep_wake: enables/disables the system wake up capability of given device
-+ *
-+ * @run_wake: enables/disables the platform to generate run-time wake-up events
-+ *		for given device (the device's wake-up capability has to be
-+ *		enabled by @sleep_wake for this feature to work)
-+ *
-+ * If given platform is generally capable of power managing PCI devices, all of
-+ * these callbacks are mandatory.
-+ */
-+struct pci_platform_pm_ops {
-+	bool (*is_manageable)(struct pci_dev *dev);
-+	int (*set_state)(struct pci_dev *dev, pci_power_t state);
-+	pci_power_t (*choose_state)(struct pci_dev *dev);
-+	int (*sleep_wake)(struct pci_dev *dev, bool enable);
-+	int (*run_wake)(struct pci_dev *dev, bool enable);
-+};
-+
-+int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
-+
- static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
- {
- #ifdef CONFIG_PCI_IOV
--- 
-1.8.5
-
+Thanks,
+Rafael
 
