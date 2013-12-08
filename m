@@ -1,44 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:37087 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880Ab3LNEoX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 23:44:23 -0500
-Received: by mail-bk0-f52.google.com with SMTP id u14so1682546bkz.11
-        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 20:44:22 -0800 (PST)
+Received: from mail.skyhub.de ([78.46.96.112]:38542 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751850Ab3LHQOC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 8 Dec 2013 11:14:02 -0500
+Date: Sun, 8 Dec 2013 17:13:57 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Joe Perches <joe@perches.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lance Ortiz <lance.ortiz@hp.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI, AER: Add a TLP header print helper
+Message-ID: <20131208161357.GF4338@pd.tnic>
+References: <1386515571-23252-1-git-send-email-bp@alien8.de>
+ <1386518724.31845.66.camel@joe-AO722>
 MIME-Version: 1.0
-Date: Sat, 14 Dec 2013 12:44:22 +0800
-Message-ID: <CAPgLHd_kw4PNiJOCmiDBG2R86UPpD0DJRBtcD4WRVpzVdmjG1Q@mail.gmail.com>
-Subject: [PATCH -next] PCI: msi: fix sparse non static symbol warning
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: bhelgaas@google.com, zhenzhong.duan@oracle.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1386518724.31845.66.camel@joe-AO722>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Sun, Dec 08, 2013 at 08:05:24AM -0800, Joe Perches wrote:
+> On Sun, 2013-12-08 at 16:12 +0100, Borislav Petkov wrote:
+> > From: Borislav Petkov <bp@suse.de>
+> > 
+> > ... and call it instead of duplicating the large printk format
+> > statement.
+> > 
+> > No functionality change.
+> 
+> You do change the output.
 
-Fixes the following sparse warnings:
+That's ok. "TLP Header:" is the proper way to print it anyway.
 
-drivers/pci/msi.c:119:6: warning:
- symbol 'default_restore_msi_irq' was not declared. Should it be static?
+-- 
+Regards/Gruss,
+    Boris.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/pci/msi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c0baa3d..3fcc1e6 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -116,7 +116,7 @@ void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
- 	return default_teardown_msi_irqs(dev);
- }
- 
--void default_restore_msi_irq(struct pci_dev *dev, int irq)
-+static void default_restore_msi_irq(struct pci_dev *dev, int irq)
- {
- 	struct msi_desc *entry;
- 
-
+Sent from a fat crate under my desk. Formatting is fine.
+--
