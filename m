@@ -1,162 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:28717 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754988Ab3LPSsD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 13:48:03 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v4 8/9] PCI/MSI: Introduce pci_get_msix_vec_count() interface
-Date: Mon, 16 Dec 2013 09:35:01 +0100
-Message-Id: <7f63ab07cfeff8e87eda141d850ecee3d4791c1c.1387140921.git.agordeev@redhat.com>
-In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:23126 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760091Ab3LHXya (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2013 18:54:30 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH 1/2] PCI: pcibus address to resource converting take bus instead of dev
+Date: Sun,  8 Dec 2013 15:54:28 -0800
+Message-Id: <1386546869-31900-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This update is needed to create a consistent MSI-X counterpart
-for pci_get_msi_vec_count() MSI interface. Device drivers can
-use this function to obtain maximum number of MSI-X interrupts
-the device supports and i.e. use that number in a following call
-to pci_enable_msix() interface.
+For allocating resource under bus path, we do not have dev to pass along,
+and we only have bus to use instead.
 
-Interface pci_get_msix_vec_count() supersedes pci_msix_table_size()
-function and returns a negative errno if device does not support
-MSI-X interrupts. After this update callers must always check the
-returned value.
+-v2: drop pcibios_bus_addr_to_resource().
 
-The only user of pci_msix_table_size() function was PCI-Express
-port driver, which is also updated by this change.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Reviewed-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
 ---
- Documentation/PCI/MSI-HOWTO.txt |   13 +++++++++++++
- drivers/pci/msi.c               |   18 +++++++++++++-----
- drivers/pci/pcie/portdrv_core.c |    7 ++++---
- include/linux/pci.h             |    6 +++---
- 4 files changed, 33 insertions(+), 11 deletions(-)
+ drivers/pci/host-bridge.c | 34 +++++++++++++++++++++-------------
+ include/linux/pci.h       |  5 +++++
+ 2 files changed, 26 insertions(+), 13 deletions(-)
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 8d35d62..7d19656 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -243,6 +243,19 @@ MSI-X Table.  This address is mapped by the PCI subsystem, and should not
- be accessed directly by the device driver.  If the driver wishes to
- mask or unmask an interrupt, it should call disable_irq() / enable_irq().
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..c988a30 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -9,22 +9,19 @@
  
-+4.3.4 pci_get_msix_vec_count
-+
-+int pci_get_msix_vec_count(struct pci_dev *dev)
-+
-+This function could be used to retrieve number of entries in the device
-+MSI-X table.
-+
-+If this function returns a negative number, it indicates the device is
-+not capable of sending MSI-Xs.
-+
-+If this function returns a positive number, it indicates the maximum
-+number of MSI-X interrupt vectors that could be allocated.
-+
- 4.4 Handling devices implementing both MSI and MSI-X capabilities
+ #include "pci.h"
  
- If a device implements both MSI and MSI-X capabilities, it can
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index de1acb9..18e877f5 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -939,19 +939,25 @@ void pci_disable_msi(struct pci_dev *dev)
- EXPORT_SYMBOL(pci_disable_msi);
- 
- /**
-- * pci_msix_table_size - return the number of device's MSI-X table entries
-+ * pci_get_msix_vec_count - return the number of device's MSI-X table entries
-  * @dev: pointer to the pci_dev data structure of MSI-X device function
-- */
--int pci_msix_table_size(struct pci_dev *dev)
-+
-+ * This function returns the number of device's MSI-X table entries and
-+ * therefore the number of MSI-X vectors device is capable to send.
-+ * It returns a negative errno if the device is not capable sending MSI-X
-+ * interrupts.
-+ **/
-+int pci_get_msix_vec_count(struct pci_dev *dev)
+-static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
++static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
  {
- 	u16 control;
+-	struct pci_bus *bus;
+-
+-	bus = dev->bus;
+ 	while (bus->parent)
+ 		bus = bus->parent;
  
- 	if (!dev->msix_cap)
--		return 0;
-+		return -EINVAL;
- 
- 	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
- 	return msix_table_size(control);
+ 	return bus;
  }
-+EXPORT_SYMBOL(pci_get_msix_vec_count);
  
- /**
-  * pci_enable_msix - configure device's MSI-X capability structure
-@@ -980,7 +986,9 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
- 	if (status)
- 		return status;
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
++static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus = find_pci_root_bus(dev);
++	struct pci_bus *root_bus = find_pci_root_bus(bus);
  
--	nr_entries = pci_msix_table_size(dev);
-+	nr_entries = pci_get_msix_vec_count(dev);
-+	if (nr_entries < 0)
-+		return nr_entries;
- 	if (nvec > nr_entries)
- 		return nr_entries;
+-	return to_pci_host_bridge(bus->bridge);
++	return to_pci_host_bridge(root_bus->bridge);
+ }
  
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index ce9d9ae..8ba9db0 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -79,9 +79,10 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
- 	u16 reg16;
- 	u32 reg32;
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+@@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+ 	return res1->start <= res2->start && res1->end >= res2->end;
+ }
  
--	nr_entries = pci_msix_table_size(dev);
--	if (!nr_entries)
--		return -EINVAL;
-+	nr_entries = pci_get_msix_vec_count(dev);
-+	if (nr_entries < 0)
-+		return nr_entries;
-+	BUG_ON(!nr_entries);
- 	if (nr_entries > PCIE_PORT_MAX_MSIX_ENTRIES)
- 		nr_entries = PCIE_PORT_MAX_MSIX_ENTRIES;
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
++void __pcibios_resource_to_bus(struct pci_bus *bus,
++				      struct pci_bus_region *region,
++				      struct resource *res)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
  
+@@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 	region->start = res->start - offset;
+ 	region->end = res->end - offset;
+ }
++void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
++			     struct resource *res)
++{
++	__pcibios_resource_to_bus(dev->bus, region, res);
++}
+ EXPORT_SYMBOL(pcibios_resource_to_bus);
+ 
+ static bool region_contains(struct pci_bus_region *region1,
+@@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+-			     struct pci_bus_region *region)
++void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
++				      struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 	res->start = region->start + offset;
+ 	res->end = region->end + offset;
+ }
++void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++			     struct pci_bus_region *region)
++{
++	__pcibios_bus_to_resource(dev->bus, res, region);
++}
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8d9eb6b..7941f06 100644
+index 1084a15..5c2cf8e 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1169,9 +1169,9 @@ static inline void pci_msi_shutdown(struct pci_dev *dev)
- static inline void pci_disable_msi(struct pci_dev *dev)
- { }
+@@ -737,8 +737,13 @@ void pci_fixup_cardbus(struct pci_bus *);
  
--static inline int pci_msix_table_size(struct pci_dev *dev)
-+static inline int pci_get_msix_vec_count(struct pci_dev *dev)
- {
--	return 0;
-+	return -ENOSYS;
- }
- static inline int pci_enable_msix(struct pci_dev *dev,
- 				  struct msix_entry *entries, int nvec)
-@@ -1198,7 +1198,7 @@ int pci_get_msi_vec_count(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, int nvec);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
--int pci_msix_table_size(struct pci_dev *dev);
-+int pci_get_msix_vec_count(struct pci_dev *dev);
- int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
- void pci_msix_shutdown(struct pci_dev *dev);
- void pci_disable_msix(struct pci_dev *dev);
+ /* Generic PCI functions used internally */
+ 
++void __pcibios_resource_to_bus(struct pci_bus *bus,
++			       struct pci_bus_region *region,
++			       struct resource *res);
+ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 			     struct resource *res);
++void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
++				      struct pci_bus_region *region);
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region);
+ void pcibios_scan_specific_bus(int busn);
 -- 
-1.7.7.6
+1.8.4
 
