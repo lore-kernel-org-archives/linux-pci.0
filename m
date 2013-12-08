@@ -1,77 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:57673 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926Ab3LMImi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 03:42:38 -0500
-Message-ID: <52AAC87B.6000007@arkona-technologies.de>
-Date: Fri, 13 Dec 2013 09:42:35 +0100
-From: Matthias Mann <M.Mann@arkona-technologies.de>
+Received: from mail-ve0-f173.google.com ([209.85.128.173]:55947 "EHLO
+	mail-ve0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751844Ab3LHEzS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 23:55:18 -0500
 MIME-Version: 1.0
-To: Matthias Mann <m.mann@arkona-technologies.de>
-CC: Harro Haan <hrhaan@gmail.com>, Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, Marek Vasut <marex@denx.de>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Richard Zhu <hong-xing.zhu@freescale.com>,
-	linux-pci@vger.kernel.org, Tim Harvey <tharvey@gateworks.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] pci: designware: fix missing msi irqs
-References: <20131212182903.409515738@gmail.com> <52AA0EB2.2070701@arkona-technologies.de>
-In-Reply-To: <52AA0EB2.2070701@arkona-technologies.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
+References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
+	<CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
+Date: Sun, 8 Dec 2013 12:55:17 +0800
+Message-ID: <CABawtvPCf5LBd2j4hHv4iZRTzo4D3HU7vU+nveYOw4sBeoANeA@mail.gmail.com>
+Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 12.12.2013 20:29, schrieb Matthias Mann:
-> Am 12.12.2013 19:29, schrieb Harro Haan:
->> The interrupts were cleared after the irq handler was called.
->> This means that new interrupts that occur after the handler handled
->> the previous irq but before the interrupt is cleared will be missed.
+On Sun, Dec 8, 2013 at 11:19 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Dec 7, 2013 at 10:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> This doesn't sound like a chipset bug.  It sounds like exactly what
+>> the spec describes: "Presence Detect State – This bit indicates the
+>> presence of an adapter in the slot, reflected by the logical “OR” of
+>> the Physical Layer in-band presence detect mechanism and, if present,
+>> any out-of-band presence detect mechanism defined for the slot’s
+>> corresponding form factor" (PCIe 3.0, sec 7.8.11).
 >
-> I discovered the same issue today. I'll test that patch tomorrow.
+> Not sure. the silicon does not report in-band correctly if we turn off
+> pcie link before turn the power of card.
 >
-I tested this patch on our custom i.MX6 board with an Altera FPGA as PCIe
-device and it fixed the missed MSI interrupts.
 
-Tested-by:  Matthias Mann <m.mann@arkona-technologies.de>
+Obvious there are both in-band and out-of band present detect
+mechanism on Yinghai's test platform:
 
-Regards
-Matthias Mann
+> case 1:
+> a. disable pci link
+> b. turn off power of pci cards
 
--- 
+in-band-present = should be 'off ', but still 'on'
+the hardware/FPGA of Yinghai's test platform has special temper here,
+it couldn't set in-band-present right if disable pci link first.
+but other platform could work well when commit 2debd9289997 applied ?
+non report that.
 
-Matthias Mann
-Research & Development
+> c. Present bit: card present.
+> d. remove the card.
 
-Phone: 	+49 (0) 6155 7802883
-Fax: 	+49 (0) 6155 7802880
-Email: 	M.Mann@arkona-technologies.de 
-<mailto:M.Mann@arkona-technologies.de>
-Web: 	www.arkona-technologies.de <http://www.arkona-technologies.de>
+out-band-present = off
 
-arkona technologies GmbH
-Im Leuschnerpark 4
-64347 Griesheim
-Germany
+present = n-band-present  | out-band-present
+                 on | off
+               = on
+not work well.
+> e. Present bit: card is present.
+>
+> case 2:
+> a. turn off power of pci cards
+> b. disable pci link
 
-Amtsgericht / Commercial Register of Darmstadt, HRB 90080
-USt-ID: DE273794666
-Steuernummer / Tax-ID: 007 / 228 / 19331
-Geschäftsführung / Managing Director: Rainer Sturm
+in-band-present = off
+works well
 
-This e-mail may contain confidential and/or privileged information. If you are
-not the intended recipient (or have received this e-mail in error) please notify
-the sender immediately and delete this message and any attachments from your
-system. Any unauthorised copying, disclosure or distribution of the material in
-this e-mail is strictly forbidden.
+> c. Present bit: card present.
+> d. remove the card.
 
-We cannot accept any responsibility for the accuracy or completeness of this
-message as it has been transmitted over a public network. If, despite our use of
-anti-virus software, a virus enters your systems in connection with the sending
-of the e-mail, you may not hold us liable for any damages that may possibly
-arise in that connection. We will accept liability which by law we cannot exclude.
+out-band-present = off
 
+> e. Present bit: card is NOT present.
+
+present = n-band-present  | out-band-present
+                 off | off
+              = off
+works well.
+>
+> case 3:
+> a. disable pci link
+> b. turn off power of pci cards
+
+in-band-present = should be 'off' , but still 'on'
+
+> c. Present bit: card present.
+> d. turn on pcie link
+> e. wait 20ms
+
+in-band-present = on ?
+
+> f. turn off pcie link
+in-band-present = off ?
+> g. remove the card.
+ out-band-present = off
+
+present = in-band-present  | out-band-present = off
+
+It seems,  Yinghai's hardware logic that sets present bit with in-band
+OR out-band detection has special nature, it coundn't see power_off
+command and set in-band-present right if you disable link first.  and
+it works well with original code path shown by case 2.
+
+if so, we should revert 2debd9289997 and workaround the AER flood with
+AER mask bit somewhere instead of play such trick in generic code.
+because of the original code could work on both this 'buggy'
+flatform  and others.  and these workaround just make the code hard to
+understand and far away from simple and generic.
+
+just my 2 cents, of coz, you could ignore it wildly.
+
+Thanks,
+Ethan
+
+> h. Present bit: card is NOT present.
+>
+>>
+>> So I want to fix this pciehp problem, but between 2debd9289997 and
+>> this patch, pciehp_power_off_slot() is accumulating warts that make it
+>> look like we're just reacting to things that break rather than making
+>> a robust design to start with.
+>
+> We have 2debd9289997 (turn off link before turn off power) to avoid
+> some AER ....
+>
+> with this patch we still keep that and link off
+> also have presence detect work correctly.
+>
+> Yinghai
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
