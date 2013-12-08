@@ -1,93 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:63640 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751235Ab3LRGuW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 01:50:22 -0500
-MIME-Version: 1.0
-In-Reply-To: <0c18891f0a754978a3015c9b3b50df93@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <52B0AEAD.6050604@gmail.com>
-	<20131218010207.GC15119@google.com>
-	<41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
-	<CAE9FiQVGQ8THfMBfEhaOnjbrdaRn+5CRoUoGZuVvRcZcAKqW_A@mail.gmail.com>
-	<0c18891f0a754978a3015c9b3b50df93@DM2PR05MB671.namprd05.prod.outlook.com>
-Date: Tue, 17 Dec 2013 22:50:21 -0800
-Message-ID: <CAE9FiQXkgLw6y2GmVvRStOAuqqOY=kTypLKY6YcvOhD2zOhdsw@mail.gmail.com>
-Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently, during removal
-From: Yinghai Lu <yinghai@kernel.org>
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Content-Type: multipart/mixed; boundary=e89a8f5038e278ebc504edc97532
+Received: from cantor2.suse.de ([195.135.220.15]:48178 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753522Ab3LHNKF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 8 Dec 2013 08:10:05 -0500
+Date: Sun, 8 Dec 2013 14:09:58 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Takashi Iwai <tiwai@suse.de>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI/portdrv: Set master earlier
+Message-ID: <20131208140958.0f1eb921@endymion.delvare>
+In-Reply-To: <CAErSpo6ikaTXXvWzX_Z0=mabwD4aedoLoSVjsd+_E5kV9YJpuA@mail.gmail.com>
+References: <20131009163304.62b439a9@endymion.delvare>
+	<CAErSpo6ikaTXXvWzX_Z0=mabwD4aedoLoSVjsd+_E5kV9YJpuA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---e89a8f5038e278ebc504edc97532
-Content-Type: text/plain; charset=ISO-8859-1
+Hi Bjorn,
 
-On Tue, Dec 17, 2013 at 10:17 PM, Rajat Jain <rajatjain@juniper.net> wrote:
-> Well, in that case I doubt if the patch will solve the problem. I think
-> Most likely the "card present / not present" messages may be replaced
-> By "link-up / link-down" messages. But I'd appreciate your testing.
+On Sat, 7 Dec 2013 15:23:25 -0700, Bjorn Helgaas wrote:
+> [+cc Yinghai]
+> 
+> On Wed, Oct 9, 2013 at 8:33 AM, Jean Delvare <jdelvare@suse.de> wrote:
+> > Since kernel 3.12-rc3, I get the following warning messages at boot:
+> > pcieport 0000:00:07.0: driver skip pci_set_master, fix it!
+> > pcieport 0000:00:01.0: driver skip pci_set_master, fix it!
+> 
+> cf3e1feba7f9 ("PCI: Workaround missing pci_set_master in pci drivers")
+> added this warning and, at the same time, turned on bus mastering.
+> 
+> There didn't seem to be any reason for the warning and no reason why
+> bus mastering should be enabled in the driver rather than the core, so
+> fbeeb822f6f4 ("PCI: Drop warning about drivers that don't use
+> pci_set_master()") just dropped the warning.
+> 
+> This should resolve the problem, so I don't think there's a need for
+> this patch.  Let me know if otherwise.
 
-I did have a debug patch at that time to report link status change.
-And it did report link up and link down.
+This is fine with me, all I really wanted was to get rid of the
+warning. I am not aware of any problem either (but I am no PCI expert
+by any means.)
 
-Thanks
-
-Yinghai
-
---e89a8f5038e278ebc504edc97532
-Content-Type: text/x-patch; charset=US-ASCII; name="link_change_report.patch"
-Content-Disposition: attachment; filename="link_change_report.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hpc7zn8p0
-
-U3ViamVjdDogW1BBVENIXSBQQ0ksIHBjaWVocDogUmVwb3J0IHBjaWUgbGluayBzdGF0ZSBjaGFu
-Z2UKClRvIHNlZSBpZiB0aGVyZSBpcyBzb21lIGxpbmsgc3RhdGUgY2hhbmdlLgoKU2lnbmVkLW9m
-Zi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9o
-b3RwbHVnL3BjaWVocF9ocGMuYyB8ICAgMjkgKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0K
-IDEgZmlsZSBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKSW5kZXg6
-IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYwo9PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
-LSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYworKysgbGlu
-dXgtMi42L2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jCkBAIC02MDMsNiArNjAzLDI1
-IEBAIGludCBwY2llaHBfcG93ZXJfb2ZmX3Nsb3Qoc3RydWN0IHNsb3QgKgogCXJldHVybiAwOwog
-fQogCitzdGF0aWMgdTggcGNpZWhwX2hhbmRsZV9saW5rc3RhdGVfY2hhbmdlKHN0cnVjdCBzbG90
-ICpzbG90KQoreworCXN0cnVjdCBjb250cm9sbGVyICpjdHJsID0gc2xvdC0+Y3RybDsKKwl1MTYg
-bG5rX3N0YXR1czsKKwlpbnQgcmV0dmFsOworCisgICAgICAgIC8qIExpbmtTdGF0ZSBDaGFuZ2Ug
-Ki8KKwljdHJsX2RiZyhjdHJsLCAiTGlua1N0YXRlIGNoYW5nZVxuIik7CisKKwlyZXR2YWwgPSBw
-Y2llaHBfcmVhZHcoY3RybCwgUENJX0VYUF9MTktTVEEsICZsbmtfc3RhdHVzKTsKKwlpZiAocmV0
-dmFsKSB7CisJCWN0cmxfZXJyKGN0cmwsICJDYW5ub3QgcmVhZCBMTktTVEFUVVMgcmVnaXN0ZXJc
-biIpOworCQlyZXR1cm4gMTsKKwl9CisJY3RybF9pbmZvKGN0cmwsICJsbmtfc3RhdHVzID0gJXhc
-biIsIGxua19zdGF0dXMpOworCisJcmV0dXJuIDE7Cit9CisKIHN0YXRpYyBpcnFyZXR1cm5fdCBw
-Y2llX2lzcihpbnQgaXJxLCB2b2lkICpkZXZfaWQpCiB7CiAJc3RydWN0IGNvbnRyb2xsZXIgKmN0
-cmwgPSAoc3RydWN0IGNvbnRyb2xsZXIgKilkZXZfaWQ7CkBAIC02MjQsNyArNjQzLDcgQEAgc3Rh
-dGljIGlycXJldHVybl90IHBjaWVfaXNyKGludCBpcnEsIHZvaQogCiAJCWRldGVjdGVkICY9IChQ
-Q0lfRVhQX1NMVFNUQV9BQlAgfCBQQ0lfRVhQX1NMVFNUQV9QRkQgfAogCQkJICAgICBQQ0lfRVhQ
-X1NMVFNUQV9NUkxTQyB8IFBDSV9FWFBfU0xUU1RBX1BEQyB8Ci0JCQkgICAgIFBDSV9FWFBfU0xU
-U1RBX0NDKTsKKwkJCSAgICAgUENJX0VYUF9TTFRTVEFfQ0MgfCBQQ0lfRVhQX1NMVFNUQV9ETExT
-Qyk7CiAJCWRldGVjdGVkICY9IH5pbnRyX2xvYzsKIAkJaW50cl9sb2MgfD0gZGV0ZWN0ZWQ7CiAJ
-CWlmICghaW50cl9sb2MpCkBAIC02NDgsNiArNjY3LDEwIEBAIHN0YXRpYyBpcnFyZXR1cm5fdCBw
-Y2llX2lzcihpbnQgaXJxLCB2b2kKIAlpZiAoIShpbnRyX2xvYyAmIH5QQ0lfRVhQX1NMVFNUQV9D
-QykpCiAJCXJldHVybiBJUlFfSEFORExFRDsKIAorCS8qIENoZWNrIExpbmsgU3RhdGUgQ2hhbmdl
-ZCAqLworCWlmIChpbnRyX2xvYyAmIFBDSV9FWFBfU0xUU1RBX0RMTFNDKQorCQlwY2llaHBfaGFu
-ZGxlX2xpbmtzdGF0ZV9jaGFuZ2Uoc2xvdCk7CisKIAkvKiBDaGVjayBNUkwgU2Vuc29yIENoYW5n
-ZWQgKi8KIAlpZiAoaW50cl9sb2MgJiBQQ0lfRVhQX1NMVFNUQV9NUkxTQykKIAkJcGNpZWhwX2hh
-bmRsZV9zd2l0Y2hfY2hhbmdlKHNsb3QpOwpAQCAtNjg5LDEwICs3MTIsMTIgQEAgaW50IHBjaWVf
-ZW5hYmxlX25vdGlmaWNhdGlvbihzdHJ1Y3QgY29udAogCQljbWQgfD0gUENJX0VYUF9TTFRDVExf
-TVJMU0NFOwogCWlmICghcGNpZWhwX3BvbGxfbW9kZSkKIAkJY21kIHw9IFBDSV9FWFBfU0xUQ1RM
-X0hQSUUgfCBQQ0lfRVhQX1NMVENUTF9DQ0lFOworCWNtZCB8PSBQQ0lfRVhQX1NMVENUTF9ETExT
-Q0U7CiAKIAltYXNrID0gKFBDSV9FWFBfU0xUQ1RMX1BEQ0UgfCBQQ0lfRVhQX1NMVENUTF9BQlBF
-IHwKIAkJUENJX0VYUF9TTFRDVExfTVJMU0NFIHwgUENJX0VYUF9TTFRDVExfUEZERSB8Ci0JCVBD
-SV9FWFBfU0xUQ1RMX0hQSUUgfCBQQ0lfRVhQX1NMVENUTF9DQ0lFKTsKKwkJUENJX0VYUF9TTFRD
-VExfSFBJRSB8IFBDSV9FWFBfU0xUQ1RMX0NDSUUgfAorCQlQQ0lfRVhQX1NMVENUTF9ETExTQ0Up
-OwogCiAJaWYgKHBjaWVfd3JpdGVfY21kKGN0cmwsIGNtZCwgbWFzaykpIHsKIAkJY3RybF9lcnIo
-Y3RybCwgIkNhbm5vdCBlbmFibGUgc29mdHdhcmUgbm90aWZpY2F0aW9uXG4iKTsK
---e89a8f5038e278ebc504edc97532--
+Thanks,
+-- 
+Jean Delvare
+Suse L3 Support
