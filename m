@@ -1,58 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog118.obsmtp.com ([207.126.144.145]:48298 "EHLO
-	eu1sys200aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750864Ab3LKLJi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 06:09:38 -0500
-Message-ID: <52A847D1.5000409@st.com>
-Date: Wed, 11 Dec 2013 16:39:05 +0530
-From: Rajeev kumar <rajeev-dlh.kumar@st.com>
-MIME-Version: 1.0
-To: Mohit KUMAR <mohit.kumar@st.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 01/12] SPEAr13xx: Correct dt field name for stmmac phy-addr
-References: <cover.1386752447.git.mohit.kumar@st.com> <1078549fa412fb34ab2c95a6232096570abee12d.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <1078549fa412fb34ab2c95a6232096570abee12d.1386752447.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mail.skyhub.de ([78.46.96.112]:36509 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755586Ab3LHPM4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 8 Dec 2013 10:12:56 -0500
+From: Borislav Petkov <bp@alien8.de>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Borislav Petkov <bp@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Lance Ortiz <lance.ortiz@hp.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 2/2] PCI, AER: Clean up error printing code a bit
+Date: Sun,  8 Dec 2013 16:12:51 +0100
+Message-Id: <1386515571-23252-2-git-send-email-bp@alien8.de>
+In-Reply-To: <1386515571-23252-1-git-send-email-bp@alien8.de>
+References: <1386515571-23252-1-git-send-email-bp@alien8.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/11/2013 3:08 PM, Mohit KUMAR wrote:
-> DT field name for the phy address changed since kernel 3.10. Set the
-> snps,phy-addr to 0xffffffff so that the driver probes for the phy.
->
-> Signed-off-by: Mohit Kumar<mohit.kumar@st.com>
-> Cc: Pratyush Anand<pratyush.anand@st.com>
-> Cc: Viresh Kumar<viresh.linux@gmail.com>
-> Cc: spear-devel@list.st.com
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: devicetree@vger.kernel.org
-> ---
->   arch/arm/boot/dts/spear13xx.dtsi |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/arm/boot/dts/spear13xx.dtsi b/arch/arm/boot/dts/spear13xx.dtsi
-> index 4382547..3518803 100644
-> --- a/arch/arm/boot/dts/spear13xx.dtsi
-> +++ b/arch/arm/boot/dts/spear13xx.dtsi
-> @@ -155,6 +155,7 @@
->
->   		gmac0: eth@e2000000 {
->   			compatible = "st,spear600-gmac";
-> +			snps,phy-addr =<0xffffffff>;
+From: Borislav Petkov <bp@suse.de>
 
-Don't you think it should be st,phy-addr =<0xffffffff>, as the 
-manufacturer is 'st' as the compatible suggest
+Save one indentation level in aer_print_error for the generic case where
+we have info->status of an error, disregard 80 cols rule a bit for the
+sake of better readability, fix alignment.
 
-~Rajeev
+No functionality change.
 
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ drivers/pci/pcie/aer/aerdrv_errprint.c | 51 ++++++++++++++++++----------------
+ 1 file changed, 27 insertions(+), 24 deletions(-)
 
->   			reg =<0xe2000000 0x8000>;
->   			interrupts =<0 33 0x4
->   				      0 34 0x4>;
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 32efc5e0d2eb..34ff7026440c 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -168,39 +168,39 @@ static void __aer_print_error(struct pci_dev *dev,
+ 
+ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ {
++	int layer, agent;
+ 	int id = ((dev->bus->number << 8) | dev->devfn);
+ 
+-	if (info->status == 0) {
++	if (!info->status) {
+ 		dev_err(&dev->dev,
+ 			"PCIe Bus Error: severity=%s, type=Unaccessible, "
+ 			"id=%04x(Unregistered Agent ID)\n",
+ 			aer_error_severity_string[info->severity], id);
+-	} else {
+-		int layer, agent;
++		goto out;
++	}
+ 
+-		layer = AER_GET_LAYER_ERROR(info->severity, info->status);
+-		agent = AER_GET_AGENT(info->severity, info->status);
++	layer = AER_GET_LAYER_ERROR(info->severity, info->status);
++	agent = AER_GET_AGENT(info->severity, info->status);
+ 
+-		dev_err(&dev->dev,
+-			"PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
+-			aer_error_severity_string[info->severity],
+-			aer_error_layer[layer], id, aer_agent_string[agent]);
++	dev_err(&dev->dev,
++		"PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
++		aer_error_severity_string[info->severity],
++		aer_error_layer[layer], id, aer_agent_string[agent]);
+ 
+-		dev_err(&dev->dev,
+-			"  device [%04x:%04x] error status/mask=%08x/%08x\n",
+-			dev->vendor, dev->device,
+-			info->status, info->mask);
++	dev_err(&dev->dev,
++		"  device [%04x:%04x] error status/mask=%08x/%08x\n",
++		dev->vendor, dev->device,
++		info->status, info->mask);
+ 
+-		__aer_print_error(dev, info);
++	__aer_print_error(dev, info);
+ 
+-		if (info->tlp_header_valid)
+-			__print_tlp_header(dev, &info->tlp);
+-	}
++	if (info->tlp_header_valid)
++		__print_tlp_header(dev, &info->tlp);
+ 
++out:
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+-		dev_err(&dev->dev,
+-			   "  Error of this Agent(%04x) is reported first\n",
+-			id);
++		dev_err(&dev->dev, "  Error of this Agent(%04x) is reported first\n", id);
++
+ 	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+ 			info->severity);
+ }
+@@ -234,6 +234,7 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 	const char **status_strs;
+ 
+ 	aer_severity = cper_severity_to_aer(cper_severity);
++
+ 	if (aer_severity == AER_CORRECTABLE) {
+ 		status = aer->cor_status;
+ 		mask = aer->cor_mask;
+@@ -246,16 +247,18 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 		status_strs_size = ARRAY_SIZE(aer_uncorrectable_error_string);
+ 		tlp_header_valid = status & AER_LOG_TLP_MASKS;
+ 	}
++
+ 	layer = AER_GET_LAYER_ERROR(aer_severity, status);
+ 	agent = AER_GET_AGENT(aer_severity, status);
+-	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
+-	       status, mask);
++
++	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
+ 	cper_print_bits("", status, status_strs, status_strs_size);
+ 	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
+-	       aer_error_layer[layer], aer_agent_string[agent]);
++		aer_error_layer[layer], aer_agent_string[agent]);
++
+ 	if (aer_severity != AER_CORRECTABLE)
+ 		dev_err(&dev->dev, "aer_uncor_severity: 0x%08x\n",
+-		       aer->uncor_severity);
++			aer->uncor_severity);
+ 
+ 	if (tlp_header_valid)
+ 		__print_tlp_header(dev, &aer->header_log);
+-- 
+1.8.4
 
