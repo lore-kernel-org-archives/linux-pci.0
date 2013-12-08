@@ -1,80 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:45246 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313Ab3LJAB7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 19:01:59 -0500
-Received: by mail-qc0-f171.google.com with SMTP id c9so3327215qcz.16
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 16:01:58 -0800 (PST)
-Date: Mon, 9 Dec 2013 17:01:54 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>, linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org,
-	linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	sparclinux@vger.kernel.org
-Subject: Re: [PATCH 1/9] PCI: Use dev_is_pci() to check whether it is pci
- device
-Message-ID: <20131210000154.GE4699@google.com>
-References: <1386244373-35796-1-git-send-email-wangyijing@huawei.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:40666 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752403Ab3LHDtS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 22:49:18 -0500
+Date: Sat, 7 Dec 2013 19:50:47 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>
+Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
+Message-ID: <20131208035047.GB17629@kroah.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+ <33026900.FbCAopDPFz@vostro.rjw.lan>
+ <CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com>
+ <1519414.GDlGZFCTSR@vostro.rjw.lan>
+ <CAE9FiQX0zvtfAW-0-aPjXyVuFzxg6PMtY9O_7csqEzyW2pr5Kw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1386244373-35796-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <CAE9FiQX0zvtfAW-0-aPjXyVuFzxg6PMtY9O_7csqEzyW2pr5Kw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc arch lists]
-
-On Thu, Dec 05, 2013 at 07:52:53PM +0800, Yijing Wang wrote:
-> Use dev_is_pci() instead of directly compare
-> pci_bus_type to check whether it is pci device.
+On Sat, Dec 07, 2013 at 07:31:21PM -0800, Yinghai Lu wrote:
+> [+ GregKH]
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-
-I applied all these to my pci/yijing-dev_is_pci branch for v3.14, thanks!
-
-Browse them here: http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/yijing-dev_is_pci
-
-This should be no functional change.
-
- arch/alpha/kernel/pci_iommu.c        |    2 +-
- arch/arm/common/it8152.c             |    4 ++--
- arch/arm/mach-ixp4xx/common-pci.c    |    6 +++---
- arch/ia64/hp/common/sba_iommu.c      |    2 +-
- arch/ia64/sn/pci/pci_dma.c           |   24 ++++++++++++------------
- arch/parisc/kernel/drivers.c         |   22 +++++-----------------
- arch/powerpc/sysdev/fsl_pci.c        |    2 +-
- arch/sparc/include/asm/dma-mapping.h |   10 ++++------
- arch/sparc/kernel/iommu.c            |    2 +-
- arch/sparc/kernel/ioport.c           |    4 +---
- arch/x86/kernel/acpi/boot.c          |    4 +---
- drivers/pci/pci-acpi.c               |    2 +-
- 12 files changed, 33 insertions(+), 51 deletions(-)
-
-Bjorn
-
-> ---
->  drivers/pci/pci-acpi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> On Fri, Dec 6, 2013 at 5:27 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Thursday, December 05, 2013 10:52:36 PM Yinghai Lu wrote:
+> >> On Mon, Dec 2, 2013 at 6:49 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> >
+> >> > Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
+> >> >   for a device and its parent bridge via remove_callback().
+> >> >
+> >> >   In that case both code paths attempt to acquire
+> >> >   pci_remove_rescan_mutex.  If the child device removal acquires
+> >> >   it first, there will be no problems.  However, if the parent
+> >> >   bridge removal acquires it first, it will eventually execute
+> >> >   pci_destroy_dev() for the child device, but that device will
+> >> >   not be freed yet due to the reference held by the concurrent
+> >> >   child removal.  Consequently, both pci_stop_bus_device() and
+> >> >   pci_remove_bus_device() will be executed for that device
+> >> >   unnecessarily and pci_destroy_dev() will see a corrupted list
+> >> >   head in that object.  Moreover, an excess put_device() will
+> >> >   be executed for that device in that case which may lead to a
+> >> >   use-after-free in the final kobject_put() done by
+> >> >   sysfs_schedule_callback_work().
+> >> >
+> >> > Index: linux-pm/include/linux/pci.h
+> >> > ===================================================================
+> >> > --- linux-pm.orig/include/linux/pci.h
+> >> > +++ linux-pm/include/linux/pci.h
+> >> > @@ -321,6 +321,7 @@ struct pci_dev {
+> >> >         unsigned int    multifunction:1;/* Part of multi-function device */
+> >> >         /* keep track of device state */
+> >> >         unsigned int    is_added:1;
+> >> > +       unsigned int    is_gone:1;
+> >> >         unsigned int    is_busmaster:1; /* device is busmaster */
+> >> >         unsigned int    no_msi:1;       /* device may not use msi */
+> >> >         unsigned int    block_cfg_access:1;     /* config space access is blocked */
+> >> > Index: linux-pm/drivers/pci/remove.c
+> >> > ===================================================================
+> >> > --- linux-pm.orig/drivers/pci/remove.c
+> >> > +++ linux-pm/drivers/pci/remove.c
+> >> > @@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
+> >> >
+> >> >  static void pci_destroy_dev(struct pci_dev *dev)
+> >> >  {
+> >> > +       dev->is_gone = 1;
+> >> >         device_del(&dev->dev);
+> >> >
+> >> >         down_write(&pci_bus_sem);
+> >> > @@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
+> >> >   */
+> >> >  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+> >> >  {
+> >> > -       pci_stop_bus_device(dev);
+> >> > -       pci_remove_bus_device(dev);
+> >> > +       if (!dev->is_gone) {
+> >> > +               pci_stop_bus_device(dev);
+> >> > +               pci_remove_bus_device(dev);
+> >> > +       }
+> >> >  }
+> >> >  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+> >> >
+> >>
+> >> Yes, above change should address sys double remove problem.
+> >
+> > I've just realized that we don't need a new flag for that, though.
+> >
+> > It looks like we only need to check dev->dev.kobj.parent and return if that is
+> > NULL, because that means pci_destroy_dev() has run for that device already
+> > (I'm wondering why device_del() doesn't clear dev->parent, BTW, it looks like
+> > it should do that?).
+> >
+> > Of course, that still is going to be racy if we don't hold
+> > pci_remove_rescan_mutex around pci_stop_and_remove_bus_device() in every code
+> > path using it (or use another similar synchronization mechanism).
 > 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index 577074e..e0431f1 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -358,7 +358,7 @@ static void pci_acpi_cleanup(struct device *dev)
->  
->  static bool pci_acpi_bus_match(struct device *dev)
->  {
-> -	return dev->bus == &pci_bus_type;
-> +	return dev_is_pci(dev);
->  }
->  
->  static struct acpi_bus_type acpi_pci_bus = {
-> -- 
-> 1.7.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Wonder if we can have safe way to check if device_del() is called already.
+
+Nope.
+
+> And those access_after_free should be addressed by driver core instead
+> of pci code?
+
+Nope, it's up to the bus to handle this.  It shouldn't be hard, you
+shouldn't actually care about this, if you do, something is wrong.
+
+How is this PCI code so hard to get right?  Look at USB for devices that
+disappear from anywhere at anytime as an example for how to handle
+this.  PCI should be doing the same thing, no need for this "is_gone"
+stuff.
+
+greg k-h
