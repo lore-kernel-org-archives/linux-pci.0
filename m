@@ -1,80 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21382 "EHLO mx1.redhat.com"
+Received: from mail.skyhub.de ([78.46.96.112]:59198 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751443Ab3LRNV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Dec 2013 08:21:58 -0500
-Date: Wed, 18 Dec 2013 14:23:49 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
+	id S1755254Ab3LHPJH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 8 Dec 2013 10:09:07 -0500
+Date: Sun, 8 Dec 2013 16:09:04 +0100
+From: Borislav Petkov <bp@alien8.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
- helpers
-Message-ID: <20131218132349.GA29552@dhcp-26-207.brq.redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
- <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
- <20131218003002.GA15119@google.com>
+Cc: Rui Wang <ruiv.wang@gmail.com>, lance.ortiz@hp.com,
+	lance_ortiz@hotmail.com, jiang.liu@intel.com, tony.luck@intel.com,
+	rostedt@goodmis.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	gong.chen@linux.intel.com, m.chehab@samsung.com,
+	Rui Wang <rui.y.wang@intel.com>
+Subject: Re: [PATCH] aerdrv: Fix severity usage in aer trace event
+Message-ID: <20131208150904.GD4338@pd.tnic>
+References: <1386476273-2418-1-git-send-email-rui.y.wang@intel.com>
+ <20131208144312.GC4338@pd.tnic>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131218003002.GA15119@google.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20131208144312.GC4338@pd.tnic>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 17, 2013 at 05:30:02PM -0700, Bjorn Helgaas wrote:
+On Sun, Dec 08, 2013 at 03:43:12PM +0100, Borislav Petkov wrote:
+> On Sun, Dec 08, 2013 at 12:17:53PM +0800, Rui Wang wrote:
+> > There's inconsistency between dmesg and the trace event output.
+> > When dmesg says "severity=Corrected", the trace event says
+> > "severity=Fatal". What happens is that HW_EVENT_ERR_CORRECTED is
+> > defined in edac.h:
+> > 
+> > enum hw_event_mc_err_type {
+> >         HW_EVENT_ERR_CORRECTED,
+> >         HW_EVENT_ERR_UNCORRECTED,
+> >         HW_EVENT_ERR_FATAL,
+> >         HW_EVENT_ERR_INFO,
+> > };
+> > 
+> > while aer_print_error() uses aer_error_severity_string[] defined as:
+> > 
+> > static const char *aer_error_severity_string[] = {
+> >         "Uncorrected (Non-Fatal)",
+> >         "Uncorrected (Fatal)",
+> >         "Corrected"
+> > };
+> > 
+> > In this case dmesg is correct because info->severity is assigned in
+> > aer_isr_one_error() using the definitions in include/linux/ras.h:
+> > 
+> > Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+> 
+> Applied, thanks.
 
-Hi Bjorn,
+I said "Applied" but this is Bjorn's area: Bjorn, wanna take this one or
+are you fine with it going over the RAS tree?
 
-Thank you for the review!
+Btw, I have a 2 trivial cleanups for aerdrv_errprint.c which are
+following...
 
-Sorry for a heavy skipping - I just wanted to focus on a principal
-moment in your suggestion and then go on with the original note.
-
-> I only see five users of pci_enable_msi_block() (nvme, ath10k, wil6210,
-> ipr, vfio); we can easily convert those to use pci_enable_msi_range() and
-> then remove pci_enable_msi_block().
-
-> It would be good if pci_enable_msix() could be implemented in terms of
-> pci_enable_msix_range(nvec, nvec), with a little extra glue to handle the
-> positive return values.
-
-So you want to get rid of the tri-state "low-level" pci_enable_msi_block()
-and pci_enable_msix(), right? I believe we can not do this, since we need
-to support a non-standard hardware which (a) can not be asked any arbitrary
-number of vectors within a range and (b) needs extra magic to enable MSI
-operation.
-
-I.e. below is a snippet from a real device driver Mark Lord has sent in a
-previous conversation:
-
-        xx_disable_all_irqs(dev);
-        do {
-            	if (nvec < 2)
-                        xx_prep_for_1_msix_vector(dev);
-                else if (nvec < 4)
-                        xx_prep_for_2_msix_vectors(dev);
-                else if (nvec < 8)
-                        xx_prep_for_4_msix_vectors(dev);
-                else if (nvec < 16)
-                        xx_prep_for_8_msix_vectors(dev);
-                else
-                    	xx_prep_for_16_msix_vectors(dev);
-                nvec = pci_enable_msix(dev->pdev, dev->irqs, dev->num_vectors);
-       	} while (nvec > 0);
-
-The same probably could have been done with pci_enable_msix_range(nvec, nvec)
-call and checking for -ENOSPC errno, but IMO it would be less graceful and
-reliable, since -ENOSPC might come from anywhere.
-
-IOW, I believe we need to keep the door open for custom MSI-enablement (loop)
-implementations.
+Thanks.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
