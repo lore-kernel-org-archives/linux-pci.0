@@ -1,52 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:46591 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752777Ab3LMPoR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 10:44:17 -0500
-Received: by mail-ie0-f177.google.com with SMTP id tp5so3010012ieb.22
-        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 07:44:16 -0800 (PST)
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:63975 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754862Ab3LHDTo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 22:19:44 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUHSF4YCQR7DmCZPSviBGDxVdot9vYPVZtTnLMBgviLow@mail.gmail.com>
-References: <20131127184652.GA1856@kroah.com> <CAErSpo46LZP8t+aLnYOtJ1mXKKkCF7sOy97MFd0hWo+OOoz68Q@mail.gmail.com>
- <CAE9FiQUeyxN5OAaXqfhdQkzTwjV83BN-L3r6kH0sO0t1b1-63Q@mail.gmail.com>
- <CAErSpo6_s6-Dc__-AzausBVDvOAY5beh7ivng2dWHUN1iRyj+g@mail.gmail.com>
- <20131213020620.GF13333@kroah.com> <CAErSpo6F_oLE2XLt9q5iQE3izuP1ZKW_rib60KKokaL9ewZogA@mail.gmail.com>
- <CAE9FiQUHSF4YCQR7DmCZPSviBGDxVdot9vYPVZtTnLMBgviLow@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 13 Dec 2013 08:43:56 -0700
-Message-ID: <CAErSpo4b69MLo6b=hH7Esum94abmki6sZDhvK8eRg0_u8K4-QA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
+References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
+Date: Sat, 7 Dec 2013 19:19:43 -0800
+Message-ID: <CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
+Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 12, 2013 at 10:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Dec 12, 2013 at 8:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> No problem.  I have
->>
->> CONFIG_LOCKDEP_SUPPORT=y
->> CONFIG_LOCKDEP=y
->> CONFIG_DEBUG_LOCKDEP=y
->>
->> and I still don't see the problem booting the qemu q35 model.
->> Whatever, I folded it in anyway.
+On Sat, Dec 7, 2013 at 10:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
-> Does qemu q35 use MSI?
+> This doesn't sound like a chipset bug.  It sounds like exactly what
+> the spec describes: "Presence Detect State – This bit indicates the
+> presence of an adapter in the slot, reflected by the logical “OR” of
+> the Physical Layer in-band presence detect mechanism and, if present,
+> any out-of-band presence detect mechanism defined for the slot’s
+> corresponding form factor" (PCIe 3.0, sec 7.8.11).
 
-Oops, sorry, I *do* see the problem on qemu q35.  I must have messed
-something up when I tried it yesterday.  And I verified that your
-change fixes it.  Sorry for the noise.
+Not sure. the silicon does not report in-band correctly if we turn off
+pcie link before turn the power of card.
 
-Bjorn
+case 1:
+a. disable pci link
+b. turn off power of pci cards
+c. Present bit: card present.
+d. remove the card.
+e. Present bit: card is present.
+
+case 2:
+a. turn off power of pci cards
+b. disable pci link
+c. Present bit: card present.
+d. remove the card.
+e. Present bit: card is NOT present.
+
+case 3:
+a. disable pci link
+b. turn off power of pci cards
+c. Present bit: card present.
+d. turn on pcie link
+e. wait 20ms
+f. turn off pcie link
+g. remove the card.
+h. Present bit: card is NOT present.
+
+>
+> So I want to fix this pciehp problem, but between 2debd9289997 and
+> this patch, pciehp_power_off_slot() is accumulating warts that make it
+> look like we're just reacting to things that break rather than making
+> a robust design to start with.
+
+We have 2debd9289997 (turn off link before turn off power) to avoid
+some AER ....
+
+with this patch we still keep that and link off
+also have presence detect work correctly.
+
+Yinghai
