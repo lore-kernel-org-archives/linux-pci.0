@@ -1,192 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:40319 "EHLO
-	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750789Ab3LJG6H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 01:58:07 -0500
-Date: Tue, 10 Dec 2013 12:27:45 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: 'Tim Harvey' <tharvey@gateworks.com>
-Cc: Jingoo Han <jg1.han@samsung.com>, 'Arnd Bergmann' <arnd@arndb.de>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Query/Discussion]: IO translation with designware PCIe
- controller
-Message-ID: <20131210065744.GA5519@pratyush-vbox>
-References: <20131205050424.GA2298@pratyush-vbox>
- <201312061546.23981.arnd@arndb.de>
- <20131209071241.GA5760@pratyush-vbox>
- <201312091709.38013.arnd@arndb.de>
- <20131210043409.GA2734@pratyush-vbox>
- <000101cef568$3cd0e4d0$b672ae70$%han@samsung.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189F9536CE2@EAPEX1MAIL1.st.com>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:60999 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932216Ab3LIUrY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:47:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189F9536CE2@EAPEX1MAIL1.st.com>
+In-Reply-To: <20131209204323.GA25180@kroah.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+	<1386546869-31900-2-git-send-email-yinghai@kernel.org>
+	<CAErSpo7HaAbsoy0n5sr_d3iPazEnpnO8WupJrDn2QR2Kid=EgQ@mail.gmail.com>
+	<CAE9FiQUebPPcTyHGssxTwJJ3GYx4aq-=infapvxOQgAm+PL4rA@mail.gmail.com>
+	<CAE9FiQUrTAnQkiS9SU3-pJ35-U9CqXQNQEceUUarf-WiPXCF2Q@mail.gmail.com>
+	<20131209204323.GA25180@kroah.com>
+Date: Mon, 9 Dec 2013 12:47:24 -0800
+Message-ID: <CAE9FiQW60hW06sr=ahV6rEMRQ5kA04A_1mUtfZQAra__6ttNxw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: pcibus address to resource converting take bus
+ instead of dev
+From: Yinghai Lu <yinghai@kernel.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Joseph Salisbury <joseph.salisbury@canonical.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim,
+On Mon, Dec 9, 2013 at 12:43 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Mon, Dec 09, 2013 at 12:03:18PM -0800, Yinghai Lu wrote:
+>> On Mon, Dec 9, 2013 at 11:21 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> > On Mon, Dec 9, 2013 at 9:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >>
+>> >> Ugh.  Why would we add new functions with "__" prefixes?  There are
+>> >> only a handful of callers to pcibios_bus_to_resource() and
+>> >> pcibios_resource_to_bus().  We can just change them to supply a
+>> >> "struct pci_bus *" directly.  That's a better match for how the
+>> >> hardware works anyway.
+>> >
+>>
+>> Please double check if you are happy with the change.
+>> Hope that will not update stable tree maintainer guys.
+>
+> What do you mean by this?
 
-On Tue, Dec 10, 2013 at 02:31:08PM +0800, Mohit KUMAR DCG wrote:
-> Hello Pratyush,
-> 
-> > -----Original Message-----
-> > From: Jingoo Han [mailto:jg1.han@samsung.com]
-> > Sent: Tuesday, December 10, 2013 10:55 AM
-> > To: Pratyush ANAND; 'Arnd Bergmann'; Mohit KUMAR DCG
-> > Cc: 'Marek Vasut'; 'Richard Zhu'; 'Kishon Vijay Abraham I'; linux-
-> > pci@vger.kernel.org; 'Tim Harvey'; 'Jingoo Han'
-> > Subject: Re: [Query/Discussion]: IO translation with designware PCIe
-> > controller
-> > 
-> > On Tuesday, December 10, 2013 1:34 PM, Pratyush Anand wrote:
-> > > On Tue, Dec 10, 2013 at 12:09:37AM +0800, Arnd Bergmann wrote:
-> > > > On Monday 09 December 2013, Pratyush Anand wrote:
-> > > > > > I think it does handle this correctly, look at
-> > > > > >
-> > > > > > static int dw_pcie_setup(int nr, struct pci_sys_data *sys) {
-> > > > > > 	...
-> > > > > >         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> > > > > >                 sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> > > > > >                 pci_ioremap_io(sys->io_offset, pp->io.start);
-> > > > > >                 global_io_offset += SZ_64K;
-> > > > > >                 pci_add_resource_offset(&sys->resources, &pp->io,
-> > > > > >                                         sys->io_offset);
-> > > > > >         }
-> > > > > > 	...
-> > > > > > }
-> > > > > >
-> > > > > > I believe this does the right thing, but you have to put the
-> > > > > > correct translation into the 'ranges' property of the host bridge node
-> > in DT.
-> > > > >
-> > > > > May be not exactly. pp->io is the  realio, and it is passed
-> > > > > correctly to pci_add_resource_offset. But, as you had also said
-> > > > > that pci_ioremap_io will receive cpu physical address space as
-> > > > > input, therefore I think following modification will be needed to
-> > > > > work io transaction properly.
-> > > >
-> > > > I see. I think you are right.
-> > > >
-> > > > > diff --git a/drivers/pci/host/pcie-designware.c
-> > > > > b/drivers/pci/host/pcie-designware.c
-> > > > > index be6ce30..cf68632 100644
-> > > > > --- a/drivers/pci/host/pcie-designware.c
-> > > > > +++ b/drivers/pci/host/pcie-designware.c
-> > > > > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port
-> > *pp)
-> > > > >  					   + global_io_offset);
-> > > > >  			pp->config.io_size = resource_size(&pp->io);
-> > > > >  			pp->config.io_bus_addr = range.pci_addr;
-> > > > > +			pp->io_base = range.cpu_addr;
-> > > > >  		}
-> > > > >  		if (restype == IORESOURCE_MEM) {
-> > > > >  			of_pci_range_to_resource(&range, np, &pp->mem);
-> > @@ -403,7
-> > > > > +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> > > > >
-> > > > >  	pp->cfg0_base = pp->cfg.start;
-> > > > >  	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> > > > > -	pp->io_base = pp->io.start;
-> > > > >  	pp->mem_base = pp->mem.start;
-> > > > >
-> > > > >  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-> > > >
-> > > > This looks correct to me and it seems to also fix a bug in
-> > > > dw_pcie_prog_viewport_io_outbound if I read this correctly.
-> > >
-> > > Yes, now outbound viewport for IO translation will get correct input
-> > > address.
-> > >
-> > > >
-> > > > > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct
-> > > > > pci_sys_data *sys)
-> > > > >
-> > > > >  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> > > > >  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> > > > > -		pci_ioremap_io(sys->io_offset, pp->io.start);
-> > > > > +		pci_ioremap_io(sys->io_offset, pp->io_base);
-> > > > >  		global_io_offset += SZ_64K;
-> > > > >  		pci_add_resource_offset(&sys->resources, &pp->io,
-> > > > >  					sys->io_offset);
-> > > >
-> > > > I think there is still a related bug in here: we should pass
-> > > > global_io_offset rather than sys->io_offset to pci_ioremap_io, so we
-> > > > map the new window into the first available spot in the Linux view
-> > > > of the I/O space, rather than passing a number that might be zero
-> > > > for any bus, if the 'ranges' are set up to have an identity mapping
-> > > > between Linux I/O spaces and PCI I/O spaces. You should be able to
-> > > > verify this by setting the I/O range for the bus to a random 4KB
-> > > > multiple in DT and observe that Linux start allocating ports from 0x1000
-> > but the raw BAR values would contain the value you have chosen.
-> > >
-> > > OK.
-> > >
-> > > @ Jingoo, Mohit
-> 
-> -  Now its working properly for SPEAr1310 tested with directly connected EP(xhc cards) as well as EP
->  Connected through switch(Lecroy PTC in AIC mode). Without this patch my EP devices were not working when
->  connected through Switch.
-> 
+Do not want to change too much code, to upset stable tree maintainers.
 
-Can you also check if this patch resolves your issue, and you are
-able to work with switch without commenting
-dw_pcie_prog_viewport_io_outbound.
+>
+> How is this a -stable kernel patch?
 
-Regards
-Pratyush
+We have stable patch that will need use the new function.
 
-> Thanks
-> Mohit
-> 
-> 
-> > >
-> > > Is it possible for you to test following patch.
-> > 
-> > Hi Pratyush Anand,
-> > 
-> > This patch works properly on Exynos platform with two different NICs. Also, I
-> > am tracing this discussion.
-> > Thank you for sending your patch.
-> > 
-> > Best regards,
-> > Jingoo Han
-> > 
-> > >
-> > > diff --git a/drivers/pci/host/pcie-designware.c
-> > > b/drivers/pci/host/pcie-designware.c
-> > > index be6ce30..b83f5e8 100644
-> > > --- a/drivers/pci/host/pcie-designware.c
-> > > +++ b/drivers/pci/host/pcie-designware.c
-> > > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> > >  					   + global_io_offset);
-> > >  			pp->config.io_size = resource_size(&pp->io);
-> > >  			pp->config.io_bus_addr = range.pci_addr;
-> > > +			pp->io_base = range.cpu_addr;
-> > >  		}
-> > >  		if (restype == IORESOURCE_MEM) {
-> > >  			of_pci_range_to_resource(&range, np, &pp->mem);
-> > @@ -403,7 +404,6
-> > > @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> > >
-> > >  	pp->cfg0_base = pp->cfg.start;
-> > >  	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> > > -	pp->io_base = pp->io.start;
-> > >  	pp->mem_base = pp->mem.start;
-> > >
-> > >  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base, @@ -
-> > 667,7
-> > > +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> > >
-> > >  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> > >  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> > > -		pci_ioremap_io(sys->io_offset, pp->io.start);
-> > > +		pci_ioremap_io(global_io_offset, pp->io_base);
-> > >  		global_io_offset += SZ_64K;
-> > >  		pci_add_resource_offset(&sys->resources, &pp->io,
-> > >  					sys->io_offset);
-> > 
+[PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
 
+Thanks
+
+Yinghai
