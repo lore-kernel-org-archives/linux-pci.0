@@ -1,144 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36154 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753050Ab3LJSsr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Dec 2013 13:48:47 -0500
-Subject: [PATCH 2/3] pci: Add support for save/restore of extended
- capabilities
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
-Date: Tue, 10 Dec 2013 11:48:39 -0700
-Message-ID: <20131210184839.26294.4912.stgit@bling.home>
-In-Reply-To: <20131210183339.26294.14581.stgit@bling.home>
-References: <20131210183339.26294.14581.stgit@bling.home>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:61139 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753259Ab3LIVgT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 16:36:19 -0500
+Received: by mail-ie0-f179.google.com with SMTP id x13so7240139ief.10
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 13:36:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20131130145222.292c3f9f@neptune.home>
+References: <20131125205441.5046e0cb@neptune.home> <20131130145222.292c3f9f@neptune.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Dec 2013 14:35:58 -0700
+Message-ID: <CAErSpo6vPFU14LEsxy0ykNSM_7tSqM0HwYr23WZA9R384jO=_w@mail.gmail.com>
+Subject: Re: [RFC patch v2] x86: Improve boot_vga/vga_default_device() for EFI
+To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>
+Cc: DRI mailing list <dri-devel@lists.freedesktop.org>,
+	Dave Airlie <airlied@linux.ie>,
+	Peter Jones <pjones@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Matt Fleming <matt.fleming@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	David Herrmann <dh.herrmann@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current save/restore is specific to standard capabilities.
+On Sat, Nov 30, 2013 at 6:52 AM, Bruno Prémont
+<bonbons@linux-vserver.org> wrote:
+> With commit b4aa0163056b6c70029b6e8619ce07c274351f42 Matthew Garret
+> introduced a efifb vga_default_device() so that EFI systems that do not
+> load shadow VBIOS or setup VGA get proper value for boot_vga PCI sysfs
+> attribute on the corresponding PCI device.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c   |   47 +++++++++++++++++++++++++++++++++++++++--------
- include/linux/pci.h |    3 ++-
- 2 files changed, 41 insertions(+), 9 deletions(-)
+I like the fact that this gets back to a single vga_default_device()
+implementation.  But of course Matthew could easily have done this to
+begin with, so I would defer to his judgment about this.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 05868e4..a898e4e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -861,18 +861,30 @@ EXPORT_SYMBOL(pci_choose_state);
- #define PCI_EXP_SAVE_REGS	7
- 
- 
--static struct pci_cap_saved_state *pci_find_saved_cap(
--	struct pci_dev *pci_dev, char cap)
-+static struct pci_cap_saved_state *_pci_find_saved_cap(struct pci_dev *pci_dev,
-+						       u16 cap, bool extended)
- {
- 	struct pci_cap_saved_state *tmp;
- 
- 	hlist_for_each_entry(tmp, &pci_dev->saved_cap_space, next) {
--		if (tmp->cap.cap_nr == cap)
-+		if (tmp->cap.cap_extended == extended && tmp->cap.cap_nr == cap)
- 			return tmp;
- 	}
- 	return NULL;
- }
- 
-+static struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev,
-+						      char cap)
-+{
-+	return _pci_find_saved_cap(dev, cap, false);
-+}
-+
-+static struct pci_cap_saved_state *pci_find_saved_ext_cap(struct pci_dev *dev,
-+							  u16 cap)
-+{
-+	return _pci_find_saved_cap(dev, cap, true);
-+}
-+
- static int pci_save_pcie_state(struct pci_dev *dev)
- {
- 	int i = 0;
-@@ -1113,7 +1125,7 @@ int pci_load_saved_state(struct pci_dev *dev, struct pci_saved_state *state)
- 	while (cap->size) {
- 		struct pci_cap_saved_state *tmp;
- 
--		tmp = pci_find_saved_cap(dev, cap->cap_nr);
-+		tmp = _pci_find_saved_cap(dev, cap->cap_nr, cap->cap_extended);
- 		if (!tmp || tmp->cap.size != cap->size)
- 			return -EINVAL;
- 
-@@ -2047,18 +2059,24 @@ static void pci_add_saved_cap(struct pci_dev *pci_dev,
- }
- 
- /**
-- * pci_add_cap_save_buffer - allocate buffer for saving given capability registers
-+ * _pci_add_cap_save_buffer - allocate buffer for saving given
-+ *                            capability registers
-  * @dev: the PCI device
-  * @cap: the capability to allocate the buffer for
-+ * @extended: Standard or Extended capability ID
-  * @size: requested size of the buffer
-  */
--static int pci_add_cap_save_buffer(
--	struct pci_dev *dev, char cap, unsigned int size)
-+static int _pci_add_cap_save_buffer(struct pci_dev *dev, u16 cap,
-+				    bool extended, unsigned int size)
- {
- 	int pos;
- 	struct pci_cap_saved_state *save_state;
- 
--	pos = pci_find_capability(dev, cap);
-+	if (extended)
-+		pos = pci_find_ext_capability(dev, cap);
-+	else
-+		pos = pci_find_capability(dev, cap);
-+
- 	if (pos <= 0)
- 		return 0;
- 
-@@ -2067,12 +2085,25 @@ static int pci_add_cap_save_buffer(
- 		return -ENOMEM;
- 
- 	save_state->cap.cap_nr = cap;
-+	save_state->cap.cap_extended = extended;
- 	save_state->cap.size = size;
- 	pci_add_saved_cap(dev, save_state);
- 
- 	return 0;
- }
- 
-+static int pci_add_cap_save_buffer(struct pci_dev *dev,
-+				   char cap, unsigned int size)
-+{
-+	return _pci_add_cap_save_buffer(dev, cap, false, size);
-+}
-+
-+static int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
-+				       u16 cap, unsigned int size)
-+{
-+	return _pci_add_cap_save_buffer(dev, cap, true, size);
-+}
-+
- /**
-  * pci_allocate_cap_save_buffers - allocate buffers for saving capabilities
-  * @dev: the PCI device
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1084a15..adcc948 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -224,7 +224,8 @@ enum pci_bus_speed {
- };
- 
- struct pci_cap_saved_data {
--	char cap_nr;
-+	u16 cap_nr;
-+	bool cap_extended;
- 	unsigned int size;
- 	u32 data[0];
- };
+I also like the fact that you do this in pci_fixup_video(), where
+we're already doing similar stuff.  The ia64 version should be changed
+the same way (or better yet, consolidated) unless there's some reason
+they need to be different.  There is a little "dig" and "hpzx1" gunk
+in the ia64 version that could be factored out into some sort of
+__weak architecture function.
 
+> Xorg is refusing to detect devices when boot_vga=0 which is the case
+> on some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
+> the dri device but then bails out with "no devices detected".
+>
+> With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
+> while having native drivers for the GPU also makes selecting sysfb/efifb
+> optional.
+>
+> Remove the efifb implementation of vga_default_device() and initialize
+> vgaarb's vga_default_device() with the PCI GPU that matches boot
+> screen_info in x86's pci_fixup_video().
+>
+> Notes:
+> - Other architectures with PCI GPU might need a similar fixup.
+> - If CONFIG_VGA_ARB is unset vga_default_device() is only available
+>   as a stub that returns NULL, making this adjustment insufficient.
+>   Unsetting CONFIG_VGA_ARB requires CONFIG_EXPERT=y though.
+>
+> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+> ---
+>  arch/x86/include/asm/vga.h |  6 ------
+>  arch/x86/pci/fixup.c       | 21 +++++++++++++++++++++
+>  drivers/video/efifb.c      | 38 --------------------------------------
+>  3 files changed, 21 insertions(+), 44 deletions(-)
+>
+> diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
+> index 44282fb..c4b9dc2 100644
+> --- a/arch/x86/include/asm/vga.h
+> +++ b/arch/x86/include/asm/vga.h
+> @@ -17,10 +17,4 @@
+>  #define vga_readb(x) (*(x))
+>  #define vga_writeb(x, y) (*(y) = (x))
+>
+> -#ifdef CONFIG_FB_EFI
+> -#define __ARCH_HAS_VGA_DEFAULT_DEVICE
+> -extern struct pci_dev *vga_default_device(void);
+> -extern void vga_set_default_device(struct pci_dev *pdev);
+> -#endif
+> -
+>  #endif /* _ASM_X86_VGA_H */
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index f5809fa..440343e 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -6,6 +6,7 @@
+>  #include <linux/dmi.h>
+>  #include <linux/pci.h>
+>  #include <linux/init.h>
+> +#include <linux/screen_info.h>
+>  #include <linux/vgaarb.h>
+>  #include <asm/pci_x86.h>
+>
+> @@ -323,6 +324,26 @@ static void pci_fixup_video(struct pci_dev *pdev)
+>         struct pci_bus *bus;
+>         u16 config;
+>
+> +       if (!vga_default_device()) {
+> +               resource_size_t start, end;
+> +               int i;
+> +
+> +               for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+> +                       if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+> +                               continue;
+> +
+> +                       start = pci_resource_start(pdev, i);
+> +                       end  = pci_resource_end(pdev, i);
+> +
+> +                       if (!start || !end)
+> +                               continue;
+> +
+> +                       if (screen_info.lfb_base >= start &&
+> +                               (screen_info.lfb_base + screen_info.lfb_size) < end)
+> +                               vga_set_default_device(pdev);
+> +               }
+> +       }
+> +
+>         /* Is VGA routed to us? */
+>         bus = pdev->bus;
+>         while (bus) {
+> diff --git a/drivers/video/efifb.c b/drivers/video/efifb.c
+> index 7f9ff75..fb3fb50 100644
+> --- a/drivers/video/efifb.c
+> +++ b/drivers/video/efifb.c
+> @@ -19,8 +19,6 @@
+>
+>  static bool request_mem_succeeded = false;
+>
+> -static struct pci_dev *default_vga;
+> -
+>  static struct fb_var_screeninfo efifb_defined = {
+>         .activate               = FB_ACTIVATE_NOW,
+>         .height                 = -1,
+> @@ -85,18 +83,6 @@ static struct fb_ops efifb_ops = {
+>         .fb_imageblit   = cfb_imageblit,
+>  };
+>
+> -struct pci_dev *vga_default_device(void)
+> -{
+> -       return default_vga;
+> -}
+> -
+> -EXPORT_SYMBOL_GPL(vga_default_device);
+> -
+> -void vga_set_default_device(struct pci_dev *pdev)
+> -{
+> -       default_vga = pdev;
+> -}
+> -
+>  static int efifb_setup(char *options)
+>  {
+>         char *this_opt;
+> @@ -127,30 +113,6 @@ static int efifb_setup(char *options)
+>                 }
+>         }
+>
+> -       for_each_pci_dev(dev) {
+> -               int i;
+> -
+> -               if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+> -                       continue;
+> -
+> -               for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+> -                       resource_size_t start, end;
+> -
+> -                       if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
+> -                               continue;
+> -
+> -                       start = pci_resource_start(dev, i);
+> -                       end  = pci_resource_end(dev, i);
+> -
+> -                       if (!start || !end)
+> -                               continue;
+> -
+> -                       if (screen_info.lfb_base >= start &&
+> -                           (screen_info.lfb_base + screen_info.lfb_size) < end)
+> -                               default_vga = dev;
+> -               }
+> -       }
+> -
+>         return 0;
+>  }
+>
