@@ -1,61 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:45814 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751229Ab3L0Aa2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Dec 2013 19:30:28 -0500
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MYF004BRW2QJ170@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 27 Dec 2013 09:30:26 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] PCI: designware: Fix indent code style
-Date: Fri, 27 Dec 2013 09:30:25 +0900
-Message-id: <000401cf029a$d63943d0$82abcb70$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:62853 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756021Ab3LIVV2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 16:21:28 -0500
+Received: by mail-ie0-f173.google.com with SMTP id to1so7151059ieb.18
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 13:21:28 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52a632f0.e42c980a.3d86.ffff8faeSMTPIN_ADDED_MISSING@mx.google.com>
+References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com>
+ <1385732125-28630-1-git-send-email-ben@datarespons.no> <20131209204349.GA2135@google.com>
+ <52a632f0.e42c980a.3d86.ffff8faeSMTPIN_ADDED_MISSING@mx.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Dec 2013 14:21:07 -0700
+Message-ID: <CAErSpo7KrWaP5e0TU+J4M+3mU0hUFr9fbt9GFyx8ghBrEJpugQ@mail.gmail.com>
+Subject: Re: [PATCH v5 0/2] Kernel oops from pci_disable_msi
+To: =?ISO-8859-1?Q?Bj=F8rn_Erik_Nilsen?= <ben@datarespons.no>
+Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
+	"marex@denx.de" <marex@denx.de>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"kishon@ti.com" <kishon@ti.com>,
+	"Mohit.KUMAR@st.com" <Mohit.KUMAR@st.com>,
+	"ajay.khandelwal@st.com" <ajay.khandelwal@st.com>,
+	"tharvey@gateworks.com" <tharvey@gateworks.com>,
+	"Eric.Nelson@boundarydevices.com" <Eric.Nelson@boundarydevices.com>,
+	"troy.kisky@boundarydevices.com" <troy.kisky@boundarydevices.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix indent code style and replace 'MSI interrupt controller'
-of comment with 'MSI controller', in order to fix the following
-checkpatch issues.
+On Mon, Dec 9, 2013 at 2:15 PM, Bjørn Erik Nilsen <ben@datarespons.no> wrote:
+> Hi Bjorn,
+>
+> 9. des. 2013 kl. 21:43 skrev Bjorn Helgaas <bhelgaas@google.com>:
+>
+>> On Fri, Nov 29, 2013 at 02:35:23PM +0100, Bjørn Erik Nilsen wrote:
+>>> This patchset address Marek Vasut's comments on the previous
+>>> patches. I decided to split into two separate commits as they are
+>>> unrelated.
+>>>
+>>> Bjørn Erik Nilsen (2):
+>>>  PCI: designware: Fix crash in dw_msi_teardown_irq
+>>>  PCI: designware: Remove redundant call to pci_write_config
+>>
+>> Hi Bjørn,
+>>
+>> There's been a fair amount of discussion about the first patch, so I'm
+>> ignoring these for now.  Please repost these (again) when that all settles
+>> down.
+>
+> I'm under the impression that all concerns have been addressed and that the discussion has settled down.
+>
+> What are the outstanding issues to be solved regarding these patches?
+>
+> I'm asking because these patches are acked-by Marek Vasut and Jingoo Han as well as tested-by Mohit Kumar (and obviously myself).
+>
+> Jingoo Han confirms he can reproduce the crash on Exynos and that the first patch fixes the problem.
 
-  ERROR: code indent should use tabs where possible
-  WARNING: please, no spaces at the start of a line
-  WARNING: line over 80 characters
+I didn't trace through the discussion closely enough to follow
+complaints and their resolution or retraction.  Can you post the
+current version including the acks, just so I make sure I get the
+latest stuff?
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/pci/host/pcie-designware.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 4a08d30..17ce88f 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -213,14 +213,14 @@ static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
- }
- 
- static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
--                            unsigned int nvec, unsigned int pos)
-+			    unsigned int nvec, unsigned int pos)
- {
- 	unsigned int i, res, bit, val;
- 
- 	for (i = 0; i < nvec; i++) {
- 		irq_set_msi_desc_off(irq_base, i, NULL);
- 		clear_bit(pos + i, pp->msi_irq_in_use);
--		/* Disable corresponding interrupt on MSI interrupt controller */
-+		/* Disable corresponding interrupt on MSI controller */
- 		res = ((pos + i) / 32) * 12;
- 		bit = (pos + i) % 32;
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
--- 
-1.7.10.4
-
-
+Thanks,
+  Bjorn
