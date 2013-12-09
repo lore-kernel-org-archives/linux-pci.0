@@ -1,82 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:6061 "EHLO
-	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750975Ab3LRGRg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 01:17:36 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
- during removal
-Date: Wed, 18 Dec 2013 06:17:28 +0000
-Message-ID: <0c18891f0a754978a3015c9b3b50df93@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <52B0AEAD.6050604@gmail.com>	<20131218010207.GC15119@google.com>
-	<41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
- <CAE9FiQVGQ8THfMBfEhaOnjbrdaRn+5CRoUoGZuVvRcZcAKqW_A@mail.gmail.com>
-In-Reply-To: <CAE9FiQVGQ8THfMBfEhaOnjbrdaRn+5CRoUoGZuVvRcZcAKqW_A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:35153 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933127Ab3LIVn3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 16:43:29 -0500
+Received: by mail-yh0-f54.google.com with SMTP id z12so3255438yhz.27
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 13:43:28 -0800 (PST)
+Date: Mon, 9 Dec 2013 14:43:24 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: marex@denx.de, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [PATCH 1/2] PCI: imx6: Remove unneeded check of
+ platform_get_resource()
+Message-ID: <20131209214324.GB2135@google.com>
+References: <1385955575-25270-1-git-send-email-festevam@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1385955575-25270-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IHlobHUua2VybmVsQGdtYWls
-LmNvbSBbbWFpbHRvOnlobHUua2VybmVsQGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mDQo+IA0KPiBP
-biBUdWUsIERlYyAxNywgMjAxMyBhdCA3OjIwIFBNLCBSYWphdCBKYWluIDxyYWphdGphaW5AanVu
-aXBlci5uZXQ+DQo+IHdyb3RlOg0KPiA+DQo+ID4gQWN0dWFsbHkgSSBkaWQgbm90IHVuZGVyc3Rh
-bmQgdGhlIG9yaWdpbmFsIHByb2JsZW0gYW5kIHRoZSBzb2x1dGlvbiBpbg0KPiA+IHRoZSBmaXJz
-dCBwbGFjZSAoc28gSSBhbHNvIGRvIG5vdCB1bmRlcnN0YW5kIGhvdyBtaWdodCBkaXNhYmxpbmcg
-b2YNCj4gPiBwcmVzZW5jZSBkZXRlY3Qgbm90aWZpY2F0aW9uIGhlbHApLiBJZiB5b3UgY2FuIGdp
-dmUgbW9yZSBkZXRhaWxzIG9uDQo+ID4gdGhlIG9yaWdpbmFsIHByb2JsZW0gdGhhdCBzaGFsbCBi
-ZSBncmVhdC4gSGVyZSBpcyB3aGF0IEkgdW5kZXJzdG9vZA0KPiBmcm9tIHRoZSBjb21taXQgbG9n
-Og0KPiA+DQo+ID4gVGhlIGJlbGlldmUgdGhlIEhXIGxvb2tzIGxpa2UgdGhpczoNCj4gPg0KPiA+
-IFBDSWUgcG9ydCA8LS0tLT4gUmVwZWF0ZXIgPC0tLS0+IERldmljZS4NCj4gPg0KPiA+IEFuIGlu
-IGFkZGl0aW9uIHRoZXJlIGlzIHRoZSBwcmVzZW5jZSBkZXRlY3QgcGluIHRoYXQgaXMgY29ubmVj
-dGVkDQo+ID4gZGlyZWN0bHkgZnJvbSBUaGUgcG9ydCB0byB0aGUgZGV2aWNlLiBOb3csIHdoZW4g
-dGhlIGRldmljZSBpcyBwbHVnZ2VkDQo+ID4gb3V0LCB0aGUgcGluIGluZGljYXRlcyBObyBwcmVz
-ZW5jZS4gQnV0IGFyZSB5b3Ugc2F5aW5nIHRoZSBQQ0llIGxpbmsNCj4gZnJvbSBwb3J0IHRvIHJl
-cGVhdGVyIGlzIHN0aWxsIHVwPw0KPiANCj4gQWZ0ZXIgdGhlIGNhcmQgaXMgcmVtb3ZlZCBmcm9t
-IHRoZSBzbG90Lg0KPiANCj4gUENJZSBwb3J0IHRyeSB0byByZXRyYWluIHRoZSBsaW5rIHRvIHJl
-cGVhdGVyLCBsaWtlIHRoZSBsaW5rIHdpbGwga2VlcA0KPiB1cCBhbmQgZG93bi4NCg0KSSBzdGls
-bCBkaWQgbm90IHVuZGVyc3RhbmQgdGhlIHdoeSB3b3VsZCB0aGUgUENJZSBwb3J0IHRyeSB0byBk
-byBzby4gQXJlIHlvdQ0KU2F5aW5nIHRoZSByZXBlYXRlciBrZWVwcyBvbiBmbGFwcGluZyB0aGUg
-bGluaz8gTmV2ZXJ0aGVsZXNzLCBJIGFzc3VtZSBpdCBpcw0KZHVlIHRvIHNvbWUgcmVwZWF0ZXIg
-YnVnICh0aGF0IHlvdSBtZW50aW9uIGJlbG93KSB0aGF0IEkgZG8gbm90IG5lZWQgdG8NCnVuZGVy
-c3RhbmQuDQoNCj4gDQo+IHNvIHRoZSBwcmVzZW5jZSBiaXQgd2lsbCBrZWVwIHJlcG9ydCBvbmUg
-Y2FyZCBwcmVzZW50IGFuZCBub3QgcHJlc2VudC4NCj4gdGhhdCBwcmVzZW50IGJpdCBzaG91bGQg
-YmUgT1Igb2YgaW5iYW5kIGlucHV0IGFuZCBvdXRiYW5kIGlucHV0Lg0KPiBXZSBjaGVjayB0aGUg
-b3V0YmFuZCBpbnB1dCBhbmQgaXQgYWx3YXlzIHJlcG9ydCBjb3JyZWN0bHkuDQoNCkp1c3QgYSBz
-dWdnZXN0aW9uIGZvciBhIHdvcmsgYXJvdW5kLiBJIGNoZWNrZWQgdGhlIG1hbnVhbCBvZiB0aGUg
-UENJZSBzd2l0Y2gNCndlIHVzZSBpbiBvdXIgc3lzdGVtIChJRFQgODlIUEVTNDhIMTJHMiksIGFu
-ZCBpdCBpcyBwb3NzaWJsZSBhdCBsZWFzdCBpbiB0aGlzDQpzd2l0Y2ggdG8gY29udHJvbCB3aGV0
-aGVyIG9yIG5vdCBpbi1iYW5kIGlzIGNvbnNpZGVyZWQuIEFuIGludGVybmFsIGNvbmZpZ3VyYXRp
-b24NCnJlZ2lzdGVyIHNheXM6DQoNClByZXNlbmNlIERldGVjdCBDb250cm9sLiBUaGlzIGZpZWxk
-IGNvbnRyb2xzIHRoZSBtYW5uZXIgaW4gd2hpY2gNCnByZXNlbmNlIG9mIGFuIGFkYXB0ZXIgaW4g
-YSBzbG90IGlzIHJlcG9ydGVkIHRvIHRoZSBob3QtcGx1ZyBjb250cm9sbGVyDQphc3NvY2lhdGVk
-IHdpdGggYSBkb3duc3RyZWFtIHN3aXRjaCBwb3J0Lg0KMHgwIC0gKGJvdGgpIFByZXNlbmNlIG9m
-IGFuIGFkYXB0ZXIgaW4gdGhlIHNsb3QgaXMgcmVwb3J0ZWQgYXMgdGhlDQpsb2dpY2FsIOKAnE9S
-4oCdIG9mIHRoZSByZWNlaXZlciBkZXRlY3QgbWVjaGFuaXNtIGFuZCB0aGUgaG90cGx1Zw0KcHJl
-c2VuY2UgZGV0ZWN0IGlucHV0IChQeFBETikuDQoweDEgLSAoc2lnbmFsKSBQcmVzZW5jZSBvZiBh
-biBhZGFwdGVyIGluIHRoZSBzbG90IGlzIHJlcG9ydGVkIGFzIHRoZQ0Kc3RhdGUgb2YgdGhlIGhv
-dC1wbHVnIHByZXNlbmNlIGRldGVjdCBpbnB1dCAoUHhQRE4pLg0KMHgyIC0gKGFsd2F5cykgV2hl
-biBzZWxlY3RlZCwgdGhpcyBtb2RlIGFsd2F5cyBpbmZvcm1zIHRoZSBob3RwbHVnDQpjb250cm9s
-bGVyIHRoYXQgYW4gYWRhcHRlciBpcyBwcmVzZW50Lg0KMHgzIC0gKG5ldmVyKSBXaGVuIHNlbGVj
-dGVkLCB0aGlzIG1vZGUgYWx3YXlzIGluZm9ybXMgdGhlIGhvdHBsdWcNCmNvbnRyb2xsZXIgdGhh
-dCBhbiBhZGFwdGVyIGlzIG5vdCBwcmVzZW50Lg0KDQpNYXkgYmUgc29tZSBzaW1pbGFyIGNvbmZp
-ZyBtYXkgYmUgcHJlc2VudCBpbiB0aGUgc3dpdGNoIG9yIHRoZSBDUFUgdGhhdCB5b3UgdXNlLg0K
-DQpKdXN0IGEgcmFuZG9tIHRob3VnaHQuDQoNCj4gDQo+IEFjY29yZGluZyB0byBIVyBndXlzIGFu
-ZCBJbnRlbCwgdGhhdCBzaG91bGQgYmUgYnVnIG9mIHJlcGVhdGVyLg0KDQpXZWxsLCBpbiB0aGF0
-IGNhc2UgSSBkb3VidCBpZiB0aGUgcGF0Y2ggd2lsbCBzb2x2ZSB0aGUgcHJvYmxlbS4gSSB0aGlu
-aw0KTW9zdCBsaWtlbHkgdGhlICJjYXJkIHByZXNlbnQgLyBub3QgcHJlc2VudCIgbWVzc2FnZXMg
-bWF5IGJlIHJlcGxhY2VkDQpCeSAibGluay11cCAvIGxpbmstZG93biIgbWVzc2FnZXMuIEJ1dCBJ
-J2QgYXBwcmVjaWF0ZSB5b3VyIHRlc3RpbmcuDQoNClRoYW5rcywNCg0KUmFqYXQNCg0KPiANCj4g
-RGlzYWJsZSB0aGUgbGluayBmcm9tIHBjaWUgdG8gcmVwZWF0ZXIsIGxpa2VseSB0byByZXNldCB0
-aGUgcmVwZWF0ZXIuLi4uDQo+IA0KPiBUaGFua3MNCj4gDQo+IFlpbmdoYWkNCj4gDQoNCg==
+[+cc Shawn]
 
+On Mon, Dec 02, 2013 at 01:39:34AM -0200, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> When using devm_ioremap_resource(), we do not need to check the return value of
+> platform_get_resource(), so just remove it.
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+
+I applied this with Marek's ack to pci/host-imx6 for v3.14.
+
+Shawn, let me know if you object.  It looks correct to me because
+devm_ioremap_resource() checks for res being NULL.
+
+> ---
+>  drivers/pci/host/pci-imx6.c | 5 -----
+>  1 file changed, 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index bd70af8..5002e23 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -426,11 +426,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  		"imprecise external abort");
+>  
+>  	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> -	if (!dbi_base) {
+> -		dev_err(&pdev->dev, "dbi_base memory resource not found\n");
+> -		return -ENODEV;
+> -	}
+> -
+>  	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
+>  	if (IS_ERR(pp->dbi_base)) {
+>  		ret = PTR_ERR(pp->dbi_base);
+> -- 
+> 1.8.1.2
+> 
