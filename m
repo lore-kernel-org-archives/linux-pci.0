@@ -1,82 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog114.obsmtp.com ([207.126.144.137]:49532 "EHLO
-	eu1sys200aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751858Ab3LPGtl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 Dec 2013 01:49:41 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Jingoo Han <jg1.han@samsung.com>, 'Harro Haan' <hrhaan@gmail.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Richard Zhu' <hong-xing.zhu@freescale.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Juergen Beisert' <jbe@pengutronix.de>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
-	'Sean Cross' <xobs@kosagi.com>,
+Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:34334 "EHLO
+	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760557Ab3LIHNb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 02:13:31 -0500
+Date: Mon, 9 Dec 2013 12:42:42 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Marek Vasut <marex@denx.de>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Mon, 16 Dec 2013 14:48:46 +0800
-Subject: RE: [PATCH] pci: designware: fix missing msi irqs
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F6A22@EAPEX1MAIL1.st.com>
-References: <20131212182903.409515738@gmail.com>
- <005b01cef9f9$52022bd0$f6068370$%han@samsung.com>
-In-Reply-To: <005b01cef9f9$52022bd0$f6068370$%han@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tim Harvey <tharvey@gateworks.com>
+Subject: Re: [Query/Discussion]: IO translation with designware PCIe
+ controller
+Message-ID: <20131209071241.GA5760@pratyush-vbox>
+References: <20131205050424.GA2298@pratyush-vbox>
+ <201312052233.13169.arnd@arndb.de>
+ <20131206091209.GC2298@pratyush-vbox>
+ <201312061546.23981.arnd@arndb.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201312061546.23981.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Jingoo Han [mailto:jg1.han@samsung.com]
-> Sent: Monday, December 16, 2013 6:24 AM
-> To: 'Harro Haan'; Mohit KUMAR DCG
-> Cc: 'Bjorn Helgaas'; 'Marek Vasut'; 'Richard Zhu'; 'Shawn Guo'; Pratyush
-> ANAND; 'Tim Harvey'; 'Juergen Beisert'; 'Arnd Bergmann'; 'Siva Reddy
-> Kallam'; 'Srikanth T Shivanand'; 'Sean Cross'; linux-pci@vger.kernel.org; linux-
-> arm-kernel@lists.infradead.org; 'Jingoo Han'
-> Subject: Re: [PATCH] pci: designware: fix missing msi irqs
-> 
-> On Friday, December 13, 2013 3:29 AM, Harro Haan wrote:
-> >
-> > The interrupts were cleared after the irq handler was called.
-> > This means that new interrupts that occur after the handler handled
-> > the previous irq but before the interrupt is cleared will be missed.
-> >
-> > Signed-off-by: Harro Haan <hrhaan@gmail.com>
-> > Cc: Mohit Kumar <mohit.kumar@st.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Marek Vasut <marex@denx.de>
-> > Cc: Richard Zhu <hong-xing.zhu@freescale.com>
-> > Cc: Shawn Guo <shawn.guo@linaro.org>
-> > Cc: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Tim Harvey <tharvey@gateworks.com>
-> > Cc: Juergen Beisert <jbe@pengutronix.de>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> > Cc: Sean Cross <xobs@kosagi.com>
-> > Cc: linux-pci@vger.kernel.org
-> > Cc: linux-arm-kernel@lists.infradead.org
-> 
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
-> 
-> I was not able to reproduce the problem, however it looks good. Also, there
-> is no side effect on Exynos platform.
-> 
-> Mohit,
-> If you have some comments, please let us know.
+Hi Arnd,
 
-- Quickly tested on SPEAr1310, working fine without any side effect. So is,
-Acked-by: Mohit Kumar <mohit.kumar@st.com>
-..
+On Fri, Dec 06, 2013 at 10:46:23PM +0800, Arnd Bergmann wrote:
+> On Friday 06 December 2013, Pratyush Anand wrote:
 > 
-> > ---
-> >  drivers/pci/host/pcie-designware.c |    4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > > 
 
+[...]
+
+> > > > For example in SPEAr1340, physically RAM is mapped on above addresses.
+> > > > PCIe address translation unit can accept address only in the range of
+> > > > core addresses which are assigned to PCIe RC ie 0x80000000-0x8FFFFFFF.
+> > > 
+> > > Since this is a physical address, it corresponds to address space 3 in
+> > > my list above, and the address you pick here is what you pass to
+> > > pci_ioremap_io.
+> > 
+> > This is what I was expecting. But currently designware driver does not
+> > pass this address to pci_ioremap_io.
+> > OK.. We will fix it and will send patch.
+> 
+> I think it does handle this correctly, look at
+> 
+> static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> {
+> 	...
+>         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+>                 sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+>                 pci_ioremap_io(sys->io_offset, pp->io.start);
+>                 global_io_offset += SZ_64K;
+>                 pci_add_resource_offset(&sys->resources, &pp->io,
+>                                         sys->io_offset);
+>         }
+> 	...
+> }
+> 
+> I believe this does the right thing, but you have to put the correct
+> translation into the 'ranges' property of the host bridge node in DT.
+
+May be not exactly. pp->io is the  realio, and it is passed correctly
+to pci_add_resource_offset. But, as you had also
+said that pci_ioremap_io will receive cpu physical address space as
+input, therefore I think following modification will be needed to work
+io transaction properly.
+
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index be6ce30..cf68632 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 					   + global_io_offset);
+ 			pp->config.io_size = resource_size(&pp->io);
+ 			pp->config.io_bus_addr = range.pci_addr;
++			pp->io_base = range.cpu_addr;
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+@@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	pp->cfg0_base = pp->cfg.start;
+ 	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+-	pp->io_base = pp->io.start;
+ 	pp->mem_base = pp->mem.start;
+ 
+ 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+@@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ 
+ 	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+ 		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+-		pci_ioremap_io(sys->io_offset, pp->io.start);
++		pci_ioremap_io(sys->io_offset, pp->io_base);
+ 		global_io_offset += SZ_64K;
+ 		pci_add_resource_offset(&sys->resources, &pp->io,
+ 					sys->io_offset);
+Regards
+Pratyush
+> 
+> 	Arnd
