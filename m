@@ -1,67 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:64375 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474Ab3LRBDy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 20:03:54 -0500
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MXZ002Q99MGM410@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 18 Dec 2013 10:03:52 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Andrew Lunn' <andrew@lunn.ch>
-Cc: 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Jason Cooper' <jason@lakedaemon.net>,
-	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <1386178241-10453-1-git-send-email-andrew@lunn.ch>
- <20131217204510.GA2281@lunn.ch>
-In-reply-to: <20131217204510.GA2281@lunn.ch>
-Subject: Re: [PATCH] PCI: MVEBU: Remove duplicate clock get
-Date: Wed, 18 Dec 2013 10:03:51 +0900
-Message-id: <006c01cefb8d$043e37f0$0cbaa7d0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:37021 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932582Ab3LIUo7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:44:59 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6xSYq=7AfFm+qNLGSfe6qjaGKyrwxdpG_CXHSy2uVX_w@mail.gmail.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
+	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
+	<CAErSpo6xSYq=7AfFm+qNLGSfe6qjaGKyrwxdpG_CXHSy2uVX_w@mail.gmail.com>
+Date: Mon, 9 Dec 2013 12:44:58 -0800
+Message-ID: <CAE9FiQVc=knLngJ9=oAi9NP4AQzu5hWGh_mkxsB2TqD_posL8g@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 18, 2013 5:45 AM, Andrew Lunn wrote:
-> On Wed, Dec 04, 2013 at 06:30:41PM +0100, Andrew Lunn wrote:
-> > Probably due to a merge conflict resolution gone bad, the pci clock is
-> > got twice. Remove the second redundent of_clk_get_by_name().
-> >
-> > Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> > ---
-> >  drivers/pci/host/pci-mvebu.c | 8 --------
-> >  1 file changed, 8 deletions(-)
-> 
-> Hi Folks
-> 
-> This patch has been Acked by Jingoo Han.
+On Mon, Dec 9, 2013 at 12:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-I just 'Reviewed', not 'Acked'. :-)
+> Yes, I agree.  I didn't say it would be simple.  The quick fix would
+> be easy for now, but adding nonsensical code makes our lives harder
+> long into the future.
 
-> 
-> So my question is, which maintainer is going to accept it for
-> mainline? Is there anything i need to do?
+If the old kernel is working, and user update kernel then we should
+not request them to append "pci=realloc=off" for booting.
 
-As Bjorn said, this patch was already applied to 'pci/host-mvebu'
-branch for v3.14.
+other user that would have "pci=realloc=on" works, they could always
+keep that.
 
-Also, MVEBU PCIe will be maintained by Thomas Petazzoni, and
-Jason Cooper as below.
+For now, we just reduce auto enable scope, as very beginning we are doing
+that esp for SRIOV..., and now SRIOV would require huge range esp when
+num_VF could be 64. we are easy to hit the case that realloc code mess up
+the bios allocation when there is not above 4G 64bit mmio.
 
-PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
-M:     Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-M:     Jason Cooper <jason@lakedaemon.net>
-L:     linux-pci@vger.kernel.org
-L:     linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-S:     Maintained
-F:     drivers/pci/host/*mvebu*
-
-Thank you.
-
-Best regards,
-Jingoo Han
-
+Yinghai
