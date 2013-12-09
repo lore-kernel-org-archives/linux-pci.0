@@ -1,43 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1386162396.17466.77.camel@kazak.uk.xensource.com>
-Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
-From: Ian Campbell <Ian.Campbell@citrix.com>
-To: David Vrabel <david.vrabel@citrix.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<stefano.stabellini@eu.citrix.com>,
-	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
-	<boris.ostrovsky@oracle.com>, <leosilva@linux.vnet.ibm.com>,
-	<ashley@ashleylai.com>, <peterhuewe@gmx.de>, <mail@srajiv.net>,
-	<tpmdd@selhorst.net>, <tpmdd@sirrix.com>,
-	<dmitry.torokhov@gmail.com>, <bhelgaas@google.com>,
-	<plagnioj@jcrosoft.com>, <tomi.valkeinen@ti.com>,
-	<tpmdd-devel@lists.sourceforge.net>, <linux-input@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-fbdev@vger.kernel.org>
-Date: Wed, 4 Dec 2013 13:06:36 +0000
-In-Reply-To: <529F2758.9070304@citrix.com>
-References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
-	 <529F2758.9070304@citrix.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:54662 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932582Ab3LIUnz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:43:55 -0500
+Received: by mail-qa0-f52.google.com with SMTP id cm18so1377372qab.4
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 12:43:54 -0800 (PST)
+Date: Mon, 9 Dec 2013 13:43:49 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: =?iso-8859-1?Q?Bj=F8rn?= Erik Nilsen <ben@datarespons.no>
+Cc: jg1.han@samsung.com, marex@denx.de, pratyush.anand@gmail.com,
+	linux-pci@vger.kernel.org, kishon@ti.com, Mohit.KUMAR@st.com,
+	ajay.khandelwal@st.com, tharvey@gateworks.com,
+	Eric.Nelson@boundarydevices.com, troy.kisky@boundarydevices.com
+Subject: Re: [PATCH v5 0/2] Kernel oops from pci_disable_msi
+Message-ID: <20131209204349.GA2135@google.com>
+References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com>
+ <1385732125-28630-1-git-send-email-ben@datarespons.no>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1385732125-28630-1-git-send-email-ben@datarespons.no>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-12-04 at 13:00 +0000, David Vrabel wrote:
-> On 03/12/13 21:14, Konrad Rzeszutek Wilk wrote:
-> > 
-> > Ian Campbell suggested getting rid of 'xen_platform_pci_unplug'
-> > but unfortunatly the xen-blkfront driver is using it, so we
-> > cannot do it.
+On Fri, Nov 29, 2013 at 02:35:23PM +0100, Bjørn Erik Nilsen wrote:
+> This patchset address Marek Vasut's comments on the previous
+> patches. I decided to split into two separate commits as they are
+> unrelated.
 > 
-> I had a look at what blkfront was using this for and it seems dumb.  How
-> did we end up with the frontend driver working around toolstack bugs?
-> If HVM Linux guest didn't want (e.g.,) PV CDROM, the toolstack shouldn't
-> have created one.
+> Bjørn Erik Nilsen (2):
+>   PCI: designware: Fix crash in dw_msi_teardown_irq
+>   PCI: designware: Remove redundant call to pci_write_config
 
-Note that this cdrom stuff is actually nothing to do with the unplug
-variable -- it just happens to be right next to that check.
+Hi Bjørn,
 
-Not that the use of the unplug var there doesn't also look pretty odd...
+There's been a fair amount of discussion about the first patch, so I'm
+ignoring these for now.  Please repost these (again) when that all settles
+down.
 
-
+Bjorn
