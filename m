@@ -1,60 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:63800 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306Ab3LMFNy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 00:13:54 -0500
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:48958 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932440Ab3LIUK7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:10:59 -0500
 MIME-Version: 1.0
-In-Reply-To: <20131212204610.GK4699@google.com>
-References: <20131211183237.GI4699@google.com>
-	<20131212204610.GK4699@google.com>
-Date: Fri, 13 Dec 2013 14:13:50 +0900
-Message-ID: <CANqRtoQEPghgEERMtzXFoUQhskbC9eNevZ1C7kO5ajoTwDua3w@mail.gmail.com>
-Subject: Re: [PATCH v2] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
- host maintainers
-From: Magnus Damm <magnus.damm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-tegra@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
-	linux-samsung-soc@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Wei Yongjun <weiyj.lk@gmail.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+In-Reply-To: <CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
+	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+Date: Mon, 9 Dec 2013 12:10:58 -0800
+Message-ID: <CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 13, 2013 at 5:46 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Thomas]
+On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> That doesn't answer my question at all.
 >
-> On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
->> If this looks reasonable, I'll merge it via the PCI tree for v3.13.
+> I understand that this change makes it so Joseph doesn't have to use
+> "pci=realloc=off".  But why should auto-reallocation be limited to
+> buses that have resources above 4GB?  That doesn't make any sense.
 >
-> OK, here's another try.  I'm not actually trying to nominate anybody; I
-> just tried to write down the list we came up with in an earlier discussion [1].
->
-> I'd like confirmation from the following people that they approve of being
-> listed here:
->
->   Richard Zhu (IMX6)
->   Thomas Petazzoni (MVEBU)
->   Magnus Damm (R-CAR)
+> We should fix the reallocation code so it can deal with this case.  If
+> there's not enough space for everything, obviously we have to leave
+> something unassigned.  A ROM BAR is a good candidate for leaving
+> unassigned, because most of the time we can get along without it.
 
-Hi Bjorn,
+Yes, that is ideal and not that simple.
+but that would be hard to backport to old kernels.
 
-Thanks for making this list. I actually have had very little to do
-with this particular driver, so I prefer to be omitted since Simon
-Horman already is listed and I trust his judgement.
+BTW, Joseph, can you try
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-3.14
+with pci=realloc=on
 
-Cheers,
+on that system?
 
-/ magnus
+Thanks
+
+Yinghai
