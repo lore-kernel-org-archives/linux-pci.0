@@ -1,48 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:51313 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751527Ab3LLVIP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:08:15 -0500
-Received: by mail-ig0-f181.google.com with SMTP id k19so203412igc.2
-        for <linux-pci@vger.kernel.org>; Thu, 12 Dec 2013 13:08:15 -0800 (PST)
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:35144 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756073Ab3LIVGK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 16:06:10 -0500
+Received: by mail-ie0-f176.google.com with SMTP id at1so7110654iec.35
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 13:06:10 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <201312121925.27591.marex@denx.de>
-References: <1386757818-5154-1-git-send-email-marex@denx.de>
- <201312121122.33746.marex@denx.de> <CAJ+vNU0aoOtZEdq6GDPpwZAgu+EN3FjHnr8JAdXCxOiDfJ5m6A@mail.gmail.com>
- <201312121925.27591.marex@denx.de>
+In-Reply-To: <CAE9FiQVc=knLngJ9=oAi9NP4AQzu5hWGh_mkxsB2TqD_posL8g@mail.gmail.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+ <1386546869-31900-3-git-send-email-yinghai@kernel.org> <CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
+ <CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+ <CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+ <CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
+ <CAErSpo6xSYq=7AfFm+qNLGSfe6qjaGKyrwxdpG_CXHSy2uVX_w@mail.gmail.com> <CAE9FiQVc=knLngJ9=oAi9NP4AQzu5hWGh_mkxsB2TqD_posL8g@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 12 Dec 2013 14:07:54 -0700
-Message-ID: <CAErSpo7C4rJZBuBUDRN6L_fkQZNthfeY=_oJ=_WCcqAxoj2Xig@mail.gmail.com>
-Subject: Re: [PATCH 1/7] PCI: imx6: Make reset-gpio optional
-To: Marek Vasut <marex@denx.de>,
-	Zhu Richard-R65037 <r65037@freescale.com>
-Cc: Tim Harvey <tharvey@gateworks.com>,
+Date: Mon, 9 Dec 2013 14:05:49 -0700
+Message-ID: <CAErSpo6G9Tb4_bqhrZLb3Om2U2FzOh16bPqEbMherLVh+oHf7A@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 12, 2013 at 11:25 AM, Marek Vasut <marex@denx.de> wrote:
-> Bjorn, would you mind picking 2/7...6/7 of this series so we are done with
-> those? I will re-post 1/7 as a self-standing patch afterwards, it has no impact
-> on the rest of the series.
+On Mon, Dec 9, 2013 at 1:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Dec 9, 2013 at 12:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> Yes, I agree.  I didn't say it would be simple.  The quick fix would
+>> be easy for now, but adding nonsensical code makes our lives harder
+>> long into the future.
+>
+> If the old kernel is working, and user update kernel then we should
+> not request them to append "pci=realloc=off" for booting.
 
-Sure.  I can't really evaluate these myself, so I'm looking for acks
-from Richard or Shawn.
-
-I noticed Pratyush, Tim, and Harro had some questions the first time
-around, and I don't know whether they got resolved.
+I agree.  I would just prefer a better fix.
 
 Bjorn
