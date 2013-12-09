@@ -1,59 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:59263 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855Ab3LRFOL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 00:14:11 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <52B0AEAD.6050604@gmail.com>
-	<20131218010207.GC15119@google.com>
-	<41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
-Date: Tue, 17 Dec 2013 21:14:10 -0800
-Message-ID: <CAE9FiQVGQ8THfMBfEhaOnjbrdaRn+5CRoUoGZuVvRcZcAKqW_A@mail.gmail.com>
-Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently, during removal
-From: Yinghai Lu <yinghai@kernel.org>
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+In-Reply-To: <CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+ <1386546869-31900-3-git-send-email-yinghai@kernel.org> <CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
+ <CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Dec 2013 12:42:29 -0700
+Message-ID: <CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 17, 2013 at 7:20 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+On Mon, Dec 9, 2013 at 12:20 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Dec 9, 2013 at 9:54 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> I don't see how the question of whether the host bridge has an
+>> aperture above 4G is related to whether we should automatically
+>> reassign resources.  They seem orthogonal to me.  No doubt it "fixes"
+>> the current problem, but it doesn't make sense conceptually.
 >
-> Actually I did not understand the original problem and the solution in the first
-> place (so I also do not understand how might disabling of presence detect notification
-> help). If you can give more details on the original problem that shall be great. Here
-> is what I understood from the commit log:
+> the BIOS has problem to have two functions point to same position.
 >
-> The believe the HW looks like this:
+> During realloc first try: standard+two rom_bar+sriov will be fail at first as
+> pci root bus does not have enough mmio range,
+> later try will standard+two rom_bar it will fail too as root bus mmio range will
+> still only fit standard+one rom_bar.
 >
-> PCIe port <----> Repeater <----> Device.
->
-> An in addition there is the presence detect pin that is connected directly from
-> The port to the device. Now, when the device is plugged out, the pin indicates
-> No presence. But are you saying the PCIe link from port to repeater is still up?
+> My thoughts is limit use realloc auto in those systems that does not have mmio64
+> above 4g...
+> so old system will never have to specify "pci=realloc=off" to disable it.
 
-After the card is removed from the slot.
+That doesn't answer my question at all.
 
-PCIe port try to retrain the link to repeater, like the link will keep
-up and down.
+I understand that this change makes it so Joseph doesn't have to use
+"pci=realloc=off".  But why should auto-reallocation be limited to
+buses that have resources above 4GB?  That doesn't make any sense.
 
-so the presence bit will keep report one card present and not present.
-that present bit should be OR of inband input and outband input.
-We check the outband input and it always report correctly.
+We should fix the reallocation code so it can deal with this case.  If
+there's not enough space for everything, obviously we have to leave
+something unassigned.  A ROM BAR is a good candidate for leaving
+unassigned, because most of the time we can get along without it.
 
-According to HW guys and Intel, that should be bug of repeater.
-
-Disable the link from pcie to repeater, likely to reset the repeater....
-
-Thanks
-
-Yinghai
+Bjorn
