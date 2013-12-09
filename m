@@ -1,62 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:47115 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853Ab3LCRj1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 12:39:27 -0500
-Received: by mail-ie0-f169.google.com with SMTP id e14so25012826iej.28
-        for <linux-pci@vger.kernel.org>; Tue, 03 Dec 2013 09:39:26 -0800 (PST)
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:60778 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761536Ab3LIVHU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 16:07:20 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so7098876ieb.22
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 13:07:19 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAD6G_RT0S43BrOeXxJ6d3p1ALbXkGumZCSPBaK1Bz=2pX3hHYQ@mail.gmail.com>
-References: <CAD6G_RT0S43BrOeXxJ6d3p1ALbXkGumZCSPBaK1Bz=2pX3hHYQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQW60hW06sr=ahV6rEMRQ5kA04A_1mUtfZQAra__6ttNxw@mail.gmail.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+ <1386546869-31900-2-git-send-email-yinghai@kernel.org> <CAErSpo7HaAbsoy0n5sr_d3iPazEnpnO8WupJrDn2QR2Kid=EgQ@mail.gmail.com>
+ <CAE9FiQUebPPcTyHGssxTwJJ3GYx4aq-=infapvxOQgAm+PL4rA@mail.gmail.com>
+ <CAE9FiQUrTAnQkiS9SU3-pJ35-U9CqXQNQEceUUarf-WiPXCF2Q@mail.gmail.com>
+ <20131209204323.GA25180@kroah.com> <CAE9FiQW60hW06sr=ahV6rEMRQ5kA04A_1mUtfZQAra__6ttNxw@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 3 Dec 2013 10:39:06 -0700
-Message-ID: <CAErSpo4DNqUpA6Cb_tanW3uRJ3J-4utCQwtRz3eYZETCMtniUQ@mail.gmail.com>
-Subject: Re: Need help on Linux PCIe
-To: Jagan Teki <jagannadh.teki@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 9 Dec 2013 14:06:59 -0700
+Message-ID: <CAErSpo7DPMRBHefLXSvw8v=vdu_qzGDKbbjXtZSF61cA1_padw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: pcibus address to resource converting take bus
+ instead of dev
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Joseph Salisbury <joseph.salisbury@canonical.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 3, 2013 at 4:24 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
-> Hi,
+On Mon, Dec 9, 2013 at 1:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Dec 9, 2013 at 12:43 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> On Mon, Dec 09, 2013 at 12:03:18PM -0800, Yinghai Lu wrote:
+>>> On Mon, Dec 9, 2013 at 11:21 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> > On Mon, Dec 9, 2013 at 9:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> >>
+>>> >> Ugh.  Why would we add new functions with "__" prefixes?  There are
+>>> >> only a handful of callers to pcibios_bus_to_resource() and
+>>> >> pcibios_resource_to_bus().  We can just change them to supply a
+>>> >> "struct pci_bus *" directly.  That's a better match for how the
+>>> >> hardware works anyway.
+>>> >
+>>>
+>>> Please double check if you are happy with the change.
+>>> Hope that will not update stable tree maintainer guys.
+>>
+>> What do you mean by this?
 >
-> I have few question on Linux PCIe subsystem, I am trying to understand
-> the PCIe on ARM platform.
-> 1. Compared to PCI, PCIe have an extra port functionalists/services
-> which is implemented drivers/pci/pcie/* is it true?
+> Do not want to change too much code, to upset stable tree maintainers.
+>
+>>
+>> How is this a -stable kernel patch?
+>
+> We have stable patch that will need use the new function.
+>
+> [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
 
-Yes.
-
-> 2. PCIe root complex is same as Host controller drivers in linux drivers/host/*
-
-Yes.
-
-> 3. As individual endpoint drivers are registered to pci_core as
-> pci_driver_register, then what is the common call for registering
-> individual HC driver to pci-core?
-
-The host controller-PCI core interface is not as mature as the
-pci_register_driver() interface.  The basic interface is
-pci_scan_root_bus().  If you skim through the drivers in
-drivers/pci/host/* and drivers/acpi/pci_root.c, the interface to the
-PCI core will be fairly obvious.  And you'll learn what the existing
-practices are in case you need to add or modify something.
-
-> 4. Can you list-down the basic and advanced functionalists supported
-> by HC driver in PCIe?
-
-The HC driver supplies struct pci_ops (functions to access config
-space), and the resources (bus numbers, MMIO aperture, I/O aperture)
-routed to the PCI/PCIe hierarchy below the host bridge.  These are all
-supplied to pci_scan_root_bus().  There might also be chipset
-initialization and error handling logic in the HC driver.
-
-Pretty much everything else is generic and is supported by PCI core code.
-
-> 5. The PCIe port bus driver is common core? means no need to change w.r.t SOC?
-
-Yes.
+Let's not get too far ahead of ourselves here.  I don't like this
+patch even for upstream, so we don't need to worry about -stable quite
+yet.
 
 Bjorn
