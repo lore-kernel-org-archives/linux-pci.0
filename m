@@ -1,76 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <52AEC241.1040507@huawei.com>
-Date: Mon, 16 Dec 2013 17:05:05 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:46870 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755633Ab3LIRwh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 12:52:37 -0500
+Received: by mail-ie0-f182.google.com with SMTP id as1so6717193iec.13
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 09:52:37 -0800 (PST)
 MIME-Version: 1.0
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	Scott Wood <scottwood@freescale.com>,
-	<linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 6/9] powerpc/pci: Use dev_is_pci() to check whether it
- is pci device
-References: <1386244880-22300-1-git-send-email-wangyijing@huawei.com> <20131216071305.GA16842@weiyang.vnet.ibm.com>
-In-Reply-To: <20131216071305.GA16842@weiyang.vnet.ibm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1386546869-31900-2-git-send-email-yinghai@kernel.org>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org> <1386546869-31900-2-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Dec 2013 10:52:15 -0700
+Message-ID: <CAErSpo7HaAbsoy0n5sr_d3iPazEnpnO8WupJrDn2QR2Kid=EgQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: pcibus address to resource converting take bus
+ instead of dev
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/12/16 15:13, Wei Yang wrote:
-> Yijing,
-> 
-> This one looks good.
-> 
-> While I take a look at the source code, there are around 20 places with
-> similar style. Do you think it would be good to change all these places
-> in one patch?
+On Sun, Dec 8, 2013 at 4:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> For allocating resource under bus path, we do not have dev to pass along,
+> and we only have bus to use instead.
+>
+> -v2: drop pcibios_bus_addr_to_resource().
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/pci/host-bridge.c | 34 +++++++++++++++++++++-------------
+>  include/linux/pci.h       |  5 +++++
+>  2 files changed, 26 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index a68dc61..c988a30 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -9,22 +9,19 @@
+>
+>  #include "pci.h"
+>
+> -static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+> +static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>  {
+> -       struct pci_bus *bus;
+> -
+> -       bus = dev->bus;
+>         while (bus->parent)
+>                 bus = bus->parent;
+>
+>         return bus;
+>  }
+>
+> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+> +static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>  {
+> -       struct pci_bus *bus = find_pci_root_bus(dev);
+> +       struct pci_bus *root_bus = find_pci_root_bus(bus);
+>
+> -       return to_pci_host_bridge(bus->bridge);
+> +       return to_pci_host_bridge(root_bus->bridge);
+>  }
+>
+>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+> @@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+>         return res1->start <= res2->start && res1->end >= res2->end;
+>  }
+>
+> -void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+> -                            struct resource *res)
+> +void __pcibios_resource_to_bus(struct pci_bus *bus,
+> +                                     struct pci_bus_region *region,
+> +                                     struct resource *res)
+>  {
+> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+>         struct pci_host_bridge_window *window;
+>         resource_size_t offset = 0;
+>
+> @@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>         region->start = res->start - offset;
+>         region->end = res->end - offset;
+>  }
+> +void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+> +                            struct resource *res)
+> +{
+> +       __pcibios_resource_to_bus(dev->bus, region, res);
+> +}
+>  EXPORT_SYMBOL(pcibios_resource_to_bus);
+>
+>  static bool region_contains(struct pci_bus_region *region1,
+> @@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
+>         return region1->start <= region2->start && region1->end >= region2->end;
+>  }
+>
+> -void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+> -                            struct pci_bus_region *region)
+> +void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> +                                     struct pci_bus_region *region)
+>  {
+> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+>         struct pci_host_bridge_window *window;
+>         resource_size_t offset = 0;
+>
+> @@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>         res->start = region->start + offset;
+>         res->end = region->end + offset;
+>  }
+> +void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+> +                            struct pci_bus_region *region)
+> +{
+> +       __pcibios_bus_to_resource(dev->bus, res, region);
+> +}
+>  EXPORT_SYMBOL(pcibios_bus_to_resource);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1084a15..5c2cf8e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -737,8 +737,13 @@ void pci_fixup_cardbus(struct pci_bus *);
+>
+>  /* Generic PCI functions used internally */
+>
+> +void __pcibios_resource_to_bus(struct pci_bus *bus,
+> +                              struct pci_bus_region *region,
+> +                              struct resource *res);
+>  void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>                              struct resource *res);
+> +void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> +                                     struct pci_bus_region *region);
+>  void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>                              struct pci_bus_region *region);
+>  void pcibios_scan_specific_bus(int busn);
 
-I sent the other similar changes to related maillist, some of them (David, Greg )has been accepted,
-and other is not. :)
+Ugh.  Why would we add new functions with "__" prefixes?  There are
+only a handful of callers to pcibios_bus_to_resource() and
+pcibios_resource_to_bus().  We can just change them to supply a
+"struct pci_bus *" directly.  That's a better match for how the
+hardware works anyway.
 
-eg.
-http://article.gmane.org/gmane.linux.kernel/1608341/match=dev_is_pci
-
-Thanks!
-Yijing.
-
-> 
-> On Thu, Dec 05, 2013 at 08:01:20PM +0800, Yijing Wang wrote:
->> Use PCI standard marco dev_is_pci() instead of directly compare
->> pci_bus_type to check whether it is pci device.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->> arch/powerpc/sysdev/fsl_pci.c |    2 +-
->> 1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
->> index 4dfd61d..7066e52 100644
->> --- a/arch/powerpc/sysdev/fsl_pci.c
->> +++ b/arch/powerpc/sysdev/fsl_pci.c
->> @@ -122,7 +122,7 @@ static int fsl_pci_dma_set_mask(struct device *dev, u64 dma_mask)
->> 	 * address width of the SoC such that we can address any internal
->> 	 * SoC address from across PCI if needed
->> 	 */
->> -	if ((dev->bus == &pci_bus_type) &&
->> +	if ((dev_is_pci(dev)) &&
->> 	    dma_mask >= DMA_BIT_MASK(MAX_PHYS_ADDR_BITS)) {
->> 		set_dma_ops(dev, &dma_direct_ops);
->> 		set_dma_offset(dev, pci64_dma_offset);
->> -- 
->> 1.7.1
->>
->>
->> _______________________________________________
->> Linuxppc-dev mailing list
->> Linuxppc-dev@lists.ozlabs.org
->> https://lists.ozlabs.org/listinfo/linuxppc-dev
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Bjorn
