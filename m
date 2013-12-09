@@ -1,54 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:51442 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755093Ab3L1JzL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 28 Dec 2013 04:55:11 -0500
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:57758 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755766Ab3LIRRM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 12:17:12 -0500
+Received: by mail-ie0-f174.google.com with SMTP id at1so6594746iec.33
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 09:17:12 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
- <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
- <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
- <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Sat, 28 Dec 2013 17:54:55 +0800
-Message-ID: <CALkVjQZWdFPLZmNq36c3CYP8dRM9QD8Xg0VDgebD-vSe2CxfVA@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <52A3DE0B.7020809@servergy.com>
+References: <52A26913.6030604@servergy.com> <52A3DE0B.7020809@servergy.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Dec 2013 10:11:29 -0700
+Message-ID: <CAErSpo7h7JjCtef6FMkd=T9hAGSMyfATAiEGUCx6EoGU_UALcQ@mail.gmail.com>
+Subject: Re: Question: 2 PCIE controllers
+To: Ruchika <ruchika.k@servergy.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+[+cc Yinghai]
 
-yesterday a friend of mine told me that one can now install Windows
-8/8.1 on a USB device natively. So I tried this so-called "Windows To
-Go" technology.
+On Sat, Dec 7, 2013 at 7:48 PM, Ruchika <ruchika.k@servergy.com> wrote:
+>
+> Hi,
+> I am working with an Soc with 3 PCIE controllers.
+> I need to have 2 configured.
+>
+> In uboot I have no problems scanning and discovering what is connected
+> to both bridges PCIE1 and PCIE2
+>
+> For both uboot sets up the Primary, secondary and Subordinate bus
+> numbers to 0,1,1 respectively.
+>
+> When linux boots up and probes the controllers, PCIE1 is probed and the
+> bridge scanned properly but PCIE2 is probed at the bridge but not
+> attempted a scan.
+> I see this message
+> "pci 0001:02:00.0: bridge configuration invalid ([bus 01-01]), reconfiguring
+> "
+>
+> I updated uboot to set the secondary and subordinate numbers to 2 (left
+> the primary number to 0) and a subsequent kernel boot scanned the bus
+> for PCIE2 successfully.
+> I found these numbers to be very critical since the device tree blob
+> (bus-range) for pci is also based off these.
 
-Now I have successfully deployed a Windows 8.1 installation on my
-external USB HDD and booted my laptop up with it. That is to say, I
-can now observe how Intel 7260 acts under Windows.
+Linux is not very good at reconfiguring bridges, as you've discovered.
+ If the firmware or boot loader leaves things correctly configured,
+Linux usually won't mess it up, but we may not be able to configure
+things from scratch.  That's why Yinghai suggested having uboot set
+things up beforehand.  That's not a very satisfactory answer, but it
+is probably the easiest short-term solution.
 
--- 
-wzyboy
+In the longer term, it'd be nice if somebody would fix Linux to handle
+this correctly, and one way to help that along would be to file a bug
+at http://bugzilla.kernel.org in the drivers/PCI category, and attach
+a complete dmesg log showing the problem.  If you can include a log or
+other info about how uboot enumerates everything, that would also
+help.
 
-Could you tell me what should I do to gather debugging information
-such as L1 mode etc in Windows? I will send them to you then. Maybe
-this could help, to figure out what the bug of iwlwifi is.
+Bjorn
