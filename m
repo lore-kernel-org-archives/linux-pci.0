@@ -1,178 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:18324
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756294Ab3LEAo6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Dec 2013 19:44:58 -0500
-From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
-To: Marek Vasut <marex@denx.de>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Frank Li' <lznuaa@gmail.com>, 'Harro Haan' <hrhaan@gmail.com>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Sascha Hauer' <s.hauer@pengutronix.de>,
-	'Sean Cross' <xobs@kosagi.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
-	'Troy Kisky' <troy.kisky@boundarydevices.com>,
-	'Yinghai Lu' <yinghai@kernel.org>
-Subject: RE: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region
- mapping
-Date: Thu, 5 Dec 2013 00:44:54 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D47C9FA@039-SN2MPN1-013.039d.mgd.msft.net>
-References: <1385500248-6551-1-git-send-email-marex@denx.de>
- <201311281856.10139.marex@denx.de>
- <0E83723C55F66F43A6041464FE31119D47BDD2@039-SN2MPN1-013.039d.mgd.msft.net>
- <201312040852.01269.marex@denx.de>
-In-Reply-To: <201312040852.01269.marex@denx.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:40643 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225Ab3LIRZy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 12:25:54 -0500
+Received: by mail-ie0-f175.google.com with SMTP id x13so6623631ief.34
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 09:25:53 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <52A4819A.50501@meshcoding.com>
+References: <20120526082551.GA2723@ritirata.org> <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com>
+ <20120529083552.GN2604@amd.com> <20120529085648.GA13941@ritirata.org> <52A4819A.50501@meshcoding.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Dec 2013 10:25:33 -0700
+Message-ID: <CAErSpo5fzbxFuX_bqq-z1hpHyfMhLO0w+iuyii_6J3PxZn3p=A@mail.gmail.com>
+Subject: Re: warn_slowpath_common in drivers/pci/search.c:44 on linux-3.4.0
+To: Antonio Quartulli <antonio@meshcoding.com>
+Cc: Joerg Roedel <joerg.roedel@amd.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek:
+[+cc Alex]
 
+On Sun, Dec 8, 2013 at 7:26 AM, Antonio Quartulli
+<antonio@meshcoding.com> wrote:
+> On 29/05/12 10:56, Antonio Quartulli wrote:
+>> On Tue, May 29, 2012 at 10:35:53 +0200, Joerg Roedel wrote:
+>>> Hi Antonio,
+>>>
+>>> On Sat, May 26, 2012 at 09:09:52AM -0600, Bjorn Helgaas wrote:
+>>>> On Sat, May 26, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+>>>>> [    1.054279] WARNING: at drivers/pci/search.c:44 pci_find_upstream_pcie_bridge+0x5e/0x70()
+>>>>> [    1.054385] Hardware name: Latitude E5420
+>>>>> [    1.054457] Modules linked in:
+>>>>> [    1.054568] Pid: 1, comm: swapper/0 Not tainted 3.4.0ordex+ #3
+>>>>> [    1.054643] Call Trace:
+>>>>> [    1.054716]  [<ffffffff81033d4a>] warn_slowpath_common+0x7a/0xb0
+>>>>> [    1.054793]  [<ffffffff81033d95>] warn_slowpath_null+0x15/0x20
+>>>>> [    1.054869]  [<ffffffff8123899e>] pci_find_upstream_pcie_bridge+0x5e/0x70
+>>>>> [    1.054949]  [<ffffffff813babe7>] intel_iommu_device_group+0x77/0x100
+>>>>> [    1.055027]  [<ffffffff813b52d5>] add_iommu_group+0x35/0x60
+>>>>> [    1.055113]  [<ffffffff813b52a0>] ? bus_set_iommu+0x50/0x50
+>>>>> [    1.055191]  [<ffffffff8132c586>] bus_for_each_dev+0x56/0x90
+>>>>> [    1.055267]  [<ffffffff813b528b>] bus_set_iommu+0x3b/0x50
+>>>>> [    1.055344]  [<ffffffff818c4920>] intel_iommu_init+0xab0/0xb3f
+>>>>> [    1.055421]  [<ffffffff81120b26>] ? sys_mkdirat+0x76/0xd0
+>>>>> [    1.055499]  [<ffffffff8189b0db>] ? memblock_find_dma_reserve+0x13d/0x13d
+>>>>> [    1.055578]  [<ffffffff8189b0ee>] pci_iommu_init+0x13/0x3e
+>>>>> [    1.055655]  [<ffffffff810001ca>] do_one_initcall+0x3a/0x170
+>>>>> [    1.055732]  [<ffffffff81897c35>] kernel_init+0x148/0x1cc
+>>>>> [    1.055807]  [<ffffffff81897588>] ? do_early_param+0x86/0x86
+>>>>> [    1.055884]  [<ffffffff814fc914>] kernel_thread_helper+0x4/0x10
+>>>>> [    1.055963]  [<ffffffff8105de60>] ? finish_task_switch+0x80/0x110
+>>>>> [    1.056040]  [<ffffffff814fafdd>] ? retint_restore_args+0xe/0xe
+>>>>> [    1.056126]  [<ffffffff81897aed>] ? start_kernel+0x30b/0x30b
+>>>>> [    1.056203]  [<ffffffff814fc910>] ? gs_change+0xb/0xb
+>>>
+>>> Hmm, this looks like pci_find_upstream_pcie_bridge() found a PCIe device
+>>> in the chain which is not a bridge. Can you please post the output of
+>>> 'lspci -vvv' and 'lspci -t'?
+>>>
+>>
+>> attached!
+>> Some days ago I tried to put some printk in the code and, as far as I can
+>> understand, you are right.
+>>
+>> I hope my lspci output will help!
+>>
+>> Cheers,
+>>
+>
+> Hi guys,
+>
+> was there any progress about this?
+> Right now I am using linux-3.10.22 and the WARNING is still present.
+> The system seems to be working fine, but I don't know if this issue can
+> trigger side effects or not.
 
+Alex and I prototyped some IOMMU and PCI restructuring [1] to avoid
+this case, but I haven't heard anything lately.
 
-> -----Original Message-----
-> From: Marek Vasut [mailto:marex@denx.de]
-> Sent: Wednesday, December 04, 2013 3:52 PM
-> To: Zhu Richard-R65037
-> Cc: Jingoo Han; 'Tim Harvey'; 'Pratyush Anand'; linux-arm-
-> kernel@lists.infradead.org; linux-pci@vger.kernel.org; 'Bjorn Helgaas'; 'Frank
-> Li'; 'Harro Haan'; 'Mohit KUMAR DCG'; 'Sascha Hauer'; 'Sean Cross'; 'Shawn
-> Guo'; 'Siva Reddy Kallam'; 'Srikanth T Shivanand'; 'Troy Kisky'; 'Yinghai Lu'
-> Subject: Re: [PATCH 2/7] [RFC] PCI: imx6: remove outbound io/mem ATU region
-> mapping
-> 
-> On Wednesday, December 04, 2013 at 06:49:55 AM, Richard Zhu wrote:
-> > Hi Marek:
-> >
-> > Best Regards
-> > Richard Zhu
-> >
-> > > -----Original Message-----
-> > > From: Marek Vasut [mailto:marex@denx.de]
-> > > Sent: Friday, November 29, 2013 1:56 AM
-> > > To: Jingoo Han
-> > > Cc: 'Tim Harvey'; 'Pratyush Anand';
-> > > linux-arm-kernel@lists.infradead.org;
-> > > linux-pci@vger.kernel.org; 'Bjorn Helgaas'; 'Frank Li'; 'Harro
-> > > Haan'; 'Mohit KUMAR DCG'; Zhu Richard-R65037; 'Sascha Hauer'; 'Sean
-> > > Cross'; 'Shawn Guo'; 'Siva Reddy Kallam'; 'Srikanth T Shivanand';
-> > > 'Troy Kisky'; 'Yinghai Lu' Subject: Re: [PATCH 2/7] [RFC] PCI: imx6:
-> > > remove outbound io/mem ATU region mapping
-> > >
-> > > Dear Jingoo Han,
-> > >
-> > > > On Wednesday, November 27, 2013 5:44 PM, Marek Vasut wrote:
-> > > > > Wednesday, November 27, 2013 1:30 PM, Pratyush Anand wrote:
-> > > > > > On Wed, Nov 27, 2013 at 05:10:43AM +0800, Marek Vasut wrote:
-> > > > > > > From: Tim Harvey <tharvey@gateworks.com>
-> > > > > > >
-> > > > > > > The IMX6 iATU is used for address translation between the
-> > > > > > > AXI bus address space and PCI address space.  This is used
-> > > > > > > for type0 and
-> > > > > > > type1 config cycles but is not necessary for outbound io/mem
-> > > > > > > regions.
-> > > > > > >
-> > > > > > > This patch removes the calls that inappropriately
-> > > > > > > re-configures the ATU viewport for outbound memory and IO
-> > > > > > > after config cycles and removes them altogether as they are not
-> necessary.
-> > > > > >
-> > > > > > Yes, they are not necessary for all the cases where
-> > > > > > translation is one to one. So so for sure all the platform
-> > > > > > till now introduced should work.
-> > > > > > But, what about a platform where memory translation is not one
-> > > > > > to one?
-> > > > > >
-> > > > > > Existing code should work with all sort of memory translation
-> > > > > > on a platform having atleast two viewports capable of
-> > > > > > programming any type of outbound transaction.
-> > > > >
-> > > > > Full ACK, that's why it's called RFC.
-> > > > >
-> > > > > > > This resolves issues with PCI devices behind switches and
-> > > > > > > has been tested with a Gige device behind a PLX PEX860x switch.
-> > > > > > > More testing is needed for other configurations.
-> > > > > >
-> > > > > > I do not understand if MX6 has 4 Outbound Viewport then how
-> > > > > > this patch helps?
-> > > > > > -- PCI devices behind switches would not have been working
-> > > > > > because
-> > > > > > CFG1 transaction would not have been correct.
-> > > > > > -- It works with this patch. This patch changes viewport for
-> > > > > > CFG1 from
-> > > > > > 1 to 0.
-> > > > > > -- Can it be possible that MX6 has some restriction on
-> > > > > > viewport programming capability. I mean,like only viewport0
-> > > > > > can be programmed for CFG0/1?
-> > > > >
-> > > > > Tim ?
-> > > > >
-> > > > > Here is the MX6 datasheet [1], the section 48.3.9.1.1 and
-> > > > > 48.3.9.1.2 describe the iATU configuration on MX6. My
-> > > > > understanding from this description is that the MX6 has 4
-> > > > > inbound and 4 outbound iATU regions. Am I wrong ?
-> > > >
-> > > > The numbers of inbound and outbound are hardware-configurable features.
-> > > > Thus, these numbers  can be confirmed by Freescale  hardware engineers.
-> > > > How about asking Freescale hardware engineers, if possible?
-> > >
-> > > Richard is on the CC. Richard, can you please confirm those?
-> >
-> > [Richard] One Pericom PI7C9X2G303EL pcie switch, and two pcie ep
-> > deivces(one is intel e1000e nic, the other is one xhci device) are
-> > tested on imx6q sabresd board. Without removing outbound io/mem
-> > regions view map during the cfg0/1 read/write cycle, both of these
-> > devices can't work well at my side. Works well after remove them
-> > during the cfg0/1 read/write cycles.
-> > Same to Tim's situation about switch implementation.
-> 
-> Thanks Richard! I am just wondering what kind of conclusion can we draw from
-> this. Let me reiterate what we have:
-> 
-> - i.MX6 has 4 inbound and 4 outbound iATU regions, is that correct, Richard?
-> - If we program the iATU regions, the i.MX6 PCIe doesn't work with switch.
-> 
-> Is there some special sause to the iATU on MX6 maybe ?
-[Richard] welcome, it's correct, imx6 pcie has 4 inbount and 4 outbound iATU regions.
-Imx6 pcie doesn't work with switch if the following view switches are not removed in
-The cfg0/1 read/write cycles.
+Bjorn
 
-@@ -516,9 +560,11 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-        if (bus->parent->number == pp->root_bus_nr) {
-                dw_pcie_prog_viewport_cfg0(pp, busdev);
-                ret = cfg_read(pp->va_cfg0_base + address, where, size, val);
-+               // dw_pcie_prog_viewport_mem_outbound(pp);
-        } else {
-                dw_pcie_prog_viewport_cfg1(pp, busdev);
-                ret = cfg_read(pp->va_cfg1_base + address, where, size, val);
-+               // dw_pcie_prog_viewport_io_outbound(pp);
-        }
-
-        return ret;
-@@ -537,9 +583,11 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-        if (bus->parent->number == pp->root_bus_nr) {
-                dw_pcie_prog_viewport_cfg0(pp, busdev);
-                ret = cfg_write(pp->va_cfg0_base + address, where, size, val);
-+               // dw_pcie_prog_viewport_mem_outbound(pp);
-        } else {
-                dw_pcie_prog_viewport_cfg1(pp, busdev);
-                ret = cfg_write(pp->va_cfg1_base + address, where, size, val);
-+               // dw_pcie_prog_viewport_io_outbound(pp);
-        }
-
-        return ret;
-
-Best Regards
-Richard Zhu
-
-
+[1] http://lkml.kernel.org/r/20130711210326.1701.56478.stgit@bling.home
