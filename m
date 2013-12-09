@@ -1,90 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:33622 "EHLO
-	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751109Ab3LKJj4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:39:56 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Arnd Bergmann <arnd@arndb.de>, Marek Vasut <marex@denx.de>,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	<spear-devel@list.st.com>
-Subject: [PATCH 08/12] pcie: designware: Fix IO transfers
-Date: Wed, 11 Dec 2013 15:08:33 +0530
-Message-ID: <6b4282b9e793ec89ba0c20f3362d41f6133a8132.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:63836 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755710Ab3LISeR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 13:34:17 -0500
+Received: by mail-ie0-f179.google.com with SMTP id x13so6819194ief.10
+        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 10:34:14 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
+References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
+ <CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com> <CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Dec 2013 11:33:54 -0700
+Message-ID: <CAErSpo401m4e4vPhrMmy6f6nPoiVnKrYqGegY-S7V7xTNf25Eg@mail.gmail.com>
+Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+On Sat, Dec 7, 2013 at 8:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Dec 7, 2013 at 10:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> This doesn't sound like a chipset bug.  It sounds like exactly what
+>> the spec describes: "Presence Detect State – This bit indicates the
+>> presence of an adapter in the slot, reflected by the logical “OR” of
+>> the Physical Layer in-band presence detect mechanism and, if present,
+>> any out-of-band presence detect mechanism defined for the slot’s
+>> corresponding form factor" (PCIe 3.0, sec 7.8.11).
+>
+> Not sure. the silicon does not report in-band correctly if we turn off
+> pcie link before turn the power of card.
 
-pp->io_base which is the input of the outbound IO address translation
-unit should be the cpu address, it was programmed wrongly to realio
-address.
+Yes, that's exactly what the spec says: "Note that the in-band
+presence detect mechanism requires that power be applied to an adapter
+for its presence to be detected."  So pciehp has to be designed to
+take that into account.
 
-We should pass global_io_offset rather than sys->io_offset to
-pci_ioremap_io, so we map the new window into the first available spot
-in the Linux view of the I/O space.
+Presence detect is obviously important for things like ExpressCard
+where there's no attention button.  I expect that pciehp will use
+presence detect to notice when a device is inserted and removed.
 
-We must also pass cpu address instead  of realio address to
-pci_ioremap_io.
+But I assume your hotplug situation is slots with attention buttons,
+and I don't think presence detect is as important there.  If you
+insert a card into an empty slot, nothing should happen until the
+attention button is pressed.  We don't need presence detect there.  If
+pciehp turns off a device to prepare for its physical removal, why do
+we care about presence detect after the power is turned off?  I think
+all pciehp can say is "this slot is powered off, and I don't know
+whether there's still a card in it."
 
-This patch fixes above issue. It has been tested with Lecroy PTC in AIC
-mode and Pericom PI7C9X2G303EL PCIe switch, which does not work
-otherwise.
+I think pciehp is somewhat buggy here -- it looks like
+pciehp_enable_slot() looks at presence detect before turning on the
+power.  I don't know why it does that, and it doesn't seem valid per
+the spec statement I quoted above.
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Tested-by: Mohit Kumar <mohit.kumar@st.com>
-Tested-by: Tim Harvey <tharvey@gateworks.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Marek Vasut <marex@denx.de>
-Cc: Richard Zhu <Hong-Xing.Zhu@freescale.com>
-Cc: linux-pci@vger.kernel.org
-Cc: spear-devel@list.st.com
----
- drivers/pci/host/pcie-designware.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index be6ce30..071ebc0 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 					   + global_io_offset);
- 			pp->config.io_size = resource_size(&pp->io);
- 			pp->config.io_bus_addr = range.pci_addr;
-+			pp->io_base = range.cpu_addr;
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
-@@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 
- 	pp->cfg0_base = pp->cfg.start;
- 	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
--	pp->io_base = pp->io.start;
- 	pp->mem_base = pp->mem.start;
- 
- 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-@@ -573,7 +573,6 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	return ret;
- }
- 
--
- static int dw_pcie_valid_config(struct pcie_port *pp,
- 				struct pci_bus *bus, int dev)
- {
-@@ -667,7 +666,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
- 
- 	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
- 		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
--		pci_ioremap_io(sys->io_offset, pp->io.start);
-+		pci_ioremap_io(global_io_offset, pp->io_base);
- 		global_io_offset += SZ_64K;
- 		pci_add_resource_offset(&sys->resources, &pp->io,
- 					sys->io_offset);
--- 
-1.7.0.1
-
+Bjorn
