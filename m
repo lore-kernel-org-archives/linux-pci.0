@@ -1,89 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:33309 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755004Ab3LITbO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Dec 2013 14:31:14 -0500
+Date: Mon, 9 Dec 2013 12:31:12 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: Prevent bus conflicts while checking for bridge
+ apertures
+Message-ID: <20131209193112.GA20199@obsidianresearch.com>
+References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131206001947.27659.14981.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1387224459-25746-5-git-send-email-david.a.cohen@linux.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com> <1387224459-25746-5-git-send-email-david.a.cohen@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 16 Dec 2013 13:47:32 -0700
-Message-ID: <CAErSpo5tM4nF-WuUb9CH6sZ+XJ3u_U5nwg9u2cbn0EmeG1OgLg@mail.gmail.com>
-Subject: Re: [PATCH v2 4/4] x86: intel-mid: remove deprecated X86_MDFLD and
- X86_WANT_INTEL_MID configs
-To: David Cohen <david.a.cohen@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131206001947.27659.14981.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 1:07 PM, David Cohen
-<david.a.cohen@linux.intel.com> wrote:
-> We want to support all Intel Mid platforms with a single config
-> selection. This patch removes deprecated CONFIG_X86_MDFLD and
-> X86_WANT_INTEL_MID options in favor of having CONFIG_X86_INTEL_MID only.
->
-> Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
-> ---
->  arch/x86/Kconfig | 29 +++++------------------------
->  1 file changed, 5 insertions(+), 24 deletions(-)
->
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index e903c71f7e69..b6a344fb01ae 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -437,42 +437,23 @@ config X86_INTEL_CE
->           This option compiles in support for the CE4100 SOC for settop
->           boxes and media devices.
->
-> -config X86_WANT_INTEL_MID
-> +config X86_INTEL_MID
->         bool "Intel MID platform support"
->         depends on X86_32
->         depends on X86_EXTENDED_PLATFORM
-> -       ---help---
-> -         Select to build a kernel capable of supporting Intel MID platform
-> -         systems which do not have the PCI legacy interfaces (Moorestown,
-> -         Medfield). If you are building for a PC class system say N here.
-> -
-> -if X86_WANT_INTEL_MID
-> -
-> -config X86_INTEL_MID
-> -       bool
-> -
-> -config X86_MDFLD
-> -       bool "Medfield MID platform"
->         depends on PCI
->         depends on PCI_GOANY
->         depends on X86_IO_APIC
-> -       select X86_INTEL_MID
->         select SFI
-> +       select I2C
->         select DW_APB_TIMER
->         select APB_TIMER
-> -       select I2C
-> -       select SPI
->         select INTEL_SCU_IPC
-> -       select X86_PLATFORM_DEVICES
->         select MFD_INTEL_MSIC
->         ---help---
-> -         Medfield is Intel's Low Power Intel Architecture (LPIA) based Moblin
-> -         Internet Device(MID) platform.
-> -         Unlike standard x86 PCs, Medfield does not have many legacy devices
-> -         nor standard legacy replacement devices/features. e.g. Medfield does
-> -         not contain i8259, i8254, HPET, legacy BIOS, most of the io ports.
-> -
-> -endif
-> +         Select to build a kernel capable of supporting Intel MID platform
-> +         systems which do not have the PCI legacy interfaces (Moorestown,
-> +         Medfield). If you are building for a PC class system say N here.
+On Thu, Dec 05, 2013 at 05:19:47PM -0700, Bjorn Helgaas wrote:
+> pci_bridge_check_ranges() determines whether the bridge supports an I/O
+> aperture and a prefetchable memory aperture.
+> 
+> Previously, if the I/O aperture was unsupported, disabled, or configured at
+> [io 0x0000-0x0fff], we wrote 0xf0 to PCI_IO_BASE and PCI_IO_LIMIT, which,
+> if the bridge supports it, enables the I/O aperture at [io 0xf000-0xffff].
+> The enabled aperture may conflict with other devices in the system.
+> 
+> Similarly, we wrote 0xfff0 to PCI_PREF_MEMORY_BASE and
+> PCI_PREF_MEMORY_LIMIT, which enables the prefetchable memory aperture at
+> [mem 0xfff00000-0xffffffff], and that may also conflict with other devices.
+> 
+> All we need to know is whether the base and limit registers are writable,
+> so we can use values that leave the apertures disabled, e.g., PCI_IO_BASE =
+> 0xf0, PCI_IO_LIMIT = 0xe0, PCI_PREF_MEMORY_BASE = 0xfff0,
+> PCI_PREF_MEMORY_LIMIT = 0xffe0.
+> 
+> Writing non-zero values to both the base and limit registers means we
+> detect whether either or both are writable, as we did before.
 
-It'd be nice to know what "MID" means -- from Googling, I guess
-"Mobile Internet Device."
+Looks sane to me. The only refinement would be to detect if IO is
+enabled and use that as a first check.
 
->  config X86_INTEL_LPSS
->         bool "Intel Low Power Subsystem Support"
-> --
-> 1.8.4.2
->
+Cheers,
+Jason
