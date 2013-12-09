@@ -1,62 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:16487 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751872Ab3LMPvK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 10:51:10 -0500
-From: Betty Dall <betty.dall@hp.com>
-To: rjw@rjwysocki.net, bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Betty Dall <betty.dall@hp.com>
-Subject: [PATCH] PCI AER: handle pci_cleanup_aer_uncorrect_error_status() in firmware first mode
-Date: Fri, 13 Dec 2013 08:41:46 -0700
-Message-Id: <1386949306-30601-1-git-send-email-betty.dall@hp.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:41373 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756042Ab3LIUPj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Dec 2013 15:15:39 -0500
+Date: Mon, 9 Dec 2013 13:15:37 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: Prevent bus conflicts while checking for bridge
+ apertures
+Message-ID: <20131209201537.GJ5429@obsidianresearch.com>
+References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131206001947.27659.14981.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131209193112.GA20199@obsidianresearch.com>
+ <CAErSpo5ab6buYa9GvpYECeeCwhYATt6dVePD6Cov-75kQndf4g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5ab6buYa9GvpYECeeCwhYATt6dVePD6Cov-75kQndf4g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are three functions exported from aerdrv_core.c that could be
-called when the system is in firmware first mode:
-pci_enable_pcie_error_reporting(), pci_disable_pcie_error_reporting, and
-pci_cleanup_aer_uncorrect_error_status(). The first two functions check if
-we are in firmware first mode and return immediately.
-pci_cleanup_aer_uncorrect_error_status() does not check firmware first
-mode. The problem is that all of these functions should not access the AER
-registers in firmware first mode because the firmware has not granted OS
-control of the AER registers through the _OSC. Many drivers call this
-function in their pci_error_handlers in firmware first mode.
+On Mon, Dec 09, 2013 at 01:00:36PM -0700, Bjorn Helgaas wrote:
 
-The fix is to change pci_cleanup_aer_uncorrect_error_status() to check
-firmware first mode before accessing the AER registers. If it is in firmware
-first mode, return 0. I considered returning -EIO, but decided the status
-has been cleaned up appropriately for firmware first. Returning 0 also avoids
-an error message. Not many places check the return of this function, and the
-ones that do, print an error message and continue such as:
-   err = pci_cleanup_aer_uncorrect_error_status(pdev);
-   if (err) {
-       dev_err(&pdev->dev,
-           "pci_cleanup_aer_uncorrect_error_status failed 0x%0x\n",
-            err); /* non-fatal, continue */
-   }
-That error message is how I found this problem, and it is not applicable
-for the firmware first recovery path.
+> I don't think it's 100% spec compliant because the spec allows
+> PCI_COMMAND_IO to be set if the bridge has an enabled I/O BAR but does
+> not support an I/O aperture.  I admit I have never seen such a device,
+> and I doubt one exists :)
 
-Signed-off-by: Betty Dall <betty.dall@hp.com>
----
+Yes, fair enough!
 
- drivers/pci/pcie/aer/aerdrv_core.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index b2c8881..1f60408 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -62,6 +62,9 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- 	int pos;
- 	u32 status;
- 
-+	if (pcie_aer_get_firmware_first(dev))
-+		return 0;
-+
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 	if (!pos)
- 		return -EIO;
+Jason
