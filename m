@@ -1,71 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:63843 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525Ab3LJSWx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 13:22:53 -0500
-Received: by mail-ie0-f177.google.com with SMTP id tp5so8789713ieb.8
-        for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 10:22:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131210013136.GO5429@obsidianresearch.com>
-References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131206001954.27659.78163.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131209193332.GB20199@obsidianresearch.com> <CAErSpo4Q-sjiCUs3UbQWdPhOTdxfJP1ay1MugxTPT1E2=TkpJw@mail.gmail.com>
- <20131209212744.GK5429@obsidianresearch.com> <CAErSpo6ZNM0SW+q7tSi+1hT6yAfb7Ckz85LjM4QUDgbH3wLAaw@mail.gmail.com>
- <20131210001008.GM5429@obsidianresearch.com> <CAErSpo63eRPzXeQ94XTR3T7PDoQUjTmqfwJKn2EKSNPi3Jyc0Q@mail.gmail.com>
- <20131210013136.GO5429@obsidianresearch.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 10 Dec 2013 11:22:32 -0700
-Message-ID: <CAErSpo4eJY5jcb4_d+Np8PP8B2iqjEQv3bh76xoLfB-fmDWUWQ@mail.gmail.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:58340 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760399Ab3LITdd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Dec 2013 14:33:33 -0500
+Date: Mon, 9 Dec 2013 12:33:32 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
 Subject: Re: [PATCH 2/2] PCI: Stop clearing bridge Secondary Status when
  setting up I/O aperture
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-ID: <20131209193332.GB20199@obsidianresearch.com>
+References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131206001954.27659.78163.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131206001954.27659.78163.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 6:31 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Mon, Dec 09, 2013 at 05:18:30PM -0700, Bjorn Helgaas wrote:
->
->> > Basically, your fix to pci_setup_bridge_io is fine - but your
->> > observation led me to realize that the HW drivers implementing RMW for
->> > 8 and 16 bit ops under their struct pci_ops.read function have exactly
->> > the same flaw you are fixing here - they will silently wipe out write
->> > 1 to clear bits.
->>
->> Ah, OK.  I thought you were saying that we couldn't change
->> pci_setup_bridge_io() to use 16-bit accesses because of this problem.
->
-> No, not really - just that this bug you discovered is broader than just
-> that one place :)
->
->> Sure, if somebody can come up with a reasonable way to share this sort
->> of code, that sounds like a good thing.  Maybe extending struct
->> pci_ops is the way to do this, but I hope not, because it seems like
->
-> Well, sharing the code is no problem, it is exactly the same for every
-> 32 bit only host driver.
->
-> But supporting RW1C bits in capability lists seems fairly hard once
-> the context at the call site is lost.
+On Thu, Dec 05, 2013 at 05:19:55PM -0700, Bjorn Helgaas wrote:
+> pci_setup_bridge_io() accessed PCI_IO_BASE and PCI_IO_LIMIT using dword
+> (32-bit) reads and writes, which also access the Secondary Status register.
+> Since the Secondary Status register is in the upper 16 bits of the dword,
+> and we preserved those upper 16 bits, this had the effect of clearing any
+> of the write-1-to-clear bits that happened to be set in the Secondary
+> Status register.
 
-Strictly speaking, fixing this only requires knowledge of the hardware
-register layout, so at least in principle, it can be done without the
-call site context.  It does sound like it might be messy, though.
-QEMU deals with this issue somehow; maybe there's something there we
-can copy.
+This is a good catch!
 
-> Which makes me wonder if supporting sub-dword writes to dwords with
-> RW1C bits makes sense at all :(
->
-> That was why my initial reaction was to not do sub dword writes if you
-> know it will conflict with a RW1C bit.
+> -	pci_write_config_dword(bridge, PCI_IO_BASE, l);
+> +	pci_write_config_word(bridge, PCI_IO_BASE, l);
 
-Keeping the dword read/write and clearing the upper 16 bits before the
-write is an option.  But I'm inclined to do the 16-bit accesses, i.e.,
-use the patch as posted, because that makes the issue more visible.
-If we keep the dword access, we can fix this particular issue, but it
-does nothing to help fix other similar cases.
+But this is a problem :(
 
-Bjorn
+tegra and mvebu at least do not have HW to do non-32 bit writes, so
+their implementation of pci_write_config_word does the RMW internally
+and will still have this same bug.
+
+I think you have to keep the 32 bit write here, but zero the
+write-one-to-clear bits :(
+
+Regards,
+Jason
