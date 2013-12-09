@@ -1,91 +1,25 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 11 Dec 2013 11:32:37 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Wei Yongjun <weiyj.lk@gmail.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
-Subject: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host
- maintainers
-Message-ID: <20131211183237.GI4699@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:43802 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932274Ab3LIHZP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 02:25:15 -0500
+Received: by mail-oa0-f47.google.com with SMTP id k1so3413629oag.20
+        for <linux-pci@vger.kernel.org>; Sun, 08 Dec 2013 23:25:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Mon, 9 Dec 2013 12:55:14 +0530
+Message-ID: <CAHH3p5JCa15sh80pojRFuS_5-z7YH7PfEs0qwnB7sB73nwdxnA@mail.gmail.com>
+Subject: ASPM L1 Substates SW implementation
+From: shiv prakash Agarwal <chhotu.shiv@gmail.com>
+To: Pratyush Anand <pratyush.anand@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If this looks reasonable, I'll merge it via the PCI tree for v3.13.
-
-Bjorn
+Hi All,
 
 
-MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
-
-Add entries for PCI host controller drivers in drivers/pci/host/.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- MAINTAINERS |   31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8285ed4676b6..826c722d92ba 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6449,16 +6449,47 @@ F:	drivers/pci/
- F:	include/linux/pci*
- F:	arch/x86/pci/
- 
-+PCI DRIVER FOR DESIGNWARE
-+M:	Jingoo Han <jg1.han@samsung.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	drivers/pci/host/*designware*
-+
-+PCI DRIVER FOR IMX6
-+M:	Shawn Guo <shawn.guo@linaro.org>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-+S:	Maintained
-+F:	drivers/pci/host/*imx6*
-+
-+PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
-+M:	Jason Cooper <jason@lakedaemon.net>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-+S:	Maintained
-+F:	drivers/pci/host/*mvebu*
-+
- PCI DRIVER FOR NVIDIA TEGRA
- M:	Thierry Reding <thierry.reding@gmail.com>
- L:	linux-tegra@vger.kernel.org
-+L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
- F:	drivers/pci/host/pci-tegra.c
- 
-+PCI DRIVER FOR RENESAS R-CAR
-+M:	Simon Horman <horms@verge.net.au>
-+M:	Magnus Damm <magnus.damm@gmail.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-sh@vger.kernel.org
-+S:	Maintained
-+F:	drivers/pci/host/*rcar*
-+
- PCI DRIVER FOR SAMSUNG EXYNOS
- M:	Jingoo Han <jg1.han@samsung.com>
- L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-+L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
- S:	Maintained
- F:	drivers/pci/host/pci-exynos.c
- 
+Are you aware of ASPM L1 Substates implementation in kernel happening
+anywhere on upstream?
+I have not found it anywhere yet.
