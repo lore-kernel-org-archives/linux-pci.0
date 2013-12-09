@@ -1,114 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:47465 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984Ab3LPVDd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 16:03:33 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so7298950iec.27
-        for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2013 13:03:32 -0800 (PST)
-Date: Mon, 16 Dec 2013 14:03:27 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Borislav Petkov <bp@alien8.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Borislav Petkov <bp@suse.de>,
-	Lance Ortiz <lance.ortiz@hp.com>,
-	Tony Luck <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI, AER: Add a TLP header print helper
-Message-ID: <20131216210327.GA28662@google.com>
-References: <1386515571-23252-1-git-send-email-bp@alien8.de>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:42686 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975Ab3LITVy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 14:21:54 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1386515571-23252-1-git-send-email-bp@alien8.de>
+In-Reply-To: <CAErSpo7HaAbsoy0n5sr_d3iPazEnpnO8WupJrDn2QR2Kid=EgQ@mail.gmail.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+	<1386546869-31900-2-git-send-email-yinghai@kernel.org>
+	<CAErSpo7HaAbsoy0n5sr_d3iPazEnpnO8WupJrDn2QR2Kid=EgQ@mail.gmail.com>
+Date: Mon, 9 Dec 2013 11:21:53 -0800
+Message-ID: <CAE9FiQUebPPcTyHGssxTwJJ3GYx4aq-=infapvxOQgAm+PL4rA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: pcibus address to resource converting take bus
+ instead of dev
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 08, 2013 at 04:12:50PM +0100, Borislav Petkov wrote:
-> From: Borislav Petkov <bp@suse.de>
-> 
-> ... and call it instead of duplicating the large printk format
-> statement.
-> 
-> No functionality change.
-> 
-> Signed-off-by: Borislav Petkov <bp@suse.de>
+On Mon, Dec 9, 2013 at 9:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sun, Dec 8, 2013 at 4:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> For allocating resource under bus path, we do not have dev to pass along,
+>> and we only have bus to use instead.
+>>
+>> -v2: drop pcibios_bus_addr_to_resource().
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: stable@vger.kernel.org
+>> ---
+>>  drivers/pci/host-bridge.c | 34 +++++++++++++++++++++-------------
+>>  include/linux/pci.h       |  5 +++++
+>>  2 files changed, 26 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>> index a68dc61..c988a30 100644
+>> --- a/drivers/pci/host-bridge.c
+>> +++ b/drivers/pci/host-bridge.c
+>> @@ -9,22 +9,19 @@
+>>
+>>  #include "pci.h"
+>>
+>> -static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+>> +static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+>>  {
+>> -       struct pci_bus *bus;
+>> -
+>> -       bus = dev->bus;
+>>         while (bus->parent)
+>>                 bus = bus->parent;
+>>
+>>         return bus;
+>>  }
+>>
+>> -static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+>> +static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
+>>  {
+>> -       struct pci_bus *bus = find_pci_root_bus(dev);
+>> +       struct pci_bus *root_bus = find_pci_root_bus(bus);
+>>
+>> -       return to_pci_host_bridge(bus->bridge);
+>> +       return to_pci_host_bridge(root_bus->bridge);
+>>  }
+>>
+>>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>> @@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+>>         return res1->start <= res2->start && res1->end >= res2->end;
+>>  }
+>>
+>> -void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>> -                            struct resource *res)
+>> +void __pcibios_resource_to_bus(struct pci_bus *bus,
+>> +                                     struct pci_bus_region *region,
+>> +                                     struct resource *res)
+>>  {
+>> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+>> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+>>         struct pci_host_bridge_window *window;
+>>         resource_size_t offset = 0;
+>>
+>> @@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>>         region->start = res->start - offset;
+>>         region->end = res->end - offset;
+>>  }
+>> +void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>> +                            struct resource *res)
+>> +{
+>> +       __pcibios_resource_to_bus(dev->bus, region, res);
+>> +}
+>>  EXPORT_SYMBOL(pcibios_resource_to_bus);
+>>
+>>  static bool region_contains(struct pci_bus_region *region1,
+>> @@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
+>>         return region1->start <= region2->start && region1->end >= region2->end;
+>>  }
+>>
+>> -void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>> -                            struct pci_bus_region *region)
+>> +void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+>> +                                     struct pci_bus_region *region)
+>>  {
+>> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
+>> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+>>         struct pci_host_bridge_window *window;
+>>         resource_size_t offset = 0;
+>>
+>> @@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>>         res->start = region->start + offset;
+>>         res->end = region->end + offset;
+>>  }
+>> +void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>> +                            struct pci_bus_region *region)
+>> +{
+>> +       __pcibios_bus_to_resource(dev->bus, res, region);
+>> +}
+>>  EXPORT_SYMBOL(pcibios_bus_to_resource);
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 1084a15..5c2cf8e 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -737,8 +737,13 @@ void pci_fixup_cardbus(struct pci_bus *);
+>>
+>>  /* Generic PCI functions used internally */
+>>
+>> +void __pcibios_resource_to_bus(struct pci_bus *bus,
+>> +                              struct pci_bus_region *region,
+>> +                              struct resource *res);
+>>  void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+>>                              struct resource *res);
+>> +void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+>> +                                     struct pci_bus_region *region);
+>>  void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>>                              struct pci_bus_region *region);
+>>  void pcibios_scan_specific_bus(int busn);
+>
+> Ugh.  Why would we add new functions with "__" prefixes?  There are
+> only a handful of callers to pcibios_bus_to_resource() and
+> pcibios_resource_to_bus().  We can just change them to supply a
+> "struct pci_bus *" directly.  That's a better match for how the
+> hardware works anyway.
 
-I applied both of these to my pci/aer branch for v3.14, thanks!
+ok, will update that if you prefer that.
 
-Bjorn
-
-> ---
->  drivers/pci/pcie/aer/aerdrv_errprint.c | 44 ++++++++++++++++------------------
->  1 file changed, 21 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 2c7c9f5f592c..32efc5e0d2eb 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -124,6 +124,21 @@ static const char *aer_agent_string[] = {
->  	"Transmitter ID"
->  };
->  
-> +static void __print_tlp_header(struct pci_dev *dev,
-> +			       struct aer_header_log_regs *t)
-> +{
-> +	unsigned char *tlp = (unsigned char *)&t;
-> +
-> +	dev_err(&dev->dev, "  TLP Header:"
-> +		" %02x%02x%02x%02x %02x%02x%02x%02x"
-> +		" %02x%02x%02x%02x %02x%02x%02x%02x\n",
-> +		*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
-> +		*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
-> +		*(tlp + 11), *(tlp + 10), *(tlp + 9),
-> +		*(tlp + 8), *(tlp + 15), *(tlp + 14),
-> +		*(tlp + 13), *(tlp + 12));
-> +}
-> +
->  static void __aer_print_error(struct pci_dev *dev,
->  			      struct aer_err_info *info)
->  {
-> @@ -178,17 +193,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
->  
->  		__aer_print_error(dev, info);
->  
-> -		if (info->tlp_header_valid) {
-> -			unsigned char *tlp = (unsigned char *) &info->tlp;
-> -			dev_err(&dev->dev, "  TLP Header:"
-> -				" %02x%02x%02x%02x %02x%02x%02x%02x"
-> -				" %02x%02x%02x%02x %02x%02x%02x%02x\n",
-> -				*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
-> -				*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
-> -				*(tlp + 11), *(tlp + 10), *(tlp + 9),
-> -				*(tlp + 8), *(tlp + 15), *(tlp + 14),
-> -				*(tlp + 13), *(tlp + 12));
-> -		}
-> +		if (info->tlp_header_valid)
-> +			__print_tlp_header(dev, &info->tlp);
->  	}
->  
->  	if (info->id && info->error_dev_num > 1 && info->id == id)
-> @@ -250,18 +256,10 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
->  	if (aer_severity != AER_CORRECTABLE)
->  		dev_err(&dev->dev, "aer_uncor_severity: 0x%08x\n",
->  		       aer->uncor_severity);
-> -	if (tlp_header_valid) {
-> -		const unsigned char *tlp;
-> -		tlp = (const unsigned char *)&aer->header_log;
-> -		dev_err(&dev->dev, "aer_tlp_header:"
-> -			" %02x%02x%02x%02x %02x%02x%02x%02x"
-> -			" %02x%02x%02x%02x %02x%02x%02x%02x\n",
-> -			*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
-> -			*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
-> -			*(tlp + 11), *(tlp + 10), *(tlp + 9),
-> -			*(tlp + 8), *(tlp + 15), *(tlp + 14),
-> -			*(tlp + 13), *(tlp + 12));
-> -	}
-> +
-> +	if (tlp_header_valid)
-> +		__print_tlp_header(dev, &aer->header_log);
-> +
->  	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
->  			aer_severity);
->  }
-> -- 
-> 1.8.4
-> 
+Yinghai
