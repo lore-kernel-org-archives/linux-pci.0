@@ -1,50 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755154Ab3LFDVE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Dec 2013 22:21:04 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiri Kosina <trivial@kernel.org>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part1 V2 10/20] iommu/vt-d, trivial: use defined macro instead of hardcoding
-Date: Fri,  6 Dec 2013 11:21:13 +0800
-Message-Id: <1386300083-6882-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:48957 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755127Ab3LIA6O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2013 19:58:14 -0500
+MIME-Version: 1.0
+In-Reply-To: <aaaa948b964642859fa142779846211f@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
+	<aaaa948b964642859fa142779846211f@DM2PR05MB671.namprd05.prod.outlook.com>
+Date: Sun, 8 Dec 2013 16:58:13 -0800
+Message-ID: <CAE9FiQUBERP_Mtv1V0R6LNrsGLr81bamXV1tSAArwTAqa1qxSA@mail.gmail.com>
+Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
+From: Yinghai Lu <yinghai@kernel.org>
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use defined macro instead of hardcoding in function set_ioapic_sid()
-for readability.
+On Sun, Dec 8, 2013 at 1:29 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+>
+> In fact things do get more complicated if we introduce link state based hot-plug, because then that requires that we do NOT disable the link permanently during power off. (Because we would want to receive future hot-plug link-up events).
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+is that out of spec?
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 41e5798..50fd55c 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -324,7 +324,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
- 		return -1;
- 	}
- 
--	set_irte_sid(irte, 1, 0, sid);
-+	set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16, sid);
- 
- 	return 0;
- }
--- 
-1.7.10.4
+Why do we need to use link state event with hotplug? What is attention
+button doing?
 
+Yinghai
