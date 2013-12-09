@@ -1,80 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:44082 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753153Ab3LCBY1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 20:24:27 -0500
-Received: by mail-ie0-f169.google.com with SMTP id e14so22514486iej.14
-        for <linux-pci@vger.kernel.org>; Mon, 02 Dec 2013 17:24:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131129175336.GA6152@kroah.com>
-References: <20131129031419.GB5889@neilslaptop.think-freely.org>
- <20131129094137.GC3028@redhat.com> <20131129175336.GA6152@kroah.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 2 Dec 2013 18:24:06 -0700
-Message-ID: <CAErSpo44sQU2PbufCYF+wzpMtMPC97_FgAMQgruX9Nw3XbmL8g@mail.gmail.com>
-Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
-To: Greg KH <greg@kroah.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout3.samsung.com ([203.254.224.33]:25264 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760148Ab3LIBqY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2013 20:46:24 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Valentine Barshak' <valentine.barshak@cogentembedded.com>
+Cc: 'Wei Yongjun' <weiyj.lk@gmail.com>,
+	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
+	linux-pci@vger.kernel.org, 'Simon Horman' <horms@verge.net.au>,
+	'Magnus Damm' <magnus.damm@gmail.com>,
+	'Kuninori Morimoto' <kuninori.morimoto.gx@renesas.com>,
+	linux-sh@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <CAPgLHd-XTnQXdK7H2uLbGW1ftxNB_nHwzcNCoiCjpXsB5X3HnA@mail.gmail.com>
+ <20131207225012.GC7901@google.com>
+In-reply-to: <20131207225012.GC7901@google.com>
+Subject: Re: [PATCH] PCI: rcar: fix return value check in rcar_pci_probe()
+Date: Mon, 09 Dec 2013 10:46:17 +0900
+Message-id: <001001cef480$73896b20$5a9c4160$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 29, 2013 at 10:53 AM, Greg KH <greg@kroah.com> wrote:
-> On Fri, Nov 29, 2013 at 10:41:37AM +0100, Veaceslav Falico wrote:
->> On Wed, Nov 27, 2013 at 10:46:52AM -0800, Greg Kroah-Hartman wrote:
->> >From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> >
->> >The PCI MSI sysfs code is a mess with kobjects for things that don't
->> >really need to be kobjects.  This patch creates attributes dynamically
->> >for the MSI interrupts instead of using kobjects.
->> >
->> >Note, this removes a directory from the current MSI interrupt sysfs
->> >code:
->> >
->> >old MSI kobjects:
->> >pci_device
->> >   └── msi_irqs
->> >       └── 40
->> >           └── mode
->> >
->> >new MSI attributes:
->> >pci_device
->> >   └── msi_irqs
->> >       └── 40
->> >
->> >As there was only one file "mode" with the kobject model, the interrupt
->> >number is now a file that returns the "mode" of the interrupt (msi vs.
->> >msix).
->> >
->> >Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>
->> Works like a charm for me.
->>
->> FWIW,
->>
->> Reviewed-by: Veaceslav Falico <vfalico@redhat.com>
->
-> On Thu, Nov 28, 2013 at 10:14:19PM -0500, Neil Horman wrote:
->> ACK, Testing with git-head irqbalance on F19 with this patch and it works fine.
->>
->> Thanks!
->> Acked-by: Neil Horman <nhorman@tuxdriver.com>
->
-> Great, thanks for both of you testing this.
->
-> Bjorn, any objection to take this through your tree for 3.14-rc1?
+On Sunday, December 08, 2013 7:50 AM, Bjorn Helgaas wrote:
+> On Tue, Nov 19, 2013 at 11:40:28AM +0800, Wei Yongjun wrote:
+> > From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> >
+> > In case of error, the function devm_ioremap_resource() returns ERR_PTR()
+> > and never returns NULL. The NULL test in the return value check should
+> > be replaced with IS_ERR().
+> >
+> > Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Applied with Jingoo's reviewed-by to pci/host-rcar for v3.14, thanks!
+> 
+> For drivers/pci/host/*, I normally look for an ack from the responsible
+> person,  but this patch is trivial enough that I'm fine taking it without
+> that.  But for more significant changes, I don't have any notes about who
+> should own pci-rcar-gen2.c.  Valentine could be a candidate since he added
+> it in the first place?  Or Jingoo?
 
-Nope, I don't object at all.  We probably should update
-Documentation/ABI/testing/sysfs-bus-pci at the same time, though.
+(+cc Simon Horman, Magnus Damm, Kuninori Morimoto, linux-sh mailing-list)
 
-Bjorn
+Hi Bjorn,
+
+I think that Valentine could be a candidate, because he is an author.
+However, pci-rcar-gen2.c is working on Renesas SoC, so, it may be
+necessary to get ACK from Renesas people such as Simon Horman,
+Magnus Damm, and Kuninori Morimoto.
+
+Simon Horman, Magnus Damm, and Kuninori Morimoto,
+Who is a proper person responsible for RCar Gen PCIe driver?
+(drivers/pci/host/pci-rcar-gen2.c)
+
+Best regards,
+Jingoo Han
+
+> 
+> Bjorn
+> 
+> > ---
+> >  drivers/pci/host/pci-rcar-gen2.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+> > index cbaa5c4..96d1182 100644
+> > --- a/drivers/pci/host/pci-rcar-gen2.c
+> > +++ b/drivers/pci/host/pci-rcar-gen2.c
+> > @@ -276,8 +276,8 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
+> >
+> >  	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> >  	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
+> > -	if (!reg)
+> > -		return -ENODEV;
+> > +	if (IS_ERR(reg))
+> > +		return PTR_ERR(reg);
+> >
+> >  	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> >  	if (!mem_res || !mem_res->start)
+> >
+
