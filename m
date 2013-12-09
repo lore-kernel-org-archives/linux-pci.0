@@ -1,174 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:63758 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440Ab3LRAdQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 19:33:16 -0500
-Received: by mail-ig0-f175.google.com with SMTP id j1so7745071iga.2
-        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2013 16:33:15 -0800 (PST)
-Date: Tue, 17 Dec 2013 17:33:13 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 6/9] PCI/MSI: Factor out pci_get_msi_vec_count()
- interface
-Message-ID: <20131218003313.GB15119@google.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
- <d0d8cd19befa8757faf7660fd3ae619945b2cde4.1387140921.git.agordeev@redhat.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53207 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755904Ab3LITGj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 14:06:39 -0500
+Date: Mon, 9 Dec 2013 11:08:07 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Ethan Zhao <ethan.kernel@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>
+Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
+Message-ID: <20131209190807.GA23877@kroah.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+ <33026900.FbCAopDPFz@vostro.rjw.lan>
+ <CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com>
+ <1519414.GDlGZFCTSR@vostro.rjw.lan>
+ <CAE9FiQX0zvtfAW-0-aPjXyVuFzxg6PMtY9O_7csqEzyW2pr5Kw@mail.gmail.com>
+ <20131208035047.GB17629@kroah.com>
+ <CABawtvO91R0wBL5XZf6xM8Rmray50Fjc74=iA9Y+XdeD7FsNwg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d0d8cd19befa8757faf7660fd3ae619945b2cde4.1387140921.git.agordeev@redhat.com>
+In-Reply-To: <CABawtvO91R0wBL5XZf6xM8Rmray50Fjc74=iA9Y+XdeD7FsNwg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 09:34:59AM +0100, Alexander Gordeev wrote:
-> Device drivers can use this interface to obtain maximum number
-> of MSI interrupts the device supports and use that number i.e.
-> in a following call to pci_enable_msi_block() interface.
+On Mon, Dec 09, 2013 at 11:24:04PM +0800, Ethan Zhao wrote:
+> On Sun, Dec 8, 2013 at 11:50 AM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > On Sat, Dec 07, 2013 at 07:31:21PM -0800, Yinghai Lu wrote:
+> >> [+ GregKH]
+> >>
+> >> On Fri, Dec 6, 2013 at 5:27 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> > On Thursday, December 05, 2013 10:52:36 PM Yinghai Lu wrote:
+> >> >> On Mon, Dec 2, 2013 at 6:49 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> >> >
+> >> >> > Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
+> >> >> >   for a device and its parent bridge via remove_callback().
+> >> >> >
+> >> >> >   In that case both code paths attempt to acquire
+> >> >> >   pci_remove_rescan_mutex.  If the child device removal acquires
+> >> >> >   it first, there will be no problems.  However, if the parent
+> >> >> >   bridge removal acquires it first, it will eventually execute
+> >> >> >   pci_destroy_dev() for the child device, but that device will
+> >> >> >   not be freed yet due to the reference held by the concurrent
+> >> >> >   child removal.  Consequently, both pci_stop_bus_device() and
+> >> >> >   pci_remove_bus_device() will be executed for that device
+> >> >> >   unnecessarily and pci_destroy_dev() will see a corrupted list
+> >> >> >   head in that object.  Moreover, an excess put_device() will
+> >> >> >   be executed for that device in that case which may lead to a
+> >> >> >   use-after-free in the final kobject_put() done by
+> >> >> >   sysfs_schedule_callback_work().
+> >> >> >
+> >> >> > Index: linux-pm/include/linux/pci.h
+> >> >> > ===================================================================
+> >> >> > --- linux-pm.orig/include/linux/pci.h
+> >> >> > +++ linux-pm/include/linux/pci.h
+> >> >> > @@ -321,6 +321,7 @@ struct pci_dev {
+> >> >> >         unsigned int    multifunction:1;/* Part of multi-function device */
+> >> >> >         /* keep track of device state */
+> >> >> >         unsigned int    is_added:1;
+> >> >> > +       unsigned int    is_gone:1;
+> >> >> >         unsigned int    is_busmaster:1; /* device is busmaster */
+> >> >> >         unsigned int    no_msi:1;       /* device may not use msi */
+> >> >> >         unsigned int    block_cfg_access:1;     /* config space access is blocked */
+> >> >> > Index: linux-pm/drivers/pci/remove.c
+> >> >> > ===================================================================
+> >> >> > --- linux-pm.orig/drivers/pci/remove.c
+> >> >> > +++ linux-pm/drivers/pci/remove.c
+> >> >> > @@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
+> >> >> >
+> >> >> >  static void pci_destroy_dev(struct pci_dev *dev)
+> >> >> >  {
+> >> >> > +       dev->is_gone = 1;
+> >> >> >         device_del(&dev->dev);
+> >> >> >
+> >> >> >         down_write(&pci_bus_sem);
+> >> >> > @@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
+> >> >> >   */
+> >> >> >  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+> >> >> >  {
+> >> >> > -       pci_stop_bus_device(dev);
+> >> >> > -       pci_remove_bus_device(dev);
+> >> >> > +       if (!dev->is_gone) {
+> >> >> > +               pci_stop_bus_device(dev);
+> >> >> > +               pci_remove_bus_device(dev);
+> >> >> > +       }
+> >> >> >  }
+> >> >> >  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+> >> >> >
+> >> >>
+> >> >> Yes, above change should address sys double remove problem.
+> >> >
+> >> > I've just realized that we don't need a new flag for that, though.
+> >> >
+> >> > It looks like we only need to check dev->dev.kobj.parent and return if that is
+> >> > NULL, because that means pci_destroy_dev() has run for that device already
+> >> > (I'm wondering why device_del() doesn't clear dev->parent, BTW, it looks like
+> >> > it should do that?).
+> >> >
+> >> > Of course, that still is going to be racy if we don't hold
+> >> > pci_remove_rescan_mutex around pci_stop_and_remove_bus_device() in every code
+> >> > path using it (or use another similar synchronization mechanism).
+> >>
+> >> Wonder if we can have safe way to check if device_del() is called already.
+> >
+> > Nope.
+> >
+> >> And those access_after_free should be addressed by driver core instead
+> >> of pci code?
+> >
+> > Nope, it's up to the bus to handle this.  It shouldn't be hard, you
+> > shouldn't actually care about this, if you do, something is wrong.
+> >
+> > How is this PCI code so hard to get right?  Look at USB for devices that
+> > disappear from anywhere at anytime as an example for how to handle
+> > this.  PCI should be doing the same thing, no need for this "is_gone"
+> > stuff.
+> Greg,
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Reviewed-by: Tejun Heo <tj@kernel.org>
-> ---
->  Documentation/PCI/MSI-HOWTO.txt |   15 ++++++++++++++
->  drivers/pci/msi.c               |   41 +++++++++++++++++++++++++++++++-------
->  include/linux/pci.h             |    6 +++++
->  3 files changed, 54 insertions(+), 8 deletions(-)
-> 
-> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> index a4d174e..c03b815 100644
-> --- a/Documentation/PCI/MSI-HOWTO.txt
-> +++ b/Documentation/PCI/MSI-HOWTO.txt
-> @@ -169,6 +169,21 @@ on any interrupt for which it previously called request_irq().
->  Failure to do so results in a BUG_ON(), leaving the device with
->  MSI enabled and thus leaking its vector.
->  
-> +4.2.5 pci_get_msi_vec_count
-> +
-> +int pci_get_msi_vec_count(struct pci_dev *dev)
+>   Don't agree USB is a good example to follow, do you never hit panic
+> when you pull out USB device from anywhere at anytime without unmount
+> or stop it via command ?
 
-What would you think of "pci_msi_vec_count()" or "pci_msi_vector_count()"
-instead?  The "get" doesn't really seem necessary, and we often use "get"
-to indicate acquiring a reference (though it's obvious that doesn't apply
-here).
+You shouldn't.  If you do, it's a bug, let us know and we will fix it.
 
-Bjorn
+> that is not truth.  the truth is none regards it as enterprise level
+> interface to attach devices.
 
-> +This function could be used to retrieve the number of MSI vectors the
-> +device requested (via the Multiple Message Capable register). The MSI
-> +specification only allows the returned value to be a power of two,
-> +up to a maximum of 2^5 (32).
-> +
-> +If this function returns a negative number, it indicates the device is
-> +not capable of sending MSIs.
-> +
-> +If this function returns a positive number, it indicates the maximum
-> +number of MSI interrupt vectors that could be allocated.
-> +
->  4.3 Using MSI-X
->  
->  The MSI-X capability is much more flexible than the MSI capability.
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index c0e2259..8915edb 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -834,6 +834,31 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
->  }
->  
->  /**
-> + * pci_get_msi_vec_count - Return the number of MSI vectors a device can send
-> + * @dev: device to report about
-> + *
-> + * This function returns the number of MSI vectors a device requested via
-> + * Multiple Message Capable register. It returns a negative errno if the
-> + * device is not capable sending MSI interrupts. Otherwise, the call succeeds
-> + * and returns a power of two, up to a maximum of 2^5 (32), according to the
-> + * MSI specification.
-> + **/
-> +int pci_get_msi_vec_count(struct pci_dev *dev)
-> +{
-> +	int ret;
-> +	u16 msgctl;
-> +
-> +	if (!dev->msi_cap)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-> +	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(pci_get_msi_vec_count);
-> +
-> +/**
->   * pci_enable_msi_block - configure device's MSI capability structure
->   * @dev: device to configure
->   * @nvec: number of interrupts to configure
-> @@ -849,13 +874,13 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
->  int pci_enable_msi_block(struct pci_dev *dev, int nvec)
->  {
->  	int status, maxvec;
-> -	u16 msgctl;
->  
-> -	if (!dev->msi_cap || dev->current_state != PCI_D0)
-> +	if (dev->current_state != PCI_D0)
->  		return -EINVAL;
->  
-> -	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-> -	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +	maxvec = pci_get_msi_vec_count(dev);
-> +	if (maxvec < 0)
-> +		return maxvec;
->  	if (nvec > maxvec)
->  		return maxvec;
->  
-> @@ -880,13 +905,13 @@ EXPORT_SYMBOL(pci_enable_msi_block);
->  int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
->  {
->  	int ret, nvec;
-> -	u16 msgctl;
->  
-> -	if (!dev->msi_cap || dev->current_state != PCI_D0)
-> +	if (dev->current_state != PCI_D0)
->  		return -EINVAL;
->  
-> -	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-> -	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +	ret = pci_get_msi_vec_count(dev);
-> +	if (ret < 0)
-> +		return ret;
->  
->  	if (maxvec)
->  		*maxvec = ret;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8cf7b15..997751d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1154,6 +1154,11 @@ struct msix_entry {
->  
->  
->  #ifndef CONFIG_PCI_MSI
-> +static inline int pci_get_msi_vec_count(struct pci_dev *dev)
-> +{
-> +	return -ENOSYS;
-> +}
-> +
->  static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
->  {
->  	return -ENOSYS;
-> @@ -1195,6 +1200,7 @@ static inline int pci_msi_enabled(void)
->  	return 0;
->  }
->  #else
-> +int pci_get_msi_vec_count(struct pci_dev *dev);
->  int pci_enable_msi_block(struct pci_dev *dev, int nvec);
->  int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec);
->  void pci_msi_shutdown(struct pci_dev *dev);
-> -- 
-> 1.7.7.6
-> 
+Huh?
+
+>   Is there a feature for an USB disk to tell the host you want to pull
+> out it and should sync all the data in cache and unmount the files
+> system then power it off ?
+
+Nope, neither is there one for when I yank out my PCI storage device
+without telling the OS about it either.  Everything better "just work",
+with the exception of any lost data that might be in flight.
+
+>   What USB could drive for us ? 40GB nic ? infiniband ? High end graphic card ?
+
+I don't understand what that means at all.
+
+We have USB network ethernet devices, I have a USB 3.0 one here that
+works really well.  Infiniband is merely a transport, with some "verbs"
+on top of it, that has nothing to do with PCI other than you can have a
+IB PCI controller in the system.  And I have a USB graphics adapter here
+that works just fine as well (people chain lots of them on one system.)
+
+So how does this apply to PCI at all?  It's the same thing, you have to
+be able to handle a PCI device going away at any point in time, with or
+without telling the OS ahead of time that you are going to remove it.
+
+greg k-h
