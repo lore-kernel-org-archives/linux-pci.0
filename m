@@ -1,39 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:37180 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407Ab3LNS7y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Dec 2013 13:59:54 -0500
-Received: by mail-ie0-f178.google.com with SMTP id lx4so4461586iec.23
-        for <linux-pci@vger.kernel.org>; Sat, 14 Dec 2013 10:59:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAHH3p5+3Zy+YkgDS_1bJ7B84w5iHOh6-QG7LRJXo2WQHREcRHw@mail.gmail.com>
-References: <CAHH3p5+3Zy+YkgDS_1bJ7B84w5iHOh6-QG7LRJXo2WQHREcRHw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 14 Dec 2013 11:59:34 -0700
-Message-ID: <CAErSpo59htYoPBoouUfSXAVXwCUQPK-TB_zG0BkE-PLhV=KRbQ@mail.gmail.com>
-Subject: Re: Memory mapping of config space of pcie devices
-To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from userp1040.oracle.com ([156.151.31.81]:34121 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250Ab3LJGyz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 01:54:55 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 2/5] PCI: Don't use 4G bus address directly in resource allocation
+Date: Mon,  9 Dec 2013 22:54:41 -0800
+Message-Id: <1386658484-15774-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
+References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 14, 2013 at 11:32 AM, shiv prakash Agarwal
-<chhotu.shiv@gmail.com> wrote:
-> Hi All,
->
-> How devices config spaces are mapped to host memory?
-> Is it being handled by core driver? I could not locate.
+Current we are using PCIBIOS_MAX_MEM_32 (4G limit) directly in the
+pci_bus_alloc_resource to make sure that don't allocate too high
+pref 64bit above 4G in the system that does not support that.
 
-The PCI core does not map config space into memory.  That's not even
-possible for the legacy config access methods, e.g., using I/O ports
-0xcf8 and 0xcfc [1].
+That is not right, as allocate_resource() should take resource limit.
 
-If you're wondering about how Linux uses ECAM, that's mostly in
-arch/x86/pci/mmconfig*.  That code does ioremap the ECAM area into
-kernel virtual space, but only for access via pci_read_config_word(),
-pci_write_config_word(), etc.
+Add pci_clip_resource() and use it check the pci bus address limit.
 
-Bjorn
+At last remove PCIBIOS_MAX_MEM_32.
 
-[1] http://en.wikipedia.org/wiki/PCI_configuration_space#Software_implementation
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/pci.h |  1 -
+ drivers/pci/bus.c          | 41 ++++++++++++++++++++++++++++++++++-------
+ include/linux/pci.h        |  4 ----
+ 3 files changed, 34 insertions(+), 12 deletions(-)
+
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 947b5c4..122c299 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -125,7 +125,6 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 
+ /* generic pci stuff */
+ #include <asm-generic/pci.h>
+-#define PCIBIOS_MAX_MEM_32 0xffffffff
+ 
+ #ifdef CONFIG_NUMA
+ /* Returns the node based on pci bus */
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index fc1b740..3ad4fd9 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -98,6 +98,25 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+ 	}
+ }
+ 
++static struct pci_bus_region pci_mem_32 = {0, 0xffffffff};
++
++static void pci_clip_resource(struct resource *res, struct pci_bus *bus,
++			      struct pci_bus_region *region)
++{
++	struct pci_bus_region r;
++
++	pcibios_resource_to_bus(bus, &r, res);
++	if (r.start < region->start)
++		r.start = region->start;
++	if (r.end > region->end)
++		r.end = region->end;
++
++	if (r.end < r.start)
++		res->end = res->start - 1;
++	else
++		pcibios_bus_to_resource(bus, res, &r);
++}
++
+ /**
+  * pci_bus_alloc_resource - allocate a resource from a parent bus
+  * @bus: PCI bus
+@@ -125,15 +144,12 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ 	int i, ret = -ENOMEM;
+ 	struct resource *r;
+-	resource_size_t max = -1;
+ 
+ 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
+ 
+-	/* don't allocate too high if the pref mem doesn't support 64bit*/
+-	if (!(res->flags & IORESOURCE_MEM_64))
+-		max = PCIBIOS_MAX_MEM_32;
+-
+ 	pci_bus_for_each_resource(bus, r, i) {
++		struct resource avail;
++
+ 		if (!r)
+ 			continue;
+ 
+@@ -147,10 +163,21 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 		    !(res->flags & IORESOURCE_PREFETCH))
+ 			continue;
+ 
++		/*
++		 * don't allocate too high if the pref mem doesn't
++		 * support 64bit.
++		 */
++		avail = *r;
++		if (!(res->flags & IORESOURCE_MEM_64)) {
++			pci_clip_resource(&avail, bus, &pci_mem_32);
++			if (!resource_size(&avail))
++				continue;
++		}
++
+ 		/* Ok, try it out.. */
+ 		ret = allocate_resource(r, res, size,
+-					r->start ? : min,
+-					max, align,
++					max(avail.start, r->start ? : min),
++					avail.end, align,
+ 					alignf, alignf_data);
+ 		if (ret == 0)
+ 			break;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index da069fa..99e9040 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1485,10 +1485,6 @@ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
+ 
+ #include <asm/pci.h>
+ 
+-#ifndef PCIBIOS_MAX_MEM_32
+-#define PCIBIOS_MAX_MEM_32 (-1)
+-#endif
+-
+ /* these helpers provide future and backwards compatibility
+  * for accessing popular PCI BAR info */
+ #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+-- 
+1.8.4
+
