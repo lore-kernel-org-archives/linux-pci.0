@@ -1,59 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39382 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751666Ab3LYKiY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Dec 2013 05:38:24 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>, Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bj?rn Mork <bjorn@mork.no>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Wed, 25 Dec 2013 10:38:20 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com>
- <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
- <5285E028.20906@gmail.com>
- <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
- <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
- <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
-In-Reply-To: <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:54719 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752359Ab3LJD7l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 22:59:41 -0500
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
+	Tue, 10 Dec 2013 13:59:39 +1000
+Message-ID: <1386647973.32037.57.camel@pasglop>
+Subject: Re: [PATCH 1/9] PCI: Use dev_is_pci() to check whether it is pci
+ device
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>, linux-ia64@vger.kernel.org,
+	linux-parisc@vger.kernel.org, linux-pci@vger.kernel.org,
+	Hanjun Guo <guohanjun@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
+	sparclinux@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org
+Date: Tue, 10 Dec 2013 14:59:33 +1100
+In-Reply-To: <20131210000154.GE4699@google.com>
+References: <1386244373-35796-1-git-send-email-wangyijing@huawei.com>
+	 <20131210000154.GE4699@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiANCj4gDQo+IEdsYWQgdG8gc2VlIHlvdSBhZ2FpbiA6LSkNCj4gDQo+IEkndmUgY29tcGlsZWQg
-TGludXggMy4xMi41IHdpdGggeW91ciBwYXRjaCwgcmVtb3ZlZCAic2V0cGNpIiB0cmljayBhbmQN
-Cj4gcmVib290ZWQuDQo+IA0KPiBEdXJpbmcgdGhlIGJvb3Qgb2YgbmV3IGtlcm5lbCwgSSBjYW4g
-c2VlIGFkZGl0aW9uYWwgKGVycm9yKSBtZXNzYWdlcyBhbW9uZw0KPiAic3lzdGVtZC1mc2NrIiBs
-aW5lcyBidXQgSSB3YXMgbm90IGZhc3QgZW5vdWdoIHRvIHRha2UgcGhvdG9zIGZvciB0aGVtDQo+
-IGJlZm9yZSB0aGV5IGRpc2FwcGVhcmVkIChmbHVzaGVkIGF3YXkpIGJ5IHR0eSBsb2dpbiBpbnRl
-cmZhY2UuDQo+IA0KPiBBZnRlciBsb2dnaW5nIGluLCBJIGZpbmQgdGhhdCBuZXRjZmcgZGlkIG5v
-dCBjb25uZWN0IHRvIGRvcm1pdG9yeSdzIFdpLUZpIGFzDQo+IGJlZm9yZS4gSSBydW4gImxzcGNp
-IC12dnh4eCIgYW5kIGZpbmQgdGhhdCB0aGUgaW50ZXJmYWNlIGlzIGZpbGxlZCB3aXRoICJmZiIu
-IEkndmUNCj4gYXR0YWNoZWQgdGhlIG91dHB1dCBvZiAibHNwY2kgLXZ2eHh4IiBhbmQgImRtZXNn
-Ii4NCj4gDQoNClNvIGl0IGRpZG4ndCB3b3JrIC0gb2suIEkgYW0gbm90IHN1cnByaXNlZCwgYnV0
-IEkgc3RpbGwgd2FudGVkIHRvIGtub3cuDQpUaGlzIHBhdGNoIGlzIHN1cHBvc2VkIHRvIGZpeCBz
-b21lIHRpbWluZyBpc3N1ZSBpbiB0aGUgd2FrZSB1cCBmcm9tIEwxLg0KVGhhbmtzIGZvciB0ZXN0
-aW5nLg0KDQo+IA0KPiAoQW5kIGhlcmUgaXMgc29tZXRoaW5nICJmdW4iOiBJIHJldmVydGVkIG15
-IGtlcm5lbCB0byBBcmNoJ3Mgb2ZmaWNpYWwNCj4gMy4xMi41IGFuZCByZWJvb3RlZCwgYW5kIHRo
-ZSBpbnRlcmZhY2UgaXMgdG90YWxseSBtaXNzaW5nISBJIG1lYW4sIGl0DQo+IGRpc2FwcGVhcmVk
-IGZyb20gdGhlIG91dHB1dCBvZiAiaXAgbGluayIuIEkgY2Fubm90IGV2ZW4gc2VlIGl0IGluICJs
-c3BjaSAtDQo+IHZ2eHh4Iiwgbm90IGV2ZW4gImZmIi4gVGhlIHN0cmFuZ2UgZWZmZWN0IHZhbmlz
-aGVkIGFmdGVyIG9uZSBtb3JlIHJlYm9vdA0KPiBhbmQgYSBjb2xkIGJvb3QuKQ0KDQpHcmVhdCAt
-IHRoYXQgY2FuIGhhcHBlbiBzb21ldGltZXMgd2hlbiBzb21ldGhpbmcgZ29lcyB3cm9uZy4uLg0K
+On Mon, 2013-12-09 at 17:01 -0700, Bjorn Helgaas wrote:
+> [+cc arch lists]
+> 
+> On Thu, Dec 05, 2013 at 07:52:53PM +0800, Yijing Wang wrote:
+> > Use dev_is_pci() instead of directly compare
+> > pci_bus_type to check whether it is pci device.
+> > 
+> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> 
+> I applied all these to my pci/yijing-dev_is_pci branch for v3.14, thanks!
+> 
+> Browse them here: http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/yijing-dev_is_pci
+
+Ah ok. I also have the powerpc one in powerpc -next, no biggie though
+
+Cheers,
+Ben.
+
+> This should be no functional change.
+> 
+>  arch/alpha/kernel/pci_iommu.c        |    2 +-
+>  arch/arm/common/it8152.c             |    4 ++--
+>  arch/arm/mach-ixp4xx/common-pci.c    |    6 +++---
+>  arch/ia64/hp/common/sba_iommu.c      |    2 +-
+>  arch/ia64/sn/pci/pci_dma.c           |   24 ++++++++++++------------
+>  arch/parisc/kernel/drivers.c         |   22 +++++-----------------
+>  arch/powerpc/sysdev/fsl_pci.c        |    2 +-
+>  arch/sparc/include/asm/dma-mapping.h |   10 ++++------
+>  arch/sparc/kernel/iommu.c            |    2 +-
+>  arch/sparc/kernel/ioport.c           |    4 +---
+>  arch/x86/kernel/acpi/boot.c          |    4 +---
+>  drivers/pci/pci-acpi.c               |    2 +-
+>  12 files changed, 33 insertions(+), 51 deletions(-)
+> 
+> Bjorn
+> 
+> > ---
+> >  drivers/pci/pci-acpi.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> > index 577074e..e0431f1 100644
+> > --- a/drivers/pci/pci-acpi.c
+> > +++ b/drivers/pci/pci-acpi.c
+> > @@ -358,7 +358,7 @@ static void pci_acpi_cleanup(struct device *dev)
+> >  
+> >  static bool pci_acpi_bus_match(struct device *dev)
+> >  {
+> > -	return dev->bus == &pci_bus_type;
+> > +	return dev_is_pci(dev);
+> >  }
+> >  
+> >  static struct acpi_bus_type acpi_pci_bus = {
+> > -- 
+> > 1.7.1
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
+
+
