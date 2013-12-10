@@ -1,86 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH] vfio-pci: Use pci "try" reset interface
-To: alex.williamson@redhat.com
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org
-Date: Mon, 16 Dec 2013 15:16:54 -0700
-Message-ID: <20131216221615.3539.78656.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog121.obsmtp.com ([207.126.144.151]:54722 "EHLO
+	eu1sys200aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750751Ab3LJEe3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 23:34:29 -0500
+Date: Tue, 10 Dec 2013 10:04:09 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+Cc: Marek Vasut <marex@denx.de>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>
+Subject: Re: [Query/Discussion]: IO translation with designware PCIe
+ controller
+Message-ID: <20131210043409.GA2734@pratyush-vbox>
+References: <20131205050424.GA2298@pratyush-vbox>
+ <201312061546.23981.arnd@arndb.de>
+ <20131209071241.GA5760@pratyush-vbox>
+ <201312091709.38013.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201312091709.38013.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI resets will attempt to take the device_lock for any device to be
-reset.  This is a problem if that lock is already held, for instance
-in the device remove path.  It's not sufficient to simply kill the
-user process or skip the reset if called after .remove as a race could
-result in the same deadlock.  Instead, we handle all resets as "best
-effort" using the PCI "try" reset interfaces.  This prevents the user
-from being able to induce a deadlock by triggering a reset.
+On Tue, Dec 10, 2013 at 12:09:37AM +0800, Arnd Bergmann wrote:
+> On Monday 09 December 2013, Pratyush Anand wrote:
+> > > I think it does handle this correctly, look at
+> > > 
+> > > static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> > > {
+> > > 	...
+> > >         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+> > >                 sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+> > >                 pci_ioremap_io(sys->io_offset, pp->io.start);
+> > >                 global_io_offset += SZ_64K;
+> > >                 pci_add_resource_offset(&sys->resources, &pp->io,
+> > >                                         sys->io_offset);
+> > >         }
+> > > 	...
+> > > }
+> > > 
+> > > I believe this does the right thing, but you have to put the correct
+> > > translation into the 'ranges' property of the host bridge node in DT.
+> > 
+> > May be not exactly. pp->io is the  realio, and it is passed correctly
+> > to pci_add_resource_offset. But, as you had also
+> > said that pci_ioremap_io will receive cpu physical address space as
+> > input, therefore I think following modification will be needed to work
+> > io transaction properly.
+> 
+> I see. I think you are right.
+> 
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index be6ce30..cf68632 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >  					   + global_io_offset);
+> >  			pp->config.io_size = resource_size(&pp->io);
+> >  			pp->config.io_bus_addr = range.pci_addr;
+> > +			pp->io_base = range.cpu_addr;
+> >  		}
+> >  		if (restype == IORESOURCE_MEM) {
+> >  			of_pci_range_to_resource(&range, np, &pp->mem);
+> > @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >  
+> >  	pp->cfg0_base = pp->cfg.start;
+> >  	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+> > -	pp->io_base = pp->io.start;
+> >  	pp->mem_base = pp->mem.start;
+> >  
+> >  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> 
+> This looks correct to me and it seems to also fix a bug in
+> dw_pcie_prog_viewport_io_outbound if I read this correctly.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+Yes, now outbound viewport for IO translation will get correct input
+address.
 
-This depends on the proposed pci "try" function/slot/bus reset patch.
+> 
+> > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> >  
+> >  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+> >  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+> > -		pci_ioremap_io(sys->io_offset, pp->io.start);
+> > +		pci_ioremap_io(sys->io_offset, pp->io_base);
+> >  		global_io_offset += SZ_64K;
+> >  		pci_add_resource_offset(&sys->resources, &pp->io,
+> >  					sys->io_offset);
+> 
+> I think there is still a related bug in here: we should pass global_io_offset rather
+> than sys->io_offset to pci_ioremap_io, so we map the new window into the first
+> available spot in the Linux view of the I/O space, rather than passing a number
+> that might be zero for any bus, if the 'ranges' are set up to have an identity
+> mapping between Linux I/O spaces and PCI I/O spaces. You should be able to verify
+> this by setting the I/O range for the bus to a random 4KB multiple in DT and
+> observe that Linux start allocating ports from 0x1000 but the raw BAR values
+> would contain the value you have chosen.
 
- drivers/vfio/pci/vfio_pci.c |   29 +++++++++--------------------
- 1 file changed, 9 insertions(+), 20 deletions(-)
+OK.
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 6ab71b9..576e34e 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -139,25 +139,14 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 	pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
- 
- 	/*
--	 * Careful, device_lock may already be held.  This is the case if
--	 * a driver unbind is blocked.  Try to get the locks ourselves to
--	 * prevent a deadlock.
-+	 * Try to reset the device.  The success of this is dependent on
-+	 * being able to lock the device, which is not always possible.
- 	 */
- 	if (vdev->reset_works) {
--		bool reset_done = false;
--
--		if (pci_cfg_access_trylock(pdev)) {
--			if (device_trylock(&pdev->dev)) {
--				__pci_reset_function_locked(pdev);
--				reset_done = true;
--				device_unlock(&pdev->dev);
--			}
--			pci_cfg_access_unlock(pdev);
--		}
--
--		if (!reset_done)
--			pr_warn("%s: Unable to acquire locks for reset of %s\n",
--				__func__, dev_name(&pdev->dev));
-+		int ret = pci_try_reset_function(pdev);
-+		if (ret)
-+			pr_debug("%s: reset of device %s = %d\n",
-+				__func__, dev_name(&pdev->dev), ret);
- 	}
- 
- 	pci_restore_state(pdev);
-@@ -514,7 +503,7 @@ static long vfio_pci_ioctl(void *device_data,
- 
- 	} else if (cmd == VFIO_DEVICE_RESET) {
- 		return vdev->reset_works ?
--			pci_reset_function(vdev->pdev) : -EINVAL;
-+			pci_try_reset_function(vdev->pdev) : -EINVAL;
- 
- 	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
- 		struct vfio_pci_hot_reset_info hdr;
-@@ -684,8 +673,8 @@ reset_info_exit:
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = slot ? pci_reset_slot(vdev->pdev->slot) :
--				     pci_reset_bus(vdev->pdev->bus);
-+			ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
-+				     pci_try_reset_bus(vdev->pdev->bus);
- 
- hot_reset_release:
- 		for (i--; i >= 0; i--)
+@ Jingoo, Mohit
 
+Is it possible for you to test following patch.
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index be6ce30..b83f5e8 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 					   + global_io_offset);
+ 			pp->config.io_size = resource_size(&pp->io);
+ 			pp->config.io_bus_addr = range.pci_addr;
++			pp->io_base = range.cpu_addr;
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+@@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	pp->cfg0_base = pp->cfg.start;
+ 	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+-	pp->io_base = pp->io.start;
+ 	pp->mem_base = pp->mem.start;
+ 
+ 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+@@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ 
+ 	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+ 		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+-		pci_ioremap_io(sys->io_offset, pp->io.start);
++		pci_ioremap_io(global_io_offset, pp->io_base);
+ 		global_io_offset += SZ_64K;
+ 		pci_add_resource_offset(&sys->resources, &pp->io,
+ 					sys->io_offset);
+
+Regards
+Pratyush
+> 
+> 	Arnd
