@@ -1,42 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:35566 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753395Ab3LSPIL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 10:08:11 -0500
-From: Levente Kurusa <levex@linux.com>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Levente Kurusa <levex@linux.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <amurray@embedded-bits.co.uk>,
-	Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 32/38] pcie: add missing put_device call
-Date: Thu, 19 Dec 2013 16:06:46 +0100
-Message-Id: <1387465612-3673-33-git-send-email-levex@linux.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:50150 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754073Ab3LJRC3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 12:02:29 -0500
+Received: by mail-ie0-f174.google.com with SMTP id at1so8759078iec.5
+        for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 09:02:28 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAHH3p5+1d0SfuhoHRPzn0e6t-C+3A7Pf8AeWZO_OaCZGjumy0w@mail.gmail.com>
+References: <CAHH3p5+1d0SfuhoHRPzn0e6t-C+3A7Pf8AeWZO_OaCZGjumy0w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Dec 2013 10:02:08 -0700
+Message-ID: <CAErSpo5K+74R5+yWCn=3xZ62hGq7EPrYjzW-kkxNJDhmydYj+w@mail.gmail.com>
+Subject: Re: ASPM L1 Substates SW implementation
+To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is required so that we give up the last reference to the device.
-Removed the kfree() as put_device will result in release_pcie_device being
-called and hence the container of the device will be kfree'd.
+On Sun, Dec 8, 2013 at 11:57 PM, shiv prakash Agarwal
+<chhotu.shiv@gmail.com> wrote:
+> Hi All,
+>
+>
+>
+> Are you aware of ASPM L1 Substates implementation in kernel happening
+> anywhere on upstream?
 
-Signed-off-by: Levente Kurusa <levex@linux.com>
----
- drivers/pci/pcie/portdrv_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 08d131f..80fb1f2 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -345,7 +345,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
- 
- 	retval = device_register(device);
- 	if (retval)
--		kfree(pcie);
-+		put_device(device);
- 	else
- 		get_device(device);
- 	return retval;
--- 
-1.8.3.1
-
+I'm not aware of any specific ASPM L1 Substates support in Linux.
