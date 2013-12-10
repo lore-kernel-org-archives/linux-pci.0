@@ -1,133 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:42935 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753183Ab3L3DaT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Dec 2013 22:30:19 -0500
+Received: from mail-out.m-online.net ([212.18.0.9]:57127 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840Ab3LJPNZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 10:13:25 -0500
+From: Marek Vasut <marex@denx.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [Query/Discussion]: IO translation with designware PCIe controller
+Date: Tue, 10 Dec 2013 14:26:40 +0100
+Cc: Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>
+References: <20131205050424.GA2298@pratyush-vbox> <201312061546.23981.arnd@arndb.de> <20131209071241.GA5760@pratyush-vbox>
+In-Reply-To: <20131209071241.GA5760@pratyush-vbox>
 MIME-Version: 1.0
-In-Reply-To: <37552283.kG1L4S8Daa@vostro.rjw.lan>
-References: <37552283.kG1L4S8Daa@vostro.rjw.lan>
-Date: Sun, 29 Dec 2013 19:30:18 -0800
-Message-ID: <CAE9FiQXCzRNGbUpXDv3c9RDV4quV2b3gkrpjpPpxYzBH-p35jw@mail.gmail.com>
-Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to
- avoid sysfs warnings
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Tejun Heo <tj@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201312101426.40614.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 28, 2013 at 3:20 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> The device_del(&host_bridge->dev) in pci_stop_root_bus() is
-> problematic, because it causes all sysfs directories below
-> the host bridge to be removed recursively and when
-> pci_remove_root_bus() attempts to remove devices on the root
-> bus (whose sysfs directories are gone now along with all their
-> subdirectories), it causes warnings similar to this one to be
-> printed:
->
-> WARNING: CPU: 0 PID: 6 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
-> sysfs group ffffffff819ac5c0 not found for kobject '0001:ff:10.2'
-> Modules linked in: <irrelevant list>
-> CPU: 0 PID: 6 Comm: kworker/u512:0 Tainted: G        W    3.13.0-rc5+ #11
-> Hardware name:
-> Workqueue: kacpi_hotplug acpi_hotplug_work_fn
->  0000000000000009 ffff8808738d3bd8 ffffffff815d84ea ffff8808738d3c20
->  ffff8808738d3c10 ffffffff8106594d 0000000000000000 ffffffff819ac5c0
->  ffff880871b9d0a8 ffff8a07d1895000 0000000000000103 ffff8808738d3c70
-> Call Trace:
->  [<ffffffff815d84ea>] dump_stack+0x45/0x56
->  [<ffffffff8106594d>] warn_slowpath_common+0x7d/0xa0
->  [<ffffffff810659bc>] warn_slowpath_fmt+0x4c/0x50
->  [<ffffffff8122b52e>] ? sysfs_get_dirent_ns+0x4e/0x70
->  [<ffffffff8122c806>] sysfs_remove_group+0xc6/0xd0
->  [<ffffffff813b83f3>] dpm_sysfs_remove+0x43/0x50
->  [<ffffffff813ae105>] device_del+0x45/0x1c0
->  [<ffffffff812e51f6>] pci_remove_bus_device+0x66/0xd0
->  [<ffffffff812e5363>] pci_remove_root_bus+0x73/0x80
->  [<ffffffff813276ab>] acpi_pci_root_remove+0x42/0x4f
->  [<ffffffff81323070>] acpi_bus_trim+0x56/0x89
->  [<ffffffff81323052>] acpi_bus_trim+0x38/0x89
->  [<ffffffff813245df>] acpi_device_hotplug+0x137/0x33b
->  [<ffffffff8131efba>] acpi_hotplug_work_fn+0x1c/0x27
->  [<ffffffff81080f1b>] process_one_work+0x17b/0x460
->  [<ffffffff81081ccb>] worker_thread+0x11b/0x400
->  [<ffffffff81081bb0>] ? rescuer_thread+0x3e0/0x3e0
->  [<ffffffff81088a12>] kthread+0xd2/0xf0
->  [<ffffffff81088940>] ? kthread_create_on_node+0x180/0x180
->  [<ffffffff815e823c>] ret_from_fork+0x7c/0xb0
->  [<ffffffff81088940>] ? kthread_create_on_node+0x180/0x180
->
-> To avoid that, the host bridge device has to be deleted after all of
-> its children, so merge pci_stop_root_bus() and pci_remove_root_bus()
-> into one function, pci_stop_and_remove_root_bus(), that first will
-> use pci_stop_and_remove_bus_device() to stop and remove all devices
-> on the root bus and then will delete the host bridge device, remove
-> its bus and drop the final reference to it.
->
-> Reported-by: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->
-> Hi,
->
-> I can't really test this patch, but I don't know how it can break anything.
->
-> The only user of pci_stop_root_bus() and pci_remove_root_bus() is
-> acpi_pci_root_remove() and the code ordering there seems to be somewhat
-> arbitrary.  If you are aware of any reason why it may not work, please let
-> me know. :-)
->
-> Thanks,
-> Rafael
->
-> ---
->  drivers/acpi/pci_root.c |    4 +---
->  drivers/pci/remove.c    |   23 ++++-------------------
->  include/linux/pci.h     |    3 +--
->  3 files changed, 6 insertions(+), 24 deletions(-)
->
-> Index: linux-pm/drivers/acpi/pci_root.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/pci_root.c
-> +++ linux-pm/drivers/acpi/pci_root.c
-> @@ -611,12 +611,10 @@ static void acpi_pci_root_remove(struct
->  {
->         struct acpi_pci_root *root = acpi_driver_data(device);
->
-> -       pci_stop_root_bus(root->bus);
-> -
->         device_set_run_wake(root->bus->bridge, false);
->         pci_acpi_remove_bus_pm_notifier(device);
->
-> -       pci_remove_root_bus(root->bus);
-> +       pci_stop_and_remove_root_bus(root->bus);
->
->         kfree(root);
->  }
+On Monday, December 09, 2013 at 08:12:42 AM, Pratyush Anand wrote:
+> Hi Arnd,
+> 
+> On Fri, Dec 06, 2013 at 10:46:23PM +0800, Arnd Bergmann wrote:
+> > On Friday 06 December 2013, Pratyush Anand wrote:
+> [...]
+> 
+> > > > > For example in SPEAr1340, physically RAM is mapped on above
+> > > > > addresses. PCIe address translation unit can accept address only
+> > > > > in the range of core addresses which are assigned to PCIe RC ie
+> > > > > 0x80000000-0x8FFFFFFF.
+> > > > 
+> > > > Since this is a physical address, it corresponds to address space 3
+> > > > in my list above, and the address you pick here is what you pass to
+> > > > pci_ioremap_io.
+> > > 
+> > > This is what I was expecting. But currently designware driver does not
+> > > pass this address to pci_ioremap_io.
+> > > OK.. We will fix it and will send patch.
+> > 
+> > I think it does handle this correctly, look at
+> > 
+> > static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> > {
+> > 
+> > 	...
+> > 	
+> >         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+> >         
+> >                 sys->io_offset = global_io_offset -
+> >                 pp->config.io_bus_addr; pci_ioremap_io(sys->io_offset,
+> >                 pp->io.start);
+> >                 global_io_offset += SZ_64K;
+> >                 pci_add_resource_offset(&sys->resources, &pp->io,
+> >                 
+> >                                         sys->io_offset);
+> >         
+> >         }
+> > 	
+> > 	...
+> > 
+> > }
+> > 
+> > I believe this does the right thing, but you have to put the correct
+> > translation into the 'ranges' property of the host bridge node in DT.
+> 
+> May be not exactly. pp->io is the  realio, and it is passed correctly
+> to pci_add_resource_offset. But, as you had also
+> said that pci_ioremap_io will receive cpu physical address space as
+> input, therefore I think following modification will be needed to work
+> io transaction properly.
+> 
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c
+> b/drivers/pci/host/pcie-designware.c index be6ce30..cf68632 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>  					   + global_io_offset);
+>  			pp->config.io_size = resource_size(&pp->io);
+>  			pp->config.io_bus_addr = range.pci_addr;
+> +			pp->io_base = range.cpu_addr;
+>  		}
+>  		if (restype == IORESOURCE_MEM) {
+>  			of_pci_range_to_resource(&range, np, &pp->mem);
+> @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> 
+>  	pp->cfg0_base = pp->cfg.start;
+>  	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+> -	pp->io_base = pp->io.start;
+>  	pp->mem_base = pp->mem.start;
+> 
+>  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data
+> *sys)
+> 
+>  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+>  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+> -		pci_ioremap_io(sys->io_offset, pp->io.start);
+> +		pci_ioremap_io(sys->io_offset, pp->io_base);
+>  		global_io_offset += SZ_64K;
+>  		pci_add_resource_offset(&sys->resources, &pp->io,
+>  					sys->io_offset);
 
-
-We have patches that need to stop ioapic and iommu between
-pci_stop_root_bus and pci_remove_root_bus.
-
-Please check if the problem still happen after
-
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=c4a0a5d964e90b93eb4101c3927b788e083e530f
-
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=e3b439e1d315aff59c1b4f0fc43c5cd2d82b4138
-
-or just try:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/deletion
-
-Thanks
-
-Yinghai
+Tim, can you test if this patch fixes your SKY2 IOspace problem please ?
