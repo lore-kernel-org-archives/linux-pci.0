@@ -1,40 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:59039 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019Ab3LQAx5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 19:53:57 -0500
-Received: by mail-ig0-f171.google.com with SMTP id c10so5101356igq.4
-        for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2013 16:53:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1386558448.5159.10.camel@pasglop>
-References: <20131009163304.62b439a9@endymion.delvare> <CAErSpo6ikaTXXvWzX_Z0=mabwD4aedoLoSVjsd+_E5kV9YJpuA@mail.gmail.com>
- <CAE9FiQWGWPVO0W5e9qtbMx7PTEKDq8kUPi1RRT8tucMEy7prYw@mail.gmail.com> <1386558448.5159.10.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 16 Dec 2013 17:53:36 -0700
-Message-ID: <CAErSpo5_jutwqr=5OuD3rT_v8fyMzGbdq0P3PUJmSMMDpqAbPQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI/portdrv: Set master earlier
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Yinghai Lu <yinghai@kernel.org>, Jean Delvare <jdelvare@suse.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Takashi Iwai <tiwai@suse.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from aserp1040.oracle.com ([141.146.126.69]:51490 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751872Ab3LJGy7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 01:54:59 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 3/5] PCI: Try to allocate mem64 above 4G at first
+Date: Mon,  9 Dec 2013 22:54:42 -0800
+Message-Id: <1386658484-15774-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
+References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 8, 2013 at 8:07 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Sat, 2013-12-07 at 19:26 -0800, Yinghai Lu wrote:
->> BenH mentioned that get_port_device_capability have some problem on
->> powerpc and will return null.
->
-> Well, it has problems on anything that doesn't have ACPI :-)
->
-> I don't care what the "right" fix is but we need to makes sure nobody
-> does a pci_enable_device() on a bridge and doesn't also enable bus
-> master, otherwise the bridge bus master will never be set. This is what
-> was happening an breaking us.
+On system with more pcie cards, we do not have enough range under 4G
+to allocate those pci devices.
 
-I assume there's nothing more I need to do here.  If there is, please
-let me know.
+On 64bit system, we could try to allocate mem64 above 4G at first,
+and fall back to below 4g if it can not find any above 4g.
 
-Bjorn
+x86 32bit without X86_PAE support will have bottom set to 0, because
+resource_size_t is 32bit.
+For 32bit kernel that resource_size_t is 64bit when pae is support.
+we are safe because iomem_resource is limited to 32bit according to
+x86_phys_bits.
+
+-v2: update bottom assigning to make it clear for non-pae support machine.
+-v3: Bjorn's change:
+        use MAX_RESOURCE instead of -1
+        use start/end instead of bottom/max
+        for all arch instead of just x86_64
+-v4: updated after PCI_MAX_RESOURCE_32 change.
+-v5: restore io handling to use PCI_MAX_RESOURCE_32 as limit.
+-v6: checking pcibios_resource_to_bus return for every bus res, to decide it
+	if we need to try high at first.
+     It supports all arches instead of just x86_64.
+-v7: split 4G limit change out to another patch according to Bjorn.
+     also use pci_clip_resource instead.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 3ad4fd9..45d8de5 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -99,6 +99,8 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+ }
+ 
+ static struct pci_bus_region pci_mem_32 = {0, 0xffffffff};
++static struct pci_bus_region pci_mem_64 = {(resource_size_t)(1ULL<<32),
++					   (resource_size_t)(-1ULL)};
+ 
+ static void pci_clip_resource(struct resource *res, struct pci_bus *bus,
+ 			      struct pci_bus_region *region)
+@@ -149,6 +151,7 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		struct resource avail;
++		int try_again = 0;
+ 
+ 		if (!r)
+ 			continue;
+@@ -165,15 +168,23 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ 		/*
+ 		 * don't allocate too high if the pref mem doesn't
+-		 * support 64bit.
++		 * support 64bit, also if this is a 64-bit mem
++		 * resource, try above 4GB first
+ 		 */
+ 		avail = *r;
+-		if (!(res->flags & IORESOURCE_MEM_64)) {
++		if (res->flags & IORESOURCE_MEM_64) {
++			pci_clip_resource(&avail, bus, &pci_mem_64);
++			if (!resource_size(&avail))
++				avail = *r;
++			else
++				try_again = 1;
++		} else {
+ 			pci_clip_resource(&avail, bus, &pci_mem_32);
+ 			if (!resource_size(&avail))
+ 				continue;
+ 		}
+ 
++again:
+ 		/* Ok, try it out.. */
+ 		ret = allocate_resource(r, res, size,
+ 					max(avail.start, r->start ? : min),
+@@ -181,6 +192,12 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 					alignf, alignf_data);
+ 		if (ret == 0)
+ 			break;
++
++		if (try_again) {
++			avail = *r;
++			try_again = 0;
++			goto again;
++		}
+ 	}
+ 	return ret;
+ }
+-- 
+1.8.4
+
