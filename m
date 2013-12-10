@@ -1,63 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:57678 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276Ab3LKTzp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 14:55:45 -0500
-MIME-Version: 1.0
-In-Reply-To: <52A8BAC5.70006@canonical.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
-	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
-	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
-	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
-	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
-	<52A8BAC5.70006@canonical.com>
-Date: Wed, 11 Dec 2013 11:55:42 -0800
-Message-ID: <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-db8lp0188.outbound.messaging.microsoft.com ([213.199.154.188]:27178
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750836Ab3LJU3d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 15:29:33 -0500
+Message-ID: <1386707357.10013.114.camel@snotra.buserror.net>
+Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+From: Scott Wood <scottwood@freescale.com>
+To: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>
+CC: 'Wood Scott-B07421' <scottwood@freescale.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	"agraf@suse.de" <agraf@suse.de>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Tue, 10 Dec 2013 14:29:17 -0600
+In-Reply-To: <34c6142137194b1cbd2336013ed3b10d@BN1PR03MB266.namprd03.prod.outlook.com>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+	 <1385067648.2879.421.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1386288052.7375.100.camel@snotra.buserror.net>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D07251EFF@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1386357907.7375.127.camel@snotra.buserror.net>
+	 <34c6142137194b1cbd2336013ed3b10d@BN1PR03MB266.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
-<joseph.salisbury@canonical.com> wrote:
-> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
->> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> That doesn't answer my question at all.
->>>
->>> I understand that this change makes it so Joseph doesn't have to use
->>> "pci=realloc=off".  But why should auto-reallocation be limited to
->>> buses that have resources above 4GB?  That doesn't make any sense.
->>>
->>> We should fix the reallocation code so it can deal with this case.  If
->>> there's not enough space for everything, obviously we have to leave
->>> something unassigned.  A ROM BAR is a good candidate for leaving
->>> unassigned, because most of the time we can get along without it.
->> Yes, that is ideal and not that simple.
->> but that would be hard to backport to old kernels.
->>
->> BTW, Joseph, can you try
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->> for-pci-3.14
->> with pci=realloc=on
->>
->> on that system?
->>
->> Thanks
->>
->> Yinghai
-> I noticed there was some back and forth on this thread.  Do you still
-> want me to test this version, Yinghai?
+My e-mail address is <scottwood@freescale.com>, not
+<IMCEAEX-_O=MMS_OU=EXTERNAL+20+28FYDIBOHF25SPDLT
++29_CN=RECIPIENTS_CN=F0FAAC8D7E74473A9EE1C45B068D838A@namprd03.prod.outlook.com>
 
-Yes, if that works, we would not need to put the patch in upstream for limiting
-realloc auto scope.
+On Tue, 2013-12-10 at 05:37 +0000, Bharat.Bhushan@freescale.com wrote:
+> 
+> > -----Original Message-----
+> > From: Wood Scott-B07421
+> > Sent: Saturday, December 07, 2013 12:55 AM
+> > To: Bhushan Bharat-R65777
+> > Cc: Alex Williamson; linux-pci@vger.kernel.org; agraf@suse.de; Yoder Stuart-
+> > B08248; iommu@lists.linux-foundation.org; bhelgaas@google.com; linuxppc-
+> > dev@lists.ozlabs.org; linux-kernel@vger.kernel.org
+> > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+> > 
+> > If the administrator does not opt into this partial loss of isolation, then once
+> > you run out of MSI groups, new users should not be able to set up MSIs.
+> 
+> So mean vfio should use Legacy when out of MSI banks?
 
-Thanks
+Yes, if the administrator hasn't granted permission to share.
 
-Yinghai
+-Scott
+
+
+
