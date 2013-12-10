@@ -1,548 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12869 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751987Ab3LQWMO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Dec 2013 17:12:14 -0500
-Message-ID: <1387318331.30327.16.camel@bling.home>
-Subject: Re: [PATCH 3/3] pci: Add Virtual Channel to save/restore support
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Tue, 17 Dec 2013 15:12:11 -0700
-In-Reply-To: <20131217004815.GA4781@google.com>
-References: <20131210183339.26294.14581.stgit@bling.home>
-	 <20131210184845.26294.81385.stgit@bling.home>
-	 <20131217004815.GA4781@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:35128 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036Ab3LJXVY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 18:21:24 -0500
+Received: by mail-ie0-f174.google.com with SMTP id at1so9527348iec.5
+        for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 15:21:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <a8c8cc16a5424e45b226bb40425b3772@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <a8c8cc16a5424e45b226bb40425b3772@DM2PR05MB671.namprd05.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Dec 2013 16:21:04 -0700
+Message-ID: <CAErSpo7XQeMr+t3e93-vrFBNmF2w7aQ1UqY8bnSRxQcc+uah1w@mail.gmail.com>
+Subject: Re: Question about how PCI subsystem uses device trees
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-12-16 at 17:48 -0700, Bjorn Helgaas wrote:
-> On Tue, Dec 10, 2013 at 11:48:45AM -0700, Alex Williamson wrote:
-> > While we don't really have any infrastructure for making use of VC
-> > support, the system BIOS can configure the topology to non-default
-> > VC values prior to boot.  This may be due to silicon bugs, desire to
-> > reserve traffic classes, or perhaps just BIOS bugs.  When we reset
-> > devices, the VC configuration may return to default values, which can
-> > be incompatible with devices upstream.  For instance, Nvidia GRID
-> > cards provide a PCIe switch and some number of GPUs, all supporting
-> > VC.  The power-on default for VC is to support TC0-7 across VC0,
-> > however some platforms will only enable TC0/VC0 mapping across the
-> > topology.  When we do a secondary bus reset on the downstream switch
-> > port, the GPU is reset to a TC0-7/VC0 mapping while the opposite end
-> > of the link only enables TC0/VC0.  If the GPU attempts to use TC1-7,
-> > it fails.
-> > 
-> > This patch attempts to provide complete support for VC save/restore,
-> > even beyond the minimally required use case above.  This includes
-> > save/restore and reload of the arbitration table, save/restore and
-> > reload of the port arbitration tables, and re-enabling of the
-> > channels for VC, VC9, and MFVC capabilities.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >  drivers/pci/pci.c |  387 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> 
-> Wow, that's a lot of code just to support resetting a device.  I wish I had
-> a better idea, but I don't.
+[+cc devicetree list; I'm devicetree-illiterate]
 
-I know, me too.  I tried to keep the code as compact as I could.  If you
-look at it on a per capability basis, since this supports VC/VC9/MFVC,
-it's not so bad ;)
-
->   I know we have similar save/restore code in
-> pci.c already, but would it make sense to put this in a vc.c to keep pci.c
-> from growing without bound?
-
-Yep, I can do that.
-
-> >  1 file changed, 387 insertions(+)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index a898e4e..3a1d060 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -969,6 +969,367 @@ static void pci_restore_pcix_state(struct pci_dev *dev)
-> >  	pci_write_config_word(dev, pos + PCI_X_CMD, cap[i++]);
-> >  }
-> >  
-> > +/**
-> > + * pci_vc_save_restore_dwords - Save or restore a series of dwords
-> > + * @dev: device
-> > + * @pos: starting config space position
-> > + * @buf: buffer to save to or restore from
-> > + * @dwords: number of dwords to save/restore
-> > + * @save: whether to save or restore
-> > + */
-> > +static void pci_vc_save_restore_dwords(struct pci_dev *dev, int pos,
-> > +				       u32 *buf, int dwords, bool save)
-> 
-> Nothing VC-specific here, so maybe remove "_vc_" from the name.
-
-Sure, but if I make a vc.c there's no reason not to move this function
-there so retaining _vc_ avoids polluting the common pci namespace.
-
-> > +{
-> > +	int i;
-> > +
-> > +	for (i = 0; i < dwords; i++, buf++) {
-> > +		if (save)
-> > +			pci_read_config_dword(dev, pos + (i * 4), buf);
-> > +		else
-> > +			pci_write_config_dword(dev, pos + (i * 4), *buf);
-> > +	}
-> > +}
-> > +
-> > +/**
-> > + * pci_vc_load_port_arb_table - load and wait for VC arbitration table
-> > + * @dev: device
-> > + * @pos: starting position of VC capability (VC/VC9/MFVC)
-> > + *
-> > + * Signal a VC arbitration table to load and wait for completion.
-> > + */
-> > +static void pci_vc_load_arb_table(struct pci_dev *dev, int pos)
-> > +{
-> > +	u32 ctrl;
-> > +
-> > +	pci_read_config_dword(dev, pos + PCI_VC_PORT_CTRL, &ctrl);
-> > +	pci_write_config_dword(dev, pos + PCI_VC_PORT_CTRL, ctrl | 1);
-> > +	if (pci_wait_for_pending(dev, pos + PCI_VC_PORT_STATUS, 1))
-> 
-> Comment doesn't match function name.  The spec "Request hardware to apply
-> new values" language would be a useful clue that this doesn't actually
-> *write* the table; before reading the spec, I initially looked for a
-> buffer containing the arbitration table.  It'd be nice to have #defines
-> for the bits here, i.e., PCI_VC_PORT_CTRL_LOAD_ARB or similar.  The
-
-Ok
-
-> spec says these are 16-bit registers; shouldn't these be "word" accesses?
-
-The control registers are 32-bit, the status registers are 16-bit.
-pci_wait_for_pending uses word access.
-
-> > +		return;
-> > +
-> > +	dev_err(&dev->dev, "VC arbitration table failed to load\n");
-> > +}
-> > +
-> > +/**
-> > + * pci_vc_load_port_arb_table - Load and wait for VC port arbitration table
-> > + * @dev: device
-> > + * @pos: starting position of VC capability (VC/VC9/MFVC)
-> > + * @res: VC res number, ie. VCn (0-7)
-> > + *
-> > + * Signal a VC port arbitration table to load and wait for completion.
-> > + */
-> > +static void pci_vc_load_port_arb_table(struct pci_dev *dev, int pos, int res)
-> > +{
-> > +	int ctrl_pos, status_pos;
-> > +	u32 ctrl;
-> > +
-> > +	ctrl_pos = pos + PCI_VC_RES_CTRL + (res * PCI_CAP_VC_PER_VC_SIZEOF);
-> > +	status_pos = pos + PCI_VC_RES_STATUS + (res * PCI_CAP_VC_PER_VC_SIZEOF);
-> > +
-> > +	pci_read_config_dword(dev, ctrl_pos, &ctrl);
-> > +	pci_write_config_dword(dev, ctrl_pos, ctrl | (1 << 16));
-> > +
-> > +	if (pci_wait_for_pending(dev, status_pos, 1))
-> 
-> #defines, please, to help grep users later.
-
-Yep
-
-> > +		return;
-> > +
-> > +	dev_err(&dev->dev, "VC%d port arbitration table failed to load\n", res);
-> > +}
-> > +
-> > +/**
-> > + * pci_vc_enable - Enable virtual channel
-> > + * @dev: device
-> > + * @pos: starting position of VC capability (VC/VC9/MFVC)
-> > + * @res: VC res number, ie. VCn (0-7)
-> > + *
-> > + * A VC is enabled by setting the enable bit in matching resource control
-> > + * registers on both sides of a link.  We therefore need to find the opposite
-> > + * end of the link.  To keep this simple we enable from the downstream device.
-> > + * RC devices do not have an upstream device, nor does it seem that VC9 do
-> > + * (spec is unclear).  Once we find the upstream device, match the VC ID to
-> > + * get the correct resource, disable and enable on both ends.
-> > + */
-> > +static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
-> > +{
-> > +	int ctrl_pos, status_pos, id, pos2, evcc, i, ctrl_pos2, status_pos2;
-> > +	u32 ctrl, header, reg1, ctrl2;
-> > +	struct pci_dev *link = NULL;
-> > +
-> > +	/* Enable VCs from the downstream device */
-> > +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
-> > +	    pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)
-> > +		return;
-> > +
-> > +	ctrl_pos = pos + PCI_VC_RES_CTRL + (res * PCI_CAP_VC_PER_VC_SIZEOF);
-> > +	status_pos = pos + PCI_VC_RES_STATUS + (res * PCI_CAP_VC_PER_VC_SIZEOF);
-> > +
-> > +	pci_read_config_dword(dev, ctrl_pos, &ctrl);
-> > +	id = (ctrl >> 24) & 0x7;
-> 
-> #define PCI_VC_RES_CTRL_ID 0x07000000.
-> 
-> It gets a little cumbersome to have #defines for *both* the mask and the
-> shift; the compromise I like is to have a #define for the mask (which shows
-> the position in the register) and use bare numbers when we need to shift.
-> Then it's easy to find uses of the field with grep or cscope, and the mask
-> definition helps manual decoding.  There are several other opportunities
-> for mask #defines below.
-
-Ok, figuring out the define for mask vs shift did play a part in doing
-neither.  I'll follow your standard.
-
-> In this case, you only compare ID values, so there's actually no need to
-> shift it.
-
-Good point.
-
-> > +
-> > +	pci_read_config_dword(dev, pos, &header);
-> > +
-> > +	/* If there is no opposite end of the link, skip to enable */
-> > +	if (PCI_EXT_CAP_ID(header) == PCI_EXT_CAP_ID_VC9 ||
-> > +	    pci_is_root_bus(dev->bus))
-> > +		goto enable;
-> > +
-> > +	pos2 = pci_find_ext_capability(dev->bus->self, PCI_EXT_CAP_ID_VC);
-> > +	if (pos2 <= 0)
-> > +		goto enable;
-> 
-> I don't think < 0 is possible (several other occurrences below, too).
-
-Copied from elsewhere, but no need to propagate poor form.
-
-> > +
-> > +	pci_read_config_dword(dev->bus->self, pos2 + PCI_VC_PORT_REG1, &reg1);
-> > +	evcc = reg1 & PCI_VC_REG1_EVCC;
-> > +
-> > +	/* VC0 is hardwired enabled, so we can start with 1 */
-> > +	for (i = 1; i < evcc + 1; i++) {
-> > +		ctrl_pos2 = pos2 + PCI_VC_RES_CTRL +
-> > +				(i * PCI_CAP_VC_PER_VC_SIZEOF);
-> > +		status_pos2 = pos2 + PCI_VC_RES_STATUS +
-> > +				(i * PCI_CAP_VC_PER_VC_SIZEOF);
-> > +		pci_read_config_dword(dev->bus->self, ctrl_pos2, &ctrl2);
-> > +		if (((ctrl2 >> 24) & 0x7) == id) {
-> > +			link = dev->bus->self;
-> > +			break;
-> > +		}
-> > +	}
-> > +
-> > +	if (!link)
-> > +		goto enable;
-> > +
-> > +	/* Disable if enabled */
-> > +	if (ctrl2 & (1U << 31)) {
-> > +		ctrl2 &= ~(1U << 31);
-> > +		pci_write_config_dword(link, ctrl_pos2, ctrl2);
-> > +	}
-> > +
-> > +	/* Enable on both ends */
-> > +	ctrl2 |= 1U << 31;
-> > +	pci_write_config_dword(link, ctrl_pos2, ctrl2);
-> > +enable:
-> > +	ctrl |= 1U << 31;
-> > +	pci_write_config_dword(dev, ctrl_pos, ctrl);
-> > +
-> > +	if (!pci_wait_for_pending(dev, status_pos, 0x2))
-> > +		dev_err(&dev->dev, "VC%d negotiation stuck pending\n", id);
-> > +
-> > +	if (link && !pci_wait_for_pending(link, status_pos2, 0x2))
-> > +		dev_err(&link->dev, "VC%d negotiation stuck pending\n", id);
-> > +}
-> > +
-> > +/**
-> > + * pci_vc_do_save_buffer - Size, save, or restore VC state
-> > + * @dev: device
-> > + * @pos: starting position of VC capability (VC/VC9/MFVC)
-> > + * @save_state: buffer for save/restore
-> > + * @name: for error message
-> > + * @save: if provided a buffer, this indicates what to do with it
-> > + *
-> > + * Walking Virtual Channel config space to size, save, or restore it
-> > + * is complicated, so we do it all from one function to reduce code and
-> > + * guarantee ordering matches in the buffer.  When called with NULL
-> > + * @save_state, return the size of the necessary save buffer.  When called
-> > + * with a non-NULL @save_state, @save determines whether we save to the
-> > + * buffer or restore from it.
-> > + */
-> > +static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
-> > +				 struct pci_cap_saved_state *save_state,
-> > +				 bool save)
-> > +{
-> > +	u32 reg1;
-> > +	char evcc, lpevcc, parb_size;
-> > +	int i, len = 0;
-> > +	u32 *buf = save_state ? save_state->cap.data : NULL;
-> > +
-> > +	/* Sanity check buffer size for save/restore */
-> > +	if (buf && save_state->cap.size !=
-> > +	    pci_vc_do_save_buffer(dev, pos, NULL, save)) {
-> > +		dev_err(&dev->dev,
-> > +			"VC save buffer size does not match @0x%x\n", pos);
-> > +		return -ENOMEM;
-> > +	}
-> > +
-> > +	pci_read_config_dword(dev, pos + PCI_VC_PORT_REG1, &reg1);
-> > +	/* Extended VC Count (not counting VC0) */
-> > +	evcc = reg1 & PCI_VC_REG1_EVCC;
-> > +	/* Low Priority Extended VC Count (not counting VC0) */
-> > +	lpevcc = (reg1 >> 4) & PCI_VC_REG1_EVCC;
-> 
-> Please make a new #define, since LPEVCC is a separate field.
-
-Ok
-
-Thanks for the review,
-
-Alex
-
-> +	/* Port Arbitration Table Entry Size (bits) */
-> > +	parb_size = 1 << ((reg1 >> 10) & 0x3);
-> > +
-> > +	/*
-> > +	 * Port VC Control Register contains VC Arbitration Select, which
-> > +	 * cannot be modified when more than one LPVC is in operation.  We
-> > +	 * therefore save/restore it first, as only VC0 should be enabled
-> > +	 * after device reset.
-> > +	 */
-> > +	if (buf) {
-> > +		pci_vc_save_restore_dwords(dev, pos + PCI_VC_PORT_CTRL,
-> > +					   buf, 1, save);
-> > +		buf++;
-> > +	}
-> > +	len += 4;
-> > +
-> > +	/*
-> > +	 * If we have any Low Priority VCs and a VC Arbitration Table Offset
-> > +	 * in Port VC Capability Register 2 then save/restore it next.
-> > +	 */
-> > +	if (lpevcc) {
-> > +		u32 reg2;
-> > +		int vcarb_offset;
-> > +
-> > +		pci_read_config_dword(dev, pos + PCI_VC_PORT_REG2, &reg2);
-> > +		vcarb_offset = (reg2 >> 24) * 16;
-> > +
-> > +		if (vcarb_offset) {
-> > +			int size, vcarb_phases = 0;
-> > +
-> > +			if (reg2 & PCI_VC_REG2_128_PHASE)
-> > +				vcarb_phases = 128;
-> > +			else if (reg2 & PCI_VC_REG2_64_PHASE)
-> > +				vcarb_phases = 64;
-> > +			else if (reg2 & PCI_VC_REG2_32_PHASE)
-> > +				vcarb_phases = 32;
-> > +
-> > +			/* Fixed 4 bits per phase per lpevcc (plus VC0) */
-> > +			size = ((lpevcc + 1) * vcarb_phases * 4) / 8;
-> > +
-> > +			if (size && buf) {
-> > +				pci_vc_save_restore_dwords(dev,
-> > +							   pos + vcarb_offset,
-> > +							   buf, size / 4, save);
-> > +				/*
-> > +				 * On restore, we need to signal hardware to
-> > +				 * re-load the VC Arbitration Table.
-> > +				 */
-> > +				if (!save)
-> > +					pci_vc_load_arb_table(dev, pos);
-> > +
-> > +				buf += size / 4;
-> > +			}
-> > +			len += size;
-> > +		}
-> > +	}
-> > +
-> > +	/*
-> > +	 * In addition to each VC Resource Control Register, we may have a
-> > +	 * Port Arbitration Table attached to each VC.  The Port Arbitration
-> > +	 * Table Offset in each VC Resource Capability Register tells us if
-> > +	 * it exists.  The entry size is global from the Port VC Capability
-> > +	 * Register1 above.  The number of phases is determined per VC.
-> > +	 */
-> > +	for (i = 0; i < evcc + 1; i++) {
-> > +		u32 cap;
-> > +		int parb_offset;
-> > +
-> > +		pci_read_config_dword(dev, pos + PCI_VC_RES_CAP +
-> > +				      (i * PCI_CAP_VC_PER_VC_SIZEOF), &cap);
-> > +		parb_offset = (cap >> 24) * 16;
-> > +		if (parb_offset) {
-> > +			int size, parb_phases = 0;
-> > +
-> > +			if (cap & 0x20)
-> > +				parb_phases = 256;
-> > +			else if (cap & 0x18)
-> > +				parb_phases = 128;
-> > +			else if (cap & 0x4)
-> > +				parb_phases = 64;
-> > +			else if (cap & 0x2)
-> > +				parb_phases = 32;
-> > +
-> > +			size = (parb_size * parb_phases) / 8;
-> > +
-> > +			if (size && buf) {
-> > +				pci_vc_save_restore_dwords(dev,
-> > +							   pos + parb_offset,
-> > +							   buf, size / 4, save);
-> > +				buf += size / 4;
-> > +			}
-> > +			len += size;
-> > +		}
-> > +
-> > +		/* VC Resource Control Register */
-> > +		if (buf) {
-> > +			int ctrl_pos = pos + PCI_VC_RES_CTRL +
-> > +						(i * PCI_CAP_VC_PER_VC_SIZEOF);
-> > +			if (save)
-> > +				pci_read_config_dword(dev, ctrl_pos, buf);
-> > +			else {
-> > +				u32 tmp, ctrl = *(u32 *)buf;
-> > +				/*
-> > +				 * For an FLR case, the VC config may remain.
-> > +				 * Preserve enable bit, restore the rest.
-> > +				 */
-> > +				pci_read_config_dword(dev, ctrl_pos, &tmp);
-> > +				tmp &= 1U << 31;
-> > +				tmp |= ctrl & ~(1U << 31);
-> > +				pci_write_config_dword(dev, ctrl_pos, tmp);
-> > +				/* Load port arbitration table if used */
-> > +				if (ctrl & (7 << 17))
-> > +					pci_vc_load_port_arb_table(dev, pos, i);
-> > +				/* Re-enable if needed */
-> > +				if ((ctrl ^ tmp) & (1U << 31))
-> > +					pci_vc_enable(dev, pos, i);
-> > +			}
-> > +			buf++;
-> > +		}
-> > +		len += 4;
-> > +	}
-> > +
-> > +	return buf ? 0 : len;
-> > +}
-> > +
-> > +static struct {
-> > +	u16 id;
-> > +	const char *name;
-> > +} vc_caps[] = { { PCI_EXT_CAP_ID_MFVC, "MFVC" },
-> > +		{ PCI_EXT_CAP_ID_VC, "VC" },
-> > +		{ PCI_EXT_CAP_ID_VC9, "VC9" } };
-> > +
-> > +static int pci_save_vc_state(struct pci_dev *dev)
-> > +{
-> > +	int i;
-> > +
-> > +	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
-> > +		int pos, ret;
-> > +		struct pci_cap_saved_state *save_state;
-> > +
-> > +		pos = pci_find_ext_capability(dev, vc_caps[i].id);
-> > +		if (pos <= 0)
-> > +			continue;
-> > +
-> > +		save_state = pci_find_saved_ext_cap(dev, vc_caps[i].id);
-> > +		if (!save_state) {
-> > +			dev_err(&dev->dev, "%s buffer not found in %s\n",
-> > +				vc_caps[i].name, __func__);
-> > +			return -ENOMEM;
-> > +		}
-> > +
-> > +		ret = pci_vc_do_save_buffer(dev, pos, save_state, true);
-> > +		if (ret) {
-> > +			dev_err(&dev->dev, "%s save unsuccessful %s\n",
-> > +				vc_caps[i].name, __func__);
-> > +			return ret;
-> > +		}
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static void pci_restore_vc_state(struct pci_dev *dev)
-> > +{
-> > +	int i;
-> > +
-> > +	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
-> > +		int pos;
-> > +		struct pci_cap_saved_state *save_state;
-> > +
-> > +		pos = pci_find_ext_capability(dev, vc_caps[i].id);
-> > +		save_state = pci_find_saved_ext_cap(dev, vc_caps[i].id);
-> > +		if (!save_state || pos <= 0)
-> > +			continue;
-> > +
-> > +		pci_vc_do_save_buffer(dev, pos, save_state, false);
-> > +	}
-> > +}
-> > +
-> >  
-> >  /**
-> >   * pci_save_state - save the PCI configuration space of a device before suspending
-> > @@ -986,6 +1347,8 @@ pci_save_state(struct pci_dev *dev)
-> >  		return i;
-> >  	if ((i = pci_save_pcix_state(dev)) != 0)
-> >  		return i;
-> > +	if ((i = pci_save_vc_state(dev)) != 0)
-> > +		return i;
-> >  	return 0;
-> >  }
-> >  
-> > @@ -1048,6 +1411,7 @@ void pci_restore_state(struct pci_dev *dev)
-> >  	/* PCI Express register must be restored first */
-> >  	pci_restore_pcie_state(dev);
-> >  	pci_restore_ats_state(dev);
-> > +	pci_restore_vc_state(dev);
-> >  
-> >  	pci_restore_config_space(dev);
-> >  
-> > @@ -2104,6 +2468,27 @@ static int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
-> >  	return _pci_add_cap_save_buffer(dev, cap, true, size);
-> >  }
-> >  
-> > +static void pci_allocate_vc_save_buffers(struct pci_dev *dev)
-> > +{
-> > +	int i;
-> > +
-> > +	for (i = 0; i < ARRAY_SIZE(vc_caps); i++) {
-> > +		int error, pos = pci_find_ext_capability(dev, vc_caps[i].id);
-> > +		int len;
-> > +
-> > +		if (pos <= 0)
-> > +			continue;
-> > +
-> > +		len = pci_vc_do_save_buffer(dev, pos, NULL, false);
-> > +		error = pci_add_ext_cap_save_buffer(dev,
-> > +						    vc_caps[i].id, len);
-> > +		if (error)
-> > +			dev_err(&dev->dev,
-> > +				"unable to preallocate %s save buffer\n",
-> > +				vc_caps[i].name);
-> > +	}
-> > +}
-> > +
-> >  /**
-> >   * pci_allocate_cap_save_buffers - allocate buffers for saving capabilities
-> >   * @dev: the PCI device
-> > @@ -2122,6 +2507,8 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
-> >  	if (error)
-> >  		dev_err(&dev->dev,
-> >  			"unable to preallocate PCI-X save buffer\n");
-> > +
-> > +	pci_allocate_vc_save_buffers(dev);
-> >  }
-> >  
-> >  void pci_free_cap_save_buffers(struct pci_dev *dev)
-> > 
-
-
+On Tue, Dec 10, 2013 at 12:53 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+> Hello,
+>
+> I am trying to understand and create device tree for a new powerpc platform. (Please feel free to point out any problems with my device tree below.) My questions:
+>
+> 1) For a PCI-PCI bridge that I'm representing like this:
+>
+> pcie@2,3 {
+>         vendor-id = <0x10b5>;
+>       device-id = <0x8618>;
+>       class-code = <0x060400>;
+>       #size-cells = <2>;
+>       #address-cells = <3>;
+>       device_type = "pci";
+>       bus-range = <0x20 0x2f>;
+>       reg = <0x00021800 0x00000000 0x000000000        /* Cfg:2.3.0: */
+>              0x00000000 0x00000000>;
+>       ranges = <0x02000000 0x00000000 0xA0000000      /* Mem behind bridge: 0xA0000000 - 0xA03FFFFF */
+>                 0x02000000 0x00000000 0xA0000000
+>                 0x00000000 0x04000000>;
+> };
+>
+> Is the above is only to _notify_ the kernel that this is how the firmware shall be setting the PCI bridge (Thus firmware has obligation of setting it like this before passing control to the kernel), and hence the kernel will merely take note of it and not really configure the bridge registers?
+>
+> Or is the above telling the kernel that this is how the kernel should _setup_ the device (thus firmware does not set up the device, but rather the kernel use this info to setup the device)?
+>
+> 2) For an PCI endpoint that I am representing like this:
+>
+>
+> xyz@20,0 {
+>         vendor-id = ...
+>       device-id = ...
+>       class-code = <0x0880>;
+>       compatible = ...
+>         ...
+>       reg = <0x00200000 0x00000000 0x00000000 /* Cfg:20.0.0: */
+>              0x00000000 0x00000000
+>              0x02200010 0x00000000 0xA0000000 /* Mem:20.0.0:(Bar0) 64MB@0xA0000000 */
+>              0x00000000 0x04000000>;
+>         ...
+> };
+>
+> Does the above tell the kernel to _program_ the BAR0 register using the above address? Or does it cause the kernel to assume that the BAR0 has been programmed with this address?
+>
+> 3) Lastly, what is the difference in behavior when I select PCI_PROBE_NORMAL over PCI_PROBE_DEVTREE?
+>
+> Thanks,
+>
+> Rajat
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
