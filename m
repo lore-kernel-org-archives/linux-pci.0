@@ -1,74 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:64004 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908Ab3LPAyI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 19:54:08 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MXV002GYJU6MP70@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Mon, 16 Dec 2013 09:54:06 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Harro Haan' <hrhaan@gmail.com>, 'Mohit Kumar' <mohit.kumar@st.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Richard Zhu' <hong-xing.zhu@freescale.com>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Tim Harvey' <tharvey@gateworks.com>,
-	'Juergen Beisert' <jbe@pengutronix.de>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
-	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
-	'Sean Cross' <xobs@kosagi.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <20131212182903.409515738@gmail.com>
-In-reply-to: <20131212182903.409515738@gmail.com>
-Subject: Re: [PATCH] pci: designware: fix missing msi irqs
-Date: Mon, 16 Dec 2013 09:54:05 +0900
-Message-id: <005b01cef9f9$52022bd0$f6068370$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-db9lp0250.outbound.messaging.microsoft.com ([213.199.154.250]:20785
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750706Ab3LJTxO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 Dec 2013 14:53:14 -0500
+Received: from mail43-db9 (localhost [127.0.0.1])	by mail43-db9-R.bigfish.com
+ (Postfix) with ESMTP id EC516680362	for <linux-pci@vger.kernel.org>; Tue, 10
+ Dec 2013 19:53:12 +0000 (UTC)
+Received: from DB9EHSMHS020.bigfish.com (unknown [10.174.16.232])	by
+ mail43-db9.bigfish.com (Postfix) with ESMTP id 1DEDFC0008D	for
+ <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 19:53:10 +0000 (UTC)
+From: Rajat Jain <rajatjain@juniper.net>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Question about how PCI subsystem uses device trees
+Date: Tue, 10 Dec 2013 19:53:05 +0000
+Message-ID: <a8c8cc16a5424e45b226bb40425b3772@DM2PR05MB671.namprd05.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 13, 2013 3:29 AM, Harro Haan wrote:
-> 
-> The interrupts were cleared after the irq handler was called.
-> This means that new interrupts that occur after the handler handled
-> the previous irq but before the interrupt is cleared will be missed.
-> 
-> Signed-off-by: Harro Haan <hrhaan@gmail.com>
-> Cc: Mohit Kumar <mohit.kumar@st.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Marek Vasut <marex@denx.de>
-> Cc: Richard Zhu <hong-xing.zhu@freescale.com>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Pratyush Anand <pratyush.anand@st.com>
-> Cc: Tim Harvey <tharvey@gateworks.com>
-> Cc: Juergen Beisert <jbe@pengutronix.de>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> Cc: Sean Cross <xobs@kosagi.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
+Hello,
 
-Acked-by: Jingoo Han <jg1.han@samsung.com>
+I am trying to understand and create device tree for a new powerpc platform. (Please feel free to point out any problems with my device tree below.) My questions: 
 
-I was not able to reproduce the problem, however it looks
-good. Also, there is no side effect on Exynos platform.
+1) For a PCI-PCI bridge that I'm representing like this:
 
-Mohit,
-If you have some comments, please let us know.
+pcie@2,3 {
+	vendor-id = <0x10b5>;
+      device-id = <0x8618>;
+      class-code = <0x060400>;
+      #size-cells = <2>;
+      #address-cells = <3>;
+      device_type = "pci";
+      bus-range = <0x20 0x2f>;
+      reg = <0x00021800 0x00000000 0x000000000        /* Cfg:2.3.0: */
+             0x00000000 0x00000000>;
+      ranges = <0x02000000 0x00000000 0xA0000000      /* Mem behind bridge: 0xA0000000 - 0xA03FFFFF */
+                0x02000000 0x00000000 0xA0000000
+                0x00000000 0x04000000>;
+};
 
-Best regards,
-Jingoo Han
+Is the above is only to _notify_ the kernel that this is how the firmware shall be setting the PCI bridge (Thus firmware has obligation of setting it like this before passing control to the kernel), and hence the kernel will merely take note of it and not really configure the bridge registers? 
 
-> ---
->  drivers/pci/host/pcie-designware.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+Or is the above telling the kernel that this is how the kernel should _setup_ the device (thus firmware does not set up the device, but rather the kernel use this info to setup the device)?
+
+2) For an PCI endpoint that I am representing like this:
+
+
+xyz@20,0 {
+	vendor-id = ...
+      device-id = ...
+      class-code = <0x0880>;
+      compatible = ...
+	...
+      reg = <0x00200000 0x00000000 0x00000000 /* Cfg:20.0.0: */
+             0x00000000 0x00000000
+             0x02200010 0x00000000 0xA0000000 /* Mem:20.0.0:(Bar0) 64MB@0xA0000000 */
+             0x00000000 0x04000000>;
+	...
+};
+
+Does the above tell the kernel to _program_ the BAR0 register using the above address? Or does it cause the kernel to assume that the BAR0 has been programmed with this address?
+
+3) Lastly, what is the difference in behavior when I select PCI_PROBE_NORMAL over PCI_PROBE_DEVTREE? 
+
+Thanks,
+
+Rajat
 
