@@ -1,160 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:20369 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752483Ab3LBBke (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 20:40:34 -0500
-Message-ID: <529BE492.5020201@huawei.com>
-Date: Mon, 2 Dec 2013 09:38:26 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:44188 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724Ab3LJXXu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 18:23:50 -0500
+Received: by mail-we0-f178.google.com with SMTP id u57so5625304wes.23
+        for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 15:23:49 -0800 (PST)
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"Dan Williams" <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <dmaengine@vger.kernel.org>
-Subject: Re: [Patch Part1 V2 01/17] iommu/vt-d: use dedicated bitmap to track
- remapping entry allocation status
-References: <1385715030-20553-1-git-send-email-jiang.liu@linux.intel.com> <1385715030-20553-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1385715030-20553-2-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <001101cef5f6$4347c520$c9d74f60$%han@samsung.com>
+References: <20131205050424.GA2298@pratyush-vbox>
+	<201312061546.23981.arnd@arndb.de>
+	<20131209071241.GA5760@pratyush-vbox>
+	<201312101426.40614.marex@denx.de>
+	<001101cef5f6$4347c520$c9d74f60$%han@samsung.com>
+Date: Tue, 10 Dec 2013 15:23:47 -0800
+Message-ID: <CAJ+vNU1LCeSKBjr8ryrJZcPt2+6Xcv0de19FttdpTvSEmr1k_w@mail.gmail.com>
+Subject: Re: [Query/Discussion]: IO translation with designware PCIe controller
+From: Tim Harvey <tharvey@gateworks.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Marek Vasut <marex@denx.de>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tested-and-reviewed-by: Yijing Wang <wangyijing@huawei.com>
+On Tue, Dec 10, 2013 at 2:22 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> On Tuesday, December 10, 2013 10:27 PM, Marek Vasut wrote:
+>> On Monday, December 09, 2013 at 08:12:42 AM, Pratyush Anand wrote:
+>
+> [.....]
+>
+>> >
+>> > diff --git a/drivers/pci/host/pcie-designware.c
+>> > b/drivers/pci/host/pcie-designware.c index be6ce30..cf68632 100644
+>> > --- a/drivers/pci/host/pcie-designware.c
+>> > +++ b/drivers/pci/host/pcie-designware.c
+>> > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>> >                                        + global_io_offset);
+>> >                     pp->config.io_size = resource_size(&pp->io);
+>> >                     pp->config.io_bus_addr = range.pci_addr;
+>> > +                   pp->io_base = range.cpu_addr;
+>> >             }
+>> >             if (restype == IORESOURCE_MEM) {
+>> >                     of_pci_range_to_resource(&range, np, &pp->mem);
+>> > @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>> >
+>> >     pp->cfg0_base = pp->cfg.start;
+>> >     pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+>> > -   pp->io_base = pp->io.start;
+>> >     pp->mem_base = pp->mem.start;
+>> >
+>> >     pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+>> > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data
+>> > *sys)
+>> >
+>> >     if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+>> >             sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+>> > -           pci_ioremap_io(sys->io_offset, pp->io.start);
+>> > +           pci_ioremap_io(sys->io_offset, pp->io_base);
+>> >             global_io_offset += SZ_64K;
+>> >             pci_add_resource_offset(&sys->resources, &pp->io,
+>> >                                     sys->io_offset);
+>>
+>> Tim, can you test if this patch fixes your SKY2 IOspace problem please ?
+>
+> Above mentioned patch is NOT the latest patch.
+> Pratyush Anand already submitted the next patch as below.
+>
+> Tim,
+> Would you test the following patch on i.MX6 platform?
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index be6ce30..b83f5e8 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>                                            + global_io_offset);
+>                         pp->config.io_size = resource_size(&pp->io);
+>                         pp->config.io_bus_addr = range.pci_addr;
+> +                       pp->io_base = range.cpu_addr;
+>                 }
+>                 if (restype == IORESOURCE_MEM) {
+>                         of_pci_range_to_resource(&range, np, &pp->mem);
+> @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+>
+>         pp->cfg0_base = pp->cfg.start;
+>         pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+> -       pp->io_base = pp->io.start;
+>         pp->mem_base = pp->mem.start;
+>
+>         pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+>
+>         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+>                 sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+> -               pci_ioremap_io(sys->io_offset, pp->io.start);
+> +               pci_ioremap_io(global_io_offset, pp->io_base);
+>                 global_io_offset += SZ_64K;
+>                 pci_add_resource_offset(&sys->resources, &pp->io,
+>                                         sys->io_offset);
+>
+>
+> Best regards,
+> Jingoo Han
+>
 
-On 2013/11/29 16:50, Jiang Liu wrote:
-> Currently Intel interrupt remapping drivers uses the "present" flag bit
-> in remapping entry to track whether an entry is allocated or not.
-> It works as follow:
-> 1) allocate a remapping entry and set its "present" flag bit to 1
-> 2) compose other fields for the entry
-> 3) update the remapping entry with the composed value
-> 
-> The remapping hardware may access the entry between step 1 and step 3,
-> which then obervers an entry with the "present" flag set but random
-> values in all other fields.
-> 
-> This patch introduces a dedicated bitmap to track remapping entry
-> allocation status instead of sharing the "present" flag with hardware,
-> thus eliminate the race window. It also simplifies the implementation.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/iommu/intel_irq_remapping.c |   51 +++++++++++++++++------------------
->  include/linux/intel-iommu.h         |    1 +
->  2 files changed, 25 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-> index bab10b1..282d392 100644
-> --- a/drivers/iommu/intel_irq_remapping.c
-> +++ b/drivers/iommu/intel_irq_remapping.c
-> @@ -72,7 +72,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
->  	u16 index, start_index;
->  	unsigned int mask = 0;
->  	unsigned long flags;
-> -	int i;
->  
->  	if (!count || !irq_iommu)
->  		return -1;
-> @@ -96,32 +95,17 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
->  	}
->  
->  	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
-> -	do {
-> -		for (i = index; i < index + count; i++)
-> -			if  (table->base[i].present)
-> -				break;
-> -		/* empty index found */
-> -		if (i == index + count)
-> -			break;
-> -
-> -		index = (index + count) % INTR_REMAP_TABLE_ENTRIES;
-> -
-> -		if (index == start_index) {
-> -			raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
-> -			printk(KERN_ERR "can't allocate an IRTE\n");
-> -			return -1;
-> -		}
-> -	} while (1);
-> -
-> -	for (i = index; i < index + count; i++)
-> -		table->base[i].present = 1;
-> -
-> -	cfg->remapped = 1;
-> -	irq_iommu->iommu = iommu;
-> -	irq_iommu->irte_index =  index;
-> -	irq_iommu->sub_handle = 0;
-> -	irq_iommu->irte_mask = mask;
-> -
-> +	index = bitmap_find_free_region(table->bitmap,
-> +					INTR_REMAP_TABLE_ENTRIES, mask);
-> +	if (index < 0) {
-> +		printk(KERN_ERR "can't allocate an IRTE\n");
-> +	} else {
-> +		cfg->remapped = 1;
-> +		irq_iommu->iommu = iommu;
-> +		irq_iommu->irte_index =  index;
-> +		irq_iommu->sub_handle = 0;
-> +		irq_iommu->irte_mask = mask;
-> +	}
->  	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
->  
->  	return index;
-> @@ -254,6 +238,8 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
->  		set_64bit(&entry->low, 0);
->  		set_64bit(&entry->high, 0);
->  	}
-> +	bitmap_release_region(iommu->ir_table->bitmap, index,
-> +			      irq_iommu->irte_mask);
->  
->  	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
->  }
-> @@ -453,6 +439,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
->  {
->  	struct ir_table *ir_table;
->  	struct page *pages;
-> +	unsigned long *bitmap;
->  
->  	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
->  					     GFP_ATOMIC);
-> @@ -470,7 +457,17 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
->  		return -ENOMEM;
->  	}
->  
-> +	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
-> +			 sizeof(long), GFP_ATOMIC);
-> +	if (bitmap == NULL) {
-> +		printk(KERN_ERR "failed to allocate bitmap\n");
-> +		__free_pages(pages, INTR_REMAP_PAGE_ORDER);
-> +		kfree(ir_table);
-> +		return -ENOMEM;
-> +	}
-> +
->  	ir_table->base = page_address(pages);
-> +	ir_table->bitmap = bitmap;
->  
->  	iommu_set_irq_remapping(iommu, mode);
->  	return 0;
-> diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-> index d380c5e..de1e5e9 100644
-> --- a/include/linux/intel-iommu.h
-> +++ b/include/linux/intel-iommu.h
-> @@ -288,6 +288,7 @@ struct q_inval {
->  
->  struct ir_table {
->  	struct irte *base;
-> +	unsigned long *bitmap;
->  };
->  #endif
->  
-> 
+Yes, this patch resolves the issue and now I can use devices with io
+resources behind a bridge attached to the IMX6.
 
+Thanks everyone for your efforts!
 
--- 
-Thanks!
-Yijing
-
+Tim
