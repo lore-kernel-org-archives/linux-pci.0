@@ -1,177 +1,92 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 19 Dec 2013 15:10:19 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Levente Kurusa <levex@linux.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Andrew Murray <amurray@embedded-bits.co.uk>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 32/38] pcie: add missing put_device call
-Message-ID: <20131219221019.GB15201@google.com>
-References: <1387465612-3673-33-git-send-email-levex@linux.com>
+Message-ID: <52A6C4E8.5030003@huawei.com>
+Date: Tue, 10 Dec 2013 15:38:16 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1387465612-3673-33-git-send-email-levex@linux.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	<linux-alpha@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-ia64@vger.kernel.org>, <linux-parisc@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <sparclinux@vger.kernel.org>
+Subject: Re: [PATCH 1/9] PCI: Use dev_is_pci() to check whether it is pci
+ device
+References: <1386244373-35796-1-git-send-email-wangyijing@huawei.com> <20131210000154.GE4699@google.com>
+In-Reply-To: <20131210000154.GE4699@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Greg, Yinghai]
-
-On Thu, Dec 19, 2013 at 04:06:46PM +0100, Levente Kurusa wrote:
-> This is required so that we give up the last reference to the device.
-> Removed the kfree() as put_device will result in release_pcie_device being
-> called and hence the container of the device will be kfree'd.
+On 2013/12/10 8:01, Bjorn Helgaas wrote:
+> [+cc arch lists]
 > 
-> Signed-off-by: Levente Kurusa <levex@linux.com>
-
-Thanks, I applied a slightly modified version of this to my pci/deletion
-branch for v3.14.
-
-I think the get_device() after device_register() succeeds and the
-put_device() before device_unregister() are superfluous, so I propose the
-series included below.  Any comments?
-
-> ---
->  drivers/pci/pcie/portdrv_core.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> On Thu, Dec 05, 2013 at 07:52:53PM +0800, Yijing Wang wrote:
+>> Use dev_is_pci() instead of directly compare
+>> pci_bus_type to check whether it is pci device.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 > 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 08d131f..80fb1f2 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -345,7 +345,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
->  
->  	retval = device_register(device);
->  	if (retval)
-> -		kfree(pcie);
-> +		put_device(device);
->  	else
->  		get_device(device);
->  	return retval;
+> I applied all these to my pci/yijing-dev_is_pci branch for v3.14, thanks!
+> 
+> Browse them here: http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/yijing-dev_is_pci
+
+Thanks!
+Bjorn, I sent the "[patch v2 4/9] sparc/PCI: Use dev_is_pci() to identify PCI devices" to
+correct build error found by kbuild test, Because I have no sparc platform, I guess the build error was introduced
+by I remove the CONFIG_PCI #ifdef in that patch. Now I keep the CONFIG_PCI code and that patch should be no functional change.
 
 
-commit 8f3acca9acec1503f6b374faef2d1013cbf502af
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Dec 19 14:20:09 2013 -0700
+> 
+> This should be no functional change.
+> 
+>  arch/alpha/kernel/pci_iommu.c        |    2 +-
+>  arch/arm/common/it8152.c             |    4 ++--
+>  arch/arm/mach-ixp4xx/common-pci.c    |    6 +++---
+>  arch/ia64/hp/common/sba_iommu.c      |    2 +-
+>  arch/ia64/sn/pci/pci_dma.c           |   24 ++++++++++++------------
+>  arch/parisc/kernel/drivers.c         |   22 +++++-----------------
+>  arch/powerpc/sysdev/fsl_pci.c        |    2 +-
+>  arch/sparc/include/asm/dma-mapping.h |   10 ++++------
+>  arch/sparc/kernel/iommu.c            |    2 +-
+>  arch/sparc/kernel/ioport.c           |    4 +---
+>  arch/x86/kernel/acpi/boot.c          |    4 +---
+>  drivers/pci/pci-acpi.c               |    2 +-
+>  12 files changed, 33 insertions(+), 51 deletions(-)
+> 
+> Bjorn
+> 
+>> ---
+>>  drivers/pci/pci-acpi.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>> index 577074e..e0431f1 100644
+>> --- a/drivers/pci/pci-acpi.c
+>> +++ b/drivers/pci/pci-acpi.c
+>> @@ -358,7 +358,7 @@ static void pci_acpi_cleanup(struct device *dev)
+>>  
+>>  static bool pci_acpi_bus_match(struct device *dev)
+>>  {
+>> -	return dev->bus == &pci_bus_type;
+>> +	return dev_is_pci(dev);
+>>  }
+>>  
+>>  static struct acpi_bus_type acpi_pci_bus = {
+>> -- 
+>> 1.7.1
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
-    PCI/portdrv: Cleanup error paths
-    
-    Make the straightline path the normal no-error path.  Check for errors and
-    return them directly, instead of checking for success and putting the
-    normal path in an "if" body.
-    
-    No functional change.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 0b6e76604068..fc86d323fecc 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -344,11 +344,13 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
- 	device_enable_async_suspend(device);
- 
- 	retval = device_register(device);
--	if (retval)
-+	if (retval) {
- 		kfree(pcie);
--	else
--		get_device(device);
--	return retval;
-+		return retval;
-+	}
-+
-+	get_device(device);
-+	return 0;
- }
- 
- /**
-@@ -498,12 +500,12 @@ static int pcie_port_probe_service(struct device *dev)
- 
- 	pciedev = to_pcie_device(dev);
- 	status = driver->probe(pciedev);
--	if (!status) {
--		dev_printk(KERN_DEBUG, dev, "service driver %s loaded\n",
--			driver->name);
--		get_device(dev);
--	}
--	return status;
-+	if (status)
-+		return status;
-+
-+	dev_printk(KERN_DEBUG, dev, "service driver %s loaded\n", driver->name);
-+	get_device(dev);
-+	return 0;
- }
- 
- /**
+-- 
+Thanks!
+Yijing
 
-commit f39862058e1f278e0495cd9ea57de571e74aa1fe
-Author: Levente Kurusa <levex@linux.com>
-Date:   Thu Dec 19 14:22:35 2013 -0700
-
-    PCI/portdrv: Add put_device() after device_register() failure
-    
-    This is required so that we give up the last reference to the device.
-    Removed the kfree() as put_device will result in release_pcie_device()
-    being called and hence the container of the device will be kfree'd.
-    
-    [bhelgaas: fix conflict after my previous cleanup]
-    Signed-off-by: Levente Kurusa <levex@linux.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index fc86d323fecc..9811eea53511 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -345,7 +345,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
- 
- 	retval = device_register(device);
- 	if (retval) {
--		kfree(pcie);
-+		put_device(device);
- 		return retval;
- 	}
- 
-
-commit e75f34ce6633549486a044d64b2a79240d4113a8
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Dec 19 14:24:13 2013 -0700
-
-    PCI/portdrv: Remove extra get_device()/put_device() for pcie_device
-    
-    Previously pcie_device_init() called get_device() if device_register() for
-    the new pcie_device succeeded, and remove_iter() called put_device() when
-    removing before unregistering the device.
-    
-    But device_register() already increments the reference count in
-    device_add(), so we don't need to do it again here.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 9811eea53511..6a6e54909335 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -349,7 +349,6 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
- 		return retval;
- 	}
- 
--	get_device(device);
- 	return 0;
- }
- 
-@@ -456,10 +455,8 @@ int pcie_port_device_resume(struct device *dev)
- 
- static int remove_iter(struct device *dev, void *data)
- {
--	if (dev->bus == &pcie_port_bus_type) {
--		put_device(dev);
-+	if (dev->bus == &pcie_port_bus_type)
- 		device_unregister(dev);
--	}
- 	return 0;
- }
- 
