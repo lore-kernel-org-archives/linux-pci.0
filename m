@@ -1,172 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:8719 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932192Ab3LISqd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Dec 2013 13:46:33 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Ethan Zhao <ethan.kernel@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: [PATCH] PCI, pciehp: Turn on link a while to workaround
- presense detection
-Date: Mon, 9 Dec 2013 18:46:26 +0000
-Message-ID: <c2a37fdd0e654fa3adccb0bcc38adb09@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
-	<aaaa948b964642859fa142779846211f@DM2PR05MB671.namprd05.prod.outlook.com>
- <CABawtvPMSGc+7HqqtE9NXxCo11Vp-Yu+feF6UqS18k+jwPxoVw@mail.gmail.com>
-In-Reply-To: <CABawtvPMSGc+7HqqtE9NXxCo11Vp-Yu+feF6UqS18k+jwPxoVw@mail.gmail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:49355 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750724Ab3LJXmD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 18:42:03 -0500
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id rBANg1Ge019697
+	for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 17:42:02 -0600
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id rBANg1Er021355
+	for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 17:42:01 -0600
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: AER driver - doesn't attach to EP's MSI IRQ
+Date: Tue, 10 Dec 2013 23:42:01 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B704656A53@DFLE11.ent.ti.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+All,
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Ethan Zhao
-> Sent: Sunday, December 08, 2013 6:10 PM
-> To: Rajat Jain
-> Cc: Bjorn Helgaas; Yinghai Lu; linux-pci@vger.kernel.org; Kenji
-> Kaneshige; stable@vger.kernel.org
-> Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround
-> presense detection
-> 
-> Rajat,
-> 
->     Do you have a draft to extend the hotplug spec ?  seem you wanna
-> introduce link change interrupt to the your chip or just poll the link
-> status register ?
+Trying to test AER driver on an ARM platform an RC driver. The EP is using MSI IRQ1. So based on a previous query on this, AER driver's IRQ handler should be attached to the MSI IRQ1 to listen to errors from this EP. But it is attached to MSI IRQ0. The EP has MSI IRQ capability. Any idea why this is not working as expected?
 
-This is for the systems that do not implement elements like attention button:
+Cat /proc/interrupts shows
 
-http://www.spinics.net/lists/hotplug/msg05802.html
-(Inspiration from the thread: http://www.spinics.net/lists/linux-pci/msg05783.html)
+576:          0          0          0          0  PCIe-MSI  aerdrv
+577:       1025          0          0          0  PCIe-MSI  ahci
 
+AHCI driver is attached to MSI iRQ1. AER driver to MSI IRQ0
 
-Here was the proposed minimal patch:
+>lspci -vv
 
-http://marc.info/?l=linux-pci&m=138610993912921&w=2
-http://marc.info/?t=138611014300001&r=1&w=2
+00:00.0 PCI bridge: Texas Instruments Device 8888 (rev 01) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Region 0: Memory at <ignored> (32-bit, non-prefetchable)
+	Region 1: Memory at <ignored> (32-bit, prefetchable)
+	Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
+	I/O behind bridge: 00001000-00001fff
+	Memory behind bridge: 50000000-501fffff
+	Prefetchable memory behind bridge: 50200000-503fffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+	BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [40] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 0000000021800054  Data: 0000
+	Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
+		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+			ExtTag- RBE+ FLReset-
+		DevCtl:	Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 256 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 5GT/s, Width x2, ASPM L0s, Latency L0 <512ns, L1 <64us
+			ClockPM- Surprise- LLActRep+ BwNot-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+			ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 5GT/s, Width x1, TrErr- Train- SlotClk- DLActive+ BWMgmt- ABWMgmt-
+		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+		RootCap: CRSVisible-
+		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP+ SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP+ BadDLLP+ Rollover- Timeout+ NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn+
+	Kernel driver in use: pcieport
 
-Would appreciate any review comments.
+01:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9125 PCIe SATA 6.0 Gb/s controller (rev 11) (prog-if 01 [AHCI 1.0])
+	Subsystem: Marvell Technology Group Ltd. 88SE9125 PCIe SATA 6.0 Gb/s controller
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 32 bytes
+	Interrupt: pin A routed to IRQ 577
+	Region 0: I/O ports at 1010 [size=8]
+	Region 1: I/O ports at 1020 [size=4]
+	Region 2: I/O ports at 1018 [size=8]
+	Region 3: I/O ports at 1024 [size=4]
+	Region 4: I/O ports at 1000 [size=16]
+	Region 5: Memory at 50000000 (32-bit, non-prefetchable) [size=2K]
+	Expansion ROM at 50200000 [disabled] [size=64K]
+	Capabilities: [40] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit-
+		Address: 21800054  Data: 0001
+	Capabilities: [70] Express (v2) Legacy Endpoint, MSI 00
+		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <1us, L1 <8us
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 256 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <64us
+			ClockPM- Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+		DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+	Kernel driver in use: ahci
 
-Thanks,
-
-Rajat
-
-
-> 
-> Thanks,
-> Ethan
-> 
-> On Mon, Dec 9, 2013 at 5:29 AM, Rajat Jain <rajatjain@juniper.net>
-> wrote:
-> > Hello,
-> >
-> >> -----Original Message-----
-> >> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> >> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
-> >> Sent: Saturday, December 07, 2013 10:36 AM
-> >> To: Yinghai Lu
-> >> Cc: linux-pci@vger.kernel.org; Kenji Kaneshige;
-> >> stable@vger.kernel.org
-> >> Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround
-> >> presense detection
-> >>
-> >> On Fri, Dec 6, 2013 at 1:22 PM, Yinghai Lu <yinghai@kernel.org>
-> wrote:
-> >> > During hotplug test on platform, found slot status register does
-> >> > not report present status correctly. That present bit does not get
-> >> > cleared even after that card is removed.
-> >> >
-> >> > That problem is caused by commit:
-> >> > | commit 2debd9289997fc5d1c0043b41201a8b40d5e11d0
-> >> > |
-> >> > |    PCI: pciehp: Disable/enable link during slot power off/on
-> >> >
-> >> > It looks like chipset bug, that PresDet bit is "OR" operation
-> >> > between sideband input from FPGA, and chipset inband detection from
-> pcie link.
-> >>
-> >> This doesn't sound like a chipset bug.  It sounds like exactly what
-> >> the spec describes: "Presence Detect State - This bit indicates the
-> >> presence of an adapter in the slot, reflected by the logical "OR" of
-> >> the Physical Layer in-band presence detect mechanism and, if present,
-> >> any out-of-band presence detect mechanism defined for the slot's
-> >> corresponding form factor" (PCIe 3.0, sec 7.8.11).
-> >>
-> >> So I want to fix this pciehp problem, but between 2debd9289997 and
-> >> this patch, pciehp_power_off_slot() is accumulating warts that make
-> >> it look like we're just reacting to things that break rather than
-> >> making a robust design to start with.
-> >
-> > Yes.
-> >
-> > In fact things do get more complicated if we introduce link state
-> based hot-plug, because then that requires that we do NOT disable the
-> link permanently during power off. (Because we would want to receive
-> future hot-plug link-up events).
-> >
-> >>
-> >> > It does not like if we disable pcie link at first and power off
-> >> > other side device, and it has input from inband detection always 1.
-> >> >
-> >> > Workaround: Try turn on link a while after power off.
-> >> >
-> >> > After this patch, PresDet report correct status when removing or
-> >> > adding card later.
-> >> >
-> >> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> > Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-> >> > Cc: <stable@vger.kernel.org> 3.4+
-> >> >
-> >> > ---
-> >> >  drivers/pci/hotplug/pciehp_hpc.c |    9 +++++++++
-> >> >  1 file changed, 9 insertions(+)
-> >> >
-> >> > Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> >> > ===================================================================
-> >> > --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-> >> > +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> >> > @@ -637,6 +637,15 @@ int pciehp_power_off_slot(struct slot *
-> >> >         }
-> >> >         ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
-> >> >                  pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-> >> > slot_cmd);
-> >> > +
-> >> > +       /*
-> >> > +        * Enable link for a while so chipset could settle down
-> >> > +        * inband presence detection logic
-> >> > +        */
-> >> > +       pciehp_link_enable(ctrl);
-> >> > +       msleep(20);
-> >> > +       pciehp_link_disable(ctrl);
-> >> > +
-> >> >         return 0;
-> >> >  }
-> >> >
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> >> in the body of a message to majordomo@vger.kernel.org More majordomo
-> >> info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> > in the body of a message to majordomo@vger.kernel.org More majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org More majordomo info
-> at  http://vger.kernel.org/majordomo-info.html
-> 
+Murali Karicheri
+Linux Kernel, Software Development
 
 
