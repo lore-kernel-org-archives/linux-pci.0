@@ -1,106 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:33814 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579Ab3LLVuZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:25 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/7] PCI: imx6: Split away the link up wait loop
-Date: Thu, 12 Dec 2013 22:50:01 +0100
-Message-Id: <1386885004-10252-4-git-send-email-marex@denx.de>
-In-Reply-To: <1386885004-10252-1-git-send-email-marex@denx.de>
-References: <1386885004-10252-1-git-send-email-marex@denx.de>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:63843 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754525Ab3LJSWx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 13:22:53 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so8789713ieb.8
+        for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 10:22:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131210013136.GO5429@obsidianresearch.com>
+References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131206001954.27659.78163.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20131209193332.GB20199@obsidianresearch.com> <CAErSpo4Q-sjiCUs3UbQWdPhOTdxfJP1ay1MugxTPT1E2=TkpJw@mail.gmail.com>
+ <20131209212744.GK5429@obsidianresearch.com> <CAErSpo6ZNM0SW+q7tSi+1hT6yAfb7Ckz85LjM4QUDgbH3wLAaw@mail.gmail.com>
+ <20131210001008.GM5429@obsidianresearch.com> <CAErSpo63eRPzXeQ94XTR3T7PDoQUjTmqfwJKn2EKSNPi3Jyc0Q@mail.gmail.com>
+ <20131210013136.GO5429@obsidianresearch.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Dec 2013 11:22:32 -0700
+Message-ID: <CAErSpo4eJY5jcb4_d+Np8PP8B2iqjEQv3bh76xoLfB-fmDWUWQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Stop clearing bridge Secondary Status when
+ setting up I/O aperture
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split the function that waits for the PCIe link to come up from the
-rest if the host init function. We will find this change useful in
-the subsequent patch, since this will be called twice then.
+On Mon, Dec 9, 2013 at 6:31 PM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Mon, Dec 09, 2013 at 05:18:30PM -0700, Bjorn Helgaas wrote:
+>
+>> > Basically, your fix to pci_setup_bridge_io is fine - but your
+>> > observation led me to realize that the HW drivers implementing RMW for
+>> > 8 and 16 bit ops under their struct pci_ops.read function have exactly
+>> > the same flaw you are fixing here - they will silently wipe out write
+>> > 1 to clear bits.
+>>
+>> Ah, OK.  I thought you were saying that we couldn't change
+>> pci_setup_bridge_io() to use 16-bit accesses because of this problem.
+>
+> No, not really - just that this bug you discovered is broader than just
+> that one place :)
+>
+>> Sure, if somebody can come up with a reasonable way to share this sort
+>> of code, that sounds like a good thing.  Maybe extending struct
+>> pci_ops is the way to do this, but I hope not, because it seems like
+>
+> Well, sharing the code is no problem, it is exactly the same for every
+> 32 bit only host driver.
+>
+> But supporting RW1C bits in capability lists seems fairly hard once
+> the context at the call site is lost.
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host/pci-imx6.c | 32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
+Strictly speaking, fixing this only requires knowledge of the hardware
+register layout, so at least in principle, it can be done without the
+call site context.  It does sound like it might be messy, though.
+QEMU deals with this issue somehow; maybe there's something there we
+can copy.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 4983784..e9e580a 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -304,6 +304,25 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- 			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
- }
- 
-+static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-+{
-+	int count = 200;
-+
-+	while (!dw_pcie_link_up(pp)) {
-+		usleep_range(100, 1000);
-+		if (--count)
-+			continue;
-+
-+		dev_err(pp->dev, "phy link never came up\n");
-+		dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-+			readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
-+			readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static void imx6_pcie_host_init(struct pcie_port *pp)
- {
- 	int count = 0;
-@@ -320,18 +339,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
- 
--	while (!dw_pcie_link_up(pp)) {
--		usleep_range(100, 1000);
--		count++;
--		if (count >= 200) {
--			dev_err(pp->dev, "phy link never came up\n");
--			dev_dbg(pp->dev,
--				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
--				readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
--				readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
--			break;
--		}
--	}
-+	imx6_pcie_wait_for_link(pp);
- 
- 	return;
- }
--- 
-1.8.4.3
+> Which makes me wonder if supporting sub-dword writes to dwords with
+> RW1C bits makes sense at all :(
+>
+> That was why my initial reaction was to not do sub dword writes if you
+> know it will conflict with a RW1C bit.
 
+Keeping the dword read/write and clearing the upper 16 bits before the
+write is an option.  But I'm inclined to do the 16-bit accesses, i.e.,
+use the patch as posted, because that makes the issue more visible.
+If we keep the dword access, we can fix this particular issue, but it
+does nothing to help fix other similar cases.
+
+Bjorn
