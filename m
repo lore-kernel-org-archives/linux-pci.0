@@ -1,51 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:48848 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000Ab3LKWs5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 17:48:57 -0500
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MXN00ILEZDK2930@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 12 Dec 2013 07:48:56 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	'Jagan Teki' <jagannadh.teki@gmail.com>,
-	linux-pci@vger.kernel.org, 'spear-devel' <spear-devel@list.st.com>,
-	'Pratyush ANAND' <pratyush.anand@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
- <CAD6G_RTrETj9p+YNPjRMEFsO7Ggf3LfnuaPOSwO2brUcusNUJw@mail.gmail.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
- <201312112231.36039.arnd@arndb.de>
-In-reply-to: <201312112231.36039.arnd@arndb.de>
-Subject: Re: [PATCH 06/12] pcie: designware: Move register definition to the
- header file
-Date: Thu, 12 Dec 2013 07:48:56 +0900
-Message-id: <001001cef6c3$2c5a3cd0$850eb670$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from aserp1040.oracle.com ([141.146.126.69]:51369 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750852Ab3LJGyh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 01:54:37 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 0/5] PCI: allocate 64bit mmio pref
+Date: Mon,  9 Dec 2013 22:54:39 -0800
+Message-Id: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 12, 2013 6:32 AM, Arnd Bergmann wrote:
-> On Wednesday 11 December 2013, Mohit KUMAR DCG wrote:
-> > >
-> > > Seems like none were using these headers except pcie-designware.c - if ie
-> > > the case better to place it same place as before.
-> >
-> > - We have include these and used few like ' PCIE_LINK_WIDTH_SPEED_CONTROL '  for SPEAr13xx platform,
-> > so move these to the separate header  file.
-> 
-> I think it's better not to touch any of the registers from a platform-specific
-> driver. Better make a high-level function in the common code that the
-> spear driver can call to change this register.
+mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
+It will try to assign 64 bit resource above 4g at first.
 
-I also agree with Arnd's opinion.
+And it is based on current pci/for-linus.
 
-Best regards,
-Jingoo Han
+-v2: update after patch that move device_del down to pci_destroy_dev.
+     add "Try best to allocate pref mmio 64bit above 4G"
+
+-v3: refresh and send out after pci_clip_resource() changes,
+     as Bjorn is not happy with attachments.
+
+-v4: make pcibios_resource_to_bus take bus directly.
+
+Yinghai Lu (5):
+  PCI: pcibus address to resource converting take bus instead of dev
+  PCI: Don't use 4G bus address directly in resource allocation
+  PCI: Try to allocate mem64 above 4G at first
+  PCI: Try best to allocate pref mmio 64bit above 4g
+  PCI: Sort pci root bus resources list
+
+ arch/alpha/kernel/pci-sysfs.c       |   4 +-
+ arch/powerpc/kernel/pci-common.c    |   4 +-
+ arch/powerpc/kernel/pci_of_scan.c   |   4 +-
+ arch/sparc/kernel/pci.c             |   6 +-
+ arch/x86/include/asm/pci.h          |   1 -
+ drivers/pci/bus.c                   |  73 +++++++++++++++---
+ drivers/pci/host-bridge.c           |  24 +++---
+ drivers/pci/probe.c                 |  18 ++---
+ drivers/pci/quirks.c                |   2 +-
+ drivers/pci/rom.c                   |   2 +-
+ drivers/pci/setup-bus.c             | 149 +++++++++++++++++++++++-------------
+ drivers/pci/setup-res.c             |  16 +++-
+ drivers/pcmcia/i82092.c             |   2 +-
+ drivers/pcmcia/yenta_socket.c       |   6 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c |   5 +-
+ drivers/video/arkfb.c               |   2 +-
+ drivers/video/s3fb.c                |   2 +-
+ drivers/video/vt8623fb.c            |   2 +-
+ include/linux/pci.h                 |   8 +-
+ 19 files changed, 217 insertions(+), 113 deletions(-)
+
+-- 
+1.8.4
 
