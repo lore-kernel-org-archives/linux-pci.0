@@ -1,90 +1,217 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:33621 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751065Ab3LJAfM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Dec 2013 19:35:12 -0500
-From: Guenter Roeck <groeck@juniper.net>
-To: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatjain@juniper.net>
-CC: Ethan Zhao <ethan.kernel@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH] PCI, pciehp: Turn on link a while to workaround
- presense detection
-Date: Tue, 10 Dec 2013 00:34:58 +0000
-Message-ID: <0a097fcaf4624bc997fc113baae9b3d1@CO1PR05MB523.namprd05.prod.outlook.com>
-References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
-	<aaaa948b964642859fa142779846211f@DM2PR05MB671.namprd05.prod.outlook.com>
-	<CABawtvPMSGc+7HqqtE9NXxCo11Vp-Yu+feF6UqS18k+jwPxoVw@mail.gmail.com>
-	<c2a37fdd0e654fa3adccb0bcc38adb09@DM2PR05MB671.namprd05.prod.outlook.com>
-	<CAE9FiQU7gM3gQkhWMXCTrJUqL137TW2TBL_gW=N2s3cbHr+5EA@mail.gmail.com>
-	<8833f61075af4c97895aadc42c3f7335@DM2PR05MB671.namprd05.prod.outlook.com>
- <CAE9FiQXCpqFjCQhWCmK=pJGoef4nBRZtxJuufPSoG9OLjoKLNg@mail.gmail.com>
-In-Reply-To: <CAE9FiQXCpqFjCQhWCmK=pJGoef4nBRZtxJuufPSoG9OLjoKLNg@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ve0-f169.google.com ([209.85.128.169]:58621 "EHLO
+	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755153Ab3LJRc6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 12:32:58 -0500
+Received: by mail-ve0-f169.google.com with SMTP id c14so5167589vea.0
+        for <linux-pci@vger.kernel.org>; Tue, 10 Dec 2013 09:32:57 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo7-rRUAJVkfb1Zjdd3c8aMeSdhnLyFvpJggkN4168-ESg@mail.gmail.com>
+References: <1386633442-12509-1-git-send-email-natg@google.com>
+	<CAErSpo7-rRUAJVkfb1Zjdd3c8aMeSdhnLyFvpJggkN4168-ESg@mail.gmail.com>
+Date: Tue, 10 Dec 2013 09:32:57 -0800
+Message-ID: <CAGmqid=FsThBb3nwagT5WF9drD4gW=Q2tHTCvbihuVP0eMP1vw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add quirk to initialize REG_BASE_ADDR to 0 for
+ Broadcom TIGON3 chips.
+From: Natarajan Gurumoorthy <natg@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Nithin Nayak Sujir <nsujir@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Looks like we are going to abandon this patch and go with the original
+one line fix to drivers/net/ethenet/broadcom/tg3.c.
+
+Nat
 
 
-> -----Original Message-----
-> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
-> Yinghai Lu
-> Sent: Monday, December 09, 2013 12:20 PM
-> To: Rajat Jain
-> Cc: Ethan Zhao; Bjorn Helgaas; linux-pci@vger.kernel.org; Kenji
-> Kaneshige; stable@vger.kernel.org; Guenter Roeck
-> Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround
-> presense detection
-> 
-> On Mon, Dec 9, 2013 at 11:35 AM, Rajat Jain <rajatjain@juniper.net>
-> wrote:
-> 
-> > Actually there are situations where the presence detect signal does
-> not make much sense, because the card is not really plugged out
-> physically. For e.g. how do we deal with PCIe end points that may be on
-> the board itself, but say come out of reset after the bootup? Or go
-> down during a firmware upgrade and again come back up after the
-> upgrade?
-> >
-> 
-> That is driver's job.
-> mpt2sas driver does diag_reset.
-> 
-Possibly, but quite frankly, after looking into that code, it seems quite dirty
-to me. Of course, that is my personal opinion only. It may suggest, however,
-assuming that the mpt2sas driver's resent handler causes a link down/link up 
-sequence of events, that there is a valid case for the boot option.
-I don't entirely understand, though, how that driver manages to reset its 
-PCIe interface without the need to re-initialize it, but maybe I am just
-missing something.
+On Mon, Dec 9, 2013 at 4:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Dec 9, 2013 at 4:57 PM, Nat Gurumoorthy <natg@google.com> wrote:
+>> The new tg3 driver leaves REG_BASE_ADDR (PCI config offset 120)
+>> uninitialized. From power on reset this register may have garbage in it. The
+>> Register Base Address register defines the device local address of a
+>> register. The data pointed to by this location is read or written using
+>> the Register Data register (PCI config offset 128). When REG_BASE_ADDR has
+>> garbage any read or write of Register Data Register (PCI 128) will cause the
+>> PCI bus to lock up. The TCO watchdog will fire and bring down the system.
+>>
+>> Signed-off-by: <natg@google.com>
+>> ---
+>>  drivers/pci/quirks.c | 138 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 138 insertions(+)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 3a02717..b9a289b 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3461,3 +3461,141 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
+>>
+>>         return -ENOTTY;
+>>  }
+>> +
+>> +/*
+>> + * This is a quirk is to initialize REG_BASE_ADDR at PCI config offset 120
+>> + * to 0 for all Broadcom devices controlled by the TIGON3 driver.
+>> + */
+>> +static void tg3_init_reg_base_addr(struct pci_dev *dev)
+>> +{
+>> +       pci_write_config_dword(dev, 120, 0);
+>> +}
+>> +
+>> +
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5700,
+>> +                       tg3_init_reg_base_addr);
+>
+> Wow, this looks like a maintenance nightmare :)  It wouldn't be quite
+> so bad if we knew that Broadcom were changing this register so it had
+> a defined state after reset.  If we have to add IDs for every new chip
+> to this list, that will really be a hassle.  And it's not a very
+> obvious failure, so the list would only be updated haphazardly.
+>
+> "lspci -x" only shows the first 64 bytes, and the man page warns that
+> "lspci -xxx", which dumps all config space, causes some PCI devices to
+> crash.  So it seems a little odd that the /sys/.../config file gives
+> us 256 bytes (at least).  I don't know the history of that size,
+> though.  Hmmm...
+>
+> Bjorn
+>
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5701,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5702,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5703,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5704,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5702FE,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705_2,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705M,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705M_2,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5702X,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5703X,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5704S,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5702A3,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5703A3,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5782,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5788,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5789,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5901,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5901_2,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5704S_2,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705F,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5721,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5722,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5751,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5751M,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5751F,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5752,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5752M,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5753,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5753M,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5753F,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5754,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5754M,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5755,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5755M,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5756,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5786,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5787,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5787M,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5787F,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5714,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5714S,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5715,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5715S,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5780,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5780S,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5781,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5906,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5906M,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5784,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5764,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5723,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5761,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5761E,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SYSKONNECT,
+>> +                       PCI_DEVICE_ID_SYSKONNECT_9DXX,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SYSKONNECT,
+>> +                       PCI_DEVICE_ID_SYSKONNECT_9MXX,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTIMA, PCI_DEVICE_ID_ALTIMA_AC1000,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTIMA, PCI_DEVICE_ID_ALTIMA_AC1001,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTIMA, PCI_DEVICE_ID_ALTIMA_AC1003,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTIMA, PCI_DEVICE_ID_ALTIMA_AC9100,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_TIGON3,
+>> +                       tg3_init_reg_base_addr);
+>> +DECLARE_PCI_FIXUP_EARLY(0x10cf, 0x11a2, tg3_init_reg_base_addr);
+>> --
+>> 1.8.5.1
+>>
 
-There are a number of other problems with the in-driver approach.
-For example, it would require the driver to re-program the chip's PCIe
-configuration space, as it will be 'vanilla' after the reset. Not even
-sure how this can work, since that includes the chip BAR registers
-and various other configuration registers which are normally set by the
-PCIe subsystem. I'd rather handle this through the PCIe subsystem
-instead of kludging around the problem in the driver.
-
-Another problem is resulting boot delays. If link up/down is handled through
-the PCIe subsystem, we can have the driver return -EPROBE_DEFER in the initial
-probe, and everything just works automatically like magic. Waiting in probe
-for the chip to re-initialize itself would add substantial delay to the boot
-sequence. With several such chips in the system that can add up to a lot.
-
-Even if we manage to implement all this, we still didn't solve our other
-problems, which include chips which are activated after initial PCIe scan,
-chips which (unfortunately) tend to hang up themselves without notice,
-and real OIR devices which don't implement "correct" PCIe OIR handling.
-
-Rajat's patch solves all those problems, and in my opinion it does so
-quite elegantly.
-
-Guenter
 
 
+-- 
+Regards
+Nat Gurumoorthy AB6SJ
