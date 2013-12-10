@@ -1,179 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f74.google.com ([209.85.219.74]:64677 "EHLO
-	mail-oa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061Ab3LIX6C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 18:58:02 -0500
-Received: by mail-oa0-f74.google.com with SMTP id o6so860029oag.3
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 15:58:01 -0800 (PST)
-From: Nat Gurumoorthy <natg@google.com>
-To: nsujir@broadcom.com, mchan@broadcom.com, bhelgaas@google.com
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Nat Gurumoorthy <natg@google.com>
-Subject: [PATCH] PCI: Add quirk to initialize REG_BASE_ADDR to 0 for Broadcom TIGON3 chips.
-Date: Mon,  9 Dec 2013 15:57:22 -0800
-Message-Id: <1386633442-12509-1-git-send-email-natg@google.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:63826 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724Ab3LJX6c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 18:58:32 -0500
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MXM001AV7XJWWB0@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Wed, 11 Dec 2013 08:58:31 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Tim Harvey' <tharvey@gateworks.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>
+Cc: 'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <20131205050424.GA2298@pratyush-vbox>
+ <201312061546.23981.arnd@arndb.de> <20131209071241.GA5760@pratyush-vbox>
+ <201312101426.40614.marex@denx.de>
+ <001101cef5f6$4347c520$c9d74f60$%han@samsung.com>
+ <CAJ+vNU1LCeSKBjr8ryrJZcPt2+6Xcv0de19FttdpTvSEmr1k_w@mail.gmail.com>
+In-reply-to: <CAJ+vNU1LCeSKBjr8ryrJZcPt2+6Xcv0de19FttdpTvSEmr1k_w@mail.gmail.com>
+Subject: Re: [Query/Discussion]: IO translation with designware PCIe controller
+Date: Wed, 11 Dec 2013 08:58:30 +0900
+Message-id: <001501cef603$ba479030$2ed6b090$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The new tg3 driver leaves REG_BASE_ADDR (PCI config offset 120)
-uninitialized. From power on reset this register may have garbage in it. The
-Register Base Address register defines the device local address of a
-register. The data pointed to by this location is read or written using
-the Register Data register (PCI config offset 128). When REG_BASE_ADDR has
-garbage any read or write of Register Data Register (PCI 128) will cause the
-PCI bus to lock up. The TCO watchdog will fire and bring down the system.
+On Wednesday, December 11, 2013 8:24 AM, Tim Harvey wrote:
+> On Tue, Dec 10, 2013 at 2:22 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> > On Tuesday, December 10, 2013 10:27 PM, Marek Vasut wrote:
+> >> On Monday, December 09, 2013 at 08:12:42 AM, Pratyush Anand wrote:
+> >
+> > [.....]
+> >
+> >> >
+> >> > diff --git a/drivers/pci/host/pcie-designware.c
+> >> > b/drivers/pci/host/pcie-designware.c index be6ce30..cf68632 100644
+> >> > --- a/drivers/pci/host/pcie-designware.c
+> >> > +++ b/drivers/pci/host/pcie-designware.c
+> >> > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >> >                                        + global_io_offset);
+> >> >                     pp->config.io_size = resource_size(&pp->io);
+> >> >                     pp->config.io_bus_addr = range.pci_addr;
+> >> > +                   pp->io_base = range.cpu_addr;
+> >> >             }
+> >> >             if (restype == IORESOURCE_MEM) {
+> >> >                     of_pci_range_to_resource(&range, np, &pp->mem);
+> >> > @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >> >
+> >> >     pp->cfg0_base = pp->cfg.start;
+> >> >     pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+> >> > -   pp->io_base = pp->io.start;
+> >> >     pp->mem_base = pp->mem.start;
+> >> >
+> >> >     pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> >> > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data
+> >> > *sys)
+> >> >
+> >> >     if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+> >> >             sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+> >> > -           pci_ioremap_io(sys->io_offset, pp->io.start);
+> >> > +           pci_ioremap_io(sys->io_offset, pp->io_base);
+> >> >             global_io_offset += SZ_64K;
+> >> >             pci_add_resource_offset(&sys->resources, &pp->io,
+> >> >                                     sys->io_offset);
+> >>
+> >> Tim, can you test if this patch fixes your SKY2 IOspace problem please ?
+> >
+> > Above mentioned patch is NOT the latest patch.
+> > Pratyush Anand already submitted the next patch as below.
+> >
+> > Tim,
+> > Would you test the following patch on i.MX6 platform?
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index be6ce30..b83f5e8 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >                                            + global_io_offset);
+> >                         pp->config.io_size = resource_size(&pp->io);
+> >                         pp->config.io_bus_addr = range.pci_addr;
+> > +                       pp->io_base = range.cpu_addr;
+> >                 }
+> >                 if (restype == IORESOURCE_MEM) {
+> >                         of_pci_range_to_resource(&range, np, &pp->mem);
+> > @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+> >
+> >         pp->cfg0_base = pp->cfg.start;
+> >         pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+> > -       pp->io_base = pp->io.start;
+> >         pp->mem_base = pp->mem.start;
+> >
+> >         pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+> > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+> >
+> >         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+> >                 sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+> > -               pci_ioremap_io(sys->io_offset, pp->io.start);
+> > +               pci_ioremap_io(global_io_offset, pp->io_base);
+> >                 global_io_offset += SZ_64K;
+> >                 pci_add_resource_offset(&sys->resources, &pp->io,
+> >                                         sys->io_offset);
+> >
+> >
+> > Best regards,
+> > Jingoo Han
+> >
+> 
+> Yes, this patch resolves the issue and now I can use devices with io
+> resources behind a bridge attached to the IMX6.
+> 
+> Thanks everyone for your efforts!
 
-Signed-off-by: <natg@google.com>
----
- drivers/pci/quirks.c | 138 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 138 insertions(+)
+Wow, happy ending! :-)
+I was deeply moved.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 3a02717..b9a289b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3461,3 +3461,141 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
- 
- 	return -ENOTTY;
- }
-+
-+/*
-+ * This is a quirk is to initialize REG_BASE_ADDR at PCI config offset 120
-+ * to 0 for all Broadcom devices controlled by the TIGON3 driver.
-+ */
-+static void tg3_init_reg_base_addr(struct pci_dev *dev)
-+{
-+	pci_write_config_dword(dev, 120, 0);
-+}
-+
-+
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5700,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5701,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5702,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5703,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5704,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5702FE,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705_2,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705M,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705M_2,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5702X,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5703X,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5704S,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5702A3,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5703A3,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5782,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5788,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5789,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5901,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5901_2,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5704S_2,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5705F,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5721,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5722,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5751,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5751M,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5751F,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5752,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5752M,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5753,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5753M,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5753F,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5754,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5754M,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5755,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5755M,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5756,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5786,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5787,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5787M,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5787F,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5714,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5714S,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5715,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5715S,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5780,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5780S,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5781,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5906,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5906M,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5784,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5764,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5723,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5761,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, PCI_DEVICE_ID_TIGON3_5761E,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SYSKONNECT,
-+			PCI_DEVICE_ID_SYSKONNECT_9DXX,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SYSKONNECT,
-+			PCI_DEVICE_ID_SYSKONNECT_9MXX,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTIMA, PCI_DEVICE_ID_ALTIMA_AC1000,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTIMA, PCI_DEVICE_ID_ALTIMA_AC1001,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTIMA, PCI_DEVICE_ID_ALTIMA_AC1003,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ALTIMA, PCI_DEVICE_ID_ALTIMA_AC9100,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_TIGON3,
-+			tg3_init_reg_base_addr);
-+DECLARE_PCI_FIXUP_EARLY(0x10cf, 0x11a2, tg3_init_reg_base_addr);
--- 
-1.8.5.1
+Pratyush Anand,
+Would you re-send this patch with commit message?
+You did a good job! I really appreciate your patch.
+
+Best regards,
+Jingoo Han
 
