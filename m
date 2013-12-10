@@ -1,153 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:37924 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932072Ab3LEL5T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 06:57:19 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH 3/9] IA64/PCI: Use dev_is_pci() to check whether it is pci device
-Date: Thu, 5 Dec 2013 19:56:39 +0800
-Message-ID: <1386244599-13468-1-git-send-email-wangyijing@huawei.com>
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:33621 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751065Ab3LJAfM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Dec 2013 19:35:12 -0500
+From: Guenter Roeck <groeck@juniper.net>
+To: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatjain@juniper.net>
+CC: Ethan Zhao <ethan.kernel@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH] PCI, pciehp: Turn on link a while to workaround
+ presense detection
+Date: Tue, 10 Dec 2013 00:34:58 +0000
+Message-ID: <0a097fcaf4624bc997fc113baae9b3d1@CO1PR05MB523.namprd05.prod.outlook.com>
+References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
+	<aaaa948b964642859fa142779846211f@DM2PR05MB671.namprd05.prod.outlook.com>
+	<CABawtvPMSGc+7HqqtE9NXxCo11Vp-Yu+feF6UqS18k+jwPxoVw@mail.gmail.com>
+	<c2a37fdd0e654fa3adccb0bcc38adb09@DM2PR05MB671.namprd05.prod.outlook.com>
+	<CAE9FiQU7gM3gQkhWMXCTrJUqL137TW2TBL_gW=N2s3cbHr+5EA@mail.gmail.com>
+	<8833f61075af4c97895aadc42c3f7335@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAE9FiQXCpqFjCQhWCmK=pJGoef4nBRZtxJuufPSoG9OLjoKLNg@mail.gmail.com>
+In-Reply-To: <CAE9FiQXCpqFjCQhWCmK=pJGoef4nBRZtxJuufPSoG9OLjoKLNg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use PCI dev_is_pci() instead of directly compare
-pci_bus_type to check whether it is pci device.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/ia64/hp/common/sba_iommu.c |    2 +-
- arch/ia64/sn/pci/pci_dma.c      |   24 ++++++++++++------------
- 2 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
-index 4c530a8..8e858b5 100644
---- a/arch/ia64/hp/common/sba_iommu.c
-+++ b/arch/ia64/hp/common/sba_iommu.c
-@@ -255,7 +255,7 @@ static u64 prefetch_spill_page;
- #endif
- 
- #ifdef CONFIG_PCI
--# define GET_IOC(dev)	(((dev)->bus == &pci_bus_type)						\
-+# define GET_IOC(dev)	((dev_is_pci(dev))						\
- 			 ? ((struct ioc *) PCI_CONTROLLER(to_pci_dev(dev))->iommu) : NULL)
- #else
- # define GET_IOC(dev)	NULL
-diff --git a/arch/ia64/sn/pci/pci_dma.c b/arch/ia64/sn/pci/pci_dma.c
-index 3290d6e..d0853e8 100644
---- a/arch/ia64/sn/pci/pci_dma.c
-+++ b/arch/ia64/sn/pci/pci_dma.c
-@@ -34,7 +34,7 @@
-  */
- static int sn_dma_supported(struct device *dev, u64 mask)
- {
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- 
- 	if (mask < 0x7fffffff)
- 		return 0;
-@@ -50,7 +50,7 @@ static int sn_dma_supported(struct device *dev, u64 mask)
-  */
- int sn_dma_set_mask(struct device *dev, u64 dma_mask)
- {
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- 
- 	if (!sn_dma_supported(dev, dma_mask))
- 		return 0;
-@@ -85,7 +85,7 @@ static void *sn_dma_alloc_coherent(struct device *dev, size_t size,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct sn_pcibus_provider *provider = SN_PCIDEV_BUSPROVIDER(pdev);
- 
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- 
- 	/*
- 	 * Allocate the memory.
-@@ -143,7 +143,7 @@ static void sn_dma_free_coherent(struct device *dev, size_t size, void *cpu_addr
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct sn_pcibus_provider *provider = SN_PCIDEV_BUSPROVIDER(pdev);
- 
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- 
- 	provider->dma_unmap(pdev, dma_handle, 0);
- 	free_pages((unsigned long)cpu_addr, get_order(size));
-@@ -187,7 +187,7 @@ static dma_addr_t sn_dma_map_page(struct device *dev, struct page *page,
- 
- 	dmabarr = dma_get_attr(DMA_ATTR_WRITE_BARRIER, attrs);
- 
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- 
- 	phys_addr = __pa(cpu_addr);
- 	if (dmabarr)
-@@ -223,7 +223,7 @@ static void sn_dma_unmap_page(struct device *dev, dma_addr_t dma_addr,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct sn_pcibus_provider *provider = SN_PCIDEV_BUSPROVIDER(pdev);
- 
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- 
- 	provider->dma_unmap(pdev, dma_addr, dir);
- }
-@@ -247,7 +247,7 @@ static void sn_dma_unmap_sg(struct device *dev, struct scatterlist *sgl,
- 	struct sn_pcibus_provider *provider = SN_PCIDEV_BUSPROVIDER(pdev);
- 	struct scatterlist *sg;
- 
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- 
- 	for_each_sg(sgl, sg, nhwentries, i) {
- 		provider->dma_unmap(pdev, sg->dma_address, dir);
-@@ -284,7 +284,7 @@ static int sn_dma_map_sg(struct device *dev, struct scatterlist *sgl,
- 
- 	dmabarr = dma_get_attr(DMA_ATTR_WRITE_BARRIER, attrs);
- 
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- 
- 	/*
- 	 * Setup a DMA address for each entry in the scatterlist.
-@@ -323,26 +323,26 @@ static int sn_dma_map_sg(struct device *dev, struct scatterlist *sgl,
- static void sn_dma_sync_single_for_cpu(struct device *dev, dma_addr_t dma_handle,
- 				       size_t size, enum dma_data_direction dir)
- {
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- }
- 
- static void sn_dma_sync_single_for_device(struct device *dev, dma_addr_t dma_handle,
- 					  size_t size,
- 					  enum dma_data_direction dir)
- {
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- }
- 
- static void sn_dma_sync_sg_for_cpu(struct device *dev, struct scatterlist *sg,
- 				   int nelems, enum dma_data_direction dir)
- {
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- }
- 
- static void sn_dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
- 				      int nelems, enum dma_data_direction dir)
- {
--	BUG_ON(dev->bus != &pci_bus_type);
-+	BUG_ON(!dev_is_pci(dev));
- }
- 
- static int sn_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
--- 
-1.7.1
+> -----Original Message-----
+> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
+> Yinghai Lu
+> Sent: Monday, December 09, 2013 12:20 PM
+> To: Rajat Jain
+> Cc: Ethan Zhao; Bjorn Helgaas; linux-pci@vger.kernel.org; Kenji
+> Kaneshige; stable@vger.kernel.org; Guenter Roeck
+> Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround
+> presense detection
+> 
+> On Mon, Dec 9, 2013 at 11:35 AM, Rajat Jain <rajatjain@juniper.net>
+> wrote:
+> 
+> > Actually there are situations where the presence detect signal does
+> not make much sense, because the card is not really plugged out
+> physically. For e.g. how do we deal with PCIe end points that may be on
+> the board itself, but say come out of reset after the bootup? Or go
+> down during a firmware upgrade and again come back up after the
+> upgrade?
+> >
+> 
+> That is driver's job.
+> mpt2sas driver does diag_reset.
+> 
+Possibly, but quite frankly, after looking into that code, it seems quite dirty
+to me. Of course, that is my personal opinion only. It may suggest, however,
+assuming that the mpt2sas driver's resent handler causes a link down/link up 
+sequence of events, that there is a valid case for the boot option.
+I don't entirely understand, though, how that driver manages to reset its 
+PCIe interface without the need to re-initialize it, but maybe I am just
+missing something.
+
+There are a number of other problems with the in-driver approach.
+For example, it would require the driver to re-program the chip's PCIe
+configuration space, as it will be 'vanilla' after the reset. Not even
+sure how this can work, since that includes the chip BAR registers
+and various other configuration registers which are normally set by the
+PCIe subsystem. I'd rather handle this through the PCIe subsystem
+instead of kludging around the problem in the driver.
+
+Another problem is resulting boot delays. If link up/down is handled through
+the PCIe subsystem, we can have the driver return -EPROBE_DEFER in the initial
+probe, and everything just works automatically like magic. Waiting in probe
+for the chip to re-initialize itself would add substantial delay to the boot
+sequence. With several such chips in the system that can add up to a lot.
+
+Even if we manage to implement all this, we still didn't solve our other
+problems, which include chips which are activated after initial PCIe scan,
+chips which (unfortunately) tend to hang up themselves without notice,
+and real OIR devices which don't implement "correct" PCIe OIR handling.
+
+Rajat's patch solves all those problems, and in my opinion it does so
+quite elegantly.
+
+Guenter
 
 
