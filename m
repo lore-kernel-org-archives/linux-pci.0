@@ -1,64 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47102 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754156Ab3LFUWz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 15:22:55 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
-Date: Fri,  6 Dec 2013 12:22:37 -0800
-Message-Id: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 5/5] PCI: Sort pci root bus resources list
+Date: Mon,  9 Dec 2013 22:54:44 -0800
+Message-Id: <1386658484-15774-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
+References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During hotplug test on platform, found slot status register does not
-report present status correctly. That present bit does not get cleared
-even after that card is removed.
+Some x86 systems expose above 4G 64bit mmio in _CRS as non-pref mmio range.
+[   49.415281] PCI host bridge to bus 0000:00
+[   49.419921] pci_bus 0000:00: root bus resource [bus 00-1e]
+[   49.426107] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+[   49.433041] pci_bus 0000:00: root bus resource [io  0x1000-0x5fff]
+[   49.440010] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+[   49.447768] pci_bus 0000:00: root bus resource [mem 0xfed8c000-0xfedfffff]
+[   49.455532] pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffbfff]
+[   49.463259] pci_bus 0000:00: root bus resource [mem 0x380000000000-0x381fffffffff]
 
-That problem is caused by commit:
-| commit 2debd9289997fc5d1c0043b41201a8b40d5e11d0
-|
-|    PCI: pciehp: Disable/enable link during slot power off/on
+During assign unassigned 64bit mmio resource, it will go through
+every non-pref mmio for root bus in pci_bus_alloc_resource().
+As the loop is with pci_bus_for_each_resource(), and could have chance
+to use under 4G mmio range instead of above 4G mmio range if the requested
+range is not big enough, even it could handle above 4G 64bit pref mmio.
 
-It looks like chipset bug, that PresDet bit is "OR" operation between
-sideband input from FPGA, and chipset inband detection from pcie link.
-It does not like if we disable pcie link at first and power off
-other side device, and it has input from inband detection
-always 1.
+For root bus, we can order list from high to low in pci_add_resource_offset(),
+during creating root bus, it will still keep the same order in final bus
+resource list.
+	pci_acpi_scan_root
+		==> add_resources
+			==> pci_add_resource_offset: # Add to temp resources
+		==> pci_create_root_bus
+			==> pci_bus_add_resource # add to final bus resources.
 
-Workaround: Try turn on link a while after power off.
-
-After this patch, PresDet report correct status when removing or adding
-card later.
+After that, we can make sure 64bit pref mmio for pci bridges will be allocated
+higest of mmio non-pref, and in this case it is above 4G instead of under 4G.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: <stable@vger.kernel.org> 3.4+
-
 ---
- drivers/pci/hotplug/pciehp_hpc.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/pci/bus.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -637,6 +637,15 @@ int pciehp_power_off_slot(struct slot *
- 	}
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
-+
-+	/*
-+	 * Enable link for a while so chipset could settle down
-+	 * inband presence detection logic
-+	 */
-+	pciehp_link_enable(ctrl);
-+	msleep(20);
-+	pciehp_link_disable(ctrl);
-+
- 	return 0;
- }
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 45d8de5..7798cd3 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -21,7 +21,8 @@
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 			     resource_size_t offset)
+ {
+-	struct pci_host_bridge_window *window;
++	struct pci_host_bridge_window *window, *tmp;
++	struct list_head *n;
  
+ 	window = kzalloc(sizeof(struct pci_host_bridge_window), GFP_KERNEL);
+ 	if (!window) {
+@@ -31,7 +32,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ 
+ 	window->res = res;
+ 	window->offset = offset;
+-	list_add_tail(&window->list, resources);
++
++	/* Keep list sorted according to res end */
++	n = resources;
++	list_for_each_entry(tmp, resources, list)
++		if (window->res->end > tmp->res->end) {
++			n = &tmp->list;
++			break;
++		}
++
++	/* Insert it just before n */
++	list_add_tail(&window->list, n);
+ }
+ EXPORT_SYMBOL(pci_add_resource_offset);
+ 
+-- 
+1.8.4
+
