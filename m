@@ -1,235 +1,144 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Mike Lothian <mike@fireburn.co.uk>, madcatx@atlas.cz,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
-	=?ISO-8859-1?Q?Joaqu=EDn_Aramend=EDa?= <samsagax@gmail.com>
-Subject: [PATCH][update] ACPIPHP / radeon / nouveau: Fix VGA switcheroo problem related to hotplug events
-Date: Sun, 29 Dec 2013 22:36:56 +0100
-Message-ID: <3135179.iXEx1Rk87m@vostro.rjw.lan>
-In-Reply-To: <10163453.2AxBLHI1XI@vostro.rjw.lan>
-References: <10163453.2AxBLHI1XI@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36154 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753050Ab3LJSsr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 Dec 2013 13:48:47 -0500
+Subject: [PATCH 2/3] pci: Add support for save/restore of extended
+ capabilities
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Alex Williamson <alex.williamson@redhat.com>
+Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
+Date: Tue, 10 Dec 2013 11:48:39 -0700
+Message-ID: <20131210184839.26294.4912.stgit@bling.home>
+In-Reply-To: <20131210183339.26294.14581.stgit@bling.home>
+References: <20131210183339.26294.14581.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Current save/restore is specific to standard capabilities.
 
-The changes in the ACPI-based PCI hotplug (ACPIPHP) subsystem made
-during the 3.12 development cycle uncovered a problem with VGA
-switcheroo that on some systems, when the device-specific method
-(ATPX in the radeon case, _DSM in the nouveau case) is used to turn
-off the discrete graphics, the BIOS generates ACPI hotplug events for
-that device and those events cause ACPIPHP to attempt to remove the
-device from the system (they are events for a device that was present
-previously and is not present any more, so that's what should be done
-according to the spec).  Then, the system stops functioning correctly.
-
-Since the hotplug events in question were simply silently ignored
-previously, the least intrusive way to address that problem is to
-make ACPIPHP ignore them again.  For this purpose, introduce a new
-ACPI device flag, no_hotplug, and modify ACPIPHP to ignore hotplug
-events for PCI devices whose ACPI companions have that flag set.
-Next, make the radeon and nouveau switcheroo detection code set the
-no_hotplug flag for the discrete graphics' ACPI companion.
-
-Fixes: bbd34fcdd1b2 (ACPI / hotplug / PCI: Register all devices under the given bridge)
-References: https://bugzilla.kernel.org/show_bug.cgi?id=61891
-References: https://bugzilla.kernel.org/show_bug.cgi?id=64891
-Reported-and-tested-by: Mike Lothian <mike@fireburn.co.uk>
-Reported-and-tested-by: <madcatx@atlas.cz>
-Reported-by: Joaquín Aramendía <samsagax@gmail.com>
-Cc: Alex Deucher <alexdeucher@gmail.com>
-Cc: Dave Airlie <airlied@linux.ie>
-Cc: Takashi Iwai <tiwai@suse.de>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: 3.12+ <stable@vger.kernel.org> # 3.12+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
+ drivers/pci/pci.c   |   47 +++++++++++++++++++++++++++++++++++++++--------
+ include/linux/pci.h |    3 ++-
+ 2 files changed, 41 insertions(+), 9 deletions(-)
 
-Hi All,
-
-According to recent testing results, the nouveau part is needed to address
-that issue on systems with analogous layouts.
-
-Thanks,
-Rafael
-
----
- drivers/gpu/drm/nouveau/nouveau_acpi.c       |   20 ++++++++++++++++++--
- drivers/gpu/drm/radeon/radeon_atpx_handler.c |   20 ++++++++++++++++++--
- drivers/pci/hotplug/acpiphp_glue.c           |   26 +++++++++++++++++++++++---
- include/acpi/acpi_bus.h                      |    3 ++-
- 4 files changed, 61 insertions(+), 8 deletions(-)
-
-Index: linux-pm/drivers/gpu/drm/radeon/radeon_atpx_handler.c
-===================================================================
---- linux-pm.orig/drivers/gpu/drm/radeon/radeon_atpx_handler.c
-+++ linux-pm/drivers/gpu/drm/radeon/radeon_atpx_handler.c
-@@ -33,6 +33,7 @@ static struct radeon_atpx_priv {
- 	bool atpx_detected;
- 	/* handle for device - and atpx */
- 	acpi_handle dhandle;
-+	acpi_handle other_handle;
- 	struct radeon_atpx atpx;
- } radeon_atpx_priv;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 05868e4..a898e4e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -861,18 +861,30 @@ EXPORT_SYMBOL(pci_choose_state);
+ #define PCI_EXP_SAVE_REGS	7
  
-@@ -451,9 +452,10 @@ static bool radeon_atpx_pci_probe_handle
- 		return false;
  
- 	status = acpi_get_handle(dhandle, "ATPX", &atpx_handle);
--	if (ACPI_FAILURE(status))
-+	if (ACPI_FAILURE(status)) {
-+		radeon_atpx_priv.other_handle = dhandle;
- 		return false;
--
-+	}
- 	radeon_atpx_priv.dhandle = dhandle;
- 	radeon_atpx_priv.atpx.handle = atpx_handle;
- 	return true;
-@@ -526,10 +528,24 @@ static bool radeon_atpx_detect(void)
+-static struct pci_cap_saved_state *pci_find_saved_cap(
+-	struct pci_dev *pci_dev, char cap)
++static struct pci_cap_saved_state *_pci_find_saved_cap(struct pci_dev *pci_dev,
++						       u16 cap, bool extended)
+ {
+ 	struct pci_cap_saved_state *tmp;
+ 
+ 	hlist_for_each_entry(tmp, &pci_dev->saved_cap_space, next) {
+-		if (tmp->cap.cap_nr == cap)
++		if (tmp->cap.cap_extended == extended && tmp->cap.cap_nr == cap)
+ 			return tmp;
  	}
- 
- 	if (has_atpx && vga_count == 2) {
-+		struct acpi_device *adev = NULL;
-+
- 		acpi_get_name(radeon_atpx_priv.atpx.handle, ACPI_FULL_PATHNAME, &buffer);
- 		printk(KERN_INFO "VGA switcheroo: detected switching method %s handle\n",
- 		       acpi_method_name);
- 		radeon_atpx_priv.atpx_detected = true;
-+		/*
-+		 * On some systems hotplug events are generated for the device
-+		 * being switched off when ATPX is executed.  They cause ACPI
-+		 * hotplug to trigger and attempt to remove the device from
-+		 * the system, which causes it to break down.  Prevent that from
-+		 * happening by setting the no_hotplug flag for the ACPI device
-+		 * object in question.
-+		 */
-+		acpi_bus_get_device(radeon_atpx_priv.other_handle, &adev);
-+		if (adev)
-+			adev->flags.no_hotplug = true;
-+
- 		return true;
- 	}
- 	return false;
-Index: linux-pm/drivers/gpu/drm/nouveau/nouveau_acpi.c
-===================================================================
---- linux-pm.orig/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ linux-pm/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -51,6 +51,7 @@ static struct nouveau_dsm_priv {
- 	bool dsm_detected;
- 	bool optimus_detected;
- 	acpi_handle dhandle;
-+	acpi_handle other_handle;
- 	acpi_handle rom_handle;
- } nouveau_dsm_priv;
- 
-@@ -260,9 +261,10 @@ static int nouveau_dsm_pci_probe(struct
- 	if (!dhandle)
- 		return false;
- 
--	if (!acpi_has_method(dhandle, "_DSM"))
-+	if (!acpi_has_method(dhandle, "_DSM")) {
-+		nouveau_dsm_priv.other_handle = dhandle;
- 		return false;
--
-+	}
- 	if (nouveau_test_dsm(dhandle, nouveau_dsm, NOUVEAU_DSM_POWER))
- 		retval |= NOUVEAU_DSM_HAS_MUX;
- 
-@@ -333,11 +335,25 @@ static bool nouveau_dsm_detect(void)
- 		nouveau_dsm_priv.optimus_detected = true;
- 		ret = true;
- 	} else if (vga_count == 2 && has_dsm && guid_valid) {
-+		struct acpi_device *adev = NULL;
-+
- 		acpi_get_name(nouveau_dsm_priv.dhandle, ACPI_FULL_PATHNAME,
- 			&buffer);
- 		printk(KERN_INFO "VGA switcheroo: detected DSM switching method %s handle\n",
- 			acpi_method_name);
- 		nouveau_dsm_priv.dsm_detected = true;
-+		/*
-+		 * On some systems hotplug events are generated for the device
-+		 * being switched off when _DSM is executed.  They cause ACPI
-+		 * hotplug to trigger and attempt to remove the device from
-+		 * the system, which causes it to break down.  Prevent that from
-+		 * happening by setting the no_hotplug flag for the ACPI device
-+		 * object in question.
-+		 */
-+		acpi_bus_get_device(nouveau_dsm_priv.other_handle, &adev);
-+		if (adev)
-+			adev->flags.no_hotplug = true;
-+
- 		ret = true;
- 	}
- 
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -169,7 +169,8 @@ struct acpi_device_flags {
- 	u32 ejectable:1;
- 	u32 power_manageable:1;
- 	u32 match_driver:1;
--	u32 reserved:27;
-+	u32 no_hotplug:1;
-+	u32 reserved:26;
- };
- 
- /* File System */
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -643,6 +643,24 @@ static void disable_slot(struct acpiphp_
- 	slot->flags &= (~SLOT_ENABLED);
+ 	return NULL;
  }
  
-+static bool acpiphp_no_hotplug(acpi_handle handle)
++static struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev,
++						      char cap)
 +{
-+	struct acpi_device *adev = NULL;
-+
-+	acpi_bus_get_device(handle, &adev);
-+	return adev && adev->flags.no_hotplug;
++	return _pci_find_saved_cap(dev, cap, false);
 +}
 +
-+static bool slot_no_hotplug(struct acpiphp_slot *slot)
++static struct pci_cap_saved_state *pci_find_saved_ext_cap(struct pci_dev *dev,
++							  u16 cap)
 +{
-+	struct acpiphp_func *func;
-+
-+	list_for_each_entry(func, &slot->funcs, sibling)
-+		if (acpiphp_no_hotplug(func_to_handle(func)))
-+			return true;
-+
-+	return false;
++	return _pci_find_saved_cap(dev, cap, true);
 +}
++
+ static int pci_save_pcie_state(struct pci_dev *dev)
+ {
+ 	int i = 0;
+@@ -1113,7 +1125,7 @@ int pci_load_saved_state(struct pci_dev *dev, struct pci_saved_state *state)
+ 	while (cap->size) {
+ 		struct pci_cap_saved_state *tmp;
+ 
+-		tmp = pci_find_saved_cap(dev, cap->cap_nr);
++		tmp = _pci_find_saved_cap(dev, cap->cap_nr, cap->cap_extended);
+ 		if (!tmp || tmp->cap.size != cap->size)
+ 			return -EINVAL;
+ 
+@@ -2047,18 +2059,24 @@ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+ }
  
  /**
-  * get_slot_status - get ACPI slot status
-@@ -701,7 +719,8 @@ static void trim_stale_devices(struct pc
- 		unsigned long long sta;
+- * pci_add_cap_save_buffer - allocate buffer for saving given capability registers
++ * _pci_add_cap_save_buffer - allocate buffer for saving given
++ *                            capability registers
+  * @dev: the PCI device
+  * @cap: the capability to allocate the buffer for
++ * @extended: Standard or Extended capability ID
+  * @size: requested size of the buffer
+  */
+-static int pci_add_cap_save_buffer(
+-	struct pci_dev *dev, char cap, unsigned int size)
++static int _pci_add_cap_save_buffer(struct pci_dev *dev, u16 cap,
++				    bool extended, unsigned int size)
+ {
+ 	int pos;
+ 	struct pci_cap_saved_state *save_state;
  
- 		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
--		alive = ACPI_SUCCESS(status) && sta == ACPI_STA_ALL;
-+		alive = (ACPI_SUCCESS(status) && sta == ACPI_STA_ALL)
-+			|| acpiphp_no_hotplug(handle);
- 	}
- 	if (!alive) {
- 		u32 v;
-@@ -741,8 +760,9 @@ static void acpiphp_check_bridge(struct
- 		struct pci_dev *dev, *tmp;
+-	pos = pci_find_capability(dev, cap);
++	if (extended)
++		pos = pci_find_ext_capability(dev, cap);
++	else
++		pos = pci_find_capability(dev, cap);
++
+ 	if (pos <= 0)
+ 		return 0;
  
- 		mutex_lock(&slot->crit_sect);
--		/* wake up all functions */
--		if (get_slot_status(slot) == ACPI_STA_ALL) {
-+		if (slot_no_hotplug(slot)) {
-+			; /* do nothing */
-+		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
- 			/* remove stale devices if any */
- 			list_for_each_entry_safe(dev, tmp, &bus->devices,
- 						 bus_list)
+@@ -2067,12 +2085,25 @@ static int pci_add_cap_save_buffer(
+ 		return -ENOMEM;
+ 
+ 	save_state->cap.cap_nr = cap;
++	save_state->cap.cap_extended = extended;
+ 	save_state->cap.size = size;
+ 	pci_add_saved_cap(dev, save_state);
+ 
+ 	return 0;
+ }
+ 
++static int pci_add_cap_save_buffer(struct pci_dev *dev,
++				   char cap, unsigned int size)
++{
++	return _pci_add_cap_save_buffer(dev, cap, false, size);
++}
++
++static int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
++				       u16 cap, unsigned int size)
++{
++	return _pci_add_cap_save_buffer(dev, cap, true, size);
++}
++
+ /**
+  * pci_allocate_cap_save_buffers - allocate buffers for saving capabilities
+  * @dev: the PCI device
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1084a15..adcc948 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -224,7 +224,8 @@ enum pci_bus_speed {
+ };
+ 
+ struct pci_cap_saved_data {
+-	char cap_nr;
++	u16 cap_nr;
++	bool cap_extended;
+ 	unsigned int size;
+ 	u32 data[0];
+ };
 
