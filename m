@@ -1,46 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:60691 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab3LFG3S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 01:29:18 -0500
-MIME-Version: 1.0
-In-Reply-To: <1992931.Zv6xBcN8V4@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
-	<33026900.FbCAopDPFz@vostro.rjw.lan>
-	<CAErSpo6edmz5nkSYogbYk1FFYsCCwNV_-rir2jGP2JBnvOx+iw@mail.gmail.com>
-	<1992931.Zv6xBcN8V4@vostro.rjw.lan>
-Date: Thu, 5 Dec 2013 22:29:17 -0800
-Message-ID: <CAE9FiQWnvZwfJ+qoazMQP11bh_VuFDctGf0zcBhEfADRWH_ocg@mail.gmail.com>
-Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Scott Wood <scottwood@freescale.com>
+CC: "Bharat.Bhushan@freescale.com" <Bharat.Bhushan@freescale.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	"agraf@suse.de" <agraf@suse.de>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+Date: Tue, 10 Dec 2013 05:37:11 +0000
+Message-ID: <326a93628a9141a9abce97b7bb4e04fd@BN1PR03MB266.namprd03.prod.outlook.com>
+References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
+	 <1384973243.2879.361.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385066603.2879.414.camel@ul30vt.home>
+	 <1385066835.1403.489.camel@snotra.buserror.net>
+	 <1385067648.2879.421.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1385397493.2879.557.camel@ul30vt.home>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D0723624C@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1386289316.7375.107.camel@snotra.buserror.net>
+	 <6A3DF150A5B70D4F9B66A25E3F7C888D07251EE4@039-SN2MPN1-012.039d.mgd.msft.net>
+	 <1386356393.7375.118.camel@snotra.buserror.net>
+ <1386358226.25738.506.camel@ul30vt.home>
+In-Reply-To: <1386358226.25738.506.camel@ul30vt.home>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 5, 2013 at 5:21 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>
->> The use-after-free problems *sound* like a reference counting issue.
->> Yinghai's patch [1] should fix some of this; how much is left after
->> that?
->>
->> [1] http://lkml.kernel.org/r/1385851238-21085-4-git-send-email-yinghai@kernel.org
->
-> Hmm, no.  Do you mean https://patchwork.kernel.org/patch/3261171/ ?
-
-should be
-
-https://patchwork.kernel.org/patch/3261001/
-[v3,03/12] PCI: Move resources and bus_list releasing to pci_release_dev
-
-move down list_del(&pci_dev->bus_list).
-
-Yinghai
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxleCBXaWxsaWFtc29u
+IFttYWlsdG86YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb21dDQo+IFNlbnQ6IFNhdHVyZGF5LCBE
+ZWNlbWJlciAwNywgMjAxMyAxOjAwIEFNDQo+IFRvOiBXb29kIFNjb3R0LUIwNzQyMQ0KPiBDYzog
+Qmh1c2hhbiBCaGFyYXQtUjY1Nzc3OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBhZ3JhZkBz
+dXNlLmRlOyBZb2Rlcg0KPiBTdHVhcnQtQjA4MjQ4OyBpb21tdUBsaXN0cy5saW51eC1mb3VuZGF0
+aW9uLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXhwcGMtDQo+IGRldkBsaXN0cy5vemxh
+YnMub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFU
+Q0ggMC85IHYyXSB2ZmlvLXBjaTogYWRkIHN1cHBvcnQgZm9yIEZyZWVzY2FsZSBJT01NVSAoUEFN
+VSkNCj4gDQo+IE9uIEZyaSwgMjAxMy0xMi0wNiBhdCAxMjo1OSAtMDYwMCwgU2NvdHQgV29vZCB3
+cm90ZToNCj4gPiBPbiBUaHUsIDIwMTMtMTItMDUgYXQgMjI6MTEgLTA2MDAsIEJoYXJhdCBCaHVz
+aGFuIHdyb3RlOg0KPiA+ID4NCj4gPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4g
+PiA+ID4gRnJvbTogV29vZCBTY290dC1CMDc0MjENCj4gPiA+ID4gU2VudDogRnJpZGF5LCBEZWNl
+bWJlciAwNiwgMjAxMyA1OjUyIEFNDQo+ID4gPiA+IFRvOiBCaHVzaGFuIEJoYXJhdC1SNjU3NzcN
+Cj4gPiA+ID4gQ2M6IEFsZXggV2lsbGlhbXNvbjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsg
+YWdyYWZAc3VzZS5kZTsNCj4gPiA+ID4gWW9kZXIgU3R1YXJ0LSBCMDgyNDg7IGlvbW11QGxpc3Rz
+LmxpbnV4LWZvdW5kYXRpb24ub3JnOw0KPiA+ID4gPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51
+eHBwYy0gZGV2QGxpc3RzLm96bGFicy5vcmc7DQo+ID4gPiA+IGxpbnV4LWtlcm5lbEB2Z2VyLmtl
+cm5lbC5vcmcNCj4gPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCAwLzkgdjJdIHZmaW8tcGNpOiBh
+ZGQgc3VwcG9ydCBmb3IgRnJlZXNjYWxlDQo+ID4gPiA+IElPTU1VIChQQU1VKQ0KPiA+ID4gPg0K
+PiA+ID4gPiBPbiBUaHUsIDIwMTMtMTEtMjggYXQgMDM6MTkgLTA2MDAsIEJoYXJhdCBCaHVzaGFu
+IHdyb3RlOg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0t
+LQ0KPiA+ID4gPiA+ID4gRnJvbTogQmh1c2hhbiBCaGFyYXQtUjY1Nzc3DQo+ID4gPiA+ID4gPiBT
+ZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDI3LCAyMDEzIDk6MzkgUE0NCj4gPiA+ID4gPiA+IFRv
+OiAnQWxleCBXaWxsaWFtc29uJw0KPiA+ID4gPiA+ID4gQ2M6IFdvb2QgU2NvdHQtQjA3NDIxOyBs
+aW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4gPiA+ID4gYWdyYWZAc3VzZS5kZTsgWW9k
+ZXIgU3R1YXJ0LSBCMDgyNDg7DQo+ID4gPiA+ID4gPiBpb21tdUBsaXN0cy5saW51eC1mb3VuZGF0
+aW9uLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4gPiA+ID4gPiA+IGxpbnV4cHBjLSBkZXZA
+bGlzdHMub3psYWJzLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gPiA+
+ID4gU3ViamVjdDogUkU6IFtQQVRDSCAwLzkgdjJdIHZmaW8tcGNpOiBhZGQgc3VwcG9ydCBmb3IN
+Cj4gPiA+ID4gPiA+IEZyZWVzY2FsZSBJT01NVSAoUEFNVSkNCj4gPiA+ID4gPiA+DQo+ID4gPiA+
+ID4gPiBJZiB3ZSBqdXN0IHByb3ZpZGUgdGhlIHNpemUgb2YgTVNJIGJhbmsgdG8gdXNlcnNwYWNl
+IHRoZW4NCj4gPiA+ID4gPiA+IHVzZXJzcGFjZSBjYW5ub3QgZG8gYW55dGhpbmcgd3JvbmcuDQo+
+ID4gPiA+ID4NCj4gPiA+ID4gPiBTbyB1c2Vyc3BhY2UgZG9lcyBub3Qga25vdyBhZGRyZXNzLCBz
+byBpdCBjYW5ub3QgbW1hcCBhbmQgY2F1c2UNCj4gPiA+ID4gPiBhbnkNCj4gPiA+ID4gaW50ZXJm
+ZXJlbmNlIGJ5IGRpcmVjdGx5IHJlYWRpbmcvd3JpdGluZy4NCj4gPiA+ID4NCj4gPiA+ID4gVGhh
+dCdzIHNlY3VyaXR5IHRocm91Z2ggb2JzY3VyaXR5Li4uICBDb3VsZG4ndCB0aGUgbWFsaWNpb3Vz
+IHVzZXINCj4gPiA+ID4gZmluZCBvdXQgdGhlIGFkZHJlc3MgdmlhIG90aGVyIG1lYW5zLCBzdWNo
+IGFzIGV4cGVyaW1lbnRhdGlvbiBvbg0KPiA+ID4gPiBhbm90aGVyIHN5c3RlbSBvdmVyIHdoaWNo
+IHRoZXkgaGF2ZSBmdWxsIGNvbnRyb2w/ICBXaGF0IHdvdWxkDQo+ID4gPiA+IGhhcHBlbiBpZiB0
+aGUgdXNlciByZWFkcyBmcm9tIHRoZWlyIGRldmljZSdzIFBDSSBjb25maWcgc3BhY2U/ICBPcg0K
+PiA+ID4gPiBnZXRzIHRoZSBpbmZvcm1hdGlvbiB2aWEgc29tZSBiYWNrIGRvb3IgaW4gdGhlIFBD
+SSBkZXZpY2UgdGhleQ0KPiA+ID4gPiBvd24/ICBPciBwb2tlcyB0aHJvdWdob3V0IHRoZSBhZGRy
+ZXNzIHNwYWNlIGxvb2tpbmcgZm9yIHNvbWV0aGluZyB0aGF0DQo+IGdlbmVyYXRlcyBhbiBpbnRl
+cnJ1cHQgdG8gaXRzIG93biBkZXZpY2U/DQo+ID4gPg0KPiA+ID4gU28gaG93IHRvIHNvbHZlIHRo
+aXMgcHJvYmxlbSwgQW55IHN1Z2dlc3Rpb24gPw0KPiA+ID4NCj4gPiA+IFdlIGhhdmUgdG8gbWFw
+IG9uZSB3aW5kb3cgaW4gUEFNVSBmb3IgTVNJcyBhbmQgYSBtYWxpY2lvdXMgdXNlciBjYW4NCj4g
+PiA+IGFzayBpdHMgZGV2aWNlIHRvIGRvIERNQSB0byBNU0kgd2luZG93IHJlZ2lvbiB3aXRoIGFu
+eSBwYWlyIG9mDQo+ID4gPiBhZGRyZXNzIGFuZCBkYXRhLCB3aGljaCBjYW4gbGVhZCB0byB1bmV4
+cGVjdGVkIE1TSXMgaW4gc3lzdGVtPw0KPiA+DQo+ID4gSSBkb24ndCB0aGluayB0aGVyZSBhcmUg
+YW55IHNvbHV0aW9ucyBvdGhlciB0aGFuIHRvIGxpbWl0IGVhY2ggYmFuayB0bw0KPiA+IG9uZSB1
+c2VyLCB1bmxlc3MgdGhlIGFkbWluIHR1cm5zIHNvbWUga25vYiB0aGF0IHNheXMgdGhleSdyZSBP
+SyB3aXRoDQo+ID4gdGhlIHBhcnRpYWwgbG9zcyBvZiBpc29sYXRpb24uDQo+IA0KPiBFdmVuIGlm
+IHRoZSBhZG1pbiBkb2VzIG9wdC1pbiB0byBhbiBhbGxvd191bnNhZmVfaW50ZXJydXB0cyBvcHRp
+b25zLCBpdCBzaG91bGQNCj4gc3RpbGwgYmUgcmVhc29uYWJseSBkaWZmaWN1bHQgZm9yIG9uZSBn
+dWVzdCB0byBpbnRlcmZlcmUgd2l0aCB0aGUgb3RoZXIuICBJDQo+IGRvbid0IHRoaW5rIHdlIHdh
+bnQgdG8gcmVseSBvbiB0aGUgYmxpbmQgbHVjayBvZiBtYWtpbmcgdGhlIGZ1bGwgTVNJIGJhbmsN
+Cj4gYWNjZXNzaWJsZSB0byBtdWx0aXBsZSBndWVzdHMgYW5kIGhvcGluZyB0aGV5IGRvbid0IHN0
+ZXAgb24gZWFjaCBvdGhlci4NCg0KTm90IHN1cmUgaG93IHRvIHNvbHZlIGluIHRoaXMgY2FzZSAo
+c2hhcmluZyBNU0kgcGFnZSkNCg0KPiAgVGhhdCBwcm9iYWJseSBtZWFucyB0aGF0IHZmaW8gbmVl
+ZHMgdG8gbWFuYWdlIHRoZSBzcGFjZSByYXRoZXIgdGhhbiB0aGUgZ3Vlc3QuDQoNCldoYXQgeW91
+IG1lYW4gYnkgIiB2ZmlvIG5lZWRzIHRvIG1hbmFnZSB0aGUgc3BhY2UgcmF0aGVyIHRoYW4gdGhl
+IGd1ZXN0Ij8NCg0KVGhhbmtzDQotQmhhcmF0DQoNCj4gVGhhbmtzLA0KPiANCj4gQWxleA0KPiAN
+Cg0K
