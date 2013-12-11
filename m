@@ -1,73 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:49121 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754814Ab3LSSWm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 13:22:42 -0500
-Received: by mail-ig0-f176.google.com with SMTP id k19so12724597igc.3
-        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 10:22:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1387456702-4709-4-git-send-email-jiang.liu@linux.intel.com>
-References: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com> <1387456702-4709-4-git-send-email-jiang.liu@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 19 Dec 2013 11:22:22 -0700
-Message-ID: <CAErSpo4oKsJCKxUhxT8E745BkX+veOD-tMEeHULHOuH-3suMRA@mail.gmail.com>
-Subject: Re: [Patch v2 03/13] PCI, pci-label: release allocated ACPI object on
- error recovery path
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-out.m-online.net ([212.18.0.9]:47044 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864Ab3LKKa6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 05:30:58 -0500
+From: Marek Vasut <marex@denx.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/7] PCI: imx6: Fix waiting for link up
+Date: Wed, 11 Dec 2013 11:30:13 +0100
+Message-Id: <1386757818-5154-2-git-send-email-marex@denx.de>
+In-Reply-To: <1386757818-5154-1-git-send-email-marex@denx.de>
+References: <1386757818-5154-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 19, 2013 at 5:38 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> Function dsm_get_label() leaks the returned ACPI object if
-> obj->package.count is not 2, so fix the possible memory leak.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+While waiting for the PHY to report the PCIe link is up, we might
+hit a situation where the link training is still in progress, while
+the PHY already reports the link is up. Add additional check for
+this condition.
 
-Rafael, if you want to take these through your tree, feel free.  I'm
-guessing it probably makes sense to keep the whole series together.
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Harro Haan <hrhaan@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host/pci-imx6.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-> ---
->  drivers/pci/pci-label.c |   12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-> index d51f45a..f6e01a5 100644
-> --- a/drivers/pci/pci-label.c
-> +++ b/drivers/pci/pci-label.c
-> @@ -233,11 +233,7 @@ dsm_get_label(acpi_handle handle, int func,
->                 return -1;
->
->         obj = (union acpi_object *)output->pointer;
-> -
-> -       switch (obj->type) {
-> -       case ACPI_TYPE_PACKAGE:
-> -               if (obj->package.count != 2)
-> -                       break;
-> +       if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
->                 len = obj->package.elements[0].integer.value;
->                 if (buf) {
->                         if (attribute == ACPI_ATTR_INDEX_SHOW)
-> @@ -250,10 +246,10 @@ dsm_get_label(acpi_handle handle, int func,
->                 }
->                 kfree(output->pointer);
->                 return len;
-> -       break;
-> -       default:
-> -               kfree(output->pointer);
->         }
-> +
-> +       kfree(output->pointer);
-> +
->         return -1;
->  }
->
-> --
-> 1.7.10.4
->
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 52027ad..4d5be4e 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -48,6 +48,8 @@ struct imx6_pcie {
+ #define PL_OFFSET 0x700
+ #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+ #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
++#define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
++#define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
+ 
+ #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
+ #define PCIE_PHY_CTRL_DATA_LOC 0
+@@ -338,10 +340,17 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ {
+ 	u32 rc, ltssm, rx_valid, temp;
+ 
+-	/* link is debug bit 36, debug register 1 starts at bit 32 */
+-	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << (36 - 32));
+-	if (rc)
+-		return -EAGAIN;
++	/*
++	 * Test if the PHY reports that the link is up and also that
++	 * the link training finished. It might happen that the PHY
++	 * reports the link is already up, but the link training bit
++	 * is still set, so make sure to check the training is done
++	 * as well here.
++	 */
++	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
++	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
++	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
++		return 1;
+ 
+ 	/*
+ 	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+-- 
+1.8.4.3
+
