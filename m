@@ -1,70 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <52B0AEA3.6000608@gmail.com>
-Date: Tue, 17 Dec 2013 12:05:55 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:33622 "EHLO
+	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751109Ab3LKJj4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:39:56 -0500
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Arnd Bergmann <arnd@arndb.de>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
+	<spear-devel@list.st.com>
+Subject: [PATCH 08/12] pcie: designware: Fix IO transfers
+Date: Wed, 11 Dec 2013 15:08:33 +0530
+Message-ID: <6b4282b9e793ec89ba0c20f3362d41f6133a8132.1386752447.git.mohit.kumar@st.com>
+In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v3 3/8] pciehp: Enable link state change notifications
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enabled the Link state notifications unconditionaly. Enable the
-presence detection notification only if attention button is absent.
-This was discussed at this thread:
-http://marc.info/?t=138611014300001&r=1&w=2
+From: Pratyush Anand <pratyush.anand@st.com>
 
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
+pp->io_base which is the input of the outbound IO address translation
+unit should be the cpu address, it was programmed wrongly to realio
+address.
+
+We should pass global_io_offset rather than sys->io_offset to
+pci_ioremap_io, so we map the new window into the first available spot
+in the Linux view of the I/O space.
+
+We must also pass cpu address instead  of realio address to
+pci_ioremap_io.
+
+This patch fixes above issue. It has been tested with Lecroy PTC in AIC
+mode and Pericom PI7C9X2G303EL PCIe switch, which does not work
+otherwise.
+
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Tested-by: Mohit Kumar <mohit.kumar@st.com>
+Tested-by: Tim Harvey <tharvey@gateworks.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Marek Vasut <marex@denx.de>
+Cc: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+Cc: linux-pci@vger.kernel.org
+Cc: spear-devel@list.st.com
 ---
-v3: * created by splitting the patch v2 [2/4]
-    * Disable presence detect notification, when ATTN BTN is present
-v2: (non existent)
-v1: (non existent)
+ drivers/pci/host/pcie-designware.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
- drivers/pci/hotplug/pciehp_hpc.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 1e9f814..b45b568 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -723,9 +723,17 @@ int pcie_enable_notification(struct controller *ctrl)
- 	 * when it is cleared in the interrupt service routine, and
- 	 * next power fault detected interrupt was notified again.
- 	 */
--	cmd = PCI_EXP_SLTCTL_PDCE;
-+
-+	/*
-+	 * Always enable link events: thus link-up and link-down shall
-+	 * always be treated as hotplug and unplug respectively. Enable
-+	 * presence detect only if Attention Button is not present.
-+	 */
-+	cmd = PCI_EXP_SLTCTL_DLLSCE;
- 	if (ATTN_BUTTN(ctrl))
- 		cmd |= PCI_EXP_SLTCTL_ABPE;
-+	else
-+		cmd |= PCI_EXP_SLTCTL_PDCE;
- 	if (MRL_SENS(ctrl))
- 		cmd |= PCI_EXP_SLTCTL_MRLSCE;
- 	if (!pciehp_poll_mode)
-@@ -733,7 +741,8 @@ int pcie_enable_notification(struct controller *ctrl)
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index be6ce30..071ebc0 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+ 					   + global_io_offset);
+ 			pp->config.io_size = resource_size(&pp->io);
+ 			pp->config.io_bus_addr = range.pci_addr;
++			pp->io_base = range.cpu_addr;
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+@@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
  
- 	mask = (PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_ABPE |
- 		PCI_EXP_SLTCTL_MRLSCE | PCI_EXP_SLTCTL_PFDE |
--		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE);
-+		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
-+		PCI_EXP_SLTCTL_DLLSCE);
+ 	pp->cfg0_base = pp->cfg.start;
+ 	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
+-	pp->io_base = pp->io.start;
+ 	pp->mem_base = pp->mem.start;
  
- 	if (pcie_write_cmd(ctrl, cmd, mask)) {
- 		ctrl_err(ctrl, "Cannot enable software notification\n");
+ 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+@@ -573,7 +573,6 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	return ret;
+ }
+ 
+-
+ static int dw_pcie_valid_config(struct pcie_port *pp,
+ 				struct pci_bus *bus, int dev)
+ {
+@@ -667,7 +666,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+ 
+ 	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
+ 		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
+-		pci_ioremap_io(sys->io_offset, pp->io.start);
++		pci_ioremap_io(global_io_offset, pp->io_base);
+ 		global_io_offset += SZ_64K;
+ 		pci_add_resource_offset(&sys->resources, &pp->io,
+ 					sys->io_offset);
 -- 
-1.7.9.5
+1.7.0.1
 
