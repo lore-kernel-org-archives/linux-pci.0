@@ -1,112 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:39614 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402Ab3LFDTs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 22:19:48 -0500
-Message-ID: <52A1424F.5060007@gmail.com>
-Date: Thu, 05 Dec 2013 19:19:43 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:63041 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800Ab3LKLic (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 06:38:32 -0500
+Received: by mail-oa0-f46.google.com with SMTP id o6so7061991oag.19
+        for <linux-pci@vger.kernel.org>; Wed, 11 Dec 2013 03:38:32 -0800 (PST)
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
- and removal
-References: <529E5C0E.80903@gmail.com> <52A04235.9010801@huawei.com>
-In-Reply-To: <52A04235.9010801@huawei.com>
+In-Reply-To: <7bce26f60d847a136f748b5eeac15dc79a7d662e.1386752447.git.mohit.kumar@st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+	<7bce26f60d847a136f748b5eeac15dc79a7d662e.1386752447.git.mohit.kumar@st.com>
+Date: Wed, 11 Dec 2013 17:08:32 +0530
+Message-ID: <CAD6G_RTrETj9p+YNPjRMEFsO7Ggf3LfnuaPOSwO2brUcusNUJw@mail.gmail.com>
+Subject: Re: [PATCH 06/12] pcie: designware: Move register definition to the
+ header file
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: Mohit Kumar <mohit.kumar@st.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	spear-devel <spear-devel@list.st.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/05/2013 01:07 AM, Yijing Wang wrote:
-> 
-> handle_link_up_event() and handle_link_down_event() are almost the same,
-> what about use like:
-> handle_link_state_change_event(p_slot, event) to reuse the the common code ?
-> 
+On Wed, Dec 11, 2013 at 3:08 PM, Mohit Kumar <mohit.kumar@st.com> wrote:
+> From: Pratyush Anand <pratyush.anand@st.com>
 >
+> Move synopsis specific register definition from source file to header
+> file, so that they can be re-used by other files if needed.
+>
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: spear-devel@list.st.com
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/pci/host/pcie-designware.c |   42 ------------------------------------
+>  drivers/pci/host/pcie-designware.h |   42 ++++++++++++++++++++++++++++++++++++
+>  2 files changed, 42 insertions(+), 42 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 212b8b6..73aa13c 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -23,48 +23,6 @@
+>
+>  #include "pcie-designware.h"
+>
+> -/* Synopsis specific PCIE configuration registers */
+> -#define PCIE_PORT_LINK_CONTROL         0x710
+> -#define PORT_LINK_MODE_MASK            (0x3f << 16)
+> -#define PORT_LINK_MODE_1_LANES         (0x1 << 16)
+> -#define PORT_LINK_MODE_2_LANES         (0x3 << 16)
+> -#define PORT_LINK_MODE_4_LANES         (0x7 << 16)
+> -
+> -#define PCIE_LINK_WIDTH_SPEED_CONTROL  0x80C
+> -#define PORT_LOGIC_SPEED_CHANGE                (0x1 << 17)
+> -#define PORT_LOGIC_LINK_WIDTH_MASK     (0x1ff << 8)
+> -#define PORT_LOGIC_LINK_WIDTH_1_LANES  (0x1 << 8)
+> -#define PORT_LOGIC_LINK_WIDTH_2_LANES  (0x2 << 8)
+> -#define PORT_LOGIC_LINK_WIDTH_4_LANES  (0x4 << 8)
+> -
+> -#define PCIE_MSI_ADDR_LO               0x820
+> -#define PCIE_MSI_ADDR_HI               0x824
+> -#define PCIE_MSI_INTR0_ENABLE          0x828
+> -#define PCIE_MSI_INTR0_MASK            0x82C
+> -#define PCIE_MSI_INTR0_STATUS          0x830
+> -
+> -#define PCIE_ATU_VIEWPORT              0x900
+> -#define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
+> -#define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
+> -#define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
+> -#define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
+> -#define PCIE_ATU_CR1                   0x904
+> -#define PCIE_ATU_TYPE_MEM              (0x0 << 0)
+> -#define PCIE_ATU_TYPE_IO               (0x2 << 0)
+> -#define PCIE_ATU_TYPE_CFG0             (0x4 << 0)
+> -#define PCIE_ATU_TYPE_CFG1             (0x5 << 0)
+> -#define PCIE_ATU_CR2                   0x908
+> -#define PCIE_ATU_ENABLE                        (0x1 << 31)
+> -#define PCIE_ATU_BAR_MODE_ENABLE       (0x1 << 30)
+> -#define PCIE_ATU_LOWER_BASE            0x90C
+> -#define PCIE_ATU_UPPER_BASE            0x910
+> -#define PCIE_ATU_LIMIT                 0x914
+> -#define PCIE_ATU_LOWER_TARGET          0x918
+> -#define PCIE_ATU_BUS(x)                        (((x) & 0xff) << 24)
+> -#define PCIE_ATU_DEV(x)                        (((x) & 0x1f) << 19)
+> -#define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
+> -#define PCIE_ATU_UPPER_TARGET          0x91C
+> -
+>  static struct hw_pci dw_pci;
+>
+>  static unsigned long global_io_offset;
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index c15379b..da1ed35 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -74,4 +74,46 @@ int dw_pcie_link_up(struct pcie_port *pp);
+>  void dw_pcie_setup_rc(struct pcie_port *pp);
+>  int dw_pcie_host_init(struct pcie_port *pp);
+>
+> +/* Synopsis specific PCIE configuration registers */
+> +#define PCIE_PORT_LINK_CONTROL         0x710
+> +#define PORT_LINK_MODE_MASK            (0x3f << 16)
+> +#define PORT_LINK_MODE_1_LANES         (0x1 << 16)
+> +#define PORT_LINK_MODE_2_LANES         (0x3 << 16)
+> +#define PORT_LINK_MODE_4_LANES         (0x7 << 16)
+> +
+> +#define PCIE_LINK_WIDTH_SPEED_CONTROL  0x80C
+> +#define PORT_LOGIC_SPEED_CHANGE                (0x1 << 17)
+> +#define PORT_LOGIC_LINK_WIDTH_MASK     (0x1ff << 8)
+> +#define PORT_LOGIC_LINK_WIDTH_1_LANES  (0x1 << 8)
+> +#define PORT_LOGIC_LINK_WIDTH_2_LANES  (0x2 << 8)
+> +#define PORT_LOGIC_LINK_WIDTH_4_LANES  (0x4 << 8)
+> +
+> +#define PCIE_MSI_ADDR_LO               0x820
+> +#define PCIE_MSI_ADDR_HI               0x824
+> +#define PCIE_MSI_INTR0_ENABLE          0x828
+> +#define PCIE_MSI_INTR0_MASK            0x82C
+> +#define PCIE_MSI_INTR0_STATUS          0x830
+> +
+> +#define PCIE_ATU_VIEWPORT              0x900
+> +#define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
+> +#define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
+> +#define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
+> +#define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
+> +#define PCIE_ATU_CR1                   0x904
+> +#define PCIE_ATU_TYPE_MEM              (0x0 << 0)
+> +#define PCIE_ATU_TYPE_IO               (0x2 << 0)
+> +#define PCIE_ATU_TYPE_CFG0             (0x4 << 0)
+> +#define PCIE_ATU_TYPE_CFG1             (0x5 << 0)
+> +#define PCIE_ATU_CR2                   0x908
+> +#define PCIE_ATU_ENABLE                        (0x1 << 31)
+> +#define PCIE_ATU_BAR_MODE_ENABLE       (0x1 << 30)
+> +#define PCIE_ATU_LOWER_BASE            0x90C
+> +#define PCIE_ATU_UPPER_BASE            0x910
+> +#define PCIE_ATU_LIMIT                 0x914
+> +#define PCIE_ATU_LOWER_TARGET          0x918
+> +#define PCIE_ATU_BUS(x)                        (((x) & 0xff) << 24)
+> +#define PCIE_ATU_DEV(x)                        (((x) & 0x1f) << 19)
+> +#define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
+> +#define PCIE_ATU_UPPER_TARGET          0x91C
+> +
+>  #endif /* _PCIE_DESIGNWARE_H */
 
-Sure, I can combine both of them to make it look more like this. Let me know
-it this looks all right.
+Seems like none were using these headers except pcie-designware.c - if
+ie the case
+better to place it same place as before.
 
-static void handle_link_event(struct slot *p_slot, unsigned int req)
-{
-	struct controller *ctrl = p_slot->ctrl;
-	struct power_work_info *info;
-
-	info = kmalloc(sizeof(*info), GFP_KERNEL);
-	if (!info) {
-		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
-			 __func__);
-		return;
-	}
-	info->p_slot = p_slot;
-	info->req = req;
-	INIT_WORK(&info->work, pciehp_power_thread);
-
-	switch (p_slot->state) {
-	case BLINKINGON_STATE:
-	case BLINKINGOFF_STATE:
-		cancel_delayed_work(&p_slot->work);
-		/* Fall through */
-	case STATIC_STATE:
-		if (req == ENABLE_REQ)
-			p_slot->state = POWERON_STATE;
-		else
-			p_slot->state = POWEROFF_STATE;
-
-		queue_work(p_slot->wq, &info->work);
-		break;
-	case POWERON_STATE:
-		if (req == ENABLE_REQ) {
-			ctrl_info(ctrl,
-				  "Link Up ignored on slot(%s): already powering on\n",
-				  slot_name(p_slot));
-			kfree(info);
-		} else {
-			ctrl_info(ctrl,
-				  "Link Down queued on slot(%s): currently getting powered on\n",
-				  slot_name(p_slot));
-			p_slot->state = POWEROFF_STATE;
-			queue_work(p_slot->wq, &info->work);
-		}
-		break;
-	case POWEROFF_STATE:
-		if (req == ENABLE_REQ) {
-			ctrl_info(ctrl,
-				  "Link Up queued on slot(%s): currently getting powered off\n",
-				  slot_name(p_slot));
-			p_slot->state = POWERON_STATE;
-			queue_work(p_slot->wq, &info->work);
-		} else {
-			ctrl_info(ctrl,
-				  "Link Down ignored on slot(%s): already powering off\n",
-				  slot_name(p_slot));
-			kfree(info);
-		}
-		break;
-	default:
-		ctrl_err(ctrl, "Not a valid state on slot(%s)\n",
-			 slot_name(p_slot));
-		kfree(info);
-		break;
-	}
-}
-
-Bjorn: was wondering if you'd able to take a look at this patchset in
-this or next week some time. I'm eagerly waiting to address any comments.
-
-Also, can you please let me know what is the protocol here? Should
-I resubmit just the "v3" of this patch? Or bump up the version of all
-the patches in the patchset to "v3" and resubmit them all?
-
-Thanks & Best Regards,
-
-Rajat
+-- 
+Thanks,
+Jagan.
+--------
+Jagannadha Sutradharudu Teki,
+E: jagannadh.teki@gmail.com, P: +91-9676773388
+Engineer - System Software Hacker
+U-boot - SPI Custodian and Zynq APSOC
+Ln: http://www.linkedin.com/in/jaganteki
