@@ -1,80 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V2 00/20] Bugfixes and improvements for Intel IOMMU drivers
-Date: Fri,  6 Dec 2013 11:21:03 +0800
-Message-Id: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from co1ehsobe004.messaging.microsoft.com ([216.32.180.187]:16108
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751133Ab3LKJPk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:15:40 -0500
+From: Jagannadha Sutradharudu Teki
+	<jagannadha.sutradharudu-teki@xilinx.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rob Landley <rob@landley.net>, <linux-pci@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+Subject: [PATCH 1/2] Documentation: pci: Minor cleanup
+Date: Wed, 11 Dec 2013 14:45:18 +0530
+MIME-Version: 1.0
+Content-Type: text/plain
+Message-ID: <4148f6b8-824a-4edc-9b71-fab1e210b7d2@CO1EHSMHS019.ehs.local>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset includes several bugfixes and code improvements for
-Intel DMA remapping and interrupt remapping drivers. It's also a
-preparation for Intel IOMMU device hotplug.
+- Used small letters for file names
+- Renamed few pcie txt files
+- Re-arranged file names in 00-INDEX
+- Removed PCI-DMA-mapping.txt from 00-INDEX
 
-It applies to the latest mainstream kernel on top of
-	commit 7e3528c3660a2e8602abc7858b0994d611f74bc3
+Signed-off-by: Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+---
+ Documentation/PCI/00-INDEX                         | 22 +++++++++++-----------
+ .../PCI/{pcieaer-howto.txt => pcie-aer-howto.txt}  |  0
+ .../PCI/{pci-iov-howto.txt => pcie-iov-howto.txt}  |  0
+ .../{PCIEBUS-HOWTO.txt => pcie-portbus-howto.txt}  |  0
+ 4 files changed, 11 insertions(+), 11 deletions(-)
+ rename Documentation/PCI/{pcieaer-howto.txt => pcie-aer-howto.txt} (100%)
+ rename Documentation/PCI/{pci-iov-howto.txt => pcie-iov-howto.txt} (100%)
+ rename Documentation/PCI/{PCIEBUS-HOWTO.txt => pcie-portbus-howto.txt} (100%)
 
-It has been tested on Intel SandyBridge and Romley-4S platforms.
-
-Thanks!
-
-V2->V3:
-1) Add three more patches 18, 19, 20
-2) Fix minor bugs in previous version
-
-V1->V2:
-1) drop one wrong bugfix of " fix remapping interrupt handle leakage in
- error recovery path"
-2) Kill redundant call of bitmap_allocate_region().
-3) Add two new bugfixes.
-
-Jiang Liu (20):
-  iommu/vt-d: use dedicated bitmap to track remapping entry allocation
-    status
-  iommu/vt-d: fix PCI device reference leakage on error recovery path
-  iommu/vt-d: fix a race window in allocating domain ID for virtual
-    machines
-  iommu/vt-d: fix resource leakage on error recovery path in
-    iommu_init_domains()
-  iommu/vt-d, trivial: refine support of 64bit guest address
-  iommu/vt-d, trivial: print correct domain id of static identity
-    domain
-  iommu/vt-d, trivial: check suitable flag in function
-    detect_intel_iommu()
-  iommu/vt-d, trivial: clean up unused code
-  iommu/vt-d: mark internal functions as static
-  iommu/vt-d, trivial: use defined macro instead of hardcoding
-  iommu/vt-d, trivial: simplify code with existing macros
-  iommu/vt-d: fix invalid memory access when freeing DMAR irq
-  iommu/vt-d: keep shared resources when failed to initialize iommu
-    devices
-  iommu/vt-d: avoid double free in error recovery path
-  iommu/vt-d: fix access after free issue in function free_dmar_iommu()
-  iommu/vt-d: release invalidation queue when destroying IOMMU unit
-  iommu/vt-d: fix wrong return value of dmar_table_init()
-  iommu/vt-d, PCI, trivial: use dev_is_pci() instead of hardcoding
-  iommu/vt-d, trivial: clean sparse warnings
-  iommu/vt-d: free all resources if failed to initialize DMARs
-
- drivers/iommu/dmar.c                |  126 ++++++++++++--------
- drivers/iommu/intel-iommu.c         |  220 +++++++++++++----------------------
- drivers/iommu/intel_irq_remapping.c |   92 +++++++--------
- drivers/iommu/irq_remapping.c       |    6 +-
- include/linux/dma_remapping.h       |    4 -
- include/linux/dmar.h                |   17 +--
- include/linux/intel-iommu.h         |    3 +-
- 7 files changed, 213 insertions(+), 255 deletions(-)
-
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index 812b17f..b8b7721 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -1,14 +1,14 @@
+ 00-INDEX
+ 	- this file
+-MSI-HOWTO.txt
+-	- the Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ.
+-PCI-DMA-mapping.txt
+-	- info for PCI drivers using DMA portably across all platforms
+-PCIEBUS-HOWTO.txt
+-	- a guide describing the PCI Express Port Bus driver
+-pci-error-recovery.txt
+-	- info on PCI error recovery
+ pci.txt
+-	- info on the PCI subsystem for device driver authors
+-pcieaer-howto.txt
+-	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
++	- Info on the PCI subsystem for device driver authors
++pci-error-recovery.txt
++	- Info on PCI error recovery
++MSI-HOWTO.txt
++	- The Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ
++pcie-portbus-howto.txt
++	- A guide describing the PCI Express Port Bus driver
++pcie-aer-howto.txt
++	- The PCI Express Advanced Error Reporting Driver Guide HOWTO
++pcie-iov-howto.txt
++	- Info on PCI Express I/O Virtualization
+diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcie-aer-howto.txt
+similarity index 100%
+rename from Documentation/PCI/pcieaer-howto.txt
+rename to Documentation/PCI/pcie-aer-howto.txt
+diff --git a/Documentation/PCI/pci-iov-howto.txt b/Documentation/PCI/pcie-iov-howto.txt
+similarity index 100%
+rename from Documentation/PCI/pci-iov-howto.txt
+rename to Documentation/PCI/pcie-iov-howto.txt
+diff --git a/Documentation/PCI/PCIEBUS-HOWTO.txt b/Documentation/PCI/pcie-portbus-howto.txt
+similarity index 100%
+rename from Documentation/PCI/PCIEBUS-HOWTO.txt
+rename to Documentation/PCI/pcie-portbus-howto.txt
 -- 
-1.7.10.4
+1.8.3
+
 
