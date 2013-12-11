@@ -1,97 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Helge Deller <deller@gmx.de>
-CC: <linux-pci@vger.kernel.org>, <linux-parisc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"Hanjun Guo" <guohanjun@huawei.com>
-Subject: [PATCH 5/9] parisc/pci: Repalce local inline function with PCI standard marco
-Date: Thu, 5 Dec 2013 19:59:38 +0800
-Message-ID: <1386244778-22820-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog104.obsmtp.com ([207.126.144.117]:36577 "EHLO
+	eu1sys200aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751030Ab3LKJj4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:39:56 -0500
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Cc: Mohit Kumar <mohit.kumar@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>,
+	<spear-devel@list.st.com>
+Subject: [PATCH 10/12] SPEAr13xx: defconfig: Update
+Date: Wed, 11 Dec 2013 15:08:35 +0530
+Message-ID: <3bc935718da3e0118c57ebee80c1363aac4a48a5.1386752447.git.mohit.kumar@st.com>
+In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Repalce local inline function is_pci_dev() with PCI standard marco
-dev_is_pci().
+Enable EABI, OEABI, VFP and NFS configs in default configuration file for
+SPEAr13xx.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Enable PCIe support for SPEAr13xx.
+
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Viresh Kumar <viresh.linux@gmail.com>
+Cc: spear-devel@list.st.com
+Cc: linux-arm-kernel@lists.infradead.org
 ---
- arch/parisc/kernel/drivers.c |   22 +++++-----------------
- 1 files changed, 5 insertions(+), 17 deletions(-)
+ arch/arm/configs/spear13xx_defconfig |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/arch/parisc/kernel/drivers.c b/arch/parisc/kernel/drivers.c
-index 14285ca..dba508f 100644
---- a/arch/parisc/kernel/drivers.c
-+++ b/arch/parisc/kernel/drivers.c
-@@ -282,18 +282,6 @@ find_pa_parent_type(const struct parisc_device *padev, int type)
- 	return NULL;
- }
- 
--#ifdef CONFIG_PCI
--static inline int is_pci_dev(struct device *dev)
--{
--	return dev->bus == &pci_bus_type;
--}
--#else
--static inline int is_pci_dev(struct device *dev)
--{
--	return 0;
--}
--#endif
--
- /*
-  * get_node_path fills in @path with the firmware path to the device.
-  * Note that if @node is a parisc device, we don't fill in the 'mod' field.
-@@ -306,7 +294,7 @@ static void get_node_path(struct device *dev, struct hardware_path *path)
- 	int i = 5;
- 	memset(&path->bc, -1, 6);
- 
--	if (is_pci_dev(dev)) {
-+	if (dev_is_pci(dev)) {
- 		unsigned int devfn = to_pci_dev(dev)->devfn;
- 		path->mod = PCI_FUNC(devfn);
- 		path->bc[i--] = PCI_SLOT(devfn);
-@@ -314,7 +302,7 @@ static void get_node_path(struct device *dev, struct hardware_path *path)
- 	}
- 
- 	while (dev != &root) {
--		if (is_pci_dev(dev)) {
-+		if (dev_is_pci(dev)) {
- 			unsigned int devfn = to_pci_dev(dev)->devfn;
- 			path->bc[i--] = PCI_SLOT(devfn) | (PCI_FUNC(devfn)<< 5);
- 		} else if (dev->bus == &parisc_bus_type) {
-@@ -695,7 +683,7 @@ static int check_parent(struct device * dev, void * data)
- 		if (dev->bus == &parisc_bus_type) {
- 			if (match_parisc_device(dev, d->index, d->modpath))
- 				d->dev = dev;
--		} else if (is_pci_dev(dev)) {
-+		} else if (dev_is_pci(dev)) {
- 			if (match_pci_device(dev, d->index, d->modpath))
- 				d->dev = dev;
- 		} else if (dev->bus == NULL) {
-@@ -753,7 +741,7 @@ struct device *hwpath_to_device(struct hardware_path *modpath)
- 		if (!parent)
- 			return NULL;
- 	}
--	if (is_pci_dev(parent)) /* pci devices already parse MOD */
-+	if (dev_is_pci(parent)) /* pci devices already parse MOD */
- 		return parent;
- 	else
- 		return parse_tree_node(parent, 6, modpath);
-@@ -772,7 +760,7 @@ void device_to_hwpath(struct device *dev, struct hardware_path *path)
- 		padev = to_parisc_device(dev);
- 		get_node_path(dev->parent, path);
- 		path->mod = padev->hw_path;
--	} else if (is_pci_dev(dev)) {
-+	} else if (dev_is_pci(dev)) {
- 		get_node_path(dev, path);
- 	}
- }
+diff --git a/arch/arm/configs/spear13xx_defconfig b/arch/arm/configs/spear13xx_defconfig
+index 82eaa55..83882c0 100644
+--- a/arch/arm/configs/spear13xx_defconfig
++++ b/arch/arm/configs/spear13xx_defconfig
+@@ -11,13 +11,24 @@ CONFIG_ARCH_SPEAR13XX=y
+ CONFIG_MACH_SPEAR1310=y
+ CONFIG_MACH_SPEAR1340=y
+ # CONFIG_SWP_EMULATE is not set
++CONFIG_PCI_MSI=y
++CONFIG_PCIE_SPEAR13XX=y
+ CONFIG_SMP=y
+ # CONFIG_SMP_ON_UP is not set
+ # CONFIG_ARM_CPU_TOPOLOGY is not set
++CONFIG_AEABI=y
++CONFIG_OABI_COMPAT=y
+ CONFIG_ARM_APPENDED_DTB=y
+ CONFIG_ARM_ATAG_DTB_COMPAT=y
++CONFIG_VFP=y
+ CONFIG_BINFMT_MISC=y
+ CONFIG_NET=y
++CONFIG_UNIX=y
++CONFIG_INET=y
++CONFIG_IP_PNP=y
++CONFIG_IP_PNP_DHCP=y
++CONFIG_IP_PNP_BOOTP=y
++CONFIG_NET_IPIP=y
+ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+ CONFIG_MTD=y
+ CONFIG_MTD_OF_PARTS=y
+@@ -27,6 +38,7 @@ CONFIG_MTD_NAND=y
+ CONFIG_MTD_NAND_FSMC=y
+ CONFIG_BLK_DEV_RAM=y
+ CONFIG_BLK_DEV_RAM_SIZE=16384
++CONFIG_BLK_DEV_SD=y
+ CONFIG_ATA=y
+ # CONFIG_SATA_PMP is not set
+ CONFIG_SATA_AHCI_PLATFORM=y
+@@ -66,6 +78,7 @@ CONFIG_USB=y
+ # CONFIG_USB_DEVICE_CLASS is not set
+ CONFIG_USB_EHCI_HCD=y
+ CONFIG_USB_OHCI_HCD=y
++CONFIG_USB_STORAGE=y
+ CONFIG_MMC=y
+ CONFIG_MMC_SDHCI=y
+ CONFIG_MMC_SDHCI_SPEAR=y
+@@ -84,6 +97,8 @@ CONFIG_VFAT_FS=m
+ CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
+ CONFIG_TMPFS=y
+ CONFIG_JFFS2_FS=y
++CONFIG_NFS_FS=y
++CONFIG_ROOT_NFS=y
+ CONFIG_NLS_DEFAULT="utf8"
+ CONFIG_NLS_CODEPAGE_437=y
+ CONFIG_NLS_ASCII=m
 -- 
-1.7.1
-
+1.7.0.1
 
