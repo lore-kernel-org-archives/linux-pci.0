@@ -1,137 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:56306 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab3LEWOs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 17:14:48 -0500
-Received: by mail-ie0-f172.google.com with SMTP id qd12so31151876ieb.17
-        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 14:14:47 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.17.10]:57397 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663Ab3LKXBb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 18:01:31 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 09/12] pcie: SPEAr13xx: Add designware pcie support
+Date: Thu, 12 Dec 2013 00:00:53 +0100
+Cc: Mohit Kumar <mohit.kumar@st.com>, linux-pci@vger.kernel.org,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Viresh Kumar <viresh.linux@gmail.com>, spear-devel@list.st.com
+References: <cover.1386752447.git.mohit.kumar@st.com> <f5c9cbbd116d462c428afc2e8afefd95aad8c6ec.1386752447.git.mohit.kumar@st.com>
+In-Reply-To: <f5c9cbbd116d462c428afc2e8afefd95aad8c6ec.1386752447.git.mohit.kumar@st.com>
 MIME-Version: 1.0
-In-Reply-To: <CANN5nGJ6NN2C5G2ioCfxCMbXWk78XRRwSip=_Qp7fuSi2DztFg@mail.gmail.com>
-References: <CANN5nGKvaHCzWKMNyUhNfSfTfZBcVxG9RfeuQaOAFS9TghF=0w@mail.gmail.com>
- <CAErSpo6SeyZpta+MuB5EnS-Rx80bAYmLkCaQgt5q_jgbtL4X6w@mail.gmail.com>
- <CAErSpo716DEk07izC_d_bj8xyDdYQFdEnqtJSirMp1bMmSdURA@mail.gmail.com> <CANN5nGJ6NN2C5G2ioCfxCMbXWk78XRRwSip=_Qp7fuSi2DztFg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 5 Dec 2013 15:14:27 -0700
-Message-ID: <CAErSpo4uPXMZnHQcoKSf3R3+aVzw2W-5vJZOkzFNmVZN=S4rRA@mail.gmail.com>
-Subject: Re: error loading iwlwifi on sony vaio
-To: Aaron McSorley <a@aaronmcsorley.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201312120000.54545.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+On Wednesday 11 December 2013, Mohit Kumar wrote:
+> +#include <linux/clk.h>
+> +#include <linux/delay.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +#include <mach/spear.h>
 
-On Thu, Dec 5, 2013 at 2:45 PM, Aaron McSorley <a@aaronmcsorley.com> wrote:
-> the dmesg
-> http://pastebin.com/Y7dKDjAi
->
-> and lspci
-> http://pastebin.com/SVGcfY2F
+This won't actually build: you cannot access mach/*.h header files
+from outside of mach-spear!
 
-Looks like some dubious BIOS PCI configuration:
+> +struct spear13xx_pcie {
+> +	void __iomem		*phy_base;
+> +	void __iomem		*app_base;
+> +	struct clk		*clk;
+> +	struct pcie_port	pp;
+> +	int			id;
+> +	int			is_gen1;
+> +};
 
-    pci 0000:00:02.0: reg 10: [mem 0xb9000000-0xb93fffff 64bit]
-    pci 0000:00:01.0: PCI bridge to [bus 01]
-    pci 0000:00:01.0:   bridge window [io  0x6000-0x6fff]
-    pci 0000:00:01.0:   bridge window [mem 0xb8000000-0xb8ffffff]
-    pci 0000:00:01.0:   bridge window [mem 0xa0000000-0xb1ffffff 64bit pref]
-    pci 0000:01:00.0: reg 10: [mem 0xb9000000-0xb9ffffff]  (not in
-window and conflicts with 00:02.0 above)
-    pci 0000:00:1c.0: PCI bridge to [bus 02]
-    pci 0000:00:1c.0:   bridge window [io  0x5000-0x5fff]
-    pci 0000:00:1c.0:   bridge window [mem 0xb7000000-0xb7ffffff]
-    pci 0000:00:1c.0:   bridge window [mem 0xb2000000-0xb2ffffff 64bit pref]
-    pci 0000:02:00.0: reg 10: [mem 0xb8000000-0xb8001fff 64bit]  (not
-in window and conflicts with 00:01.0 bridge window)
+The pcie driver shouldn't have direct access to the phy registers,
+use a phy driver for that.
 
-But Linux should be able to recover from this.  Any chance you can
-reproduce this on a current upstream kernel (v3.12) so we can find out
-whether this has already been fixed?
+> +static int workaround_linkup_spear1340(struct spear13xx_pcie *spear13xx_pcie)
+> +{
+> 
+> +}
+> +
+> +static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+> +{
 
-> On Thu, Dec 5, 2013 at 2:22 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [Fix Jiang's email address, please respond to this, not the previous message]
->>
->> On Thu, Dec 5, 2013 at 1:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> [+cc Jiang, Ben]
->>>
->>> On Thu, Dec 5, 2013 at 8:24 AM, Aaron McSorley <a@aaronmcsorley.com> wrote:
->>>> Hello, I'm getting this message when trying to load iwlwifi in our
->>>> debian live image running kernel 3.8.5, this is on a Sony SVS13AA11L,
->>>> please advise on how to debug this, or any additional information you
->>>> need, any help is much appreciated, and thanks in advance
->>>
->>> Thanks, Aaron.  Can you collect the complete dmesg log and output of
->>> "lspci -vv" (run as root)?
->>>
->>> I know this is a Debian kernel, but the upstream kernel likely still
->>> has the same problem, so it'd be good if you opened a bug report at
->>> http://bugzilla.kernel.org (drivers/pci category).
->>>
->>> Is there any hotplug involved here?  Since this doesn't seem to be a
->>> problem every iwlwifi user sees, possibly we didn't assign resources
->>> to the iwlwifi device in this case.
->>>
->>> Bjorn
->>>
->>>> [ 1387.804146] iwlwifi 0000:02:00.0: pci_ioremap_bar failed
->>>> [ 1387.804206] iwlwifi: probe of 0000:02:00.0 failed with error -12
->>>> [ 1978.637526] Intel(R) Wireless WiFi driver for Linux, in-tree:
->>>> [ 1978.637531] Copyright(c) 2003-2012 Intel Corporation
->>>> [ 1978.637685] ------------[ cut here ]------------
->>>> [ 1978.637695] WARNING: at /build/linux/drivers/pci/pci.c:130
->>>> pci_ioremap_bar+0x4a/0x4e()
->>>> [ 1978.637697] Hardware name: SVS13A12FXB
->>>> [ 1978.637699] Modules linked in: iwlwifi(+) joydev coretemp kvm
->>>> tpm_infineon crc32c_intel uvc
->>>> video aesni_intel aes_i586 videobuf2_vmalloc cfg80211 xts
->>>> videobuf2_memops lrw btusb tpm_tis b
->>>> luetooth videobuf2_core gf128mul iTCO_wdt ablk_helper videodev
->>>> acpi_cpufreq tpm iTCO_vendor_su
->>>> pport psmouse i2c_i801 cryptd sony_laptop crc16 mperf media tpm_bios
->>>> of_i2c serio_raw lpc_ich
->>>> rfkill battery evdev processor ac mei fuse squashfs loop aufs(C)
->>>> nls_utf8 isofs dm_mirror dm_r
->>>> egion_hash dm_log dm_mod radeon sg sr_mod sd_mod crc_t10dif cdrom
->>>> usb_storage thermal nouveau
->>>> mxm_wmi wmi r8169 mii rtsx_pci ttm microcode i915 ahci libahci
->>>> ehci_pci ehci_hcd xhci_hcd vide
->>>> o libata usbcore button i2c_algo_bit drm_kms_helper scsi_mod
->>>> usb_common drm i2c_core thermal_s
->>>> ys [last unloaded: iwlwifi]
->>>> [ 1978.637759] Pid: 2896, comm: modprobe Tainted: P        WC O
->>>> 3.8-0baureo1-486 #1 Debian 3.8.5-1~experimental.1~baureo1
->>>> [ 1978.637761] Call Trace:
->>>> [ 1978.637768]  [<c1021361>] ? warn_slowpath_common+0x68/0x79
->>>> [ 1978.637773]  [<c115b85d>] ? pci_ioremap_bar+0x4a/0x4e
->>>> [ 1978.637777]  [<c102137f>] ? warn_slowpath_null+0xd/0x10
->>>> [ 1978.637781]  [<c115b85d>] ? pci_ioremap_bar+0x4a/0x4e
->>>> [ 1978.637804]  [<f89136c2>] ? iwl_trans_pcie_alloc+0x113/0x271 [iwlwifi]
->>>> [ 1978.637822]  [<f890f313>] ? iwl_pci_probe+0xf/0x7e [iwlwifi]
->>>> [ 1978.637826]  [<c115e50e>] ? pci_device_probe+0x4e/0x85
->>>> [ 1978.637833]  [<c11d958b>] ? driver_probe_device+0x78/0x163
->>>> [ 1978.637838]  [<c11d96ba>] ? __driver_attach+0x44/0x5f
->>>> [ 1978.637842]  [<c11d8357>] ? bus_for_each_dev+0x37/0x61
->>>> [ 1978.637846]  [<c11d91ca>] ? driver_attach+0x11/0x13
->>>> [ 1978.637851]  [<c11d9676>] ? driver_probe_device+0x163/0x163
->>>> [ 1978.637855]  [<c11d8f40>] ? bus_add_driver+0xb0/0x1a7
->>>> [ 1978.637861]  [<f891d000>] ? 0xf891cfff
->>>> [ 1978.637866]  [<c11d9ae6>] ? driver_register+0x70/0xdb
->>>> [ 1978.637871]  [<f891d000>] ? 0xf891cfff
->>>> [ 1978.637876]  [<f891d000>] ? 0xf891cfff
->>>> [ 1978.637891]  [<f890f3f5>] ? iwl_pci_register_driver+0x15/0x2a [iwlwifi]
->>>> [ 1978.637896]  [<f891d000>] ? 0xf891cfff
->>>> [ 1978.637900]  [<c100116f>] ? do_one_initcall+0x65/0x10a
->>>> [ 1978.637904]  [<f891d000>] ? 0xf891cfff
->>>> [ 1978.637910]  [<c1055ea0>] ? load_module+0x1610/0x18e6
->>>> [ 1978.637918]  [<c10561e2>] ? sys_init_module+0x6c/0x80
->>>> [ 1978.637933]  [<c12aa12f>] ? syscall_call+0x7/0xb
->>>> [ 1978.637937] ---[ end trace 57fa059f8cbca6fc ]---
->>>> [ 1978.637941] iwlwifi 0000:02:00.0: pci_ioremap_bar failed
->>>> [ 1978.638002] iwlwifi: probe of 0000:02:00.0 failed with error -12
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+These should move into the phy driver.
+
+> +	/* txdetectrx workaround for SPEAr1310 */
+> +	if (of_machine_is_compatible("st,spear1310"))
+> +		writeb(0x00, spear13xx_pcie->phy_base + 0x16);
+
+Don't use of_machine_is_compatible() to test for features or bugs of a
+particular device. Instead use a binary property in the specific
+device node, or key it off of the device's "compatible" value if
+there are a lot of differences. You seem to have a couple of these
+to test for one or the other PHY implementation, those will
+go away when you have a proper driver for them.
+
+	Arnd
