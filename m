@@ -1,149 +1,184 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:41432 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754849Ab3LDJhd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Dec 2013 04:37:33 -0500
-Message-ID: <1386149848.13256.86.camel@kazak.uk.xensource.com>
-Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
-From: Ian Campbell <Ian.Campbell@citrix.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: <stefano.stabellini@eu.citrix.com>,
-	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
-	<boris.ostrovsky@oracle.com>, <david.vrabel@citrix.com>,
-	<leosilva@linux.vnet.ibm.com>, <ashley@ashleylai.com>,
-	<peterhuewe@gmx.de>, <mail@srajiv.net>, <tpmdd@selhorst.net>,
-	<tpmdd@sirrix.com>, <dmitry.torokhov@gmail.com>,
-	<bhelgaas@google.com>, <plagnioj@jcrosoft.com>,
-	<tomi.valkeinen@ti.com>, <tpmdd-devel@lists.sourceforge.net>,
-	<linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-fbdev@vger.kernel.org>
-Date: Wed, 4 Dec 2013 09:37:28 +0000
-In-Reply-To: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
-References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:46688 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058Ab3LKMEf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 07:04:35 -0500
+Received: by mail-ob0-f173.google.com with SMTP id gq1so6783421obb.4
+        for <linux-pci@vger.kernel.org>; Wed, 11 Dec 2013 04:04:34 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+	<7bce26f60d847a136f748b5eeac15dc79a7d662e.1386752447.git.mohit.kumar@st.com>
+	<CAD6G_RTrETj9p+YNPjRMEFsO7Ggf3LfnuaPOSwO2brUcusNUJw@mail.gmail.com>
+	<2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
+Date: Wed, 11 Dec 2013 17:34:34 +0530
+Message-ID: <CAD6G_RQ5AyHePbx8Xm-XVHp4TkwXL_hAmwCZWQ-wv7EBJcOHwA@mail.gmail.com>
+Subject: Re: [PATCH 06/12] pcie: designware: Move register definition to the
+ header file
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	spear-devel <spear-devel@list.st.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-12-03 at 16:14 -0500, Konrad Rzeszutek Wilk wrote:
-> The user has the option of disabling the platform driver:
-> 00:02.0 Unassigned class [ff80]: XenSource, Inc. Xen Platform Device (rev 01)
-> 
-> which is used to unplug the emulated drivers (IDE, Realtek 8169, etc)
-> and allow the PV drivers to take over. If the user wishes
-> to disable that they can set:
-> 
->   xen_platform_pci=0
->   (in the guest config file)
-> 
-> or
->   xen_emul_unplug=never
->   (on the Linux command line)
-> 
-> except it does not work properly. The PV drivers still try to
-> load and since the Xen platform driver is not run - and it
-> has not initialized the grant tables, most of the PV drivers
-> stumble upon:
-> 
-> input: Xen Virtual Keyboard as /devices/virtual/input/input5
-> input: Xen Virtual Pointer as /devices/virtual/input/input6M
-> ------------[ cut here ]------------
-> kernel BUG at /home/konrad/ssd/konrad/linux/drivers/xen/grant-table.c:1206!
-> invalid opcode: 0000 [#1] SMP
-> Modules linked in: xen_kbdfront(+) xenfs xen_privcmd
-> CPU: 6 PID: 1389 Comm: modprobe Not tainted 3.13.0-rc1upstream-00021-ga6c892b-dirty #1
-> Hardware name: Xen HVM domU, BIOS 4.4-unstable 11/26/2013
-> RIP: 0010:[<ffffffff813ddc40>]  [<ffffffff813ddc40>] get_free_entries+0x2e0/0x300
-> Call Trace:
->  [<ffffffff8150d9a3>] ? evdev_connect+0x1e3/0x240
->  [<ffffffff813ddd0e>] gnttab_grant_foreign_access+0x2e/0x70
->  [<ffffffffa0010081>] xenkbd_connect_backend+0x41/0x290 [xen_kbdfront]
->  [<ffffffffa0010a12>] xenkbd_probe+0x2f2/0x324 [xen_kbdfront]
->  [<ffffffff813e5757>] xenbus_dev_probe+0x77/0x130
->  [<ffffffff813e7217>] xenbus_frontend_dev_probe+0x47/0x50
->  [<ffffffff8145e9a9>] driver_probe_device+0x89/0x230
->  [<ffffffff8145ebeb>] __driver_attach+0x9b/0xa0
->  [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
->  [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
->  [<ffffffff8145cf1c>] bus_for_each_dev+0x8c/0xb0
->  [<ffffffff8145e7d9>] driver_attach+0x19/0x20
->  [<ffffffff8145e260>] bus_add_driver+0x1a0/0x220
->  [<ffffffff8145f1ff>] driver_register+0x5f/0xf0
->  [<ffffffff813e55c5>] xenbus_register_driver_common+0x15/0x20
->  [<ffffffff813e76b3>] xenbus_register_frontend+0x23/0x40
->  [<ffffffffa0015000>] ? 0xffffffffa0014fff
->  [<ffffffffa001502b>] xenkbd_init+0x2b/0x1000 [xen_kbdfront]
->  [<ffffffff81002049>] do_one_initcall+0x49/0x170
-> 
-> .. snip..
-> 
-> which is hardly nice. This patch fixes this by having each
-> PV driver check for:
->  - if running in PV, then it is fine to execute (as that is their
->    native environment).
->  - if running in HVM, check if user wanted 'xen_emul_unplug=never',
->    in which case bail out and don't load PV drivers.
->  - if running in HVM, and if PCI device 5853:0001 (xen_platform_pci)
->    does not exist, then bail out and not load PV drivers.
-> 
-> P.S.
-> Ian Campbell suggested getting rid of 'xen_platform_pci_unplug'
-> but unfortunatly the xen-blkfront driver is using it, so we
-> cannot do it.
+On Wed, Dec 11, 2013 at 5:25 PM, Mohit KUMAR DCG <Mohit.KUMAR@st.com> wrote:
+> Hello Jagan,
+>
+>> -----Original Message-----
+>> From: Jagan Teki [mailto:jagannadh.teki@gmail.com]
+>> Sent: Wednesday, December 11, 2013 5:09 PM
+>> To: Mohit KUMAR DCG
+>> Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+>> Pratyush ANAND; Jingoo Han; spear-devel
+>> Subject: Re: [PATCH 06/12] pcie: designware: Move register definition to the
+>> header file
+>>
+>> On Wed, Dec 11, 2013 at 3:08 PM, Mohit Kumar <mohit.kumar@st.com>
+>> wrote:
+>> > From: Pratyush Anand <pratyush.anand@st.com>
+>> >
+>> > Move synopsis specific register definition from source file to header
+>> > file, so that they can be re-used by other files if needed.
+>> >
+>> > Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+>> > Cc: Mohit Kumar <mohit.kumar@st.com>
+>> > Cc: Jingoo Han <jg1.han@samsung.com>
+>> > Cc: spear-devel@list.st.com
+>> > Cc: linux-pci@vger.kernel.org
+>> > ---
+>> >  drivers/pci/host/pcie-designware.c |   42 ------------------------------------
+>> >  drivers/pci/host/pcie-designware.h |   42
+>> ++++++++++++++++++++++++++++++++++++
+>> >  2 files changed, 42 insertions(+), 42 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/host/pcie-designware.c
+>> > b/drivers/pci/host/pcie-designware.c
+>> > index 212b8b6..73aa13c 100644
+>> > --- a/drivers/pci/host/pcie-designware.c
+>> > +++ b/drivers/pci/host/pcie-designware.c
+>> > @@ -23,48 +23,6 @@
+>> >
+>> >  #include "pcie-designware.h"
+>> >
+>> > -/* Synopsis specific PCIE configuration registers */
+>> > -#define PCIE_PORT_LINK_CONTROL         0x710
+>> > -#define PORT_LINK_MODE_MASK            (0x3f << 16)
+>> > -#define PORT_LINK_MODE_1_LANES         (0x1 << 16)
+>> > -#define PORT_LINK_MODE_2_LANES         (0x3 << 16)
+>> > -#define PORT_LINK_MODE_4_LANES         (0x7 << 16)
+>> > -
+>> > -#define PCIE_LINK_WIDTH_SPEED_CONTROL  0x80C
+>> > -#define PORT_LOGIC_SPEED_CHANGE                (0x1 << 17)
+>> > -#define PORT_LOGIC_LINK_WIDTH_MASK     (0x1ff << 8)
+>> > -#define PORT_LOGIC_LINK_WIDTH_1_LANES  (0x1 << 8) -#define
+>> > PORT_LOGIC_LINK_WIDTH_2_LANES  (0x2 << 8) -#define
+>> > PORT_LOGIC_LINK_WIDTH_4_LANES  (0x4 << 8)
+>> > -
+>> > -#define PCIE_MSI_ADDR_LO               0x820
+>> > -#define PCIE_MSI_ADDR_HI               0x824
+>> > -#define PCIE_MSI_INTR0_ENABLE          0x828
+>> > -#define PCIE_MSI_INTR0_MASK            0x82C
+>> > -#define PCIE_MSI_INTR0_STATUS          0x830
+>> > -
+>> > -#define PCIE_ATU_VIEWPORT              0x900
+>> > -#define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
+>> > -#define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
+>> > -#define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
+>> > -#define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
+>> > -#define PCIE_ATU_CR1                   0x904
+>> > -#define PCIE_ATU_TYPE_MEM              (0x0 << 0)
+>> > -#define PCIE_ATU_TYPE_IO               (0x2 << 0)
+>> > -#define PCIE_ATU_TYPE_CFG0             (0x4 << 0)
+>> > -#define PCIE_ATU_TYPE_CFG1             (0x5 << 0)
+>> > -#define PCIE_ATU_CR2                   0x908
+>> > -#define PCIE_ATU_ENABLE                        (0x1 << 31)
+>> > -#define PCIE_ATU_BAR_MODE_ENABLE       (0x1 << 30)
+>> > -#define PCIE_ATU_LOWER_BASE            0x90C
+>> > -#define PCIE_ATU_UPPER_BASE            0x910
+>> > -#define PCIE_ATU_LIMIT                 0x914
+>> > -#define PCIE_ATU_LOWER_TARGET          0x918
+>> > -#define PCIE_ATU_BUS(x)                        (((x) & 0xff) << 24)
+>> > -#define PCIE_ATU_DEV(x)                        (((x) & 0x1f) << 19)
+>> > -#define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
+>> > -#define PCIE_ATU_UPPER_TARGET          0x91C
+>> > -
+>> >  static struct hw_pci dw_pci;
+>> >
+>> >  static unsigned long global_io_offset; diff --git
+>> > a/drivers/pci/host/pcie-designware.h
+>> > b/drivers/pci/host/pcie-designware.h
+>> > index c15379b..da1ed35 100644
+>> > --- a/drivers/pci/host/pcie-designware.h
+>> > +++ b/drivers/pci/host/pcie-designware.h
+>> > @@ -74,4 +74,46 @@ int dw_pcie_link_up(struct pcie_port *pp);  void
+>> > dw_pcie_setup_rc(struct pcie_port *pp);  int dw_pcie_host_init(struct
+>> > pcie_port *pp);
+>> >
+>> > +/* Synopsis specific PCIE configuration registers */
+>> > +#define PCIE_PORT_LINK_CONTROL         0x710
+>> > +#define PORT_LINK_MODE_MASK            (0x3f << 16)
+>> > +#define PORT_LINK_MODE_1_LANES         (0x1 << 16)
+>> > +#define PORT_LINK_MODE_2_LANES         (0x3 << 16)
+>> > +#define PORT_LINK_MODE_4_LANES         (0x7 << 16)
+>> > +
+>> > +#define PCIE_LINK_WIDTH_SPEED_CONTROL  0x80C
+>> > +#define PORT_LOGIC_SPEED_CHANGE                (0x1 << 17)
+>> > +#define PORT_LOGIC_LINK_WIDTH_MASK     (0x1ff << 8)
+>> > +#define PORT_LOGIC_LINK_WIDTH_1_LANES  (0x1 << 8) #define
+>> > +PORT_LOGIC_LINK_WIDTH_2_LANES  (0x2 << 8) #define
+>> > +PORT_LOGIC_LINK_WIDTH_4_LANES  (0x4 << 8)
+>> > +
+>> > +#define PCIE_MSI_ADDR_LO               0x820
+>> > +#define PCIE_MSI_ADDR_HI               0x824
+>> > +#define PCIE_MSI_INTR0_ENABLE          0x828
+>> > +#define PCIE_MSI_INTR0_MASK            0x82C
+>> > +#define PCIE_MSI_INTR0_STATUS          0x830
+>> > +
+>> > +#define PCIE_ATU_VIEWPORT              0x900
+>> > +#define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
+>> > +#define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
+>> > +#define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
+>> > +#define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
+>> > +#define PCIE_ATU_CR1                   0x904
+>> > +#define PCIE_ATU_TYPE_MEM              (0x0 << 0)
+>> > +#define PCIE_ATU_TYPE_IO               (0x2 << 0)
+>> > +#define PCIE_ATU_TYPE_CFG0             (0x4 << 0)
+>> > +#define PCIE_ATU_TYPE_CFG1             (0x5 << 0)
+>> > +#define PCIE_ATU_CR2                   0x908
+>> > +#define PCIE_ATU_ENABLE                        (0x1 << 31)
+>> > +#define PCIE_ATU_BAR_MODE_ENABLE       (0x1 << 30)
+>> > +#define PCIE_ATU_LOWER_BASE            0x90C
+>> > +#define PCIE_ATU_UPPER_BASE            0x910
+>> > +#define PCIE_ATU_LIMIT                 0x914
+>> > +#define PCIE_ATU_LOWER_TARGET          0x918
+>> > +#define PCIE_ATU_BUS(x)                        (((x) & 0xff) << 24)
+>> > +#define PCIE_ATU_DEV(x)                        (((x) & 0x1f) << 19)
+>> > +#define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
+>> > +#define PCIE_ATU_UPPER_TARGET          0x91C
+>> > +
+>> >  #endif /* _PCIE_DESIGNWARE_H */
+>>
+>> Seems like none were using these headers except pcie-designware.c - if ie
+>> the case better to place it same place as before.
+>
+> - We have include these and used few like ' PCIE_LINK_WIDTH_SPEED_CONTROL '  for SPEAr13xx platform,
+> so move these to the separate header  file.
+>
 
-It might still be nice to expose a suitable semantic interface (i.e.
-some relevant predicate) rather than the raw value for blkfront to use.
-But that can be a future thing I think.
+Acked-by: Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
 
-> Reported-by: Sander Eikelenboom <linux@eikelenboom.it
-> Reported-by: Anthony PERARD <anthony.perard@citrix.com>
-> Reported-by: Fabio Fantoni <fabio.fantoni@m2r.biz>
-> ---
->  arch/x86/xen/platform-pci-unplug.c         | 18 ++++++++++++++++++
->  drivers/block/xen-blkfront.c               |  2 +-
->  drivers/char/tpm/xen-tpmfront.c            |  4 ++++
->  drivers/input/misc/xen-kbdfront.c          |  4 ++++
->  drivers/net/xen-netfront.c                 |  2 +-
->  drivers/pci/xen-pcifront.c                 |  4 ++++
->  drivers/video/xen-fbfront.c                |  4 ++++
->  drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
->  include/xen/platform_pci.h                 | 13 ++++++++++++-
->  9 files changed, 49 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/x86/xen/platform-pci-unplug.c b/arch/x86/xen/platform-pci-unplug.c
-> index 0a78524..087dfeb 100644
-> --- a/arch/x86/xen/platform-pci-unplug.c
-> +++ b/arch/x86/xen/platform-pci-unplug.c
-> @@ -69,6 +69,24 @@ static int check_platform_magic(void)
->  	return 0;
->  }
->  
-> +bool xen_has_pv_devices(void)
-> +{
-> +	if (!xen_domain())
-> +		return false;
-> +
-> +	if (xen_hvm_domain()) {
-> +		/* User requested no unplug, so no PV drivers. */
-> +		if (xen_emul_unplug & XEN_UNPLUG_NEVER)
-> +			return false;
-
-I think you need
-		if (xen_emul_unpug & XEN_UNPLUG_UNNECESSARY)
-			return true;
-don't you?
-
-> +		/* And user has xen_platform_pci=0 set in guest config as
-> +		 * driver did not modify the value. */
-> +		if (!xen_platform_pci_unplug)
-> +			return false;
-> +	}
-> +	return true;
-> +}
-> +EXPORT_SYMBOL_GPL(xen_has_pv_devices);
-> +
->  void xen_unplug_emulated_devices(void)
->  {
->  	int r;
-
-
+-- 
+Thanks,
+Jagan.
+--------
+Jagannadha Sutradharudu Teki,
+E: jagannadh.teki@gmail.com, P: +91-9676773388
+Engineer - System Software Hacker
+U-boot - SPI Custodian and Zynq APSOC
+Ln: http://www.linkedin.com/in/jaganteki
