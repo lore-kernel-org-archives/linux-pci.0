@@ -1,99 +1,306 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3764 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754529Ab3LIRhA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Dec 2013 12:37:00 -0500
-Message-ID: <1386610614.25738.594.camel@ul30vt.home>
-Subject: Re: warn_slowpath_common in drivers/pci/search.c:44 on linux-3.4.0
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Antonio Quartulli <antonio@meshcoding.com>,
-	Joerg Roedel <joerg.roedel@amd.com>,
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:42490 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751370Ab3LKR6h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 12:58:37 -0500
+MIME-Version: 1.0
+In-Reply-To: <52A8A1CA.6000407@infradead.org>
+References: <1386753319-21500-1-git-send-email-jaganna@xilinx.com>
+	<9e43a9a6-9883-45c5-aaf1-432ac06c7dce@AM1EHSMHS017.ehs.local>
+	<52A8A1CA.6000407@infradead.org>
+Date: Wed, 11 Dec 2013 23:28:36 +0530
+Message-ID: <CAD6G_RRX4ZZfX0LNiUJCF-G585s6+t791tsxnXw2xi-GJHzC2A@mail.gmail.com>
+Subject: Re: [PATCH 2/2] Documentation: pci: Add pcie-howto.txt
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Jagannadha Sutradharudu Teki
+	<jagannadha.sutradharudu-teki@xilinx.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Landley <rob@landley.net>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>
-Date: Mon, 09 Dec 2013 10:36:54 -0700
-In-Reply-To: <CAErSpo5fzbxFuX_bqq-z1hpHyfMhLO0w+iuyii_6J3PxZn3p=A@mail.gmail.com>
-References: <20120526082551.GA2723@ritirata.org>
-	 <CAErSpo553_-AivRa7VbjHrFraHaO4NYoYR7A9Am5fkDP-CMvSA@mail.gmail.com>
-	 <20120529083552.GN2604@amd.com> <20120529085648.GA13941@ritirata.org>
-	 <52A4819A.50501@meshcoding.com>
-	 <CAErSpo5fzbxFuX_bqq-z1hpHyfMhLO0w+iuyii_6J3PxZn3p=A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-12-09 at 10:25 -0700, Bjorn Helgaas wrote:
-> [+cc Alex]
-> 
-> On Sun, Dec 8, 2013 at 7:26 AM, Antonio Quartulli
-> <antonio@meshcoding.com> wrote:
-> > On 29/05/12 10:56, Antonio Quartulli wrote:
-> >> On Tue, May 29, 2012 at 10:35:53 +0200, Joerg Roedel wrote:
-> >>> Hi Antonio,
-> >>>
-> >>> On Sat, May 26, 2012 at 09:09:52AM -0600, Bjorn Helgaas wrote:
-> >>>> On Sat, May 26, 2012 at 2:25 AM, Antonio Quartulli <ordex@autistici.org> wrote:
-> >>>>> [    1.054279] WARNING: at drivers/pci/search.c:44 pci_find_upstream_pcie_bridge+0x5e/0x70()
-> >>>>> [    1.054385] Hardware name: Latitude E5420
-> >>>>> [    1.054457] Modules linked in:
-> >>>>> [    1.054568] Pid: 1, comm: swapper/0 Not tainted 3.4.0ordex+ #3
-> >>>>> [    1.054643] Call Trace:
-> >>>>> [    1.054716]  [<ffffffff81033d4a>] warn_slowpath_common+0x7a/0xb0
-> >>>>> [    1.054793]  [<ffffffff81033d95>] warn_slowpath_null+0x15/0x20
-> >>>>> [    1.054869]  [<ffffffff8123899e>] pci_find_upstream_pcie_bridge+0x5e/0x70
-> >>>>> [    1.054949]  [<ffffffff813babe7>] intel_iommu_device_group+0x77/0x100
-> >>>>> [    1.055027]  [<ffffffff813b52d5>] add_iommu_group+0x35/0x60
-> >>>>> [    1.055113]  [<ffffffff813b52a0>] ? bus_set_iommu+0x50/0x50
-> >>>>> [    1.055191]  [<ffffffff8132c586>] bus_for_each_dev+0x56/0x90
-> >>>>> [    1.055267]  [<ffffffff813b528b>] bus_set_iommu+0x3b/0x50
-> >>>>> [    1.055344]  [<ffffffff818c4920>] intel_iommu_init+0xab0/0xb3f
-> >>>>> [    1.055421]  [<ffffffff81120b26>] ? sys_mkdirat+0x76/0xd0
-> >>>>> [    1.055499]  [<ffffffff8189b0db>] ? memblock_find_dma_reserve+0x13d/0x13d
-> >>>>> [    1.055578]  [<ffffffff8189b0ee>] pci_iommu_init+0x13/0x3e
-> >>>>> [    1.055655]  [<ffffffff810001ca>] do_one_initcall+0x3a/0x170
-> >>>>> [    1.055732]  [<ffffffff81897c35>] kernel_init+0x148/0x1cc
-> >>>>> [    1.055807]  [<ffffffff81897588>] ? do_early_param+0x86/0x86
-> >>>>> [    1.055884]  [<ffffffff814fc914>] kernel_thread_helper+0x4/0x10
-> >>>>> [    1.055963]  [<ffffffff8105de60>] ? finish_task_switch+0x80/0x110
-> >>>>> [    1.056040]  [<ffffffff814fafdd>] ? retint_restore_args+0xe/0xe
-> >>>>> [    1.056126]  [<ffffffff81897aed>] ? start_kernel+0x30b/0x30b
-> >>>>> [    1.056203]  [<ffffffff814fc910>] ? gs_change+0xb/0xb
-> >>>
-> >>> Hmm, this looks like pci_find_upstream_pcie_bridge() found a PCIe device
-> >>> in the chain which is not a bridge. Can you please post the output of
-> >>> 'lspci -vvv' and 'lspci -t'?
-> >>>
-> >>
-> >> attached!
-> >> Some days ago I tried to put some printk in the code and, as far as I can
-> >> understand, you are right.
-> >>
-> >> I hope my lspci output will help!
-> >>
-> >> Cheers,
-> >>
-> >
-> > Hi guys,
-> >
-> > was there any progress about this?
-> > Right now I am using linux-3.10.22 and the WARNING is still present.
-> > The system seems to be working fine, but I don't know if this issue can
-> > trigger side effects or not.
-> 
-> Alex and I prototyped some IOMMU and PCI restructuring [1] to avoid
-> this case, but I haven't heard anything lately.
-> 
-> Bjorn
-> 
-> [1] http://lkml.kernel.org/r/20130711210326.1701.56478.stgit@bling.home
+Hi Randy
 
-Yep, it's stalled waiting on time to work on it.  IIRC, the remaining
-work is to figure out how to generalize the behavior of root complex PCI
-bridges.  The behavior in the patch should probably be handled as an
-Intel specific quirk.  If anyone has time to continue it, feel free to
-run with the patches.  Otherwise I'll get back to it eventually.
+On Wed, Dec 11, 2013 at 11:02 PM, Randy Dunlap <rdunlap@infradead.org> wrote:
+> On 12/11/13 01:15, Jagannadha Sutradharudu Teki wrote:
+>> Added pcie-howto.txt for describing the information
+>> on PCI Express basics and Root Complex driver.
+>>
+>> Signed-off-by: Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+>> ---
+>>  Documentation/PCI/00-INDEX       |   2 +
+>>  Documentation/PCI/pcie-howto.txt | 184 +++++++++++++++++++++++++++++++++++++++
+>>  2 files changed, 186 insertions(+)
+>>  create mode 100644 Documentation/PCI/pcie-howto.txt
+>>
+>> diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+>> index b8b7721..d61e7b9 100644
+>> --- a/Documentation/PCI/00-INDEX
+>> +++ b/Documentation/PCI/00-INDEX
+>> @@ -6,6 +6,8 @@ pci-error-recovery.txt
+>>       - Info on PCI error recovery
+>>  MSI-HOWTO.txt
+>>       - The Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ
+>> +pcie-howto.txt
+>> +     - A guide describing the PCI Express basics and Root Complex driver
+>>  pcie-portbus-howto.txt
+>>       - A guide describing the PCI Express Port Bus driver
+>>  pcie-aer-howto.txt
+>> diff --git a/Documentation/PCI/pcie-howto.txt b/Documentation/PCI/pcie-howto.txt
+>> new file mode 100644
+>> index 0000000..963cb75
+>> --- /dev/null
+>> +++ b/Documentation/PCI/pcie-howto.txt
+>> @@ -0,0 +1,184 @@
+>> +     PCI Express HOWTO
+>> +     Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
+>> +     05/12/2013
+>> +
+>> +1. About this guide
+>> +
+>> +This guide describes the basics of the PCI Express and provides
+>
+>                                               Express bus and
+>
+>> +information on how Linux PCIe subsystem looks like and at last
+>
+>                   what the Linux                      and ends
+>
+>> +with brief description of PCI Host controller/Root complex driver
+>
+>    with a brief
+>
+>> +along with some sample code.
+>> +
+>> +2. Basic terminology and conventions
+>> +
+>> +PCI Express is
+>> +- A high performance, IO interconnect for peripherals.
+>
+>                        ^drop comma
+>
+>> +- Low hardware design overhead compared to PCI, as it uses less pins.
+>> +- A serial point-to-point interconnect between two devices.
+>> +- Implements packet based protocol for data transfer.
+>
+>                 packet-based
+>
+>> +- Supports features like Advanced power management, Advanced error
+>> +  reporting facility, and hot-plug.
+>> +                                     _________
+>> +                                    |         |
+>> +                                    |   CPU   |
+>> +                                    |_________|
+>> +                                         |
+>> +                      ___________________|___________________________
+>> +                     |                                               |         ________
+>> +                     |               ROOT COMPLEX                    |        |        |
+>> +                     |                                               |--------| Memory |
+>> +                     |   Switch Port                 Root port       |        |________|
+>> +                     |_______________________________________________|
+>> +                                         |                             PCIe Bus0
+>> +             ____________________________|______________________________________
+>> +                             |               |                 |
+>> +           ____        ______|______         |             ____|____
+>> +          |    |      /             \      __|__          |         |
+>> +          | EP |-----|    SWITCH     |    |     |         | BRIDGE  |
+>> +          |____|      \_____________/     | EP  |         | PCIe -  |
+>> +                         |       |        |_____|         | PCI/PCIe|
+>> +                       __|__   __|__                      |_________|
+>> +                      |     | |     |                          |       PCIe Bus1
+>> +                      | EP  | | EP  |                __________|________________
+>> +                      |_____| |_____|                    |             |
+>> +                                                       __|__         __|__
+>> +                                                      |     |       |     |
+>> +                                                      | EP  |       | EP  |
+>> +                                                      |_____|       |_____|
+>> +
+>> +Root Complex (RC)
+>> +Connects the CPU and memory subsystem to the PCIe fabric (A topology comprised of PCIe
+>> +nodes like Root Complex, Endpoint, Bridge or a Switch)
+>> +
+>> +Port
+>> +Interface between a PCIe component and the Link.
+>> +
+>> +Link
+>> +PCIe interconnect is referred as a Link, and connects two devices.
+>> +
+>> +Lane
+>> +A PCIe link consists of either 1, 2, 4, 8, 12, 16 or 32 signals in each direction
+>> +(each signal needs two wires - one for Tx and other for Rx). these signals are
+>
+>                                                                 These
+>
+>> +referred to as Lanes.
+>> +
+>> +Upstream Port
+>> +Port that points in the direction of RC.
+>> +
+>> +Downstream Port
+>> +Port the points away from the RC.
+>
+>         that
+>
+>> +
+>> +Root Port
+>> +Whose upstream port is RC and dowstream port should be a EP or Bridge.
+>
+>                                                           an
+>
+>> +
+>> +Switch Port
+>> +Whose upstream port is RC and dowstream port is always be a switch.
+>
+>                                                    always a switch.
+>
+>> +
+>> +Endpoint (EP)
+>> +Devices other than RC, Switches and Bridges which either generates or terminates a PCIe
+>
+>                                                             generate or terminate
+>
+>> +transaction. These are peripheral devices such as Ethernet, USB and graphics devices.
+>> +
+>> +Switch
+>> +PCIe device single upstream port as RC and multiple downstream ports as EP's,
+>> +Switches or Bridges.
+>> +
+>> +Bridge
+>> +Is for extending PCIe Bus segment - whose downstream port points to one more PCIe bus.
+>> +
+>> +3. Linux PCIe Subsystem
+>> +
+>> +                                       ifconfig      open()/close/read()/write()        /proc, /sys
+>> +                                           ^              ^             ^                    ^
+>> +                                           |              |             |                    |
+>> +                                           |              |             |                    |
+>> +                                           |              |             |                    V
+>> +                                           |              |             |            PCIe Port Bus services
+>> +                                           |              |             |            (AER, HP, PME, VC
+>> +                                           |              |             |             drivers/pci/pcie/
+>> +                                           |              |             |             drivers/pci/hotplug)
+>> +                                           V              V             V                    ^
+>> +                                         Socket          Block        Char                   |
+>> +                                         layer        Subsystem      Subsystem               |
+>> +                                           ^              ^             ^                    | pcie_port_service_register()
+>> +                                           |              |             |                    |
+>> +                                           |              |             |                    |
+>> +                                           V              V             V                    V
+>> +                                      Common net         USB          Input            PCIe Port Core
+>> +                                      device layer       Core         Core    (drivers/pci/pcie/portdrv_core.c)
+>> +                                           ^              ^             ^                    ^
+>> +                                           |              |             |                    | pcie_port_bus_register()
+>> +                                           |              |             |                    |
+>> +                                      _____V_____     ____V____     ____V_____      _________V___________
+>> +                                     |           |   |         |   |          |    |                     |
+>> +                     All these are   | GEM       |   | USB HC  |   | Mouse/KB/|    | PCIe Port Bus driver|
+>> +                     PCI endpoint    | Controller|   | driver  |   | TS HC    |    | (drivers/pci/pcie/  |
+>> +                     drivers         | driver    |   |         |   | driver   |    |  portdrv_pci.c)     |
+>> +                                     |___________|   |_________|   |__________|    |_____________________|
+>> +                                           ^              ^             ^                    ^
+>> +                                           |__________    |             |           _________|
+>> +                                                      |   |             |          |          pci_register_driver()
+>> +          ___________________  pci_bus_*()          __V___V_____________V__________V______
+>> +         |                   | pci_scan_root_bus() |                                      |
+>> +         |     PCI BIOS      |-------------------->|              PCI Core                |
+>> +            | (arch/arm/kernel/ |<--------------------|          (drivers/pci/pci*        |
+>> +      ----->|        bios32.c))      |<---     pcibios_*() |           drivers/pci/bus.c)         |
+>> +      |     |___________________|   |                      |______________________________________|
+>> +      |                   ^              |
+>> +      |                   |              | pci_common_init_dev()
+>> +      |                   |              |
+>> +  ____V___    ____V___        ___V____
+>> + |     |     |        |      |        |
+>> + | Renesas|  | Tergra |      | Exynos |
+>
+>                   Tegra
+>
+>> + | PCI HC |  | PCIe HC|      | PCIe HC| drivers/pci/host/
+>> + | driver |  | driver |      | driver | All these are
+>> + |________|  |________|      |________| PCI Root Complex drivers
+>> +     |                   |               |
+>> +     |                   |               |
+>> +     V                   V               V
+>> +         platform_driver_register()
+>> +
+>> +Note:
+>> +Linux PCI subsystem is like above one without have a PCIe port bus stack.
+>
+>                                                  having
+>
+>> +For more details abou this block see http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
+>
+>                     about
+>
+>> +
+>> +PCI HC/RC driver
+>> +- Low level initialization and configuration (board, soc)
+>
+>                                                         SOC or SoC, please
+>
+>> +- Invokes PCI-BIOS - for bus enumerations so-that the endpoints on bus is ready.
+>
+>                                              so that                      are
+>
+>> +- Supplies struct pci_ops to read/write config space.
+>> +- Setup the resources like bus numbers, memory/IO space, Interrupt numbers, MSI.
+>> +- Register PCI-BIOS as pci_common_init_dev()
+>> +
+>> +PCI BIOS
+>> +- Architecture specific PCI
+>> +- Bus enumeration - Lane, Bus, Device, Memory, Interrupt.
+>> +- Enumeration ends up with scanning all endpoints on bus got discovered.
+>
+>                                                             ^^^ confusing
+>
+>> +- Register to PCI core for common accessing of endpoint drivers.
+>> +- pci_scan_root_bus() and pci_bus_*()
+>> +
+>> +PCI Core
+>> +- Provides services to Lower level BIOS and Upper level endpoint layers.
+>> +- Creates device entries for proc/sysfs information.
+>> +- Linux kernel pci bus and driver management code.
+>
+>                   PCI
+>
+>> +- Provides set of abstraction functions that endpoint drivers can used to
+>
+>                                                                      use
+>
+>> +  initiate pci communication with attached endpoints.
+>
+>               PCI
+>
+>> +- Calls BIOS codes with pcibios_*
+>> +
+>> +PCI Endpoint driver
+>> +- Individual endpoint drivers from upper layer.
+>> +- Accessing config space upon respective endpoint enumeration done.
+>> +- Communicate over the endpoint for Tx/Rx transactions.
+>> +- Register to PCI core as pci_driver_register()
+>> +
+>> +PCIe Port Bus driver
+>> +- A logical PCI-PCI Bridge structure.
+>> +- Root Port and the Switch Port.
+>> +- See Documentation/PCI/pcie-busport-howto.txt
+>                                 ~~~~~~~
+>                                 portbus
+>
+
+Thanks for your comments will send the next version after fixing these.
+
+-- 
 Thanks,
-
-Alex
-
+Jagan.
+--------
+Jagannadha Sutradharudu Teki,
+E: jagannadh.teki@gmail.com, P: +91-9676773388
+Engineer - System Software Hacker
+U-boot - SPI Custodian and Zynq APSOC
+Ln: http://www.linkedin.com/in/jaganteki
