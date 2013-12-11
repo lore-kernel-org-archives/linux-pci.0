@@ -1,163 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:32847 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857Ab3LEUDu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 15:03:50 -0500
-Received: by mail-ie0-f180.google.com with SMTP id tp5so30475357ieb.11
-        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 12:03:49 -0800 (PST)
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:41098 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178Ab3LKSsj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 13:48:39 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so11249307iec.23
+        for <linux-pci@vger.kernel.org>; Wed, 11 Dec 2013 10:48:38 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAD6G_RQzT1AB1LdYptm5RghLKVg_OC4fOP3-J=kXSiA7CV30Ug@mail.gmail.com>
-References: <CAD6G_RT0S43BrOeXxJ6d3p1ALbXkGumZCSPBaK1Bz=2pX3hHYQ@mail.gmail.com>
- <CAErSpo4DNqUpA6Cb_tanW3uRJ3J-4utCQwtRz3eYZETCMtniUQ@mail.gmail.com>
- <CAD6G_RR=toq_6tCav6Y9=EprK9LC3YfGO=scvWpcGfDpWwJbRA@mail.gmail.com>
- <CAErSpo57gPPY73nCHbfGVynZRde0jj9_kjpR=FKwY-uTXzY2cw@mail.gmail.com>
- <CAD6G_RTHNGg7XSnDMQ-H+hUzmh1RPn9gYUDf7vRdeETmTmTdzw@mail.gmail.com>
- <CAErSpo5jLsvMwjuWMctwgvjUrP-RyzxykXG5AbAvTp8K0PezNg@mail.gmail.com>
- <CAD6G_RSvrHGa=OEBgoD_iM68eOzb_2Dq9FneuNjSX_+iTj0_zA@mail.gmail.com>
- <CAErSpo41ATgzfdew=2=X4ULkoENPRaW_PikDLcjWJqeCf5sPMA@mail.gmail.com> <CAD6G_RQzT1AB1LdYptm5RghLKVg_OC4fOP3-J=kXSiA7CV30Ug@mail.gmail.com>
+In-Reply-To: <CAE9FiQWcUqK11PSD-fCnD_G8HzvTh08N8h5tvQe2Z_YdZa7POQ@mail.gmail.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+ <1385429290-25397-11-git-send-email-yinghai@kernel.org> <CAErSpo4Sa6hpv45E9fQB_LsSrTt_mFzxbJvRocuCo9HXcAYfow@mail.gmail.com>
+ <CAE9FiQWcUqK11PSD-fCnD_G8HzvTh08N8h5tvQe2Z_YdZa7POQ@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 5 Dec 2013 13:03:29 -0700
-Message-ID: <CAErSpo41xkDhDRpNmYf9QsAUaBa62C+X+PDqsX2yqFFEeUcNyw@mail.gmail.com>
-Subject: Re: Need help on Linux PCIe
-To: Jagan Teki <jagannadh.teki@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Wed, 11 Dec 2013 11:48:18 -0700
+Message-ID: <CAErSpo4dV_BWj1PFxzmeweg++iA7V8z56P5ZO=vArK4kB_ve4Q@mail.gmail.com>
+Subject: Re: [PATCH v2 10/10] intel-gtt: Read 64bit for gmar_bus_addr
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Airlie <airlied@linux.ie>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 5, 2013 at 11:36 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
-> On Thu, Dec 5, 2013 at 11:45 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Wed, Dec 4, 2013 at 11:30 PM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
->>> On Wed, Dec 4, 2013 at 11:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> On Wed, Dec 4, 2013 at 10:00 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
->>>>> On Wed, Dec 4, 2013 at 8:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>>> On Tue, Dec 3, 2013 at 11:20 PM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
->>>>>>> Thanks for your quick response.
->>>>>>> Please find my comments below.
->>>>>>>
->>>>>>> On Tue, Dec 3, 2013 at 11:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>>>>> On Tue, Dec 3, 2013 at 4:24 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
->>>>>>>>> Hi,
->>>>>>>>>
->>>>>>>>> I have few question on Linux PCIe subsystem, I am trying to understand
->>>>>>>>> the PCIe on ARM platform.
->>>>>>>>> 1. Compared to PCI, PCIe have an extra port functionalists/services
->>>>>>>>> which is implemented drivers/pci/pcie/* is it true?
->>>>>>>>
->>>>>>>> Yes.
->>>>>>>>
->>>>>>>>> 2. PCIe root complex is same as Host controller drivers in linux drivers/host/*
->>>>>>>>
->>>>>>>> Yes.
->>>>>>>>
->>>>>>>>> 3. As individual endpoint drivers are registered to pci_core as
->>>>>>>>> pci_driver_register, then what is the common call for registering
->>>>>>>>> individual HC driver to pci-core?
->>>>>>>>
->>>>>>>> The host controller-PCI core interface is not as mature as the
->>>>>>>> pci_register_driver() interface.  The basic interface is
->>>>>>>> pci_scan_root_bus().  If you skim through the drivers in
->>>>>>>> drivers/pci/host/* and drivers/acpi/pci_root.c, the interface to the
->>>>>>>> PCI core will be fairly obvious.  And you'll learn what the existing
->>>>>>>> practices are in case you need to add or modify something.
->>>>>>>
->>>>>>> OK.
->>>>>>>
->>>>>>> I understand the flow as below - please correct if am wrong.
->>>>>>>
->>>>>>> From low level (hw) - HC driver has a platform registration using
->>>>>>> platform_driver_register() to lower layer
->>>>>>> and then pci_scan_root_bus() --> pci_common_init_dev() registration to
->>>>>>> upper layer as PCI - BIOS and then ends.
->>>>>>
->>>>>> Yes.  Sometime HC drivers use platform_driver_register(); other use
->>>>>> something else depending on how the HC device is enumerated.  For
->>>>>> example, drivers/acpi/pci_root.c uses something else to deal with host
->>>>>> bridges in the ACPI namespace.
->>>>>>
->>>>>>> From upper level (app) - each endpoint driver has
->>>>>>> pci_driver_register() call to PCI Core for lower level
->>>>>>
->>>>>> Yes.
->>>>>>
->>>>>>> and then the upper level registration is based on endpoint().
->>>>>>
->>>>>> I don't know what you mean here (I don't know of a function named
->>>>>> "endpoint()").  But the driver model matches drivers to PCI functions
->>>>>> based on vendor and device IDs.  A Linux "pci_dev" is what the PCI
->>>>>> specs refer to as a "function."
->>>>> Sorry it's typo - added ()
->>>>>
->>>>>>
->>>>>>> What is the connection here for PCI-BIOS and PCI-Core here, does these
->>>>>>> are two different entities means there is no common call for these?
->>>>>>> I see for ARM - "arch/arm/kernel/bios32.c" is PCI-BIOS is it correct?
->>>>>>> does we have separate BIOS codes for architectures?
->>>>>>
->>>>>> The "pcibios_*" functions are architecture-specific things called by
->>>>>> the generic PCI core.  Generally, things specified by the PCI specs
->>>>>> are architecture-independent and should be in the PCI core
->>>>>> (drivers/pci/*).
->>>>>
->>>>> I have some good information to discuss from this thread.
->>>>> Can you please verify this Linux PCIe subsystem stack - comment
->>>>> whether my understanding is correct/not.
->>>>> (I just draw this based on driver calls flow - to accommodate with in
->>>>> the Linux cores)
->>>>> http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
->>>>
->>>> Yes, that makes sense.  I wouldn't label the PCIBIOS - PCI core link
->>>> as "pci_bus_add_device()"; pci_bus_add_device() is part of the PCI
->>>> core's generic enumeration code and shouldn't be called by
->>>> arch-specific code.  The link going from PCI core to PCIBIOS is the
->>>> set of "pcibios_*()" functions.  Going from PCIBIOS to the PCI core,
->>>> it's mostly just pci_scan_root_bus().
->>> Yes - understand your point.
->>> I made few changes accordingly.
->>> http://jagannadhteki.blog.com/files/2013/12/Linux_PCIe_zynq.png
+On Tue, Nov 26, 2013 at 12:35 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Nov 25, 2013 at 7:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> That bar could be 64bit pref mem and above 4G.
+>>>
+>>> -v2: refresh to 3.13-rc1
+>>>
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> Cc: David Airlie <airlied@linux.ie>
+>>> Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 >>
->> Why did you keep the pci_bus_add_device() label?  There are no calls
->> from arch code.  The only calls from outside the PCI core are from
-> Yes.. from ARM I see pci_bus_add_devices() call from BIOS code -
-> arch/arm/kernel/bios32
-> to a defination of pci core side.
+>> This looks OK to me.  Does it depend on any previous patches in this
+>> series?  If not, I think Dave should pick it up.
 >
-> As it's a last call from pci_common_init_dev() - which actually called
-> from HC driver.
+> No.
 >
-> Correct me if am wrong.
+> could be exposed after 5-9 get applied.
 
-Ah, I see.  I searched for "pci_bus_add_device()", which is what's in
-your picture.  It's true that there are several other callers of
-"pci_bus_add_devices()" (with an "s"), including the one from
-pci_common_init_dev().
-
-The reason non-PCI core code calls pci_bus_add_devices() is basically
-historical.  The core isn't yet smart enough to manage all resource
-allocation by itself.  That's why you see things like
-pci_bus_assign_resources() between pci_scan_root_bus() and
-pci_bus_add_devices().  There's nothing arch-specific about assigning
-resources, though, so that all *should* be pulled into the PCI core.
-Then we could get rid of almost all the pci_bus_add_devices() callers.
-
-To get back to your picture, I guess it makes sense to document the
-current state, even if it's not where we want to end up.  But you
-should fix the typo (add the "s" at the end of pci_bus_add_devices())
-and maybe add pci_bus_assign_resources().
+Doesn't that mean that this series should be reordered so this patch
+is *before* patches 5-9 to avoid bisection breakage?  I know you've
+split up and reposted parts of the series, but the question still
+applies.
 
 Bjorn
-
->> i82875p_setup_overfl_dev(), asus_rfkill_hotplug(), and
->> eeepc_rfkill_hotplug().  These are all hacks that should not be
->> emulated.
->
-> --
-> Thanks,
-> Jagan.
-> --------
-> Jagannadha Sutradharudu Teki,
-> E: jagannadh.teki@gmail.com, P: +91-9676773388
-> Engineer - System Software Hacker
-> U-boot - SPI Custodian and Zynq APSOC
-> Ln: http://www.linkedin.com/in/jaganteki
