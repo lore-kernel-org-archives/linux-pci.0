@@ -1,94 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17205 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753246Ab3LSMnW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 19 Dec 2013 07:43:22 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [Patch v2 05/13] PCI, pci-label: treat PCI label with index 0 as valid label
-Date: Thu, 19 Dec 2013 20:38:14 +0800
-Message-Id: <1387456702-4709-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from eu1sys200aog123.obsmtp.com ([207.126.144.155]:41290 "EHLO
+	eu1sys200aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751085Ab3LKJkA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:40:00 -0500
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Subject: [PATCH 00/12] PCI:Add SPEAr13xx PCie support
+Date: Wed, 11 Dec 2013 15:08:25 +0530
+Message-ID: <cover.1386752447.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current pci-label driver detects ACPI label by checking label index
-returned by ACPI _DSM method, and treat it as valid if label index
-is positive. According to ACPI Firmware specification 3.1, zero is
-also an valid label index. So change code to detect availability of
-ACPI slot label by checking availaiblity of ACPI _DSM function for
-PCI label.
+First five patches are improvement and fixes for SPEAr13xx support.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/pci-label.c |   34 ++++++++++++++++++----------------
- 1 file changed, 18 insertions(+), 16 deletions(-)
+Next three patches improves pcie designware driver and fixes the IO
+translation bug. IO translation bug fix leads to the working of PCIe EP devices
+connected to RC through switch.
 
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index f12dcd1..0260b14 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -187,7 +187,6 @@ static const char device_label_dsm_uuid[] = {
- };
+PCIe driver support for SPEAr1310/40 platform board is added.
+
+These patches are tested with SPEAr1310 evaluation board:
+	- INTEL PRO 100/100 EP card
+	- USB xhci gen2 card
+ 	- Above cards connected through LeCROY PTC switch
  
- enum acpi_attr_enum {
--	ACPI_ATTR_NONE = 0,
- 	ACPI_ATTR_LABEL_SHOW,
- 	ACPI_ATTR_INDEX_SHOW,
- };
-@@ -222,20 +221,16 @@ dsm_get_label(struct device *dev, char *buf, enum acpi_attr_enum attr)
- 	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2 &&
- 	    tmp[0].type == ACPI_TYPE_INTEGER &&
- 	    tmp[1].type == ACPI_TYPE_STRING) {
--		len = tmp[0].integer.value;
--		if (buf) {
--			/*
--			 * This second string element is optional even when
--			 * this _DSM is implemented; when not implemented,
--			 * this entry must return a null string.
--			 */
--			if (attr == ACPI_ATTR_INDEX_SHOW)
--				scnprintf(buf, PAGE_SIZE, "%llu\n",
--				tmp->integer.value);
--			else if (attr == ACPI_ATTR_LABEL_SHOW)
--				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
--			len = strlen(buf) > 0 ? strlen(buf) : -1;
--		}
-+		/*
-+		 * The second string element is optional even when
-+		 * this _DSM is implemented; when not implemented,
-+		 * this entry must return a null string.
-+		 */
-+		if (attr == ACPI_ATTR_INDEX_SHOW)
-+			scnprintf(buf, PAGE_SIZE, "%llu\n", tmp->integer.value);
-+		else if (attr == ACPI_ATTR_LABEL_SHOW)
-+			dsm_label_utf16s_to_utf8s(tmp + 1, buf);
-+		len = strlen(buf) > 0 ? strlen(buf) : -1;
- 	}
- 
- 	ACPI_FREE(obj);
-@@ -246,7 +241,14 @@ dsm_get_label(struct device *dev, char *buf, enum acpi_attr_enum attr)
- static bool
- device_has_dsm(struct device *dev)
- {
--	return dsm_get_label(dev, NULL, ACPI_ATTR_NONE) > 0;
-+	acpi_handle handle;
-+
-+	handle = ACPI_HANDLE(dev);
-+	if (!handle)
-+		return false;
-+
-+	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
-+				1 << DEVICE_LABEL_DSM);
- }
- 
- static umode_t
--- 
-1.7.10.4
+Mohit Kumar (4):
+  SPEAr13xx: Correct dt field name for stmmac phy-addr
+  SPEAr13xx: defconfig: Update
+  MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
+  MAINTAINERS: Add Synopsis Designware PCIe driver maintainer
+
+Pratyush Anand (8):
+  SPEAr13xx: Move SPEAr1340 definitions to header file
+  SPEAr13xx: Add SPEAr1310 PCIe register definitions
+  SPEAr13xx: Fix static mapping table
+  clk: SPEAr13xx: Fix pcie clock name
+  pcie: designware: Move register definition to the header file
+  pcie: designware: add dw_pcie prefix before cfg_read/write
+  pcie: designware: Fix IO transfers
+  pcie: SPEAr13xx: Add designware pcie support
+
+ MAINTAINERS                              |   13 +
+ arch/arm/boot/dts/spear13xx.dtsi         |   55 +++-
+ arch/arm/configs/spear13xx_defconfig     |   15 +
+ arch/arm/mach-spear/Kconfig              |    1 +
+ arch/arm/mach-spear/include/mach/spear.h |  132 +++++++-
+ arch/arm/mach-spear/spear1340.c          |   54 ---
+ arch/arm/mach-spear/spear13xx.c          |    2 +-
+ drivers/clk/spear/spear1310_clock.c      |    6 +-
+ drivers/clk/spear/spear1340_clock.c      |    2 +-
+ drivers/pci/host/Kconfig                 |    5 +
+ drivers/pci/host/Makefile                |    2 +
+ drivers/pci/host/pci-exynos.c            |    5 +-
+ drivers/pci/host/pcie-designware.c       |   70 +---
+ drivers/pci/host/pcie-designware.h       |   46 +++-
+ drivers/pci/host/pcie-spear13xx.c        |  564 ++++++++++++++++++++++++++++++
+ 15 files changed, 850 insertions(+), 122 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-spear13xx.c
 
