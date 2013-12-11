@@ -1,66 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:64506 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753880Ab3LNUSn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Dec 2013 15:18:43 -0500
-Received: by mail-ie0-f181.google.com with SMTP id e14so4441681iej.26
-        for <linux-pci@vger.kernel.org>; Sat, 14 Dec 2013 12:18:43 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.186]:51803 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911Ab3LKVbn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 16:31:43 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 06/12] pcie: designware: Move register definition to the header file
+Date: Wed, 11 Dec 2013 22:31:35 +0100
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jagan Teki <jagannadh.teki@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"spear-devel" <spear-devel@list.st.com>,
+	Pratyush ANAND <pratyush.anand@st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com> <CAD6G_RTrETj9p+YNPjRMEFsO7Ggf3LfnuaPOSwO2brUcusNUJw@mail.gmail.com> <2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
+In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHH3p5J7Se8zu64MfoSDkAN_NtOp=qv1DcvWBAa8jWKouo0TXg@mail.gmail.com>
-References: <CAHH3p5+3Zy+YkgDS_1bJ7B84w5iHOh6-QG7LRJXo2WQHREcRHw@mail.gmail.com>
- <CAErSpo59htYoPBoouUfSXAVXwCUQPK-TB_zG0BkE-PLhV=KRbQ@mail.gmail.com> <CAHH3p5J7Se8zu64MfoSDkAN_NtOp=qv1DcvWBAa8jWKouo0TXg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 14 Dec 2013 13:18:23 -0700
-Message-ID: <CAErSpo5k1KZuaL7jYp1-5YaxjdZseDPrFo64mJcb2tu2PWJowA@mail.gmail.com>
-Subject: Re: Memory mapping of config space of pcie devices
-To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201312112231.36039.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc devicetree, linux-arm-kernel]
+On Wednesday 11 December 2013, Mohit KUMAR DCG wrote:
+> > 
+> > Seems like none were using these headers except pcie-designware.c - if ie
+> > the case better to place it same place as before.
+> 
+> - We have include these and used few like ' PCIE_LINK_WIDTH_SPEED_CONTROL '  for SPEAr13xx platform, 
+> so move these to the separate header  file.
 
-On Sat, Dec 14, 2013 at 1:05 PM, shiv prakash Agarwal
-<chhotu.shiv@gmail.com> wrote:
-> On Sun, Dec 15, 2013 at 12:29 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sat, Dec 14, 2013 at 11:32 AM, shiv prakash Agarwal
->> <chhotu.shiv@gmail.com> wrote:
->>> Hi All,
->>>
->>> How devices config spaces are mapped to host memory?
->>> Is it being handled by core driver? I could not locate.
->>
->> The PCI core does not map config space into memory.  That's not even
->> possible for the legacy config access methods, e.g., using I/O ports
->> 0xcf8 and 0xcfc [1].
->>
->> If you're wondering about how Linux uses ECAM, that's mostly in
->> arch/x86/pci/mmconfig*.  That code does ioremap the ECAM area into
->> kernel virtual space, but only for access via pci_read_config_word(),
->> pci_write_config_word(), etc.
->>
->> Bjorn
->>
->> [1] http://en.wikipedia.org/wiki/PCI_configuration_space#Software_implementation
->
-> Thanks Bjorn for quick reply,
->
-> Above reference says:
-> During system initialization, firmware determines the base address for
-> this “stolen” address region and communicates it to the root complex
-> and to the operating system. This communication method is
-> implementation-specific, and not defined in the PCI Express
-> specification.
->
-> How above is implemented on ARM?
+I think it's better not to touch any of the registers from a platform-specific
+driver. Better make a high-level function in the common code that the
+spear driver can call to change this register.
 
-On x86, we learn the ECAM address via ACPI (the MCFG table or a host
-bridge _CBA method).  I don't know how this is done on ARM.  I could
-imagine it being done via device tree, but I really don't know.
-Unfortunately both the address discovery and the actual ECAM accesses
-are in arch-specific code.
-
-Bjorn
+	Arnd
