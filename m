@@ -1,33 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:48957 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755127Ab3LIA6O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2013 19:58:14 -0500
+Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:46221 "EHLO
+	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751368Ab3LKJj7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:39:59 -0500
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Cc: Mohit Kumar <mohit.kumar@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH 11/12] MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
+Date: Wed, 11 Dec 2013 15:08:36 +0530
+Message-ID: <0f924b2ad771dd5c3486c81ed524a3f6e7d813b9.1386752447.git.mohit.kumar@st.com>
+In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <aaaa948b964642859fa142779846211f@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com>
-	<aaaa948b964642859fa142779846211f@DM2PR05MB671.namprd05.prod.outlook.com>
-Date: Sun, 8 Dec 2013 16:58:13 -0800
-Message-ID: <CAE9FiQUBERP_Mtv1V0R6LNrsGLr81bamXV1tSAArwTAqa1qxSA@mail.gmail.com>
-Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
-From: Yinghai Lu <yinghai@kernel.org>
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 8, 2013 at 1:29 PM, Rajat Jain <rajatjain@juniper.net> wrote:
->
-> In fact things do get more complicated if we introduce link state based hot-plug, because then that requires that we do NOT disable the link permanently during power off. (Because we would want to receive future hot-plug link-up events).
+Add Mohit Kumar as maintainer for ST SPEAr13xx PCIe driver.
 
-is that out of spec?
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: linux-pci@vger.kernel.org
+---
+ MAINTAINERS |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Why do we need to use link state event with hotplug? What is attention
-button doing?
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8285ed4..fd03da6 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6462,6 +6462,12 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/pci-exynos.c
+ 
++PCIE DRIVER FOR ST SPEAR13XX
++M:	Mohit Kumar <mohit.kumar@st.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	drivers/pci/host/pcie-spear13xx.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
+-- 
+1.7.0.1
 
-Yinghai
