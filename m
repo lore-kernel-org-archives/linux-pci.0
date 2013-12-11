@@ -1,404 +1,238 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51502 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752199Ab3LBBQw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 20:16:52 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>
-Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
-Date: Mon, 02 Dec 2013 02:29:46 +0100
-Message-ID: <5750980.G76cQES87j@vostro.rjw.lan>
-In-Reply-To: <3611889.9a0SszCTpv@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <CAE9FiQUG-WV26o5MtM=QPfN1kEDGs4Li2wdGB88T==yrxGum_w@mail.gmail.com> <3611889.9a0SszCTpv@vostro.rjw.lan>
+Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:6476
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751057Ab3LKJPg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:15:36 -0500
+From: Jagannadha Sutradharudu Teki
+	<jagannadha.sutradharudu-teki@xilinx.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rob Landley <rob@landley.net>, <linux-pci@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+Subject: [PATCH 2/2] Documentation: pci: Add pcie-howto.txt
+Date: Wed, 11 Dec 2013 14:45:19 +0530
+In-Reply-To: <1386753319-21500-1-git-send-email-jaganna@xilinx.com>
+References: <1386753319-21500-1-git-send-email-jaganna@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
+Message-ID: <9e43a9a6-9883-45c5-aaf1-432ac06c7dce@AM1EHSMHS017.ehs.local>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, December 01, 2013 02:24:33 AM Rafael J. Wysocki wrote:
-> On Saturday, November 30, 2013 02:27:15 PM Yinghai Lu wrote:
-> > On Sat, Nov 30, 2013 at 1:37 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > On Saturday, November 30, 2013 01:31:33 AM Rafael J. Wysocki wrote:
-> > >> On Saturday, November 30, 2013 12:45:55 AM Rafael J. Wysocki wrote:
-> > >> > On Saturday, November 30, 2013 12:38:26 AM Rafael J. Wysocki wrote:
-> > >> > > On Tuesday, November 26, 2013 06:26:54 PM Yinghai Lu wrote:
-> > >> > > > On Tue, Nov 26, 2013 at 5:24 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > >> > > > >
-> > >> > > > > So assume pci_destroy_dev() is called twice in parallel for the same dev
-> > >> > > > > by two different threads.  Thread 1 does the atomic_inc_and_test() and
-> > >> > > > > finds that it is OK to do the device_del() and put_device() which causes
-> > >> > > > > the device object to be freed.  Then thread 2 does the atomic_inc_and_test()
-> > >> > > > > on the already freed device object and crashes the kernel.
-> > >> > > > >
-> > >> > > > thread2 should still hold one extra reference.
-> > >> > > > that is in
-> > >> > > >   device_schedule_callback
-> > >> > > >      ==> sysfs_schedule_callback
-> > >> > > >          ==> kobject_get(kobj)
-> > >> > > >
-> > >> > > > pci_destroy_dev for thread2 is called at this point.
-> > >> > > >
-> > >> > > > and that reference will be released from
-> > >> > > >         sysfs_schedule_callback
-> > >> > > >         ==> kobject_put()...
-> > >> > >
-> > >> > > Well, that would be the case if thread 2 was started by device_schedule_callback(),
-> > >> > > but again, for example, it may be trim_stale_devices() started by acpiphp_check_bridge()
-> > >> > > that doesn't hold extra references to the pci_dev.  [Well, that piece of code
-> > >> > > is racy anyway, because it walks bus->devices without locking.  Which is my
-> > >> > > fault too, because I overlooked that.  Shame, shame.]
-> > >> > >
-> > 
-> > can you add extra reference to that path?
-> 
-> hotplug_event_work()
-> 	hotplug_event()
-> 		acpiphp_check_bridge()
-> 			trim_stale_devices()
-> 				pci_stop_and_remove_bus_device()
-> 
-> Yes, it should hold a reference to dev, but adding it there doesn't really help,
-> because there are list walks over &bus->devices in acpiphp_check_bridge() and
-> trim_stale_devices() that are racy with respect to pci_stop_and_remove_bus_device()
-> run from device_schedule_callback().
-> 
-> > >> > > Perhaps we can do something like the (untested) patch below (in addition to the
-> > >> > > $subject patch).  Do you see any immediate problems with it?
-> > >> >
-> > >> > Ah, I see one.  It will break pci_stop_bus_device() and pci_remove_bus_device().
-> > >> > So much for being clever.
-> > >> >
-> > >> > Moreover, it looks like those two routines above are racy too for the same
-> > >> > reason?
-> > >>
-> > >> The (still untested) patch below is what I have come up with for now.  The
-> > >> is_gone flag is now only operated under pci_remove_rescan_mutex, so it need
-> > >> not be atomic.  Of course, whoever calls pci_stop_and_remove_bus_device()
-> > >> (the "locked" one) should hold a ref to the device being removed to avoid
-> > >> use-after-free (the callers need to be audited for that).
-> > 
-> > if you can use device_schedule_...,
-> 
-> No, I can't.  I need to hold acpi_scan_lock taken in hotplug_event_work()
-> throughout all bus trimming/scanning and I need to protect list walks over
-> &bus->devices too.
-> 
-> > should have hold reference may be
-> > atomic would be better than lock/unlock everywhere?
-> 
-> The locking is necessary not only for the device removal itself, but also for
-> the safety of the &bus->devices list walks.
-> 
-> Besides, remove_callback() in remove.c already holds pci_remove_rescan_mutex
-> around pci_stop_and_remove_bus_device() and I don't see how it would be safe
-> to run pci_stop_and_remove_bus_device() without holding that mutex from
-> anywhere else.
-> 
-> For one example, pci_stop_and_remove_bus_device() that is not run under
-> pci_remove_rescan_mutex can race with the stuff called under that mutex
-> in dev_bus_rescan_store() (and elsewhere in pci-sysfs.c).
-> 
-> So either pci_remove_rescan_mutex is useless and should be dropped, or
-> it is there for a purpose, in which case it needs to be used around
-> pci_stop_and_remove_bus_device() everywhere.  There's no other possibility
-> and to my eyes that mutex is necessary.
+Added pcie-howto.txt for describing the information
+on PCI Express basics and Root Complex driver.
 
-So below is a new version of the patch (which has been tested on my Thunderbolt
-rig without visibly breaking anything) with the description of all the problems
-it attempts to address.  If any of the scenarios described in the changelog are
-not possible for some reason, please tell me why that is the case.  I couldn't
-find such reasons myself.
-
-Thanks,
-Rafael
-
-
+Signed-off-by: Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
 ---
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: PCI / hotplug / ACPI: Fix concurrency problems related to device removal
+ Documentation/PCI/00-INDEX       |   2 +
+ Documentation/PCI/pcie-howto.txt | 184 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 186 insertions(+)
+ create mode 100644 Documentation/PCI/pcie-howto.txt
 
-The following are concurrency problems related to the PCI device
-removal code in pci-sysfs.c and in ACPIPHP present in the current
-mainline kernel:
-
-Scenario 1: pci_stop_and_remove_bus_device() run concurrently for
-  the same top device from remove_callback() in pci-sysfs.c and
-  from trim_stale_devices() in acpiphp_glue.c.
-
-  In this scenario the second code path is executed without
-  pci_remove_rescan_mutex locked, so the &bus->devices list
-  walks in either trim_stale_devices() itself or in
-  acpiphp_check_bridge() can suffer from list corruption while the
-  first code path is executing pci_destroy_dev() for one of the
-  devices on those lists.
-
-  Moreover, if any of the device objects in question is freed
-  after pci_destroy_dev() executed by the first code path, the
-  second code path may suffer a use-after-free problem while
-  trying to access that device object.
-
-  Conversely, the second code path may execute pci_destroy_dev()
-  for one of the devices in question such that one of the
-  &bus->devices list walks in pci_stop_bus_device()
-  or pci_remove_bus_device() executed by the first code path will
-  suffer from a list corruption.
-
-  Moreover, use-after-free is also possible if one of the device
-  objects in question is freed as a result of calling
-  pci_destroy_dev() by the second code path and then the first
-  code path tries to access it (the first code path only holds
-  an extra reference to the device it has been run for, but not
-  for its child devices).
-
-Scenario 2: ACPI hotplug event occurs for a device under a bridge
-  being removed by pci_stop_and_remove_bus_device() run from
-  remove_callback() in pci-sysfs.c.
-
-  In that case it doesn't make sense to handle the hotplug event,
-  because the device in question will be removed anyway along with
-  its parent bridge and that will cause the context objects needed
-  for hotplug handling to be freed as well.
-
-  Moreover, if the event is handled regardless, it may cause one
-  or more devices already removed by pci_stop_and_remove_bus_device()
-  to be added again by the code handling the event, which will
-  conflict with the bridge removal.
-
-Scenario 3: pci_stop_and_remove_bus_device() is run from
-  trim_stale_devices() (as a result of an ACPI hotplug event) in
-  parallel with dev_bus_rescan_store() or bus_rescan_store(),
-  or dev_rescan_store().
-
-  In that scenario the second code path may attempt to operate
-  on device objects being removed by the first code path which
-  may lead to many interesting types of breakage.
-
-Scenario 4: acpi_pci_root_remove() run (as a result of an ACPI PCI
-  host bridge removal event) in  parallel with bus_rescan_store(),
-  dev_bus_rescan_store(), dev_rescan_store(), or remove_callback()
-  for any devices under the host bridge in question.
-
-  In that case the same symptoms as in Scenarios 1 and 3 may occur
-  depending on which code path wins the races involved.
-
-Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
-  for a device and its parent bridge via remove_callback().
-
-  In that case both code paths attempt to acquire
-  pci_remove_rescan_mutex.  If the child device removal acquires
-  it first, there will be no problems.  However, if the parent
-  bridge removal acquires it first, it will eventually execute
-  pci_destroy_dev() for the child device, but that device will
-  not be freed yet due to the reference held by the concurrent
-  child removal.  Consequently, both pci_stop_bus_device() and
-  pci_remove_bus_device() will be executed for that device
-  unnecessarily and pci_destroy_dev() will see a corrupted list
-  head in that object.  Moreover, an excess put_device() will
-  be executed for that device in that case which may lead to a
-  use-after-free in the final kobject_put() done by
-  sysfs_schedule_callback_work().
-
-All of these scenarios are addressed by the patch below as follows.
-
-(1) To prevent Scenarios 1 and 3 from happening hold
-    pci_remove_rescan_mutex around hotplug_event() in
-    hotplug_event_work(() (acpiphp_glue.c).
-
-(2) To prevent Scenario 2 from happening, add an ACPIPHP bridge
-    flag is_going_away indicating that hotplug events should be
-    ignored for children below that bridge.  That flag is set
-    by cleanup_bridge() that for non-root bridges should be run
-    under pci_remove_rescan_mutex (for root bridges it is only
-    run under acpi_scan_lock anyway).
-
-(3) To prevent Scenario 4 from happening, hold
-    pci_remove_rescan_mutex around pci_stop_root_bus() and
-    pci_remove_root_bus() in acpi_pci_root_remove().
-
-(4) To prevent Scenario 5 from happening, add an new is_gone
-    flag to struct pci_dev that will be set by pci_destroy_dev()
-    and checked by pci_stop_and_remove_bus_device().  That only
-    covers cases in which pci_stop_and_remove_bus_device() is
-    run under pci_remove_rescan_mutex, but the other existing
-    cases need to be fixed to use that mutex anyway for other
-    reasons (analogous to Scenarios 1 and 3, for example).
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/pci_root.c            |    4 ++++
- drivers/pci/hotplug/acpiphp.h      |    1 +
- drivers/pci/hotplug/acpiphp_glue.c |   22 ++++++++++++++++++++--
- drivers/pci/pci-sysfs.c            |   11 +++++++++++
- drivers/pci/remove.c               |    7 +++++--
- include/linux/pci.h                |    3 +++
- 6 files changed, 44 insertions(+), 4 deletions(-)
-
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -321,6 +321,7 @@ struct pci_dev {
- 	unsigned int	multifunction:1;/* Part of multi-function device */
- 	/* keep track of device state */
- 	unsigned int	is_added:1;
-+	unsigned int	is_gone:1;
- 	unsigned int	is_busmaster:1; /* device is busmaster */
- 	unsigned int	no_msi:1;	/* device may not use msi */
- 	unsigned int	block_cfg_access:1;	/* config space access is blocked */
-@@ -1021,6 +1022,8 @@ void set_pcie_hotplug_bridge(struct pci_
- int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap);
- unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge);
- unsigned int pci_rescan_bus(struct pci_bus *bus);
-+void lock_pci_remove_rescan(void);
-+void unlock_pci_remove_rescan(void);
- 
- /* Vital product data routines */
- ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
-Index: linux-pm/drivers/pci/pci-sysfs.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-sysfs.c
-+++ linux-pm/drivers/pci/pci-sysfs.c
-@@ -298,6 +298,17 @@ msi_bus_store(struct device *dev, struct
- static DEVICE_ATTR_RW(msi_bus);
- 
- static DEFINE_MUTEX(pci_remove_rescan_mutex);
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index b8b7721..d61e7b9 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -6,6 +6,8 @@ pci-error-recovery.txt
+ 	- Info on PCI error recovery
+ MSI-HOWTO.txt
+ 	- The Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ
++pcie-howto.txt
++	- A guide describing the PCI Express basics and Root Complex driver
+ pcie-portbus-howto.txt
+ 	- A guide describing the PCI Express Port Bus driver
+ pcie-aer-howto.txt
+diff --git a/Documentation/PCI/pcie-howto.txt b/Documentation/PCI/pcie-howto.txt
+new file mode 100644
+index 0000000..963cb75
+--- /dev/null
++++ b/Documentation/PCI/pcie-howto.txt
+@@ -0,0 +1,184 @@
++	PCI Express HOWTO
++	Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
++	05/12/2013
 +
-+void lock_pci_remove_rescan(void)
-+{
-+	mutex_lock(&pci_remove_rescan_mutex);
-+}
++1. About this guide
 +
-+void unlock_pci_remove_rescan(void)
-+{
-+	mutex_unlock(&pci_remove_rescan_mutex);
-+}
++This guide describes the basics of the PCI Express and provides
++information on how Linux PCIe subsystem looks like and at last
++with brief description of PCI Host controller/Root complex driver
++along with some sample code.
 +
- static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 				size_t count)
- {
-Index: linux-pm/drivers/pci/remove.c
-===================================================================
---- linux-pm.orig/drivers/pci/remove.c
-+++ linux-pm/drivers/pci/remove.c
-@@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
- 
- static void pci_destroy_dev(struct pci_dev *dev)
- {
-+	dev->is_gone = 1;
- 	device_del(&dev->dev);
- 
- 	down_write(&pci_bus_sem);
-@@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
-  */
- void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- {
--	pci_stop_bus_device(dev);
--	pci_remove_bus_device(dev);
-+	if (!dev->is_gone) {
-+		pci_stop_bus_device(dev);
-+		pci_remove_bus_device(dev);
-+	}
- }
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -71,6 +71,7 @@ struct acpiphp_bridge {
- 	struct acpiphp_context *context;
- 
- 	int nr_slots;
-+	bool is_going_away;
- 
- 	/* This bus (host bridge) or Secondary bus (PCI-to-PCI bridge) */
- 	struct pci_bus *pci_bus;
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -439,6 +439,13 @@ static void cleanup_bridge(struct acpiph
- 	mutex_lock(&bridge_mutex);
- 	list_del(&bridge->list);
- 	mutex_unlock(&bridge_mutex);
++2. Basic terminology and conventions
 +
-+	/*
-+	 * For non-root bridges this flag is protected by the PCI remove/rescan
-+	 * locking.  For root bridges it is only operated under acpi_scan_lock
-+	 * anyway.
-+	 */
-+	bridge->is_going_away = true;
- }
- 
- /**
-@@ -733,11 +740,17 @@ static void trim_stale_devices(struct pc
-  *
-  * Iterate over all slots under this bridge and make sure that if a
-  * card is present they are enabled, and if not they are disabled.
-+ *
-+ * For non-root bridges call under the PCI remove/rescan mutex.
-  */
- static void acpiphp_check_bridge(struct acpiphp_bridge *bridge)
- {
- 	struct acpiphp_slot *slot;
- 
-+	/* Bail out if the bridge is going away. */
-+	if (bridge->is_going_away)
-+		return;
++PCI Express is
++- A high performance, IO interconnect for peripherals.
++- Low hardware design overhead compared to PCI, as it uses less pins.
++- A serial point-to-point interconnect between two devices.
++- Implements packet based protocol for data transfer.
++- Supports features like Advanced power management, Advanced error
++  reporting facility, and hot-plug.
++					_________
++				       |	 |
++				       |   CPU   |
++				       |_________|
++					    |
++   			 ___________________|___________________________
++			|						| 	  ________
++   			|		ROOT COMPLEX			|        |	  |
++			|						|--------| Memory |
++			|   Switch Port			Root port	|	 |________|
++			|_______________________________________________|
++					    |				  PCIe Bus0
++		____________________________|______________________________________
++				|		|		  |
++	      ____	  ______|______		|	      ____|____
++	     |	  |	 /	       \      __|__	     |	       |
++	     | EP |-----|    SWITCH	|    |     |	     | BRIDGE  |
++	     |____|	 \_____________/     | EP  |	     | PCIe -  |
++			    |	    | 	     |_____|         | PCI/PCIe|
++			  __|__   __|__ 		     |_________|
++			 |     | |     |			  |	  PCIe Bus1
++			 | EP  | | EP  | 		__________|________________
++			 |_____| |_____| 		    |		  |
++							  __|__		__|__
++							 |     |       |     |
++							 | EP  |       | EP  |
++							 |_____|       |_____|
 +
- 	list_for_each_entry(slot, &bridge->slots, node) {
- 		struct pci_bus *bus = slot->bus;
- 		struct pci_dev *dev, *tmp;
-@@ -878,14 +891,19 @@ static void hotplug_event_work(void *dat
- {
- 	struct acpiphp_context *context = data;
- 	acpi_handle handle = context->handle;
-+	struct acpiphp_bridge *bridge = context->func.parent;
- 
- 	acpi_scan_lock_acquire();
-+	lock_pci_remove_rescan();
- 
--	hotplug_event(handle, type, context);
-+	/* Bail out if the parent bridge is going away. */
-+	if (!bridge->is_going_away)
-+		hotplug_event(handle, type, context);
- 
-+	unlock_pci_remove_rescan();
- 	acpi_scan_lock_release();
- 	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
--	put_bridge(context->func.parent);
-+	put_bridge(bridge);
- }
- 
- /**
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -616,6 +616,8 @@ static void acpi_pci_root_remove(struct
- {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 
-+	lock_pci_remove_rescan();
++Root Complex (RC)
++Connects the CPU and memory subsystem to the PCIe fabric (A topology comprised of PCIe
++nodes like Root Complex, Endpoint, Bridge or a Switch)
 +
- 	pci_stop_root_bus(root->bus);
- 
- 	device_set_run_wake(root->bus->bridge, false);
-@@ -623,6 +625,8 @@ static void acpi_pci_root_remove(struct
- 
- 	pci_remove_root_bus(root->bus);
- 
-+	unlock_pci_remove_rescan();
++Port
++Interface between a PCIe component and the Link.
 +
- 	kfree(root);
- }
- 
++Link
++PCIe interconnect is referred as a Link, and connects two devices.
++
++Lane
++A PCIe link consists of either 1, 2, 4, 8, 12, 16 or 32 signals in each direction
++(each signal needs two wires - one for Tx and other for Rx). these signals are
++referred to as Lanes.
++
++Upstream Port
++Port that points in the direction of RC.
++
++Downstream Port
++Port the points away from the RC.
++
++Root Port
++Whose upstream port is RC and dowstream port should be a EP or Bridge.
++
++Switch Port
++Whose upstream port is RC and dowstream port is always be a switch.
++
++Endpoint (EP)
++Devices other than RC, Switches and Bridges which either generates or terminates a PCIe
++transaction. These are peripheral devices such as Ethernet, USB and graphics devices.
++
++Switch
++PCIe device single upstream port as RC and multiple downstream ports as EP's,
++Switches or Bridges.
++
++Bridge
++Is for extending PCIe Bus segment - whose downstream port points to one more PCIe bus.
++
++3. Linux PCIe Subsystem
++
++					  ifconfig	open()/close/read()/write()	   /proc, /sys
++					      ^		     ^		   ^			^
++					      |		     |		   |			|
++					      |		     |		   |			|
++  					      |              |		   |			V
++					      |		     |		   |		PCIe Port Bus services
++					      |		     |		   |		(AER, HP, PME, VC
++					      |		     |		   |		 drivers/pci/pcie/
++					      |		     |		   |		 drivers/pci/hotplug)
++					      V		     V		   V			^
++					    Socket 	    Block	 Char		        |
++					    layer	 Subsystem	Subsystem		|
++					      ^		     ^		   ^			| pcie_port_service_register()
++					      |		     |		   |			|
++					      |		     |		   |			|
++					      V		     V		   V			V
++					 Common net	    USB		 Input		  PCIe Port Core
++					 device layer       Core	 Core    (drivers/pci/pcie/portdrv_core.c)
++					      ^		     ^		   ^			^
++					      |		     |		   |			| pcie_port_bus_register()
++					      |		     |		   |			|
++					 _____V_____	 ____V____     ____V_____      _________V___________
++					|	    |	|         |   |		 |    | 		    |
++			All these are	| GEM 	    |	| USB HC  |   | Mouse/KB/|    | PCIe Port Bus driver|
++			PCI endpoint	| Controller|	| driver  |   | TS HC	 |    | (drivers/pci/pcie/  |
++			drivers		| driver    |	|	  |   |	driver	 |    |	 portdrv_pci.c)     |
++					|___________|	|_________|   |__________|    |_____________________|
++					      ^	             ^             ^			^
++					      |__________    |		   |	       _________|
++							 |   |		   |	      |		 pci_register_driver()
++	     ___________________  pci_bus_*()	       __V___V_____________V__________V______
++	    |			| pci_scan_root_bus() |					     |
++	    |	  PCI BIOS	|-------------------->|     	     PCI Core		     |
++            | (arch/arm/kernel/ |<--------------------|          (drivers/pci/pci*	     |
++      ----->|        bios32.c))	|<---     pcibios_*() |           drivers/pci/bus.c)	     |
++      |     |___________________|   |		      |______________________________________|
++      |		     ^		    |
++      |		     |		    | pci_common_init_dev()
++      |		     |		    |
++  ____V___	 ____V___	 ___V____
++ | 	  |     |	 |	|	 |
++ | Renesas|	| Tergra |	| Exynos |
++ | PCI HC | 	| PCIe HC|	| PCIe HC| drivers/pci/host/
++ | driver |	| driver |	| driver | All these are
++ |________|	|________|	|________| PCI Root Complex drivers
++     |		    |		    |
++     |		    |		    |
++     V		    V		    V
++         platform_driver_register()
++
++Note:
++Linux PCI subsystem is like above one without have a PCIe port bus stack.
++For more details abou this block see http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
++
++PCI HC/RC driver
++- Low level initialization and configuration (board, soc)
++- Invokes PCI-BIOS - for bus enumerations so-that the endpoints on bus is ready.
++- Supplies struct pci_ops to read/write config space.
++- Setup the resources like bus numbers, memory/IO space, Interrupt numbers, MSI.
++- Register PCI-BIOS as pci_common_init_dev()
++
++PCI BIOS
++- Architecture specific PCI
++- Bus enumeration - Lane, Bus, Device, Memory, Interrupt.
++- Enumeration ends up with scanning all endpoints on bus got discovered.
++- Register to PCI core for common accessing of endpoint drivers.
++- pci_scan_root_bus() and pci_bus_*()
++
++PCI Core
++- Provides services to Lower level BIOS and Upper level endpoint layers.
++- Creates device entries for proc/sysfs information.
++- Linux kernel pci bus and driver management code.
++- Provides set of abstraction functions that endpoint drivers can used to
++  initiate pci communication with attached endpoints.
++- Calls BIOS codes with pcibios_*
++
++PCI Endpoint driver
++- Individual endpoint drivers from upper layer.
++- Accessing config space upon respective endpoint enumeration done.
++- Communicate over the endpoint for Tx/Rx transactions.
++- Register to PCI core as pci_driver_register()
++
++PCIe Port Bus driver
++- A logical PCI-PCI Bridge structure.
++- Root Port and the Switch Port.
++- See Documentation/PCI/pcie-busport-howto.txt
++
++4. PCI HC/RC driver
++
++4.1 Description
++
++4.2 Sample code
++
++5. References
++http://www.mindshare.com/files/ebooks/pci%20express%20system%20architecture.pdf
++http://www.pcisig.com/developers/main/training_materials/
+-- 
+1.8.3
+
 
