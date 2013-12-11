@@ -1,112 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:38353 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753620Ab3LCTmp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 14:42:45 -0500
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com
-Subject: [PATCH 2/6] Crashdump-Accepting-Active-IOMMU-Utility-functions
-Date: Tue,  3 Dec 2013 12:41:30 -0700
-Message-Id: <1386099694-4190-3-git-send-email-bill.sumner@hp.com>
-In-Reply-To: <1386099694-4190-1-git-send-email-bill.sumner@hp.com>
-References: <Crashdump-Accepting-Active-IOMMU>
- <1386099694-4190-1-git-send-email-bill.sumner@hp.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:38589 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892Ab3LKXvj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 18:51:39 -0500
+Date: Thu, 12 Dec 2013 08:51:35 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Wei Yongjun <weiyj.lk@gmail.com>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
+ host maintainers
+Message-ID: <20131211235135.GA11671@verge.net.au>
+References: <20131211183237.GI4699@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131211183237.GI4699@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
+> If this looks reasonable, I'll merge it via the PCI tree for v3.13.
+> 
+> Bjorn
+> 
+> 
+> MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
+> 
+> Add entries for PCI host controller drivers in drivers/pci/host/.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Bill Sumner <bill.sumner@hp.com>
----
- drivers/iommu/intel-iommu.c | 74 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+Renesas R-Car potion:
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index a0e8a76..b68b962 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -4453,3 +4453,77 @@ static void __init check_tylersburg_isoch(void)
- 	printk(KERN_WARNING "DMAR: Recommended TLB entries for ISOCH unit is 16; your BIOS set %d\n",
- 	       vtisochctrl);
- }
-+#ifdef CONFIG_CRASH_DUMP
-+
-+/* ========================================================================
-+ * Utility functions for accessing the iommu Translation Tables
-+ * ------------------------------------------------------------------------
-+ */
-+static inline struct context_entry *
-+get_context_phys_from_root(struct root_entry *root)
-+{
-+	return (struct context_entry *)
-+		(root_present(root) ? (void *) (root->val & VTD_PAGE_MASK)
-+				    : NULL);
-+}
-+
-+static int
-+context_get_p(struct context_entry *c)    {return((c->lo >> 0) & 0x1); }
-+
-+static int
-+context_get_fpdi(struct context_entry *c) {return((c->lo >> 1) & 0x1); }
-+
-+static int
-+context_get_t(struct context_entry *c)    {return((c->lo >> 2) & 0x3); }
-+
-+static u64
-+context_get_asr(struct context_entry *c)  {return((c->lo >> 12));      }
-+
-+static int
-+context_get_aw(struct context_entry *c)   {return((c->hi >> 0) & 0x7); }
-+
-+static int
-+context_get_aval(struct context_entry *c) {return((c->hi >> 3) & 0xf); }
-+
-+static int
-+context_get_did(struct context_entry *c)  {return((c->hi >> 8) & 0xffff); }
-+
-+static void context_put_asr(struct context_entry *c, unsigned long asr)
-+{
-+	c->lo &= (~VTD_PAGE_MASK);
-+	c->lo |= (asr << VTD_PAGE_SHIFT);
-+}
-+
-+
-+/*
-+ * Copy memory from a physically-addressed area into a virtually-addressed area
-+ */
-+static int oldcopy(void *to, void *from, int size)
-+{
-+	size_t ret = 0;			/* Length copied */
-+	unsigned long pfn;		/* Page Frame Number */
-+	char *buf = to;			/* Adr(Output buffer) */
-+	size_t csize = (size_t)size;	/* Num(bytes to copy) */
-+	unsigned long offset;		/* Lower 12 bits of from */
-+	int userbuf = 0;		/* to is in kernel space */
-+
-+	if (pr_dbg.enter_oldcopy)
-+		pr_debug("ENTER %s to=%16.16llx, from = %16.16llx, size = %d\n",
-+			__func__,
-+			(unsigned long long) to,
-+			(unsigned long long) from, size);
-+
-+	if (intel_iommu_translation_tables_are_mapped)
-+		memcpy(to, phys_to_virt((phys_addr_t)from), csize);
-+	else {
-+		pfn = ((unsigned long) from) >> VTD_PAGE_SHIFT;
-+		offset = ((unsigned long) from) & (~VTD_PAGE_MASK);
-+		ret = copy_oldmem_page(pfn, buf, csize, offset, userbuf);
-+	}
-+
-+	if (pr_dbg.leave_oldcopy)
-+		pr_debug("LEAVE %s ret=%d\n", __func__, (int) ret);
-+
-+	return (int) ret;
-+}
-+#endif /* CONFIG_CRASH_DUMP */
--- 
-Bill Sumner <bill.sumner@hp.com>
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
+> ---
+>  MAINTAINERS |   31 +++++++++++++++++++++++++++++++
+>  1 file changed, 31 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 8285ed4676b6..826c722d92ba 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6449,16 +6449,47 @@ F:	drivers/pci/
+>  F:	include/linux/pci*
+>  F:	arch/x86/pci/
+>  
+> +PCI DRIVER FOR DESIGNWARE
+> +M:	Jingoo Han <jg1.han@samsung.com>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	drivers/pci/host/*designware*
+> +
+> +PCI DRIVER FOR IMX6
+> +M:	Shawn Guo <shawn.guo@linaro.org>
+> +L:	linux-pci@vger.kernel.org
+> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> +S:	Maintained
+> +F:	drivers/pci/host/*imx6*
+> +
+> +PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
+> +M:	Jason Cooper <jason@lakedaemon.net>
+> +L:	linux-pci@vger.kernel.org
+> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> +S:	Maintained
+> +F:	drivers/pci/host/*mvebu*
+> +
+>  PCI DRIVER FOR NVIDIA TEGRA
+>  M:	Thierry Reding <thierry.reding@gmail.com>
+>  L:	linux-tegra@vger.kernel.org
+> +L:	linux-pci@vger.kernel.org
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>  F:	drivers/pci/host/pci-tegra.c
+>  
+> +PCI DRIVER FOR RENESAS R-CAR
+> +M:	Simon Horman <horms@verge.net.au>
+> +M:	Magnus Damm <magnus.damm@gmail.com>
+> +L:	linux-pci@vger.kernel.org
+> +L:	linux-sh@vger.kernel.org
+> +S:	Maintained
+> +F:	drivers/pci/host/*rcar*
+> +
+>  PCI DRIVER FOR SAMSUNG EXYNOS
+>  M:	Jingoo Han <jg1.han@samsung.com>
+>  L:	linux-pci@vger.kernel.org
+> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> +L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
+>  S:	Maintained
+>  F:	drivers/pci/host/pci-exynos.c
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
