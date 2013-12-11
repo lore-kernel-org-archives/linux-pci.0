@@ -1,60 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:37055 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932690Ab3LDRIn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 12:08:43 -0500
-Date: Wed, 4 Dec 2013 09:08:37 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: stefano.stabellini@eu.citrix.com, ian.campbell@citrix.com,
-	xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	leosilva@linux.vnet.ibm.com, ashley@ashleylai.com,
-	peterhuewe@gmx.de, mail@srajiv.net, tpmdd@selhorst.net,
-	tpmdd@sirrix.com, bhelgaas@google.com, plagnioj@jcrosoft.com,
-	tomi.valkeinen@ti.com, tpmdd-devel@lists.sourceforge.net,
-	linux-input@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-fbdev@vger.kernel.org
-Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
-Message-ID: <20131204170837.GB8838@core.coreip.homeip.net>
-References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
- <20131204164218.GA8838@core.coreip.homeip.net>
- <20131204164802.GG391@pegasus.dumpdata.com>
+Received: from moutng.kundenserver.de ([212.227.17.9]:52101 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751700Ab3LKWsg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 17:48:36 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header file
+Date: Wed, 11 Dec 2013 23:48:06 +0100
+Cc: Mohit Kumar <mohit.kumar@st.com>, linux-pci@vger.kernel.org,
+	Pratyush Anand <pratyush.anand@st.com>,
+	spear-devel@list.st.com, Viresh Kumar <viresh.linux@gmail.com>
+References: <cover.1386752447.git.mohit.kumar@st.com> <9ae7b152da13c094b024c54d27187aab96e439b3.1386752447.git.mohit.kumar@st.com>
+In-Reply-To: <9ae7b152da13c094b024c54d27187aab96e439b3.1386752447.git.mohit.kumar@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131204164802.GG391@pegasus.dumpdata.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201312112348.06755.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 04, 2013 at 11:48:03AM -0500, Konrad Rzeszutek Wilk wrote:
-> > > which is hardly nice. This patch fixes this by having each
-> > > PV driver check for:
-> > >  - if running in PV, then it is fine to execute (as that is their
-> > >    native environment).
-> > >  - if running in HVM, check if user wanted 'xen_emul_unplug=never',
-> > >    in which case bail out and don't load PV drivers.
-> > >  - if running in HVM, and if PCI device 5853:0001 (xen_platform_pci)
-> > >    does not exist, then bail out and not load PV drivers.
-> > > 
-> > > P.S.
-> > > Ian Campbell suggested getting rid of 'xen_platform_pci_unplug'
-> > > but unfortunatly the xen-blkfront driver is using it, so we
-> > > cannot do it.
-> > > 
-> > > Reported-by: Sander Eikelenboom <linux@eikelenboom.it
-> > > Reported-by: Anthony PERARD <anthony.perard@citrix.com>
-> > > Reported-by: Fabio Fantoni <fabio.fantoni@m2r.biz>
-> > 
-> > For input:
-> > 
-> > Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+On Wednesday 11 December 2013, Mohit Kumar wrote:
+> From: Pratyush Anand <pratyush.anand@st.com>
 > 
-> Thank you. I need to do some extra changes to the other subsystems but
-> for the fb/kbd itshould be still throught the same function as this
-> patch has exposed. I will repost it and include your Ack if you are OK
-> with that?
+> Move SPEAr1340 definitions to header files so that theese can be used by
+> other code too.
 
-Sure.
+This looks like a regression, we intentionally made them private and they
+should be moved into a proper driver instead of being globally visible.
 
--- 
-Dmitry
+> diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
+> index 5cdc53d..4526f75 100644
+> --- a/arch/arm/mach-spear/include/mach/spear.h
+> +++ b/arch/arm/mach-spear/include/mach/spear.h
+> @@ -86,6 +86,61 @@
+>  /* Debug uart for linux, will be used for debug and uncompress messages */
+>  #define SPEAR_DBG_UART_BASE			UART_BASE
+>  
+> +/* PCIe/SATA Base addresses */
+> +#define SPEAR1340_SATA_BASE			UL(0xB1000000)
+> +#define SPEAR1340_PCIE_BASE			UL(0xB1000000)
+
+These should be in DT only.
+
+> +/* Power Management Registers */
+> +#define SPEAR1340_PCM_CFG			(VA_MISC_BASE + 0x100)
+> +#define SPEAR1340_PCM_WKUP_CFG			(VA_MISC_BASE + 0x104)
+> +#define SPEAR1340_SWITCH_CTR			(VA_MISC_BASE + 0x108)
+> +
+> +#define SPEAR1340_PERIP1_SW_RST			(VA_MISC_BASE + 0x318)
+> +#define SPEAR1340_PERIP2_SW_RST			(VA_MISC_BASE + 0x31C)
+> +#define SPEAR1340_PERIP3_SW_RST			(VA_MISC_BASE + 0x320)
+
+The RST bits should probably go into a drivers/reset driver. Not sure what the
+other registers do, but I'm sure we can find a driver for these too, possibly
+they should be part of the PHY driver?
+
+> @@ -22,60 +22,6 @@
+>  #include <mach/spear.h>
+>  
+>  /* FIXME: Move SATA PHY code into a standalone driver */
+> -
+> -
+> -/* PCIE - SATA configuration registers */
+> -#define SPEAR1340_PCIE_SATA_CFG			(VA_MISC_BASE + 0x424)
+> -	/* PCIE CFG MASks */
+> -	#define SPEAR1340_PCIE_CFG_DEVICE_PRESENT	(1 << 11)
+> -	#define SPEAR1340_PCIE_CFG_POWERUP_RESET	(1 << 10)
+> -	#define SPEAR1340_PCIE_CFG_CORE_CLK_EN		(1 << 9)
+> -	#define SPEAR1340_PCIE_CFG_AUX_CLK_EN		(1 << 8)
+> -	#define SPEAR1340_SATA_CFG_TX_CLK_EN		(1 << 4)
+> -	#define SPEAR1340_SATA_CFG_RX_CLK_EN		(1 << 3)
+> -	#define SPEAR1340_SATA_CFG_POWERUP_RESET	(1 << 2)
+
+You leave the FIXME in place but move away the definitions it talks about.
+Please fix the problem instead.
+
+	Arnd
