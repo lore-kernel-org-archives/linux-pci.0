@@ -1,50 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:63623 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755587Ab3LSQij (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 11:38:39 -0500
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:51221 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab3LKT6Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 14:58:25 -0500
 MIME-Version: 1.0
-In-Reply-To: <1387433380-18564-2-git-send-email-yinghai@kernel.org>
-References: <1387433380-18564-1-git-send-email-yinghai@kernel.org>
-	<1387433380-18564-2-git-send-email-yinghai@kernel.org>
-Date: Thu, 19 Dec 2013 08:38:39 -0800
-Message-ID: <CAE9FiQXUAdVQf6SZ_n2Hcq5QK+dAU+ufPEORzdpQyrEOVyD-9Q@mail.gmail.com>
-Subject: Re: [PATCH v5 1/3] PCI: Try to allocate mem64 above 4G at first
+In-Reply-To: <CAErSpo4dV_BWj1PFxzmeweg++iA7V8z56P5ZO=vArK4kB_ve4Q@mail.gmail.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+	<1385429290-25397-11-git-send-email-yinghai@kernel.org>
+	<CAErSpo4Sa6hpv45E9fQB_LsSrTt_mFzxbJvRocuCo9HXcAYfow@mail.gmail.com>
+	<CAE9FiQWcUqK11PSD-fCnD_G8HzvTh08N8h5tvQe2Z_YdZa7POQ@mail.gmail.com>
+	<CAErSpo4dV_BWj1PFxzmeweg++iA7V8z56P5ZO=vArK4kB_ve4Q@mail.gmail.com>
+Date: Wed, 11 Dec 2013 11:58:25 -0800
+Message-ID: <CAE9FiQW8ZwELZwGooUAwkEv86fHWu0t7+mHo8ZoS9EsV5XZE+Q@mail.gmail.com>
+Subject: Re: [PATCH v2 10/10] intel-gtt: Read 64bit for gmar_bus_addr
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Airlie <airlied@linux.ie>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 18, 2013 at 10:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On system with more pcie cards, we do not have enough range under 4G
-> to allocate those pci devices.
+On Wed, Dec 11, 2013 at 10:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
-> On 64bit system, we could try to allocate mem64 above 4G at first,
-> and fall back to below 4g if it can not find any above 4g.
->
-> x86 32bit without X86_PAE support will have bottom set to 0, because
-> resource_size_t is 32bit.
-> For 32bit kernel that resource_size_t is 64bit when pae is support.
-> we are safe because iomem_resource is limited to 32bit according to
-> x86_phys_bits.
->
-> -v2: update bottom assigning to make it clear for non-pae support machine.
-> -v3: Bjorn's change:
->         use MAX_RESOURCE instead of -1
->         use start/end instead of bottom/max
->         for all arch instead of just x86_64
-> -v4: updated after PCI_MAX_RESOURCE_32 change.
-> -v5: restore io handling to use PCI_MAX_RESOURCE_32 as limit.
-> -v6: checking pcibios_resource_to_bus return for every bus res, to decide it
->         if we need to try high at first.
->      It supports all arches instead of just x86_64.
-> -v7: split 4G limit change out to another patch according to Bjorn.
->      also use pci_clip_resource instead.
-> -v8: refresh after changes in pci/resource.
+> Doesn't that mean that this series should be reordered so this patch
+> is *before* patches 5-9 to avoid bisection breakage?  I know you've
+> split up and reposted parts of the series, but the question still
+> applies.
 
-looks still have other problem, will send out updated version later.
+Yes, you are right.
+
+Maybe we have this one go through via Dave Airlie at first for 3.13?
+
+Thanks
+
+Yinghai
