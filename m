@@ -1,116 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:63453 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751551Ab3LQAgd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 19:36:33 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVQUsvYuRJQyvbyCkGjwwaKsgF2b8wTzi-KV4vex7Y5mg@mail.gmail.com>
-References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
-	<1386658484-15774-5-git-send-email-yinghai@kernel.org>
-	<20131216082329.GA4926@yanx>
-	<CAE9FiQWONC84f35_Jyvs=nwXdj4QWCBdokOgiFWDgWSSpcf_NA@mail.gmail.com>
-	<CAE9FiQVQUsvYuRJQyvbyCkGjwwaKsgF2b8wTzi-KV4vex7Y5mg@mail.gmail.com>
-Date: Mon, 16 Dec 2013 16:36:32 -0800
-Message-ID: <CAE9FiQV8kJZz0oaiZOvfWce_bu+8nZB2Qtw7KjLeASTkwUrjug@mail.gmail.com>
-Subject: Re: [PATCH v4 4/5] PCI: Try best to allocate pref mmio 64bit above 4g
-From: Yinghai Lu <yinghai@kernel.org>
-To: Guo Chao <yan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=001a11c2190ac42cd204edb01efb
+Received: from mailout2.samsung.com ([203.254.224.25]:18494 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076Ab3LKWYu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 17:24:50 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Simon Horman' <horms@verge.net.au>,
+	'Magnus Damm' <magnus.damm@gmail.com>,
+	'Valentine Barshak' <valentine.barshak@cogentembedded.com>,
+	'Wei Yongjun' <weiyj.lk@gmail.com>,
+	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
+	'Kuninori Morimoto' <kuninori.morimoto.gx@renesas.com>,
+	'Mohit Kumar' <mohit.kumar@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <20131211183237.GI4699@google.com>
+ <20131211184321.GJ4699@google.com>
+In-reply-to: <20131211184321.GJ4699@google.com>
+Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada,
+ R-Car PCI host maintainers
+Date: Thu, 12 Dec 2013 07:24:47 +0900
+Message-id: <000f01cef6bf$cd0fe340$672fa9c0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a11c2190ac42cd204edb01efb
-Content-Type: text/plain; charset=ISO-8859-1
+On Thursday, December 12, 2013 3:43 AM, Bjorn Helgaas wrote:
+> On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
+> > If this looks reasonable, I'll merge it via the PCI tree for v3.13.
+> 
+> And I see Mohit's patch [1] to update the DesignWare entry:
+> 
+> +PCIE DRIVER FOR SYNOPSIS DESIGNWARE CONTROLLER
+> +M:	Mohit Kumar <mohit.kumar@st.com>
+> +M:	Jingoo Han <jg1.han@samsung.com>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	drivers/pci/host/pcie-designware.c
+> 
+> I can fold in that update too if Jingoo acks it.
+> 
+> [1] http://patchwork.ozlabs.org/patch/299905/
 
-On Mon, Dec 16, 2013 at 1:36 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Dec 16, 2013 at 10:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>
->>> 64-bit non-prefetchable BARs are missed from caculation in the scheme,
->>> causing assign failed eventually.
+Hi Bjorn,
 
->>>
->>> Will you figure out a better way to cover them or just add a 'type3' parameter?
->
-> Looks like we have add type3 for that case.
+I agree with this. :-)
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-please check attached delta patch.
+Best regards,
+Jingoo Han
 
-Thanks
+> > MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
+> >
+> > Add entries for PCI host controller drivers in drivers/pci/host/.
+> >
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  MAINTAINERS |   31 +++++++++++++++++++++++++++++++
+> >  1 file changed, 31 insertions(+)
+> >
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index 8285ed4676b6..826c722d92ba 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -6449,16 +6449,47 @@ F:	drivers/pci/
+> >  F:	include/linux/pci*
+> >  F:	arch/x86/pci/
+> >
+> > +PCI DRIVER FOR DESIGNWARE
+> > +M:	Jingoo Han <jg1.han@samsung.com>
+> > +L:	linux-pci@vger.kernel.org
+> > +S:	Maintained
+> > +F:	drivers/pci/host/*designware*
+> > +
+> > +PCI DRIVER FOR IMX6
+> > +M:	Shawn Guo <shawn.guo@linaro.org>
+> > +L:	linux-pci@vger.kernel.org
+> > +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> > +S:	Maintained
+> > +F:	drivers/pci/host/*imx6*
+> > +
+> > +PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
+> > +M:	Jason Cooper <jason@lakedaemon.net>
+> > +L:	linux-pci@vger.kernel.org
+> > +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> > +S:	Maintained
+> > +F:	drivers/pci/host/*mvebu*
+> > +
+> >  PCI DRIVER FOR NVIDIA TEGRA
+> >  M:	Thierry Reding <thierry.reding@gmail.com>
+> >  L:	linux-tegra@vger.kernel.org
+> > +L:	linux-pci@vger.kernel.org
+> >  S:	Supported
+> >  F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> >  F:	drivers/pci/host/pci-tegra.c
+> >
+> > +PCI DRIVER FOR RENESAS R-CAR
+> > +M:	Simon Horman <horms@verge.net.au>
+> > +M:	Magnus Damm <magnus.damm@gmail.com>
+> > +L:	linux-pci@vger.kernel.org
+> > +L:	linux-sh@vger.kernel.org
+> > +S:	Maintained
+> > +F:	drivers/pci/host/*rcar*
+> > +
+> >  PCI DRIVER FOR SAMSUNG EXYNOS
+> >  M:	Jingoo Han <jg1.han@samsung.com>
+> >  L:	linux-pci@vger.kernel.org
+> > +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> > +L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
+> >  S:	Maintained
+> >  F:	drivers/pci/host/pci-exynos.c
+> >
 
-Yinghai
-
---001a11c2190ac42cd204edb01efb
-Content-Type: text/x-patch; charset=US-ASCII; name="pref_mem_64_only_fix_non_pref.patch"
-Content-Disposition: attachment;
-	filename="pref_mem_64_only_fix_non_pref.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hpaf81mr0
-
-LS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgMTcgKysrKysrKysrKystLS0tLS0KIGRy
-aXZlcnMvcGNpL3NldHVwLXJlcy5jIHwgICAgOCArKysrKystLQogMiBmaWxlcyBjaGFuZ2VkLCAx
-NyBpbnNlcnRpb25zKCspLCA4IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJz
-L3BjaS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3Bj
-aS9zZXR1cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCkBAIC05
-MTYsNiArOTE2LDcgQEAgc3RhdGljIGlubGluZSByZXNvdXJjZV9zaXplX3QgY2FsY3VsYXRlXwog
-ICovCiBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9idXMgKmJ1cywgdW5zaWdu
-ZWQgbG9uZyBtYXNrLAogCQkJIHVuc2lnbmVkIGxvbmcgdHlwZSwgdW5zaWduZWQgbG9uZyB0eXBl
-MiwKKwkJCSB1bnNpZ25lZCBsb25nIHR5cGUzLAogCQkJIHJlc291cmNlX3NpemVfdCBtaW5fc2l6
-ZSwgcmVzb3VyY2Vfc2l6ZV90IGFkZF9zaXplLAogCQkJIHN0cnVjdCBsaXN0X2hlYWQgKnJlYWxs
-b2NfaGVhZCkKIHsKQEAgLTk0Niw3ICs5NDcsOCBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0o
-c3RydWN0IHBjaV9idXMKIAkJCXJlc291cmNlX3NpemVfdCByX3NpemU7CiAKIAkJCWlmIChyLT5w
-YXJlbnQgfHwgKChyLT5mbGFncyAmIG1hc2spICE9IHR5cGUgJiYKLQkJCQkJICAoci0+ZmxhZ3Mg
-JiBtYXNrKSAhPSB0eXBlMikpCisJCQkJCSAgKHItPmZsYWdzICYgbWFzaykgIT0gdHlwZTIgJiYK
-KwkJCQkJICAoci0+ZmxhZ3MgJiBtYXNrKSAhPSB0eXBlMykpCiAJCQkJY29udGludWU7CiAJCQly
-X3NpemUgPSByZXNvdXJjZV9zaXplKHIpOwogI2lmZGVmIENPTkZJR19QQ0lfSU9WCkBAIC0xMTE5
-LDcgKzExMjEsNyBAQCB2b2lkIF9fcmVmIF9fcGNpX2J1c19zaXplX2JyaWRnZXMoc3RydWN0CiAJ
-CQlzdHJ1Y3QgbGlzdF9oZWFkICpyZWFsbG9jX2hlYWQpCiB7CiAJc3RydWN0IHBjaV9kZXYgKmRl
-djsKLQl1bnNpZ25lZCBsb25nIG1hc2ssIHByZWZtYXNrLCB0eXBlMiA9IDA7CisJdW5zaWduZWQg
-bG9uZyBtYXNrLCBwcmVmbWFzaywgdHlwZTIgPSAwLCB0eXBlMyA9IDA7CiAJcmVzb3VyY2Vfc2l6
-ZV90IGFkZGl0aW9uYWxfbWVtX3NpemUgPSAwLCBhZGRpdGlvbmFsX2lvX3NpemUgPSAwOwogCXN0
-cnVjdCByZXNvdXJjZSAqYl9yZXM7CiAKQEAgLTExNzEsMjYgKzExNzMsMjkgQEAgdm9pZCBfX3Jl
-ZiBfX3BjaV9idXNfc2l6ZV9icmlkZ2VzKHN0cnVjdAogCQlwcmVmbWFzayA9IElPUkVTT1VSQ0Vf
-TUVNIHwgSU9SRVNPVVJDRV9QUkVGRVRDSDsKIAkJaWYgKGJfcmVzWzJdLmZsYWdzICYgSU9SRVNP
-VVJDRV9NRU1fNjQpIHsKIAkJCXByZWZtYXNrIHw9IElPUkVTT1VSQ0VfTUVNXzY0OwotCQkJaWYg
-KHBidXNfc2l6ZV9tZW0oYnVzLCBwcmVmbWFzaywgcHJlZm1hc2ssIHByZWZtYXNrLAorCQkJaWYg
-KHBidXNfc2l6ZV9tZW0oYnVzLCBwcmVmbWFzaywgcHJlZm1hc2ssCisJCQkJICBwcmVmbWFzaywg
-cHJlZm1hc2ssCiAJCQkJICByZWFsbG9jX2hlYWQgPyAwIDogYWRkaXRpb25hbF9tZW1fc2l6ZSwK
-IAkJCQkgIGFkZGl0aW9uYWxfbWVtX3NpemUsIHJlYWxsb2NfaGVhZCkpIHsKIAkJCQkJLyogU3Vj
-Y2Vzcywgc2l6ZSBub24tcHJlZjY0IG9ubHkuICovCiAJCQkJCW1hc2sgPSBwcmVmbWFzazsKIAkJ
-CQkJdHlwZTIgPSBwcmVmbWFzayAmIH5JT1JFU09VUkNFX01FTV82NDsKKwkJCQkJdHlwZTMgPSBw
-cmVmbWFzayAmIH5JT1JFU09VUkNFX1BSRUZFVENIOwogCQkJfQogCQl9CiAJCWlmICghdHlwZTIp
-IHsKIAkJCXByZWZtYXNrICY9IH5JT1JFU09VUkNFX01FTV82NDsKLQkJCWlmIChwYnVzX3NpemVf
-bWVtKGJ1cywgcHJlZm1hc2ssIHByZWZtYXNrLCBwcmVmbWFzaywKKwkJCWlmIChwYnVzX3NpemVf
-bWVtKGJ1cywgcHJlZm1hc2ssIHByZWZtYXNrLAorCQkJCQkgcHJlZm1hc2ssIHByZWZtYXNrLAog
-CQkJCQkgcmVhbGxvY19oZWFkID8gMCA6IGFkZGl0aW9uYWxfbWVtX3NpemUsCiAJCQkJCSBhZGRp
-dGlvbmFsX21lbV9zaXplLCByZWFsbG9jX2hlYWQpKSB7CiAJCQkJLyogU3VjY2Vzcywgc2l6ZSBu
-b24tcHJlZmV0Y2ggb25seS4gKi8KIAkJCQltYXNrID0gcHJlZm1hc2s7CiAJCQl9IGVsc2UKIAkJ
-CQlhZGRpdGlvbmFsX21lbV9zaXplICs9IGFkZGl0aW9uYWxfbWVtX3NpemU7Ci0JCQl0eXBlMiA9
-IElPUkVTT1VSQ0VfTUVNOworCQkJdHlwZTIgPSB0eXBlMyA9IElPUkVTT1VSQ0VfTUVNOwogCQl9
-Ci0JCXBidXNfc2l6ZV9tZW0oYnVzLCBtYXNrLCBJT1JFU09VUkNFX01FTSwgdHlwZTIsCisJCXBi
-dXNfc2l6ZV9tZW0oYnVzLCBtYXNrLCBJT1JFU09VUkNFX01FTSwgdHlwZTIsIHR5cGUzLAogCQkJ
-CXJlYWxsb2NfaGVhZCA/IDAgOiBhZGRpdGlvbmFsX21lbV9zaXplLAogCQkJCWFkZGl0aW9uYWxf
-bWVtX3NpemUsIHJlYWxsb2NfaGVhZCk7CiAJCWJyZWFrOwpJbmRleDogbGludXgtMi42L2RyaXZl
-cnMvcGNpL3NldHVwLXJlcy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMv
-cGNpL3NldHVwLXJlcy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtcmVzLmMKQEAg
-LTIxMiw3ICsyMTIsOCBAQCBzdGF0aWMgaW50IF9fcGNpX2Fzc2lnbl9yZXNvdXJjZShzdHJ1Y3QK
-IAkJCQkgICAgIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UsIGRldik7CiAKIAlpZiAocmV0IDwgMCAm
-JgotCSAgICAocmVzLT5mbGFncyAmIChJT1JFU09VUkNFX1BSRUZFVENIIHwgSU9SRVNPVVJDRV9N
-RU1fNjQpKSkgeworCSAgICAocmVzLT5mbGFncyAmIChJT1JFU09VUkNFX1BSRUZFVENIIHwgSU9S
-RVNPVVJDRV9NRU1fNjQpKSA9PQorCSAgICAgKElPUkVTT1VSQ0VfUFJFRkVUQ0ggfCBJT1JFU09V
-UkNFX01FTV82NCkpIHsKIAkJLyoKIAkJICogVGhhdCBmYWlsZWQuCiAJCSAqCkBAIC0yMjMsMTIg
-KzIyNCwxNSBAQCBzdGF0aWMgaW50IF9fcGNpX2Fzc2lnbl9yZXNvdXJjZShzdHJ1Y3QKIAkJCQkJ
-ICAgICBwY2liaW9zX2FsaWduX3Jlc291cmNlLCBkZXYpOwogCX0KIAotCWlmIChyZXQgPCAwICYm
-IChyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9QUkVGRVRDSCkpIHsKKwlpZiAocmV0IDwgMCAmJgor
-CSAgICAocmVzLT5mbGFncyAmIChJT1JFU09VUkNFX1BSRUZFVENIIHwgSU9SRVNPVVJDRV9NRU1f
-NjQpKSkgewogCQkvKgogCQkgKiBUaGF0IGZhaWxlZC4KIAkJICoKIAkJICogQnV0IGEgcHJlZmV0
-Y2hpbmcgYXJlYSBjYW4gaGFuZGxlIGEgbm9uLXByZWZldGNoaW5nCiAJCSAqIHdpbmRvdyAoaXQg
-d2lsbCBqdXN0IG5vdCBwZXJmb3JtIGFzIHdlbGwpLgorCQkgKgorCQkgKiBBbHNvIGNhbiBwdXQg
-NjRiaXQgdW5kZXIgMzJiaXQgcmFuZ2UuIChiZWxvdyA0ZykuCiAJCSAqLwogCQlyZXQgPSBwY2lf
-YnVzX2FsbG9jX3Jlc291cmNlKGJ1cywgcmVzLCBzaXplLCBhbGlnbiwgbWluLCAwLAogCQkJCQkg
-ICAgIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UsIGRldik7Cg==
---001a11c2190ac42cd204edb01efb--
