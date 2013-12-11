@@ -1,92 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:47044 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864Ab3LKKa6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 05:30:58 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/7] PCI: imx6: Fix waiting for link up
-Date: Wed, 11 Dec 2013 11:30:13 +0100
-Message-Id: <1386757818-5154-2-git-send-email-marex@denx.de>
-In-Reply-To: <1386757818-5154-1-git-send-email-marex@denx.de>
-References: <1386757818-5154-1-git-send-email-marex@denx.de>
+Received: from mailout4.samsung.com ([203.254.224.34]:55329 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873Ab3LKXeb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 18:34:31 -0500
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MXO00IPW1HI2950@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 12 Dec 2013 08:34:30 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Mohit Kumar' <mohit.kumar@st.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
+	'Arnd Bergmann' <arnd@arndb.de>, 'Marek Vasut' <marex@denx.de>,
+	'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
+	spear-devel@list.st.com, 'Jingoo Han' <jg1.han@samsung.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <6b4282b9e793ec89ba0c20f3362d41f6133a8132.1386752447.git.mohit.kumar@st.com>
+In-reply-to: <6b4282b9e793ec89ba0c20f3362d41f6133a8132.1386752447.git.mohit.kumar@st.com>
+Subject: Re: [PATCH 08/12] pcie: designware: Fix IO transfers
+Date: Thu, 12 Dec 2013 08:34:30 +0900
+Message-id: <001601cef6c9$89d65eb0$9d831c10$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While waiting for the PHY to report the PCIe link is up, we might
-hit a situation where the link training is still in progress, while
-the PHY already reports the link is up. Add additional check for
-this condition.
+On Wednesday, December 11, 2013 6:39 PM, Mohit Kumar wrote:
+> From: Pratyush Anand <pratyush.anand@st.com>
+> 
+> pp->io_base which is the input of the outbound IO address translation
+> unit should be the cpu address, it was programmed wrongly to realio
+> address.
+> 
+> We should pass global_io_offset rather than sys->io_offset to
+> pci_ioremap_io, so we map the new window into the first available spot
+> in the Linux view of the I/O space.
+> 
+> We must also pass cpu address instead  of realio address to
+> pci_ioremap_io.
+> 
+> This patch fixes above issue. It has been tested with Lecroy PTC in AIC
+> mode and Pericom PI7C9X2G303EL PCIe switch, which does not work
+> otherwise.
+> 
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> Tested-by: Mohit Kumar <mohit.kumar@st.com>
+> Tested-by: Tim Harvey <tharvey@gateworks.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Marek Vasut <marex@denx.de>
+> Cc: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: spear-devel@list.st.com
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host/pci-imx6.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 52027ad..4d5be4e 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -48,6 +48,8 @@ struct imx6_pcie {
- #define PL_OFFSET 0x700
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
-+#define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
-+#define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
- 
- #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
- #define PCIE_PHY_CTRL_DATA_LOC 0
-@@ -338,10 +340,17 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
- {
- 	u32 rc, ltssm, rx_valid, temp;
- 
--	/* link is debug bit 36, debug register 1 starts at bit 32 */
--	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << (36 - 32));
--	if (rc)
--		return -EAGAIN;
-+	/*
-+	 * Test if the PHY reports that the link is up and also that
-+	 * the link training finished. It might happen that the PHY
-+	 * reports the link is already up, but the link training bit
-+	 * is still set, so make sure to check the training is done
-+	 * as well here.
-+	 */
-+	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
-+	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
-+	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
-+		return 1;
- 
- 	/*
- 	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
--- 
-1.8.4.3
+Best regards,
+Jingoo Han
+
+> ---
+>  drivers/pci/host/pcie-designware.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
 
