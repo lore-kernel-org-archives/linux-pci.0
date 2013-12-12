@@ -1,107 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:38589 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892Ab3LKXvj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 18:51:39 -0500
-Date: Thu, 12 Dec 2013 08:51:35 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Wei Yongjun <weiyj.lk@gmail.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
-Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
- host maintainers
-Message-ID: <20131211235135.GA11671@verge.net.au>
-References: <20131211183237.GI4699@google.com>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:57483 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278Ab3LLWMO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 17:12:14 -0500
+Received: by mail-ob0-f176.google.com with SMTP id vb8so1124857obc.7
+        for <linux-pci@vger.kernel.org>; Thu, 12 Dec 2013 14:12:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131211183237.GI4699@google.com>
+In-Reply-To: <CAErSpo7C4rJZBuBUDRN6L_fkQZNthfeY=_oJ=_WCcqAxoj2Xig@mail.gmail.com>
+References: <1386757818-5154-1-git-send-email-marex@denx.de>
+	<201312121122.33746.marex@denx.de>
+	<CAJ+vNU0aoOtZEdq6GDPpwZAgu+EN3FjHnr8JAdXCxOiDfJ5m6A@mail.gmail.com>
+	<201312121925.27591.marex@denx.de>
+	<CAErSpo7C4rJZBuBUDRN6L_fkQZNthfeY=_oJ=_WCcqAxoj2Xig@mail.gmail.com>
+Date: Thu, 12 Dec 2013 23:12:13 +0100
+Message-ID: <CAB5oZtBUTnA3FdO9_YyORfUx7Joqy96NF55o1-XQkFPXsWLoig@mail.gmail.com>
+Subject: Re: [PATCH 1/7] PCI: imx6: Make reset-gpio optional
+From: Harro Haan <hrhaan@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Marek Vasut <marex@denx.de>,
+	Zhu Richard-R65037 <r65037@freescale.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Frank Li <lznuaa@gmail.com>, Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
-> If this looks reasonable, I'll merge it via the PCI tree for v3.13.
-> 
-> Bjorn
-> 
-> 
-> MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
-> 
-> Add entries for PCI host controller drivers in drivers/pci/host/.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On 12 December 2013 22:07, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Dec 12, 2013 at 11:25 AM, Marek Vasut <marex@denx.de> wrote:
+>> Bjorn, would you mind picking 2/7...6/7 of this series so we are done with
+>> those? I will re-post 1/7 as a self-standing patch afterwards, it has no impact
+>> on the rest of the series.
+>
+> Sure.  I can't really evaluate these myself, so I'm looking for acks
+> from Richard or Shawn.
+>
+> I noticed Pratyush, Tim, and Harro had some questions the first time
+> around, and I don't know whether they got resolved.
 
-Renesas R-Car potion:
-
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-
-> ---
->  MAINTAINERS |   31 +++++++++++++++++++++++++++++++
->  1 file changed, 31 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 8285ed4676b6..826c722d92ba 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6449,16 +6449,47 @@ F:	drivers/pci/
->  F:	include/linux/pci*
->  F:	arch/x86/pci/
->  
-> +PCI DRIVER FOR DESIGNWARE
-> +M:	Jingoo Han <jg1.han@samsung.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Maintained
-> +F:	drivers/pci/host/*designware*
-> +
-> +PCI DRIVER FOR IMX6
-> +M:	Shawn Guo <shawn.guo@linaro.org>
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> +S:	Maintained
-> +F:	drivers/pci/host/*imx6*
-> +
-> +PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
-> +M:	Jason Cooper <jason@lakedaemon.net>
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> +S:	Maintained
-> +F:	drivers/pci/host/*mvebu*
-> +
->  PCI DRIVER FOR NVIDIA TEGRA
->  M:	Thierry Reding <thierry.reding@gmail.com>
->  L:	linux-tegra@vger.kernel.org
-> +L:	linux-pci@vger.kernel.org
->  S:	Supported
->  F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
->  F:	drivers/pci/host/pci-tegra.c
->  
-> +PCI DRIVER FOR RENESAS R-CAR
-> +M:	Simon Horman <horms@verge.net.au>
-> +M:	Magnus Damm <magnus.damm@gmail.com>
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-sh@vger.kernel.org
-> +S:	Maintained
-> +F:	drivers/pci/host/*rcar*
-> +
->  PCI DRIVER FOR SAMSUNG EXYNOS
->  M:	Jingoo Han <jg1.han@samsung.com>
->  L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> +L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
->  S:	Maintained
->  F:	drivers/pci/host/pci-exynos.c
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Yes, Marek resolved the build warning comment in [PATCH V2 3/7]. Regards, Harro
