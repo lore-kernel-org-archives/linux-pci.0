@@ -1,131 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:56818 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755658Ab3L3Mhy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Dec 2013 07:37:54 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to avoid sysfs warnings
-Date: Mon, 30 Dec 2013 13:51:28 +0100
-Message-ID: <1460504.iemmv1nFbi@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXCzRNGbUpXDv3c9RDV4quV2b3gkrpjpPpxYzBH-p35jw@mail.gmail.com>
-References: <37552283.kG1L4S8Daa@vostro.rjw.lan> <CAE9FiQXCzRNGbUpXDv3c9RDV4quV2b3gkrpjpPpxYzBH-p35jw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout1.samsung.com ([203.254.224.24]:55992 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751203Ab3LLAjP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 19:39:15 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Rajeev kumar' <rajeev-dlh.kumar@st.com>,
+	'Mohit KUMAR' <mohit.kumar@st.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	'Pratyush ANAND' <pratyush.anand@st.com>,
+	'Viresh Kumar' <viresh.linux@gmail.com>,
+	'spear-devel' <spear-devel@list.st.com>,
+	devicetree@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <1078549fa412fb34ab2c95a6232096570abee12d.1386752447.git.mohit.kumar@st.com>
+ <52A847D1.5000409@st.com>
+In-reply-to: <52A847D1.5000409@st.com>
+Subject: Re: [PATCH 01/12] SPEAr13xx: Correct dt field name for stmmac phy-addr
+Date: Thu, 12 Dec 2013 09:39:07 +0900
+Message-id: <001b01cef6d2$9104f7b0$b30ee710$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, December 29, 2013 07:30:18 PM Yinghai Lu wrote:
-> On Sat, Dec 28, 2013 at 3:20 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wednesday, December 11, 2013 8:09 PM, Rajeev kumar wrote:
+> On 12/11/2013 3:08 PM, Mohit KUMAR wrote:
+> > DT field name for the phy address changed since kernel 3.10. Set the
+> > snps,phy-addr to 0xffffffff so that the driver probes for the phy.
 > >
-> > The device_del(&host_bridge->dev) in pci_stop_root_bus() is
-> > problematic, because it causes all sysfs directories below
-> > the host bridge to be removed recursively and when
-> > pci_remove_root_bus() attempts to remove devices on the root
-> > bus (whose sysfs directories are gone now along with all their
-> > subdirectories), it causes warnings similar to this one to be
-> > printed:
-> >
-> > WARNING: CPU: 0 PID: 6 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
-> > sysfs group ffffffff819ac5c0 not found for kobject '0001:ff:10.2'
-> > Modules linked in: <irrelevant list>
-> > CPU: 0 PID: 6 Comm: kworker/u512:0 Tainted: G        W    3.13.0-rc5+ #11
-> > Hardware name:
-> > Workqueue: kacpi_hotplug acpi_hotplug_work_fn
-> >  0000000000000009 ffff8808738d3bd8 ffffffff815d84ea ffff8808738d3c20
-> >  ffff8808738d3c10 ffffffff8106594d 0000000000000000 ffffffff819ac5c0
-> >  ffff880871b9d0a8 ffff8a07d1895000 0000000000000103 ffff8808738d3c70
-> > Call Trace:
-> >  [<ffffffff815d84ea>] dump_stack+0x45/0x56
-> >  [<ffffffff8106594d>] warn_slowpath_common+0x7d/0xa0
-> >  [<ffffffff810659bc>] warn_slowpath_fmt+0x4c/0x50
-> >  [<ffffffff8122b52e>] ? sysfs_get_dirent_ns+0x4e/0x70
-> >  [<ffffffff8122c806>] sysfs_remove_group+0xc6/0xd0
-> >  [<ffffffff813b83f3>] dpm_sysfs_remove+0x43/0x50
-> >  [<ffffffff813ae105>] device_del+0x45/0x1c0
-> >  [<ffffffff812e51f6>] pci_remove_bus_device+0x66/0xd0
-> >  [<ffffffff812e5363>] pci_remove_root_bus+0x73/0x80
-> >  [<ffffffff813276ab>] acpi_pci_root_remove+0x42/0x4f
-> >  [<ffffffff81323070>] acpi_bus_trim+0x56/0x89
-> >  [<ffffffff81323052>] acpi_bus_trim+0x38/0x89
-> >  [<ffffffff813245df>] acpi_device_hotplug+0x137/0x33b
-> >  [<ffffffff8131efba>] acpi_hotplug_work_fn+0x1c/0x27
-> >  [<ffffffff81080f1b>] process_one_work+0x17b/0x460
-> >  [<ffffffff81081ccb>] worker_thread+0x11b/0x400
-> >  [<ffffffff81081bb0>] ? rescuer_thread+0x3e0/0x3e0
-> >  [<ffffffff81088a12>] kthread+0xd2/0xf0
-> >  [<ffffffff81088940>] ? kthread_create_on_node+0x180/0x180
-> >  [<ffffffff815e823c>] ret_from_fork+0x7c/0xb0
-> >  [<ffffffff81088940>] ? kthread_create_on_node+0x180/0x180
-> >
-> > To avoid that, the host bridge device has to be deleted after all of
-> > its children, so merge pci_stop_root_bus() and pci_remove_root_bus()
-> > into one function, pci_stop_and_remove_root_bus(), that first will
-> > use pci_stop_and_remove_bus_device() to stop and remove all devices
-> > on the root bus and then will delete the host bridge device, remove
-> > its bus and drop the final reference to it.
-> >
-> > Reported-by: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Signed-off-by: Mohit Kumar<mohit.kumar@st.com>
+> > Cc: Pratyush Anand<pratyush.anand@st.com>
+> > Cc: Viresh Kumar<viresh.linux@gmail.com>
+> > Cc: spear-devel@list.st.com
+> > Cc: linux-arm-kernel@lists.infradead.org
+> > Cc: devicetree@vger.kernel.org
 > > ---
+> >   arch/arm/boot/dts/spear13xx.dtsi |    1 +
+> >   1 files changed, 1 insertions(+), 0 deletions(-)
 > >
-> > Hi,
+> > diff --git a/arch/arm/boot/dts/spear13xx.dtsi b/arch/arm/boot/dts/spear13xx.dtsi
+> > index 4382547..3518803 100644
+> > --- a/arch/arm/boot/dts/spear13xx.dtsi
+> > +++ b/arch/arm/boot/dts/spear13xx.dtsi
+> > @@ -155,6 +155,7 @@
 > >
-> > I can't really test this patch, but I don't know how it can break anything.
-> >
-> > The only user of pci_stop_root_bus() and pci_remove_root_bus() is
-> > acpi_pci_root_remove() and the code ordering there seems to be somewhat
-> > arbitrary.  If you are aware of any reason why it may not work, please let
-> > me know. :-)
-> >
-> > Thanks,
-> > Rafael
-> >
-> > ---
-> >  drivers/acpi/pci_root.c |    4 +---
-> >  drivers/pci/remove.c    |   23 ++++-------------------
-> >  include/linux/pci.h     |    3 +--
-> >  3 files changed, 6 insertions(+), 24 deletions(-)
-> >
-> > Index: linux-pm/drivers/acpi/pci_root.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/acpi/pci_root.c
-> > +++ linux-pm/drivers/acpi/pci_root.c
-> > @@ -611,12 +611,10 @@ static void acpi_pci_root_remove(struct
-> >  {
-> >         struct acpi_pci_root *root = acpi_driver_data(device);
-> >
-> > -       pci_stop_root_bus(root->bus);
-> > -
-> >         device_set_run_wake(root->bus->bridge, false);
-> >         pci_acpi_remove_bus_pm_notifier(device);
-> >
-> > -       pci_remove_root_bus(root->bus);
-> > +       pci_stop_and_remove_root_bus(root->bus);
-> >
-> >         kfree(root);
-> >  }
+> >   		gmac0: eth@e2000000 {
+> >   			compatible = "st,spear600-gmac";
+> > +			snps,phy-addr =<0xffffffff>;
 > 
-> 
-> We have patches that need to stop ioapic and iommu between
-> pci_stop_root_bus and pci_remove_root_bus.
-> 
-> Please check if the problem still happen after
-> 
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=c4a0a5d964e90b93eb4101c3927b788e083e530f
-> 
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=e3b439e1d315aff59c1b4f0fc43c5cd2d82b4138
+> Don't you think it should be st,phy-addr =<0xffffffff>, as the
+> manufacturer is 'st' as the compatible suggest
 
-The second one should fix the problem.
+Hi Rajeev Kumar,
 
-Thanks,
-Rafael
+According to the Documentation, it guides to use 'snps' prefix.
+
+In my humble opinion,
+'gmac' is a Synopsys based IP. Thus, if 'snps,phy-addr' is
+not ST specific, 'snps' prefix can be used.
+
+./Documentation/devicetree/bindings/net/stmmac.txt
+- snps,phy-addr         phy address to connect to.
+
+Best regards,
+Jingoo Han
 
