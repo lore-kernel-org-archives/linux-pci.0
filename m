@@ -1,43 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:46489 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547Ab3LSWe3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 17:34:29 -0500
-Date: Thu, 19 Dec 2013 14:34:32 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Levente Kurusa <levex@linux.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Andrew Murray <amurray@embedded-bits.co.uk>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 32/38] pcie: add missing put_device call
-Message-ID: <20131219223432.GA3145@kroah.com>
-References: <1387465612-3673-33-git-send-email-levex@linux.com>
- <20131219221019.GB15201@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131219221019.GB15201@google.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:8347 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120Ab3LLKro (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 05:47:44 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Shawn Guo' <shawn.guo@linaro.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Simon Horman' <horms@verge.net.au>,
+	'Magnus Damm' <magnus.damm@gmail.com>,
+	'Valentine Barshak' <valentine.barshak@cogentembedded.com>,
+	'Wei Yongjun' <weiyj.lk@gmail.com>,
+	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
+	'Kuninori Morimoto' <kuninori.morimoto.gx@renesas.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <20131211183237.GI4699@google.com>
+ <20131212070045.GO18380@S2101-09.ap.freescale.net>
+In-reply-to: <20131212070045.GO18380@S2101-09.ap.freescale.net>
+Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada,
+ R-Car PCI host maintainers
+Date: Thu, 12 Dec 2013 19:47:02 +0900
+Message-id: <000001cef727$7da93730$78fba590$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 19, 2013 at 03:10:19PM -0700, Bjorn Helgaas wrote:
-> [+cc Greg, Yinghai]
+On Thursday, December 12, 2013 4:01 PM, Shawn Guo wrote:
+> On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
+> > +PCI DRIVER FOR IMX6
+> > +M:	Shawn Guo <shawn.guo@linaro.org>
 > 
-> On Thu, Dec 19, 2013 at 04:06:46PM +0100, Levente Kurusa wrote:
-> > This is required so that we give up the last reference to the device.
-> > Removed the kfree() as put_device will result in release_pcie_device being
-> > called and hence the container of the device will be kfree'd.
-> > 
-> > Signed-off-by: Levente Kurusa <levex@linux.com>
-> 
-> Thanks, I applied a slightly modified version of this to my pci/deletion
-> branch for v3.14.
-> 
-> I think the get_device() after device_register() succeeds and the
-> put_device() before device_unregister() are superfluous, so I propose the
-> series included below.  Any comments?
+> Thanks for the nomination.  But I think a better person for this
+> position would be Richard Zhu <r65037@freescale.com> (copied).  He knows
+> the driver and controller much better than myself, and most importantly
+> he is the driver owner for Freescale kernel and he has the contact to
+> Freescale PCIe hardware people.
 
-Looks good to me.
+I agree with Shawn Guo's opinion. :-)
 
-greg k-h
+Richard Zhu has been maintaining i.MX6 PCIe driver. Also he can contact
+Freescale PCIe hardware engineers. Thus, he is the appropriate person
+for the Maintainer of i.MX PCIe.
+
+Best regards,
+Jingoo Han
+
+> 
+> Shawn
+> 
+> > +L:	linux-pci@vger.kernel.org
+> > +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> > +S:	Maintained
+> > +F:	drivers/pci/host/*imx6*
+
