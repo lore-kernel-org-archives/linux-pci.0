@@ -1,57 +1,239 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47348 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756362Ab3LTAzX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 19:55:23 -0500
-Date: Thu, 19 Dec 2013 16:55:26 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: How to reserve pci bus numbers for hotplug?
-Message-ID: <20131220005526.GB17307@kroah.com>
-References: <CAMxnaaWgUPRb3L2aKpUu62F73GR2iXOfd6LUnTkU0O=Gq-E_sQ@mail.gmail.com>
- <20131214220145.GA27585@kroah.com>
- <CAMxnaaXzvxTJc+fP_E9fQhMTsVcj2PCJCsp=PNae3Pv47JONdQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jagannadha Sutradharudu Teki
+	<jagannadha.sutradharudu-teki@xilinx.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rob Landley <rob@landley.net>, <linux-pci@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+Subject: [PATCH v2 2/2] Documentation: pci: Add pcie-howto.txt
+Date: Thu, 12 Dec 2013 17:08:45 +0530
+In-Reply-To: <1386848325-21064-1-git-send-email-jaganna@xilinx.com>
+References: <1386848325-21064-1-git-send-email-jaganna@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMxnaaXzvxTJc+fP_E9fQhMTsVcj2PCJCsp=PNae3Pv47JONdQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Message-ID: <ced64bc2-ba6c-4bfc-bbc3-53cda681789c@CH1EHSMHS035.ehs.local>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 14, 2013 at 11:15:39PM +0100, Andreas Noever wrote:
-> On Sat, Dec 14, 2013 at 11:01 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > On Thu, Dec 12, 2013 at 12:37:50AM +0100, Andreas Noever wrote:
-> >>
-> >> If I could get Linux to assign enough resources (bus numbers for now)
-> >> then I could drop the acpi_osi parameter and make thunderbolt work
-> >> after suspend... So, is there an easy way to fix this? (Quirks,
-> >> reconfiguring bus number assignments from a platform driver, ...?)
-> >
-> > I think you are going to have to do a lot more here, what is needed is a
-> > whole connection manager for Thunderbolt, emulating what the BIOS does,
-> > in order to get all of this working properly.
-> >
-> > But don't let that stop you from trying, however the work involved is
-> > really not trivial at all.
-> >
-> > good luck,
-> >
-> > greg k-h
-> 
-> Actually the thunderbolt part is already working (for non chaining
-> devices, see https://lkml.org/lkml/2013/11/28/492 if you are
-> interested). I can completely bootstrap the tb side of things. The
-> only problem is that if power has been cut by the firmware (during
-> boot without osi_acpi=Darwin or after a suspend/resume cycle) then
-> Linux does not allocate enough PCI resources...
+Added pcie-howto.txt for describing the information
+on PCI Express basics and Root Complex driver.
 
-Ah, that's nice to know, I didn't realize that.
+Signed-off-by: Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+---
+Changes for v2:
+	- Fixed comments from "Randy Dunlap"
 
-There should be some Intel people around on the list that has access to
-a Thunderbolt monitor for testing.  Or, if needed, I can see if I can
-expense one, as it would be good to get this working :)
+ Documentation/PCI/00-INDEX       |   2 +
+ Documentation/PCI/pcie-howto.txt | 186 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 188 insertions(+)
+ create mode 100644 Documentation/PCI/pcie-howto.txt
 
-thanks,
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index b8b7721..d61e7b9 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -6,6 +6,8 @@ pci-error-recovery.txt
+ 	- Info on PCI error recovery
+ MSI-HOWTO.txt
+ 	- The Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ
++pcie-howto.txt
++	- A guide describing the PCI Express basics and Root Complex driver
+ pcie-portbus-howto.txt
+ 	- A guide describing the PCI Express Port Bus driver
+ pcie-aer-howto.txt
+diff --git a/Documentation/PCI/pcie-howto.txt b/Documentation/PCI/pcie-howto.txt
+new file mode 100644
+index 0000000..df464b5
+--- /dev/null
++++ b/Documentation/PCI/pcie-howto.txt
+@@ -0,0 +1,186 @@
++	PCI Express HOWTO
++	Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
++	12/12/2013
++
++1. About this guide
++
++This guide describes the basics of the PCI Express bus and provides
++information on what the Linux PCIe subsystem looks like and ends with
++a brief description of PCI Host controller/Root complex driver along
++with some sample code.
++
++2. Basic terminology and conventions
++
++PCI Express is
++- A high performance IO interconnect for peripherals.
++- Low hardware design overhead compared to PCI, as it uses less pins.
++- A serial point-to-point interconnect between two devices.
++- Implements packet-based protocol for data transfer.
++- Supports features like Advanced power management, Advanced error
++  reporting facility, and hot-plug.
++					_________
++				       |	 |
++				       |   CPU   |
++				       |_________|
++					    |
++			 ___________________|___________________________
++			|						| 	  ________
++			|		ROOT COMPLEX			|        |	  |
++			|						|--------| Memory |
++			|   Switch Port			Root port	|	 |________|
++			|_______________________________________________|
++					    |				  PCIe Bus0
++		____________________________|______________________________________
++				|		|		  |
++	      ____	  ______|______		|	      ____|____
++	     |	  |	 /	       \      __|__	     |	       |
++	     | EP |-----|    SWITCH	|    |     |	     | BRIDGE  |
++	     |____|	 \_____________/     | EP  |	     | PCIe -  |
++			    |	    | 	     |_____|         | PCI/PCIe|
++			  __|__   __|__ 		     |_________|
++			 |     | |     |			  |	  PCIe Bus1
++			 | EP  | | EP  | 		__________|________________
++			 |_____| |_____| 		    |		  |
++							  __|__		__|__
++							 |     |       |     |
++							 | EP  |       | EP  |
++							 |_____|       |_____|
++
++Root Complex (RC)
++Connects the CPU and memory subsystem to the PCIe fabric (A topology comprised of PCIe
++nodes like Root Complex, Endpoint, Bridge or a Switch)
++
++Port
++Interface between a PCIe component and the Link.
++
++Link
++PCIe interconnect is referred as a Link, and connects two devices.
++
++Lane
++A PCIe link consists of either 1, 2, 4, 8, 12, 16 or 32 signals in each direction
++(each signal needs two wires - one for Tx and other for Rx). These signals are
++referred to as Lanes.
++
++Upstream Port
++Port that points in the direction of RC.
++
++Downstream Port
++Port that points away from the RC.
++
++Root Port
++Whose upstream port is RC and dowstream port should be an EP or Bridge.
++
++Switch Port
++Whose upstream port is RC and dowstream port is always a switch.
++
++Endpoint (EP)
++Devices other than RC, Switches and Bridges which either generate or terminate a PCIe
++transaction. These are peripheral devices such as Ethernet, USB and graphics devices.
++
++Switch
++PCIe device single upstream port as RC and multiple downstream ports as EP's,
++Switches or Bridges.
++
++Bridge
++Is for extending PCIe Bus segment - whose downstream port points to one more PCIe bus.
++
++3. Linux PCIe Subsystem
++
++					  ifconfig	open()/close/read()/write()	   /proc, /sys
++					      ^		     ^		   ^			^
++					      |		     |		   |			|
++					      |		     |		   |			|
++					      |              |		   |			V
++					      |		     |		   |		PCIe Port Bus services
++					      |		     |		   |		(AER, HP, PME, VC
++					      |		     |		   |		 drivers/pci/pcie/
++					      |		     |		   |		 drivers/pci/hotplug)
++					      V		     V		   V			^
++					    Socket 	    Block	 Char		        |
++					    layer	 Subsystem	Subsystem		|
++					      ^		     ^		   ^			| pcie_port_service_register()
++					      |		     |		   |			|
++					      |		     |		   |			|
++					      V		     V		   V			V
++					 Common net	    USB		 Input		  PCIe Port Core
++					 device layer       Core	 Core    (drivers/pci/pcie/portdrv_core.c)
++					      ^		     ^		   ^			^
++					      |		     |		   |			| pcie_port_bus_register()
++					      |		     |		   |			|
++					 _____V_____	 ____V____     ____V_____      _________V___________
++					|	    |	|         |   |		 |    | 		    |
++			All these are	| GEM 	    |	| USB HC  |   | Mouse/KB/|    | PCIe Port Bus driver|
++			PCI endpoint	| Controller|	| driver  |   | TS HC	 |    | (drivers/pci/pcie/  |
++			drivers		| driver    |	|	  |   |	driver	 |    |	 portdrv_pci.c)     |
++					|___________|	|_________|   |__________|    |_____________________|
++					      ^	             ^             ^			^
++					      |__________    |		   |	       _________|
++							 |   |		   |	      |		 pci_register_driver()
++	     ___________________  pci_bus_*()	       __V___V_____________V__________V______
++	    |			| pci_scan_root_bus() |					     |
++	    |	  PCI BIOS	|-------------------->|     	     PCI Core		     |
++            | (arch/arm/kernel/ |<--------------------|          (drivers/pci/pci*	     |
++      ----->|        bios32.c))	|<---     pcibios_*() |           drivers/pci/bus.c)	     |
++      |     |___________________|   |		      |______________________________________|
++      |		     ^		    |
++      |		     |		    | pci_common_init_dev()
++      |		     |		    |
++  ____V___	 ____V___	 ___V____
++ | 	  |     |	 |	|	 |
++ | Renesas|	| Tegra  |	| Exynos |
++ | PCI HC | 	| PCIe HC|	| PCIe HC| drivers/pci/host/
++ | driver |	| driver |	| driver | All these are
++ |________|	|________|	|________| PCI Root Complex drivers
++     |		    |		    |
++     |		    |		    |
++     V		    V		    V
++         platform_driver_register()
++
++Note:
++Linux PCI subsystem is like above one without having a PCIe port bus stack.
++For more details about this block see http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
++
++PCI HC/RC driver
++- Low level initialization and configuration (board, SoC)
++- Invokes PCI-BIOS - for bus enumerations so that the endpoints on bus are ready.
++- Supplies struct pci_ops to read/write config space.
++- Setup the resources like bus numbers, memory/IO space, Interrupt numbers, MSI.
++- Register PCI-BIOS as pci_common_init_dev()
++
++PCI BIOS
++- Architecture specific PCI
++- Bus enumeration - Lane, Bus, Device, Memory, Interrupt.
++- Successful completion of BIOS assures that all the endpoints in bus are
++  assigned parts of available PCI resources and their respective Endpoint drivers
++  can take control of them using the functionalities provided by PCI Core.
++- Register to PCI core for common accessing of endpoint drivers.
++- pci_scan_root_bus() and pci_bus_*()
++
++PCI Core
++- Provides services to Lower level BIOS and Upper level endpoint layers.
++- Creates device entries for proc/sysfs information.
++- Linux kernel PCI bus and driver management code.
++- Provides set of abstraction functions that endpoint drivers can use to
++  initiate PCI communication with attached endpoints.
++- Calls BIOS codes with pcibios_*
++
++PCI Endpoint driver
++- Individual endpoint drivers from upper layer.
++- Accessing config space upon respective endpoint enumeration done.
++- Communicate over the endpoint for Tx/Rx transactions.
++- Register to PCI core as pci_driver_register()
++
++PCIe Port Bus driver
++- A logical PCI-PCI Bridge structure.
++- Root Port and the Switch Port.
++- See Documentation/PCI/pcie-portbus-howto.txt
++
++4. PCI HC/RC driver
++
++4.1 Description
++
++4.2 Sample code
++
++5. References
++http://www.mindshare.com/files/ebooks/pci%20express%20system%20architecture.pdf
++http://www.pcisig.com/developers/main/training_materials/
+-- 
+1.8.3
 
-greg k-h
+
