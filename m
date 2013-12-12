@@ -1,89 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f169.google.com ([209.85.220.169]:51201 "EHLO
-	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733Ab3LGFLc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 00:11:32 -0500
-MIME-Version: 1.0
-In-Reply-To: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
-Date: Sat, 7 Dec 2013 13:11:31 +0800
-Message-ID: <CABawtvObh1_6usvtFL8==s49t5zMwnj312HeFiSX6mrNsXOSiw@mail.gmail.com>
-Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-out.m-online.net ([212.18.0.10]:39312 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535Ab3LLVu2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:28 -0500
+From: Marek Vasut <marex@denx.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH V2 3/7] PCI: imx6: Split away the PHY reset
+Date: Thu, 12 Dec 2013 22:50:00 +0100
+Message-Id: <1386885004-10252-3-git-send-email-marex@denx.de>
+In-Reply-To: <1386885004-10252-1-git-send-email-marex@denx.de>
+References: <1386885004-10252-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai,
-    Does this workaround have any known side effect to 'other'
-platform ?  for example, some old platforms don't have such buggy
-chipset/FPPA logic.  have you tested it on those hotplug capable box ?
-    If the issue is caused by commit
-2debd9289997fc5d1c0043b41201a8b40d5e11d0, should we revert it
-first ?
-    And if the workaround is specific to any vendor's platform, could
-we introduce a method of only workaround the specific vendor id /
-device id instead of  patching generic code ?
+Split the PCIe PHY reset from the link up function to make
+the code a little more structured.
 
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Harro Haan <hrhaan@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host/pci-imx6.c | 35 +++++++++++++++++++----------------
+ 1 file changed, 19 insertions(+), 16 deletions(-)
 
-Thanks,
-Ethan
+V2: Drop unused 'temp' variable.
 
-On Sat, Dec 7, 2013 at 4:22 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> During hotplug test on platform, found slot status register does not
-> report present status correctly. That present bit does not get cleared
-> even after that card is removed.
->
-> That problem is caused by commit:
-> | commit 2debd9289997fc5d1c0043b41201a8b40d5e11d0
-> |
-> |    PCI: pciehp: Disable/enable link during slot power off/on
->
-> It looks like chipset bug, that PresDet bit is "OR" operation between
-> sideband input from FPGA, and chipset inband detection from pcie link.
-> It does not like if we disable pcie link at first and power off
-> other side device, and it has input from inband detection
-> always 1.
->
-> Workaround: Try turn on link a while after power off.
->
-> After this patch, PresDet report correct status when removing or adding
-> card later.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-> Cc: <stable@vger.kernel.org> 3.4+
->
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |    9 +++++++++
->  1 file changed, 9 insertions(+)
->
-> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -637,6 +637,15 @@ int pciehp_power_off_slot(struct slot *
->         }
->         ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->                  pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
-> +
-> +       /*
-> +        * Enable link for a while so chipset could settle down
-> +        * inband presence detection logic
-> +        */
-> +       pciehp_link_enable(ctrl);
-> +       msleep(20);
-> +       pciehp_link_disable(ctrl);
-> +
->         return 0;
->  }
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index f5541c3..4983784 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -336,9 +336,26 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 	return;
+ }
+ 
++static void imx6_pcie_reset_phy(struct pcie_port *pp)
++{
++	uint32_t temp;
++
++	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
++	temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
++		 PHY_RX_OVRD_IN_LO_RX_PLL_EN);
++	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
++
++	usleep_range(2000, 3000);
++
++	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
++	temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
++		  PHY_RX_OVRD_IN_LO_RX_PLL_EN);
++	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
++}
++
+ static int imx6_pcie_link_up(struct pcie_port *pp)
+ {
+-	u32 rc, ltssm, rx_valid, temp;
++	u32 rc, ltssm, rx_valid;
+ 
+ 	/*
+ 	 * Test if the PHY reports that the link is up and also that
+@@ -370,21 +387,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 
+ 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+ 
+-	pcie_phy_read(pp->dbi_base,
+-		PHY_RX_OVRD_IN_LO, &temp);
+-	temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN
+-		| PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+-	pcie_phy_write(pp->dbi_base,
+-		PHY_RX_OVRD_IN_LO, temp);
+-
+-	usleep_range(2000, 3000);
+-
+-	pcie_phy_read(pp->dbi_base,
+-		PHY_RX_OVRD_IN_LO, &temp);
+-	temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN
+-		| PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+-	pcie_phy_write(pp->dbi_base,
+-		PHY_RX_OVRD_IN_LO, temp);
++	imx6_pcie_reset_phy(pp);
+ 
+ 	return 0;
+ }
+-- 
+1.8.4.3
+
