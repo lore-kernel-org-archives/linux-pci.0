@@ -1,63 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:12477 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222Ab3LEFpr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 00:45:47 -0500
-From: Jay Agarwal <jagarwal@nvidia.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	"'yinghai@kernel.org'" <yinghai@kernel.org>
-CC: Stephen Warren <swarren@nvidia.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Krishna Thota <kthota@nvidia.com>
-Date: Thu, 5 Dec 2013 11:14:53 +0530
-Subject: [Discussion]: ARM: PCIE: Setup bridges not happening with portbus
- driver enabled
-Message-ID: <C79B248886DD134989C8FF6B096A91AB92139701C7@BGMAIL01.nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-out.m-online.net ([212.18.0.9]:33814 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579Ab3LLVuZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:25 -0500
+From: Marek Vasut <marex@denx.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/7] PCI: imx6: Split away the link up wait loop
+Date: Thu, 12 Dec 2013 22:50:01 +0100
+Message-Id: <1386885004-10252-4-git-send-email-marex@denx.de>
+In-Reply-To: <1386885004-10252-1-git-send-email-marex@denx.de>
+References: <1386885004-10252-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+Split the function that waits for the PCIe link to come up from the
+rest if the host init function. We will find this change useful in
+the subsequent patch, since this will be called twice then.
 
-I am seeing below issue on an ARM platform with CONFIG_PCIEPORTBUS enabled in kernel
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Frank Li <lznuaa@gmail.com>
+Cc: Harro Haan <hrhaan@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/host/pci-imx6.c | 32 ++++++++++++++++++++------------
+ 1 file changed, 20 insertions(+), 12 deletions(-)
 
-ISSUE:  Any memory access by devices fails
-
-FINDINGS:
-
-1. No bridge windows like below are setup and probably this is not allowing any memory access by devices
-[    1.280324] pci 0000:00:00.0:   bridge window [mem 0xXXX00000-0xXXXfffff]
-[    1.280350] pci 0000:00:00.0:   bridge window [mem 0xXXX00000-0xXXXfffff pref]
-
-2. On debugging, I see pci_enable_bridge(setup-bus.c) is not called because pci_is_enabled returns true. This is because pci_enable_device is already called for this bridge by portbus driver in pcie_port_device_register(portdrv_core.c).
-3. Below patch is resolving this issue without any visible side effects. In fact, I verified AER(which needs PORTBUS) also with this.
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c index 64a7de2..9b67fff 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1200,8 +1200,7 @@ void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 4983784..e9e580a 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -304,6 +304,25 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
+ }
  
-                switch (dev->class >> 8) {
-                case PCI_CLASS_BRIDGE_PCI:
--                       if (!pci_is_enabled(dev))
--                               pci_setup_bridge(b);
-+                       pci_setup_bridge(b);
-                        break;
++static int imx6_pcie_wait_for_link(struct pcie_port *pp)
++{
++	int count = 200;
++
++	while (!dw_pcie_link_up(pp)) {
++		usleep_range(100, 1000);
++		if (--count)
++			continue;
++
++		dev_err(pp->dev, "phy link never came up\n");
++		dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
++			readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
++			readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static void imx6_pcie_host_init(struct pcie_port *pp)
+ {
+ 	int count = 0;
+@@ -320,18 +339,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
  
-                case PCI_CLASS_BRIDGE_CARDBUS:
+-	while (!dw_pcie_link_up(pp)) {
+-		usleep_range(100, 1000);
+-		count++;
+-		if (count >= 200) {
+-			dev_err(pp->dev, "phy link never came up\n");
+-			dev_dbg(pp->dev,
+-				"DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-				readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+-				readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+-			break;
+-		}
+-	}
++	imx6_pcie_wait_for_link(pp);
+ 
+ 	return;
+ }
+-- 
+1.8.4.3
 
-3. This patch works without PORTBUS enabled also.
-
-QUESTIONS:
-1. Does anybody see any problem with this patch? Any reason for pci_is_enabled check above?
-
-With best,
-Jay
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
