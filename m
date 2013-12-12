@@ -1,120 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:44190 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315Ab3LMMG6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 07:06:58 -0500
-Received: by mail-la0-f49.google.com with SMTP id er20so1298034lab.22
-        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 04:06:57 -0800 (PST)
-Message-ID: <52AAF85E.80206@cogentembedded.com>
-Date: Fri, 13 Dec 2013 16:06:54 +0400
-From: Valentine <valentine.barshak@cogentembedded.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:63525 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703Ab3LLVQg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:16:36 -0500
+Received: by mail-ig0-f174.google.com with SMTP id hk11so212840igb.1
+        for <linux-pci@vger.kernel.org>; Thu, 12 Dec 2013 13:16:36 -0800 (PST)
 MIME-Version: 1.0
-To: Simon Horman <horms@verge.net.au>, Jingoo Han <jg1.han@samsung.com>
-CC: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Wei Yongjun' <weiyj.lk@gmail.com>,
-	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
-	linux-pci@vger.kernel.org, 'Magnus Damm' <magnus.damm@gmail.com>,
-	'Kuninori Morimoto' <kuninori.morimoto.gx@renesas.com>,
-	linux-sh@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar: fix return value check in rcar_pci_probe()
-References: <CAPgLHd-XTnQXdK7H2uLbGW1ftxNB_nHwzcNCoiCjpXsB5X3HnA@mail.gmail.com> <20131207225012.GC7901@google.com> <001001cef480$73896b20$5a9c4160$%han@samsung.com> <20131211023006.GN19992@verge.net.au>
-In-Reply-To: <20131211023006.GN19992@verge.net.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20131212160612.GA14655@dhcp-26-207.brq.redhat.com>
+References: <cover.1385399393.git.agordeev@redhat.com> <4c879b0928ded8b4c9d2fab3fc413b98d34d8c7c.1385399393.git.agordeev@redhat.com>
+ <20131210230847.GG4699@google.com> <20131212160612.GA14655@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 12 Dec 2013 14:16:16 -0700
+Message-ID: <CAErSpo5F=Cce_8QcMRQYgGJFYcXGSfGjqmdnDuxWiYYG_-Kb9Q@mail.gmail.com>
+Subject: Re: [PATCH v3 10/11] PCI/MSI: Convert pci_msix_table_size() to a
+ public interface
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@aculab.com>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/11/2013 06:30 AM, Simon Horman wrote:
-> On Mon, Dec 09, 2013 at 10:46:17AM +0900, Jingoo Han wrote:
->> On Sunday, December 08, 2013 7:50 AM, Bjorn Helgaas wrote:
->>> On Tue, Nov 19, 2013 at 11:40:28AM +0800, Wei Yongjun wrote:
->>>> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->>>>
->>>> In case of error, the function devm_ioremap_resource() returns ERR_PTR()
->>>> and never returns NULL. The NULL test in the return value check should
->>>> be replaced with IS_ERR().
->>>>
->>>> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->>>
->>> Applied with Jingoo's reviewed-by to pci/host-rcar for v3.14, thanks!
->>>
->>> For drivers/pci/host/*, I normally look for an ack from the responsible
->>> person,  but this patch is trivial enough that I'm fine taking it without
->>> that.  But for more significant changes, I don't have any notes about who
->>> should own pci-rcar-gen2.c.  Valentine could be a candidate since he added
->>> it in the first place?  Or Jingoo?
-
-Sorry, I didn't ack since I thought it was not really needed for a trivial
-change like this one that had already been reviewed by Jingoo.
-
->>
->> (+cc Simon Horman, Magnus Damm, Kuninori Morimoto, linux-sh mailing-list)
->>
->> Hi Bjorn,
->>
->> I think that Valentine could be a candidate, because he is an author.
->> However, pci-rcar-gen2.c is working on Renesas SoC, so, it may be
->> necessary to get ACK from Renesas people such as Simon Horman,
->> Magnus Damm, and Kuninori Morimoto.
->>
->> Simon Horman, Magnus Damm, and Kuninori Morimoto,
->> Who is a proper person responsible for RCar Gen PCIe driver?
->> (drivers/pci/host/pci-rcar-gen2.c)
+On Thu, Dec 12, 2013 at 9:06 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Tue, Dec 10, 2013 at 04:08:47PM -0700, Bjorn Helgaas wrote:
+>> If pci_msix_table_size() is a counterpart to pci_get_msi_cap(), can we make
+>> the names similar?
 >
-> Good question.
+> Tejun also pointed this out. What about pci_get_msi_vec_count() and
+> pci_get_msix_vec_count()?
+
+Sounds perfect to me.  I think the fact that they return the same type
+of information is more important than where the information came from.
+
+> Nevertheless, the existing names are more informative for me, since they
+> hint where the MSI/MSI-X vector count comes from. Up to you.
 >
-> My feeling is that as it relates to Renesas ARM SoCs that
-> responsibility at least in part defaults to the Renesas ARM SoC
-> maintainers, Magnus and myself.
->
-> So I think it would be best if the following were CCed on any patches
-> to this driver:
->
-> Simon Horman <horms@verge.net.au>
-> Magnus Damm <magnus.damm@gmail.com>
-> linux-sh@vger.kernel.org
-
-I agree.
-
->
-> I would not be opposed for there being a MAINTAINERS file entry to that effect.
->
-> I will let Valentine volunteer himself if he wants to.
-
-I'll try to track the e-mails related to this driver as well.
-
-Not sure if I want myself in the MAINTAINERS though, since it would probably
-mean that "try to" should be changed to "have to" in my statement above.
-
-Thanks,
-Val.
-
->
->>
->> Best regards,
->> Jingoo Han
->>
->>>
->>> Bjorn
->>>
->>>> ---
->>>>   drivers/pci/host/pci-rcar-gen2.c | 4 ++--
->>>>   1 file changed, 2 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
->>>> index cbaa5c4..96d1182 100644
->>>> --- a/drivers/pci/host/pci-rcar-gen2.c
->>>> +++ b/drivers/pci/host/pci-rcar-gen2.c
->>>> @@ -276,8 +276,8 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
->>>>
->>>>   	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->>>>   	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
->>>> -	if (!reg)
->>>> -		return -ENODEV;
->>>> +	if (IS_ERR(reg))
->>>> +		return PTR_ERR(reg);
->>>>
->>>>   	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->>>>   	if (!mem_res || !mem_res->start)
->>>>
->>
-
+> --
+> Regards,
+> Alexander Gordeev
+> agordeev@redhat.com
