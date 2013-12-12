@@ -1,91 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:14215 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751230Ab3L3H1A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Dec 2013 02:27:00 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v5 0/4] Introduce pci_enable_msi/msix_range() interfaces
-Date: Mon, 30 Dec 2013 08:28:12 +0100
-Message-Id: <cover.1388262668.git.agordeev@redhat.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:43812 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623Ab3LLVua (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:30 -0500
+From: Marek Vasut <marex@denx.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/7] PCI: imx6: Make reset-gpio optional
+Date: Thu, 12 Dec 2013 22:38:28 +0100
+Cc: "Zhu Richard-R65037" <r65037@freescale.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1386757818-5154-1-git-send-email-marex@denx.de> <CAErSpo7C4rJZBuBUDRN6L_fkQZNthfeY=_oJ=_WCcqAxoj2Xig@mail.gmail.com> <CAErSpo682q3TkjsZvtR4Qhvvwfmx7FUB2QZTfQV+3Q+nK0C-7w@mail.gmail.com>
+In-Reply-To: <CAErSpo682q3TkjsZvtR4Qhvvwfmx7FUB2QZTfQV+3Q+nK0C-7w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201312122238.28413.marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is against "next" branch in Bjorn's repo:
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+On Thursday, December 12, 2013 at 10:20:30 PM, Bjorn Helgaas wrote:
+> On Thu, Dec 12, 2013 at 2:07 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Thu, Dec 12, 2013 at 11:25 AM, Marek Vasut <marex@denx.de> wrote:
+> >> Bjorn, would you mind picking 2/7...6/7 of this series so we are done
+> >> with those? I will re-post 1/7 as a self-standing patch afterwards, it
+> >> has no impact on the rest of the series.
+> > 
+> > Sure.  I can't really evaluate these myself, so I'm looking for acks
+> > from Richard or Shawn.
+> > 
+> > I noticed Pratyush, Tim, and Harro had some questions the first time
+> > around, and I don't know whether they got resolved.
+> 
+> By the way, I tried to apply patches 2-6 to my pci/host-imx6 branch,
+> but patch 6 ("PCI: imx6: Fix bugs in PCIe startup code") didn't apply
+> cleanly.
+> 
+> I pushed the branch to
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host
+> -imx6 if you want to try it yourself.
 
-Changes from v4 to v5:
-  - pci_auto_enable_msi* functions renamed to pci_enable_msi* ones;
-  - pci_enable_msi_range() and pci_enable_msix_range() are the only
-    basic interfaces left to enable MSI/MSI-X operation;
-  - pci_enable_msi(), pci_enable_msi_block() and pci_enable_msix() old
-    interfaces deprecated in favour of pci_enable_msi/msix_range() ones;
-    description of the old interfaces is removed from the documentation;
-  - pci_get_msi_vec_count()  renamed to pci_msi_vec_count() and
-    pci_get_msix_vec_count() renamed to pci_msix_vec_count();
+That's because of Fabio's patch. I will rebase and repost, thanks.
 
-Changes from v3 to v4:
-  - pcim_enable_msi* functions renamed to pci_auto_enable_msi* ones;
-  - PowerPC patches dropped;
-  - pci_get_msi_cap()     renamed to pci_get_msi_vec_count() and
-    pci_msix_table_size() renamed to pci_get_msix_vec_count();
-
-Changes from v2 to v3:
-  - new public interfaces commented in drivers/pci/msi.c;
-  - patch "Make quota traversing and requesting race-safe" explained;
-  - pci_enable_msi/msix() 'nvec' arg type changed from 'unsigned int' to 'int';
-  - pcim_enable_msi*() arg 'nvec' renamed to 'maxvec' when upper limit passed;
-  - pcim_enable_msi*(..., maxvec, minvec) arg order swapped to minvec, maxvec;
-  - "PCI: Fail MSI/MSI-X initialization if device is not in PCI_D0" commit
-    869a161 and "PCI/MSI: Factor out pci_get_msi_cap() interface" patch
-    conflicts resolved;
-
-This update introduces pci_enable_msi_range() function which
-supersedes pci_enable_msi() and pci_enable_msi_block()
-interfaces for MSI and pci_enable_msi_range() function which
-supersedes pci_enable_msix() interface for MSI-X interrupts.
-
-The plan is to convert all drivers to the new interfaces and
-then remove existing pci_enable_msi(), pci_enable_msi_block()
-and pci_enable_msix() functions.
-
-The newly introduced functions return either a negative error
-code or a number of successfully allocated MSI/MSI-X interrupts.
-
-Unlike the old interfaces where the "third" state indicates
-a possible number of MSI interrupts that could have been
-allocated, the new interfaces allow device drivers not to deal
-with tri-state return values and hide fallback logic behind
-the implementation.
-
-As result, device drivers are expected to have more clearer
-and straight code.
-
-The tree could be found in "pci-next-msi-v5" branch in repo:
-https://github.com/a-gordeev/linux.git
-
-Alexander Gordeev (4):
-  PCI/MSI: Factor out pci_msi_vec_count() interface
-  PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
-  PCI/MSI: Introduce pci_msix_vec_count() interface
-  PCI/MSI: Introduce pci_enable_msi/msix_range() interfaces
-
- Documentation/PCI/MSI-HOWTO.txt |  308 ++++++++++++++++++++++++++-------------
- drivers/ata/ahci.c              |   56 +++++---
- drivers/pci/msi.c               |  150 +++++++++++++++-----
- drivers/pci/pcie/portdrv_core.c |    7 +-
- include/linux/pci.h             |   27 +++-
- 5 files changed, 385 insertions(+), 163 deletions(-)
-
--- 
-1.7.7.6
-
+Best regards,
+Marek Vasut
