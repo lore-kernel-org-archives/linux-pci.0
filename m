@@ -1,79 +1,147 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
-Date: Mon, 23 Dec 2013 13:32:04 +0530
-Message-Id: <1387785725-24262-4-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.9]:38477 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751611Ab3LLTP2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 14:15:28 -0500
+From: Marek Vasut <marex@denx.de>
+To: Tim Harvey <tharvey@gateworks.com>
+Subject: Re: [PATCH 1/7] PCI: imx6: Make reset-gpio optional
+Date: Thu, 12 Dec 2013 19:25:27 +0100
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+References: <1386757818-5154-1-git-send-email-marex@denx.de> <201312121122.33746.marex@denx.de> <CAJ+vNU0aoOtZEdq6GDPpwZAgu+EN3FjHnr8JAdXCxOiDfJ5m6A@mail.gmail.com>
+In-Reply-To: <CAJ+vNU0aoOtZEdq6GDPpwZAgu+EN3FjHnr8JAdXCxOiDfJ5m6A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201312121925.27591.marex@denx.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for X-Gene PCIe driver. The driver resides
-under 'drivers/pci/host/pcie-xgene.c' file.
+On Thursday, December 12, 2013 at 07:16:18 PM, Tim Harvey wrote:
+> On Thu, Dec 12, 2013 at 2:22 AM, Marek Vasut <marex@denx.de> wrote:
+> > On Thursday, December 12, 2013 at 06:10:31 AM, Tim Harvey wrote:
+> > > On Wed, Dec 11, 2013 at 2:30 AM, Marek Vasut <marex@denx.de> wrote:
+> > > > Some boards do not have a PCIe reset GPIO. To avoid probe
+> > > > failure on these boards, make the reset GPIO optional as
+> > > > well.
+> > > > 
+> > > > Signed-off-by: Marek Vasut <marex@denx.de>
+> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > Cc: Frank Li <lznuaa@gmail.com>
+> > > > Cc: Harro Haan <hrhaan@gmail.com>
+> > > > Cc: Jingoo Han <jg1.han@samsung.com>
+> > > > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> > > > Cc: Pratyush Anand <pratyush.anand@st.com>
+> > > > Cc: Richard Zhu <r65037@freescale.com>
+> > > > Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> > > > Cc: Sean Cross <xobs@kosagi.com>
+> > > > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > > > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> > > > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> > > > Cc: Tim Harvey <tharvey@gateworks.com>
+> > > > Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+> > > > Cc: Yinghai Lu <yinghai@kernel.org>
+> > > > ---
+> > > > 
+> > > >  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
+> > > >  drivers/pci/host/pci-imx6.c                        | 29
+> > > >  +++++++++++----------- 2 files changed, 16 insertions(+), 15
+> > > >  deletions(-)
+> > > > 
+> > > > diff --git
+> > > > a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> > > > b/Documentation/devicetree/bindings/pci/designware-pcie.txt index
+> > > > d5d26d4..b7a2279 100644
+> > > > --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> > > > +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> > > > 
+> > > > @@ -19,9 +19,9 @@ Required properties:
+> > > >         to define the mapping of the PCIe interface to interrupt
+> > > >         numbers.
+> > > >  
+> > > >  - num-lanes: number of lanes to use
+> > > > 
+> > > > -- reset-gpio: gpio pin number of power good signal
+> > > > 
+> > > >  Optional properties for fsl,imx6q-pcie
+> > > > 
+> > > > +- reset-gpio: gpio pin number of power good signal
+> > > > 
+> > > >  - power-on-gpio: gpio pin number of power-enable signal
+> > > >  - wake-up-gpio: gpio pin number of incoming wakeup signal
+> > > >  - disable-gpio: gpio pin number of outgoing rfkill/endpoint disable
+> > > >  signal
+> > > > 
+> > > > diff --git a/drivers/pci/host/pci-imx6.c
+> > > > b/drivers/pci/host/pci-imx6.c index bd70af8..52027ad 100644
+> > > > --- a/drivers/pci/host/pci-imx6.c
+> > > > +++ b/drivers/pci/host/pci-imx6.c
+> > > > @@ -214,9 +214,12 @@ static int imx6_pcie_assert_core_reset(struct
+> > > > pcie_port *pp)
+> > > > 
+> > > >         regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+> > > >         
+> > > >                         IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+> > > > 
+> > > > -       gpio_set_value(imx6_pcie->reset_gpio, 0);
+> > > > -       msleep(100);
+> > > > -       gpio_set_value(imx6_pcie->reset_gpio, 1);
+> > > > +       /* Some boards don't have PCIe reset GPIO. */
+> > > > +       if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> > > > +               gpio_set_value(imx6_pcie->reset_gpio, 0);
+> > > > +               msleep(100);
+> > > > +               gpio_set_value(imx6_pcie->reset_gpio, 1);
+> > > > +       }
+> > > > 
+> > > >         return 0;
+> > > >  
+> > > >  }
+> > > 
+> > > Marek,
+> > > 
+> > > Though not the fault of your patch, I noticed while looking at this
+> > > that the PCI Express specification is not being properly met with
+> > > regards to PERST# and the reference clock.  The spec states that
+> > > PERST# must be kept asserted until after the reference clock is stable
+> > > (I'm not entirely clear how long of a delay is needed for the clock to
+> > > become stable but I think the value is typically the 100ms).  I see in
+> > > the current pci-imx6.c code that imx6_pcie_host_init calls
+> > > imx6_pcie_assert_core_reset first, then imx6_pcie_init_phy, followed
+> > > by imx6_pcie_deassert_core_reset.  Despite the function names,
+> > > imx6_pcie_assert_core_reset as shown above asserts then de-asserts
+> > > PERST# before the clock is enabled in imx6_pcie_deassert_core_reset.
+> > > This seems to me to be a violation of the spec and I believe the
+> > > msleep(100) and de-assertion of the option reset_gpio should be done
+> > > in imx6_pcie_deassert_core reset after the clock is brought up.
+> > > 
+> > > If you agree with my assessment, would you mind resolving this issue
+> > > at the same time?  If not, I'm happy to follow-up with a patch to
+> > > resolve it after your patch is accepted.
+> > 
+> > Is this not resolved by patch 0006 in this series please?
+> 
+> Marek,
+> 
+> Yes it is addressed there.  Sorry - I missed that.
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- .../devicetree/bindings/pci/xgene-pcie.txt         |   43 ++++++++++++++++++++
- 1 file changed, 43 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
+No problem, thanks for checking it :)
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pcie.txt b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
-new file mode 100644
-index 0000000..d92da4f
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
-@@ -0,0 +1,43 @@
-+* AppliedMicro X-Gene PCIe interface
-+
-+Required properties:
-+- status: Either "ok" or "disabled".
-+- device_type: set to "pci"
-+- compatible: should contain "xgene,pcie" to identify the core.
-+- reg: base addresses and lengths of the pcie controller configuration
-+	space register.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- ranges: ranges for the PCI memory, I/O regions, config and MSI regions
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+- clocks: from common clock binding: handle to pci clock.
-+- clock-names: from common clock binding. Should be "pcieclk".
-+
-+Example:
-+
-+SoC specific DT Entry:
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "xgene,pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000>;
-+		ranges = <0x02000000 0x0 0x00000000 0xe0 0x00000000 0x0 0x10000000 /* mem*/
-+			  0x01000000 0x0 0x80000000 0xe0 0x80000000 0x0 0x00010000 /* io */
-+			  0x00000000 0x0 0xd0000000 0xe0 0xd0000000 0x0 0x00200000 /* cfg */
-+			  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1>;
-+		clocks = <&pcie0clk 0>;
-+		clock-names = "pcieclk"
-+	};
-+
-+Board specific DT Entry:
-+	&pcie0 {
-+		status = "ok";
-+	};
--- 
-1.7.9.5
+Bjorn, would you mind picking 2/7...6/7 of this series so we are done with 
+those? I will re-post 1/7 as a self-standing patch afterwards, it has no impact 
+on the rest of the series.
 
+Shawn, can you please pick 7/7 ?
