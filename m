@@ -1,107 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:34287 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932576Ab3LDRAm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 12:00:42 -0500
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59744 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751502Ab3LLXUT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 18:20:19 -0500
+Date: Thu, 12 Dec 2013 15:22:09 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Veaceslav Falico <vfalico@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
+Message-ID: <20131212232209.GA8543@kroah.com>
+References: <20131127184652.GA1856@kroah.com>
+ <CAErSpo46LZP8t+aLnYOtJ1mXKKkCF7sOy97MFd0hWo+OOoz68Q@mail.gmail.com>
+ <CAE9FiQUeyxN5OAaXqfhdQkzTwjV83BN-L3r6kH0sO0t1b1-63Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo57gPPY73nCHbfGVynZRde0jj9_kjpR=FKwY-uTXzY2cw@mail.gmail.com>
-References: <CAD6G_RT0S43BrOeXxJ6d3p1ALbXkGumZCSPBaK1Bz=2pX3hHYQ@mail.gmail.com>
-	<CAErSpo4DNqUpA6Cb_tanW3uRJ3J-4utCQwtRz3eYZETCMtniUQ@mail.gmail.com>
-	<CAD6G_RR=toq_6tCav6Y9=EprK9LC3YfGO=scvWpcGfDpWwJbRA@mail.gmail.com>
-	<CAErSpo57gPPY73nCHbfGVynZRde0jj9_kjpR=FKwY-uTXzY2cw@mail.gmail.com>
-Date: Wed, 4 Dec 2013 22:30:42 +0530
-Message-ID: <CAD6G_RTHNGg7XSnDMQ-H+hUzmh1RPn9gYUDf7vRdeETmTmTdzw@mail.gmail.com>
-Subject: Re: Need help on Linux PCIe
-From: Jagan Teki <jagannadh.teki@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAE9FiQUeyxN5OAaXqfhdQkzTwjV83BN-L3r6kH0sO0t1b1-63Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 4, 2013 at 8:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Dec 3, 2013 at 11:20 PM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
->> Thanks for your quick response.
->> Please find my comments below.
->>
->> On Tue, Dec 3, 2013 at 11:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Tue, Dec 3, 2013 at 4:24 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
->>>> Hi,
->>>>
->>>> I have few question on Linux PCIe subsystem, I am trying to understand
->>>> the PCIe on ARM platform.
->>>> 1. Compared to PCI, PCIe have an extra port functionalists/services
->>>> which is implemented drivers/pci/pcie/* is it true?
->>>
->>> Yes.
->>>
->>>> 2. PCIe root complex is same as Host controller drivers in linux drivers/host/*
->>>
->>> Yes.
->>>
->>>> 3. As individual endpoint drivers are registered to pci_core as
->>>> pci_driver_register, then what is the common call for registering
->>>> individual HC driver to pci-core?
->>>
->>> The host controller-PCI core interface is not as mature as the
->>> pci_register_driver() interface.  The basic interface is
->>> pci_scan_root_bus().  If you skim through the drivers in
->>> drivers/pci/host/* and drivers/acpi/pci_root.c, the interface to the
->>> PCI core will be fairly obvious.  And you'll learn what the existing
->>> practices are in case you need to add or modify something.
->>
->> OK.
->>
->> I understand the flow as below - please correct if am wrong.
->>
->> From low level (hw) - HC driver has a platform registration using
->> platform_driver_register() to lower layer
->> and then pci_scan_root_bus() --> pci_common_init_dev() registration to
->> upper layer as PCI - BIOS and then ends.
->
-> Yes.  Sometime HC drivers use platform_driver_register(); other use
-> something else depending on how the HC device is enumerated.  For
-> example, drivers/acpi/pci_root.c uses something else to deal with host
-> bridges in the ACPI namespace.
->
->> From upper level (app) - each endpoint driver has
->> pci_driver_register() call to PCI Core for lower level
->
-> Yes.
->
->> and then the upper level registration is based on endpoint().
->
-> I don't know what you mean here (I don't know of a function named
-> "endpoint()").  But the driver model matches drivers to PCI functions
-> based on vendor and device IDs.  A Linux "pci_dev" is what the PCI
-> specs refer to as a "function."
-Sorry it's typo - added ()
+On Thu, Dec 12, 2013 at 03:17:50PM -0800, Yinghai Lu wrote:
+> On Sat, Dec 7, 2013 at 12:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Wed, Nov 27, 2013 at 11:46 AM, Greg Kroah-Hartman
+> > <gregkh@linuxfoundation.org> wrote:
+> >> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >>
+> >> The PCI MSI sysfs code is a mess with kobjects for things that don't
+> >> really need to be kobjects.  This patch creates attributes dynamically
+> >> for the MSI interrupts instead of using kobjects.
+> >>
+> >> Note, this removes a directory from the current MSI interrupt sysfs
+> >> code:
+> >>
+> >> old MSI kobjects:
+> >> pci_device
+> >>    └── msi_irqs
+> >>        └── 40
+> >>            └── mode
+> >>
+> >> new MSI attributes:
+> >> pci_device
+> >>    └── msi_irqs
+> >>        └── 40
+> >>
+> >> As there was only one file "mode" with the kobject model, the interrupt
+> >> number is now a file that returns the "mode" of the interrupt (msi vs.
+> >> msix).
+> >>
+> >> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >
+> > I added the acks from Neil and Veaceslav, folded in the
+> > Documentation/ABI update, and applied the whole thing to my pci/misc
+> > branch for v3.14.  Thanks!
+> 
+> got:
+> [   71.429735] BUG: key ffff887fcf082a58 not in .data!
+> [   71.429737] ------------[ cut here ]------------
+> [   71.429742] WARNING: CPU: 0 PID: 4 at kernel/locking/lockdep.c:2987 lockdep_i
+> nit_map+0x127/0x5b0()
+> [   71.429743] DEBUG_LOCKS_WARN_ON(1)
+> [   71.429744] Modules linked in:
+> [   71.429747] CPU: 0 PID: 4 Comm: kworker/0:0 Tainted: G          I  3.13.0-rc3
+> -yh-01187-ge0e4e4e-dirty #45
+> [   71.429757] Workqueue: events work_for_cpu_fn
+> [   71.429792]  0000000000000009 ffff881fcf95da58 ffffffff82020475 ffff881fcf95d
+> aa0
+> [   71.429800]  ffff881fcf95da90 ffffffff81097c3d ffff887fcf082a58 ffff88dfcec1a
+> d28
+> [   71.429809]  0000000000000000 0000000000000000 ffff889fcf2eecd0 ffff881fcf95d
+> af0
+> [   71.429809] Call Trace:
+> [   71.429814]  [<ffffffff82020475>] dump_stack+0x45/0x56
+> [   71.429818]  [<ffffffff81097c3d>] warn_slowpath_common+0x7d/0xa0
+> [   71.429822]  [<ffffffff81097cac>] warn_slowpath_fmt+0x4c/0x50
+> [   71.429826]  [<ffffffff810e3d97>] lockdep_init_map+0x127/0x5b0
+> [   71.429835]  [<ffffffff81242fe8>] ? sysfs_new_dirent+0x98/0x140
+> [   71.429839]  [<ffffffff81242033>] sysfs_add_file_mode_ns+0x63/0xc0
+> [   71.429843]  [<ffffffff8124491d>] internal_create_group+0x18d/0x260
+> [   71.429853]  [<ffffffff81556345>] ? populate_msi_sysfs+0x185/0x1d0
+> [   71.429857]  [<ffffffff81244a52>] sysfs_create_groups+0x42/0xa0
+> [   71.429861]  [<ffffffff81556367>] populate_msi_sysfs+0x1a7/0x1d0
+> [   71.429865]  [<ffffffff81556b67>] pci_enable_msi_block+0x1f7/0x2a0
+> [   71.429870]  [<ffffffff81549795>] pcie_port_device_register+0x335/0x520
+> [   71.429874]  [<ffffffff81549f08>] pcie_portdrv_probe+0x68/0xa0
+> [   71.429883]  [<ffffffff8153cf75>] local_pci_probe+0x45/0xa0
+> [   71.429887]  [<ffffffff810b0af4>] work_for_cpu_fn+0x14/0x20
+> [   71.429891]  [<ffffffff810b431b>] process_one_work+0x28b/0x4a0
+> [   71.429895]  [<ffffffff810b4292>] ? process_one_work+0x202/0x4a0
+> [   71.429899]  [<ffffffff810b55db>] worker_thread+0x26b/0x3a0
+> [   71.429903]  [<ffffffff810e262d>] ? trace_hardirqs_on+0xd/0x10
+> [   71.429906]  [<ffffffff810b5370>] ? manage_workers.isra.17+0x340/0x340
+> [   71.429912]  [<ffffffff810bc031>] kthread+0x111/0x120
+> [   71.429919]  [<ffffffff810cddab>] ? local_clock+0x2b/0x40
+> [   71.429923]  [<ffffffff810bbf20>] ? kthread_stop+0xf0/0xf0
+> [   71.429927]  [<ffffffff8203842c>] ret_from_fork+0x7c/0xb0
+> [   71.429931]  [<ffffffff810bbf20>] ? kthread_stop+0xf0/0xf0
+> [   71.429933] ---[ end trace c511e3d74efea94e ]---
+> 
+> looks like Greg forgot adding attr init.
+> 
+> Can you fold attached patch into Greg's patch ?
+> 
+> Index: linux-2.6/drivers/pci/msi.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/msi.c
+> +++ linux-2.6/drivers/pci/msi.c
+> @@ -547,6 +547,7 @@ static int populate_msi_sysfs(struct pci
+>                 msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+>                 if (!msi_dev_attr)
+>                         return -ENOMEM;
+> +               sysfs_attr_init(&msi_dev_attr->attr);
+>                 sprintf(name, "%d", entry->irq);
+>                 msi_dev_attr->attr.name = name;
+>                 msi_dev_attr->attr.mode = S_IRUGO;
 
->
->> What is the connection here for PCI-BIOS and PCI-Core here, does these
->> are two different entities means there is no common call for these?
->> I see for ARM - "arch/arm/kernel/bios32.c" is PCI-BIOS is it correct?
->> does we have separate BIOS codes for architectures?
->
-> The "pcibios_*" functions are architecture-specific things called by
-> the generic PCI core.  Generally, things specified by the PCI specs
-> are architecture-independent and should be in the PCI core
-> (drivers/pci/*).
+> ---
+>  drivers/pci/msi.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> Index: linux-2.6/drivers/pci/msi.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/msi.c
+> +++ linux-2.6/drivers/pci/msi.c
+> @@ -547,6 +547,7 @@ static int populate_msi_sysfs(struct pci
+>  		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+>  		if (!msi_dev_attr)
+>  			return -ENOMEM;
+> +		sysfs_attr_init(&msi_dev_attr->attr);
+>  		sprintf(name, "%d", entry->irq);
+>  		msi_dev_attr->attr.name = name;
+>  		msi_dev_attr->attr.mode = S_IRUGO;
 
-I have some good information to discuss from this thread.
-Can you please verify this Linux PCIe subsystem stack - comment
-whether my understanding is correct/not.
-(I just draw this based on driver calls flow - to accommodate with in
-the Linux cores)
-http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
+Ah, crap, yes, you are right, my fault, very nice catch.
 
--- 
-Thanks,
-Jagan.
---------
-Jagannadha Sutradharudu Teki,
-E: jagannadh.teki@gmail.com, P: +91-9676773388
-Engineer - System Software Hacker
-U-boot - SPI Custodian and Zynq APSOC
-Ln: http://www.linkedin.com/in/jaganteki
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+greg k-h
