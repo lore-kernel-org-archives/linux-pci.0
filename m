@@ -1,134 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f49.google.com ([209.85.128.49]:35393 "EHLO
-	mail-qe0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474Ab3LIW2A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 17:28:00 -0500
-Received: by mail-qe0-f49.google.com with SMTP id w7so3377101qeb.36
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 14:28:00 -0800 (PST)
-Date: Mon, 9 Dec 2013 15:27:54 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: =?iso-8859-1?Q?Bj=F8rn?= Erik Nilsen <ben@datarespons.no>
-Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
-	"marex@denx.de" <marex@denx.de>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:50547 "EHLO
+	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751549Ab3LLFNs convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Dec 2013 00:13:48 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Chen-Yu Tsai <wens@csie.org>,
+	Rajeev KUMAR <rajeev-dlh.kumar@st.com>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	"Viresh Kumar (viresh.linux@gmail.com)" <viresh.linux@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	spear-devel <spear-devel@list.st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"Mohit.KUMAR@st.com" <Mohit.KUMAR@st.com>,
-	"ajay.khandelwal@st.com" <ajay.khandelwal@st.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	"Eric.Nelson@boundarydevices.com" <Eric.Nelson@boundarydevices.com>,
-	"troy.kisky@boundarydevices.com" <troy.kisky@boundarydevices.com>
-Subject: Re: [PATCH v5 0/2] Kernel oops from pci_disable_msi
-Message-ID: <20131209222754.GC2135@google.com>
-References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com>
- <1385732125-28630-1-git-send-email-ben@datarespons.no>
- <20131209204349.GA2135@google.com>
- <52a632f0.e42c980a.3d86.ffff8faeSMTPIN_ADDED_MISSING@mx.google.com>
- <CAErSpo7KrWaP5e0TU+J4M+3mU0hUFr9fbt9GFyx8ghBrEJpugQ@mail.gmail.com>
- <52a63678.4902980a.6fd7.ffffa2b9SMTPIN_ADDED_MISSING@mx.google.com>
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Florian Fainelli <f.fainelli@gmail.com>
+Date: Thu, 12 Dec 2013 13:13:08 +0800
+Subject: RE: [PATCH 01/12] SPEAr13xx: Correct dt field name for stmmac
+ phy-addr
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F6435@EAPEX1MAIL1.st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <1078549fa412fb34ab2c95a6232096570abee12d.1386752447.git.mohit.kumar@st.com>
+ <52A847D1.5000409@st.com> <001b01cef6d2$9104f7b0$b30ee710$%han@samsung.com>
+ <52A934A2.8020101@st.com>
+ <CAGb2v67tK7W12Ljb-j+KJhGQkZ_k_p0WK+kcYiRqOuQujJL1HA@mail.gmail.com>
+In-Reply-To: <CAGb2v67tK7W12Ljb-j+KJhGQkZ_k_p0WK+kcYiRqOuQujJL1HA@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <52a63678.4902980a.6fd7.ffffa2b9SMTPIN_ADDED_MISSING@mx.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 09, 2013 at 10:30:17PM +0100, Bjørn Erik Nilsen wrote:
-> 
-> 9. des. 2013 kl. 22:21 skrev Bjorn Helgaas <bhelgaas@google.com>:
-> 
-> > On Mon, Dec 9, 2013 at 2:15 PM, Bjørn Erik Nilsen <ben@datarespons.no> wrote:
-> >> Hi Bjorn,
-> >> 
-> >> 9. des. 2013 kl. 21:43 skrev Bjorn Helgaas <bhelgaas@google.com>:
-> >> 
-> >>> On Fri, Nov 29, 2013 at 02:35:23PM +0100, Bjørn Erik Nilsen wrote:
-> >>>> This patchset address Marek Vasut's comments on the previous
-> >>>> patches. I decided to split into two separate commits as they are
-> >>>> unrelated.
-> >>>> 
-> >>>> Bjørn Erik Nilsen (2):
-> >>>> PCI: designware: Fix crash in dw_msi_teardown_irq
-> >>>> PCI: designware: Remove redundant call to pci_write_config
-> >>> 
-> >>> Hi Bjørn,
-> >>> 
-> >>> There's been a fair amount of discussion about the first patch, so I'm
-> >>> ignoring these for now.  Please repost these (again) when that all settles
-> >>> down.
-> >> 
-> >> I'm under the impression that all concerns have been addressed and that the discussion has settled down.
-> >> 
-> >> What are the outstanding issues to be solved regarding these patches?
-> >> 
-> >> I'm asking because these patches are acked-by Marek Vasut and Jingoo Han as well as tested-by Mohit Kumar (and obviously myself).
-> >> 
-> >> Jingoo Han confirms he can reproduce the crash on Exynos and that the first patch fixes the problem.
-> > 
-> > I didn't trace through the discussion closely enough to follow
-> > complaints and their resolution or retraction.  Can you post the
-> > current version including the acks, just so I make sure I get the
-> > latest stuff?
-> 
-> I'm not able to repost right now, but I can do it tomorrow morning if needed.
-> 
-> v5 (as posted) is the latest however, and the amendment is:
-> 
-> Acked-by: Marek Vasut <marex@denx.de>
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
-> Tested-by: Mohit Kumar <mohit.kumar@st.com>
+Hello Shiraz/Viresh,
 
-OK, I added these and applied to a pci/host-designware branch for v3.14.  I
-also added the following cleanup patch as suggested by Marek:
+> -----Original Message-----
+> From: wens213@gmail.com [mailto:wens213@gmail.com] On Behalf Of
+> Chen-Yu Tsai
+> Sent: Thursday, December 12, 2013 9:37 AM
+> To: Rajeev KUMAR
+> Cc: Jingoo Han; Pratyush ANAND; devicetree@vger.kernel.org; Mohit
+> KUMAR DCG; spear-devel; Viresh Kumar; linux-pci@vger.kernel.org; linux-
+> arm-kernel@lists.infradead.org; Florian Fainelli
+> Subject: Re: [PATCH 01/12] SPEAr13xx: Correct dt field name for stmmac phy-
+> addr
+> 
+> Hi,
+> 
+> On Thu, Dec 12, 2013 at 11:59 AM, Rajeev kumar <rajeev-
+> dlh.kumar@st.com> wrote:
+> > On 12/12/2013 6:09 AM, Jingoo Han wrote:
+> >>
+> >> On Wednesday, December 11, 2013 8:09 PM, Rajeev kumar wrote:
+> >>>
+> >>> On 12/11/2013 3:08 PM, Mohit KUMAR wrote:
+> >>>>
+> >>>> DT field name for the phy address changed since kernel 3.10. Set
+> >>>> the snps,phy-addr to 0xffffffff so that the driver probes for the phy.
+> >>>>
+> >>>> Signed-off-by: Mohit Kumar<mohit.kumar@st.com>
+> >>>> Cc: Pratyush Anand<pratyush.anand@st.com>
+> >>>> Cc: Viresh Kumar<viresh.linux@gmail.com>
+> >>>> Cc: spear-devel@list.st.com
+> >>>> Cc: linux-arm-kernel@lists.infradead.org
+> >>>> Cc: devicetree@vger.kernel.org
+> >>>> ---
+> >>>>    arch/arm/boot/dts/spear13xx.dtsi |    1 +
+> >>>>    1 files changed, 1 insertions(+), 0 deletions(-)
+> >>>>
+> >>>> diff --git a/arch/arm/boot/dts/spear13xx.dtsi
+> >>>> b/arch/arm/boot/dts/spear13xx.dtsi
+> >>>> index 4382547..3518803 100644
+> >>>> --- a/arch/arm/boot/dts/spear13xx.dtsi
+> >>>> +++ b/arch/arm/boot/dts/spear13xx.dtsi
+> >>>> @@ -155,6 +155,7 @@
+> >>>>
+> >>>>                 gmac0: eth@e2000000 {
+> >>>>                         compatible = "st,spear600-gmac";
+> >>>> +                       snps,phy-addr =<0xffffffff>;
+> >>>
+> >>>
+> >>> Don't you think it should be st,phy-addr =<0xffffffff>, as the
+> >>> manufacturer is 'st' as the compatible suggest
+> >>
+> >>
+> >> Hi Rajeev Kumar,
+> >>
+> >> According to the Documentation, it guides to use 'snps' prefix.
+> >>
+> >> In my humble opinion,
+> >> 'gmac' is a Synopsys based IP. Thus, if 'snps,phy-addr' is not ST
+> >> specific, 'snps' prefix can be used.
+> >>
+> >
+> >
+> > Very much true, I raise the point just becuase compatible =
+> > "st,spear600-gmac". Check the manufacturer name here.
+> 
+> As documented, "st,spear600-gmac" is there for backwards compatibility. It
+> should really be updated to '"snps,dwmac-<version>", "snps,dwmac"'.
+> 
+> 
+> 
+> 
+> >> ./Documentation/devicetree/bindings/net/stmmac.txt
+> >> - snps,phy-addr         phy address to connect to.
+> 
+> About the "snps,phy-addr" property, Florian recently raised the issue that
+> this is !standard. I am currently implementing proper DT ethernet phy node
+> support for stmmac. Just a heads up. :)
+> 
+- Any comment on this?
 
-
-commit 0b8cfb6aa3aabc96177b1e68ef13d2eb5c686606
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Dec 9 15:11:25 2013 -0700
-
-    PCI: designware: Use typical "for" loop idiom
-    
-    It's conventional to use "for" rather than "while" for simple iteration.
-    No functional change.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 5274085ecd4b..1c92833a4ed3 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -214,8 +214,7 @@ static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
- {
- 	unsigned int i, res, bit, val;
- 
--	i = 0;
--	while (i < nvec) {
-+	for (i = 0; i < nvec; i++) {
- 		irq_set_msi_desc_off(irq_base, i, NULL);
- 		clear_bit(pos + i, pp->msi_irq_in_use);
- 		/* Disable corresponding interrupt on MSI interrupt controller */
-@@ -224,7 +223,6 @@ static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
- 		val &= ~(1 << bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
--		++i;
- 	}
- }
- 
-@@ -268,8 +266,7 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- 	 * descs are also successfully allocated.
- 	 */
- 
--	i = 0;
--	while (i < no_irqs) {
-+	for (i = 0; i < no_irqs; i++) {
- 		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
- 			clear_irq_range(pp, irq, i, pos0);
- 			goto no_valid_irq;
-@@ -281,7 +278,6 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
- 		val |= 1 << bit;
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
--		i++;
- 	}
- 
- 	*pos = pos0;
+Regards
+Mohit
