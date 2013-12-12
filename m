@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:47044 "EHLO
+Received: from mail-out.m-online.net ([212.18.0.9]:33846 "EHLO
 	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751215Ab3LKKa7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 05:30:59 -0500
+	with ESMTP id S1751579Ab3LLVu0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:26 -0500
 From: Marek Vasut <marex@denx.de>
 To: linux-pci@vger.kernel.org
 Cc: linux-arm-kernel@lists.infradead.org,
@@ -20,10 +20,10 @@ Cc: linux-arm-kernel@lists.infradead.org,
 	Troy Kisky <troy.kisky@boundarydevices.com>,
 	Yinghai Lu <yinghai@kernel.org>
 Subject: [PATCH 6/7] PCI: imx6: Fix bugs in PCIe startup code
-Date: Wed, 11 Dec 2013 11:30:17 +0100
-Message-Id: <1386757818-5154-6-git-send-email-marex@denx.de>
-In-Reply-To: <1386757818-5154-1-git-send-email-marex@denx.de>
-References: <1386757818-5154-1-git-send-email-marex@denx.de>
+Date: Thu, 12 Dec 2013 22:50:03 +0100
+Message-Id: <1386885004-10252-6-git-send-email-marex@denx.de>
+In-Reply-To: <1386885004-10252-1-git-send-email-marex@denx.de>
+References: <1386885004-10252-1-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
@@ -54,7 +54,7 @@ Cc: Yinghai Lu <yinghai@kernel.org>
  1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 3028f2c..38df103 100644
+index a945e74..7985272 100644
 --- a/drivers/pci/host/pci-imx6.c
 +++ b/drivers/pci/host/pci-imx6.c
 @@ -220,18 +220,9 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
