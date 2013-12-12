@@ -1,47 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:42981 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663Ab3KSSeC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Nov 2013 13:34:02 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so5470994iec.27
-        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2013 10:34:01 -0800 (PST)
+Received: from top.free-electrons.com ([176.31.233.9]:52762 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751458Ab3LLHk5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 02:40:57 -0500
+Message-ID: <52A96877.90902@free-electrons.com>
+Date: Thu, 12 Dec 2013 08:40:39 +0100
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <20131118191723.26774.53479.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131118191723.26774.53479.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 19 Nov 2013 11:33:41 -0700
-Message-ID: <CAErSpo7mFMP+aU5rhVyhpdhWGBrB4fmP1MSg3oO4umLXziCzAw@mail.gmail.com>
-Subject: Re: [PATCH 0/2] PCIe Capability accessor fixes [stable backports]
-To: "stable@vger.kernel.org" <stable@vger.kernel.org>
-Cc: Myron Stowe <myron.stowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	Adam Lee <adam.lee@canonical.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yuval Mintz <yuvalmin@broadcom.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Thomas Renninger <trenn@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+CC: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
+	linux-samsung-soc@vger.kernel.org,
+	Wei Yongjun <weiyj.lk@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Simon Horman <horms@verge.net.au>, linux-sh@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-tegra@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
+ host maintainers
+References: <20131211183237.GI4699@google.com>
+In-Reply-To: <20131211183237.GI4699@google.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 18, 2013 at 12:17 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> The following two patches fix issues reported by Yuval Mintz
-> <yuvalmin@broadcom.com> and Adam Lee <adam.lee@canonical.com>.
->
-> These backports are for 3.10.x and 3.11.x.
->
-> 3.4.x and earlier stable kernels do not need these fixes because they
-> do not have the pcie_capability_*() accessors.
->
+Hi Bjorn, ,
+
+On 11/12/2013 19:32, Bjorn Helgaas wrote:
+> If this looks reasonable, I'll merge it via the PCI tree for v3.13.
+> 
+> Bjorn
+> 
+> 
+> MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
+> 
+> Add entries for PCI host controller drivers in drivers/pci/host/.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->
-> Bjorn Helgaas (2):
->       PCI: Allow PCIe Capability link-related register access for switches
->       PCI: Support PCIe Capability Slot registers only for ports with slots
+>  MAINTAINERS |   31 +++++++++++++++++++++++++++++++
+>  1 file changed, 31 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 8285ed4676b6..826c722d92ba 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6449,16 +6449,47 @@ F:	drivers/pci/
+>  F:	include/linux/pci*
+>  F:	arch/x86/pci/
+>  
+> +PCI DRIVER FOR DESIGNWARE
+> +M:	Jingoo Han <jg1.han@samsung.com>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	drivers/pci/host/*designware*
+> +
+> +PCI DRIVER FOR IMX6
+> +M:	Shawn Guo <shawn.guo@linaro.org>
+> +L:	linux-pci@vger.kernel.org
+> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> +S:	Maintained
+> +F:	drivers/pci/host/*imx6*
+> +
+> +PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
+> +M:	Jason Cooper <jason@lakedaemon.net>
+> +L:	linux-pci@vger.kernel.org
+> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+> +S:	Maintained
+> +F:	drivers/pci/host/*mvebu*
 
-Please ignore these two patches.  Myron pointed out that I need to
-include a third patch from the series, so I'll repost with that one
-included.
+I think that Thomas Petazzoni would be more appropriate, he worked
+on the mvebu PCIe since 6 moths and now know very well the
+subject. Until now all the mvebu PCIe related questions were
+managed by Thomas.
 
-Bjorn
+Regards,
+
+Gregory
+
+
+
+-- 
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
