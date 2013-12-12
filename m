@@ -1,96 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f169.google.com ([209.85.128.169]:34211 "EHLO
-	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086Ab3LLEH0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 23:07:26 -0500
+Received: from mail-yh0-f46.google.com ([209.85.213.46]:61268 "EHLO
+	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469Ab3LLQLT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 11:11:19 -0500
+Date: Thu, 12 Dec 2013 11:11:07 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 11/11] PCI/MSI: Introduce pcim_enable_msi*() family
+ helpers
+Message-ID: <20131212161107.GI32683@htj.dyndns.org>
+References: <cover.1385399393.git.agordeev@redhat.com>
+ <086bc30b22688c629911d02e230d1bc876fb946f.1385399393.git.agordeev@redhat.com>
+ <20131210231602.GH4699@google.com>
+ <20131212161100.GB14655@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <52A934A2.8020101@st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <1078549fa412fb34ab2c95a6232096570abee12d.1386752447.git.mohit.kumar@st.com>
- <52A847D1.5000409@st.com> <001b01cef6d2$9104f7b0$b30ee710$%han@samsung.com> <52A934A2.8020101@st.com>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Thu, 12 Dec 2013 12:07:05 +0800
-Message-ID: <CAGb2v67tK7W12Ljb-j+KJhGQkZ_k_p0WK+kcYiRqOuQujJL1HA@mail.gmail.com>
-Subject: Re: [PATCH 01/12] SPEAr13xx: Correct dt field name for stmmac phy-addr
-To: Rajeev kumar <rajeev-dlh.kumar@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	spear-devel <spear-devel@list.st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Florian Fainelli <f.fainelli@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131212161100.GB14655@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, Dec 12, 2013 at 05:11:01PM +0100, Alexander Gordeev wrote:
+> On Tue, Dec 10, 2013 at 04:16:02PM -0700, Bjorn Helgaas wrote:
+> > What's the reason for using the "pcim_" prefix?  To me, that suggests that
+> > this is a "managed" interface in the sense described in
+> > Documentation/driver-model/devres.txt, where resources are automatically
+> > deallocated when the driver detaches.  But I don't see anything like that
+> > happening in this patch.
+> 
+> Oh.. right. What about pci_auto_ prefix to indicate automatic fallback
+> logic? Or may be even pcia_ ?
 
-On Thu, Dec 12, 2013 at 11:59 AM, Rajeev kumar <rajeev-dlh.kumar@st.com> wrote:
-> On 12/12/2013 6:09 AM, Jingoo Han wrote:
->>
->> On Wednesday, December 11, 2013 8:09 PM, Rajeev kumar wrote:
->>>
->>> On 12/11/2013 3:08 PM, Mohit KUMAR wrote:
->>>>
->>>> DT field name for the phy address changed since kernel 3.10. Set the
->>>> snps,phy-addr to 0xffffffff so that the driver probes for the phy.
->>>>
->>>> Signed-off-by: Mohit Kumar<mohit.kumar@st.com>
->>>> Cc: Pratyush Anand<pratyush.anand@st.com>
->>>> Cc: Viresh Kumar<viresh.linux@gmail.com>
->>>> Cc: spear-devel@list.st.com
->>>> Cc: linux-arm-kernel@lists.infradead.org
->>>> Cc: devicetree@vger.kernel.org
->>>> ---
->>>>    arch/arm/boot/dts/spear13xx.dtsi |    1 +
->>>>    1 files changed, 1 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/arch/arm/boot/dts/spear13xx.dtsi
->>>> b/arch/arm/boot/dts/spear13xx.dtsi
->>>> index 4382547..3518803 100644
->>>> --- a/arch/arm/boot/dts/spear13xx.dtsi
->>>> +++ b/arch/arm/boot/dts/spear13xx.dtsi
->>>> @@ -155,6 +155,7 @@
->>>>
->>>>                 gmac0: eth@e2000000 {
->>>>                         compatible = "st,spear600-gmac";
->>>> +                       snps,phy-addr =<0xffffffff>;
->>>
->>>
->>> Don't you think it should be st,phy-addr =<0xffffffff>, as the
->>> manufacturer is 'st' as the compatible suggest
->>
->>
->> Hi Rajeev Kumar,
->>
->> According to the Documentation, it guides to use 'snps' prefix.
->>
->> In my humble opinion,
->> 'gmac' is a Synopsys based IP. Thus, if 'snps,phy-addr' is
->> not ST specific, 'snps' prefix can be used.
->>
->
->
-> Very much true, I raise the point just becuase compatible =
-> "st,spear600-gmac". Check the manufacturer name here.
+I'd vote for pci_auto, one-off single char pre/postfixes usually get
+pretty confusing.
 
-As documented, "st,spear600-gmac" is there for backwards
-compatibility. It should really be updated to
-'"snps,dwmac-<version>", "snps,dwmac"'.
+Thanks.
 
-
-
-
->> ./Documentation/devicetree/bindings/net/stmmac.txt
->> - snps,phy-addr         phy address to connect to.
-
-About the "snps,phy-addr" property, Florian recently raised
-the issue that this is !standard. I am currently implementing
-proper DT ethernet phy node support for stmmac. Just a
-heads up. :)
-
-
-ChenYu
+-- 
+tejun
