@@ -1,46 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:45073 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753025Ab3LJSsl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 13:48:41 -0500
-From: Marek Vasut <marex@denx.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 2/2] PCI: imx6: Remove unneeded 'goto err'
-Date: Tue, 10 Dec 2013 19:48:39 +0100
-Cc: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Fabio Estevam'" <festevam@gmail.com>, linux-pci@vger.kernel.org,
-	"'Fabio Estevam'" <fabio.estevam@freescale.com>
-References: <1385955575-25270-1-git-send-email-festevam@gmail.com> <20131209223824.GD2135@google.com> <000301cef56c$38fd71d0$aaf85570$%han@samsung.com>
-In-Reply-To: <000301cef56c$38fd71d0$aaf85570$%han@samsung.com>
+Received: from mail-ve0-f169.google.com ([209.85.128.169]:34211 "EHLO
+	mail-ve0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086Ab3LLEH0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 23:07:26 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201312101948.39891.marex@denx.de>
+In-Reply-To: <52A934A2.8020101@st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com> <1078549fa412fb34ab2c95a6232096570abee12d.1386752447.git.mohit.kumar@st.com>
+ <52A847D1.5000409@st.com> <001b01cef6d2$9104f7b0$b30ee710$%han@samsung.com> <52A934A2.8020101@st.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Thu, 12 Dec 2013 12:07:05 +0800
+Message-ID: <CAGb2v67tK7W12Ljb-j+KJhGQkZ_k_p0WK+kcYiRqOuQujJL1HA@mail.gmail.com>
+Subject: Re: [PATCH 01/12] SPEAr13xx: Correct dt field name for stmmac phy-addr
+To: Rajeev kumar <rajeev-dlh.kumar@st.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	spear-devel <spear-devel@list.st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Florian Fainelli <f.fainelli@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 10, 2013 at 06:54:00 AM, Jingoo Han wrote:
-> On Tuesday, December 10, 2013 7:38 AM, Bjorn Helgaas wrote:
-> > On Mon, Dec 02, 2013 at 01:39:35AM -0200, Fabio Estevam wrote:
-> > > From: Fabio Estevam <fabio.estevam@freescale.com>
-> > > 
-> > > There is no need to use 'goto err' as we can directly return the
-> > > errors.
-> > > 
-> > > Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> > 
-> > Since there's no functional change, I also applied this one to
-> > pci/host-imx6 for v3.14.  I agree that leaving the DABT handler installed
-> > is a bug and should be fixed by another patch.
-> 
-> I also agree with Bjorn's opinion. :-)
-> Fixing the DABT handler problem can be sent as another patch.
+Hi,
 
-Hm, actually I suspect we cannot un-install the handler. See arch/arm/mm/fault.c 
-, the hook_fault_code() call is annotated __init , so it disappears after the 
-init sequence finishes. This basically leaves us with disallowing the mx6 pcie 
-driver to be removed from kernel (don't let it compile as a module), which I 
-dont think is much of a problem anyway.
+On Thu, Dec 12, 2013 at 11:59 AM, Rajeev kumar <rajeev-dlh.kumar@st.com> wrote:
+> On 12/12/2013 6:09 AM, Jingoo Han wrote:
+>>
+>> On Wednesday, December 11, 2013 8:09 PM, Rajeev kumar wrote:
+>>>
+>>> On 12/11/2013 3:08 PM, Mohit KUMAR wrote:
+>>>>
+>>>> DT field name for the phy address changed since kernel 3.10. Set the
+>>>> snps,phy-addr to 0xffffffff so that the driver probes for the phy.
+>>>>
+>>>> Signed-off-by: Mohit Kumar<mohit.kumar@st.com>
+>>>> Cc: Pratyush Anand<pratyush.anand@st.com>
+>>>> Cc: Viresh Kumar<viresh.linux@gmail.com>
+>>>> Cc: spear-devel@list.st.com
+>>>> Cc: linux-arm-kernel@lists.infradead.org
+>>>> Cc: devicetree@vger.kernel.org
+>>>> ---
+>>>>    arch/arm/boot/dts/spear13xx.dtsi |    1 +
+>>>>    1 files changed, 1 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/arch/arm/boot/dts/spear13xx.dtsi
+>>>> b/arch/arm/boot/dts/spear13xx.dtsi
+>>>> index 4382547..3518803 100644
+>>>> --- a/arch/arm/boot/dts/spear13xx.dtsi
+>>>> +++ b/arch/arm/boot/dts/spear13xx.dtsi
+>>>> @@ -155,6 +155,7 @@
+>>>>
+>>>>                 gmac0: eth@e2000000 {
+>>>>                         compatible = "st,spear600-gmac";
+>>>> +                       snps,phy-addr =<0xffffffff>;
+>>>
+>>>
+>>> Don't you think it should be st,phy-addr =<0xffffffff>, as the
+>>> manufacturer is 'st' as the compatible suggest
+>>
+>>
+>> Hi Rajeev Kumar,
+>>
+>> According to the Documentation, it guides to use 'snps' prefix.
+>>
+>> In my humble opinion,
+>> 'gmac' is a Synopsys based IP. Thus, if 'snps,phy-addr' is
+>> not ST specific, 'snps' prefix can be used.
+>>
+>
+>
+> Very much true, I raise the point just becuase compatible =
+> "st,spear600-gmac". Check the manufacturer name here.
 
-Best regards,
-Marek Vasut
+As documented, "st,spear600-gmac" is there for backwards
+compatibility. It should really be updated to
+'"snps,dwmac-<version>", "snps,dwmac"'.
+
+
+
+
+>> ./Documentation/devicetree/bindings/net/stmmac.txt
+>> - snps,phy-addr         phy address to connect to.
+
+About the "snps,phy-addr" property, Florian recently raised
+the issue that this is !standard. I am currently implementing
+proper DT ethernet phy node support for stmmac. Just a
+heads up. :)
+
+
+ChenYu
