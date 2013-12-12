@@ -1,161 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:53207 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755904Ab3LITGj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 14:06:39 -0500
-Date: Mon, 9 Dec 2013 11:08:07 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Ethan Zhao <ethan.kernel@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Zheng, Lv" <lv.zheng@intel.com>,
+	"Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+	"Brown, Len" <len.brown@intel.com>, Lv Zheng <zetalog@gmail.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>
-Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
-Message-ID: <20131209190807.GA23877@kroah.com>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
- <33026900.FbCAopDPFz@vostro.rjw.lan>
- <CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com>
- <1519414.GDlGZFCTSR@vostro.rjw.lan>
- <CAE9FiQX0zvtfAW-0-aPjXyVuFzxg6PMtY9O_7csqEzyW2pr5Kw@mail.gmail.com>
- <20131208035047.GB17629@kroah.com>
- <CABawtvO91R0wBL5XZf6xM8Rmray50Fjc74=iA9Y+XdeD7FsNwg@mail.gmail.com>
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	"Tang, Feng" <feng.tang@intel.com>,
+	"sfi-devel@simplefirmware.org" <sfi-devel@simplefirmware.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 5/6] ACPI/SFI: Fix wrong <acpi/acpi.h> inclusion in SFI/ACPI wrapper - acpi_disabled linkage.
+Date: Thu, 12 Dec 2013 02:38:21 +0100
+Message-ID: <2140164.VX2WIofybX@vostro.rjw.lan>
+In-Reply-To: <20131209231515.GA4699@google.com>
+References: <cover.1385094640.git.lv.zheng@intel.com> <1AE640813FDE7649BE1B193DEA596E88024950DB@SHSMSX101.ccr.corp.intel.com> <20131209231515.GA4699@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABawtvO91R0wBL5XZf6xM8Rmray50Fjc74=iA9Y+XdeD7FsNwg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 09, 2013 at 11:24:04PM +0800, Ethan Zhao wrote:
-> On Sun, Dec 8, 2013 at 11:50 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Sat, Dec 07, 2013 at 07:31:21PM -0800, Yinghai Lu wrote:
-> >> [+ GregKH]
-> >>
-> >> On Fri, Dec 6, 2013 at 5:27 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >> > On Thursday, December 05, 2013 10:52:36 PM Yinghai Lu wrote:
-> >> >> On Mon, Dec 2, 2013 at 6:49 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >> >> >
-> >> >> > Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
-> >> >> >   for a device and its parent bridge via remove_callback().
-> >> >> >
-> >> >> >   In that case both code paths attempt to acquire
-> >> >> >   pci_remove_rescan_mutex.  If the child device removal acquires
-> >> >> >   it first, there will be no problems.  However, if the parent
-> >> >> >   bridge removal acquires it first, it will eventually execute
-> >> >> >   pci_destroy_dev() for the child device, but that device will
-> >> >> >   not be freed yet due to the reference held by the concurrent
-> >> >> >   child removal.  Consequently, both pci_stop_bus_device() and
-> >> >> >   pci_remove_bus_device() will be executed for that device
-> >> >> >   unnecessarily and pci_destroy_dev() will see a corrupted list
-> >> >> >   head in that object.  Moreover, an excess put_device() will
-> >> >> >   be executed for that device in that case which may lead to a
-> >> >> >   use-after-free in the final kobject_put() done by
-> >> >> >   sysfs_schedule_callback_work().
-> >> >> >
-> >> >> > Index: linux-pm/include/linux/pci.h
-> >> >> > ===================================================================
-> >> >> > --- linux-pm.orig/include/linux/pci.h
-> >> >> > +++ linux-pm/include/linux/pci.h
-> >> >> > @@ -321,6 +321,7 @@ struct pci_dev {
-> >> >> >         unsigned int    multifunction:1;/* Part of multi-function device */
-> >> >> >         /* keep track of device state */
-> >> >> >         unsigned int    is_added:1;
-> >> >> > +       unsigned int    is_gone:1;
-> >> >> >         unsigned int    is_busmaster:1; /* device is busmaster */
-> >> >> >         unsigned int    no_msi:1;       /* device may not use msi */
-> >> >> >         unsigned int    block_cfg_access:1;     /* config space access is blocked */
-> >> >> > Index: linux-pm/drivers/pci/remove.c
-> >> >> > ===================================================================
-> >> >> > --- linux-pm.orig/drivers/pci/remove.c
-> >> >> > +++ linux-pm/drivers/pci/remove.c
-> >> >> > @@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
-> >> >> >
-> >> >> >  static void pci_destroy_dev(struct pci_dev *dev)
-> >> >> >  {
-> >> >> > +       dev->is_gone = 1;
-> >> >> >         device_del(&dev->dev);
-> >> >> >
-> >> >> >         down_write(&pci_bus_sem);
-> >> >> > @@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
-> >> >> >   */
-> >> >> >  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
-> >> >> >  {
-> >> >> > -       pci_stop_bus_device(dev);
-> >> >> > -       pci_remove_bus_device(dev);
-> >> >> > +       if (!dev->is_gone) {
-> >> >> > +               pci_stop_bus_device(dev);
-> >> >> > +               pci_remove_bus_device(dev);
-> >> >> > +       }
-> >> >> >  }
-> >> >> >  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
-> >> >> >
-> >> >>
-> >> >> Yes, above change should address sys double remove problem.
-> >> >
-> >> > I've just realized that we don't need a new flag for that, though.
-> >> >
-> >> > It looks like we only need to check dev->dev.kobj.parent and return if that is
-> >> > NULL, because that means pci_destroy_dev() has run for that device already
-> >> > (I'm wondering why device_del() doesn't clear dev->parent, BTW, it looks like
-> >> > it should do that?).
-> >> >
-> >> > Of course, that still is going to be racy if we don't hold
-> >> > pci_remove_rescan_mutex around pci_stop_and_remove_bus_device() in every code
-> >> > path using it (or use another similar synchronization mechanism).
-> >>
-> >> Wonder if we can have safe way to check if device_del() is called already.
-> >
-> > Nope.
-> >
-> >> And those access_after_free should be addressed by driver core instead
-> >> of pci code?
-> >
-> > Nope, it's up to the bus to handle this.  It shouldn't be hard, you
-> > shouldn't actually care about this, if you do, something is wrong.
-> >
-> > How is this PCI code so hard to get right?  Look at USB for devices that
-> > disappear from anywhere at anytime as an example for how to handle
-> > this.  PCI should be doing the same thing, no need for this "is_gone"
-> > stuff.
-> Greg,
+On Monday, December 09, 2013 04:15:15 PM Bjorn Helgaas wrote:
+> On Fri, Dec 06, 2013 at 02:53:00PM +0000, Zheng, Lv wrote:
+> > Hi,
+> > 
+> > > From: Zheng, Lv
+> > > Sent: Friday, December 06, 2013 4:52 PM
+> > > To: Wysocki, Rafael J; Brown, Len
+> > > 
+> > > In Linux kernel, ACPICA is wrapped and safely exported by CONFIG_ACPI.  So
+> > > all external modules should depend on CONFIG_ACPI rather than using ACPICA
+> > > header directly for stubbing.  But if we moves <acpi/acpi.h> inclusions
+> > > into "#ifdef CONFIG_ACPI", build breakge can help to detect wrong ACPICA
+> > > dependent modules.
+> > > 
+> > > One of the build breakage is:
+> > > arch/x86/pci/mmconfig-shared.c:389:1: error: unknown type name 'acpi_status'
+> > > arch/x86/pci/mmconfig-shared.c:389:47: warning: 'struct acpi_resource' declared inside parameter list [enabled by default]
+> > > arch/x86/pci/mmconfig-shared.c:389:47: warning: its scope is only this definition or declaration, which is probably not what you want
+> > > [enabled by default]
+> > > arch/x86/pci/mmconfig-shared.c: In function 'check_mcfg_resource':
+> > > arch/x86/pci/mmconfig-shared.c:392:33: error: storage size of 'address' isn't known
+> > > arch/x86/pci/mmconfig-shared.c:393:2: error: unknown type name 'acpi_status'
+> > > arch/x86/pci/mmconfig-shared.c:395:9: error: dereferencing pointer to incomplete type
+> > > arch/x86/pci/mmconfig-shared.c:395:19: error: 'ACPI_RESOURCE_TYPE_FIXED_MEMORY32' undeclared (first use in this function)
+> > > arch/x86/pci/mmconfig-shared.c:395:19: note: each undeclared identifier is reported only once for each function it appears in
+> > > arch/x86/pci/mmconfig-shared.c:397:8: error: dereferencing pointer to incomplete type
+> > > arch/x86/pci/mmconfig-shared.c:399:11: error: 'AE_OK' undeclared (first use in this function)
+> > > arch/x86/pci/mmconfig-shared.c:400:35: error: dereferencing pointer to incomplete type
+> > > arch/x86/pci/mmconfig-shared.c:401:33: error: dereferencing pointer to incomplete type
+> > > arch/x86/pci/mmconfig-shared.c:402:19: error: dereferencing pointer to incomplete type
+> > > arch/x86/pci/mmconfig-shared.c:404:11: error: 'AE_CTRL_TERMINATE' undeclared (first use in this function)
+> > > arch/x86/pci/mmconfig-shared.c:407:10: error: dereferencing pointer to incomplete type
+> > > arch/x86/pci/mmconfig-shared.c:407:20: error: 'ACPI_RESOURCE_TYPE_ADDRESS32' undeclared (first use in this function)
+> > > arch/x86/pci/mmconfig-shared.c:408:10: error: dereferencing pointer to incomplete type
+> > > arch/x86/pci/mmconfig-shared.c:408:20: error: 'ACPI_RESOURCE_TYPE_ADDRESS64' undeclared (first use in this function)
+> > > arch/x86/pci/mmconfig-shared.c:411:2: error: implicit declaration of function 'acpi_resource_to_address64' [-Werror=implicit-
+> > > function-declaration]
+> > > arch/x86/pci/mmconfig-shared.c:412:2: error: implicit declaration of function 'ACPI_FAILURE' [-Werror=implicit-function-declaration]
+> > > arch/x86/pci/mmconfig-shared.c:414:31: error: 'ACPI_MEMORY_RANGE' undeclared (first use in this function)
+> > > arch/x86/pci/mmconfig-shared.c:392:33: warning: unused variable 'address' [-Wunused-variable]
+> > > arch/x86/pci/mmconfig-shared.c: At top level:
+> > > arch/x86/pci/mmconfig-shared.c:425:1: error: unknown type name 'acpi_status'
+> > > arch/x86/pci/mmconfig-shared.c:425:41: error: unknown type name 'acpi_handle'
+> > > arch/x86/pci/mmconfig-shared.c: In function 'is_acpi_reserved':
+> > > arch/x86/pci/mmconfig-shared.c:447:2: error: implicit declaration of function 'acpi_get_devices' [-Werror=implicit-function-
+> > > declaration]
+> > > arch/x86/pci/mmconfig-shared.c:447:30: error: 'find_mboard_resource' undeclared (first use in this function)
+> > > arch/x86/pci/mmconfig-shared.c: At top level:
+> > > arch/x86/pci/mmconfig-shared.c:389:20: warning: 'check_mcfg_resource' defined but not used [-Wunused-function]
+> > 
+> > Let me say something about this error messages.  Someone may face difficulties to reproduce it.
+> > Currently, this message cannot be seen in any kernel build.
+> > This is because this patch series doesn't include a fix to remove <acpi/acpi.h> inclusion from linux/sfi_acpi.h.
+> > To achieve this, I have offered 2 options:
+> > 1. Redefining ACPICA table stuff for CONFIG_ACPI=n environment, or
+> > 2. Implementing stubs for all ACPICA functions/globals/macros and introducing <linux/acpica.h> (where acpi/acpi.h is included) as a top level header.
+> > 3. Other solutions...
+> > 
+> > If we choose solution 1, then this issue is exposed by a build test where CONFIG_ACPI=n and CONFIG_SFI=y.
+> > Since we haven't decided what to do for the table structures and it is really not a good approach to achieve the build safety for mmconfig-share.c by relying on link-stage optimization rather than compile-stage referencing.  IMO, we need to sort it out, thus I make it a part of this patchset.
+> > 
+> > Well, if we choose solution 2, this patch can only help to reduce the size of the kernel image.
 > 
->   Don't agree USB is a good example to follow, do you never hit panic
-> when you pull out USB device from anywhere at anytime without unmount
-> or stop it via command ?
+> OK, I assume you will make sure one of these fixes gets merged before the
+> change that causes the breakage, so bisection continues to work.
+> Therefore, I think it's best if both changes are merged through the same
+> tree, and I won't apply this via the PCI tree.  Let me know if you need me
+> to do something.
 
-You shouldn't.  If you do, it's a bug, let us know and we will fix it.
+We're doing our best not to break compilation between the patches in this
+series.  And I'll take care of it. :-)
 
-> that is not truth.  the truth is none regards it as enterprise level
-> interface to attach devices.
+Thanks,
+Rafael
 
-Huh?
-
->   Is there a feature for an USB disk to tell the host you want to pull
-> out it and should sync all the data in cache and unmount the files
-> system then power it off ?
-
-Nope, neither is there one for when I yank out my PCI storage device
-without telling the OS about it either.  Everything better "just work",
-with the exception of any lost data that might be in flight.
-
->   What USB could drive for us ? 40GB nic ? infiniband ? High end graphic card ?
-
-I don't understand what that means at all.
-
-We have USB network ethernet devices, I have a USB 3.0 one here that
-works really well.  Infiniband is merely a transport, with some "verbs"
-on top of it, that has nothing to do with PCI other than you can have a
-IB PCI controller in the system.  And I have a USB graphics adapter here
-that works just fine as well (people chain lots of them on one system.)
-
-So how does this apply to PCI at all?  It's the same thing, you have to
-be able to handle a PCI device going away at any point in time, with or
-without telling the OS ahead of time that you are going to remove it.
-
-greg k-h
