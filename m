@@ -1,55 +1,124 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
-Cc: bhelgaas@google.com, david.a.cohen@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 0/4] Add Clovertrail and Merrifeld support to Intel MID
-Date: Mon, 16 Dec 2013 12:07:35 -0800
-Message-Id: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+Date: Thu, 12 Dec 2013 13:46:10 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Magnus Damm <magnus.damm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-tegra@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org,
+	Jingoo Han <jg1.han@samsung.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Wei Yongjun <weiyj.lk@gmail.com>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Subject: [PATCH v2] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
+ host maintainers
+Message-ID: <20131212204610.GK4699@google.com>
+References: <20131211183237.GI4699@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131211183237.GI4699@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+[+cc Thomas]
 
-I've a bunch of Intel MID patches under review but it seems they are becoming
-old and start to need changes.
-I gathered an up-to-date version of all of them in this single patch set.
+On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
+> If this looks reasonable, I'll merge it via the PCI tree for v3.13.
 
-This series implements support of Clovertrail and Merrifield to Intel MID.
-It also removes the unwanted X86_MDFLD option since *all* Intel MID platforms
-should be supported through CONFIG_X86_INTEL_MID option.
+OK, here's another try.  I'm not actually trying to nominate anybody; I
+just tried to write down the list we came up with in an earlier discussion [1].
 
-This makes obsolete the following patches:
-https://lkml.org/lkml/2013/10/18/480
-https://lkml.org/lkml/2013/10/22/533
-http://lkml.indiana.edu/hypermail/linux/kernel/1311.1/02937.html
+I'd like confirmation from the following people that they approve of being
+listed here:
 
-Br, David
+  Richard Zhu (IMX6)
+  Thomas Petazzoni (MVEBU)
+  Magnus Damm (R-CAR)
 
+I think everybody else listed has already said they approve.
+
+[1] http://lkml.kernel.org/r/CAErSpo5tN==4nSv2u3SUBe_L4VsWn4P7TN+LtrC172Qj1vhtog@mail.gmail.com
+
+
+MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
+
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+Add entries for PCI host controller drivers in drivers/pci/host/.
+
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>		(DesignWare)
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>	(DesignWare)
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Simon Horman <horms+renesas@verge.net.au>	(R-CAR)
+Acked-by: Jason Cooper <jason@lakedaemon.net>		(MVEBU)
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
 ---
-David Cohen (3):
-  x86: intel-mid: move Medfield code out of intel-mid.c core file
-  x86: intel-mid: add Merrifield platform support
-  x86: intel-mid: remove deprecated X86_MDFLD and X86_WANT_INTEL_MID
-    configs
+ MAINTAINERS |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-Kuppuswamy Sathyanarayanan (1):
-  x86: intel-mid: add Clovertrail platform support
-
- arch/x86/Kconfig                                   |  29 +-----
- arch/x86/include/asm/intel-mid.h                   |  48 +++++++++-
- arch/x86/pci/intel_mid_pci.c                       |   6 +-
- arch/x86/platform/intel-mid/Makefile               |   4 +-
- arch/x86/platform/intel-mid/intel-mid.c            |  64 +++++++------
- arch/x86/platform/intel-mid/intel_mid_weak_decls.h |  19 ++++
- arch/x86/platform/intel-mid/mfld.c                 |  75 +++++++++++++++
- arch/x86/platform/intel-mid/mrfl.c                 | 103 +++++++++++++++++++++
- arch/x86/platform/intel-mid/sfi.c                  |  34 +++++--
- 9 files changed, 317 insertions(+), 65 deletions(-)
- create mode 100644 arch/x86/platform/intel-mid/intel_mid_weak_decls.h
- create mode 100644 arch/x86/platform/intel-mid/mfld.c
- create mode 100644 arch/x86/platform/intel-mid/mrfl.c
-
--- 
-1.8.4.2
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8285ed4676b6..1c5dc36ec522 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6449,19 +6449,53 @@ F:	drivers/pci/
+ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ 
++PCI DRIVER FOR IMX6
++M:	Richard Zhu <r65037@freescale.com>
++M:	Shawn Guo <shawn.guo@linaro.org>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
++S:	Maintained
++F:	drivers/pci/host/*imx6*
++
++PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
++M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
++M:	Jason Cooper <jason@lakedaemon.net>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
++S:	Maintained
++F:	drivers/pci/host/*mvebu*
++
+ PCI DRIVER FOR NVIDIA TEGRA
+ M:	Thierry Reding <thierry.reding@gmail.com>
+ L:	linux-tegra@vger.kernel.org
++L:	linux-pci@vger.kernel.org
+ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+ F:	drivers/pci/host/pci-tegra.c
+ 
++PCI DRIVER FOR RENESAS R-CAR
++M:	Simon Horman <horms@verge.net.au>
++M:	Magnus Damm <magnus.damm@gmail.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-sh@vger.kernel.org
++S:	Maintained
++F:	drivers/pci/host/*rcar*
++
+ PCI DRIVER FOR SAMSUNG EXYNOS
+ M:	Jingoo Han <jg1.han@samsung.com>
+ L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
++L:	linux-samsung-soc@vger.kernel.org (moderated for non-subscribers)
+ S:	Maintained
+ F:	drivers/pci/host/pci-exynos.c
+ 
++PCI DRIVER FOR SYNOPSIS DESIGNWARE
++M:	Mohit Kumar <mohit.kumar@st.com>
++M:	Jingoo Han <jg1.han@samsung.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	drivers/pci/host/*designware*
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
