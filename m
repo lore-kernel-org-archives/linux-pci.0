@@ -1,67 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:59616 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab3LLVu2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:28 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 7/7] ARM: dts: imx6q-sabrelite: Enable PCI express
-Date: Thu, 12 Dec 2013 22:50:04 +0100
-Message-Id: <1386885004-10252-7-git-send-email-marex@denx.de>
-In-Reply-To: <1386885004-10252-1-git-send-email-marex@denx.de>
-References: <1386885004-10252-1-git-send-email-marex@denx.de>
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:58334 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751117Ab3LLFHU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Dec 2013 00:07:20 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Jingoo Han <jg1.han@samsung.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Simon Horman' <horms@verge.net.au>,
+	'Magnus Damm' <magnus.damm@gmail.com>,
+	'Valentine Barshak' <valentine.barshak@cogentembedded.com>,
+	'Wei Yongjun' <weiyj.lk@gmail.com>,
+	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
+	'Kuninori Morimoto' <kuninori.morimoto.gx@renesas.com>,
+	Pratyush ANAND <pratyush.anand@st.com>
+Date: Thu, 12 Dec 2013 13:06:16 +0800
+Subject: RE: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
+ host maintainers
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F642F@EAPEX1MAIL1.st.com>
+References: <20131211183237.GI4699@google.com>
+ <20131211184321.GJ4699@google.com>
+ <000f01cef6bf$cd0fe340$672fa9c0$%han@samsung.com>
+In-Reply-To: <000f01cef6bf$cd0fe340$672fa9c0$%han@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- arch/arm/boot/dts/imx6q-sabrelite.dts | 4 ++++
- 1 file changed, 4 insertions(+)
+> -----Original Message-----
+> From: Jingoo Han [mailto:jg1.han@samsung.com]
+> Sent: Thursday, December 12, 2013 3:55 AM
+> To: 'Bjorn Helgaas'; linux-pci@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> linux-tegra@vger.kernel.org; linux-sh@vger.kernel.org; linux-samsung-
+> soc@vger.kernel.org; 'Shawn Guo'; 'Jason Cooper'; 'Thierry Reding'; 'Simon
+> Horman'; 'Magnus Damm'; 'Valentine Barshak'; 'Wei Yongjun'; 'Wei Yongjun';
+> 'Kuninori Morimoto'; Mohit KUMAR DCG; Pratyush ANAND; 'Jingoo Han'
+> Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car
+> PCI host maintainers
+> 
+> On Thursday, December 12, 2013 3:43 AM, Bjorn Helgaas wrote:
+> > On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
+> > > If this looks reasonable, I'll merge it via the PCI tree for v3.13.
+> >
+> > And I see Mohit's patch [1] to update the DesignWare entry:
+> >
+> > +PCIE DRIVER FOR SYNOPSIS DESIGNWARE CONTROLLER
+> > +M:	Mohit Kumar <mohit.kumar@st.com>
+> > +M:	Jingoo Han <jg1.han@samsung.com>
+> > +L:	linux-pci@vger.kernel.org
+> > +S:	Maintained
+> > +F:	drivers/pci/host/pcie-designware.c
+> >
+> > I can fold in that update too if Jingoo acks it.
+> >
+> > [1] http://patchwork.ozlabs.org/patch/299905/
+> 
+> Hi Bjorn,
+> 
+> I agree with this. :-)
+> Acked-by: Jingoo Han <jg1.han@samsung.com>
+> 
+- Thanks Bjorn and Jingoo. I will remove this patch from my v2 patches.
 
-diff --git a/arch/arm/boot/dts/imx6q-sabrelite.dts b/arch/arm/boot/dts/imx6q-sabrelite.dts
-index f004913..0806ce7 100644
---- a/arch/arm/boot/dts/imx6q-sabrelite.dts
-+++ b/arch/arm/boot/dts/imx6q-sabrelite.dts
-@@ -154,6 +154,10 @@
- 	};
- };
- 
-+&pcie {
-+	status = "okay";
-+};
-+
- &sata {
- 	status = "okay";
- };
--- 
-1.8.4.3
-
+Regards
+Mohit
