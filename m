@@ -1,61 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 10 Dec 2013 01:40:16 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rui Wang <ruiv.wang@gmail.com>, Lance Ortiz <lance.ortiz@hp.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	jiang.liu@intel.com, Tony Luck <tony.luck@intel.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Chen Gong <gong.chen@linux.intel.com>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	Rui Wang <rui.y.wang@intel.com>, Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] aerdrv: Fix severity usage in aer trace event
-Message-ID: <20131210004016.GG31650@pd.tnic>
-References: <1386476273-2418-1-git-send-email-rui.y.wang@intel.com>
- <20131208144312.GC4338@pd.tnic>
- <20131208150904.GD4338@pd.tnic>
- <CAErSpo7M=d0qMUCV2CCjkkbMX7h-xQcp0tuST89G_HefTQVoyg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.9]:52863 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056Ab3LLWEK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 17:04:10 -0500
+From: Marek Vasut <marex@denx.de>
+To: Harro Haan <hrhaan@gmail.com>
+Subject: Re: [PATCH] pci: designware: fix missing msi irqs
+Date: Thu, 12 Dec 2013 23:01:01 +0100
+Cc: Mohit Kumar <mohit.kumar@st.com>, Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <hong-xing.zhu@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Juergen Beisert <jbe@pengutronix.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Sean Cross <xobs@kosagi.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+References: <20131212182903.409515738@gmail.com>
+In-Reply-To: <20131212182903.409515738@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAErSpo7M=d0qMUCV2CCjkkbMX7h-xQcp0tuST89G_HefTQVoyg@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201312122301.01658.marex@denx.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 09, 2013 at 04:41:18PM -0700, Bjorn Helgaas wrote:
-> I think it's worthwhile to keep all three patches together, and I'd
-> be happy to merge them via PCI. It looks like Joe had some good
-> questions, so once you resolve them, I can merge them, or ack them and
-> you can take them. I think either way will be fine.
+On Thursday, December 12, 2013 at 07:29:03 PM, Harro Haan wrote:
+> The interrupts were cleared after the irq handler was called.
+> This means that new interrupts that occur after the handler handled
+> the previous irq but before the interrupt is cleared will be missed.
+> 
+> Signed-off-by: Harro Haan <hrhaan@gmail.com>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Marek Vasut <marex@denx.de>
+> Cc: Richard Zhu <hong-xing.zhu@freescale.com>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Tim Harvey <tharvey@gateworks.com>
+> Cc: Juergen Beisert <jbe@pengutronix.de>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> Cc: Sean Cross <xobs@kosagi.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> ---
+>  drivers/pci/host/pcie-designware.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c
+> b/drivers/pci/host/pcie-designware.c index 1ce0453..762f596 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -167,11 +167,13 @@ void dw_handle_msi_irq(struct pcie_port *pp)
+>  			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
+>  				irq = irq_find_mapping(pp->irq_domain,
+>  						i * 32 + pos);
+> +				dw_pcie_wr_own_conf(pp,
+> +						PCIE_MSI_INTR0_STATUS + i * 12,
+> +						4, 1 << pos);
+>  				generic_handle_irq(irq);
+>  				pos++;
+>  			}
+>  		}
+> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4, val);
+>  	}
+>  }
 
-So actually I'm only really interested in the first patch which clearly
-fixes a minor issue in the PCIe AER tracepoint and that one I probably
-should take through the RAS tree as the original patch adding the
-tracepoint went through it too. Unless you really want to take it - then
-be my guest! :-)
+On imx6-sabrelite:
 
-My intention with aerdrv_errprint.c was to cleanup some obvious stuff
-which sprang at me while looking at the code, *without* *any* change in
-functionality except the minor and obviously sensible
+Tested-by: Marek Vasut <marex@denx.de>
 
-	s/aer_tlp_header:/TLP Header:/
-
-replacement. (printk strings are not an API anyway).
-
-If you're fine with those patches as they are right now, I can apply
-them or you can take them or whatever. If not, then so be it.
-
-If someone wants to diddle with what could be done better and more
-readable, then that someone can do this at his own time - I don't really
-want to waste mine.
-
-Thanks.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Best regards,
+Marek Vasut
