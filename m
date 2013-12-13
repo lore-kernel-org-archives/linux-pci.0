@@ -1,78 +1,118 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <529E5BEA.5040208@gmail.com>
-Date: Tue, 03 Dec 2013 14:32:10 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
+References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com> <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 13 Dec 2013 06:21:59 -0700
+Message-ID: <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
+ and removal
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Alex Williamson <alex.williamson@redhat.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>
-CC: Rajat Jain <rajatjain@juniper.net>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Rajat Jain <rajatjain@juniper.net>,
 	Rajat Jain <rajatxjain@gmail.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
 	Guenter Roeck <groeck@juniper.net>,
 	Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH v2 1/4] pciehp: Make check_link_active() non-static
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-check_link_active() functionality needs to be used by subsequent patches
-(that introduce link state change based hotplug). Thus make the function
-non-static, and rename it to pciehp_check_link_active() so as to be
-consistent with other non-static functions.
+On Thu, Dec 12, 2013 at 11:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Dec 12, 2013 at 2:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
- v2: Same as v1, dropped the "RFC" from subject, and added Guenter's signature
+>>> * Define and use interrupt events for linkup / linkdown.
+>>
+>> This seems like a reasonable idea.
+>>
+>> In the ExpressCard Standard (Rel 2.0, Feb 2009), Section 6.3.1 and Figure
+>> 6-2 talk about a "Link Detect" or "Link Train Detected" interrupt being
+>> used to trigger the ACPI hotplug flow for a non-PCIe-aware OS.  I'm not
+>> sure what interrupt this refers to.  The Slot Control Data Link Layer State
+>> Changed interrupt (which you're using) sounds similar, but my guess is that
+>> "Link Detect" is a generic term for chipset-specific functionality to
+>> generate an SMI for hotplug events.
+>>
+>> But then Section 6.3.1.1 suggests that a PCIe-aware OS would use "Presence
+>> Detect Changed" instead.  I don't know why a different mechanism would be
+>> suggested, although DLLSC was added after PCIe 1.0, so older hardware
+>> wouldn't have a PCIe-standard link detection mechanism.
+>>
+>> In any event, I think having the Link Status Data Link Layer Link Active
+>> bit set would certainly imply that a device is present, so it seems
+>> reasonable to use DLLLA in addition to Presence Detect State.
+>
+> Yes, if Attention attention is not there and Surprise removal is supported.
 
- drivers/pci/hotplug/pciehp.h     |    1 +
- drivers/pci/hotplug/pciehp_hpc.c |    6 +++---
- 2 files changed, 4 insertions(+), 3 deletions(-)
+I'm not convinced that it's a good idea to make link state support
+conditional on the attention button and surprise removal bits.  That
+might cover Rajat's particular case, but I don't think there's a
+logical connection between link state and those bits, so making it
+conditional might just make the code more complicated and less general
+for no good reason.
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 541bbe6..fc322ed 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -154,6 +154,7 @@ void pciehp_green_led_on(struct slot *slot);
- void pciehp_green_led_off(struct slot *slot);
- void pciehp_green_led_blink(struct slot *slot);
- int pciehp_check_link_status(struct controller *ctrl);
-+bool pciehp_check_link_active(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
- int pciehp_reset_slot(struct slot *slot, int probe);
- 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 51f56ef..3a5eee7 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -241,7 +241,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- 	return retval;
- }
- 
--static bool check_link_active(struct controller *ctrl)
-+bool pciehp_check_link_active(struct controller *ctrl)
- {
- 	bool ret = false;
- 	u16 lnk_status;
-@@ -261,12 +261,12 @@ static void __pcie_wait_link_active(struct controller *ctrl, bool active)
- {
- 	int timeout = 1000;
- 
--	if (check_link_active(ctrl) == active)
-+	if (pciehp_check_link_active(ctrl) == active)
- 		return;
- 	while (timeout > 0) {
- 		msleep(10);
- 		timeout -= 10;
--		if (check_link_active(ctrl) == active)
-+		if (pciehp_check_link_active(ctrl) == active)
- 			return;
- 	}
- 	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
--- 
-1.7.9.5
+>>> @@ -620,13 +610,10 @@ int pciehp_power_off_slot(struct slot * slot)
+>>>       u16 cmd_mask;
+>>>       int retval;
+>>>
+>>> -     /* Disable the link at first */
+>>> -     pciehp_link_disable(ctrl);
+>>> -     /* wait the link is down */
+>>> -     if (ctrl->link_active_reporting)
+>>> -             pcie_wait_link_not_active(ctrl);
+>>> -     else
+>>> -             msleep(1000);
+>>
+>> 2debd9289997 ("PCI: pciehp: Disable/enable link during slot power off/on")
+>> added this code that disables the link to fix problems.  So we need to make
+>> sure we don't reintroduce those problems by leaving the link enabled.
+>>
+>> One problem was spurious "card present/not present" messages.  I suspect
+>> that topology has an attention button, and I'm not sure it makes sense to
+>> enable the presence detect interrupt in that case.  As far as I can tell,
+>> if there's an attention button, the OS should not do anything on card
+>> insertion or removal; it should only do something when the attention button
+>> is pressed.  So maybe we can deal with the message issue that way.
+>
+> Agreed.
+>
+>>
+>> The changelog also hints that disabling the link might be needed to allow a
+>> repeater to be reset, but I don't know the details.  I don't remember any
+>> spec language that requires the link to be disabled on hotplug; maybe this
+>> is a platform-specific quirk.
+>
+> yes, that is workaround to to reset repeater in between.
 
+What does the "other OS" do about this repeater?  Did you verify that
+it disables the link when powering off the slot?  If we were smarter
+about presence detect, I wonder if that would be enough.
+
+> Also we can get rid of annoying aer during power off slot.
+
+I don't know the details of this issue.  It may be possible to avoid
+the AER in some way other than turning off the link.
+
+> Also at least other os will turn on link after turn on the power,
+> as hotplug is working if BIOS have link disabled when boot system
+> without card inserted.
+
+If the link is disabled after turning on power, it certainly makes
+sense to me to enable the link.  I don't think Rajat changed the
+pciehp_power_on_slot() path, so this part should still work.
+
+> I suggest that link event handling will be enabled automatically when
+> attention button is not there and surprise removal is supported.
+> And when that enabled, should disable Present event handling.
+
+I think it should be as simple as possible, i.e., if we have an
+attention button, ignore presence detect.  If we make it more
+complicated that necessary, we run the risk of enforcing assumptions
+that may not hold in the future.
+
+Bjorn
