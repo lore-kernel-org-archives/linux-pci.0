@@ -1,72 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35807 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751846Ab3LMLdi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Dec 2013 06:33:38 -0500
-Date: Fri, 13 Dec 2013 11:29:25 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 04/11] PCI/MSI/pSeries: Make quota traversing and
- requesting race-safe
-Message-ID: <20131213102924.GA14728@dhcp-26-207.brq.redhat.com>
-References: <cover.1385399393.git.agordeev@redhat.com>
- <97749db3e9562eb05fb3ee22a0be0ed7a93a0615.1385399393.git.agordeev@redhat.com>
- <20131210223020.GF4699@google.com>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:51647 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752470Ab3LMS2o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 13:28:44 -0500
+Received: by mail-ob0-f179.google.com with SMTP id wm4so2368838obc.10
+        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 10:28:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131210223020.GF4699@google.com>
+In-Reply-To: <CAErSpo5iMdL6+ckU3G=znjTGBuh+nZYj=4QqsAeYw6JV2bvkkg@mail.gmail.com>
+References: <CAHH3p5+s-hs7uYZKYAh7Tjv+Rp6b3KusgWtj6Sbd8wqLTebO0Q@mail.gmail.com>
+	<CAErSpo5iMdL6+ckU3G=znjTGBuh+nZYj=4QqsAeYw6JV2bvkkg@mail.gmail.com>
+Date: Fri, 13 Dec 2013 23:58:43 +0530
+Message-ID: <CAD6G_RQfrwcHbrrxQox4aPNfC=ckcSHUsY+uRzQrxKmaYwQ0tw@mail.gmail.com>
+Subject: Re: PCIE Software architecture
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: shiv prakash Agarwal <chhotu.shiv@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 10, 2013 at 03:30:20PM -0700, Bjorn Helgaas wrote:
-> Can you outline the race and the scenario that leads to incorrect results
-> or a crash?  I looked through rtas_setup_msi_irqs() (briefly) and I didn't
-> see the way that concurrent calls for different devices could interfere
-> with each other.
-> 
-> I was looking for some place that modifies state, where concurrent calls
-> might trample on each other, but it looks like msi_quota_for_device() is
-> pretty safe: it traverses a tree, but everything it computes is on the
-> stack and it doesn't seem to save results anywhere.  Maybe I'm barking up
-> the wrong tree?
+Hi Shiv Prakash,
 
-Hmm. I've assumed the number of MSIs for a device is cached, and therefore
-concurrent calls to msi_quota_for_device() and rtas_change_msi() could race.
-But it seems msi_quota_for_device() indeed computes a quota while reading
-only device's properties and gains constant result (well, assuming the device
-tree is not updated, but this is a different story). Which makes me confused
-about this note from a earlier thread:
+On Fri, Dec 13, 2013 at 9:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Dec 13, 2013 at 5:17 AM, shiv prakash Agarwal
+> <chhotu.shiv@gmail.com> wrote:
+>> Hi All,
+>>
+>> Is there any PCIE Software architecture document to understand whole
+>> software flow?
+>
+> Not really, but you can start with this:
+> http://lkml.kernel.org/r/ced64bc2-ba6c-4bfc-bbc3-53cda681789c@CH1EHSMHS035.ehs.local
 
-[quote]
-On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
-> So my point is - drivers should first obtain a number of MSIs they *can*
-> get, then *derive* a number of MSIs the device is fine with and only then
-> request that number. Not terribly different from memory or any other type
-> of resource allocation ;)
-
-What if the limit is for a group of devices ? Your interface is racy in
-that case, another driver could have eaten into the limit in between the
-calls.
-
-Ben.
-[/quote]
-
-Some comment from Ben would be nice, but I think the patch could be dropped
-for now.
-
-Thanks, Bjorn!
-
-> Bjorn
+Please try to post your view up on this doc - so-that we can discuss more.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Thanks,
+Jagan.
+--------
+Jagannadha Sutradharudu Teki,
+E: jagannadh.teki@gmail.com, P: +91-9676773388
+Engineer - System Software Hacker
+U-boot - SPI Custodian and Zynq APSOC
+Ln: http://www.linkedin.com/in/jaganteki
