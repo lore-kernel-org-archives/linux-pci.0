@@ -1,53 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:51573 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426Ab3L2NGl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Dec 2013 08:06:41 -0500
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P21k4Tm460u1_SSD6Xrv2huDZR_EdZjOPh5wdhUfkqZGg@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
- <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
- <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
- <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
- <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
- <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com> <CANUX_P21k4Tm460u1_SSD6Xrv2huDZR_EdZjOPh5wdhUfkqZGg@mail.gmail.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Sun, 29 Dec 2013 21:06:24 +0800
-Message-ID: <CALkVjQZ1LA_x=O6mH+mW5S_XB610e=Jt6uhsPyGucTvLLmRuwQ@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60516 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751866Ab3LMCEa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 21:04:30 -0500
+Date: Thu, 12 Dec 2013 18:06:20 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Veaceslav Falico <vfalico@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
+	Thomas Gleixner <tglx@linutronix.de>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
+Message-ID: <20131213020620.GF13333@kroah.com>
+References: <20131127184652.GA1856@kroah.com>
+ <CAErSpo46LZP8t+aLnYOtJ1mXKKkCF7sOy97MFd0hWo+OOoz68Q@mail.gmail.com>
+ <CAE9FiQUeyxN5OAaXqfhdQkzTwjV83BN-L3r6kH0sO0t1b1-63Q@mail.gmail.com>
+ <CAErSpo6_s6-Dc__-AzausBVDvOAY5beh7ivng2dWHUN1iRyj+g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAErSpo6_s6-Dc__-AzausBVDvOAY5beh7ivng2dWHUN1iRyj+g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2013/12/29 Emmanuel Grumbach <egrumbach@gmail.com>:
-> looks like all the power features are enabled... including the ones I
-> told you to disable.
-> I am lost now...
+On Thu, Dec 12, 2013 at 04:56:20PM -0700, Bjorn Helgaas wrote:
+> On Thu, Dec 12, 2013 at 4:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Sat, Dec 7, 2013 at 12:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> On Wed, Nov 27, 2013 at 11:46 AM, Greg Kroah-Hartman
+> >> <gregkh@linuxfoundation.org> wrote:
+> >>> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >>>
+> >>> The PCI MSI sysfs code is a mess with kobjects for things that don't
+> >>> really need to be kobjects.  This patch creates attributes dynamically
+> >>> for the MSI interrupts instead of using kobjects.
+> >>>
+> >>> Note, this removes a directory from the current MSI interrupt sysfs
+> >>> code:
+> >>>
+> >>> old MSI kobjects:
+> >>> pci_device
+> >>>    └── msi_irqs
+> >>>        └── 40
+> >>>            └── mode
+> >>>
+> >>> new MSI attributes:
+> >>> pci_device
+> >>>    └── msi_irqs
+> >>>        └── 40
+> >>>
+> >>> As there was only one file "mode" with the kobject model, the interrupt
+> >>> number is now a file that returns the "mode" of the interrupt (msi vs.
+> >>> msix).
+> >>>
+> >>> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >>
+> >> I added the acks from Neil and Veaceslav, folded in the
+> >> Documentation/ABI update, and applied the whole thing to my pci/misc
+> >> branch for v3.14.  Thanks!
+> >
+> > got:
+> > [   71.429735] BUG: key ffff887fcf082a58 not in .data!
+> > [   71.429737] ------------[ cut here ]------------
+> > [   71.429742] WARNING: CPU: 0 PID: 4 at kernel/locking/lockdep.c:2987 lockdep_i
+> > nit_map+0x127/0x5b0()
+> > [   71.429743] DEBUG_LOCKS_WARN_ON(1)
+> > [   71.429744] Modules linked in:
+> > [   71.429747] CPU: 0 PID: 4 Comm: kworker/0:0 Tainted: G          I  3.13.0-rc3
+> > -yh-01187-ge0e4e4e-dirty #45
+> > [   71.429757] Workqueue: events work_for_cpu_fn
+> > [   71.429792]  0000000000000009 ffff881fcf95da58 ffffffff82020475 ffff881fcf95d
+> > aa0
+> > [   71.429800]  ffff881fcf95da90 ffffffff81097c3d ffff887fcf082a58 ffff88dfcec1a
+> > d28
+> > [   71.429809]  0000000000000000 0000000000000000 ffff889fcf2eecd0 ffff881fcf95d
+> > af0
+> > [   71.429809] Call Trace:
+> > [   71.429814]  [<ffffffff82020475>] dump_stack+0x45/0x56
+> > [   71.429818]  [<ffffffff81097c3d>] warn_slowpath_common+0x7d/0xa0
+> > [   71.429822]  [<ffffffff81097cac>] warn_slowpath_fmt+0x4c/0x50
+> > [   71.429826]  [<ffffffff810e3d97>] lockdep_init_map+0x127/0x5b0
+> > [   71.429835]  [<ffffffff81242fe8>] ? sysfs_new_dirent+0x98/0x140
+> > [   71.429839]  [<ffffffff81242033>] sysfs_add_file_mode_ns+0x63/0xc0
+> > [   71.429843]  [<ffffffff8124491d>] internal_create_group+0x18d/0x260
+> > [   71.429853]  [<ffffffff81556345>] ? populate_msi_sysfs+0x185/0x1d0
+> > [   71.429857]  [<ffffffff81244a52>] sysfs_create_groups+0x42/0xa0
+> > [   71.429861]  [<ffffffff81556367>] populate_msi_sysfs+0x1a7/0x1d0
+> > [   71.429865]  [<ffffffff81556b67>] pci_enable_msi_block+0x1f7/0x2a0
+> > [   71.429870]  [<ffffffff81549795>] pcie_port_device_register+0x335/0x520
+> > [   71.429874]  [<ffffffff81549f08>] pcie_portdrv_probe+0x68/0xa0
+> > [   71.429883]  [<ffffffff8153cf75>] local_pci_probe+0x45/0xa0
+> > [   71.429887]  [<ffffffff810b0af4>] work_for_cpu_fn+0x14/0x20
+> > [   71.429891]  [<ffffffff810b431b>] process_one_work+0x28b/0x4a0
+> > [   71.429895]  [<ffffffff810b4292>] ? process_one_work+0x202/0x4a0
+> > [   71.429899]  [<ffffffff810b55db>] worker_thread+0x26b/0x3a0
+> > [   71.429903]  [<ffffffff810e262d>] ? trace_hardirqs_on+0xd/0x10
+> > [   71.429906]  [<ffffffff810b5370>] ? manage_workers.isra.17+0x340/0x340
+> > [   71.429912]  [<ffffffff810bc031>] kthread+0x111/0x120
+> > [   71.429919]  [<ffffffff810cddab>] ? local_clock+0x2b/0x40
+> > [   71.429923]  [<ffffffff810bbf20>] ? kthread_stop+0xf0/0xf0
+> > [   71.429927]  [<ffffffff8203842c>] ret_from_fork+0x7c/0xb0
+> > [   71.429931]  [<ffffffff810bbf20>] ? kthread_stop+0xf0/0xf0
+> > [   71.429933] ---[ end trace c511e3d74efea94e ]---
+> >
+> > looks like Greg forgot adding attr init.
+> >
+> > Can you fold attached patch into Greg's patch ?
+> 
+> Sure.  I don't know how to reproduce it, so I couldn't verify the fix,
+> but I added it to Greg's patch.  Thanks!
 
+I think lockdep has to be enabled for this to show up, I wasn't running
+with that enabled when I tested the code, my fault, sorry.
 
-Oh... That sounds bad. But I thought both Windows and Linux driver for
-this NIC is written by Intel?
-
--- 
-wzyboy
+greg k-h
