@@ -1,87 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:41773 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756258Ab3LSXiv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 18:38:51 -0500
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: RE: pcie designware question
-Date: Thu, 19 Dec 2013 23:38:44 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B70465DF45@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
- <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
-In-Reply-To: <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:40779 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752825Ab3LMXHC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 18:07:02 -0500
+Received: by mail-ie0-f182.google.com with SMTP id as1so3817172iec.27
+        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 15:07:01 -0800 (PST)
+Date: Fri, 13 Dec 2013 16:06:57 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Betty Dall <betty.dall@hp.com>
+Cc: lenb@kernel.org, rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI AER: Handle non-AER HEST error sources in
+ aer_hest_parse()
+Message-ID: <20131213230657.GD6746@google.com>
+References: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
+ <20131213221616.GC6746@google.com>
+ <1386974853.10497.64.camel@ejdallLaptop>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1386974853.10497.64.camel@ejdallLaptop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRv
-OmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+U2VudDogVGh1cnNkYXksIERlY2VtYmVyIDE5LCAyMDEz
-IDU6NTggUE0NCj5UbzogS2FyaWNoZXJpLCBNdXJhbGlkaGFyYW4NCj5DYzogbGludXgtcGNpQHZn
-ZXIua2VybmVsLm9yZzsgTW9oaXQgS3VtYXI7IEppbmdvbyBIYW4NCj5TdWJqZWN0OiBSZTogcGNp
-ZSBkZXNpZ253YXJlIHF1ZXN0aW9uDQo+DQo+WytjYyBNb2hpdCwgSmluZ29vXQ0KPg0KQmpvcm4s
-DQoNClRoYW5rcyBmb3IgZm9yd2FyZGluZyB0aGlzIHRvIGV4cGVydHMuDQoNCk11cmFsaQ0KPk9u
-IFRodSwgRGVjIDE5LCAyMDEzIGF0IDM6MDEgUE0sIEthcmljaGVyaSwgTXVyYWxpZGhhcmFuIDxt
-LWthcmljaGVyaTJAdGkuY29tPiB3cm90ZToNCj4+IEhpLA0KPj4NCj4+IEkgYW0gd29ya2luZyB0
-byBwb3J0IG15IHBjaWUgZHJpdmVyIHRvIHBjaWUtZGVzaWdud2FyZSBjb3JlIGRyaXZlci4NCj4+
-IFRoZSBwY2llIHN1YiBzeXN0ZW0gIG9uIG91ciBwbGF0Zm9ybSAgaGFzIDMyIE9VVEJPVU5EIHJl
-Z2lvbnMgYW5kIDINCj4+IElOQk9VTkQgcmVnaW9ucy4gSW4gbXkgY3VycmVudCBkcml2ZXIsIEkg
-dXNlIGludGVybmFsIG1lbW9yeSBtYXAgb2YNCj4+IENQVSB0byBhY2Nlc3MgdGhlIFJDJ3MgY29u
-ZmlnL2FwcGxpY2F0aW9uIHNwYWNlIGFzIHdlbGwgRVAncyBjb25maWcNCj4+IHNwYWNlLiBhIDRL
-IHJhbmdlIGlzIGF2YWlsYWJsZSB0byBhY2Nlc3MgdGhlIEVQJ3MgY29uZmlnIHNwYWNlLiBUbw0K
-Pj4gYWxsb3cgd3JpdGUvcmVhZCB0byB0aGUgRVAncyBjb25maWcgc3BhY2UsIHRoZSBkcml2ZXIg
-YmFzaWNhbGx5IHdyaXRlIHRoZSBidXMsIGRldmljZSBhbmQNCj5mdW5jdGlvbiBudW1iZXIgdG8g
-dGhlICBhcHBsaWNhdGlvbiBDRkdfU0VUVVAgcmVnaXN0ZXIgYW5kIHRoZW4gYWNjZXNzIHRoZSBj
-b3JyZXNwb25kaW5nDQo+RVAncyBjb25maWcgcmVnaXN0ZXIuDQo+Pg0KPj4gSSBoYXZlIHJldmll
-d2VkIHRoZSBkZXNpZ253YXJlLmMgY29kZSBhbmQgdGhlIGdsdWUgbG9naWMgZHJpdmVyDQo+PiBw
-Y2ktZXh5bm9zLmMgYW5kIGNvdWxkbid0IHVuZGVyc3RhbmQgZmV3IHRoaW5ncy4NCj4+DQo+PiAx
-LiBPdXIgcGNpZSBzcyBpcyBiYXNlZCBvbiBkZXNpZ253YXJlIGNvcmUgYW5kIGZvbGxvd2luZyBh
-ZGRyZXNzZXMgYXJlDQo+PiBub3QgbGlzdGVkIGluIG91ciBJUCdzICBkYXRhIG1hbnVhbC4gV2hl
-cmUgaXMgZGVmaW5lZD8gSXQgZG9lcyBzaG93DQo+PiB0aGUgcmVzdCBvZiB0aGUgb2Zmc2V0cyBk
-ZWZpbmVkIGluICBkcml2ZXJzL3BjaS9ob3N0L2Rlc2lnbndhcmUuYyBhbmQNCj4+DQo+PiAjZGVm
-aW5lIFBDSUVfQVRVX1ZJRVdQT1JUICAgICAgICAgICAgICAgMHg5MDANCj4+ICNkZWZpbmUgUENJ
-RV9BVFVfUkVHSU9OX0lOQk9VTkQgICAgICAgICAoMHgxIDw8IDMxKQ0KPj4gI2RlZmluZSBQQ0lF
-X0FUVV9SRUdJT05fT1VUQk9VTkQgICAgICAgICgweDAgPDwgMzEpDQo+PiAjZGVmaW5lIFBDSUVf
-QVRVX1JFR0lPTl9JTkRFWDEgICAgICAgICAgKDB4MSA8PCAwKQ0KPj4gI2RlZmluZSBQQ0lFX0FU
-VV9SRUdJT05fSU5ERVgwICAgICAgICAgICgweDAgPDwgMCkNCj4+ICNkZWZpbmUgUENJRV9BVFVf
-Q1IxICAgICAgICAgICAgICAgICAgICAweDkwNA0KPj4gI2RlZmluZSBQQ0lFX0FUVV9UWVBFX01F
-TSAgICAgICAgICAgICAgICgweDAgPDwgMCkNCj4+ICNkZWZpbmUgUENJRV9BVFVfVFlQRV9JTyAg
-ICAgICAgICAgICAgICAoMHgyIDw8IDApDQo+PiAjZGVmaW5lIFBDSUVfQVRVX1RZUEVfQ0ZHMCAg
-ICAgICAgICAgICAgKDB4NCA8PCAwKQ0KPj4gI2RlZmluZSBQQ0lFX0FUVV9UWVBFX0NGRzEgICAg
-ICAgICAgICAgICgweDUgPDwgMCkNCj4+ICNkZWZpbmUgUENJRV9BVFVfQ1IyICAgICAgICAgICAg
-ICAgICAgICAweDkwOA0KPj4gI2RlZmluZSBQQ0lFX0FUVV9FTkFCTEUgICAgICAgICAgICAgICAg
-ICgweDEgPDwgMzEpDQo+PiAjZGVmaW5lIFBDSUVfQVRVX0JBUl9NT0RFX0VOQUJMRSAgICAgICAg
-KDB4MSA8PCAzMCkNCj4+ICNkZWZpbmUgUENJRV9BVFVfTE9XRVJfQkFTRSAgICAgICAgICAgICAw
-eDkwQw0KPj4gI2RlZmluZSBQQ0lFX0FUVV9VUFBFUl9CQVNFICAgICAgICAgICAgIDB4OTEwDQo+
-PiAjZGVmaW5lIFBDSUVfQVRVX0xJTUlUICAgICAgICAgICAgICAgICAgMHg5MTQNCj4+ICNkZWZp
-bmUgUENJRV9BVFVfTE9XRVJfVEFSR0VUICAgICAgICAgICAweDkxOA0KPj4gI2RlZmluZSBQQ0lF
-X0FUVV9CVVMoeCkgICAgICAgICAgICAgICAgICgoKHgpICYgMHhmZikgPDwgMjQpDQo+PiAjZGVm
-aW5lIFBDSUVfQVRVX0RFVih4KSAgICAgICAgICAgICAgICAgKCgoeCkgJiAweDFmKSA8PCAxOSkN
-Cj4+ICNkZWZpbmUgUENJRV9BVFVfRlVOQyh4KSAgICAgICAgICAgICAgICAoKCh4KSAmIDB4Nykg
-PDwgMTYpDQo+PiAjZGVmaW5lIFBDSUVfQVRVX1VQUEVSX1RBUkdFVCAgICAgICAgICAgMHg5MUMN
-Cj4+DQo+PiAyLiBNeSB1bmRlcnN0YW5kaW5nIGlzIHRoYXQgdGhlIGRlc2lnbndhcmUgY29yZSBj
-dXJyZW50bHkgc3VwcG9ydCAyDQo+PiBPVVRCT1VORCByZWdpb25zIGFuZCAyIElOQk9VTkQgcmVn
-aW9ucy4gSXMgdGhpcyB0cnVlPyBJcyB0aGVyZSBhIHBsYW4gdG8gc3VwcG9ydCBtb3JlDQo+dGhh
-biAyPw0KPj4gMy4gSXMgdGhlcmUgYSBkb2N1bWVudGF0aW9uIGV4cGxhaW5pbmcgaG93IHRoZSBB
-VFUgaGFuZGxpbmcgY29kZSBpcw0KPj4gZGVzaWduZWQ/IEJhc2ljYWxseSBhcyBJIGNhbid0IGZp
-bmQgQVRVIHNwZWNpZmljIHJlZ2lzdGVycyBkZWZpbmVkIGluDQo+PiB0aGUgc3Mgc3BlYywgSSBh
-bSBub3QgYWJsZSB0byB1bmRlcnN0YW5kIHRoaXMgY29kZS4gSSBkbyBzZWUgdGhlDQo+PiBhcHBs
-aWNhdGlvbiBzcGFjZSBpbiBvdXIgc3Mgc3BlYyBkZWZpbmluZyBPVVRCT1VORCBJTkRFWC9PRkZT
-RVQgcmVnaXN0ZXIgdG8gY29uZmlndXJlDQo+T1VUQk9VTkQgcmVnaW9ucyBhbmQgSUIgcmVnaXN0
-ZXJzIHRvIGRlZmluZSB0aGUgSU5CT1VORCByZWdpb24uDQo+Pg0KPj4gNC4gV2hhdCBpcyB0aGUg
-YmFzZSBhZGRyZXNzIHZhcmlhYmxlIHVzZWQgdG8gYWNjZXNzIFJDJ3MgYXBwbGljYXRpb24NCj4+
-IHJlZ2lzdGVyIHNwYWNlPyBkYmlfYmFzZSBpbiBzdHJ1Y3QgcGNpZV9wb3J0ID8gQWxzbyBJIGFt
-IGFzc3VtaW5nIHRoaXMNCj4+IGlzIHVzZWQgZm9yIGFjY2Vzc2luZyB0aGlzIHNwYWNlIGZyb20g
-aW50ZXJuYWwgQ1BVIGJ1cyBhbmQgY2ZnMF9iYXNlIGFuZCBjZmcxX2Jhc2UgZm9yDQo+YWNjZXNz
-aW5nIGl0IGZyb20gcGNpIGJ1cy4gSXMgdGhpcyByaWdodD8NCj4+DQo+PiBJIGFtIHRyeWluZyB0
-byBmaWd1cmUgdGhpcyBvdXQgbXlzZWxmLCBidXQgaWYgc29tZW9uZSBjb3VsZCBleHBsYWluIHRo
-ZXNlLCB0aGF0IHdpbGwgYmUNCj5ncmVhdCENCj4+DQo+PiBUaGFua3MuDQo+Pg0KPj4gTXVyYWxp
-IEthcmljaGVyaQ0KPj4gTGludXggS2VybmVsLCBTb2Z0d2FyZSBEZXZlbG9wbWVudA0KPj4NCj4+
-DQo+PiAtLQ0KPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
-InVuc3Vic2NyaWJlIGxpbnV4LXBjaSINCj4+IGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
-YWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vDQo+PiBpbmZvIGF0ICBodHRw
-Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+On Fri, Dec 13, 2013 at 03:47:33PM -0700, Betty Dall wrote:
+> Yes, that is more readable code. Thanks for revising it. I tested it on
+> my system that has non-AER error sources and it works fine. One nit is
+> that "Ignore" is misspelled in the subject line. 
+
+Thanks, fixed.
+
+I should have thought longer before hitting send.  I think it's worthwhile
+to use the same helper in aer_hest_parse_aff(), and once I did that, it
+became more obvious that aer_hest_parse() and aer_hest_parse_aff() are
+essentially similar, so I wonder if it's worth consolidating them, as
+below.  It doesn't reduce the number of lines of code, but maybe it's
+simpler for the reader?
+
+Bjorn
+
+commit 8e7f8d0b30d4e3e30007b10eb2916d970b5f8c93
+Author: Betty Dall <betty.dall@hp.com>
+Date:   Fri Dec 13 08:23:16 2013 -0700
+
+    PCI/AER: Ignore non-PCIe AER error sources in aer_hest_parse()
+    
+    aer_set_firmware_first() searches the HEST for an error source descriptor
+    matching the specified PCI device.  It uses the apei_hest_parse() iterator
+    to call aer_hest_parse() for every descriptor in the HEST.
+    
+    Previously, aer_hest_parse() incorrectly assumed every descriptor was for a
+    PCIe error source.  This patch adds a check to avoid that error.
+    
+    [bhelgaas: factor check into helper, use in aer_hest_parse_aff(), changelog]
+    Signed-off-by: Betty Dall <betty.dall@hp.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+index cf611ab2193a..a23995749f1d 100644
+--- a/drivers/pci/pcie/aer/aerdrv_acpi.c
++++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+@@ -50,12 +50,24 @@ struct aer_hest_parse_info {
+ 	int firmware_first;
+ };
+ 
++static int hest_source_is_pcie_aer(struct acpi_hest_header *hest_hdr)
++{
++	if (hest_hdr->type == ACPI_HEST_TYPE_AER_ROOT_PORT ||
++	    hest_hdr->type == ACPI_HEST_TYPE_AER_ENDPOINT ||
++	    hest_hdr->type == ACPI_HEST_TYPE_AER_BRIDGE)
++		return 1;
++	return 0;
++}
++
+ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+ {
+ 	struct aer_hest_parse_info *info = data;
+ 	struct acpi_hest_aer_common *p;
+ 	int ff;
+ 
++	if (!hest_source_is_pcie_aer(hest_hdr))
++		return 0;
++
+ 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+ 	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+ 	if (p->flags & ACPI_HEST_GLOBAL) {
+@@ -104,15 +116,12 @@ static int aer_hest_parse_aff(struct acpi_hest_header *hest_hdr, void *data)
+ 	if (aer_firmware_first)
+ 		return 0;
+ 
+-	switch (hest_hdr->type) {
+-	case ACPI_HEST_TYPE_AER_ROOT_PORT:
+-	case ACPI_HEST_TYPE_AER_ENDPOINT:
+-	case ACPI_HEST_TYPE_AER_BRIDGE:
+-		p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+-		aer_firmware_first = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+-	default:
++	if (!hest_source_is_pcie_aer(hest_hdr))
+ 		return 0;
+-	}
++
++	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
++	aer_firmware_first = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
++	return 0;
+ }
+ 
+ /**
+commit 01600a1b034f93dab6f855c81626b8030b85aec0
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri Dec 13 15:42:53 2013 -0700
+
+    PCI/AER: Consolidate HEST error source parsers
+    
+    aer_hest_parse() and aer_hest_parse_aff() are almost identical.
+    We use aer_hest_parse() to check the ACPI_HEST_FIRMWARE_FIRST flag for a
+    specific device, and we use aer_hest_parse_aff() to check to see if any
+    device sets the flag.
+    
+    This drops aer_hest_parse_aff() and enhances aer_hest_parse() so it
+    collects the union of the ACPI_HEST_FIRMWARE_FIRST flag setting when no
+    specific device is supplied.
+    
+    No functional change.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+index a23995749f1d..4d6991794fa2 100644
+--- a/drivers/pci/pcie/aer/aerdrv_acpi.c
++++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+@@ -70,6 +70,17 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+ 
+ 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+ 	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
++
++	/*
++	 * If no specific device is supplied, determine whether
++	 * FIRMWARE_FIRST is set for *any* PCIe device.
++	 */
++	if (!info->pci_dev) {
++		info->firmware_first |= ff;
++		return 0;
++	}
++
++	/* Otherwise, check the specific device */
+ 	if (p->flags & ACPI_HEST_GLOBAL) {
+ 		if (hest_match_type(hest_hdr, info->pci_dev))
+ 			info->firmware_first = ff;
+@@ -109,30 +120,20 @@ int pcie_aer_get_firmware_first(struct pci_dev *dev)
+ 
+ static bool aer_firmware_first;
+ 
+-static int aer_hest_parse_aff(struct acpi_hest_header *hest_hdr, void *data)
+-{
+-	struct acpi_hest_aer_common *p;
+-
+-	if (aer_firmware_first)
+-		return 0;
+-
+-	if (!hest_source_is_pcie_aer(hest_hdr))
+-		return 0;
+-
+-	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+-	aer_firmware_first = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+-	return 0;
+-}
+-
+ /**
+  * aer_acpi_firmware_first - Check if APEI should control AER.
+  */
+ bool aer_acpi_firmware_first(void)
+ {
+ 	static bool parsed = false;
++	struct aer_hest_parse_info info = {
++		.pci_dev	= NULL,	/* Check all PCIe devices */
++		.firmware_first	= 0,
++	};
+ 
+ 	if (!parsed) {
+-		apei_hest_parse(aer_hest_parse_aff, NULL);
++		apei_hest_parse(aer_hest_parse, &info);
++		aer_firmware_first = info.firmware_first;
+ 		parsed = true;
+ 	}
+ 	return aer_firmware_first;
