@@ -1,41 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:35144 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756073Ab3LIVGK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 16:06:10 -0500
-Received: by mail-ie0-f176.google.com with SMTP id at1so7110654iec.35
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 13:06:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVc=knLngJ9=oAi9NP4AQzu5hWGh_mkxsB2TqD_posL8g@mail.gmail.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
- <1386546869-31900-3-git-send-email-yinghai@kernel.org> <CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
- <CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
- <CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
- <CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
- <CAErSpo6xSYq=7AfFm+qNLGSfe6qjaGKyrwxdpG_CXHSy2uVX_w@mail.gmail.com> <CAE9FiQVc=knLngJ9=oAi9NP4AQzu5hWGh_mkxsB2TqD_posL8g@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 14:05:49 -0700
-Message-ID: <CAErSpo6G9Tb4_bqhrZLb3Om2U2FzOh16bPqEbMherLVh+oHf7A@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:8643 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045Ab3LMPcm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 10:32:42 -0500
+From: Betty Dall <betty.dall@hp.com>
+To: lenb@kernel.org, rjw@rjwysocki.net, bhelgaas@google.com
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Betty Dall <betty.dall@hp.com>
+Subject: [PATCH] PCI AER: Handle non-AER HEST error sources in aer_hest_parse()
+Date: Fri, 13 Dec 2013 08:23:16 -0700
+Message-Id: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 1:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Dec 9, 2013 at 12:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> Yes, I agree.  I didn't say it would be simple.  The quick fix would
->> be easy for now, but adding nonsensical code makes our lives harder
->> long into the future.
->
-> If the old kernel is working, and user update kernel then we should
-> not request them to append "pci=realloc=off" for booting.
+aer_hest_parse() could pass a non-AER HEST error source to the function
+hest_match_pci(). hest_match_pci() assumes that the HEST error source is
+type ACPI_HEST_TYPE_AER_ROOT_PORT, ACPI_HEST_TYPE_AER_ENDPOINT, or
+ACPI_HEST_TYPE_AER_BRIDGE. I have a platform that has some
+ACPI_HEST_TYPE_GENERIC error sources where hest_match_pci() was trying to
+access the structure as if it had the acpi_hest_aer_common fields.
 
-I agree.  I would just prefer a better fix.
+aer_hest_parse() is only ever interested in the AER type HEST error
+sources. Add a check on the type of the error souce at the beginning of
+aer_hest_parse().
 
-Bjorn
+Signed-off-by: Betty Dall <betty.dall@hp.com>
+---
+
+ drivers/pci/pcie/aer/aerdrv_acpi.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+index cf611ab..39186e3 100644
+--- a/drivers/pci/pcie/aer/aerdrv_acpi.c
++++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+@@ -56,6 +56,10 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+ 	struct acpi_hest_aer_common *p;
+ 	int ff;
+ 
++	if (hest_hdr->type != ACPI_HEST_TYPE_AER_ROOT_PORT &&
++		hest_hdr->type != ACPI_HEST_TYPE_AER_ENDPOINT &&
++		hest_hdr->type != ACPI_HEST_TYPE_AER_BRIDGE)
++		return 0;
+ 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+ 	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+ 	if (p->flags & ACPI_HEST_GLOBAL) {
