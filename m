@@ -1,77 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
-Cc: bhelgaas@google.com, david.a.cohen@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 4/4] x86: intel-mid: remove deprecated X86_MDFLD and X86_WANT_INTEL_MID configs
-Date: Mon, 16 Dec 2013 12:07:39 -0800
-Message-Id: <1387224459-25746-5-git-send-email-david.a.cohen@linux.intel.com>
-In-Reply-To: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog125.obsmtp.com ([207.126.144.159]:42827 "EHLO
+	eu1sys200aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751774Ab3LMEai convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Dec 2013 23:30:38 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Viresh Kumar <viresh.linux@gmail.com>,
+	spear-devel <spear-devel@list.st.com>
+Date: Fri, 13 Dec 2013 12:30:03 +0800
+Subject: RE: [PATCH 09/12] pcie: SPEAr13xx: Add designware pcie support
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F66A2@EAPEX1MAIL1.st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <f5c9cbbd116d462c428afc2e8afefd95aad8c6ec.1386752447.git.mohit.kumar@st.com>
+ <201312120000.54545.arnd@arndb.de>
+In-Reply-To: <201312120000.54545.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to support all Intel Mid platforms with a single config
-selection. This patch removes deprecated CONFIG_X86_MDFLD and
-X86_WANT_INTEL_MID options in favor of having CONFIG_X86_INTEL_MID only.
+Hello Arnd,
 
-Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
----
- arch/x86/Kconfig | 29 +++++------------------------
- 1 file changed, 5 insertions(+), 24 deletions(-)
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Thursday, December 12, 2013 4:31 AM
+> To: linux-arm-kernel@lists.infradead.org
+> Cc: Mohit KUMAR DCG; linux-pci@vger.kernel.org; Pratyush ANAND; Jingoo
+> Han; Viresh Kumar; spear-devel
+> Subject: Re: [PATCH 09/12] pcie: SPEAr13xx: Add designware pcie support
+> 
+> On Wednesday 11 December 2013, Mohit Kumar wrote:
+> > +#include <linux/clk.h>
+> > +#include <linux/delay.h>
+> > +#include <linux/interrupt.h>
+> > +#include <linux/kernel.h>
+> > +#include <linux/module.h>
+> > +#include <linux/of.h>
+> > +#include <linux/pci.h>
+> > +#include <linux/platform_device.h>
+> > +#include <linux/resource.h>
+> > +#include <mach/spear.h>
+> 
+> This won't actually build: you cannot access mach/*.h header files from
+> outside of mach-spear!
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index e903c71f7e69..b6a344fb01ae 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -437,42 +437,23 @@ config X86_INTEL_CE
- 	  This option compiles in support for the CE4100 SOC for settop
- 	  boxes and media devices.
- 
--config X86_WANT_INTEL_MID
-+config X86_INTEL_MID
- 	bool "Intel MID platform support"
- 	depends on X86_32
- 	depends on X86_EXTENDED_PLATFORM
--	---help---
--	  Select to build a kernel capable of supporting Intel MID platform
--	  systems which do not have the PCI legacy interfaces (Moorestown,
--	  Medfield). If you are building for a PC class system say N here.
--
--if X86_WANT_INTEL_MID
--
--config X86_INTEL_MID
--	bool
--
--config X86_MDFLD
--       bool "Medfield MID platform"
- 	depends on PCI
- 	depends on PCI_GOANY
- 	depends on X86_IO_APIC
--	select X86_INTEL_MID
- 	select SFI
-+	select I2C
- 	select DW_APB_TIMER
- 	select APB_TIMER
--	select I2C
--	select SPI
- 	select INTEL_SCU_IPC
--	select X86_PLATFORM_DEVICES
- 	select MFD_INTEL_MSIC
- 	---help---
--	  Medfield is Intel's Low Power Intel Architecture (LPIA) based Moblin
--	  Internet Device(MID) platform. 
--	  Unlike standard x86 PCs, Medfield does not have many legacy devices
--	  nor standard legacy replacement devices/features. e.g. Medfield does
--	  not contain i8259, i8254, HPET, legacy BIOS, most of the io ports.
--
--endif
-+	  Select to build a kernel capable of supporting Intel MID platform
-+	  systems which do not have the PCI legacy interfaces (Moorestown,
-+	  Medfield). If you are building for a PC class system say N here.
- 
- config X86_INTEL_LPSS
- 	bool "Intel Low Power Subsystem Support"
--- 
-1.8.4.2
+- OK, will fix it.
 
+> 
+> > +struct spear13xx_pcie {
+> > +	void __iomem		*phy_base;
+> > +	void __iomem		*app_base;
+> > +	struct clk		*clk;
+> > +	struct pcie_port	pp;
+> > +	int			id;
+> > +	int			is_gen1;
+> > +};
+> 
+> The pcie driver shouldn't have direct access to the phy registers, use a phy
+> driver for that.
+
+- OK. In few workarounds we have to access controller as well as phy registers,
+How we should handle such cases if we separate out phy driver from here? Should it be
+through phy global functions called from pcie driver?
+
+Thanks
+Mohit
