@@ -1,78 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:52101 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700Ab3LKWsg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 17:48:36 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header file
-Date: Wed, 11 Dec 2013 23:48:06 +0100
-Cc: Mohit Kumar <mohit.kumar@st.com>, linux-pci@vger.kernel.org,
-	Pratyush Anand <pratyush.anand@st.com>,
-	spear-devel@list.st.com, Viresh Kumar <viresh.linux@gmail.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <9ae7b152da13c094b024c54d27187aab96e439b3.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <9ae7b152da13c094b024c54d27187aab96e439b3.1386752447.git.mohit.kumar@st.com>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:44190 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752315Ab3LMMG6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 07:06:58 -0500
+Received: by mail-la0-f49.google.com with SMTP id er20so1298034lab.22
+        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 04:06:57 -0800 (PST)
+Message-ID: <52AAF85E.80206@cogentembedded.com>
+Date: Fri, 13 Dec 2013 16:06:54 +0400
+From: Valentine <valentine.barshak@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312112348.06755.arnd@arndb.de>
+To: Simon Horman <horms@verge.net.au>, Jingoo Han <jg1.han@samsung.com>
+CC: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Wei Yongjun' <weiyj.lk@gmail.com>,
+	'Wei Yongjun' <yongjun_wei@trendmicro.com.cn>,
+	linux-pci@vger.kernel.org, 'Magnus Damm' <magnus.damm@gmail.com>,
+	'Kuninori Morimoto' <kuninori.morimoto.gx@renesas.com>,
+	linux-sh@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar: fix return value check in rcar_pci_probe()
+References: <CAPgLHd-XTnQXdK7H2uLbGW1ftxNB_nHwzcNCoiCjpXsB5X3HnA@mail.gmail.com> <20131207225012.GC7901@google.com> <001001cef480$73896b20$5a9c4160$%han@samsung.com> <20131211023006.GN19992@verge.net.au>
+In-Reply-To: <20131211023006.GN19992@verge.net.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 11 December 2013, Mohit Kumar wrote:
-> From: Pratyush Anand <pratyush.anand@st.com>
-> 
-> Move SPEAr1340 definitions to header files so that theese can be used by
-> other code too.
+On 12/11/2013 06:30 AM, Simon Horman wrote:
+> On Mon, Dec 09, 2013 at 10:46:17AM +0900, Jingoo Han wrote:
+>> On Sunday, December 08, 2013 7:50 AM, Bjorn Helgaas wrote:
+>>> On Tue, Nov 19, 2013 at 11:40:28AM +0800, Wei Yongjun wrote:
+>>>> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>>>>
+>>>> In case of error, the function devm_ioremap_resource() returns ERR_PTR()
+>>>> and never returns NULL. The NULL test in the return value check should
+>>>> be replaced with IS_ERR().
+>>>>
+>>>> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>>>
+>>> Applied with Jingoo's reviewed-by to pci/host-rcar for v3.14, thanks!
+>>>
+>>> For drivers/pci/host/*, I normally look for an ack from the responsible
+>>> person,  but this patch is trivial enough that I'm fine taking it without
+>>> that.  But for more significant changes, I don't have any notes about who
+>>> should own pci-rcar-gen2.c.  Valentine could be a candidate since he added
+>>> it in the first place?  Or Jingoo?
 
-This looks like a regression, we intentionally made them private and they
-should be moved into a proper driver instead of being globally visible.
+Sorry, I didn't ack since I thought it was not really needed for a trivial
+change like this one that had already been reviewed by Jingoo.
 
-> diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
-> index 5cdc53d..4526f75 100644
-> --- a/arch/arm/mach-spear/include/mach/spear.h
-> +++ b/arch/arm/mach-spear/include/mach/spear.h
-> @@ -86,6 +86,61 @@
->  /* Debug uart for linux, will be used for debug and uncompress messages */
->  #define SPEAR_DBG_UART_BASE			UART_BASE
->  
-> +/* PCIe/SATA Base addresses */
-> +#define SPEAR1340_SATA_BASE			UL(0xB1000000)
-> +#define SPEAR1340_PCIE_BASE			UL(0xB1000000)
+>>
+>> (+cc Simon Horman, Magnus Damm, Kuninori Morimoto, linux-sh mailing-list)
+>>
+>> Hi Bjorn,
+>>
+>> I think that Valentine could be a candidate, because he is an author.
+>> However, pci-rcar-gen2.c is working on Renesas SoC, so, it may be
+>> necessary to get ACK from Renesas people such as Simon Horman,
+>> Magnus Damm, and Kuninori Morimoto.
+>>
+>> Simon Horman, Magnus Damm, and Kuninori Morimoto,
+>> Who is a proper person responsible for RCar Gen PCIe driver?
+>> (drivers/pci/host/pci-rcar-gen2.c)
+>
+> Good question.
+>
+> My feeling is that as it relates to Renesas ARM SoCs that
+> responsibility at least in part defaults to the Renesas ARM SoC
+> maintainers, Magnus and myself.
+>
+> So I think it would be best if the following were CCed on any patches
+> to this driver:
+>
+> Simon Horman <horms@verge.net.au>
+> Magnus Damm <magnus.damm@gmail.com>
+> linux-sh@vger.kernel.org
 
-These should be in DT only.
+I agree.
 
-> +/* Power Management Registers */
-> +#define SPEAR1340_PCM_CFG			(VA_MISC_BASE + 0x100)
-> +#define SPEAR1340_PCM_WKUP_CFG			(VA_MISC_BASE + 0x104)
-> +#define SPEAR1340_SWITCH_CTR			(VA_MISC_BASE + 0x108)
-> +
-> +#define SPEAR1340_PERIP1_SW_RST			(VA_MISC_BASE + 0x318)
-> +#define SPEAR1340_PERIP2_SW_RST			(VA_MISC_BASE + 0x31C)
-> +#define SPEAR1340_PERIP3_SW_RST			(VA_MISC_BASE + 0x320)
+>
+> I would not be opposed for there being a MAINTAINERS file entry to that effect.
+>
+> I will let Valentine volunteer himself if he wants to.
 
-The RST bits should probably go into a drivers/reset driver. Not sure what the
-other registers do, but I'm sure we can find a driver for these too, possibly
-they should be part of the PHY driver?
+I'll try to track the e-mails related to this driver as well.
 
-> @@ -22,60 +22,6 @@
->  #include <mach/spear.h>
->  
->  /* FIXME: Move SATA PHY code into a standalone driver */
-> -
-> -
-> -/* PCIE - SATA configuration registers */
-> -#define SPEAR1340_PCIE_SATA_CFG			(VA_MISC_BASE + 0x424)
-> -	/* PCIE CFG MASks */
-> -	#define SPEAR1340_PCIE_CFG_DEVICE_PRESENT	(1 << 11)
-> -	#define SPEAR1340_PCIE_CFG_POWERUP_RESET	(1 << 10)
-> -	#define SPEAR1340_PCIE_CFG_CORE_CLK_EN		(1 << 9)
-> -	#define SPEAR1340_PCIE_CFG_AUX_CLK_EN		(1 << 8)
-> -	#define SPEAR1340_SATA_CFG_TX_CLK_EN		(1 << 4)
-> -	#define SPEAR1340_SATA_CFG_RX_CLK_EN		(1 << 3)
-> -	#define SPEAR1340_SATA_CFG_POWERUP_RESET	(1 << 2)
+Not sure if I want myself in the MAINTAINERS though, since it would probably
+mean that "try to" should be changed to "have to" in my statement above.
 
-You leave the FIXME in place but move away the definitions it talks about.
-Please fix the problem instead.
+Thanks,
+Val.
 
-	Arnd
+>
+>>
+>> Best regards,
+>> Jingoo Han
+>>
+>>>
+>>> Bjorn
+>>>
+>>>> ---
+>>>>   drivers/pci/host/pci-rcar-gen2.c | 4 ++--
+>>>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+>>>> index cbaa5c4..96d1182 100644
+>>>> --- a/drivers/pci/host/pci-rcar-gen2.c
+>>>> +++ b/drivers/pci/host/pci-rcar-gen2.c
+>>>> @@ -276,8 +276,8 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
+>>>>
+>>>>   	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>>>>   	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
+>>>> -	if (!reg)
+>>>> -		return -ENODEV;
+>>>> +	if (IS_ERR(reg))
+>>>> +		return PTR_ERR(reg);
+>>>>
+>>>>   	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>>>>   	if (!mem_res || !mem_res->start)
+>>>>
+>>
+
