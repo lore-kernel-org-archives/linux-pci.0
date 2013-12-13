@@ -1,186 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
-Cc: bhelgaas@google.com, david.a.cohen@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [PATCH v2 1/4] x86: intel-mid: move Medfield code out of intel-mid.c core file
-Date: Mon, 16 Dec 2013 12:07:36 -0800
-Message-Id: <1387224459-25746-2-git-send-email-david.a.cohen@linux.intel.com>
-In-Reply-To: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:54234 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751805Ab3LMEnj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 23:43:39 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
+Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out of the core
+Date: Fri, 13 Dec 2013 05:56:47 +0100
+Message-ID: <4217831.DpCd0ng0jT@vostro.rjw.lan>
+In-Reply-To: <52AA7760.20603@jp.fujitsu.com>
+References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <81535269.SKoBMiGyoU@vostro.rjw.lan> <52AA7760.20603@jp.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order make the driver more portable and support other Intel Mid
-platforms we need to move Medfield code from intel-mid.c core to its own
-mfld.c file.
+On Friday, December 13, 2013 11:56:32 AM Yasuaki Ishimatsu wrote:
+> Hi Rafael,
 
-This patch does no functional change.
+Hi,
 
-Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- arch/x86/platform/intel-mid/Makefile               |  4 +-
- arch/x86/platform/intel-mid/intel-mid.c            | 37 +---------------
- arch/x86/platform/intel-mid/intel_mid_weak_decls.h | 15 +++++++
- arch/x86/platform/intel-mid/mfld.c                 | 51 ++++++++++++++++++++++
- 4 files changed, 70 insertions(+), 37 deletions(-)
- create mode 100644 arch/x86/platform/intel-mid/intel_mid_weak_decls.h
- create mode 100644 arch/x86/platform/intel-mid/mfld.c
+> Please share your more detailed idea. I started to implement the following
+> idea. But the idea has one problem.
+> 
+> >>> The eject work flow can be:
+> >>>     (1) an eject event occurs,
+> >>>     (2) the container "physical" device fails offline in acpi_scan_hot_remove()
+> >>>         emmitting, say, KOBJ_CHANGE for the "physical" device,
+> >>>     (3) user space notices the KOBJ_CHANGE and does the cleanup as needed,
+> >>>     (4) user space changes the "physical" container device flag controlling
+> >>>         offline to 0,
+> >>>     (5) user space uses the sysfs "eject" attribute of the ACPI container object
+> >>>         to finally eject the container,
+> >>>     (6) the offline in acpi_scan_hot_remove() is now successful, because the
+> >>>         flag controlling it has been set to 0 in step (4),
+> >>>     (7) the "physical" container device goes away before executing _EJ0,
+> >>>     (8) the container is ejected.
+> 
+> I want to emit KOBJ_CHANGE before offlining devices on container device at (2).
+> But acpi_scan_hot_remove() offlines devices on container device at first.
+> So when offline container device, devices on container has been offlined.
+> 
+> Thus the idea cannot fulfill my necessary feature.
 
-diff --git a/arch/x86/platform/intel-mid/Makefile b/arch/x86/platform/intel-mid/Makefile
-index 01cc29ea5ff7..78a14ba0e0db 100644
---- a/arch/x86/platform/intel-mid/Makefile
-+++ b/arch/x86/platform/intel-mid/Makefile
-@@ -1,6 +1,6 @@
--obj-$(CONFIG_X86_INTEL_MID) += intel-mid.o
--obj-$(CONFIG_X86_INTEL_MID) += intel_mid_vrtc.o
-+obj-$(CONFIG_X86_INTEL_MID) += intel-mid.o intel_mid_vrtc.o mfld.o
- obj-$(CONFIG_EARLY_PRINTK_INTEL_MID) += early_printk_intel_mid.o
-+
- # SFI specific code
- ifdef CONFIG_X86_INTEL_MID
- obj-$(CONFIG_SFI) += sfi.o device_libs/
-diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
-index f90e290f689f..527d6d50643d 100644
---- a/arch/x86/platform/intel-mid/intel-mid.c
-+++ b/arch/x86/platform/intel-mid/intel-mid.c
-@@ -35,6 +35,8 @@
- #include <asm/apb_timer.h>
- #include <asm/reboot.h>
- 
-+#include "intel_mid_weak_decls.h"
-+
- /*
-  * the clockevent devices on Moorestown/Medfield can be APBT or LAPIC clock,
-  * cmdline option x86_intel_mid_timer can be used to override the configuration
-@@ -61,46 +63,11 @@ enum intel_mid_timer_options intel_mid_timer_options;
- enum intel_mid_cpu_type __intel_mid_cpu_chip;
- EXPORT_SYMBOL_GPL(__intel_mid_cpu_chip);
- 
--static void intel_mid_power_off(void)
--{
--}
--
- static void intel_mid_reboot(void)
- {
- 	intel_scu_ipc_simple_command(IPCMSG_COLD_BOOT, 0);
- }
- 
--static unsigned long __init intel_mid_calibrate_tsc(void)
--{
--	unsigned long fast_calibrate;
--	u32 lo, hi, ratio, fsb;
--
--	rdmsr(MSR_IA32_PERF_STATUS, lo, hi);
--	pr_debug("IA32 perf status is 0x%x, 0x%0x\n", lo, hi);
--	ratio = (hi >> 8) & 0x1f;
--	pr_debug("ratio is %d\n", ratio);
--	if (!ratio) {
--		pr_err("read a zero ratio, should be incorrect!\n");
--		pr_err("force tsc ratio to 16 ...\n");
--		ratio = 16;
--	}
--	rdmsr(MSR_FSB_FREQ, lo, hi);
--	if ((lo & 0x7) == 0x7)
--		fsb = PENWELL_FSB_FREQ_83SKU;
--	else
--		fsb = PENWELL_FSB_FREQ_100SKU;
--	fast_calibrate = ratio * fsb;
--	pr_debug("read penwell tsc %lu khz\n", fast_calibrate);
--	lapic_timer_frequency = fsb * 1000 / HZ;
--	/* mark tsc clocksource as reliable */
--	set_cpu_cap(&boot_cpu_data, X86_FEATURE_TSC_RELIABLE);
--
--	if (fast_calibrate)
--		return fast_calibrate;
--
--	return 0;
--}
--
- static void __init intel_mid_time_init(void)
- {
- 	sfi_table_parse(SFI_SIG_MTMR, NULL, NULL, sfi_parse_mtmr);
-diff --git a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
-new file mode 100644
-index 000000000000..519beb75ba4c
---- /dev/null
-+++ b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
-@@ -0,0 +1,15 @@
-+/*
-+ * intel_mid_weak_decls.h: Weak declarations of intel-mid.c
-+ *
-+ * (C) Copyright 2013 Intel Corporation
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; version 2
-+ * of the License.
-+ */
-+
-+
-+/* __attribute__((weak)) makes these declarations overridable */
-+extern void intel_mid_power_off(void) __attribute__((weak));
-+extern unsigned long __init intel_mid_calibrate_tsc(void) __attribute__((weak));
-diff --git a/arch/x86/platform/intel-mid/mfld.c b/arch/x86/platform/intel-mid/mfld.c
-new file mode 100644
-index 000000000000..c7ff83c4576d
---- /dev/null
-+++ b/arch/x86/platform/intel-mid/mfld.c
-@@ -0,0 +1,51 @@
-+/*
-+ * mfld.c: Intel Medfield platform setup code
-+ *
-+ * (C) Copyright 2013 Intel Corporation
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; version 2
-+ * of the License.
-+ */
-+
-+#include <linux/init.h>
-+
-+#include <asm/apic.h>
-+#include <asm/intel-mid.h>
-+#include <asm/intel_mid_vrtc.h>
-+
-+void intel_mid_power_off(void)
-+{
-+}
-+
-+unsigned long __init intel_mid_calibrate_tsc(void)
-+{
-+	unsigned long fast_calibrate;
-+	u32 lo, hi, ratio, fsb;
-+
-+	rdmsr(MSR_IA32_PERF_STATUS, lo, hi);
-+	pr_debug("IA32 perf status is 0x%x, 0x%0x\n", lo, hi);
-+	ratio = (hi >> 8) & 0x1f;
-+	pr_debug("ratio is %d\n", ratio);
-+	if (!ratio) {
-+		pr_err("read a zero ratio, should be incorrect!\n");
-+		pr_err("force tsc ratio to 16 ...\n");
-+		ratio = 16;
-+	}
-+	rdmsr(MSR_FSB_FREQ, lo, hi);
-+	if ((lo & 0x7) == 0x7)
-+		fsb = PENWELL_FSB_FREQ_83SKU;
-+	else
-+		fsb = PENWELL_FSB_FREQ_100SKU;
-+	fast_calibrate = ratio * fsb;
-+	pr_debug("read penwell tsc %lu khz\n", fast_calibrate);
-+	lapic_timer_frequency = fsb * 1000 / HZ;
-+	/* mark tsc clocksource as reliable */
-+	set_cpu_cap(&boot_cpu_data, X86_FEATURE_TSC_RELIABLE);
-+
-+	if (fast_calibrate)
-+		return fast_calibrate;
-+
-+	return 0;
-+}
--- 
-1.8.4.2
+Well, in that case we need to treat containers in a special way at the ACPI
+level.  Which is a bit unfortunate so to speak.
+
+To that end I'd try to add a new flag to struct acpi_hotplug_profile, say
+.verify_offline, such that if set, it would cause acpi_scan_hot_remove() to
+check if all of the "physical" companions of the top-level device are offline
+to start with, and if not, it would just emit KOBJ_CHANGE for the companions
+that are not offline and bail out.
+
+So the above algorithm would become:
+
+(1) an eject event occurs,
+(2) acpi_scan_hot_remove() checks the verify_offline flag in the target device's
+    scan_handler structure,
+(3) if set (it would always be set for containers), acpi_scan_hot_remove()
+    checks the status of the target device's "physical" companions; if at least
+    one of them is offline, KOBJ_CHANGE is emitted for that "physical" device,
+    and acpi_scan_hot_remove() returns, [I guess we can just emit KOBJ_CHANGE
+    for the first companion that is not offline at this point.]
+(4) user space notices the KOBJ_CHANGE and does the cleanup as needed; in the
+    process it carries out the offline operation for the container's "physical"
+    companion (there's only one such companion for each container), [That
+    operation for the container itself is trivial, but to succeed it requires
+    all devices below the container to be taken offline in advance.]
+(5) user space uses the sysfs "eject" attribute of the ACPI container object
+    to finally eject the container,
+(6) acpi_scan_hot_remove() is now successful, because the container's "physical"
+    companion is now offline,
+(7) the "physical" container device goes away before executing _EJ0,
+(8) the container is ejected.
+
+I think that should work for you.
+
+Thanks,
+Rafael
 
