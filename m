@@ -1,93 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:52762 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751458Ab3LLHk5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 02:40:57 -0500
-Message-ID: <52A96877.90902@free-electrons.com>
-Date: Thu, 12 Dec 2013 08:40:39 +0100
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-CC: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
-	linux-samsung-soc@vger.kernel.org,
-	Wei Yongjun <weiyj.lk@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Simon Horman <horms@verge.net.au>, linux-sh@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-tegra@vger.kernel.org, Shawn Guo <shawn.guo@linaro.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
- host maintainers
-References: <20131211183237.GI4699@google.com>
-In-Reply-To: <20131211183237.GI4699@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout3.samsung.com ([203.254.224.33]:32804 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886Ab3LME5J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 23:57:09 -0500
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MXQ00HSBB37TWC0@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 13 Dec 2013 13:57:07 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org,
+	'Pratyush ANAND' <pratyush.anand@st.com>,
+	'Viresh Kumar' <viresh.linux@gmail.com>,
+	'spear-devel' <spear-devel@list.st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <f5c9cbbd116d462c428afc2e8afefd95aad8c6ec.1386752447.git.mohit.kumar@st.com>
+ <201312120000.54545.arnd@arndb.de>
+ <2CC2A0A4A178534D93D5159BF3BCB66189F95F66A2@EAPEX1MAIL1.st.com>
+In-reply-to: <2CC2A0A4A178534D93D5159BF3BCB66189F95F66A2@EAPEX1MAIL1.st.com>
+Subject: Re: [PATCH 09/12] pcie: SPEAr13xx: Add designware pcie support
+Date: Fri, 13 Dec 2013 13:57:06 +0900
+Message-id: <002c01cef7bf$c5a7b640$50f722c0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, ,
+On Friday, December 13, 2013 1:30 PM, Mohit KUMAR DCG wrote:
+> On Thursday, December 12, 2013 4:31 AM, Arnd Bergmann wrote:
+> > On Wednesday 11 December 2013, Mohit Kumar wrote:
 
-On 11/12/2013 19:32, Bjorn Helgaas wrote:
-> If this looks reasonable, I'll merge it via the PCI tree for v3.13.
+[.....]
+
+> > > +struct spear13xx_pcie {
+> > > +	void __iomem		*phy_base;
+> > > +	void __iomem		*app_base;
+> > > +	struct clk		*clk;
+> > > +	struct pcie_port	pp;
+> > > +	int			id;
+> > > +	int			is_gen1;
+> > > +};
+> >
+> > The pcie driver shouldn't have direct access to the phy registers, use a phy
+> > driver for that.
 > 
-> Bjorn
-> 
-> 
-> MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
-> 
-> Add entries for PCI host controller drivers in drivers/pci/host/.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  MAINTAINERS |   31 +++++++++++++++++++++++++++++++
->  1 file changed, 31 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 8285ed4676b6..826c722d92ba 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6449,16 +6449,47 @@ F:	drivers/pci/
->  F:	include/linux/pci*
->  F:	arch/x86/pci/
->  
-> +PCI DRIVER FOR DESIGNWARE
-> +M:	Jingoo Han <jg1.han@samsung.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Maintained
-> +F:	drivers/pci/host/*designware*
-> +
-> +PCI DRIVER FOR IMX6
-> +M:	Shawn Guo <shawn.guo@linaro.org>
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> +S:	Maintained
-> +F:	drivers/pci/host/*imx6*
-> +
-> +PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
-> +M:	Jason Cooper <jason@lakedaemon.net>
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> +S:	Maintained
-> +F:	drivers/pci/host/*mvebu*
+> - OK. In few workarounds we have to access controller as well as phy registers,
+> How we should handle such cases if we separate out phy driver from here? Should it be
+> through phy global functions called from pcie driver?
 
-I think that Thomas Petazzoni would be more appropriate, he worked
-on the mvebu PCIe since 6 moths and now know very well the
-subject. Until now all the mvebu PCIe related questions were
-managed by Thomas.
+Arnd, do you mean the following?
 
-Regards,
+1. Implement Spear PCIe PHY driver using General PHY framework.
+  ./drivers/phy/phy-spear13xx-pcie.c
 
-Gregory
+2. Call General PHY APIs
+  ./drivers/pci/host/pcie-spear13xx.c
+  #include <linux/phy/phy.h>
+
+  pp->phy = devm_phy_get(pp->dev, ...);
+
+  phy_power_on(pp->phy);
+
+  phy_power_off(pp->phy);
 
 
+Best regards,
+Jingoo Han
 
--- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
