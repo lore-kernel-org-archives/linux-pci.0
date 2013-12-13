@@ -1,69 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41904 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753806Ab3LPPIN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 10:08:13 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: axboe@kernel.dk, stefano.stabellini@eu.citrix.com,
-	ian.campbell@citrix.com, xen-devel@lists.xenproject.org,
-	linux-kernel@vger.kernel.org, boris.ostrovsky@oracle.com,
-	david.vrabel@citrix.com, leosilva@linux.vnet.ibm.com,
-	ashley@ashleylai.com, peterhuewe@gmx.de, mail@srajiv.net,
-	tpmdd@selhorst.net, dmitry.torokhov@gmail.com, bhelgaas@google.com,
-	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
-	tpmdd-devel@lists.sourceforge.net, linux-input@vger.kernel.org,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-fbdev@vger.kernel.org
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH v3 2/2] xen/pvhvm: Remove the xen_platform_pci int.
-Date: Mon, 16 Dec 2013 10:04:10 -0500
-Message-Id: <1387206250-13963-3-git-send-email-konrad.wilk@oracle.com>
-In-Reply-To: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com>
-References: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com>
+Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:53034 "EHLO
+	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751797Ab3LMETL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 Dec 2013 23:19:11 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	spear-devel <spear-devel@list.st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>
+Date: Fri, 13 Dec 2013 12:18:35 +0800
+Subject: RE: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header
+ file
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F669D@EAPEX1MAIL1.st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <9ae7b152da13c094b024c54d27187aab96e439b3.1386752447.git.mohit.kumar@st.com>
+ <201312112348.06755.arnd@arndb.de>
+In-Reply-To: <201312112348.06755.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since we have  xen_has_pv_devices,xen_has_pv_disk_devices,
-xen_has_pv_nic_devices, and xen_has_pv_and_legacy_disk_devices
-to figure out the different 'unplug' behaviors - lets
-use those instead of this single int.
+Hello Arnd,
 
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
----
- arch/x86/xen/platform-pci-unplug.c | 5 ++---
- include/xen/platform_pci.h         | 2 --
- 2 files changed, 2 insertions(+), 5 deletions(-)
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Thursday, December 12, 2013 4:18 AM
+> To: linux-arm-kernel@lists.infradead.org
+> Cc: Mohit KUMAR DCG; linux-pci@vger.kernel.org; Pratyush ANAND; spear-
+> devel; Viresh Kumar
+> Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to
+> header file
+> 
+> On Wednesday 11 December 2013, Mohit Kumar wrote:
+> > From: Pratyush Anand <pratyush.anand@st.com>
+> >
+> > Move SPEAr1340 definitions to header files so that theese can be used
+> > by other code too.
+> 
+> This looks like a regression, we intentionally made them private and they
+> should be moved into a proper driver instead of being globally visible.
+> 
+> > diff --git a/arch/arm/mach-spear/include/mach/spear.h
+> > b/arch/arm/mach-spear/include/mach/spear.h
+> > index 5cdc53d..4526f75 100644
+> > --- a/arch/arm/mach-spear/include/mach/spear.h
+> > +++ b/arch/arm/mach-spear/include/mach/spear.h
+> > @@ -86,6 +86,61 @@
+> >  /* Debug uart for linux, will be used for debug and uncompress messages
+> */
+> >  #define SPEAR_DBG_UART_BASE			UART_BASE
+> >
+> > +/* PCIe/SATA Base addresses */
+> > +#define SPEAR1340_SATA_BASE			UL(0xB1000000)
+> > +#define SPEAR1340_PCIE_BASE			UL(0xB1000000)
+> 
+> These should be in DT only.
+> 
+> > +/* Power Management Registers */
+> > +#define SPEAR1340_PCM_CFG			(VA_MISC_BASE +
+> 0x100)
+> > +#define SPEAR1340_PCM_WKUP_CFG
+> 	(VA_MISC_BASE + 0x104)
+> > +#define SPEAR1340_SWITCH_CTR			(VA_MISC_BASE +
+> 0x108)
+> > +
+> > +#define SPEAR1340_PERIP1_SW_RST
+> 	(VA_MISC_BASE + 0x318)
+> > +#define SPEAR1340_PERIP2_SW_RST
+> 	(VA_MISC_BASE + 0x31C)
+> > +#define SPEAR1340_PERIP3_SW_RST
+> 	(VA_MISC_BASE + 0x320)
+> 	
+> The RST bits should probably go into a drivers/reset driver. Not sure what the
+> other registers do, but I'm sure we can find a driver for these too, possibly
+> they should be part of the PHY driver?
 
-diff --git a/arch/x86/xen/platform-pci-unplug.c b/arch/x86/xen/platform-pci-unplug.c
-index ab84ac1..a826171 100644
---- a/arch/x86/xen/platform-pci-unplug.c
-+++ b/arch/x86/xen/platform-pci-unplug.c
-@@ -30,10 +30,9 @@
- #define XEN_PLATFORM_ERR_PROTOCOL -2
- #define XEN_PLATFORM_ERR_BLACKLIST -3
- 
--/* store the value of xen_emul_unplug after the unplug is done */
--int xen_platform_pci_unplug;
--EXPORT_SYMBOL_GPL(xen_platform_pci_unplug);
- #ifdef CONFIG_XEN_PVHVM
-+/* store the value of xen_emul_unplug after the unplug is done */
-+static int xen_platform_pci_unplug;
- static int xen_emul_unplug;
- 
- static int check_platform_magic(void)
-diff --git a/include/xen/platform_pci.h b/include/xen/platform_pci.h
-index b49eeab..5c52b55 100644
---- a/include/xen/platform_pci.h
-+++ b/include/xen/platform_pci.h
-@@ -46,8 +46,6 @@ static inline int xen_must_unplug_disks(void) {
- #endif
- }
- 
--extern int xen_platform_pci_unplug;
--
- #if defined(CONFIG_XEN_PVHVM)
- extern bool xen_has_pv_devices(void);
- extern bool xen_has_pv_disk_devices(void);
--- 
-1.8.3.1
+-  Perhaps if we implement phy and reset driver then we may not require to move these definitions and
+it will address most of your comments on SPEar13xx pcie driver. I am understanding and working on this.l 
 
+Regards
+Mohit
