@@ -1,73 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:60295 "EHLO
-	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751030Ab3LKJjx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:39:53 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	<spear-devel@list.st.com>
-Subject: [PATCH 04/12] SPEAr13xx: Fix static mapping table
-Date: Wed, 11 Dec 2013 15:08:29 +0530
-Message-ID: <cbb98a14a9cdbf5d65b4b7462dd5da24cd0db3f2.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-bn1lp0153.outbound.protection.outlook.com ([207.46.163.153]:27631
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750826Ab3LMGqd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 01:46:33 -0500
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Shawn Guo <shawn.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"Jason Cooper" <jason@lakedaemon.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Wei Yongjun <weiyj.lk@gmail.com>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	"Kuninori Morimoto" <kuninori.morimoto.gx@renesas.com>
+Subject: RE: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
+ host maintainers
+Date: Fri, 13 Dec 2013 06:31:42 +0000
+Message-ID: <e0528b75cb62462eba9cdc9ff903814b@BLUPR03MB136.namprd03.prod.outlook.com>
+References: <20131211183237.GI4699@google.com>
+ <20131212070045.GO18380@S2101-09.ap.freescale.net>
+ <CAErSpo5O1nSkKmWfHGGZiuVdvRxFjNNDS-8BWKFhnCgwVSdr8A@mail.gmail.com>
+ <20131213053922.GP18380@S2101-09.ap.freescale.net>
+In-Reply-To: <20131213053922.GP18380@S2101-09.ap.freescale.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+Hi Bjorn:
 
-SPEAr13xx was using virtual address space 0xFE000000 to map physical address
-space 0xB3000000. pci_remap_io uses 0xFEE00000 as virtual address. So
-change 0xFE000000 to 0xF9000000.
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Viresh Kumar <viresh.linux@gmail.com>
-Cc: spear-devel@list.st.com
-Cc: linux-arm-kernel@lists.infradead.org
----
- arch/arm/mach-spear/include/mach/spear.h |    4 ++--
- arch/arm/mach-spear/spear13xx.c          |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> -----Original Message-----
+> From: Shawn Guo [mailto:shawn.guo@linaro.org]
+> Sent: Friday, December 13, 2013 1:39 PM
+> To: Bjorn Helgaas
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm; linux-
+> tegra@vger.kernel.org; linux-sh@vger.kernel.org; linux-samsung-
+> soc@vger.kernel.org; Jingoo Han; Jason Cooper; Thierry Reding; Simon Horman;
+> Magnus Damm; Valentine Barshak; Wei Yongjun; Wei Yongjun; Kuninori Morimoto;
+> Zhu Richard-R65037
+> Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
+> host maintainers
+> 
+> On Thu, Dec 12, 2013 at 01:29:00PM -0700, Bjorn Helgaas wrote:
+> > On Thu, Dec 12, 2013 at 12:00 AM, Shawn Guo <shawn.guo@linaro.org> wrote:
+> > > Hi Bjorn,
+> > >
+> > > On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
+> > >> +PCI DRIVER FOR IMX6
+> > >> +M:   Shawn Guo <shawn.guo@linaro.org>
+> > >
+> > > Thanks for the nomination.  But I think a better person for this
+> > > position would be Richard Zhu <r65037@freescale.com> (copied).  He
+> > > knows the driver and controller much better than myself, and most
+> > > importantly he is the driver owner for Freescale kernel and he has
+> > > the contact to Freescale PCIe hardware people.
+> >
+> > Richard, are you OK with being listed here?
+> 
+> Richard is on leave these two days.  Hope he will be back to online soon.
+[Richard] I went to hospital in the past two days.
+Thanks, I'm ok with being listed here.
 
-diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
-index c236cef..e7ba122 100644
---- a/arch/arm/mach-spear/include/mach/spear.h
-+++ b/arch/arm/mach-spear/include/mach/spear.h
-@@ -52,10 +52,10 @@
- #ifdef CONFIG_ARCH_SPEAR13XX
- 
- #define PERIP_GRP2_BASE				UL(0xB3000000)
--#define VA_PERIP_GRP2_BASE			IOMEM(0xFE000000)
-+#define VA_PERIP_GRP2_BASE			IOMEM(0xF9000000)
- #define MCIF_SDHCI_BASE				UL(0xB3000000)
- #define SYSRAM0_BASE				UL(0xB3800000)
--#define VA_SYSRAM0_BASE				IOMEM(0xFE800000)
-+#define VA_SYSRAM0_BASE				IOMEM(0xF9800000)
- #define SYS_LOCATION				(VA_SYSRAM0_BASE + 0x600)
- 
- #define PERIP_GRP1_BASE				UL(0xE0000000)
-diff --git a/arch/arm/mach-spear/spear13xx.c b/arch/arm/mach-spear/spear13xx.c
-index 7aa6e8c..20ce885 100644
---- a/arch/arm/mach-spear/spear13xx.c
-+++ b/arch/arm/mach-spear/spear13xx.c
-@@ -52,10 +52,10 @@ void __init spear13xx_l2x0_init(void)
- /*
-  * Following will create 16MB static virtual/physical mappings
-  * PHYSICAL		VIRTUAL
-- * 0xB3000000		0xFE000000
-  * 0xE0000000		0xFD000000
-  * 0xEC000000		0xFC000000
-  * 0xED000000		0xFB000000
-+ * 0xB3000000		0xF9000000
-  */
- struct map_desc spear13xx_io_desc[] __initdata = {
- 	{
--- 
-1.7.0.1
+> 
+> > Shawn, do you want to be
+> > listed here in addition, if only to make sure you're copied on changes
+> > to pci-imx6.c?
+> 
+> Okay, thanks, Bjorn.
+> 
+> Shawn
+
+Best Regards
+Richard Zhu
 
