@@ -1,137 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:52408 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755707Ab3LQSXd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 13:23:33 -0500
-Received: by mail-ie0-f180.google.com with SMTP id tp5so8866919ieb.39
-        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2013 10:23:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5s7euqGvqg=W=_j=98eyPp1uk=Zw8gD1gif6A9h_BNpQ@mail.gmail.com>
-References: <1386949306-30601-1-git-send-email-betty.dall@hp.com>
- <CAErSpo4tswv8PHGOQDviFj6Rc7QMYkWQ5rhMCFmHZFL9jM6oBQ@mail.gmail.com>
- <1386976612.10497.80.camel@ejdallLaptop> <CAErSpo5s7euqGvqg=W=_j=98eyPp1uk=Zw8gD1gif6A9h_BNpQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Dec 2013 11:23:12 -0700
-Message-ID: <CAErSpo4wbaoGL3P=-ju9+TfUjRrjwDh5Y9w0aCVyK08NJKZdaQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI AER: handle pci_cleanup_aer_uncorrect_error_status()
- in firmware first mode
-To: Betty Dall <betty.dall@hp.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:41604 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754922Ab3LMWrj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 17:47:39 -0500
+Message-ID: <1386974853.10497.64.camel@ejdallLaptop>
+Subject: Re: [PATCH] PCI AER: Handle non-AER HEST error sources in
+ aer_hest_parse()
+From: Betty Dall <betty.dall@hp.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: lenb@kernel.org, rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Fri, 13 Dec 2013 15:47:33 -0700
+In-Reply-To: <20131213221616.GC6746@google.com>
+References: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
+	 <20131213221616.GC6746@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 12:51 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Dec 13, 2013 at 4:16 PM, Betty Dall <betty.dall@hp.com> wrote:
->> On Fri, 2013-12-13 at 15:35 -0700, Bjorn Helgaas wrote:
->>> On Fri, Dec 13, 2013 at 8:41 AM, Betty Dall <betty.dall@hp.com> wrote:
->>> > There are three functions exported from aerdrv_core.c that could be
->>> > called when the system is in firmware first mode:
->>> > pci_enable_pcie_error_reporting(), pci_disable_pcie_error_reporting, and
->>> > pci_cleanup_aer_uncorrect_error_status(). The first two functions check if
->>> > we are in firmware first mode and return immediately.
->>> > pci_cleanup_aer_uncorrect_error_status() does not check firmware first
->>> > mode. The problem is that all of these functions should not access the AER
->>> > registers in firmware first mode because the firmware has not granted OS
->>> > control of the AER registers through the _OSC.
->>>
->>> This looks like a good fix to me.  If I read aer_acpi_firmware_first()
->>> correctly, we don't even *ask* for control of AER if
->>> ACPI_HEST_FIRMWARE_FIRST appears anywhere in the HEST.  Does that
->>> match your understanding?
->>
->> Yes, when the system is in firmware first mode the code setting the _OSC
->> control register does not ask for AER control.
->>
->>>
->>> > Many drivers call this
->>> > function in their pci_error_handlers in firmware first mode.
->>>
->>> Drivers don't have any idea whether their device is in firmware-first
->>> mode, do they?
->>
->> Right. And I think we want to keep it that way. Having this function is
->> a good thing so that the firmware first can be abstracted from the
->> drivers.
->>
->>>
->>> > The fix is to change pci_cleanup_aer_uncorrect_error_status() to check
->>> > firmware first mode before accessing the AER registers. If it is in firmware
->>> > first mode, return 0. I considered returning -EIO, but decided the status
->>> > has been cleaned up appropriately for firmware first. Returning 0 also avoids
->>> > an error message. Not many places check the return of this function, and the
->>> > ones that do, print an error message and continue such as:
->>> >    err = pci_cleanup_aer_uncorrect_error_status(pdev);
->>> >    if (err) {
->>> >        dev_err(&pdev->dev,
->>> >            "pci_cleanup_aer_uncorrect_error_status failed 0x%0x\n",
->>> >             err); /* non-fatal, continue */
->>> >    }
->>> > That error message is how I found this problem, and it is not applicable
->>> > for the firmware first recovery path.
->>>
->>> I'm curious -- did you find this problem because you saw a message
->>> when pci_cleanup_aer_uncorrect_error_status() returned failure?  The
->>> only way it can return failure is if there is no AER capability, and
->>> that should be completely independent of whether we're in
->>> firmware-first mode.
->>
->> Yes, I saw the error message during error injection testing and using a
->> firmware that denies access to AER control because it is firmware first.
->> You are right that it would only print out when there is no AER
->> capability. I was reading code looking for places that might access the
->> AER registers in firmware first mode. This is the only one I found.
->
-> I see why you added a pcie_aer_get_firmware_first() test, because
-> that's what pci_enable_pcie_error_reporting() and
-> pci_disable_pcie_error_reporting() do.
->
-> But I think we implemented the firmware-first stuff wrong by elevating
-> the firmware-first concept to the arch-independent level.  The
-> connection between this and the _OSC negotiation is pretty convoluted,
-> even on x86.  It's hard to verify by reading the code that we avoid
-> touching AER if we haven't asked for control or the BIOS declined to
-> grant it.
->
-> I think it would be better if the pci_dev.__aer_firmware_first stuff
-> were replaced by a more generic "can we use AER?" flag.  That flag
-> should be set at device enumeration time, so we wouldn't need anything
-> like the __aer_firmware_first_valid flag.
+On Fri, 2013-12-13 at 15:16 -0700, Bjorn Helgaas wrote:
+> On Fri, Dec 13, 2013 at 08:23:16AM -0700, Betty Dall wrote:
+> > aer_hest_parse() could pass a non-AER HEST error source to the function
+> > hest_match_pci(). hest_match_pci() assumes that the HEST error source is
+> > type ACPI_HEST_TYPE_AER_ROOT_PORT, ACPI_HEST_TYPE_AER_ENDPOINT, or
+> > ACPI_HEST_TYPE_AER_BRIDGE. I have a platform that has some
+> > ACPI_HEST_TYPE_GENERIC error sources where hest_match_pci() was trying to
+> > access the structure as if it had the acpi_hest_aer_common fields.
+> > 
+> > aer_hest_parse() is only ever interested in the AER type HEST error
+> > sources. Add a check on the type of the error souce at the beginning of
+> > aer_hest_parse().
+> > 
+> > Signed-off-by: Betty Dall <betty.dall@hp.com>
+> > ---
+> > 
+> >  drivers/pci/pcie/aer/aerdrv_acpi.c |    4 ++++
+> >  1 files changed, 4 insertions(+), 0 deletions(-)
+> > 
+> > 
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+> > index cf611ab..39186e3 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+> > @@ -56,6 +56,10 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+> >  	struct acpi_hest_aer_common *p;
+> >  	int ff;
+> >  
+> > +	if (hest_hdr->type != ACPI_HEST_TYPE_AER_ROOT_PORT &&
+> > +		hest_hdr->type != ACPI_HEST_TYPE_AER_ENDPOINT &&
+> > +		hest_hdr->type != ACPI_HEST_TYPE_AER_BRIDGE)
+> > +		return 0;
+> >  	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+> >  	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+> >  	if (p->flags & ACPI_HEST_GLOBAL) {
+> 
+> Hi Betty,
+> 
+> I propose the following tweaked version.  Will this work for you?
+> 
+> 
+> PCI/AER: Ingore non-PCIe AER error sources in aer_hest_parse()
+> 
+> From: Betty Dall <betty.dall@hp.com>
+> 
+> aer_set_firmware_first() searches the HEST for an error source descriptor
+> matching the specified PCI device.  It uses the apei_hest_parse() iterator
+> to call aer_hest_parse() for every descriptor in the HEST.
+> 
+> Previously, aer_hest_parse() incorrectly assumed every descriptor was for a
+> PCIe error source.  This patch adds a check to avoid that error.
+> 
+> [bhelgaas: factor check into helper function, changelog]
+> Signed-off-by: Betty Dall <betty.dall@hp.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pcie/aer/aerdrv_acpi.c |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+> index cf611ab2193a..f670313479ee 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+> @@ -50,12 +50,24 @@ struct aer_hest_parse_info {
+>  	int firmware_first;
+>  };
+>  
+> +static int hest_source_is_pcie_aer(struct acpi_hest_header *hest_hdr)
+> +{
+> +	if (hest_hdr->type == ACPI_HEST_TYPE_AER_ROOT_PORT ||
+> +	    hest_hdr->type == ACPI_HEST_TYPE_AER_ENDPOINT ||
+> +	    hest_hdr->type == ACPI_HEST_TYPE_AER_BRIDGE)
+> +		return 1;
+> +	return 0;
+> +}
+> +
+>  static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+>  {
+>  	struct aer_hest_parse_info *info = data;
+>  	struct acpi_hest_aer_common *p;
+>  	int ff;
+>  
+> +	if (!hest_source_is_pcie_aer(hest_hdr))
+> +		return 0;
+> +
+>  	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+>  	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+>  	if (p->flags & ACPI_HEST_GLOBAL) {
 
-I guess I'm assuming that firmware-first means "the OS should not use
-AER at all for this device; any errors will be reported via HEST."  Is
-that true?
+Hi Bjorn,
 
-The term "firmware-first" definitely suggests that the firmware gets
-to process an error before the OS does anything.  It *could* also
-suggest that after the firmware gets first chance, the OS can do its
-normal error handling with AER.  But I hope that's not the case
-because I think it would be hard to coordinate.
+Yes, that is more readable code. Thanks for revising it. I tested it on
+my system that has non-AER error sources and it works fine. One nit is
+that "Ignore" is misspelled in the subject line. 
 
-Bjorn
+-Betty
 
->>> > Signed-off-by: Betty Dall <betty.dall@hp.com>
->>> > ---
->>> >
->>> >  drivers/pci/pcie/aer/aerdrv_core.c |    3 +++
->>> >  1 files changed, 3 insertions(+), 0 deletions(-)
->>> >
->>> >
->>> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
->>> > index b2c8881..1f60408 100644
->>> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
->>> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->>> > @@ -62,6 +62,9 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->>> >         int pos;
->>> >         u32 status;
->>> >
->>> > +       if (pcie_aer_get_firmware_first(dev))
->>> > +               return 0;
->>> > +
->>> >         pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
->>> >         if (!pos)
->>> >                 return -EIO;
->>
->>
+
