@@ -1,36 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:64760 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753612Ab3LNTDI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Dec 2013 14:03:08 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header file
-Date: Sat, 14 Dec 2013 20:02:38 +0100
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	"spear-devel" <spear-devel@list.st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <201312112348.06755.arnd@arndb.de> <2CC2A0A4A178534D93D5159BF3BCB66189F95F669D@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189F95F669D@EAPEX1MAIL1.st.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35807 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751846Ab3LMLdi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Dec 2013 06:33:38 -0500
+Date: Fri, 13 Dec 2013 11:29:25 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 04/11] PCI/MSI/pSeries: Make quota traversing and
+ requesting race-safe
+Message-ID: <20131213102924.GA14728@dhcp-26-207.brq.redhat.com>
+References: <cover.1385399393.git.agordeev@redhat.com>
+ <97749db3e9562eb05fb3ee22a0be0ed7a93a0615.1385399393.git.agordeev@redhat.com>
+ <20131210223020.GF4699@google.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312142002.38423.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131210223020.GF4699@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 13 December 2013, Mohit KUMAR DCG wrote:
-> > The RST bits should probably go into a drivers/reset driver. Not sure what the
-> > other registers do, but I'm sure we can find a driver for these too, possibly
-> > they should be part of the PHY driver?
+On Tue, Dec 10, 2013 at 03:30:20PM -0700, Bjorn Helgaas wrote:
+> Can you outline the race and the scenario that leads to incorrect results
+> or a crash?  I looked through rtas_setup_msi_irqs() (briefly) and I didn't
+> see the way that concurrent calls for different devices could interfere
+> with each other.
 > 
-> -  Perhaps if we implement phy and reset driver then we may not require to move these definitions and
-> it will address most of your comments on SPEar13xx pcie driver. I am understanding and working on this.l 
-> 
+> I was looking for some place that modifies state, where concurrent calls
+> might trample on each other, but it looks like msi_quota_for_device() is
+> pretty safe: it traverses a tree, but everything it computes is on the
+> stack and it doesn't seem to save results anywhere.  Maybe I'm barking up
+> the wrong tree?
 
-Ok, very good.
+Hmm. I've assumed the number of MSIs for a device is cached, and therefore
+concurrent calls to msi_quota_for_device() and rtas_change_msi() could race.
+But it seems msi_quota_for_device() indeed computes a quota while reading
+only device's properties and gains constant result (well, assuming the device
+tree is not updated, but this is a different story). Which makes me confused
+about this note from a earlier thread:
 
-	Arnd
+[quote]
+On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
+> So my point is - drivers should first obtain a number of MSIs they *can*
+> get, then *derive* a number of MSIs the device is fine with and only then
+> request that number. Not terribly different from memory or any other type
+> of resource allocation ;)
+
+What if the limit is for a group of devices ? Your interface is racy in
+that case, another driver could have eaten into the limit in between the
+calls.
+
+Ben.
+[/quote]
+
+Some comment from Ben would be nice, but I think the patch could be dropped
+for now.
+
+Thanks, Bjorn!
+
+> Bjorn
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
