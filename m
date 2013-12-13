@@ -1,69 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51895 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753874Ab3LTH1Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Dec 2013 02:27:16 -0500
-Date: Fri, 20 Dec 2013 15:25:57 +0800
-From: Baoquan He <bhe@redhat.com>
-To: Bill Sumner <bill.sumner@hp.com>
-Cc: indou.takao@jp.fujitsu.com, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, iommu@lists.linux-foundation.org,
-	linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
-	ddutile@redhat.com, doug.hatch@hp.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	dwmw2@infradead.org
-Subject: Re: [PATCHv2 4/6] Crashdump-Accepting-Active-IOMMU-Copy-Translations
-Message-ID: <20131220072557.GA4382@dhcp-16-105.nay.redhat.com>
-References: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
- <1387507787-14163-5-git-send-email-bill.sumner@hp.com>
- <20131220060429.GB32194@dhcp-16-116.nay.redhat.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:61830 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750891Ab3LMF7W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 00:59:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131220060429.GB32194@dhcp-16-116.nay.redhat.com>
+In-Reply-To: <CAErSpo6F_oLE2XLt9q5iQE3izuP1ZKW_rib60KKokaL9ewZogA@mail.gmail.com>
+References: <20131127184652.GA1856@kroah.com>
+	<CAErSpo46LZP8t+aLnYOtJ1mXKKkCF7sOy97MFd0hWo+OOoz68Q@mail.gmail.com>
+	<CAE9FiQUeyxN5OAaXqfhdQkzTwjV83BN-L3r6kH0sO0t1b1-63Q@mail.gmail.com>
+	<CAErSpo6_s6-Dc__-AzausBVDvOAY5beh7ivng2dWHUN1iRyj+g@mail.gmail.com>
+	<20131213020620.GF13333@kroah.com>
+	<CAErSpo6F_oLE2XLt9q5iQE3izuP1ZKW_rib60KKokaL9ewZogA@mail.gmail.com>
+Date: Thu, 12 Dec 2013 21:59:21 -0800
+Message-ID: <CAE9FiQUHSF4YCQR7DmCZPSviBGDxVdot9vYPVZtTnLMBgviLow@mail.gmail.com>
+Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Neil Horman <nhorman@tuxdriver.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Veaceslav Falico <vfalico@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Ingo Molnar <mingo@kernel.org>,
+	Paul McKenney <paulmck@linux.vnet.ibm.com>,
+	=?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/20/13 at 02:04pm, Baoquan He wrote:
-> On 12/19/13 at 07:49pm, Bill Sumner wrote:
-> 
-> > +static int copy_page_addr(u64 page_addr, u32 shift, u32 bus, u32 devfn,
-> > +				u64 pte, struct dmar_domain *domain,
-> > +				void *parms)
-> > +{
-> > +	struct copy_page_addr_parms *ppap = parms;
-> > +
-> > +	u64 page_size = ((u64)1 << shift);	/* page_size */
-> > +	u64 pfn_lo;				/* For reserving IOVA range */
-> > +	u64 pfn_hi;				/* For reserving IOVA range */
-> > +	struct iova *iova_p;			/* For reserving IOVA range */
-> > +
-> > +	if (!ppap) {
-> > +		pr_err("ERROR: ppap is NULL: 0x%3.3x(%3.3d) DevFn: 0x%3.3x(%3.3d) Page: 0x%16.16llx Size: 0x%16.16llx(%lld)\n",
-> > +			bus, bus, devfn, devfn,  page_addr,
-> > +			page_size, page_size);
-> > +		return 0;
-> > +	}
-> > +
-> 
-> > +	/* Prepare for a new page */
-> > +	ppap->first     = 0;		/* Not first-time anymore */
-> > +	ppap->bus       = bus;
-> > +	ppap->devfn     = devfn;
-> > +	ppap->shift     = shift;
-> > +	ppap->pte       = pte;
-> > +	ppap->next_addr = page_addr + page_size; /* Next-expected page_addr */
-> > +
-> > +	ppap->page_addr = page_addr;	/* Addr(new page) */
-> > +	ppap->page_size = page_size;	/* Size(new page) */
-> > +
-> > +	ppap->domain    = domain;	/* adr(domain for the new range) */
-> 
-> Here I am confused, ppap is used to collect the copied ranges and
-> necessary information. To my understanding, this domain is the
-> dmar_domain which the 1st device is on. When ppat->last is set to 1,
-> among the whole collected range, there may be many domains. I just feel
-> not good for this. Is it OK to define a specific lock for ppap
-> structure, possibly? Please correct me if I am wrong.
+On Thu, Dec 12, 2013 at 8:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> No problem.  I have
+>
+> CONFIG_LOCKDEP_SUPPORT=y
+> CONFIG_LOCKDEP=y
+> CONFIG_DEBUG_LOCKDEP=y
+>
+> and I still don't see the problem booting the qemu q35 model.
+> Whatever, I folded it in anyway.
 
-Well, check it again. It's not about the lock. Just all address is
-recorded in one dmar_domain.
+Does qemu q35 use MSI?
+
+Yinghai
