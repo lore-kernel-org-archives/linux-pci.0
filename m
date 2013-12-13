@@ -1,166 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:51979 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755284Ab3LCWdk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 17:33:40 -0500
-Message-ID: <529E5C40.5010300@gmail.com>
-Date: Tue, 03 Dec 2013 14:33:36 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>
-CC: Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH v2 4/4] pciehp: Introduce hotplug_lock to serialize HP events
+In-Reply-To: <1386949306-30601-1-git-send-email-betty.dall@hp.com>
+References: <1386949306-30601-1-git-send-email-betty.dall@hp.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 13 Dec 2013 15:35:15 -0700
+Message-ID: <CAErSpo4tswv8PHGOQDviFj6Rc7QMYkWQ5rhMCFmHZFL9jM6oBQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI AER: handle pci_cleanup_aer_uncorrect_error_status()
+ in firmware first mode
+To: Betty Dall <betty.dall@hp.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Today it is there is no protection around pciehp_enable_slot() and
-pciehp_disable_slot() to ensure that they complete before another
-hot-plug operation can be done on that particular slot.
+On Fri, Dec 13, 2013 at 8:41 AM, Betty Dall <betty.dall@hp.com> wrote:
+> There are three functions exported from aerdrv_core.c that could be
+> called when the system is in firmware first mode:
+> pci_enable_pcie_error_reporting(), pci_disable_pcie_error_reporting, and
+> pci_cleanup_aer_uncorrect_error_status(). The first two functions check if
+> we are in firmware first mode and return immediately.
+> pci_cleanup_aer_uncorrect_error_status() does not check firmware first
+> mode. The problem is that all of these functions should not access the AER
+> registers in firmware first mode because the firmware has not granted OS
+> control of the AER registers through the _OSC.
 
-This patch introduces the slot->hotplug_lock to ensure that any
-hotplug operations (add / remove) complete before another HP event
-can begin processing on that particular slot.
+This looks like a good fix to me.  If I read aer_acpi_firmware_first()
+correctly, we don't even *ask* for control of AER if
+ACPI_HEST_FIRMWARE_FIRST appears anywhere in the HEST.  Does that
+match your understanding?
 
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
- v2: Same as v1, dropped the "RFC" from subject, added Guenter's signature
+> Many drivers call this
+> function in their pci_error_handlers in firmware first mode.
 
- drivers/pci/hotplug/pciehp.h      |    1 +
- drivers/pci/hotplug/pciehp_core.c |    7 ++++++-
- drivers/pci/hotplug/pciehp_ctrl.c |   17 +++++++++++++++--
- drivers/pci/hotplug/pciehp_hpc.c  |    1 +
- 4 files changed, 23 insertions(+), 3 deletions(-)
+Drivers don't have any idea whether their device is in firmware-first
+mode, do they?
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 353edda..33ef8e4 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -77,6 +77,7 @@ struct slot {
- 	struct hotplug_slot *hotplug_slot;
- 	struct delayed_work work;	/* work for button event */
- 	struct mutex lock;
-+	struct mutex hotplug_lock;
- 	struct workqueue_struct *wq;
- };
- 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index f4a18f5..3904483 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -278,8 +278,11 @@ static int pciehp_probe(struct pcie_device *dev)
- 	slot = ctrl->slot;
- 	pciehp_get_adapter_status(slot, &occupied);
- 	pciehp_get_power_status(slot, &poweron);
--	if (occupied && pciehp_force)
-+	if (occupied && pciehp_force) {
-+		mutex_lock(&slot->hotplug_lock);
- 		pciehp_enable_slot(slot);
-+		mutex_unlock(&slot->hotplug_lock);
-+	}
- 	/* If empty slot's power status is on, turn power off */
- 	if (!occupied && poweron && POWER_CTRL(ctrl))
- 		pciehp_power_off_slot(slot);
-@@ -323,10 +326,12 @@ static int pciehp_resume (struct pcie_device *dev)
- 
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
-+	mutex_lock(&slot->hotplug_lock);
- 	if (status)
- 		pciehp_enable_slot(slot);
- 	else
- 		pciehp_disable_slot(slot);
-+	mutex_unlock(&slot->hotplug_lock);
- 	return 0;
- }
- #endif /* PM */
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index c2cd02a..d3b1012 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -314,6 +314,7 @@ static void pciehp_power_thread(struct work_struct *work)
- 	struct power_work_info *info =
- 		container_of(work, struct power_work_info, work);
- 	struct slot *p_slot = info->p_slot;
-+	int ret;
- 
- 	switch (info->req) {
- 	case DISABLE_REQ:
-@@ -321,7 +322,9 @@ static void pciehp_power_thread(struct work_struct *work)
- 			 "Disabling domain:bus:device=%04x:%02x:00\n",
- 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
- 			 p_slot->ctrl->pcie->port->subordinate->number);
-+		mutex_lock(&p_slot->hotplug_lock);
- 		pciehp_disable_slot(p_slot);
-+		mutex_unlock(&p_slot->hotplug_lock);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
- 		mutex_unlock(&p_slot->lock);
-@@ -331,7 +334,10 @@ static void pciehp_power_thread(struct work_struct *work)
- 			 "Enabling domain:bus:device=%04x:%02x:00\n",
- 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
- 			 p_slot->ctrl->pcie->port->subordinate->number);
--		if (pciehp_enable_slot(p_slot) && PWR_LED(p_slot->ctrl))
-+		mutex_lock(&p_slot->hotplug_lock);
-+		ret = pciehp_enable_slot(p_slot);
-+		mutex_unlock(&p_slot->hotplug_lock);
-+		if (ret && PWR_LED(p_slot->ctrl))
- 			pciehp_green_led_off(p_slot);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
-@@ -611,6 +617,9 @@ static void interrupt_event_handler(struct work_struct *work)
- 	kfree(info);
- }
- 
-+/*
-+ * Note: This function must be called with slot->hotplug_lock held
-+ */
- int pciehp_enable_slot(struct slot *p_slot)
- {
- 	u8 getstatus = 0;
-@@ -649,7 +658,9 @@ int pciehp_enable_slot(struct slot *p_slot)
- 	return rc;
- }
- 
--
-+/*
-+ * Note: This function must be called with slot->hotplug_lock held
-+ */
- int pciehp_disable_slot(struct slot *p_slot)
- {
- 	u8 getstatus = 0;
-@@ -692,7 +703,9 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
- 	case STATIC_STATE:
- 		p_slot->state = POWERON_STATE;
- 		mutex_unlock(&p_slot->lock);
-+		mutex_lock(&p_slot->hotplug_lock);
- 		retval = pciehp_enable_slot(p_slot);
-+		mutex_unlock(&p_slot->hotplug_lock);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
- 		break;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 1f152f3..1c014e9 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -811,6 +811,7 @@ static int pcie_init_slot(struct controller *ctrl)
- 
- 	slot->ctrl = ctrl;
- 	mutex_init(&slot->lock);
-+	mutex_init(&slot->hotplug_lock);
- 	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
- 	ctrl->slot = slot;
- 	return 0;
--- 
-1.7.9.5
+> The fix is to change pci_cleanup_aer_uncorrect_error_status() to check
+> firmware first mode before accessing the AER registers. If it is in firmware
+> first mode, return 0. I considered returning -EIO, but decided the status
+> has been cleaned up appropriately for firmware first. Returning 0 also avoids
+> an error message. Not many places check the return of this function, and the
+> ones that do, print an error message and continue such as:
+>    err = pci_cleanup_aer_uncorrect_error_status(pdev);
+>    if (err) {
+>        dev_err(&pdev->dev,
+>            "pci_cleanup_aer_uncorrect_error_status failed 0x%0x\n",
+>             err); /* non-fatal, continue */
+>    }
+> That error message is how I found this problem, and it is not applicable
+> for the firmware first recovery path.
 
+I'm curious -- did you find this problem because you saw a message
+when pci_cleanup_aer_uncorrect_error_status() returned failure?  The
+only way it can return failure is if there is no AER capability, and
+that should be completely independent of whether we're in
+firmware-first mode.
+
+> Signed-off-by: Betty Dall <betty.dall@hp.com>
+> ---
+>
+>  drivers/pci/pcie/aer/aerdrv_core.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>
+>
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index b2c8881..1f60408 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -62,6 +62,9 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+>         int pos;
+>         u32 status;
+>
+> +       if (pcie_aer_get_firmware_first(dev))
+> +               return 0;
+> +
+>         pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+>         if (!pos)
+>                 return -EIO;
