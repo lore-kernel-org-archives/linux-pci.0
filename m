@@ -1,56 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:62326 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752635Ab3LWRUB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Dec 2013 12:20:01 -0500
-Received: by mail-ig0-f181.google.com with SMTP id k19so13673154igc.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Dec 2013 09:20:01 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20131223144418.GA11342@dhcp-26-207.brq.redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com> <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
- <20131218003002.GA15119@google.com> <20131223144418.GA11342@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <CAMxnaaVEzSuEXRyX5KKKvUJFKTGikP_hfQddT6Ke7Dx6boOuKQ@mail.gmail.com>
+References: <CAMxnaaWgUPRb3L2aKpUu62F73GR2iXOfd6LUnTkU0O=Gq-E_sQ@mail.gmail.com>
+ <CAE9FiQUtqtBLx3_pdhs=CjgqViGrDL9xdCjLKgs66jA-apHdQA@mail.gmail.com> <CAMxnaaVEzSuEXRyX5KKKvUJFKTGikP_hfQddT6Ke7Dx6boOuKQ@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 23 Dec 2013 10:19:41 -0700
-Message-ID: <CAErSpo6urD4Gd4STW3=SzeNfvZrstqTpfzouCvEwqDLoMpBpng@mail.gmail.com>
-Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family helpers
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@aculab.com>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Date: Fri, 13 Dec 2013 10:09:54 -0700
+Message-ID: <CAErSpo6gy9ZMcv=2+aWbT1CeZ=1kkvu74eNgMrU1y4Nxs40eAw@mail.gmail.com>
+Subject: Re: How to reserve pci bus numbers for hotplug?
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 23, 2013 at 7:44 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Tue, Dec 17, 2013 at 05:30:02PM -0700, Bjorn Helgaas wrote:
->> > +int pci_auto_enable_msi_range(struct pci_dev *dev, struct msix_entry *entries,
->> > +                         int minvec, int maxvec)
->
-> [...]
->
->> > +If this function returns a positive number it indicates at least the
->> > +returned number of MSI interrupts have been successfully allocated (it may
->> > +have allocated more in order to satisfy the power-of-two requirement).
+On Thu, Dec 12, 2013 at 12:56 PM, Andreas Noever
+<andreas.noever@gmail.com> wrote:
+> On Thu, Dec 12, 2013 at 1:21 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Dec 11, 2013 at 3:37 PM, Andreas Noever
+>> <andreas.noever@gmail.com> wrote:
 >>
->> I assume this means the return value may be larger than the "maxvec"
->> requested, right?  And the driver is free to use all the vectors up to the
->> return value, even those above maxvec, right?
+>>> If I could get Linux to assign enough resources (bus numbers for now)
+>>> then I could drop the acpi_osi parameter and make thunderbolt work
+>>> after suspend... So, is there an easy way to fix this? (Quirks,
+>>> reconfiguring bus number assignments from a platform driver, ...?)
+>>
+>> please check if busn_alloc at
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>> for-pci-busn-alloc-3.14
+>>
+>> could help.
 >
-> No, the returned value may not be larger than the "maxvec" ever. This is just
-> paraphrasing the semantics of exisitng pci_enable_msi_block() interface - a
-> value written to MMC register might be larger than the returned value, but the
-> driver may not use the extra vectors it did not request.
+> It seems to help. The initial assignment looks good:
+>            +-01.1-[05-9b]----00.0-[06-27]--+-00.0-[07]----00.0  Intel
+> Corporation DSL3510 Thunderbolt Port [Cactus Ridge]
+>            |                               +-03.0-[08-0f]--
+>            |                               +-04.0-[10-17]--
+>            |                               +-05.0-[18-1f]--
+>            |                               \-06.0-[20-27]--
+> After hotplug it looks like this:
+>            +-01.1-[05-9b]----00.0-[06-29]--+-00.0-[07]----00.0  Intel
+> Corporation DSL3510 Thunderbolt Port [Cactus Ridge]
+>            |
+> +-03.0-[08-11]----00.0-[09-11]----00.0-[0a-11]----00.0  Broadcom
+> Corporation NetXtreme BCM57762 Gigabit Ethernet PCIe
+>            |                               +-04.0-[10-17]--
+>            |                               +-05.0-[18-1f]--
+>            |                               \-06.0-[20-27]--
+> (Note that the bridge numbers are not disjoint)
+>
+> dmesg is attached.
+>
+> What is the status of the patch? Will it be merged for 3.14?
 
-Then I think we should remove the "(it may have allocated more...)"
-text.  If the driver can't use those extra vectors, they are an
-internal implementation detail, and mentioning them here will only
-cause confusion.  The "at least" text should also be removed.  From
-the driver's point of view, it can use exactly the number of
-interrupts returned.
+It's not on my radar yet, so likely won't make it for v3.14.
+
+Can you open a report at http://bugzilla.kernel.org and attach
+complete dmesg logs without and with Yinghai's patches, and also the
+complete "lspci -vv" output?
 
 Bjorn
