@@ -1,89 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <52AA7760.20603@jp.fujitsu.com>
+Date: Fri, 13 Dec 2013 11:56:32 +0900
+From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <1385429290-25397-11-git-send-email-yinghai@kernel.org>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-11-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 20 Dec 2013 17:27:23 -0700
-Message-ID: <CAErSpo7THxjUQ=EWxicPYCwQCHReJ=sxPyPPRFv4QQ=ex6wmOA@mail.gmail.com>
-Subject: Re: [PATCH v2 10/10] intel-gtt: Read 64bit for gmar_bus_addr
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Airlie <airlied@linux.ie>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
+Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out
+ of the core
+References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <1554480.uCR6qUxJk9@vostro.rjw.lan> <529D4600.6040601@jp.fujitsu.com> <81535269.SKoBMiGyoU@vostro.rjw.lan>
+In-Reply-To: <81535269.SKoBMiGyoU@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> That bar could be 64bit pref mem and above 4G.
->
-> -v2: refresh to 3.13-rc1
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: David Airlie <airlied@linux.ie>
-> Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
-> ---
->  drivers/char/agp/intel-gtt.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
-> index b8e2014..b929e9d 100644
-> --- a/drivers/char/agp/intel-gtt.c
-> +++ b/drivers/char/agp/intel-gtt.c
-> @@ -609,8 +609,10 @@ static bool intel_gtt_can_wc(void)
->  static int intel_gtt_init(void)
->  {
->         u32 gma_addr;
-> +       u32 addr_hi = 0;
->         u32 gtt_map_size;
->         int ret;
-> +       int pos;
->
->         ret = intel_private.driver->setup();
->         if (ret != 0)
-> @@ -660,13 +662,17 @@ static int intel_gtt_init(void)
->         }
->
->         if (INTEL_GTT_GEN <= 2)
-> -               pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
-> -                                     &gma_addr);
-> +               pos = I810_GMADDR;
->         else
-> -               pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
-> -                                     &gma_addr);
-> +               pos = I915_GMADDR;
-> +
-> +       pci_read_config_dword(intel_private.pcidev, pos, &gma_addr);
-> +
-> +       if (gma_addr & PCI_BASE_ADDRESS_MEM_TYPE_64)
-> +               pci_read_config_dword(intel_private.pcidev, pos + 4, &addr_hi);
+Hi Rafael,
 
-Why are we reading these BARs directly anyway?  These look like
-standard PCI BARs (I810_GMADDR == 0x10 and I915_GMADDR == 0x18), so
-the PCI core should already be reading them correctly, shouldn't it?
-Can't we just use pcibios_resource_to_bus(pci_resource_start())?
+Please share your more detailed idea. I started to implement the following
+idea. But the idea has one problem.
 
-It looks like i810_setup(), i830_setup(), and i9xx_setup() have the
-same problem and should also be using pci_resource_start() or
-something similar.
+>>> The eject work flow can be:
+>>>     (1) an eject event occurs,
+>>>     (2) the container "physical" device fails offline in acpi_scan_hot_remove()
+>>>         emmitting, say, KOBJ_CHANGE for the "physical" device,
+>>>     (3) user space notices the KOBJ_CHANGE and does the cleanup as needed,
+>>>     (4) user space changes the "physical" container device flag controlling
+>>>         offline to 0,
+>>>     (5) user space uses the sysfs "eject" attribute of the ACPI container object
+>>>         to finally eject the container,
+>>>     (6) the offline in acpi_scan_hot_remove() is now successful, because the
+>>>         flag controlling it has been set to 0 in step (4),
+>>>     (7) the "physical" container device goes away before executing _EJ0,
+>>>     (8) the container is ejected.
 
-And I'm confused because the i915_gmch_probe() path fills in
-gtt->mappable_base with the bus address, but the gen6_gmch_probe()
-path uses the resource, i.e., the CPU, address.  That looks broken to
-me.
+I want to emit KOBJ_CHANGE before offlining devices on container device at (2).
+But acpi_scan_hot_remove() offlines devices on container device at first.
+So when offline container device, devices on container has been offlined.
 
-agp_serverworks_probe() looks like another place that should not be
-reading the BARs directly.
+Thus the idea cannot fulfill my necessary feature.
 
+Thanks,
+Yasauaki Ishimatsu
+
+Thanks,
+Yasauaki Ishimatsu
+
+>>>
+>>> Of course, if the flag controlling container offline is 0 to start with, step
+>>> (6) will now occur directly after (1), so whoever wants containers to be
+>>> hot-removed automatically may just clear that flag for all of them on boot.
+>>>
+>>> How does that sound?
+>>
+>>
+>> The above ideas are almost O.K. I want kernel to notify user space of KOBJ_OFFLINE.
+>> Even if user space catches "KOBJ_CHANGE", user doesn't know whether the notification
+>> is offline or not.
 >
->         intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
-> +       intel_private.gma_bus_addr |= (u64)addr_hi << 32;
+> It is easy to figure out, though.  Since the KOBJ_CHANGE will be emitted for
+> container devices only in that situation, user space can see that (1) it is
+> from a container and (2) it is KOBJ_CHANGE, so it must mean "container offline
+> has been attempted".
 >
->         return 0;
->  }
-> --
-> 1.8.1.4
+> My concern with using KOBJ_OFFLINE for that is that device_offline() emits it
+> too on success and it may be easily confused with the one emitted on failure
+> for containers.
 >
+> Thanks,
+> Rafael
+>
+
+
