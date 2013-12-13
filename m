@@ -1,46 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:64384 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753590Ab3LNTCK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Dec 2013 14:02:10 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 09/12] pcie: SPEAr13xx: Add designware pcie support
-Date: Sat, 14 Dec 2013 20:01:55 +0100
-Cc: "'Mohit KUMAR DCG'" <Mohit.KUMAR@st.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	"'Pratyush ANAND'" <pratyush.anand@st.com>,
-	"'Viresh Kumar'" <viresh.linux@gmail.com>,
-	"'spear-devel'" <spear-devel@list.st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <2CC2A0A4A178534D93D5159BF3BCB66189F95F66A2@EAPEX1MAIL1.st.com> <002c01cef7bf$c5a7b640$50f722c0$%han@samsung.com>
-In-Reply-To: <002c01cef7bf$c5a7b640$50f722c0$%han@samsung.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:55272 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822Ab3LMVOa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 16:14:30 -0500
+Received: by mail-ie0-f175.google.com with SMTP id x13so3642817ief.20
+        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 13:14:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312142001.56359.arnd@arndb.de>
+In-Reply-To: <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com>
+ <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
+ <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com> <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 13 Dec 2013 14:14:10 -0700
+Message-ID: <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
+ and removal
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Guenter Roeck <linux@roeck-us.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 13 December 2013, Jingoo Han wrote:
-> Arnd, do you mean the following?
-> 
-> 1. Implement Spear PCIe PHY driver using General PHY framework.
->   ./drivers/phy/phy-spear13xx-pcie.c
-> 
-> 2. Call General PHY APIs
->   ./drivers/pci/host/pcie-spear13xx.c
->   #include <linux/phy/phy.h>
-> 
->   pp->phy = devm_phy_get(pp->dev, ...);
-> 
->   phy_power_on(pp->phy);
-> 
->   phy_power_off(pp->phy);
+On Fri, Dec 13, 2013 at 12:04 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+>> On Thu, Dec 12, 2013 at 11:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> > On Thu, Dec 12, 2013 at 2:44 PM, Bjorn Helgaas <bhelgaas@google.com>
 
-Yes, exactly.
+> Also, I think the device removal should _always_ be initiated (if not done already) whenever the Link goes down for any reason (irrespective of whether the attention button is implemented or not, or whether the surprise events are supported or not). I think this is logical as it makes no sense for the software to think the device is accessible when in reality it is not. In fact I think we should also remove the checks in pciehp_disable_slot() that ensure that the adapter should be populated and latch should be closed.
 
-Of course if the phy driver is licensed from some other company such as
-designware as well, or if it can handle more than just pcie, the
-implementation of the phy driver and the binding should reflect that.
+I agree.
 
-	Arnd
+>> What does the "other OS" do about this repeater?  Did you verify that it
+>> disables the link when powering off the slot?  If we were smarter about
+>> presence detect, I wonder if that would be enough.
+>>
+>> > Also we can get rid of annoying aer during power off slot.
+>>
+>> I don't know the details of this issue.  It may be possible to avoid the
+>> AER in some way other than turning off the link.
+>
+> Sorry, I could not understand what we are talking about here. I'd appreciate if you could elaborate if you see this as a problem related to the patch?
+
+I assume Yinghai means that when we power off the slot, if AER is
+still enabled, it may report errors caused by the link going down.
+PCIe r3.0 sec. 3.2.1 says some of these cases must not be considered
+errors if the link is disabled, the port is associated with a
+hot-pluggable slot, etc.  Maybe his platform doesn't follow those
+rules, or maybe there's some other AER error that's not covered by
+them.
+
+It's related to your patch because you are removing the link disable,
+and Yinghai says that if we leave the link enabled, he gets unwanted
+AER errors when powering off the slot.  Sorry if this was all obvious
+to you.  I don't know any more details.  It'd be nice to know the
+exact AER errors and the PCIe capability info.  Then we might be able
+to figure out a way to leave the link enabled while still suppressing
+the AER errors.
+
+> Once again: the way I interpret this is:
+> * Always enable Link events.
+> * Disable presence events if attention button is present.
+
+That sounds like a good plan to me.
+
+I'm also dubious about this use of presence detect:
+
+    pciehp_power_thread
+      pciehp_enable_slot
+        pciehp_get_adapter_status
+          pciehp_readw(ctrl, PCI_EXP_SLTSTA, &slot_status)
+          *status = !!(slot_status & PCI_EXP_SLTSTA_PDS)
+        board_added
+          pciehp_power_on_slot
+
+because we apparently look at PCI_EXP_SLTSTA_PDS when the slot is
+powered off.  Only in-band presence detection is required by spec, and
+in-band detection only works when power is applied.  So I think this
+pciehp_get_adapter_status() call should probably just be removed.
+
+Bjorn
