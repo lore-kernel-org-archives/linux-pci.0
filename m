@@ -1,97 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754261Ab3LFDUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Dec 2013 22:20:46 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiri Kosina <trivial@kernel.org>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part1 V2 05/20] iommu/vt-d, trivial: refine support of 64bit guest address
-Date: Fri,  6 Dec 2013 11:21:08 +0800
-Message-Id: <1386300083-6882-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:45988
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751773Ab3LMHAl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 02:00:41 -0500
+Date: Fri, 13 Dec 2013 15:01:11 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Marek Vasut <marex@denx.de>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 7/7] ARM: dts: imx6q-sabrelite: Enable PCI express
+Message-ID: <20131213070109.GQ18380@S2101-09.ap.freescale.net>
+References: <1386757818-5154-1-git-send-email-marex@denx.de>
+ <1386757818-5154-7-git-send-email-marex@denx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1386757818-5154-7-git-send-email-marex@denx.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In Intel IOMMU driver, it calculate page table level from adjusted guest
-address width as 'level = (agaw - 30) / 9', which assumes (agaw -30)
-could be divided by 9. On the other hand, 64bit is a valid agaw and
-(64 - 30) can't be divided by 9, so it needs special handling.
+On Wed, Dec 11, 2013 at 11:30:18AM +0100, Marek Vasut wrote:
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Frank Li <lznuaa@gmail.com>
+> Cc: Harro Haan <hrhaan@gmail.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> Cc: Sean Cross <xobs@kosagi.com>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> Cc: Tim Harvey <tharvey@gateworks.com>
+> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
 
-This patch enhances Intel IOMMU driver to correctly handle 64bit agaw.
-It's mainly for code readability because there's no hardware supporting
-64bit agaw yet.
+Applied, thanks.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 2398876..70bc071 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -63,6 +63,7 @@
- #define DEFAULT_DOMAIN_ADDRESS_WIDTH 48
- 
- #define MAX_AGAW_WIDTH 64
-+#define MAX_AGAW_PFN_WIDTH	(MAX_AGAW_WIDTH - VTD_PAGE_SHIFT)
- 
- #define __DOMAIN_MAX_PFN(gaw)  ((((uint64_t)1) << (gaw-VTD_PAGE_SHIFT)) - 1)
- #define __DOMAIN_MAX_ADDR(gaw) ((((uint64_t)1) << gaw) - 1)
-@@ -106,12 +107,12 @@ static inline int agaw_to_level(int agaw)
- 
- static inline int agaw_to_width(int agaw)
- {
--	return 30 + agaw * LEVEL_STRIDE;
-+	return min_t(int, 30 + agaw * LEVEL_STRIDE, MAX_AGAW_WIDTH);
- }
- 
- static inline int width_to_agaw(int width)
- {
--	return (width - 30) / LEVEL_STRIDE;
-+	return DIV_ROUND_UP(width - 30, LEVEL_STRIDE);
- }
- 
- static inline unsigned int level_to_offset_bits(int level)
-@@ -141,7 +142,7 @@ static inline unsigned long align_to_level(unsigned long pfn, int level)
- 
- static inline unsigned long lvl_to_nr_pages(unsigned int lvl)
- {
--	return  1 << ((lvl - 1) * LEVEL_STRIDE);
-+	return  1 << min_t(int, (lvl - 1) * LEVEL_STRIDE, MAX_AGAW_PFN_WIDTH);
- }
- 
- /* VT-d pages must always be _smaller_ than MM pages. Otherwise things
-@@ -865,7 +866,6 @@ static int dma_pte_clear_range(struct dmar_domain *domain,
- 	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
- 	unsigned int large_page = 1;
- 	struct dma_pte *first_pte, *pte;
--	int order;
- 
- 	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
- 	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
-@@ -890,8 +890,7 @@ static int dma_pte_clear_range(struct dmar_domain *domain,
- 
- 	} while (start_pfn && start_pfn <= last_pfn);
- 
--	order = (large_page - 1) * 9;
--	return order;
-+	return min_t(int, (large_page - 1) * 9, MAX_AGAW_PFN_WIDTH);
- }
- 
- static void dma_pte_free_level(struct dmar_domain *domain, int level,
--- 
-1.7.10.4
+> ---
+>  arch/arm/boot/dts/imx6q-sabrelite.dts | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/arch/arm/boot/dts/imx6q-sabrelite.dts b/arch/arm/boot/dts/imx6q-sabrelite.dts
+> index fca8f220..f570ad5 100644
+> --- a/arch/arm/boot/dts/imx6q-sabrelite.dts
+> +++ b/arch/arm/boot/dts/imx6q-sabrelite.dts
+> @@ -190,6 +190,10 @@
+>  	};
+>  };
+>  
+> +&pcie {
+> +	status = "okay";
+> +};
+> +
+>  &sata {
+>  	status = "okay";
+>  };
+> -- 
+> 1.8.4.3
+> 
 
