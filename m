@@ -1,128 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.active-venture.com ([67.228.131.205]:61687 "EHLO
-	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752782Ab3LBDzx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 22:55:53 -0500
-Message-ID: <529C04C7.9050506@roeck-us.net>
-Date: Sun, 01 Dec 2013 19:55:51 -0800
-From: Guenter Roeck <linux@roeck-us.net>
+Received: from v094114.home.net.pl ([79.96.170.134]:60993 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751880Ab3LNEx4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 23:53:56 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Moore, Robert" <robert.moore@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
+Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out of the core
+Date: Sat, 14 Dec 2013 06:07:06 +0100
+Message-ID: <3111545.W6MaeKuZVj@vostro.rjw.lan>
+In-Reply-To: <52AA986C.7050305@jp.fujitsu.com>
+References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <4217831.DpCd0ng0jT@vostro.rjw.lan> <52AA986C.7050305@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Jingoo Han <jg1.han@samsung.com>
-CC: 'Joe Perches' <joe@perches.com>,
-	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	'Andrew Morton' <akpm@linux-foundation.org>,
-	'Andy Whitcroft' <apw@canonical.com>,
-	linux-serial@vger.kernel.org
-Subject: Re: [PATCH 1/5] serial: 8250_pci: use DEFINE_PCI_DEVICE_TABLE macro
-References: <000601ceebdc$ee148de0$ca3da9a0$%han@samsung.com> <20131128040750.GA29917@kroah.com> <006001ceebfa$c85a1020$590e3060$%han@samsung.com> <1385617213.12210.5.camel@joe-AO722> <20131128055328.GA565@kroah.com> <1385619863.12210.14.camel@joe-AO722> <529C026E.2000302@roeck-us.net> <000f01ceef11$a14acf00$e3e06d00$%han@samsung.com>
-In-Reply-To: <000f01ceef11$a14acf00$e3e06d00$%han@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/01/2013 07:50 PM, Jingoo Han wrote:
-> On Monday, December 02, 2013 12:46 PM, Guenter Roeck wrote:
->> On 12/01/2013 04:07 PM, Jingoo Han wrote:
->>> On Friday, November 29, 2013 10:34 AM, Jingoo Han wrote:
->>>> On Thursday, November 28, 2013 3:24 PM, Joe Perches wrote:
->>>>> On Wed, 2013-11-27 at 21:53 -0800, 'Greg Kroah-Hartman' wrote:
->>>>>> On Wed, Nov 27, 2013 at 09:40:13PM -0800, Joe Perches wrote:
->>>>>>> On Thu, 2013-11-28 at 14:29 +0900, Jingoo Han wrote:
->>>>>>>> On Thursday, November 28, 2013 1:08 PM, Greg Kroah-Hartman wrote:
->>>>>>>>> On Thu, Nov 28, 2013 at 10:55:35AM +0900, Jingoo Han wrote:
->>>>>>>>>> This macro is used to create a struct pci_device_id array.
->>>>>>>>>
->>>>>>>>> Yeah, and it's a horrid macro that deserves to be removed, please don't
->>>>>>>>> use it in more places.
->>>>>>>>>
->>>>>>>>> Actually, if you could just remove it, that would be best, sorry, I'm
->>>>>>>>> not going to take these patches.
->>>>>>>>
->>>>>>>> (+cc Joe Perches, Andrew Morton, Andy Whitcroft)
->>>>>>>>
->>>>>>>> Hi Joe Perches,
->>>>>>>>
->>>>>>>> Would you fix checkpatch.pl about DEFINE_PCI_DEVICE_TABLE?
->>>>>>>> Currently, checkpatch.pl guides to use DEFINE_PCI_DEVICE_TABLE
->>>>>>>> as below.
->>>>>>>>
->>>>>>>>     WARNING: Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id
->>>>>>>>     #331: FILE: drivers/usb/host/ehci-pci.c:331:
->>>>>>>>     +static const struct pci_device_id pci_ids [] = { {
->>>>>>>>
->>>>>>>> However, Greg Kroah-Hartman mentioned that DEFINE_PCI_DEVICE_TABLE
->>>>>>>> shouldn't be used anymore.
->>>>>>>>
->>>>>>>> So, would you change checkpatch.pl in order to guide to use
->>>>>>>> struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE?
->>>>>>>>
->>>>>>>> For example,
->>>>>>>>     WARNING: Use struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE
->>>>>>>
->>>>>>> The documentation doesn't agree with Greg.
->>>>> []
->>>>>> I say just remove it, I should have done that years ago when I was the
->>>>>> PCI maintainer, just never got around to it.  No other bus has something
->>>>>> like this for their device ids, why should PCI be "special"?
->>>>>
->>>>> Anyone else have an opinion?
->>>>>
->>>>> I don't care one way or another, but please, one way
->>>>> not two.
->>>>
->>
->> Same here.
->>
->>>> (+cc Bjorn Helgaas, linux-pci)
->>>>
->>>> Then, how about the following steps?
->>>>
->>>> 1. Fix ./Documentation/PCI/pci.txt as below.
->>>>      (Jingoo Han)
->>>>      The ID table is an array of struct pci_device_id entries ending with an
->>>>      -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
->>>>      -method of declaring the table.  Each entry consists of:
->>>>      +all-zero entry; Each entry consists of:
->>>>
->>>> 2. Fix ./scripts/checkpatch.pl in order to guide to use
->>>>       struct pci_device_id instead of DEFINE_PCI_DEVICE_TABLE.
->>>>       (Joe Perches)
->>>
->>> If all DEFINE_PCI_DEVICE_TABLEs are replaced with 'const struct pci_device_id'
->>> and these patches are merged through 'driver-core.git', it will be not
->>> necessary to fix ./scripts/checkpatch.pl.
->>>
->> Why not ?
->
-> I will replace all DEFINE_PCI_DEVICE_TABLEs with 'const struct pci_device_id',
-> and remove the definition of DEFINE_PCI_DEVICE_TABLE macro.
->
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -631,16 +631,6 @@ struct pci_driver {
->   #define        to_pci_driver(drv) container_of(drv, struct pci_driver, driver)
->
->   /**
-> - * DEFINE_PCI_DEVICE_TABLE - macro used to describe a pci device table
-> - * @_table: device table name
-> - *
-> - * This macro is used to create a struct pci_device_id array (a device table)
-> - * in a generic manner.
-> - */
-> -#define DEFINE_PCI_DEVICE_TABLE(_table) \
-> -       const struct pci_device_id _table[]
-> -
-> -/**
->
-> In this case, there is no DEFINE_PCI_DEVICE_TABLE usage
-> in the kernel. If someone uses DEFINE_PCI_DEVICE_TABLE macro,
-> it will make  build error.
->
+On Friday, December 13, 2013 02:17:32 PM Yasuaki Ishimatsu wrote:
+> (2013/12/13 13:56), Rafael J. Wysocki wrote:
+> > On Friday, December 13, 2013 11:56:32 AM Yasuaki Ishimatsu wrote:
+> >> Hi Rafael,
+> >
+> > Hi,
+> >
+> >> Please share your more detailed idea. I started to implement the following
+> >> idea. But the idea has one problem.
+> >>
+> >>>>> The eject work flow can be:
+> >>>>>      (1) an eject event occurs,
+> >>>>>      (2) the container "physical" device fails offline in acpi_scan_hot_remove()
+> >>>>>          emmitting, say, KOBJ_CHANGE for the "physical" device,
+> >>>>>      (3) user space notices the KOBJ_CHANGE and does the cleanup as needed,
+> >>>>>      (4) user space changes the "physical" container device flag controlling
+> >>>>>          offline to 0,
+> >>>>>      (5) user space uses the sysfs "eject" attribute of the ACPI container object
+> >>>>>          to finally eject the container,
+> >>>>>      (6) the offline in acpi_scan_hot_remove() is now successful, because the
+> >>>>>          flag controlling it has been set to 0 in step (4),
+> >>>>>      (7) the "physical" container device goes away before executing _EJ0,
+> >>>>>      (8) the container is ejected.
+> >>
+> >> I want to emit KOBJ_CHANGE before offlining devices on container device at (2).
+> >> But acpi_scan_hot_remove() offlines devices on container device at first.
+> >> So when offline container device, devices on container has been offlined.
+> >>
+> >> Thus the idea cannot fulfill my necessary feature.
+> >
+> > Well, in that case we need to treat containers in a special way at the ACPI
+> > level.  Which is a bit unfortunate so to speak.
+> >
+> > To that end I'd try to add a new flag to struct acpi_hotplug_profile, say
+> > .verify_offline, such that if set, it would cause acpi_scan_hot_remove() to
+> > check if all of the "physical" companions of the top-level device are offline
+> > to start with, and if not, it would just emit KOBJ_CHANGE for the companions
+> > that are not offline and bail out.
+> >
+> > So the above algorithm would become:
+> >
+> > (1) an eject event occurs,
+> > (2) acpi_scan_hot_remove() checks the verify_offline flag in the target device's
+> >      scan_handler structure,
+> > (3) if set (it would always be set for containers), acpi_scan_hot_remove()
+> >      checks the status of the target device's "physical" companions; if at least
+> >      one of them is offline, KOBJ_CHANGE is emitted for that "physical" device,
+> >      and acpi_scan_hot_remove() returns, [I guess we can just emit KOBJ_CHANGE
+> >      for the first companion that is not offline at this point.]
+> > (4) user space notices the KOBJ_CHANGE and does the cleanup as needed; in the
+> >      process it carries out the offline operation for the container's "physical"
+> >      companion (there's only one such companion for each container), [That
+> >      operation for the container itself is trivial, but to succeed it requires
+> >      all devices below the container to be taken offline in advance.]
+> > (5) user space uses the sysfs "eject" attribute of the ACPI container object
+> >      to finally eject the container,
+> > (6) acpi_scan_hot_remove() is now successful, because the container's "physical"
+> >      companion is now offline,
+> > (7) the "physical" container device goes away before executing _EJ0,
+> > (8) the container is ejected.
+> >
+> > I think that should work for you.
+> 
+> This idea seems to same as your previous work.
+> http://lkml.org/lkml/2013/2/23/97
 
-And that will make the checkpatch warning go away ?
-That seems to be very unlikely.
+No, it is not.  That one didn't involve physical device representations.
 
-Guenter
+> How about add autoremove flag into acpi_hotplug_profile and check it as follow:
+
+This is very similar to "enable" except that it generates the uevent and
+"enable" doesn't.  You might as well modify "enable" to trigger a uevent if
+eject is not enabled (note that with the latest patches in linux-next "enable"
+only applies to eject).
+
+That said I don't think we should generate any uevents for struct acpi_device
+objects, because they are not devices.
+
+> ---
+>   drivers/acpi/scan.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 5383c81..c43d110 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -409,6 +409,11 @@ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+>   			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+>   			goto err_out;
+>   		}
+> +		if (!handler->hotplug.autoremove) {
+> +			kobject_uevent(&device->dev.kobj, KOBJ_CHANGE);
+> +			ost_code = ACPI_OST_SC_EJECT_NON_SPECIFIC_FAILURE;
+> +			goto err_out;
+> +		}
+>   		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+>   					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+>   		break;
+> 
+> Adding the check into "acpi_hotplug_notify_cb()", user need not change the
+> flag for removing container device by "sysfs eject".
+
+Which is utterly confusing.  There is no reason whatsoever why the sysfs eject
+attribute should work differently from the event-triggered eject.  Quite the
+opposite is the case: it should work in the same way in my opinion so that it
+is possible to test the eject code path using that attribute.
+
+I'm traveling now, but when I get back home (next week), I'll try to implement
+the thing I was talking about above.
+
+Thanks,
+Rafael
 
