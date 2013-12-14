@@ -1,40 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:39334 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754316Ab3LDCDu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 21:03:50 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAL-B5D3t=K-m5Y=Vvgv=SnrOLni8rAJC5eW8J1CEBsgafjTemA@mail.gmail.com>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-	<CAL-B5D3t=K-m5Y=Vvgv=SnrOLni8rAJC5eW8J1CEBsgafjTemA@mail.gmail.com>
-Date: Tue, 3 Dec 2013 18:03:49 -0800
-Message-ID: <CAE9FiQVxCykW+LD=UXRbkQvwniBK9-7BdjufjAwRu2E_pPtN5w@mail.gmail.com>
-Subject: Re: [PATCH v3 00/12] PCI: Double removing fix and allocate 64bit mmio pref
-From: Yinghai Lu <yinghai@kernel.org>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:65040 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480Ab3LNTbX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Dec 2013 14:31:23 -0500
+Received: by mail-ig0-f178.google.com with SMTP id ut6so1045016igb.5
+        for <linux-pci@vger.kernel.org>; Sat, 14 Dec 2013 11:31:23 -0800 (PST)
+Date: Sat, 14 Dec 2013 12:31:20 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	Chang Liu <cl91tp@gmail.com>,
+	Konstantin Khlebnikov <koct9i@gmail.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Michal Marek <mmarek@suse.cz>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Alexander Duyck <alexander.h.duyck@intel.com>
+Subject: [GIT PULL] PCI updates for v3.13
+Message-ID: <20131214193120.GE6746@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 1, 2013 at 9:05 AM, Myron Stowe <myron.stowe@gmail.com> wrote:
-> Would you please consider *not* bundling unrelated, or at least
-> non-dependent, patches together in one series.  As a distrobution
-> subsystem maintainer, this type of bundling really complicates trying
-> to identify and isolate key material for bringing in.  It also makes
-> trying to identify the core content for key fixes, which can occur
-> many months or years later, significantly more difficult when they
-> were buried within a series with other unrelated content
+The following changes since commit 6ce4eac1f600b34f2f7f58f9cd8f0503d79e42ae:
 
-ok.
+  Linux 3.13-rc1 (2013-11-22 11:30:55 -0800)
 
-Will resend them in three patchset.
+are available in the git repository at:
 
-Thanks
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.13-fixes-2
 
-Yinghai
+for you to fetch changes up to f0b75693cbb26439ba959ba7d3b4f43e2fcf3da6:
+
+  MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers (2013-12-11 10:40:59 -0700)
+
+----------------------------------------------------------------
+PCI updates for v3.13:
+
+  PCI device hotplug
+    - Move device_del() from pci_stop_dev() to pci_destroy_dev() (Rafael J. Wysocki)
+
+  Host bridge drivers
+    - Update maintainers for DesignWare, i.MX6, Armada, R-Car (Bjorn Helgaas)
+    - mvebu: Return 'unsupported' for Interrupt Line and Interrupt Pin (Jason Gunthorpe)
+
+  Miscellaneous
+    - Avoid unnecessary CPU switch when calling .probe() (Alexander Duyck)
+    - Revert "workqueue: allow work_on_cpu() to be called recursively" (Bjorn Helgaas)
+    - Disable Bus Master only on kexec reboot (Khalid Aziz)
+    - Omit PCI ID macro strings to shorten quirk names for LTO (Michal Marek)
+
+ MAINTAINERS                  | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/host/pci-mvebu.c |  5 +++++
+ drivers/pci/pci-driver.c     | 38 ++++++++++++++++++++++++++++++--------
+ drivers/pci/remove.c         |  4 +++-
+ include/linux/kexec.h        |  3 +++
+ include/linux/pci.h          | 30 +++++++++++++++---------------
+ kernel/kexec.c               |  4 ++++
+ kernel/workqueue.c           | 32 ++++++++++----------------------
+ 8 files changed, 103 insertions(+), 46 deletions(-)
+
+----------------------------------------------------------------
+Alexander Duyck (1):
+      PCI: Avoid unnecessary CPU switch when calling driver .probe() method
+
+Bjorn Helgaas (2):
+      Revert "workqueue: allow work_on_cpu() to be called recursively"
+      MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
+
+Jason Gunthorpe (1):
+      PCI: mvebu: Return 'unsupported' for Interrupt Line and Interrupt Pin
+
+Khalid Aziz (1):
+      PCI: Disable Bus Master only on kexec reboot
+
+Michal Marek (1):
+      PCI: Omit PCI ID macro strings to shorten quirk names
+
+Rafael J. Wysocki (1):
+      PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
+
+ MAINTAINERS                  | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/host/pci-mvebu.c |  5 +++++
+ drivers/pci/pci-driver.c     | 38 ++++++++++++++++++++++++++++++--------
+ drivers/pci/remove.c         |  4 +++-
+ include/linux/kexec.h        |  3 +++
+ include/linux/pci.h          | 30 +++++++++++++++---------------
+ kernel/kexec.c               |  4 ++++
+ kernel/workqueue.c           | 32 ++++++++++----------------------
+ 8 files changed, 103 insertions(+), 46 deletions(-)
