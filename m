@@ -1,74 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:34715 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754259Ab3LSVhn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 16:37:43 -0500
-Received: by mail-ie0-f176.google.com with SMTP id at1so2136649iec.21
-        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 13:37:43 -0800 (PST)
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:41347 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753608Ab3LNQJo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Dec 2013 11:09:44 -0500
+Received: by mail-ie0-f181.google.com with SMTP id e14so4498601iej.40
+        for <linux-pci@vger.kernel.org>; Sat, 14 Dec 2013 08:09:44 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20131219134244.GA32238@dhcp-26-207.brq.redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com> <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
- <20131218003002.GA15119@google.com> <20131218132349.GA29552@dhcp-26-207.brq.redhat.com>
- <CAErSpo6Km5N+Cfpaj5JEsb966rwcBjrAT4SFvG6Q9QkwkDFXCA@mail.gmail.com> <20131219134244.GA32238@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <CAPgLHd_kw4PNiJOCmiDBG2R86UPpD0DJRBtcD4WRVpzVdmjG1Q@mail.gmail.com>
+References: <CAPgLHd_kw4PNiJOCmiDBG2R86UPpD0DJRBtcD4WRVpzVdmjG1Q@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 19 Dec 2013 14:37:22 -0700
-Message-ID: <CAErSpo66Jh-8sbQr13r1LknfKWMt1zBd9xhm46XpCcW-X_TqnA@mail.gmail.com>
-Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family helpers
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@aculab.com>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+Date: Sat, 14 Dec 2013 09:09:22 -0700
+Message-ID: <CAErSpo6V7HD5AcGUr4Wt+XmXTytd7VVJ=kvb1zwvF7hi3zuP8g@mail.gmail.com>
+Subject: Re: [PATCH -next] PCI: msi: fix sparse non static symbol warning
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Zhenzhong Duan <zhenzhong.duan@oracle.com>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 19, 2013 at 6:42 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Wed, Dec 18, 2013 at 11:58:47AM -0700, Bjorn Helgaas wrote:
->> If rc == 13 and the device can only use 8, the extra 5 would be
->> ignored and wasted.
->>
->> If the waste is unacceptable, the driver can try this:
->>
->>     rc = pci_enable_msix_range(dev->pdev, dev->irqs, 16, 16);
->>     if (rc < 0) {
->>         rc = pci_enable_msix_range(dev->pdev, dev->irqs, 8, 8);
->>         if (rc < 0) {
->>             rc = pci_enable_msix_range(dev->pdev, dev->irqs, 4, 4);
->>             ...
->>     }
+On Fri, Dec 13, 2013 at 9:44 PM, Wei Yongjun <weiyj.lk@gmail.com> wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 >
-> I have troubles with this fallback logic. On each failed step we get an
-> error and we do not know if this is indeed an error or an indication of
-> insufficient MSI resources. Even -ENOSPC would not tell much, since it
-> could be thrown from a lower level.
+> Fixes the following sparse warnings:
 >
-> By contrast, with the tri-state return value we can distinguish and bail
-> out on errors right away.
+> drivers/pci/msi.c:119:6: warning:
+>  symbol 'default_restore_msi_irq' was not declared. Should it be static?
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-I thought the main point of this was to get rid of interfaces that
-were prone to misuse, and tri-state return values was a big part of
-that.  All we really care about in the driver is success/failure.  I'm
-not sure there's much to be gained by analyzing *why* we failed, and I
-think it tends to make uncommon error paths more complicated than
-necessary.  If we fail four times instead of bailing out after the
-first failure, well, that doesn't sound terrible to me.  The last
-failure can log the errno, which is enough for debugging.
+Thanks, this is already fixed in my "next" branch.  Let me know if you
+find otherwise.
 
-> So the above is bit ungraceful for me. Combined with a possible waste in
-> logs (if we're hitting the same error) it is quite enough for me to keep
-> current the interfaces, at least for a time being.
+Bjorn
+
+> ---
+>  drivers/pci/msi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
->>     if (rc < 0) { /* error, couldn't allocate *any* interrupts */
->>     else { /* rc interrupts allocated (1, 2, 4, 8, or 16) */ }
->>
->> Bjorn
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index c0baa3d..3fcc1e6 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -116,7 +116,7 @@ void __weak arch_teardown_msi_irqs(struct pci_dev *dev)
+>         return default_teardown_msi_irqs(dev);
+>  }
 >
-> --
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
+> -void default_restore_msi_irq(struct pci_dev *dev, int irq)
+> +static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+>  {
+>         struct msi_desc *entry;
+>
+>
