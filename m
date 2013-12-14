@@ -1,102 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:58557 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752390Ab3LRG5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Dec 2013 01:57:45 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>,
-	Leonidas Da Silva Barbosa <leosilva@linux.vnet.ibm.com>,
-	Ashley Lai <ashley@ashleylai.com>,
-	Peter Huewe <peterhuewe@gmx.de>,
-	Rajiv Andrade <mail@srajiv.net>,
-	Marcel Selhorst <tpmdd@selhorst.net>,
-	Sirrix AG <tpmdd@sirrix.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	David Airlie <airlied@linux.ie>, Jiri Kosina <jkosina@suse.cz>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>
-Subject: [RFC Patch v1 05/13] PCI, pci-label: treat PCI label with index 0 as valid label
-Date: Wed, 18 Dec 2013 14:58:13 +0800
-Message-Id: <1387349901-3391-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1387349901-3391-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1387349901-3391-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:57243 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753158Ab3LNDjO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 22:39:14 -0500
+Date: Fri, 13 Dec 2013 19:39:11 -0800
+From: Guenter Roeck <linux@roeck-us.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for
+ hot-plug and removal
+Message-ID: <20131214033911.GA25115@roeck-us.net>
+References: <529E5C0E.80903@gmail.com>
+ <20131212224407.GL4699@google.com>
+ <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
+ <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
+ <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com>
+ <CAE9FiQX-ZP0R-weuPoOJ6GkPxOLp5jk9thnjfPQ+Q5tCHugD4w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQX-ZP0R-weuPoOJ6GkPxOLp5jk9thnjfPQ+Q5tCHugD4w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current pci-label driver detects ACPI label by checking label index
-returned by ACPI _DSM method, and treat it as valid if label index
-is positive. According to ACPI Firmware specification 3.1, zero is
-also an valid label index. So change code to detect availability of
-ACPI slot label by checking availaiblity of ACPI _DSM function for
-PCI label.
+On Fri, Dec 13, 2013 at 05:58:08PM -0800, Yinghai Lu wrote:
+> On Fri, Dec 13, 2013 at 1:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Fri, Dec 13, 2013 at 12:04 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+> >
+> >> Once again: the way I interpret this is:
+> >> * Always enable Link events.
+> >> * Disable presence events if attention button is present.
+> >
+> > That sounds like a good plan to me.
+> 
+> How about Diag_Reset from MPT2SAS and others?
+> link could up and down
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/pci-label.c |   34 ++++++++++++++++++----------------
- 1 file changed, 18 insertions(+), 16 deletions(-)
+Good question. Another question is how this would play together
+with AER functions, specifically link_reset and slot_reset.
 
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index f12dcd1..0260b14 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -187,7 +187,6 @@ static const char device_label_dsm_uuid[] = {
- };
- 
- enum acpi_attr_enum {
--	ACPI_ATTR_NONE = 0,
- 	ACPI_ATTR_LABEL_SHOW,
- 	ACPI_ATTR_INDEX_SHOW,
- };
-@@ -222,20 +221,16 @@ dsm_get_label(struct device *dev, char *buf, enum acpi_attr_enum attr)
- 	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2 &&
- 	    tmp[0].type == ACPI_TYPE_INTEGER &&
- 	    tmp[1].type == ACPI_TYPE_STRING) {
--		len = tmp[0].integer.value;
--		if (buf) {
--			/*
--			 * This second string element is optional even when
--			 * this _DSM is implemented; when not implemented,
--			 * this entry must return a null string.
--			 */
--			if (attr == ACPI_ATTR_INDEX_SHOW)
--				scnprintf(buf, PAGE_SIZE, "%llu\n",
--				tmp->integer.value);
--			else if (attr == ACPI_ATTR_LABEL_SHOW)
--				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
--			len = strlen(buf) > 0 ? strlen(buf) : -1;
--		}
-+		/*
-+		 * The second string element is optional even when
-+		 * this _DSM is implemented; when not implemented,
-+		 * this entry must return a null string.
-+		 */
-+		if (attr == ACPI_ATTR_INDEX_SHOW)
-+			scnprintf(buf, PAGE_SIZE, "%llu\n", tmp->integer.value);
-+		else if (attr == ACPI_ATTR_LABEL_SHOW)
-+			dsm_label_utf16s_to_utf8s(tmp + 1, buf);
-+		len = strlen(buf) > 0 ? strlen(buf) : -1;
- 	}
- 
- 	ACPI_FREE(obj);
-@@ -246,7 +241,14 @@ dsm_get_label(struct device *dev, char *buf, enum acpi_attr_enum attr)
- static bool
- device_has_dsm(struct device *dev)
- {
--	return dsm_get_label(dev, NULL, ACPI_ATTR_NONE) > 0;
-+	acpi_handle handle;
-+
-+	handle = ACPI_HANDLE(dev);
-+	if (!handle)
-+		return false;
-+
-+	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
-+				1 << DEVICE_LABEL_DSM);
- }
- 
- static umode_t
--- 
-1.7.10.4
+In this context ... is it possible that the link_reset function from struct
+pci_error_handlers is never called, or am I missing something ?
 
+Guenter
