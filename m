@@ -1,92 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:58717 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab3LARFC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 12:05:02 -0500
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:39418 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753882Ab3LOEK2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Dec 2013 23:10:28 -0500
 MIME-Version: 1.0
-In-Reply-To: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-Date: Sun, 1 Dec 2013 10:05:00 -0700
-Message-ID: <CAL-B5D3t=K-m5Y=Vvgv=SnrOLni8rAJC5eW8J1CEBsgafjTemA@mail.gmail.com>
-Subject: Re: [PATCH v3 00/12] PCI: Double removing fix and allocate 64bit mmio pref
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAMxnaaVEzSuEXRyX5KKKvUJFKTGikP_hfQddT6Ke7Dx6boOuKQ@mail.gmail.com>
+References: <CAMxnaaWgUPRb3L2aKpUu62F73GR2iXOfd6LUnTkU0O=Gq-E_sQ@mail.gmail.com>
+	<CAE9FiQUtqtBLx3_pdhs=CjgqViGrDL9xdCjLKgs66jA-apHdQA@mail.gmail.com>
+	<CAMxnaaVEzSuEXRyX5KKKvUJFKTGikP_hfQddT6Ke7Dx6boOuKQ@mail.gmail.com>
+Date: Sat, 14 Dec 2013 20:10:27 -0800
+Message-ID: <CAE9FiQU-77q0CaCEkbH1sbMbnRWKpp3iNRNt-+qgQteOQ_mVhg@mail.gmail.com>
+Subject: Re: How to reserve pci bus numbers for hotplug?
+From: Yinghai Lu <yinghai@kernel.org>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=485b397dd20b1126b404ed8ae018
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai:
+--485b397dd20b1126b404ed8ae018
+Content-Type: text/plain; charset=ISO-8859-1
 
-Would you please consider *not* bundling unrelated, or at least
-non-dependent, patches together in one series.  As a distrobution
-subsystem maintainer, this type of bundling really complicates trying
-to identify and isolate key material for bringing in.  It also makes
-trying to identify the core content for key fixes, which can occur
-many months or years later, significantly more difficult when they
-were buried within a series with other unrelated content
+On Thu, Dec 12, 2013 at 11:56 AM, Andreas Noever
+<andreas.noever@gmail.com> wrote:
+> On Thu, Dec 12, 2013 at 1:21 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Dec 11, 2013 at 3:37 PM, Andreas Noever
+>> <andreas.noever@gmail.com> wrote:
+>>
+>>> If I could get Linux to assign enough resources (bus numbers for now)
+>>> then I could drop the acpi_osi parameter and make thunderbolt work
+>>> after suspend... So, is there an easy way to fix this? (Quirks,
+>>> reconfiguring bus number assignments from a platform driver, ...?)
+>>
+>> please check if busn_alloc at
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>> for-pci-busn-alloc-3.14
+>>
+>> could help.
+>
+> It seems to help. The initial assignment looks good:
+>            +-01.1-[05-9b]----00.0-[06-27]--+-00.0-[07]----00.0  Intel
+> Corporation DSL3510 Thunderbolt Port [Cactus Ridge]
+>            |                               +-03.0-[08-0f]--
+>            |                               +-04.0-[10-17]--
+>            |                               +-05.0-[18-1f]--
+>            |                               \-06.0-[20-27]--
+> After hotplug it looks like this:
+>            +-01.1-[05-9b]----00.0-[06-29]--+-00.0-[07]----00.0  Intel
+> Corporation DSL3510 Thunderbolt Port [Cactus Ridge]
+>            |
+> +-03.0-[08-11]----00.0-[09-11]----00.0-[0a-11]----00.0  Broadcom
+> Corporation NetXtreme BCM57762 Gigabit Ethernet PCIe
+>            |                               +-04.0-[10-17]--
+>            |                               +-05.0-[18-1f]--
+>            |                               \-06.0-[20-27]--
+> (Note that the bridge numbers are not disjoint)
 
-Thanks,
- Myron.
+it should not extend to [08-11] or [06-29]
 
-On Sat, Nov 30, 2013 at 3:40 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> First 4 are for Gu Zheng <guz.fnst@cn.fujitsu.com> to help double pci
-> device removing via sysfs.
-> For patch 4, rafael like to have use lock instead of atomic.
->
-> Patch 6 are for not enabling realloc auto when 64bit mmio is not there for
-> root bus.
->
-> Others are about mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
-> It will try to assign 64 bit resource above 4g at first.
->
-> Patch 1-4 and Patch 5-12 could be appliey seperatedly.
->
-> Could be found:
->         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-3.14
->
-> And it is based on current pci/for-linus.
->
-> -v2: update after patch that move device_del down to pci_destroy_dev.
->      add "Try best to allocate pref mmio 64bit above 4G"
->
-> -v3: refresh and send out after pci_clip_resource() changes,
->      as Bjorn is not happy with attachments.
->
-> Yinghai Lu (12):
->   PCI: Use device_release_driver in pci_stop_root_bus
->   PCI: Move back pci_proc_attach_devices calling
->   PCI: Move resources and bus_list releasing to pci_release_dev
->   PCI: Destroy pci dev only once
->   PCI: pcibus address to resource converting take bus instead of dev
->   PCI: Only enable realloc auto when root bus has 64bit mmio
->   PCI: Don't use 4G bus address directly in resource allocation
->   PCI: Try to allocate mem64 above 4G at first
->   PCI: Kill PCIBIOS_MAX_MEM_32
->   PCI: Try best to allocate pref mmio 64bit above 4g
->   PCI: Sort pci root bus resources list
->   intel-gtt: Read 64bit for gmar_bus_addr
->
->  arch/x86/include/asm/pci.h   |   1 -
->  drivers/char/agp/intel-gtt.c |  14 ++--
->  drivers/pci/bus.c            |  74 ++++++++++++++++---
->  drivers/pci/host-bridge.c    |  34 +++++----
->  drivers/pci/probe.c          |  23 +++++-
->  drivers/pci/remove.c         |  31 ++------
->  drivers/pci/setup-bus.c      | 165 ++++++++++++++++++++++++++++++-------------
->  drivers/pci/setup-res.c      |  14 +++-
->  include/linux/pci.h          |  10 +--
->  9 files changed, 257 insertions(+), 109 deletions(-)
->
-> --
-> 1.8.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please check attached patch that should address bus number wrong extending.
+--- missed checking before going up one level ...wrong assumption ...
+
+Thanks
+
+Yinghai
+
+--485b397dd20b1126b404ed8ae018
+Content-Type: text/x-patch; charset=US-ASCII; name="fix_probe_resource_assumption.patch"
+Content-Disposition: attachment;
+	filename="fix_probe_resource_assumption.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hp7rxszc1
+
+LS0tCiBrZXJuZWwvcmVzb3VyY2UuYyB8ICAgMTAgKysrKysrKystLQogMSBmaWxlIGNoYW5nZWQs
+IDggaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYva2VybmVs
+L3Jlc291cmNlLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcva2VybmVsL3Jlc291cmNl
+LmMKKysrIGxpbnV4LTIuNi9rZXJuZWwvcmVzb3VyY2UuYwpAQCAtMTEzMCw3ICsxMTMwLDkgQEAg
+aW50IHByb2JlX3Jlc291cmNlKHN0cnVjdCByZXNvdXJjZSAqYl9yZQogCS8qIFByb2JlIGV4dGVu
+ZGVkIHJhbmdlIGFib3ZlIHRvcCAqLwogCW1lbXNldChidXNuX3JlcywgMCwgc2l6ZW9mKHN0cnVj
+dCByZXNvdXJjZSkpOwogCXBhcmVudF9yZXMgPSBiX3JlczsKLQl3aGlsZSAocGFyZW50X3JlcyAm
+JiAhKHBhcmVudF9yZXMtPmZsYWdzICYgc3RvcF9mbGFncykpIHsKKwl3aGlsZSAoIShwYXJlbnRf
+cmVzLT5mbGFncyAmIHN0b3BfZmxhZ3MpKSB7CisJCXN0cnVjdCByZXNvdXJjZSAqdXBfcGFyZW50
+X3JlczsKKwogCQlyZXQgPSBfX2FkanVzdF9yZXNvdXJjZShwYXJlbnRfcmVzLCBwYXJlbnRfcmVz
+LT5zdGFydCwKIAkJCXJlc291cmNlX3NpemUocGFyZW50X3JlcykgKyAobmVlZGVkX3NpemUgLSBu
+X3NpemUpKTsKIAkJaWYgKCFyZXQpIHsKQEAgLTExNTEsNyArMTE1MywxMSBAQCBpbnQgcHJvYmVf
+cmVzb3VyY2Uoc3RydWN0IHJlc291cmNlICpiX3JlCiAJCQkvKiByZXQgbXVzdCBiZSAwIGhlcmUq
+LwogCQkJZ290byBvdXQ7CiAJCX0KLQkJcGFyZW50X3JlcyA9IHBhcmVudF9yZXMtPnBhcmVudDsK
+KwkJLyogYmVmb3JlIGdvIHVwLCBuZWVkIHRvIG1ha2Ugc3VyZSBhdCB0aGUgc2FtZSBlbmQgKi8K
+KwkJdXBfcGFyZW50X3JlcyA9IHBhcmVudF9yZXMtPnBhcmVudDsKKwkJaWYgKCF1cF9wYXJlbnRf
+cmVzIHx8IHVwX3BhcmVudF9yZXMtPmVuZCAhPSBwYXJlbnRfcmVzLT5lbmQpCisJCQlnb3RvIG91
+dDsKKwkJcGFyZW50X3JlcyA9IHVwX3BhcmVudF9yZXM7CiAJfQogCiBvdXQ6Cg==
+--485b397dd20b1126b404ed8ae018--
