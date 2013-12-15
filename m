@@ -1,87 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:53034 "EHLO
-	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751797Ab3LMETL convert rfc822-to-8bit
+Received: from [216.32.180.13] ([216.32.180.13]:11400 "EHLO
+	va3outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752011Ab3LOX1O convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Dec 2013 23:19:11 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	spear-devel <spear-devel@list.st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>
-Date: Fri, 13 Dec 2013 12:18:35 +0800
-Subject: RE: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header
- file
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F669D@EAPEX1MAIL1.st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
- <9ae7b152da13c094b024c54d27187aab96e439b3.1386752447.git.mohit.kumar@st.com>
- <201312112348.06755.arnd@arndb.de>
-In-Reply-To: <201312112348.06755.arnd@arndb.de>
+	Sun, 15 Dec 2013 18:27:14 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Guenter Roeck <linux@roeck-us.net>, Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: [PATCH v2 2/4] pciehp: Use link change notifications for
+ hot-plug and removal
+Date: Sun, 15 Dec 2013 23:24:50 +0000
+Message-ID: <241775f7fb71476aa84bbb19fde4602f@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com>
+ <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
+ <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
+ <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com>
+ <CAE9FiQX-ZP0R-weuPoOJ6GkPxOLp5jk9thnjfPQ+Q5tCHugD4w@mail.gmail.com>
+ <20131214033911.GA25115@roeck-us.net>
+In-Reply-To: <20131214033911.GA25115@roeck-us.net>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Arnd,
-
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: Thursday, December 12, 2013 4:18 AM
-> To: linux-arm-kernel@lists.infradead.org
-> Cc: Mohit KUMAR DCG; linux-pci@vger.kernel.org; Pratyush ANAND; spear-
-> devel; Viresh Kumar
-> Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to
-> header file
-> 
-> On Wednesday 11 December 2013, Mohit Kumar wrote:
-> > From: Pratyush Anand <pratyush.anand@st.com>
+> > >
+> > >> Once again: the way I interpret this is:
+> > >> * Always enable Link events.
+> > >> * Disable presence events if attention button is present.
+> > >
+> > > That sounds like a good plan to me.
 > >
-> > Move SPEAr1340 definitions to header files so that theese can be used
-> > by other code too.
-> 
-> This looks like a regression, we intentionally made them private and they
-> should be moved into a proper driver instead of being globally visible.
-> 
-> > diff --git a/arch/arm/mach-spear/include/mach/spear.h
-> > b/arch/arm/mach-spear/include/mach/spear.h
-> > index 5cdc53d..4526f75 100644
-> > --- a/arch/arm/mach-spear/include/mach/spear.h
-> > +++ b/arch/arm/mach-spear/include/mach/spear.h
-> > @@ -86,6 +86,61 @@
-> >  /* Debug uart for linux, will be used for debug and uncompress messages
-> */
-> >  #define SPEAR_DBG_UART_BASE			UART_BASE
+> > How about Diag_Reset from MPT2SAS and others?
+> > link could up and down
 > >
-> > +/* PCIe/SATA Base addresses */
-> > +#define SPEAR1340_SATA_BASE			UL(0xB1000000)
-> > +#define SPEAR1340_PCIE_BASE			UL(0xB1000000)
-> 
-> These should be in DT only.
-> 
-> > +/* Power Management Registers */
-> > +#define SPEAR1340_PCM_CFG			(VA_MISC_BASE +
-> 0x100)
-> > +#define SPEAR1340_PCM_WKUP_CFG
-> 	(VA_MISC_BASE + 0x104)
-> > +#define SPEAR1340_SWITCH_CTR			(VA_MISC_BASE +
-> 0x108)
-> > +
-> > +#define SPEAR1340_PERIP1_SW_RST
-> 	(VA_MISC_BASE + 0x318)
-> > +#define SPEAR1340_PERIP2_SW_RST
-> 	(VA_MISC_BASE + 0x31C)
-> > +#define SPEAR1340_PERIP3_SW_RST
-> 	(VA_MISC_BASE + 0x320)
-> 	
-> The RST bits should probably go into a drivers/reset driver. Not sure what the
-> other registers do, but I'm sure we can find a driver for these too, possibly
-> they should be part of the PHY driver?
 
--  Perhaps if we implement phy and reset driver then we may not require to move these definitions and
-it will address most of your comments on SPEar13xx pcie driver. I am understanding and working on this.l 
+I am assuming you are referring to 
 
-Regards
-Mohit
+static int
+_base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+
+Which as far as I could understand would cause link to go down and come up
+ again without the kernel knowing anything about it?
+
+Please see below since I think point made by Guenter includes this. 
+
+> 
+> Good question. Another question is how this would play together with AER
+> functions, specifically link_reset and slot_reset.
+> 
+> In this context ... is it possible that the link_reset function from
+> struct pci_error_handlers is never called, or am I missing something ?
+>
+
+Very good catch. That seems to be the case, at least as far as I can see.
+In fact I think this may be uncovering a more serious problem 
+with current code (with no link state events used for hotplug). 
+
+A fatal error is discovered by AER
+=> Calls do_recovery()
+   => reset_link()
+      => Which will  reset the link at downstream / root port.
+
+[PS: There is a clear problem the link_reset() is never broadcasted to all
+The drivers, but skimming over that for now] 
+
+In general, I guess the question is when a link goes down and back up, whether
+or not we want to treat it as a hot unplug followed by a hotplug. I think there
+may be cases such as AER (or the one Yinghai mentions) where we don't want to
+treat it as a hotplug (see note below). And there may be cases that we
+definitely want to treat it as hotplug (need link events!). Situation gets more
+complex since there may be pciehp slots downstream of a link getting reset. 
+
+It seems to me that we are saying that a mechanism is needed so that a voluntary
+Link flap is NOT treated like a hotplug temporarily?
+
+I found these:
+
+/**
+ * pcie_port_device_suspend - suspend port services associated with a PCIe port
+ * @dev: PCI Express port to handle
+ */
+int pcie_port_device_suspend(struct device *dev)
+{
+        return device_for_each_child(dev, NULL, suspend_iter);
+}
+
+/**
+ * pcie_port_device_suspend - resume port services associated with a PCIe port
+ * @dev: PCI Express port to handle
+ */
+int pcie_port_device_suspend(struct device *dev)
+{
+        return device_for_each_child(dev, NULL, suspend_iter);
+}
+
+May be either these can be used or enhancements can be provided to disable a specific
+Service on a particular port. 
+
+Thanks,
+
+Rajat
+
+
+Notes: 
+* it may not OK, if the kernel thinks the device is accessible when it is really not.
+  What if during this downtime, someone tries to access the device (say userspace)?
+* How do we know after the link up, that the device is really the same. 
+  If during this reset, the device changed its "character", say a different class?
+  I think a rescan should be mandated after every such event.
+ * Do we need to unload and reload the driver after the link reset, since it can be a different device?
+
+
+
+
+
