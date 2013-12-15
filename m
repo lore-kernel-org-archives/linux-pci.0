@@ -1,101 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755453Ab3LFDVV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Dec 2013 22:21:21 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part1 V2 15/20] iommu/vt-d: fix access after free issue in function free_dmar_iommu()
-Date: Fri,  6 Dec 2013 11:21:18 +0800
-Message-Id: <1386300083-6882-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-we0-f175.google.com ([74.125.82.175]:63922 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754248Ab3LOMVH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 07:21:07 -0500
+Received: by mail-we0-f175.google.com with SMTP id t60so3526229wes.6
+        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2013 04:21:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <mj+md-20131215.110132.29802.nikam@ucw.cz>
+References: <1378302428-19758-1-git-send-email-teg@jklm.no>
+ <mj+md-20130904.134928.12262.nikam@ucw.cz> <CAG-2HqWcnZ-z7EbDd0aAj6y_Ho6szfRZUiK0psEnmoz17Kw-xA@mail.gmail.com>
+ <mj+md-20131110.114139.9646.albireo@ucw.cz> <CAG-2HqXsEBB_nxUF4gza-eTsUjmysYR7iPEjJPUFyR1rC2KGMg@mail.gmail.com>
+ <CAPXgP12MLL_Z5gyrCndQLRT6SR_TJi9xHp1HkHMX1ahwnxx3yw@mail.gmail.com>
+ <mj+md-20131215.091609.28546.nikam@ucw.cz> <CAPXgP10+1WtX8_xN+QSHvKws01hbKhP3FN95sXk9EtezdSPtqg@mail.gmail.com>
+ <mj+md-20131215.110132.29802.nikam@ucw.cz>
+From: Kay Sievers <kay@vrfy.org>
+Date: Sun, 15 Dec 2013 13:20:45 +0100
+Message-ID: <CAPXgP127fBUBPqtsOCiqE2cy2JX+JabWn2Trmhk69GRUmUb57g@mail.gmail.com>
+Subject: Re: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb support
+To: Martin Mares <mj@ucw.cz>
+Cc: Tom Gundersen <teg@jklm.no>, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function free_dmar_iommu() may access domain->iommu_lock by
-	spin_unlock_irqrestore(&domain->iommu_lock, flags);
-after freeing corresponding domain structure.
+On Sun, Dec 15, 2013 at 12:33 PM, Martin Mares <mj@ucw.cz> wrote:
+>> It does that per process doing that, and that's the problem for how
+>> udev works/worked. The binary hwdb is on-disk and can be mmaped, and
+>> there is no difference between initialization, first, or subsequent
+>> queries.
+>
+> OK, point taken.
+>
+> I see that a mechanism for fast lookup of hardware identification data
+> is needed. However, why should such a mechanism depend on udev, systemd,
+> or Linux in general?
+>
+> What I would really like to have is a universal library for HW lookup,
+> independent of anything else and widely portable. All the hardware data
+> would be provided by other packages -- pci.ids, usb.ids, kernel modules,
+> etc. -- and compiled to a binary format available for instant queries.
 
-Sample stack dump:
-[    8.912818] =========================
-[    8.917072] [ BUG: held lock freed! ]
-[    8.921335] 3.13.0-rc1-gerry+ #12 Not tainted
-[    8.926375] -------------------------
-[    8.930629] swapper/0/1 is freeing memory ffff880c23b56040-ffff880c23b5613f, with a lock still held there!
-[    8.941675]  (&(&domain->iommu_lock)->rlock){......}, at: [<ffffffff81dc775c>] init_dmars+0x72c/0x95b
-[    8.952582] 1 lock held by swapper/0/1:
-[    8.957031]  #0:  (&(&domain->iommu_lock)->rlock){......}, at: [<ffffffff81dc775c>] init_dmars+0x72c/0x95b
-[    8.968487]
-[    8.968487] stack backtrace:
-[    8.973602] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.13.0-rc1-gerry+ #12
-[    8.981556] Hardware name: Intel Corporation LH Pass ........../SVRBD-ROW_T, BIOS SE5C600.86B.99.99.x059.091020121352 09/10/2012
-[    8.994742]  ffff880c23b56040 ffff88042dd33c98 ffffffff815617fd ffff88042dd38b28
-[    9.003566]  ffff88042dd33cd0 ffffffff810a977a ffff880c23b56040 0000000000000086
-[    9.012403]  ffff88102c4923c0 ffff88042ddb4800 ffffffff81b1e8c0 ffff88042dd33d28
-[    9.021240] Call Trace:
-[    9.024138]  [<ffffffff815617fd>] dump_stack+0x4d/0x66
-[    9.030057]  [<ffffffff810a977a>] debug_check_no_locks_freed+0x15a/0x160
-[    9.037723]  [<ffffffff811aa1c2>] kmem_cache_free+0x62/0x5b0
-[    9.044225]  [<ffffffff81465e27>] domain_exit+0x197/0x1c0
-[    9.050418]  [<ffffffff81dc7788>] init_dmars+0x758/0x95b
-[    9.056527]  [<ffffffff81dc7dfa>] intel_iommu_init+0x351/0x438
-[    9.063207]  [<ffffffff81d8a711>] ? iommu_setup+0x27d/0x27d
-[    9.069601]  [<ffffffff81d8a739>] pci_iommu_init+0x28/0x52
-[    9.075910]  [<ffffffff81000342>] do_one_initcall+0x122/0x180
-[    9.082509]  [<ffffffff81077738>] ? parse_args+0x1e8/0x320
-[    9.088815]  [<ffffffff81d850e8>] kernel_init_freeable+0x1e1/0x26c
-[    9.095895]  [<ffffffff81d84833>] ? do_early_param+0x88/0x88
-[    9.102396]  [<ffffffff8154f580>] ? rest_init+0xd0/0xd0
-[    9.108410]  [<ffffffff8154f58e>] kernel_init+0xe/0x130
-[    9.114423]  [<ffffffff81574a2c>] ret_from_fork+0x7c/0xb0
-[    9.120612]  [<ffffffff8154f580>] ? rest_init+0xd0/0xd0
+Yeah, that's what udev's hwdb is for us now.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+For the textual strings, it seems relatively easy to commit to a
+reasonable stable format, but I doubt that text strings alone would
+justify supporting a binary format to compile to.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 1a20171..fc3473b 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1266,7 +1266,7 @@ static void vm_domain_exit(struct dmar_domain *domain);
- static void free_dmar_iommu(struct intel_iommu *iommu)
- {
- 	struct dmar_domain *domain;
--	int i;
-+	int i, count;
- 	unsigned long flags;
- 
- 	if ((iommu->domains) && (iommu->domain_ids)) {
-@@ -1275,13 +1275,14 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 			clear_bit(i, iommu->domain_ids);
- 
- 			spin_lock_irqsave(&domain->iommu_lock, flags);
--			if (--domain->iommu_count == 0) {
-+			count = --domain->iommu_count;
-+			spin_unlock_irqrestore(&domain->iommu_lock, flags);
-+			if (count == 0) {
- 				if (domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE)
- 					vm_domain_exit(domain);
- 				else
- 					domain_exit(domain);
- 			}
--			spin_unlock_irqrestore(&domain->iommu_lock, flags);
- 		}
- 	}
- 
--- 
-1.7.10.4
+I wouldn't want to commit to cross-platform stability for other device
+properties we use, or things which will end up in the hwdb. It's hard
+enough already to coordinate the development across Linux
+distributions, and generic cross-platform device-management metadata
+maintenance doesn't sound too promising or an easy goal to me.
 
+Some data of hwdb is entirely Linux and Linux kernel device specific.
+The hwdb query string to lookup the binary radix tree in the hwdb file
+is just the Linux kernel modalias strings, and they are directly
+passed as queries to hwdb. Other platforms could do the same thing,
+sure, but I'm not sure this really makes too much sense.
+
+> Do I miss anything?
+
+No, you didn't. It's just that we develop for and work with Linux
+only, and this is really hard enough already. :)
+
+I personally never think about other platforms because I don't really
+know/care about or use them; and hwdb was just a tiny and not
+important enough piece of the problem we need to solve, so it became
+part of udev.
+
+Kay
