@@ -1,100 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:44323 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950Ab3LRDkH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 22:40:07 -0500
-Date: Tue, 17 Dec 2013 19:40:04 -0800
-From: Guenter Roeck <linux@roeck-us.net>
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Y@jasper.es
-Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
- during removal
-Message-ID: <20131218034004.GA22858@roeck-us.net>
-References: <52B0AEAD.6050604@gmail.com>
- <20131218010207.GC15119@google.com>
- <41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:42720 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752016Ab3LOX4y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 18:56:54 -0500
+Received: by mail-ie0-f170.google.com with SMTP id qd12so5661795ieb.1
+        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2013 15:56:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
+In-Reply-To: <20131215231413.GA6853@kroah.com>
+References: <20131215063123.GB26396@localhost> <20131215170417.GB28799@kroah.com>
+ <CAErSpo4Usujp5zJT83-88T71J8tObJgZ03i-wORqLputxQbdXg@mail.gmail.com> <20131215231413.GA6853@kroah.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sun, 15 Dec 2013 16:56:31 -0700
+Message-ID: <CAErSpo5R5fTLj0X+qc2Rkmvvjzdrbx0s-rW8iXMuSsqJmGjVmw@mail.gmail.com>
+Subject: Re: BUG: key ffff8800192a6ad0 not in .data!
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Fengguang Wu <fengguang.wu@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 18, 2013 at 03:20:58AM +0000, Rajat Jain wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> > 
-> > [+cc yinghai@kernel.org (seems to be Yinghai's preferred email]
-> > 
-> > On Tue, Dec 17, 2013 at 12:06:05PM -0800, Rajat Jain wrote:
-> > > We need future link up events for hot-add, thus don't disable the link
-> > > permanently during device removal. Also, remove the static functions
-> > > that are now left unused.
-> > 
-> > The changelog should mention that this reverts part of 2debd9289997
-> > ("PCI:
-> > pciehp: Disable/enable link during slot power off/on").
-> 
-> Sure, I'll add that. 
-> 
-> > 
-> > Yinghai, can you tell us whether this is an issue on your systems?
-> >
-> 
-> Thanks in advance Yinghai. 
-> 
-> Actually I did not understand the original problem and the solution in the first
-> place (so I also do not understand how might disabling of presence detect notification
-> help). If you can give more details on the original problem that shall be great. Here
-> is what I understood from the commit log:
-> 
-> The believe the HW looks like this:
-> 
-> PCIe port <----> Repeater <----> Device.
-> 
-> An in addition there is the presence detect pin that is connected directly from
-> The port to the device. Now, when the device is plugged out, the pin indicates
-> No presence. But are you saying the PCIe link from port to repeater is still up?
-> 
-> Part of log:
-> ====================================
->     ...
->     It turns out the root complex is continually trying to train the link to
->     the repeater because the repeater has not been reset.
-> 
->     This patch will disable the link at removal time to allow the repeater
->     to be reset properly.
->     ...
-> ====================================
-> 
-> 1) I did not understand why would port try to retrain to the link in either cases -
-> Whether the link to the repeater is up or not?
-> 
-> 2) When no link is seen, is THAT what causes repeater to go down and hence solve the
-> Problem?
-> 
-> 3) I'd expect you'd continuously get "adapter not present" messages if some how
-> The driver was trying to add the device. But I did not understand where did
-> "adapter present" messages came from?
-> 
-> Sorry, but I guess I am totally confused now. I'll probably go to sleep :-) 
-> 
+On Sun, Dec 15, 2013 at 4:14 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Sun, Dec 15, 2013 at 03:12:03PM -0700, Bjorn Helgaas wrote:
+>> On Sun, Dec 15, 2013 at 10:04 AM, Greg Kroah-Hartman
+>> <gregkh@linuxfoundation.org> wrote:
+>> > On Sun, Dec 15, 2013 at 02:31:23PM +0800, Fengguang Wu wrote:
+>> >> Greetings,
+>> >>
+>> >> I got the below dmesg and the first bad commit is
+>> >
+>> > I thought this was already fixed in Bjorn's tree, but perhaps he hasn't
+>> > merged in the one-liner for it...
+>>
+>> Yes, this is fixed.  I actually dropped that MSI change temporarily
+>> until we can fold in the memory leak fixes, so it is not currently in
+>> linux-next.
+>
+> Do you want me to just resend a fixed patch up with the one-line fix,
+> and the memory-leak-on-error-path fix all as just one patch to make it
+> easier for you?
 
-What, that early ? :-)
+It's fine either way.  I'm happy to incorporate an incremental patch
+if that's easier for you.
 
-I think we may have a similar setup on some of our boards. Maybe we can
-reproduce the situation (after we understand what exactly it is and how to
-trigger it).
-
-Related to this patch set, I learned today that our Space product uses mpt2sas.
-Just in case we need one for testing reset functionality.
-
-Guenter
+Bjorn
