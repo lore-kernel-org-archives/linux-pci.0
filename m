@@ -1,93 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754969Ab3LFDU5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Dec 2013 22:20:57 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:48716 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751879Ab3LPASq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 19:18:46 -0500
+Received: by mail-ig0-f172.google.com with SMTP id hl1so2634390igb.5
+        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2013 16:18:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <241775f7fb71476aa84bbb19fde4602f@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com>
+ <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
+ <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
+ <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com>
+ <CAE9FiQX-ZP0R-weuPoOJ6GkPxOLp5jk9thnjfPQ+Q5tCHugD4w@mail.gmail.com>
+ <20131214033911.GA25115@roeck-us.net> <241775f7fb71476aa84bbb19fde4602f@DM2PR05MB671.namprd05.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sun, 15 Dec 2013 17:18:26 -0700
+Message-ID: <CAErSpo4grMgCBetm7DMmizWQS_peM5yYBwFS99K8jbXaEWGmEg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
+ and removal
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Jiri Kosina <trivial@kernel.org>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part1 V2 08/20] iommu/vt-d, trivial: clean up unused code
-Date: Fri,  6 Dec 2013 11:21:11 +0800
-Message-Id: <1386300083-6882-9-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+	Paul Bolle <pebolle@tiscali.nl>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove dead code from VT-d related files.
+On Sun, Dec 15, 2013 at 4:24 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+>> > >
+>> > >> Once again: the way I interpret this is:
+>> > >> * Always enable Link events.
+>> > >> * Disable presence events if attention button is present.
+>> > >
+>> > > That sounds like a good plan to me.
+>> >
+>> > How about Diag_Reset from MPT2SAS and others?
+>> > link could up and down
+>> >
+>
+> I am assuming you are referring to
+>
+> static int
+> _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+>
+> Which as far as I could understand would cause link to go down and come up
+>  again without the kernel knowing anything about it?
+> ...
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c        |    2 --
- drivers/iommu/intel-iommu.c |   25 -------------------------
- 2 files changed, 27 deletions(-)
+> In general, I guess the question is when a link goes down and back up, whether
+> or not we want to treat it as a hot unplug followed by a hotplug. I think there
+> may be cases such as AER (or the one Yinghai mentions) where we don't want to
+> treat it as a hotplug (see note below). And there may be cases that we
+> definitely want to treat it as hotplug (need link events!). Situation gets more
+> complex since there may be pciehp slots downstream of a link getting reset.
+>
+> It seems to me that we are saying that a mechanism is needed so that a voluntary
+> Link flap is NOT treated like a hotplug temporarily?
+> ...
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 70612a9..9a76073 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1121,8 +1121,6 @@ static const char *irq_remap_fault_reasons[] =
- 	"Blocked an interrupt request due to source-id verification failure",
- };
- 
--#define MAX_FAULT_REASON_IDX 	(ARRAY_SIZE(fault_reason_strings) - 1)
--
- const char *dmar_get_fault_reason(u8 fault_reason, int *fault_type)
- {
- 	if (fault_reason >= 0x20 && (fault_reason - 0x20 <
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 68bce9d..b5f13e4 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -289,26 +289,6 @@ static inline void dma_clear_pte(struct dma_pte *pte)
- 	pte->val = 0;
- }
- 
--static inline void dma_set_pte_readable(struct dma_pte *pte)
--{
--	pte->val |= DMA_PTE_READ;
--}
--
--static inline void dma_set_pte_writable(struct dma_pte *pte)
--{
--	pte->val |= DMA_PTE_WRITE;
--}
--
--static inline void dma_set_pte_snp(struct dma_pte *pte)
--{
--	pte->val |= DMA_PTE_SNP;
--}
--
--static inline void dma_set_pte_prot(struct dma_pte *pte, unsigned long prot)
--{
--	pte->val = (pte->val & ~3) | (prot & 3);
--}
--
- static inline u64 dma_pte_addr(struct dma_pte *pte)
- {
- #ifdef CONFIG_64BIT
-@@ -319,11 +299,6 @@ static inline u64 dma_pte_addr(struct dma_pte *pte)
- #endif
- }
- 
--static inline void dma_set_pte_pfn(struct dma_pte *pte, unsigned long pfn)
--{
--	pte->val |= (uint64_t)pfn << VTD_PAGE_SHIFT;
--}
--
- static inline bool dma_pte_present(struct dma_pte *pte)
- {
- 	return (pte->val & 3) != 0;
--- 
-1.7.10.4
+> Notes:
+> * it may not OK, if the kernel thinks the device is accessible when it is really not.
+>   What if during this downtime, someone tries to access the device (say userspace)?
+> * How do we know after the link up, that the device is really the same.
+>   If during this reset, the device changed its "character", say a different class?
+>   I think a rescan should be mandated after every such event.
+>  * Do we need to unload and reload the driver after the link reset, since it can be a different device?
 
+I am quite dubious about the idea of a voluntary link flap.  If the
+link goes down and comes back up, I don't see how we can make any
+assumptions about what device is there.
+
+I let Alex talk me into pciehp_reset_slot(), which disables presence
+detect interrupts while resetting a device, so we already have a bit
+of precedent for the idea.  But even in that case, the device could
+easily come out of reset as a different device, e.g., if the reset
+caused it to load updated firmware.
+
+I would feel much better if we treated link down as a remove and did a
+rescan on the link up.
+
+Bjorn
