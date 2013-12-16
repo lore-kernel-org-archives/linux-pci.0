@@ -1,60 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:63836 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755710Ab3LISeR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 13:34:17 -0500
-Received: by mail-ie0-f179.google.com with SMTP id x13so6819194ief.10
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 10:34:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
-References: <1386361357-7767-1-git-send-email-yinghai@kernel.org>
- <CAErSpo5BnfmRJjXBqM7pWrMgvUt60hfC9oRbGy7=h6+Gftepqg@mail.gmail.com> <CAE9FiQV_3SfigDfJuAoP4nX-q2qNR=Vd=YuQ3bE7Ur+WVM7hwg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 11:33:54 -0700
-Message-ID: <CAErSpo401m4e4vPhrMmy6f6nPoiVnKrYqGegY-S7V7xTNf25Eg@mail.gmail.com>
-Subject: Re: [PATCH] PCI, pciehp: Turn on link a while to workaround presense detection
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+Received: from userp1040.oracle.com ([156.151.31.81]:41904 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806Ab3LPPIN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 10:08:13 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: axboe@kernel.dk, stefano.stabellini@eu.citrix.com,
+	ian.campbell@citrix.com, xen-devel@lists.xenproject.org,
+	linux-kernel@vger.kernel.org, boris.ostrovsky@oracle.com,
+	david.vrabel@citrix.com, leosilva@linux.vnet.ibm.com,
+	ashley@ashleylai.com, peterhuewe@gmx.de, mail@srajiv.net,
+	tpmdd@selhorst.net, dmitry.torokhov@gmail.com, bhelgaas@google.com,
+	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
+	tpmdd-devel@lists.sourceforge.net, linux-input@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH v3 2/2] xen/pvhvm: Remove the xen_platform_pci int.
+Date: Mon, 16 Dec 2013 10:04:10 -0500
+Message-Id: <1387206250-13963-3-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com>
+References: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 7, 2013 at 8:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sat, Dec 7, 2013 at 10:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> This doesn't sound like a chipset bug.  It sounds like exactly what
->> the spec describes: "Presence Detect State – This bit indicates the
->> presence of an adapter in the slot, reflected by the logical “OR” of
->> the Physical Layer in-band presence detect mechanism and, if present,
->> any out-of-band presence detect mechanism defined for the slot’s
->> corresponding form factor" (PCIe 3.0, sec 7.8.11).
->
-> Not sure. the silicon does not report in-band correctly if we turn off
-> pcie link before turn the power of card.
+Since we have  xen_has_pv_devices,xen_has_pv_disk_devices,
+xen_has_pv_nic_devices, and xen_has_pv_and_legacy_disk_devices
+to figure out the different 'unplug' behaviors - lets
+use those instead of this single int.
 
-Yes, that's exactly what the spec says: "Note that the in-band
-presence detect mechanism requires that power be applied to an adapter
-for its presence to be detected."  So pciehp has to be designed to
-take that into account.
+Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+---
+ arch/x86/xen/platform-pci-unplug.c | 5 ++---
+ include/xen/platform_pci.h         | 2 --
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-Presence detect is obviously important for things like ExpressCard
-where there's no attention button.  I expect that pciehp will use
-presence detect to notice when a device is inserted and removed.
+diff --git a/arch/x86/xen/platform-pci-unplug.c b/arch/x86/xen/platform-pci-unplug.c
+index ab84ac1..a826171 100644
+--- a/arch/x86/xen/platform-pci-unplug.c
++++ b/arch/x86/xen/platform-pci-unplug.c
+@@ -30,10 +30,9 @@
+ #define XEN_PLATFORM_ERR_PROTOCOL -2
+ #define XEN_PLATFORM_ERR_BLACKLIST -3
+ 
+-/* store the value of xen_emul_unplug after the unplug is done */
+-int xen_platform_pci_unplug;
+-EXPORT_SYMBOL_GPL(xen_platform_pci_unplug);
+ #ifdef CONFIG_XEN_PVHVM
++/* store the value of xen_emul_unplug after the unplug is done */
++static int xen_platform_pci_unplug;
+ static int xen_emul_unplug;
+ 
+ static int check_platform_magic(void)
+diff --git a/include/xen/platform_pci.h b/include/xen/platform_pci.h
+index b49eeab..5c52b55 100644
+--- a/include/xen/platform_pci.h
++++ b/include/xen/platform_pci.h
+@@ -46,8 +46,6 @@ static inline int xen_must_unplug_disks(void) {
+ #endif
+ }
+ 
+-extern int xen_platform_pci_unplug;
+-
+ #if defined(CONFIG_XEN_PVHVM)
+ extern bool xen_has_pv_devices(void);
+ extern bool xen_has_pv_disk_devices(void);
+-- 
+1.8.3.1
 
-But I assume your hotplug situation is slots with attention buttons,
-and I don't think presence detect is as important there.  If you
-insert a card into an empty slot, nothing should happen until the
-attention button is pressed.  We don't need presence detect there.  If
-pciehp turns off a device to prepare for its physical removal, why do
-we care about presence detect after the power is turned off?  I think
-all pciehp can say is "this slot is powered off, and I don't know
-whether there's still a card in it."
-
-I think pciehp is somewhat buggy here -- it looks like
-pciehp_enable_slot() looks at presence detect before turning on the
-power.  I don't know why it does that, and it doesn't seem valid per
-the spec statement I quoted above.
-
-Bjorn
