@@ -1,78 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47019 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754711Ab3LSWB3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 17:01:29 -0500
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id rBJM1TCg030969
-	for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 16:01:29 -0600
-Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id rBJM1TBt022666
-	for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 16:01:29 -0600
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: pcie designware question
-Date: Thu, 19 Dec 2013 22:01:28 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:59413 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466Ab3LPTMf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 14:12:35 -0500
+Received: by mail-ie0-f171.google.com with SMTP id ar20so7098492iec.2
+        for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2013 11:12:34 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1387206956.8071.14.camel@ejdallLaptop>
+References: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
+ <20131213221616.GC6746@google.com> <1386974853.10497.64.camel@ejdallLaptop>
+ <20131213230657.GD6746@google.com> <1387206956.8071.14.camel@ejdallLaptop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 16 Dec 2013 12:12:14 -0700
+Message-ID: <CAErSpo4rDNkqXTDvwD3masQUgy9vTxG97dBXMnLYzTdpEM5b9A@mail.gmail.com>
+Subject: Re: [PATCH] PCI AER: Handle non-AER HEST error sources in aer_hest_parse()
+To: Betty Dall <betty.dall@hp.com>
+Cc: Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, Dec 16, 2013 at 8:15 AM, Betty Dall <betty.dall@hp.com> wrote:
+> On Fri, 2013-12-13 at 16:06 -0700, Bjorn Helgaas wrote:
+>
+>> I should have thought longer before hitting send.  I think it's worthwhile
+>> to use the same helper in aer_hest_parse_aff(), and once I did that, it
+>> became more obvious that aer_hest_parse() and aer_hest_parse_aff() are
+>> essentially similar, so I wonder if it's worth consolidating them, as
+>> below.  It doesn't reduce the number of lines of code, but maybe it's
+>> simpler for the reader?
+>
+>
+> Hi Bjorn,
+>
+> That is a nice cleanup. I tested it on my firmware first system.
+>
+> Also, I double checked back through the ACPI spec, and there are
+> FIRMWARE_FIRST flags in the IA-32 Architecture Machine Check Exception
+> and IA-32 Architecture Corrected Machine Check error sources too. These
+> functions we are changing are specifically looking just for the AER
+> error sources. That is correct because AER firmware first is separate
+> from MCE/CMC firmware first. So, this patch looks good.
 
-I am working to port my pcie driver to pcie-designware core driver. The pcie sub system
- on our platform  has 32 OUTBOUND regions and 2 INBOUND regions. In my current driver,
-I use internal memory map of CPU to access the RC's config/application space as well EP's
-config space. a 4K range is available to access the EP's config space. To allow write/read to
-the EP's config space, the driver basically write the bus, device and function number to the
- application CFG_SETUP register and then access the corresponding EP's config register.
+Thanks, I added your "Reviewed-by".
 
-I have reviewed the designware.c code and the glue logic driver pci-exynos.c and couldn't
-understand few things.
-
-1. Our pcie ss is based on designware core and following addresses are not listed in our IP's
- data manual. Where is defined? It does show the rest of the offsets defined in
- drivers/pci/host/designware.c and 
-
-#define PCIE_ATU_VIEWPORT               0x900
-#define PCIE_ATU_REGION_INBOUND         (0x1 << 31)
-#define PCIE_ATU_REGION_OUTBOUND        (0x0 << 31)
-#define PCIE_ATU_REGION_INDEX1          (0x1 << 0)
-#define PCIE_ATU_REGION_INDEX0          (0x0 << 0)
-#define PCIE_ATU_CR1                    0x904
-#define PCIE_ATU_TYPE_MEM               (0x0 << 0)
-#define PCIE_ATU_TYPE_IO                (0x2 << 0)
-#define PCIE_ATU_TYPE_CFG0              (0x4 << 0)
-#define PCIE_ATU_TYPE_CFG1              (0x5 << 0)
-#define PCIE_ATU_CR2                    0x908
-#define PCIE_ATU_ENABLE                 (0x1 << 31)
-#define PCIE_ATU_BAR_MODE_ENABLE        (0x1 << 30)
-#define PCIE_ATU_LOWER_BASE             0x90C
-#define PCIE_ATU_UPPER_BASE             0x910
-#define PCIE_ATU_LIMIT                  0x914
-#define PCIE_ATU_LOWER_TARGET           0x918
-#define PCIE_ATU_BUS(x)                 (((x) & 0xff) << 24)
-#define PCIE_ATU_DEV(x)                 (((x) & 0x1f) << 19)
-#define PCIE_ATU_FUNC(x)                (((x) & 0x7) << 16)
-#define PCIE_ATU_UPPER_TARGET           0x91C
-
-2. My understanding is that the designware core currently support 2 OUTBOUND regions
-and 2 INBOUND regions. Is this true? Is there a plan to support more than 2?
-3. Is there a documentation explaining how the ATU handling code is designed? Basically
-as I can't find ATU specific registers defined in the ss spec, I am not able to understand
-this code. I do see the application space in our ss spec defining OUTBOUND INDEX/OFFSET
-register to configure OUTBOUND regions and IB registers to define the INBOUND region.
-
-4. What is the base address variable used to access RC's application register space? dbi_base
-in struct pcie_port ? Also I am assuming this is used for accessing this space from internal
-CPU bus and cfg0_base and cfg1_base for accessing it from pci bus. Is this right?
-
-I am trying to figure this out myself, but if someone could explain these, that will be great!
-
-Thanks.
-
-Murali Karicheri
-Linux Kernel, Software Development
-
-
+Bjorn
