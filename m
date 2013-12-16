@@ -1,96 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:62203 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932758Ab3LIQJr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 11:09:47 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [Query/Discussion]: IO translation with designware PCIe controller
-Date: Mon, 9 Dec 2013 17:09:37 +0100
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Marek Vasut <marex@denx.de>,
-	Richard Zhu <Hong-Xing.Zhu@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Tim Harvey <tharvey@gateworks.com>
-References: <20131205050424.GA2298@pratyush-vbox> <201312061546.23981.arnd@arndb.de> <20131209071241.GA5760@pratyush-vbox>
-In-Reply-To: <20131209071241.GA5760@pratyush-vbox>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312091709.38013.arnd@arndb.de>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:28555 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754993Ab3LPSoY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 13:44:24 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v4 0/9] PCI/MSI: Introduce pci_auto_enable_msi*() family helpers
+Date: Mon, 16 Dec 2013 09:34:53 +0100
+Message-Id: <cover.1387140921.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 09 December 2013, Pratyush Anand wrote:
-> > I think it does handle this correctly, look at
-> > 
-> > static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> > {
-> > 	...
-> >         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> >                 sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> >                 pci_ioremap_io(sys->io_offset, pp->io.start);
-> >                 global_io_offset += SZ_64K;
-> >                 pci_add_resource_offset(&sys->resources, &pp->io,
-> >                                         sys->io_offset);
-> >         }
-> > 	...
-> > }
-> > 
-> > I believe this does the right thing, but you have to put the correct
-> > translation into the 'ranges' property of the host bridge node in DT.
-> 
-> May be not exactly. pp->io is the  realio, and it is passed correctly
-> to pci_add_resource_offset. But, as you had also
-> said that pci_ioremap_io will receive cpu physical address space as
-> input, therefore I think following modification will be needed to work
-> io transaction properly.
+This series is against "next" branch in Bjorn's repo:
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
 
-I see. I think you are right.
+Changes from v3 to v4:
+  - pcim_enable_msi* functions renamed to pci_auto_enable_msi* ones
+  - PowerPC patches dropped
+  - pci_get_msi_cap()     renamed to pci_get_msix_vec_count() and
+    pci_msix_table_size() renamed to pci_get_msix_vec_count()
 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index be6ce30..cf68632 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  					   + global_io_offset);
->  			pp->config.io_size = resource_size(&pp->io);
->  			pp->config.io_bus_addr = range.pci_addr;
-> +			pp->io_base = range.cpu_addr;
->  		}
->  		if (restype == IORESOURCE_MEM) {
->  			of_pci_range_to_resource(&range, np, &pp->mem);
-> @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  
->  	pp->cfg0_base = pp->cfg.start;
->  	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> -	pp->io_base = pp->io.start;
->  	pp->mem_base = pp->mem.start;
->  
->  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
+Changes from v2 to v3:
+  - new public interfaces commented in drivers/pci/msi.c;
+  - patch "Make quota traversing and requesting race-safe" explained;
+  - pci_enable_msi/msix() 'nvec' arg type changed from 'unsigned int' to 'int';
+  - pcim_enable_msi*() arg 'nvec' renamed to 'maxvec' when upper limit passed;
+  - pcim_enable_msi*(..., maxvec, minvec) arg order swapped to minvec, maxvec;
+  - "PCI: Fail MSI/MSI-X initialization if device is not in PCI_D0" commit
+    869a161 and "PCI/MSI: Factor out pci_get_msi_cap() interface" patch
+    conflicts resolved;
 
-This looks correct to me and it seems to also fix a bug in
-dw_pcie_prog_viewport_io_outbound if I read this correctly.
+Currently many device drivers need contiguously call functions
+pci_enable_msix() for MSI-X or pci_enable_msi_block() for MSI
+in a loop until success or failure. This update generalizes
+this usage pattern and introduces pci_auto_enable_msi*() family
+helpers.
 
-> @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
->  
->  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
->  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> -		pci_ioremap_io(sys->io_offset, pp->io.start);
-> +		pci_ioremap_io(sys->io_offset, pp->io_base);
->  		global_io_offset += SZ_64K;
->  		pci_add_resource_offset(&sys->resources, &pp->io,
->  					sys->io_offset);
+As result, device drivers do not have to deal with tri-state
+return values from pci_enable_msix() and pci_enable_msi_block()
+functions directly and expected to have more clearer and straight
+code.
 
-I think there is still a related bug in here: we should pass global_io_offset rather
-than sys->io_offset to pci_ioremap_io, so we map the new window into the first
-available spot in the Linux view of the I/O space, rather than passing a number
-that might be zero for any bus, if the 'ranges' are set up to have an identity
-mapping between Linux I/O spaces and PCI I/O spaces. You should be able to verify
-this by setting the I/O range for the bus to a random 4KB multiple in DT and
-observe that Linux start allocating ports from 0x1000 but the raw BAR values
-would contain the value you have chosen.
+So i.e. the request loop described in the documentation...
 
-	Arnd
+	int foo_driver_enable_msix(struct foo_adapter *adapter,
+				   int nvec)
+	{
+		while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
+			rc = pci_enable_msix(adapter->pdev,
+					     adapter->msix_entries,
+					     nvec);
+			if (rc > 0)
+				nvec = rc;
+			else
+				return rc;
+		}
+
+		return -ENOSPC;
+	}
+
+...would turn into a single helper call....
+
+	rc = pci_auto_enable_msix_range(adapter->pdev,
+					adapter->msix_entries,
+					FOO_DRIVER_MINIMUM_NVEC,
+					nvec);
+
+Device drivers with more specific requirements (i.e. a number of
+MSI-Xs which is a multiple of a certain number within a specified
+range) would still need to implement the loop using the two old
+functions.
+
+The tree could be found in "pci-next-msi-v4" branch in repo:
+https://github.com/a-gordeev/linux.git
+
+
+Alexander Gordeev (9):
+  PCI/MSI/s390: Fix single MSI only check
+  PCI/MSI/s390: Remove superfluous check of MSI type
+  PCI/MSI: Fix return value when populate_msi_sysfs() failed
+  PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
+  PCI/MSI: Make pci_enable_msi/msix() 'nvec' argument type as int
+  PCI/MSI: Factor out pci_get_msi_vec_count() interface
+  PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
+  PCI/MSI: Introduce pci_get_msix_vec_count() interface
+  PCI/MSI: Introduce pci_auto_enable_msi*() family helpers
+
+ Documentation/PCI/MSI-HOWTO.txt |  175 +++++++++++++++++++++++++++++++++------
+ arch/s390/pci/pci.c             |    4 +-
+ drivers/ata/ahci.c              |   56 ++++++++-----
+ drivers/pci/msi.c               |  163 +++++++++++++++++++++++++++---------
+ drivers/pci/pcie/portdrv_core.c |    7 +-
+ include/linux/pci.h             |   78 +++++++++++++++---
+ 6 files changed, 380 insertions(+), 103 deletions(-)
+
+-- 
+1.7.7.6
+
