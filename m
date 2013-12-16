@@ -1,108 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:57602 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751018Ab3LLWLQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 17:11:16 -0500
-Date: Thu, 12 Dec 2013 23:11:03 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-tegra@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Wei Yongjun <weiyj.lk@gmail.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
-Subject: Re: [PATCH v2] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car
- PCI host maintainers
-Message-ID: <20131212231103.3ceeb3bb@skate>
-In-Reply-To: <20131212204610.GK4699@google.com>
-References: <20131211183237.GI4699@google.com>
-	<20131212204610.GK4699@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:10174 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755379Ab3LPTeR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 14:34:17 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v4 2/9] PCI/MSI/s390: Remove superfluous check of MSI type
+Date: Mon, 16 Dec 2013 09:34:55 +0100
+Message-Id: <f317583c5dda2b440ac2906b2cd04c97cae5ed1b.1387140921.git.agordeev@redhat.com>
+In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn Helgaas,
+arch_setup_msi_irqs() hook can only be called from the generic
+MSI code which ensures correct MSI type parameter.
 
-On Thu, 12 Dec 2013 13:46:10 -0700, Bjorn Helgaas wrote:
-> [+cc Thomas]
-> 
-> On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
-> > If this looks reasonable, I'll merge it via the PCI tree for v3.13.
-> 
-> OK, here's another try.  I'm not actually trying to nominate anybody; I
-> just tried to write down the list we came up with in an earlier discussion [1].
-> 
-> I'd like confirmation from the following people that they approve of being
-> listed here:
-> 
->   Richard Zhu (IMX6)
->   Thomas Petazzoni (MVEBU)
->   Magnus Damm (R-CAR)
-> 
-> I think everybody else listed has already said they approve.
-> 
-> [1] http://lkml.kernel.org/r/CAErSpo5tN==4nSv2u3SUBe_L4VsWn4P7TN+LtrC172Qj1vhtog@mail.gmail.com
-> 
-> 
-> MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
-> 
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Add entries for PCI host controller drivers in drivers/pci/host/.
-> 
-> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>		(DesignWare)
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>	(DesignWare)
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Acked-by: Simon Horman <horms+renesas@verge.net.au>	(R-CAR)
-> Acked-by: Jason Cooper <jason@lakedaemon.net>		(MVEBU)
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
-> Acked-by: Thierry Reding <treding@nvidia.com>
-> ---
->  MAINTAINERS |   34 ++++++++++++++++++++++++++++++++++
->  1 file changed, 34 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 8285ed4676b6..1c5dc36ec522 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6449,19 +6449,53 @@ F:	drivers/pci/
->  F:	include/linux/pci*
->  F:	arch/x86/pci/
->  
-> +PCI DRIVER FOR IMX6
-> +M:	Richard Zhu <r65037@freescale.com>
-> +M:	Shawn Guo <shawn.guo@linaro.org>
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> +S:	Maintained
-> +F:	drivers/pci/host/*imx6*
-> +
-> +PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
-> +M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> +M:	Jason Cooper <jason@lakedaemon.net>
-> +L:	linux-pci@vger.kernel.org
-> +L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-> +S:	Maintained
-> +F:	drivers/pci/host/*mvebu*
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
+---
+ arch/s390/pci/pci.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-
-Thanks for doing this!
-
-Best regards,
-
-Thomas
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 6f3788e..4859c40 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -407,8 +407,6 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ 	struct msi_msg msg;
+ 	int rc;
+ 
+-	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
+-		return -EINVAL;
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.7.7.6
+
