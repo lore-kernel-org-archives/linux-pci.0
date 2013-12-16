@@ -1,91 +1,248 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 16 Dec 2013 09:39:07 -0800
-From: Guenter Roeck <linux@roeck-us.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatjain@juniper.net>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for
- hot-plug and removal
-Message-ID: <20131216173907.GC1811@roeck-us.net>
-References: <529E5C0E.80903@gmail.com>
- <20131212224407.GL4699@google.com>
- <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
- <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
- <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
- <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com>
- <CAE9FiQX-ZP0R-weuPoOJ6GkPxOLp5jk9thnjfPQ+Q5tCHugD4w@mail.gmail.com>
- <20131214033911.GA25115@roeck-us.net>
- <241775f7fb71476aa84bbb19fde4602f@DM2PR05MB671.namprd05.prod.outlook.com>
- <CAErSpo4grMgCBetm7DMmizWQS_peM5yYBwFS99K8jbXaEWGmEg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4grMgCBetm7DMmizWQS_peM5yYBwFS99K8jbXaEWGmEg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:26908 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751430Ab3LPUC7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Dec 2013 15:02:59 -0500
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
+Cc: bhelgaas@google.com, david.a.cohen@linux.intel.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Kuppuswamy Sathyanarayanan
+	<sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Fei Yang <fei.yang@intel.com>
+Subject: [PATCH v2 2/4] x86: intel-mid: add Clovertrail platform support
+Date: Mon, 16 Dec 2013 12:07:37 -0800
+Message-Id: <1387224459-25746-3-git-send-email-david.a.cohen@linux.intel.com>
+In-Reply-To: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 15, 2013 at 05:18:26PM -0700, Bjorn Helgaas wrote:
-> On Sun, Dec 15, 2013 at 4:24 PM, Rajat Jain <rajatjain@juniper.net> wrote:
-> >> > >
-> >> > >> Once again: the way I interpret this is: * Always enable Link events.
-> >> > >> * Disable presence events if attention button is present.
-> >> > >
-> >> > > That sounds like a good plan to me.
-> >> >
-> >> > How about Diag_Reset from MPT2SAS and others?  link could up and down
-> >> >
-> >
-> > I am assuming you are referring to
-> >
-> > static int _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
-> >
-> > Which as far as I could understand would cause link to go down and come up
-> > again without the kernel knowing anything about it?  ...
-> 
-> > In general, I guess the question is when a link goes down and back up,
-> > whether or not we want to treat it as a hot unplug followed by a hotplug. I
-> > think there may be cases such as AER (or the one Yinghai mentions) where we
-> > don't want to treat it as a hotplug (see note below). And there may be cases
-> > that we definitely want to treat it as hotplug (need link events!).
-> > Situation gets more complex since there may be pciehp slots downstream of a
-> > link getting reset.
-> >
-> > It seems to me that we are saying that a mechanism is needed so that a
-> > voluntary Link flap is NOT treated like a hotplug temporarily?  ...
-> 
-> > Notes: * it may not OK, if the kernel thinks the device is accessible when
-> > it is really not.  What if during this downtime, someone tries to access the
-> > device (say userspace)?  * How do we know after the link up, that the device
-> > is really the same.  If during this reset, the device changed its
-> > "character", say a different class?  I think a rescan should be mandated
-> > after every such event.  * Do we need to unload and reload the driver after
-> > the link reset, since it can be a different device?
-> 
-> I am quite dubious about the idea of a voluntary link flap.  If the link goes
-> down and comes back up, I don't see how we can make any assumptions about what
-> device is there.
-> 
-> I let Alex talk me into pciehp_reset_slot(), which disables presence detect
-> interrupts while resetting a device, so we already have a bit of precedent for
-> the idea.  But even in that case, the device could easily come out of reset as
-> a different device, e.g., if the reset caused it to load updated firmware.
-> 
-> I would feel much better if we treated link down as a remove and did a rescan
-> on the link up.
-> 
-Agreed. Question is if we might need some means for a driver to tell the PCIe
-core about an upcoming "planned" link flap. pciehp_reset_slot() doesn't seem
-to address the condition where a driver resets a connected chip by other means
-than by calling pciehp_reset_slot(). Still not sure what happens when the
-mpt2sas driver issues its diagnostic reset, to take Yinghai's example (or if
-there would be a cleaner way to implement such a reset).
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-Guenter
+This patch adds Clovertrail support on intel-mid and makes it more
+flexible to support other SoCs.
+
+Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Signed-off-by: Fei Yang <fei.yang@intel.com>
+---
+ arch/x86/include/asm/intel-mid.h                   | 46 +++++++++++++++++++++-
+ arch/x86/platform/intel-mid/intel-mid.c            | 39 ++++++++++++++++--
+ arch/x86/platform/intel-mid/intel_mid_weak_decls.h |  7 +++-
+ arch/x86/platform/intel-mid/mfld.c                 | 32 +++++++++++++--
+ 4 files changed, 113 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/include/asm/intel-mid.h b/arch/x86/include/asm/intel-mid.h
+index 459769d39263..f8a831431fe0 100644
+--- a/arch/x86/include/asm/intel-mid.h
++++ b/arch/x86/include/asm/intel-mid.h
+@@ -51,10 +51,39 @@ struct devs_id {
+ enum intel_mid_cpu_type {
+ 	/* 1 was Moorestown */
+ 	INTEL_MID_CPU_CHIP_PENWELL = 2,
++	INTEL_MID_CPU_CHIP_CLOVERVIEW,
+ };
+ 
+ extern enum intel_mid_cpu_type __intel_mid_cpu_chip;
+ 
++/**
++ * struct intel_mid_ops - Interface between intel-mid & sub archs
++ * @arch_setup: arch_setup function to re-initialize platform
++ *             structures (x86_init, x86_platform_init)
++ *
++ * This structure can be extended if any new interface is required
++ * between intel-mid & its sub arch files.
++ */
++struct intel_mid_ops {
++	void (*arch_setup)(void);
++};
++
++/* Helper API's for INTEL_MID_OPS_INIT */
++#define DECLARE_INTEL_MID_OPS_INIT(cpuname, cpuid)	\
++				[cpuid] = get_##cpuname##_ops
++
++/* Maximum number of CPU ops */
++#define MAX_CPU_OPS(a) (sizeof(a)/sizeof(void *))
++
++/*
++ * For every new cpu addition, a weak get_<cpuname>_ops() function needs be
++ * declared in arch/x86/platform/intel_mid/intel_mid_weak_decls.h.
++ */
++#define INTEL_MID_OPS_INIT {\
++	DECLARE_INTEL_MID_OPS_INIT(penwell, INTEL_MID_CPU_CHIP_PENWELL), \
++	DECLARE_INTEL_MID_OPS_INIT(cloverview, INTEL_MID_CPU_CHIP_CLOVERVIEW), \
++};
++
+ #ifdef CONFIG_X86_INTEL_MID
+ 
+ static inline enum intel_mid_cpu_type intel_mid_identify_cpu(void)
+@@ -86,8 +115,21 @@ extern enum intel_mid_timer_options intel_mid_timer_options;
+  * Penwell uses spread spectrum clock, so the freq number is not exactly
+  * the same as reported by MSR based on SDM.
+  */
+-#define PENWELL_FSB_FREQ_83SKU         83200
+-#define PENWELL_FSB_FREQ_100SKU        99840
++#define FSB_FREQ_83SKU	83200
++#define FSB_FREQ_100SKU	99840
++#define FSB_FREQ_133SKU	133000
++
++#define FSB_FREQ_167SKU	167000
++#define FSB_FREQ_200SKU	200000
++#define FSB_FREQ_267SKU	267000
++#define FSB_FREQ_333SKU	333000
++#define FSB_FREQ_400SKU	400000
++
++/* Bus Select SoC Fuse value */
++#define BSEL_SOC_FUSE_MASK	0x7
++#define BSEL_SOC_FUSE_001	0x1 /* FSB 133MHz */
++#define BSEL_SOC_FUSE_101	0x5 /* FSB 100MHz */
++#define BSEL_SOC_FUSE_111	0x7 /* FSB 83MHz */
+ 
+ #define SFI_MTMR_MAX_NUM 8
+ #define SFI_MRTC_MAX	8
+diff --git a/arch/x86/platform/intel-mid/intel-mid.c b/arch/x86/platform/intel-mid/intel-mid.c
+index 527d6d50643d..40955841bb32 100644
+--- a/arch/x86/platform/intel-mid/intel-mid.c
++++ b/arch/x86/platform/intel-mid/intel-mid.c
+@@ -60,14 +60,27 @@
+ 
+ enum intel_mid_timer_options intel_mid_timer_options;
+ 
++/* intel_mid_ops to store sub arch ops */
++struct intel_mid_ops *intel_mid_ops;
++/* getter function for sub arch ops*/
++static void *(*get_intel_mid_ops[])(void) = INTEL_MID_OPS_INIT;
+ enum intel_mid_cpu_type __intel_mid_cpu_chip;
+ EXPORT_SYMBOL_GPL(__intel_mid_cpu_chip);
+ 
++static void intel_mid_power_off(void)
++{
++};
++
+ static void intel_mid_reboot(void)
+ {
+ 	intel_scu_ipc_simple_command(IPCMSG_COLD_BOOT, 0);
+ }
+ 
++static unsigned long __init intel_mid_calibrate_tsc(void)
++{
++	return 0;
++}
++
+ static void __init intel_mid_time_init(void)
+ {
+ 	sfi_table_parse(SFI_SIG_MTMR, NULL, NULL, sfi_parse_mtmr);
+@@ -92,13 +105,33 @@ static void __init intel_mid_time_init(void)
+ 
+ static void intel_mid_arch_setup(void)
+ {
+-	if (boot_cpu_data.x86 == 6 && boot_cpu_data.x86_model == 0x27)
+-		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_PENWELL;
+-	else {
++	if (boot_cpu_data.x86 != 6) {
+ 		pr_err("Unknown Intel MID CPU (%d:%d), default to Penwell\n",
+ 			boot_cpu_data.x86, boot_cpu_data.x86_model);
+ 		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_PENWELL;
++		goto out;
++	}
++
++	switch (boot_cpu_data.x86_model) {
++	case 0x35:
++		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_CLOVERVIEW;
++		break;
++	case 0x27:
++	default:
++		__intel_mid_cpu_chip = INTEL_MID_CPU_CHIP_PENWELL;
++		break;
+ 	}
++
++	if (__intel_mid_cpu_chip < MAX_CPU_OPS(get_intel_mid_ops))
++		intel_mid_ops = get_intel_mid_ops[__intel_mid_cpu_chip]();
++	else {
++		intel_mid_ops = get_intel_mid_ops[INTEL_MID_CPU_CHIP_PENWELL]();
++		pr_info("ARCH: Uknown SoC, assuming PENWELL!\n");
++	}
++
++out:
++	if (intel_mid_ops->arch_setup)
++		intel_mid_ops->arch_setup();
+ }
+ 
+ /* MID systems don't have i8042 controller */
+diff --git a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
+index 519beb75ba4c..9ebce0447edf 100644
+--- a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
++++ b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
+@@ -11,5 +11,8 @@
+ 
+ 
+ /* __attribute__((weak)) makes these declarations overridable */
+-extern void intel_mid_power_off(void) __attribute__((weak));
+-extern unsigned long __init intel_mid_calibrate_tsc(void) __attribute__((weak));
++/* For every CPU addition a new get_<cpuname>_ops interface needs
++ * to be added.
++ */
++extern void * __cpuinit get_penwell_ops(void) __attribute__((weak));
++extern void * __cpuinit get_cloverview_ops(void) __attribute__((weak));
+diff --git a/arch/x86/platform/intel-mid/mfld.c b/arch/x86/platform/intel-mid/mfld.c
+index c7ff83c4576d..4f7884eebc14 100644
+--- a/arch/x86/platform/intel-mid/mfld.c
++++ b/arch/x86/platform/intel-mid/mfld.c
+@@ -15,11 +15,19 @@
+ #include <asm/intel-mid.h>
+ #include <asm/intel_mid_vrtc.h>
+ 
+-void intel_mid_power_off(void)
++#include "intel_mid_weak_decls.h"
++
++static void penwell_arch_setup(void);
++/* penwell arch ops */
++static struct intel_mid_ops penwell_ops = {
++	.arch_setup = penwell_arch_setup,
++};
++
++static void mfld_power_off(void)
+ {
+ }
+ 
+-unsigned long __init intel_mid_calibrate_tsc(void)
++static unsigned long __init mfld_calibrate_tsc(void)
+ {
+ 	unsigned long fast_calibrate;
+ 	u32 lo, hi, ratio, fsb;
+@@ -35,9 +43,9 @@ unsigned long __init intel_mid_calibrate_tsc(void)
+ 	}
+ 	rdmsr(MSR_FSB_FREQ, lo, hi);
+ 	if ((lo & 0x7) == 0x7)
+-		fsb = PENWELL_FSB_FREQ_83SKU;
++		fsb = FSB_FREQ_83SKU;
+ 	else
+-		fsb = PENWELL_FSB_FREQ_100SKU;
++		fsb = FSB_FREQ_100SKU;
+ 	fast_calibrate = ratio * fsb;
+ 	pr_debug("read penwell tsc %lu khz\n", fast_calibrate);
+ 	lapic_timer_frequency = fsb * 1000 / HZ;
+@@ -49,3 +57,19 @@ unsigned long __init intel_mid_calibrate_tsc(void)
+ 
+ 	return 0;
+ }
++
++static void __init penwell_arch_setup()
++{
++	x86_platform.calibrate_tsc = mfld_calibrate_tsc;
++	pm_power_off = mfld_power_off;
++}
++
++void * __cpuinit get_penwell_ops()
++{
++	return &penwell_ops;
++}
++
++void * __cpuinit get_cloverview_ops()
++{
++	return &penwell_ops;
++}
+-- 
+1.8.4.2
+
