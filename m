@@ -1,147 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:59744 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502Ab3LLXUT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 18:20:19 -0500
-Date: Thu, 12 Dec 2013 15:22:09 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Neil Horman <nhorman@tuxdriver.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Veaceslav Falico <vfalico@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Knut Petersen <Knut_Petersen@t-online.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	=?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: export MSI mode using attributes, not kobjects
-Message-ID: <20131212232209.GA8543@kroah.com>
-References: <20131127184652.GA1856@kroah.com>
- <CAErSpo46LZP8t+aLnYOtJ1mXKKkCF7sOy97MFd0hWo+OOoz68Q@mail.gmail.com>
- <CAE9FiQUeyxN5OAaXqfhdQkzTwjV83BN-L3r6kH0sO0t1b1-63Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAE9FiQUeyxN5OAaXqfhdQkzTwjV83BN-L3r6kH0sO0t1b1-63Q@mail.gmail.com>
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:28717 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754988Ab3LPSsD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 13:48:03 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v4 8/9] PCI/MSI: Introduce pci_get_msix_vec_count() interface
+Date: Mon, 16 Dec 2013 09:35:01 +0100
+Message-Id: <7f63ab07cfeff8e87eda141d850ecee3d4791c1c.1387140921.git.agordeev@redhat.com>
+In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 12, 2013 at 03:17:50PM -0800, Yinghai Lu wrote:
-> On Sat, Dec 7, 2013 at 12:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Wed, Nov 27, 2013 at 11:46 AM, Greg Kroah-Hartman
-> > <gregkh@linuxfoundation.org> wrote:
-> >> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >>
-> >> The PCI MSI sysfs code is a mess with kobjects for things that don't
-> >> really need to be kobjects.  This patch creates attributes dynamically
-> >> for the MSI interrupts instead of using kobjects.
-> >>
-> >> Note, this removes a directory from the current MSI interrupt sysfs
-> >> code:
-> >>
-> >> old MSI kobjects:
-> >> pci_device
-> >>    └── msi_irqs
-> >>        └── 40
-> >>            └── mode
-> >>
-> >> new MSI attributes:
-> >> pci_device
-> >>    └── msi_irqs
-> >>        └── 40
-> >>
-> >> As there was only one file "mode" with the kobject model, the interrupt
-> >> number is now a file that returns the "mode" of the interrupt (msi vs.
-> >> msix).
-> >>
-> >> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> >
-> > I added the acks from Neil and Veaceslav, folded in the
-> > Documentation/ABI update, and applied the whole thing to my pci/misc
-> > branch for v3.14.  Thanks!
-> 
-> got:
-> [   71.429735] BUG: key ffff887fcf082a58 not in .data!
-> [   71.429737] ------------[ cut here ]------------
-> [   71.429742] WARNING: CPU: 0 PID: 4 at kernel/locking/lockdep.c:2987 lockdep_i
-> nit_map+0x127/0x5b0()
-> [   71.429743] DEBUG_LOCKS_WARN_ON(1)
-> [   71.429744] Modules linked in:
-> [   71.429747] CPU: 0 PID: 4 Comm: kworker/0:0 Tainted: G          I  3.13.0-rc3
-> -yh-01187-ge0e4e4e-dirty #45
-> [   71.429757] Workqueue: events work_for_cpu_fn
-> [   71.429792]  0000000000000009 ffff881fcf95da58 ffffffff82020475 ffff881fcf95d
-> aa0
-> [   71.429800]  ffff881fcf95da90 ffffffff81097c3d ffff887fcf082a58 ffff88dfcec1a
-> d28
-> [   71.429809]  0000000000000000 0000000000000000 ffff889fcf2eecd0 ffff881fcf95d
-> af0
-> [   71.429809] Call Trace:
-> [   71.429814]  [<ffffffff82020475>] dump_stack+0x45/0x56
-> [   71.429818]  [<ffffffff81097c3d>] warn_slowpath_common+0x7d/0xa0
-> [   71.429822]  [<ffffffff81097cac>] warn_slowpath_fmt+0x4c/0x50
-> [   71.429826]  [<ffffffff810e3d97>] lockdep_init_map+0x127/0x5b0
-> [   71.429835]  [<ffffffff81242fe8>] ? sysfs_new_dirent+0x98/0x140
-> [   71.429839]  [<ffffffff81242033>] sysfs_add_file_mode_ns+0x63/0xc0
-> [   71.429843]  [<ffffffff8124491d>] internal_create_group+0x18d/0x260
-> [   71.429853]  [<ffffffff81556345>] ? populate_msi_sysfs+0x185/0x1d0
-> [   71.429857]  [<ffffffff81244a52>] sysfs_create_groups+0x42/0xa0
-> [   71.429861]  [<ffffffff81556367>] populate_msi_sysfs+0x1a7/0x1d0
-> [   71.429865]  [<ffffffff81556b67>] pci_enable_msi_block+0x1f7/0x2a0
-> [   71.429870]  [<ffffffff81549795>] pcie_port_device_register+0x335/0x520
-> [   71.429874]  [<ffffffff81549f08>] pcie_portdrv_probe+0x68/0xa0
-> [   71.429883]  [<ffffffff8153cf75>] local_pci_probe+0x45/0xa0
-> [   71.429887]  [<ffffffff810b0af4>] work_for_cpu_fn+0x14/0x20
-> [   71.429891]  [<ffffffff810b431b>] process_one_work+0x28b/0x4a0
-> [   71.429895]  [<ffffffff810b4292>] ? process_one_work+0x202/0x4a0
-> [   71.429899]  [<ffffffff810b55db>] worker_thread+0x26b/0x3a0
-> [   71.429903]  [<ffffffff810e262d>] ? trace_hardirqs_on+0xd/0x10
-> [   71.429906]  [<ffffffff810b5370>] ? manage_workers.isra.17+0x340/0x340
-> [   71.429912]  [<ffffffff810bc031>] kthread+0x111/0x120
-> [   71.429919]  [<ffffffff810cddab>] ? local_clock+0x2b/0x40
-> [   71.429923]  [<ffffffff810bbf20>] ? kthread_stop+0xf0/0xf0
-> [   71.429927]  [<ffffffff8203842c>] ret_from_fork+0x7c/0xb0
-> [   71.429931]  [<ffffffff810bbf20>] ? kthread_stop+0xf0/0xf0
-> [   71.429933] ---[ end trace c511e3d74efea94e ]---
-> 
-> looks like Greg forgot adding attr init.
-> 
-> Can you fold attached patch into Greg's patch ?
-> 
-> Index: linux-2.6/drivers/pci/msi.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/msi.c
-> +++ linux-2.6/drivers/pci/msi.c
-> @@ -547,6 +547,7 @@ static int populate_msi_sysfs(struct pci
->                 msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
->                 if (!msi_dev_attr)
->                         return -ENOMEM;
-> +               sysfs_attr_init(&msi_dev_attr->attr);
->                 sprintf(name, "%d", entry->irq);
->                 msi_dev_attr->attr.name = name;
->                 msi_dev_attr->attr.mode = S_IRUGO;
+This update is needed to create a consistent MSI-X counterpart
+for pci_get_msi_vec_count() MSI interface. Device drivers can
+use this function to obtain maximum number of MSI-X interrupts
+the device supports and i.e. use that number in a following call
+to pci_enable_msix() interface.
 
-> ---
->  drivers/pci/msi.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> Index: linux-2.6/drivers/pci/msi.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/msi.c
-> +++ linux-2.6/drivers/pci/msi.c
-> @@ -547,6 +547,7 @@ static int populate_msi_sysfs(struct pci
->  		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
->  		if (!msi_dev_attr)
->  			return -ENOMEM;
-> +		sysfs_attr_init(&msi_dev_attr->attr);
->  		sprintf(name, "%d", entry->irq);
->  		msi_dev_attr->attr.name = name;
->  		msi_dev_attr->attr.mode = S_IRUGO;
+Interface pci_get_msix_vec_count() supersedes pci_msix_table_size()
+function and returns a negative errno if device does not support
+MSI-X interrupts. After this update callers must always check the
+returned value.
 
-Ah, crap, yes, you are right, my fault, very nice catch.
+The only user of pci_msix_table_size() function was PCI-Express
+port driver, which is also updated by this change.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Reviewed-by: Tejun Heo <tj@kernel.org>
+---
+ Documentation/PCI/MSI-HOWTO.txt |   13 +++++++++++++
+ drivers/pci/msi.c               |   18 +++++++++++++-----
+ drivers/pci/pcie/portdrv_core.c |    7 ++++---
+ include/linux/pci.h             |    6 +++---
+ 4 files changed, 33 insertions(+), 11 deletions(-)
 
-greg k-h
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 8d35d62..7d19656 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -243,6 +243,19 @@ MSI-X Table.  This address is mapped by the PCI subsystem, and should not
+ be accessed directly by the device driver.  If the driver wishes to
+ mask or unmask an interrupt, it should call disable_irq() / enable_irq().
+ 
++4.3.4 pci_get_msix_vec_count
++
++int pci_get_msix_vec_count(struct pci_dev *dev)
++
++This function could be used to retrieve number of entries in the device
++MSI-X table.
++
++If this function returns a negative number, it indicates the device is
++not capable of sending MSI-Xs.
++
++If this function returns a positive number, it indicates the maximum
++number of MSI-X interrupt vectors that could be allocated.
++
+ 4.4 Handling devices implementing both MSI and MSI-X capabilities
+ 
+ If a device implements both MSI and MSI-X capabilities, it can
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index de1acb9..18e877f5 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -939,19 +939,25 @@ void pci_disable_msi(struct pci_dev *dev)
+ EXPORT_SYMBOL(pci_disable_msi);
+ 
+ /**
+- * pci_msix_table_size - return the number of device's MSI-X table entries
++ * pci_get_msix_vec_count - return the number of device's MSI-X table entries
+  * @dev: pointer to the pci_dev data structure of MSI-X device function
+- */
+-int pci_msix_table_size(struct pci_dev *dev)
++
++ * This function returns the number of device's MSI-X table entries and
++ * therefore the number of MSI-X vectors device is capable to send.
++ * It returns a negative errno if the device is not capable sending MSI-X
++ * interrupts.
++ **/
++int pci_get_msix_vec_count(struct pci_dev *dev)
+ {
+ 	u16 control;
+ 
+ 	if (!dev->msix_cap)
+-		return 0;
++		return -EINVAL;
+ 
+ 	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &control);
+ 	return msix_table_size(control);
+ }
++EXPORT_SYMBOL(pci_get_msix_vec_count);
+ 
+ /**
+  * pci_enable_msix - configure device's MSI-X capability structure
+@@ -980,7 +986,9 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	if (status)
+ 		return status;
+ 
+-	nr_entries = pci_msix_table_size(dev);
++	nr_entries = pci_get_msix_vec_count(dev);
++	if (nr_entries < 0)
++		return nr_entries;
+ 	if (nvec > nr_entries)
+ 		return nr_entries;
+ 
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index ce9d9ae..8ba9db0 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -79,9 +79,10 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+ 	u16 reg16;
+ 	u32 reg32;
+ 
+-	nr_entries = pci_msix_table_size(dev);
+-	if (!nr_entries)
+-		return -EINVAL;
++	nr_entries = pci_get_msix_vec_count(dev);
++	if (nr_entries < 0)
++		return nr_entries;
++	BUG_ON(!nr_entries);
+ 	if (nr_entries > PCIE_PORT_MAX_MSIX_ENTRIES)
+ 		nr_entries = PCIE_PORT_MAX_MSIX_ENTRIES;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8d9eb6b..7941f06 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1169,9 +1169,9 @@ static inline void pci_msi_shutdown(struct pci_dev *dev)
+ static inline void pci_disable_msi(struct pci_dev *dev)
+ { }
+ 
+-static inline int pci_msix_table_size(struct pci_dev *dev)
++static inline int pci_get_msix_vec_count(struct pci_dev *dev)
+ {
+-	return 0;
++	return -ENOSYS;
+ }
+ static inline int pci_enable_msix(struct pci_dev *dev,
+ 				  struct msix_entry *entries, int nvec)
+@@ -1198,7 +1198,7 @@ int pci_get_msi_vec_count(struct pci_dev *dev);
+ int pci_enable_msi_block(struct pci_dev *dev, int nvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+-int pci_msix_table_size(struct pci_dev *dev);
++int pci_get_msix_vec_count(struct pci_dev *dev);
+ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+ void pci_msix_shutdown(struct pci_dev *dev);
+ void pci_disable_msix(struct pci_dev *dev);
+-- 
+1.7.7.6
+
