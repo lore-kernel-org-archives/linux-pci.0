@@ -1,36 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50250 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751909Ab3LQU27 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:28:59 -0500
-Message-ID: <1387312137.30327.11.camel@bling.home>
-Subject: Re: [PATCH 3/3] pci: Add Virtual Channel to save/restore support
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, ddutile@redhat.com,
-	linux-kernel@vger.kernel.org
-Date: Tue, 17 Dec 2013 13:28:57 -0700
-In-Reply-To: <20131217180322.GA12482@google.com>
-References: <20131210183339.26294.14581.stgit@bling.home>
-	 <20131210184845.26294.81385.stgit@bling.home>
-	 <20131217180322.GA12482@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
+Cc: bhelgaas@google.com, david.a.cohen@linux.intel.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 4/4] x86: intel-mid: remove deprecated X86_MDFLD and X86_WANT_INTEL_MID configs
+Date: Mon, 16 Dec 2013 12:07:39 -0800
+Message-Id: <1387224459-25746-5-git-send-email-david.a.cohen@linux.intel.com>
+In-Reply-To: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2013-12-17 at 11:03 -0700, Bjorn Helgaas wrote:
-> On Tue, Dec 10, 2013 at 11:48:45AM -0700, Alex Williamson wrote:
-> >...
-> > +	pci_read_config_dword(dev->bus->self, pos2 + PCI_VC_PORT_REG1, &reg1);
-> > +	evcc = reg1 & PCI_VC_REG1_EVCC;
-> 
-> I think PCI_VC_PORT_REG1 and PCI_VC_PORT_REG2 are mis-named and should be
-> changed to CAP1 and CAP2 or similar.  Almost everything here is a
-> "register."
+We want to support all Intel Mid platforms with a single config
+selection. This patch removes deprecated CONFIG_X86_MDFLD and
+X86_WANT_INTEL_MID options in favor of having CONFIG_X86_INTEL_MID only.
 
-That's true, but it matches the name in the spec: "Port VC Capability
-Register 1/2".  Thanks,
+Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
+---
+ arch/x86/Kconfig | 29 +++++------------------------
+ 1 file changed, 5 insertions(+), 24 deletions(-)
 
-Alex
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index e903c71f7e69..b6a344fb01ae 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -437,42 +437,23 @@ config X86_INTEL_CE
+ 	  This option compiles in support for the CE4100 SOC for settop
+ 	  boxes and media devices.
+ 
+-config X86_WANT_INTEL_MID
++config X86_INTEL_MID
+ 	bool "Intel MID platform support"
+ 	depends on X86_32
+ 	depends on X86_EXTENDED_PLATFORM
+-	---help---
+-	  Select to build a kernel capable of supporting Intel MID platform
+-	  systems which do not have the PCI legacy interfaces (Moorestown,
+-	  Medfield). If you are building for a PC class system say N here.
+-
+-if X86_WANT_INTEL_MID
+-
+-config X86_INTEL_MID
+-	bool
+-
+-config X86_MDFLD
+-       bool "Medfield MID platform"
+ 	depends on PCI
+ 	depends on PCI_GOANY
+ 	depends on X86_IO_APIC
+-	select X86_INTEL_MID
+ 	select SFI
++	select I2C
+ 	select DW_APB_TIMER
+ 	select APB_TIMER
+-	select I2C
+-	select SPI
+ 	select INTEL_SCU_IPC
+-	select X86_PLATFORM_DEVICES
+ 	select MFD_INTEL_MSIC
+ 	---help---
+-	  Medfield is Intel's Low Power Intel Architecture (LPIA) based Moblin
+-	  Internet Device(MID) platform. 
+-	  Unlike standard x86 PCs, Medfield does not have many legacy devices
+-	  nor standard legacy replacement devices/features. e.g. Medfield does
+-	  not contain i8259, i8254, HPET, legacy BIOS, most of the io ports.
+-
+-endif
++	  Select to build a kernel capable of supporting Intel MID platform
++	  systems which do not have the PCI legacy interfaces (Moorestown,
++	  Medfield). If you are building for a PC class system say N here.
+ 
+ config X86_INTEL_LPSS
+ 	bool "Intel Low Power Subsystem Support"
+-- 
+1.8.4.2
 
