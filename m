@@ -1,86 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0153.outbound.protection.outlook.com ([207.46.163.153]:27631
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750826Ab3LMGqd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 01:46:33 -0500
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: Shawn Guo <shawn.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-samsung-soc@vger.kernel.org"
-	<linux-samsung-soc@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"Jason Cooper" <jason@lakedaemon.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Wei Yongjun <weiyj.lk@gmail.com>,
-	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	"Kuninori Morimoto" <kuninori.morimoto.gx@renesas.com>
-Subject: RE: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
- host maintainers
-Date: Fri, 13 Dec 2013 06:31:42 +0000
-Message-ID: <e0528b75cb62462eba9cdc9ff903814b@BLUPR03MB136.namprd03.prod.outlook.com>
-References: <20131211183237.GI4699@google.com>
- <20131212070045.GO18380@S2101-09.ap.freescale.net>
- <CAErSpo5O1nSkKmWfHGGZiuVdvRxFjNNDS-8BWKFhnCgwVSdr8A@mail.gmail.com>
- <20131213053922.GP18380@S2101-09.ap.freescale.net>
-In-Reply-To: <20131213053922.GP18380@S2101-09.ap.freescale.net>
+Received: from eu1sys200aog114.obsmtp.com ([207.126.144.137]:49532 "EHLO
+	eu1sys200aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751858Ab3LPGtl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Dec 2013 01:49:41 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Jingoo Han <jg1.han@samsung.com>, 'Harro Haan' <hrhaan@gmail.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Richard Zhu' <hong-xing.zhu@freescale.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Juergen Beisert' <jbe@pengutronix.de>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
+	'Sean Cross' <xobs@kosagi.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Date: Mon, 16 Dec 2013 14:48:46 +0800
+Subject: RE: [PATCH] pci: designware: fix missing msi irqs
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F6A22@EAPEX1MAIL1.st.com>
+References: <20131212182903.409515738@gmail.com>
+ <005b01cef9f9$52022bd0$f6068370$%han@samsung.com>
+In-Reply-To: <005b01cef9f9$52022bd0$f6068370$%han@samsung.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn:
-
-
 > -----Original Message-----
-> From: Shawn Guo [mailto:shawn.guo@linaro.org]
-> Sent: Friday, December 13, 2013 1:39 PM
-> To: Bjorn Helgaas
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm; linux-
-> tegra@vger.kernel.org; linux-sh@vger.kernel.org; linux-samsung-
-> soc@vger.kernel.org; Jingoo Han; Jason Cooper; Thierry Reding; Simon Horman;
-> Magnus Damm; Valentine Barshak; Wei Yongjun; Wei Yongjun; Kuninori Morimoto;
-> Zhu Richard-R65037
-> Subject: Re: [PATCH] MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI
-> host maintainers
+> From: Jingoo Han [mailto:jg1.han@samsung.com]
+> Sent: Monday, December 16, 2013 6:24 AM
+> To: 'Harro Haan'; Mohit KUMAR DCG
+> Cc: 'Bjorn Helgaas'; 'Marek Vasut'; 'Richard Zhu'; 'Shawn Guo'; Pratyush
+> ANAND; 'Tim Harvey'; 'Juergen Beisert'; 'Arnd Bergmann'; 'Siva Reddy
+> Kallam'; 'Srikanth T Shivanand'; 'Sean Cross'; linux-pci@vger.kernel.org; linux-
+> arm-kernel@lists.infradead.org; 'Jingoo Han'
+> Subject: Re: [PATCH] pci: designware: fix missing msi irqs
 > 
-> On Thu, Dec 12, 2013 at 01:29:00PM -0700, Bjorn Helgaas wrote:
-> > On Thu, Dec 12, 2013 at 12:00 AM, Shawn Guo <shawn.guo@linaro.org> wrote:
-> > > Hi Bjorn,
-> > >
-> > > On Wed, Dec 11, 2013 at 11:32:37AM -0700, Bjorn Helgaas wrote:
-> > >> +PCI DRIVER FOR IMX6
-> > >> +M:   Shawn Guo <shawn.guo@linaro.org>
-> > >
-> > > Thanks for the nomination.  But I think a better person for this
-> > > position would be Richard Zhu <r65037@freescale.com> (copied).  He
-> > > knows the driver and controller much better than myself, and most
-> > > importantly he is the driver owner for Freescale kernel and he has
-> > > the contact to Freescale PCIe hardware people.
+> On Friday, December 13, 2013 3:29 AM, Harro Haan wrote:
 > >
-> > Richard, are you OK with being listed here?
+> > The interrupts were cleared after the irq handler was called.
+> > This means that new interrupts that occur after the handler handled
+> > the previous irq but before the interrupt is cleared will be missed.
+> >
+> > Signed-off-by: Harro Haan <hrhaan@gmail.com>
+> > Cc: Mohit Kumar <mohit.kumar@st.com>
+> > Cc: Jingoo Han <jg1.han@samsung.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Marek Vasut <marex@denx.de>
+> > Cc: Richard Zhu <hong-xing.zhu@freescale.com>
+> > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > Cc: Pratyush Anand <pratyush.anand@st.com>
+> > Cc: Tim Harvey <tharvey@gateworks.com>
+> > Cc: Juergen Beisert <jbe@pengutronix.de>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> > Cc: Sean Cross <xobs@kosagi.com>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: linux-arm-kernel@lists.infradead.org
 > 
-> Richard is on leave these two days.  Hope he will be back to online soon.
-[Richard] I went to hospital in the past two days.
-Thanks, I'm ok with being listed here.
+> Acked-by: Jingoo Han <jg1.han@samsung.com>
+> 
+> I was not able to reproduce the problem, however it looks good. Also, there
+> is no side effect on Exynos platform.
+> 
+> Mohit,
+> If you have some comments, please let us know.
 
+- Quickly tested on SPEAr1310, working fine without any side effect. So is,
+Acked-by: Mohit Kumar <mohit.kumar@st.com>
+..
 > 
-> > Shawn, do you want to be
-> > listed here in addition, if only to make sure you're copied on changes
-> > to pci-imx6.c?
-> 
-> Okay, thanks, Bjorn.
-> 
-> Shawn
-
-Best Regards
-Richard Zhu
+> > ---
+> >  drivers/pci/host/pcie-designware.c |    4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
 
