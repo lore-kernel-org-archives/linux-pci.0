@@ -1,126 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v2 1/4] pci: Generalize wait loop
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
-Date: Tue, 17 Dec 2013 16:43:39 -0700
-Message-ID: <20131217234339.2310.68566.stgit@bling.home>
-In-Reply-To: <20131217233741.2310.78334.stgit@bling.home>
-References: <20131217233741.2310.78334.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:33275 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762Ab3LPPQD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 10:16:03 -0500
+Message-ID: <1387206956.8071.14.camel@ejdallLaptop>
+Subject: Re: [PATCH] PCI AER: Handle non-AER HEST error sources in
+ aer_hest_parse()
+From: Betty Dall <betty.dall@hp.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: lenb@kernel.org, rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Mon, 16 Dec 2013 08:15:56 -0700
+In-Reply-To: <20131213230657.GD6746@google.com>
+References: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
+	 <20131213221616.GC6746@google.com> <1386974853.10497.64.camel@ejdallLaptop>
+	 <20131213230657.GD6746@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We currently have two instance of this loop which waits for a pending
-bit to clear in a status dword.  Generalize the function for future
-users.
+On Fri, 2013-12-13 at 16:06 -0700, Bjorn Helgaas wrote:
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c   |   54 +++++++++++++++++++++++++++++----------------------
- include/linux/pci.h |    1 +
- 2 files changed, 32 insertions(+), 23 deletions(-)
+> I should have thought longer before hitting send.  I think it's worthwhile
+> to use the same helper in aer_hest_parse_aff(), and once I did that, it
+> became more obvious that aer_hest_parse() and aer_hest_parse_aff() are
+> essentially similar, so I wonder if it's worth consolidating them, as
+> below.  It doesn't reduce the number of lines of code, but maybe it's
+> simpler for the reader?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 07369f3..848023f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -431,6 +431,32 @@ pci_find_parent_resource(const struct pci_dev *dev, struct resource *res)
- }
- 
- /**
-+ * pci_wait_for_pending - wait for @mask bit(s) to clear in status word @pos
-+ * @dev: the PCI device to operate on
-+ * @pos: config space offset of status word
-+ * @mask: mask of bit(s) to care about in status word
-+ *
-+ * Return 1 when mask bit(s) in status word clear, 0 otherwise.
-+ */
-+int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask)
-+{
-+	int i;
-+
-+	/* Wait for Transaction Pending bit clean */
-+	for (i = 0; i < 4; i++) {
-+		u16 status;
-+		if (i)
-+			msleep((1 << (i - 1)) * 100);
-+
-+		pci_read_config_word(dev, pos, &status);
-+		if (!(status & mask))
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-  * pci_restore_bars - restore a devices BAR values (e.g. after wake-up)
-  * @dev: PCI device to have its BARs restored
-  *
-@@ -3204,20 +3230,10 @@ EXPORT_SYMBOL(pci_set_dma_seg_boundary);
-  */
- int pci_wait_for_pending_transaction(struct pci_dev *dev)
- {
--	int i;
--	u16 status;
--
--	/* Wait for Transaction Pending bit clean */
--	for (i = 0; i < 4; i++) {
--		if (i)
--			msleep((1 << (i - 1)) * 100);
--
--		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
--		if (!(status & PCI_EXP_DEVSTA_TRPND))
--			return 1;
--	}
-+	if (!pci_is_pcie(dev))
-+		return 1;
- 
--	return 0;
-+	return pci_wait_for_pending(dev, PCI_EXP_DEVSTA, PCI_EXP_DEVSTA_TRPND);
- }
- EXPORT_SYMBOL(pci_wait_for_pending_transaction);
- 
-@@ -3244,10 +3260,8 @@ static int pcie_flr(struct pci_dev *dev, int probe)
- 
- static int pci_af_flr(struct pci_dev *dev, int probe)
- {
--	int i;
- 	int pos;
- 	u8 cap;
--	u8 status;
- 
- 	pos = pci_find_capability(dev, PCI_CAP_ID_AF);
- 	if (!pos)
-@@ -3261,14 +3275,8 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 		return 0;
- 
- 	/* Wait for Transaction Pending bit clean */
--	for (i = 0; i < 4; i++) {
--		if (i)
--			msleep((1 << (i - 1)) * 100);
--
--		pci_read_config_byte(dev, pos + PCI_AF_STATUS, &status);
--		if (!(status & PCI_AF_STATUS_TP))
--			goto clear;
--	}
-+	if (pci_wait_for_pending(dev, PCI_AF_STATUS, PCI_AF_STATUS_TP))
-+		goto clear;
- 
- 	dev_err(&dev->dev, "transaction is not cleared; "
- 			"proceeding with reset anyway\n");
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a13d682..e661333 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -938,6 +938,7 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev);
- void pci_msi_off(struct pci_dev *dev);
- int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size);
- int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask);
-+int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
- int pci_wait_for_pending_transaction(struct pci_dev *dev);
- int pcix_get_max_mmrbc(struct pci_dev *dev);
- int pcix_get_mmrbc(struct pci_dev *dev);
+
+Hi Bjorn,
+
+That is a nice cleanup. I tested it on my firmware first system. 
+
+Also, I double checked back through the ACPI spec, and there are
+FIRMWARE_FIRST flags in the IA-32 Architecture Machine Check Exception
+and IA-32 Architecture Corrected Machine Check error sources too. These
+functions we are changing are specifically looking just for the AER
+error sources. That is correct because AER firmware first is separate
+from MCE/CMC firmware first. So, this patch looks good. 
+
+-Betty
 
