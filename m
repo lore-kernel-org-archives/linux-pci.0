@@ -1,76 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:46298 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881Ab3LBVix (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 16:38:53 -0500
-Message-ID: <529CFDE4.9070409@canonical.com>
-Date: Mon, 02 Dec 2013 16:38:44 -0500
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:53558 "EHLO
+	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752326Ab3LPDqn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 22:46:43 -0500
+Date: Mon, 16 Dec 2013 09:15:44 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: shiv prakash Agarwal <chhotu.shiv@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [REGRESSION][v3.4-rc1] PCI: add a PCI resource reallocation config
- option
-References: <52965493.8060208@canonical.com> <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
-In-Reply-To: <CAE9FiQV104AgXC+EaSvBzuRg7WTLEDvQZETPeWHY4gdpg2eY_w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Subject: Re: Memory mapping of config space of pcie devices
+Message-ID: <20131216034544.GA2445@pratyush-vbox>
+References: <CAHH3p5+3Zy+YkgDS_1bJ7B84w5iHOh6-QG7LRJXo2WQHREcRHw@mail.gmail.com>
+ <CAErSpo59htYoPBoouUfSXAVXwCUQPK-TB_zG0BkE-PLhV=KRbQ@mail.gmail.com>
+ <CAHH3p5J7Se8zu64MfoSDkAN_NtOp=qv1DcvWBAa8jWKouo0TXg@mail.gmail.com>
+ <CAErSpo5k1KZuaL7jYp1-5YaxjdZseDPrFo64mJcb2tu2PWJowA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo5k1KZuaL7jYp1-5YaxjdZseDPrFo64mJcb2tu2PWJowA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/28/2013 02:17 AM, Yinghai Lu wrote:
-> On Wed, Nov 27, 2013 at 12:22 PM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
->> Hi Yinghai,
->>
->> A kernel bug was opened against Ubuntu [0].  After a kernel bisect, it
->> was found that the following commit introduced the bug:
->>
->> commit b07f2ebc109b607789f648dedcff4b125f9afec6
->> Author: Yinghai Lu <yinghai@kernel.org>
->> Date:   Thu Feb 23 19:23:32 2012 -0800
->>
->>     PCI: add a PCI resource reallocation config option
->>
->>
->>
->> The regression was introduced as of v3.4-rc1 and also exists in current
->> mainline.
->>
->> The bug seems platform specific since we have not had allot of other
->> reports.  The bug is preventing ixgbe to probe Intel x520 NIC's.
->>
->> It would be easy enough to disable the PCI_REALLOC_ENABLE_AUTO config
->> option, but I wanted to get your feedback since you are the author.  It
->> looks like the bug reporter may also be able to work around the problem
->> with the pci=realloc=.
-> The bios has problem to have two functions rom bar to same place, and
-> root bus does
-> not enough mmio range and confuse realloc logic.
->
-> Please try attached patches to top of linus's tree, or your internal tree.
->
-> Thanks
->
-> Yinghai
+On Sun, Dec 15, 2013 at 04:18:23AM +0800, Bjorn Helgaas wrote:
+> [+cc devicetree, linux-arm-kernel]
+> 
+> On Sat, Dec 14, 2013 at 1:05 PM, shiv prakash Agarwal
+> <chhotu.shiv@gmail.com> wrote:
+> > On Sun, Dec 15, 2013 at 12:29 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> On Sat, Dec 14, 2013 at 11:32 AM, shiv prakash Agarwal
+> >> <chhotu.shiv@gmail.com> wrote:
+> >>> Hi All,
+> >>>
+> >>> How devices config spaces are mapped to host memory?
+> >>> Is it being handled by core driver? I could not locate.
+> >>
+> >> The PCI core does not map config space into memory.  That's not even
+> >> possible for the legacy config access methods, e.g., using I/O ports
+> >> 0xcf8 and 0xcfc [1].
+> >>
+> >> If you're wondering about how Linux uses ECAM, that's mostly in
+> >> arch/x86/pci/mmconfig*.  That code does ioremap the ECAM area into
+> >> kernel virtual space, but only for access via pci_read_config_word(),
+> >> pci_write_config_word(), etc.
+> >>
+> >> Bjorn
+> >>
+> >> [1] http://en.wikipedia.org/wiki/PCI_configuration_space#Software_implementation
+> >
+> > Thanks Bjorn for quick reply,
+> >
+> > Above reference says:
+> > During system initialization, firmware determines the base address for
+> > this “stolen” address region and communicates it to the root complex
+> > and to the operating system. This communication method is
+> > implementation-specific, and not defined in the PCI Express
+> > specification.
+> >
+> > How above is implemented on ARM?
+> 
+> On x86, we learn the ECAM address via ACPI (the MCFG table or a host
+> bridge _CBA method).  I don't know how this is done on ARM.  I could
+> imagine it being done via device tree, but I really don't know.
+> Unfortunately both the address discovery and the actual ECAM accesses
+> are in arch-specific code.
 
-Hi Yinghai,
+Yes, it comes from device tree. DT sends CPU address range allocated
+for cfg transfers. pci_read_config_word and pci_write_config_word
+send bdf and offset. Address translation unit of your RC driver should
+be programmed in such a way that it translates cpu address to the cfg
+address based on bdf and offset.
 
-Your patches were tested against the 3.5 tree.  The patches did fix the
-bug, and allowed the Intel x520 NIC's to work properly.  We were unable
-to test this with Linus' tree due to another bug, which prevents the
-system from booting.  We are looking deeper into that bug and should be
-able to test the mainline tree at some point.
+You can see one such implementation in drivers/pci/host/pcie-designware.c
 
-Testing against the 3.5 tree required that I cherry-pick the following
-commits: ff35147, 55ed83a, 967260c and 223d96f.  However, that shouldn't
-affect the test results of your patches.
+Regards
+Pratyush
 
-Thanks for your assistance with this!
-
-
-Joe
-
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
