@@ -1,112 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:54515 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051Ab3LKKa6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 05:30:58 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH V2 3/7] PCI: imx6: Split away the PHY reset
-Date: Wed, 11 Dec 2013 11:30:14 +0100
-Message-Id: <1386757818-5154-3-git-send-email-marex@denx.de>
-In-Reply-To: <1386757818-5154-1-git-send-email-marex@denx.de>
-References: <1386757818-5154-1-git-send-email-marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <52AEC241.1040507@huawei.com>
+Date: Mon, 16 Dec 2013 17:05:05 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	Scott Wood <scottwood@freescale.com>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH 6/9] powerpc/pci: Use dev_is_pci() to check whether it
+ is pci device
+References: <1386244880-22300-1-git-send-email-wangyijing@huawei.com> <20131216071305.GA16842@weiyang.vnet.ibm.com>
+In-Reply-To: <20131216071305.GA16842@weiyang.vnet.ibm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split the PCIe PHY reset from the link up function to make
-the code a little more structured.
+On 2013/12/16 15:13, Wei Yang wrote:
+> Yijing,
+> 
+> This one looks good.
+> 
+> While I take a look at the source code, there are around 20 places with
+> similar style. Do you think it would be good to change all these places
+> in one patch?
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host/pci-imx6.c | 35 +++++++++++++++++++----------------
- 1 file changed, 19 insertions(+), 16 deletions(-)
+I sent the other similar changes to related maillist, some of them (David, Greg )has been accepted,
+and other is not. :)
 
-V2: Drop unused 'temp' variable.
+eg.
+http://article.gmane.org/gmane.linux.kernel/1608341/match=dev_is_pci
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 4d5be4e..478e87e 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -336,9 +336,26 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- 	return;
- }
- 
-+static void imx6_pcie_reset_phy(struct pcie_port *pp)
-+{
-+	uint32_t temp;
-+
-+	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
-+	temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
-+		 PHY_RX_OVRD_IN_LO_RX_PLL_EN);
-+	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
-+
-+	usleep_range(2000, 3000);
-+
-+	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
-+	temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
-+		  PHY_RX_OVRD_IN_LO_RX_PLL_EN);
-+	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
-+}
-+
- static int imx6_pcie_link_up(struct pcie_port *pp)
- {
--	u32 rc, ltssm, rx_valid, temp;
-+	u32 rc, ltssm, rx_valid;
- 
- 	/*
- 	 * Test if the PHY reports that the link is up and also that
-@@ -370,21 +387,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
- 
- 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
- 
--	pcie_phy_read(pp->dbi_base,
--		PHY_RX_OVRD_IN_LO, &temp);
--	temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN
--		| PHY_RX_OVRD_IN_LO_RX_PLL_EN);
--	pcie_phy_write(pp->dbi_base,
--		PHY_RX_OVRD_IN_LO, temp);
--
--	usleep_range(2000, 3000);
--
--	pcie_phy_read(pp->dbi_base,
--		PHY_RX_OVRD_IN_LO, &temp);
--	temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN
--		| PHY_RX_OVRD_IN_LO_RX_PLL_EN);
--	pcie_phy_write(pp->dbi_base,
--		PHY_RX_OVRD_IN_LO, temp);
-+	imx6_pcie_reset_phy(pp);
- 
- 	return 0;
- }
+Thanks!
+Yijing.
+
+> 
+> On Thu, Dec 05, 2013 at 08:01:20PM +0800, Yijing Wang wrote:
+>> Use PCI standard marco dev_is_pci() instead of directly compare
+>> pci_bus_type to check whether it is pci device.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>> arch/powerpc/sysdev/fsl_pci.c |    2 +-
+>> 1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+>> index 4dfd61d..7066e52 100644
+>> --- a/arch/powerpc/sysdev/fsl_pci.c
+>> +++ b/arch/powerpc/sysdev/fsl_pci.c
+>> @@ -122,7 +122,7 @@ static int fsl_pci_dma_set_mask(struct device *dev, u64 dma_mask)
+>> 	 * address width of the SoC such that we can address any internal
+>> 	 * SoC address from across PCI if needed
+>> 	 */
+>> -	if ((dev->bus == &pci_bus_type) &&
+>> +	if ((dev_is_pci(dev)) &&
+>> 	    dma_mask >= DMA_BIT_MASK(MAX_PHYS_ADDR_BITS)) {
+>> 		set_dma_ops(dev, &dma_direct_ops);
+>> 		set_dma_offset(dev, pci64_dma_offset);
+>> -- 
+>> 1.7.1
+>>
+>>
+>> _______________________________________________
+>> Linuxppc-dev mailing list
+>> Linuxppc-dev@lists.ozlabs.org
+>> https://lists.ozlabs.org/listinfo/linuxppc-dev
+> 
+
+
 -- 
-1.8.4.3
+Thanks!
+Yijing
 
