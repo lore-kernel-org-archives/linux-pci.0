@@ -1,58 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:61406 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488Ab3LBBrY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 20:47:24 -0500
-Message-ID: <529BE5EF.7040706@huawei.com>
-Date: Mon, 2 Dec 2013 09:44:15 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 16 Dec 2013 13:31:02 -0800
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 4/4] x86: intel-mid: remove deprecated X86_MDFLD and
+ X86_WANT_INTEL_MID configs
+Message-ID: <20131216213102.GD17264@psi-dev26.jf.intel.com>
+References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+ <1387224459-25746-5-git-send-email-david.a.cohen@linux.intel.com>
+ <CAErSpo5tM4nF-WuUb9CH6sZ+XJ3u_U5nwg9u2cbn0EmeG1OgLg@mail.gmail.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"Dan Williams" <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <dmaengine@vger.kernel.org>
-Subject: Re: [Patch Part1 V2 07/17] iommu/vt-d, trivial: check suitable flag
- in function detect_intel_iommu()
-References: <1385715030-20553-1-git-send-email-jiang.liu@linux.intel.com> <1385715030-20553-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1385715030-20553-8-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5tM4nF-WuUb9CH6sZ+XJ3u_U5nwg9u2cbn0EmeG1OgLg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/11/29 16:50, Jiang Liu wrote:
-> Flag irq_remapping_enabled is only set by intel_enable_irq_remapping(),
-> which is called after detect_intel_iommu(). So we should check flag
-> disable_irq_remap instead of irq_remapping_enabled in function
-> detect_intel_iommu().
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/iommu/dmar.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-> index f3043a2..77a066b 100644
-> --- a/drivers/iommu/dmar.c
-> +++ b/drivers/iommu/dmar.c
-> @@ -561,7 +561,7 @@ int __init detect_intel_iommu(void)
->  
->  		dmar = (struct acpi_table_dmar *) dmar_tbl;
->  
-> -		if (ret && irq_remapping_enabled && cpu_has_x2apic &&
-> +		if (ret && !disable_irq_remap && cpu_has_x2apic &&
->  		    dmar->flags & 0x1)
->  			pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
->  
-> 
+Hi, Bjorn,
 
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+[snip]
 
--- 
-Thanks!
-Yijing
+> It'd be nice to know what "MID" means -- from Googling, I guess
+> "Mobile Internet Device."
+
+Yes, that's correct. Wikipedia explains it:
+http://en.wikipedia.org/wiki/Mobile_Internet_device
+
+I'll prepare a patch adding intel mid to Documentation/ as soon as I have
+time for it.
+
+Br, David Cohen
 
