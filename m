@@ -1,49 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:10174 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755379Ab3LPTeR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 14:34:17 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v4 2/9] PCI/MSI/s390: Remove superfluous check of MSI type
-Date: Mon, 16 Dec 2013 09:34:55 +0100
-Message-Id: <f317583c5dda2b440ac2906b2cd04c97cae5ed1b.1387140921.git.agordeev@redhat.com>
-In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49596 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762Ab3LPPFs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 10:05:48 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: axboe@kernel.dk, stefano.stabellini@eu.citrix.com,
+	ian.campbell@citrix.com, xen-devel@lists.xenproject.org,
+	linux-kernel@vger.kernel.org, boris.ostrovsky@oracle.com,
+	david.vrabel@citrix.com, leosilva@linux.vnet.ibm.com,
+	ashley@ashleylai.com, peterhuewe@gmx.de, mail@srajiv.net,
+	tpmdd@selhorst.net, dmitry.torokhov@gmail.com, bhelgaas@google.com,
+	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
+	tpmdd-devel@lists.sourceforge.net, linux-input@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: [PATCH v3] if xen_platform_pci=0 is set don't blow up.
+Date: Mon, 16 Dec 2013 10:04:08 -0500
+Message-Id: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-arch_setup_msi_irqs() hook can only be called from the generic
-MSI code which ensures correct MSI type parameter.
+The first patch:
+ [PATCH v3 1/2] xen/pvhvm: If xen_platform_pci=0 is set don't blow up
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
----
- arch/s390/pci/pci.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+I would like to commit to stable as it is fixing an eggregious bug -
+where we blow up if the guest config has: "xen_platform_pci=0" setup.
+This bug has been in existence for years and it is time to stamp it out.
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 6f3788e..4859c40 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -407,8 +407,6 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- 	struct msi_msg msg;
- 	int rc;
- 
--	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
--		return -EINVAL;
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
- 		return 1;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
--- 
-1.7.7.6
+The second patch is a cleanup - not a stable candidate.
+
+It touches all of the Xen frontend drivers and adds the logic of:
+"if user disabled us, don't init" - with variations. As you can
+specify exactly which ones you want to init and which ones
+not (Linux runtime parameter 'xen_emul_unplug'). But for the majority
+of drivers - it is just an on/off switch.
+
+Since it touches a lot of maintainers I figured I would send it
+to Linus on Wednesday or Thursday.
+
+Thank you!
+
+ arch/x86/xen/platform-pci-unplug.c         | 79 ++++++++++++++++++++++++++++--
+ drivers/block/xen-blkfront.c               |  4 +-
+ drivers/char/tpm/xen-tpmfront.c            |  4 ++
+ drivers/input/misc/xen-kbdfront.c          |  4 ++
+ drivers/net/xen-netfront.c                 |  2 +-
+ drivers/pci/xen-pcifront.c                 |  4 ++
+ drivers/video/xen-fbfront.c                |  4 ++
+ drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
+ include/xen/platform_pci.h                 | 25 +++++++++-
+ 9 files changed, 119 insertions(+), 9 deletions(-)
+
+
+Konrad Rzeszutek Wilk (2):
+      xen/pvhvm: If xen_platform_pci=0 is set don't blow up (v3).
+      xen/pvhvm: Remove the xen_platform_pci int.
 
