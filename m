@@ -1,80 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:33052 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761846Ab3LIV61 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 16:58:27 -0500
-Received: by mail-ie0-f178.google.com with SMTP id lx4so6992652iec.23
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 13:58:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131209212744.GK5429@obsidianresearch.com>
-References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131206001954.27659.78163.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131209193332.GB20199@obsidianresearch.com> <CAErSpo4Q-sjiCUs3UbQWdPhOTdxfJP1ay1MugxTPT1E2=TkpJw@mail.gmail.com>
- <20131209212744.GK5429@obsidianresearch.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 14:58:06 -0700
-Message-ID: <CAErSpo6ZNM0SW+q7tSi+1hT6yAfb7Ckz85LjM4QUDgbH3wLAaw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Stop clearing bridge Secondary Status when
- setting up I/O aperture
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v4 4/9] PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
+Date: Mon, 16 Dec 2013 09:34:57 +0100
+Message-Id: <1dca03726b2a4a2015e82e0cdbe5061cc1905e7d.1387140921.git.agordeev@redhat.com>
+In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 2:27 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Mon, Dec 09, 2013 at 01:15:52PM -0700, Bjorn Helgaas wrote:
->
->> Is there actually some spec requirement about the access sizes that
->> must be supported by the hardware?  If there is something, I'll gladly
->> keep the 32-bit access, but if it's only a tegra/mvebu-specific
->> restriction, then I think it needs to be handled in the PCI config
->> accessors for that hardware.
->
-> The host register interface is not specified by any standard.
->
-> I looked a for a bit and found other drivers with the same problem:
->   arch/arm/mach-cns3xxx/pcie.c
->   arch/arm/mach-iop13xx/pci.c
->   arch/arm/mach-ks8695/pci.c
->   arch/arm/mach-sa1100/pci-nanoengine.c
->  [..]
->
-> I stopped looking after that point..
->
->> This spec statement (PCI (not PCIe) r3.0, sec 3.2.2.3.4) makes it
->> sound like tegra/mvebu is non-conforming and should deal with this
->> specially:
->>
->> "A function must not restrict the size of the access it supports in
->> Configuration Space. The configuration commands, like other commands,
->> allow data to be accessed using any combination of bytes (including a
->> byte, word, DWORD, or non-contiguous bytes) and multiple data phases
->> in a burst. The target is required to handle any combination of byte
->> enables."
->
-> This verbage is talking about the target/responder, not the host. Any
-> target must respond to all possible sizes for all possible config
-> registers, including combinations that even x86 can't issue (like a BE
-> pattern of b0110)
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Suggested-by: Ben Hutchings <bhutchings@solarflare.com>
+Reviewed-by: Tejun Heo <tj@kernel.org>
+---
+ include/linux/pci.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Now I'm confused.  From the PCI core's point of view,
-pci_setup_bridge_io() is talking to a target, namely a PCI-to-PCI
-bridge.  PCI config space accessors are also for talking to targets.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e335f21..39493b7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1156,13 +1156,13 @@ struct msix_entry {
+ #ifndef CONFIG_PCI_MSI
+ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
+ 
+ static inline int
+ pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
+ 
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+@@ -1177,7 +1177,7 @@ static inline int pci_msix_table_size(struct pci_dev *dev)
+ static inline int pci_enable_msix(struct pci_dev *dev,
+ 				  struct msix_entry *entries, int nvec)
+ {
+-	return -1;
++	return -ENOSYS;
+ }
+ 
+ static inline void pci_msix_shutdown(struct pci_dev *dev)
+-- 
+1.7.7.6
 
-I think you're talking about host bridges, and I agree that they are
-not covered by this spec statement and can have arbitrary register
-layout and access size restrictions.
-
-Some arches set up their host bridges so they appear in PCI config
-space and have register layouts that look like PCI-to-PCI bridges.  In
-my opinion, those arches then have the responsibility of following all
-the PCI-to-PCI bridge rules, including access size restrictions,
-either directly in hardware or in their config accessors.
-
-I don't think it makes sense to try to make the core know about this
-stuff.  There are many places that touch bridges, and it would be
-pretty hard to manage exceptions like this.
-
-Bjorn
