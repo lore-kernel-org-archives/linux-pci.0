@@ -1,173 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:44046 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643Ab3LLVu2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:28 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
+Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:28503 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754939Ab3LPSmg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 13:42:36 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH V2 5/7] PCI: imx6: Fix link start operation
-Date: Thu, 12 Dec 2013 22:50:02 +0100
-Message-Id: <1386885004-10252-5-git-send-email-marex@denx.de>
-In-Reply-To: <1386885004-10252-1-git-send-email-marex@denx.de>
-References: <1386885004-10252-1-git-send-email-marex@denx.de>
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v4 5/9] PCI/MSI: Make pci_enable_msi/msix() 'nvec' argument type as int
+Date: Mon, 16 Dec 2013 09:34:58 +0100
+Message-Id: <e06648adc93d616db3e4a3541bdff0078e28d4a6.1387140921.git.agordeev@redhat.com>
+In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch first forces the link into Gen1 mode before starting up
-the link and only after the link is up requests the link to start
-negotiating possible Gen2 mode operation. This is because without
-such sequence, some PCIe switches are not detected at all.
+Make pci_enable_msi_block(), pci_enable_msi_block_auto() and
+pci_enable_msix() consistent with regard to the type of 'nvec'
+argument.
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Reviewed-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/pci/host/pci-imx6.c | 78 +++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 72 insertions(+), 6 deletions(-)
+ Documentation/PCI/MSI-HOWTO.txt |    2 +-
+ drivers/pci/msi.c               |    4 ++--
+ include/linux/pci.h             |    8 ++++----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-V2: Change the link speed reporting from dev_err() to dev_dbg() so it doesn't
-    polute the kernel output.
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index e9e580a..a945e74 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -44,6 +44,12 @@ struct imx6_pcie {
- 	void __iomem		*mem_base;
- };
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index a091780..a4d174e 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -129,7 +129,7 @@ call to succeed.
  
-+/* PCIe Root Complex registers (memory-mapped) */
-+#define PCIE_RC_LCR				0x7c
-+#define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1	0x1
-+#define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2	0x2
-+#define PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK	0xf
-+
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET 0x700
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
-@@ -61,6 +67,9 @@ struct imx6_pcie {
- #define PCIE_PHY_STAT (PL_OFFSET + 0x110)
- #define PCIE_PHY_STAT_ACK_LOC 16
+ 4.2.3 pci_enable_msi_block_auto
  
-+#define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
-+#define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
-+
- /* PHY registers (not memory-mapped) */
- #define PCIE_PHY_RX_ASIC_OUT 0x100D
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
++int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
  
-@@ -323,11 +332,71 @@ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+ This variation on pci_enable_msi() call allows a device driver to request
+ the maximum possible number of MSIs.  The MSI specification only allows
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 623322d..c0e2259 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -846,7 +846,7 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+  * updates the @dev's irq member to the lowest new interrupt number; the
+  * other interrupt numbers allocated to this device are consecutive.
+  */
+-int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
++int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+ {
+ 	int status, maxvec;
+ 	u16 msgctl;
+@@ -877,7 +877,7 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block);
+ 
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
++int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
+ {
+ 	int ret, nvec;
+ 	u16 msgctl;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 39493b7..8cf7b15 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1154,13 +1154,13 @@ struct msix_entry {
+ 
+ 
+ #ifndef CONFIG_PCI_MSI
+-static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
++static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+ {
+ 	return -ENOSYS;
+ }
+ 
+ static inline int
+-pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
++pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
+ {
+ 	return -ENOSYS;
+ }
+@@ -1195,8 +1195,8 @@ static inline int pci_msi_enabled(void)
  	return 0;
  }
- 
--static void imx6_pcie_host_init(struct pcie_port *pp)
-+static int imx6_pcie_start_link(struct pcie_port *pp)
- {
--	int count = 0;
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-+	uint32_t tmp;
-+	int ret, count;
-+
-+	/*
-+	 * Force Gen1 operation when starting the link. In case the link is
-+	 * started in Gen2 mode, there is a possibility the devices on the
-+	 * bus will not be detected at all. This happens with PCIe switches.
-+	 */
-+	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-+	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-+	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-+	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-+
-+	/* Start LTSSM. */
-+	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
-+
-+	ret = imx6_pcie_wait_for_link(pp);
-+	if (ret)
-+		return ret;
-+
-+	/* Allow Gen2 mode after the link is up. */
-+	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-+	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-+	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-+	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-+
-+	/*
-+	 * Start Directed Speed Change so the best possible speed both link
-+	 * partners support can be negotiated.
-+	 */
-+	tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	tmp |= PORT_LOGIC_SPEED_CHANGE;
-+	writel(tmp, pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
-+
-+	count = 200;
-+	while (count--) {
-+		tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
-+		/* Test if the speed change finished. */
-+		if (!(tmp & PORT_LOGIC_SPEED_CHANGE))
-+			break;
-+		usleep_range(100, 1000);
-+	}
-+
-+	/* Make sure link training is finished as well! */
-+	if (count)
-+		ret = imx6_pcie_wait_for_link(pp);
-+	else
-+		ret = -EINVAL;
- 
-+	if (ret) {
-+		dev_err(pp->dev, "Failed to bring link up!\n");
-+	} else {
-+		tmp = readl(pp->dbi_base + 0x80);
-+		dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
-+	}
-+
-+	return ret;
-+}
-+
-+static void imx6_pcie_host_init(struct pcie_port *pp)
-+{
- 	imx6_pcie_assert_core_reset(pp);
- 
- 	imx6_pcie_init_phy(pp);
-@@ -336,10 +405,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_setup_rc(pp);
- 
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
--
--	imx6_pcie_wait_for_link(pp);
-+	imx6_pcie_start_link(pp);
- 
- 	return;
- }
+ #else
+-int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
++int pci_enable_msi_block(struct pci_dev *dev, int nvec);
++int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_table_size(struct pci_dev *dev);
 -- 
-1.8.4.3
+1.7.7.6
 
