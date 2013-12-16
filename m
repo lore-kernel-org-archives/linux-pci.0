@@ -1,101 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:61635 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787Ab3LJHKq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 02:10:46 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <sparclinux@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH v2] sparc/PCI: Use dev_is_pci() to identify PCI devices
-Date: Tue, 10 Dec 2013 15:10:04 +0800
-Message-ID: <1386659404-37924-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:46887 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751908Ab3LPBPg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 20:15:36 -0500
+Received: by mail-ie0-f172.google.com with SMTP id qd12so5728346ieb.17
+        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2013 17:15:36 -0800 (PST)
+Received: from localhost (173-8-252-97-Colorado.hfc.comcastbusiness.net. [173.8.252.97])
+        by mx.google.com with ESMTPSA id y10sm13382914igl.4.2013.12.15.17.15.35
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Sun, 15 Dec 2013 17:15:36 -0800 (PST)
+Subject: [PATCH 6/8] PCI: pciehp: Use symbolic constants,
+ not hard-coded bitmask
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sun, 15 Dec 2013 18:15:35 -0700
+Message-ID: <20131216011535.7275.77761.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20131216010946.7275.83547.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20131216010946.7275.83547.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use dev_is_pci() instead of checking bus type directly.
+Use the PCI_EXP_SLTSTA definitions, not 0x1f, when clearing Slot Status
+bits.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+No functional change.
+
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
 ---
+ drivers/pci/hotplug/pciehp_hpc.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-v1->v2: Keep #ifdef CONFIG_PCI code to avoid build error, found by
-		kbuild test.
-
----
- arch/sparc/include/asm/dma-mapping.h |    7 +++----
- arch/sparc/kernel/iommu.c            |    2 +-
- arch/sparc/kernel/ioport.c           |    2 +-
- 3 files changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/arch/sparc/include/asm/dma-mapping.h b/arch/sparc/include/asm/dma-mapping.h
-index 05fe53f..ab529f1 100644
---- a/arch/sparc/include/asm/dma-mapping.h
-+++ b/arch/sparc/include/asm/dma-mapping.h
-@@ -4,6 +4,7 @@
- #include <linux/scatterlist.h>
- #include <linux/mm.h>
- #include <linux/dma-debug.h>
-+#include <linux/pci.h>
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index cb3100af7e8c..915bb35f9180 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -808,7 +808,10 @@ struct controller *pcie_init(struct pcie_device *dev)
+         }
  
- #define DMA_ERROR_CODE	(~(dma_addr_t)0x0)
+ 	/* Clear all remaining event bits in Slot Status register */
+-	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, 0x1f);
++	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
++		PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
++		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
++		PCI_EXP_SLTSTA_CC);
  
-@@ -16,14 +17,12 @@ extern struct dma_map_ops *dma_ops;
- extern struct dma_map_ops *leon_dma_ops;
- extern struct dma_map_ops pci32_dma_ops;
- 
--extern struct bus_type pci_bus_type;
--
- static inline struct dma_map_ops *get_dma_ops(struct device *dev)
- {
- #if defined(CONFIG_SPARC32) && defined(CONFIG_PCI)
- 	if (sparc_cpu_model == sparc_leon)
- 		return leon_dma_ops;
--	else if (dev->bus == &pci_bus_type)
-+	else if (dev_is_pci(dev))
- 		return &pci32_dma_ops;
- #endif
- 	return dma_ops;
-@@ -66,7 +65,7 @@ static inline int dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
- static inline int dma_set_mask(struct device *dev, u64 mask)
- {
- #ifdef CONFIG_PCI
--	if (dev->bus == &pci_bus_type) {
-+	if (dev_is_pci(dev)) {
- 		if (!dev->dma_mask || !dma_supported(dev, mask))
- 			return -EINVAL;
- 		*dev->dma_mask = mask;
-diff --git a/arch/sparc/kernel/iommu.c b/arch/sparc/kernel/iommu.c
-index 070ed14..76663b0 100644
---- a/arch/sparc/kernel/iommu.c
-+++ b/arch/sparc/kernel/iommu.c
-@@ -854,7 +854,7 @@ int dma_supported(struct device *dev, u64 device_mask)
- 		return 1;
- 
- #ifdef CONFIG_PCI
--	if (dev->bus == &pci_bus_type)
-+	if (dev_is_pci(dev))
- 		return pci64_dma_supported(to_pci_dev(dev), device_mask);
- #endif
- 
-diff --git a/arch/sparc/kernel/ioport.c b/arch/sparc/kernel/ioport.c
-index 2096468..5b8aab9 100644
---- a/arch/sparc/kernel/ioport.c
-+++ b/arch/sparc/kernel/ioport.c
-@@ -667,7 +667,7 @@ EXPORT_SYMBOL(dma_ops);
- int dma_supported(struct device *dev, u64 mask)
- {
- #ifdef CONFIG_PCI
--	if (dev->bus == &pci_bus_type)
-+	if (dev_is_pci(dev))
- 		return 1;
- #endif
- 	return 0;
--- 
-1.7.1
-
+ 	/* Disable software notification */
+ 	pcie_disable_notification(ctrl);
 
