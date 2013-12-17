@@ -1,110 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:22171 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224Ab3LJWWJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 17:22:09 -0500
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MXM005YW3GWSZ40@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 11 Dec 2013 07:22:08 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Marek Vasut' <marex@denx.de>, 'Tim Harvey' <tharvey@gateworks.com>
-Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <20131205050424.GA2298@pratyush-vbox>
- <201312061546.23981.arnd@arndb.de> <20131209071241.GA5760@pratyush-vbox>
- <201312101426.40614.marex@denx.de>
-In-reply-to: <201312101426.40614.marex@denx.de>
-Subject: Re: [Query/Discussion]: IO translation with designware PCIe controller
-Date: Wed, 11 Dec 2013 07:22:07 +0900
-Message-id: <001101cef5f6$4347c520$c9d74f60$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 1/4] pci: Generalize wait loop
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
+Date: Tue, 17 Dec 2013 16:43:39 -0700
+Message-ID: <20131217234339.2310.68566.stgit@bling.home>
+In-Reply-To: <20131217233741.2310.78334.stgit@bling.home>
+References: <20131217233741.2310.78334.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 10, 2013 10:27 PM, Marek Vasut wrote:
-> On Monday, December 09, 2013 at 08:12:42 AM, Pratyush Anand wrote:
+We currently have two instance of this loop which waits for a pending
+bit to clear in a status dword.  Generalize the function for future
+users.
 
-[.....]
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c   |   54 +++++++++++++++++++++++++++++----------------------
+ include/linux/pci.h |    1 +
+ 2 files changed, 32 insertions(+), 23 deletions(-)
 
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c
-> > b/drivers/pci/host/pcie-designware.c index be6ce30..cf68632 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >  					   + global_io_offset);
-> >  			pp->config.io_size = resource_size(&pp->io);
-> >  			pp->config.io_bus_addr = range.pci_addr;
-> > +			pp->io_base = range.cpu_addr;
-> >  		}
-> >  		if (restype == IORESOURCE_MEM) {
-> >  			of_pci_range_to_resource(&range, np, &pp->mem);
-> > @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >
-> >  	pp->cfg0_base = pp->cfg.start;
-> >  	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> > -	pp->io_base = pp->io.start;
-> >  	pp->mem_base = pp->mem.start;
-> >
-> >  	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-> > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data
-> > *sys)
-> >
-> >  	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> >  		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> > -		pci_ioremap_io(sys->io_offset, pp->io.start);
-> > +		pci_ioremap_io(sys->io_offset, pp->io_base);
-> >  		global_io_offset += SZ_64K;
-> >  		pci_add_resource_offset(&sys->resources, &pp->io,
-> >  					sys->io_offset);
-> 
-> Tim, can you test if this patch fixes your SKY2 IOspace problem please ?
-
-Above mentioned patch is NOT the latest patch.
-Pratyush Anand already submitted the next patch as below.
-
-Tim,
-Would you test the following patch on i.MX6 platform?
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index be6ce30..b83f5e8 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
- 					   + global_io_offset);
- 			pp->config.io_size = resource_size(&pp->io);
- 			pp->config.io_bus_addr = range.pci_addr;
-+			pp->io_base = range.cpu_addr;
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
-@@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 07369f3..848023f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -431,6 +431,32 @@ pci_find_parent_resource(const struct pci_dev *dev, struct resource *res)
+ }
  
- 	pp->cfg0_base = pp->cfg.start;
- 	pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
--	pp->io_base = pp->io.start;
- 	pp->mem_base = pp->mem.start;
+ /**
++ * pci_wait_for_pending - wait for @mask bit(s) to clear in status word @pos
++ * @dev: the PCI device to operate on
++ * @pos: config space offset of status word
++ * @mask: mask of bit(s) to care about in status word
++ *
++ * Return 1 when mask bit(s) in status word clear, 0 otherwise.
++ */
++int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask)
++{
++	int i;
++
++	/* Wait for Transaction Pending bit clean */
++	for (i = 0; i < 4; i++) {
++		u16 status;
++		if (i)
++			msleep((1 << (i - 1)) * 100);
++
++		pci_read_config_word(dev, pos, &status);
++		if (!(status & mask))
++			return 1;
++	}
++
++	return 0;
++}
++
++/**
+  * pci_restore_bars - restore a devices BAR values (e.g. after wake-up)
+  * @dev: PCI device to have its BARs restored
+  *
+@@ -3204,20 +3230,10 @@ EXPORT_SYMBOL(pci_set_dma_seg_boundary);
+  */
+ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ {
+-	int i;
+-	u16 status;
+-
+-	/* Wait for Transaction Pending bit clean */
+-	for (i = 0; i < 4; i++) {
+-		if (i)
+-			msleep((1 << (i - 1)) * 100);
+-
+-		pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+-		if (!(status & PCI_EXP_DEVSTA_TRPND))
+-			return 1;
+-	}
++	if (!pci_is_pcie(dev))
++		return 1;
  
- 	pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-@@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+-	return 0;
++	return pci_wait_for_pending(dev, PCI_EXP_DEVSTA, PCI_EXP_DEVSTA_TRPND);
+ }
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
  
- 	if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
- 		sys->io_offset = global_io_offset - pp->config.io_bus_addr;
--		pci_ioremap_io(sys->io_offset, pp->io.start);
-+		pci_ioremap_io(global_io_offset, pp->io_base);
- 		global_io_offset += SZ_64K;
- 		pci_add_resource_offset(&sys->resources, &pp->io,
- 					sys->io_offset);
-
-
-Best regards,
-Jingoo Han
+@@ -3244,10 +3260,8 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+ 
+ static int pci_af_flr(struct pci_dev *dev, int probe)
+ {
+-	int i;
+ 	int pos;
+ 	u8 cap;
+-	u8 status;
+ 
+ 	pos = pci_find_capability(dev, PCI_CAP_ID_AF);
+ 	if (!pos)
+@@ -3261,14 +3275,8 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 		return 0;
+ 
+ 	/* Wait for Transaction Pending bit clean */
+-	for (i = 0; i < 4; i++) {
+-		if (i)
+-			msleep((1 << (i - 1)) * 100);
+-
+-		pci_read_config_byte(dev, pos + PCI_AF_STATUS, &status);
+-		if (!(status & PCI_AF_STATUS_TP))
+-			goto clear;
+-	}
++	if (pci_wait_for_pending(dev, PCI_AF_STATUS, PCI_AF_STATUS_TP))
++		goto clear;
+ 
+ 	dev_err(&dev->dev, "transaction is not cleared; "
+ 			"proceeding with reset anyway\n");
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a13d682..e661333 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -938,6 +938,7 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev);
+ void pci_msi_off(struct pci_dev *dev);
+ int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size);
+ int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask);
++int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
+ int pci_wait_for_pending_transaction(struct pci_dev *dev);
+ int pcix_get_max_mmrbc(struct pci_dev *dev);
+ int pcix_get_mmrbc(struct pci_dev *dev);
 
