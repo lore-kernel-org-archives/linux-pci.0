@@ -1,71 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:59039 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019Ab3LQAx5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 19:53:57 -0500
+Received: by mail-ig0-f171.google.com with SMTP id c10so5101356igq.4
+        for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2013 16:53:56 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20131204203837.GA7517@pd.tnic>
-References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
-	<CANVTcTaP18CiGOSEcX5Ch_wPw9mEhkgokfp+d+ZOMFD+Ce4juA@mail.gmail.com>
-	<20131204203837.GA7517@pd.tnic>
-Date: Fri, 6 Dec 2013 17:06:10 +0800
-Message-ID: <CANVTcTYJS3eAUA4bHVCrKgz=7rQpJZHCiBcw3JM=j0FbCsgQJw@mail.gmail.com>
-Subject: Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
-From: rui wang <ruiv.wang@gmail.com>
-To: Borislav Petkov <bp@alien8.de>
-Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
-	lance_ortiz@hotmail.com, jiang.liu@intel.com, tony.luck@intel.com,
-	rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, gong.chen@intel.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1386558448.5159.10.camel@pasglop>
+References: <20131009163304.62b439a9@endymion.delvare> <CAErSpo6ikaTXXvWzX_Z0=mabwD4aedoLoSVjsd+_E5kV9YJpuA@mail.gmail.com>
+ <CAE9FiQWGWPVO0W5e9qtbMx7PTEKDq8kUPi1RRT8tucMEy7prYw@mail.gmail.com> <1386558448.5159.10.camel@pasglop>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 16 Dec 2013 17:53:36 -0700
+Message-ID: <CAErSpo5_jutwqr=5OuD3rT_v8fyMzGbdq0P3PUJmSMMDpqAbPQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI/portdrv: Set master earlier
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Yinghai Lu <yinghai@kernel.org>, Jean Delvare <jdelvare@suse.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Takashi Iwai <tiwai@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/5/13, Borislav Petkov <bp@alien8.de> wrote:
-
-> Yes, the AER tracepoint above should use the AER_* defines and not the
-> HW_EVENT_ERR_* ones which are for memory errors.
+On Sun, Dec 8, 2013 at 8:07 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Sat, 2013-12-07 at 19:26 -0800, Yinghai Lu wrote:
+>> BenH mentioned that get_port_device_capability have some problem on
+>> powerpc and will return null.
 >
-> Wanna send a fix?
+> Well, it has problems on anything that doesn't have ACPI :-)
 >
+> I don't care what the "right" fix is but we need to makes sure nobody
+> does a pci_enable_device() on a bridge and doesn't also enable bus
+> master, otherwise the bridge bus master will never be set. This is what
+> was happening an breaking us.
 
-Yes. Does it translate into something like this?
+I assume there's nothing more I need to do here.  If there is, please
+let me know.
 
-From: Rui Wang <rui.y.wang@intel.com>
-Date: Fri, 6 Dec 2013 16:47:46 +0800
-Subject: [PATCH] Fix severity usage in aer trace event
-
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- include/trace/events/ras.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
-index 88b8783..e2a17d8 100644
---- a/include/trace/events/ras.h
-+++ b/include/trace/events/ras.h
-@@ -5,7 +5,7 @@
- #define _TRACE_AER_H
-
- #include <linux/tracepoint.h>
--#include <linux/edac.h>
-+#include <linux/aer.h>
-
-
- /*
-@@ -63,10 +63,10 @@ TRACE_EVENT(aer_event,
-
-        TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-                __get_str(dev_name),
--               __entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
--                       __entry->severity == HW_EVENT_ERR_FATAL ?
-+               __entry->severity == AER_CORRECTABLE ? "Corrected" :
-+                       __entry->severity == AER_FATAL ?
-                        "Fatal" : "Uncorrected",
--               __entry->severity == HW_EVENT_ERR_CORRECTED ?
-+               __entry->severity == AER_CORRECTABLE ?
-                __print_flags(__entry->status, "|", aer_correctable_errors) :
-                __print_flags(__entry->status, "|", aer_uncorrectable_errors))
- );
--- 
-1.7.5.4
-
-Regards,
-Rui
+Bjorn
