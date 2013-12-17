@@ -1,142 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog122.obsmtp.com ([207.126.144.153]:58546 "EHLO
-	eu1sys200aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751057Ab3LKKIA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 05:08:00 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, <spear-devel@list.st.com>
-Subject: [PATCH 06/12] pcie: designware: Move register definition to the header file
-Date: Wed, 11 Dec 2013 15:08:31 +0530
-Message-ID: <7bce26f60d847a136f748b5eeac15dc79a7d662e.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:54066 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901Ab3LQBAs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 20:00:48 -0500
+Received: by mail-ie0-f171.google.com with SMTP id ar20so7596977iec.16
+        for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2013 17:00:47 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com>
+References: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 16 Dec 2013 18:00:25 -0700
+Message-ID: <CAErSpo7F+-TZ_dGwsFtr7pra45hVqTv4HLuQNr-SR4MeLespYw@mail.gmail.com>
+Subject: Re: [PATCH v3] if xen_platform_pci=0 is set don't blow up.
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>,
+	Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+	ian.campbell@citrix.com, xen-devel@lists.xenproject.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	boris.ostrovsky@oracle.com, David Vrabel <david.vrabel@citrix.com>,
+	leosilva@linux.vnet.ibm.com, ashley@ashleylai.com,
+	=?UTF-8?Q?Peter_H=C3=BCwe?= <peterhuewe@gmx.de>, mail@srajiv.net,
+	tpmdd@selhorst.net, Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
+	tpmdd-devel@lists.sourceforge.net,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-fbdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+On Mon, Dec 16, 2013 at 8:04 AM, Konrad Rzeszutek Wilk
+<konrad.wilk@oracle.com> wrote:
+> The first patch:
+>  [PATCH v3 1/2] xen/pvhvm: If xen_platform_pci=0 is set don't blow up
+>
+> I would like to commit to stable as it is fixing an eggregious bug -
+> where we blow up if the guest config has: "xen_platform_pci=0" setup.
+> This bug has been in existence for years and it is time to stamp it out.
+>
+> The second patch is a cleanup - not a stable candidate.
+>
+> It touches all of the Xen frontend drivers and adds the logic of:
+> "if user disabled us, don't init" - with variations. As you can
+> specify exactly which ones you want to init and which ones
+> not (Linux runtime parameter 'xen_emul_unplug'). But for the majority
+> of drivers - it is just an on/off switch.
+>
+> Since it touches a lot of maintainers I figured I would send it
+> to Linus on Wednesday or Thursday.
+>
+> Thank you!
+>
+>  arch/x86/xen/platform-pci-unplug.c         | 79 ++++++++++++++++++++++++++++--
+>  drivers/block/xen-blkfront.c               |  4 +-
+>  drivers/char/tpm/xen-tpmfront.c            |  4 ++
+>  drivers/input/misc/xen-kbdfront.c          |  4 ++
+>  drivers/net/xen-netfront.c                 |  2 +-
+>  drivers/pci/xen-pcifront.c                 |  4 ++
+>  drivers/video/xen-fbfront.c                |  4 ++
+>  drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
+>  include/xen/platform_pci.h                 | 25 +++++++++-
+>  9 files changed, 119 insertions(+), 9 deletions(-)
 
-Move synopsis specific register definition from source file to header
-file, so that they can be re-used by other files if needed.
+If you want it:
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: spear-devel@list.st.com
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/host/pcie-designware.c |   42 ------------------------------------
- drivers/pci/host/pcie-designware.h |   42 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 42 insertions(+), 42 deletions(-)
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 212b8b6..73aa13c 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -23,48 +23,6 @@
- 
- #include "pcie-designware.h"
- 
--/* Synopsis specific PCIE configuration registers */
--#define PCIE_PORT_LINK_CONTROL		0x710
--#define PORT_LINK_MODE_MASK		(0x3f << 16)
--#define PORT_LINK_MODE_1_LANES		(0x1 << 16)
--#define PORT_LINK_MODE_2_LANES		(0x3 << 16)
--#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
--
--#define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
--#define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
--#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1ff << 8)
--#define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
--#define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
--#define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
--
--#define PCIE_MSI_ADDR_LO		0x820
--#define PCIE_MSI_ADDR_HI		0x824
--#define PCIE_MSI_INTR0_ENABLE		0x828
--#define PCIE_MSI_INTR0_MASK		0x82C
--#define PCIE_MSI_INTR0_STATUS		0x830
--
--#define PCIE_ATU_VIEWPORT		0x900
--#define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
--#define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
--#define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
--#define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
--#define PCIE_ATU_CR1			0x904
--#define PCIE_ATU_TYPE_MEM		(0x0 << 0)
--#define PCIE_ATU_TYPE_IO		(0x2 << 0)
--#define PCIE_ATU_TYPE_CFG0		(0x4 << 0)
--#define PCIE_ATU_TYPE_CFG1		(0x5 << 0)
--#define PCIE_ATU_CR2			0x908
--#define PCIE_ATU_ENABLE			(0x1 << 31)
--#define PCIE_ATU_BAR_MODE_ENABLE	(0x1 << 30)
--#define PCIE_ATU_LOWER_BASE		0x90C
--#define PCIE_ATU_UPPER_BASE		0x910
--#define PCIE_ATU_LIMIT			0x914
--#define PCIE_ATU_LOWER_TARGET		0x918
--#define PCIE_ATU_BUS(x)			(((x) & 0xff) << 24)
--#define PCIE_ATU_DEV(x)			(((x) & 0x1f) << 19)
--#define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
--#define PCIE_ATU_UPPER_TARGET		0x91C
--
- static struct hw_pci dw_pci;
- 
- static unsigned long global_io_offset;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index c15379b..da1ed35 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -74,4 +74,46 @@ int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
- 
-+/* Synopsis specific PCIE configuration registers */
-+#define PCIE_PORT_LINK_CONTROL		0x710
-+#define PORT_LINK_MODE_MASK		(0x3f << 16)
-+#define PORT_LINK_MODE_1_LANES		(0x1 << 16)
-+#define PORT_LINK_MODE_2_LANES		(0x3 << 16)
-+#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-+
-+#define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
-+#define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
-+#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1ff << 8)
-+#define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
-+#define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
-+#define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
-+
-+#define PCIE_MSI_ADDR_LO		0x820
-+#define PCIE_MSI_ADDR_HI		0x824
-+#define PCIE_MSI_INTR0_ENABLE		0x828
-+#define PCIE_MSI_INTR0_MASK		0x82C
-+#define PCIE_MSI_INTR0_STATUS		0x830
-+
-+#define PCIE_ATU_VIEWPORT		0x900
-+#define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
-+#define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
-+#define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
-+#define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
-+#define PCIE_ATU_CR1			0x904
-+#define PCIE_ATU_TYPE_MEM		(0x0 << 0)
-+#define PCIE_ATU_TYPE_IO		(0x2 << 0)
-+#define PCIE_ATU_TYPE_CFG0		(0x4 << 0)
-+#define PCIE_ATU_TYPE_CFG1		(0x5 << 0)
-+#define PCIE_ATU_CR2			0x908
-+#define PCIE_ATU_ENABLE			(0x1 << 31)
-+#define PCIE_ATU_BAR_MODE_ENABLE	(0x1 << 30)
-+#define PCIE_ATU_LOWER_BASE		0x90C
-+#define PCIE_ATU_UPPER_BASE		0x910
-+#define PCIE_ATU_LIMIT			0x914
-+#define PCIE_ATU_LOWER_TARGET		0x918
-+#define PCIE_ATU_BUS(x)			(((x) & 0xff) << 24)
-+#define PCIE_ATU_DEV(x)			(((x) & 0x1f) << 19)
-+#define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
-+#define PCIE_ATU_UPPER_TARGET		0x91C
-+
- #endif /* _PCIE_DESIGNWARE_H */
--- 
-1.7.0.1
+for the PCI parts.
 
+>
+> Konrad Rzeszutek Wilk (2):
+>       xen/pvhvm: If xen_platform_pci=0 is set don't blow up (v3).
+>       xen/pvhvm: Remove the xen_platform_pci int.
+>
