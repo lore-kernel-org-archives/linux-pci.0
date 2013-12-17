@@ -1,330 +1,389 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com
-Subject: [PATCHv2 3/6] Crashdump-Accepting-Active-IOMMU-Domain-Interfaces
-Date: Thu, 19 Dec 2013 19:49:44 -0700
-Message-Id: <1387507787-14163-4-git-send-email-bill.sumner@hp.com>
-In-Reply-To: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
-References: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:34418 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752779Ab3LQJyu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 04:54:50 -0500
+Received: by mail-ee0-f51.google.com with SMTP id b15so2755815eek.24
+        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2013 01:54:48 -0800 (PST)
+Message-ID: <52B01F67.1030108@m2r.biz>
+Date: Tue, 17 Dec 2013 10:54:47 +0100
+From: Fabio Fantoni <fabio.fantoni@m2r.biz>
+MIME-Version: 1.0
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, axboe@kernel.dk,
+	stefano.stabellini@eu.citrix.com, ian.campbell@citrix.com,
+	xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
+	leosilva@linux.vnet.ibm.com, ashley@ashleylai.com,
+	peterhuewe@gmx.de, mail@srajiv.net, tpmdd@selhorst.net,
+	dmitry.torokhov@gmail.com, bhelgaas@google.com,
+	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
+	tpmdd-devel@lists.sourceforge.net, linux-input@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: Re: [Xen-devel] [PATCH v3 1/2] xen/pvhvm: If xen_platform_pci=0 is
+ set don't blow up (v3).
+References: <1387206250-13963-1-git-send-email-konrad.wilk@oracle.com> <1387206250-13963-2-git-send-email-konrad.wilk@oracle.com>
+In-Reply-To: <1387206250-13963-2-git-send-email-konrad.wilk@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch contains functions called from among the mainline code
-to retrieve information from the translation tables that have been
-copied into the crashdump kernel from the panicked kernel.
+Il 16/12/2013 16:04, Konrad Rzeszutek Wilk ha scritto:
+> The user has the option of disabling the platform driver:
+> 00:02.0 Unassigned class [ff80]: XenSource, Inc. Xen Platform Device (rev 01)
+>
+> which is used to unplug the emulated drivers (IDE, Realtek 8169, etc)
+> and allow the PV drivers to take over. If the user wishes
+> to disable that they can set:
+>
+>    xen_platform_pci=0
+>    (in the guest config file)
+>
+> or
+>    xen_emul_unplug=never
+>    (on the Linux command line)
+>
+> except it does not work properly. The PV drivers still try to
+> load and since the Xen platform driver is not run - and it
+> has not initialized the grant tables, most of the PV drivers
+> stumble upon:
+>
+> input: Xen Virtual Keyboard as /devices/virtual/input/input5
+> input: Xen Virtual Pointer as /devices/virtual/input/input6M
+> ------------[ cut here ]------------
+> kernel BUG at /home/konrad/ssd/konrad/linux/drivers/xen/grant-table.c:1206!
+> invalid opcode: 0000 [#1] SMP
+> Modules linked in: xen_kbdfront(+) xenfs xen_privcmd
+> CPU: 6 PID: 1389 Comm: modprobe Not tainted 3.13.0-rc1upstream-00021-ga6c892b-dirty #1
+> Hardware name: Xen HVM domU, BIOS 4.4-unstable 11/26/2013
+> RIP: 0010:[<ffffffff813ddc40>]  [<ffffffff813ddc40>] get_free_entries+0x2e0/0x300
+> Call Trace:
+>   [<ffffffff8150d9a3>] ? evdev_connect+0x1e3/0x240
+>   [<ffffffff813ddd0e>] gnttab_grant_foreign_access+0x2e/0x70
+>   [<ffffffffa0010081>] xenkbd_connect_backend+0x41/0x290 [xen_kbdfront]
+>   [<ffffffffa0010a12>] xenkbd_probe+0x2f2/0x324 [xen_kbdfront]
+>   [<ffffffff813e5757>] xenbus_dev_probe+0x77/0x130
+>   [<ffffffff813e7217>] xenbus_frontend_dev_probe+0x47/0x50
+>   [<ffffffff8145e9a9>] driver_probe_device+0x89/0x230
+>   [<ffffffff8145ebeb>] __driver_attach+0x9b/0xa0
+>   [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
+>   [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
+>   [<ffffffff8145cf1c>] bus_for_each_dev+0x8c/0xb0
+>   [<ffffffff8145e7d9>] driver_attach+0x19/0x20
+>   [<ffffffff8145e260>] bus_add_driver+0x1a0/0x220
+>   [<ffffffff8145f1ff>] driver_register+0x5f/0xf0
+>   [<ffffffff813e55c5>] xenbus_register_driver_common+0x15/0x20
+>   [<ffffffff813e76b3>] xenbus_register_frontend+0x23/0x40
+>   [<ffffffffa0015000>] ? 0xffffffffa0014fff
+>   [<ffffffffa001502b>] xenkbd_init+0x2b/0x1000 [xen_kbdfront]
+>   [<ffffffff81002049>] do_one_initcall+0x49/0x170
+>
+> .. snip..
+>
+> which is hardly nice. This patch fixes this by having each
+> PV driver check for:
+>   - if running in PV, then it is fine to execute (as that is their
+>     native environment).
+>   - if running in HVM, check if user wanted 'xen_emul_unplug=never',
+>     in which case bail out and don't load any PV drivers.
+>   - if running in HVM, and if PCI device 5853:0001 (xen_platform_pci)
+>     does not exist, then bail out and not load PV drivers.
+>   - (v2) if running in HVM, and if the user wanted 'xen_emul_unplug=disks',
+>     then bail out for all PV devices _except_ the block one.
+>     Ditto for the network one ('nics').
+>   - (v2) if running in HVM, and if the user wanted 'xen_emul_unplug=unnecessary'
+>     then load block PV driver, and also setup the legacy IDE paths.
+>     In (v3) make it actually load PV drivers.
+>
+> Reported-by: Sander Eikelenboom <linux@eikelenboom.it
+> Reported-by: Anthony PERARD <anthony.perard@citrix.com>
+> Reported-by: Fabio Fantoni <fabio.fantoni@m2r.biz>
+> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> [v2: Add extra logic to handle the myrid ways 'xen_emul_unplug'
+> can be used per Ian and Stefano suggestion]
+> [v3: Make the unnecessary case work properly]
+> Reviewed-by: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
 
-Most often this happens when the crashdump kernel is setting-up a new
-domain for a device.  The crashdump kernel will assign to the device
-(and to its new domain) the same IOVA addressing width and domain-id
-that were used for this device by the panicked kernel. In the new
-domain all of the IOVA addresses that were in-use by this device at
-the time of the panic will be marked as "in-use" so that the crashdump
-kernel will avoid re-using them.
+I tested this patch with all possible cases that I know, no crash or 
+calltrace found.
 
-This patch also includes one function to retrieve a bitmap of all
-domain-ids in-use by the panicked kernel.  These are marked "in-use"
-so that if there is a device being used by the crashdump kernel that
-was not being used by the panicked kernel then that new device will
-receive a fresh, unused domain-id.
+I don't understand the utility of 'xen_emul_unplug=unnecessary' but 
+probably it is working correctly, it shows both pv and not pv for blocks 
+and nics.
 
-The 'device_domain_values_list' is used during the operation of
-duplicating (copying) the translation tables from the panicked kernel
-into the crashdump kernel, to insure that all devices that were assigned
-to any specific domain-id in the panicked kernel are also assigned to
-that same domain-id in the crashdump kernel.  Additionally, all context
-entries (there is one per device) that contain the same domain-id *must*
-point to the same set of page-tables.  The 'device_domain_values_list'
-insures that if the copy operation has already seen 'this' domain-id,
-it will simply point the current context entry to the same top-level
-page-table that has been created previously for this domain-id.
+About 'xen_emul_unplug=disks' and 'xen_emul_unplug=nics' probably there 
+is something wrong.
+With 'xen_emul_unplug=nics' it shows pv nic (this should be correct) and 
+about disks it shows the same disk twice, as pv and not pv (xvda and 
+sda) with different device number.
+With 'xen_emul_unplug=disks' it shows pv block (this should be correct) 
+and it seems to show the pv nic too (this should be wrong).
 
-v1->v2:
-Updated patch description
+Thanks for any reply.
 
-Signed-off-by: Bill Sumner <bill.sumner@hp.com>
----
- drivers/iommu/intel-iommu.c | 266 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 266 insertions(+)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 4172a2b..85e30e5 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -4529,3 +4529,269 @@ static int oldcopy(void *to, void *from, int size)
- 	return (int) ret;
- }
- #endif /* CONFIG_CRASH_DUMP */
-+#ifdef CONFIG_CRASH_DUMP
-+
-+
-+
-+/* ------------------------------------------------------------------------
-+ * Interfaces for when a new domain in the new kernel needs some values
-+ * from the old kernel's context entries
-+ * ------------------------------------------------------------------------
-+ */
-+
-+/* List to hold domain values found during the copy operation */
-+static struct list_head *device_domain_values_list;
-+
-+
-+/* Utility function for interface functions that follow. */
-+static int
-+context_get_entry(struct context_entry *context_addr,
-+			struct intel_iommu *iommu, u32 bus, int devfn)
-+{
-+	unsigned long long q;		/* quadword scratch */
-+	struct root_entry *root_phys;	/* Phys adr (root table entry) */
-+	struct root_entry  root_temp;	/* Local copy of root_entry */
-+	struct context_entry *context_phys;	/* Phys adr */
-+
-+	if (pr_dbg.domain_get)
-+		pr_debug("ENTER %s B:D:F=%2.2x:%2.2x:%1.1x &context_entry:0x%llx &intel_iommu:0x%llx\n",
-+			__func__, bus, devfn>>3, devfn&7,
-+			(u64)context_addr, (u64)iommu);
-+
-+	if (bus > 255)				/* Sanity check */
-+		return -5;
-+	if (devfn > 255 || devfn < 0)		/* Sanity check */
-+		return -6;
-+
-+	q = readq(iommu->reg + DMAR_RTADDR_REG);
-+	pr_debug("IOMMU %d: DMAR_RTADDR_REG:0x%16.16llx\n", iommu->seq_id, q);
-+	if (!q)
-+		return -1;
-+
-+	root_phys = (struct root_entry *) q;	/* Adr(base of vector) */
-+	root_phys += bus;			/* Adr(entry we want) */
-+
-+	oldcopy(&root_temp, root_phys, sizeof(root_temp));
-+
-+	pr_debug("root_temp.val:0x%llx .rsvd1:0x%llx root_phys:0x%llx\n",
-+		root_temp.val, root_temp.rsvd1, (u64)root_phys);
-+
-+	if (!root_present(&root_temp))
-+		return -2;
-+
-+	pr_debug("B:D:F=%2.2x:%2.2x:%1.1x root_temp.val: %llx .rsvd1: %llx\n",
-+		bus, devfn >> 3, devfn & 7, root_temp.val, root_temp.rsvd1);
-+
-+	if (root_temp.rsvd1)			/* If (root_entry is bad) */
-+		return -3;
-+
-+	context_phys = get_context_phys_from_root(&root_temp);
-+	if (!context_phys)
-+		return -4;
-+
-+	context_phys += devfn;			/* Adr(context_entry we want) */
-+
-+
-+	oldcopy(context_addr, context_phys, sizeof(*context_addr));
-+
-+	if (pr_dbg.domain_get)
-+		pr_debug("LEAVE %s returning: phys:0x%12.12llx hi:0x%16.16llx lo:0x%16.16llx\n",
-+			__func__, (u64) context_phys,
-+			context_addr->hi, context_addr->lo);
-+	return 0;
-+}
-+
-+
-+/* Get address_width of iova for a device from old kernel (if device existed) */
-+static int
-+domain_get_gaw_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev)
-+{
-+	int ret;
-+	struct context_entry context_temp;
-+
-+	if (pr_dbg.domain_get)
-+		pr_debug("ENTER %s B:D:F=%2.2x:%2.2x:%1.1x iommu:%d\n",
-+			__func__, pdev->bus->number,
-+			pdev->devfn >> 3, pdev->devfn & 7,
-+			iommu->seq_id);
-+
-+	ret = context_get_entry(&context_temp, iommu,
-+				pdev->bus->number, pdev->devfn);
-+	if (ret < 0)
-+		return ret;
-+
-+	return (int) agaw_to_width(context_get_aw(&context_temp));
-+}
-+
-+
-+/* Get domain_id for a device from old kernel (if device existed) */
-+static int
-+domain_get_did_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev)
-+{
-+	int ret;
-+	struct context_entry context_temp;
-+
-+	if (pr_dbg.domain_get)
-+		pr_debug("ENTER %s B:D:F=%2.2x:%2.2x:%1.1x iommu:%d\n",
-+			__func__, pdev->bus->number,
-+			pdev->devfn >> 3, pdev->devfn & 7,
-+			iommu->seq_id);
-+
-+	ret = context_get_entry(&context_temp, iommu,
-+				pdev->bus->number, pdev->devfn);
-+	if (ret < 0)
-+		return ret;
-+
-+	return (int) context_get_did(&context_temp);
-+}
-+
-+
-+/* Get adr(top page_table) for a device from old kernel (if device exists) */
-+static u64
-+domain_get_pgd_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev)
-+{
-+	int ret;
-+	struct context_entry context_temp;
-+	u64 phys;
-+	u64 virt;
-+
-+	if (pr_dbg.domain_get)
-+		pr_debug("ENTER %s B:D:F=%2.2x:%2.2x:%1.1x iommu:%d\n",
-+			__func__, pdev->bus->number,
-+			pdev->devfn >> 3, pdev->devfn & 7,
-+			iommu->seq_id);
-+
-+	ret = context_get_entry(&context_temp, iommu,
-+				pdev->bus->number, pdev->devfn);
-+	if (ret < 0)
-+		return 0;
-+	if (!context_get_p(&context_temp))
-+		return 0;
-+
-+	phys = context_get_asr(&context_temp) << VTD_PAGE_SHIFT;
-+	if (pr_dbg.domain_get)
-+		pr_debug("%s, phys: 0x%16.16llx\n", __func__, (u64) phys);
-+
-+	if (!phys)
-+		return 0;
-+
-+	virt = (u64) phys_to_virt(phys);
-+	if (pr_dbg.domain_get)
-+		pr_debug("%s, virt: 0x%16.16llx\n", __func__, (u64) virt);
-+
-+	return virt;
-+}
-+
-+
-+/* Mark IOVAs that are in-use at time of panic by a device of the old kernel.
-+ * Mark IOVAs in the domain for that device in the new kernel
-+ * so that all new requests from the device driver for an IOVA will avoid
-+ * re-using any IOVA that was in-use by the old kernel.
-+ */
-+static void
-+domain_get_ranges_from_old_kernel(struct dmar_domain *domain,
-+				  struct intel_iommu *iommu,
-+				  struct pci_dev *pdev)
-+{
-+	u32 bus = pdev->bus->number;
-+	int devfn = pdev->devfn;
-+	struct device_domain_info *i = NULL;    /* iterator for foreach */
-+
-+	pr_debug("ENTER %s, iommu=%d, B:D:F=%2.2x:%2.2x:%1.1x\n",
-+			__func__, iommu->seq_id,
-+			bus, devfn >> 3, devfn & 0x3);
-+
-+	list_for_each_entry(i, &device_domain_values_list[iommu->seq_id],
-+				global) {
-+		if (i->bus == bus && i->devfn == devfn) {
-+			if (i->domain == NULL) {
-+				pr_err("ERROR %s, iommu=%d, B:D:F=%2.2x:%2.2x:%1.1x\n",
-+					__func__, iommu->seq_id,
-+					bus, devfn >> 3, devfn & 0x3);
-+
-+				pr_err("FOUND B:D:F=%2.2x:%2.2x:%1.1x INFO domain-pointer is NULL\n",
-+					bus, devfn >> 3, devfn & 0x3);
-+				break;
-+			}
-+			pr_debug("FOUND B:D:F=%2.2x:%2.2x:%1.1x did:%4.4x\n",
-+				bus, devfn >> 3, devfn & 0x3, i->domain->id);
-+
-+			copy_reserved_iova(&i->domain->iovad, &domain->iovad);
-+			break;
-+		}
-+	}
-+
-+	pr_debug("LEAVE %s\n", __func__);
-+}
-+
-+
-+/* Mark domain-id's from old kernel as in-use on this iommu so that a new
-+ * domain-id is allocated in the case where there is a device in the new kernel
-+ * that was not in the old kernel -- and therefore a new domain-id is needed.
-+ */
-+static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu)
-+{
-+	unsigned long long q;		/* quadword scratch */
-+	struct root_entry *root_phys;	/* Phys(in old kernel) */
-+	struct root_entry *root_temp;	/* Virt(Local copy) */
-+	struct root_entry *re;		/* Loop index */
-+	struct context_entry *context_phys;	/* Phys(in old kernel) */
-+	struct context_entry *context_temp;	/* Virt(Local copy) */
-+	struct context_entry *ce;	/* Loop index */
-+	int did;			/* Each domain-id found */
-+	u32 bus;			/* Index into root-entry-table */
-+	u32 devfn;			/* Index into context-entry-table */
-+
-+	pr_debug("ENTER %s iommu:%d\n", __func__, iommu->seq_id);
-+
-+	q = readq(iommu->reg + DMAR_RTADDR_REG);
-+	pr_debug("IOMMU %d: DMAR_RTADDR_REG:0x%16.16llx\n", iommu->seq_id, q);
-+	if (!q)
-+		return -ENOMEM;
-+
-+	root_phys = (void *)q;
-+	root_temp = (struct root_entry *)alloc_pgtable_page(iommu->node);
-+	if (!root_temp)
-+		return -ENOMEM;
-+	oldcopy(root_temp, root_phys, PAGE_SIZE);
-+
-+	context_temp = (struct context_entry *)alloc_pgtable_page(iommu->node);
-+	if (!context_temp) {
-+		free_pgtable_page(root_temp);
-+		return -ENOMEM;
-+	}
-+
-+	for (bus = 0, re = root_temp; bus < 256; bus += 1, re += 1) {
-+
-+		if (!root_present(re))
-+			continue;
-+
-+		pr_debug("ROOT B:%2.2x val: %16.16llx rsvd1: %16.16llx\n",
-+			bus, re->val, re->rsvd1);
-+
-+		if (re->rsvd1)			/* If (root_entry is bad) */
-+			continue;
-+
-+		context_phys = get_context_phys_from_root(re);
-+		if (!context_phys)
-+			continue;
-+
-+		oldcopy(context_temp, context_phys, PAGE_SIZE);
-+
-+		for (devfn = 0, ce = context_temp; devfn < 512; devfn++, ce++) {
-+			if (!context_get_p(ce))
-+				continue;
-+
-+			did = context_get_did(ce);
-+			set_bit(did, iommu->domain_ids);
-+			pr_debug("DID B:D:F:%2.2x:%2.2x:%1.1x did:%d(0x%4.4x)\n",
-+				bus, devfn >> 3, devfn & 0x7, did, did);
-+		}
-+
-+	}
-+	free_pgtable_page(root_temp);
-+	free_pgtable_page(context_temp);
-+	pr_debug("LEAVE %s iommu:%d\n", __func__, iommu->seq_id);
-+	return 0;
-+}
-+#endif /* CONFIG_CRASH_DUMP */
--- 
-Bill Sumner <bill.sumner@hp.com>
+> ---
+>   arch/x86/xen/platform-pci-unplug.c         | 74 ++++++++++++++++++++++++++++++
+>   drivers/block/xen-blkfront.c               |  4 +-
+>   drivers/char/tpm/xen-tpmfront.c            |  4 ++
+>   drivers/input/misc/xen-kbdfront.c          |  4 ++
+>   drivers/net/xen-netfront.c                 |  2 +-
+>   drivers/pci/xen-pcifront.c                 |  4 ++
+>   drivers/video/xen-fbfront.c                |  4 ++
+>   drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
+>   include/xen/platform_pci.h                 | 23 ++++++++++
+>   9 files changed, 117 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/x86/xen/platform-pci-unplug.c b/arch/x86/xen/platform-pci-unplug.c
+> index 0a78524..ab84ac1 100644
+> --- a/arch/x86/xen/platform-pci-unplug.c
+> +++ b/arch/x86/xen/platform-pci-unplug.c
+> @@ -69,6 +69,80 @@ static int check_platform_magic(void)
+>   	return 0;
+>   }
+>   
+> +bool xen_has_pv_devices()
+> +{
+> +	if (!xen_domain())
+> +		return false;
+> +
+> +	/* PV domains always have them. */
+> +	if (xen_pv_domain())
+> +		return true;
+> +
+> +	/* And user has xen_platform_pci=0 set in guest config as
+> +	 * driver did not modify the value. */
+> +	if (xen_platform_pci_unplug == 0)
+> +		return false;
+> +
+> +	if (xen_platform_pci_unplug & XEN_UNPLUG_NEVER)
+> +		return false;
+> +
+> +	if (xen_platform_pci_unplug & XEN_UNPLUG_ALL)
+> +		return true;
+> +
+> +	/* This is an odd one - we are going to run legacy
+> +	 * and PV drivers at the same time. */
+> +	if (xen_platform_pci_unplug & XEN_UNPLUG_UNNECESSARY)
+> +		return true;
+> +
+> +	/* And the caller has to follow with xen_pv_{disk,nic}_devices
+> +	 * to be certain which driver can load. */
+> +	return false;
+> +}
+> +EXPORT_SYMBOL_GPL(xen_has_pv_devices);
+> +
+> +static bool __xen_has_pv_device(int state)
+> +{
+> +	/* HVM domains might or might not */
+> +	if (xen_hvm_domain() && (xen_platform_pci_unplug & state))
+> +		return true;
+> +
+> +	return xen_has_pv_devices();
+> +}
+> +
+> +bool xen_has_pv_nic_devices(void)
+> +{
+> +	return __xen_has_pv_device(XEN_UNPLUG_ALL_NICS | XEN_UNPLUG_ALL);
+> +}
+> +EXPORT_SYMBOL_GPL(xen_has_pv_nic_devices);
+> +
+> +bool xen_has_pv_disk_devices(void)
+> +{
+> +	return __xen_has_pv_device(XEN_UNPLUG_ALL_IDE_DISKS |
+> +				   XEN_UNPLUG_AUX_IDE_DISKS | XEN_UNPLUG_ALL);
+> +}
+> +EXPORT_SYMBOL_GPL(xen_has_pv_disk_devices);
+> +
+> +/*
+> + * This one is odd - it determines whether you want to run PV _and_
+> + * legacy (IDE) drivers together. This combination is only possible
+> + * under HVM.
+> + */
+> +bool xen_has_pv_and_legacy_disk_devices(void)
+> +{
+> +	if (!xen_domain())
+> +		return false;
+> +
+> +	/* N.B. This is only ever used in HVM mode */
+> +	if (xen_pv_domain())
+> +		return false;
+> +
+> +	if (xen_platform_pci_unplug & XEN_UNPLUG_UNNECESSARY)
+> +		return true;
+> +
+> +	return false;
+> +}
+> +EXPORT_SYMBOL_GPL(xen_has_pv_and_legacy_disk_devices);
+> +
+>   void xen_unplug_emulated_devices(void)
+>   {
+>   	int r;
+> diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+> index a4660bb..ed88b3c 100644
+> --- a/drivers/block/xen-blkfront.c
+> +++ b/drivers/block/xen-blkfront.c
+> @@ -1278,7 +1278,7 @@ static int blkfront_probe(struct xenbus_device *dev,
+>   		char *type;
+>   		int len;
+>   		/* no unplug has been done: do not hook devices != xen vbds */
+> -		if (xen_platform_pci_unplug & XEN_UNPLUG_UNNECESSARY) {
+> +		if (xen_has_pv_and_legacy_disk_devices()) {
+>   			int major;
+>   
+>   			if (!VDEV_IS_EXTENDED(vdevice))
+> @@ -2022,7 +2022,7 @@ static int __init xlblk_init(void)
+>   	if (!xen_domain())
+>   		return -ENODEV;
+>   
+> -	if (xen_hvm_domain() && !xen_platform_pci_unplug)
+> +	if (!xen_has_pv_disk_devices())
+>   		return -ENODEV;
+>   
+>   	if (register_blkdev(XENVBD_MAJOR, DEV_NAME)) {
+> diff --git a/drivers/char/tpm/xen-tpmfront.c b/drivers/char/tpm/xen-tpmfront.c
+> index 06189e5..9c2cbd1 100644
+> --- a/drivers/char/tpm/xen-tpmfront.c
+> +++ b/drivers/char/tpm/xen-tpmfront.c
+> @@ -16,6 +16,7 @@
+>   #include <xen/xenbus.h>
+>   #include <xen/page.h>
+>   #include "tpm.h"
+> +#include <xen/platform_pci.h>
+>   
+>   struct tpm_private {
+>   	struct tpm_chip *chip;
+> @@ -422,6 +423,9 @@ static int __init xen_tpmfront_init(void)
+>   	if (!xen_domain())
+>   		return -ENODEV;
+>   
+> +	if (!xen_has_pv_devices())
+> +		return -ENODEV;
+> +
+>   	return xenbus_register_frontend(&tpmfront_driver);
+>   }
+>   module_init(xen_tpmfront_init);
+> diff --git a/drivers/input/misc/xen-kbdfront.c b/drivers/input/misc/xen-kbdfront.c
+> index e21c181..fbfdc10 100644
+> --- a/drivers/input/misc/xen-kbdfront.c
+> +++ b/drivers/input/misc/xen-kbdfront.c
+> @@ -29,6 +29,7 @@
+>   #include <xen/interface/io/fbif.h>
+>   #include <xen/interface/io/kbdif.h>
+>   #include <xen/xenbus.h>
+> +#include <xen/platform_pci.h>
+>   
+>   struct xenkbd_info {
+>   	struct input_dev *kbd;
+> @@ -380,6 +381,9 @@ static int __init xenkbd_init(void)
+>   	if (xen_initial_domain())
+>   		return -ENODEV;
+>   
+> +	if (!xen_has_pv_devices())
+> +		return -ENODEV;
+> +
+>   	return xenbus_register_frontend(&xenkbd_driver);
+>   }
+>   
+> diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
+> index 36808bf..eea2392 100644
+> --- a/drivers/net/xen-netfront.c
+> +++ b/drivers/net/xen-netfront.c
+> @@ -2106,7 +2106,7 @@ static int __init netif_init(void)
+>   	if (!xen_domain())
+>   		return -ENODEV;
+>   
+> -	if (xen_hvm_domain() && !xen_platform_pci_unplug)
+> +	if (!xen_has_pv_nic_devices())
+>   		return -ENODEV;
+>   
+>   	pr_info("Initialising Xen virtual ethernet driver\n");
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index f7197a7..eae7cd9 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -20,6 +20,7 @@
+>   #include <linux/workqueue.h>
+>   #include <linux/bitops.h>
+>   #include <linux/time.h>
+> +#include <xen/platform_pci.h>
+>   
+>   #include <asm/xen/swiotlb-xen.h>
+>   #define INVALID_GRANT_REF (0)
+> @@ -1138,6 +1139,9 @@ static int __init pcifront_init(void)
+>   	if (!xen_pv_domain() || xen_initial_domain())
+>   		return -ENODEV;
+>   
+> +	if (!xen_has_pv_devices())
+> +		return -ENODEV;
+> +
+>   	pci_frontend_registrar(1 /* enable */);
+>   
+>   	return xenbus_register_frontend(&xenpci_driver);
+> diff --git a/drivers/video/xen-fbfront.c b/drivers/video/xen-fbfront.c
+> index cd005c2..4b2d3ab 100644
+> --- a/drivers/video/xen-fbfront.c
+> +++ b/drivers/video/xen-fbfront.c
+> @@ -35,6 +35,7 @@
+>   #include <xen/interface/io/fbif.h>
+>   #include <xen/interface/io/protocols.h>
+>   #include <xen/xenbus.h>
+> +#include <xen/platform_pci.h>
+>   
+>   struct xenfb_info {
+>   	unsigned char		*fb;
+> @@ -699,6 +700,9 @@ static int __init xenfb_init(void)
+>   	if (xen_initial_domain())
+>   		return -ENODEV;
+>   
+> +	if (!xen_has_pv_devices())
+> +		return -ENODEV;
+> +
+>   	return xenbus_register_frontend(&xenfb_driver);
+>   }
+>   
+> diff --git a/drivers/xen/xenbus/xenbus_probe_frontend.c b/drivers/xen/xenbus/xenbus_probe_frontend.c
+> index 34b20bf..6244f9c 100644
+> --- a/drivers/xen/xenbus/xenbus_probe_frontend.c
+> +++ b/drivers/xen/xenbus/xenbus_probe_frontend.c
+> @@ -496,7 +496,7 @@ subsys_initcall(xenbus_probe_frontend_init);
+>   #ifndef MODULE
+>   static int __init boot_wait_for_devices(void)
+>   {
+> -	if (xen_hvm_domain() && !xen_platform_pci_unplug)
+> +	if (!xen_has_pv_devices())
+>   		return -ENODEV;
+>   
+>   	ready_to_wait_for_devices = 1;
+> diff --git a/include/xen/platform_pci.h b/include/xen/platform_pci.h
+> index 438c256..b49eeab 100644
+> --- a/include/xen/platform_pci.h
+> +++ b/include/xen/platform_pci.h
+> @@ -48,4 +48,27 @@ static inline int xen_must_unplug_disks(void) {
+>   
+>   extern int xen_platform_pci_unplug;
+>   
+> +#if defined(CONFIG_XEN_PVHVM)
+> +extern bool xen_has_pv_devices(void);
+> +extern bool xen_has_pv_disk_devices(void);
+> +extern bool xen_has_pv_nic_devices(void);
+> +extern bool xen_has_pv_and_legacy_disk_devices(void);
+> +#else
+> +static inline bool xen_has_pv_devices(void)
+> +{
+> +	return IS_ENABLED(CONFIG_XEN);
+> +}
+> +static inline bool xen_has_pv_disk_devices(void)
+> +{
+> +	return IS_ENABLED(CONFIG_XEN);
+> +}
+> +static inline bool xen_has_pv_nic_devices(void)
+> +{
+> +	return IS_ENABLED(CONFIG_XEN);
+> +}
+> +static inline bool xen_has_pv_and_legacy_disk_devices(void)
+> +{
+> +	return false;
+> +}
+> +#endif
+>   #endif /* _XEN_PLATFORM_PCI_H */
 
