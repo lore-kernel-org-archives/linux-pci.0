@@ -1,89 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:26942 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752240Ab3LPEUS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 23:20:18 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Pratyush Anand' <pratyush.anand@st.com>,
-	'shiv prakash Agarwal' <chhotu.shiv@gmail.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	'linux-arm' <linux-arm-kernel@lists.infradead.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <CAHH3p5+3Zy+YkgDS_1bJ7B84w5iHOh6-QG7LRJXo2WQHREcRHw@mail.gmail.com>
- <CAErSpo59htYoPBoouUfSXAVXwCUQPK-TB_zG0BkE-PLhV=KRbQ@mail.gmail.com>
- <CAHH3p5J7Se8zu64MfoSDkAN_NtOp=qv1DcvWBAa8jWKouo0TXg@mail.gmail.com>
- <CAErSpo5k1KZuaL7jYp1-5YaxjdZseDPrFo64mJcb2tu2PWJowA@mail.gmail.com>
- <20131216034544.GA2445@pratyush-vbox>
-In-reply-to: <20131216034544.GA2445@pratyush-vbox>
-Subject: Re: Memory mapping of config space of pcie devices
-Date: Mon, 16 Dec 2013 13:20:10 +0900
-Message-id: <006801cefa16$1c0f91d0$542eb570$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:63453 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751551Ab3LQAgd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 19:36:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQVQUsvYuRJQyvbyCkGjwwaKsgF2b8wTzi-KV4vex7Y5mg@mail.gmail.com>
+References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
+	<1386658484-15774-5-git-send-email-yinghai@kernel.org>
+	<20131216082329.GA4926@yanx>
+	<CAE9FiQWONC84f35_Jyvs=nwXdj4QWCBdokOgiFWDgWSSpcf_NA@mail.gmail.com>
+	<CAE9FiQVQUsvYuRJQyvbyCkGjwwaKsgF2b8wTzi-KV4vex7Y5mg@mail.gmail.com>
+Date: Mon, 16 Dec 2013 16:36:32 -0800
+Message-ID: <CAE9FiQV8kJZz0oaiZOvfWce_bu+8nZB2Qtw7KjLeASTkwUrjug@mail.gmail.com>
+Subject: Re: [PATCH v4 4/5] PCI: Try best to allocate pref mmio 64bit above 4g
+From: Yinghai Lu <yinghai@kernel.org>
+To: Guo Chao <yan@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a11c2190ac42cd204edb01efb
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, December 16, 2013 12:46 PM, shiv prakash Agarwal wrote:
-> On Sun, Dec 15, 2013 at 04:18:23AM +0800, Bjorn Helgaas wrote:
-> > [+cc devicetree, linux-arm-kernel]
-> >
-> > On Sat, Dec 14, 2013 at 1:05 PM, shiv prakash Agarwal
-> > <chhotu.shiv@gmail.com> wrote:
-> > > On Sun, Dec 15, 2013 at 12:29 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > >> On Sat, Dec 14, 2013 at 11:32 AM, shiv prakash Agarwal
-> > >> <chhotu.shiv@gmail.com> wrote:
-> > >>> Hi All,
-> > >>>
-> > >>> How devices config spaces are mapped to host memory?
-> > >>> Is it being handled by core driver? I could not locate.
-> > >>
-> > >> The PCI core does not map config space into memory.  That's not even
-> > >> possible for the legacy config access methods, e.g., using I/O ports
-> > >> 0xcf8 and 0xcfc [1].
-> > >>
-> > >> If you're wondering about how Linux uses ECAM, that's mostly in
-> > >> arch/x86/pci/mmconfig*.  That code does ioremap the ECAM area into
-> > >> kernel virtual space, but only for access via pci_read_config_word(),
-> > >> pci_write_config_word(), etc.
-> > >>
-> > >> Bjorn
-> > >>
-> > >> [1] http://en.wikipedia.org/wiki/PCI_configuration_space#Software_implementation
-> > >
-> > > Thanks Bjorn for quick reply,
-> > >
-> > > Above reference says:
-> > > During system initialization, firmware determines the base address for
-> > > this “stolen” address region and communicates it to the root complex
-> > > and to the operating system. This communication method is
-> > > implementation-specific, and not defined in the PCI Express
-> > > specification.
-> > >
-> > > How above is implemented on ARM?
-> >
-> > On x86, we learn the ECAM address via ACPI (the MCFG table or a host
-> > bridge _CBA method).  I don't know how this is done on ARM.  I could
-> > imagine it being done via device tree, but I really don't know.
-> > Unfortunately both the address discovery and the actual ECAM accesses
-> > are in arch-specific code.
-> 
-> Yes, it comes from device tree. DT sends CPU address range allocated
-> for cfg transfers. pci_read_config_word and pci_write_config_word
-> send bdf and offset. Address translation unit of your RC driver should
-> be programmed in such a way that it translates cpu address to the cfg
-> address based on bdf and offset.
-> 
-> You can see one such implementation in drivers/pci/host/pcie-designware.c
+--001a11c2190ac42cd204edb01efb
+Content-Type: text/plain; charset=ISO-8859-1
 
-As Bjorn said, the PCI core does not map config space into memory.
-As Pratyush Anand said, address mapping can be done via device tree.
-Please refer to the following in order to understand PCI Device
-tree standard.
+On Mon, Dec 16, 2013 at 1:36 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Dec 16, 2013 at 10:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>
+>>> 64-bit non-prefetchable BARs are missed from caculation in the scheme,
+>>> causing assign failed eventually.
 
-http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+>>>
+>>> Will you figure out a better way to cover them or just add a 'type3' parameter?
+>
+> Looks like we have add type3 for that case.
 
-Best regards,
-Jingoo Han
+please check attached delta patch.
 
+Thanks
 
+Yinghai
+
+--001a11c2190ac42cd204edb01efb
+Content-Type: text/x-patch; charset=US-ASCII; name="pref_mem_64_only_fix_non_pref.patch"
+Content-Disposition: attachment;
+	filename="pref_mem_64_only_fix_non_pref.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hpaf81mr0
+
+LS0tCiBkcml2ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgMTcgKysrKysrKysrKystLS0tLS0KIGRy
+aXZlcnMvcGNpL3NldHVwLXJlcy5jIHwgICAgOCArKysrKystLQogMiBmaWxlcyBjaGFuZ2VkLCAx
+NyBpbnNlcnRpb25zKCspLCA4IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJz
+L3BjaS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3Bj
+aS9zZXR1cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCkBAIC05
+MTYsNiArOTE2LDcgQEAgc3RhdGljIGlubGluZSByZXNvdXJjZV9zaXplX3QgY2FsY3VsYXRlXwog
+ICovCiBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9idXMgKmJ1cywgdW5zaWdu
+ZWQgbG9uZyBtYXNrLAogCQkJIHVuc2lnbmVkIGxvbmcgdHlwZSwgdW5zaWduZWQgbG9uZyB0eXBl
+MiwKKwkJCSB1bnNpZ25lZCBsb25nIHR5cGUzLAogCQkJIHJlc291cmNlX3NpemVfdCBtaW5fc2l6
+ZSwgcmVzb3VyY2Vfc2l6ZV90IGFkZF9zaXplLAogCQkJIHN0cnVjdCBsaXN0X2hlYWQgKnJlYWxs
+b2NfaGVhZCkKIHsKQEAgLTk0Niw3ICs5NDcsOCBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0o
+c3RydWN0IHBjaV9idXMKIAkJCXJlc291cmNlX3NpemVfdCByX3NpemU7CiAKIAkJCWlmIChyLT5w
+YXJlbnQgfHwgKChyLT5mbGFncyAmIG1hc2spICE9IHR5cGUgJiYKLQkJCQkJICAoci0+ZmxhZ3Mg
+JiBtYXNrKSAhPSB0eXBlMikpCisJCQkJCSAgKHItPmZsYWdzICYgbWFzaykgIT0gdHlwZTIgJiYK
+KwkJCQkJICAoci0+ZmxhZ3MgJiBtYXNrKSAhPSB0eXBlMykpCiAJCQkJY29udGludWU7CiAJCQly
+X3NpemUgPSByZXNvdXJjZV9zaXplKHIpOwogI2lmZGVmIENPTkZJR19QQ0lfSU9WCkBAIC0xMTE5
+LDcgKzExMjEsNyBAQCB2b2lkIF9fcmVmIF9fcGNpX2J1c19zaXplX2JyaWRnZXMoc3RydWN0CiAJ
+CQlzdHJ1Y3QgbGlzdF9oZWFkICpyZWFsbG9jX2hlYWQpCiB7CiAJc3RydWN0IHBjaV9kZXYgKmRl
+djsKLQl1bnNpZ25lZCBsb25nIG1hc2ssIHByZWZtYXNrLCB0eXBlMiA9IDA7CisJdW5zaWduZWQg
+bG9uZyBtYXNrLCBwcmVmbWFzaywgdHlwZTIgPSAwLCB0eXBlMyA9IDA7CiAJcmVzb3VyY2Vfc2l6
+ZV90IGFkZGl0aW9uYWxfbWVtX3NpemUgPSAwLCBhZGRpdGlvbmFsX2lvX3NpemUgPSAwOwogCXN0
+cnVjdCByZXNvdXJjZSAqYl9yZXM7CiAKQEAgLTExNzEsMjYgKzExNzMsMjkgQEAgdm9pZCBfX3Jl
+ZiBfX3BjaV9idXNfc2l6ZV9icmlkZ2VzKHN0cnVjdAogCQlwcmVmbWFzayA9IElPUkVTT1VSQ0Vf
+TUVNIHwgSU9SRVNPVVJDRV9QUkVGRVRDSDsKIAkJaWYgKGJfcmVzWzJdLmZsYWdzICYgSU9SRVNP
+VVJDRV9NRU1fNjQpIHsKIAkJCXByZWZtYXNrIHw9IElPUkVTT1VSQ0VfTUVNXzY0OwotCQkJaWYg
+KHBidXNfc2l6ZV9tZW0oYnVzLCBwcmVmbWFzaywgcHJlZm1hc2ssIHByZWZtYXNrLAorCQkJaWYg
+KHBidXNfc2l6ZV9tZW0oYnVzLCBwcmVmbWFzaywgcHJlZm1hc2ssCisJCQkJICBwcmVmbWFzaywg
+cHJlZm1hc2ssCiAJCQkJICByZWFsbG9jX2hlYWQgPyAwIDogYWRkaXRpb25hbF9tZW1fc2l6ZSwK
+IAkJCQkgIGFkZGl0aW9uYWxfbWVtX3NpemUsIHJlYWxsb2NfaGVhZCkpIHsKIAkJCQkJLyogU3Vj
+Y2Vzcywgc2l6ZSBub24tcHJlZjY0IG9ubHkuICovCiAJCQkJCW1hc2sgPSBwcmVmbWFzazsKIAkJ
+CQkJdHlwZTIgPSBwcmVmbWFzayAmIH5JT1JFU09VUkNFX01FTV82NDsKKwkJCQkJdHlwZTMgPSBw
+cmVmbWFzayAmIH5JT1JFU09VUkNFX1BSRUZFVENIOwogCQkJfQogCQl9CiAJCWlmICghdHlwZTIp
+IHsKIAkJCXByZWZtYXNrICY9IH5JT1JFU09VUkNFX01FTV82NDsKLQkJCWlmIChwYnVzX3NpemVf
+bWVtKGJ1cywgcHJlZm1hc2ssIHByZWZtYXNrLCBwcmVmbWFzaywKKwkJCWlmIChwYnVzX3NpemVf
+bWVtKGJ1cywgcHJlZm1hc2ssIHByZWZtYXNrLAorCQkJCQkgcHJlZm1hc2ssIHByZWZtYXNrLAog
+CQkJCQkgcmVhbGxvY19oZWFkID8gMCA6IGFkZGl0aW9uYWxfbWVtX3NpemUsCiAJCQkJCSBhZGRp
+dGlvbmFsX21lbV9zaXplLCByZWFsbG9jX2hlYWQpKSB7CiAJCQkJLyogU3VjY2Vzcywgc2l6ZSBu
+b24tcHJlZmV0Y2ggb25seS4gKi8KIAkJCQltYXNrID0gcHJlZm1hc2s7CiAJCQl9IGVsc2UKIAkJ
+CQlhZGRpdGlvbmFsX21lbV9zaXplICs9IGFkZGl0aW9uYWxfbWVtX3NpemU7Ci0JCQl0eXBlMiA9
+IElPUkVTT1VSQ0VfTUVNOworCQkJdHlwZTIgPSB0eXBlMyA9IElPUkVTT1VSQ0VfTUVNOwogCQl9
+Ci0JCXBidXNfc2l6ZV9tZW0oYnVzLCBtYXNrLCBJT1JFU09VUkNFX01FTSwgdHlwZTIsCisJCXBi
+dXNfc2l6ZV9tZW0oYnVzLCBtYXNrLCBJT1JFU09VUkNFX01FTSwgdHlwZTIsIHR5cGUzLAogCQkJ
+CXJlYWxsb2NfaGVhZCA/IDAgOiBhZGRpdGlvbmFsX21lbV9zaXplLAogCQkJCWFkZGl0aW9uYWxf
+bWVtX3NpemUsIHJlYWxsb2NfaGVhZCk7CiAJCWJyZWFrOwpJbmRleDogbGludXgtMi42L2RyaXZl
+cnMvcGNpL3NldHVwLXJlcy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMv
+cGNpL3NldHVwLXJlcy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtcmVzLmMKQEAg
+LTIxMiw3ICsyMTIsOCBAQCBzdGF0aWMgaW50IF9fcGNpX2Fzc2lnbl9yZXNvdXJjZShzdHJ1Y3QK
+IAkJCQkgICAgIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UsIGRldik7CiAKIAlpZiAocmV0IDwgMCAm
+JgotCSAgICAocmVzLT5mbGFncyAmIChJT1JFU09VUkNFX1BSRUZFVENIIHwgSU9SRVNPVVJDRV9N
+RU1fNjQpKSkgeworCSAgICAocmVzLT5mbGFncyAmIChJT1JFU09VUkNFX1BSRUZFVENIIHwgSU9S
+RVNPVVJDRV9NRU1fNjQpKSA9PQorCSAgICAgKElPUkVTT1VSQ0VfUFJFRkVUQ0ggfCBJT1JFU09V
+UkNFX01FTV82NCkpIHsKIAkJLyoKIAkJICogVGhhdCBmYWlsZWQuCiAJCSAqCkBAIC0yMjMsMTIg
+KzIyNCwxNSBAQCBzdGF0aWMgaW50IF9fcGNpX2Fzc2lnbl9yZXNvdXJjZShzdHJ1Y3QKIAkJCQkJ
+ICAgICBwY2liaW9zX2FsaWduX3Jlc291cmNlLCBkZXYpOwogCX0KIAotCWlmIChyZXQgPCAwICYm
+IChyZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9QUkVGRVRDSCkpIHsKKwlpZiAocmV0IDwgMCAmJgor
+CSAgICAocmVzLT5mbGFncyAmIChJT1JFU09VUkNFX1BSRUZFVENIIHwgSU9SRVNPVVJDRV9NRU1f
+NjQpKSkgewogCQkvKgogCQkgKiBUaGF0IGZhaWxlZC4KIAkJICoKIAkJICogQnV0IGEgcHJlZmV0
+Y2hpbmcgYXJlYSBjYW4gaGFuZGxlIGEgbm9uLXByZWZldGNoaW5nCiAJCSAqIHdpbmRvdyAoaXQg
+d2lsbCBqdXN0IG5vdCBwZXJmb3JtIGFzIHdlbGwpLgorCQkgKgorCQkgKiBBbHNvIGNhbiBwdXQg
+NjRiaXQgdW5kZXIgMzJiaXQgcmFuZ2UuIChiZWxvdyA0ZykuCiAJCSAqLwogCQlyZXQgPSBwY2lf
+YnVzX2FsbG9jX3Jlc291cmNlKGJ1cywgcmVzLCBzaXplLCBhbGlnbiwgbWluLCAwLAogCQkJCQkg
+ICAgIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UsIGRldik7Cg==
+--001a11c2190ac42cd204edb01efb--
