@@ -1,60 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39007 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754521Ab3L3JNm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Dec 2013 04:13:42 -0500
-Date: Mon, 30 Dec 2013 11:20:43 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mike Lothian <mike@fireburn.co.uk>, madcatx@atlas.cz,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
-	=?iso-8859-1?Q?Joaqu=EDn_Aramend=EDa?= <samsagax@gmail.com>
-Subject: Re: [PATCH][update] ACPIPHP / radeon / nouveau: Fix VGA switcheroo
- problem related to hotplug events
-Message-ID: <20131230092043.GB2494@intel.com>
-References: <10163453.2AxBLHI1XI@vostro.rjw.lan>
- <3135179.iXEx1Rk87m@vostro.rjw.lan>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:34908 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752003Ab3LQWYn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 17:24:43 -0500
+Received: by mail-ie0-f175.google.com with SMTP id x13so9301267ief.34
+        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2013 14:24:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <3135179.iXEx1Rk87m@vostro.rjw.lan>
+In-Reply-To: <1387318331.30327.16.camel@bling.home>
+References: <20131210183339.26294.14581.stgit@bling.home> <20131210184845.26294.81385.stgit@bling.home>
+ <20131217004815.GA4781@google.com> <1387318331.30327.16.camel@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 17 Dec 2013 15:24:22 -0700
+Message-ID: <CAErSpo6TH7QghPMhDxrohEz5rUtSiQEh_VR66f+jckPUWjey0g@mail.gmail.com>
+Subject: Re: [PATCH 3/3] pci: Add Virtual Channel to save/restore support
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Don Dutile <ddutile@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 29, 2013 at 10:36:56PM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The changes in the ACPI-based PCI hotplug (ACPIPHP) subsystem made
-> during the 3.12 development cycle uncovered a problem with VGA
-> switcheroo that on some systems, when the device-specific method
-> (ATPX in the radeon case, _DSM in the nouveau case) is used to turn
-> off the discrete graphics, the BIOS generates ACPI hotplug events for
-> that device and those events cause ACPIPHP to attempt to remove the
-> device from the system (they are events for a device that was present
-> previously and is not present any more, so that's what should be done
-> according to the spec).  Then, the system stops functioning correctly.
-> 
-> Since the hotplug events in question were simply silently ignored
-> previously, the least intrusive way to address that problem is to
-> make ACPIPHP ignore them again.  For this purpose, introduce a new
-> ACPI device flag, no_hotplug, and modify ACPIPHP to ignore hotplug
-> events for PCI devices whose ACPI companions have that flag set.
-> Next, make the radeon and nouveau switcheroo detection code set the
-> no_hotplug flag for the discrete graphics' ACPI companion.
-> 
-> Fixes: bbd34fcdd1b2 (ACPI / hotplug / PCI: Register all devices under the given bridge)
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=61891
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=64891
-> Reported-and-tested-by: Mike Lothian <mike@fireburn.co.uk>
-> Reported-and-tested-by: <madcatx@atlas.cz>
-> Reported-by: Joaquín Aramendía <samsagax@gmail.com>
-> Cc: Alex Deucher <alexdeucher@gmail.com>
-> Cc: Dave Airlie <airlied@linux.ie>
-> Cc: Takashi Iwai <tiwai@suse.de>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: 3.12+ <stable@vger.kernel.org> # 3.12+
+On Tue, Dec 17, 2013 at 3:12 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Mon, 2013-12-16 at 17:48 -0700, Bjorn Helgaas wrote:
+>> On Tue, Dec 10, 2013 at 11:48:45AM -0700, Alex Williamson wrote:
 
-FWIW, Thunderbolt hotplug still works fine after this patch is applied :)
+>> > +static void pci_vc_load_arb_table(struct pci_dev *dev, int pos)
+>> > +{
+>> > +   u32 ctrl;
+>> > +
+>> > +   pci_read_config_dword(dev, pos + PCI_VC_PORT_CTRL, &ctrl);
+>> > +   pci_write_config_dword(dev, pos + PCI_VC_PORT_CTRL, ctrl | 1);
+>> > +   if (pci_wait_for_pending(dev, pos + PCI_VC_PORT_STATUS, 1))
+
+>> spec says these are 16-bit registers; shouldn't these be "word" accesses?
+>
+> The control registers are 32-bit, the status registers are 16-bit.
+> pci_wait_for_pending uses word access.
+
+The "VC Resource Control Registers" at offset 14h + (n * 0Ch) are 32
+bits, but I was referring to the PCI_VC_PORT_CTRL accesses, sorry I
+didn't make that clear.  I'm looking at 7.11.4 "Port VC Control
+Register" at offset 12 (0Ch), and that one looks like 16 bits to me.
+
+Bjorn
