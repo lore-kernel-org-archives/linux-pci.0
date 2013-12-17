@@ -1,82 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:41959 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755562Ab3LGWXp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 17:23:45 -0500
-Received: by mail-ie0-f176.google.com with SMTP id at1so3695740iec.7
-        for <linux-pci@vger.kernel.org>; Sat, 07 Dec 2013 14:23:45 -0800 (PST)
+Received: from mail.active-venture.com ([67.228.131.205]:57961 "EHLO
+	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945Ab3LQCgE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 21:36:04 -0500
+Message-ID: <52AFB891.5020700@roeck-us.net>
+Date: Mon, 16 Dec 2013 18:36:01 -0800
+From: Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
-In-Reply-To: <20131009163304.62b439a9@endymion.delvare>
-References: <20131009163304.62b439a9@endymion.delvare>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 7 Dec 2013 15:23:25 -0700
-Message-ID: <CAErSpo6ikaTXXvWzX_Z0=mabwD4aedoLoSVjsd+_E5kV9YJpuA@mail.gmail.com>
-Subject: Re: [PATCH] PCI/portdrv: Set master earlier
-To: Jean Delvare <jdelvare@suse.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Takashi Iwai <tiwai@suse.de>, Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatjain@juniper.net>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
+ and removal
+References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com> <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com> <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com> <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com> <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com> <CAE9FiQX-ZP0R-weuPoOJ6GkPxOLp5jk9thnjfPQ+Q5tCHugD4w@mail.gmail.com> <20131214033911.GA25115@roeck-us.net> <241775f7fb71476aa84bbb19fde4602f@DM2PR05MB671.namprd05.prod.outlook.com> <CAErSpo4grMgCBetm7DMmizWQS_peM5yYBwFS99K8jbXaEWGmEg@mail.gmail.com> <20131216173907.GC1811@roeck-us.net> <CAErSpo6pBk6HR79jLfxd2sZPQ3Xq=Z-u1t__ODzDqa31_TLPSA@mail.gmail.com>
+In-Reply-To: <CAErSpo6pBk6HR79jLfxd2sZPQ3Xq=Z-u1t__ODzDqa31_TLPSA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+On 12/16/2013 05:14 PM, Bjorn Helgaas wrote:
+> On Mon, Dec 16, 2013 at 10:39 AM, Guenter Roeck <linux@roeck-us.net> wrote:
+>> On Sun, Dec 15, 2013 at 05:18:26PM -0700, Bjorn Helgaas wrote:
+>>> On Sun, Dec 15, 2013 at 4:24 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+>>>>>>>
+>>>>>>>> Once again: the way I interpret this is: * Always enable Link events.
+>>>>>>>> * Disable presence events if attention button is present.
+>>>>>>>
+>>>>>>> That sounds like a good plan to me.
+>>>>>>
+>>>>>> How about Diag_Reset from MPT2SAS and others?  link could up and down
+>>>>>>
+>>>>
+>>>> I am assuming you are referring to
+>>>>
+>>>> static int _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+>>>>
+>>>> Which as far as I could understand would cause link to go down and come up
+>>>> again without the kernel knowing anything about it?  ...
+>>>
+>>>> In general, I guess the question is when a link goes down and back up,
+>>>> whether or not we want to treat it as a hot unplug followed by a hotplug. I
+>>>> think there may be cases such as AER (or the one Yinghai mentions) where we
+>>>> don't want to treat it as a hotplug (see note below). And there may be cases
+>>>> that we definitely want to treat it as hotplug (need link events!).
+>>>> Situation gets more complex since there may be pciehp slots downstream of a
+>>>> link getting reset.
+>>>>
+>>>> It seems to me that we are saying that a mechanism is needed so that a
+>>>> voluntary Link flap is NOT treated like a hotplug temporarily?  ...
+>>>
+>>>> Notes: * it may not OK, if the kernel thinks the device is accessible when
+>>>> it is really not.  What if during this downtime, someone tries to access the
+>>>> device (say userspace)?  * How do we know after the link up, that the device
+>>>> is really the same.  If during this reset, the device changed its
+>>>> "character", say a different class?  I think a rescan should be mandated
+>>>> after every such event.  * Do we need to unload and reload the driver after
+>>>> the link reset, since it can be a different device?
+>>>
+>>> I am quite dubious about the idea of a voluntary link flap.  If the link goes
+>>> down and comes back up, I don't see how we can make any assumptions about what
+>>> device is there.
+>>>
+>>> I let Alex talk me into pciehp_reset_slot(), which disables presence detect
+>>> interrupts while resetting a device, so we already have a bit of precedent for
+>>> the idea.  But even in that case, the device could easily come out of reset as
+>>> a different device, e.g., if the reset caused it to load updated firmware.
+>>>
+>>> I would feel much better if we treated link down as a remove and did a rescan
+>>> on the link up.
+>>>
+>> Agreed. Question is if we might need some means for a driver to tell the PCIe
+>> core about an upcoming "planned" link flap. pciehp_reset_slot() doesn't seem
+>> to address the condition where a driver resets a connected chip by other means
+>> than by calling pciehp_reset_slot(). Still not sure what happens when the
+>> mpt2sas driver issues its diagnostic reset, to take Yinghai's example (or if
+>> there would be a cleaner way to implement such a reset).
+>
+> In my opinion we should not add the concept of a planned link flap.
+> We already have pci_reset_function(), and we can probably make that
+> deal with link up/down events internally, so I think we should try to
+> use that if we can.  I think it's too much of a mess to try to support
+> link flaps for random driver-initiated resets that don't go through
+> the PCI core.
+>
+Perfectly fine with me.
 
-On Wed, Oct 9, 2013 at 8:33 AM, Jean Delvare <jdelvare@suse.de> wrote:
-> Since kernel 3.12-rc3, I get the following warning messages at boot:
-> pcieport 0000:00:07.0: driver skip pci_set_master, fix it!
-> pcieport 0000:00:01.0: driver skip pci_set_master, fix it!
+> That probably means going through and identifying all the drivers we
+> can find that do their own internal resets, and converting them.
+> We'll likely miss some, since the mechanisms are driver-specific.  And
 
-cf3e1feba7f9 ("PCI: Workaround missing pci_set_master in pci drivers")
-added this warning and, at the same time, turned on bus mastering.
+Also might be difficult - that kind of work really asks for having
+the hardware available for testing.
 
-There didn't seem to be any reason for the warning and no reason why
-bus mastering should be enabled in the driver rather than the core, so
-fbeeb822f6f4 ("PCI: Drop warning about drivers that don't use
-pci_set_master()") just dropped the warning.
+Guenter
 
-This should resolve the problem, so I don't think there's a need for
-this patch.  Let me know if otherwise.
+> maybe there are some driver resets that think they add value over the
+> core's pci_reset_function() (I'm not sure what that would be, but I'm
+> open to discussion about it).
+>
+> Bjorn
+>
+>
 
-Bjorn
-
-> These are:
-> 00:01.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 1 (rev 13)
-> 00:07.0 PCI bridge: Intel Corporation 5520/5500/X58 I/O Hub PCI Express Root Port 7 (rev 13)
->
-> Calling pci_set_master() immediately after pci_enable_device() makes
-> the warning messages go away.
->
-> Signed-off-by: Jean Delvare <jdelvare@suse.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
-> Please note that I am far from certain that this is the correct fix.
-> Another approach would be to disable the device if
-> get_port_device_capability() returns no capabilities. I suppose the
-> device would then be re-enabled later if really needed. What's the best
-> approach?
->
->  drivers/pci/pcie/portdrv_core.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> --- linux-3.12-rc4.orig/drivers/pci/pcie/portdrv_core.c 2013-09-24 00:41:09.000000000 +0200
-> +++ linux-3.12-rc4/drivers/pci/pcie/portdrv_core.c      2013-10-09 15:43:54.205943783 +0200
-> @@ -366,13 +366,13 @@ int pcie_port_device_register(struct pci
->         status = pci_enable_device(dev);
->         if (status)
->                 return status;
-> +       pci_set_master(dev);
->
->         /* Get and check PCI Express port services */
->         capabilities = get_port_device_capability(dev);
->         if (!capabilities)
->                 return 0;
->
-> -       pci_set_master(dev);
->         /*
->          * Initialize service irqs. Don't use service devices that
->          * require interrupts if there is no way to generate them.
->
->
-> --
-> Jean Delvare
-> Suse L3 Support
