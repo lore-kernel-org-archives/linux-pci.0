@@ -1,91 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:48716 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751879Ab3LPASq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 19:18:46 -0500
-Received: by mail-ig0-f172.google.com with SMTP id hl1so2634390igb.5
-        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2013 16:18:46 -0800 (PST)
+Received: from vps0.lunn.ch ([178.209.37.122]:34928 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753983Ab3LQUpx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Dec 2013 15:45:53 -0500
+Date: Tue, 17 Dec 2013 21:45:10 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	bhelgaas@google.com, Jason Cooper <jason@lakedaemon.net>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: MVEBU: Remove duplicate clock get
+Message-ID: <20131217204510.GA2281@lunn.ch>
+References: <1386178241-10453-1-git-send-email-andrew@lunn.ch>
 MIME-Version: 1.0
-In-Reply-To: <241775f7fb71476aa84bbb19fde4602f@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com>
- <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
- <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
- <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
- <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com>
- <CAE9FiQX-ZP0R-weuPoOJ6GkPxOLp5jk9thnjfPQ+Q5tCHugD4w@mail.gmail.com>
- <20131214033911.GA25115@roeck-us.net> <241775f7fb71476aa84bbb19fde4602f@DM2PR05MB671.namprd05.prod.outlook.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 15 Dec 2013 17:18:26 -0700
-Message-ID: <CAErSpo4grMgCBetm7DMmizWQS_peM5yYBwFS99K8jbXaEWGmEg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
- and removal
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Rajat Jain <rajatjain.linux@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1386178241-10453-1-git-send-email-andrew@lunn.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 15, 2013 at 4:24 PM, Rajat Jain <rajatjain@juniper.net> wrote:
->> > >
->> > >> Once again: the way I interpret this is:
->> > >> * Always enable Link events.
->> > >> * Disable presence events if attention button is present.
->> > >
->> > > That sounds like a good plan to me.
->> >
->> > How about Diag_Reset from MPT2SAS and others?
->> > link could up and down
->> >
->
-> I am assuming you are referring to
->
-> static int
-> _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
->
-> Which as far as I could understand would cause link to go down and come up
->  again without the kernel knowing anything about it?
-> ...
 
-> In general, I guess the question is when a link goes down and back up, whether
-> or not we want to treat it as a hot unplug followed by a hotplug. I think there
-> may be cases such as AER (or the one Yinghai mentions) where we don't want to
-> treat it as a hotplug (see note below). And there may be cases that we
-> definitely want to treat it as hotplug (need link events!). Situation gets more
-> complex since there may be pciehp slots downstream of a link getting reset.
->
-> It seems to me that we are saying that a mechanism is needed so that a voluntary
-> Link flap is NOT treated like a hotplug temporarily?
-> ...
 
-> Notes:
-> * it may not OK, if the kernel thinks the device is accessible when it is really not.
->   What if during this downtime, someone tries to access the device (say userspace)?
-> * How do we know after the link up, that the device is really the same.
->   If during this reset, the device changed its "character", say a different class?
->   I think a rescan should be mandated after every such event.
->  * Do we need to unload and reload the driver after the link reset, since it can be a different device?
+On Wed, Dec 04, 2013 at 06:30:41PM +0100, Andrew Lunn wrote:
+> Probably due to a merge conflict resolution gone bad, the pci clock is
+> got twice. Remove the second redundent of_clk_get_by_name().
+> 
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+> ---
+>  drivers/pci/host/pci-mvebu.c | 8 --------
+>  1 file changed, 8 deletions(-)
 
-I am quite dubious about the idea of a voluntary link flap.  If the
-link goes down and comes back up, I don't see how we can make any
-assumptions about what device is there.
+Hi Folks
 
-I let Alex talk me into pciehp_reset_slot(), which disables presence
-detect interrupts while resetting a device, so we already have a bit
-of precedent for the idea.  But even in that case, the device could
-easily come out of reset as a different device, e.g., if the reset
-caused it to load updated firmware.
+This patch has been Acked by Jingoo Han.
 
-I would feel much better if we treated link down as a remove and did a
-rescan on the link up.
+So my question is, which maintainer is going to accept it for
+mainline? Is there anything i need to do?
 
-Bjorn
+Thanks
+	Andrew
+
+
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index c269e430c760..96352be58cc9 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -949,14 +949,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+>  
+>  		mvebu_pcie_set_local_dev_nr(port, 1);
+>  
+> -		port->clk = of_clk_get_by_name(child, NULL);
+> -		if (IS_ERR(port->clk)) {
+> -			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
+> -			       port->port, port->lane);
+> -			iounmap(port->base);
+> -			continue;
+> -		}
+> -
+>  		port->dn = child;
+>  		spin_lock_init(&port->conf_lock);
+>  		mvebu_sw_pci_bridge_init(port);
+> -- 
+> 1.8.5
+> 
