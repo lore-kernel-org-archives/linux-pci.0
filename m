@@ -1,48 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:42720 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016Ab3LOX4y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 18:56:54 -0500
-Received: by mail-ie0-f170.google.com with SMTP id qd12so5661795ieb.1
-        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2013 15:56:52 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <52B0AEEF.8000403@gmail.com>
+Date: Tue, 17 Dec 2013 12:07:11 -0800
+From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20131215231413.GA6853@kroah.com>
-References: <20131215063123.GB26396@localhost> <20131215170417.GB28799@kroah.com>
- <CAErSpo4Usujp5zJT83-88T71J8tObJgZ03i-wORqLputxQbdXg@mail.gmail.com> <20131215231413.GA6853@kroah.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 15 Dec 2013 16:56:31 -0700
-Message-ID: <CAErSpo5R5fTLj0X+qc2Rkmvvjzdrbx0s-rW8iXMuSsqJmGjVmw@mail.gmail.com>
-Subject: Re: BUG: key ffff8800192a6ad0 not in .data!
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
+CC: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH v3 8/8] pciehp: Introduce hotplug_lock to serialize HP events
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 15, 2013 at 4:14 PM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Sun, Dec 15, 2013 at 03:12:03PM -0700, Bjorn Helgaas wrote:
->> On Sun, Dec 15, 2013 at 10:04 AM, Greg Kroah-Hartman
->> <gregkh@linuxfoundation.org> wrote:
->> > On Sun, Dec 15, 2013 at 02:31:23PM +0800, Fengguang Wu wrote:
->> >> Greetings,
->> >>
->> >> I got the below dmesg and the first bad commit is
->> >
->> > I thought this was already fixed in Bjorn's tree, but perhaps he hasn't
->> > merged in the one-liner for it...
->>
->> Yes, this is fixed.  I actually dropped that MSI change temporarily
->> until we can fold in the memory leak fixes, so it is not currently in
->> linux-next.
->
-> Do you want me to just resend a fixed patch up with the one-line fix,
-> and the memory-leak-on-error-path fix all as just one patch to make it
-> easier for you?
+Today it is there is no protection around pciehp_enable_slot() and
+pciehp_disable_slot() to ensure that they complete before another
+hot-plug operation can be done on that particular slot.
 
-It's fine either way.  I'm happy to incorporate an incremental patch
-if that's easier for you.
+This patch introduces the slot->hotplug_lock to ensure that any
+hotplug operations (add / remove) complete before another HP event
+can begin processing on that particular slot.
 
-Bjorn
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+v3: same as v2, only patch numbering changed from [4/4] to [8/8].
+v2: Same as v1, dropped the "RFC" from subject, added Guenter's signature
+v1: Initial patch
+
+ drivers/pci/hotplug/pciehp.h      |    1 +
+ drivers/pci/hotplug/pciehp_core.c |    7 ++++++-
+ drivers/pci/hotplug/pciehp_ctrl.c |   17 +++++++++++++++--
+ drivers/pci/hotplug/pciehp_hpc.c  |    1 +
+ 4 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 92d7fed..589339b 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -77,6 +77,7 @@ struct slot {
+ 	struct hotplug_slot *hotplug_slot;
+ 	struct delayed_work work;	/* work for button event */
+ 	struct mutex lock;
++	struct mutex hotplug_lock;
+ 	struct workqueue_struct *wq;
+ };
+ 
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index bbd48bb..d01573d 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -278,8 +278,11 @@ static int pciehp_probe(struct pcie_device *dev)
+ 	slot = ctrl->slot;
+ 	pciehp_get_adapter_status(slot, &occupied);
+ 	pciehp_get_power_status(slot, &poweron);
+-	if (occupied && pciehp_force)
++	if (occupied && pciehp_force) {
++		mutex_lock(&slot->hotplug_lock);
+ 		pciehp_enable_slot(slot);
++		mutex_unlock(&slot->hotplug_lock);
++	}
+ 	/* If empty slot's power status is on, turn power off */
+ 	if (!occupied && poweron && POWER_CTRL(ctrl))
+ 		pciehp_power_off_slot(slot);
+@@ -323,10 +326,12 @@ static int pciehp_resume (struct pcie_device *dev)
+ 
+ 	/* Check if slot is occupied */
+ 	pciehp_get_adapter_status(slot, &status);
++	mutex_lock(&slot->hotplug_lock);
+ 	if (status)
+ 		pciehp_enable_slot(slot);
+ 	else
+ 		pciehp_disable_slot(slot);
++	mutex_unlock(&slot->hotplug_lock);
+ 	return 0;
+ }
+ #endif /* PM */
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 36a8061..e6a5941 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -314,6 +314,7 @@ static void pciehp_power_thread(struct work_struct *work)
+ 	struct power_work_info *info =
+ 		container_of(work, struct power_work_info, work);
+ 	struct slot *p_slot = info->p_slot;
++	int ret;
+ 
+ 	switch (info->req) {
+ 	case DISABLE_REQ:
+@@ -321,7 +322,9 @@ static void pciehp_power_thread(struct work_struct *work)
+ 			 "Disabling domain:bus:device=%04x:%02x:00\n",
+ 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
+ 			 p_slot->ctrl->pcie->port->subordinate->number);
++		mutex_lock(&p_slot->hotplug_lock);
+ 		pciehp_disable_slot(p_slot);
++		mutex_unlock(&p_slot->hotplug_lock);
+ 		mutex_lock(&p_slot->lock);
+ 		p_slot->state = STATIC_STATE;
+ 		mutex_unlock(&p_slot->lock);
+@@ -331,7 +334,10 @@ static void pciehp_power_thread(struct work_struct *work)
+ 			 "Enabling domain:bus:device=%04x:%02x:00\n",
+ 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
+ 			 p_slot->ctrl->pcie->port->subordinate->number);
+-		if (pciehp_enable_slot(p_slot) && PWR_LED(p_slot->ctrl))
++		mutex_lock(&p_slot->hotplug_lock);
++		ret = pciehp_enable_slot(p_slot);
++		mutex_unlock(&p_slot->hotplug_lock);
++		if (ret && PWR_LED(p_slot->ctrl))
+ 			pciehp_green_led_off(p_slot);
+ 		mutex_lock(&p_slot->lock);
+ 		p_slot->state = STATIC_STATE;
+@@ -575,6 +581,9 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	kfree(info);
+ }
+ 
++/*
++ * Note: This function must be called with slot->hotplug_lock held
++ */
+ int pciehp_enable_slot(struct slot *p_slot)
+ {
+ 	u8 getstatus = 0;
+@@ -613,7 +622,9 @@ int pciehp_enable_slot(struct slot *p_slot)
+ 	return rc;
+ }
+ 
+-
++/*
++ * Note: This function must be called with slot->hotplug_lock held
++ */
+ int pciehp_disable_slot(struct slot *p_slot)
+ {
+ 	u8 getstatus = 0;
+@@ -647,7 +658,9 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
+ 	case STATIC_STATE:
+ 		p_slot->state = POWERON_STATE;
+ 		mutex_unlock(&p_slot->lock);
++		mutex_lock(&p_slot->hotplug_lock);
+ 		retval = pciehp_enable_slot(p_slot);
++		mutex_unlock(&p_slot->hotplug_lock);
+ 		mutex_lock(&p_slot->lock);
+ 		p_slot->state = STATIC_STATE;
+ 		break;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index c2f3e37..5c747a9 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -815,6 +815,7 @@ static int pcie_init_slot(struct controller *ctrl)
+ 
+ 	slot->ctrl = ctrl;
+ 	mutex_init(&slot->lock);
++	mutex_init(&slot->hotplug_lock);
+ 	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
+ 	ctrl->slot = slot;
+ 	return 0;
+-- 
+1.7.9.5
+
