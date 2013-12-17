@@ -1,45 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:37021 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932582Ab3LIUo7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:44:59 -0500
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:63904 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753782Ab3LQUGh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 15:06:37 -0500
+Message-ID: <52B0AEC8.4030003@gmail.com>
+Date: Tue, 17 Dec 2013 12:06:32 -0800
+From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6xSYq=7AfFm+qNLGSfe6qjaGKyrwxdpG_CXHSy2uVX_w@mail.gmail.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
-	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
-	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
-	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
-	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
-	<CAErSpo6xSYq=7AfFm+qNLGSfe6qjaGKyrwxdpG_CXHSy2uVX_w@mail.gmail.com>
-Date: Mon, 9 Dec 2013 12:44:58 -0800
-Message-ID: <CAE9FiQVc=knLngJ9=oAi9NP4AQzu5hWGh_mkxsB2TqD_posL8g@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
+CC: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH v3 5/8] pciehp: Don't check for adapter or latch status while
+ disabling
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 12:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+It does not make much sense to refuse to disable a slot if an
+adapter is not present or the latch is open. If an adapter is not
+present, it provides an even better reason to disable the device
+slot.
 
-> Yes, I agree.  I didn't say it would be simple.  The quick fix would
-> be easy for now, but adding nonsensical code makes our lives harder
-> long into the future.
+This is specially a problem for link state hot-plug, because some
+ports use in band mechanism for presence detection. Thus
+when link goes down, presence detect also goes down. We _want_ that
+the removal should take place in such case.
 
-If the old kernel is working, and user update kernel then we should
-not request them to append "pci=realloc=off" for booting.
+Thus remove the checks for adapter and latch in pciehp_disable_slot()
 
-other user that would have "pci=realloc=on" works, they could always
-keep that.
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+v3: * created by splitting the patch v2 [2/4]
+    * Remove the check for latch as well
+v2: (non existent)
+v1: (non existent)
 
-For now, we just reduce auto enable scope, as very beginning we are doing
-that esp for SRIOV..., and now SRIOV would require huge range esp when
-num_VF could be 64. we are easy to hit the case that realloc code mess up
-the bios allocation when there is not above 4G 64bit mmio.
+ drivers/pci/hotplug/pciehp_ctrl.c |   18 ------------------
+ 1 file changed, 18 deletions(-)
 
-Yinghai
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 7ae7b02..e934618 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -612,24 +612,6 @@ int pciehp_disable_slot(struct slot *p_slot)
+ 	if (!p_slot->ctrl)
+ 		return 1;
+ 
+-	if (!HP_SUPR_RM(p_slot->ctrl)) {
+-		ret = pciehp_get_adapter_status(p_slot, &getstatus);
+-		if (ret || !getstatus) {
+-			ctrl_info(ctrl, "No adapter on slot(%s)\n",
+-				  slot_name(p_slot));
+-			return -ENODEV;
+-		}
+-	}
+-
+-	if (MRL_SENS(p_slot->ctrl)) {
+-		ret = pciehp_get_latch_status(p_slot, &getstatus);
+-		if (ret || getstatus) {
+-			ctrl_info(ctrl, "Latch open on slot(%s)\n",
+-				  slot_name(p_slot));
+-			return -ENODEV;
+-		}
+-	}
+-
+ 	if (POWER_CTRL(p_slot->ctrl)) {
+ 		ret = pciehp_get_power_status(p_slot, &getstatus);
+ 		if (ret || !getstatus) {
+-- 
+1.7.9.5
+
