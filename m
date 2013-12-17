@@ -1,6 +1,6 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <52B0AE88.8090203@gmail.com>
-Date: Tue, 17 Dec 2013 12:05:28 -0800
+Message-ID: <52B0AEA3.6000608@gmail.com>
+Date: Tue, 17 Dec 2013 12:05:55 -0800
 From: Rajat Jain <rajatjain.linux@gmail.com>
 MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>,
@@ -11,67 +11,60 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 CC: Guenter Roeck <groeck@juniper.net>,
 	Rajat Jain <rajatjain@juniper.net>,
 	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v3 1/8] pciehp: Make check_link_active() non-static
+Subject: [PATCH v3 3/8] pciehp: Enable link state change notifications
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-check_link_active() functionality needs to be used by subsequent patches
-(that introduce link state change based hotplug). Thus make the function
-non-static, and rename it to pciehp_check_link_active() so as to be
-consistent with other non-static functions.
+Enabled the Link state notifications unconditionaly. Enable the
+presence detection notification only if attention button is absent.
+This was discussed at this thread:
+http://marc.info/?t=138611014300001&r=1&w=2
 
 Signed-off-by: Rajat Jain <rajatjain@juniper.net>
 Signed-off-by: Guenter Roeck <groeck@juniper.net>
 ---
-v3: Same as v2, only numbering changed from [1/4] to [1/8]
-v2: Same as v1, dropped the "RFC" from subject, and added Guenter's signature
-v1: Initial patch
+v3: * created by splitting the patch v2 [2/4]
+    * Disable presence detect notification, when ATTN BTN is present
+v2: (non existent)
+v1: (non existent)
 
- drivers/pci/hotplug/pciehp.h     |    1 +
- drivers/pci/hotplug/pciehp_hpc.c |    6 +++---
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 21e865d..4ffcf6b 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -154,6 +154,7 @@ void pciehp_green_led_on(struct slot *slot);
- void pciehp_green_led_off(struct slot *slot);
- void pciehp_green_led_blink(struct slot *slot);
- int pciehp_check_link_status(struct controller *ctrl);
-+bool pciehp_check_link_active(struct controller *ctrl);
- void pciehp_release_ctrl(struct controller *ctrl);
- int pciehp_reset_slot(struct slot *slot, int probe);
- 
 diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 3eea3fd..f8c7a5f 100644
+index 1e9f814..b45b568 100644
 --- a/drivers/pci/hotplug/pciehp_hpc.c
 +++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -241,7 +241,7 @@ static int pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- 	return retval;
- }
+@@ -723,9 +723,17 @@ int pcie_enable_notification(struct controller *ctrl)
+ 	 * when it is cleared in the interrupt service routine, and
+ 	 * next power fault detected interrupt was notified again.
+ 	 */
+-	cmd = PCI_EXP_SLTCTL_PDCE;
++
++	/*
++	 * Always enable link events: thus link-up and link-down shall
++	 * always be treated as hotplug and unplug respectively. Enable
++	 * presence detect only if Attention Button is not present.
++	 */
++	cmd = PCI_EXP_SLTCTL_DLLSCE;
+ 	if (ATTN_BUTTN(ctrl))
+ 		cmd |= PCI_EXP_SLTCTL_ABPE;
++	else
++		cmd |= PCI_EXP_SLTCTL_PDCE;
+ 	if (MRL_SENS(ctrl))
+ 		cmd |= PCI_EXP_SLTCTL_MRLSCE;
+ 	if (!pciehp_poll_mode)
+@@ -733,7 +741,8 @@ int pcie_enable_notification(struct controller *ctrl)
  
--static bool check_link_active(struct controller *ctrl)
-+bool pciehp_check_link_active(struct controller *ctrl)
- {
- 	bool ret = false;
- 	u16 lnk_status;
-@@ -261,12 +261,12 @@ static void __pcie_wait_link_active(struct controller *ctrl, bool active)
- {
- 	int timeout = 1000;
+ 	mask = (PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_ABPE |
+ 		PCI_EXP_SLTCTL_MRLSCE | PCI_EXP_SLTCTL_PFDE |
+-		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE);
++		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
++		PCI_EXP_SLTCTL_DLLSCE);
  
--	if (check_link_active(ctrl) == active)
-+	if (pciehp_check_link_active(ctrl) == active)
- 		return;
- 	while (timeout > 0) {
- 		msleep(10);
- 		timeout -= 10;
--		if (check_link_active(ctrl) == active)
-+		if (pciehp_check_link_active(ctrl) == active)
- 			return;
- 	}
- 	ctrl_dbg(ctrl, "Data Link Layer Link Active not %s in 1000 msec\n",
+ 	if (pcie_write_cmd(ctrl, cmd, mask)) {
+ 		ctrl_err(ctrl, "Cannot enable software notification\n");
 -- 
 1.7.9.5
 
