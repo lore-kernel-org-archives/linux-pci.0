@@ -1,52 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:47357 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753791Ab3LNUFe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Dec 2013 15:05:34 -0500
-Received: by mail-ob0-f179.google.com with SMTP id wm4so3333083obc.24
-        for <linux-pci@vger.kernel.org>; Sat, 14 Dec 2013 12:05:33 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:14664 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752278Ab3LQXns (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Dec 2013 18:43:48 -0500
+Subject: [PATCH v2 2/4] pci: Add support for save/restore of extended
+ capabilities
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
+Date: Tue, 17 Dec 2013 16:43:45 -0700
+Message-ID: <20131217234345.2310.58636.stgit@bling.home>
+In-Reply-To: <20131217233741.2310.78334.stgit@bling.home>
+References: <20131217233741.2310.78334.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo59htYoPBoouUfSXAVXwCUQPK-TB_zG0BkE-PLhV=KRbQ@mail.gmail.com>
-References: <CAHH3p5+3Zy+YkgDS_1bJ7B84w5iHOh6-QG7LRJXo2WQHREcRHw@mail.gmail.com>
-	<CAErSpo59htYoPBoouUfSXAVXwCUQPK-TB_zG0BkE-PLhV=KRbQ@mail.gmail.com>
-Date: Sun, 15 Dec 2013 01:35:33 +0530
-Message-ID: <CAHH3p5J7Se8zu64MfoSDkAN_NtOp=qv1DcvWBAa8jWKouo0TXg@mail.gmail.com>
-Subject: Re: Memory mapping of config space of pcie devices
-From: shiv prakash Agarwal <chhotu.shiv@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 15, 2013 at 12:29 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Dec 14, 2013 at 11:32 AM, shiv prakash Agarwal
-> <chhotu.shiv@gmail.com> wrote:
->> Hi All,
->>
->> How devices config spaces are mapped to host memory?
->> Is it being handled by core driver? I could not locate.
->
-> The PCI core does not map config space into memory.  That's not even
-> possible for the legacy config access methods, e.g., using I/O ports
-> 0xcf8 and 0xcfc [1].
->
-> If you're wondering about how Linux uses ECAM, that's mostly in
-> arch/x86/pci/mmconfig*.  That code does ioremap the ECAM area into
-> kernel virtual space, but only for access via pci_read_config_word(),
-> pci_write_config_word(), etc.
->
-> Bjorn
->
-> [1] http://en.wikipedia.org/wiki/PCI_configuration_space#Software_implementation
+Current save/restore is specific to standard capabilities.
 
-Thanks Bjorn for quick reply,
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c   |   43 +++++++++++++++++++++++++++++++++++--------
+ include/linux/pci.h |    9 ++++++++-
+ 2 files changed, 43 insertions(+), 9 deletions(-)
 
-Above reference says:
-During system initialization, firmware determines the base address for
-this “stolen” address region and communicates it to the root complex
-and to the operating system. This communication method is
-implementation-specific, and not defined in the PCI Express
-specification.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 848023f..c65d53c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -861,18 +861,28 @@ EXPORT_SYMBOL(pci_choose_state);
+ #define PCI_EXP_SAVE_REGS	7
+ 
+ 
+-static struct pci_cap_saved_state *pci_find_saved_cap(
+-	struct pci_dev *pci_dev, char cap)
++static struct pci_cap_saved_state *_pci_find_saved_cap(struct pci_dev *pci_dev,
++						       u16 cap, bool extended)
+ {
+ 	struct pci_cap_saved_state *tmp;
+ 
+ 	hlist_for_each_entry(tmp, &pci_dev->saved_cap_space, next) {
+-		if (tmp->cap.cap_nr == cap)
++		if (tmp->cap.cap_extended == extended && tmp->cap.cap_nr == cap)
+ 			return tmp;
+ 	}
+ 	return NULL;
+ }
+ 
++struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap)
++{
++	return _pci_find_saved_cap(dev, cap, false);
++}
++
++struct pci_cap_saved_state *pci_find_saved_ext_cap(struct pci_dev *dev, u16 cap)
++{
++	return _pci_find_saved_cap(dev, cap, true);
++}
++
+ static int pci_save_pcie_state(struct pci_dev *dev)
+ {
+ 	int i = 0;
+@@ -1113,7 +1123,7 @@ int pci_load_saved_state(struct pci_dev *dev, struct pci_saved_state *state)
+ 	while (cap->size) {
+ 		struct pci_cap_saved_state *tmp;
+ 
+-		tmp = pci_find_saved_cap(dev, cap->cap_nr);
++		tmp = _pci_find_saved_cap(dev, cap->cap_nr, cap->cap_extended);
+ 		if (!tmp || tmp->cap.size != cap->size)
+ 			return -EINVAL;
+ 
+@@ -2047,18 +2057,24 @@ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+ }
+ 
+ /**
+- * pci_add_cap_save_buffer - allocate buffer for saving given capability registers
++ * _pci_add_cap_save_buffer - allocate buffer for saving given
++ *                            capability registers
+  * @dev: the PCI device
+  * @cap: the capability to allocate the buffer for
++ * @extended: Standard or Extended capability ID
+  * @size: requested size of the buffer
+  */
+-static int pci_add_cap_save_buffer(
+-	struct pci_dev *dev, char cap, unsigned int size)
++static int _pci_add_cap_save_buffer(struct pci_dev *dev, u16 cap,
++				    bool extended, unsigned int size)
+ {
+ 	int pos;
+ 	struct pci_cap_saved_state *save_state;
+ 
+-	pos = pci_find_capability(dev, cap);
++	if (extended)
++		pos = pci_find_ext_capability(dev, cap);
++	else
++		pos = pci_find_capability(dev, cap);
++
+ 	if (pos <= 0)
+ 		return 0;
+ 
+@@ -2067,12 +2083,23 @@ static int pci_add_cap_save_buffer(
+ 		return -ENOMEM;
+ 
+ 	save_state->cap.cap_nr = cap;
++	save_state->cap.cap_extended = extended;
+ 	save_state->cap.size = size;
+ 	pci_add_saved_cap(dev, save_state);
+ 
+ 	return 0;
+ }
+ 
++int pci_add_cap_save_buffer(struct pci_dev *dev, char cap, unsigned int size)
++{
++	return _pci_add_cap_save_buffer(dev, cap, false, size);
++}
++
++int pci_add_ext_cap_save_buffer(struct pci_dev *dev, u16 cap, unsigned int size)
++{
++	return _pci_add_cap_save_buffer(dev, cap, true, size);
++}
++
+ /**
+  * pci_allocate_cap_save_buffers - allocate buffers for saving capabilities
+  * @dev: the PCI device
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e661333..ebbd311 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -224,7 +224,8 @@ enum pci_bus_speed {
+ };
+ 
+ struct pci_cap_saved_data {
+-	char cap_nr;
++	u16 cap_nr;
++	bool cap_extended;
+ 	unsigned int size;
+ 	u32 data[0];
+ };
+@@ -978,6 +979,12 @@ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev);
+ int pci_load_saved_state(struct pci_dev *dev, struct pci_saved_state *state);
+ int pci_load_and_free_saved_state(struct pci_dev *dev,
+ 				  struct pci_saved_state **state);
++struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *dev, char cap);
++struct pci_cap_saved_state *pci_find_saved_ext_cap(struct pci_dev *dev,
++						   u16 cap);
++int pci_add_cap_save_buffer(struct pci_dev *dev, char cap, unsigned int size);
++int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
++				u16 cap, unsigned int size);
+ int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state);
+ int pci_set_power_state(struct pci_dev *dev, pci_power_t state);
+ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
 
-How above is implemented on ARM?
