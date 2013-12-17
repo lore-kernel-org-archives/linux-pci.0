@@ -1,73 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:28613 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754084Ab3LDLF2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 06:05:28 -0500
-Date: Wed, 4 Dec 2013 11:05:07 +0000
-From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-To: Ian Campbell <Ian.Campbell@citrix.com>
-CC: Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
-	"Konrad Rzeszutek Wilk" <konrad.wilk@oracle.com>,
-	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
-	<boris.ostrovsky@oracle.com>, <david.vrabel@citrix.com>,
-	<leosilva@linux.vnet.ibm.com>, <ashley@ashleylai.com>,
-	<peterhuewe@gmx.de>, <mail@srajiv.net>, <tpmdd@selhorst.net>,
-	<tpmdd@sirrix.com>, <dmitry.torokhov@gmail.com>,
-	<bhelgaas@google.com>, <plagnioj@jcrosoft.com>,
-	<tomi.valkeinen@ti.com>, <tpmdd-devel@lists.sourceforge.net>,
-	<linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-fbdev@vger.kernel.org>
-Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
-In-Reply-To: <1386154783.17466.14.camel@kazak.uk.xensource.com>
-Message-ID: <alpine.DEB.2.02.1312041104110.7093@kaball.uk.xensource.com>
-References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>  <1386149848.13256.86.camel@kazak.uk.xensource.com>  <alpine.DEB.2.02.1312041049310.7093@kaball.uk.xensource.com> <1386154783.17466.14.camel@kazak.uk.xensource.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:42954 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752346Ab3LQBOU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 20:14:20 -0500
+Received: by mail-ie0-f180.google.com with SMTP id tp5so7313815ieb.25
+        for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2013 17:14:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <20131216173907.GC1811@roeck-us.net>
+References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com>
+ <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
+ <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
+ <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAErSpo5NjOCqkao03Ea=98gunVEaUUitq8mGLarpKW_DQoDF8g@mail.gmail.com>
+ <CAE9FiQX-ZP0R-weuPoOJ6GkPxOLp5jk9thnjfPQ+Q5tCHugD4w@mail.gmail.com>
+ <20131214033911.GA25115@roeck-us.net> <241775f7fb71476aa84bbb19fde4602f@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAErSpo4grMgCBetm7DMmizWQS_peM5yYBwFS99K8jbXaEWGmEg@mail.gmail.com> <20131216173907.GC1811@roeck-us.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 16 Dec 2013 18:14:00 -0700
+Message-ID: <CAErSpo6pBk6HR79jLfxd2sZPQ3Xq=Z-u1t__ODzDqa31_TLPSA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] pciehp: Use link change notifications for hot-plug
+ and removal
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Rajat Jain <rajatjain@juniper.net>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 4 Dec 2013, Ian Campbell wrote:
-> On Wed, 2013-12-04 at 10:51 +0000, Stefano Stabellini wrote:
-> > On Wed, 4 Dec 2013, Ian Campbell wrote:
-> > > > +bool xen_has_pv_devices(void)
-> > > > +{
-> > > > +	if (!xen_domain())
-> > > > +		return false;
-> > > > +
-> > > > +	if (xen_hvm_domain()) {
-> > > > +		/* User requested no unplug, so no PV drivers. */
-> > > > +		if (xen_emul_unplug & XEN_UNPLUG_NEVER)
-> > > > +			return false;
-> > > 
-> > > I think you need
-> > > 		if (xen_emul_unpug & XEN_UNPLUG_UNNECESSARY)
-> > > 			return true;
-> > > don't you?
-> > 
-> > XEN_UNPLUG_UNNECESSARY was introduced to enable the platform PCI device
-> > even if it didn't respond properly to the unplug protocol.
-> > The corresponding parameter is called "unnecessary" because if you pass
-> > it to the kernel you mean that it is unnecessary to unplug the emulated
-> > devices but you can use the pv devices anyway.
-> > 
-> > So no, we shouldn't check for XEN_UNPLUG_UNNECESSARY here.
-> 
-> Oh, we will eventually fall through to the return true, so it does
-> actually work out OK.
-> 
-> I'd still be in favour of handling each option explicitly, for clarity.
-> Which means checking for XEN_UNPLUG_UNNECESSARY.
+On Mon, Dec 16, 2013 at 10:39 AM, Guenter Roeck <linux@roeck-us.net> wrote:
+> On Sun, Dec 15, 2013 at 05:18:26PM -0700, Bjorn Helgaas wrote:
+>> On Sun, Dec 15, 2013 at 4:24 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+>> >> > >
+>> >> > >> Once again: the way I interpret this is: * Always enable Link events.
+>> >> > >> * Disable presence events if attention button is present.
+>> >> > >
+>> >> > > That sounds like a good plan to me.
+>> >> >
+>> >> > How about Diag_Reset from MPT2SAS and others?  link could up and down
+>> >> >
+>> >
+>> > I am assuming you are referring to
+>> >
+>> > static int _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+>> >
+>> > Which as far as I could understand would cause link to go down and come up
+>> > again without the kernel knowing anything about it?  ...
+>>
+>> > In general, I guess the question is when a link goes down and back up,
+>> > whether or not we want to treat it as a hot unplug followed by a hotplug. I
+>> > think there may be cases such as AER (or the one Yinghai mentions) where we
+>> > don't want to treat it as a hotplug (see note below). And there may be cases
+>> > that we definitely want to treat it as hotplug (need link events!).
+>> > Situation gets more complex since there may be pciehp slots downstream of a
+>> > link getting reset.
+>> >
+>> > It seems to me that we are saying that a mechanism is needed so that a
+>> > voluntary Link flap is NOT treated like a hotplug temporarily?  ...
+>>
+>> > Notes: * it may not OK, if the kernel thinks the device is accessible when
+>> > it is really not.  What if during this downtime, someone tries to access the
+>> > device (say userspace)?  * How do we know after the link up, that the device
+>> > is really the same.  If during this reset, the device changed its
+>> > "character", say a different class?  I think a rescan should be mandated
+>> > after every such event.  * Do we need to unload and reload the driver after
+>> > the link reset, since it can be a different device?
+>>
+>> I am quite dubious about the idea of a voluntary link flap.  If the link goes
+>> down and comes back up, I don't see how we can make any assumptions about what
+>> device is there.
+>>
+>> I let Alex talk me into pciehp_reset_slot(), which disables presence detect
+>> interrupts while resetting a device, so we already have a bit of precedent for
+>> the idea.  But even in that case, the device could easily come out of reset as
+>> a different device, e.g., if the reset caused it to load updated firmware.
+>>
+>> I would feel much better if we treated link down as a remove and did a rescan
+>> on the link up.
+>>
+> Agreed. Question is if we might need some means for a driver to tell the PCIe
+> core about an upcoming "planned" link flap. pciehp_reset_slot() doesn't seem
+> to address the condition where a driver resets a connected chip by other means
+> than by calling pciehp_reset_slot(). Still not sure what happens when the
+> mpt2sas driver issues its diagnostic reset, to take Yinghai's example (or if
+> there would be a cleaner way to implement such a reset).
 
-I think is wrong to check for any xen_emul_unpug options in this function.
-The xen_emul_unpug options should be used to set the right value of
-xen_platform_pci_unplug. (See my other reply.)
+In my opinion we should not add the concept of a planned link flap.
+We already have pci_reset_function(), and we can probably make that
+deal with link up/down events internally, so I think we should try to
+use that if we can.  I think it's too much of a mess to try to support
+link flaps for random driver-initiated resets that don't go through
+the PCI core.
 
+That probably means going through and identifying all the drivers we
+can find that do their own internal resets, and converting them.
+We'll likely miss some, since the mechanisms are driver-specific.  And
+maybe there are some driver resets that think they add value over the
+core's pci_reset_function() (I'm not sure what that would be, but I'm
+open to discussion about it).
 
-> > > > +		/* And user has xen_platform_pci=0 set in guest config as
-> > > > +		 * driver did not modify the value. */
-> > > > +		if (!xen_platform_pci_unplug)
-> > > > +			return false;
-> 
-> I assume this check doesn't trigger if unnecessary has been specified?
- 
-right
+Bjorn
