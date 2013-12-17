@@ -1,57 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:60999 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932216Ab3LIUrY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:47:24 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 0/4] pci: virtual channel save/restore support
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
+Date: Tue, 17 Dec 2013 16:43:33 -0700
+Message-ID: <20131217233741.2310.78334.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <20131209204323.GA25180@kroah.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
-	<1386546869-31900-2-git-send-email-yinghai@kernel.org>
-	<CAErSpo7HaAbsoy0n5sr_d3iPazEnpnO8WupJrDn2QR2Kid=EgQ@mail.gmail.com>
-	<CAE9FiQUebPPcTyHGssxTwJJ3GYx4aq-=infapvxOQgAm+PL4rA@mail.gmail.com>
-	<CAE9FiQUrTAnQkiS9SU3-pJ35-U9CqXQNQEceUUarf-WiPXCF2Q@mail.gmail.com>
-	<20131209204323.GA25180@kroah.com>
-Date: Mon, 9 Dec 2013 12:47:24 -0800
-Message-ID: <CAE9FiQW60hW06sr=ahV6rEMRQ5kA04A_1mUtfZQAra__6ttNxw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: pcibus address to resource converting take bus
- instead of dev
-From: Yinghai Lu <yinghai@kernel.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Joseph Salisbury <joseph.salisbury@canonical.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 12:43 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Mon, Dec 09, 2013 at 12:03:18PM -0800, Yinghai Lu wrote:
->> On Mon, Dec 9, 2013 at 11:21 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > On Mon, Dec 9, 2013 at 9:52 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >>
->> >> Ugh.  Why would we add new functions with "__" prefixes?  There are
->> >> only a handful of callers to pcibios_bus_to_resource() and
->> >> pcibios_resource_to_bus().  We can just change them to supply a
->> >> "struct pci_bus *" directly.  That's a better match for how the
->> >> hardware works anyway.
->> >
->>
->> Please double check if you are happy with the change.
->> Hope that will not update stable tree maintainer guys.
->
-> What do you mean by this?
+v1->v2:
 
-Do not want to change too much code, to upset stable tree maintainers.
+Address Bjorn's comments
+ - split code out to vc.c
+ - #defines for everything
+ - rename VC defines
+ - fix word access to PCI_VC_PORT_CTRL
 
->
-> How is this a -stable kernel patch?
+It ended up getting a little bigger since I added function description
+comments, header, includes and misc lines here and there.
 
-We have stable patch that will need use the new function.
+v1:
 
-[PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+Turns out that even though we don't do much with virtual channel, we
+still need to save/restore it around reset.  The case where this comes
+into play currently is a card with a switch and multiple devices, all
+supporting VC (Nvidia GRID).  On some platforms the system firmware
+will leave all the virtual channel capabilities in their default
+state, where the VC0 TC/VC map is 0xff (TC0-7 enabled over VC0).
+Other systems decide to restrict the available traffic classes and
+configure 0x01 (only TC0 over VC0).  At handoff, everything works, but
+as soon as we do a device reset, especially if done via bus reset, the
+endpoint can be returned to the spec defined default rather than the
+platform default.  If such a device is then assigned to a guest, the
+guest driver sees multiple TCs enabled, attempts to use them, and it
+fails.  The failure mode depends on the platform, ranging from the
+driver in the guest failing to work to host panic from an unsupported
+transaction.
 
-Thanks
+This series attempts to implement full save/restore support for all
+types of virtual channel (VC, MFVC, and VC9).  The buffer sizing code
+will execute for any device with these capabilities, but of couse the
+actual save/restore is only done if a reset is requested for the
+device, which typically means assignment to a VM.  Thanks,
 
-Yinghai
+Alex
+
+---
+
+Alex Williamson (4):
+      pci: Generalize wait loop
+      pci: Add support for save/restore of extended capabilities
+      pci: Add Virtual Channel to save/restore support
+      pci: Rename PCI_VC_PORT_REG1/2 to PCI_VC_PORT_CAP1/2
+
+
+ drivers/pci/Makefile               |    2 
+ drivers/pci/pci.c                  |  102 ++++++--
+ drivers/pci/vc.c                   |  434 ++++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_config.c |   12 -
+ include/linux/pci.h                |   15 +
+ include/uapi/linux/pci_regs.h      |   29 ++
+ 6 files changed, 549 insertions(+), 45 deletions(-)
+ create mode 100644 drivers/pci/vc.c
