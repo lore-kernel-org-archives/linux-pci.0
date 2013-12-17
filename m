@@ -1,174 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [216.32.180.31] ([216.32.180.31]:20276 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752827Ab3LMTEz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 13 Dec 2013 14:04:55 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-CC: Rajat Jain <rajatjain.linux@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Guenter Roeck <linux@roeck-us.net>
-Subject: RE: [PATCH v2 2/4] pciehp: Use link change notifications for
- hot-plug and removal
-Date: Fri, 13 Dec 2013 19:04:32 +0000
-Message-ID: <428d664592c2466c9e5e6b393df9d690@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <529E5C0E.80903@gmail.com> <20131212224407.GL4699@google.com>
- <CAE9FiQX8XXkwbhhuNhCF-pHdc_3or_dMEH-VN5NBSEV_eXE-Pg@mail.gmail.com>
- <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
-In-Reply-To: <CAErSpo5BsaLNrny3T1sYknz3wo4hN0SKJk0_u6eNyEd6qq5o=g@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:33514 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752539Ab3LQXoA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Dec 2013 18:44:00 -0500
+Subject: [PATCH v2 4/4] pci: Rename PCI_VC_PORT_REG1/2 to PCI_VC_PORT_CAP1/2
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: ddutile@redhat.com, linux-kernel@vger.kernel.org
+Date: Tue, 17 Dec 2013 16:43:57 -0700
+Message-ID: <20131217234357.2310.8530.stgit@bling.home>
+In-Reply-To: <20131217233741.2310.78334.stgit@bling.home>
+References: <20131217233741.2310.78334.stgit@bling.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello folks,
+These are set of two capability registers, it's pretty much given that
+they're registers, so reflect their purpose in the name.
 
-Firstly, thanks a lot for taking a look at my patch set.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/vc.c                   |   28 ++++++++++++++--------------
+ drivers/vfio/pci/vfio_pci_config.c |   12 ++++++------
+ include/uapi/linux/pci_regs.h      |   18 +++++++++---------
+ 3 files changed, 29 insertions(+), 29 deletions(-)
 
-> 
-> On Thu, Dec 12, 2013 at 11:26 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Thu, Dec 12, 2013 at 2:44 PM, Bjorn Helgaas <bhelgaas@google.com>
-> wrote:
-> 
-> >>> * Define and use interrupt events for linkup / linkdown.
-> >>
-> >> This seems like a reasonable idea.
-> >>
-> >> In the ExpressCard Standard (Rel 2.0, Feb 2009), Section 6.3.1 and
-> >> Figure
-> >> 6-2 talk about a "Link Detect" or "Link Train Detected" interrupt
-> >> being used to trigger the ACPI hotplug flow for a non-PCIe-aware OS.
-> >> I'm not sure what interrupt this refers to.  The Slot Control Data
-> >> Link Layer State Changed interrupt (which you're using) sounds
-> >> similar, but my guess is that "Link Detect" is a generic term for
-> >> chipset-specific functionality to generate an SMI for hotplug events.
-> >>
-> >> But then Section 6.3.1.1 suggests that a PCIe-aware OS would use
-> >> "Presence Detect Changed" instead.  I don't know why a different
-> >> mechanism would be suggested, although DLLSC was added after PCIe
-> >> 1.0, so older hardware wouldn't have a PCIe-standard link detection
-> mechanism.
-> >>
-> >> In any event, I think having the Link Status Data Link Layer Link
-> >> Active bit set would certainly imply that a device is present, so it
-> >> seems reasonable to use DLLLA in addition to Presence Detect State.
-> >
-> > Yes, if Attention attention is not there and Surprise removal is
-> supported.
-> 
-> I'm not convinced that it's a good idea to make link state support
-> conditional on the attention button and surprise removal bits.  That
-> might cover Rajat's particular case, but I don't think there's a logical
-> connection between link state and those bits, so making it conditional
-> might just make the code more complicated and less general for no good
-> reason.
-
-Ok. 
-
-> 
-> >>> @@ -620,13 +610,10 @@ int pciehp_power_off_slot(struct slot * slot)
-> >>>       u16 cmd_mask;
-> >>>       int retval;
-> >>>
-> >>> -     /* Disable the link at first */
-> >>> -     pciehp_link_disable(ctrl);
-> >>> -     /* wait the link is down */
-> >>> -     if (ctrl->link_active_reporting)
-> >>> -             pcie_wait_link_not_active(ctrl);
-> >>> -     else
-> >>> -             msleep(1000);
-
-I'll separate this out as a separate patch. 
-
-> >>
-> >> 2debd9289997 ("PCI: pciehp: Disable/enable link during slot power
-> >> off/on") added this code that disables the link to fix problems.  So
-> >> we need to make sure we don't reintroduce those problems by leaving
-> the link enabled.
-> >>
-> >> One problem was spurious "card present/not present" messages.  I
-> >> suspect that topology has an attention button, and I'm not sure it
-> >> makes sense to enable the presence detect interrupt in that case.  As
-> >> far as I can tell, if there's an attention button, the OS should not
-> >> do anything on card insertion or removal; it should only do something
-> >> when the attention button is pressed.  So maybe we can deal with the
-> message issue that way.
-> >
-> > Agreed.
-
-Ok. I'll disable the presence detect interrupt when attention button is present. Note that however, if the link comes up or goes down without the user pressing the attention button, the device will be added or removed. It may be a non-issue, because I think ultimately all the attention button press does during device addition, is to power on the slot to bring the Link up. In this case since the link is already Up, there really isn't anything else the SW would or could do on attention button press. 
-
-Also, I think the device removal should _always_ be initiated (if not done already) whenever the Link goes down for any reason (irrespective of whether the attention button is implemented or not, or whether the surprise events are supported or not). I think this is logical as it makes no sense for the software to think the device is accessible when in reality it is not. In fact I think we should also remove the checks in pciehp_disable_slot() that ensure that the adapter should be populated and latch should be closed.
-
-
-> >
-> >>
-> >> The changelog also hints that disabling the link might be needed to
-> >> allow a repeater to be reset, but I don't know the details.  I don't
-> >> remember any spec language that requires the link to be disabled on
-> >> hotplug; maybe this is a platform-specific quirk.
-> >
-> > yes, that is workaround to to reset repeater in between.
-
-I guess my question is what breaks if we don't disable the link on a hot-unplug? And if it is a platform specific problem, may be it should be dealt with in a platform specific way? I guess, it would become more clearer once I split out the patch, and you could just test NOT disabling the link while unplugging.
-
-> 
-> What does the "other OS" do about this repeater?  Did you verify that it
-> disables the link when powering off the slot?  If we were smarter about
-> presence detect, I wonder if that would be enough.
-> 
-> > Also we can get rid of annoying aer during power off slot.
-> 
-> I don't know the details of this issue.  It may be possible to avoid the
-> AER in some way other than turning off the link.
-
-Sorry, I could not understand what we are talking about here. I'd appreciate if you could elaborate if you see this as a problem related to the patch?
-
-> 
-> > Also at least other os will turn on link after turn on the power, as
-> > hotplug is working if BIOS have link disabled when boot system without
-> > card inserted.
-> 
-> If the link is disabled after turning on power, it certainly makes sense
-> to me to enable the link.  I don't think Rajat changed the
-> pciehp_power_on_slot() path, so this part should still work.
-
-Yes, I think so.
-
-> 
-> > I suggest that link event handling will be enabled automatically when
-> > attention button is not there and surprise removal is supported.
-> > And when that enabled, should disable Present event handling.
-> 
-> I think it should be as simple as possible, i.e., if we have an
-> attention button, ignore presence detect.  If we make it more
-> complicated that necessary, we run the risk of enforcing assumptions
-> that may not hold in the future.
-
-Once again: the way I interpret this is:
-* Always enable Link events.
-* Disable presence events if attention button is present.
-
-
-Thanks,
-
-Rajat
-
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org More majordomo info
-> at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+index c10567e4..7e1304d 100644
+--- a/drivers/pci/vc.c
++++ b/drivers/pci/vc.c
+@@ -104,7 +104,7 @@ static void pci_vc_load_port_arb_table(struct pci_dev *dev, int pos, int res)
+ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
+ {
+ 	int ctrl_pos, status_pos, id, pos2, evcc, i, ctrl_pos2, status_pos2;
+-	u32 ctrl, header, reg1, ctrl2;
++	u32 ctrl, header, cap1, ctrl2;
+ 	struct pci_dev *link = NULL;
+ 
+ 	/* Enable VCs from the downstream device */
+@@ -129,8 +129,8 @@ static void pci_vc_enable(struct pci_dev *dev, int pos, int res)
+ 	if (!pos2)
+ 		goto enable;
+ 
+-	pci_read_config_dword(dev->bus->self, pos2 + PCI_VC_PORT_REG1, &reg1);
+-	evcc = reg1 & PCI_VC_REG1_EVCC;
++	pci_read_config_dword(dev->bus->self, pos2 + PCI_VC_PORT_CAP1, &cap1);
++	evcc = cap1 & PCI_VC_CAP1_EVCC;
+ 
+ 	/* VC0 is hardwired enabled, so we can start with 1 */
+ 	for (i = 1; i < evcc + 1; i++) {
+@@ -188,7 +188,7 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 				 struct pci_cap_saved_state *save_state,
+ 				 bool save)
+ {
+-	u32 reg1;
++	u32 cap1;
+ 	char evcc, lpevcc, parb_size;
+ 	int i, len = 0;
+ 	u8 *buf = save_state ? (u8 *)save_state->cap.data : NULL;
+@@ -201,13 +201,13 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 		return -ENOMEM;
+ 	}
+ 
+-	pci_read_config_dword(dev, pos + PCI_VC_PORT_REG1, &reg1);
++	pci_read_config_dword(dev, pos + PCI_VC_PORT_CAP1, &cap1);
+ 	/* Extended VC Count (not counting VC0) */
+-	evcc = reg1 & PCI_VC_REG1_EVCC;
++	evcc = cap1 & PCI_VC_CAP1_EVCC;
+ 	/* Low Priority Extended VC Count (not counting VC0) */
+-	lpevcc = (reg1 & PCI_VC_REG1_LPEVCC) >> 4;
++	lpevcc = (cap1 & PCI_VC_CAP1_LPEVCC) >> 4;
+ 	/* Port Arbitration Table Entry Size (bits) */
+-	parb_size = 1 << ((reg1 & PCI_VC_REG1_ARB_SIZE) >> 10);
++	parb_size = 1 << ((cap1 & PCI_VC_CAP1_ARB_SIZE) >> 10);
+ 
+ 	/*
+ 	 * Port VC Control Register contains VC Arbitration Select, which
+@@ -231,20 +231,20 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 	 * in Port VC Capability Register 2 then save/restore it next.
+ 	 */
+ 	if (lpevcc) {
+-		u32 reg2;
++		u32 cap2;
+ 		int vcarb_offset;
+ 
+-		pci_read_config_dword(dev, pos + PCI_VC_PORT_REG2, &reg2);
+-		vcarb_offset = ((reg2 & PCI_VC_REG2_ARB_OFF) >> 24) * 16;
++		pci_read_config_dword(dev, pos + PCI_VC_PORT_CAP2, &cap2);
++		vcarb_offset = ((cap2 & PCI_VC_CAP2_ARB_OFF) >> 24) * 16;
+ 
+ 		if (vcarb_offset) {
+ 			int size, vcarb_phases = 0;
+ 
+-			if (reg2 & PCI_VC_REG2_128_PHASE)
++			if (cap2 & PCI_VC_CAP2_128_PHASE)
+ 				vcarb_phases = 128;
+-			else if (reg2 & PCI_VC_REG2_64_PHASE)
++			else if (cap2 & PCI_VC_CAP2_64_PHASE)
+ 				vcarb_phases = 64;
+-			else if (reg2 & PCI_VC_REG2_32_PHASE)
++			else if (cap2 & PCI_VC_CAP2_32_PHASE)
+ 				vcarb_phases = 32;
+ 
+ 			/* Fixed 4 bits per phase per lpevcc (plus VC0) */
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index ffd0632..83cd157 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -975,20 +975,20 @@ static int vfio_vc_cap_len(struct vfio_pci_device *vdev, u16 pos)
+ 	int ret, evcc, phases, vc_arb;
+ 	int len = PCI_CAP_VC_BASE_SIZEOF;
+ 
+-	ret = pci_read_config_dword(pdev, pos + PCI_VC_PORT_REG1, &tmp);
++	ret = pci_read_config_dword(pdev, pos + PCI_VC_PORT_CAP1, &tmp);
+ 	if (ret)
+ 		return pcibios_err_to_errno(ret);
+ 
+-	evcc = tmp & PCI_VC_REG1_EVCC; /* extended vc count */
+-	ret = pci_read_config_dword(pdev, pos + PCI_VC_PORT_REG2, &tmp);
++	evcc = tmp & PCI_VC_CAP1_EVCC; /* extended vc count */
++	ret = pci_read_config_dword(pdev, pos + PCI_VC_PORT_CAP2, &tmp);
+ 	if (ret)
+ 		return pcibios_err_to_errno(ret);
+ 
+-	if (tmp & PCI_VC_REG2_128_PHASE)
++	if (tmp & PCI_VC_CAP2_128_PHASE)
+ 		phases = 128;
+-	else if (tmp & PCI_VC_REG2_64_PHASE)
++	else if (tmp & PCI_VC_CAP2_64_PHASE)
+ 		phases = 64;
+-	else if (tmp & PCI_VC_REG2_32_PHASE)
++	else if (tmp & PCI_VC_CAP2_32_PHASE)
+ 		phases = 32;
+ 	else
+ 		phases = 0;
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 5eefacd..d0160cc 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -677,15 +677,15 @@
+ #define PCI_ERR_ROOT_ERR_SRC	52	/* Error Source Identification */
+ 
+ /* Virtual Channel */
+-#define PCI_VC_PORT_REG1	4
+-#define  PCI_VC_REG1_EVCC	0x00000007	/* extended VC count */
+-#define  PCI_VC_REG1_LPEVCC	0x00000070	/* low prio extended VC count */
+-#define  PCI_VC_REG1_ARB_SIZE	0x00000c00
+-#define PCI_VC_PORT_REG2	8
+-#define  PCI_VC_REG2_32_PHASE		0x00000002
+-#define  PCI_VC_REG2_64_PHASE		0x00000004
+-#define  PCI_VC_REG2_128_PHASE		0x00000008
+-#define  PCI_VC_REG2_ARB_OFF		0xff000000
++#define PCI_VC_PORT_CAP1	4
++#define  PCI_VC_CAP1_EVCC	0x00000007	/* extended VC count */
++#define  PCI_VC_CAP1_LPEVCC	0x00000070	/* low prio extended VC count */
++#define  PCI_VC_CAP1_ARB_SIZE	0x00000c00
++#define PCI_VC_PORT_CAP2	8
++#define  PCI_VC_CAP2_32_PHASE		0x00000002
++#define  PCI_VC_CAP2_64_PHASE		0x00000004
++#define  PCI_VC_CAP2_128_PHASE		0x00000008
++#define  PCI_VC_CAP2_ARB_OFF		0xff000000
+ #define PCI_VC_PORT_CTRL	12
+ #define  PCI_VC_PORT_CTRL_LOAD_TABLE	0x00000001
+ #define PCI_VC_PORT_STATUS	14
 
