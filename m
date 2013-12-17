@@ -1,78 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:63904 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753782Ab3LQUGh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 15:06:37 -0500
-Message-ID: <52B0AEC8.4030003@gmail.com>
-Date: Tue, 17 Dec 2013 12:06:32 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 17 Dec 2013 10:02:17 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>,
+	Scott Wood <scottwood@freescale.com>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 6/9] powerpc/pci: Use dev_is_pci() to check whether it is
+ pci device
+Message-ID: <20131217020217.GA7677@weiyang.vnet.ibm.com>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1386244880-22300-1-git-send-email-wangyijing@huawei.com>
+ <20131216071305.GA16842@weiyang.vnet.ibm.com>
+ <52AEC241.1040507@huawei.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v3 5/8] pciehp: Don't check for adapter or latch status while
- disabling
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52AEC241.1040507@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It does not make much sense to refuse to disable a slot if an
-adapter is not present or the latch is open. If an adapter is not
-present, it provides an even better reason to disable the device
-slot.
+On Mon, Dec 16, 2013 at 05:05:05PM +0800, Yijing Wang wrote:
+>On 2013/12/16 15:13, Wei Yang wrote:
+>> Yijing,
+>> 
+>> This one looks good.
+>> 
+>> While I take a look at the source code, there are around 20 places with
+>> similar style. Do you think it would be good to change all these places
+>> in one patch?
+>
+>I sent the other similar changes to related maillist, some of them (David, Greg )has been accepted,
+>and other is not. :)
+>
+>eg.
+>http://article.gmane.org/gmane.linux.kernel/1608341/match=dev_is_pci
 
-This is specially a problem for link state hot-plug, because some
-ports use in band mechanism for presence detection. Thus
-when link goes down, presence detect also goes down. We _want_ that
-the removal should take place in such case.
+Ah, I see. Thanks :-)
 
-Thus remove the checks for adapter and latch in pciehp_disable_slot()
+>
+>Thanks!
+>Yijing.
+>
+>> 
+>> On Thu, Dec 05, 2013 at 08:01:20PM +0800, Yijing Wang wrote:
+>>> Use PCI standard marco dev_is_pci() instead of directly compare
+>>> pci_bus_type to check whether it is pci device.
+>>>
+>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>> ---
+>>> arch/powerpc/sysdev/fsl_pci.c |    2 +-
+>>> 1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+>>> index 4dfd61d..7066e52 100644
+>>> --- a/arch/powerpc/sysdev/fsl_pci.c
+>>> +++ b/arch/powerpc/sysdev/fsl_pci.c
+>>> @@ -122,7 +122,7 @@ static int fsl_pci_dma_set_mask(struct device *dev, u64 dma_mask)
+>>> 	 * address width of the SoC such that we can address any internal
+>>> 	 * SoC address from across PCI if needed
+>>> 	 */
+>>> -	if ((dev->bus == &pci_bus_type) &&
+>>> +	if ((dev_is_pci(dev)) &&
+>>> 	    dma_mask >= DMA_BIT_MASK(MAX_PHYS_ADDR_BITS)) {
+>>> 		set_dma_ops(dev, &dma_direct_ops);
+>>> 		set_dma_offset(dev, pci64_dma_offset);
+>>> -- 
+>>> 1.7.1
+>>>
+>>>
+>>> _______________________________________________
+>>> Linuxppc-dev mailing list
+>>> Linuxppc-dev@lists.ozlabs.org
+>>> https://lists.ozlabs.org/listinfo/linuxppc-dev
+>> 
+>
+>
+>-- 
+>Thanks!
+>Yijing
 
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
-v3: * created by splitting the patch v2 [2/4]
-    * Remove the check for latch as well
-v2: (non existent)
-v1: (non existent)
-
- drivers/pci/hotplug/pciehp_ctrl.c |   18 ------------------
- 1 file changed, 18 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 7ae7b02..e934618 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -612,24 +612,6 @@ int pciehp_disable_slot(struct slot *p_slot)
- 	if (!p_slot->ctrl)
- 		return 1;
- 
--	if (!HP_SUPR_RM(p_slot->ctrl)) {
--		ret = pciehp_get_adapter_status(p_slot, &getstatus);
--		if (ret || !getstatus) {
--			ctrl_info(ctrl, "No adapter on slot(%s)\n",
--				  slot_name(p_slot));
--			return -ENODEV;
--		}
--	}
--
--	if (MRL_SENS(p_slot->ctrl)) {
--		ret = pciehp_get_latch_status(p_slot, &getstatus);
--		if (ret || getstatus) {
--			ctrl_info(ctrl, "Latch open on slot(%s)\n",
--				  slot_name(p_slot));
--			return -ENODEV;
--		}
--	}
--
- 	if (POWER_CTRL(p_slot->ctrl)) {
- 		ret = pciehp_get_power_status(p_slot, &getstatus);
- 		if (ret || !getstatus) {
 -- 
-1.7.9.5
+Richard Yang
+Help you, Help me
 
