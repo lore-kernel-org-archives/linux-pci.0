@@ -1,57 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:40285 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932069Ab3L3SxW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Dec 2013 13:53:22 -0500
-Received: by mail-bk0-f46.google.com with SMTP id u15so3793514bkz.5
-        for <linux-pci@vger.kernel.org>; Mon, 30 Dec 2013 10:53:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <mj+md-20131215.110132.29802.nikam@ucw.cz>
-References: <1378302428-19758-1-git-send-email-teg@jklm.no>
- <mj+md-20130904.134928.12262.nikam@ucw.cz> <CAG-2HqWcnZ-z7EbDd0aAj6y_Ho6szfRZUiK0psEnmoz17Kw-xA@mail.gmail.com>
- <mj+md-20131110.114139.9646.albireo@ucw.cz> <CAG-2HqXsEBB_nxUF4gza-eTsUjmysYR7iPEjJPUFyR1rC2KGMg@mail.gmail.com>
- <CAPXgP12MLL_Z5gyrCndQLRT6SR_TJi9xHp1HkHMX1ahwnxx3yw@mail.gmail.com>
- <mj+md-20131215.091609.28546.nikam@ucw.cz> <CAPXgP10+1WtX8_xN+QSHvKws01hbKhP3FN95sXk9EtezdSPtqg@mail.gmail.com>
- <mj+md-20131215.110132.29802.nikam@ucw.cz>
-From: Tom Gundersen <teg@jklm.no>
-Date: Mon, 30 Dec 2013 19:53:01 +0100
-Message-ID: <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
-Subject: Re: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb support
-To: Martin Mares <mj@ucw.cz>
-Cc: Kay Sievers <kay@vrfy.org>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>,
+	Leonidas Da Silva Barbosa <leosilva@linux.vnet.ibm.com>,
+	Ashley Lai <ashley@ashleylai.com>,
+	Peter Huewe <peterhuewe@gmx.de>,
+	Rajiv Andrade <mail@srajiv.net>,
+	Marcel Selhorst <tpmdd@selhorst.net>,
+	Sirrix AG <tpmdd@sirrix.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	David Airlie <airlied@linux.ie>, Jiri Kosina <jkosina@suse.cz>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>
+Subject: [RFC Patch v1 03/13] PCI, pci-label: release allocated ACPI object on error recovery path
+Date: Wed, 18 Dec 2013 14:58:11 +0800
+Message-Id: <1387349901-3391-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1387349901-3391-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1387349901-3391-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
+Function dsm_get_label() leaks the returned ACPI object if
+obj->package.count is not 2, so fix the possible memory leak.
 
-On Sun, Dec 15, 2013 at 12:33 PM, Martin Mares <mj@ucw.cz> wrote:
-> I see that a mechanism for fast lookup of hardware identification data
-> is needed. However, why should such a mechanism depend on udev, systemd,
-> or Linux in general?
->
-> What I would really like to have is a universal library for HW lookup,
-> independent of anything else and widely portable. All the hardware data
-> would be provided by other packages -- pci.ids, usb.ids, kernel modules,
-> etc. -- and compiled to a binary format available for instant queries.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/pci-label.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-I'd like to reach an agreement on this patch, so I'll resend it with
-the changes we agreed on so far. Please let me know if further changes
-are needed.
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index d51f45a..f6e01a5 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -233,11 +233,7 @@ dsm_get_label(acpi_handle handle, int func,
+ 		return -1;
+ 
+ 	obj = (union acpi_object *)output->pointer;
+-
+-	switch (obj->type) {
+-	case ACPI_TYPE_PACKAGE:
+-		if (obj->package.count != 2)
+-			break;
++	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
+ 		len = obj->package.elements[0].integer.value;
+ 		if (buf) {
+ 			if (attribute == ACPI_ATTR_INDEX_SHOW)
+@@ -250,10 +246,10 @@ dsm_get_label(acpi_handle handle, int func,
+ 		}
+ 		kfree(output->pointer);
+ 		return len;
+-	break;
+-	default:
+-		kfree(output->pointer);
+ 	}
++
++	kfree(output->pointer);
++
+ 	return -1;
+ }
+ 
+-- 
+1.7.10.4
 
-If I understand correctly, you are ok with the functionality hwdb
-provides, but would have preferred an OS-agnostic solution. However,
-as no such solution currently exist, and the patch adding hwdb support
-is pretty minimal and self-contained, would you be happy taking that
-for now, and rather revisit the topic if and when a generic solution
-appears?
-
-FWIW, I made the analogous change to lsusb some time ago [0], so would
-be cool to get this all done.
-
-Cheers,
-
-Tom
-
-[0]: <https://github.com/gregkh/usbutils/commit/c6282a7a0e20fbb9c56837f055843635a43ba8b4>
