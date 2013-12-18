@@ -1,47 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:40885 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761411Ab3LIUVT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:21:19 -0500
-Received: by mail-ie0-f175.google.com with SMTP id x13so7004346ief.20
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 12:21:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
- <1386546869-31900-3-git-send-email-yinghai@kernel.org> <CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
- <CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
- <CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com> <CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 13:20:59 -0700
-Message-ID: <CAErSpo6xSYq=7AfFm+qNLGSfe6qjaGKyrwxdpG_CXHSy2uVX_w@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:55546
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751996Ab3LREGk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 23:06:40 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Guenter Roeck <linux@roeck-us.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	"Y@jasper.es" <Y@jasper.es>
+Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
+ during removal
+Date: Wed, 18 Dec 2013 04:06:07 +0000
+Message-ID: <7324b9d8069446db85352ccad59c87ae@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
+ <41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
+ <20131218034004.GA22858@roeck-us.net>
+In-Reply-To: <20131218034004.GA22858@roeck-us.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 1:10 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> That doesn't answer my question at all.
->>
->> I understand that this change makes it so Joseph doesn't have to use
->> "pci=realloc=off".  But why should auto-reallocation be limited to
->> buses that have resources above 4GB?  That doesn't make any sense.
->>
->> We should fix the reallocation code so it can deal with this case.  If
->> there's not enough space for everything, obviously we have to leave
->> something unassigned.  A ROM BAR is a good candidate for leaving
->> unassigned, because most of the time we can get along without it.
->
-> Yes, that is ideal and not that simple.
-> but that would be hard to backport to old kernels.
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogR3VlbnRlciBSb2VjayBb
+bWFpbHRvOmdyb2VjazdAZ21haWwuY29tXSBPbiBCZWhhbGYgT2YgR3VlbnRlcg0KPiBSb2Vjaw0K
+PiBTZW50OiBUdWVzZGF5LCBEZWNlbWJlciAxNywgMjAxMyA3OjQwIFBNDQo+IFRvOiBSYWphdCBK
+YWluDQo+IENjOiBCam9ybiBIZWxnYWFzOyBSYWphdCBKYWluOyBLZW5qaSBLYW5lc2hpZ2U7IEFs
+ZXggV2lsbGlhbXNvbjsgWWlqaW5nDQo+IFdhbmc7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+IFlAamFzcGVyLmVzDQo+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0ggdjMgNC84XSBwY2llaHA6IERvbid0IGRpc2FibGUgdGhlIGxpbmsgcGVybWFu
+ZW50bHksDQo+IGR1cmluZyByZW1vdmFsDQo+IA0KPiBPbiBXZWQsIERlYyAxOCwgMjAxMyBhdCAw
+MzoyMDo1OEFNICswMDAwLCBSYWphdCBKYWluIHdyb3RlOg0KPiA+DQo+ID4NCj4gPiA+IC0tLS0t
+T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86
+YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gPiA+DQo+ID4gPiBbK2NjIHlpbmdoYWlAa2VybmVsLm9y
+ZyAoc2VlbXMgdG8gYmUgWWluZ2hhaSdzIHByZWZlcnJlZCBlbWFpbF0NCj4gPiA+DQo+ID4gPiBP
+biBUdWUsIERlYyAxNywgMjAxMyBhdCAxMjowNjowNVBNIC0wODAwLCBSYWphdCBKYWluIHdyb3Rl
+Og0KPiA+ID4gPiBXZSBuZWVkIGZ1dHVyZSBsaW5rIHVwIGV2ZW50cyBmb3IgaG90LWFkZCwgdGh1
+cyBkb24ndCBkaXNhYmxlIHRoZQ0KPiA+ID4gPiBsaW5rIHBlcm1hbmVudGx5IGR1cmluZyBkZXZp
+Y2UgcmVtb3ZhbC4gQWxzbywgcmVtb3ZlIHRoZSBzdGF0aWMNCj4gPiA+ID4gZnVuY3Rpb25zIHRo
+YXQgYXJlIG5vdyBsZWZ0IHVudXNlZC4NCj4gPiA+DQo+ID4gPiBUaGUgY2hhbmdlbG9nIHNob3Vs
+ZCBtZW50aW9uIHRoYXQgdGhpcyByZXZlcnRzIHBhcnQgb2YgMmRlYmQ5Mjg5OTk3DQo+ID4gPiAo
+IlBDSToNCj4gPiA+IHBjaWVocDogRGlzYWJsZS9lbmFibGUgbGluayBkdXJpbmcgc2xvdCBwb3dl
+ciBvZmYvb24iKS4NCj4gPg0KPiA+IFN1cmUsIEknbGwgYWRkIHRoYXQuDQo+ID4NCj4gPiA+DQo+
+ID4gPiBZaW5naGFpLCBjYW4geW91IHRlbGwgdXMgd2hldGhlciB0aGlzIGlzIGFuIGlzc3VlIG9u
+IHlvdXIgc3lzdGVtcz8NCj4gPiA+DQo+ID4NCj4gPiBUaGFua3MgaW4gYWR2YW5jZSBZaW5naGFp
+Lg0KPiA+DQo+ID4gQWN0dWFsbHkgSSBkaWQgbm90IHVuZGVyc3RhbmQgdGhlIG9yaWdpbmFsIHBy
+b2JsZW0gYW5kIHRoZSBzb2x1dGlvbiBpbg0KPiA+IHRoZSBmaXJzdCBwbGFjZSAoc28gSSBhbHNv
+IGRvIG5vdCB1bmRlcnN0YW5kIGhvdyBtaWdodCBkaXNhYmxpbmcgb2YNCj4gPiBwcmVzZW5jZSBk
+ZXRlY3Qgbm90aWZpY2F0aW9uIGhlbHApLiBJZiB5b3UgY2FuIGdpdmUgbW9yZSBkZXRhaWxzIG9u
+DQo+ID4gdGhlIG9yaWdpbmFsIHByb2JsZW0gdGhhdCBzaGFsbCBiZSBncmVhdC4gSGVyZSBpcyB3
+aGF0IEkgdW5kZXJzdG9vZA0KPiBmcm9tIHRoZSBjb21taXQgbG9nOg0KPiA+DQo+ID4gVGhlIGJl
+bGlldmUgdGhlIEhXIGxvb2tzIGxpa2UgdGhpczoNCj4gPg0KPiA+IFBDSWUgcG9ydCA8LS0tLT4g
+UmVwZWF0ZXIgPC0tLS0+IERldmljZS4NCj4gPg0KPiA+IEFuIGluIGFkZGl0aW9uIHRoZXJlIGlz
+IHRoZSBwcmVzZW5jZSBkZXRlY3QgcGluIHRoYXQgaXMgY29ubmVjdGVkDQo+ID4gZGlyZWN0bHkg
+ZnJvbSBUaGUgcG9ydCB0byB0aGUgZGV2aWNlLiBOb3csIHdoZW4gdGhlIGRldmljZSBpcyBwbHVn
+Z2VkDQo+ID4gb3V0LCB0aGUgcGluIGluZGljYXRlcyBObyBwcmVzZW5jZS4gQnV0IGFyZSB5b3Ug
+c2F5aW5nIHRoZSBQQ0llIGxpbmsNCj4gZnJvbSBwb3J0IHRvIHJlcGVhdGVyIGlzIHN0aWxsIHVw
+Pw0KPiA+DQo+ID4gUGFydCBvZiBsb2c6DQo+ID4gPT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09DQo+ID4gICAgIC4uLg0KPiA+ICAgICBJdCB0dXJucyBvdXQgdGhlIHJvb3QgY29t
+cGxleCBpcyBjb250aW51YWxseSB0cnlpbmcgdG8gdHJhaW4gdGhlDQo+IGxpbmsgdG8NCj4gPiAg
+ICAgdGhlIHJlcGVhdGVyIGJlY2F1c2UgdGhlIHJlcGVhdGVyIGhhcyBub3QgYmVlbiByZXNldC4N
+Cj4gPg0KPiA+ICAgICBUaGlzIHBhdGNoIHdpbGwgZGlzYWJsZSB0aGUgbGluayBhdCByZW1vdmFs
+IHRpbWUgdG8gYWxsb3cgdGhlDQo+IHJlcGVhdGVyDQo+ID4gICAgIHRvIGJlIHJlc2V0IHByb3Bl
+cmx5Lg0KPiA+ICAgICAuLi4NCj4gPiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT0NCj4gPg0KPiA+IDEpIEkgZGlkIG5vdCB1bmRlcnN0YW5kIHdoeSB3b3VsZCBwb3J0IHRyeSB0
+byByZXRyYWluIHRvIHRoZSBsaW5rIGluDQo+ID4gZWl0aGVyIGNhc2VzIC0gV2hldGhlciB0aGUg
+bGluayB0byB0aGUgcmVwZWF0ZXIgaXMgdXAgb3Igbm90Pw0KPiA+DQo+ID4gMikgV2hlbiBubyBs
+aW5rIGlzIHNlZW4sIGlzIFRIQVQgd2hhdCBjYXVzZXMgcmVwZWF0ZXIgdG8gZ28gZG93biBhbmQN
+Cj4gPiBoZW5jZSBzb2x2ZSB0aGUgUHJvYmxlbT8NCj4gPg0KPiA+IDMpIEknZCBleHBlY3QgeW91
+J2QgY29udGludW91c2x5IGdldCAiYWRhcHRlciBub3QgcHJlc2VudCIgbWVzc2FnZXMgaWYNCj4g
+PiBzb21lIGhvdyBUaGUgZHJpdmVyIHdhcyB0cnlpbmcgdG8gYWRkIHRoZSBkZXZpY2UuIEJ1dCBJ
+IGRpZCBub3QNCj4gPiB1bmRlcnN0YW5kIHdoZXJlIGRpZCAiYWRhcHRlciBwcmVzZW50IiBtZXNz
+YWdlcyBjYW1lIGZyb20/DQo+ID4NCj4gPiBTb3JyeSwgYnV0IEkgZ3Vlc3MgSSBhbSB0b3RhbGx5
+IGNvbmZ1c2VkIG5vdy4gSSdsbCBwcm9iYWJseSBnbyB0bw0KPiA+IHNsZWVwIDotKQ0KPiA+DQo+
+IA0KPiBXaGF0LCB0aGF0IGVhcmx5ID8gOi0pDQoNCkkgd2FzIHVwIHVudGlsIDMgQU0gbGFzdCBu
+aWdodC4gImdpdCIgKG9yIHRoZSBpZ25vcmFuY2Ugb2YgaXQpIGtlZXBzIG1lIGJ1c3kgSSBndWVz
+cyA6LSkNCg0KPiANCj4gSSB0aGluayB3ZSBtYXkgaGF2ZSBhIHNpbWlsYXIgc2V0dXAgb24gc29t
+ZSBvZiBvdXIgYm9hcmRzLiBNYXliZSB3ZSBjYW4NCj4gcmVwcm9kdWNlIHRoZSBzaXR1YXRpb24g
+KGFmdGVyIHdlIHVuZGVyc3RhbmQgd2hhdCBleGFjdGx5IGl0IGlzIGFuZCBob3cNCj4gdG8gdHJp
+Z2dlciBpdCkuDQo+IA0KPiBSZWxhdGVkIHRvIHRoaXMgcGF0Y2ggc2V0LCBJIGxlYXJuZWQgdG9k
+YXkgdGhhdCBvdXIgU3BhY2UgcHJvZHVjdCB1c2VzDQo+IG1wdDJzYXMuDQo+IEp1c3QgaW4gY2Fz
+ZSB3ZSBuZWVkIG9uZSBmb3IgdGVzdGluZyByZXNldCBmdW5jdGlvbmFsaXR5Lg0KPiANCj4gR3Vl
+bnRlcg0KPiANCg0K
 
-Yes, I agree.  I didn't say it would be simple.  The quick fix would
-be easy for now, but adding nonsensical code makes our lives harder
-long into the future.
-
-Bjorn
