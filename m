@@ -1,32 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:41373 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756042Ab3LIUPj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 9 Dec 2013 15:15:39 -0500
-Date: Mon, 9 Dec 2013 13:15:37 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI: Prevent bus conflicts while checking for bridge
- apertures
-Message-ID: <20131209201537.GJ5429@obsidianresearch.com>
-References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131206001947.27659.14981.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131209193112.GA20199@obsidianresearch.com>
- <CAErSpo5ab6buYa9GvpYECeeCwhYATt6dVePD6Cov-75kQndf4g@mail.gmail.com>
+Received: from co1ehsobe005.messaging.microsoft.com ([216.32.180.188]:45446
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751963Ab3LRDVF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 22:21:05 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yhlu.kernel@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>
+Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
+ during removal
+Date: Wed, 18 Dec 2013 03:20:58 +0000
+Message-ID: <41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
+In-Reply-To: <20131218010207.GC15119@google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5ab6buYa9GvpYECeeCwhYATt6dVePD6Cov-75kQndf4g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 09, 2013 at 01:00:36PM -0700, Bjorn Helgaas wrote:
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
+bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IA0KPiBbK2NjIHlpbmdoYWlAa2VybmVsLm9y
+ZyAoc2VlbXMgdG8gYmUgWWluZ2hhaSdzIHByZWZlcnJlZCBlbWFpbF0NCj4gDQo+IE9uIFR1ZSwg
+RGVjIDE3LCAyMDEzIGF0IDEyOjA2OjA1UE0gLTA4MDAsIFJhamF0IEphaW4gd3JvdGU6DQo+ID4g
+V2UgbmVlZCBmdXR1cmUgbGluayB1cCBldmVudHMgZm9yIGhvdC1hZGQsIHRodXMgZG9uJ3QgZGlz
+YWJsZSB0aGUgbGluaw0KPiA+IHBlcm1hbmVudGx5IGR1cmluZyBkZXZpY2UgcmVtb3ZhbC4gQWxz
+bywgcmVtb3ZlIHRoZSBzdGF0aWMgZnVuY3Rpb25zDQo+ID4gdGhhdCBhcmUgbm93IGxlZnQgdW51
+c2VkLg0KPiANCj4gVGhlIGNoYW5nZWxvZyBzaG91bGQgbWVudGlvbiB0aGF0IHRoaXMgcmV2ZXJ0
+cyBwYXJ0IG9mIDJkZWJkOTI4OTk5Nw0KPiAoIlBDSToNCj4gcGNpZWhwOiBEaXNhYmxlL2VuYWJs
+ZSBsaW5rIGR1cmluZyBzbG90IHBvd2VyIG9mZi9vbiIpLg0KDQpTdXJlLCBJJ2xsIGFkZCB0aGF0
+LiANCg0KPiANCj4gWWluZ2hhaSwgY2FuIHlvdSB0ZWxsIHVzIHdoZXRoZXIgdGhpcyBpcyBhbiBp
+c3N1ZSBvbiB5b3VyIHN5c3RlbXM/DQo+DQoNClRoYW5rcyBpbiBhZHZhbmNlIFlpbmdoYWkuIA0K
+DQpBY3R1YWxseSBJIGRpZCBub3QgdW5kZXJzdGFuZCB0aGUgb3JpZ2luYWwgcHJvYmxlbSBhbmQg
+dGhlIHNvbHV0aW9uIGluIHRoZSBmaXJzdA0KcGxhY2UgKHNvIEkgYWxzbyBkbyBub3QgdW5kZXJz
+dGFuZCBob3cgbWlnaHQgZGlzYWJsaW5nIG9mIHByZXNlbmNlIGRldGVjdCBub3RpZmljYXRpb24N
+CmhlbHApLiBJZiB5b3UgY2FuIGdpdmUgbW9yZSBkZXRhaWxzIG9uIHRoZSBvcmlnaW5hbCBwcm9i
+bGVtIHRoYXQgc2hhbGwgYmUgZ3JlYXQuIEhlcmUNCmlzIHdoYXQgSSB1bmRlcnN0b29kIGZyb20g
+dGhlIGNvbW1pdCBsb2c6DQoNClRoZSBiZWxpZXZlIHRoZSBIVyBsb29rcyBsaWtlIHRoaXM6DQoN
+ClBDSWUgcG9ydCA8LS0tLT4gUmVwZWF0ZXIgPC0tLS0+IERldmljZS4NCg0KQW4gaW4gYWRkaXRp
+b24gdGhlcmUgaXMgdGhlIHByZXNlbmNlIGRldGVjdCBwaW4gdGhhdCBpcyBjb25uZWN0ZWQgZGly
+ZWN0bHkgZnJvbQ0KVGhlIHBvcnQgdG8gdGhlIGRldmljZS4gTm93LCB3aGVuIHRoZSBkZXZpY2Ug
+aXMgcGx1Z2dlZCBvdXQsIHRoZSBwaW4gaW5kaWNhdGVzDQpObyBwcmVzZW5jZS4gQnV0IGFyZSB5
+b3Ugc2F5aW5nIHRoZSBQQ0llIGxpbmsgZnJvbSBwb3J0IHRvIHJlcGVhdGVyIGlzIHN0aWxsIHVw
+Pw0KDQpQYXJ0IG9mIGxvZzoNCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0K
+ICAgIC4uLg0KICAgIEl0IHR1cm5zIG91dCB0aGUgcm9vdCBjb21wbGV4IGlzIGNvbnRpbnVhbGx5
+IHRyeWluZyB0byB0cmFpbiB0aGUgbGluayB0bw0KICAgIHRoZSByZXBlYXRlciBiZWNhdXNlIHRo
+ZSByZXBlYXRlciBoYXMgbm90IGJlZW4gcmVzZXQuDQoNCiAgICBUaGlzIHBhdGNoIHdpbGwgZGlz
+YWJsZSB0aGUgbGluayBhdCByZW1vdmFsIHRpbWUgdG8gYWxsb3cgdGhlIHJlcGVhdGVyDQogICAg
+dG8gYmUgcmVzZXQgcHJvcGVybHkuDQogICAgLi4uDQo9PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0NCg0KMSkgSSBkaWQgbm90IHVuZGVyc3RhbmQgd2h5IHdvdWxkIHBvcnQgdHJ5
+IHRvIHJldHJhaW4gdG8gdGhlIGxpbmsgaW4gZWl0aGVyIGNhc2VzIC0NCldoZXRoZXIgdGhlIGxp
+bmsgdG8gdGhlIHJlcGVhdGVyIGlzIHVwIG9yIG5vdD8NCg0KMikgV2hlbiBubyBsaW5rIGlzIHNl
+ZW4sIGlzIFRIQVQgd2hhdCBjYXVzZXMgcmVwZWF0ZXIgdG8gZ28gZG93biBhbmQgaGVuY2Ugc29s
+dmUgdGhlDQpQcm9ibGVtPw0KDQozKSBJJ2QgZXhwZWN0IHlvdSdkIGNvbnRpbnVvdXNseSBnZXQg
+ImFkYXB0ZXIgbm90IHByZXNlbnQiIG1lc3NhZ2VzIGlmIHNvbWUgaG93DQpUaGUgZHJpdmVyIHdh
+cyB0cnlpbmcgdG8gYWRkIHRoZSBkZXZpY2UuIEJ1dCBJIGRpZCBub3QgdW5kZXJzdGFuZCB3aGVy
+ZSBkaWQNCiJhZGFwdGVyIHByZXNlbnQiIG1lc3NhZ2VzIGNhbWUgZnJvbT8NCg0KU29ycnksIGJ1
+dCBJIGd1ZXNzIEkgYW0gdG90YWxseSBjb25mdXNlZCBub3cuIEknbGwgcHJvYmFibHkgZ28gdG8g
+c2xlZXAgOi0pIA0KDQpKdXN0IHRyeWluZyB0byB1bmRlcnN0YW5kLg0KDQpUaGFua3MsDQoNClJh
+amF0DQoNCj4gPiBTaWduZWQtb2ZmLWJ5OiBSYWphdCBKYWluIDxyYWphdGphaW5AanVuaXBlci5u
+ZXQ+DQo+ID4gU2lnbmVkLW9mZi1ieTogR3VlbnRlciBSb2VjayA8Z3JvZWNrQGp1bmlwZXIubmV0
+Pg0KPiA+IC0tLQ0KPiA+IHYzOiBubyBjaGFuZ2UsIGNyZWF0ZWQgYnkgc3BsaXR0aW5nIHRoZSBw
+YXRjaCB2MiBbMi80XQ0KPiA+IHYyOiAobm9uIGV4aXN0ZW50KQ0KPiA+IHYxOiAobm9uIGV4aXN0
+ZW50KQ0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jIHwgICAxOCAt
+LS0tLS0tLS0tLS0tLS0tLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDE4IGRlbGV0aW9ucygtKQ0K
+PiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jDQo+
+ID4gYi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiA+IGluZGV4IGI0NWI1Njgu
+LmFiMTI1NTUgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBj
+LmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiA+IEBAIC0y
+NzgsMTEgKzI3OCw2IEBAIHN0YXRpYyB2b2lkIHBjaWVfd2FpdF9saW5rX2FjdGl2ZShzdHJ1Y3QN
+Cj4gY29udHJvbGxlciAqY3RybCkNCj4gPiAgCV9fcGNpZV93YWl0X2xpbmtfYWN0aXZlKGN0cmws
+IHRydWUpOyAgfQ0KPiA+DQo+ID4gLXN0YXRpYyB2b2lkIHBjaWVfd2FpdF9saW5rX25vdF9hY3Rp
+dmUoc3RydWN0IGNvbnRyb2xsZXIgKmN0cmwpIC17DQo+ID4gLQlfX3BjaWVfd2FpdF9saW5rX2Fj
+dGl2ZShjdHJsLCBmYWxzZSk7DQo+ID4gLX0NCj4gPiAtDQo+ID4gIHN0YXRpYyBib29sIHBjaV9i
+dXNfY2hlY2tfZGV2KHN0cnVjdCBwY2lfYnVzICpidXMsIGludCBkZXZmbikgIHsNCj4gPiAgCXUz
+MiBsOw0KPiA+IEBAIC0zODMsMTEgKzM3OCw2IEBAIHN0YXRpYyBpbnQgcGNpZWhwX2xpbmtfZW5h
+YmxlKHN0cnVjdCBjb250cm9sbGVyDQo+ICpjdHJsKQ0KPiA+ICAJcmV0dXJuIF9fcGNpZWhwX2xp
+bmtfc2V0KGN0cmwsIHRydWUpOyAgfQ0KPiA+DQo+ID4gLXN0YXRpYyBpbnQgcGNpZWhwX2xpbmtf
+ZGlzYWJsZShzdHJ1Y3QgY29udHJvbGxlciAqY3RybCkgLXsNCj4gPiAtCXJldHVybiBfX3BjaWVo
+cF9saW5rX3NldChjdHJsLCBmYWxzZSk7DQo+ID4gLX0NCj4gPiAtDQo+ID4gIGludCBwY2llaHBf
+Z2V0X2F0dGVudGlvbl9zdGF0dXMoc3RydWN0IHNsb3QgKnNsb3QsIHU4ICpzdGF0dXMpICB7DQo+
+ID4gIAlzdHJ1Y3QgY29udHJvbGxlciAqY3RybCA9IHNsb3QtPmN0cmw7IEBAIC02MjAsMTQgKzYx
+MCw2IEBAIGludA0KPiA+IHBjaWVocF9wb3dlcl9vZmZfc2xvdChzdHJ1Y3Qgc2xvdCAqIHNsb3Qp
+DQo+ID4gIAl1MTYgY21kX21hc2s7DQo+ID4gIAlpbnQgcmV0dmFsOw0KPiA+DQo+ID4gLQkvKiBE
+aXNhYmxlIHRoZSBsaW5rIGF0IGZpcnN0ICovDQo+ID4gLQlwY2llaHBfbGlua19kaXNhYmxlKGN0
+cmwpOw0KPiA+IC0JLyogd2FpdCB0aGUgbGluayBpcyBkb3duICovDQo+ID4gLQlpZiAoY3RybC0+
+bGlua19hY3RpdmVfcmVwb3J0aW5nKQ0KPiA+IC0JCXBjaWVfd2FpdF9saW5rX25vdF9hY3RpdmUo
+Y3RybCk7DQo+ID4gLQllbHNlDQo+ID4gLQkJbXNsZWVwKDEwMDApOw0KPiA+IC0NCj4gPiAgCXNs
+b3RfY21kID0gUE9XRVJfT0ZGOw0KPiA+ICAJY21kX21hc2sgPSBQQ0lfRVhQX1NMVENUTF9QQ0M7
+DQo+ID4gIAlyZXR2YWwgPSBwY2llX3dyaXRlX2NtZChjdHJsLCBzbG90X2NtZCwgY21kX21hc2sp
+Ow0KPiA+IC0tDQo+ID4gMS43LjkuNQ0KPiA+DQo+IA0KDQo=
 
-> I don't think it's 100% spec compliant because the spec allows
-> PCI_COMMAND_IO to be set if the bridge has an enabled I/O BAR but does
-> not support an I/O aperture.  I admit I have never seen such a device,
-> and I doubt one exists :)
-
-Yes, fair enough!
-
-Jason
