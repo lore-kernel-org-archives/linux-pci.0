@@ -1,43 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:51744 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754131Ab3LQV6A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 16:58:00 -0500
-Received: by mail-ie0-f170.google.com with SMTP id qd12so9274275ieb.15
-        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2013 13:58:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1387312137.30327.11.camel@bling.home>
-References: <20131210183339.26294.14581.stgit@bling.home> <20131210184845.26294.81385.stgit@bling.home>
- <20131217180322.GA12482@google.com> <1387312137.30327.11.camel@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Dec 2013 14:57:39 -0700
-Message-ID: <CAErSpo653fTtNkMk9gNkXsCVgFuVPnJmhFw5rO6ytefbDSSEyA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] pci: Add Virtual Channel to save/restore support
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Don Dutile <ddutile@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lv Zheng <lv.zheng@intel.com>
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Len Brown <len.brown@intel.com>
+Cc: Lv Zheng <lv.zheng@intel.com>, Lv Zheng <zetalog@gmail.com>,
+	<linux-kernel@vger.kernel.org>, linux-acpi@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>, sfi-devel@simplefirmware.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH 14/15] ACPI/SFI: Fix wrong <acpi/acpi.h> inclusion in SFI/ACPI wrapper - table definitions.
+Date: Wed, 18 Dec 2013 17:07:14 +0800
+Message-Id: <fc95924e41ed67b381217ec8c0b9eeee46164360.1387336613.git.lv.zheng@intel.com>
+In-Reply-To: <cover.1387336613.git.lv.zheng@intel.com>
+References: <cover.1387336613.git.lv.zheng@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 17, 2013 at 1:28 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Tue, 2013-12-17 at 11:03 -0700, Bjorn Helgaas wrote:
->> On Tue, Dec 10, 2013 at 11:48:45AM -0700, Alex Williamson wrote:
->> >...
->> > +   pci_read_config_dword(dev->bus->self, pos2 + PCI_VC_PORT_REG1, &reg1);
->> > +   evcc = reg1 & PCI_VC_REG1_EVCC;
->>
->> I think PCI_VC_PORT_REG1 and PCI_VC_PORT_REG2 are mis-named and should be
->> changed to CAP1 and CAP2 or similar.  Almost everything here is a
->> "register."
->
-> That's true, but it matches the name in the spec: "Port VC Capability
-> Register 1/2".  Thanks,
+This patch removes <acpi/acpi.h> inclusions from <linux/sfi_acpi.h> as
+<linux/acpi.h> has already included it for CONFIG_ACPI=n builds.
 
-Sure, but we use PCI_EXP_DEVCAP for the "Device Capabilities
-Register," PCI_EXP_DEVCTL for the "Device Control Register," etc.  All
-I'm saying is that "REG" doesn't convey as much information as "CAP."
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: sfi-devel@simplefirmware.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Lv Zheng <lv.zheng@intel.com>
+---
+ include/linux/sfi_acpi.h |    3 ---
+ 1 file changed, 3 deletions(-)
 
-Bjorn
+diff --git a/include/linux/sfi_acpi.h b/include/linux/sfi_acpi.h
+index 4723bbf..a6e555c 100644
+--- a/include/linux/sfi_acpi.h
++++ b/include/linux/sfi_acpi.h
+@@ -63,8 +63,6 @@
+ #include <linux/sfi.h>
+ 
+ #ifdef CONFIG_SFI
+-#include <acpi/acpi.h>	/* FIXME: inclusion should be removed */
+-
+ extern int sfi_acpi_table_parse(char *signature, char *oem_id,
+ 				char *oem_table_id,
+ 				int (*handler)(struct acpi_table_header *));
+@@ -78,7 +76,6 @@ static inline int __init acpi_sfi_table_parse(char *signature,
+ 	return sfi_acpi_table_parse(signature, NULL, NULL, handler);
+ }
+ #else /* !CONFIG_SFI */
+-
+ static inline int sfi_acpi_table_parse(char *signature, char *oem_id,
+ 				char *oem_table_id,
+ 				int (*handler)(struct acpi_table_header *))
+-- 
+1.7.10.4
+
