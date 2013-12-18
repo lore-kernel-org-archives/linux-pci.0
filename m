@@ -1,59 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51369 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852Ab3LJGyh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 01:54:37 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 0/5] PCI: allocate 64bit mmio pref
-Date: Mon,  9 Dec 2013 22:54:39 -0800
-Message-Id: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:63758 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440Ab3LRAdQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 19:33:16 -0500
+Received: by mail-ig0-f175.google.com with SMTP id j1so7745071iga.2
+        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2013 16:33:15 -0800 (PST)
+Date: Tue, 17 Dec 2013 17:33:13 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 6/9] PCI/MSI: Factor out pci_get_msi_vec_count()
+ interface
+Message-ID: <20131218003313.GB15119@google.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
+ <d0d8cd19befa8757faf7660fd3ae619945b2cde4.1387140921.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d0d8cd19befa8757faf7660fd3ae619945b2cde4.1387140921.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
-It will try to assign 64 bit resource above 4g at first.
+On Mon, Dec 16, 2013 at 09:34:59AM +0100, Alexander Gordeev wrote:
+> Device drivers can use this interface to obtain maximum number
+> of MSI interrupts the device supports and use that number i.e.
+> in a following call to pci_enable_msi_block() interface.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Reviewed-by: Tejun Heo <tj@kernel.org>
+> ---
+>  Documentation/PCI/MSI-HOWTO.txt |   15 ++++++++++++++
+>  drivers/pci/msi.c               |   41 +++++++++++++++++++++++++++++++-------
+>  include/linux/pci.h             |    6 +++++
+>  3 files changed, 54 insertions(+), 8 deletions(-)
+> 
+> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+> index a4d174e..c03b815 100644
+> --- a/Documentation/PCI/MSI-HOWTO.txt
+> +++ b/Documentation/PCI/MSI-HOWTO.txt
+> @@ -169,6 +169,21 @@ on any interrupt for which it previously called request_irq().
+>  Failure to do so results in a BUG_ON(), leaving the device with
+>  MSI enabled and thus leaking its vector.
+>  
+> +4.2.5 pci_get_msi_vec_count
+> +
+> +int pci_get_msi_vec_count(struct pci_dev *dev)
 
-And it is based on current pci/for-linus.
+What would you think of "pci_msi_vec_count()" or "pci_msi_vector_count()"
+instead?  The "get" doesn't really seem necessary, and we often use "get"
+to indicate acquiring a reference (though it's obvious that doesn't apply
+here).
 
--v2: update after patch that move device_del down to pci_destroy_dev.
-     add "Try best to allocate pref mmio 64bit above 4G"
+Bjorn
 
--v3: refresh and send out after pci_clip_resource() changes,
-     as Bjorn is not happy with attachments.
-
--v4: make pcibios_resource_to_bus take bus directly.
-
-Yinghai Lu (5):
-  PCI: pcibus address to resource converting take bus instead of dev
-  PCI: Don't use 4G bus address directly in resource allocation
-  PCI: Try to allocate mem64 above 4G at first
-  PCI: Try best to allocate pref mmio 64bit above 4g
-  PCI: Sort pci root bus resources list
-
- arch/alpha/kernel/pci-sysfs.c       |   4 +-
- arch/powerpc/kernel/pci-common.c    |   4 +-
- arch/powerpc/kernel/pci_of_scan.c   |   4 +-
- arch/sparc/kernel/pci.c             |   6 +-
- arch/x86/include/asm/pci.h          |   1 -
- drivers/pci/bus.c                   |  73 +++++++++++++++---
- drivers/pci/host-bridge.c           |  24 +++---
- drivers/pci/probe.c                 |  18 ++---
- drivers/pci/quirks.c                |   2 +-
- drivers/pci/rom.c                   |   2 +-
- drivers/pci/setup-bus.c             | 149 +++++++++++++++++++++++-------------
- drivers/pci/setup-res.c             |  16 +++-
- drivers/pcmcia/i82092.c             |   2 +-
- drivers/pcmcia/yenta_socket.c       |   6 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c |   5 +-
- drivers/video/arkfb.c               |   2 +-
- drivers/video/s3fb.c                |   2 +-
- drivers/video/vt8623fb.c            |   2 +-
- include/linux/pci.h                 |   8 +-
- 19 files changed, 217 insertions(+), 113 deletions(-)
-
--- 
-1.8.4
-
+> +This function could be used to retrieve the number of MSI vectors the
+> +device requested (via the Multiple Message Capable register). The MSI
+> +specification only allows the returned value to be a power of two,
+> +up to a maximum of 2^5 (32).
+> +
+> +If this function returns a negative number, it indicates the device is
+> +not capable of sending MSIs.
+> +
+> +If this function returns a positive number, it indicates the maximum
+> +number of MSI interrupt vectors that could be allocated.
+> +
+>  4.3 Using MSI-X
+>  
+>  The MSI-X capability is much more flexible than the MSI capability.
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index c0e2259..8915edb 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -834,6 +834,31 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  }
+>  
+>  /**
+> + * pci_get_msi_vec_count - Return the number of MSI vectors a device can send
+> + * @dev: device to report about
+> + *
+> + * This function returns the number of MSI vectors a device requested via
+> + * Multiple Message Capable register. It returns a negative errno if the
+> + * device is not capable sending MSI interrupts. Otherwise, the call succeeds
+> + * and returns a power of two, up to a maximum of 2^5 (32), according to the
+> + * MSI specification.
+> + **/
+> +int pci_get_msi_vec_count(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +	u16 msgctl;
+> +
+> +	if (!dev->msi_cap)
+> +		return -EINVAL;
+> +
+> +	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+> +	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(pci_get_msi_vec_count);
+> +
+> +/**
+>   * pci_enable_msi_block - configure device's MSI capability structure
+>   * @dev: device to configure
+>   * @nvec: number of interrupts to configure
+> @@ -849,13 +874,13 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+>  {
+>  	int status, maxvec;
+> -	u16 msgctl;
+>  
+> -	if (!dev->msi_cap || dev->current_state != PCI_D0)
+> +	if (dev->current_state != PCI_D0)
+>  		return -EINVAL;
+>  
+> -	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+> -	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+> +	maxvec = pci_get_msi_vec_count(dev);
+> +	if (maxvec < 0)
+> +		return maxvec;
+>  	if (nvec > maxvec)
+>  		return maxvec;
+>  
+> @@ -880,13 +905,13 @@ EXPORT_SYMBOL(pci_enable_msi_block);
+>  int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
+>  {
+>  	int ret, nvec;
+> -	u16 msgctl;
+>  
+> -	if (!dev->msi_cap || dev->current_state != PCI_D0)
+> +	if (dev->current_state != PCI_D0)
+>  		return -EINVAL;
+>  
+> -	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+> -	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+> +	ret = pci_get_msi_vec_count(dev);
+> +	if (ret < 0)
+> +		return ret;
+>  
+>  	if (maxvec)
+>  		*maxvec = ret;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8cf7b15..997751d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1154,6 +1154,11 @@ struct msix_entry {
+>  
+>  
+>  #ifndef CONFIG_PCI_MSI
+> +static inline int pci_get_msi_vec_count(struct pci_dev *dev)
+> +{
+> +	return -ENOSYS;
+> +}
+> +
+>  static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+>  {
+>  	return -ENOSYS;
+> @@ -1195,6 +1200,7 @@ static inline int pci_msi_enabled(void)
+>  	return 0;
+>  }
+>  #else
+> +int pci_get_msi_vec_count(struct pci_dev *dev);
+>  int pci_enable_msi_block(struct pci_dev *dev, int nvec);
+>  int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec);
+>  void pci_msi_shutdown(struct pci_dev *dev);
+> -- 
+> 1.7.7.6
+> 
