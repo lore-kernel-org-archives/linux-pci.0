@@ -1,180 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:32809 "EHLO
-	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751319Ab3LKL4S convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Dec 2013 06:56:18 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Jagan Teki <jagannadh.teki@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	spear-devel <spear-devel@list.st.com>
-Date: Wed, 11 Dec 2013 19:55:42 +0800
-Subject: RE: [PATCH 06/12] pcie: designware: Move register definition to the
- header file
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
-	<7bce26f60d847a136f748b5eeac15dc79a7d662e.1386752447.git.mohit.kumar@st.com>
- <CAD6G_RTrETj9p+YNPjRMEFsO7Ggf3LfnuaPOSwO2brUcusNUJw@mail.gmail.com>
-In-Reply-To: <CAD6G_RTrETj9p+YNPjRMEFsO7Ggf3LfnuaPOSwO2brUcusNUJw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:59051 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267Ab3LRJv2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 04:51:28 -0500
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <yan@linux.vnet.ibm.com>;
+	Wed, 18 Dec 2013 19:51:26 +1000
+Date: Wed, 18 Dec 2013 17:51:16 +0800
+From: Guo Chao <yan@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 4/5] PCI: Try best to allocate pref mmio 64bit above 4g
+Message-ID: <20131218095116.GA961@yanx>
+References: <1386658484-15774-1-git-send-email-yinghai@kernel.org>
+ <1386658484-15774-5-git-send-email-yinghai@kernel.org>
+ <20131216082329.GA4926@yanx>
+ <CAE9FiQWONC84f35_Jyvs=nwXdj4QWCBdokOgiFWDgWSSpcf_NA@mail.gmail.com>
+ <CAE9FiQVQUsvYuRJQyvbyCkGjwwaKsgF2b8wTzi-KV4vex7Y5mg@mail.gmail.com>
+ <CAE9FiQV8kJZz0oaiZOvfWce_bu+8nZB2Qtw7KjLeASTkwUrjug@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQV8kJZz0oaiZOvfWce_bu+8nZB2Qtw7KjLeASTkwUrjug@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Jagan,
-
-> -----Original Message-----
-> From: Jagan Teki [mailto:jagannadh.teki@gmail.com]
-> Sent: Wednesday, December 11, 2013 5:09 PM
-> To: Mohit KUMAR DCG
-> Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> Pratyush ANAND; Jingoo Han; spear-devel
-> Subject: Re: [PATCH 06/12] pcie: designware: Move register definition to the
-> header file
+Hi:
+On Mon, Dec 16, 2013 at 04:36:32PM -0800, Yinghai Lu wrote:
+> On Mon, Dec 16, 2013 at 1:36 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Mon, Dec 16, 2013 at 10:13 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >>>
+> >>> 64-bit non-prefetchable BARs are missed from caculation in the scheme,
+> >>> causing assign failed eventually.
 > 
-> On Wed, Dec 11, 2013 at 3:08 PM, Mohit Kumar <mohit.kumar@st.com>
-> wrote:
-> > From: Pratyush Anand <pratyush.anand@st.com>
+> >>>
+> >>> Will you figure out a better way to cover them or just add a 'type3' parameter?
 > >
-> > Move synopsis specific register definition from source file to header
-> > file, so that they can be re-used by other files if needed.
-> >
-> > Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Mohit Kumar <mohit.kumar@st.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: spear-devel@list.st.com
-> > Cc: linux-pci@vger.kernel.org
-> > ---
-> >  drivers/pci/host/pcie-designware.c |   42 ------------------------------------
-> >  drivers/pci/host/pcie-designware.h |   42
-> ++++++++++++++++++++++++++++++++++++
-> >  2 files changed, 42 insertions(+), 42 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c
-> > b/drivers/pci/host/pcie-designware.c
-> > index 212b8b6..73aa13c 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -23,48 +23,6 @@
-> >
-> >  #include "pcie-designware.h"
-> >
-> > -/* Synopsis specific PCIE configuration registers */
-> > -#define PCIE_PORT_LINK_CONTROL         0x710
-> > -#define PORT_LINK_MODE_MASK            (0x3f << 16)
-> > -#define PORT_LINK_MODE_1_LANES         (0x1 << 16)
-> > -#define PORT_LINK_MODE_2_LANES         (0x3 << 16)
-> > -#define PORT_LINK_MODE_4_LANES         (0x7 << 16)
-> > -
-> > -#define PCIE_LINK_WIDTH_SPEED_CONTROL  0x80C
-> > -#define PORT_LOGIC_SPEED_CHANGE                (0x1 << 17)
-> > -#define PORT_LOGIC_LINK_WIDTH_MASK     (0x1ff << 8)
-> > -#define PORT_LOGIC_LINK_WIDTH_1_LANES  (0x1 << 8) -#define
-> > PORT_LOGIC_LINK_WIDTH_2_LANES  (0x2 << 8) -#define
-> > PORT_LOGIC_LINK_WIDTH_4_LANES  (0x4 << 8)
-> > -
-> > -#define PCIE_MSI_ADDR_LO               0x820
-> > -#define PCIE_MSI_ADDR_HI               0x824
-> > -#define PCIE_MSI_INTR0_ENABLE          0x828
-> > -#define PCIE_MSI_INTR0_MASK            0x82C
-> > -#define PCIE_MSI_INTR0_STATUS          0x830
-> > -
-> > -#define PCIE_ATU_VIEWPORT              0x900
-> > -#define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
-> > -#define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
-> > -#define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
-> > -#define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
-> > -#define PCIE_ATU_CR1                   0x904
-> > -#define PCIE_ATU_TYPE_MEM              (0x0 << 0)
-> > -#define PCIE_ATU_TYPE_IO               (0x2 << 0)
-> > -#define PCIE_ATU_TYPE_CFG0             (0x4 << 0)
-> > -#define PCIE_ATU_TYPE_CFG1             (0x5 << 0)
-> > -#define PCIE_ATU_CR2                   0x908
-> > -#define PCIE_ATU_ENABLE                        (0x1 << 31)
-> > -#define PCIE_ATU_BAR_MODE_ENABLE       (0x1 << 30)
-> > -#define PCIE_ATU_LOWER_BASE            0x90C
-> > -#define PCIE_ATU_UPPER_BASE            0x910
-> > -#define PCIE_ATU_LIMIT                 0x914
-> > -#define PCIE_ATU_LOWER_TARGET          0x918
-> > -#define PCIE_ATU_BUS(x)                        (((x) & 0xff) << 24)
-> > -#define PCIE_ATU_DEV(x)                        (((x) & 0x1f) << 19)
-> > -#define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
-> > -#define PCIE_ATU_UPPER_TARGET          0x91C
-> > -
-> >  static struct hw_pci dw_pci;
-> >
-> >  static unsigned long global_io_offset; diff --git
-> > a/drivers/pci/host/pcie-designware.h
-> > b/drivers/pci/host/pcie-designware.h
-> > index c15379b..da1ed35 100644
-> > --- a/drivers/pci/host/pcie-designware.h
-> > +++ b/drivers/pci/host/pcie-designware.h
-> > @@ -74,4 +74,46 @@ int dw_pcie_link_up(struct pcie_port *pp);  void
-> > dw_pcie_setup_rc(struct pcie_port *pp);  int dw_pcie_host_init(struct
-> > pcie_port *pp);
-> >
-> > +/* Synopsis specific PCIE configuration registers */
-> > +#define PCIE_PORT_LINK_CONTROL         0x710
-> > +#define PORT_LINK_MODE_MASK            (0x3f << 16)
-> > +#define PORT_LINK_MODE_1_LANES         (0x1 << 16)
-> > +#define PORT_LINK_MODE_2_LANES         (0x3 << 16)
-> > +#define PORT_LINK_MODE_4_LANES         (0x7 << 16)
-> > +
-> > +#define PCIE_LINK_WIDTH_SPEED_CONTROL  0x80C
-> > +#define PORT_LOGIC_SPEED_CHANGE                (0x1 << 17)
-> > +#define PORT_LOGIC_LINK_WIDTH_MASK     (0x1ff << 8)
-> > +#define PORT_LOGIC_LINK_WIDTH_1_LANES  (0x1 << 8) #define
-> > +PORT_LOGIC_LINK_WIDTH_2_LANES  (0x2 << 8) #define
-> > +PORT_LOGIC_LINK_WIDTH_4_LANES  (0x4 << 8)
-> > +
-> > +#define PCIE_MSI_ADDR_LO               0x820
-> > +#define PCIE_MSI_ADDR_HI               0x824
-> > +#define PCIE_MSI_INTR0_ENABLE          0x828
-> > +#define PCIE_MSI_INTR0_MASK            0x82C
-> > +#define PCIE_MSI_INTR0_STATUS          0x830
-> > +
-> > +#define PCIE_ATU_VIEWPORT              0x900
-> > +#define PCIE_ATU_REGION_INBOUND                (0x1 << 31)
-> > +#define PCIE_ATU_REGION_OUTBOUND       (0x0 << 31)
-> > +#define PCIE_ATU_REGION_INDEX1         (0x1 << 0)
-> > +#define PCIE_ATU_REGION_INDEX0         (0x0 << 0)
-> > +#define PCIE_ATU_CR1                   0x904
-> > +#define PCIE_ATU_TYPE_MEM              (0x0 << 0)
-> > +#define PCIE_ATU_TYPE_IO               (0x2 << 0)
-> > +#define PCIE_ATU_TYPE_CFG0             (0x4 << 0)
-> > +#define PCIE_ATU_TYPE_CFG1             (0x5 << 0)
-> > +#define PCIE_ATU_CR2                   0x908
-> > +#define PCIE_ATU_ENABLE                        (0x1 << 31)
-> > +#define PCIE_ATU_BAR_MODE_ENABLE       (0x1 << 30)
-> > +#define PCIE_ATU_LOWER_BASE            0x90C
-> > +#define PCIE_ATU_UPPER_BASE            0x910
-> > +#define PCIE_ATU_LIMIT                 0x914
-> > +#define PCIE_ATU_LOWER_TARGET          0x918
-> > +#define PCIE_ATU_BUS(x)                        (((x) & 0xff) << 24)
-> > +#define PCIE_ATU_DEV(x)                        (((x) & 0x1f) << 19)
-> > +#define PCIE_ATU_FUNC(x)               (((x) & 0x7) << 16)
-> > +#define PCIE_ATU_UPPER_TARGET          0x91C
-> > +
-> >  #endif /* _PCIE_DESIGNWARE_H */
+> > Looks like we have add type3 for that case.
 > 
-> Seems like none were using these headers except pcie-designware.c - if ie
-> the case better to place it same place as before.
-
-- We have include these and used few like ' PCIE_LINK_WIDTH_SPEED_CONTROL '  for SPEAr13xx platform, 
-so move these to the separate header  file.
-
-Thanks
-Mohit
+> please check attached delta patch.
 > 
-> --
-> Thanks,
-> Jagan.
-> --------
-> Jagannadha Sutradharudu Teki,
-> E: jagannadh.teki@gmail.com, P: +91-9676773388 Engineer - System
-> Software Hacker U-boot - SPI Custodian and Zynq APSOC
-> Ln: http://www.linkedin.com/in/jaganteki
+
+It works, thank you.
+
+Guo Chao
+
+> Thanks
+> 
+> Yinghai
+
+> ---
+>  drivers/pci/setup-bus.c |   17 +++++++++++------
+>  drivers/pci/setup-res.c |    8 ++++++--
+>  2 files changed, 17 insertions(+), 8 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -916,6 +916,7 @@ static inline resource_size_t calculate_
+>   */
+>  static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  			 unsigned long type, unsigned long type2,
+> +			 unsigned long type3,
+>  			 resource_size_t min_size, resource_size_t add_size,
+>  			 struct list_head *realloc_head)
+>  {
+> @@ -946,7 +947,8 @@ static int pbus_size_mem(struct pci_bus
+>  			resource_size_t r_size;
+>  
+>  			if (r->parent || ((r->flags & mask) != type &&
+> -					  (r->flags & mask) != type2))
+> +					  (r->flags & mask) != type2 &&
+> +					  (r->flags & mask) != type3))
+>  				continue;
+>  			r_size = resource_size(r);
+>  #ifdef CONFIG_PCI_IOV
+> @@ -1119,7 +1121,7 @@ void __ref __pci_bus_size_bridges(struct
+>  			struct list_head *realloc_head)
+>  {
+>  	struct pci_dev *dev;
+> -	unsigned long mask, prefmask, type2 = 0;
+> +	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+>  	resource_size_t additional_mem_size = 0, additional_io_size = 0;
+>  	struct resource *b_res;
+>  
+> @@ -1171,26 +1173,29 @@ void __ref __pci_bus_size_bridges(struct
+>  		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+>  		if (b_res[2].flags & IORESOURCE_MEM_64) {
+>  			prefmask |= IORESOURCE_MEM_64;
+> -			if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
+> +			if (pbus_size_mem(bus, prefmask, prefmask,
+> +				  prefmask, prefmask,
+>  				  realloc_head ? 0 : additional_mem_size,
+>  				  additional_mem_size, realloc_head)) {
+>  					/* Success, size non-pref64 only. */
+>  					mask = prefmask;
+>  					type2 = prefmask & ~IORESOURCE_MEM_64;
+> +					type3 = prefmask & ~IORESOURCE_PREFETCH;
+>  			}
+>  		}
+>  		if (!type2) {
+>  			prefmask &= ~IORESOURCE_MEM_64;
+> -			if (pbus_size_mem(bus, prefmask, prefmask, prefmask,
+> +			if (pbus_size_mem(bus, prefmask, prefmask,
+> +					 prefmask, prefmask,
+>  					 realloc_head ? 0 : additional_mem_size,
+>  					 additional_mem_size, realloc_head)) {
+>  				/* Success, size non-prefetch only. */
+>  				mask = prefmask;
+>  			} else
+>  				additional_mem_size += additional_mem_size;
+> -			type2 = IORESOURCE_MEM;
+> +			type2 = type3 = IORESOURCE_MEM;
+>  		}
+> -		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2,
+> +		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+>  				realloc_head ? 0 : additional_mem_size,
+>  				additional_mem_size, realloc_head);
+>  		break;
+> Index: linux-2.6/drivers/pci/setup-res.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-res.c
+> +++ linux-2.6/drivers/pci/setup-res.c
+> @@ -212,7 +212,8 @@ static int __pci_assign_resource(struct
+>  				     pcibios_align_resource, dev);
+>  
+>  	if (ret < 0 &&
+> -	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
+> +	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+> +	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+>  		/*
+>  		 * That failed.
+>  		 *
+> @@ -223,12 +224,15 @@ static int __pci_assign_resource(struct
+>  					     pcibios_align_resource, dev);
+>  	}
+>  
+> -	if (ret < 0 && (res->flags & IORESOURCE_PREFETCH)) {
+> +	if (ret < 0 &&
+> +	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))) {
+>  		/*
+>  		 * That failed.
+>  		 *
+>  		 * But a prefetching area can handle a non-prefetching
+>  		 * window (it will just not perform as well).
+> +		 *
+> +		 * Also can put 64bit under 32bit range. (below 4g).
+>  		 */
+>  		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+>  					     pcibios_align_resource, dev);
+
