@@ -1,74 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 5 Dec 2013 22:12:55 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Betty Dall <betty.dall@hp.com>
-Cc: Ethan Zhao <ethan.kernel@gmail.com>,
-	rui wang <ruiv.wang@gmail.com>,
-	Lance Ortiz <lance.ortiz@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, lance_ortiz@hotmail.com,
-	jiang.liu@intel.com, tony.luck@intel.com, rostedt@goodmis.org,
-	m.chehab@samsung.com, linux-acpi@vger.kernel.org,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, gong.chen@linux.intel.com
-Subject: Re: [BUG] Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
-Message-ID: <20131205211255.GG14407@pd.tnic>
-References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
- <CANVTcTabw2pxUP0iinepviavSLHT7AAyaQvA7e-mv2simbX7ow@mail.gmail.com>
- <CABawtvP3m_dAKaOLxNqHXQobsgk92ysh6H881i3eDASLi+-WAg@mail.gmail.com>
- <1386267670.18256.8.camel@ejdallLaptop>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1386267670.18256.8.camel@ejdallLaptop>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20131218132349.GA29552@dhcp-26-207.brq.redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com> <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
+ <20131218003002.GA15119@google.com> <20131218132349.GA29552@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 18 Dec 2013 11:58:47 -0700
+Message-ID: <CAErSpo6Km5N+Cfpaj5JEsb966rwcBjrAT4SFvG6Q9QkwkDFXCA@mail.gmail.com>
+Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family helpers
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@aculab.com>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 05, 2013 at 11:21:10AM -0700, Betty Dall wrote:
-> The definition of the GHES_SEV* matches up with the error severity
-> definition of the CPER records as defined in the UEFI spec section
-> N.2.1:
-> "Indicates the severity of the error condition. The severity of
-> the error record corresponds to the most severe error
-> section.
-> 0 - Recoverable (also called non-fatal uncorrected)
-> 1 - Fatal
-> 2 - Corrected
-> 3 - Informational
-> All other values are reserved.
-> Note that severity of "Informational" indicates that the record
-> could be safely ignored by error handling software."
+On Wed, Dec 18, 2013 at 6:23 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Tue, Dec 17, 2013 at 05:30:02PM -0700, Bjorn Helgaas wrote:
+>
+> Hi Bjorn,
+>
+> Thank you for the review!
+>
+> Sorry for a heavy skipping - I just wanted to focus on a principal
+> moment in your suggestion and then go on with the original note.
+>
+>> I only see five users of pci_enable_msi_block() (nvme, ath10k, wil6210,
+>> ipr, vfio); we can easily convert those to use pci_enable_msi_range() and
+>> then remove pci_enable_msi_block().
+>
+>> It would be good if pci_enable_msix() could be implemented in terms of
+>> pci_enable_msix_range(nvec, nvec), with a little extra glue to handle the
+>> positive return values.
+>
+> So you want to get rid of the tri-state "low-level" pci_enable_msi_block()
+> and pci_enable_msix(), right? I believe we can not do this, since we need
+> to support a non-standard hardware which (a) can not be asked any arbitrary
+> number of vectors within a range and (b) needs extra magic to enable MSI
+> operation.
+>
+> I.e. below is a snippet from a real device driver Mark Lord has sent in a
+> previous conversation:
+>
+>         xx_disable_all_irqs(dev);
+>         do {
+>                 if (nvec < 2)
+>                         xx_prep_for_1_msix_vector(dev);
+>                 else if (nvec < 4)
+>                         xx_prep_for_2_msix_vectors(dev);
+>                 else if (nvec < 8)
+>                         xx_prep_for_4_msix_vectors(dev);
+>                 else if (nvec < 16)
+>                         xx_prep_for_8_msix_vectors(dev);
+>                 else
+>                         xx_prep_for_16_msix_vectors(dev);
+>                 nvec = pci_enable_msix(dev->pdev, dev->irqs, dev->num_vectors);
+>         } while (nvec > 0);
+>
+> The same probably could have been done with pci_enable_msix_range(nvec, nvec)
+> call and checking for -ENOSPC errno, but IMO it would be less graceful and
+> reliable, since -ENOSPC might come from anywhere.
+>
+> IOW, I believe we need to keep the door open for custom MSI-enablement (loop)
+> implementations.
 
-Actually, we can go even one radical step further and drop
-ghes_severity() completely because GHES severity in the ACPI spec 5.0 is
-defined almost exactly the same:
+I think this can still be done even with pci_enable_msix_range().
+Here's what I'm thinking, tell me where I'm going wrong:
 
-"18.3.2.6.1 Generic Error Data
+    rc = pci_enable_msix_range(dev->pdev, dev->irqs, 1, 16);
+    if (rc < 0) { /* error */ }
+    else { /* rc interrupts allocated */ }
 
-...
+If rc == 13 and the device can only use 8, the extra 5 would be
+ignored and wasted.
 
-Identifies the error severity of the reported error:
-0 – Recoverable
-1 – Fatal
-2 – Corrected
-3 – None
-Note: This is the error severity of the entire event. Each Generic
-Error Data Entry also includes its own Error Severity field."
+If the waste is unacceptable, the driver can try this:
 
-I don't know which version of the spec dictated
+    rc = pci_enable_msix_range(dev->pdev, dev->irqs, 16, 16);
+    if (rc < 0) {
+        rc = pci_enable_msix_range(dev->pdev, dev->irqs, 8, 8);
+        if (rc < 0) {
+            rc = pci_enable_msix_range(dev->pdev, dev->irqs, 4, 4);
+            ...
+    }
 
-enum {
-        GHES_SEV_NO = 0x0,
-        GHES_SEV_CORRECTED = 0x1,
-        GHES_SEV_RECOVERABLE = 0x2,
-        GHES_SEV_PANIC = 0x3,
-};
+    if (rc < 0) { /* error, couldn't allocate *any* interrupts */
+    else { /* rc interrupts allocated (1, 2, 4, 8, or 16) */ }
 
-though and whether we're going to have to differentiate between the old
-and GHES numerical severity levels. Which, if we have to, would be very
-nasty...
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Bjorn
