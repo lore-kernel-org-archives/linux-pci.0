@@ -1,96 +1,319 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:54719 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359Ab3LJD7l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 22:59:41 -0500
-Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <benh@au1.ibm.com>;
-	Tue, 10 Dec 2013 13:59:39 +1000
-Message-ID: <1386647973.32037.57.camel@pasglop>
-Subject: Re: [PATCH 1/9] PCI: Use dev_is_pci() to check whether it is pci
- device
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>, linux-ia64@vger.kernel.org,
-	linux-parisc@vger.kernel.org, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
-	sparclinux@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org
-Date: Tue, 10 Dec 2013 14:59:33 +1100
-In-Reply-To: <20131210000154.GE4699@google.com>
-References: <1386244373-35796-1-git-send-email-wangyijing@huawei.com>
-	 <20131210000154.GE4699@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 18 Dec 2013 11:15:47 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jagannadha Sutradharudu Teki
+	<jagannadha.sutradharudu-teki@xilinx.com>
+Cc: Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+Subject: Re: [PATCH v2 2/2] Documentation: pci: Add pcie-howto.txt
+Message-ID: <20131218181547.GD15119@google.com>
+References: <1386848325-21064-1-git-send-email-jaganna@xilinx.com>
+ <ced64bc2-ba6c-4bfc-bbc3-53cda681789c@CH1EHSMHS035.ehs.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ced64bc2-ba6c-4bfc-bbc3-53cda681789c@CH1EHSMHS035.ehs.local>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-12-09 at 17:01 -0700, Bjorn Helgaas wrote:
-> [+cc arch lists]
+On Thu, Dec 12, 2013 at 05:08:45PM +0530, Jagannadha Sutradharudu Teki wrote:
+> Added pcie-howto.txt for describing the information
+> on PCI Express basics and Root Complex driver.
 > 
-> On Thu, Dec 05, 2013 at 07:52:53PM +0800, Yijing Wang wrote:
-> > Use dev_is_pci() instead of directly compare
-> > pci_bus_type to check whether it is pci device.
-> > 
-> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
+> ---
+> Changes for v2:
+> 	- Fixed comments from "Randy Dunlap"
 > 
-> I applied all these to my pci/yijing-dev_is_pci branch for v3.14, thanks!
+>  Documentation/PCI/00-INDEX       |   2 +
+>  Documentation/PCI/pcie-howto.txt | 186 +++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 188 insertions(+)
+>  create mode 100644 Documentation/PCI/pcie-howto.txt
 > 
-> Browse them here: http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/yijing-dev_is_pci
+> diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+> index b8b7721..d61e7b9 100644
+> --- a/Documentation/PCI/00-INDEX
+> +++ b/Documentation/PCI/00-INDEX
+> @@ -6,6 +6,8 @@ pci-error-recovery.txt
+>  	- Info on PCI error recovery
+>  MSI-HOWTO.txt
+>  	- The Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ
+> +pcie-howto.txt
+> +	- A guide describing the PCI Express basics and Root Complex driver
+>  pcie-portbus-howto.txt
+>  	- A guide describing the PCI Express Port Bus driver
+>  pcie-aer-howto.txt
+> diff --git a/Documentation/PCI/pcie-howto.txt b/Documentation/PCI/pcie-howto.txt
+> new file mode 100644
+> index 0000000..df464b5
+> --- /dev/null
+> +++ b/Documentation/PCI/pcie-howto.txt
+> @@ -0,0 +1,186 @@
+> +	PCI Express HOWTO
+> +	Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
+> +	12/12/2013
+> +
+> +1. About this guide
+> +
+> +This guide describes the basics of the PCI Express bus and provides
+> +information on what the Linux PCIe subsystem looks like and ends with
+> +a brief description of PCI Host controller/Root complex driver along
+> +with some sample code.
+> +
+> +2. Basic terminology and conventions
 
-Ah ok. I also have the powerpc one in powerpc -next, no biggie though
+This section is basic PCIe hardware info, basically the sort of information
+you'd find in the first chapter of the PCIe spec or the MindShare PCIe
+books.  I'm not necessarily opposed to putting this in Documentation/PCI,
+but you should include full references (not just URLs for extracts as you
+have now).
 
-Cheers,
-Ben.
+> +PCI Express is
+> +- A high performance IO interconnect for peripherals.
+> +- Low hardware design overhead compared to PCI, as it uses less pins.
+> +- A serial point-to-point interconnect between two devices.
+> +- Implements packet-based protocol for data transfer.
+> +- Supports features like Advanced power management, Advanced error
+> +  reporting facility, and hot-plug.
+> +					_________
+> +				       |	 |
+> +				       |   CPU   |
+> +				       |_________|
+> +					    |
+> +			 ___________________|___________________________
+> +			|						| 	  ________
+> +			|		ROOT COMPLEX			|        |	  |
+> +			|						|--------| Memory |
+> +			|   Switch Port			Root port	|	 |________|
+> +			|_______________________________________________|
+> +					    |				  PCIe Bus0
+> +		____________________________|______________________________________
+> +				|		|		  |
+> +	      ____	  ______|______		|	      ____|____
+> +	     |	  |	 /	       \      __|__	     |	       |
+> +	     | EP |-----|    SWITCH	|    |     |	     | BRIDGE  |
+> +	     |____|	 \_____________/     | EP  |	     | PCIe -  |
+> +			    |	    | 	     |_____|         | PCI/PCIe|
+> +			  __|__   __|__ 		     |_________|
+> +			 |     | |     |			  |	  PCIe Bus1
+> +			 | EP  | | EP  | 		__________|________________
+> +			 |_____| |_____| 		    |		  |
+> +							  __|__		__|__
+> +							 |     |       |     |
+> +							 | EP  |       | EP  |
+> +							 |_____|       |_____|
 
-> This should be no functional change.
+The ROOT COMPLEX block should contain only one port (a Root Port).  A Root
+Complex can contain several Root Port, but your drawing only shows one
+(there's only one Link exiting your box).
+
+I don't know if you mean something special by putting one EP block to the
+left of the switch.  A detailed graphic would probably make it clear, but
+for ASCII art, I think it would avoid confusion if you drew all the EP
+blocks below the switch.
+
+A Link only connects two components, so the Link exiting the ROOT COMPLEX,
+i.e., the link from the Root Port, cannot connect to the SWITCH, the EP,
+and the BRIDGE.  It could only connect to one of them.
+
+A BRIDGE refers to a device with an Upstream Port on the primary (RC) side
+and a conventional PCI or a PCI-X interface on the secondary side.  So your
+BRIDGE box should say "BRIDGE PCIe - PCI/PCI-X", and the bus on the
+downstream side would be PCI or PCI-X, not PCIe.  Obviously that means
+there would not be PCIe Endpoints below it.
+
+There is also such a thing as a PCI/PCI-X to PCIe Bridge, but these are
+pretty rare.  In any case, a Switch has PCIe on both upstream and
+downstream sides.  A Bridge has PCIe on one side and PCI/PCI-X on the
+other.
+
+> +Root Complex (RC)
+> +Connects the CPU and memory subsystem to the PCIe fabric (A topology comprised of PCIe
+> +nodes like Root Complex, Endpoint, Bridge or a Switch)
+> +
+> +Port
+> +Interface between a PCIe component and the Link.
+> +
+> +Link
+> +PCIe interconnect is referred as a Link, and connects two devices.
+> +
+> +Lane
+> +A PCIe link consists of either 1, 2, 4, 8, 12, 16 or 32 signals in each direction
+> +(each signal needs two wires - one for Tx and other for Rx). These signals are
+> +referred to as Lanes.
+> +
+> +Upstream Port
+> +Port that points in the direction of RC.
+> +
+> +Downstream Port
+> +Port that points away from the RC.
+> +
+> +Root Port
+> +Whose upstream port is RC and dowstream port should be an EP or Bridge.
+
+A Root Port is a special kind of a Downstream Port, and it does not have an
+Upstream Port at all.
+
+> +Switch Port
+> +Whose upstream port is RC and dowstream port is always a switch.
+
+A Switch consists of one Upstream Port and one or more Downstream Ports.
+It can be anywhere in the hierarchy, so its Upstream Port may lead to a
+Root Port or to a Downstream Port of another Switch.  A Switch Downstream
+Port may lead to an Endpoint, a Bridge, or to the Upstream Port of another
+Switch.
+
+> +Endpoint (EP)
+> +Devices other than RC, Switches and Bridges which either generate or terminate a PCIe
+> +transaction. These are peripheral devices such as Ethernet, USB and graphics devices.
+> +
+> +Switch
+> +PCIe device single upstream port as RC and multiple downstream ports as EP's,
+> +Switches or Bridges.
+> +
+> +Bridge
+> +Is for extending PCIe Bus segment - whose downstream port points to one more PCIe bus.
+
+Nope, as described above.
+
+> +3. Linux PCIe Subsystem
+
+Section 3 is really not PCIe-specific; with the exception of the PCIe Port
+Bus driver, everything is generic across conventional PCI, PCI-X, and PCIe.
+So this should not go in a file named "pcie-howto.txt".
+
+> +
+> +					  ifconfig	open()/close/read()/write()	   /proc, /sys
+> +					      ^		     ^		   ^			^
+> +					      |		     |		   |			|
+> +					      |		     |		   |			|
+> +					      |              |		   |			V
+> +					      |		     |		   |		PCIe Port Bus services
+> +					      |		     |		   |		(AER, HP, PME, VC
+> +					      |		     |		   |		 drivers/pci/pcie/
+> +					      |		     |		   |		 drivers/pci/hotplug)
+> +					      V		     V		   V			^
+> +					    Socket 	    Block	 Char		        |
+> +					    layer	 Subsystem	Subsystem		|
+> +					      ^		     ^		   ^			| pcie_port_service_register()
+> +					      |		     |		   |			|
+> +					      |		     |		   |			|
+> +					      V		     V		   V			V
+> +					 Common net	    USB		 Input		  PCIe Port Core
+> +					 device layer       Core	 Core    (drivers/pci/pcie/portdrv_core.c)
+> +					      ^		     ^		   ^			^
+> +					      |		     |		   |			| pcie_port_bus_register()
+> +					      |		     |		   |			|
+> +					 _____V_____	 ____V____     ____V_____      _________V___________
+> +					|	    |	|         |   |		 |    | 		    |
+> +			All these are	| GEM 	    |	| USB HC  |   | Mouse/KB/|    | PCIe Port Bus driver|
+> +			PCI endpoint	| Controller|	| driver  |   | TS HC	 |    | (drivers/pci/pcie/  |
+> +			drivers		| driver    |	|	  |   |	driver	 |    |	 portdrv_pci.c)     |
+> +					|___________|	|_________|   |__________|    |_____________________|
+> +					      ^	             ^             ^			^
+> +					      |__________    |		   |	       _________|
+> +							 |   |		   |	      |		 pci_register_driver()
+> +	     ___________________  pci_bus_*()	       __V___V_____________V__________V______
+> +	    |			| pci_scan_root_bus() |					     |
+> +	    |	  PCI BIOS	|-------------------->|     	     PCI Core		     |
+> +            | (arch/arm/kernel/ |<--------------------|          (drivers/pci/pci*	     |
+> +      ----->|        bios32.c))	|<---     pcibios_*() |           drivers/pci/bus.c)	     |
+> +      |     |___________________|   |		      |______________________________________|
+> +      |		     ^		    |
+> +      |		     |		    | pci_common_init_dev()
+> +      |		     |		    |
+> +  ____V___	 ____V___	 ___V____
+> + | 	  |     |	 |	|	 |
+> + | Renesas|	| Tegra  |	| Exynos |
+> + | PCI HC | 	| PCIe HC|	| PCIe HC| drivers/pci/host/
+> + | driver |	| driver |	| driver | All these are
+> + |________|	|________|	|________| PCI Root Complex drivers
+> +     |		    |		    |
+> +     |		    |		    |
+> +     V		    V		    V
+> +         platform_driver_register()
+
+I would not say "All these are PCI endpoint drivers" because "Endpoint" is
+specific to PCIe and doesn't mean anything in conventional PCI.  "PCI
+drivers" is sufficient.  There is no special driver registration interface
+for PCIe; the same driver can claim either PCI or PCIe devices with no
+PCIe-specific code (if it needs PCIe-specific features, may have code for
+those, of course).
+
+> +Note:
+> +Linux PCI subsystem is like above one without having a PCIe port bus stack.
+> +For more details about this block see http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
+
+I don't really want to include URLs outside of kernel.org things, because
+we can't tell how long they will last.  You're already reproduced almost
+everything from that drawing above, anyway.
+
+> +PCI HC/RC driver
+> +- Low level initialization and configuration (board, SoC)
+> +- Invokes PCI-BIOS - for bus enumerations so that the endpoints on bus are ready.
+
+Enumeration isn't really done by PCIBIOS; the PCI core does it by calling
+the config space accessors supplied in struct pci_ops.  In general,
+enumeration is the same for PCI and PCIe, so it finds "devices," not
+"endpoints."
+
+> +- Supplies struct pci_ops to read/write config space.
+> +- Setup the resources like bus numbers, memory/IO space, Interrupt numbers, MSI.
+> +- Register PCI-BIOS as pci_common_init_dev()
+
+pci_common_init_dev() is an arch-specific function only used by ARM, as far
+as I can tell.
+
+> +PCI BIOS
+> +- Architecture specific PCI
+> +- Bus enumeration - Lane, Bus, Device, Memory, Interrupt.
+
+Lanes really aren't visible in the core.  They're only relevant if you have
+host bridge code that needs to initialize them or something.
+
+> +- Successful completion of BIOS assures that all the endpoints in bus are
+> +  assigned parts of available PCI resources and their respective Endpoint drivers
+> +  can take control of them using the functionalities provided by PCI Core.
+
+I don't know what "completion of BIOS" means -- there isn't a single phase
+of "BIOS execution."
+
+> +- Register to PCI core for common accessing of endpoint drivers.
+> +- pci_scan_root_bus() and pci_bus_*()
+
+I think pci_bus_add_devices() is the only relevant interface we talked
+about here.  When necessary, it would logically be called by the host
+bridge driver.
+
+> +PCI Core
+> +- Provides services to Lower level BIOS and Upper level endpoint layers.
+> +- Creates device entries for proc/sysfs information.
+> +- Linux kernel PCI bus and driver management code.
+> +- Provides set of abstraction functions that endpoint drivers can use to
+> +  initiate PCI communication with attached endpoints.
+> +- Calls BIOS codes with pcibios_*
+> +
+> +PCI Endpoint driver
+> +- Individual endpoint drivers from upper layer.
+> +- Accessing config space upon respective endpoint enumeration done.
+> +- Communicate over the endpoint for Tx/Rx transactions.
+> +- Register to PCI core as pci_driver_register()
+> +
+> +PCIe Port Bus driver
+> +- A logical PCI-PCI Bridge structure.
+> +- Root Port and the Switch Port.
+> +- See Documentation/PCI/pcie-portbus-howto.txt
+> +
+> +4. PCI HC/RC driver
+> +
+> +4.1 Description
+> +
+> +4.2 Sample code
+> +
+> +5. References
+> +http://www.mindshare.com/files/ebooks/pci%20express%20system%20architecture.pdf
+> +http://www.pcisig.com/developers/main/training_materials/
+> -- 
+> 1.8.3
 > 
->  arch/alpha/kernel/pci_iommu.c        |    2 +-
->  arch/arm/common/it8152.c             |    4 ++--
->  arch/arm/mach-ixp4xx/common-pci.c    |    6 +++---
->  arch/ia64/hp/common/sba_iommu.c      |    2 +-
->  arch/ia64/sn/pci/pci_dma.c           |   24 ++++++++++++------------
->  arch/parisc/kernel/drivers.c         |   22 +++++-----------------
->  arch/powerpc/sysdev/fsl_pci.c        |    2 +-
->  arch/sparc/include/asm/dma-mapping.h |   10 ++++------
->  arch/sparc/kernel/iommu.c            |    2 +-
->  arch/sparc/kernel/ioport.c           |    4 +---
->  arch/x86/kernel/acpi/boot.c          |    4 +---
->  drivers/pci/pci-acpi.c               |    2 +-
->  12 files changed, 33 insertions(+), 51 deletions(-)
 > 
-> Bjorn
-> 
-> > ---
-> >  drivers/pci/pci-acpi.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> > index 577074e..e0431f1 100644
-> > --- a/drivers/pci/pci-acpi.c
-> > +++ b/drivers/pci/pci-acpi.c
-> > @@ -358,7 +358,7 @@ static void pci_acpi_cleanup(struct device *dev)
-> >  
-> >  static bool pci_acpi_bus_match(struct device *dev)
-> >  {
-> > -	return dev->bus == &pci_bus_type;
-> > +	return dev_is_pci(dev);
-> >  }
-> >  
-> >  static struct acpi_bus_type acpi_pci_bus = {
-> > -- 
-> > 1.7.1
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
-
-
