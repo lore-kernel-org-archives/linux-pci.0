@@ -1,94 +1,203 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:33846 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579Ab3LLVu0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:26 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	Richard Zhu <r65037@freescale.com>,
+Received: from mga14.intel.com ([143.182.124.37]:58557 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752390Ab3LRG5l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Dec 2013 01:57:41 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 6/7] PCI: imx6: Fix bugs in PCIe startup code
-Date: Thu, 12 Dec 2013 22:50:03 +0100
-Message-Id: <1386885004-10252-6-git-send-email-marex@denx.de>
-In-Reply-To: <1386885004-10252-1-git-send-email-marex@denx.de>
-References: <1386885004-10252-1-git-send-email-marex@denx.de>
+	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>,
+	Leonidas Da Silva Barbosa <leosilva@linux.vnet.ibm.com>,
+	Ashley Lai <ashley@ashleylai.com>,
+	Peter Huewe <peterhuewe@gmx.de>,
+	Rajiv Andrade <mail@srajiv.net>,
+	Marcel Selhorst <tpmdd@selhorst.net>,
+	Sirrix AG <tpmdd@sirrix.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	David Airlie <airlied@linux.ie>, Jiri Kosina <jkosina@suse.cz>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>
+Subject: [RFC Patch v1 04/13] ACPI, PCI: replace open-coded _DSM specific code with helper functions
+Date: Wed, 18 Dec 2013 14:58:12 +0800
+Message-Id: <1387349901-3391-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1387349901-3391-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1387349901-3391-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Richard Zhu <r65037@freescale.com>
+Use helper functions to simplify _DSM related code in pci-label driver.
+Also enforce more strict checks on objects returned by _DSM method.
 
-- LTSSM shouldn't be set once in assert_core_reset
-- Move peripheral reset just before LTSSM start
-
-From: Richard Zhu <r65037@freescale.com>
-Signed-off-by: Richard Zhu <r65037@freescale.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/host/pci-imx6.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/pci/pci-label.c |  121 +++++++++++++----------------------------------
+ 1 file changed, 34 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index a945e74..7985272 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -220,18 +220,9 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
- 
--	/* Some boards don't have PCIe reset GPIO. */
--	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
--		gpio_set_value(imx6_pcie->reset_gpio, 0);
--		msleep(100);
--		gpio_set_value(imx6_pcie->reset_gpio, 1);
--	}
--
- 	return 0;
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index f6e01a5..f12dcd1 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -195,80 +195,58 @@ enum acpi_attr_enum {
+ static void dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
+ {
+ 	int len;
+-	len = utf16s_to_utf8s((const wchar_t *)obj->
+-			      package.elements[1].string.pointer,
+-			      obj->package.elements[1].string.length,
++	len = utf16s_to_utf8s((const wchar_t *)obj->string.pointer,
++			      obj->string.length,
+ 			      UTF16_LITTLE_ENDIAN,
+ 			      buf, PAGE_SIZE);
+ 	buf[len] = '\n';
  }
  
-@@ -275,6 +266,12 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	/* allow the clocks to stabilize */
- 	usleep_range(200, 500);
+ static int
+-dsm_get_label(acpi_handle handle, int func,
+-	      struct acpi_buffer *output,
+-	      char *buf, enum acpi_attr_enum attribute)
++dsm_get_label(struct device *dev, char *buf, enum acpi_attr_enum attr)
+ {
+-	struct acpi_object_list input;
+-	union acpi_object params[4];
+-	union acpi_object *obj;
+-	int len = 0;
+-
+-	int err;
+-
+-	input.count = 4;
+-	input.pointer = params;
+-	params[0].type = ACPI_TYPE_BUFFER;
+-	params[0].buffer.length = sizeof(device_label_dsm_uuid);
+-	params[0].buffer.pointer = (char *)device_label_dsm_uuid;
+-	params[1].type = ACPI_TYPE_INTEGER;
+-	params[1].integer.value = 0x02;
+-	params[2].type = ACPI_TYPE_INTEGER;
+-	params[2].integer.value = func;
+-	params[3].type = ACPI_TYPE_PACKAGE;
+-	params[3].package.count = 0;
+-	params[3].package.elements = NULL;
+-
+-	err = acpi_evaluate_object(handle, "_DSM", &input, output);
+-	if (err)
++	acpi_handle handle;
++	union acpi_object *obj, *tmp;
++	int len = -1;
++
++	handle = ACPI_HANDLE(dev);
++	if (!handle)
+ 		return -1;
  
-+	/* Some boards don't have PCIe reset GPIO. */
-+	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-+		gpio_set_value(imx6_pcie->reset_gpio, 0);
-+		msleep(100);
-+		gpio_set_value(imx6_pcie->reset_gpio, 1);
-+	}
- 	return 0;
+-	obj = (union acpi_object *)output->pointer;
+-	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
+-		len = obj->package.elements[0].integer.value;
++	obj = acpi_evaluate_dsm(handle, device_label_dsm_uuid, 0x2,
++				DEVICE_LABEL_DSM, NULL);
++	if (!obj)
++		return -1;
++
++	tmp = obj->package.elements;
++	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2 &&
++	    tmp[0].type == ACPI_TYPE_INTEGER &&
++	    tmp[1].type == ACPI_TYPE_STRING) {
++		len = tmp[0].integer.value;
+ 		if (buf) {
+-			if (attribute == ACPI_ATTR_INDEX_SHOW)
++			/*
++			 * This second string element is optional even when
++			 * this _DSM is implemented; when not implemented,
++			 * this entry must return a null string.
++			 */
++			if (attr == ACPI_ATTR_INDEX_SHOW)
+ 				scnprintf(buf, PAGE_SIZE, "%llu\n",
+-				obj->package.elements[0].integer.value);
+-			else if (attribute == ACPI_ATTR_LABEL_SHOW)
+-				dsm_label_utf16s_to_utf8s(obj, buf);
+-			kfree(output->pointer);
+-			return strlen(buf);
++				tmp->integer.value);
++			else if (attr == ACPI_ATTR_LABEL_SHOW)
++				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
++			len = strlen(buf) > 0 ? strlen(buf) : -1;
+ 		}
+-		kfree(output->pointer);
+-		return len;
+ 	}
  
- err_pcie_axi:
+-	kfree(output->pointer);
++	ACPI_FREE(obj);
+ 
+-	return -1;
++	return len;
+ }
+ 
+ static bool
+ device_has_dsm(struct device *dev)
+ {
+-	acpi_handle handle;
+-	struct acpi_buffer output = {ACPI_ALLOCATE_BUFFER, NULL};
+-
+-	handle = ACPI_HANDLE(dev);
+-
+-	if (!handle)
+-		return FALSE;
+-
+-	if (dsm_get_label(handle, DEVICE_LABEL_DSM, &output, NULL,
+-			  ACPI_ATTR_NONE) > 0)
+-		return TRUE;
+-
+-	return FALSE;
++	return dsm_get_label(dev, NULL, ACPI_ATTR_NONE) > 0;
+ }
+ 
+ static umode_t
+@@ -287,44 +265,13 @@ acpi_index_string_exist(struct kobject *kobj, struct attribute *attr, int n)
+ static ssize_t
+ acpilabel_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+-	struct acpi_buffer output = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_handle handle;
+-	int length;
+-
+-	handle = ACPI_HANDLE(dev);
+-
+-	if (!handle)
+-		return -1;
+-
+-	length = dsm_get_label(handle, DEVICE_LABEL_DSM,
+-			       &output, buf, ACPI_ATTR_LABEL_SHOW);
+-
+-	if (length < 1)
+-		return -1;
+-
+-	return length;
++	return dsm_get_label(dev, buf, ACPI_ATTR_LABEL_SHOW);
+ }
+ 
+ static ssize_t
+ acpiindex_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+-	struct acpi_buffer output = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_handle handle;
+-	int length;
+-
+-	handle = ACPI_HANDLE(dev);
+-
+-	if (!handle)
+-		return -1;
+-
+-	length = dsm_get_label(handle, DEVICE_LABEL_DSM,
+-			       &output, buf, ACPI_ATTR_INDEX_SHOW);
+-
+-	if (length < 0)
+-		return -1;
+-
+-	return length;
+-
++	return dsm_get_label(dev, buf, ACPI_ATTR_INDEX_SHOW);
+ }
+ 
+ static struct device_attribute acpi_attr_label = {
 -- 
-1.8.4.3
+1.7.10.4
 
