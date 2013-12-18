@@ -1,146 +1,209 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <529EC0FC.1010400@jp.fujitsu.com>
-Date: Wed, 4 Dec 2013 14:43:24 +0900
-From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:43554 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755090Ab3LRPti convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 10:49:38 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so10447612ieb.36
+        for <linux-pci@vger.kernel.org>; Wed, 18 Dec 2013 07:49:35 -0800 (PST)
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
+In-Reply-To: <CANq1E4SqmFiOJx7o9fNq=s-RGqv-Gz8fb3mUMs1s-mD3JkdSGA@mail.gmail.com>
+References: <20131125205441.5046e0cb@neptune.home>
+	<20131130145222.292c3f9f@neptune.home>
+	<CANq1E4SqmFiOJx7o9fNq=s-RGqv-Gz8fb3mUMs1s-mD3JkdSGA@mail.gmail.com>
+Date: Wed, 18 Dec 2013 16:43:59 +0100
+Message-ID: <CANq1E4TZOu9D_uZQATK3LsyGjV8jBW17j4_jJ9QvP1T_R7mBkQ@mail.gmail.com>
+Subject: Re: [RFC patch v2] x86: Improve boot_vga/vga_default_device() for EFI
+From: David Herrmann <dh.herrmann@gmail.com>
+To: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>
+Cc: "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	Dave Airlie <airlied@linux.ie>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Lv Zheng <lv.zheng@intel.com>
-Subject: Re: [PATCH 7/10] ACPI / hotplug: Move container-specific code out
- of the core
-References: <1421028.Rsfpmhnym3@vostro.rjw.lan> <1554480.uCR6qUxJk9@vostro.rjw.lan> <529D4600.6040601@jp.fujitsu.com> <81535269.SKoBMiGyoU@vostro.rjw.lan>
-In-Reply-To: <81535269.SKoBMiGyoU@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+	Peter Jones <pjones@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Matthew Garrett <mjg@redhat.com>, matt.fleming@intel.com,
+	"H. Peter Anvin" <hpa@zytor.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2013/12/03 22:15), Rafael J. Wysocki wrote:
-> On Tuesday, December 03, 2013 11:46:24 AM Yasuaki Ishimatsu wrote:
->> (2013/11/29 22:08), Rafael J. Wysocki wrote:
->>> On Friday, November 29, 2013 11:36:55 AM Yasuaki Ishimatsu wrote:
->>>> Hi Rafael,
->>>
->>> Hi,
->>>
->>>> Replying to this mail may be wrong.
->>>
->>> OK, so this particular patch doesn't break things any more?
->>
->> Yes.
->>
->>>
->>>> Do you remember following your patch?
->>>> http://lkml.org/lkml/2013/2/23/97
->>>>
->>>> I want to add autoeject variable in acpi_hotplug_profile structure and
->>>> set autoecjet of container device "false".
->>>
->>> Then after the series the $subject patch belongs to it will work almost the
->>> same way as /sys/firmware/acpi/container/enabled (hot add will still work after
->>> patch [4/10] if "enabled" is 0), but only for containers.
->>>
->>>> Currently, I have a problem on ejecting container device. Since linux-3.12,
->>>> container device is removed by acpi_scan_hot_remove.
->>>>
->>>> I think this has two problems.
->>>>
->>>>      1. easily fail
->>>>         My container device has CPU device and Memory device, and maximum size of
->>>>         memory is 3Tbyte. In my environment, hot removing container device fails
->>>>         on offlining memory if memory is used by application.
->>>>         I think if offlininig memory, we must retly to offline memory several
->>>>         times.
->>>
->>> Yes, that's correct.  But then you can try to offline the memory upfront
->>> and only remove the container after that has been successful.
->>>
->>>>      2. cannot work with userland's application
->>>>         Hot removing CPU and memory on container device, we need take care of
->>>>         userland application. Before linux-3.12, container device just notifies
->>>>         KOBJ_OFFLINE to udev. So by using udev, if application binds to removed
->>>>         CPU or node, applications can change them before hot removing container
->>>>         device.
->>>>         Currently, KOBJ_OFFLINE is notified to udev. But acpi_scan_hot_remove
->>>>         also runs simultaneously for hot removing container device. So when
->>>>         applications runs for corresponding to the deletion of the devices,
->>>>         the devices may have been deleted.
->>>
->>
->>> So the expectation is that the container will refuse to offline, but instead
->>> it will emit KOBJ_OFFLINE so that user space can do some cleanup and offline
->>> it through the "eject" attribute, right?
->>
->> Yes, that's right.
->>
->>>
->>>> I don't know what devices are on hotpluggable conatainer device of other
->>>> vendors. At least, my container device cannot be hot removed correctly.
->>>> Then I want to add autoeject variable in acpi_hotplug_profile so that user
->>>> can change the parameter to "true" or "false".
->>>
->>> I have a different idea.
->>>
->>> Why don't we create a bus type for containers in analogy with CPUs and memory
->>> and make it support offline.  Then, the container scan handler will create a
->>> "physical" container device under that bus type and the new bus type code will
->>> implement the logic you need (that is, it will have a sysfs flag that will
->>> cause the offline to fail emitting a uevent of some sort if set and will allow
->>> the offline to happen when unset).  That "physical" container device will go
->>> away (again, via the container scan handler) during container removal.
->>>
->>
->>> The eject work flow can be:
->>>     (1) an eject event occurs,
->>>     (2) the container "physical" device fails offline in acpi_scan_hot_remove()
->>>         emmitting, say, KOBJ_CHANGE for the "physical" device,
->>>     (3) user space notices the KOBJ_CHANGE and does the cleanup as needed,
->>>     (4) user space changes the "physical" container device flag controlling
->>>         offline to 0,
->>>     (5) user space uses the sysfs "eject" attribute of the ACPI container object
->>>         to finally eject the container,
->>>     (6) the offline in acpi_scan_hot_remove() is now successful, because the
->>>         flag controlling it has been set to 0 in step (4),
->>>     (7) the "physical" container device goes away before executing _EJ0,
->>>     (8) the container is ejected.
->>>
->>> Of course, if the flag controlling container offline is 0 to start with, step
->>> (6) will now occur directly after (1), so whoever wants containers to be
->>> hot-removed automatically may just clear that flag for all of them on boot.
->>>
->>> How does that sound?
->>
->>
->> The above ideas are almost O.K. I want kernel to notify user space of KOBJ_OFFLINE.
->> Even if user space catches "KOBJ_CHANGE", user doesn't know whether the notification
->> is offline or not.
+Hi
+
+On Wed, Dec 18, 2013 at 4:38 PM, David Herrmann <dh.herrmann@gmail.com> wrote:
+> Hi
 >
-
-> It is easy to figure out, though.  Since the KOBJ_CHANGE will be emitted for
-> container devices only in that situation, user space can see that (1) it is
-> from a container and (2) it is KOBJ_CHANGE, so it must mean "container offline
-> has been attempted".
+> On Sat, Nov 30, 2013 at 2:52 PM, Bruno Prémont
+> <bonbons@linux-vserver.org> wrote:
+>> With commit b4aa0163056b6c70029b6e8619ce07c274351f42 Matthew Garret
+>> introduced a efifb vga_default_device() so that EFI systems that do not
+>> load shadow VBIOS or setup VGA get proper value for boot_vga PCI sysfs
+>> attribute on the corresponding PCI device.
+>>
+>> Xorg is refusing to detect devices when boot_vga=0 which is the case
+>> on some EFI system (e.g. MacBookAir2,1). Xorg detects the GPU and finds
+>> the dri device but then bails out with "no devices detected".
+>>
+>> With introduction of sysfb/simplefb/simpledrm efifb is getting obsolete
+>> while having native drivers for the GPU also makes selecting sysfb/efifb
+>> optional.
+>>
+>> Remove the efifb implementation of vga_default_device() and initialize
+>> vgaarb's vga_default_device() with the PCI GPU that matches boot
+>> screen_info in x86's pci_fixup_video().
+>>
+>> Notes:
+>> - Other architectures with PCI GPU might need a similar fixup.
+>> - If CONFIG_VGA_ARB is unset vga_default_device() is only available
+>>   as a stub that returns NULL, making this adjustment insufficient.
+>>   Unsetting CONFIG_VGA_ARB requires CONFIG_EXPERT=y though.
+>>
+>> Signed-off-by: Bruno Prémont <bonbons@linux-vserver.org>
+>> ---
+>>  arch/x86/include/asm/vga.h |  6 ------
+>>  arch/x86/pci/fixup.c       | 21 +++++++++++++++++++++
+>>  drivers/video/efifb.c      | 38 --------------------------------------
+>>  3 files changed, 21 insertions(+), 44 deletions(-)
+>>
+>> diff --git a/arch/x86/include/asm/vga.h b/arch/x86/include/asm/vga.h
+>> index 44282fb..c4b9dc2 100644
+>> --- a/arch/x86/include/asm/vga.h
+>> +++ b/arch/x86/include/asm/vga.h
+>> @@ -17,10 +17,4 @@
+>>  #define vga_readb(x) (*(x))
+>>  #define vga_writeb(x, y) (*(y) = (x))
+>>
+>> -#ifdef CONFIG_FB_EFI
+>> -#define __ARCH_HAS_VGA_DEFAULT_DEVICE
+>> -extern struct pci_dev *vga_default_device(void);
+>> -extern void vga_set_default_device(struct pci_dev *pdev);
+>> -#endif
+>> -
+>>  #endif /* _ASM_X86_VGA_H */
+>> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+>> index f5809fa..440343e 100644
+>> --- a/arch/x86/pci/fixup.c
+>> +++ b/arch/x86/pci/fixup.c
+>> @@ -6,6 +6,7 @@
+>>  #include <linux/dmi.h>
+>>  #include <linux/pci.h>
+>>  #include <linux/init.h>
+>> +#include <linux/screen_info.h>
+>>  #include <linux/vgaarb.h>
+>>  #include <asm/pci_x86.h>
+>>
+>> @@ -323,6 +324,26 @@ static void pci_fixup_video(struct pci_dev *pdev)
+>>         struct pci_bus *bus;
+>>         u16 config;
+>>
+>> +       if (!vga_default_device()) {
+>> +               resource_size_t start, end;
+>> +               int i;
+>> +
+>> +               for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+>> +                       if (!(pci_resource_flags(pdev, i) & IORESOURCE_MEM))
+>> +                               continue;
+>> +
+>> +                       start = pci_resource_start(pdev, i);
+>> +                       end  = pci_resource_end(pdev, i);
+>> +
+>> +                       if (!start || !end)
+>> +                               continue;
+>> +
+>> +                       if (screen_info.lfb_base >= start &&
+>> +                               (screen_info.lfb_base + screen_info.lfb_size) < end)
 >
-> My concern with using KOBJ_OFFLINE for that is that device_offline() emits it
-> too on success and it may be easily confused with the one emitted on failure
-> for containers.
-
-I have no objection.
-
-Thanks,
-Yasuaki Ishimatsu
-
+> pci_resource_end() returns the address of the end, not the length, so
+> we have a double off-by-one error here, don't we?
+> Shouldn't this be:
+>                                (screen_info.lfb_base +
+> screen_info.lfb_size) <= end + 1)
 >
-> Thanks,
-> Rafael
+> Oh, and lfb_size is in multiples of 0xffff, so it actually needs to be:
+>                                (screen_info.lfb_base +
+> ((u64)screen_info.lfb_size << 16)) <= end + 1)
+
+Oh, just remembered that this is only done for VESA, not EFI.
+Awesome.. so the "<< 16" shift is not needed.
+
+David
+
+> I know, it's copy/paste, but we could still fix it here.
 >
-
-
+>> +                               vga_set_default_device(pdev);
+>> +               }
+>> +       }
+>> +
+>>         /* Is VGA routed to us? */
+>>         bus = pdev->bus;
+>>         while (bus) {
+>> diff --git a/drivers/video/efifb.c b/drivers/video/efifb.c
+>> index 7f9ff75..fb3fb50 100644
+>> --- a/drivers/video/efifb.c
+>> +++ b/drivers/video/efifb.c
+>> @@ -19,8 +19,6 @@
+>>
+>>  static bool request_mem_succeeded = false;
+>>
+>> -static struct pci_dev *default_vga;
+>> -
+>>  static struct fb_var_screeninfo efifb_defined = {
+>>         .activate               = FB_ACTIVATE_NOW,
+>>         .height                 = -1,
+>> @@ -85,18 +83,6 @@ static struct fb_ops efifb_ops = {
+>>         .fb_imageblit   = cfb_imageblit,
+>>  };
+>>
+>> -struct pci_dev *vga_default_device(void)
+>> -{
+>> -       return default_vga;
+>> -}
+>> -
+>> -EXPORT_SYMBOL_GPL(vga_default_device);
+>> -
+>> -void vga_set_default_device(struct pci_dev *pdev)
+>> -{
+>> -       default_vga = pdev;
+>> -}
+>> -
+>>  static int efifb_setup(char *options)
+>>  {
+>>         char *this_opt;
+>> @@ -127,30 +113,6 @@ static int efifb_setup(char *options)
+>>                 }
+>>         }
+>
+> I wonder whether we should move the efifb_setup() argument parsing to
+> x86/kernel/sysfb.c now. Because currently we break simplefb-conversion
+> and the vga_boot flag if we keep it here.
+>
+> Otherwise, the patch looks good to me.
+> Thanks
+> David
+>
+>>
+>> -       for_each_pci_dev(dev) {
+>> -               int i;
+>> -
+>> -               if ((dev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+>> -                       continue;
+>> -
+>> -               for (i=0; i < DEVICE_COUNT_RESOURCE; i++) {
+>> -                       resource_size_t start, end;
+>> -
+>> -                       if (!(pci_resource_flags(dev, i) & IORESOURCE_MEM))
+>> -                               continue;
+>> -
+>> -                       start = pci_resource_start(dev, i);
+>> -                       end  = pci_resource_end(dev, i);
+>> -
+>> -                       if (!start || !end)
+>> -                               continue;
+>> -
+>> -                       if (screen_info.lfb_base >= start &&
+>> -                           (screen_info.lfb_base + screen_info.lfb_size) < end)
+>> -                               default_vga = dev;
+>> -               }
+>> -       }
+>> -
+>>         return 0;
+>>  }
+>>
