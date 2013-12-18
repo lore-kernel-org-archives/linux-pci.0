@@ -1,62 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:38361 "EHLO SMTP.CITRIX.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755369Ab3LDKsi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 4 Dec 2013 05:48:38 -0500
-Date: Wed, 4 Dec 2013 10:48:17 +0000
-From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: <stefano.stabellini@eu.citrix.com>, <ian.campbell@citrix.com>,
-	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
-	<boris.ostrovsky@oracle.com>, <david.vrabel@citrix.com>,
-	<leosilva@linux.vnet.ibm.com>, <ashley@ashleylai.com>,
-	<peterhuewe@gmx.de>, <mail@srajiv.net>, <tpmdd@selhorst.net>,
-	<tpmdd@sirrix.com>, <dmitry.torokhov@gmail.com>,
-	<bhelgaas@google.com>, <plagnioj@jcrosoft.com>,
-	<tomi.valkeinen@ti.com>, <tpmdd-devel@lists.sourceforge.net>,
-	<linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-fbdev@vger.kernel.org>
-Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
-In-Reply-To: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
-Message-ID: <alpine.DEB.2.02.1312041047200.7093@kaball.uk.xensource.com>
-References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
+Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:6061 "EHLO
+	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750975Ab3LRGRg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 01:17:36 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
+ during removal
+Date: Wed, 18 Dec 2013 06:17:28 +0000
+Message-ID: <0c18891f0a754978a3015c9b3b50df93@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <52B0AEAD.6050604@gmail.com>	<20131218010207.GC15119@google.com>
+	<41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
+ <CAE9FiQVGQ8THfMBfEhaOnjbrdaRn+5CRoUoGZuVvRcZcAKqW_A@mail.gmail.com>
+In-Reply-To: <CAE9FiQVGQ8THfMBfEhaOnjbrdaRn+5CRoUoGZuVvRcZcAKqW_A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 3 Dec 2013, Konrad Rzeszutek Wilk wrote:
-> diff --git a/arch/x86/xen/platform-pci-unplug.c b/arch/x86/xen/platform-pci-unplug.c
-> index 0a78524..087dfeb 100644
-> --- a/arch/x86/xen/platform-pci-unplug.c
-> +++ b/arch/x86/xen/platform-pci-unplug.c
-> @@ -69,6 +69,24 @@ static int check_platform_magic(void)
->  	return 0;
->  }
->  
-> +bool xen_has_pv_devices(void)
-> +{
-> +	if (!xen_domain())
-> +		return false;
-> +
-> +	if (xen_hvm_domain()) {
-> +		/* User requested no unplug, so no PV drivers. */
-> +		if (xen_emul_unplug & XEN_UNPLUG_NEVER)
-> +			return false;
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IHlobHUua2VybmVsQGdtYWls
+LmNvbSBbbWFpbHRvOnlobHUua2VybmVsQGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mDQo+IA0KPiBP
+biBUdWUsIERlYyAxNywgMjAxMyBhdCA3OjIwIFBNLCBSYWphdCBKYWluIDxyYWphdGphaW5AanVu
+aXBlci5uZXQ+DQo+IHdyb3RlOg0KPiA+DQo+ID4gQWN0dWFsbHkgSSBkaWQgbm90IHVuZGVyc3Rh
+bmQgdGhlIG9yaWdpbmFsIHByb2JsZW0gYW5kIHRoZSBzb2x1dGlvbiBpbg0KPiA+IHRoZSBmaXJz
+dCBwbGFjZSAoc28gSSBhbHNvIGRvIG5vdCB1bmRlcnN0YW5kIGhvdyBtaWdodCBkaXNhYmxpbmcg
+b2YNCj4gPiBwcmVzZW5jZSBkZXRlY3Qgbm90aWZpY2F0aW9uIGhlbHApLiBJZiB5b3UgY2FuIGdp
+dmUgbW9yZSBkZXRhaWxzIG9uDQo+ID4gdGhlIG9yaWdpbmFsIHByb2JsZW0gdGhhdCBzaGFsbCBi
+ZSBncmVhdC4gSGVyZSBpcyB3aGF0IEkgdW5kZXJzdG9vZA0KPiBmcm9tIHRoZSBjb21taXQgbG9n
+Og0KPiA+DQo+ID4gVGhlIGJlbGlldmUgdGhlIEhXIGxvb2tzIGxpa2UgdGhpczoNCj4gPg0KPiA+
+IFBDSWUgcG9ydCA8LS0tLT4gUmVwZWF0ZXIgPC0tLS0+IERldmljZS4NCj4gPg0KPiA+IEFuIGlu
+IGFkZGl0aW9uIHRoZXJlIGlzIHRoZSBwcmVzZW5jZSBkZXRlY3QgcGluIHRoYXQgaXMgY29ubmVj
+dGVkDQo+ID4gZGlyZWN0bHkgZnJvbSBUaGUgcG9ydCB0byB0aGUgZGV2aWNlLiBOb3csIHdoZW4g
+dGhlIGRldmljZSBpcyBwbHVnZ2VkDQo+ID4gb3V0LCB0aGUgcGluIGluZGljYXRlcyBObyBwcmVz
+ZW5jZS4gQnV0IGFyZSB5b3Ugc2F5aW5nIHRoZSBQQ0llIGxpbmsNCj4gZnJvbSBwb3J0IHRvIHJl
+cGVhdGVyIGlzIHN0aWxsIHVwPw0KPiANCj4gQWZ0ZXIgdGhlIGNhcmQgaXMgcmVtb3ZlZCBmcm9t
+IHRoZSBzbG90Lg0KPiANCj4gUENJZSBwb3J0IHRyeSB0byByZXRyYWluIHRoZSBsaW5rIHRvIHJl
+cGVhdGVyLCBsaWtlIHRoZSBsaW5rIHdpbGwga2VlcA0KPiB1cCBhbmQgZG93bi4NCg0KSSBzdGls
+bCBkaWQgbm90IHVuZGVyc3RhbmQgdGhlIHdoeSB3b3VsZCB0aGUgUENJZSBwb3J0IHRyeSB0byBk
+byBzby4gQXJlIHlvdQ0KU2F5aW5nIHRoZSByZXBlYXRlciBrZWVwcyBvbiBmbGFwcGluZyB0aGUg
+bGluaz8gTmV2ZXJ0aGVsZXNzLCBJIGFzc3VtZSBpdCBpcw0KZHVlIHRvIHNvbWUgcmVwZWF0ZXIg
+YnVnICh0aGF0IHlvdSBtZW50aW9uIGJlbG93KSB0aGF0IEkgZG8gbm90IG5lZWQgdG8NCnVuZGVy
+c3RhbmQuDQoNCj4gDQo+IHNvIHRoZSBwcmVzZW5jZSBiaXQgd2lsbCBrZWVwIHJlcG9ydCBvbmUg
+Y2FyZCBwcmVzZW50IGFuZCBub3QgcHJlc2VudC4NCj4gdGhhdCBwcmVzZW50IGJpdCBzaG91bGQg
+YmUgT1Igb2YgaW5iYW5kIGlucHV0IGFuZCBvdXRiYW5kIGlucHV0Lg0KPiBXZSBjaGVjayB0aGUg
+b3V0YmFuZCBpbnB1dCBhbmQgaXQgYWx3YXlzIHJlcG9ydCBjb3JyZWN0bHkuDQoNCkp1c3QgYSBz
+dWdnZXN0aW9uIGZvciBhIHdvcmsgYXJvdW5kLiBJIGNoZWNrZWQgdGhlIG1hbnVhbCBvZiB0aGUg
+UENJZSBzd2l0Y2gNCndlIHVzZSBpbiBvdXIgc3lzdGVtIChJRFQgODlIUEVTNDhIMTJHMiksIGFu
+ZCBpdCBpcyBwb3NzaWJsZSBhdCBsZWFzdCBpbiB0aGlzDQpzd2l0Y2ggdG8gY29udHJvbCB3aGV0
+aGVyIG9yIG5vdCBpbi1iYW5kIGlzIGNvbnNpZGVyZWQuIEFuIGludGVybmFsIGNvbmZpZ3VyYXRp
+b24NCnJlZ2lzdGVyIHNheXM6DQoNClByZXNlbmNlIERldGVjdCBDb250cm9sLiBUaGlzIGZpZWxk
+IGNvbnRyb2xzIHRoZSBtYW5uZXIgaW4gd2hpY2gNCnByZXNlbmNlIG9mIGFuIGFkYXB0ZXIgaW4g
+YSBzbG90IGlzIHJlcG9ydGVkIHRvIHRoZSBob3QtcGx1ZyBjb250cm9sbGVyDQphc3NvY2lhdGVk
+IHdpdGggYSBkb3duc3RyZWFtIHN3aXRjaCBwb3J0Lg0KMHgwIC0gKGJvdGgpIFByZXNlbmNlIG9m
+IGFuIGFkYXB0ZXIgaW4gdGhlIHNsb3QgaXMgcmVwb3J0ZWQgYXMgdGhlDQpsb2dpY2FsIOKAnE9S
+4oCdIG9mIHRoZSByZWNlaXZlciBkZXRlY3QgbWVjaGFuaXNtIGFuZCB0aGUgaG90cGx1Zw0KcHJl
+c2VuY2UgZGV0ZWN0IGlucHV0IChQeFBETikuDQoweDEgLSAoc2lnbmFsKSBQcmVzZW5jZSBvZiBh
+biBhZGFwdGVyIGluIHRoZSBzbG90IGlzIHJlcG9ydGVkIGFzIHRoZQ0Kc3RhdGUgb2YgdGhlIGhv
+dC1wbHVnIHByZXNlbmNlIGRldGVjdCBpbnB1dCAoUHhQRE4pLg0KMHgyIC0gKGFsd2F5cykgV2hl
+biBzZWxlY3RlZCwgdGhpcyBtb2RlIGFsd2F5cyBpbmZvcm1zIHRoZSBob3RwbHVnDQpjb250cm9s
+bGVyIHRoYXQgYW4gYWRhcHRlciBpcyBwcmVzZW50Lg0KMHgzIC0gKG5ldmVyKSBXaGVuIHNlbGVj
+dGVkLCB0aGlzIG1vZGUgYWx3YXlzIGluZm9ybXMgdGhlIGhvdHBsdWcNCmNvbnRyb2xsZXIgdGhh
+dCBhbiBhZGFwdGVyIGlzIG5vdCBwcmVzZW50Lg0KDQpNYXkgYmUgc29tZSBzaW1pbGFyIGNvbmZp
+ZyBtYXkgYmUgcHJlc2VudCBpbiB0aGUgc3dpdGNoIG9yIHRoZSBDUFUgdGhhdCB5b3UgdXNlLg0K
+DQpKdXN0IGEgcmFuZG9tIHRob3VnaHQuDQoNCj4gDQo+IEFjY29yZGluZyB0byBIVyBndXlzIGFu
+ZCBJbnRlbCwgdGhhdCBzaG91bGQgYmUgYnVnIG9mIHJlcGVhdGVyLg0KDQpXZWxsLCBpbiB0aGF0
+IGNhc2UgSSBkb3VidCBpZiB0aGUgcGF0Y2ggd2lsbCBzb2x2ZSB0aGUgcHJvYmxlbS4gSSB0aGlu
+aw0KTW9zdCBsaWtlbHkgdGhlICJjYXJkIHByZXNlbnQgLyBub3QgcHJlc2VudCIgbWVzc2FnZXMg
+bWF5IGJlIHJlcGxhY2VkDQpCeSAibGluay11cCAvIGxpbmstZG93biIgbWVzc2FnZXMuIEJ1dCBJ
+J2QgYXBwcmVjaWF0ZSB5b3VyIHRlc3RpbmcuDQoNClRoYW5rcywNCg0KUmFqYXQNCg0KPiANCj4g
+RGlzYWJsZSB0aGUgbGluayBmcm9tIHBjaWUgdG8gcmVwZWF0ZXIsIGxpa2VseSB0byByZXNldCB0
+aGUgcmVwZWF0ZXIuLi4uDQo+IA0KPiBUaGFua3MNCj4gDQo+IFlpbmdoYWkNCj4gDQoNCg==
 
-Considering that if (xen_emul_unplug & XEN_UNPLUG_NEVER) we never set
-xen_platform_pci_unplug, this check is redundant.
-
-
-> +		/* And user has xen_platform_pci=0 set in guest config as
-> +		 * driver did not modify the value. */
-> +		if (!xen_platform_pci_unplug)
-> +			return false;
-> +	}
-> +	return true;
-> +}
-> +EXPORT_SYMBOL_GPL(xen_has_pv_devices);
-> +
->  void xen_unplug_emulated_devices(void)
->  {
->  	int r;
