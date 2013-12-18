@@ -1,82 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:50148 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018Ab3LIXZ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 18:25:58 -0500
-Received: by mail-qa0-f49.google.com with SMTP id ii20so3128380qab.8
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 15:25:58 -0800 (PST)
-Date: Mon, 9 Dec 2013 16:25:54 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: Re: [PATCH] pci: pci-rcar-gen2: Add runtime PM support
-Message-ID: <20131209232554.GC4699@google.com>
-References: <1386174815-4647-1-git-send-email-valentine.barshak@cogentembedded.com>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:63640 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235Ab3LRGuW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 01:50:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1386174815-4647-1-git-send-email-valentine.barshak@cogentembedded.com>
+In-Reply-To: <0c18891f0a754978a3015c9b3b50df93@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <52B0AEAD.6050604@gmail.com>
+	<20131218010207.GC15119@google.com>
+	<41c1723da4454cdca6503418746a5ca7@DM2PR05MB671.namprd05.prod.outlook.com>
+	<CAE9FiQVGQ8THfMBfEhaOnjbrdaRn+5CRoUoGZuVvRcZcAKqW_A@mail.gmail.com>
+	<0c18891f0a754978a3015c9b3b50df93@DM2PR05MB671.namprd05.prod.outlook.com>
+Date: Tue, 17 Dec 2013 22:50:21 -0800
+Message-ID: <CAE9FiQXkgLw6y2GmVvRStOAuqqOY=kTypLKY6YcvOhD2zOhdsw@mail.gmail.com>
+Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently, during removal
+From: Yinghai Lu <yinghai@kernel.org>
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: multipart/mixed; boundary=e89a8f5038e278ebc504edc97532
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 04, 2013 at 08:33:35PM +0400, Valentine Barshak wrote:
-> If runtime PM is enabled in the kernel config, the PCI clocks
-> are not forced on at start-up, and thus, are never enabled.
-> Use pm_runtime_get_sync to enable the clocks.
-> 
-> While at it, use dev_info instead of pr_info since now we have
-> the device pointer available in the PCI setup callback.
-> 
-> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+--e89a8f5038e278ebc504edc97532
+Content-Type: text/plain; charset=ISO-8859-1
 
-Applied to my pci/host-rcar branch for v3.14, thanks!
+On Tue, Dec 17, 2013 at 10:17 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+> Well, in that case I doubt if the patch will solve the problem. I think
+> Most likely the "card present / not present" messages may be replaced
+> By "link-up / link-down" messages. But I'd appreciate your testing.
 
-Bjorn
+I did have a debug patch at that time to report link status change.
+And it did report link up and link down.
 
-> ---
->  drivers/pci/host/pci-rcar-gen2.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> index cbaa5c4..f74228f 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -17,6 +17,7 @@
->  #include <linux/module.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
-> +#include <linux/pm_runtime.h>
->  #include <linux/slab.h>
->  
->  /* AHB-PCI Bridge PCI communication registers */
-> @@ -77,6 +78,7 @@
->  #define RCAR_PCI_NR_CONTROLLERS		3
->  
->  struct rcar_pci_priv {
-> +	struct device *dev;
->  	void __iomem *reg;
->  	struct resource io_res;
->  	struct resource mem_res;
-> @@ -169,8 +171,11 @@ static int __init rcar_pci_setup(int nr, struct pci_sys_data *sys)
->  	void __iomem *reg = priv->reg;
->  	u32 val;
->  
-> +	pm_runtime_enable(priv->dev);
-> +	pm_runtime_get_sync(priv->dev);
-> +
->  	val = ioread32(reg + RCAR_PCI_UNIT_REV_REG);
-> -	pr_info("PCI: bus%u revision %x\n", sys->busnr, val);
-> +	dev_info(priv->dev, "PCI: bus%u revision %x\n", sys->busnr, val);
->  
->  	/* Disable Direct Power Down State and assert reset */
->  	val = ioread32(reg + RCAR_USBCTR_REG) & ~RCAR_USBCTR_DIRPD;
-> @@ -301,6 +306,7 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
->  
->  	priv->irq = platform_get_irq(pdev, 0);
->  	priv->reg = reg;
-> +	priv->dev = &pdev->dev;
->  
->  	return rcar_pci_add_controller(priv);
->  }
-> -- 
-> 1.8.3.1
-> 
+Thanks
+
+Yinghai
+
+--e89a8f5038e278ebc504edc97532
+Content-Type: text/x-patch; charset=US-ASCII; name="link_change_report.patch"
+Content-Disposition: attachment; filename="link_change_report.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hpc7zn8p0
+
+U3ViamVjdDogW1BBVENIXSBQQ0ksIHBjaWVocDogUmVwb3J0IHBjaWUgbGluayBzdGF0ZSBjaGFu
+Z2UKClRvIHNlZSBpZiB0aGVyZSBpcyBzb21lIGxpbmsgc3RhdGUgY2hhbmdlLgoKU2lnbmVkLW9m
+Zi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9o
+b3RwbHVnL3BjaWVocF9ocGMuYyB8ICAgMjkgKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0K
+IDEgZmlsZSBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKSW5kZXg6
+IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYwo9PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
+LSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYworKysgbGlu
+dXgtMi42L2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jCkBAIC02MDMsNiArNjAzLDI1
+IEBAIGludCBwY2llaHBfcG93ZXJfb2ZmX3Nsb3Qoc3RydWN0IHNsb3QgKgogCXJldHVybiAwOwog
+fQogCitzdGF0aWMgdTggcGNpZWhwX2hhbmRsZV9saW5rc3RhdGVfY2hhbmdlKHN0cnVjdCBzbG90
+ICpzbG90KQoreworCXN0cnVjdCBjb250cm9sbGVyICpjdHJsID0gc2xvdC0+Y3RybDsKKwl1MTYg
+bG5rX3N0YXR1czsKKwlpbnQgcmV0dmFsOworCisgICAgICAgIC8qIExpbmtTdGF0ZSBDaGFuZ2Ug
+Ki8KKwljdHJsX2RiZyhjdHJsLCAiTGlua1N0YXRlIGNoYW5nZVxuIik7CisKKwlyZXR2YWwgPSBw
+Y2llaHBfcmVhZHcoY3RybCwgUENJX0VYUF9MTktTVEEsICZsbmtfc3RhdHVzKTsKKwlpZiAocmV0
+dmFsKSB7CisJCWN0cmxfZXJyKGN0cmwsICJDYW5ub3QgcmVhZCBMTktTVEFUVVMgcmVnaXN0ZXJc
+biIpOworCQlyZXR1cm4gMTsKKwl9CisJY3RybF9pbmZvKGN0cmwsICJsbmtfc3RhdHVzID0gJXhc
+biIsIGxua19zdGF0dXMpOworCisJcmV0dXJuIDE7Cit9CisKIHN0YXRpYyBpcnFyZXR1cm5fdCBw
+Y2llX2lzcihpbnQgaXJxLCB2b2lkICpkZXZfaWQpCiB7CiAJc3RydWN0IGNvbnRyb2xsZXIgKmN0
+cmwgPSAoc3RydWN0IGNvbnRyb2xsZXIgKilkZXZfaWQ7CkBAIC02MjQsNyArNjQzLDcgQEAgc3Rh
+dGljIGlycXJldHVybl90IHBjaWVfaXNyKGludCBpcnEsIHZvaQogCiAJCWRldGVjdGVkICY9IChQ
+Q0lfRVhQX1NMVFNUQV9BQlAgfCBQQ0lfRVhQX1NMVFNUQV9QRkQgfAogCQkJICAgICBQQ0lfRVhQ
+X1NMVFNUQV9NUkxTQyB8IFBDSV9FWFBfU0xUU1RBX1BEQyB8Ci0JCQkgICAgIFBDSV9FWFBfU0xU
+U1RBX0NDKTsKKwkJCSAgICAgUENJX0VYUF9TTFRTVEFfQ0MgfCBQQ0lfRVhQX1NMVFNUQV9ETExT
+Qyk7CiAJCWRldGVjdGVkICY9IH5pbnRyX2xvYzsKIAkJaW50cl9sb2MgfD0gZGV0ZWN0ZWQ7CiAJ
+CWlmICghaW50cl9sb2MpCkBAIC02NDgsNiArNjY3LDEwIEBAIHN0YXRpYyBpcnFyZXR1cm5fdCBw
+Y2llX2lzcihpbnQgaXJxLCB2b2kKIAlpZiAoIShpbnRyX2xvYyAmIH5QQ0lfRVhQX1NMVFNUQV9D
+QykpCiAJCXJldHVybiBJUlFfSEFORExFRDsKIAorCS8qIENoZWNrIExpbmsgU3RhdGUgQ2hhbmdl
+ZCAqLworCWlmIChpbnRyX2xvYyAmIFBDSV9FWFBfU0xUU1RBX0RMTFNDKQorCQlwY2llaHBfaGFu
+ZGxlX2xpbmtzdGF0ZV9jaGFuZ2Uoc2xvdCk7CisKIAkvKiBDaGVjayBNUkwgU2Vuc29yIENoYW5n
+ZWQgKi8KIAlpZiAoaW50cl9sb2MgJiBQQ0lfRVhQX1NMVFNUQV9NUkxTQykKIAkJcGNpZWhwX2hh
+bmRsZV9zd2l0Y2hfY2hhbmdlKHNsb3QpOwpAQCAtNjg5LDEwICs3MTIsMTIgQEAgaW50IHBjaWVf
+ZW5hYmxlX25vdGlmaWNhdGlvbihzdHJ1Y3QgY29udAogCQljbWQgfD0gUENJX0VYUF9TTFRDVExf
+TVJMU0NFOwogCWlmICghcGNpZWhwX3BvbGxfbW9kZSkKIAkJY21kIHw9IFBDSV9FWFBfU0xUQ1RM
+X0hQSUUgfCBQQ0lfRVhQX1NMVENUTF9DQ0lFOworCWNtZCB8PSBQQ0lfRVhQX1NMVENUTF9ETExT
+Q0U7CiAKIAltYXNrID0gKFBDSV9FWFBfU0xUQ1RMX1BEQ0UgfCBQQ0lfRVhQX1NMVENUTF9BQlBF
+IHwKIAkJUENJX0VYUF9TTFRDVExfTVJMU0NFIHwgUENJX0VYUF9TTFRDVExfUEZERSB8Ci0JCVBD
+SV9FWFBfU0xUQ1RMX0hQSUUgfCBQQ0lfRVhQX1NMVENUTF9DQ0lFKTsKKwkJUENJX0VYUF9TTFRD
+VExfSFBJRSB8IFBDSV9FWFBfU0xUQ1RMX0NDSUUgfAorCQlQQ0lfRVhQX1NMVENUTF9ETExTQ0Up
+OwogCiAJaWYgKHBjaWVfd3JpdGVfY21kKGN0cmwsIGNtZCwgbWFzaykpIHsKIAkJY3RybF9lcnIo
+Y3RybCwgIkNhbm5vdCBlbmFibGUgc29mdHdhcmUgbm90aWZpY2F0aW9uXG4iKTsK
+--e89a8f5038e278ebc504edc97532--
