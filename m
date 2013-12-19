@@ -1,99 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:54403 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754039Ab3LGBOt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 20:14:49 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>
-Subject: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once
-Date: Sat, 07 Dec 2013 02:27:51 +0100
-Message-ID: <1519414.GDlGZFCTSR@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <33026900.FbCAopDPFz@vostro.rjw.lan> <CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:63623 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755587Ab3LSQij (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 11:38:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1387433380-18564-2-git-send-email-yinghai@kernel.org>
+References: <1387433380-18564-1-git-send-email-yinghai@kernel.org>
+	<1387433380-18564-2-git-send-email-yinghai@kernel.org>
+Date: Thu, 19 Dec 2013 08:38:39 -0800
+Message-ID: <CAE9FiQXUAdVQf6SZ_n2Hcq5QK+dAU+ufPEORzdpQyrEOVyD-9Q@mail.gmail.com>
+Subject: Re: [PATCH v5 1/3] PCI: Try to allocate mem64 above 4G at first
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 05, 2013 10:52:36 PM Yinghai Lu wrote:
-> On Mon, Dec 2, 2013 at 6:49 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> >
-> > Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
-> >   for a device and its parent bridge via remove_callback().
-> >
-> >   In that case both code paths attempt to acquire
-> >   pci_remove_rescan_mutex.  If the child device removal acquires
-> >   it first, there will be no problems.  However, if the parent
-> >   bridge removal acquires it first, it will eventually execute
-> >   pci_destroy_dev() for the child device, but that device will
-> >   not be freed yet due to the reference held by the concurrent
-> >   child removal.  Consequently, both pci_stop_bus_device() and
-> >   pci_remove_bus_device() will be executed for that device
-> >   unnecessarily and pci_destroy_dev() will see a corrupted list
-> >   head in that object.  Moreover, an excess put_device() will
-> >   be executed for that device in that case which may lead to a
-> >   use-after-free in the final kobject_put() done by
-> >   sysfs_schedule_callback_work().
-> >
-> > Index: linux-pm/include/linux/pci.h
-> > ===================================================================
-> > --- linux-pm.orig/include/linux/pci.h
-> > +++ linux-pm/include/linux/pci.h
-> > @@ -321,6 +321,7 @@ struct pci_dev {
-> >         unsigned int    multifunction:1;/* Part of multi-function device */
-> >         /* keep track of device state */
-> >         unsigned int    is_added:1;
-> > +       unsigned int    is_gone:1;
-> >         unsigned int    is_busmaster:1; /* device is busmaster */
-> >         unsigned int    no_msi:1;       /* device may not use msi */
-> >         unsigned int    block_cfg_access:1;     /* config space access is blocked */
-> > Index: linux-pm/drivers/pci/remove.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/pci/remove.c
-> > +++ linux-pm/drivers/pci/remove.c
-> > @@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
-> >
-> >  static void pci_destroy_dev(struct pci_dev *dev)
-> >  {
-> > +       dev->is_gone = 1;
-> >         device_del(&dev->dev);
-> >
-> >         down_write(&pci_bus_sem);
-> > @@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
-> >   */
-> >  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
-> >  {
-> > -       pci_stop_bus_device(dev);
-> > -       pci_remove_bus_device(dev);
-> > +       if (!dev->is_gone) {
-> > +               pci_stop_bus_device(dev);
-> > +               pci_remove_bus_device(dev);
-> > +       }
-> >  }
-> >  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
-> >
-> 
-> Yes, above change should address sys double remove problem.
+On Wed, Dec 18, 2013 at 10:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On system with more pcie cards, we do not have enough range under 4G
+> to allocate those pci devices.
+>
+> On 64bit system, we could try to allocate mem64 above 4G at first,
+> and fall back to below 4g if it can not find any above 4g.
+>
+> x86 32bit without X86_PAE support will have bottom set to 0, because
+> resource_size_t is 32bit.
+> For 32bit kernel that resource_size_t is 64bit when pae is support.
+> we are safe because iomem_resource is limited to 32bit according to
+> x86_phys_bits.
+>
+> -v2: update bottom assigning to make it clear for non-pae support machine.
+> -v3: Bjorn's change:
+>         use MAX_RESOURCE instead of -1
+>         use start/end instead of bottom/max
+>         for all arch instead of just x86_64
+> -v4: updated after PCI_MAX_RESOURCE_32 change.
+> -v5: restore io handling to use PCI_MAX_RESOURCE_32 as limit.
+> -v6: checking pcibios_resource_to_bus return for every bus res, to decide it
+>         if we need to try high at first.
+>      It supports all arches instead of just x86_64.
+> -v7: split 4G limit change out to another patch according to Bjorn.
+>      also use pci_clip_resource instead.
+> -v8: refresh after changes in pci/resource.
 
-I've just realized that we don't need a new flag for that, though.
-
-It looks like we only need to check dev->dev.kobj.parent and return if that is
-NULL, because that means pci_destroy_dev() has run for that device already
-(I'm wondering why device_del() doesn't clear dev->parent, BTW, it looks like
-it should do that?).
-
-Of course, that still is going to be racy if we don't hold
-pci_remove_rescan_mutex around pci_stop_and_remove_bus_device() in every code
-path using it (or use another similar synchronization mechanism).
-
-Thanks,
-Rafael
-
+looks still have other problem, will send out updated version later.
