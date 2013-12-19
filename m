@@ -1,72 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:42775 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761436Ab3LIUQN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Dec 2013 15:16:13 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so7014563iec.41
-        for <linux-pci@vger.kernel.org>; Mon, 09 Dec 2013 12:16:13 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:17618 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756352Ab3LSNlF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Dec 2013 08:41:05 -0500
+Date: Thu, 19 Dec 2013 14:42:45 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@aculab.com>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
+ helpers
+Message-ID: <20131219134244.GA32238@dhcp-26-207.brq.redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
+ <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
+ <20131218003002.GA15119@google.com>
+ <20131218132349.GA29552@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6Km5N+Cfpaj5JEsb966rwcBjrAT4SFvG6Q9QkwkDFXCA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20131209193332.GB20199@obsidianresearch.com>
-References: <20131206001333.27659.59935.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131206001954.27659.78163.stgit@bhelgaas-glaptop.roam.corp.google.com> <20131209193332.GB20199@obsidianresearch.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 13:15:52 -0700
-Message-ID: <CAErSpo4Q-sjiCUs3UbQWdPhOTdxfJP1ay1MugxTPT1E2=TkpJw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Stop clearing bridge Secondary Status when
- setting up I/O aperture
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6Km5N+Cfpaj5JEsb966rwcBjrAT4SFvG6Q9QkwkDFXCA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 12:33 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Thu, Dec 05, 2013 at 05:19:55PM -0700, Bjorn Helgaas wrote:
->> pci_setup_bridge_io() accessed PCI_IO_BASE and PCI_IO_LIMIT using dword
->> (32-bit) reads and writes, which also access the Secondary Status register.
->> Since the Secondary Status register is in the upper 16 bits of the dword,
->> and we preserved those upper 16 bits, this had the effect of clearing any
->> of the write-1-to-clear bits that happened to be set in the Secondary
->> Status register.
->
-> This is a good catch!
->
->> -     pci_write_config_dword(bridge, PCI_IO_BASE, l);
->> +     pci_write_config_word(bridge, PCI_IO_BASE, l);
->
-> But this is a problem :(
->
-> tegra and mvebu at least do not have HW to do non-32 bit writes, so
-> their implementation of pci_write_config_word does the RMW internally
-> and will still have this same bug.
->
-> I think you have to keep the 32 bit write here, but zero the
-> write-one-to-clear bits :(
+On Wed, Dec 18, 2013 at 11:58:47AM -0700, Bjorn Helgaas wrote:
+> If rc == 13 and the device can only use 8, the extra 5 would be
+> ignored and wasted.
+> 
+> If the waste is unacceptable, the driver can try this:
+> 
+>     rc = pci_enable_msix_range(dev->pdev, dev->irqs, 16, 16);
+>     if (rc < 0) {
+>         rc = pci_enable_msix_range(dev->pdev, dev->irqs, 8, 8);
+>         if (rc < 0) {
+>             rc = pci_enable_msix_range(dev->pdev, dev->irqs, 4, 4);
+>             ...
+>     }
 
-Is there actually some spec requirement about the access sizes that
-must be supported by the hardware?  If there is something, I'll gladly
-keep the 32-bit access, but if it's only a tegra/mvebu-specific
-restriction, then I think it needs to be handled in the PCI config
-accessors for that hardware.
+I have troubles with this fallback logic. On each failed step we get an
+error and we do not know if this is indeed an error or an indication of
+insufficient MSI resources. Even -ENOSPC would not tell much, since it
+could be thrown from a lower level.
 
-This spec statement (PCI (not PCIe) r3.0, sec 3.2.2.3.4) makes it
-sound like tegra/mvebu is non-conforming and should deal with this
-specially:
+By contrast, with the tri-state return value we can distinguish and bail
+out on errors right away.
 
-"A function must not restrict the size of the access it supports in
-Configuration Space. The configuration commands, like other commands,
-allow data to be accessed using any combination of bytes (including a
-byte, word, DWORD, or non-contiguous bytes) and multiple data phases
-in a burst. The target is required to handle any combination of byte
-enables."
+So the above is bit ungraceful for me. Combined with a possible waste in
+logs (if we're hitting the same error) it is quite enough for me to keep
+current the interfaces, at least for a time being.
 
-I think the tegra/mvebu accessors should be able to use the address
-and access size to figure out what we're trying to do.  If we're doing
-a WORD write to PCI_IO_BASE, it can turn that into: 32-bit read, clear
-the upper 16 bits (secondary status), insert the PCI_IO_BASE part,
-32-bit write.  If we're doing a 16-bit write to PCI_SEC_STATUS, it can
-turn that into: 32-bit read, insert upper 16 bits (secondary status),
-leave lower 16 bits alone, 32-bit write.
+>     if (rc < 0) { /* error, couldn't allocate *any* interrupts */
+>     else { /* rc interrupts allocated (1, 2, 4, 8, or 16) */ }
+> 
+> Bjorn
 
-Bjorn
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
