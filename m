@@ -1,64 +1,191 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 4 Dec 2013 10:51:55 +0000
-From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-To: Ian Campbell <Ian.Campbell@citrix.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	<stefano.stabellini@eu.citrix.com>,
-	<xen-devel@lists.xenproject.org>, <linux-kernel@vger.kernel.org>,
-	<boris.ostrovsky@oracle.com>, <david.vrabel@citrix.com>,
-	<leosilva@linux.vnet.ibm.com>, <ashley@ashleylai.com>,
-	<peterhuewe@gmx.de>, <mail@srajiv.net>, <tpmdd@selhorst.net>,
-	<tpmdd@sirrix.com>, <dmitry.torokhov@gmail.com>,
-	<bhelgaas@google.com>, <plagnioj@jcrosoft.com>,
-	<tomi.valkeinen@ti.com>, <tpmdd-devel@lists.sourceforge.net>,
-	<linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-fbdev@vger.kernel.org>
-Subject: Re: [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't blow up.
-In-Reply-To: <1386149848.13256.86.camel@kazak.uk.xensource.com>
-Message-ID: <alpine.DEB.2.02.1312041049310.7093@kaball.uk.xensource.com>
-References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com> <1386149848.13256.86.camel@kazak.uk.xensource.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [Patch v2 04/13] ACPI, PCI: replace open-coded _DSM specific code with helper functions
+Date: Thu, 19 Dec 2013 20:38:13 +0800
+Message-Id: <1387456702-4709-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 4 Dec 2013, Ian Campbell wrote:
-> > +bool xen_has_pv_devices(void)
-> > +{
-> > +	if (!xen_domain())
-> > +		return false;
-> > +
-> > +	if (xen_hvm_domain()) {
-> > +		/* User requested no unplug, so no PV drivers. */
-> > +		if (xen_emul_unplug & XEN_UNPLUG_NEVER)
-> > +			return false;
-> 
-> I think you need
-> 		if (xen_emul_unpug & XEN_UNPLUG_UNNECESSARY)
-> 			return true;
-> don't you?
+Use helper functions to simplify _DSM related code in pci-label driver.
+Also enforce more strict checks on objects returned by _DSM method.
 
-XEN_UNPLUG_UNNECESSARY was introduced to enable the platform PCI device
-even if it didn't respond properly to the unplug protocol.
-The corresponding parameter is called "unnecessary" because if you pass
-it to the kernel you mean that it is unnecessary to unplug the emulated
-devices but you can use the pv devices anyway.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/pci-label.c |  121 +++++++++++++----------------------------------
+ 1 file changed, 34 insertions(+), 87 deletions(-)
 
-So no, we shouldn't check for XEN_UNPLUG_UNNECESSARY here.
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index f6e01a5..f12dcd1 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -195,80 +195,58 @@ enum acpi_attr_enum {
+ static void dsm_label_utf16s_to_utf8s(union acpi_object *obj, char *buf)
+ {
+ 	int len;
+-	len = utf16s_to_utf8s((const wchar_t *)obj->
+-			      package.elements[1].string.pointer,
+-			      obj->package.elements[1].string.length,
++	len = utf16s_to_utf8s((const wchar_t *)obj->string.pointer,
++			      obj->string.length,
+ 			      UTF16_LITTLE_ENDIAN,
+ 			      buf, PAGE_SIZE);
+ 	buf[len] = '\n';
+ }
+ 
+ static int
+-dsm_get_label(acpi_handle handle, int func,
+-	      struct acpi_buffer *output,
+-	      char *buf, enum acpi_attr_enum attribute)
++dsm_get_label(struct device *dev, char *buf, enum acpi_attr_enum attr)
+ {
+-	struct acpi_object_list input;
+-	union acpi_object params[4];
+-	union acpi_object *obj;
+-	int len = 0;
+-
+-	int err;
+-
+-	input.count = 4;
+-	input.pointer = params;
+-	params[0].type = ACPI_TYPE_BUFFER;
+-	params[0].buffer.length = sizeof(device_label_dsm_uuid);
+-	params[0].buffer.pointer = (char *)device_label_dsm_uuid;
+-	params[1].type = ACPI_TYPE_INTEGER;
+-	params[1].integer.value = 0x02;
+-	params[2].type = ACPI_TYPE_INTEGER;
+-	params[2].integer.value = func;
+-	params[3].type = ACPI_TYPE_PACKAGE;
+-	params[3].package.count = 0;
+-	params[3].package.elements = NULL;
+-
+-	err = acpi_evaluate_object(handle, "_DSM", &input, output);
+-	if (err)
++	acpi_handle handle;
++	union acpi_object *obj, *tmp;
++	int len = -1;
++
++	handle = ACPI_HANDLE(dev);
++	if (!handle)
+ 		return -1;
+ 
+-	obj = (union acpi_object *)output->pointer;
+-	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
+-		len = obj->package.elements[0].integer.value;
++	obj = acpi_evaluate_dsm(handle, device_label_dsm_uuid, 0x2,
++				DEVICE_LABEL_DSM, NULL);
++	if (!obj)
++		return -1;
++
++	tmp = obj->package.elements;
++	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2 &&
++	    tmp[0].type == ACPI_TYPE_INTEGER &&
++	    tmp[1].type == ACPI_TYPE_STRING) {
++		len = tmp[0].integer.value;
+ 		if (buf) {
+-			if (attribute == ACPI_ATTR_INDEX_SHOW)
++			/*
++			 * This second string element is optional even when
++			 * this _DSM is implemented; when not implemented,
++			 * this entry must return a null string.
++			 */
++			if (attr == ACPI_ATTR_INDEX_SHOW)
+ 				scnprintf(buf, PAGE_SIZE, "%llu\n",
+-				obj->package.elements[0].integer.value);
+-			else if (attribute == ACPI_ATTR_LABEL_SHOW)
+-				dsm_label_utf16s_to_utf8s(obj, buf);
+-			kfree(output->pointer);
+-			return strlen(buf);
++				tmp->integer.value);
++			else if (attr == ACPI_ATTR_LABEL_SHOW)
++				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
++			len = strlen(buf) > 0 ? strlen(buf) : -1;
+ 		}
+-		kfree(output->pointer);
+-		return len;
+ 	}
+ 
+-	kfree(output->pointer);
++	ACPI_FREE(obj);
+ 
+-	return -1;
++	return len;
+ }
+ 
+ static bool
+ device_has_dsm(struct device *dev)
+ {
+-	acpi_handle handle;
+-	struct acpi_buffer output = {ACPI_ALLOCATE_BUFFER, NULL};
+-
+-	handle = ACPI_HANDLE(dev);
+-
+-	if (!handle)
+-		return FALSE;
+-
+-	if (dsm_get_label(handle, DEVICE_LABEL_DSM, &output, NULL,
+-			  ACPI_ATTR_NONE) > 0)
+-		return TRUE;
+-
+-	return FALSE;
++	return dsm_get_label(dev, NULL, ACPI_ATTR_NONE) > 0;
+ }
+ 
+ static umode_t
+@@ -287,44 +265,13 @@ acpi_index_string_exist(struct kobject *kobj, struct attribute *attr, int n)
+ static ssize_t
+ acpilabel_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+-	struct acpi_buffer output = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_handle handle;
+-	int length;
+-
+-	handle = ACPI_HANDLE(dev);
+-
+-	if (!handle)
+-		return -1;
+-
+-	length = dsm_get_label(handle, DEVICE_LABEL_DSM,
+-			       &output, buf, ACPI_ATTR_LABEL_SHOW);
+-
+-	if (length < 1)
+-		return -1;
+-
+-	return length;
++	return dsm_get_label(dev, buf, ACPI_ATTR_LABEL_SHOW);
+ }
+ 
+ static ssize_t
+ acpiindex_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+-	struct acpi_buffer output = {ACPI_ALLOCATE_BUFFER, NULL};
+-	acpi_handle handle;
+-	int length;
+-
+-	handle = ACPI_HANDLE(dev);
+-
+-	if (!handle)
+-		return -1;
+-
+-	length = dsm_get_label(handle, DEVICE_LABEL_DSM,
+-			       &output, buf, ACPI_ATTR_INDEX_SHOW);
+-
+-	if (length < 0)
+-		return -1;
+-
+-	return length;
+-
++	return dsm_get_label(dev, buf, ACPI_ATTR_INDEX_SHOW);
+ }
+ 
+ static struct device_attribute acpi_attr_label = {
+-- 
+1.7.10.4
 
-
-
-> > +		/* And user has xen_platform_pci=0 set in guest config as
-> > +		 * driver did not modify the value. */
-> > +		if (!xen_platform_pci_unplug)
-> > +			return false;
-> > +	}
-> > +	return true;
-> > +}
-> > +EXPORT_SYMBOL_GPL(xen_has_pv_devices);
-> > +
-> >  void xen_unplug_emulated_devices(void)
-> >  {
-> >  	int r;
-> 
-> 
