@@ -1,86 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db8lp0189.outbound.messaging.microsoft.com ([213.199.154.189]:43548
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756607Ab3LFTAI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Dec 2013 14:00:08 -0500
-Message-ID: <1386356393.7375.118.camel@snotra.buserror.net>
-Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-From: Scott Wood <scottwood@freescale.com>
-To: Bharat Bhushan <Bharat.Bhushan@freescale.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Fri, 6 Dec 2013 12:59:53 -0600
-In-Reply-To: <6A3DF150A5B70D4F9B66A25E3F7C888D07251EE4@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1384973243.2879.361.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385066603.2879.414.camel@ul30vt.home>
-	 <1385066835.1403.489.camel@snotra.buserror.net>
-	 <1385067648.2879.421.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385397493.2879.557.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0723624C@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1386289316.7375.107.camel@snotra.buserror.net>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D07251EE4@039-SN2MPN1-012.039d.mgd.msft.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:61115 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755846Ab3LSW57 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 17:57:59 -0500
+Received: by mail-ig0-f174.google.com with SMTP id hk11so13384852igb.1
+        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 14:57:58 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 19 Dec 2013 15:57:38 -0700
+Message-ID: <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
+Subject: Re: pcie designware question
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-12-05 at 22:11 -0600, Bharat Bhushan wrote:
-> 
-> > -----Original Message-----
-> > From: Wood Scott-B07421
-> > Sent: Friday, December 06, 2013 5:52 AM
-> > To: Bhushan Bharat-R65777
-> > Cc: Alex Williamson; linux-pci@vger.kernel.org; agraf@suse.de; Yoder Stuart-
-> > B08248; iommu@lists.linux-foundation.org; bhelgaas@google.com; linuxppc-
-> > dev@lists.ozlabs.org; linux-kernel@vger.kernel.org
-> > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-> >
-> > On Thu, 2013-11-28 at 03:19 -0600, Bharat Bhushan wrote:
-> > >
-> > > > -----Original Message-----
-> > > > From: Bhushan Bharat-R65777
-> > > > Sent: Wednesday, November 27, 2013 9:39 PM
-> > > > To: 'Alex Williamson'
-> > > > Cc: Wood Scott-B07421; linux-pci@vger.kernel.org; agraf@suse.de;
-> > > > Yoder Stuart- B08248; iommu@lists.linux-foundation.org;
-> > > > bhelgaas@google.com; linuxppc- dev@lists.ozlabs.org;
-> > > > linux-kernel@vger.kernel.org
-> > > > Subject: RE: [PATCH 0/9 v2] vfio-pci: add support for Freescale
-> > > > IOMMU (PAMU)
-> > > >
-> > > > If we just provide the size of MSI bank to userspace then userspace
-> > > > cannot do anything wrong.
-> > >
-> > > So userspace does not know address, so it cannot mmap and cause any
-> > interference by directly reading/writing.
-> >
-> > That's security through obscurity...  Couldn't the malicious user find out the
-> > address via other means, such as experimentation on another system over which
-> > they have full control?  What would happen if the user reads from their device's
-> > PCI config space?  Or gets the information via some back door in the PCI device
-> > they own?  Or pokes throughout the address space looking for something that
-> > generates an interrupt to its own device?
-> 
-> So how to solve this problem, Any suggestion ?
-> 
-> We have to map one window in PAMU for MSIs and a malicious user can ask
-> its device to do DMA to MSI window region with any pair of address and
-> data, which can lead to unexpected MSIs in system?
+[+cc Mohit, Jingoo]
 
-I don't think there are any solutions other than to limit each bank to
-one user, unless the admin turns some knob that says they're OK with the
-partial loss of isolation.
-
--Scott
-
-
-
+On Thu, Dec 19, 2013 at 3:01 PM, Karicheri, Muralidharan
+<m-karicheri2@ti.com> wrote:
+> Hi,
+>
+> I am working to port my pcie driver to pcie-designware core driver. The pcie sub system
+>  on our platform  has 32 OUTBOUND regions and 2 INBOUND regions. In my current driver,
+> I use internal memory map of CPU to access the RC's config/application space as well EP's
+> config space. a 4K range is available to access the EP's config space. To allow write/read to
+> the EP's config space, the driver basically write the bus, device and function number to the
+>  application CFG_SETUP register and then access the corresponding EP's config register.
+>
+> I have reviewed the designware.c code and the glue logic driver pci-exynos.c and couldn't
+> understand few things.
+>
+> 1. Our pcie ss is based on designware core and following addresses are not listed in our IP's
+>  data manual. Where is defined? It does show the rest of the offsets defined in
+>  drivers/pci/host/designware.c and
+>
+> #define PCIE_ATU_VIEWPORT               0x900
+> #define PCIE_ATU_REGION_INBOUND         (0x1 << 31)
+> #define PCIE_ATU_REGION_OUTBOUND        (0x0 << 31)
+> #define PCIE_ATU_REGION_INDEX1          (0x1 << 0)
+> #define PCIE_ATU_REGION_INDEX0          (0x0 << 0)
+> #define PCIE_ATU_CR1                    0x904
+> #define PCIE_ATU_TYPE_MEM               (0x0 << 0)
+> #define PCIE_ATU_TYPE_IO                (0x2 << 0)
+> #define PCIE_ATU_TYPE_CFG0              (0x4 << 0)
+> #define PCIE_ATU_TYPE_CFG1              (0x5 << 0)
+> #define PCIE_ATU_CR2                    0x908
+> #define PCIE_ATU_ENABLE                 (0x1 << 31)
+> #define PCIE_ATU_BAR_MODE_ENABLE        (0x1 << 30)
+> #define PCIE_ATU_LOWER_BASE             0x90C
+> #define PCIE_ATU_UPPER_BASE             0x910
+> #define PCIE_ATU_LIMIT                  0x914
+> #define PCIE_ATU_LOWER_TARGET           0x918
+> #define PCIE_ATU_BUS(x)                 (((x) & 0xff) << 24)
+> #define PCIE_ATU_DEV(x)                 (((x) & 0x1f) << 19)
+> #define PCIE_ATU_FUNC(x)                (((x) & 0x7) << 16)
+> #define PCIE_ATU_UPPER_TARGET           0x91C
+>
+> 2. My understanding is that the designware core currently support 2 OUTBOUND regions
+> and 2 INBOUND regions. Is this true? Is there a plan to support more than 2?
+> 3. Is there a documentation explaining how the ATU handling code is designed? Basically
+> as I can't find ATU specific registers defined in the ss spec, I am not able to understand
+> this code. I do see the application space in our ss spec defining OUTBOUND INDEX/OFFSET
+> register to configure OUTBOUND regions and IB registers to define the INBOUND region.
+>
+> 4. What is the base address variable used to access RC's application register space? dbi_base
+> in struct pcie_port ? Also I am assuming this is used for accessing this space from internal
+> CPU bus and cfg0_base and cfg1_base for accessing it from pci bus. Is this right?
+>
+> I am trying to figure this out myself, but if someone could explain these, that will be great!
+>
+> Thanks.
+>
+> Murali Karicheri
+> Linux Kernel, Software Development
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
