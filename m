@@ -1,50 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:54517 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751821Ab3LCBPJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 20:15:09 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Joe Perches' <joe@perches.com>,
-	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <001501ceefb1$69c96820$3d5c3860$%han@samsung.com>
- <003b01ceefb6$bca43ed0$35ecbc70$%han@samsung.com>
- <1386028330.15309.13.camel@joe-AO722>
-In-reply-to: <1386028330.15309.13.camel@joe-AO722>
-Subject: Re: [PATCH 38/39] PCI: remove DEFINE_PCI_DEVICE_TABLE macro
-Date: Tue, 03 Dec 2013 10:15:06 +0900
-Message-id: <003e01ceefc5$1a6f9880$4f4ec980$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from aserp1040.oracle.com ([141.146.126.69]:35722 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756038Ab3LSUnr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 15:43:47 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 0/2] PCI: allocate 64bit mmio pref
+Date: Thu, 19 Dec 2013 12:44:01 -0800
+Message-Id: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 03, 2013 8:52 AM, Joe Perches wrote:
-> On Tue, 2013-12-03 at 08:32 +0900, Jingoo Han wrote:
-> > Don't use DEFINE_PCI_DEVICE_TABLE macro, because this macro
-> > is not preferred. Also, the definition of DEFINE_PCI_DEVICE_TABLE
-> > macro is removed.
-> 
-> These sorts of treewide conversions are almost never
-> applied wholesale.
-> 
-> This patch is not appropriate until there are no more
-> uses of DEFINE_PCI_DEVICE_TABLE in Linus' tree.
-> 
-> Just marking the function as deprecated in the
-> documentation and the pci.h file is probably good
-> enough for now.
-> 
-> see:  http://lkml.org/lkml/2013/12/2/400
+mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
+It will try to assign 64 bit resource above 4g at first.
 
-Actually, I want to remove all DEFINE_PCI_DEVICE_TABLEs from the
-next 3.14-rc1 kernel, by merging all patches through Greg's tree.
+And it is based on current pci/next and pci/resource.
 
-Greg,
-How about you?
+-v2: update after patch that move device_del down to pci_destroy_dev.
+     add "Try best to allocate pref mmio 64bit above 4G"
 
-Best regards,
-Jingoo Han
+-v3: refresh and send out after pci_clip_resource() changes,
+     as Bjorn is not happy with attachments.
+
+-v4: make pcibios_resource_to_bus take bus directly.
+
+-v5: fix non-pref mmio64 allocation problem found by Guo Chao.
+     refresh last three as Bjorn update first two and put them in pci/resource
+
+-v6: try above 4G at first, then restart again for under 4G.
+     so we can drop patch that sort pci root bus resource list.
+
+Yinghai Lu (2):
+  PCI: Try to allocate mem64 above 4G at first
+  PCI: Try best to allocate pref mmio 64bit above 4g
+
+ drivers/pci/bus.c       |  34 ++++++++----
+ drivers/pci/setup-bus.c | 138 ++++++++++++++++++++++++++++++++----------------
+ drivers/pci/setup-res.c |  20 ++++++-
+ 3 files changed, 135 insertions(+), 57 deletions(-)
+
+-- 
+1.8.4
 
