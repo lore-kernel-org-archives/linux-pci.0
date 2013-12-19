@@ -1,119 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:41604 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754922Ab3LMWrj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 17:47:39 -0500
-Message-ID: <1386974853.10497.64.camel@ejdallLaptop>
-Subject: Re: [PATCH] PCI AER: Handle non-AER HEST error sources in
- aer_hest_parse()
-From: Betty Dall <betty.dall@hp.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: lenb@kernel.org, rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Fri, 13 Dec 2013 15:47:33 -0700
-In-Reply-To: <20131213221616.GC6746@google.com>
-References: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
-	 <20131213221616.GC6746@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:40978 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754474Ab3LSSFe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 13:05:34 -0500
+Received: by mail-ie0-f175.google.com with SMTP id x13so1801197ief.34
+        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 10:05:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131219060921.GX6691@S2101-09.ap.freescale.net>
+References: <1386885004-10252-1-git-send-email-marex@denx.de>
+ <20131218200645.GF15119@google.com> <20131219060921.GX6691@S2101-09.ap.freescale.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 19 Dec 2013 11:05:11 -0700
+Message-ID: <CAErSpo6O3uVNXo2HbYVaNnmmFg=D6HTTHFxEuUb-PKSs1L3wCA@mail.gmail.com>
+Subject: Re: [PATCH V2 1/7] PCI: imx6: Make reset-gpio optional
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: Marek Vasut <marex@denx.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Mohit KUMAR <Mohit.KUMAR@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Richard Zhu <r65037@freescale.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Cross <xobs@kosagi.com>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Troy Kisky <troy.kisky@boundarydevices.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-12-13 at 15:16 -0700, Bjorn Helgaas wrote:
-> On Fri, Dec 13, 2013 at 08:23:16AM -0700, Betty Dall wrote:
-> > aer_hest_parse() could pass a non-AER HEST error source to the function
-> > hest_match_pci(). hest_match_pci() assumes that the HEST error source is
-> > type ACPI_HEST_TYPE_AER_ROOT_PORT, ACPI_HEST_TYPE_AER_ENDPOINT, or
-> > ACPI_HEST_TYPE_AER_BRIDGE. I have a platform that has some
-> > ACPI_HEST_TYPE_GENERIC error sources where hest_match_pci() was trying to
-> > access the structure as if it had the acpi_hest_aer_common fields.
-> > 
-> > aer_hest_parse() is only ever interested in the AER type HEST error
-> > sources. Add a check on the type of the error souce at the beginning of
-> > aer_hest_parse().
-> > 
-> > Signed-off-by: Betty Dall <betty.dall@hp.com>
-> > ---
-> > 
-> >  drivers/pci/pcie/aer/aerdrv_acpi.c |    4 ++++
-> >  1 files changed, 4 insertions(+), 0 deletions(-)
-> > 
-> > 
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> > index cf611ab..39186e3 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> > @@ -56,6 +56,10 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
-> >  	struct acpi_hest_aer_common *p;
-> >  	int ff;
-> >  
-> > +	if (hest_hdr->type != ACPI_HEST_TYPE_AER_ROOT_PORT &&
-> > +		hest_hdr->type != ACPI_HEST_TYPE_AER_ENDPOINT &&
-> > +		hest_hdr->type != ACPI_HEST_TYPE_AER_BRIDGE)
-> > +		return 0;
-> >  	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
-> >  	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
-> >  	if (p->flags & ACPI_HEST_GLOBAL) {
-> 
-> Hi Betty,
-> 
-> I propose the following tweaked version.  Will this work for you?
-> 
-> 
-> PCI/AER: Ingore non-PCIe AER error sources in aer_hest_parse()
-> 
-> From: Betty Dall <betty.dall@hp.com>
-> 
-> aer_set_firmware_first() searches the HEST for an error source descriptor
-> matching the specified PCI device.  It uses the apei_hest_parse() iterator
-> to call aer_hest_parse() for every descriptor in the HEST.
-> 
-> Previously, aer_hest_parse() incorrectly assumed every descriptor was for a
-> PCIe error source.  This patch adds a check to avoid that error.
-> 
-> [bhelgaas: factor check into helper function, changelog]
-> Signed-off-by: Betty Dall <betty.dall@hp.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv_acpi.c |   12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> index cf611ab2193a..f670313479ee 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> @@ -50,12 +50,24 @@ struct aer_hest_parse_info {
->  	int firmware_first;
->  };
->  
-> +static int hest_source_is_pcie_aer(struct acpi_hest_header *hest_hdr)
-> +{
-> +	if (hest_hdr->type == ACPI_HEST_TYPE_AER_ROOT_PORT ||
-> +	    hest_hdr->type == ACPI_HEST_TYPE_AER_ENDPOINT ||
-> +	    hest_hdr->type == ACPI_HEST_TYPE_AER_BRIDGE)
-> +		return 1;
-> +	return 0;
-> +}
-> +
->  static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
->  {
->  	struct aer_hest_parse_info *info = data;
->  	struct acpi_hest_aer_common *p;
->  	int ff;
->  
-> +	if (!hest_source_is_pcie_aer(hest_hdr))
-> +		return 0;
-> +
->  	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
->  	ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
->  	if (p->flags & ACPI_HEST_GLOBAL) {
+On Wed, Dec 18, 2013 at 11:09 PM, Shawn Guo <shawn.guo@linaro.org> wrote:
+> On Wed, Dec 18, 2013 at 01:06:45PM -0700, Bjorn Helgaas wrote:
+>> On Thu, Dec 12, 2013 at 10:49:58PM +0100, Marek Vasut wrote:
+>> > Some boards do not have a PCIe reset GPIO. To avoid probe
+>> > failure on these boards, make the reset GPIO optional as
+>> > well.
+>> >
+>> > Signed-off-by: Marek Vasut <marex@denx.de>
+>> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > Cc: Frank Li <lznuaa@gmail.com>
+>> > Cc: Harro Haan <hrhaan@gmail.com>
+>> > Cc: Jingoo Han <jg1.han@samsung.com>
+>> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+>> > Cc: Pratyush Anand <pratyush.anand@st.com>
+>> > Cc: Richard Zhu <r65037@freescale.com>
+>> > Cc: Sascha Hauer <s.hauer@pengutronix.de>
+>> > Cc: Sean Cross <xobs@kosagi.com>
+>> > Cc: Shawn Guo <shawn.guo@linaro.org>
+>> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+>> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+>> > Cc: Tim Harvey <tharvey@gateworks.com>
+>> > Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+>> > Cc: Yinghai Lu <yinghai@kernel.org>
+>> > ---
+>> >  .../devicetree/bindings/pci/designware-pcie.txt    |  2 ++
+>> >  drivers/pci/host/pci-imx6.c                        | 29 +++++++++++-----------
+>> >  2 files changed, 17 insertions(+), 14 deletions(-)
+>>
+>> Richard or Shawn, can you ack/nak these (patches 1-6)?  I'd like to dispose
+>> of them one way or the other.
+>
+> Acked-by: Shawn Guo <shawn.guo@linaro.org>
 
-Hi Bjorn,
+I assume this ack applies to all the patches (1-6).  I applied these
+to my pci/host-imx6 branch for v3.14.    Thanks!
 
-Yes, that is more readable code. Thanks for revising it. I tested it on
-my system that has non-AER error sources and it works fine. One nit is
-that "Ignore" is misspelled in the subject line. 
-
--Betty
-
-
+Bjorn
