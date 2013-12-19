@@ -1,37 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:51803 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911Ab3LKVbn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 16:31:43 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 06/12] pcie: designware: Move register definition to the header file
-Date: Wed, 11 Dec 2013 22:31:35 +0100
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Jagan Teki <jagannadh.teki@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"spear-devel" <spear-devel@list.st.com>,
-	Pratyush ANAND <pratyush.anand@st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <CAD6G_RTrETj9p+YNPjRMEFsO7Ggf3LfnuaPOSwO2brUcusNUJw@mail.gmail.com> <2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189F95F6311@EAPEX1MAIL1.st.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:41773 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756258Ab3LSXiv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 18:38:51 -0500
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: RE: pcie designware question
+Date: Thu, 19 Dec 2013 23:38:44 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B70465DF45@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
+ <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
+In-Reply-To: <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312112231.36039.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 11 December 2013, Mohit KUMAR DCG wrote:
-> > 
-> > Seems like none were using these headers except pcie-designware.c - if ie
-> > the case better to place it same place as before.
-> 
-> - We have include these and used few like ' PCIE_LINK_WIDTH_SPEED_CONTROL '  for SPEAr13xx platform, 
-> so move these to the separate header  file.
-
-I think it's better not to touch any of the registers from a platform-specific
-driver. Better make a high-level function in the common code that the
-spear driver can call to change this register.
-
-	Arnd
+Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRv
+OmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+U2VudDogVGh1cnNkYXksIERlY2VtYmVyIDE5LCAyMDEz
+IDU6NTggUE0NCj5UbzogS2FyaWNoZXJpLCBNdXJhbGlkaGFyYW4NCj5DYzogbGludXgtcGNpQHZn
+ZXIua2VybmVsLm9yZzsgTW9oaXQgS3VtYXI7IEppbmdvbyBIYW4NCj5TdWJqZWN0OiBSZTogcGNp
+ZSBkZXNpZ253YXJlIHF1ZXN0aW9uDQo+DQo+WytjYyBNb2hpdCwgSmluZ29vXQ0KPg0KQmpvcm4s
+DQoNClRoYW5rcyBmb3IgZm9yd2FyZGluZyB0aGlzIHRvIGV4cGVydHMuDQoNCk11cmFsaQ0KPk9u
+IFRodSwgRGVjIDE5LCAyMDEzIGF0IDM6MDEgUE0sIEthcmljaGVyaSwgTXVyYWxpZGhhcmFuIDxt
+LWthcmljaGVyaTJAdGkuY29tPiB3cm90ZToNCj4+IEhpLA0KPj4NCj4+IEkgYW0gd29ya2luZyB0
+byBwb3J0IG15IHBjaWUgZHJpdmVyIHRvIHBjaWUtZGVzaWdud2FyZSBjb3JlIGRyaXZlci4NCj4+
+IFRoZSBwY2llIHN1YiBzeXN0ZW0gIG9uIG91ciBwbGF0Zm9ybSAgaGFzIDMyIE9VVEJPVU5EIHJl
+Z2lvbnMgYW5kIDINCj4+IElOQk9VTkQgcmVnaW9ucy4gSW4gbXkgY3VycmVudCBkcml2ZXIsIEkg
+dXNlIGludGVybmFsIG1lbW9yeSBtYXAgb2YNCj4+IENQVSB0byBhY2Nlc3MgdGhlIFJDJ3MgY29u
+ZmlnL2FwcGxpY2F0aW9uIHNwYWNlIGFzIHdlbGwgRVAncyBjb25maWcNCj4+IHNwYWNlLiBhIDRL
+IHJhbmdlIGlzIGF2YWlsYWJsZSB0byBhY2Nlc3MgdGhlIEVQJ3MgY29uZmlnIHNwYWNlLiBUbw0K
+Pj4gYWxsb3cgd3JpdGUvcmVhZCB0byB0aGUgRVAncyBjb25maWcgc3BhY2UsIHRoZSBkcml2ZXIg
+YmFzaWNhbGx5IHdyaXRlIHRoZSBidXMsIGRldmljZSBhbmQNCj5mdW5jdGlvbiBudW1iZXIgdG8g
+dGhlICBhcHBsaWNhdGlvbiBDRkdfU0VUVVAgcmVnaXN0ZXIgYW5kIHRoZW4gYWNjZXNzIHRoZSBj
+b3JyZXNwb25kaW5nDQo+RVAncyBjb25maWcgcmVnaXN0ZXIuDQo+Pg0KPj4gSSBoYXZlIHJldmll
+d2VkIHRoZSBkZXNpZ253YXJlLmMgY29kZSBhbmQgdGhlIGdsdWUgbG9naWMgZHJpdmVyDQo+PiBw
+Y2ktZXh5bm9zLmMgYW5kIGNvdWxkbid0IHVuZGVyc3RhbmQgZmV3IHRoaW5ncy4NCj4+DQo+PiAx
+LiBPdXIgcGNpZSBzcyBpcyBiYXNlZCBvbiBkZXNpZ253YXJlIGNvcmUgYW5kIGZvbGxvd2luZyBh
+ZGRyZXNzZXMgYXJlDQo+PiBub3QgbGlzdGVkIGluIG91ciBJUCdzICBkYXRhIG1hbnVhbC4gV2hl
+cmUgaXMgZGVmaW5lZD8gSXQgZG9lcyBzaG93DQo+PiB0aGUgcmVzdCBvZiB0aGUgb2Zmc2V0cyBk
+ZWZpbmVkIGluICBkcml2ZXJzL3BjaS9ob3N0L2Rlc2lnbndhcmUuYyBhbmQNCj4+DQo+PiAjZGVm
+aW5lIFBDSUVfQVRVX1ZJRVdQT1JUICAgICAgICAgICAgICAgMHg5MDANCj4+ICNkZWZpbmUgUENJ
+RV9BVFVfUkVHSU9OX0lOQk9VTkQgICAgICAgICAoMHgxIDw8IDMxKQ0KPj4gI2RlZmluZSBQQ0lF
+X0FUVV9SRUdJT05fT1VUQk9VTkQgICAgICAgICgweDAgPDwgMzEpDQo+PiAjZGVmaW5lIFBDSUVf
+QVRVX1JFR0lPTl9JTkRFWDEgICAgICAgICAgKDB4MSA8PCAwKQ0KPj4gI2RlZmluZSBQQ0lFX0FU
+VV9SRUdJT05fSU5ERVgwICAgICAgICAgICgweDAgPDwgMCkNCj4+ICNkZWZpbmUgUENJRV9BVFVf
+Q1IxICAgICAgICAgICAgICAgICAgICAweDkwNA0KPj4gI2RlZmluZSBQQ0lFX0FUVV9UWVBFX01F
+TSAgICAgICAgICAgICAgICgweDAgPDwgMCkNCj4+ICNkZWZpbmUgUENJRV9BVFVfVFlQRV9JTyAg
+ICAgICAgICAgICAgICAoMHgyIDw8IDApDQo+PiAjZGVmaW5lIFBDSUVfQVRVX1RZUEVfQ0ZHMCAg
+ICAgICAgICAgICAgKDB4NCA8PCAwKQ0KPj4gI2RlZmluZSBQQ0lFX0FUVV9UWVBFX0NGRzEgICAg
+ICAgICAgICAgICgweDUgPDwgMCkNCj4+ICNkZWZpbmUgUENJRV9BVFVfQ1IyICAgICAgICAgICAg
+ICAgICAgICAweDkwOA0KPj4gI2RlZmluZSBQQ0lFX0FUVV9FTkFCTEUgICAgICAgICAgICAgICAg
+ICgweDEgPDwgMzEpDQo+PiAjZGVmaW5lIFBDSUVfQVRVX0JBUl9NT0RFX0VOQUJMRSAgICAgICAg
+KDB4MSA8PCAzMCkNCj4+ICNkZWZpbmUgUENJRV9BVFVfTE9XRVJfQkFTRSAgICAgICAgICAgICAw
+eDkwQw0KPj4gI2RlZmluZSBQQ0lFX0FUVV9VUFBFUl9CQVNFICAgICAgICAgICAgIDB4OTEwDQo+
+PiAjZGVmaW5lIFBDSUVfQVRVX0xJTUlUICAgICAgICAgICAgICAgICAgMHg5MTQNCj4+ICNkZWZp
+bmUgUENJRV9BVFVfTE9XRVJfVEFSR0VUICAgICAgICAgICAweDkxOA0KPj4gI2RlZmluZSBQQ0lF
+X0FUVV9CVVMoeCkgICAgICAgICAgICAgICAgICgoKHgpICYgMHhmZikgPDwgMjQpDQo+PiAjZGVm
+aW5lIFBDSUVfQVRVX0RFVih4KSAgICAgICAgICAgICAgICAgKCgoeCkgJiAweDFmKSA8PCAxOSkN
+Cj4+ICNkZWZpbmUgUENJRV9BVFVfRlVOQyh4KSAgICAgICAgICAgICAgICAoKCh4KSAmIDB4Nykg
+PDwgMTYpDQo+PiAjZGVmaW5lIFBDSUVfQVRVX1VQUEVSX1RBUkdFVCAgICAgICAgICAgMHg5MUMN
+Cj4+DQo+PiAyLiBNeSB1bmRlcnN0YW5kaW5nIGlzIHRoYXQgdGhlIGRlc2lnbndhcmUgY29yZSBj
+dXJyZW50bHkgc3VwcG9ydCAyDQo+PiBPVVRCT1VORCByZWdpb25zIGFuZCAyIElOQk9VTkQgcmVn
+aW9ucy4gSXMgdGhpcyB0cnVlPyBJcyB0aGVyZSBhIHBsYW4gdG8gc3VwcG9ydCBtb3JlDQo+dGhh
+biAyPw0KPj4gMy4gSXMgdGhlcmUgYSBkb2N1bWVudGF0aW9uIGV4cGxhaW5pbmcgaG93IHRoZSBB
+VFUgaGFuZGxpbmcgY29kZSBpcw0KPj4gZGVzaWduZWQ/IEJhc2ljYWxseSBhcyBJIGNhbid0IGZp
+bmQgQVRVIHNwZWNpZmljIHJlZ2lzdGVycyBkZWZpbmVkIGluDQo+PiB0aGUgc3Mgc3BlYywgSSBh
+bSBub3QgYWJsZSB0byB1bmRlcnN0YW5kIHRoaXMgY29kZS4gSSBkbyBzZWUgdGhlDQo+PiBhcHBs
+aWNhdGlvbiBzcGFjZSBpbiBvdXIgc3Mgc3BlYyBkZWZpbmluZyBPVVRCT1VORCBJTkRFWC9PRkZT
+RVQgcmVnaXN0ZXIgdG8gY29uZmlndXJlDQo+T1VUQk9VTkQgcmVnaW9ucyBhbmQgSUIgcmVnaXN0
+ZXJzIHRvIGRlZmluZSB0aGUgSU5CT1VORCByZWdpb24uDQo+Pg0KPj4gNC4gV2hhdCBpcyB0aGUg
+YmFzZSBhZGRyZXNzIHZhcmlhYmxlIHVzZWQgdG8gYWNjZXNzIFJDJ3MgYXBwbGljYXRpb24NCj4+
+IHJlZ2lzdGVyIHNwYWNlPyBkYmlfYmFzZSBpbiBzdHJ1Y3QgcGNpZV9wb3J0ID8gQWxzbyBJIGFt
+IGFzc3VtaW5nIHRoaXMNCj4+IGlzIHVzZWQgZm9yIGFjY2Vzc2luZyB0aGlzIHNwYWNlIGZyb20g
+aW50ZXJuYWwgQ1BVIGJ1cyBhbmQgY2ZnMF9iYXNlIGFuZCBjZmcxX2Jhc2UgZm9yDQo+YWNjZXNz
+aW5nIGl0IGZyb20gcGNpIGJ1cy4gSXMgdGhpcyByaWdodD8NCj4+DQo+PiBJIGFtIHRyeWluZyB0
+byBmaWd1cmUgdGhpcyBvdXQgbXlzZWxmLCBidXQgaWYgc29tZW9uZSBjb3VsZCBleHBsYWluIHRo
+ZXNlLCB0aGF0IHdpbGwgYmUNCj5ncmVhdCENCj4+DQo+PiBUaGFua3MuDQo+Pg0KPj4gTXVyYWxp
+IEthcmljaGVyaQ0KPj4gTGludXggS2VybmVsLCBTb2Z0d2FyZSBEZXZlbG9wbWVudA0KPj4NCj4+
+DQo+PiAtLQ0KPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUg
+InVuc3Vic2NyaWJlIGxpbnV4LXBjaSINCj4+IGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
+YWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vDQo+PiBpbmZvIGF0ICBodHRw
+Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
