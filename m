@@ -1,172 +1,314 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:47382 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752733Ab3LQUHE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 15:07:04 -0500
-Message-ID: <52B0AEE4.1000900@gmail.com>
-Date: Tue, 17 Dec 2013 12:07:00 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45920 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755619Ab3LSUaP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 15:30:15 -0500
+Date: Thu, 19 Dec 2013 12:30:17 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Neil Horman <nhorman@tuxdriver.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Veaceslav Falico <vfalico@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Knut Petersen <Knut_Petersen@t-online.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3] PCI: export MSI mode using attributes, not kobjects
+Message-ID: <20131219203017.GA1768@kroah.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v3 7/8] pciehp: Ensure very fast hotplug events are also processed.
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Today, this is how all the hotplug and unplug events work:
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Hotplug / Removal needs to be done
-  => Set slot->state (protected by slot->lock) to either
-    POWERON_STATE (for enabling) or POWEROFF_STATE (for disabling).
-  => Submit the work item for pciehp_power_thread() to slot->wq.
+The PCI MSI sysfs code is a mess with kobjects for things that don't
+really need to be kobjects.  This patch creates attributes dynamically
+for the MSI interrupts instead of using kobjects.
 
-Problem:
-  There is a problem if the hotplug events can happen fast enough that
-  they do not give SW enough time to add or remove the new devices.
+Note, this removes a directory from the current MSI interrupt sysfs
+code:
 
-  => Assume: Event for unplug comes (e.g. surprise removal). But
-     before the pciehp_power_thread() work item was executed, the
-     card was replaced by another card, causing surprise hotplug event.
+old MSI kobjects:
+pci_device
+   └── msi_irqs
+       └── 40
+           └── mode
 
-  => What goes wrong:
-    => The hot-removal event sets slot->state to POWEROFF_STATE, and
-       schedules the pciehp_power_thread().
-    => The hot-add event sets slot->state to POWERON_STATE, and
-       schedules the pciehp_power_thread().
-    => Now the pciehp_power_thread() is scheduled twice, and on both
-       occasions it will find POWERON_STATE and will try to add the
-       devices on the slot, and will fail complaining that the devices
-       already exist.
+new MSI attributes:
+pci_device
+   └── msi_irqs
+       └── 40
 
-  => Why this is a problem: If the device was replaced between the hot
-     removal and hot-add, then we should unload the old driver and
-     reload the new one. This does not happen today. The kernel or the
-     driver is not even aware that the device was replaced.
+As there was only one file "mode" with the kobject model, the interrupt
+number is now a file that returns the "mode" of the interrupt (msi vs.
+msix).
 
-     The problem is that the pciehp_power_thread() only looks at the
-     slot->state which would only contain the *latest* state - not
-     the actual event (add / remove) that was the intent of the IRQ
-     handler who submitted the work.
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-What this patch does:
-
-  => Hotplug events pass on an actual request (for addition or removal)
-     to pciehp_power_thread() which is local to that work item
-     submission.
-
-  => pciehp_power_thread() does not need to look at slote->state and
-     hence no locks needed in that.
-
-  => Essentially this results in all the hotplug and unplug events
-     "replayed" by pciehp_power_thread().
-
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
 ---
-v3: * same as v2. Only the patch numbering has changed from [3/4] to [7/8]
-    * Folded 4 hunks into one since handler functions were combined.
-v2: Same as v1, dropped the "RFC" from subject, added Guenter's signature
-v1: Initial patch
+v3: attribute creation properly tagged for lockdep.
+    error handling if creation of attributes fails.
 
- drivers/pci/hotplug/pciehp_ctrl.c |   29 ++++++++++++++++++++---------
- 1 file changed, 20 insertions(+), 9 deletions(-)
+v2: add documentation for sysfs attributes
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index e934618..36a8061 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -297,6 +297,9 @@ static int remove_board(struct slot *p_slot)
- struct power_work_info {
- 	struct slot *p_slot;
- 	struct work_struct work;
-+	unsigned int req;
-+#define DISABLE_REQ 0
-+#define ENABLE_REQ  1
- };
+ Documentation/ABI/testing/sysfs-bus-pci |   11 --
+ drivers/pci/msi.c                       |  166 +++++++++++++++++---------------
+ include/linux/pci.h                     |    2 
+ 3 files changed, 96 insertions(+), 83 deletions(-)
+
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -70,18 +70,15 @@ Date:		September, 2011
+ Contact:	Neil Horman <nhorman@tuxdriver.com>
+ Description:
+ 		The /sys/devices/.../msi_irqs directory contains a variable set
+-		of sub-directories, with each sub-directory being named after a
+-		corresponding msi irq vector allocated to that device.  Each
+-		numbered sub-directory N contains attributes of that irq.
+-		Note that this directory is not created for device drivers which
+-		do not support msi irqs
++		of files, with each file being named after a corresponding msi
++		irq vector allocated to that device.
  
- /**
-@@ -312,10 +315,8 @@ static void pciehp_power_thread(struct work_struct *work)
- 		container_of(work, struct power_work_info, work);
- 	struct slot *p_slot = info->p_slot;
+-What:		/sys/bus/pci/devices/.../msi_irqs/<N>/mode
++What:		/sys/bus/pci/devices/.../msi_irqs/<N>
+ Date:		September 2011
+ Contact:	Neil Horman <nhorman@tuxdriver.com>
+ Description:
+ 		This attribute indicates the mode that the irq vector named by
+-		the parent directory is in (msi vs. msix)
++		the file is in (msi vs. msix)
  
--	mutex_lock(&p_slot->lock);
--	switch (p_slot->state) {
--	case POWEROFF_STATE:
--		mutex_unlock(&p_slot->lock);
-+	switch (info->req) {
-+	case DISABLE_REQ:
- 		ctrl_dbg(p_slot->ctrl,
- 			 "Disabling domain:bus:device=%04x:%02x:00\n",
- 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
-@@ -323,18 +324,22 @@ static void pciehp_power_thread(struct work_struct *work)
- 		pciehp_disable_slot(p_slot);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
--		break;
--	case POWERON_STATE:
- 		mutex_unlock(&p_slot->lock);
-+		break;
-+	case ENABLE_REQ:
-+		ctrl_dbg(p_slot->ctrl,
-+			 "Enabling domain:bus:device=%04x:%02x:00\n",
-+			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
-+			 p_slot->ctrl->pcie->port->subordinate->number);
- 		if (pciehp_enable_slot(p_slot) && PWR_LED(p_slot->ctrl))
- 			pciehp_green_led_off(p_slot);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
-+		mutex_unlock(&p_slot->lock);
- 		break;
- 	default:
- 		break;
+ What:		/sys/bus/pci/devices/.../remove
+ Date:		January 2009
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -363,6 +363,9 @@ void write_msi_msg(unsigned int irq, str
+ static void free_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry, *tmp;
++	struct attribute **msi_attrs;
++	struct device_attribute *dev_attr;
++	int count = 0;
+ 
+ 	list_for_each_entry(entry, &dev->msi_list, list) {
+ 		int i, nvec;
+@@ -398,6 +401,22 @@ static void free_msi_irqs(struct pci_dev
+ 		list_del(&entry->list);
+ 		kfree(entry);
  	}
--	mutex_unlock(&p_slot->lock);
- 
- 	kfree(info);
- }
-@@ -357,9 +362,11 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
- 	switch (p_slot->state) {
- 	case BLINKINGOFF_STATE:
- 		p_slot->state = POWEROFF_STATE;
-+		info->req = DISABLE_REQ;
- 		break;
- 	case BLINKINGON_STATE:
- 		p_slot->state = POWERON_STATE;
-+		info->req = ENABLE_REQ;
- 		break;
- 	default:
- 		kfree(info);
-@@ -455,10 +462,13 @@ static void handle_surprise_event(struct slot *p_slot)
- 	INIT_WORK(&info->work, pciehp_power_thread);
- 
- 	pciehp_get_adapter_status(p_slot, &getstatus);
--	if (!getstatus)
-+	if (!getstatus) {
- 		p_slot->state = POWEROFF_STATE;
--	else
-+		info->req = DISABLE_REQ;
-+	} else {
- 		p_slot->state = POWERON_STATE;
-+		info->req = ENABLE_REQ;
++
++	if (dev->msi_irq_groups) {
++		sysfs_remove_groups(&dev->dev.kobj, dev->msi_irq_groups);
++		msi_attrs = dev->msi_irq_groups[0]->attrs;
++		list_for_each_entry(entry, &dev->msi_list, list) {
++			dev_attr = container_of(msi_attrs[count],
++						struct device_attribute, attr);
++			kfree(dev_attr->attr.name);
++			kfree(dev_attr);
++			++count;
++		}
++		kfree(msi_attrs);
++		kfree(dev->msi_irq_groups[0]);
++		kfree(dev->msi_irq_groups);
++		dev->msi_irq_groups = NULL;
 +	}
- 
- 	queue_work(p_slot->wq, &info->work);
  }
-@@ -478,6 +488,7 @@ static void handle_link_event(struct slot *p_slot, u32 event)
- 		return;
- 	}
- 	info->p_slot = p_slot;
-+	info->req = event == INT_LINK_UP ? ENABLE_REQ : DISABLE_REQ;
- 	INIT_WORK(&info->work, pciehp_power_thread);
  
- 	switch (p_slot->state) {
--- 
-1.7.9.5
-
+ static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
+@@ -471,94 +490,95 @@ void pci_restore_msi_state(struct pci_de
+ }
+ EXPORT_SYMBOL_GPL(pci_restore_msi_state);
+ 
+-
+-#define to_msi_attr(obj) container_of(obj, struct msi_attribute, attr)
+-#define to_msi_desc(obj) container_of(obj, struct msi_desc, kobj)
+-
+-struct msi_attribute {
+-	struct attribute        attr;
+-	ssize_t (*show)(struct msi_desc *entry, struct msi_attribute *attr,
+-			char *buf);
+-	ssize_t (*store)(struct msi_desc *entry, struct msi_attribute *attr,
+-			 const char *buf, size_t count);
+-};
+-
+-static ssize_t show_msi_mode(struct msi_desc *entry, struct msi_attribute *atr,
++static ssize_t msi_mode_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+ {
+-	return sprintf(buf, "%s\n", entry->msi_attrib.is_msix ? "msix" : "msi");
+-}
+-
+-static ssize_t msi_irq_attr_show(struct kobject *kobj,
+-				 struct attribute *attr, char *buf)
+-{
+-	struct msi_attribute *attribute = to_msi_attr(attr);
+-	struct msi_desc *entry = to_msi_desc(kobj);
+-
+-	if (!attribute->show)
+-		return -EIO;
+-
+-	return attribute->show(entry, attribute, buf);
+-}
+-
+-static const struct sysfs_ops msi_irq_sysfs_ops = {
+-	.show = msi_irq_attr_show,
+-};
+-
+-static struct msi_attribute mode_attribute =
+-	__ATTR(mode, S_IRUGO, show_msi_mode, NULL);
+-
+-
+-static struct attribute *msi_irq_default_attrs[] = {
+-	&mode_attribute.attr,
+-	NULL
+-};
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct msi_desc *entry;
++	unsigned long irq;
++	int retval;
+ 
+-static void msi_kobj_release(struct kobject *kobj)
+-{
+-	struct msi_desc *entry = to_msi_desc(kobj);
++	retval = kstrtoul(attr->attr.name, 10, &irq);
++	if (retval)
++		return retval;
+ 
+-	pci_dev_put(entry->dev);
++	list_for_each_entry(entry, &pdev->msi_list, list) {
++		if (entry->irq == irq) {
++			return sprintf(buf, "%s\n",
++				       entry->msi_attrib.is_msix ? "msix" : "msi");
++		}
++	}
++	return -ENODEV;
+ }
+ 
+-static struct kobj_type msi_irq_ktype = {
+-	.release = msi_kobj_release,
+-	.sysfs_ops = &msi_irq_sysfs_ops,
+-	.default_attrs = msi_irq_default_attrs,
+-};
+-
+ static int populate_msi_sysfs(struct pci_dev *pdev)
+ {
++	struct attribute **msi_attrs;
++	struct attribute *msi_attr;
++	struct device_attribute *msi_dev_attr;
++	struct attribute_group *msi_irq_group;
++	const struct attribute_group **msi_irq_groups;
+ 	struct msi_desc *entry;
+-	struct kobject *kobj;
+-	int ret;
++	int ret = -ENOMEM;
++	int num_msi = 0;
+ 	int count = 0;
+ 
+-	pdev->msi_kset = kset_create_and_add("msi_irqs", NULL, &pdev->dev.kobj);
+-	if (!pdev->msi_kset)
+-		return -ENOMEM;
++	/* Determine how many msi entries we have */
++	list_for_each_entry(entry, &pdev->msi_list, list) {
++		++num_msi;
++	}
++	if (!num_msi)
++		return 0;
+ 
++	/* Dynamically create the MSI attributes for the PCI device */
++	msi_attrs = kzalloc(sizeof(void *) * (num_msi + 1), GFP_KERNEL);
++	if (!msi_attrs)
++		return -ENOMEM;
+ 	list_for_each_entry(entry, &pdev->msi_list, list) {
+-		kobj = &entry->kobj;
+-		kobj->kset = pdev->msi_kset;
+-		pci_dev_get(pdev);
+-		ret = kobject_init_and_add(kobj, &msi_irq_ktype, NULL,
+-				     "%u", entry->irq);
+-		if (ret)
+-			goto out_unroll;
++		char *name = kmalloc(20, GFP_KERNEL);
++		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
++		if (!msi_dev_attr)
++			goto error_attrs;
++		sprintf(name, "%d", entry->irq);
++		sysfs_attr_init(&msi_dev_attr->attr);
++		msi_dev_attr->attr.name = name;
++		msi_dev_attr->attr.mode = S_IRUGO;
++		msi_dev_attr->show = msi_mode_show;
++		msi_attrs[count] = &msi_dev_attr->attr;
++		++count;
++	}
++
++	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
++	if (!msi_irq_group)
++		goto error_attrs;
++	msi_irq_group->name = "msi_irqs";
++	msi_irq_group->attrs = msi_attrs;
++
++	msi_irq_groups = kzalloc(sizeof(void *) * 2, GFP_KERNEL);
++	if (!msi_irq_groups)
++		goto error_irq_group;
++	msi_irq_groups[0] = msi_irq_group;
+ 
+-		count++;
+-	}
++	ret = sysfs_create_groups(&pdev->dev.kobj, msi_irq_groups);
++	if (ret)
++		goto error_irq_groups;
++	pdev->msi_irq_groups = msi_irq_groups;
+ 
+ 	return 0;
+ 
+-out_unroll:
+-	list_for_each_entry(entry, &pdev->msi_list, list) {
+-		if (!count)
+-			break;
+-		kobject_del(&entry->kobj);
+-		kobject_put(&entry->kobj);
+-		count--;
++error_irq_groups:
++	kfree(msi_irq_groups);
++error_irq_group:
++	kfree(msi_irq_group);
++error_attrs:
++	count = 0;
++	msi_attr = msi_attrs[count];
++	while (msi_attr) {
++		msi_dev_attr = container_of(msi_attr, struct device_attribute, attr);
++		kfree(msi_attr->name);
++		kfree(msi_dev_attr);
++		++count;
++		msi_attr = msi_attrs[count];
+ 	}
+ 	return ret;
+ }
+@@ -925,8 +945,6 @@ void pci_disable_msi(struct pci_dev *dev
+ 
+ 	pci_msi_shutdown(dev);
+ 	free_msi_irqs(dev);
+-	kset_unregister(dev->msi_kset);
+-	dev->msi_kset = NULL;
+ }
+ EXPORT_SYMBOL(pci_disable_msi);
+ 
+@@ -1023,8 +1041,6 @@ void pci_disable_msix(struct pci_dev *de
+ 
+ 	pci_msix_shutdown(dev);
+ 	free_msi_irqs(dev);
+-	kset_unregister(dev->msi_kset);
+-	dev->msi_kset = NULL;
+ }
+ EXPORT_SYMBOL(pci_disable_msix);
+ 
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -351,7 +351,7 @@ struct pci_dev {
+ 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
+ #ifdef CONFIG_PCI_MSI
+ 	struct list_head msi_list;
+-	struct kset *msi_kset;
++	const struct attribute_group **msi_irq_groups;
+ #endif
+ 	struct pci_vpd *vpd;
+ #ifdef CONFIG_PCI_ATS
