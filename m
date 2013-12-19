@@ -1,59 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752862Ab3LFDUt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Dec 2013 22:20:49 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiri Kosina <trivial@kernel.org>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part1 V2 06/20] iommu/vt-d, trivial: print correct domain id of static identity domain
-Date: Fri,  6 Dec 2013 11:21:09 +0800
-Message-Id: <1386300083-6882-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Tony Luck <tony.luck@intel.com>, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [Patch v2 03/13] PCI, pci-label: release allocated ACPI object on error recovery path
+Date: Thu, 19 Dec 2013 20:38:12 +0800
+Message-Id: <1387456702-4709-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Field si_domain->id is set by iommu_attach_domain(), so we could only
-print domain id for static identity domain after calling
-iommu_attach_domain(si_domain, iommu).
+Function dsm_get_label() leaks the returned ACPI object if
+obj->package.count is not 2, so fix the possible memory leak.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/intel-iommu.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/pci/pci-label.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 70bc071..68bce9d 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -2246,8 +2246,6 @@ static int __init si_domain_init(int hw)
- 	if (!si_domain)
- 		return -EFAULT;
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index d51f45a..f6e01a5 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -233,11 +233,7 @@ dsm_get_label(acpi_handle handle, int func,
+ 		return -1;
  
--	pr_debug("Identity mapping domain is domain %d\n", si_domain->id);
+ 	obj = (union acpi_object *)output->pointer;
 -
- 	for_each_active_iommu(iommu, drhd) {
- 		ret = iommu_attach_domain(si_domain, iommu);
- 		if (ret) {
-@@ -2262,6 +2260,7 @@ static int __init si_domain_init(int hw)
+-	switch (obj->type) {
+-	case ACPI_TYPE_PACKAGE:
+-		if (obj->package.count != 2)
+-			break;
++	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
+ 		len = obj->package.elements[0].integer.value;
+ 		if (buf) {
+ 			if (attribute == ACPI_ATTR_INDEX_SHOW)
+@@ -250,10 +246,10 @@ dsm_get_label(acpi_handle handle, int func,
+ 		}
+ 		kfree(output->pointer);
+ 		return len;
+-	break;
+-	default:
+-		kfree(output->pointer);
  	}
++
++	kfree(output->pointer);
++
+ 	return -1;
+ }
  
- 	si_domain->flags = DOMAIN_FLAG_STATIC_IDENTITY;
-+	pr_debug("Identity mapping domain is domain %d\n", si_domain->id);
- 
- 	if (hw)
- 		return 0;
 -- 
 1.7.10.4
 
