@@ -1,108 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:21738 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495Ab3LBBmM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 Dec 2013 20:42:12 -0500
-Message-ID: <529BE508.7090504@huawei.com>
-Date: Mon, 2 Dec 2013 09:40:24 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"Dan Williams" <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <dmaengine@vger.kernel.org>
-Subject: Re: [Patch Part1 V2 02/17] iommu/vt-d: fix PCI device reference leakage
- on error recovery path
-References: <1385715030-20553-1-git-send-email-jiang.liu@linux.intel.com> <1385715030-20553-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1385715030-20553-3-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from userp1040.oracle.com ([156.151.31.81]:31613 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756038Ab3LSUnx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 15:43:53 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v6 1/2] PCI: Try to allocate mem64 above 4G at first
+Date: Thu, 19 Dec 2013 12:44:02 -0800
+Message-Id: <1387485843-17403-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
+References: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+On system with more pcie cards, we do not have enough range under 4G
+to allocate those pci devices.
 
-On 2013/11/29 16:50, Jiang Liu wrote:
-> Function dmar_parse_dev_scope() should release the PCI device reference
-> count gained in function dmar_parse_one_dev_scope() on error recovery,
-> otherwise will cause PCI device object leakage.
-> 
-> This patch also introduces dmar_free_dev_scope(), which will be used
-> to support DMAR device hotplug.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/iommu/dmar.c |   15 +++++++++++++--
->  include/linux/dmar.h |    1 +
->  2 files changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-> index 8b452c9..f3043a2 100644
-> --- a/drivers/iommu/dmar.c
-> +++ b/drivers/iommu/dmar.c
-> @@ -72,6 +72,7 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
->  	struct acpi_dmar_pci_path *path;
->  	int count;
->  
-> +	*dev = NULL;
->  	bus = pci_find_bus(segment, scope->bus);
->  	path = (struct acpi_dmar_pci_path *)(scope + 1);
->  	count = (scope->length - sizeof(struct acpi_dmar_device_scope))
-> @@ -100,7 +101,6 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
->  	if (!pdev) {
->  		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
->  			segment, scope->bus, path->device, path->function);
-> -		*dev = NULL;
->  		return 0;
->  	}
->  	if ((scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT && \
-> @@ -151,7 +151,7 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
->  			ret = dmar_parse_one_dev_scope(scope,
->  				&(*devices)[index], segment);
->  			if (ret) {
-> -				kfree(*devices);
-> +				dmar_free_dev_scope(devices, cnt);
->  				return ret;
->  			}
->  			index ++;
-> @@ -162,6 +162,17 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
->  	return 0;
->  }
->  
-> +void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt)
-> +{
-> +	if (*devices && *cnt) {
-> +		while (--*cnt >= 0)
-> +			pci_dev_put((*devices)[*cnt]);
-> +		kfree(*devices);
-> +		*devices = NULL;
-> +		*cnt = 0;
-> +	}
-> +}
-> +
->  /**
->   * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
->   * structure which uniquely represent one DMA remapping hardware unit
-> diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-> index b029d1a..8adfce0 100644
-> --- a/include/linux/dmar.h
-> +++ b/include/linux/dmar.h
-> @@ -159,6 +159,7 @@ extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
->  extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
->  extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
->  				struct pci_dev ***devices, u16 segment);
-> +extern void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt);
->  extern int intel_iommu_init(void);
->  #else /* !CONFIG_INTEL_IOMMU: */
->  static inline int intel_iommu_init(void) { return -ENODEV; }
-> 
+On 64bit system, we could try to allocate mem64 above 4G at first,
+and fall back to below 4g if it can not find any above 4g.
 
+-v2: update bottom assigning to make it clear for non-pae support machine.
+-v3: Bjorn's change:
+        use MAX_RESOURCE instead of -1
+        use start/end instead of bottom/max
+        for all arch instead of just x86_64
+-v4: updated after PCI_MAX_RESOURCE_32 change.
+-v5: restore io handling to use PCI_MAX_RESOURCE_32 as limit.
+-v6: checking pcibios_resource_to_bus return for every bus res, to decide it
+	if we need to try high at first.
+     It supports all arches instead of just x86_64.
+-v7: split 4G limit change out to another patch according to Bjorn.
+     also use pci_clip_resource instead.
+-v8: refresh after changes in pci/resource.
+-v9: make second try to restart from first res of bus.
+     so we can ommit the patch that sort resource list of pci root bus.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c | 34 ++++++++++++++++++++++++----------
+ 1 file changed, 24 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 263b90c..d49e6cb 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -100,6 +100,9 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+ 
+ /* The region that can be mapped by a 32-bit BAR. */
+ static struct pci_bus_region pci_32_bit = {0, 0xffffffff};
++/* The region that can be mapped by a 64-bit BAR above 4G */
++static struct pci_bus_region pci_64_bit = {(resource_size_t)(1ULL<<32),
++					   (resource_size_t)(-1ULL)};
+ 
+ /*
+  * @res contains CPU addresses.  Clip it so the corresponding bus addresses
+@@ -150,10 +153,11 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ 	int i, ret = -ENOMEM;
+ 	struct resource *r;
+-	resource_size_t max;
++	bool try_again = !!(res->flags & IORESOURCE_MEM_64);
+ 
+ 	type_mask |= IORESOURCE_IO | IORESOURCE_MEM;
+ 
++again:
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		struct resource avail;
+ 
+@@ -170,13 +174,21 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 		    !(res->flags & IORESOURCE_PREFETCH))
+ 			continue;
+ 
++		/* If this is a 64-bit BAR, try above 4G first. */
++		avail = *r;
++		if (try_again) {
++			/* res->flags has IORESOURCE_MEM_64 set */
++			pci_clip_resource_to_bus(bus, &avail, &pci_64_bit);
++			if (!resource_size(&avail))
++				continue;
++		}
++
+ 		/*
+ 		 * Unless this is a 64-bit BAR, we have to clip the
+ 		 * available space to the part that maps to the region of
+ 		 * 32-bit bus addresses.
+ 		 */
+-		avail = *r;
+-		if (!(res->flags & IORESOURCE_MEM_64)) {
++		if (!try_again && !(res->flags & IORESOURCE_MEM_64)) {
+ 			pci_clip_resource_to_bus(bus, &avail, &pci_32_bit);
+ 			if (!resource_size(&avail))
+ 				continue;
+@@ -188,17 +200,19 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 		 * this is an already-configured bridge window, its start
+ 		 * overrides "min".
+ 		 */
+-		if (avail.start)
+-			min = avail.start;
+-
+-		max = avail.end;
+ 
+ 		/* Ok, try it out.. */
+-		ret = allocate_resource(r, res, size, min, max,
+-					align, alignf, alignf_data);
++		ret = allocate_resource(r, res, size, avail.start ? : min,
++					avail.end, align, alignf, alignf_data);
+ 		if (ret == 0)
+-			break;
++			return 0;
+ 	}
++
++	if (try_again) {
++		try_again = false;
++		goto again;
++	}
++
+ 	return ret;
+ }
+ 
 -- 
-Thanks!
-Yijing
+1.8.4
 
