@@ -1,42 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47358 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466Ab3LLQJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Dec 2013 11:09:13 -0500
-Date: Thu, 12 Dec 2013 17:11:01 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 11/11] PCI/MSI: Introduce pcim_enable_msi*() family
- helpers
-Message-ID: <20131212161100.GB14655@dhcp-26-207.brq.redhat.com>
-References: <cover.1385399393.git.agordeev@redhat.com>
- <086bc30b22688c629911d02e230d1bc876fb946f.1385399393.git.agordeev@redhat.com>
- <20131210231602.GH4699@google.com>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:49121 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754814Ab3LSSWm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 13:22:42 -0500
+Received: by mail-ig0-f176.google.com with SMTP id k19so12724597igc.3
+        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 10:22:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131210231602.GH4699@google.com>
+In-Reply-To: <1387456702-4709-4-git-send-email-jiang.liu@linux.intel.com>
+References: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com> <1387456702-4709-4-git-send-email-jiang.liu@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 19 Dec 2013 11:22:22 -0700
+Message-ID: <CAErSpo4oKsJCKxUhxT8E745BkX+veOD-tMEeHULHOuH-3suMRA@mail.gmail.com>
+Subject: Re: [Patch v2 03/13] PCI, pci-label: release allocated ACPI object on
+ error recovery path
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 10, 2013 at 04:16:02PM -0700, Bjorn Helgaas wrote:
-> What's the reason for using the "pcim_" prefix?  To me, that suggests that
-> this is a "managed" interface in the sense described in
-> Documentation/driver-model/devres.txt, where resources are automatically
-> deallocated when the driver detaches.  But I don't see anything like that
-> happening in this patch.
+On Thu, Dec 19, 2013 at 5:38 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> Function dsm_get_label() leaks the returned ACPI object if
+> obj->package.count is not 2, so fix the possible memory leak.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-Oh.. right. What about pci_auto_ prefix to indicate automatic fallback
-logic? Or may be even pcia_ ?
+Rafael, if you want to take these through your tree, feel free.  I'm
+guessing it probably makes sense to keep the whole series together.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+> ---
+>  drivers/pci/pci-label.c |   12 ++++--------
+>  1 file changed, 4 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+> index d51f45a..f6e01a5 100644
+> --- a/drivers/pci/pci-label.c
+> +++ b/drivers/pci/pci-label.c
+> @@ -233,11 +233,7 @@ dsm_get_label(acpi_handle handle, int func,
+>                 return -1;
+>
+>         obj = (union acpi_object *)output->pointer;
+> -
+> -       switch (obj->type) {
+> -       case ACPI_TYPE_PACKAGE:
+> -               if (obj->package.count != 2)
+> -                       break;
+> +       if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
+>                 len = obj->package.elements[0].integer.value;
+>                 if (buf) {
+>                         if (attribute == ACPI_ATTR_INDEX_SHOW)
+> @@ -250,10 +246,10 @@ dsm_get_label(acpi_handle handle, int func,
+>                 }
+>                 kfree(output->pointer);
+>                 return len;
+> -       break;
+> -       default:
+> -               kfree(output->pointer);
+>         }
+> +
+> +       kfree(output->pointer);
+> +
+>         return -1;
+>  }
+>
+> --
+> 1.7.10.4
+>
