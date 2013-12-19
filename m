@@ -1,17 +1,17 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35813 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:51735 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756038Ab3LSUn5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 15:43:57 -0500
+	with ESMTP id S1750909Ab3LSGJe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 01:09:34 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 2/2] PCI: Try best to allocate pref mmio 64bit above 4g
-Date: Thu, 19 Dec 2013 12:44:03 -0800
-Message-Id: <1387485843-17403-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
-References: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v5 2/3] PCI: Try best to allocate pref mmio 64bit above 4g
+Date: Wed, 18 Dec 2013 22:09:39 -0800
+Message-Id: <1387433380-18564-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1387433380-18564-1-git-send-email-yinghai@kernel.org>
+References: <1387433380-18564-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
