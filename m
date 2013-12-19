@@ -1,74 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:53454 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752493Ab3LQUFS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 15:05:18 -0500
-Message-ID: <52B0AE7A.7010201@gmail.com>
-Date: Tue, 17 Dec 2013 12:05:14 -0800
-From: Rajat Jain <rajatjain.linux@gmail.com>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:50647 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756313Ab3LSWa3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 17:30:29 -0500
+Received: by mail-ie0-f170.google.com with SMTP id qd12so2257835ieb.29
+        for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 14:30:28 -0800 (PST)
+Date: Thu, 19 Dec 2013 15:30:23 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 0/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
+ helpers
+Message-ID: <20131219223023.GD15201@google.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v3 0/8] Allow Link state changes for Hot-Plug
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Mon, Dec 16, 2013 at 09:34:53AM +0100, Alexander Gordeev wrote:
+> Alexander Gordeev (9):
+>   PCI/MSI/s390: Fix single MSI only check
+>   PCI/MSI/s390: Remove superfluous check of MSI type
+>   PCI/MSI: Fix return value when populate_msi_sysfs() failed
+>   PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
+>   PCI/MSI: Make pci_enable_msi/msix() 'nvec' argument type as int
 
-This patch set enables the use of PCI Express link up and link down events
-for Hotplug or Unplug. Resending the patch after taking care of review
-comments, splitting patch into multiple smaller patches, and incorporating
-the conclusions drawn from the discussion here:
+I applied the patches above to pci/msi for v3.14 to get them out of the
+way.
 
-http://marc.info/?t=138611014300001&r=1&w=2
-
-Due to splitting of the patch, 4 new patches are added to the patchset,
-although the content is almost the same. 
-
-Patch v2 [1/4] = Patch v3 [1/8]
-
-Patch v2 [2/8] = Patch v3 [2/8] +
-                 Patch v3 [3/8] +
-                 Patch v3 [4/8] +
-                 Patch v3 [5/8] +
-                 Patch v3 [6/8]
-
-Patch v2 [3/4] = Patch v3 [7/8]
-
-Patch v2 [4/4] = Patch v3 [8/8]
-
-(As a side effect, this patch also fixes the bug 
-https://bugzilla.kernel.org/show_bug.cgi?id=65521 )
-
-I'd appreciate if you could please review and provide me with any comments.
-
-Thanks,
-
-Rajat
-
-Rajat Jain (8):
-  pciehp: Make check_link_active() non-static
-  pciehp: Use link change notifications for hot-plug and removal
-  pciehp: Enable link state change notifications
-  pciehp: Don't disable the link permanently, during removal
-  pciehp: Don't check for adapter or latch status while disabling
-  pciehp: Disabling the link notification across slot reset
-  pciehp: Ensure very fast hotplug events are also processed.
-  pciehp: Introduce hotplug_lock to serialize HP events
-
- drivers/pci/hotplug/pciehp.h      |    5 ++
- drivers/pci/hotplug/pciehp_core.c |    7 +-
- drivers/pci/hotplug/pciehp_ctrl.c |  152 ++++++++++++++++++++++++++++++-------
- drivers/pci/hotplug/pciehp_hpc.c  |   73 +++++++++---------
- 4 files changed, 171 insertions(+), 66 deletions(-)
-
--- 
-1.7.9.5
-
+>   PCI/MSI: Factor out pci_get_msi_vec_count() interface
+>   PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
+>   PCI/MSI: Introduce pci_get_msix_vec_count() interface
+>   PCI/MSI: Introduce pci_auto_enable_msi*() family helpers
