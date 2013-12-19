@@ -1,54 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:58549 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752074Ab3LXRwY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Dec 2013 12:52:24 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so7327403iec.41
-        for <linux-pci@vger.kernel.org>; Tue, 24 Dec 2013 09:52:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CACaajQv1OWxxcGORBq=LN-4JQzATf4YmWBQymoeyovfY-rUpmw@mail.gmail.com>
-References: <CACaajQv1OWxxcGORBq=LN-4JQzATf4YmWBQymoeyovfY-rUpmw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Dec 2013 10:52:02 -0700
-Message-ID: <CAErSpo4uZ1N7uKyKMGHERtq-gvcpQ7oHTE7U9fGiAzfziMJ+Ew@mail.gmail.com>
-Subject: Re: tg3 and sd card reader at acer aspire
-To: Vasiliy Tolstov <v.tolstov@selfip.ru>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout4.samsung.com ([203.254.224.34]:45716 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750817Ab3LSBLe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 20:11:34 -0500
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MY100KRQ4N3MRC0@mailout4.samsung.com> for
+ linux-pci@vger.kernel.org; Thu, 19 Dec 2013 10:11:27 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Marek Vasut' <marex@denx.de>, linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Frank Li' <lznuaa@gmail.com>, 'Harro Haan' <hrhaan@gmail.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Richard Zhu' <r65037@freescale.com>,
+	'Sascha Hauer' <s.hauer@pengutronix.de>,
+	'Sean Cross' <xobs@kosagi.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Siva Reddy Kallam' <siva.kallam@samsung.com>,
+	'Srikanth T Shivanand' <ts.srikanth@samsung.com>,
+	'Tim Harvey' <tharvey@gateworks.com>,
+	'Troy Kisky' <troy.kisky@boundarydevices.com>,
+	'Yinghai Lu' <yinghai@kernel.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1386757818-5154-1-git-send-email-marex@denx.de>
+ <1386757818-5154-3-git-send-email-marex@denx.de>
+In-reply-to: <1386757818-5154-3-git-send-email-marex@denx.de>
+Subject: Re: [PATCH V2 3/7] PCI: imx6: Split away the PHY reset
+Date: Thu, 19 Dec 2013 10:11:26 +0900
+Message-id: <001f01cefc57$3d77d1a0$b86774e0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci because I think this is related to PCI ASPM]
+On Wednesday, December 11, 2013 7:30 PM, Marek Vasut wrote:
+> 
+> Split the PCIe PHY reset from the link up function to make
+> the code a little more structured.
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Frank Li <lznuaa@gmail.com>
+> Cc: Harro Haan <hrhaan@gmail.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> Cc: Sean Cross <xobs@kosagi.com>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+> Cc: Tim Harvey <tharvey@gateworks.com>
+> Cc: Troy Kisky <troy.kisky@boundarydevices.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
 
-I'm afraid nobody wants to touch ASPM because it's such a mess, but I
-hope somebody will step up and investigate this.
+Reviewed-by: Jingoo Han <jg1.han@samsung.com>
 
-On Tue, Dec 24, 2013 at 1:27 AM, Vasiliy Tolstov <v.tolstov@selfip.ru> wrote:
-> Hi all and sorry for may be spamming mailing list.
->
-> I have acer aspire v5-17 with broadcom card reader and ethernet card.
-> I'm affecting on this ubuntu bugs. But bug is present in vanilla linux
-> current git and stable lts.
->
-> Can somebody helps me and say - where i can post message and discuss
-> this problem. As i see ubuntu team can't solve this problem (bug
-> present is about 1 year and nothing changed).
-> One ubuntu user wia bisecting find broken commit -
-> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=6cac12dfab9c57a4f76821412224b226a9b08dff
->
-> Relevant ubuntu bugs:
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1178131
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1067222
->
->
-> Thanks!
-> --
-> Vasiliy Tolstov,
-> e-mail: v.tolstov@selfip.ru
-> jabber: vase@selfip.ru
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Best regards,
+Jingoo Han
+
+> ---
+>  drivers/pci/host/pci-imx6.c | 35 +++++++++++++++++++----------------
+>  1 file changed, 19 insertions(+), 16 deletions(-)
+> 
+> V2: Drop unused 'temp' variable.
+
