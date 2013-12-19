@@ -1,95 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:34718 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493Ab3LRBCK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Dec 2013 20:02:10 -0500
-Received: by mail-ig0-f179.google.com with SMTP id hk11so7785844igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2013 17:02:10 -0800 (PST)
-Date: Tue, 17 Dec 2013 18:02:07 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rajat Jain <rajatjain.linux@gmail.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>, yinghai@kernel.org
-Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
- during removal
-Message-ID: <20131218010207.GC15119@google.com>
-References: <52B0AEAD.6050604@gmail.com>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:41308 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750817Ab3LSNrX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 08:47:23 -0500
+Date: Thu, 19 Dec 2013 08:47:19 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@aculab.com>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
+ helpers
+Message-ID: <20131219134719.GA16994@htj.dyndns.org>
+References: <cover.1387140921.git.agordeev@redhat.com>
+ <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
+ <20131218003002.GA15119@google.com>
+ <20131218132349.GA29552@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6Km5N+Cfpaj5JEsb966rwcBjrAT4SFvG6Q9QkwkDFXCA@mail.gmail.com>
+ <20131219134244.GA32238@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52B0AEAD.6050604@gmail.com>
+In-Reply-To: <20131219134244.GA32238@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc yinghai@kernel.org (seems to be Yinghai's preferred email]
+Hello,
 
-On Tue, Dec 17, 2013 at 12:06:05PM -0800, Rajat Jain wrote:
-> We need future link up events for hot-add, thus don't disable
-> the link permanently during device removal. Also, remove the static
-> functions that are now left unused.
+On Thu, Dec 19, 2013 at 02:42:45PM +0100, Alexander Gordeev wrote:
+> I have troubles with this fallback logic. On each failed step we get an
+> error and we do not know if this is indeed an error or an indication of
+> insufficient MSI resources. Even -ENOSPC would not tell much, since it
+> could be thrown from a lower level.
 
-The changelog should mention that this reverts part of 2debd9289997 ("PCI:
-pciehp: Disable/enable link during slot power off/on").
+Well, it's not hard to define what -ENOSPC should mean.
 
-Yinghai, can you tell us whether this is an issue on your systems?
+> By contrast, with the tri-state return value we can distinguish and bail
+> out on errors right away.
 
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
-> ---
-> v3: no change, created by splitting the patch v2 [2/4]
-> v2: (non existent)
-> v1: (non existent)
-> 
->  drivers/pci/hotplug/pciehp_hpc.c |   18 ------------------
->  1 file changed, 18 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index b45b568..ab12555 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -278,11 +278,6 @@ static void pcie_wait_link_active(struct controller *ctrl)
->  	__pcie_wait_link_active(ctrl, true);
->  }
->  
-> -static void pcie_wait_link_not_active(struct controller *ctrl)
-> -{
-> -	__pcie_wait_link_active(ctrl, false);
-> -}
-> -
->  static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
->  {
->  	u32 l;
-> @@ -383,11 +378,6 @@ static int pciehp_link_enable(struct controller *ctrl)
->  	return __pciehp_link_set(ctrl, true);
->  }
->  
-> -static int pciehp_link_disable(struct controller *ctrl)
-> -{
-> -	return __pciehp_link_set(ctrl, false);
-> -}
-> -
->  int pciehp_get_attention_status(struct slot *slot, u8 *status)
->  {
->  	struct controller *ctrl = slot->ctrl;
-> @@ -620,14 +610,6 @@ int pciehp_power_off_slot(struct slot * slot)
->  	u16 cmd_mask;
->  	int retval;
->  
-> -	/* Disable the link at first */
-> -	pciehp_link_disable(ctrl);
-> -	/* wait the link is down */
-> -	if (ctrl->link_active_reporting)
-> -		pcie_wait_link_not_active(ctrl);
-> -	else
-> -		msleep(1000);
-> -
->  	slot_cmd = POWER_OFF;
->  	cmd_mask = PCI_EXP_SLTCTL_PCC;
->  	retval = pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
-> -- 
-> 1.7.9.5
-> 
+I kinda like that the available options are listed explicitly on the
+caller side (even if it ends up being a loop).  It decreases the
+chance of the caller going "oh I didn't expect _that_" and generaly
+makes things easier to follow.
+
+> So the above is bit ungraceful for me. Combined with a possible waste in
+> logs (if we're hitting the same error) it is quite enough for me to keep
+> current the interfaces, at least for a time being.
+
+FWIW, I like Bjorn's suggestion.  Given that this is mostly corner
+case thing, it isn't as important as the common ones but we might as
+well while we're at it.
+
+Thanks a lot for your work in the area!  :)
+
+-- 
+tejun
