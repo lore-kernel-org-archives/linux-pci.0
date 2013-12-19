@@ -1,68 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:39247 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184Ab3LRS0i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Dec 2013 13:26:38 -0500
-Received: by mail-ie0-f179.google.com with SMTP id x13so26088ief.24
-        for <linux-pci@vger.kernel.org>; Wed, 18 Dec 2013 10:26:38 -0800 (PST)
-Date: Wed, 18 Dec 2013 11:26:35 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Mark Lord <kernel@start.ca>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Jan Beulich <JBeulich@suse.com>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Message-ID: <20131218182635.GE15119@google.com>
-References: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <52442975.9000603@start.ca>
+Received: from bear.ext.ti.com ([192.94.94.41]:47019 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754711Ab3LSWB3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 17:01:29 -0500
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id rBJM1TCg030969
+	for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 16:01:29 -0600
+Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
+	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id rBJM1TBt022666
+	for <linux-pci@vger.kernel.org>; Thu, 19 Dec 2013 16:01:29 -0600
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: pcie designware question
+Date: Thu, 19 Dec 2013 22:01:28 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52442975.9000603@start.ca>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 26, 2013 at 08:32:53AM -0400, Mark Lord wrote:
-> On 13-09-18 05:48 AM, Alexander Gordeev wrote:
-> >
-> > The last pattern makes most of sense to me and could be updated with a more
-> > clear sequence - a call to (bit modified) pci_msix_table_size() followed
-> > by a call to pci_enable_msix(). I think this pattern can effectively
-> > supersede the currently recommended "loop" practice.
-> 
-> The loop is still necessary, because there's a race between those two calls,
-> so that pci_enable_msix() can still fail due to lack of MSIX slots.
+Hi,
 
-Hi Mark,
+I am working to port my pcie driver to pcie-designware core driver. The pcie sub system
+ on our platform  has 32 OUTBOUND regions and 2 INBOUND regions. In my current driver,
+I use internal memory map of CPU to access the RC's config/application space as well EP's
+config space. a 4K range is available to access the EP's config space. To allow write/read to
+the EP's config space, the driver basically write the bus, device and function number to the
+ application CFG_SETUP register and then access the corresponding EP's config register.
 
-Can you elaborate on this race?  My understanding is that
-pci_msix_table_size() depends only on the "Table Size" field in the MSI-X
-Message Control register.
+I have reviewed the designware.c code and the glue logic driver pci-exynos.c and couldn't
+understand few things.
 
-So if there's a concurrency problem here, it would have to be something
-like "pci_enable_msix() may not be able to configure the requested number
-of vectors because it has to allocate from a shared pool."
+1. Our pcie ss is based on designware core and following addresses are not listed in our IP's
+ data manual. Where is defined? It does show the rest of the offsets defined in
+ drivers/pci/host/designware.c and 
 
-If that's the case, pci_msix_table_size() wouldn't be involved at all, and
-the only question is how to coordinate between several drivers that each
-call pci_enable_msix().  I think that would have to be resolved in some
-arch hook used by the PCI core.
+#define PCIE_ATU_VIEWPORT               0x900
+#define PCIE_ATU_REGION_INBOUND         (0x1 << 31)
+#define PCIE_ATU_REGION_OUTBOUND        (0x0 << 31)
+#define PCIE_ATU_REGION_INDEX1          (0x1 << 0)
+#define PCIE_ATU_REGION_INDEX0          (0x0 << 0)
+#define PCIE_ATU_CR1                    0x904
+#define PCIE_ATU_TYPE_MEM               (0x0 << 0)
+#define PCIE_ATU_TYPE_IO                (0x2 << 0)
+#define PCIE_ATU_TYPE_CFG0              (0x4 << 0)
+#define PCIE_ATU_TYPE_CFG1              (0x5 << 0)
+#define PCIE_ATU_CR2                    0x908
+#define PCIE_ATU_ENABLE                 (0x1 << 31)
+#define PCIE_ATU_BAR_MODE_ENABLE        (0x1 << 30)
+#define PCIE_ATU_LOWER_BASE             0x90C
+#define PCIE_ATU_UPPER_BASE             0x910
+#define PCIE_ATU_LIMIT                  0x914
+#define PCIE_ATU_LOWER_TARGET           0x918
+#define PCIE_ATU_BUS(x)                 (((x) & 0xff) << 24)
+#define PCIE_ATU_DEV(x)                 (((x) & 0x1f) << 19)
+#define PCIE_ATU_FUNC(x)                (((x) & 0x7) << 16)
+#define PCIE_ATU_UPPER_TARGET           0x91C
 
-Maybe this is already taken care of; I just want to make sure we don't
-overlook an issue here.
+2. My understanding is that the designware core currently support 2 OUTBOUND regions
+and 2 INBOUND regions. Is this true? Is there a plan to support more than 2?
+3. Is there a documentation explaining how the ATU handling code is designed? Basically
+as I can't find ATU specific registers defined in the ss spec, I am not able to understand
+this code. I do see the application space in our ss spec defining OUTBOUND INDEX/OFFSET
+register to configure OUTBOUND regions and IB registers to define the INBOUND region.
 
-Bjorn
+4. What is the base address variable used to access RC's application register space? dbi_base
+in struct pcie_port ? Also I am assuming this is used for accessing this space from internal
+CPU bus and cfg0_base and cfg1_base for accessing it from pci bus. Is this right?
+
+I am trying to figure this out myself, but if someone could explain these, that will be great!
+
+Thanks.
+
+Murali Karicheri
+Linux Kernel, Software Development
+
+
