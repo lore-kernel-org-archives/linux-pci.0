@@ -1,73 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog125.obsmtp.com ([207.126.144.159]:42827 "EHLO
-	eu1sys200aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751774Ab3LMEai convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Dec 2013 23:30:38 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	spear-devel <spear-devel@list.st.com>
-Date: Fri, 13 Dec 2013 12:30:03 +0800
-Subject: RE: [PATCH 09/12] pcie: SPEAr13xx: Add designware pcie support
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F95F66A2@EAPEX1MAIL1.st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
- <f5c9cbbd116d462c428afc2e8afefd95aad8c6ec.1386752447.git.mohit.kumar@st.com>
- <201312120000.54545.arnd@arndb.de>
-In-Reply-To: <201312120000.54545.arnd@arndb.de>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:17205 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753246Ab3LSMnW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 19 Dec 2013 07:43:22 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [Patch v2 05/13] PCI, pci-label: treat PCI label with index 0 as valid label
+Date: Thu, 19 Dec 2013 20:38:14 +0800
+Message-Id: <1387456702-4709-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Arnd,
+Current pci-label driver detects ACPI label by checking label index
+returned by ACPI _DSM method, and treat it as valid if label index
+is positive. According to ACPI Firmware specification 3.1, zero is
+also an valid label index. So change code to detect availability of
+ACPI slot label by checking availaiblity of ACPI _DSM function for
+PCI label.
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: Thursday, December 12, 2013 4:31 AM
-> To: linux-arm-kernel@lists.infradead.org
-> Cc: Mohit KUMAR DCG; linux-pci@vger.kernel.org; Pratyush ANAND; Jingoo
-> Han; Viresh Kumar; spear-devel
-> Subject: Re: [PATCH 09/12] pcie: SPEAr13xx: Add designware pcie support
-> 
-> On Wednesday 11 December 2013, Mohit Kumar wrote:
-> > +#include <linux/clk.h>
-> > +#include <linux/delay.h>
-> > +#include <linux/interrupt.h>
-> > +#include <linux/kernel.h>
-> > +#include <linux/module.h>
-> > +#include <linux/of.h>
-> > +#include <linux/pci.h>
-> > +#include <linux/platform_device.h>
-> > +#include <linux/resource.h>
-> > +#include <mach/spear.h>
-> 
-> This won't actually build: you cannot access mach/*.h header files from
-> outside of mach-spear!
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/pci-label.c |   34 ++++++++++++++++++----------------
+ 1 file changed, 18 insertions(+), 16 deletions(-)
 
-- OK, will fix it.
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index f12dcd1..0260b14 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -187,7 +187,6 @@ static const char device_label_dsm_uuid[] = {
+ };
+ 
+ enum acpi_attr_enum {
+-	ACPI_ATTR_NONE = 0,
+ 	ACPI_ATTR_LABEL_SHOW,
+ 	ACPI_ATTR_INDEX_SHOW,
+ };
+@@ -222,20 +221,16 @@ dsm_get_label(struct device *dev, char *buf, enum acpi_attr_enum attr)
+ 	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2 &&
+ 	    tmp[0].type == ACPI_TYPE_INTEGER &&
+ 	    tmp[1].type == ACPI_TYPE_STRING) {
+-		len = tmp[0].integer.value;
+-		if (buf) {
+-			/*
+-			 * This second string element is optional even when
+-			 * this _DSM is implemented; when not implemented,
+-			 * this entry must return a null string.
+-			 */
+-			if (attr == ACPI_ATTR_INDEX_SHOW)
+-				scnprintf(buf, PAGE_SIZE, "%llu\n",
+-				tmp->integer.value);
+-			else if (attr == ACPI_ATTR_LABEL_SHOW)
+-				dsm_label_utf16s_to_utf8s(tmp + 1, buf);
+-			len = strlen(buf) > 0 ? strlen(buf) : -1;
+-		}
++		/*
++		 * The second string element is optional even when
++		 * this _DSM is implemented; when not implemented,
++		 * this entry must return a null string.
++		 */
++		if (attr == ACPI_ATTR_INDEX_SHOW)
++			scnprintf(buf, PAGE_SIZE, "%llu\n", tmp->integer.value);
++		else if (attr == ACPI_ATTR_LABEL_SHOW)
++			dsm_label_utf16s_to_utf8s(tmp + 1, buf);
++		len = strlen(buf) > 0 ? strlen(buf) : -1;
+ 	}
+ 
+ 	ACPI_FREE(obj);
+@@ -246,7 +241,14 @@ dsm_get_label(struct device *dev, char *buf, enum acpi_attr_enum attr)
+ static bool
+ device_has_dsm(struct device *dev)
+ {
+-	return dsm_get_label(dev, NULL, ACPI_ATTR_NONE) > 0;
++	acpi_handle handle;
++
++	handle = ACPI_HANDLE(dev);
++	if (!handle)
++		return false;
++
++	return !!acpi_check_dsm(handle, device_label_dsm_uuid, 0x2,
++				1 << DEVICE_LABEL_DSM);
+ }
+ 
+ static umode_t
+-- 
+1.7.10.4
 
-> 
-> > +struct spear13xx_pcie {
-> > +	void __iomem		*phy_base;
-> > +	void __iomem		*app_base;
-> > +	struct clk		*clk;
-> > +	struct pcie_port	pp;
-> > +	int			id;
-> > +	int			is_gen1;
-> > +};
-> 
-> The pcie driver shouldn't have direct access to the phy registers, use a phy
-> driver for that.
-
-- OK. In few workarounds we have to access controller as well as phy registers,
-How we should handle such cases if we separate out phy driver from here? Should it be
-through phy global functions called from pcie driver?
-
-Thanks
-Mohit
