@@ -1,253 +1,330 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:28866 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754897Ab3LPSt4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 13:49:56 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v4 7/9] PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
-Date: Mon, 16 Dec 2013 09:35:00 +0100
-Message-Id: <d9037b2ab455abff30e9c2da0a98e5e01b0940d7.1387140921.git.agordeev@redhat.com>
-In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com
+Subject: [PATCHv2 3/6] Crashdump-Accepting-Active-IOMMU-Domain-Interfaces
+Date: Thu, 19 Dec 2013 19:49:44 -0700
+Message-Id: <1387507787-14163-4-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+References: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of introduction of pci_get_msi_vec_count()
-interface pci_enable_msi_block_auto() function became
-superflous.
+This patch contains functions called from among the mainline code
+to retrieve information from the translation tables that have been
+copied into the crashdump kernel from the panicked kernel.
 
-To enable maximum possible number of MSIs drivers will
-first obtain that number from pci_get_msi_vec_count()
-function and then call pci_enable_msi_block() interface.
+Most often this happens when the crashdump kernel is setting-up a new
+domain for a device.  The crashdump kernel will assign to the device
+(and to its new domain) the same IOVA addressing width and domain-id
+that were used for this device by the panicked kernel. In the new
+domain all of the IOVA addresses that were in-use by this device at
+the time of the panic will be marked as "in-use" so that the crashdump
+kernel will avoid re-using them.
 
-Function pci_enable_msi_block_auto() has been introduced
-recently and its only user is AHCI driver, which is also
-updated by this change.
+This patch also includes one function to retrieve a bitmap of all
+domain-ids in-use by the panicked kernel.  These are marked "in-use"
+so that if there is a device being used by the crashdump kernel that
+was not being used by the panicked kernel then that new device will
+receive a fresh, unused domain-id.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Tejun Heo <tj@kernel.org>
+The 'device_domain_values_list' is used during the operation of
+duplicating (copying) the translation tables from the panicked kernel
+into the crashdump kernel, to insure that all devices that were assigned
+to any specific domain-id in the panicked kernel are also assigned to
+that same domain-id in the crashdump kernel.  Additionally, all context
+entries (there is one per device) that contain the same domain-id *must*
+point to the same set of page-tables.  The 'device_domain_values_list'
+insures that if the copy operation has already seen 'this' domain-id,
+it will simply point the current context entry to the same top-level
+page-table that has been created previously for this domain-id.
+
+v1->v2:
+Updated patch description
+
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
 ---
- Documentation/PCI/MSI-HOWTO.txt |   39 ++++-----------------------
- drivers/ata/ahci.c              |   56 ++++++++++++++++++++++++--------------
- drivers/pci/msi.c               |   25 -----------------
- include/linux/pci.h             |    7 -----
- 4 files changed, 41 insertions(+), 86 deletions(-)
+ drivers/iommu/intel-iommu.c | 266 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 266 insertions(+)
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index c03b815..8d35d62 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -127,49 +127,22 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
- returns as soon as it finds any constraint that doesn't allow the
- call to succeed.
- 
--4.2.3 pci_enable_msi_block_auto
--
--int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
--
--This variation on pci_enable_msi() call allows a device driver to request
--the maximum possible number of MSIs.  The MSI specification only allows
--interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
--
--If this function returns a positive number, it indicates that it has
--succeeded and the returned value is the number of allocated interrupts. In
--this case, the function enables MSI on this device and updates dev->irq to
--be the lowest of the new interrupts assigned to it.  The other interrupts
--assigned to the device are in the range dev->irq to dev->irq + returned
--value - 1.
--
--If this function returns a negative number, it indicates an error and
--the driver should not attempt to request any more MSI interrupts for
--this device.
--
--If the device driver needs to know the number of interrupts the device
--supports it can pass the pointer count where that number is stored. The
--device driver must decide what action to take if pci_enable_msi_block_auto()
--succeeds, but returns a value less than the number of interrupts supported.
--If the device driver does not need to know the number of interrupts
--supported, it can set the pointer count to NULL.
--
--4.2.4 pci_disable_msi
-+4.2.3 pci_disable_msi
- 
- void pci_disable_msi(struct pci_dev *dev)
- 
- This function should be used to undo the effect of pci_enable_msi() or
--pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
--dev->irq to the pin-based interrupt number and frees the previously
--allocated message signaled interrupt(s).  The interrupt may subsequently be
--assigned to another device, so drivers should not cache the value of
--dev->irq.
-+pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
-+interrupt number and frees the previously allocated message signaled
-+interrupt(s).  The interrupt may subsequently be assigned to another
-+device, so drivers should not cache the value of dev->irq.
- 
- Before calling this function, a device driver must always call free_irq()
- on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
- 
--4.2.5 pci_get_msi_vec_count
-+4.2.4 pci_get_msi_vec_count
- 
- int pci_get_msi_vec_count(struct pci_dev *dev)
- 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index e2903d0..e490d42 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1095,26 +1095,40 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- {}
- #endif
- 
--int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
-+int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
-+			 struct ahci_host_priv *hpriv)
- {
--	int rc;
--	unsigned int maxvec;
-+	int rc, nvec;
- 
--	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
--		rc = pci_enable_msi_block_auto(pdev, &maxvec);
--		if (rc > 0) {
--			if ((rc == maxvec) || (rc == 1))
--				return rc;
--			/*
--			 * Assume that advantage of multipe MSIs is negated,
--			 * so fallback to single MSI mode to save resources
--			 */
--			pci_disable_msi(pdev);
--			if (!pci_enable_msi(pdev))
--				return 1;
--		}
--	}
-+	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
-+		goto intx;
-+
-+	rc = pci_get_msi_vec_count(pdev);
-+	if (rc < 0)
-+		goto intx;
-+
-+	/*
-+	 * If number of MSIs is less than number of ports then Sharing Last
-+	 * Message mode could be enforced. In this case assume that advantage
-+	 * of multipe MSIs is negated and use single MSI mode instead.
-+	 */
-+	if (rc < n_ports)
-+		goto single_msi;
-+
-+	nvec = rc;
-+	rc = pci_enable_msi_block(pdev, nvec);
-+	if (rc)
-+		goto intx;
- 
-+	return nvec;
-+
-+single_msi:
-+	rc = pci_enable_msi(pdev);
-+	if (rc)
-+		goto intx;
-+	return 1;
-+
-+intx:
- 	pci_intx(pdev, 1);
- 	return 0;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 4172a2b..85e30e5 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -4529,3 +4529,269 @@ static int oldcopy(void *to, void *from, int size)
+ 	return (int) ret;
  }
-@@ -1281,10 +1295,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
- 
--	n_msis = ahci_init_interrupts(pdev, hpriv);
--	if (n_msis > 1)
--		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
--
- 	/* save initial config */
- 	ahci_pci_save_initial_config(pdev, hpriv);
- 
-@@ -1339,6 +1349,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 */
- 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
- 
-+	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
-+	if (n_msis > 1)
-+		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+ #endif /* CONFIG_CRASH_DUMP */
++#ifdef CONFIG_CRASH_DUMP
 +
- 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
- 	if (!host)
- 		return -ENOMEM;
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 8915edb..de1acb9 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -902,31 +902,6 @@ int pci_enable_msi_block(struct pci_dev *dev, int nvec)
- }
- EXPORT_SYMBOL(pci_enable_msi_block);
- 
--int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
--{
--	int ret, nvec;
--
--	if (dev->current_state != PCI_D0)
--		return -EINVAL;
--
--	ret = pci_get_msi_vec_count(dev);
--	if (ret < 0)
--		return ret;
--
--	if (maxvec)
--		*maxvec = ret;
--
--	do {
--		nvec = ret;
--		ret = pci_enable_msi_block(dev, nvec);
--	} while (ret > 0);
--
--	if (ret < 0)
--		return ret;
--	return nvec;
--}
--EXPORT_SYMBOL(pci_enable_msi_block_auto);
--
- void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 997751d..8d9eb6b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1164,12 +1164,6 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
- 	return -ENOSYS;
- }
- 
--static inline int
--pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
--{
--	return -ENOSYS;
--}
--
- static inline void pci_msi_shutdown(struct pci_dev *dev)
- { }
- static inline void pci_disable_msi(struct pci_dev *dev)
-@@ -1202,7 +1196,6 @@ static inline int pci_msi_enabled(void)
- #else
- int pci_get_msi_vec_count(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, int nvec);
--int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_table_size(struct pci_dev *dev);
++
++
++/* ------------------------------------------------------------------------
++ * Interfaces for when a new domain in the new kernel needs some values
++ * from the old kernel's context entries
++ * ------------------------------------------------------------------------
++ */
++
++/* List to hold domain values found during the copy operation */
++static struct list_head *device_domain_values_list;
++
++
++/* Utility function for interface functions that follow. */
++static int
++context_get_entry(struct context_entry *context_addr,
++			struct intel_iommu *iommu, u32 bus, int devfn)
++{
++	unsigned long long q;		/* quadword scratch */
++	struct root_entry *root_phys;	/* Phys adr (root table entry) */
++	struct root_entry  root_temp;	/* Local copy of root_entry */
++	struct context_entry *context_phys;	/* Phys adr */
++
++	if (pr_dbg.domain_get)
++		pr_debug("ENTER %s B:D:F=%2.2x:%2.2x:%1.1x &context_entry:0x%llx &intel_iommu:0x%llx\n",
++			__func__, bus, devfn>>3, devfn&7,
++			(u64)context_addr, (u64)iommu);
++
++	if (bus > 255)				/* Sanity check */
++		return -5;
++	if (devfn > 255 || devfn < 0)		/* Sanity check */
++		return -6;
++
++	q = readq(iommu->reg + DMAR_RTADDR_REG);
++	pr_debug("IOMMU %d: DMAR_RTADDR_REG:0x%16.16llx\n", iommu->seq_id, q);
++	if (!q)
++		return -1;
++
++	root_phys = (struct root_entry *) q;	/* Adr(base of vector) */
++	root_phys += bus;			/* Adr(entry we want) */
++
++	oldcopy(&root_temp, root_phys, sizeof(root_temp));
++
++	pr_debug("root_temp.val:0x%llx .rsvd1:0x%llx root_phys:0x%llx\n",
++		root_temp.val, root_temp.rsvd1, (u64)root_phys);
++
++	if (!root_present(&root_temp))
++		return -2;
++
++	pr_debug("B:D:F=%2.2x:%2.2x:%1.1x root_temp.val: %llx .rsvd1: %llx\n",
++		bus, devfn >> 3, devfn & 7, root_temp.val, root_temp.rsvd1);
++
++	if (root_temp.rsvd1)			/* If (root_entry is bad) */
++		return -3;
++
++	context_phys = get_context_phys_from_root(&root_temp);
++	if (!context_phys)
++		return -4;
++
++	context_phys += devfn;			/* Adr(context_entry we want) */
++
++
++	oldcopy(context_addr, context_phys, sizeof(*context_addr));
++
++	if (pr_dbg.domain_get)
++		pr_debug("LEAVE %s returning: phys:0x%12.12llx hi:0x%16.16llx lo:0x%16.16llx\n",
++			__func__, (u64) context_phys,
++			context_addr->hi, context_addr->lo);
++	return 0;
++}
++
++
++/* Get address_width of iova for a device from old kernel (if device existed) */
++static int
++domain_get_gaw_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev)
++{
++	int ret;
++	struct context_entry context_temp;
++
++	if (pr_dbg.domain_get)
++		pr_debug("ENTER %s B:D:F=%2.2x:%2.2x:%1.1x iommu:%d\n",
++			__func__, pdev->bus->number,
++			pdev->devfn >> 3, pdev->devfn & 7,
++			iommu->seq_id);
++
++	ret = context_get_entry(&context_temp, iommu,
++				pdev->bus->number, pdev->devfn);
++	if (ret < 0)
++		return ret;
++
++	return (int) agaw_to_width(context_get_aw(&context_temp));
++}
++
++
++/* Get domain_id for a device from old kernel (if device existed) */
++static int
++domain_get_did_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev)
++{
++	int ret;
++	struct context_entry context_temp;
++
++	if (pr_dbg.domain_get)
++		pr_debug("ENTER %s B:D:F=%2.2x:%2.2x:%1.1x iommu:%d\n",
++			__func__, pdev->bus->number,
++			pdev->devfn >> 3, pdev->devfn & 7,
++			iommu->seq_id);
++
++	ret = context_get_entry(&context_temp, iommu,
++				pdev->bus->number, pdev->devfn);
++	if (ret < 0)
++		return ret;
++
++	return (int) context_get_did(&context_temp);
++}
++
++
++/* Get adr(top page_table) for a device from old kernel (if device exists) */
++static u64
++domain_get_pgd_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev)
++{
++	int ret;
++	struct context_entry context_temp;
++	u64 phys;
++	u64 virt;
++
++	if (pr_dbg.domain_get)
++		pr_debug("ENTER %s B:D:F=%2.2x:%2.2x:%1.1x iommu:%d\n",
++			__func__, pdev->bus->number,
++			pdev->devfn >> 3, pdev->devfn & 7,
++			iommu->seq_id);
++
++	ret = context_get_entry(&context_temp, iommu,
++				pdev->bus->number, pdev->devfn);
++	if (ret < 0)
++		return 0;
++	if (!context_get_p(&context_temp))
++		return 0;
++
++	phys = context_get_asr(&context_temp) << VTD_PAGE_SHIFT;
++	if (pr_dbg.domain_get)
++		pr_debug("%s, phys: 0x%16.16llx\n", __func__, (u64) phys);
++
++	if (!phys)
++		return 0;
++
++	virt = (u64) phys_to_virt(phys);
++	if (pr_dbg.domain_get)
++		pr_debug("%s, virt: 0x%16.16llx\n", __func__, (u64) virt);
++
++	return virt;
++}
++
++
++/* Mark IOVAs that are in-use at time of panic by a device of the old kernel.
++ * Mark IOVAs in the domain for that device in the new kernel
++ * so that all new requests from the device driver for an IOVA will avoid
++ * re-using any IOVA that was in-use by the old kernel.
++ */
++static void
++domain_get_ranges_from_old_kernel(struct dmar_domain *domain,
++				  struct intel_iommu *iommu,
++				  struct pci_dev *pdev)
++{
++	u32 bus = pdev->bus->number;
++	int devfn = pdev->devfn;
++	struct device_domain_info *i = NULL;    /* iterator for foreach */
++
++	pr_debug("ENTER %s, iommu=%d, B:D:F=%2.2x:%2.2x:%1.1x\n",
++			__func__, iommu->seq_id,
++			bus, devfn >> 3, devfn & 0x3);
++
++	list_for_each_entry(i, &device_domain_values_list[iommu->seq_id],
++				global) {
++		if (i->bus == bus && i->devfn == devfn) {
++			if (i->domain == NULL) {
++				pr_err("ERROR %s, iommu=%d, B:D:F=%2.2x:%2.2x:%1.1x\n",
++					__func__, iommu->seq_id,
++					bus, devfn >> 3, devfn & 0x3);
++
++				pr_err("FOUND B:D:F=%2.2x:%2.2x:%1.1x INFO domain-pointer is NULL\n",
++					bus, devfn >> 3, devfn & 0x3);
++				break;
++			}
++			pr_debug("FOUND B:D:F=%2.2x:%2.2x:%1.1x did:%4.4x\n",
++				bus, devfn >> 3, devfn & 0x3, i->domain->id);
++
++			copy_reserved_iova(&i->domain->iovad, &domain->iovad);
++			break;
++		}
++	}
++
++	pr_debug("LEAVE %s\n", __func__);
++}
++
++
++/* Mark domain-id's from old kernel as in-use on this iommu so that a new
++ * domain-id is allocated in the case where there is a device in the new kernel
++ * that was not in the old kernel -- and therefore a new domain-id is needed.
++ */
++static int intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu)
++{
++	unsigned long long q;		/* quadword scratch */
++	struct root_entry *root_phys;	/* Phys(in old kernel) */
++	struct root_entry *root_temp;	/* Virt(Local copy) */
++	struct root_entry *re;		/* Loop index */
++	struct context_entry *context_phys;	/* Phys(in old kernel) */
++	struct context_entry *context_temp;	/* Virt(Local copy) */
++	struct context_entry *ce;	/* Loop index */
++	int did;			/* Each domain-id found */
++	u32 bus;			/* Index into root-entry-table */
++	u32 devfn;			/* Index into context-entry-table */
++
++	pr_debug("ENTER %s iommu:%d\n", __func__, iommu->seq_id);
++
++	q = readq(iommu->reg + DMAR_RTADDR_REG);
++	pr_debug("IOMMU %d: DMAR_RTADDR_REG:0x%16.16llx\n", iommu->seq_id, q);
++	if (!q)
++		return -ENOMEM;
++
++	root_phys = (void *)q;
++	root_temp = (struct root_entry *)alloc_pgtable_page(iommu->node);
++	if (!root_temp)
++		return -ENOMEM;
++	oldcopy(root_temp, root_phys, PAGE_SIZE);
++
++	context_temp = (struct context_entry *)alloc_pgtable_page(iommu->node);
++	if (!context_temp) {
++		free_pgtable_page(root_temp);
++		return -ENOMEM;
++	}
++
++	for (bus = 0, re = root_temp; bus < 256; bus += 1, re += 1) {
++
++		if (!root_present(re))
++			continue;
++
++		pr_debug("ROOT B:%2.2x val: %16.16llx rsvd1: %16.16llx\n",
++			bus, re->val, re->rsvd1);
++
++		if (re->rsvd1)			/* If (root_entry is bad) */
++			continue;
++
++		context_phys = get_context_phys_from_root(re);
++		if (!context_phys)
++			continue;
++
++		oldcopy(context_temp, context_phys, PAGE_SIZE);
++
++		for (devfn = 0, ce = context_temp; devfn < 512; devfn++, ce++) {
++			if (!context_get_p(ce))
++				continue;
++
++			did = context_get_did(ce);
++			set_bit(did, iommu->domain_ids);
++			pr_debug("DID B:D:F:%2.2x:%2.2x:%1.1x did:%d(0x%4.4x)\n",
++				bus, devfn >> 3, devfn & 0x7, did, did);
++		}
++
++	}
++	free_pgtable_page(root_temp);
++	free_pgtable_page(context_temp);
++	pr_debug("LEAVE %s iommu:%d\n", __func__, iommu->seq_id);
++	return 0;
++}
++#endif /* CONFIG_CRASH_DUMP */
 -- 
-1.7.7.6
+Bill Sumner <bill.sumner@hp.com>
 
