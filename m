@@ -1,52 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:57355 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685Ab3LKWvz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 17:51:55 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 03/12] SPEAr13xx: Add SPEAr1310 PCIe register definitions
-Date: Wed, 11 Dec 2013 23:51:24 +0100
-Cc: Mohit Kumar <mohit.kumar@st.com>, linux-pci@vger.kernel.org,
-	Pratyush Anand <pratyush.anand@st.com>,
-	spear-devel@list.st.com, Viresh Kumar <viresh.linux@gmail.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <3a008bd5223b1da9f17ceac745b3fc08b6b842e3.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <3a008bd5223b1da9f17ceac745b3fc08b6b842e3.1386752447.git.mohit.kumar@st.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43096 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755838Ab3LTK0W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Dec 2013 05:26:22 -0500
+Date: Fri, 20 Dec 2013 11:28:12 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
+ helpers
+Message-ID: <20131220102812.GB28367@dhcp-26-207.brq.redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
+ <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
+ <20131218003002.GA15119@google.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312112351.24603.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131218003002.GA15119@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 11 December 2013, Mohit Kumar wrote:
-> diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
-> index 4526f75..c236cef 100644
-> --- a/arch/arm/mach-spear/include/mach/spear.h
-> +++ b/arch/arm/mach-spear/include/mach/spear.h
-> @@ -140,6 +140,79 @@
->                         (SPEAR1340_MIPHY_OSC_BYPASS_EXT | \
->                         SPEAR1340_MIPHY_PLL_RATIO_TOP(25))
->  
-> +#define VA_SPEAR1310_PCIE_SATA_CFG             (VA_MISC_BASE + 0x3A4)
-> +       #define SPEAR1310_PCIE_SATA2_SEL_PCIE           (0 << 31)
-> +       #define SPEAR1310_PCIE_SATA1_SEL_PCIE           (0 << 30)
-> +       #define SPEAR1310_PCIE_SATA0_SEL_PCIE           (0 << 29)
-> +       #define SPEAR1310_PCIE_SATA2_SEL_SATA           (1 << 31)
-> +       #define SPEAR1310_PCIE_SATA1_SEL_SATA           (1 << 30)
-> +       #define SPEAR1310_PCIE_SATA0_SEL_SATA           (1 << 29)
+On Tue, Dec 17, 2013 at 05:30:02PM -0700, Bjorn Helgaas wrote:
+> After this patch, we would have:
+> 
+>     pci_enable_msi()				# existing (1 vector)
+>     pci_enable_msi_block(nvec)			# existing
+>     pci_enable_msi_block_auto(maxvec)		# existing (removed)
+> 
+>     pci_auto_enable_msi(maxvec)			# new	(1-maxvec)
+>     pci_auto_enable_msi_range(minvec, maxvec)	# new
+>     pci_auto_enable_msi_exact(nvec)		# new	(nvec-nvec)
+> 
+>     pci_enable_msix(nvec)			# existing
+> 
+>     pci_auto_enable_msix(maxvec)		# new	(1-maxvec)
+>     pci_auto_enable_msix_range(minvec, maxvec)	# new
+>     pci_auto_enable_msix_exact(nvec)		# new	(nvec-nvec)
+> 
+> That seems like a lot of interfaces to document and understand, especially
+> since most of them are built on each other.  I'd prefer just these:
+> 
+>     pci_enable_msi()				# existing (1 vector)
+>     pci_enable_msi_range(minvec, maxvec)	# new
+> 
+>     pci_enable_msix(nvec)			# existing
+>     pci_enable_msix_range(minvec, maxvec)	# new
+> 
+> with examples in the documentation about how to call them with ranges like
+> (1, maxvec), (nvec, nvec), etc.  I think that will be easier than
+> understanding several interfaces.
 
-These should definitely be part of the PHY driver.
+I agree pci_auto_enable_msix() and pci_auto_enable_msix_exact() are worth
+sacrificing for the sake of clarity. My only concern is people will start
+defining their own helpers for (1, maxvec) and (nvec, nvec) cases here and
+there...
 
-Regarding style, don't use a hardcoded VA_MISC_BASE constant here,
-but find the right address in the driver, and instead of shifting
-bits, just use hexadecimal notation:
+> I don't think the "auto" in the names really adds anything, does it?  The
+> whole point of supplying a range is that the core has the flexibility to
+> choose any number of vectors within the range.
 
-#define SPEAR1310_PCIE_SATA2_SEL_PCIE           0x80000000
-#define SPEAR1310_PCIE_SATA1_SEL_PCIE           0x40000000
-...
+"Auto" indicates auto-retry, but I see no problem in skipping it, especially
+if we deprecate or phase out the existing interfaces.
 
-However, if you have a "reset" driver, you can use #reset-cells=<1>
-and pass the bit as the reset specifier.
+> I only see five users of pci_enable_msi_block() (nvme, ath10k, wil6210,
+> ipr, vfio); we can easily convert those to use pci_enable_msi_range() and
+> then remove pci_enable_msi_block().
+> 
+> pci_enable_msi() itself can simply be pci_enable_msi_range(1, 1).
+> 
+> There are nearly 80 callers of pci_enable_msix(), so that's a bit harder.
+> Can we deprecate that somehow, and incrementally convert callers to use
+> pci_enable_msix_range() instead?  Maybe you're already planning that; I
+> know you dropped some driver patches from the series for now, and I didn't
+> look to see exactly what they did.
 
-	Arnd
+Right, the plan is first to introduce pci_auto_* (or whatever) family into
+the tree and then gradually convert all drivers to the new interfaces.
+
+> It would be good if pci_enable_msix() could be implemented in terms of
+> pci_enable_msix_range(nvec, nvec), with a little extra glue to handle the
+> positive return values.
+
+[...]
+
+> I think it would be better to make pci_enable_msix_range() the fundamental
+> implementation, with pci_enable_msix() built on top of it.  That way we
+> could deprecate and eventually remove pci_enable_msix() and its tri-state
+> return values.
+
+We can reuse pci_enable_msix() name, but not before all drivers converted.
+
+But considering the other thread you want to have only pci_enable_msi_range()
+and pci_enable_msix_range() interfaces - am I getting it right?
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
