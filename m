@@ -1,99 +1,165 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
-References: <1386105246-14337-1-git-send-email-konrad.wilk@oracle.com>
-Date: Wed, 4 Dec 2013 13:03:35 +1300
-Message-ID: <CAD3CandHsEu_WAC2VGrwYoN=hh-PkBuORNBtR7r3dWg6e7i2dQ@mail.gmail.com>
-Subject: Re: [Xen-devel] [PATCH] xen/pvhvm: If xen_platform_pci=0 is set don't
- blow up.
-From: Matthew Daley <mattd@bugfuzz.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
-	Ian Campbell <ian.campbell@citrix.com>,
-	xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	boris.ostrovsky@oracle.com, david.vrabel@citrix.com,
-	leosilva@linux.vnet.ibm.com, ashley@ashleylai.com,
-	peterhuewe@gmx.de, mail@srajiv.net, tpmdd@selhorst.net,
-	tpmdd@sirrix.com, dmitry.torokhov@gmail.com, bhelgaas@google.com,
-	plagnioj@jcrosoft.com, tomi.valkeinen@ti.com,
-	tpmdd-devel@lists.sourceforge.net, linux-input@vger.kernel.org,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-fbdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:8032 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256Ab3LTCuX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 21:50:23 -0500
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com
+Subject: [PATCHv2 1/6] Crashdump-Accepting-Active-IOMMU-Flags-and-Prototype
+Date: Thu, 19 Dec 2013 19:49:42 -0700
+Message-Id: <1387507787-14163-2-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+References: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 4, 2013 at 10:14 AM, Konrad Rzeszutek Wilk
-<konrad.wilk@oracle.com> wrote:
-> The user has the option of disabling the platform driver:
-> 00:02.0 Unassigned class [ff80]: XenSource, Inc. Xen Platform Device (rev 01)
->
-> which is used to unplug the emulated drivers (IDE, Realtek 8169, etc)
-> and allow the PV drivers to take over. If the user wishes
-> to disable that they can set:
->
->   xen_platform_pci=0
->   (in the guest config file)
->
-> or
->   xen_emul_unplug=never
->   (on the Linux command line)
->
-> except it does not work properly. The PV drivers still try to
-> load and since the Xen platform driver is not run - and it
-> has not initialized the grant tables, most of the PV drivers
-> stumble upon:
->
-> input: Xen Virtual Keyboard as /devices/virtual/input/input5
-> input: Xen Virtual Pointer as /devices/virtual/input/input6M
-> ------------[ cut here ]------------
-> kernel BUG at /home/konrad/ssd/konrad/linux/drivers/xen/grant-table.c:1206!
-> invalid opcode: 0000 [#1] SMP
-> Modules linked in: xen_kbdfront(+) xenfs xen_privcmd
-> CPU: 6 PID: 1389 Comm: modprobe Not tainted 3.13.0-rc1upstream-00021-ga6c892b-dirty #1
-> Hardware name: Xen HVM domU, BIOS 4.4-unstable 11/26/2013
-> RIP: 0010:[<ffffffff813ddc40>]  [<ffffffff813ddc40>] get_free_entries+0x2e0/0x300
-> Call Trace:
->  [<ffffffff8150d9a3>] ? evdev_connect+0x1e3/0x240
->  [<ffffffff813ddd0e>] gnttab_grant_foreign_access+0x2e/0x70
->  [<ffffffffa0010081>] xenkbd_connect_backend+0x41/0x290 [xen_kbdfront]
->  [<ffffffffa0010a12>] xenkbd_probe+0x2f2/0x324 [xen_kbdfront]
->  [<ffffffff813e5757>] xenbus_dev_probe+0x77/0x130
->  [<ffffffff813e7217>] xenbus_frontend_dev_probe+0x47/0x50
->  [<ffffffff8145e9a9>] driver_probe_device+0x89/0x230
->  [<ffffffff8145ebeb>] __driver_attach+0x9b/0xa0
->  [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
->  [<ffffffff8145eb50>] ? driver_probe_device+0x230/0x230
->  [<ffffffff8145cf1c>] bus_for_each_dev+0x8c/0xb0
->  [<ffffffff8145e7d9>] driver_attach+0x19/0x20
->  [<ffffffff8145e260>] bus_add_driver+0x1a0/0x220
->  [<ffffffff8145f1ff>] driver_register+0x5f/0xf0
->  [<ffffffff813e55c5>] xenbus_register_driver_common+0x15/0x20
->  [<ffffffff813e76b3>] xenbus_register_frontend+0x23/0x40
->  [<ffffffffa0015000>] ? 0xffffffffa0014fff
->  [<ffffffffa001502b>] xenkbd_init+0x2b/0x1000 [xen_kbdfront]
->  [<ffffffff81002049>] do_one_initcall+0x49/0x170
->
-> .. snip..
->
-> which is hardly nice. This patch fixes this by having each
-> PV driver check for:
->  - if running in PV, then it is fine to execute (as that is their
->    native environment).
->  - if running in HVM, check if user wanted 'xen_emul_unplug=never',
->    in which case bail out and don't load PV drivers.
->  - if running in HVM, and if PCI device 5853:0001 (xen_platform_pci)
->    does not exist, then bail out and not load PV drivers.
->
-> P.S.
-> Ian Campbell suggested getting rid of 'xen_platform_pci_unplug'
-> but unfortunatly the xen-blkfront driver is using it, so we
-> cannot do it.
->
-> Reported-by: Sander Eikelenboom <linux@eikelenboom.it
-> Reported-by: Anthony PERARD <anthony.perard@citrix.com>
-> Reported-by: Fabio Fantoni <fabio.fantoni@m2r.biz>
+The following series implements a fix for:
+A kdump problem about DMA that has been discussed for a long time. That is,
+when a kernel panics and boots into the kdump kernel, DMA started by the
+panicked kernel is not stopped before the kdump kernel is booted and the
+kdump kernel disables the IOMMU while this DMA continues.  This causes the
+IOMMU to stop translating the DMA addresses as IOVAs and begin to treat them
+as physical memory addresses -- which causes the DMA to either:
+(1) generate DMAR errors or (2) generate PCI SERR errors or (3) transfer
+data to or from incorrect areas of memory. Often this causes the dump to fail.
 
-I think you forgot your Signed-off-by line.
+This patch set modifies the behavior of the iommu in the (new) crashdump kernel:
+1. to accept the iommu hardware in an active state,
+2. to leave the current translations in-place so that legacy DMA will continue
+   using its current buffers until the device drivers in the crashdump kernel
+   initialize and initialize their devices,
+3. to use different portions of the iova address ranges for the device drivers
+   in the crashdump kernel than the iova ranges that were in-use at the time
+   of the panic.
 
-- Matthew
+Advantages of this approach:
+1. All manipulation of the IO-device is done by the Linux device-driver
+   for that device.
+2. This approach behaves in a manner very similar to operation without an
+   active iommu.
+3. Any activity between the IO-device and its RMRR areas is handled by the
+   device-driver in the same manner as during a non-kdump boot.
+4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
+   This supports the practice of creating a special kdump kernel without
+   drivers for any devices that are not required for taking a crashdump.
+
+This patch contains global flags used by many sections of the code and
+prototypes of the interface functions which are coded at the end of
+the source file.
+
+Static struct 'pr_dbg' contains bit-flags that control the amount of debug
+print placed on the console.  Note that the amount of print increases greatly
+(probably geometrically if not faster) as additional bits further down the
+structure are enabled.  These flags and the pr_debug() lines scattered
+throughout the code are only for the developer or analyst.  At this time,
+no means is provided to modify the flags without a re-compile.
+
+v1->v2:
+Updated patch description
+
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 75 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 75 insertions(+)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 43b9bfe..17c4537 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -48,6 +48,7 @@
+ 
+ #include "irq_remapping.h"
+ #include "pci.h"
++#include <linux/crash_dump.h>
+ 
+ #define ROOT_SIZE		VTD_PAGE_SIZE
+ #define CONTEXT_SIZE		VTD_PAGE_SIZE
+@@ -164,6 +165,80 @@ static inline unsigned long virt_to_dma_pfn(void *p)
+ 	return page_to_dma_pfn(virt_to_page(p));
+ }
+ 
++#ifdef CONFIG_CRASH_DUMP
++/* ===================================================================
++ * Crashdump Accepting Active IOMMU
++ * Enhances the crashdump kernel to deal with an active iommu
++ * and legacy DMA from the (old) panic'd kernel in a manner similar to how
++ * legacy DMA is handled when no hardware iommu was in use by the old kernel --
++ * allow the legacy DMA to continue into its current buffers.
++ *
++ * This code:
++ * 1. accepts the iommu hardware in an active state from the old kernel,
++ * 2. leaves the current translations in-place so that legacy DMA will
++ *    continue to use its current buffers,
++ * 3. allocates to the device drivers in the crashdump kernel
++ *    portions of the iova address ranges that are different
++ *    from the iova address ranges that were being used by the old kernel
++ *    at the time of the panic.
++ * -------------------------------------------------------------------
++ */
++
++/* Flags for Crashdump Accepting Active IOMMU */
++
++static int crashdump_accepting_active_iommu;	/* activate this feature */
++static int intel_iommu_translation_tables_are_mapped;	/* table copy done */
++
++static struct {				/* run-time pr_debug() flags */
++	unsigned in_crashdump:1;	/* if crashdump_accepting_active_iommu */
++	unsigned domain_get:1;		/* pr_debug in domain_get* functions */
++	unsigned copy_page_table:1;	/* enter/leave copy_page_table() */
++	unsigned copy_page_addr:1;	/* enter/leave copy_page_addr() */
++	unsigned addr_ranges:1;		/* accumulated addr ranges */
++	unsigned reserved_ranges:1;	/* accumulated addr ranges reserved */
++	unsigned page_addr:1;		/* adr(each page table) */
++	unsigned enter_oldcopy:1;	/* enter oldcopy() parameters */
++	unsigned leave_oldcopy:1;	/* leave oldcopy() parameters */
++} pr_dbg  = {				/* Enable flags below here */
++	.in_crashdump = 1,
++	.domain_get = 1,
++	.copy_page_table = 1,
++	.copy_page_addr = 0,
++	.addr_ranges = 0,
++	.reserved_ranges = 0,
++	.page_addr = 0,
++	.enter_oldcopy = 0,
++	.leave_oldcopy = 0,
++};
++
++/* Prototypes of interface functions for Crashdump Accepting Active IOMMU */
++
++static int
++copy_intel_iommu_translation_tables(struct dmar_drhd_unit *drhd,
++	struct root_entry **root_old_p, struct root_entry **root_new_p);
++
++static int
++domain_get_did_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
++
++static int
++domain_get_gaw_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
++
++static u64
++domain_get_pgd_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
++
++static void
++domain_get_ranges_from_old_kernel(struct dmar_domain *domain,
++		  struct intel_iommu *iommu, struct pci_dev *pdev);
++static int
++intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
++
++/* Debug-print functions for  Crashdump Accepting Active IOMMU */
++
++static void
++print_intel_iommu_registers(struct dmar_drhd_unit *drhd);
++#endif	/* CONFIG_CRASH_DUMP */
++
++
+ /* global iommu list, set NULL for ignored DMAR units */
+ static struct intel_iommu **g_iommus;
+ 
+-- 
+Bill Sumner <bill.sumner@hp.com>
+
