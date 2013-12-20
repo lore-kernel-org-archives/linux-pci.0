@@ -1,110 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:9252 "EHLO
-	co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754427Ab3LFABC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 19:01:02 -0500
-Message-ID: <1386288052.7375.100.camel@snotra.buserror.net>
-Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
-From: Scott Wood <scottwood@freescale.com>
-To: Bharat Bhushan <Bharat.Bhushan@freescale.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	Yoder Stuart-B08248 <stuart.yoder@freescale.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Thu, 5 Dec 2013 18:00:52 -0600
-In-Reply-To: <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1384838233-24847-1-git-send-email-Bharat.Bhushan@freescale.com>
-	 <1384973243.2879.361.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0721D9AC@039-SN2MPN1-012.039d.mgd.msft.net>
-	 <1385066603.2879.414.camel@ul30vt.home>
-	 <1385066835.1403.489.camel@snotra.buserror.net>
-	 <1385067648.2879.421.camel@ul30vt.home>
-	 <6A3DF150A5B70D4F9B66A25E3F7C888D0722C180@039-SN2MPN1-012.039d.mgd.msft.net>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 20 Dec 2013 10:04:13 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@aculab.com>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
+ helpers
+Message-ID: <20131220090412.GA28367@dhcp-26-207.brq.redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
+ <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
+ <20131218003002.GA15119@google.com>
+ <20131218132349.GA29552@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6Km5N+Cfpaj5JEsb966rwcBjrAT4SFvG6Q9QkwkDFXCA@mail.gmail.com>
+ <20131219134244.GA32238@dhcp-26-207.brq.redhat.com>
+ <CAErSpo66Jh-8sbQr13r1LknfKWMt1zBd9xhm46XpCcW-X_TqnA@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo66Jh-8sbQr13r1LknfKWMt1zBd9xhm46XpCcW-X_TqnA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2013-11-24 at 23:33 -0600, Bharat Bhushan wrote:
-> 
-> > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Friday, November 22, 2013 2:31 AM
-> > To: Wood Scott-B07421
-> > Cc: Bhushan Bharat-R65777; linux-pci@vger.kernel.org; agraf@suse.de; Yoder
-> > Stuart-B08248; iommu@lists.linux-foundation.org; bhelgaas@google.com; linuxppc-
-> > dev@lists.ozlabs.org; linux-kernel@vger.kernel.org
-> > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale IOMMU (PAMU)
+On Thu, Dec 19, 2013 at 02:37:22PM -0700, Bjorn Helgaas wrote:
+> On Thu, Dec 19, 2013 at 6:42 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> > On Wed, Dec 18, 2013 at 11:58:47AM -0700, Bjorn Helgaas wrote:
+> >> If rc == 13 and the device can only use 8, the extra 5 would be
+> >> ignored and wasted.
+> >>
+> >> If the waste is unacceptable, the driver can try this:
+> >>
+> >>     rc = pci_enable_msix_range(dev->pdev, dev->irqs, 16, 16);
+> >>     if (rc < 0) {
+> >>         rc = pci_enable_msix_range(dev->pdev, dev->irqs, 8, 8);
+> >>         if (rc < 0) {
+> >>             rc = pci_enable_msix_range(dev->pdev, dev->irqs, 4, 4);
+> >>             ...
+> >>     }
 > >
-> > On Thu, 2013-11-21 at 14:47 -0600, Scott Wood wrote:
-> > > On Thu, 2013-11-21 at 13:43 -0700, Alex Williamson wrote:
-> > > > On Thu, 2013-11-21 at 11:20 +0000, Bharat Bhushan wrote:
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > > > > Sent: Thursday, November 21, 2013 12:17 AM
-> > > > > > To: Bhushan Bharat-R65777
-> > > > > > Cc: joro@8bytes.org; bhelgaas@google.com; agraf@suse.de; Wood
-> > > > > > Scott-B07421; Yoder Stuart-B08248;
-> > > > > > iommu@lists.linux-foundation.org; linux- pci@vger.kernel.org;
-> > > > > > linuxppc-dev@lists.ozlabs.org; linux- kernel@vger.kernel.org;
-> > > > > > Bhushan Bharat-R65777
-> > > > > > Subject: Re: [PATCH 0/9 v2] vfio-pci: add support for Freescale
-> > > > > > IOMMU (PAMU)
-> > > > > >
-> > > > > > Is VFIO_IOMMU_PAMU_GET_MSI_BANK_COUNT per aperture (ie. each
-> > > > > > vfio user has $COUNT regions at their disposal exclusively)?
-> > > > >
-> > > > > Number of msi-bank count is system wide and not per aperture, But will be
-> > setting windows for banks in the device aperture.
-> > > > > So say if we are direct assigning 2 pci device (both have different iommu
-> > group, so 2 aperture in iommu) to VM.
-> > > > > Now qemu can make only one call to know how many msi-banks are there but
-> > it must set sub-windows for all banks for both pci device in its respective
-> > aperture.
-> > > >
-> > > > I'm still confused.  What I want to make sure of is that the banks
-> > > > are independent per aperture.  For instance, if we have two separate
-> > > > userspace processes operating independently and they both chose to
-> > > > use msi bank zero for their device, that's bank zero within each
-> > > > aperture and doesn't interfere.  Or another way to ask is can a
-> > > > malicious user interfere with other users by using the wrong bank.
-> > > > Thanks,
-> > >
-> > > They can interfere.
+> > I have troubles with this fallback logic. On each failed step we get an
+> > error and we do not know if this is indeed an error or an indication of
+> > insufficient MSI resources. Even -ENOSPC would not tell much, since it
+> > could be thrown from a lower level.
+> >
+> > By contrast, with the tri-state return value we can distinguish and bail
+> > out on errors right away.
 > 
-> Want to be sure of how they can interfere?
+> I thought the main point of this was to get rid of interfaces that
+> were prone to misuse, and tri-state return values was a big part of
+> that.  All we really care about in the driver is success/failure.  I'm
+> not sure there's much to be gained by analyzing *why* we failed, and I
+> think it tends to make uncommon error paths more complicated than
+> necessary.  If we fail four times instead of bailing out after the
+> first failure, well, that doesn't sound terrible to me.  The last
+> failure can log the errno, which is enough for debugging.
 
-If more than one VFIO user shares the same MSI group, one of the users
-can send MSIs to another user, by using the wrong interrupt within the
-bank.  Unexpected MSIs could cause misbehavior or denial of service.
+Sure, the main point is to get rid of try-state interfaces. I just afraid
+to throw out the baby with the bath water for unusual devices (which we do
+not have in the tree).
 
-> >>  With this hardware, the only way to prevent that
-> > > is to make sure that a bank is not shared by multiple protection contexts.
-> > > For some of our users, though, I believe preventing this is less
-> > > important than the performance benefit.
-> 
-> So should we let this patch series in without protection?
+I can only identify two downsides of the approach above - (a) repeated error
+logging in a platform code (i.e. caused by -ENOMEM) and (b) repeated attempts
+to enable MSI when the platform already reported a fatal error.
 
-No, there should be some sort of opt-in mechanism similar to IOMMU-less
-VFIO -- but not the same exact one, since one is a much more serious
-loss of isolation than the other.
+I think if a device needs an extra magic to enable MSI (i.e. writing to
+specific registers etc.) it would be manageable with pci_enable_msix_range(),
+but may be I am missing something?
 
-> > I think we need some sort of ownership model around the msi banks then.
-> > Otherwise there's nothing preventing another userspace from attempting an MSI
-> > based attack on other users, or perhaps even on the host.  VFIO can't allow
-> > that.  Thanks,
-> 
-> We have very few (3 MSI bank on most of chips), so we can not assign
-> one to each userspace.
+So my thought is may be we deprecate the tri-state interfaces, but do not
+do it immediately.
 
-That depends on how many users there are.
-
--Scott
-
-
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
