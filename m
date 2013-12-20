@@ -1,153 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56623 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752302Ab3LFDUd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Dec 2013 22:20:33 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	dmaengine@vger.kernel.org
-Subject: [Patch Part1 V2 01/20] iommu/vt-d: use dedicated bitmap to track remapping entry allocation status
-Date: Fri,  6 Dec 2013 11:21:04 +0800
-Message-Id: <1386300083-6882-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1386300083-6882-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:58877 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755870Ab3LTQfa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Dec 2013 11:35:30 -0500
+Received: by mail-ig0-f182.google.com with SMTP id c10so7514568igq.3
+        for <linux-pci@vger.kernel.org>; Fri, 20 Dec 2013 08:35:30 -0800 (PST)
+Date: Fri, 20 Dec 2013 09:35:26 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Mohit Kumar <mohit.kumar@st.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>, spear-devel@list.st.com
+Subject: Re: [PATCH 07/12] pcie: designware: add dw_pcie prefix before
+ cfg_read/write
+Message-ID: <20131220163526.GA30026@google.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <11157a3462fcad1067bddd27dcd580bbeb2c289e.1386752447.git.mohit.kumar@st.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <11157a3462fcad1067bddd27dcd580bbeb2c289e.1386752447.git.mohit.kumar@st.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently Intel interrupt remapping drivers uses the "present" flag bit
-in remapping entry to track whether an entry is allocated or not.
-It works as follow:
-1) allocate a remapping entry and set its "present" flag bit to 1
-2) compose other fields for the entry
-3) update the remapping entry with the composed value
+On Wed, Dec 11, 2013 at 03:08:32PM +0530, Mohit Kumar wrote:
+> From: Pratyush Anand <pratyush.anand@st.com>
+> 
+> cfg_read/write function are designware pcie specific. Add dw_pcie prefix
+> to avoid collision in global name space.
+> 
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Mohit Kumar <mohit.kumar@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: spear-devel@list.st.com
+> Cc: linux-pci@vger.kernel.org
 
-The remapping hardware may access the entry between step 1 and step 3,
-which then obervers an entry with the "present" flag set but random
-values in all other fields.
+Applied to pci/host-designware for v3.14, with these acks:
 
-This patch introduces a dedicated bitmap to track remapping entry
-allocation status instead of sharing the "present" flag with hardware,
-thus eliminate the race window. It also simplifies the implementation.
+    Tested-by: Jingoo Han <jg1.han@samsung.com>
+    Reviewed-by: Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
+    Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-Tested-and-reviewed-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |   51 +++++++++++++++++------------------
- include/linux/intel-iommu.h         |    1 +
- 2 files changed, 25 insertions(+), 27 deletions(-)
+Thanks!
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index bab10b1..282d392 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -72,7 +72,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
- 	u16 index, start_index;
- 	unsigned int mask = 0;
- 	unsigned long flags;
--	int i;
- 
- 	if (!count || !irq_iommu)
- 		return -1;
-@@ -96,32 +95,17 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
- 	}
- 
- 	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--	do {
--		for (i = index; i < index + count; i++)
--			if  (table->base[i].present)
--				break;
--		/* empty index found */
--		if (i == index + count)
--			break;
--
--		index = (index + count) % INTR_REMAP_TABLE_ENTRIES;
--
--		if (index == start_index) {
--			raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--			printk(KERN_ERR "can't allocate an IRTE\n");
--			return -1;
--		}
--	} while (1);
--
--	for (i = index; i < index + count; i++)
--		table->base[i].present = 1;
--
--	cfg->remapped = 1;
--	irq_iommu->iommu = iommu;
--	irq_iommu->irte_index =  index;
--	irq_iommu->sub_handle = 0;
--	irq_iommu->irte_mask = mask;
--
-+	index = bitmap_find_free_region(table->bitmap,
-+					INTR_REMAP_TABLE_ENTRIES, mask);
-+	if (index < 0) {
-+		printk(KERN_ERR "can't allocate an IRTE\n");
-+	} else {
-+		cfg->remapped = 1;
-+		irq_iommu->iommu = iommu;
-+		irq_iommu->irte_index =  index;
-+		irq_iommu->sub_handle = 0;
-+		irq_iommu->irte_mask = mask;
-+	}
- 	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
- 
- 	return index;
-@@ -254,6 +238,8 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 		set_64bit(&entry->low, 0);
- 		set_64bit(&entry->high, 0);
- 	}
-+	bitmap_release_region(iommu->ir_table->bitmap, index,
-+			      irq_iommu->irte_mask);
- 
- 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
- }
-@@ -453,6 +439,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- {
- 	struct ir_table *ir_table;
- 	struct page *pages;
-+	unsigned long *bitmap;
- 
- 	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
- 					     GFP_ATOMIC);
-@@ -470,7 +457,17 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- 		return -ENOMEM;
- 	}
- 
-+	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
-+			 sizeof(long), GFP_ATOMIC);
-+	if (bitmap == NULL) {
-+		printk(KERN_ERR "failed to allocate bitmap\n");
-+		__free_pages(pages, INTR_REMAP_PAGE_ORDER);
-+		kfree(ir_table);
-+		return -ENOMEM;
-+	}
-+
- 	ir_table->base = page_address(pages);
-+	ir_table->bitmap = bitmap;
- 
- 	iommu_set_irq_remapping(iommu, mode);
- 	return 0;
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index d380c5e..de1e5e9 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -288,6 +288,7 @@ struct q_inval {
- 
- struct ir_table {
- 	struct irte *base;
-+	unsigned long *bitmap;
- };
- #endif
- 
--- 
-1.7.10.4
-
+> ---
+>  drivers/pci/host/pci-exynos.c      |    5 +++--
+>  drivers/pci/host/pcie-designware.c |   23 ++++++++++++++---------
+>  drivers/pci/host/pcie-designware.h |    4 ++--
+>  3 files changed, 19 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index 24beed3..3de6bfb 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -468,7 +468,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>  	int ret;
+>  
+>  	exynos_pcie_sideband_dbi_r_mode(pp, true);
+> -	ret = cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
+> +	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
+>  	exynos_pcie_sideband_dbi_r_mode(pp, false);
+>  	return ret;
+>  }
+> @@ -479,7 +479,8 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+>  	int ret;
+>  
+>  	exynos_pcie_sideband_dbi_w_mode(pp, true);
+> -	ret = cfg_write(pp->dbi_base + (where & ~0x3), where, size, val);
+> +	ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
+> +			where, size, val);
+>  	exynos_pcie_sideband_dbi_w_mode(pp, false);
+>  	return ret;
+>  }
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 73aa13c..be6ce30 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -32,7 +32,7 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+>  	return sys->private_data;
+>  }
+>  
+> -int cfg_read(void __iomem *addr, int where, int size, u32 *val)
+> +int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>  {
+>  	*val = readl(addr);
+>  
+> @@ -46,7 +46,7 @@ int cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>  	return PCIBIOS_SUCCESSFUL;
+>  }
+>  
+> -int cfg_write(void __iomem *addr, int where, int size, u32 val)
+> +int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
+>  {
+>  	if (size == 4)
+>  		writel(val, addr);
+> @@ -84,7 +84,8 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>  	if (pp->ops->rd_own_conf)
+>  		ret = pp->ops->rd_own_conf(pp, where, size, val);
+>  	else
+> -		ret = cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
+> +		ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
+> +				size, val);
+>  
+>  	return ret;
+>  }
+> @@ -97,8 +98,8 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+>  	if (pp->ops->wr_own_conf)
+>  		ret = pp->ops->wr_own_conf(pp, where, size, val);
+>  	else
+> -		ret = cfg_write(pp->dbi_base + (where & ~0x3), where, size,
+> -				val);
+> +		ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
+> +				size, val);
+>  
+>  	return ret;
+>  }
+> @@ -534,11 +535,13 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>  
+>  	if (bus->parent->number == pp->root_bus_nr) {
+>  		dw_pcie_prog_viewport_cfg0(pp, busdev);
+> -		ret = cfg_read(pp->va_cfg0_base + address, where, size, val);
+> +		ret = dw_pcie_cfg_read(pp->va_cfg0_base + address, where, size,
+> +				val);
+>  		dw_pcie_prog_viewport_mem_outbound(pp);
+>  	} else {
+>  		dw_pcie_prog_viewport_cfg1(pp, busdev);
+> -		ret = cfg_read(pp->va_cfg1_base + address, where, size, val);
+> +		ret = dw_pcie_cfg_read(pp->va_cfg1_base + address, where, size,
+> +				val);
+>  		dw_pcie_prog_viewport_io_outbound(pp);
+>  	}
+>  
+> @@ -557,11 +560,13 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+>  
+>  	if (bus->parent->number == pp->root_bus_nr) {
+>  		dw_pcie_prog_viewport_cfg0(pp, busdev);
+> -		ret = cfg_write(pp->va_cfg0_base + address, where, size, val);
+> +		ret = dw_pcie_cfg_write(pp->va_cfg0_base + address, where, size,
+> +				val);
+>  		dw_pcie_prog_viewport_mem_outbound(pp);
+>  	} else {
+>  		dw_pcie_prog_viewport_cfg1(pp, busdev);
+> -		ret = cfg_write(pp->va_cfg1_base + address, where, size, val);
+> +		ret = dw_pcie_cfg_write(pp->va_cfg1_base + address, where, size,
+> +				val);
+>  		dw_pcie_prog_viewport_io_outbound(pp);
+>  	}
+>  
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index da1ed35..afb1734 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -66,8 +66,8 @@ struct pcie_host_ops {
+>  	void (*host_init)(struct pcie_port *pp);
+>  };
+>  
+> -int cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> -int cfg_write(void __iomem *addr, int where, int size, u32 val);
+> +int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
+> +int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
+>  void dw_handle_msi_irq(struct pcie_port *pp);
+>  void dw_pcie_msi_init(struct pcie_port *pp);
+>  int dw_pcie_link_up(struct pcie_port *pp);
+> -- 
+> 1.7.0.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
