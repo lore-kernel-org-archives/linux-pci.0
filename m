@@ -1,39 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1051 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751041Ab3LBSzD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 Dec 2013 13:55:03 -0500
-Subject: Re: [PATCH] PCI / tg3: Give up chip reset and carrier loss
- handling if PCI device is not present
-From: "Michael Chan" <mchan@broadcom.com>
-To: "David Miller" <davem@davemloft.net>
-cc: rjw@rjwysocki.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, nsujir@broadcom.com
-In-Reply-To: <20131202.134829.2041194874847967680.davem@davemloft.net>
-References: <7807315.7cU9KldDtM@vostro.rjw.lan>
- <1385930359.6988.7.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
- <20131202.134829.2041194874847967680.davem@davemloft.net>
-Date: Mon, 2 Dec 2013 10:54:57 -0800
-Message-ID: <1386010497.6988.8.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:59889 "EHLO
+	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751832Ab3LTDsT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 22:48:19 -0500
+Date: Fri, 20 Dec 2013 09:17:33 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: 'Jagan Teki' <jagannadh.teki@gmail.com>,
+	'Marek Vasut' <marex@denx.de>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
+	spear-devel <spear-devel@list.st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: Re: [PATCH 08/12] pcie: designware: Fix IO transfers
+Message-ID: <20131220034733.GA2291@pratyush-vbox>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <6b4282b9e793ec89ba0c20f3362d41f6133a8132.1386752447.git.mohit.kumar@st.com>
+ <201312111103.28568.marex@denx.de>
+ <CAD6G_RSBhHoXMdw=pK_riXN6ozUtK32uUeAJH5uuox_PQxmi7g@mail.gmail.com>
+ <002401cef6d7$e6d89c00$b489d400$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <002401cef6d7$e6d89c00$b489d400$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-12-02 at 13:48 -0500, David Miller wrote: 
-> From: "Michael Chan" <mchan@broadcom.com>
-> Date: Sun, 1 Dec 2013 12:39:19 -0800
-> 
-> > I'm not familiar with the DS1.  Does the tg3 device get removed through
-> > tg3_remove_one() in this case?  What happens when you reconnect the DS1?
-> 
-> Michael, is Rafael's explanation sufficient for you?
-> 
+Hi Bjorn,
 
-Yes, thanks.
+On Thu, Dec 12, 2013 at 09:17:19AM +0800, Jingoo Han wrote:
+> On Wednesday, December 11, 2013 8:30 PM, Jagan Teki wrote:
+> > On Wed, Dec 11, 2013 at 3:33 PM, Marek Vasut <marex@denx.de> wrote:
+> > > On Wednesday, December 11, 2013 at 10:38:33 AM, Mohit Kumar wrote:
+> > >> From: Pratyush Anand <pratyush.anand@st.com>
 
-Acked-by: Michael Chan <mchan@broadcom.com>
+May be you can apply this patch along with 07/12 of this series.
+V2 of other patches might get delayed because of vacations.
 
-
+Regards
+Pratyush
