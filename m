@@ -1,46 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36119 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755551Ab3LHXy1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2013 18:54:27 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 0/2] PCI: Don't enable realloc automatically when above 4g 64bit mmio is not supported
-Date: Sun,  8 Dec 2013 15:54:27 -0800
-Message-Id: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:35383 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751838Ab3LTEVZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 23:21:25 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Date: Fri, 20 Dec 2013 12:21:08 +0800
+Subject: RE: pcie designware question
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189F96BAC51@EAPEX1MAIL1.st.com>
+References: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
+ <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
+In-Reply-To: <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On one system (Dell) realloc auto cause ixgbe does not work,
-the system does not have enough range for sriov and rom.
-
-We could try to tighten the condition about enabling realloc auto.
-Not enabling realloc auto when above 64bit mmio is not there for
-root bus.
-So the system does not need to take "pci=realloc=off" to have working
-network as old kernel.
-
-First patch is preparing for bus address converting with bus instead of dev.
-
-After those two patches get into pci-next or linus-tree, I will send
-other patches about 64bit resource allocation.
-
-Thanks
-
-Yinghai
-
-Yinghai Lu (2):
-  PCI: pcibus address to resource converting take bus instead of dev
-  PCI: Only enable realloc auto when root bus has 64bit mmio
-
- drivers/pci/host-bridge.c | 34 +++++++++++++++++++++-------------
- drivers/pci/setup-bus.c   | 32 +++++++++++++++++++++++++++-----
- include/linux/pci.h       |  5 +++++
- 3 files changed, 53 insertions(+), 18 deletions(-)
-
--- 
-1.8.4
-
+SGVsbG8gTXVyYWxpLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJq
+b3JuIEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiBTZW50OiBGcmlkYXks
+IERlY2VtYmVyIDIwLCAyMDEzIDQ6MjggQU0NCj4gVG86IEthcmljaGVyaSwgTXVyYWxpZGhhcmFu
+DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBNb2hpdCBLVU1BUiBEQ0c7IEppbmdv
+byBIYW4NCj4gU3ViamVjdDogUmU6IHBjaWUgZGVzaWdud2FyZSBxdWVzdGlvbg0KPiANCj4gWytj
+YyBNb2hpdCwgSmluZ29vXQ0KPiANCj4gT24gVGh1LCBEZWMgMTksIDIwMTMgYXQgMzowMSBQTSwg
+S2FyaWNoZXJpLCBNdXJhbGlkaGFyYW4gPG0tDQo+IGthcmljaGVyaTJAdGkuY29tPiB3cm90ZToN
+Cj4gPiBIaSwNCj4gPg0KPiA+IEkgYW0gd29ya2luZyB0byBwb3J0IG15IHBjaWUgZHJpdmVyIHRv
+IHBjaWUtZGVzaWdud2FyZSBjb3JlIGRyaXZlci4NCj4gPiBUaGUgcGNpZSBzdWIgc3lzdGVtICBv
+biBvdXIgcGxhdGZvcm0gIGhhcyAzMiBPVVRCT1VORCByZWdpb25zIGFuZCAyDQo+ID4gSU5CT1VO
+RCByZWdpb25zLiBJbiBteSBjdXJyZW50IGRyaXZlciwgSSB1c2UgaW50ZXJuYWwgbWVtb3J5IG1h
+cCBvZg0KPiA+IENQVSB0byBhY2Nlc3MgdGhlIFJDJ3MgY29uZmlnL2FwcGxpY2F0aW9uIHNwYWNl
+IGFzIHdlbGwgRVAncyBjb25maWcNCj4gPiBzcGFjZS4gYSA0SyByYW5nZSBpcyBhdmFpbGFibGUg
+dG8gYWNjZXNzIHRoZSBFUCdzIGNvbmZpZyBzcGFjZS4gVG8NCj4gPiBhbGxvdyB3cml0ZS9yZWFk
+IHRvIHRoZSBFUCdzIGNvbmZpZyBzcGFjZSwgdGhlIGRyaXZlciBiYXNpY2FsbHkgd3JpdGUgdGhl
+IGJ1cywNCj4gZGV2aWNlIGFuZCBmdW5jdGlvbiBudW1iZXIgdG8gdGhlICBhcHBsaWNhdGlvbiBD
+RkdfU0VUVVAgcmVnaXN0ZXIgYW5kIHRoZW4NCj4gYWNjZXNzIHRoZSBjb3JyZXNwb25kaW5nIEVQ
+J3MgY29uZmlnIHJlZ2lzdGVyLg0KPiA+DQo+ID4gSSBoYXZlIHJldmlld2VkIHRoZSBkZXNpZ253
+YXJlLmMgY29kZSBhbmQgdGhlIGdsdWUgbG9naWMgZHJpdmVyDQo+ID4gcGNpLWV4eW5vcy5jIGFu
+ZCBjb3VsZG4ndCB1bmRlcnN0YW5kIGZldyB0aGluZ3MuDQo+ID4NCj4gPiAxLiBPdXIgcGNpZSBz
+cyBpcyBiYXNlZCBvbiBkZXNpZ253YXJlIGNvcmUgYW5kIGZvbGxvd2luZyBhZGRyZXNzZXMgYXJl
+DQo+ID4gbm90IGxpc3RlZCBpbiBvdXIgSVAncyAgZGF0YSBtYW51YWwuIFdoZXJlIGlzIGRlZmlu
+ZWQ/IEl0IGRvZXMgc2hvdw0KPiA+IHRoZSByZXN0IG9mIHRoZSBvZmZzZXRzIGRlZmluZWQgaW4g
+IGRyaXZlcnMvcGNpL2hvc3QvZGVzaWdud2FyZS5jIGFuZA0KPiA+DQo+ID4gI2RlZmluZSBQQ0lF
+X0FUVV9WSUVXUE9SVCAgICAgICAgICAgICAgIDB4OTAwDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9S
+RUdJT05fSU5CT1VORCAgICAgICAgICgweDEgPDwgMzEpDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9S
+RUdJT05fT1VUQk9VTkQgICAgICAgICgweDAgPDwgMzEpDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9S
+RUdJT05fSU5ERVgxICAgICAgICAgICgweDEgPDwgMCkNCj4gPiAjZGVmaW5lIFBDSUVfQVRVX1JF
+R0lPTl9JTkRFWDAgICAgICAgICAgKDB4MCA8PCAwKQ0KPiA+ICNkZWZpbmUgUENJRV9BVFVfQ1Ix
+ICAgICAgICAgICAgICAgICAgICAweDkwNA0KPiA+ICNkZWZpbmUgUENJRV9BVFVfVFlQRV9NRU0g
+ICAgICAgICAgICAgICAoMHgwIDw8IDApDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9UWVBFX0lPICAg
+ICAgICAgICAgICAgICgweDIgPDwgMCkNCj4gPiAjZGVmaW5lIFBDSUVfQVRVX1RZUEVfQ0ZHMCAg
+ICAgICAgICAgICAgKDB4NCA8PCAwKQ0KPiA+ICNkZWZpbmUgUENJRV9BVFVfVFlQRV9DRkcxICAg
+ICAgICAgICAgICAoMHg1IDw8IDApDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9DUjIgICAgICAgICAg
+ICAgICAgICAgIDB4OTA4DQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9FTkFCTEUgICAgICAgICAgICAg
+ICAgICgweDEgPDwgMzEpDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9CQVJfTU9ERV9FTkFCTEUgICAg
+ICAgICgweDEgPDwgMzApDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9MT1dFUl9CQVNFICAgICAgICAg
+ICAgIDB4OTBDDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9VUFBFUl9CQVNFICAgICAgICAgICAgIDB4
+OTEwDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9MSU1JVCAgICAgICAgICAgICAgICAgIDB4OTE0DQo+
+ID4gI2RlZmluZSBQQ0lFX0FUVV9MT1dFUl9UQVJHRVQgICAgICAgICAgIDB4OTE4DQo+ID4gI2Rl
+ZmluZSBQQ0lFX0FUVV9CVVMoeCkgICAgICAgICAgICAgICAgICgoKHgpICYgMHhmZikgPDwgMjQp
+DQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9ERVYoeCkgICAgICAgICAgICAgICAgICgoKHgpICYgMHgx
+ZikgPDwgMTkpDQo+ID4gI2RlZmluZSBQQ0lFX0FUVV9GVU5DKHgpICAgICAgICAgICAgICAgICgo
+KHgpICYgMHg3KSA8PCAxNikNCj4gPiAjZGVmaW5lIFBDSUVfQVRVX1VQUEVSX1RBUkdFVCAgICAg
+ICAgICAgMHg5MUMNCg0KLSBUaGVzZSBhcmUgU3lub3BzeXMgc3BlY2lmaWMgcG9ydCBsb2dpYyBy
+ZWdpc3RlcnMuIFlvdSBjYW4gZmluZCB0aGVzZSByZWdpc3RlcnMgYXQgb2Zmc2V0IDB4MjAwDQog
+dW5kZXIgcG9ydCBsb2dpYyByZWdpc3RlcnMgc2VjdGlvbiBpbiBTeW5wc3lzIFBDSWUgRE0uICBU
+aGVyZSBjYW4gYmUgbWlub3IgZGlmZmVyZW5jZSBpbiB0aGUgbmFtZQ0KY29udmVudGlvbiBhcyBp
+dCBpcyBjYWxsZWQgJ2lBVFUgVmlld3BvcnQgUmVnaXN0ZXInIGluIGNvbnRyb2xsZXIgdmVyc2lv
+bjMuNzAgYW5kICdpQVRVIEluZGV4IFJlZ2lzdGVyJw0KIGluIHZlcnNpb24gNC4xMS4NCkJ5IHRo
+ZSB3YXkgd2hpY2ggdmVyc2lvbiBvZiBJUCBtYW51YWwgeW91IGFyZSByZWZlcnJpbmc/DQoNCj4g
+Pg0KPiA+IDIuIE15IHVuZGVyc3RhbmRpbmcgaXMgdGhhdCB0aGUgZGVzaWdud2FyZSBjb3JlIGN1
+cnJlbnRseSBzdXBwb3J0IDINCj4gPiBPVVRCT1VORCByZWdpb25zIGFuZCAyIElOQk9VTkQgcmVn
+aW9ucy4gSXMgdGhpcyB0cnVlPyBJcyB0aGVyZSBhIHBsYW4gdG8NCj4gc3VwcG9ydCBtb3JlIHRo
+YW4gMj8NCg0KLSB5ZXMgY3VycmVudGx5IHN1cHBvcnRpbmcgb25seSAyIHZpZXdwb3J0cyBhcyB0
+aGVyZSBhcmUgc29tZSBjb250cm9sbGVyIGhhdmluZyBvbmx5IHR3by4NCkFzIG9mIG5vdyBubyBw
+bGFuIHRvIGVuaGFuY2UgaXQuIEJ1dCBpZiB5b3Ugc2VuZCBhIHBhdGNoIGZvciB0aGlzIG1vZGlm
+aWNhdGlvbiwgd2UgY2FuIHJldmlldy4NCg0KPiA+IDMuIElzIHRoZXJlIGEgZG9jdW1lbnRhdGlv
+biBleHBsYWluaW5nIGhvdyB0aGUgQVRVIGhhbmRsaW5nIGNvZGUgaXMNCj4gPiBkZXNpZ25lZD8g
+QmFzaWNhbGx5IGFzIEkgY2FuJ3QgZmluZCBBVFUgc3BlY2lmaWMgcmVnaXN0ZXJzIGRlZmluZWQg
+aW4NCj4gPiB0aGUgc3Mgc3BlYywgSSBhbSBub3QgYWJsZSB0byB1bmRlcnN0YW5kIHRoaXMgY29k
+ZS4gSSBkbyBzZWUgdGhlDQo+ID4gYXBwbGljYXRpb24gc3BhY2UgaW4gb3VyIHNzIHNwZWMgZGVm
+aW5pbmcgT1VUQk9VTkQgSU5ERVgvT0ZGU0VUDQo+IHJlZ2lzdGVyIHRvIGNvbmZpZ3VyZSBPVVRC
+T1VORCByZWdpb25zIGFuZCBJQiByZWdpc3RlcnMgdG8gZGVmaW5lIHRoZQ0KPiBJTkJPVU5EIHJl
+Z2lvbi4NCg0KLSBBcyBtZW50aW9uZWQgcGxlYXNlIHJlZmVyIFN5bm9wc3lzIFBDSWUgRE0gYW5k
+IGZpbmQgdGhlc2UgcmVnaXN0ZXJzIHVuZGVyIHBvcnQgbG9naWMgc2VjdGlvbg0KIGF0IG9mZnNl
+dCAweDIwMC4NCg0KPiA+DQo+ID4gNC4gV2hhdCBpcyB0aGUgYmFzZSBhZGRyZXNzIHZhcmlhYmxl
+IHVzZWQgdG8gYWNjZXNzIFJDJ3MgYXBwbGljYXRpb24NCj4gPiByZWdpc3RlciBzcGFjZT8gZGJp
+X2Jhc2UgaW4gc3RydWN0IHBjaWVfcG9ydCA/IEFsc28gSSBhbSBhc3N1bWluZyB0aGlzDQo+ID4g
+aXMgdXNlZCBmb3IgYWNjZXNzaW5nIHRoaXMgc3BhY2UgZnJvbSBpbnRlcm5hbCBDUFUgYnVzIGFu
+ZCBjZmcwX2Jhc2UgYW5kDQo+IGNmZzFfYmFzZSBmb3IgYWNjZXNzaW5nIGl0IGZyb20gcGNpIGJ1
+cy4gSXMgdGhpcyByaWdodD8NCg0KLSBEQkkgU3BhY2U6IFRoaXMgc3BhY2UgaXMgdXNlZCB0byBy
+ZWFkL3dyaXRlIG93biBQQ0kgQ29uZmlndXJhdGlvbiBIZWFkZXIsDQogQ2FwYWJpbGl0eSBhbmQg
+UG9ydCBMb2dpYyAoUEwpIFJlZ2lzdGVycw0KIEVMQkkgc3BhY2U6IFRoZXNlIGFyZSBjb21wbGV0
+ZWx5IHBsYXRmb3JtIChTcGVhci9FeHlub3N5cyAuLi4pIHNwZWNpZmljIGFwcGxpY2F0aW9uIHJl
+Z2lzdGVycy4NCkNvbmZpZ3VyYXRpb24vSU8vTWVtb3J5IHNwYWNlOiBUaGVzZSBhZGRyZXNzZXMg
+Y2FuIGJlIHVzZWQgaW4gdmlld3BvcnQgcHJvZ3JhbW1pbmcgdG8NCiBnZW5lcmF0ZSBkaWZmZXJl
+bnQgdHlwZSBvZiBvdXRib3VuZCB0cmFuc2FjdGlvbi4NCg0KUmVnYXJkcw0KTW9oaXQNCg0KPiA+
+DQo+ID4gSSBhbSB0cnlpbmcgdG8gZmlndXJlIHRoaXMgb3V0IG15c2VsZiwgYnV0IGlmIHNvbWVv
+bmUgY291bGQgZXhwbGFpbiB0aGVzZSwNCj4gdGhhdCB3aWxsIGJlIGdyZWF0IQ0KPiA+DQo+ID4g
+VGhhbmtzLg0KPiA+DQo+ID4gTXVyYWxpIEthcmljaGVyaQ0KPiA+IExpbnV4IEtlcm5lbCwgU29m
+dHdhcmUgRGV2ZWxvcG1lbnQNCj4gPg0KPiA+DQo+ID4gLS0NCj4gPiBUbyB1bnN1YnNjcmliZSBm
+cm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIg0KPiA+
+IGluIHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1v
+cmUNCj4gbWFqb3Jkb21vDQo+ID4gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpv
+cmRvbW8taW5mby5odG1sDQo=
