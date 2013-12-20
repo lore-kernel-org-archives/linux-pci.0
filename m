@@ -1,85 +1,164 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 28 Dec 2013 19:59:25 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to
- avoid sysfs warnings
-Message-ID: <20131229035925.GC26111@kroah.com>
-References: <37552283.kG1L4S8Daa@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <37552283.kG1L4S8Daa@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:3141 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab3LTCuW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 21:50:22 -0500
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com
+Subject: [PATCHv2 0/6] Crashdump Accepting Active IOMMU
+Date: Thu, 19 Dec 2013 19:49:41 -0700
+Message-Id: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 29, 2013 at 12:20:22AM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The device_del(&host_bridge->dev) in pci_stop_root_bus() is
-> problematic, because it causes all sysfs directories below
-> the host bridge to be removed recursively and when
-> pci_remove_root_bus() attempts to remove devices on the root
-> bus (whose sysfs directories are gone now along with all their
-> subdirectories), it causes warnings similar to this one to be
-> printed:
-> 
-> WARNING: CPU: 0 PID: 6 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
-> sysfs group ffffffff819ac5c0 not found for kobject '0001:ff:10.2'
-> Modules linked in: <irrelevant list>
-> CPU: 0 PID: 6 Comm: kworker/u512:0 Tainted: G        W    3.13.0-rc5+ #11
-> Hardware name:
-> Workqueue: kacpi_hotplug acpi_hotplug_work_fn
->  0000000000000009 ffff8808738d3bd8 ffffffff815d84ea ffff8808738d3c20
->  ffff8808738d3c10 ffffffff8106594d 0000000000000000 ffffffff819ac5c0
->  ffff880871b9d0a8 ffff8a07d1895000 0000000000000103 ffff8808738d3c70
-> Call Trace:
->  [<ffffffff815d84ea>] dump_stack+0x45/0x56
->  [<ffffffff8106594d>] warn_slowpath_common+0x7d/0xa0
->  [<ffffffff810659bc>] warn_slowpath_fmt+0x4c/0x50
->  [<ffffffff8122b52e>] ? sysfs_get_dirent_ns+0x4e/0x70
->  [<ffffffff8122c806>] sysfs_remove_group+0xc6/0xd0
->  [<ffffffff813b83f3>] dpm_sysfs_remove+0x43/0x50
->  [<ffffffff813ae105>] device_del+0x45/0x1c0
->  [<ffffffff812e51f6>] pci_remove_bus_device+0x66/0xd0
->  [<ffffffff812e5363>] pci_remove_root_bus+0x73/0x80
->  [<ffffffff813276ab>] acpi_pci_root_remove+0x42/0x4f
->  [<ffffffff81323070>] acpi_bus_trim+0x56/0x89
->  [<ffffffff81323052>] acpi_bus_trim+0x38/0x89
->  [<ffffffff813245df>] acpi_device_hotplug+0x137/0x33b
->  [<ffffffff8131efba>] acpi_hotplug_work_fn+0x1c/0x27
->  [<ffffffff81080f1b>] process_one_work+0x17b/0x460
->  [<ffffffff81081ccb>] worker_thread+0x11b/0x400
->  [<ffffffff81081bb0>] ? rescuer_thread+0x3e0/0x3e0
->  [<ffffffff81088a12>] kthread+0xd2/0xf0
->  [<ffffffff81088940>] ? kthread_create_on_node+0x180/0x180
->  [<ffffffff815e823c>] ret_from_fork+0x7c/0xb0
->  [<ffffffff81088940>] ? kthread_create_on_node+0x180/0x180
-> 
-> To avoid that, the host bridge device has to be deleted after all of
-> its children, so merge pci_stop_root_bus() and pci_remove_root_bus()
-> into one function, pci_stop_and_remove_root_bus(), that first will
-> use pci_stop_and_remove_bus_device() to stop and remove all devices
-> on the root bus and then will delete the host bridge device, remove
-> its bus and drop the final reference to it.
-> 
-> Reported-by: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> Hi,
-> 
-> I can't really test this patch, but I don't know how it can break anything.
-> 
-> The only user of pci_stop_root_bus() and pci_remove_root_bus() is
-> acpi_pci_root_remove() and the code ordering there seems to be somewhat
-> arbitrary.  If you are aware of any reason why it may not work, please let
-> me know. :-)
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Changes from previous submission:
+1. Moved up to Linux kernel top-of-tree of this week.
+2. Expanded the comments section of each patch so that the documentation
+   will appear in the commit logs. (Requested by Alex Williamson and one
+   internal reviewer)
+3. Corrected one line in the table which drives the diagnostic printing
+   of the IOMMU registers (Requested by one internal reviewer)
+
+Notes:
+1. This patch set is ready for extensive testing by the Linux community,
+   for discussion, and hopefully for acceptance into Linux mainstream.
+2. In order to support this testing, I have left a modest amount of
+   debug print enabled.  For testing, the amount of print can be increased
+   or decreased easily; and for production, can be completely turned-off.
+   Please see the bit-flags in struct 'pr_dbg'
+
+Testing:
+1. This patch set was re-tested on the machine that reproduced the problem
+   a. Without this patch set, crashdump console sees a large number of:
+      "dmar: DMAR:[DMA Write] Request device [04:00.0] fault addr fff69000
+      "DMAR:[fault reason 01] Present bit in root entry is clear"
+   b. With this patch set, none of the above messages are seen.
+2. This patch set has not yet been tested with hardware pass-through enabled.
+
+
+Patch 0 file from previous submission:
+The following series implements a fix for:
+A kdump problem about DMA that has been discussed for a long time. That is,
+when a kernel panics and boots into the kdump kernel, DMA started by the 
+panicked kernel is not stopped before the kdump kernel is booted and the 
+kdump kernel disables the IOMMU while this DMA continues.  This causes the
+IOMMU to stop translating the DMA addresses as IOVAs and begin to treat them 
+as physical memory addresses -- which causes the DMA to either:
+(1) generate DMAR errors or (2) generate PCI SERR errors or (3) transfer  
+data to or from incorrect areas of memory. Often this causes the dump to fail.
+
+This patch set modifies the behavior of the iommu in the (new) crashdump kernel: 
+1. to accept the iommu hardware in an active state, 
+2. to leave the current translations in-place so that legacy DMA will continue
+   using its current buffers until the device drivers in the crashdump kernel
+   initialize and initialize their devices,
+3. to use different portions of the iova address ranges for the device drivers
+   in the crashdump kernel than the iova ranges that were in-use at the time
+   of the panic.  
+
+Advantages of this approach:
+1. All manipulation of the IO-device is done by the Linux device-driver
+   for that device.
+2. This approach behaves in a manner very similar to operation without an
+   active iommu.
+3. Any activity between the IO-device and its RMRR areas is handled by the
+   device-driver in the same manner as during a non-kdump boot.
+4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
+   This supports the practice of creating a special kdump kernel without
+   drivers for any devices that are not required for taking a crashdump. 
+
+Changes since the RFC version of this patch:
+1. Consolidated all of the operational code into the "copy..." functions.
+   The "process..." functions were primarily used for diagnostics and
+   exploration; however, there was a small amount of operational code that
+   used the "process..." functions.
+   This operational code has been moved into the "copy..." functions.
+
+2. Removed the "Process ..." functions and the diagnostic code that ran
+   on that function set.  This removed about 1/4 of the code -- which this
+   operational patch set no longer needs.  These portions of the RFC patch
+   could be formatted as a separate patch and submitted independently
+   at a later date. 
+
+3. Re-formatted the code to the Linux Coding Standards.
+   The checkpatch script still finds some lines to complain about;
+   however most of these lines are either (1) lines that I did not change,
+   or (2) lines that only changed by adding a level of indent which pushed
+   them over 80-characters, or (3) new lines whose intent is far clearer when
+   longer than 80-characters.
+
+4. Updated the remaining debug print to be significantly more flexible.
+   This allows control over the amount of debug print to the console --
+   which can vary widely.
+
+5. Fixed a couple of minor bugs found by testing on a machine with a
+   very large IO configuration.
+
+At a high level, this code operates primarily during iommu initialization
+and device-driver initialization
+
+During intel-iommu hardware initialization:
+In intel_iommu_init(void)
+* If (This is the crash kernel)
+  .  Set flag: crashdump_accepting_active_iommu (all changes below check this)
+  .  Skip disabling the iommu hardware translations
+
+In init_dmars()
+* Duplicate the intel iommu translation tables from the old kernel
+  in the new kernel
+  . The root-entry table, all context-entry tables,
+    and all page-translation-entry tables
+  . The duplicate tables contain updated physical addresses to link them together.
+  . The duplicate tables are mapped into kernel virtual addresses
+    in the new kernel which allows most of the existing iommu code
+    to operate without change.
+  . Do some minimal sanity-checks during the copy
+  . Place the address of the new root-entry structure into "struct intel_iommu"
+
+* Skip setting-up new domains for 'si', 'rmrr', 'isa' 
+  . Translations for 'rmrr' and 'isa' ranges have been copied from the old kernel
+  . This patch has not yet been tested with iommu pass-through enabled
+
+* Existing (unchanged) code near the end of dmar_init:
+  . Loads the address of the (now new) root-entry structure from
+    "struct intel_iommu" into the iommu hardware and does the hardware flushes.
+    This changes the active translation tables from the ones in the old kernel
+    to the copies in the new kernel.
+  . This is legal because the translations in the two sets of tables are
+    currently identical:
+      Virtualization Technology for Directed I/O. Architecture Specification,
+      February 2011, Rev. 1.3  (section 11.2, paragraph 2) 
+
+In iommu_init_domains()
+* Mark as in-use all domain-id's from the old kernel
+  . In case the new kernel contains a device that was not in the old kernel
+    and a new, unused domain-id is actually needed, the bitmap will give us one.
+
+When a new domain is created for a device:
+* If (this device has a context in the old kernel)
+  . Get domain-id, address-width, and IOVA ranges from the old kernel context;
+  . Get address(page-entry-tables) from the copy in the new kernel;
+  . And apply all of the above values to the new domain structure.
+* Else
+  . Create a new domain as normal
+
+
+Bill Sumner (6):
+  Crashdump-Accepting-Active-IOMMU-Flags-and-Prototype
+  Crashdump-Accepting-Active-IOMMU-Utility-functions
+  Crashdump-Accepting-Active-IOMMU-Domain-Interfaces
+  Crashdump-Accepting-Active-IOMMU-Copy-Translations
+  Crashdump-Accepting-Active-IOMMU-Debug-Print-IOMMU
+  Crashdump-Accepting-Active-IOMMU-Call-From-Mainline
+
+ drivers/iommu/intel-iommu.c | 1292 ++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 1224 insertions(+), 68 deletions(-)
+
+-- 
+Bill Sumner <bill.sumner@hp.com>
