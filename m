@@ -1,88 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:52448 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932065Ab3LTBsf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 20:48:35 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Patch v2 03/13] PCI, pci-label: release allocated ACPI object on error recovery path
+Date: Fri, 20 Dec 2013 03:01:55 +0100
+Message-ID: <1896409.Ntvojm0Xli@vostro.rjw.lan>
+In-Reply-To: <CAErSpo4oKsJCKxUhxT8E745BkX+veOD-tMEeHULHOuH-3suMRA@mail.gmail.com>
+References: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com> <1387456702-4709-4-git-send-email-jiang.liu@linux.intel.com> <CAErSpo4oKsJCKxUhxT8E745BkX+veOD-tMEeHULHOuH-3suMRA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1386476273-2418-1-git-send-email-rui.y.wang@intel.com>
-References: <1386476273-2418-1-git-send-email-rui.y.wang@intel.com>
-Date: Sun, 8 Dec 2013 13:09:31 +0800
-Message-ID: <CABawtvPuanr5wDccf+uw6RssLTrob3dU2mOh58+KgKG0t9q4ew@mail.gmail.com>
-Subject: Re: [PATCH] aerdrv: Fix severity usage in aer trace event
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: Rui Wang <ruiv.wang@gmail.com>
-Cc: Borislav Petkov <bp@alien8.de>, Lance Ortiz <lance.ortiz@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, lance_ortiz@hotmail.com,
-	jiang.liu@intel.com, tony.luck@intel.com, rostedt@goodmis.org,
-	linux-acpi@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, gong.chen@linux.intel.com,
-	m.chehab@samsung.com, Rui Wang <rui.y.wang@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rui,
-  I like this patch.  thanks your revision.
+On Thursday, December 19, 2013 11:22:22 AM Bjorn Helgaas wrote:
+> On Thu, Dec 19, 2013 at 5:38 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> > Function dsm_get_label() leaks the returned ACPI object if
+> > obj->package.count is not 2, so fix the possible memory leak.
+> >
+> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> 
+> Rafael, if you want to take these through your tree, feel free.
 
-Ethan
+I'm going to do that, thanks!
 
-On Sun, Dec 8, 2013 at 12:17 PM, Rui Wang <ruiv.wang@gmail.com> wrote:
-> There's inconsistency between dmesg and the trace event output.
-> When dmesg says "severity=Corrected", the trace event says
-> "severity=Fatal". What happens is that HW_EVENT_ERR_CORRECTED is
-> defined in edac.h:
->
-> enum hw_event_mc_err_type {
->         HW_EVENT_ERR_CORRECTED,
->         HW_EVENT_ERR_UNCORRECTED,
->         HW_EVENT_ERR_FATAL,
->         HW_EVENT_ERR_INFO,
-> };
->
-> while aer_print_error() uses aer_error_severity_string[] defined as:
->
-> static const char *aer_error_severity_string[] = {
->         "Uncorrected (Non-Fatal)",
->         "Uncorrected (Fatal)",
->         "Corrected"
-> };
->
-> In this case dmesg is correct because info->severity is assigned in
-> aer_isr_one_error() using the definitions in include/linux/ras.h:
->
-> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
-> ---
->  include/trace/events/ras.h |   10 +++++-----
->  1 files changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
-> index 88b8783..1c875ad 100644
-> --- a/include/trace/events/ras.h
-> +++ b/include/trace/events/ras.h
-> @@ -5,7 +5,7 @@
->  #define _TRACE_AER_H
->
->  #include <linux/tracepoint.h>
-> -#include <linux/edac.h>
-> +#include <linux/aer.h>
->
->
->  /*
-> @@ -63,10 +63,10 @@ TRACE_EVENT(aer_event,
->
->         TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
->                 __get_str(dev_name),
-> -               __entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
-> -                       __entry->severity == HW_EVENT_ERR_FATAL ?
-> -                       "Fatal" : "Uncorrected",
-> -               __entry->severity == HW_EVENT_ERR_CORRECTED ?
-> +               __entry->severity == AER_CORRECTABLE ? "Corrected" :
-> +                       __entry->severity == AER_FATAL ?
-> +                       "Fatal" : "Uncorrected, non-fatal",
-> +               __entry->severity == AER_CORRECTABLE ?
->                 __print_flags(__entry->status, "|", aer_correctable_errors) :
->                 __print_flags(__entry->status, "|", aer_uncorrectable_errors))
->  );
+> I'm guessing it probably makes sense to keep the whole series together.
+
+Agreed.
+
+> > ---
+> >  drivers/pci/pci-label.c |   12 ++++--------
+> >  1 file changed, 4 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+> > index d51f45a..f6e01a5 100644
+> > --- a/drivers/pci/pci-label.c
+> > +++ b/drivers/pci/pci-label.c
+> > @@ -233,11 +233,7 @@ dsm_get_label(acpi_handle handle, int func,
+> >                 return -1;
+> >
+> >         obj = (union acpi_object *)output->pointer;
+> > -
+> > -       switch (obj->type) {
+> > -       case ACPI_TYPE_PACKAGE:
+> > -               if (obj->package.count != 2)
+> > -                       break;
+> > +       if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
+> >                 len = obj->package.elements[0].integer.value;
+> >                 if (buf) {
+> >                         if (attribute == ACPI_ATTR_INDEX_SHOW)
+> > @@ -250,10 +246,10 @@ dsm_get_label(acpi_handle handle, int func,
+> >                 }
+> >                 kfree(output->pointer);
+> >                 return len;
+> > -       break;
+> > -       default:
+> > -               kfree(output->pointer);
+> >         }
+> > +
+> > +       kfree(output->pointer);
+> > +
+> >         return -1;
+> >  }
+> >
+> > --
+> > 1.7.10.4
+> >
 > --
-> 1.7.5.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
