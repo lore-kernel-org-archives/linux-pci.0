@@ -1,79 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
-Cc: bhelgaas@google.com, david.a.cohen@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2.1 4/4] x86: intel-mid: remove deprecated X86_MDFLD and X86_WANT_INTEL_MID configs
-Date: Mon, 16 Dec 2013 17:37:26 -0800
-Message-Id: <1387244246-20714-1-git-send-email-david.a.cohen@linux.intel.com>
-In-Reply-To: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:33533 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700Ab3LTQJl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Dec 2013 11:09:41 -0500
+Received: by mail-ie0-f170.google.com with SMTP id qd12so3373979ieb.29
+        for <linux-pci@vger.kernel.org>; Fri, 20 Dec 2013 08:09:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <003201cefd2d$0c7cbc60$25763520$%han@samsung.com>
+References: <20131212182903.409515738@gmail.com> <005b01cef9f9$52022bd0$f6068370$%han@samsung.com>
+ <2CC2A0A4A178534D93D5159BF3BCB66189F95F6A22@EAPEX1MAIL1.st.com> <003201cefd2d$0c7cbc60$25763520$%han@samsung.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 20 Dec 2013 09:09:20 -0700
+Message-ID: <CAErSpo5Kjq4=nTP1DaCjiPSPqAKYyFUBNB6r9tfLm6aF_U-qNA@mail.gmail.com>
+Subject: Re: [PATCH] pci: designware: fix missing msi irqs
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Harro Haan <hrhaan@gmail.com>, Marek Vasut <marex@denx.de>,
+	Richard Zhu <hong-xing.zhu@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Juergen Beisert <jbe@pengutronix.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Siva Reddy Kallam <siva.kallam@samsung.com>,
+	Srikanth T Shivanand <ts.srikanth@samsung.com>,
+	Sean Cross <xobs@kosagi.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to support all Intel Mid platforms with a single config
-selection. This patch removes deprecated CONFIG_X86_MDFLD and
-X86_WANT_INTEL_MID options in favor of having CONFIG_X86_INTEL_MID only.
+On Thu, Dec 19, 2013 at 7:41 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> On Monday, December 16, 2013 3:49 PM, Mohit KUMAR DCG wrote:
+>> On Monday, December 16, 2013 6:24 AM, Jingoo Han wrote:
+>> > On Friday, December 13, 2013 3:29 AM, Harro Haan wrote:
+>> > >
+>> > > The interrupts were cleared after the irq handler was called.
+>> > > This means that new interrupts that occur after the handler handled
+>> > > the previous irq but before the interrupt is cleared will be missed.
+>> > >
+>> > > Signed-off-by: Harro Haan <hrhaan@gmail.com>
+>> > > Cc: Mohit Kumar <mohit.kumar@st.com>
+>> > > Cc: Jingoo Han <jg1.han@samsung.com>
+>> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > > Cc: Marek Vasut <marex@denx.de>
+>> > > Cc: Richard Zhu <hong-xing.zhu@freescale.com>
+>> > > Cc: Shawn Guo <shawn.guo@linaro.org>
+>> > > Cc: Pratyush Anand <pratyush.anand@st.com>
+>> > > Cc: Tim Harvey <tharvey@gateworks.com>
+>> > > Cc: Juergen Beisert <jbe@pengutronix.de>
+>> > > Cc: Arnd Bergmann <arnd@arndb.de>
+>> > > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+>> > > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+>> > > Cc: Sean Cross <xobs@kosagi.com>
+>> > > Cc: linux-pci@vger.kernel.org
+>> > > Cc: linux-arm-kernel@lists.infradead.org
+>> >
+>> > Acked-by: Jingoo Han <jg1.han@samsung.com>
+>> >
+>> > I was not able to reproduce the problem, however it looks good. Also, there
+>> > is no side effect on Exynos platform.
+>> >
+>> > Mohit,
+>> > If you have some comments, please let us know.
+>>
+>> - Quickly tested on SPEAr1310, working fine without any side effect. So is,
+>> Acked-by: Mohit Kumar <mohit.kumar@st.com>
+>
+> Hi Bjorn Helgaas,
+>
+> Would you apply this patch to your 'pci/host-designware' branch
+> with the following Tested-by and Acked-by?
+>
+> Tested-by: Marek Vasut <marex@denx.de>
+> Tested-by:  Matthias Mann <m.mann@arkona-technologies.de>
+> Acked-by: Jingoo Han <jg1.han@samsung.com>
+> Acked-by: Mohit Kumar <mohit.kumar@st.com>
 
-Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
----
- arch/x86/Kconfig | 30 +++++++-----------------------
- 1 file changed, 7 insertions(+), 23 deletions(-)
+Applied to pci/host-designware for v3.14, thanks for the reminder!
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index e903c71f7e69..f998be2d2901 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -437,42 +437,26 @@ config X86_INTEL_CE
- 	  This option compiles in support for the CE4100 SOC for settop
- 	  boxes and media devices.
- 
--config X86_WANT_INTEL_MID
-+config X86_INTEL_MID
- 	bool "Intel MID platform support"
- 	depends on X86_32
- 	depends on X86_EXTENDED_PLATFORM
--	---help---
--	  Select to build a kernel capable of supporting Intel MID platform
--	  systems which do not have the PCI legacy interfaces (Moorestown,
--	  Medfield). If you are building for a PC class system say N here.
--
--if X86_WANT_INTEL_MID
--
--config X86_INTEL_MID
--	bool
--
--config X86_MDFLD
--       bool "Medfield MID platform"
- 	depends on PCI
- 	depends on PCI_GOANY
- 	depends on X86_IO_APIC
--	select X86_INTEL_MID
- 	select SFI
-+	select I2C
- 	select DW_APB_TIMER
- 	select APB_TIMER
--	select I2C
--	select SPI
- 	select INTEL_SCU_IPC
--	select X86_PLATFORM_DEVICES
- 	select MFD_INTEL_MSIC
- 	---help---
--	  Medfield is Intel's Low Power Intel Architecture (LPIA) based Moblin
--	  Internet Device(MID) platform. 
--	  Unlike standard x86 PCs, Medfield does not have many legacy devices
--	  nor standard legacy replacement devices/features. e.g. Medfield does
--	  not contain i8259, i8254, HPET, legacy BIOS, most of the io ports.
-+	  Select to build a kernel capable of supporting Intel MID (Mobile
-+	  Internet Device) platform systems which do not have the PCI legacy
-+	  interfaces. If you are building for a PC class system say N here.
- 
--endif
-+	  Intel MID platforms are based on an Intel processor and chipset which
-+	  consume less power than most of the x86 derivatives.
- 
- config X86_INTEL_LPSS
- 	bool "Intel Low Power Subsystem Support"
--- 
-1.8.4.2
-
+Bjorn
