@@ -1,51 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f45.google.com ([209.85.213.45]:37030 "EHLO
-	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758780Ab3LGWkn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Dec 2013 17:40:43 -0500
-Received: by mail-yh0-f45.google.com with SMTP id v1so1598072yhn.32
-        for <linux-pci@vger.kernel.org>; Sat, 07 Dec 2013 14:40:43 -0800 (PST)
-Date: Sat, 7 Dec 2013 15:40:40 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Eric Brower <ebrower@nvidia.com>
-Cc: thierry.reding@gmail.com, linux-pci@vger.kernel.org,
-	swarren@wwwdotorg.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] PCI: Disable Gen2 for Tegra20 and Tegra30
-Message-ID: <20131207224040.GB7901@google.com>
-References: <1384815306-3149-1-git-send-email-ebrower@nvidia.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:64774 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753546Ab3LTGPm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Dec 2013 01:15:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1384815306-3149-1-git-send-email-ebrower@nvidia.com>
+In-Reply-To: <20131219221019.GB15201@google.com>
+References: <1387465612-3673-33-git-send-email-levex@linux.com>
+	<20131219221019.GB15201@google.com>
+Date: Thu, 19 Dec 2013 22:15:41 -0800
+Message-ID: <CAE9FiQUrjCX=YzSni8YsbH-aFKtOLZ_v3-A6EcHzFY3esRb0Rw@mail.gmail.com>
+Subject: Re: [PATCH 32/38] pcie: add missing put_device call
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Levente Kurusa <levex@linux.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Andrew Murray <amurray@embedded-bits.co.uk>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 18, 2013 at 02:55:06PM -0800, Eric Brower wrote:
-> Tegra20 and Tegra30 do not support gen2 PCIe, so correct the
-> register setting to disable it.
-> 
-> Signed-off-by: Eric Brower <ebrower@nvidia.com>
+On Thu, Dec 19, 2013 at 2:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Greg, Yinghai]
+>
+> On Thu, Dec 19, 2013 at 04:06:46PM +0100, Levente Kurusa wrote:
+>> This is required so that we give up the last reference to the device.
+>> Removed the kfree() as put_device will result in release_pcie_device being
+>> called and hence the container of the device will be kfree'd.
+>>
+>> Signed-off-by: Levente Kurusa <levex@linux.com>
+>
+> Thanks, I applied a slightly modified version of this to my pci/deletion
+> branch for v3.14.
+>
+> I think the get_device() after device_register() succeeds and the
+> put_device() before device_unregister() are superfluous, so I propose the
+> series included below.  Any comments?
 
-Applied with Thierry's ack to pci/host-tegra for v3.14, thanks!
+Nice cleanup.
 
-Bjorn
+Thanks
 
-> ---
->  drivers/pci/host/pci-tegra.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 0afbbbc..b8ba2f7 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -805,7 +805,7 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  	afi_writel(pcie, value, AFI_PCIE_CONFIG);
->  
->  	value = afi_readl(pcie, AFI_FUSE);
-> -	value &= ~AFI_FUSE_PCIE_T0_GEN2_DIS;
-> +	value |= AFI_FUSE_PCIE_T0_GEN2_DIS;
->  	afi_writel(pcie, value, AFI_FUSE);
->  
->  	/* initialize internal PHY, enable up to 16 PCIE lanes */
-> -- 
-> 1.8.1.5
-> 
+Yinghai
