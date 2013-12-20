@@ -1,51 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42533 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753518Ab3LWOma (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Dec 2013 09:42:30 -0500
-Date: Mon, 23 Dec 2013 15:44:18 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
- helpers
-Message-ID: <20131223144418.GA11342@dhcp-26-207.brq.redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
- <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
- <20131218003002.GA15119@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131218003002.GA15119@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com
+Subject: [PATCHv2 2/6] Crashdump-Accepting-Active-IOMMU-Utility-functions
+Date: Thu, 19 Dec 2013 19:49:43 -0700
+Message-Id: <1387507787-14163-3-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+References: <1387507787-14163-1-git-send-email-bill.sumner@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 17, 2013 at 05:30:02PM -0700, Bjorn Helgaas wrote:
-> > +int pci_auto_enable_msi_range(struct pci_dev *dev, struct msix_entry *entries,
-> > +			      int minvec, int maxvec)
+Most of the code for Crashdump Accepting Active IOMMU is contained
+in a large section at the end of intel-iommu.c -- beginning here.
 
-[...]
+This patch contains small utility functions used to access the
+bit fields of the context entry, plus one to copy from a physically-
+addressed area of memory (primarily pages from the panicked kernel)
+into a virtually-addressed area within the crashdump kernel.
 
-> > +If this function returns a positive number it indicates at least the
-> > +returned number of MSI interrupts have been successfully allocated (it may
-> > +have allocated more in order to satisfy the power-of-two requirement).
-> 
-> I assume this means the return value may be larger than the "maxvec"
-> requested, right?  And the driver is free to use all the vectors up to the
-> return value, even those above maxvec, right?
+v1->v2:
+Updated patch description
 
-No, the returned value may not be larger than the "maxvec" ever. This is just
-paraphrasing the semantics of exisitng pci_enable_msi_block() interface - a
-value written to MMC register might be larger than the returned value, but the
-driver may not use the extra vectors it did not request.
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 74 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
 
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 17c4537..4172a2b 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -4455,3 +4455,77 @@ static void __init check_tylersburg_isoch(void)
+ 	printk(KERN_WARNING "DMAR: Recommended TLB entries for ISOCH unit is 16; your BIOS set %d\n",
+ 	       vtisochctrl);
+ }
++#ifdef CONFIG_CRASH_DUMP
++
++/* ========================================================================
++ * Utility functions for accessing the iommu Translation Tables
++ * ------------------------------------------------------------------------
++ */
++static inline struct context_entry *
++get_context_phys_from_root(struct root_entry *root)
++{
++	return (struct context_entry *)
++		(root_present(root) ? (void *) (root->val & VTD_PAGE_MASK)
++				    : NULL);
++}
++
++static int
++context_get_p(struct context_entry *c)    {return((c->lo >> 0) & 0x1); }
++
++static int
++context_get_fpdi(struct context_entry *c) {return((c->lo >> 1) & 0x1); }
++
++static int
++context_get_t(struct context_entry *c)    {return((c->lo >> 2) & 0x3); }
++
++static u64
++context_get_asr(struct context_entry *c)  {return((c->lo >> 12));      }
++
++static int
++context_get_aw(struct context_entry *c)   {return((c->hi >> 0) & 0x7); }
++
++static int
++context_get_aval(struct context_entry *c) {return((c->hi >> 3) & 0xf); }
++
++static int
++context_get_did(struct context_entry *c)  {return((c->hi >> 8) & 0xffff); }
++
++static void context_put_asr(struct context_entry *c, unsigned long asr)
++{
++	c->lo &= (~VTD_PAGE_MASK);
++	c->lo |= (asr << VTD_PAGE_SHIFT);
++}
++
++
++/*
++ * Copy memory from a physically-addressed area into a virtually-addressed area
++ */
++static int oldcopy(void *to, void *from, int size)
++{
++	size_t ret = 0;			/* Length copied */
++	unsigned long pfn;		/* Page Frame Number */
++	char *buf = to;			/* Adr(Output buffer) */
++	size_t csize = (size_t)size;	/* Num(bytes to copy) */
++	unsigned long offset;		/* Lower 12 bits of from */
++	int userbuf = 0;		/* to is in kernel space */
++
++	if (pr_dbg.enter_oldcopy)
++		pr_debug("ENTER %s to=%16.16llx, from = %16.16llx, size = %d\n",
++			__func__,
++			(unsigned long long) to,
++			(unsigned long long) from, size);
++
++	if (intel_iommu_translation_tables_are_mapped)
++		memcpy(to, phys_to_virt((phys_addr_t)from), csize);
++	else {
++		pfn = ((unsigned long) from) >> VTD_PAGE_SHIFT;
++		offset = ((unsigned long) from) & (~VTD_PAGE_MASK);
++		ret = copy_oldmem_page(pfn, buf, csize, offset, userbuf);
++	}
++
++	if (pr_dbg.leave_oldcopy)
++		pr_debug("LEAVE %s ret=%d\n", __func__, (int) ret);
++
++	return (int) ret;
++}
++#endif /* CONFIG_CRASH_DUMP */
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Bill Sumner <bill.sumner@hp.com>
+
