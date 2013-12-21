@@ -1,255 +1,256 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:41532 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908Ab3LPBPm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Dec 2013 20:15:42 -0500
-Received: by mail-ig0-f178.google.com with SMTP id ut6so2708230igb.5
-        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2013 17:15:42 -0800 (PST)
-Received: from localhost (173-8-252-97-Colorado.hfc.comcastbusiness.net. [173.8.252.97])
-        by mx.google.com with ESMTPSA id da14sm13393042igc.1.2013.12.15.17.15.42
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-        Sun, 15 Dec 2013 17:15:42 -0800 (PST)
-Subject: [PATCH 7/8] PCI: pciehp: Use symbolic constants for Slot Control
- fields
-To: linux-pci@vger.kernel.org
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:56956 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754700Ab3LUSut (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 21 Dec 2013 13:50:49 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so4340314ieb.8
+        for <linux-pci@vger.kernel.org>; Sat, 21 Dec 2013 10:50:48 -0800 (PST)
+Date: Sat, 21 Dec 2013 11:50:45 -0700
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 15 Dec 2013 18:15:41 -0700
-Message-ID: <20131216011541.7275.52355.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20131216010946.7275.83547.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20131216010946.7275.83547.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>
+Subject: Re: [PATCH v2 10/10] intel-gtt: Read 64bit for gmar_bus_addr
+Message-ID: <20131221185045.GA22728@google.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+ <1385429290-25397-11-git-send-email-yinghai@kernel.org>
+ <CAErSpo7THxjUQ=EWxicPYCwQCHReJ=sxPyPPRFv4QQ=ex6wmOA@mail.gmail.com>
+ <CAE9FiQUDkuBnuYo4OfZncFw6k22PcapgjqzapVFt5UneiqoVDQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQUDkuBnuYo4OfZncFw6k22PcapgjqzapVFt5UneiqoVDQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add symbolic constants for the PCIe Slot Control indicator and power
-control fields defined by spec and use them instead of open-coded hex
-constants.
+[+cc Daniel]
 
-No functional change.
+On Fri, Dec 20, 2013 at 05:19:38PM -0800, Yinghai Lu wrote:
+> On Fri, Dec 20, 2013 at 4:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+> > Why are we reading these BARs directly anyway?  These look like
+> > standard PCI BARs (I810_GMADDR == 0x10 and I915_GMADDR == 0x18), so
+> > the PCI core should already be reading them correctly, shouldn't it?
+> > Can't we just use pcibios_resource_to_bus(pci_resource_start())?
+> >
+> > It looks like i810_setup(), i830_setup(), and i9xx_setup() have the
+> > same problem and should also be using pci_resource_start() or
+> > something similar.
+> 
+> Agreed.
+> 
+> should be sth like:
+> 
+> 
+> Index: linux-2.6/drivers/char/agp/intel-gtt.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/char/agp/intel-gtt.c
+> +++ linux-2.6/drivers/char/agp/intel-gtt.c
+> @@ -608,9 +608,9 @@ static bool intel_gtt_can_wc(void)
+> 
+>  static int intel_gtt_init(void)
+>  {
+> -       u32 gma_addr;
+> +       struct pci_bus_region r;
+>         u32 gtt_map_size;
+> -       int ret;
+> +       int ret, idx;
+> 
+>         ret = intel_private.driver->setup();
+>         if (ret != 0)
+> @@ -660,13 +660,14 @@ static int intel_gtt_init(void)
+>         }
+> 
+>         if (INTEL_GTT_GEN <= 2)
+> -               pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
+> -                                     &gma_addr);
+> +               idx = 0; /* I810_GMADDR */
+>         else
+> -               pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
+> -                                     &gma_addr);
+> +               idx = 2; /* I915_GMADDR */
+> 
+> -       intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
+> +       pcibios_resource_to_bus(intel_private.pcidev->bus, &r,
+> +                               &intel_private.pcidev->resource[idx]);
+> +
+> +       intel_private.gma_bus_addr = r.start;
+> 
+>         return 0;
+>  }
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pciehp_hpc.c |   86 ++++++++++++--------------------------
- include/uapi/linux/pci_regs.h    |    8 ++++
- 2 files changed, 36 insertions(+), 58 deletions(-)
+I think it's even worse than we first thought.  Not only does the current
+code fail on 64-bit BARs, but it also ignores the CPU/bus address
+difference, and I think we want the CPU address.  So I think we need
+something like these:
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 915bb35f9180..05d421cf935e 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -46,10 +46,6 @@ static inline struct pci_dev *ctrl_dev(struct controller *ctrl)
- 	return ctrl->pcie->port;
+
+commit 8ba262d78f9d218672486c62ba6a1c7a073bd272
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Sat Dec 21 10:49:58 2013 -0700
+
+    agp/intel: Rename "*_bus_addr" to "*_phys_addr"
+    
+    We're dealing with CPU physical addresses here, which may be different from
+    bus addresses, so rename "gtt_bus_addr" to "gtt_phys_addr" and
+    "gma_bus_addr" to "gma_phys_addr" to avoid confusion.
+    
+    No functional change.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+index b8e2014cb9cb..dca04a6aa7f8 100644
+--- a/drivers/char/agp/intel-gtt.c
++++ b/drivers/char/agp/intel-gtt.c
+@@ -64,7 +64,7 @@ static struct _intel_private {
+ 	struct pci_dev *pcidev;	/* device one */
+ 	struct pci_dev *bridge_dev;
+ 	u8 __iomem *registers;
+-	phys_addr_t gtt_bus_addr;
++	phys_addr_t gtt_phys_addr;
+ 	u32 PGETBL_save;
+ 	u32 __iomem *gtt;		/* I915G */
+ 	bool clear_fake_agp; /* on first access via agp, fill with scratch */
+@@ -78,7 +78,7 @@ static struct _intel_private {
+ 	int refcount;
+ 	/* Whether i915 needs to use the dmar apis or not. */
+ 	unsigned int needs_dmar : 1;
+-	phys_addr_t gma_bus_addr;
++	phys_addr_t gma_phys_addr;
+ 	/*  Size of memory reserved for graphics by the BIOS */
+ 	unsigned int stolen_size;
+ 	/* Total number of gtt entries. */
+@@ -191,7 +191,7 @@ static int i810_setup(void)
+ 	writel(virt_to_phys(gtt_table) | I810_PGETBL_ENABLED,
+ 	       intel_private.registers+I810_PGETBL_CTL);
+ 
+-	intel_private.gtt_bus_addr = reg_addr + I810_PTE_BASE;
++	intel_private.gtt_phys_addr = reg_addr + I810_PTE_BASE;
+ 
+ 	if ((readl(intel_private.registers+I810_DRAM_CTL)
+ 		& I810_DRAM_ROW_0) == I810_DRAM_ROW_0_SDRAM) {
+@@ -636,10 +636,10 @@ static int intel_gtt_init(void)
+ 
+ 	intel_private.gtt = NULL;
+ 	if (intel_gtt_can_wc())
+-		intel_private.gtt = ioremap_wc(intel_private.gtt_bus_addr,
++		intel_private.gtt = ioremap_wc(intel_private.gtt_phys_addr,
+ 					       gtt_map_size);
+ 	if (intel_private.gtt == NULL)
+-		intel_private.gtt = ioremap(intel_private.gtt_bus_addr,
++		intel_private.gtt = ioremap(intel_private.gtt_phys_addr,
+ 					    gtt_map_size);
+ 	if (intel_private.gtt == NULL) {
+ 		intel_private.driver->cleanup();
+@@ -666,7 +666,7 @@ static int intel_gtt_init(void)
+ 		pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
+ 				      &gma_addr);
+ 
+-	intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
++	intel_private.gma_phys_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
+ 
+ 	return 0;
  }
+@@ -796,7 +796,7 @@ static int i830_setup(void)
+ 	if (!intel_private.registers)
+ 		return -ENOMEM;
  
--/* Power Control Command */
--#define POWER_ON	0
--#define POWER_OFF	PCI_EXP_SLTCTL_PCC
--
- static irqreturn_t pcie_isr(int irq, void *dev_id);
- static void start_int_poll_timer(struct controller *ctrl, int sec);
+-	intel_private.gtt_bus_addr = reg_addr + I810_PTE_BASE;
++	intel_private.gtt_phys_addr = reg_addr + I810_PTE_BASE;
  
-@@ -346,25 +342,19 @@ void pciehp_get_attention_status(struct slot *slot, u8 *status)
- 	struct controller *ctrl = slot->ctrl;
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 slot_ctrl;
--	u8 atten_led_state;
+ 	return 0;
+ }
+@@ -821,7 +821,7 @@ static int intel_fake_agp_configure(void)
+ 	    return -EIO;
  
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x, value read %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_ctrl);
+ 	intel_private.clear_fake_agp = true;
+-	agp_bridge->gart_bus_addr = intel_private.gma_bus_addr;
++	agp_bridge->gart_bus_addr = intel_private.gma_phys_addr;
  
--	atten_led_state = (slot_ctrl & PCI_EXP_SLTCTL_AIC) >> 6;
--
--	switch (atten_led_state) {
--	case 0:
--		*status = 0xFF;	/* Reserved */
--		break;
--	case 1:
-+	switch (slot_ctrl & PCI_EXP_SLTCTL_AIC) {
-+	case PCI_EXP_SLTCTL_ATTN_IND_ON:
- 		*status = 1;	/* On */
+ 	return 0;
+ }
+@@ -1123,13 +1123,13 @@ static int i9xx_setup(void)
+ 	case 3:
+ 		pci_read_config_dword(intel_private.pcidev,
+ 				      I915_PTEADDR, &gtt_addr);
+-		intel_private.gtt_bus_addr = gtt_addr;
++		intel_private.gtt_phys_addr = gtt_addr;
  		break;
--	case 2:
-+	case PCI_EXP_SLTCTL_ATTN_IND_BLINK:
- 		*status = 2;	/* Blink */
- 		break;
--	case 3:
-+	case PCI_EXP_SLTCTL_ATTN_IND_OFF:
- 		*status = 0;	/* Off */
+ 	case 5:
+-		intel_private.gtt_bus_addr = reg_addr + MB(2);
++		intel_private.gtt_phys_addr = reg_addr + MB(2);
  		break;
  	default:
-@@ -378,20 +368,17 @@ void pciehp_get_power_status(struct slot *slot, u8 *status)
- 	struct controller *ctrl = slot->ctrl;
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 slot_ctrl;
--	u8 pwr_state;
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x value read %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_ctrl);
- 
--	pwr_state = (slot_ctrl & PCI_EXP_SLTCTL_PCC) >> 10;
--
--	switch (pwr_state) {
--	case 0:
--		*status = 1;
-+	switch (slot_ctrl & PCI_EXP_SLTCTL_PCC) {
-+	case PCI_EXP_SLTCTL_PWR_ON:
-+		*status = 1;	/* On */
+-		intel_private.gtt_bus_addr = reg_addr + KB(512);
++		intel_private.gtt_phys_addr = reg_addr + KB(512);
  		break;
--	case 1:
--		*status = 0;
-+	case PCI_EXP_SLTCTL_PWR_OFF:
-+		*status = 0;	/* Off */
- 		break;
- 	default:
- 		*status = 0xFF;
-@@ -430,72 +417,59 @@ void pciehp_set_attention_status(struct slot *slot, u8 value)
- {
- 	struct controller *ctrl = slot->ctrl;
- 	u16 slot_cmd;
--	u16 cmd_mask;
- 
--	cmd_mask = PCI_EXP_SLTCTL_AIC;
- 	switch (value) {
- 	case 0 :	/* turn off */
--		slot_cmd = 0x00C0;
-+		slot_cmd = PCI_EXP_SLTCTL_ATTN_IND_OFF;
- 		break;
- 	case 1:		/* turn on */
--		slot_cmd = 0x0040;
-+		slot_cmd = PCI_EXP_SLTCTL_ATTN_IND_ON;
- 		break;
- 	case 2:		/* turn blink */
--		slot_cmd = 0x0080;
-+		slot_cmd = PCI_EXP_SLTCTL_ATTN_IND_BLINK;
- 		break;
- 	default:
- 		return;
  	}
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
--	pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
-+	pcie_write_cmd(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
- }
  
- void pciehp_green_led_on(struct slot *slot)
+@@ -1409,7 +1409,7 @@ void intel_gtt_get(size_t *gtt_total, size_t *stolen_size,
  {
- 	struct controller *ctrl = slot->ctrl;
--	u16 slot_cmd;
--	u16 cmd_mask;
- 
--	slot_cmd = 0x0100;
--	cmd_mask = PCI_EXP_SLTCTL_PIC;
--	pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
-+	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON, PCI_EXP_SLTCTL_PIC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
--		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-+		 PCI_EXP_SLTCTL_PWR_IND_ON);
+ 	*gtt_total = intel_private.gtt_total_entries << PAGE_SHIFT;
+ 	*stolen_size = intel_private.stolen_size;
+-	*mappable_base = intel_private.gma_bus_addr;
++	*mappable_base = intel_private.gma_phys_addr;
+ 	*mappable_end = intel_private.gtt_mappable_entries << PAGE_SHIFT;
  }
- 
- void pciehp_green_led_off(struct slot *slot)
- {
- 	struct controller *ctrl = slot->ctrl;
--	u16 slot_cmd;
--	u16 cmd_mask;
- 
--	slot_cmd = 0x0300;
--	cmd_mask = PCI_EXP_SLTCTL_PIC;
--	pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
-+	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF, PCI_EXP_SLTCTL_PIC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
--		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-+		 PCI_EXP_SLTCTL_PWR_IND_OFF);
- }
- 
- void pciehp_green_led_blink(struct slot *slot)
- {
- 	struct controller *ctrl = slot->ctrl;
--	u16 slot_cmd;
--	u16 cmd_mask;
- 
--	slot_cmd = 0x0200;
--	cmd_mask = PCI_EXP_SLTCTL_PIC;
--	pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
-+	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK, PCI_EXP_SLTCTL_PIC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
--		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-+		 PCI_EXP_SLTCTL_PWR_IND_BLINK);
- }
- 
- int pciehp_power_on_slot(struct slot * slot)
- {
- 	struct controller *ctrl = slot->ctrl;
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
--	u16 slot_cmd;
--	u16 cmd_mask;
- 	u16 slot_status;
- 	int retval;
- 
-@@ -506,11 +480,10 @@ int pciehp_power_on_slot(struct slot * slot)
- 					   PCI_EXP_SLTSTA_PFD);
- 	ctrl->power_fault_detected = 0;
- 
--	slot_cmd = POWER_ON;
--	cmd_mask = PCI_EXP_SLTCTL_PCC;
--	pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
-+	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
--		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-+		 PCI_EXP_SLTCTL_PWR_ON);
- 
- 	retval = pciehp_link_enable(ctrl);
- 	if (retval)
-@@ -522,8 +495,6 @@ int pciehp_power_on_slot(struct slot * slot)
- void pciehp_power_off_slot(struct slot * slot)
- {
- 	struct controller *ctrl = slot->ctrl;
--	u16 slot_cmd;
--	u16 cmd_mask;
- 
- 	/* Disable the link at first */
- 	pciehp_link_disable(ctrl);
-@@ -533,11 +504,10 @@ void pciehp_power_off_slot(struct slot * slot)
- 	else
- 		msleep(1000);
- 
--	slot_cmd = POWER_OFF;
--	cmd_mask = PCI_EXP_SLTCTL_PCC;
--	pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
-+	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
--		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-+		 PCI_EXP_SLTCTL_PWR_OFF);
- }
- 
- static irqreturn_t pcie_isr(int irq, void *dev_id)
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 4a98e85438a7..6d03ba42ab23 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -518,8 +518,16 @@
- #define  PCI_EXP_SLTCTL_CCIE	0x0010	/* Command Completed Interrupt Enable */
- #define  PCI_EXP_SLTCTL_HPIE	0x0020	/* Hot-Plug Interrupt Enable */
- #define  PCI_EXP_SLTCTL_AIC	0x00c0	/* Attention Indicator Control */
-+#define  PCI_EXP_SLTCTL_ATTN_IND_ON    0x0040 /* Attention Indicator on */
-+#define  PCI_EXP_SLTCTL_ATTN_IND_BLINK 0x0080 /* Attention Indicator blinking */
-+#define  PCI_EXP_SLTCTL_ATTN_IND_OFF   0x00c0 /* Attention Indicator off */
- #define  PCI_EXP_SLTCTL_PIC	0x0300	/* Power Indicator Control */
-+#define  PCI_EXP_SLTCTL_PWR_IND_ON     0x0100 /* Power Indicator on */
-+#define  PCI_EXP_SLTCTL_PWR_IND_BLINK  0x0200 /* Power Indicator blinking */
-+#define  PCI_EXP_SLTCTL_PWR_IND_OFF    0x0300 /* Power Indicator off */
- #define  PCI_EXP_SLTCTL_PCC	0x0400	/* Power Controller Control */
-+#define  PCI_EXP_SLTCTL_PWR_ON         0x0000 /* Power On */
-+#define  PCI_EXP_SLTCTL_PWR_OFF        0x0400 /* Power Off */
- #define  PCI_EXP_SLTCTL_EIC	0x0800	/* Electromechanical Interlock Control */
- #define  PCI_EXP_SLTCTL_DLLSCE	0x1000	/* Data Link Layer State Changed Enable */
- #define PCI_EXP_SLTSTA		26	/* Slot Status */
+ EXPORT_SYMBOL(intel_gtt_get);
 
+commit 31349de4ce32a0c2c2d14df35717544e94d56066
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Sat Dec 21 10:09:19 2013 -0700
+
+    intel-gtt: Use CPU address (not BAR value) for GART
+    
+    There were two problems here:
+    
+      1) The GMADR can be either a 32-bit or a 64-bit BAR, but we only read the
+         low 32 bits, so this failed if GMADR was above 4GB.
+    
+      2) The value read from the BAR is a bus address, not a CPU physical
+         address, and these may be different.
+    
+    Use pci_resource_start() instead of reading the BAR directly to remove the
+    BAR size and bus/CPU address issue, as gen8_gmch_probe() already does.
+    
+    Reference: http://lkml.kernel.org/r/1385429290-25397-11-git-send-email-yinghai@kernel.org
+    Based-on-patch-by: Yinghai Lu <yinghai@kernel.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+index dca04a6aa7f8..35169ff0ffe1 100644
+--- a/drivers/char/agp/intel-gtt.c
++++ b/drivers/char/agp/intel-gtt.c
+@@ -610,7 +610,7 @@ static int intel_gtt_init(void)
+ {
+ 	u32 gma_addr;
+ 	u32 gtt_map_size;
+-	int ret;
++	int ret, bar;
+ 
+ 	ret = intel_private.driver->setup();
+ 	if (ret != 0)
+@@ -660,14 +660,12 @@ static int intel_gtt_init(void)
+ 	}
+ 
+ 	if (INTEL_GTT_GEN <= 2)
+-		pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
+-				      &gma_addr);
++		bar = 0;	/* I810_GMADDR */
+ 	else
+-		pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
+-				      &gma_addr);
+-
+-	intel_private.gma_phys_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
++		bar = 2;	/* I915_GMADDR */
+ 
++	intel_private.gma_phys_addr = pci_resource_start(intel_private.pcidev,
++							 bar);
+ 	return 0;
+ }
+ 
