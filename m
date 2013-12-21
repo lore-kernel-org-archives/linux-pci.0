@@ -1,67 +1,89 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 3 Dec 2013 10:04:25 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Veaceslav Falico <vfalico@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Neil Horman <nhorman@tuxdriver.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Zdenek Kabelac <zkabelac@redhat.com>
-Subject: Re: [PATCH 1/2] kobject: remove kset from sysfs immediately in
- kset_unregister()
-Message-ID: <20131203180425.GC15279@kroah.com>
-References: <20131008201915.19377.34185.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20131008202016.19377.17182.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131008202016.19377.17182.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1385429290-25397-11-git-send-email-yinghai@kernel.org>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1385429290-25397-11-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 20 Dec 2013 17:27:23 -0700
+Message-ID: <CAErSpo7THxjUQ=EWxicPYCwQCHReJ=sxPyPPRFv4QQ=ex6wmOA@mail.gmail.com>
+Subject: Re: [PATCH v2 10/10] intel-gtt: Read 64bit for gmar_bus_addr
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Airlie <airlied@linux.ie>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 08, 2013 at 02:20:16PM -0600, Bjorn Helgaas wrote:
-> There's no explicit "unlink from sysfs" interface for ksets, so I think
-> callers of kset_unregister() expect the kset to be removed from sysfs
-> immediately, without waiting for the last reference to be released.
-> 
-> This patch makes the sysfs removal happen immediately, so the caller may
-> create a new kset with the same name as soon as kset_unregister() returns.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-With the PCI MSI attribute change, this patch is no longer needed,
-right?
-
-thanks,
-
-greg k-h
-
+On Mon, Nov 25, 2013 at 6:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> That bar could be 64bit pref mem and above 4G.
+>
+> -v2: refresh to 3.13-rc1
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: David Airlie <airlied@linux.ie>
+> Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
 > ---
->  Documentation/kobject.txt |    3 ++-
->  lib/kobject.c             |    1 +
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/kobject.txt b/Documentation/kobject.txt
-> index c5182bb..8e8b501 100644
-> --- a/Documentation/kobject.txt
-> +++ b/Documentation/kobject.txt
-> @@ -342,7 +342,8 @@ kset use:
->  
->  When you are finished with the kset, call:
->    void kset_unregister(struct kset *kset);
-> -to destroy it.
-> +to destroy it.  This removes the kset from sysfs and, after the kset
-> +reference count goes to zero, releases it.
->  
->  An example of using a kset can be seen in the
->  samples/kobject/kset-example.c file in the kernel tree.
-> diff --git a/lib/kobject.c b/lib/kobject.c
-> index 9621751..9098992 100644
-> --- a/lib/kobject.c
-> +++ b/lib/kobject.c
-> @@ -753,6 +753,7 @@ void kset_unregister(struct kset *k)
+>  drivers/char/agp/intel-gtt.c | 14 ++++++++++----
+>  1 file changed, 10 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+> index b8e2014..b929e9d 100644
+> --- a/drivers/char/agp/intel-gtt.c
+> +++ b/drivers/char/agp/intel-gtt.c
+> @@ -609,8 +609,10 @@ static bool intel_gtt_can_wc(void)
+>  static int intel_gtt_init(void)
 >  {
->  	if (!k)
->  		return;
-> +	kobject_del(&k->kobj);
->  	kobject_put(&k->kobj);
+>         u32 gma_addr;
+> +       u32 addr_hi = 0;
+>         u32 gtt_map_size;
+>         int ret;
+> +       int pos;
+>
+>         ret = intel_private.driver->setup();
+>         if (ret != 0)
+> @@ -660,13 +662,17 @@ static int intel_gtt_init(void)
+>         }
+>
+>         if (INTEL_GTT_GEN <= 2)
+> -               pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
+> -                                     &gma_addr);
+> +               pos = I810_GMADDR;
+>         else
+> -               pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
+> -                                     &gma_addr);
+> +               pos = I915_GMADDR;
+> +
+> +       pci_read_config_dword(intel_private.pcidev, pos, &gma_addr);
+> +
+> +       if (gma_addr & PCI_BASE_ADDRESS_MEM_TYPE_64)
+> +               pci_read_config_dword(intel_private.pcidev, pos + 4, &addr_hi);
+
+Why are we reading these BARs directly anyway?  These look like
+standard PCI BARs (I810_GMADDR == 0x10 and I915_GMADDR == 0x18), so
+the PCI core should already be reading them correctly, shouldn't it?
+Can't we just use pcibios_resource_to_bus(pci_resource_start())?
+
+It looks like i810_setup(), i830_setup(), and i9xx_setup() have the
+same problem and should also be using pci_resource_start() or
+something similar.
+
+And I'm confused because the i915_gmch_probe() path fills in
+gtt->mappable_base with the bus address, but the gen6_gmch_probe()
+path uses the resource, i.e., the CPU, address.  That looks broken to
+me.
+
+agp_serverworks_probe() looks like another place that should not be
+reading the BARs directly.
+
+>
+>         intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
+> +       intel_private.gma_bus_addr |= (u64)addr_hi << 32;
+>
+>         return 0;
 >  }
->  
+> --
+> 1.8.1.4
+>
