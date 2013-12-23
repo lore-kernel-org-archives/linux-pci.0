@@ -1,133 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23126 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760091Ab3LHXya (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 Dec 2013 18:54:30 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joseph Salisbury <joseph.salisbury@canonical.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH 1/2] PCI: pcibus address to resource converting take bus instead of dev
-Date: Sun,  8 Dec 2013 15:54:28 -0800
-Message-Id: <1386546869-31900-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:62326 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635Ab3LWRUB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Dec 2013 12:20:01 -0500
+Received: by mail-ig0-f181.google.com with SMTP id k19so13673154igc.2
+        for <linux-pci@vger.kernel.org>; Mon, 23 Dec 2013 09:20:01 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131223144418.GA11342@dhcp-26-207.brq.redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com> <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
+ <20131218003002.GA15119@google.com> <20131223144418.GA11342@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 23 Dec 2013 10:19:41 -0700
+Message-ID: <CAErSpo6urD4Gd4STW3=SzeNfvZrstqTpfzouCvEwqDLoMpBpng@mail.gmail.com>
+Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family helpers
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Michael Ellerman <michael@ellerman.id.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tejun Heo <tj@kernel.org>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Laight <David.Laight@aculab.com>,
+	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For allocating resource under bus path, we do not have dev to pass along,
-and we only have bus to use instead.
+On Mon, Dec 23, 2013 at 7:44 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Tue, Dec 17, 2013 at 05:30:02PM -0700, Bjorn Helgaas wrote:
+>> > +int pci_auto_enable_msi_range(struct pci_dev *dev, struct msix_entry *entries,
+>> > +                         int minvec, int maxvec)
+>
+> [...]
+>
+>> > +If this function returns a positive number it indicates at least the
+>> > +returned number of MSI interrupts have been successfully allocated (it may
+>> > +have allocated more in order to satisfy the power-of-two requirement).
+>>
+>> I assume this means the return value may be larger than the "maxvec"
+>> requested, right?  And the driver is free to use all the vectors up to the
+>> return value, even those above maxvec, right?
+>
+> No, the returned value may not be larger than the "maxvec" ever. This is just
+> paraphrasing the semantics of exisitng pci_enable_msi_block() interface - a
+> value written to MMC register might be larger than the returned value, but the
+> driver may not use the extra vectors it did not request.
 
--v2: drop pcibios_bus_addr_to_resource().
+Then I think we should remove the "(it may have allocated more...)"
+text.  If the driver can't use those extra vectors, they are an
+internal implementation detail, and mentioning them here will only
+cause confusion.  The "at least" text should also be removed.  From
+the driver's point of view, it can use exactly the number of
+interrupts returned.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/pci/host-bridge.c | 34 +++++++++++++++++++++-------------
- include/linux/pci.h       |  5 +++++
- 2 files changed, 26 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index a68dc61..c988a30 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -9,22 +9,19 @@
- 
- #include "pci.h"
- 
--static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
-+static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
--
--	bus = dev->bus;
- 	while (bus->parent)
- 		bus = bus->parent;
- 
- 	return bus;
- }
- 
--static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
-+static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
- {
--	struct pci_bus *bus = find_pci_root_bus(dev);
-+	struct pci_bus *root_bus = find_pci_root_bus(bus);
- 
--	return to_pci_host_bridge(bus->bridge);
-+	return to_pci_host_bridge(root_bus->bridge);
- }
- 
- void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
-@@ -40,10 +37,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
- 	return res1->start <= res2->start && res1->end >= res2->end;
- }
- 
--void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
--			     struct resource *res)
-+void __pcibios_resource_to_bus(struct pci_bus *bus,
-+				      struct pci_bus_region *region,
-+				      struct resource *res)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -60,6 +58,11 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 	region->start = res->start - offset;
- 	region->end = res->end - offset;
- }
-+void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-+			     struct resource *res)
-+{
-+	__pcibios_resource_to_bus(dev->bus, region, res);
-+}
- EXPORT_SYMBOL(pcibios_resource_to_bus);
- 
- static bool region_contains(struct pci_bus_region *region1,
-@@ -68,10 +71,10 @@ static bool region_contains(struct pci_bus_region *region1,
- 	return region1->start <= region2->start && region1->end >= region2->end;
- }
- 
--void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
--			     struct pci_bus_region *region)
-+void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-+				      struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
-+	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
-@@ -93,4 +96,9 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 	res->start = region->start + offset;
- 	res->end = region->end + offset;
- }
-+void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-+			     struct pci_bus_region *region)
-+{
-+	__pcibios_bus_to_resource(dev->bus, res, region);
-+}
- EXPORT_SYMBOL(pcibios_bus_to_resource);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1084a15..5c2cf8e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -737,8 +737,13 @@ void pci_fixup_cardbus(struct pci_bus *);
- 
- /* Generic PCI functions used internally */
- 
-+void __pcibios_resource_to_bus(struct pci_bus *bus,
-+			       struct pci_bus_region *region,
-+			       struct resource *res);
- void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 			     struct resource *res);
-+void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-+				      struct pci_bus_region *region);
- void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 			     struct pci_bus_region *region);
- void pcibios_scan_specific_bus(int busn);
--- 
-1.8.4
-
+Bjorn
