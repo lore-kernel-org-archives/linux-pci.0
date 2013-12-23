@@ -1,84 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52448 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932065Ab3LTBsf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 20:48:35 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Patch v2 03/13] PCI, pci-label: release allocated ACPI object on error recovery path
-Date: Fri, 20 Dec 2013 03:01:55 +0100
-Message-ID: <1896409.Ntvojm0Xli@vostro.rjw.lan>
-In-Reply-To: <CAErSpo4oKsJCKxUhxT8E745BkX+veOD-tMEeHULHOuH-3suMRA@mail.gmail.com>
-References: <1387456702-4709-1-git-send-email-jiang.liu@linux.intel.com> <1387456702-4709-4-git-send-email-jiang.liu@linux.intel.com> <CAErSpo4oKsJCKxUhxT8E745BkX+veOD-tMEeHULHOuH-3suMRA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
+Date: Mon, 23 Dec 2013 13:32:04 +0530
+Message-Id: <1387785725-24262-4-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 19, 2013 11:22:22 AM Bjorn Helgaas wrote:
-> On Thu, Dec 19, 2013 at 5:38 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> > Function dsm_get_label() leaks the returned ACPI object if
-> > obj->package.count is not 2, so fix the possible memory leak.
-> >
-> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> 
-> Rafael, if you want to take these through your tree, feel free.
+This patch adds the bindings for X-Gene PCIe driver. The driver resides
+under 'drivers/pci/host/pcie-xgene.c' file.
 
-I'm going to do that, thanks!
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ .../devicetree/bindings/pci/xgene-pcie.txt         |   43 ++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
 
-> I'm guessing it probably makes sense to keep the whole series together.
-
-Agreed.
-
-> > ---
-> >  drivers/pci/pci-label.c |   12 ++++--------
-> >  1 file changed, 4 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-> > index d51f45a..f6e01a5 100644
-> > --- a/drivers/pci/pci-label.c
-> > +++ b/drivers/pci/pci-label.c
-> > @@ -233,11 +233,7 @@ dsm_get_label(acpi_handle handle, int func,
-> >                 return -1;
-> >
-> >         obj = (union acpi_object *)output->pointer;
-> > -
-> > -       switch (obj->type) {
-> > -       case ACPI_TYPE_PACKAGE:
-> > -               if (obj->package.count != 2)
-> > -                       break;
-> > +       if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
-> >                 len = obj->package.elements[0].integer.value;
-> >                 if (buf) {
-> >                         if (attribute == ACPI_ATTR_INDEX_SHOW)
-> > @@ -250,10 +246,10 @@ dsm_get_label(acpi_handle handle, int func,
-> >                 }
-> >                 kfree(output->pointer);
-> >                 return len;
-> > -       break;
-> > -       default:
-> > -               kfree(output->pointer);
-> >         }
-> > +
-> > +       kfree(output->pointer);
-> > +
-> >         return -1;
-> >  }
-> >
-> > --
-> > 1.7.10.4
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pcie.txt b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
+new file mode 100644
+index 0000000..d92da4f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
+@@ -0,0 +1,43 @@
++* AppliedMicro X-Gene PCIe interface
++
++Required properties:
++- status: Either "ok" or "disabled".
++- device_type: set to "pci"
++- compatible: should contain "xgene,pcie" to identify the core.
++- reg: base addresses and lengths of the pcie controller configuration
++	space register.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- ranges: ranges for the PCI memory, I/O regions, config and MSI regions
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: handle to pci clock.
++- clock-names: from common clock binding. Should be "pcieclk".
++
++Example:
++
++SoC specific DT Entry:
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "xgene,pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000>;
++		ranges = <0x02000000 0x0 0x00000000 0xe0 0x00000000 0x0 0x10000000 /* mem*/
++			  0x01000000 0x0 0x80000000 0xe0 0x80000000 0x0 0x00010000 /* io */
++			  0x00000000 0x0 0xd0000000 0xe0 0xd0000000 0x0 0x00200000 /* cfg */
++			  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1>;
++		clocks = <&pcie0clk 0>;
++		clock-names = "pcieclk"
++	};
++
++Board specific DT Entry:
++	&pcie0 {
++		status = "ok";
++	};
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
