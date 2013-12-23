@@ -1,112 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:37223 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322Ab3LBIKb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 03:10:31 -0500
-From: Marek Vasut <marex@denx.de>
-To: =?iso-8859-1?q?Bj=F8rn_Erik_Nilsen?= <ben@datarespons.no>
-Subject: Re: [PATCH v5 1/2] PCI: designware: Fix crash in dw_msi_teardown_irq
-Date: Mon, 2 Dec 2013 09:10:26 +0100
-Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"Mohit.KUMAR@st.com" <Mohit.KUMAR@st.com>,
-	"ajay.khandelwal@st.com" <ajay.khandelwal@st.com>,
-	"tharvey@gateworks.com" <tharvey@gateworks.com>,
-	"Eric.Nelson@boundarydevices.com" <Eric.Nelson@boundarydevices.com>,
-	"troy.kisky@boundarydevices.com" <troy.kisky@boundarydevices.com>
-References: <003101ceecd5$dd4e79e0$97eb6da0$%han@samsung.com> <201311291802.53655.marex@denx.de> <cmu-lmtpd-8418-1385750273-5@frontend1.mail.m-online.net>
-In-Reply-To: <cmu-lmtpd-8418-1385750273-5@frontend1.mail.m-online.net>
+Received: from exprod5og111.obsmtp.com ([64.18.0.22]:45090 "HELO
+	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751504Ab3LWI41 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Dec 2013 03:56:27 -0500
+Received: by mail-ve0-f182.google.com with SMTP id jy13so2834784veb.27
+        for <linux-pci@vger.kernel.org>; Mon, 23 Dec 2013 00:56:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201312020910.26538.marex@denx.de>
+In-Reply-To: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+Date: Mon, 23 Dec 2013 14:26:25 +0530
+Message-ID: <CACoXjc=bC=O=MxHxMA8kYMdEGNufXeNR+oxENsLieErTRekLNw@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/3] APM X-Gene PCIe driver
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjørn Erik Nilsen,
+On Mon, Dec 23, 2013 at 1:32 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+> cards.
+>
+> X-Gene PCIe controller driver has depedency on the pcie arch support for
+> arm64. The arm64 pcie arch support is not yet part of mainline Linux kernel
+> and approach for arch support is under discussion with arm64 maintainers.
+> The reference patch can be found here --> https://lkml.org/lkml/2013/10/23/244
+>
+> If someone wishes to test PCIe on X-Gene, arch support patch must be applied
+> before the patches in this patch set.
+>
+> Tanmay Inamdar (3):
+>   pci: APM X-Gene PCIe controller driver
+>   arm64: dts: APM X-Gene PCIe device tree nodes
+>   dt-bindings: pci: xgene pcie device tree bindings
+>
+>  .../devicetree/bindings/pci/xgene-pcie.txt         |   43 +
+>  arch/arm64/boot/dts/apm-mustang.dts                |    4 +
+>  arch/arm64/boot/dts/apm-storm.dtsi                 |  140 +++
+>  drivers/pci/host/Kconfig                           |    5 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pcie-xgene.c                      | 1017 ++++++++++++++++++++
+>  6 files changed, 1210 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-xgene.c
+>
+> --
+> 1.7.9.5
+>
+This patch set might have been delivered to limited audience
+previously because of some problem in my mail settings.
 
-> 29. nov. 2013 kl. 18:02 skrev Marek Vasut <marex@denx.de>:
-> > Dear Bjørn Erik Nilsen,
-> > 
-> >> Dear Marek Vasut,
-> >> 
-> >> On Fri, 2013-11-29 at 16:36 +0100, Marek Vasut wrote:
-> >>> Dear Bjørn Erik Nilsen,
-> >>> [...]
-> >>> 
-> >>>>> Won't simple
-> >>>>> 
-> >>>>> for (i = 0; i < nvec; i++) {
-> >>>>> 
-> >>>>> do here?
-> >>>> 
-> >>>> Yes.
-> >>>> 
-> >>>> The very same syntax ('while i < nvec') is used in assign_irq. That is
-> >>>> why I wanted to keep it like that to avoid adding too much confusion,
-> >>>> or at least make it easy to recognize the same pattern.
-> >>>> 
-> >>>> You still want me to change it?
-> >>> 
-> >>> Your loop does exactly what a for() loop would do, there's no need to
-> >>> emulate it with a while() loop. If you can fix the other one, fix the
-> >>> other one as well please.
-> >> 
-> >> Yes, it is syntax sugar indeed and I did it purely for readability as
-> >> explained. You don't seem to agree with me on the readability argument,
-> >> so I can make the new code use a for-loop. And then in an unrelated
-> >> commit (which would look awfully silly) I can change the other
-> >> while-loop too.
-> > 
-> > Either way is fine with me, I'm just more inclined to the for loop ;-)
-> > Let's wait for what the others have to say, they can judge this
-> > argument.
-> > 
-> >>>> As for the other nitpick, I don't agree with you.
-> >>>> 
-> >>>> In fact, dw_msi_teardown_irq has no return value itself. Moreover, if
-> >>>> setting the msi desc to NULL fails, then it simply means there is no
-> >>>> irq desc and there is nothing to unwind. Also, skipping the other
-> >>>> unwind operations just because that single operation failed would
-> >>>> leave the driver in a much worse state. At least in my opinion.
-> >>>> 
-> >>>> What's your opinion on that?
-> >>> 
-> >>> I see this:
-> >>> 
-> >>> $ git grep irq_set_msi_desc_off include/
-> >>> include/linux/irq.h:extern int irq_set_msi_desc_off(unsigned int
-> >>> irq_base, unsigned int irq_offset,
-> >>> 
-> >>> So it has a return value which needs to be handled. Sorry if I wasn't
-> >>> clear on the first try.
-> >> 
-> >> I agree that return values should be checked.
-> >> 
-> >> However based on my reasoning there is absolutely nothing to do with the
-> >> return value in this particular case, and in fact bailing out will leave
-> >> the driver in a much worse state (as other unwind operations will be
-> >> skipped).
-> >> 
-> >> That is what I kindly asked you to comment on.
-> > 
-> > How come you cannot unwind what you did thus far and bail out ? That
-> > means the design here is seriously broken, don't you think ?
-> 
-> Maybe you need to take a closer look at the patch because the code in
-> question is *the* unwinding code. So bailing out from there  doesn't make
-> much sense.
-> 
-> Also note that I do check the return value of the same function call in
-> setup, but the one you are complaining is for unwinding stuff that has
-> already been setup.
-> 
-> I hope this helps :-)
+My apologies for spamming.
 
-Please consider me stupid and blind, sorry. I think maybe a WARN_ON(ret) might 
-be a good sign things have gone severely awry here at least. What do you think?
-
-Best regards,
+-Tanmay
