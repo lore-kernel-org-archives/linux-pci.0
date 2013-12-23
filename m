@@ -1,8 +1,12 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42533 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753518Ab3LWOma (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Dec 2013 09:42:30 -0500
+Date: Mon, 23 Dec 2013 15:44:18 +0100
 From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
 	Michael Ellerman <michael@ellerman.id.au>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Tejun Heo <tj@kernel.org>,
@@ -10,148 +14,38 @@ Cc: Alexander Gordeev <agordeev@redhat.com>,
 	David Laight <David.Laight@ACULAB.COM>,
 	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
 	linux-pci@vger.kernel.org
-Subject: [PATCH v5 1/4] PCI/MSI: Factor out pci_msi_vec_count() interface
-Date: Mon, 30 Dec 2013 08:28:13 +0100
-Message-Id: <4f6330995d90c654b045d5457ea90b0c633e07a6.1388262668.git.agordeev@redhat.com>
-In-Reply-To: <cover.1388262668.git.agordeev@redhat.com>
-References: <cover.1388262668.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: Re: [PATCH v4 9/9] PCI/MSI: Introduce pci_auto_enable_msi*() family
+ helpers
+Message-ID: <20131223144418.GA11342@dhcp-26-207.brq.redhat.com>
+References: <cover.1387140921.git.agordeev@redhat.com>
+ <bbf6f73ef3e16e5dfd7d41fc1e4412f641acb0f3.1387140921.git.agordeev@redhat.com>
+ <20131218003002.GA15119@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131218003002.GA15119@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Device drivers can use this interface to obtain maximum number
-of MSI interrupts the device supports and use that number i.e.
-in a following call to pci_enable_msi_block() interface.
+On Tue, Dec 17, 2013 at 05:30:02PM -0700, Bjorn Helgaas wrote:
+> > +int pci_auto_enable_msi_range(struct pci_dev *dev, struct msix_entry *entries,
+> > +			      int minvec, int maxvec)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Reviewed-by: Tejun Heo <tj@kernel.org>
----
- Documentation/PCI/MSI-HOWTO.txt |   15 ++++++++++++++
- drivers/pci/msi.c               |   41 +++++++++++++++++++++++++++++++-------
- include/linux/pci.h             |    6 +++++
- 3 files changed, 54 insertions(+), 8 deletions(-)
+[...]
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index a4d174e..a8b4178 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -169,6 +169,21 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
- 
-+4.2.5 pci_msi_vec_count
-+
-+int pci_msi_vec_count(struct pci_dev *dev)
-+
-+This function could be used to retrieve the number of MSI vectors the
-+device requested (via the Multiple Message Capable register). The MSI
-+specification only allows the returned value to be a power of two,
-+up to a maximum of 2^5 (32).
-+
-+If this function returns a negative number, it indicates the device is
-+not capable of sending MSIs.
-+
-+If this function returns a positive number, it indicates the maximum
-+number of MSI interrupt vectors that could be allocated.
-+
- 4.3 Using MSI-X
- 
- The MSI-X capability is much more flexible than the MSI capability.
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 22957aa..5233e28 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -852,6 +852,31 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- }
- 
- /**
-+ * pci_msi_vec_count - Return the number of MSI vectors a device can send
-+ * @dev: device to report about
-+ *
-+ * This function returns the number of MSI vectors a device requested via
-+ * Multiple Message Capable register. It returns a negative errno if the
-+ * device is not capable sending MSI interrupts. Otherwise, the call succeeds
-+ * and returns a power of two, up to a maximum of 2^5 (32), according to the
-+ * MSI specification.
-+ **/
-+int pci_msi_vec_count(struct pci_dev *dev)
-+{
-+	int ret;
-+	u16 msgctl;
-+
-+	if (!dev->msi_cap)
-+		return -EINVAL;
-+
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-+	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_msi_vec_count);
-+
-+/**
-  * pci_enable_msi_block - configure device's MSI capability structure
-  * @dev: device to configure
-  * @nvec: number of interrupts to configure
-@@ -867,13 +892,13 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- int pci_enable_msi_block(struct pci_dev *dev, int nvec)
- {
- 	int status, maxvec;
--	u16 msgctl;
- 
--	if (!dev->msi_cap || dev->current_state != PCI_D0)
-+	if (dev->current_state != PCI_D0)
- 		return -EINVAL;
- 
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	maxvec = pci_msi_vec_count(dev);
-+	if (maxvec < 0)
-+		return maxvec;
- 	if (nvec > maxvec)
- 		return maxvec;
- 
-@@ -898,13 +923,13 @@ EXPORT_SYMBOL(pci_enable_msi_block);
- int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
- {
- 	int ret, nvec;
--	u16 msgctl;
- 
--	if (!dev->msi_cap || dev->current_state != PCI_D0)
-+	if (dev->current_state != PCI_D0)
- 		return -EINVAL;
- 
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	ret = pci_msi_vec_count(dev);
-+	if (ret < 0)
-+		return ret;
- 
- 	if (maxvec)
- 		*maxvec = ret;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4b7cf4c..0322af1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1166,6 +1166,11 @@ struct msix_entry {
- 
- 
- #ifndef CONFIG_PCI_MSI
-+static inline int pci_msi_vec_count(struct pci_dev *dev)
-+{
-+	return -ENOSYS;
-+}
-+
- static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
- {
- 	return -ENOSYS;
-@@ -1207,6 +1212,7 @@ static inline int pci_msi_enabled(void)
- 	return 0;
- }
- #else
-+int pci_msi_vec_count(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, int nvec);
- int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
+> > +If this function returns a positive number it indicates at least the
+> > +returned number of MSI interrupts have been successfully allocated (it may
+> > +have allocated more in order to satisfy the power-of-two requirement).
+> 
+> I assume this means the return value may be larger than the "maxvec"
+> requested, right?  And the driver is free to use all the vectors up to the
+> return value, even those above maxvec, right?
+
+No, the returned value may not be larger than the "maxvec" ever. This is just
+paraphrasing the semantics of exisitng pci_enable_msi_block() interface - a
+value written to MMC register might be larger than the returned value, but the
+driver may not use the extra vectors it did not request.
+
 -- 
-1.7.7.6
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
