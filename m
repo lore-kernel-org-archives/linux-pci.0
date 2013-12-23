@@ -1,54 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:38426 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752522Ab3LBIEq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 03:04:46 -0500
-From: Marek Vasut <marex@denx.de>
-To: Fabio Estevam <festevam@gmail.com>
-Subject: Re: [PATCH 1/2] PCI: imx6: Remove unneeded check of platform_get_resource()
-Date: Mon, 2 Dec 2013 09:04:45 +0100
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-References: <1385955575-25270-1-git-send-email-festevam@gmail.com>
-In-Reply-To: <1385955575-25270-1-git-send-email-festevam@gmail.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:34913 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756362Ab3LWBOM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 22 Dec 2013 20:14:12 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201312020904.45124.marex@denx.de>
+In-Reply-To: <CAErSpo5VWREGptW0MU0wLJUa3h23DXMZPGkdJFMTx5WAGL8J6Q@mail.gmail.com>
+References: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
+	<1387485843-17403-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo5VWREGptW0MU0wLJUa3h23DXMZPGkdJFMTx5WAGL8J6Q@mail.gmail.com>
+Date: Sun, 22 Dec 2013 17:14:12 -0800
+Message-ID: <CAE9FiQU88EO=e+CR7RKnZ6r7ofSwi9J1QisnrnDyDz6Qh367YQ@mail.gmail.com>
+Subject: Re: [PATCH v6 2/2] PCI: Try best to allocate pref mmio 64bit above 4g
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Fabio Estevam,
+On Sun, Dec 22, 2013 at 4:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Dec 19, 2013 at 1:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+> Let me see if I can figure out what you're trying to do here.  Please
+> correct me if I'm wrong:
+>
+>> When one of children resources does not support MEM_64, MEM_64 for
+>> bridge get reset, so pull down whole pref resource on the bridge under 4G.
+>
+> When we allocate space for a bridge's prefetchable window, we
+> currently look at the devices behind the bridge and put the window
+> below 4GB if any of those children has a 32-bit prefetchable BAR.
+>
+> This maximizes the use of prefetch, at the cost of using more 32-bit
+> address space.
 
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> When using devm_ioremap_resource(), we do not need to check the return
-> value of platform_get_resource(), so just remove it.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+yes. and we have problem when we have 8 sockets or 32 sockets system,
+will have limit 32bit space.
+but we have enough above 4G 64bit mmio for prefetchable.
 
-Acked-by: Marek Vasut <marex@denx.de>
+>
+>> If the bridge support pref mem 64, will only allocate that with pref mem64 to
+>> children that support it.
+>> For children resources if they only support pref mem 32, will allocate them
+>> from non pref mem instead.
+>
+> You are changing this so that we will always try to put a bridge's
+> 64-bit prefetchable window above 4GB, regardless of what devices are
+> behind the bridge.  If a device behind the bridge has a 32-bit
+> prefetchable BAR, we will place that BAR in the bridge's 32-bit
+> non-prefetchable window.
 
-> ---
->  drivers/pci/host/pci-imx6.c | 5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index bd70af8..5002e23 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -426,11 +426,6 @@ static int __init imx6_pcie_probe(struct
-> platform_device *pdev) "imprecise external abort");
-> 
->  	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> -	if (!dbi_base) {
-> -		dev_err(&pdev->dev, "dbi_base memory resource not found\n");
-> -		return -ENODEV;
-> -	}
-> -
->  	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
->  	if (IS_ERR(pp->dbi_base)) {
->  		ret = PTR_ERR(pp->dbi_base);
+Yes. so we can keep IORESOURCE_MEM64 in the flags for PREF.
 
-Best regards,
-Marek Vasut
+>
+> This minimizes the use of the 32-bit address space, at the cost of not
+> being able to use prefetch as much.
+>
+>> If the bridge only support 32bit pref mmio, will still have all children pref
+>> mmio under that.
+>
+> Obviously, if a bridge has a prefetchable window that's only 32 bits,
+> 64-bit prefetchable BARs behind the bridge will have to be in that
+> 32-bit prefetchable window or the 32-bit non-prefetchable window.  And
+> if the bridge has no prefetchable window at all, every memory BAR
+> behind the bridge will have to be in the 32-bit non-prefetchable
+> window.
+
+Yes.
+
+>
+> I'll look at the actual patch later; I just want to make sure I
+> understand your intent first.
+
+Thanks
+
+Yinghai
