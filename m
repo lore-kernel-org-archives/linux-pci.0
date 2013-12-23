@@ -1,161 +1,194 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 221-186-24-89.in-addr.arpa ([89.24.186.221]:28612 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755184Ab3LPSqM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 13:46:12 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v4 6/9] PCI/MSI: Factor out pci_get_msi_vec_count() interface
-Date: Mon, 16 Dec 2013 09:34:59 +0100
-Message-Id: <d0d8cd19befa8757faf7660fd3ae619945b2cde4.1387140921.git.agordeev@redhat.com>
-In-Reply-To: <cover.1387140921.git.agordeev@redhat.com>
-References: <cover.1387140921.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH 2/3] arm64: dts: APM X-Gene PCIe device tree nodes
+Date: Mon, 23 Dec 2013 13:32:03 +0530
+Message-Id: <1387785725-24262-3-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Device drivers can use this interface to obtain maximum number
-of MSI interrupts the device supports and use that number i.e.
-in a following call to pci_enable_msi_block() interface.
+This patch adds the device tree nodes for APM X-Gene PCIe controller and
+PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts nodes
+are added.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Reviewed-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- Documentation/PCI/MSI-HOWTO.txt |   15 ++++++++++++++
- drivers/pci/msi.c               |   41 +++++++++++++++++++++++++++++++-------
- include/linux/pci.h             |    6 +++++
- 3 files changed, 54 insertions(+), 8 deletions(-)
+ arch/arm64/boot/dts/apm-mustang.dts |    4 +
+ arch/arm64/boot/dts/apm-storm.dtsi  |  140 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 144 insertions(+)
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index a4d174e..c03b815 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -169,6 +169,21 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
- 
-+4.2.5 pci_get_msi_vec_count
+diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
+index 1247ca1..ab2b95f 100644
+--- a/arch/arm64/boot/dts/apm-mustang.dts
++++ b/arch/arm64/boot/dts/apm-mustang.dts
+@@ -24,3 +24,7 @@
+ 		reg = < 0x1 0x00000000 0x0 0x80000000 >; /* Updated by bootloader */
+ 	};
+ };
 +
-+int pci_get_msi_vec_count(struct pci_dev *dev)
++&pcie0 {
++	status = "ok";
++};
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index d37d736..b82f430 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -176,6 +176,146 @@
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "eth8clk";
+ 			};
 +
-+This function could be used to retrieve the number of MSI vectors the
-+device requested (via the Multiple Message Capable register). The MSI
-+specification only allows the returned value to be a power of two,
-+up to a maximum of 2^5 (32).
++			pcie0clk: pcie0clk@1f2bc000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "pcie0clk";
++				reg = <0x0 0x1f2bc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie0clk";
++			};
 +
-+If this function returns a negative number, it indicates the device is
-+not capable of sending MSIs.
++			pcie1clk: pcie1clk@1f2cc000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "pcie1clk";
++				reg = <0x0 0x1f2cc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie1clk";
++			};
 +
-+If this function returns a positive number, it indicates the maximum
-+number of MSI interrupt vectors that could be allocated.
++			pcie2clk: pcie2clk@1f2dc000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "pcie2clk";
++				reg = <0x0 0x1f2dc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie2clk";
++			};
 +
- 4.3 Using MSI-X
- 
- The MSI-X capability is much more flexible than the MSI capability.
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c0e2259..8915edb 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -834,6 +834,31 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- }
- 
- /**
-+ * pci_get_msi_vec_count - Return the number of MSI vectors a device can send
-+ * @dev: device to report about
-+ *
-+ * This function returns the number of MSI vectors a device requested via
-+ * Multiple Message Capable register. It returns a negative errno if the
-+ * device is not capable sending MSI interrupts. Otherwise, the call succeeds
-+ * and returns a power of two, up to a maximum of 2^5 (32), according to the
-+ * MSI specification.
-+ **/
-+int pci_get_msi_vec_count(struct pci_dev *dev)
-+{
-+	int ret;
-+	u16 msgctl;
++			pcie3clk: pcie3clk@1f50c000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "pcie3clk";
++				reg = <0x0 0x1f50c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie3clk";
++			};
 +
-+	if (!dev->msi_cap)
-+		return -EINVAL;
++			pcie4clk: pcie4clk@1f51c000 {
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				clock-names = "pcie4clk";
++				reg = <0x0 0x1f51c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie4clk";
++			};
++		};
 +
-+	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
-+	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++		pcie0: pcie@1f2b0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2b0000 0x0 0x00010000>;
++			ranges = <0x02000000 0x0 0x00000000 0xe0 0x00000000 0x0 0x10000000 /* mem*/
++				  0x01000000 0x0 0x80000000 0xe0 0x80000000 0x0 0x00010000 /* io */
++				  0x00000000 0x0 0xd0000000 0xe0 0xd0000000 0x0 0x00200000 /* cfg */
++				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1>;
++			clocks = <&pcie0clk 0>;
++			clock-names = "pcieclk";
++		};
 +
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_get_msi_vec_count);
++		pcie1: pcie@1f2c0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = <0x00 0x1f2c0000 0x0 0x00010000>;
++			ranges = <0x02000000 0x0 0x00000000 0xd0 0x00000000 0x0 0x10000000 /* mem*/
++				  0x01000000 0x0 0x80000000 0xd0 0x80000000 0x0 0x00010000 /* io */
++				  0x00000000 0x0 0xd0000000 0xd0 0xd0000000 0x0 0x00200000 /* cfg */
++				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1>;
++			clocks = <&pcie1clk 0>;
++			clock-names = "pcieclk";
++		};
 +
-+/**
-  * pci_enable_msi_block - configure device's MSI capability structure
-  * @dev: device to configure
-  * @nvec: number of interrupts to configure
-@@ -849,13 +874,13 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
- int pci_enable_msi_block(struct pci_dev *dev, int nvec)
- {
- 	int status, maxvec;
--	u16 msgctl;
- 
--	if (!dev->msi_cap || dev->current_state != PCI_D0)
-+	if (dev->current_state != PCI_D0)
- 		return -EINVAL;
- 
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	maxvec = pci_get_msi_vec_count(dev);
-+	if (maxvec < 0)
-+		return maxvec;
- 	if (nvec > maxvec)
- 		return maxvec;
- 
-@@ -880,13 +905,13 @@ EXPORT_SYMBOL(pci_enable_msi_block);
- int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec)
- {
- 	int ret, nvec;
--	u16 msgctl;
- 
--	if (!dev->msi_cap || dev->current_state != PCI_D0)
-+	if (dev->current_state != PCI_D0)
- 		return -EINVAL;
- 
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	ret = pci_get_msi_vec_count(dev);
-+	if (ret < 0)
-+		return ret;
- 
- 	if (maxvec)
- 		*maxvec = ret;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8cf7b15..997751d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1154,6 +1154,11 @@ struct msix_entry {
- 
- 
- #ifndef CONFIG_PCI_MSI
-+static inline int pci_get_msi_vec_count(struct pci_dev *dev)
-+{
-+	return -ENOSYS;
-+}
++		pcie2: pcie@1f2d0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg =  <0x00 0x1f2d0000 0x0 0x00010000>;
++			ranges = <0x02000000 0x0 0x00000000 0x90 0x00000000 0x0 0x10000000 /* mem*/
++				  0x01000000 0x0 0x80000000 0x90 0x80000000 0x0 0x00010000 /* io */
++				  0x00000000 0x0 0xd0000000 0x90 0xd0000000 0x0 0x00200000 /* cfg */
++				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1>;
++			clocks = <&pcie3clk 0>;
++			clock-names = "pcieclk";
++		};
 +
- static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
- {
- 	return -ENOSYS;
-@@ -1195,6 +1200,7 @@ static inline int pci_msi_enabled(void)
- 	return 0;
- }
- #else
-+int pci_get_msi_vec_count(struct pci_dev *dev);
- int pci_enable_msi_block(struct pci_dev *dev, int nvec);
- int pci_enable_msi_block_auto(struct pci_dev *dev, int *maxvec);
- void pci_msi_shutdown(struct pci_dev *dev);
++		pcie3: pcie@1f500000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = <0x00 0x1f500000 0x0 0x00010000>;
++			ranges = <0x02000000 0x0 0x00000000 0xa0 0x00000000 0x0 0x10000000 /* mem*/
++				  0x01000000 0x0 0x80000000 0xa0 0x80000000 0x0 0x00010000 /* io */
++				  0x00000000 0x0 0xd0000000 0xa0 0xd0000000 0x0 0x00200000 /* cfg */
++				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1>;
++			clocks = <&pcie3clk 0>;
++			clock-names = "pcieclk";
++		};
++
++		pcie4: pcie@1f510000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = <0x00 0x1f510000 0x0 0x00010000>;
++			ranges = <0x02000000 0x0 0x00000000 0xc0 0x00000000 0x0 0x10000000 /* mem*/
++				  0x01000000 0x0 0x80000000 0xc0 0x80000000 0x0 0x00010000 /* io */
++				  0x00000000 0x0 0xd0000000 0xc0 0xd0000000 0x0 0x00200000 /* cfg */
++				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1>;
++			clocks = <&pcie4clk 0>;
++			clock-names = "pcieclk";
+ 		};
+ 
+ 		serial0: serial@1c020000 {
 -- 
-1.7.7.6
+1.7.9.5
 
