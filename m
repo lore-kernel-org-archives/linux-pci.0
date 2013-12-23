@@ -1,48 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:40404 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753505Ab3LDCT3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Dec 2013 21:19:29 -0500
-MIME-Version: 1.0
-In-Reply-To: <2691826.V0kc3nrim3@vostro.rjw.lan>
-References: <1385851238-21085-1-git-send-email-yinghai@kernel.org>
-	<1385851238-21085-5-git-send-email-yinghai@kernel.org>
-	<2691826.V0kc3nrim3@vostro.rjw.lan>
-Date: Tue, 3 Dec 2013 18:19:28 -0800
-Message-ID: <CAE9FiQUURT40gXGFhPxqHvWTxVdWbm=70uh14U=dp=FgTOGt-g@mail.gmail.com>
-Subject: Re: [PATCH v3 04/12] PCI: Destroy pci dev only once
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH 0/3] APM X-Gene PCIe driver
+Date: Mon, 23 Dec 2013 13:32:01 +0530
+Message-Id: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 30, 2013 at 5:05 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Saturday, November 30, 2013 02:40:30 PM Yinghai Lu wrote:
->
-> And this is not enough as I said, can you please stop ignoring me openly?
->
-> You've already commented the last patch I posted, so why don't we finish
-> that discussion first?
+This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+cards.
 
-No, i did not mean that.
+X-Gene PCIe controller driver has depedency on the pcie arch support for
+arm64. The arm64 pcie arch support is not yet part of mainline Linux kernel
+and approach for arch support is under discussion with arm64 maintainers.
+The reference patch can be found here --> https://lkml.org/lkml/2013/10/23/244
 
-I resent the whole patchset as I added pci_clip_resource() and that
-will need to revise several critial patches, and Bjorn does not like
-to have patches to be attached format.
+If someone wishes to test PCIe on X-Gene, arch support patch must be applied
+before the patches in this patch set.
 
-Also in the patcheset head mail, i did state that you have another
-solution using
-lock.
+Tanmay Inamdar (3):
+  pci: APM X-Gene PCIe controller driver
+  arm64: dts: APM X-Gene PCIe device tree nodes
+  dt-bindings: pci: xgene pcie device tree bindings
 
-And your patch is quite big, please give me some time to digest it.
+ .../devicetree/bindings/pci/xgene-pcie.txt         |   43 +
+ arch/arm64/boot/dts/apm-mustang.dts                |    4 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |  140 +++
+ drivers/pci/host/Kconfig                           |    5 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pcie-xgene.c                      | 1017 ++++++++++++++++++++
+ 6 files changed, 1210 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-xgene.c
 
-Thanks
+-- 
+1.7.9.5
 
-Yinghai
