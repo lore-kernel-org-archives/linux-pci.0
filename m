@@ -1,78 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:33636 "EHLO
-	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751091Ab3LKKIA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 05:08:00 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	<spear-devel@list.st.com>
-Subject: [PATCH 05/12] clk: SPEAr13xx: Fix pcie clock name
-Date: Wed, 11 Dec 2013 15:08:30 +0530
-Message-ID: <aeeefe3537089f0d0a2f8f5662d50dfca2aadf29.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
+Received: from mail-by2lp0236.outbound.protection.outlook.com ([207.46.163.236]:28668
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751151Ab3LXIUP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Dec 2013 03:20:15 -0500
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"James E.J. Bottomley" <jbottomley@parallels.com>,
+	"Saxena, Sumit" <Sumit.Saxena@lsi.com>,
+	Adam Radford <aradford@gmail.com>, "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH] megaraid_sas: Quirk mmio hook for 1078 MR controller
+Date: Tue, 24 Dec 2013 08:20:11 +0000
+Message-ID: <49ee1c68150946e0b972b6b047a07126@BN1PR07MB247.namprd07.prod.outlook.com>
+References: <201312231512.rBNFC6mo008974@cosmhbs0.lsi.com>
+ <CAErSpo7X4khuPOp5s4MdunOmwww0V4JZipJa3iEOA=Y5nnCwqA@mail.gmail.com>
+In-Reply-To: <CAErSpo7X4khuPOp5s4MdunOmwww0V4JZipJa3iEOA=Y5nnCwqA@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
-
-Follow dt clock naming convention for PCIe clocks.
-
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Viresh Kumar <viresh.linux@gmail.com>
-Cc: spear-devel@list.st.com
-Cc: linux-arm-kernel@lists.infradead.org
----
- drivers/clk/spear/spear1310_clock.c |    6 +++---
- drivers/clk/spear/spear1340_clock.c |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/clk/spear/spear1310_clock.c b/drivers/clk/spear/spear1310_clock.c
-index 65894f7..4daa597 100644
---- a/drivers/clk/spear/spear1310_clock.c
-+++ b/drivers/clk/spear/spear1310_clock.c
-@@ -742,19 +742,19 @@ void __init spear1310_clk_init(void __iomem *misc_base, void __iomem *ras_base)
- 	clk = clk_register_gate(NULL, "pcie_sata_0_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_0_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.0");
-+	clk_register_clkdev(clk, NULL, "b1000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1000000.ahci");
- 
- 	clk = clk_register_gate(NULL, "pcie_sata_1_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_1_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.1");
-+	clk_register_clkdev(clk, NULL, "b1800000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1800000.ahci");
- 
- 	clk = clk_register_gate(NULL, "pcie_sata_2_clk", "ahb_clk", 0,
- 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_2_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie.2");
-+	clk_register_clkdev(clk, NULL, "b4000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b4000000.ahci");
- 
- 	clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
-diff --git a/drivers/clk/spear/spear1340_clock.c b/drivers/clk/spear/spear1340_clock.c
-index fe835c1..5a5c664 100644
---- a/drivers/clk/spear/spear1340_clock.c
-+++ b/drivers/clk/spear/spear1340_clock.c
-@@ -839,7 +839,7 @@ void __init spear1340_clk_init(void __iomem *misc_base)
- 	clk = clk_register_gate(NULL, "pcie_sata_clk", "ahb_clk", 0,
- 			SPEAR1340_PERIP1_CLK_ENB, SPEAR1340_PCIE_SATA_CLK_ENB,
- 			0, &_lock);
--	clk_register_clkdev(clk, NULL, "dw_pcie");
-+	clk_register_clkdev(clk, NULL, "b1000000.pcie");
- 	clk_register_clkdev(clk, NULL, "b1000000.ahci");
- 
- 	clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
--- 
-1.7.0.1
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
+bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IE1vbmRheSwgRGVjZW1iZXIgMjMs
+IDIwMTMgMTE6MjggUE0NCj4gVG86IERlc2FpLCBLYXNoeWFwDQo+IENjOiBsaW51eC1zY3NpQHZn
+ZXIua2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgSmFtZXMgRS5KLg0KPiBC
+b3R0b21sZXk7IFNheGVuYSwgU3VtaXQ7IEFkYW0gUmFkZm9yZA0KPiBTdWJqZWN0OiBSZTogW1BB
+VENIXSBtZWdhcmFpZF9zYXM6IFF1aXJrIG1taW8gaG9vayBmb3IgMTA3OCBNUiBjb250cm9sbGVy
+DQo+IA0KPiBPbiBNb24sIERlYyAyMywgMjAxMyBhdCA4OjEzIEFNLCAgPEthc2h5YXAuRGVzYWlA
+bHNpLmNvbT4gd3JvdGU6DQo+ID4gVGhpcyBwYXRjaCBoYXMgZml4IGZvciBMU0kgR2VuLTEgTVIg
+Y29udHJvbGxlciBpc3N1ZSB3aGljaCBvbmx5IHBvcC11cA0KPiA+IG9uIGZldyBzeXN0ZW1zIGFu
+ZCBpdCBpcyBub3QgZ2VuZXJpYy4NCj4gPg0KPiA+IE9uIGZldyBzeXN0ZW0sIE1SIDEwNzggTVIg
+Y29udHJvbGxlciBpcyBub3Qgd29ya2luZyBpZiBtbWlvIGRlY29kaW5nIGlzDQo+IG9mZi4NCj4g
+PiBUaGlzIHBhdGNoIHByb3Bvc2VkIGVhcmx5IHF1aXJjayBlbnRyeSBmb3IgRGV2aWNlIGlkIDB4
+MTAwMC8weDA0MTEgdG8NCj4gZW5hYmxlIG1taW8uDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBL
+YXNoeWFwIERlc2FpIDxrYXNoeWFwLmRlc2FpQGxzaS5jb20+DQo+ID4gLS0tDQo+ID4gZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMgaW5kZXgN
+Cj4gPiBmNmMzMWZhLi5hMjBmZTQxIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL3F1aXJr
+cy5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gPiBAQCAtNDMsNiArNDMsMTAg
+QEAgc3RhdGljIHZvaWQgcXVpcmtfbW1pb19hbHdheXNfb24oc3RydWN0IHBjaV9kZXYNCj4gPiAq
+ZGV2KSAgfSAgREVDTEFSRV9QQ0lfRklYVVBfQ0xBU1NfRUFSTFkoUENJX0FOWV9JRCwgUENJX0FO
+WV9JRCwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFBDSV9DTEFTU19CUklE
+R0VfSE9TVCwgOCwNCj4gPiBxdWlya19tbWlvX2Fsd2F5c19vbik7DQo+ID4gKy8qIExTSSBjb250
+cm9sbGVyIGRldmljZSBpZCAweDA0MTEgaGFzIHNvbWUgaXNzdWVzIGlmIG1taW9fYWx3YXlzX29u
+IGlzDQo+IG5vdCBzZXQuDQo+ID4gKyAqIEl0IHBvcC11cCBvbmx5IG9uIGZldyBzcGVjaWZpYyBz
+eXN0ZW0sIHdoZXJlIGRlY29kaW5nIGRpc2FibGUgaXMgbm90DQo+IHdvcmtpbmcuDQo+ID4gKyAq
+Lw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9FQVJMWSgweDEwMDAsIDB4MDQxMSwgcXVpcmtfbW1p
+b19hbHdheXNfb24pOw0KPiANCj4gV2hhdCBpcyB0aGUgYWN0dWFsIHByb2JsZW0gdGhhdCBoYXBw
+ZW5zIHdpdGhvdXQgdGhpcyBxdWlyaz8gIElzIHRoZXJlIHNvbWUNCj4gaGFyZHdhcmUgZGVmZWN0
+IGluIHRoZSBNUiAxMDc4IHRoYXQgbWFrZXMgaXQgZmFpbCB3aGVuIHdlIGRpc2FibGUgZGVjb2Rp
+bmc/DQo+IA0KPiBEaXNhYmxpbmcgZGVjb2RpbmcgaXMgaW1wb3J0YW50IGJlY2F1c2UgaXQgcHJl
+dmVudHMgY29uZmxpY3RzIHdpdGggb3RoZXINCj4gZGV2aWNlcyB3aGlsZSBzaXppbmcgYW5kIHVw
+ZGF0aW5nIEJBUnMsIHNvIEkgZG9uJ3Qgd2FudCB0byB1c2UgdGhpcyBxdWlyaw0KPiB1bmxlc3Mg
+aXQncyByZWFsbHkgbmVjZXNzYXJ5Lg0KTFNJIGlzIHN0aWxsIGludmVzdGlnYXRpbmcgb24gaC93
+IGlzc3VlLiBJdCB3YXMgb3JpZ2luYWxseSByZXBvcnRlZCBmcm9tIGN1c3RvbWVyIHNpdGUgYW5k
+IHRoZXkgaGF2ZSBmb3VuZCB0aGlzIGlzc3VlIHdoZW4gdGhleSB1cGdyYWRlIFJIRUw2LjMgdG8g
+UkhFTDYuNC4NCg0KS2VybmVsL0RyaXZlciBmYXVsdCB3aXRoIG1hY2hpbmUgY2hlY2sgb24gUkhF
+TDYuNCBhdCB0aGUgdGltZSBvZiBkcml2ZXIgcmVhZGluZyBiYXNlIGFkZHJlc3MgcmVnaXN0ZXJz
+LiBOZXcgd2F5LCB1c2VkIGluIFJIRUw2LjQgKHNpbWlsYXIgdG8gdXBzdHJlYW0ga2VybmVsKSBp
+cyB0byBkaXNhYmxlIG1taW8gbWVtb3J5IG1hcHBpbmcgYSBhbmQgaS9vIHRvIHRoZSBkZXZpY2Us
+IHJlYWQgdGhlIHZhbHVlIGFuZCB0aGVuIHJlLWVuYWJsZSBtbWlvIG1lbW9yeSBtYXBwaW5nIGFu
+ZCBpL28uICBUaGlzIHNlZW1zIHRvIGNhdXNlIHByb2JsZW1zIG9uIGN1c3RvbWVyIHNldHVwLg0K
+DQoxMDc4IE1SIGNvbnRyb2xsZXIgaXMgcHJldHR5IG9sZCBoL3cgYW5kIHdlIG1heSBuZWVkIG1v
+cmUgdGltZSB0byBhY3R1YWxseSBmaWd1cmUgb3V0IHdoeSBuZXcgcGNpX3JlYWQgbWV0aG9kIGlz
+IGZhaWxpbmcgb24gY3VzdG9tZXIgc3lzdGVtLiAgQXMgYW4gYWx0ZXJuYXRpdmUgKGNvbnNpZGVy
+IHRoYXQgTFNJIGgvdyBoYXMgc29tZSBpc3N1ZSksIHdlIG9wdCB0byBlbmFibGUgbW1pbyB2aWEg
+cXVpcmsgZW50cnkuIA0KDQogfiBLYXNoeWFwDQoNCj4gDQo+IEJqb3JuDQo+IA0KDQo=
