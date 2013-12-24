@@ -1,44 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:44188 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813Ab3LSGJY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 19 Dec 2013 01:09:24 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 0/3] PCI: allocate 64bit mmio pref
-Date: Wed, 18 Dec 2013 22:09:37 -0800
-Message-Id: <1387433380-18564-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:53474 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab3LXOqy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Dec 2013 09:46:54 -0500
+Received: by mail-ie0-f173.google.com with SMTP id to1so7173387ieb.18
+        for <linux-pci@vger.kernel.org>; Tue, 24 Dec 2013 06:46:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <49ee1c68150946e0b972b6b047a07126@BN1PR07MB247.namprd07.prod.outlook.com>
+References: <201312231512.rBNFC6mo008974@cosmhbs0.lsi.com> <CAErSpo7X4khuPOp5s4MdunOmwww0V4JZipJa3iEOA=Y5nnCwqA@mail.gmail.com>
+ <49ee1c68150946e0b972b6b047a07126@BN1PR07MB247.namprd07.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 24 Dec 2013 07:46:33 -0700
+Message-ID: <CAErSpo6Q7XnDhxKJOt2ZRUMzTY-Jj2dD=FJdh_DsLx2XB=zxrw@mail.gmail.com>
+Subject: Re: [PATCH] megaraid_sas: Quirk mmio hook for 1078 MR controller
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"James E.J. Bottomley" <jbottomley@parallels.com>,
+	"Saxena, Sumit" <Sumit.Saxena@lsi.com>,
+	Adam Radford <aradford@gmail.com>,
+	"Yang, Bo" <Bo.Yang@lsi.com>, Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mmio 64 allocation that could help Guo Chao <yan@linux.vnet.ibm.com> on powerpc mmio allocation.
-It will try to assign 64 bit resource above 4g at first.
+[+cc Myron]
 
-And it is based on current pci/next and pci/resource.
+On Tue, Dec 24, 2013 at 1:20 AM, Desai, Kashyap <Kashyap.Desai@lsi.com> wrote:
+>
+>
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Monday, December 23, 2013 11:28 PM
+>> To: Desai, Kashyap
+>> Cc: linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org; James E.J.
+>> Bottomley; Saxena, Sumit; Adam Radford
+>> Subject: Re: [PATCH] megaraid_sas: Quirk mmio hook for 1078 MR controller
+>>
+>> On Mon, Dec 23, 2013 at 8:13 AM,  <Kashyap.Desai@lsi.com> wrote:
+>> > This patch has fix for LSI Gen-1 MR controller issue which only pop-up
+>> > on few systems and it is not generic.
+>> >
+>> > On few system, MR 1078 MR controller is not working if mmio decoding is
+>> off.
+>> > This patch proposed early quirck entry for Device id 0x1000/0x0411 to
+>> enable mmio.
+>> >
+>> > Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+>> > ---
+>> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
+>> > f6c31fa..a20fe41 100644
+>> > --- a/drivers/pci/quirks.c
+>> > +++ b/drivers/pci/quirks.c
+>> > @@ -43,6 +43,10 @@ static void quirk_mmio_always_on(struct pci_dev
+>> > *dev)  }  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_ANY_ID, PCI_ANY_ID,
+>> >                                 PCI_CLASS_BRIDGE_HOST, 8,
+>> > quirk_mmio_always_on);
+>> > +/* LSI controller device id 0x0411 has some issues if mmio_always_on is
+>> not set.
+>> > + * It pop-up only on few specific system, where decoding disable is not
+>> working.
+>> > + */
+>> > +DECLARE_PCI_FIXUP_EARLY(0x1000, 0x0411, quirk_mmio_always_on);
+>>
+>> What is the actual problem that happens without this quirk?  Is there some
+>> hardware defect in the MR 1078 that makes it fail when we disable decoding?
+>>
+>> Disabling decoding is important because it prevents conflicts with other
+>> devices while sizing and updating BARs, so I don't want to use this quirk
+>> unless it's really necessary.
+> LSI is still investigating on h/w issue. It was originally reported from customer site and they have found this issue when they upgrade RHEL6.3 to RHEL6.4.
+>
+> Kernel/Driver fault with machine check on RHEL6.4 at the time of driver reading base address registers. New way, used in RHEL6.4 (similar to upstream kernel) is to disable mmio memory mapping a and i/o to the device, read the value and then re-enable mmio memory mapping and i/o.  This seems to cause problems on customer setup.
 
--v2: update after patch that move device_del down to pci_destroy_dev.
-     add "Try best to allocate pref mmio 64bit above 4G"
+Is there a bug report we can look at?  Maybe a dmesg or console log of
+the issue happening, along with "lspci -vv" output and contents of
+/proc/iomem and /proc/ioports?
 
--v3: refresh and send out after pci_clip_resource() changes,
-     as Bjorn is not happy with attachments.
+Unless there's some 1078 hardware defect related to writing the
+command register, the current code should be safe.  It's possible
+there's a driver defect or something else that causes an access to the
+device while it is disabled.  If that's happening, *that* is what
+needs to be fixed.
 
--v4: make pcibios_resource_to_bus take bus directly.
+I am opposed to making a change like this to upstream until we
+understand what's actually going on.  Of course, RH may want to put
+the change in their kernel as a pragmatic measure.
 
--v5: fix non-pref mmio64 allocation problem found by Guo Chao.
-     refresh last three as Bjorn update first two and put them in pci/resource
-
-Yinghai Lu (3):
-  PCI: Try to allocate mem64 above 4G at first
-  PCI: Try best to allocate pref mmio 64bit above 4g
-  PCI: Sort pci root bus resources list
-
- drivers/pci/bus.c       |  43 +++++++++++----
- drivers/pci/setup-bus.c | 138 ++++++++++++++++++++++++++++++++----------------
- drivers/pci/setup-res.c |  20 ++++++-
- 3 files changed, 144 insertions(+), 57 deletions(-)
-
--- 
-1.8.4
-
+> 1078 MR controller is pretty old h/w and we may need more time to actually figure out why new pci_read method is failing on customer system.  As an alternative (consider that LSI h/w has some issue), we opt to enable mmio via quirk entry.
+>
+>  ~ Kashyap
+>
+>>
+>> Bjorn
+>>
+>
