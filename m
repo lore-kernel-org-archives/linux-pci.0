@@ -1,70 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:57032 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246Ab3LYI2A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Dec 2013 03:28:00 -0500
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:58549 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752074Ab3LXRwY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Dec 2013 12:52:24 -0500
+Received: by mail-ie0-f182.google.com with SMTP id as1so7327403iec.41
+        for <linux-pci@vger.kernel.org>; Tue, 24 Dec 2013 09:52:24 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
-	<CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-	<52828364.6080103@gmail.com>
-	<CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
-	<CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
-	<CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
-	<CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
-	<CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
-	<CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
-	<CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
-	<CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
-	<5285E028.20906@gmail.com>
-	<CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
-Date: Wed, 25 Dec 2013 10:27:58 +0200
-Message-ID: <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CACaajQv1OWxxcGORBq=LN-4JQzATf4YmWBQymoeyovfY-rUpmw@mail.gmail.com>
+References: <CACaajQv1OWxxcGORBq=LN-4JQzATf4YmWBQymoeyovfY-rUpmw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 24 Dec 2013 10:52:02 -0700
+Message-ID: <CAErSpo4uZ1N7uKyKMGHERtq-gvcpQ7oHTE7U9fGiAzfziMJ+Ew@mail.gmail.com>
+Subject: Re: tg3 and sd card reader at acer aspire
+To: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 15, 2013 at 11:04 AM, wzyboy <wzyboy@wzyboy.org> wrote:
-> Thanks a lot for explaination, Emmanuel!
+[+cc linux-pci because I think this is related to PCI ASPM]
+
+I'm afraid nobody wants to touch ASPM because it's such a mess, but I
+hope somebody will step up and investigate this.
+
+On Tue, Dec 24, 2013 at 1:27 AM, Vasiliy Tolstov <v.tolstov@selfip.ru> wrote:
+> Hi all and sorry for may be spamming mailing list.
 >
-> Now I finally know why this is a "catch-22" situation: Disabling those
-> features with OS/drvier cannot be as neat as disabling them directly
-> in BIOS. And there may be chance, that disabling them at a bad timing
-> may cause G3...
+> I have acer aspire v5-17 with broadcom card reader and ethernet card.
+> I'm affecting on this ubuntu bugs. But bug is present in vanilla linux
+> current git and stable lts.
 >
+> Can somebody helps me and say - where i can post message and discuss
+> this problem. As i see ubuntu team can't solve this problem (bug
+> present is about 1 year and nothing changed).
+> One ubuntu user wia bisecting find broken commit -
+> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=6cac12dfab9c57a4f76821412224b226a9b08dff
+>
+> Relevant ubuntu bugs:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1178131
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1067222
+>
+>
+> Thanks!
 > --
-
-Back to you.
-Can you please try not to do the setpci and add this:
-
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c
-b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 079a511..e8a52f3 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -707,6 +707,8 @@ void iwl_pcie_tx_start(struct iwl_trans *trans,
-u32 scd_base_addr)
-        iwl_write_direct32(trans, FH_TX_CHICKEN_BITS_REG,
-                           reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
-
-+        iwl_set_bits_prph(trans, 0xa04068, 0x8);
-+
-        /* Enable L1-Active */
-        iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
-                            APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
-
-
-thanks
+> Vasiliy Tolstov,
+> e-mail: v.tolstov@selfip.ru
+> jabber: vase@selfip.ru
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
