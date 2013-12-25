@@ -1,100 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:45812 "EHLO
-	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751051Ab3LKKrl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 05:47:41 -0500
-Message-ID: <52A842A7.1030605@st.com>
-Date: Wed, 11 Dec 2013 16:17:03 +0530
-From: Rajeev kumar <rajeev-dlh.kumar@st.com>
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:57032 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751246Ab3LYI2A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Dec 2013 03:28:00 -0500
 MIME-Version: 1.0
-To: Mohit KUMAR <mohit.kumar@st.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	spear-devel <spear-devel@list.st.com>
-Subject: Re: [PATCH 10/12] SPEAr13xx: defconfig: Update
-References: <cover.1386752447.git.mohit.kumar@st.com> <3bc935718da3e0118c57ebee80c1363aac4a48a5.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <3bc935718da3e0118c57ebee80c1363aac4a48a5.1386752447.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+	<CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+	<52828364.6080103@gmail.com>
+	<CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+	<CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+	<CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+	<CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+	<CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+	<CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+	<CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+	<CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+	<5285E028.20906@gmail.com>
+	<CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+Date: Wed, 25 Dec 2013 10:27:58 +0200
+Message-ID: <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/11/2013 3:08 PM, Mohit KUMAR wrote:
-> Enable EABI, OEABI, VFP and NFS configs in default configuration file for
-> SPEAr13xx.
+On Fri, Nov 15, 2013 at 11:04 AM, wzyboy <wzyboy@wzyboy.org> wrote:
+> Thanks a lot for explaination, Emmanuel!
 >
-> Enable PCIe support for SPEAr13xx.
+> Now I finally know why this is a "catch-22" situation: Disabling those
+> features with OS/drvier cannot be as neat as disabling them directly
+> in BIOS. And there may be chance, that disabling them at a bad timing
+> may cause G3...
 >
-> Signed-off-by: Pratyush Anand<pratyush.anand@st.com>
-> Signed-off-by: Mohit Kumar<mohit.kumar@st.com>
-> Cc: Mohit Kumar<mohit.kumar@st.com>
-> Cc: Viresh Kumar<viresh.linux@gmail.com>
-> Cc: spear-devel@list.st.com
-> Cc: linux-arm-kernel@lists.infradead.org
-> ---
->   arch/arm/configs/spear13xx_defconfig |   15 +++++++++++++++
->   1 files changed, 15 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/arm/configs/spear13xx_defconfig b/arch/arm/configs/spear13xx_defconfig
-> index 82eaa55..83882c0 100644
-> --- a/arch/arm/configs/spear13xx_defconfig
-> +++ b/arch/arm/configs/spear13xx_defconfig
-> @@ -11,13 +11,24 @@ CONFIG_ARCH_SPEAR13XX=y
->   CONFIG_MACH_SPEAR1310=y
->   CONFIG_MACH_SPEAR1340=y
->   # CONFIG_SWP_EMULATE is not set
-> +CONFIG_PCI_MSI=y
-> +CONFIG_PCIE_SPEAR13XX=y
->   CONFIG_SMP=y
->   # CONFIG_SMP_ON_UP is not set
->   # CONFIG_ARM_CPU_TOPOLOGY is not set
-> +CONFIG_AEABI=y
-> +CONFIG_OABI_COMPAT=y
->   CONFIG_ARM_APPENDED_DTB=y
->   CONFIG_ARM_ATAG_DTB_COMPAT=y
-> +CONFIG_VFP=y
->   CONFIG_BINFMT_MISC=y
->   CONFIG_NET=y
-> +CONFIG_UNIX=y
-> +CONFIG_INET=y
-> +CONFIG_IP_PNP=y
-> +CONFIG_IP_PNP_DHCP=y
-> +CONFIG_IP_PNP_BOOTP=y
-> +CONFIG_NET_IPIP=y
->   CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
->   CONFIG_MTD=y
->   CONFIG_MTD_OF_PARTS=y
-> @@ -27,6 +38,7 @@ CONFIG_MTD_NAND=y
->   CONFIG_MTD_NAND_FSMC=y
->   CONFIG_BLK_DEV_RAM=y
->   CONFIG_BLK_DEV_RAM_SIZE=16384
-> +CONFIG_BLK_DEV_SD=y
->   CONFIG_ATA=y
->   # CONFIG_SATA_PMP is not set
->   CONFIG_SATA_AHCI_PLATFORM=y
-> @@ -66,6 +78,7 @@ CONFIG_USB=y
->   # CONFIG_USB_DEVICE_CLASS is not set
->   CONFIG_USB_EHCI_HCD=y
->   CONFIG_USB_OHCI_HCD=y
-> +CONFIG_USB_STORAGE=y
->   CONFIG_MMC=y
->   CONFIG_MMC_SDHCI=y
->   CONFIG_MMC_SDHCI_SPEAR=y
-> @@ -84,6 +97,8 @@ CONFIG_VFAT_FS=m
->   CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
->   CONFIG_TMPFS=y
->   CONFIG_JFFS2_FS=y
-> +CONFIG_NFS_FS=y
-> +CONFIG_ROOT_NFS=y
+> --
 
-Its better to enable CONFIG_FUSE_FS also in case you want to work with 
-fully functional NFS in userspace.
+Back to you.
+Can you please try not to do the setpci and add this:
 
-~Rajeev
 
->   CONFIG_NLS_DEFAULT="utf8"
->   CONFIG_NLS_CODEPAGE_437=y
->   CONFIG_NLS_ASCII=m
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c
+b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 079a511..e8a52f3 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -707,6 +707,8 @@ void iwl_pcie_tx_start(struct iwl_trans *trans,
+u32 scd_base_addr)
+        iwl_write_direct32(trans, FH_TX_CHICKEN_BITS_REG,
+                           reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
 
++        iwl_set_bits_prph(trans, 0xa04068, 0x8);
++
+        /* Enable L1-Active */
+        iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
+                            APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+
+
+thanks
