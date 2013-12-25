@@ -1,40 +1,29 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 15 Dec 2013 15:14:13 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: BUG: key ffff8800192a6ad0 not in .data!
-Message-ID: <20131215231413.GA6853@kroah.com>
-References: <20131215063123.GB26396@localhost>
- <20131215170417.GB28799@kroah.com>
- <CAErSpo4Usujp5zJT83-88T71J8tObJgZ03i-wORqLputxQbdXg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4Usujp5zJT83-88T71J8tObJgZ03i-wORqLputxQbdXg@mail.gmail.com>
+In-Reply-To: <CAErSpo4uZ1N7uKyKMGHERtq-gvcpQ7oHTE7U9fGiAzfziMJ+Ew@mail.gmail.com>
+References: <CACaajQv1OWxxcGORBq=LN-4JQzATf4YmWBQymoeyovfY-rUpmw@mail.gmail.com>
+ <CAErSpo4uZ1N7uKyKMGHERtq-gvcpQ7oHTE7U9fGiAzfziMJ+Ew@mail.gmail.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Wed, 25 Dec 2013 11:50:07 +0400
+Message-ID: <CACaajQssMQUtuJyqQk80cgw6-Cf8Gh6B5kdMEys7oE-eqQH+Tw@mail.gmail.com>
+Subject: Re: tg3 and sd card reader at acer aspire
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 15, 2013 at 03:12:03PM -0700, Bjorn Helgaas wrote:
-> On Sun, Dec 15, 2013 at 10:04 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Sun, Dec 15, 2013 at 02:31:23PM +0800, Fengguang Wu wrote:
-> >> Greetings,
-> >>
-> >> I got the below dmesg and the first bad commit is
-> >
-> > I thought this was already fixed in Bjorn's tree, but perhaps he hasn't
-> > merged in the one-liner for it...
-> 
-> Yes, this is fixed.  I actually dropped that MSI change temporarily
-> until we can fold in the memory leak fixes, so it is not currently in
-> linux-next.
+2013/12/24 Bjorn Helgaas <bhelgaas@google.com>:
+> [+cc linux-pci because I think this is related to PCI ASPM]
+>
+> I'm afraid nobody wants to touch ASPM because it's such a mess, but I
+> hope somebody will step up and investigate this.
 
-Do you want me to just resend a fixed patch up with the one-line fix,
-and the memory-leak-on-error-path fix all as just one patch to make it
-easier for you?
 
-thanks,
+Thank you!
 
-greg k-h
+-- 
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
