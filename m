@@ -1,106 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:51656 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379Ab3LEUXF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Dec 2013 15:23:05 -0500
-Received: by mail-ie0-f181.google.com with SMTP id e14so29265119iej.26
-        for <linux-pci@vger.kernel.org>; Thu, 05 Dec 2013 12:23:04 -0800 (PST)
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:52523 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166Ab3LYBwx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Dec 2013 20:52:53 -0500
+Message-ID: <52BA3A72.6080700@gmail.com>
+Date: Tue, 24 Dec 2013 19:52:50 -0600
+From: Robert Hancock <hancockrwd@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6SeyZpta+MuB5EnS-Rx80bAYmLkCaQgt5q_jgbtL4X6w@mail.gmail.com>
-References: <CANN5nGKvaHCzWKMNyUhNfSfTfZBcVxG9RfeuQaOAFS9TghF=0w@mail.gmail.com>
- <CAErSpo6SeyZpta+MuB5EnS-Rx80bAYmLkCaQgt5q_jgbtL4X6w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 5 Dec 2013 13:22:44 -0700
-Message-ID: <CAErSpo716DEk07izC_d_bj8xyDdYQFdEnqtJSirMp1bMmSdURA@mail.gmail.com>
-Subject: Re: error loading iwlwifi on sony vaio
-To: Aaron McSorley <a@aaronmcsorley.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Vasiliy Tolstov <v.tolstov@selfip.ru>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: tg3 and sd card reader at acer aspire
+References: <CACaajQv1OWxxcGORBq=LN-4JQzATf4YmWBQymoeyovfY-rUpmw@mail.gmail.com> <CAErSpo4uZ1N7uKyKMGHERtq-gvcpQ7oHTE7U9fGiAzfziMJ+Ew@mail.gmail.com>
+In-Reply-To: <CAErSpo4uZ1N7uKyKMGHERtq-gvcpQ7oHTE7U9fGiAzfziMJ+Ew@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Fix Jiang's email address, please respond to this, not the previous message]
+On 12/24/2013 11:52 AM, Bjorn Helgaas wrote:
+> [+cc linux-pci because I think this is related to PCI ASPM]
+>
+> I'm afraid nobody wants to touch ASPM because it's such a mess, but I
+> hope somebody will step up and investigate this.
 
-On Thu, Dec 5, 2013 at 1:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Jiang, Ben]
+So apparently this machine got broken when we changed the behavior for 
+the ACPI ASPM-not-supported bit from forcing ASPM off for everything to 
+leaving ASPM in whatever state the BIOS left it in. And apparently for 
+some reason the device (devices?) doesn't work with ASPM enabled in 
+Linux but does in Windows. It's possible that some other workaround is 
+being applied by the Windows driver that allows it to work there.
+
+I'm not too sure what the next step to debug that would be, unless maybe 
+someone has a contact at Broadcom. We could conceivably add a quirk to 
+force ASPM off for this device regardless of what the BIOS says, though.
+
 >
-> On Thu, Dec 5, 2013 at 8:24 AM, Aaron McSorley <a@aaronmcsorley.com> wrote:
->> Hello, I'm getting this message when trying to load iwlwifi in our
->> debian live image running kernel 3.8.5, this is on a Sony SVS13AA11L,
->> please advise on how to debug this, or any additional information you
->> need, any help is much appreciated, and thanks in advance
->
-> Thanks, Aaron.  Can you collect the complete dmesg log and output of
-> "lspci -vv" (run as root)?
->
-> I know this is a Debian kernel, but the upstream kernel likely still
-> has the same problem, so it'd be good if you opened a bug report at
-> http://bugzilla.kernel.org (drivers/pci category).
->
-> Is there any hotplug involved here?  Since this doesn't seem to be a
-> problem every iwlwifi user sees, possibly we didn't assign resources
-> to the iwlwifi device in this case.
->
-> Bjorn
->
->> [ 1387.804146] iwlwifi 0000:02:00.0: pci_ioremap_bar failed
->> [ 1387.804206] iwlwifi: probe of 0000:02:00.0 failed with error -12
->> [ 1978.637526] Intel(R) Wireless WiFi driver for Linux, in-tree:
->> [ 1978.637531] Copyright(c) 2003-2012 Intel Corporation
->> [ 1978.637685] ------------[ cut here ]------------
->> [ 1978.637695] WARNING: at /build/linux/drivers/pci/pci.c:130
->> pci_ioremap_bar+0x4a/0x4e()
->> [ 1978.637697] Hardware name: SVS13A12FXB
->> [ 1978.637699] Modules linked in: iwlwifi(+) joydev coretemp kvm
->> tpm_infineon crc32c_intel uvc
->> video aesni_intel aes_i586 videobuf2_vmalloc cfg80211 xts
->> videobuf2_memops lrw btusb tpm_tis b
->> luetooth videobuf2_core gf128mul iTCO_wdt ablk_helper videodev
->> acpi_cpufreq tpm iTCO_vendor_su
->> pport psmouse i2c_i801 cryptd sony_laptop crc16 mperf media tpm_bios
->> of_i2c serio_raw lpc_ich
->> rfkill battery evdev processor ac mei fuse squashfs loop aufs(C)
->> nls_utf8 isofs dm_mirror dm_r
->> egion_hash dm_log dm_mod radeon sg sr_mod sd_mod crc_t10dif cdrom
->> usb_storage thermal nouveau
->> mxm_wmi wmi r8169 mii rtsx_pci ttm microcode i915 ahci libahci
->> ehci_pci ehci_hcd xhci_hcd vide
->> o libata usbcore button i2c_algo_bit drm_kms_helper scsi_mod
->> usb_common drm i2c_core thermal_s
->> ys [last unloaded: iwlwifi]
->> [ 1978.637759] Pid: 2896, comm: modprobe Tainted: P        WC O
->> 3.8-0baureo1-486 #1 Debian 3.8.5-1~experimental.1~baureo1
->> [ 1978.637761] Call Trace:
->> [ 1978.637768]  [<c1021361>] ? warn_slowpath_common+0x68/0x79
->> [ 1978.637773]  [<c115b85d>] ? pci_ioremap_bar+0x4a/0x4e
->> [ 1978.637777]  [<c102137f>] ? warn_slowpath_null+0xd/0x10
->> [ 1978.637781]  [<c115b85d>] ? pci_ioremap_bar+0x4a/0x4e
->> [ 1978.637804]  [<f89136c2>] ? iwl_trans_pcie_alloc+0x113/0x271 [iwlwifi]
->> [ 1978.637822]  [<f890f313>] ? iwl_pci_probe+0xf/0x7e [iwlwifi]
->> [ 1978.637826]  [<c115e50e>] ? pci_device_probe+0x4e/0x85
->> [ 1978.637833]  [<c11d958b>] ? driver_probe_device+0x78/0x163
->> [ 1978.637838]  [<c11d96ba>] ? __driver_attach+0x44/0x5f
->> [ 1978.637842]  [<c11d8357>] ? bus_for_each_dev+0x37/0x61
->> [ 1978.637846]  [<c11d91ca>] ? driver_attach+0x11/0x13
->> [ 1978.637851]  [<c11d9676>] ? driver_probe_device+0x163/0x163
->> [ 1978.637855]  [<c11d8f40>] ? bus_add_driver+0xb0/0x1a7
->> [ 1978.637861]  [<f891d000>] ? 0xf891cfff
->> [ 1978.637866]  [<c11d9ae6>] ? driver_register+0x70/0xdb
->> [ 1978.637871]  [<f891d000>] ? 0xf891cfff
->> [ 1978.637876]  [<f891d000>] ? 0xf891cfff
->> [ 1978.637891]  [<f890f3f5>] ? iwl_pci_register_driver+0x15/0x2a [iwlwifi]
->> [ 1978.637896]  [<f891d000>] ? 0xf891cfff
->> [ 1978.637900]  [<c100116f>] ? do_one_initcall+0x65/0x10a
->> [ 1978.637904]  [<f891d000>] ? 0xf891cfff
->> [ 1978.637910]  [<c1055ea0>] ? load_module+0x1610/0x18e6
->> [ 1978.637918]  [<c10561e2>] ? sys_init_module+0x6c/0x80
->> [ 1978.637933]  [<c12aa12f>] ? syscall_call+0x7/0xb
->> [ 1978.637937] ---[ end trace 57fa059f8cbca6fc ]---
->> [ 1978.637941] iwlwifi 0000:02:00.0: pci_ioremap_bar failed
->> [ 1978.638002] iwlwifi: probe of 0000:02:00.0 failed with error -12
+> On Tue, Dec 24, 2013 at 1:27 AM, Vasiliy Tolstov <v.tolstov@selfip.ru> wrote:
+>> Hi all and sorry for may be spamming mailing list.
+>>
+>> I have acer aspire v5-17 with broadcom card reader and ethernet card.
+>> I'm affecting on this ubuntu bugs. But bug is present in vanilla linux
+>> current git and stable lts.
+>>
+>> Can somebody helps me and say - where i can post message and discuss
+>> this problem. As i see ubuntu team can't solve this problem (bug
+>> present is about 1 year and nothing changed).
+>> One ubuntu user wia bisecting find broken commit -
+>> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/?id=6cac12dfab9c57a4f76821412224b226a9b08dff
+>>
+>> Relevant ubuntu bugs:
+>> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1178131
+>> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1067222
+>>
+>>
+>> Thanks!
 >> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> Vasiliy Tolstov,
+>> e-mail: v.tolstov@selfip.ru
+>> jabber: vase@selfip.ru
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 >> the body of a message to majordomo@vger.kernel.org
 >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+
