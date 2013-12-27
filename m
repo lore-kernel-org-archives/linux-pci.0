@@ -1,44 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:38657 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101Ab3LBIIc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Dec 2013 03:08:32 -0500
-From: Marek Vasut <marex@denx.de>
-To: Fabio Estevam <festevam@gmail.com>
-Subject: Re: [PATCH 2/2] PCI: imx6: Remove unneeded 'goto err'
-Date: Mon, 2 Dec 2013 09:08:31 +0100
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-References: <1385955575-25270-1-git-send-email-festevam@gmail.com> <1385955575-25270-2-git-send-email-festevam@gmail.com>
-In-Reply-To: <1385955575-25270-2-git-send-email-festevam@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201312020908.31316.marex@denx.de>
+Received: from mailout3.samsung.com ([203.254.224.33]:45814 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751229Ab3L0Aa2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Dec 2013 19:30:28 -0500
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MYF004BRW2QJ170@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 27 Dec 2013 09:30:26 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, 'Mohit Kumar' <mohit.kumar@st.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] PCI: designware: Fix indent code style
+Date: Fri, 27 Dec 2013 09:30:25 +0900
+Message-id: <000401cf029a$d63943d0$82abcb70$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Fabio Estevam,
+Fix indent code style and replace 'MSI interrupt controller'
+of comment with 'MSI controller', in order to fix the following
+checkpatch issues.
 
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> There is no need to use 'goto err' as we can directly return the errors.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+  ERROR: code indent should use tabs where possible
+  WARNING: please, no spaces at the start of a line
+  WARNING: line over 80 characters
 
-I am a bit worried about unwinding of the installation of the DABT hook:
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pcie-designware.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-424         /* Added for PCI abort handling */
-425         hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
-426                 "imprecise external abort");
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 4a08d30..17ce88f 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -213,14 +213,14 @@ static int find_valid_pos0(struct pcie_port *pp, int msgvec, int pos, int *pos0)
+ }
+ 
+ static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+-                            unsigned int nvec, unsigned int pos)
++			    unsigned int nvec, unsigned int pos)
+ {
+ 	unsigned int i, res, bit, val;
+ 
+ 	for (i = 0; i < nvec; i++) {
+ 		irq_set_msi_desc_off(irq_base, i, NULL);
+ 		clear_bit(pos + i, pp->msi_irq_in_use);
+-		/* Disable corresponding interrupt on MSI interrupt controller */
++		/* Disable corresponding interrupt on MSI controller */
+ 		res = ((pos + i) / 32) * 12;
+ 		bit = (pos + i) % 32;
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+-- 
+1.7.10.4
 
-This is not handled in the fail path. Instead of this patch, would it be 
-possible for you to fix the failpath to take this part into consideration?
 
-Another option, and I think even a better one, would be to move this DABT 
-handler installation just before imx6_add_pcie_port() call. You'd still need to 
-handle it's de-installation in remove(), but you won't have so many functions in 
-probe() goto-ing to fail path.
-
-Best regards,
-Marek Vasut
