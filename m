@@ -1,60 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:34962 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753073Ab3LGRpp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 7 Dec 2013 12:45:45 -0500
-Date: Sat, 7 Dec 2013 18:45:42 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Ethan Zhao <ethan.kernel@gmail.com>
-Cc: rui wang <ruiv.wang@gmail.com>, Lance Ortiz <lance.ortiz@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, lance_ortiz@hotmail.com,
-	jiang.liu@intel.com, tony.luck@intel.com, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, gong.chen@intel.com
-Subject: Re: [PATCH v10 1/3] aerdrv: Trace Event for AER
-Message-ID: <20131207174542.GB4183@pd.tnic>
-References: <CANVTcTYJS3eAUA4bHVCrKgz=7rQpJZHCiBcw3JM=j0FbCsgQJw@mail.gmail.com>
- <CABawtvPz5sZxhFnQru8Uc6UwF-O8HyGred_RWqBBeT615Qj8sQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CABawtvPz5sZxhFnQru8Uc6UwF-O8HyGred_RWqBBeT615Qj8sQ@mail.gmail.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:46842 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877Ab3L0Aei (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Dec 2013 19:34:38 -0500
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MYF00BZPW9ORL50@mailout3.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 27 Dec 2013 09:34:37 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] PCI: mvebu: Use max_t() instead of max(resource_size_t,)
+Date: Fri, 27 Dec 2013 09:34:36 +0900
+Message-id: <000601cf029b$6bb27e40$43177ac0$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 06, 2013 at 11:11:07PM +0800, Ethan Zhao wrote:
-> > @@ -63,10 +63,10 @@ TRACE_EVENT(aer_event,
-> >
-> >         TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-> >                 __get_str(dev_name),
-> > -               __entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
-> > -                       __entry->severity == HW_EVENT_ERR_FATAL ?
-> > +               __entry->severity == AER_CORRECTABLE ? "Corrected" :
-> > +                       __entry->severity == AER_FATAL ?
-> >                         "Fatal" : "Uncorrected",
-> 
-> Why not             "Fatal" : "Non-fatal",   ?  per the PCIe spec,
-> 'Fatal' and 'Non-fatal' are sub-category of "
-> Uncorrected". But here "Uncorrected" means "Non-fatal".
+Use max_t() instead of max(resource_size_t,) in order to fix
+the following checkpatch warning.
 
-... and just to denote that, it'll probably be best to say:
+  WARNING: max() should probably be max_t(resource_size_t, SZ_64K, size)
+  WARNING: max() should probably be max_t(resource_size_t, SZ_1M, size)
 
-		__entry->severity == AER_CORRECTABLE ? "Corrected" :
-			__entry->severity == AER_FATAL ?
-			   "Fatal" : "Uncorrected, non-fatal"
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pci-mvebu.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-right?
-
-Btw, Rui, you patch is whitespace-damaged so next time please try
-sending from a real mail client which doesn't mangle whitespace and not
-from the gmail web interface. Sending the patch to yourself and trying
-to apply it is always a good test for that.
-
-Thanks.
-
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index bedc0b1..fa140e1 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -735,9 +735,9 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 	 * aligned on their size
+ 	 */
+ 	if (res->flags & IORESOURCE_IO)
+-		return round_up(start, max((resource_size_t)SZ_64K, size));
++		return round_up(start, max_t(resource_size_t, SZ_64K, size));
+ 	else if (res->flags & IORESOURCE_MEM)
+-		return round_up(start, max((resource_size_t)SZ_1M, size));
++		return round_up(start, max_t(resource_size_t, SZ_1M, size));
+ 	else
+ 		return start;
+ }
 -- 
-Regards/Gruss,
-    Boris.
+1.7.10.4
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+
