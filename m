@@ -1,50 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f176.google.com ([209.85.128.176]:39936 "EHLO
-	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752889Ab3LDSb6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Dec 2013 13:31:58 -0500
-Received: by mail-ve0-f176.google.com with SMTP id oz11so12302204veb.21
-        for <linux-pci@vger.kernel.org>; Wed, 04 Dec 2013 10:31:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201312020908.31316.marex@denx.de>
-References: <1385955575-25270-1-git-send-email-festevam@gmail.com>
-	<1385955575-25270-2-git-send-email-festevam@gmail.com>
-	<201312020908.31316.marex@denx.de>
-Date: Wed, 4 Dec 2013 16:31:57 -0200
-Message-ID: <CAOMZO5B26G0nAqjAsuR4mkRMtfE6jbSQHfa=ZSLGGEbOP-1smQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: imx6: Remove unneeded 'goto err'
-From: Fabio Estevam <festevam@gmail.com>
-To: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mailout2.samsung.com ([203.254.224.25]:22841 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256Ab3L0AdT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Dec 2013 19:33:19 -0500
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MYF007S1W7DT470@mailout2.samsung.com> for
+ linux-pci@vger.kernel.org; Fri, 27 Dec 2013 09:33:13 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Bjorn Helgaas' <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Cooper' <jason@lakedaemon.net>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: PATCH] PCI: mvebu: Use max_t() instead of max(resource_size_t,)
+Date: Fri, 27 Dec 2013 09:33:12 +0900
+Message-id: <000501cf029b$39aa4400$acfecc00$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
+Use max_t() instead of max(resource_size_t,) in order to fix
+the following checkpatch warning.
 
-On Mon, Dec 2, 2013 at 6:08 AM, Marek Vasut <marex@denx.de> wrote:
+  WARNING: max() should probably be max_t(resource_size_t, SZ_64K, size)
+  WARNING: max() should probably be max_t(resource_size_t, SZ_1M, size)
 
-> I am a bit worried about unwinding of the installation of the DABT hook:
->
-> 424         /* Added for PCI abort handling */
-> 425         hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
-> 426                 "imprecise external abort");
->
-> This is not handled in the fail path. Instead of this patch, would it be
-> possible for you to fix the failpath to take this part into consideration?
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/pci/host/pci-mvebu.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-IMHO this would be subject of a separate patch. This one does not
-change any current behavior.
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index bedc0b1..fa140e1 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -735,9 +735,9 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+ 	 * aligned on their size
+ 	 */
+ 	if (res->flags & IORESOURCE_IO)
+-		return round_up(start, max((resource_size_t)SZ_64K, size));
++		return round_up(start, max_t(resource_size_t, SZ_64K, size));
+ 	else if (res->flags & IORESOURCE_MEM)
+-		return round_up(start, max((resource_size_t)SZ_1M, size));
++		return round_up(start, max_t(resource_size_t, SZ_1M, size));
+ 	else
+ 		return start;
+ }
+-- 
+1.7.10.4
 
->
-> Another option, and I think even a better one, would be to move this DABT
-> handler installation just before imx6_add_pcie_port() call. You'd still need to
-> handle it's de-installation in remove(), but you won't have so many functions in
-> probe() goto-ing to fail path.
 
-How do we 'uninstall' this DABT handler installation?
-
-Regards,
-
-Fabio Estevam
