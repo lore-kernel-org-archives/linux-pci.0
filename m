@@ -1,45 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:33275 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab3LPPQD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Dec 2013 10:16:03 -0500
-Message-ID: <1387206956.8071.14.camel@ejdallLaptop>
-Subject: Re: [PATCH] PCI AER: Handle non-AER HEST error sources in
- aer_hest_parse()
-From: Betty Dall <betty.dall@hp.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: lenb@kernel.org, rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Mon, 16 Dec 2013 08:15:56 -0700
-In-Reply-To: <20131213230657.GD6746@google.com>
-References: <1386948196-9409-1-git-send-email-betty.dall@hp.com>
-	 <20131213221616.GC6746@google.com> <1386974853.10497.64.camel@ejdallLaptop>
-	 <20131213230657.GD6746@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Agustin Barto <abarto@gmail.com>
+Subject: [PATCH] PCI / ACPI: Install wakeup notify handlers for all PCI devs with ACPI
+Date: Fri, 27 Dec 2013 01:17:22 +0100
+Message-ID: <2145694.TZRgVXpeL1@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-12-13 at 16:06 -0700, Bjorn Helgaas wrote:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> I should have thought longer before hitting send.  I think it's worthwhile
-> to use the same helper in aer_hest_parse_aff(), and once I did that, it
-> became more obvious that aer_hest_parse() and aer_hest_parse_aff() are
-> essentially similar, so I wonder if it's worth consolidating them, as
-> below.  It doesn't reduce the number of lines of code, but maybe it's
-> simpler for the reader?
+It turns out that some BIOSes don't report wakeup GPEs through
+_PRW, but use them for signaling wakeup anyway, which causes GPE
+storms to occur on some systems after resume from system suspend.
+This issue has been uncovered by commit d2e5f0c16ad6 (ACPI / PCI:
+Rework the setup and cleanup of device wakeup) during the 3.9
+development cycle.
 
+Work around the problem by installing wakeup notify handlers for all
+PCI devices with ACPI support (i.e. having ACPI companions) regardless
+of whether or not the BIOS reports ACPI wakeup support for them.  The
+presence of the wakeup notify handlers alone is not harmful in any
+way if there are no events for them to handle (they are simply never
+executed then), but on some systems they are needed to take care of
+spurious events.
 
-Hi Bjorn,
+Fixes: d2e5f0c16ad6 (ACPI / PCI: Rework the setup and cleanup of device wakeup)
+References: https://bugzilla.kernel.org/show_bug.cgi?id=63021
+Reported-and-tested-by: Agustin Barto <abarto@gmail.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-acpi.c |   21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-That is a nice cleanup. I tested it on my firmware first system. 
-
-Also, I double checked back through the ACPI spec, and there are
-FIRMWARE_FIRST flags in the IA-32 Architecture Machine Check Exception
-and IA-32 Architecture Corrected Machine Check error sources too. These
-functions we are changing are specifically looking just for the AER
-error sources. That is correct because AER firmware first is separate
-from MCE/CMC firmware first. So, this patch looks good. 
-
--Betty
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -325,29 +325,32 @@ static struct acpi_device *acpi_pci_find
+ static void pci_acpi_setup(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	acpi_handle handle = ACPI_HANDLE(dev);
+-	struct acpi_device *adev;
++	struct acpi_device *adev = ACPI_COMPANION(dev);
+ 
+-	if (acpi_bus_get_device(handle, &adev) || !adev->wakeup.flags.valid)
++	if (!adev)
++		return;
++
++	pci_acpi_add_pm_notifier(adev, pci_dev);
++	if (!adev->wakeup.flags.valid)
+ 		return;
+ 
+ 	device_set_wakeup_capable(dev, true);
+ 	acpi_pci_sleep_wake(pci_dev, false);
+-
+-	pci_acpi_add_pm_notifier(adev, pci_dev);
+ 	if (adev->wakeup.flags.run_wake)
+ 		device_set_run_wake(dev, true);
+ }
+ 
+ static void pci_acpi_cleanup(struct device *dev)
+ {
+-	acpi_handle handle = ACPI_HANDLE(dev);
+-	struct acpi_device *adev;
++	struct acpi_device *adev = ACPI_COMPANION(dev);
++
++	if (!adev)
++		return;
+ 
+-	if (!acpi_bus_get_device(handle, &adev) && adev->wakeup.flags.valid) {
++	pci_acpi_remove_pm_notifier(adev);
++	if (adev->wakeup.flags.valid) {
+ 		device_set_wakeup_capable(dev, false);
+ 		device_set_run_wake(dev, false);
+-		pci_acpi_remove_pm_notifier(adev);
+ 	}
+ }
+ 
 
