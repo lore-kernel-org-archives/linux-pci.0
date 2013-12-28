@@ -1,289 +1,168 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:36357 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751387Ab3LKRdG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 12:33:06 -0500
-Message-ID: <52A8A1CA.6000407@infradead.org>
-Date: Wed, 11 Dec 2013 09:32:58 -0800
-From: Randy Dunlap <rdunlap@infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>
+Subject: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to avoid sysfs warnings
+Date: Sun, 29 Dec 2013 00:20:22 +0100
+Message-ID: <37552283.kG1L4S8Daa@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Jagannadha Sutradharudu Teki
-	<jagannadha.sutradharudu-teki@xilinx.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
-Subject: Re: [PATCH 2/2] Documentation: pci: Add pcie-howto.txt
-References: <1386753319-21500-1-git-send-email-jaganna@xilinx.com> <9e43a9a6-9883-45c5-aaf1-432ac06c7dce@AM1EHSMHS017.ehs.local>
-In-Reply-To: <9e43a9a6-9883-45c5-aaf1-432ac06c7dce@AM1EHSMHS017.ehs.local>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/11/13 01:15, Jagannadha Sutradharudu Teki wrote:
-> Added pcie-howto.txt for describing the information
-> on PCI Express basics and Root Complex driver.
-> 
-> Signed-off-by: Jagannadha Sutradharudu Teki <jaganna@xilinx.com>
-> ---
->  Documentation/PCI/00-INDEX       |   2 +
->  Documentation/PCI/pcie-howto.txt | 184 +++++++++++++++++++++++++++++++++++++++
->  2 files changed, 186 insertions(+)
->  create mode 100644 Documentation/PCI/pcie-howto.txt
-> 
-> diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-> index b8b7721..d61e7b9 100644
-> --- a/Documentation/PCI/00-INDEX
-> +++ b/Documentation/PCI/00-INDEX
-> @@ -6,6 +6,8 @@ pci-error-recovery.txt
->  	- Info on PCI error recovery
->  MSI-HOWTO.txt
->  	- The Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ
-> +pcie-howto.txt
-> +	- A guide describing the PCI Express basics and Root Complex driver
->  pcie-portbus-howto.txt
->  	- A guide describing the PCI Express Port Bus driver
->  pcie-aer-howto.txt
-> diff --git a/Documentation/PCI/pcie-howto.txt b/Documentation/PCI/pcie-howto.txt
-> new file mode 100644
-> index 0000000..963cb75
-> --- /dev/null
-> +++ b/Documentation/PCI/pcie-howto.txt
-> @@ -0,0 +1,184 @@
-> +	PCI Express HOWTO
-> +	Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
-> +	05/12/2013
-> +
-> +1. About this guide
-> +
-> +This guide describes the basics of the PCI Express and provides
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-                                              Express bus and
+The device_del(&host_bridge->dev) in pci_stop_root_bus() is
+problematic, because it causes all sysfs directories below
+the host bridge to be removed recursively and when
+pci_remove_root_bus() attempts to remove devices on the root
+bus (whose sysfs directories are gone now along with all their
+subdirectories), it causes warnings similar to this one to be
+printed:
 
-> +information on how Linux PCIe subsystem looks like and at last
+WARNING: CPU: 0 PID: 6 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
+sysfs group ffffffff819ac5c0 not found for kobject '0001:ff:10.2'
+Modules linked in: <irrelevant list>
+CPU: 0 PID: 6 Comm: kworker/u512:0 Tainted: G        W    3.13.0-rc5+ #11
+Hardware name:
+Workqueue: kacpi_hotplug acpi_hotplug_work_fn
+ 0000000000000009 ffff8808738d3bd8 ffffffff815d84ea ffff8808738d3c20
+ ffff8808738d3c10 ffffffff8106594d 0000000000000000 ffffffff819ac5c0
+ ffff880871b9d0a8 ffff8a07d1895000 0000000000000103 ffff8808738d3c70
+Call Trace:
+ [<ffffffff815d84ea>] dump_stack+0x45/0x56
+ [<ffffffff8106594d>] warn_slowpath_common+0x7d/0xa0
+ [<ffffffff810659bc>] warn_slowpath_fmt+0x4c/0x50
+ [<ffffffff8122b52e>] ? sysfs_get_dirent_ns+0x4e/0x70
+ [<ffffffff8122c806>] sysfs_remove_group+0xc6/0xd0
+ [<ffffffff813b83f3>] dpm_sysfs_remove+0x43/0x50
+ [<ffffffff813ae105>] device_del+0x45/0x1c0
+ [<ffffffff812e51f6>] pci_remove_bus_device+0x66/0xd0
+ [<ffffffff812e5363>] pci_remove_root_bus+0x73/0x80
+ [<ffffffff813276ab>] acpi_pci_root_remove+0x42/0x4f
+ [<ffffffff81323070>] acpi_bus_trim+0x56/0x89
+ [<ffffffff81323052>] acpi_bus_trim+0x38/0x89
+ [<ffffffff813245df>] acpi_device_hotplug+0x137/0x33b
+ [<ffffffff8131efba>] acpi_hotplug_work_fn+0x1c/0x27
+ [<ffffffff81080f1b>] process_one_work+0x17b/0x460
+ [<ffffffff81081ccb>] worker_thread+0x11b/0x400
+ [<ffffffff81081bb0>] ? rescuer_thread+0x3e0/0x3e0
+ [<ffffffff81088a12>] kthread+0xd2/0xf0
+ [<ffffffff81088940>] ? kthread_create_on_node+0x180/0x180
+ [<ffffffff815e823c>] ret_from_fork+0x7c/0xb0
+ [<ffffffff81088940>] ? kthread_create_on_node+0x180/0x180
 
-                  what the Linux                      and ends
+To avoid that, the host bridge device has to be deleted after all of
+its children, so merge pci_stop_root_bus() and pci_remove_root_bus()
+into one function, pci_stop_and_remove_root_bus(), that first will
+use pci_stop_and_remove_bus_device() to stop and remove all devices
+on the root bus and then will delete the host bridge device, remove
+its bus and drop the final reference to it.
 
-> +with brief description of PCI Host controller/Root complex driver
+Reported-by: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-   with a brief
+Hi,
 
-> +along with some sample code.
-> +
-> +2. Basic terminology and conventions
-> +
-> +PCI Express is
-> +- A high performance, IO interconnect for peripherals.
+I can't really test this patch, but I don't know how it can break anything.
 
-                       ^drop comma
+The only user of pci_stop_root_bus() and pci_remove_root_bus() is
+acpi_pci_root_remove() and the code ordering there seems to be somewhat
+arbitrary.  If you are aware of any reason why it may not work, please let
+me know. :-)
 
-> +- Low hardware design overhead compared to PCI, as it uses less pins.
-> +- A serial point-to-point interconnect between two devices.
-> +- Implements packet based protocol for data transfer.
+Thanks,
+Rafael
 
-                packet-based
+---
+ drivers/acpi/pci_root.c |    4 +---
+ drivers/pci/remove.c    |   23 ++++-------------------
+ include/linux/pci.h     |    3 +--
+ 3 files changed, 6 insertions(+), 24 deletions(-)
 
-> +- Supports features like Advanced power management, Advanced error
-> +  reporting facility, and hot-plug.
-> +					_________
-> +				       |	 |
-> +				       |   CPU   |
-> +				       |_________|
-> +					    |
-> +   			 ___________________|___________________________
-> +			|						| 	  ________
-> +   			|		ROOT COMPLEX			|        |	  |
-> +			|						|--------| Memory |
-> +			|   Switch Port			Root port	|	 |________|
-> +			|_______________________________________________|
-> +					    |				  PCIe Bus0
-> +		____________________________|______________________________________
-> +				|		|		  |
-> +	      ____	  ______|______		|	      ____|____
-> +	     |	  |	 /	       \      __|__	     |	       |
-> +	     | EP |-----|    SWITCH	|    |     |	     | BRIDGE  |
-> +	     |____|	 \_____________/     | EP  |	     | PCIe -  |
-> +			    |	    | 	     |_____|         | PCI/PCIe|
-> +			  __|__   __|__ 		     |_________|
-> +			 |     | |     |			  |	  PCIe Bus1
-> +			 | EP  | | EP  | 		__________|________________
-> +			 |_____| |_____| 		    |		  |
-> +							  __|__		__|__
-> +							 |     |       |     |
-> +							 | EP  |       | EP  |
-> +							 |_____|       |_____|
-> +
-> +Root Complex (RC)
-> +Connects the CPU and memory subsystem to the PCIe fabric (A topology comprised of PCIe
-> +nodes like Root Complex, Endpoint, Bridge or a Switch)
-> +
-> +Port
-> +Interface between a PCIe component and the Link.
-> +
-> +Link
-> +PCIe interconnect is referred as a Link, and connects two devices.
-> +
-> +Lane
-> +A PCIe link consists of either 1, 2, 4, 8, 12, 16 or 32 signals in each direction
-> +(each signal needs two wires - one for Tx and other for Rx). these signals are
+Index: linux-pm/drivers/acpi/pci_root.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_root.c
++++ linux-pm/drivers/acpi/pci_root.c
+@@ -611,12 +611,10 @@ static void acpi_pci_root_remove(struct
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 
+-	pci_stop_root_bus(root->bus);
+-
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
+-	pci_remove_root_bus(root->bus);
++	pci_stop_and_remove_root_bus(root->bus);
+ 
+ 	kfree(root);
+ }
+Index: linux-pm/drivers/pci/remove.c
+===================================================================
+--- linux-pm.orig/drivers/pci/remove.c
++++ linux-pm/drivers/pci/remove.c
+@@ -114,7 +114,7 @@ void pci_stop_and_remove_bus_device(stru
+ }
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+ 
+-void pci_stop_root_bus(struct pci_bus *bus)
++void pci_stop_and_remove_root_bus(struct pci_bus *bus)
+ {
+ 	struct pci_dev *child, *tmp;
+ 	struct pci_host_bridge *host_bridge;
+@@ -123,29 +123,14 @@ void pci_stop_root_bus(struct pci_bus *b
+ 		return;
+ 
+ 	host_bridge = to_pci_host_bridge(bus->bridge);
+-	list_for_each_entry_safe_reverse(child, tmp,
+-					 &bus->devices, bus_list)
+-		pci_stop_bus_device(child);
++	list_for_each_entry_safe_reverse(child, tmp, &bus->devices, bus_list)
++		pci_stop_and_remove_bus_device(child);
+ 
+ 	/* stop the host bridge */
+ 	device_del(&host_bridge->dev);
+-}
+-
+-void pci_remove_root_bus(struct pci_bus *bus)
+-{
+-	struct pci_dev *child, *tmp;
+-	struct pci_host_bridge *host_bridge;
+-
+-	if (!pci_is_root_bus(bus))
+-		return;
+-
+-	host_bridge = to_pci_host_bridge(bus->bridge);
+-	list_for_each_entry_safe(child, tmp,
+-				 &bus->devices, bus_list)
+-		pci_remove_bus_device(child);
++	/* remove the root bus */
+ 	pci_remove_bus(bus);
+ 	host_bridge->bus = NULL;
+-
+ 	/* remove the host bridge */
+ 	put_device(&host_bridge->dev);
+ }
+Index: linux-pm/include/linux/pci.h
+===================================================================
+--- linux-pm.orig/include/linux/pci.h
++++ linux-pm/include/linux/pci.h
+@@ -779,8 +779,7 @@ struct pci_dev *pci_dev_get(struct pci_d
+ void pci_dev_put(struct pci_dev *dev);
+ void pci_remove_bus(struct pci_bus *b);
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+-void pci_stop_root_bus(struct pci_bus *bus);
+-void pci_remove_root_bus(struct pci_bus *bus);
++void pci_stop_and_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
 
-                                                                These
-
-> +referred to as Lanes.
-> +
-> +Upstream Port
-> +Port that points in the direction of RC.
-> +
-> +Downstream Port
-> +Port the points away from the RC.
-
-        that
-
-> +
-> +Root Port
-> +Whose upstream port is RC and dowstream port should be a EP or Bridge.
-
-                                                          an
-
-> +
-> +Switch Port
-> +Whose upstream port is RC and dowstream port is always be a switch.
-
-                                                   always a switch.
-
-> +
-> +Endpoint (EP)
-> +Devices other than RC, Switches and Bridges which either generates or terminates a PCIe
-
-                                                            generate or terminate
-
-> +transaction. These are peripheral devices such as Ethernet, USB and graphics devices.
-> +
-> +Switch
-> +PCIe device single upstream port as RC and multiple downstream ports as EP's,
-> +Switches or Bridges.
-> +
-> +Bridge
-> +Is for extending PCIe Bus segment - whose downstream port points to one more PCIe bus.
-> +
-> +3. Linux PCIe Subsystem
-> +
-> +					  ifconfig	open()/close/read()/write()	   /proc, /sys
-> +					      ^		     ^		   ^			^
-> +					      |		     |		   |			|
-> +					      |		     |		   |			|
-> +  					      |              |		   |			V
-> +					      |		     |		   |		PCIe Port Bus services
-> +					      |		     |		   |		(AER, HP, PME, VC
-> +					      |		     |		   |		 drivers/pci/pcie/
-> +					      |		     |		   |		 drivers/pci/hotplug)
-> +					      V		     V		   V			^
-> +					    Socket 	    Block	 Char		        |
-> +					    layer	 Subsystem	Subsystem		|
-> +					      ^		     ^		   ^			| pcie_port_service_register()
-> +					      |		     |		   |			|
-> +					      |		     |		   |			|
-> +					      V		     V		   V			V
-> +					 Common net	    USB		 Input		  PCIe Port Core
-> +					 device layer       Core	 Core    (drivers/pci/pcie/portdrv_core.c)
-> +					      ^		     ^		   ^			^
-> +					      |		     |		   |			| pcie_port_bus_register()
-> +					      |		     |		   |			|
-> +					 _____V_____	 ____V____     ____V_____      _________V___________
-> +					|	    |	|         |   |		 |    | 		    |
-> +			All these are	| GEM 	    |	| USB HC  |   | Mouse/KB/|    | PCIe Port Bus driver|
-> +			PCI endpoint	| Controller|	| driver  |   | TS HC	 |    | (drivers/pci/pcie/  |
-> +			drivers		| driver    |	|	  |   |	driver	 |    |	 portdrv_pci.c)     |
-> +					|___________|	|_________|   |__________|    |_____________________|
-> +					      ^	             ^             ^			^
-> +					      |__________    |		   |	       _________|
-> +							 |   |		   |	      |		 pci_register_driver()
-> +	     ___________________  pci_bus_*()	       __V___V_____________V__________V______
-> +	    |			| pci_scan_root_bus() |					     |
-> +	    |	  PCI BIOS	|-------------------->|     	     PCI Core		     |
-> +            | (arch/arm/kernel/ |<--------------------|          (drivers/pci/pci*	     |
-> +      ----->|        bios32.c))	|<---     pcibios_*() |           drivers/pci/bus.c)	     |
-> +      |     |___________________|   |		      |______________________________________|
-> +      |		     ^		    |
-> +      |		     |		    | pci_common_init_dev()
-> +      |		     |		    |
-> +  ____V___	 ____V___	 ___V____
-> + | 	  |     |	 |	|	 |
-> + | Renesas|	| Tergra |	| Exynos |
-
-                  Tegra
-
-> + | PCI HC | 	| PCIe HC|	| PCIe HC| drivers/pci/host/
-> + | driver |	| driver |	| driver | All these are
-> + |________|	|________|	|________| PCI Root Complex drivers
-> +     |		    |		    |
-> +     |		    |		    |
-> +     V		    V		    V
-> +         platform_driver_register()
-> +
-> +Note:
-> +Linux PCI subsystem is like above one without have a PCIe port bus stack.
-
-                                                 having
-
-> +For more details abou this block see http://jagannadhteki.blog.com/2013/12/04/linux-pcie-subsystem/
-
-                    about
-
-> +
-> +PCI HC/RC driver
-> +- Low level initialization and configuration (board, soc)
-
-                                                        SOC or SoC, please
-
-> +- Invokes PCI-BIOS - for bus enumerations so-that the endpoints on bus is ready.
-
-                                             so that                      are
-
-> +- Supplies struct pci_ops to read/write config space.
-> +- Setup the resources like bus numbers, memory/IO space, Interrupt numbers, MSI.
-> +- Register PCI-BIOS as pci_common_init_dev()
-> +
-> +PCI BIOS
-> +- Architecture specific PCI
-> +- Bus enumeration - Lane, Bus, Device, Memory, Interrupt.
-> +- Enumeration ends up with scanning all endpoints on bus got discovered.
-
-                                                            ^^^ confusing
-
-> +- Register to PCI core for common accessing of endpoint drivers.
-> +- pci_scan_root_bus() and pci_bus_*()
-> +
-> +PCI Core
-> +- Provides services to Lower level BIOS and Upper level endpoint layers.
-> +- Creates device entries for proc/sysfs information.
-> +- Linux kernel pci bus and driver management code.
-
-                  PCI
-
-> +- Provides set of abstraction functions that endpoint drivers can used to
-
-                                                                     use
-
-> +  initiate pci communication with attached endpoints.
-
-              PCI
-
-> +- Calls BIOS codes with pcibios_*
-> +
-> +PCI Endpoint driver
-> +- Individual endpoint drivers from upper layer.
-> +- Accessing config space upon respective endpoint enumeration done.
-> +- Communicate over the endpoint for Tx/Rx transactions.
-> +- Register to PCI core as pci_driver_register()
-> +
-> +PCIe Port Bus driver
-> +- A logical PCI-PCI Bridge structure.
-> +- Root Port and the Switch Port.
-> +- See Documentation/PCI/pcie-busport-howto.txt
-                                ~~~~~~~
-                                portbus
-
-
--- 
-~Randy
