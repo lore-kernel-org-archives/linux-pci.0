@@ -1,132 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:55423 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774Ab3LLMWt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 07:22:49 -0500
-From: Marek Vasut <marex@denx.de>
-To: Tim Harvey <tharvey@gateworks.com>
-Subject: Re: [PATCH 1/7] PCI: imx6: Make reset-gpio optional
-Date: Thu, 12 Dec 2013 11:22:33 +0100
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-References: <1386757818-5154-1-git-send-email-marex@denx.de> <CAJ+vNU38oofeUjJ2s1J-2JNC+UM0MsET3EaGvDaGF9URS_efTA@mail.gmail.com>
-In-Reply-To: <CAJ+vNU38oofeUjJ2s1J-2JNC+UM0MsET3EaGvDaGF9URS_efTA@mail.gmail.com>
+Received: from mantis.wzyboy.im ([199.83.51.51]:51454 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752892Ab3L1J5z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 28 Dec 2013 04:57:55 -0500
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201312121122.33746.marex@denx.de>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Sat, 28 Dec 2013 17:57:39 +0800
+Message-ID: <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 12, 2013 at 06:10:31 AM, Tim Harvey wrote:
-> On Wed, Dec 11, 2013 at 2:30 AM, Marek Vasut <marex@denx.de> wrote:
-> > Some boards do not have a PCIe reset GPIO. To avoid probe
-> > failure on these boards, make the reset GPIO optional as
-> > well.
-> > 
-> > Signed-off-by: Marek Vasut <marex@denx.de>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Frank Li <lznuaa@gmail.com>
-> > Cc: Harro Haan <hrhaan@gmail.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-> > Cc: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Richard Zhu <r65037@freescale.com>
-> > Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> > Cc: Sean Cross <xobs@kosagi.com>
-> > Cc: Shawn Guo <shawn.guo@linaro.org>
-> > Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-> > Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-> > Cc: Tim Harvey <tharvey@gateworks.com>
-> > Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-> > Cc: Yinghai Lu <yinghai@kernel.org>
-> > ---
-> > 
-> >  .../devicetree/bindings/pci/designware-pcie.txt    |  2 +-
-> >  drivers/pci/host/pci-imx6.c                        | 29
-> >  +++++++++++----------- 2 files changed, 16 insertions(+), 15
-> >  deletions(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> > b/Documentation/devicetree/bindings/pci/designware-pcie.txt index
-> > d5d26d4..b7a2279 100644
-> > --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> > +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> > 
-> > @@ -19,9 +19,9 @@ Required properties:
-> >         to define the mapping of the PCIe interface to interrupt
-> >         numbers.
-> >  
-> >  - num-lanes: number of lanes to use
-> > 
-> > -- reset-gpio: gpio pin number of power good signal
-> > 
-> >  Optional properties for fsl,imx6q-pcie
-> > 
-> > +- reset-gpio: gpio pin number of power good signal
-> > 
-> >  - power-on-gpio: gpio pin number of power-enable signal
-> >  - wake-up-gpio: gpio pin number of incoming wakeup signal
-> >  - disable-gpio: gpio pin number of outgoing rfkill/endpoint disable
-> >  signal
-> > 
-> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > index bd70af8..52027ad 100644
-> > --- a/drivers/pci/host/pci-imx6.c
-> > +++ b/drivers/pci/host/pci-imx6.c
-> > @@ -214,9 +214,12 @@ static int imx6_pcie_assert_core_reset(struct
-> > pcie_port *pp)
-> > 
-> >         regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-> >         
-> >                         IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-> > 
-> > -       gpio_set_value(imx6_pcie->reset_gpio, 0);
-> > -       msleep(100);
-> > -       gpio_set_value(imx6_pcie->reset_gpio, 1);
-> > +       /* Some boards don't have PCIe reset GPIO. */
-> > +       if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> > +               gpio_set_value(imx6_pcie->reset_gpio, 0);
-> > +               msleep(100);
-> > +               gpio_set_value(imx6_pcie->reset_gpio, 1);
-> > +       }
-> > 
-> >         return 0;
-> >  
-> >  }
-> 
-> Marek,
-> 
-> Though not the fault of your patch, I noticed while looking at this
-> that the PCI Express specification is not being properly met with
-> regards to PERST# and the reference clock.  The spec states that
-> PERST# must be kept asserted until after the reference clock is stable
-> (I'm not entirely clear how long of a delay is needed for the clock to
-> become stable but I think the value is typically the 100ms).  I see in
-> the current pci-imx6.c code that imx6_pcie_host_init calls
-> imx6_pcie_assert_core_reset first, then imx6_pcie_init_phy, followed
-> by imx6_pcie_deassert_core_reset.  Despite the function names,
-> imx6_pcie_assert_core_reset as shown above asserts then de-asserts
-> PERST# before the clock is enabled in imx6_pcie_deassert_core_reset.
-> This seems to me to be a violation of the spec and I believe the
-> msleep(100) and de-assertion of the option reset_gpio should be done
-> in imx6_pcie_deassert_core reset after the clock is brought up.
-> 
-> If you agree with my assessment, would you mind resolving this issue
-> at the same time?  If not, I'm happy to follow-up with a patch to
-> resolve it after your patch is accepted.
+(Sorry for sending this mail multiple times...)
 
-Is this not resolved by patch 0006 in this series please?
+Hi,
+
+yesterday a friend of mine told me that one can now install Windows
+8/8.1 on a USB device natively. So I tried this so-called "Windows To
+Go" technology.
+
+Now I have successfully deployed a Windows 8.1 installation on my
+external USB HDD and booted my laptop up with it. That is to say, I
+can now observe how Intel 7260 acts under Windows.
+
+Could you tell me what should I do to gather debugging information
+such as L1 mode etc in Windows? I will send them to you then. Maybe
+this could help, to figure out what the bug of iwlwifi is.
+
+-- 
+wzyboy
