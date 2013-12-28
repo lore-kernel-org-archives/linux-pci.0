@@ -1,119 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com
-Subject: [PATCH 1/6] Crashdump-Accepting-Active-IOMMU-Flags-and-Prototypes
-Date: Tue,  3 Dec 2013 12:41:29 -0700
-Message-Id: <1386099694-4190-2-git-send-email-bill.sumner@hp.com>
-In-Reply-To: <1386099694-4190-1-git-send-email-bill.sumner@hp.com>
-References: <Crashdump-Accepting-Active-IOMMU>
- <1386099694-4190-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Mike Lothian <mike@fireburn.co.uk>, madcatx@atlas.cz,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>
+Subject: [PATCH] ACPIPHP / radeon: Fix VGA switcheroo problem related to hotplug events
+Date: Sat, 28 Dec 2013 23:13:39 +0100
+Message-ID: <10163453.2AxBLHI1XI@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Bill Sumner <bill.sumner@hp.com>
+The changes in the ACPI-based PCI hotplug (ACPIPHP) subsystem made
+during the 3.12 development cycle uncovered a problem with VGA
+switcheroo that on some systems, when the device-specific method
+(ATPX in the radeon case) is used to turn off the discrete
+graphics, the BIOS generates ACPI hotplug events for that device and
+those events cause ACPIPHP to attempt to remove the device from the
+system (they are events for a device that was present previously and
+is not present any more, so that's what should be done according to
+the spec).  Then, the system stops functioning correctly.
+
+Since the hotplug events in question were simply silently ignored
+previously, the least intrusive way to address that problem is to
+make ACPIPHP ignore them again.  For this purpose, introduce a new
+ACPI device flag, no_hotplug, and modify ACPIPHP to ignore hotplug
+events for PCI devices whose ACPI companions have that flag set.
+Next, make the radeon switcheroo detection code set the no_hotplug
+flag for the discrete graphics' ACPI companion.
+
+References: https://bugzilla.kernel.org/show_bug.cgi?id=61891
+Fixes: bbd34fcdd1b2 (ACPI / hotplug / PCI: Register all devices under the given bridge)
+Reported-and-tested-by: Mike Lothian <mike@fireburn.co.uk>
+Reported-and-tested-by: <madcatx@atlas.cz>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Alex Deucher <alexdeucher@gmail.com>
+Cc: Dave Airlie <airlied@linux.ie>
+Cc: Takashi Iwai <tiwai@suse.de>
 ---
- drivers/iommu/intel-iommu.c | 75 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 75 insertions(+)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 15e9b57..a0e8a76 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -48,6 +48,7 @@
+Hi All,
+
+I have an analogous change for nouveau in the works and if that really turns
+out to be the same issue, I'll just add the nouveau changes to this patch
+and resend.
+
+Thanks,
+Rafael
+
+---
+ drivers/gpu/drm/radeon/radeon_atpx_handler.c |   20 ++++++++++++++++++--
+ drivers/pci/hotplug/acpiphp_glue.c           |   26 +++++++++++++++++++++++---
+ include/acpi/acpi_bus.h                      |    3 ++-
+ 3 files changed, 43 insertions(+), 6 deletions(-)
+
+Index: linux-pm/drivers/gpu/drm/radeon/radeon_atpx_handler.c
+===================================================================
+--- linux-pm.orig/drivers/gpu/drm/radeon/radeon_atpx_handler.c
++++ linux-pm/drivers/gpu/drm/radeon/radeon_atpx_handler.c
+@@ -33,6 +33,7 @@ static struct radeon_atpx_priv {
+ 	bool atpx_detected;
+ 	/* handle for device - and atpx */
+ 	acpi_handle dhandle;
++	acpi_handle other_handle;
+ 	struct radeon_atpx atpx;
+ } radeon_atpx_priv;
  
- #include "irq_remapping.h"
- #include "pci.h"
-+#include <linux/crash_dump.h>
+@@ -451,9 +452,10 @@ static bool radeon_atpx_pci_probe_handle
+ 		return false;
  
- #define ROOT_SIZE		VTD_PAGE_SIZE
- #define CONTEXT_SIZE		VTD_PAGE_SIZE
-@@ -164,6 +165,80 @@ static inline unsigned long virt_to_dma_pfn(void *p)
- 	return page_to_dma_pfn(virt_to_page(p));
+ 	status = acpi_get_handle(dhandle, "ATPX", &atpx_handle);
+-	if (ACPI_FAILURE(status))
++	if (ACPI_FAILURE(status)) {
++		radeon_atpx_priv.other_handle = dhandle;
+ 		return false;
+-
++	}
+ 	radeon_atpx_priv.dhandle = dhandle;
+ 	radeon_atpx_priv.atpx.handle = atpx_handle;
+ 	return true;
+@@ -526,10 +528,24 @@ static bool radeon_atpx_detect(void)
+ 	}
+ 
+ 	if (has_atpx && vga_count == 2) {
++		struct acpi_device *adev = NULL;
++
+ 		acpi_get_name(radeon_atpx_priv.atpx.handle, ACPI_FULL_PATHNAME, &buffer);
+ 		printk(KERN_INFO "VGA switcheroo: detected switching method %s handle\n",
+ 		       acpi_method_name);
+ 		radeon_atpx_priv.atpx_detected = true;
++		/*
++		 * On some systems hotplug events are generated for the device
++		 * being switched off when ATPX is executed.  They cause ACPI
++		 * hotplug to trigger and attempt to remove the device from
++		 * the system, which causes it to break down.  Prevent that from
++		 * happening by setting the no_hotplug flag for the ACPI device
++		 * object in question.
++		 */
++		acpi_bus_get_device(radeon_atpx_priv.other_handle, &adev);
++		if (adev)
++			adev->flags.no_hotplug = true;
++
+ 		return true;
+ 	}
+ 	return false;
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -169,7 +169,8 @@ struct acpi_device_flags {
+ 	u32 ejectable:1;
+ 	u32 power_manageable:1;
+ 	u32 match_driver:1;
+-	u32 reserved:27;
++	u32 no_hotplug:1;
++	u32 reserved:26;
+ };
+ 
+ /* File System */
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -643,6 +643,24 @@ static void disable_slot(struct acpiphp_
+ 	slot->flags &= (~SLOT_ENABLED);
  }
  
-+#ifdef CONFIG_CRASH_DUMP
-+/* ===================================================================
-+ * Crashdump Accepting Active IOMMU
-+ * Enhances the crashdump kernel to deal with an active iommu
-+ * and legacy DMA from the (old) panic'd kernel in a manner similar to how
-+ * legacy DMA is handled when no hardware iommu was in use by the old kernel --
-+ * allow the legacy DMA to continue into its current buffers.
-+ *
-+ * This code:
-+ * 1. accepts the iommu hardware in an active state from the old kernel,
-+ * 2. leaves the current translations in-place so that legacy DMA will
-+ *    continue to use its current buffers,
-+ * 3. allocates to the device drivers in the crashdump kernel
-+ *    portions of the iova address ranges that are different
-+ *    from the iova address ranges that were being used by the old kernel
-+ *    at the time of the panic.
-+ * -------------------------------------------------------------------
-+ */
++static bool acpiphp_no_hotplug(acpi_handle handle)
++{
++	struct acpi_device *adev = NULL;
 +
-+/* Flags for Crashdump Accepting Active IOMMU */
++	acpi_bus_get_device(handle, &adev);
++	return adev && adev->flags.no_hotplug;
++}
 +
-+static int crashdump_accepting_active_iommu;	/* activate this feature */
-+static int intel_iommu_translation_tables_are_mapped;	/* table copy done */
++static bool slot_no_hotplug(struct acpiphp_slot *slot)
++{
++	struct acpiphp_func *func;
 +
-+static struct {				/* run-time pr_debug() flags */
-+	unsigned in_crashdump:1;	/* if crashdump_accepting_active_iommu */
-+	unsigned domain_get:1;		/* pr_debug in domain_get* functions */
-+	unsigned copy_page_table:1;	/* enter/leave copy_page_table() */
-+	unsigned copy_page_addr:1;	/* enter/leave copy_page_addr() */
-+	unsigned addr_ranges:1;		/* accumulated addr ranges */
-+	unsigned reserved_ranges:1;	/* accumulated addr ranges reserved */
-+	unsigned page_addr:1;		/* adr(each page table) */
-+	unsigned enter_oldcopy:1;	/* enter oldcopy() parameters */
-+	unsigned leave_oldcopy:1;	/* leave oldcopy() parameters */
-+} pr_dbg  = {				/* Enable flags below here */
-+	.in_crashdump = 1,
-+	.domain_get = 1,
-+	.copy_page_table = 1,
-+	.copy_page_addr = 0,
-+	.addr_ranges = 0,
-+	.reserved_ranges = 0,
-+	.page_addr = 0,
-+	.enter_oldcopy = 0,
-+	.leave_oldcopy = 0,
-+};
++	list_for_each_entry(func, &slot->funcs, sibling)
++		if (acpiphp_no_hotplug(func_to_handle(func)))
++			return true;
 +
-+/* Prototypes of interface functions for Crashdump Accepting Active IOMMU */
-+
-+static int
-+copy_intel_iommu_translation_tables(struct dmar_drhd_unit *drhd,
-+	struct root_entry **root_old_p, struct root_entry **root_new_p);
-+
-+static int
-+domain_get_did_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
-+
-+static int
-+domain_get_gaw_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
-+
-+static u64
-+domain_get_pgd_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
-+
-+static void
-+domain_get_ranges_from_old_kernel(struct dmar_domain *domain,
-+		  struct intel_iommu *iommu, struct pci_dev *pdev);
-+static int
-+intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
-+
-+/* Debug-print functions for  Crashdump Accepting Active IOMMU */
-+
-+static void
-+print_intel_iommu_registers(struct dmar_drhd_unit *drhd);
-+#endif	/* CONFIG_CRASH_DUMP */
-+
-+
- /* global iommu list, set NULL for ignored DMAR units */
- static struct intel_iommu **g_iommus;
++	return false;
++}
  
--- 
-Bill Sumner <bill.sumner@hp.com>
+ /**
+  * get_slot_status - get ACPI slot status
+@@ -701,7 +719,8 @@ static void trim_stale_devices(struct pc
+ 		unsigned long long sta;
+ 
+ 		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
+-		alive = ACPI_SUCCESS(status) && sta == ACPI_STA_ALL;
++		alive = (ACPI_SUCCESS(status) && sta == ACPI_STA_ALL)
++			|| acpiphp_no_hotplug(handle);
+ 	}
+ 	if (!alive) {
+ 		u32 v;
+@@ -741,8 +760,9 @@ static void acpiphp_check_bridge(struct
+ 		struct pci_dev *dev, *tmp;
+ 
+ 		mutex_lock(&slot->crit_sect);
+-		/* wake up all functions */
+-		if (get_slot_status(slot) == ACPI_STA_ALL) {
++		if (slot_no_hotplug(slot)) {
++			; /* do nothing */
++		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
+ 			/* remove stale devices if any */
+ 			list_for_each_entry_safe(dev, tmp, &bus->devices,
+ 						 bus_list)
 
