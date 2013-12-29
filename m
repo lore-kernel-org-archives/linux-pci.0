@@ -1,121 +1,235 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:51998 "EHLO
-	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750960Ab3LKJjp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Dec 2013 04:39:45 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	<spear-devel@list.st.com>
-Subject: [PATCH 03/12] SPEAr13xx: Add SPEAr1310 PCIe register definitions
-Date: Wed, 11 Dec 2013 15:08:28 +0530
-Message-ID: <3a008bd5223b1da9f17ceac745b3fc08b6b842e3.1386752447.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1386752447.git.mohit.kumar@st.com>
-References: <cover.1386752447.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Mike Lothian <mike@fireburn.co.uk>, madcatx@atlas.cz,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
+	=?ISO-8859-1?Q?Joaqu=EDn_Aramend=EDa?= <samsagax@gmail.com>
+Subject: [PATCH][update] ACPIPHP / radeon / nouveau: Fix VGA switcheroo problem related to hotplug events
+Date: Sun, 29 Dec 2013 22:36:56 +0100
+Message-ID: <3135179.iXEx1Rk87m@vostro.rjw.lan>
+In-Reply-To: <10163453.2AxBLHI1XI@vostro.rjw.lan>
+References: <10163453.2AxBLHI1XI@vostro.rjw.lan>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Add SPEAr1310 Misc register definitions for PCIe.
+The changes in the ACPI-based PCI hotplug (ACPIPHP) subsystem made
+during the 3.12 development cycle uncovered a problem with VGA
+switcheroo that on some systems, when the device-specific method
+(ATPX in the radeon case, _DSM in the nouveau case) is used to turn
+off the discrete graphics, the BIOS generates ACPI hotplug events for
+that device and those events cause ACPIPHP to attempt to remove the
+device from the system (they are events for a device that was present
+previously and is not present any more, so that's what should be done
+according to the spec).  Then, the system stops functioning correctly.
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Viresh Kumar <viresh.linux@gmail.com>
-Cc: spear-devel@list.st.com
-Cc: linux-arm-kernel@lists.infradead.org
+Since the hotplug events in question were simply silently ignored
+previously, the least intrusive way to address that problem is to
+make ACPIPHP ignore them again.  For this purpose, introduce a new
+ACPI device flag, no_hotplug, and modify ACPIPHP to ignore hotplug
+events for PCI devices whose ACPI companions have that flag set.
+Next, make the radeon and nouveau switcheroo detection code set the
+no_hotplug flag for the discrete graphics' ACPI companion.
+
+Fixes: bbd34fcdd1b2 (ACPI / hotplug / PCI: Register all devices under the given bridge)
+References: https://bugzilla.kernel.org/show_bug.cgi?id=61891
+References: https://bugzilla.kernel.org/show_bug.cgi?id=64891
+Reported-and-tested-by: Mike Lothian <mike@fireburn.co.uk>
+Reported-and-tested-by: <madcatx@atlas.cz>
+Reported-by: Joaquín Aramendía <samsagax@gmail.com>
+Cc: Alex Deucher <alexdeucher@gmail.com>
+Cc: Dave Airlie <airlied@linux.ie>
+Cc: Takashi Iwai <tiwai@suse.de>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: 3.12+ <stable@vger.kernel.org> # 3.12+
 ---
- arch/arm/mach-spear/include/mach/spear.h |   73 ++++++++++++++++++++++++++++++
- 1 files changed, 73 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm/mach-spear/include/mach/spear.h b/arch/arm/mach-spear/include/mach/spear.h
-index 4526f75..c236cef 100644
---- a/arch/arm/mach-spear/include/mach/spear.h
-+++ b/arch/arm/mach-spear/include/mach/spear.h
-@@ -140,6 +140,79 @@
- 			(SPEAR1340_MIPHY_OSC_BYPASS_EXT | \
- 			SPEAR1340_MIPHY_PLL_RATIO_TOP(25))
+Hi All,
+
+According to recent testing results, the nouveau part is needed to address
+that issue on systems with analogous layouts.
+
+Thanks,
+Rafael
+
+---
+ drivers/gpu/drm/nouveau/nouveau_acpi.c       |   20 ++++++++++++++++++--
+ drivers/gpu/drm/radeon/radeon_atpx_handler.c |   20 ++++++++++++++++++--
+ drivers/pci/hotplug/acpiphp_glue.c           |   26 +++++++++++++++++++++++---
+ include/acpi/acpi_bus.h                      |    3 ++-
+ 4 files changed, 61 insertions(+), 8 deletions(-)
+
+Index: linux-pm/drivers/gpu/drm/radeon/radeon_atpx_handler.c
+===================================================================
+--- linux-pm.orig/drivers/gpu/drm/radeon/radeon_atpx_handler.c
++++ linux-pm/drivers/gpu/drm/radeon/radeon_atpx_handler.c
+@@ -33,6 +33,7 @@ static struct radeon_atpx_priv {
+ 	bool atpx_detected;
+ 	/* handle for device - and atpx */
+ 	acpi_handle dhandle;
++	acpi_handle other_handle;
+ 	struct radeon_atpx atpx;
+ } radeon_atpx_priv;
  
-+#define VA_SPEAR1310_PCIE_SATA_CFG		(VA_MISC_BASE + 0x3A4)
-+	#define SPEAR1310_PCIE_SATA2_SEL_PCIE		(0 << 31)
-+	#define SPEAR1310_PCIE_SATA1_SEL_PCIE		(0 << 30)
-+	#define SPEAR1310_PCIE_SATA0_SEL_PCIE		(0 << 29)
-+	#define SPEAR1310_PCIE_SATA2_SEL_SATA		(1 << 31)
-+	#define SPEAR1310_PCIE_SATA1_SEL_SATA		(1 << 30)
-+	#define SPEAR1310_PCIE_SATA0_SEL_SATA		(1 << 29)
-+	#define SPEAR1310_SATA2_CFG_TX_CLK_EN		(1 << 27)
-+	#define SPEAR1310_SATA2_CFG_RX_CLK_EN		(1 << 26)
-+	#define SPEAR1310_SATA2_CFG_POWERUP_RESET	(1 << 25)
-+	#define SPEAR1310_SATA2_CFG_PM_CLK_EN		(1 << 24)
-+	#define SPEAR1310_SATA1_CFG_TX_CLK_EN		(1 << 23)
-+	#define SPEAR1310_SATA1_CFG_RX_CLK_EN		(1 << 22)
-+	#define SPEAR1310_SATA1_CFG_POWERUP_RESET	(1 << 21)
-+	#define SPEAR1310_SATA1_CFG_PM_CLK_EN		(1 << 20)
-+	#define SPEAR1310_SATA0_CFG_TX_CLK_EN		(1 << 19)
-+	#define SPEAR1310_SATA0_CFG_RX_CLK_EN		(1 << 18)
-+	#define SPEAR1310_SATA0_CFG_POWERUP_RESET	(1 << 17)
-+	#define SPEAR1310_SATA0_CFG_PM_CLK_EN		(1 << 16)
-+	#define SPEAR1310_PCIE2_CFG_DEVICE_PRESENT	(1 << 11)
-+	#define SPEAR1310_PCIE2_CFG_POWERUP_RESET	(1 << 10)
-+	#define SPEAR1310_PCIE2_CFG_CORE_CLK_EN		(1 << 9)
-+	#define SPEAR1310_PCIE2_CFG_AUX_CLK_EN		(1 << 8)
-+	#define SPEAR1310_PCIE1_CFG_DEVICE_PRESENT	(1 << 7)
-+	#define SPEAR1310_PCIE1_CFG_POWERUP_RESET	(1 << 6)
-+	#define SPEAR1310_PCIE1_CFG_CORE_CLK_EN		(1 << 5)
-+	#define SPEAR1310_PCIE1_CFG_AUX_CLK_EN		(1 << 4)
-+	#define SPEAR1310_PCIE0_CFG_DEVICE_PRESENT	(1 << 3)
-+	#define SPEAR1310_PCIE0_CFG_POWERUP_RESET	(1 << 2)
-+	#define SPEAR1310_PCIE0_CFG_CORE_CLK_EN		(1 << 1)
-+	#define SPEAR1310_PCIE0_CFG_AUX_CLK_EN		(1 << 0)
-+
-+	#define SPEAR1310_PCIE_CFG_MASK(x) ((0xF << (x * 4)) | (1 << (x + 29)))
-+	#define SPEAR1310_SATA_CFG_MASK(x) ((0xF << (x * 4 + 16)) | \
-+			(1 << (x + 29)))
-+	#define SPEAR1310_PCIE_CFG_VAL(x) \
-+			(SPEAR1310_PCIE_SATA##x##_SEL_PCIE | \
-+			SPEAR1310_PCIE##x##_CFG_AUX_CLK_EN | \
-+			SPEAR1310_PCIE##x##_CFG_CORE_CLK_EN | \
-+			SPEAR1310_PCIE##x##_CFG_POWERUP_RESET | \
-+			SPEAR1310_PCIE##x##_CFG_DEVICE_PRESENT)
-+	#define SPEAR1310_SATA_CFG_VAL(x) \
-+			(SPEAR1310_PCIE_SATA##x##_SEL_SATA | \
-+			SPEAR1310_SATA##x##_CFG_PM_CLK_EN | \
-+			SPEAR1310_SATA##x##_CFG_POWERUP_RESET | \
-+			SPEAR1310_SATA##x##_CFG_RX_CLK_EN | \
-+			SPEAR1310_SATA##x##_CFG_TX_CLK_EN)
-+
-+#define VA_SPEAR1310_PCIE_MIPHY_CFG_1		(VA_MISC_BASE + 0x3A8)
-+	#define SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT	(1 << 31)
-+	#define SPEAR1310_MIPHY_DUAL_CLK_REF_DIV2	(1 << 28)
-+	#define SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(x)	(x << 16)
-+	#define SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT	(1 << 15)
-+	#define SPEAR1310_MIPHY_SINGLE_CLK_REF_DIV2	(1 << 12)
-+	#define SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(x)	(x << 0)
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA_MASK (0xFFFF)
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK (0xFFFF << 16)
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA \
-+			(SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT | \
-+			SPEAR1310_MIPHY_DUAL_CLK_REF_DIV2 | \
-+			SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(60) | \
-+			SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT | \
-+			SPEAR1310_MIPHY_SINGLE_CLK_REF_DIV2 | \
-+			SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(60))
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK \
-+			(SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(120))
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE \
-+			(SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT | \
-+			SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(25) | \
-+			SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT | \
-+			SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(25))
-+
-+#define VA_SPEAR1310_PCIE_MIPHY_CFG_2		(VA_MISC_BASE + 0x3AC)
+@@ -451,9 +452,10 @@ static bool radeon_atpx_pci_probe_handle
+ 		return false;
  
- #endif /* SPEAR13XX */
+ 	status = acpi_get_handle(dhandle, "ATPX", &atpx_handle);
+-	if (ACPI_FAILURE(status))
++	if (ACPI_FAILURE(status)) {
++		radeon_atpx_priv.other_handle = dhandle;
+ 		return false;
+-
++	}
+ 	radeon_atpx_priv.dhandle = dhandle;
+ 	radeon_atpx_priv.atpx.handle = atpx_handle;
+ 	return true;
+@@ -526,10 +528,24 @@ static bool radeon_atpx_detect(void)
+ 	}
  
--- 
-1.7.0.1
+ 	if (has_atpx && vga_count == 2) {
++		struct acpi_device *adev = NULL;
++
+ 		acpi_get_name(radeon_atpx_priv.atpx.handle, ACPI_FULL_PATHNAME, &buffer);
+ 		printk(KERN_INFO "VGA switcheroo: detected switching method %s handle\n",
+ 		       acpi_method_name);
+ 		radeon_atpx_priv.atpx_detected = true;
++		/*
++		 * On some systems hotplug events are generated for the device
++		 * being switched off when ATPX is executed.  They cause ACPI
++		 * hotplug to trigger and attempt to remove the device from
++		 * the system, which causes it to break down.  Prevent that from
++		 * happening by setting the no_hotplug flag for the ACPI device
++		 * object in question.
++		 */
++		acpi_bus_get_device(radeon_atpx_priv.other_handle, &adev);
++		if (adev)
++			adev->flags.no_hotplug = true;
++
+ 		return true;
+ 	}
+ 	return false;
+Index: linux-pm/drivers/gpu/drm/nouveau/nouveau_acpi.c
+===================================================================
+--- linux-pm.orig/drivers/gpu/drm/nouveau/nouveau_acpi.c
++++ linux-pm/drivers/gpu/drm/nouveau/nouveau_acpi.c
+@@ -51,6 +51,7 @@ static struct nouveau_dsm_priv {
+ 	bool dsm_detected;
+ 	bool optimus_detected;
+ 	acpi_handle dhandle;
++	acpi_handle other_handle;
+ 	acpi_handle rom_handle;
+ } nouveau_dsm_priv;
+ 
+@@ -260,9 +261,10 @@ static int nouveau_dsm_pci_probe(struct
+ 	if (!dhandle)
+ 		return false;
+ 
+-	if (!acpi_has_method(dhandle, "_DSM"))
++	if (!acpi_has_method(dhandle, "_DSM")) {
++		nouveau_dsm_priv.other_handle = dhandle;
+ 		return false;
+-
++	}
+ 	if (nouveau_test_dsm(dhandle, nouveau_dsm, NOUVEAU_DSM_POWER))
+ 		retval |= NOUVEAU_DSM_HAS_MUX;
+ 
+@@ -333,11 +335,25 @@ static bool nouveau_dsm_detect(void)
+ 		nouveau_dsm_priv.optimus_detected = true;
+ 		ret = true;
+ 	} else if (vga_count == 2 && has_dsm && guid_valid) {
++		struct acpi_device *adev = NULL;
++
+ 		acpi_get_name(nouveau_dsm_priv.dhandle, ACPI_FULL_PATHNAME,
+ 			&buffer);
+ 		printk(KERN_INFO "VGA switcheroo: detected DSM switching method %s handle\n",
+ 			acpi_method_name);
+ 		nouveau_dsm_priv.dsm_detected = true;
++		/*
++		 * On some systems hotplug events are generated for the device
++		 * being switched off when _DSM is executed.  They cause ACPI
++		 * hotplug to trigger and attempt to remove the device from
++		 * the system, which causes it to break down.  Prevent that from
++		 * happening by setting the no_hotplug flag for the ACPI device
++		 * object in question.
++		 */
++		acpi_bus_get_device(nouveau_dsm_priv.other_handle, &adev);
++		if (adev)
++			adev->flags.no_hotplug = true;
++
+ 		ret = true;
+ 	}
+ 
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -169,7 +169,8 @@ struct acpi_device_flags {
+ 	u32 ejectable:1;
+ 	u32 power_manageable:1;
+ 	u32 match_driver:1;
+-	u32 reserved:27;
++	u32 no_hotplug:1;
++	u32 reserved:26;
+ };
+ 
+ /* File System */
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -643,6 +643,24 @@ static void disable_slot(struct acpiphp_
+ 	slot->flags &= (~SLOT_ENABLED);
+ }
+ 
++static bool acpiphp_no_hotplug(acpi_handle handle)
++{
++	struct acpi_device *adev = NULL;
++
++	acpi_bus_get_device(handle, &adev);
++	return adev && adev->flags.no_hotplug;
++}
++
++static bool slot_no_hotplug(struct acpiphp_slot *slot)
++{
++	struct acpiphp_func *func;
++
++	list_for_each_entry(func, &slot->funcs, sibling)
++		if (acpiphp_no_hotplug(func_to_handle(func)))
++			return true;
++
++	return false;
++}
+ 
+ /**
+  * get_slot_status - get ACPI slot status
+@@ -701,7 +719,8 @@ static void trim_stale_devices(struct pc
+ 		unsigned long long sta;
+ 
+ 		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
+-		alive = ACPI_SUCCESS(status) && sta == ACPI_STA_ALL;
++		alive = (ACPI_SUCCESS(status) && sta == ACPI_STA_ALL)
++			|| acpiphp_no_hotplug(handle);
+ 	}
+ 	if (!alive) {
+ 		u32 v;
+@@ -741,8 +760,9 @@ static void acpiphp_check_bridge(struct
+ 		struct pci_dev *dev, *tmp;
+ 
+ 		mutex_lock(&slot->crit_sect);
+-		/* wake up all functions */
+-		if (get_slot_status(slot) == ACPI_STA_ALL) {
++		if (slot_no_hotplug(slot)) {
++			; /* do nothing */
++		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
+ 			/* remove stale devices if any */
+ 			list_for_each_entry_safe(dev, tmp, &bus->devices,
+ 						 bus_list)
 
