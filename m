@@ -1,109 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:50770 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212Ab3LMSjL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Dec 2013 13:39:11 -0500
-Received: by mail-pa0-f53.google.com with SMTP id hz1so371361pad.26
-        for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2013 10:39:10 -0800 (PST)
-Date: Fri, 13 Dec 2013 11:39:05 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Joe Perches <joe@perches.com>
-Cc: Jonas Bonn <jonas@southpole.se>, Jingoo Han <jg1.han@samsung.com>,
-	'Guenter Roeck' <linux@roeck-us.net>,
-	'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	'Andrew Morton' <akpm@linux-foundation.org>,
-	'Andy Whitcroft' <apw@canonical.com>,
-	linux-serial@vger.kernel.org
-Subject: Re: [PATCH] pci/checkpatch: Deprecate DEFINE_PCI_DEVICE_TABLE
-Message-ID: <20131213183905.GA6746@google.com>
-References: <1385617213.12210.5.camel@joe-AO722>
- <20131128055328.GA565@kroah.com>
- <1385619863.12210.14.camel@joe-AO722>
- <529C026E.2000302@roeck-us.net>
- <000f01ceef11$a14acf00$e3e06d00$%han@samsung.com>
- <529C04C7.9050506@roeck-us.net>
- <001001ceef13$7fa3ee70$7eebcb50$%han@samsung.com>
- <1385963295.2680.2.camel@joe-AO722>
- <529C6495.3020305@southpole.se>
- <1386006217.2680.13.camel@joe-AO722>
+Received: from mga02.intel.com ([134.134.136.20]:14792 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751048Ab3L2IPF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Dec 2013 03:15:05 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bj?rn Mork <bjorn@mork.no>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Sun, 29 Dec 2013 08:14:50 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com>
+ <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com>
+ <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+In-Reply-To: <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1386006217.2680.13.camel@joe-AO722>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 02, 2013 at 09:43:37AM -0800, Joe Perches wrote:
-> Prefer use of the direct definition of struct pci_device_id
-> instead of indirection via macro DEFINE_PCI_DEVICE_TABLE.
-> 
-> Update the PCI documentation to deprecate DEFINE_PCI_DEVICE_TABLE.
-> Update checkpatch adding --fix option.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-
-Applied with Jingoo's ack for v3.14, thanks!
-
-Bjorn
-
-> ---
->  Documentation/PCI/pci.txt |  6 ++++--
->  include/linux/pci.h       |  3 +--
->  scripts/checkpatch.pl     | 11 +++++++----
->  3 files changed, 12 insertions(+), 8 deletions(-)
-> 
-> diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.txt
-> index 6f45856..9518006 100644
-> --- a/Documentation/PCI/pci.txt
-> +++ b/Documentation/PCI/pci.txt
-> @@ -123,8 +123,10 @@ initialization with a pointer to a structure describing the driver
->  
->  
->  The ID table is an array of struct pci_device_id entries ending with an
-> -all-zero entry; use of the macro DEFINE_PCI_DEVICE_TABLE is the preferred
-> -method of declaring the table.  Each entry consists of:
-> +all-zero entry.  Definitions with static const are generally preferred.
-> +Use of the deprecated macro DEFINE_PCI_DEVICE_TABLE should be avoided.
-> +
-> +Each entry consists of:
->  
->  	vendor,device	Vendor and device ID to match (or PCI_ANY_ID)
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1084a15..88674b0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -634,8 +634,7 @@ struct pci_driver {
->   * DEFINE_PCI_DEVICE_TABLE - macro used to describe a pci device table
->   * @_table: device table name
->   *
-> - * This macro is used to create a struct pci_device_id array (a device table)
-> - * in a generic manner.
-> + * This macro is deprecated and should not be used in new code.
->   */
->  #define DEFINE_PCI_DEVICE_TABLE(_table) \
->  	const struct pci_device_id _table[]
-> diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-> index 38be5d5..6f883f0 100755
-> --- a/scripts/checkpatch.pl
-> +++ b/scripts/checkpatch.pl
-> @@ -2643,10 +2643,13 @@ sub process {
->  			}
->  		}
->  
-> -# check for declarations of struct pci_device_id
-> -		if ($line =~ /\bstruct\s+pci_device_id\s+\w+\s*\[\s*\]\s*\=\s*\{/) {
-> -			WARN("DEFINE_PCI_DEVICE_TABLE",
-> -			     "Use DEFINE_PCI_DEVICE_TABLE for struct pci_device_id\n" . $herecurr);
-> +# check for uses of DEFINE_PCI_DEVICE_TABLE
-> +		if ($line =~ /\bDEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=/) {
-> +			if (WARN("DEFINE_PCI_DEVICE_TABLE",
-> +				 "Prefer struct pci_device_id over deprecated DEFINE_PCI_DEVICE_TABLE\n" . $herecurr) &&
-> +			    $fix) {
-> +				$fixed[$linenr - 1] =~ s/\b(?:static\s+|)DEFINE_PCI_DEVICE_TABLE\s*\(\s*(\w+)\s*\)\s*=\s*/static const struct pci_device_id $1\[\] = /;
-> +			}
->  		}
->  
->  # check for new typedefs, only function parameters and sparse annotations
-> 
-> 
+PiBIaSwNCj4gDQo+IHllc3RlcmRheSBhIGZyaWVuZCBvZiBtaW5lIHRvbGQgbWUgdGhhdCBvbmUg
+Y2FuIG5vdyBpbnN0YWxsIFdpbmRvd3MNCj4gOC84LjEgb24gYSBVU0IgZGV2aWNlIG5hdGl2ZWx5
+LiBTbyBJIHRyaWVkIHRoaXMgc28tY2FsbGVkICJXaW5kb3dzIFRvIEdvIg0KPiB0ZWNobm9sb2d5
+Lg0KPiANCj4gTm93IEkgaGF2ZSBzdWNjZXNzZnVsbHkgZGVwbG95ZWQgYSBXaW5kb3dzIDguMSBp
+bnN0YWxsYXRpb24gb24gbXkgZXh0ZXJuYWwNCj4gVVNCIEhERCBhbmQgYm9vdGVkIG15IGxhcHRv
+cCB1cCB3aXRoIGl0LiBUaGF0IGlzIHRvIHNheSwgSSBjYW4gbm93IG9ic2VydmUNCj4gaG93IElu
+dGVsIDcyNjAgYWN0cyB1bmRlciBXaW5kb3dzLg0KPiANCj4gQ291bGQgeW91IHRlbGwgbWUgd2hh
+dCBzaG91bGQgSSBkbyB0byBnYXRoZXIgZGVidWdnaW5nIGluZm9ybWF0aW9uIHN1Y2ggYXMNCj4g
+TDEgbW9kZSBldGMgaW4gV2luZG93cz8gSSB3aWxsIHNlbmQgdGhlbSB0byB5b3UgdGhlbi4gTWF5
+YmUgdGhpcyBjb3VsZA0KPiBoZWxwLCB0byBmaWd1cmUgb3V0IHdoYXQgdGhlIGJ1ZyBvZiBpd2x3
+aWZpIGlzLg0KDQpodHRwOi8vcndldmVyeXRoaW5nLmNvbS8NCg==
