@@ -1,68 +1,60 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mike Lothian <mike@fireburn.co.uk>, madcatx@atlas.cz,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Dave Airlie <airlied@linux.ie>, Takashi Iwai <tiwai@suse.de>,
+	=?ISO-8859-1?Q?Joaqu=EDn_Aramend=EDa?= <samsagax@gmail.com>
+Subject: Re: [PATCH][update] ACPIPHP / radeon / nouveau: Fix VGA switcheroo problem related to hotplug events
+Date: Mon, 30 Dec 2013 13:52:46 +0100
+Message-ID: <1571235.xlQ25FNpVL@vostro.rjw.lan>
+In-Reply-To: <20131230092043.GB2494@intel.com>
+References: <10163453.2AxBLHI1XI@vostro.rjw.lan> <3135179.iXEx1Rk87m@vostro.rjw.lan> <20131230092043.GB2494@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20131208150904.GD4338@pd.tnic>
-References: <1386476273-2418-1-git-send-email-rui.y.wang@intel.com>
- <20131208144312.GC4338@pd.tnic> <20131208150904.GD4338@pd.tnic>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Dec 2013 16:41:18 -0700
-Message-ID: <CAErSpo7M=d0qMUCV2CCjkkbMX7h-xQcp0tuST89G_HefTQVoyg@mail.gmail.com>
-Subject: Re: [PATCH] aerdrv: Fix severity usage in aer trace event
-To: Borislav Petkov <bp@alien8.de>
-Cc: Rui Wang <ruiv.wang@gmail.com>, Lance Ortiz <lance.ortiz@hp.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	jiang.liu@intel.com, Tony Luck <tony.luck@intel.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Chen Gong <gong.chen@linux.intel.com>,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>,
-	Rui Wang <rui.y.wang@intel.com>, Joe Perches <joe@perches.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joe]
+On Monday, December 30, 2013 11:20:43 AM Mika Westerberg wrote:
+> On Sun, Dec 29, 2013 at 10:36:56PM +0100, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > The changes in the ACPI-based PCI hotplug (ACPIPHP) subsystem made
+> > during the 3.12 development cycle uncovered a problem with VGA
+> > switcheroo that on some systems, when the device-specific method
+> > (ATPX in the radeon case, _DSM in the nouveau case) is used to turn
+> > off the discrete graphics, the BIOS generates ACPI hotplug events for
+> > that device and those events cause ACPIPHP to attempt to remove the
+> > device from the system (they are events for a device that was present
+> > previously and is not present any more, so that's what should be done
+> > according to the spec).  Then, the system stops functioning correctly.
+> > 
+> > Since the hotplug events in question were simply silently ignored
+> > previously, the least intrusive way to address that problem is to
+> > make ACPIPHP ignore them again.  For this purpose, introduce a new
+> > ACPI device flag, no_hotplug, and modify ACPIPHP to ignore hotplug
+> > events for PCI devices whose ACPI companions have that flag set.
+> > Next, make the radeon and nouveau switcheroo detection code set the
+> > no_hotplug flag for the discrete graphics' ACPI companion.
+> > 
+> > Fixes: bbd34fcdd1b2 (ACPI / hotplug / PCI: Register all devices under the given bridge)
+> > References: https://bugzilla.kernel.org/show_bug.cgi?id=61891
+> > References: https://bugzilla.kernel.org/show_bug.cgi?id=64891
+> > Reported-and-tested-by: Mike Lothian <mike@fireburn.co.uk>
+> > Reported-and-tested-by: <madcatx@atlas.cz>
+> > Reported-by: Joaquín Aramendía <samsagax@gmail.com>
+> > Cc: Alex Deucher <alexdeucher@gmail.com>
+> > Cc: Dave Airlie <airlied@linux.ie>
+> > Cc: Takashi Iwai <tiwai@suse.de>
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: 3.12+ <stable@vger.kernel.org> # 3.12+
+> 
+> FWIW, Thunderbolt hotplug still works fine after this patch is applied :)
 
-On Sun, Dec 8, 2013 at 8:09 AM, Borislav Petkov <bp@alien8.de> wrote:
-> On Sun, Dec 08, 2013 at 03:43:12PM +0100, Borislav Petkov wrote:
->> On Sun, Dec 08, 2013 at 12:17:53PM +0800, Rui Wang wrote:
->> > There's inconsistency between dmesg and the trace event output.
->> > When dmesg says "severity=Corrected", the trace event says
->> > "severity=Fatal". What happens is that HW_EVENT_ERR_CORRECTED is
->> > defined in edac.h:
->> >
->> > enum hw_event_mc_err_type {
->> >         HW_EVENT_ERR_CORRECTED,
->> >         HW_EVENT_ERR_UNCORRECTED,
->> >         HW_EVENT_ERR_FATAL,
->> >         HW_EVENT_ERR_INFO,
->> > };
->> >
->> > while aer_print_error() uses aer_error_severity_string[] defined as:
->> >
->> > static const char *aer_error_severity_string[] = {
->> >         "Uncorrected (Non-Fatal)",
->> >         "Uncorrected (Fatal)",
->> >         "Corrected"
->> > };
->> >
->> > In this case dmesg is correct because info->severity is assigned in
->> > aer_isr_one_error() using the definitions in include/linux/ras.h:
->> >
->> > Signed-off-by: Rui Wang <rui.y.wang@intel.com>
->>
->> Applied, thanks.
->
-> I said "Applied" but this is Bjorn's area: Bjorn, wanna take this one or
-> are you fine with it going over the RAS tree?
->
-> Btw, I have a 2 trivial cleanups for aerdrv_errprint.c which are
-> following...
+I've checked that, but thanks for the confirmation!
 
-I think it's worthwhile to keep all three patches together, and I'd be
-happy to merge them via PCI.  It looks like Joe had some good
-questions, so once you resolve them, I can merge them, or ack them and
-you can take them.  I think either way will be fine.
+Rafael
 
-Bjorn
