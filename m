@@ -1,130 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:63826 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750724Ab3LJX6c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Dec 2013 18:58:32 -0500
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MXM001AV7XJWWB0@mailout2.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 11 Dec 2013 08:58:31 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Tim Harvey' <tharvey@gateworks.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>
-Cc: 'Marek Vasut' <marex@denx.de>, 'Arnd Bergmann' <arnd@arndb.de>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Richard Zhu' <Hong-Xing.Zhu@freescale.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <20131205050424.GA2298@pratyush-vbox>
- <201312061546.23981.arnd@arndb.de> <20131209071241.GA5760@pratyush-vbox>
- <201312101426.40614.marex@denx.de>
- <001101cef5f6$4347c520$c9d74f60$%han@samsung.com>
- <CAJ+vNU1LCeSKBjr8ryrJZcPt2+6Xcv0de19FttdpTvSEmr1k_w@mail.gmail.com>
-In-reply-to: <CAJ+vNU1LCeSKBjr8ryrJZcPt2+6Xcv0de19FttdpTvSEmr1k_w@mail.gmail.com>
-Subject: Re: [Query/Discussion]: IO translation with designware PCIe controller
-Date: Wed, 11 Dec 2013 08:58:30 +0900
-Message-id: <001501cef603$ba479030$2ed6b090$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:55747 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932083Ab3L3Sx7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Dec 2013 13:53:59 -0500
+Received: by mail-wi0-f176.google.com with SMTP id hq4so16599652wib.9
+        for <linux-pci@vger.kernel.org>; Mon, 30 Dec 2013 10:53:58 -0800 (PST)
+From: Tom Gundersen <teg@jklm.no>
+To: linux-pci@vger.kernel.org
+Cc: kay@vrfy.org, linux-kernel@vger.kernel.org,
+	Tom Gundersen <teg@jklm.no>, Martin Mares <mj@ucw.cz>
+Subject: [PATCH] libpci: pci_id_lookup - add udev/hwdb support
+Date: Mon, 30 Dec 2013 19:59:53 +0100
+Message-Id: <1388429993-14231-1-git-send-email-teg@jklm.no>
+In-Reply-To: <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
+References: <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 11, 2013 8:24 AM, Tim Harvey wrote:
-> On Tue, Dec 10, 2013 at 2:22 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> > On Tuesday, December 10, 2013 10:27 PM, Marek Vasut wrote:
-> >> On Monday, December 09, 2013 at 08:12:42 AM, Pratyush Anand wrote:
-> >
-> > [.....]
-> >
-> >> >
-> >> > diff --git a/drivers/pci/host/pcie-designware.c
-> >> > b/drivers/pci/host/pcie-designware.c index be6ce30..cf68632 100644
-> >> > --- a/drivers/pci/host/pcie-designware.c
-> >> > +++ b/drivers/pci/host/pcie-designware.c
-> >> > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >> >                                        + global_io_offset);
-> >> >                     pp->config.io_size = resource_size(&pp->io);
-> >> >                     pp->config.io_bus_addr = range.pci_addr;
-> >> > +                   pp->io_base = range.cpu_addr;
-> >> >             }
-> >> >             if (restype == IORESOURCE_MEM) {
-> >> >                     of_pci_range_to_resource(&range, np, &pp->mem);
-> >> > @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >> >
-> >> >     pp->cfg0_base = pp->cfg.start;
-> >> >     pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> >> > -   pp->io_base = pp->io.start;
-> >> >     pp->mem_base = pp->mem.start;
-> >> >
-> >> >     pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-> >> > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data
-> >> > *sys)
-> >> >
-> >> >     if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> >> >             sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> >> > -           pci_ioremap_io(sys->io_offset, pp->io.start);
-> >> > +           pci_ioremap_io(sys->io_offset, pp->io_base);
-> >> >             global_io_offset += SZ_64K;
-> >> >             pci_add_resource_offset(&sys->resources, &pp->io,
-> >> >                                     sys->io_offset);
-> >>
-> >> Tim, can you test if this patch fixes your SKY2 IOspace problem please ?
-> >
-> > Above mentioned patch is NOT the latest patch.
-> > Pratyush Anand already submitted the next patch as below.
-> >
-> > Tim,
-> > Would you test the following patch on i.MX6 platform?
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index be6ce30..b83f5e8 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -378,6 +378,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >                                            + global_io_offset);
-> >                         pp->config.io_size = resource_size(&pp->io);
-> >                         pp->config.io_bus_addr = range.pci_addr;
-> > +                       pp->io_base = range.cpu_addr;
-> >                 }
-> >                 if (restype == IORESOURCE_MEM) {
-> >                         of_pci_range_to_resource(&range, np, &pp->mem);
-> > @@ -403,7 +404,6 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
-> >
-> >         pp->cfg0_base = pp->cfg.start;
-> >         pp->cfg1_base = pp->cfg.start + pp->config.cfg0_size;
-> > -       pp->io_base = pp->io.start;
-> >         pp->mem_base = pp->mem.start;
-> >
-> >         pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-> > @@ -667,7 +667,7 @@ static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
-> >
-> >         if (global_io_offset < SZ_1M && pp->config.io_size > 0) {
-> >                 sys->io_offset = global_io_offset - pp->config.io_bus_addr;
-> > -               pci_ioremap_io(sys->io_offset, pp->io.start);
-> > +               pci_ioremap_io(global_io_offset, pp->io_base);
-> >                 global_io_offset += SZ_64K;
-> >                 pci_add_resource_offset(&sys->resources, &pp->io,
-> >                                         sys->io_offset);
-> >
-> >
-> > Best regards,
-> > Jingoo Han
-> >
-> 
-> Yes, this patch resolves the issue and now I can use devices with io
-> resources behind a bridge attached to the IMX6.
-> 
-> Thanks everyone for your efforts!
+This lets you select hwdb support at compile time.
 
-Wow, happy ending! :-)
-I was deeply moved.
+hwdb is an efficient hardware database shipped with recent versions of udev. It contains
+among other sources pci.ids so querying hwdb rather than reading pci.ids directly should give
+the same result.
 
-Pratyush Anand,
-Would you re-send this patch with commit message?
-You did a good job! I really appreciate your patch.
+Ideally Linux distros using udev could stop shipping pci.ids, but use hwdb as the only source
+of this information, which this patch allows.
 
-Best regards,
-Jingoo Han
+Cc: Martin Mares <mj@ucw.cz>
+---
+ lib/configure    | 17 ++++++++++++++++
+ lib/names-hash.c | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 74 insertions(+), 2 deletions(-)
+
+diff --git a/lib/configure b/lib/configure
+index 27388bc..778f99f 100755
+--- a/lib/configure
++++ b/lib/configure
+@@ -141,6 +141,23 @@ esac
+ echo >>$c '#define PCI_HAVE_PM_DUMP'
+ echo " dump"
+ 
++echo_n "Checking for udev hwdb support... "
++if [ "$HWDB" = yes -o "$HWDB" = no ] ; then
++	echo "$HWDB (set manually)"
++else
++	if `pkg-config --atleast-version=196 libudev` ; then
++		HWDB=yes
++	else
++		HWDB=no
++	fi
++	echo "$HWDB (auto-detected)"
++fi
++if [ "$HWDB" = yes ] ; then
++	echo >>$c '#define PCI_HAVE_HWDB'
++	echo >>$m 'LIBUDEV=-ludev'
++	echo >>$m 'WITH_LIBS+=$(LIBUDEV)'
++fi
++
+ echo_n "Checking for zlib support... "
+ if [ "$ZLIB" = yes -o "$ZLIB" = no ] ; then
+ 	echo "$ZLIB (set manually)"
+diff --git a/lib/names-hash.c b/lib/names-hash.c
+index 33f3c11..9661d03 100644
+--- a/lib/names-hash.c
++++ b/lib/names-hash.c
+@@ -11,6 +11,11 @@
+ #include "internal.h"
+ #include "names.h"
+ 
++#ifdef PCI_HAVE_HWDB
++#include <libudev.h>
++#include <stdio.h>
++#endif
++
+ struct id_bucket {
+   struct id_bucket *next;
+   unsigned int full;
+@@ -86,8 +91,58 @@ char
+ *pci_id_lookup(struct pci_access *a, int flags, int cat, int id1, int id2, int id3, int id4)
+ {
+   struct id_entry *n, *best;
+-  u32 id12 = id_pair(id1, id2);
+-  u32 id34 = id_pair(id3, id4);
++  u32 id12, id34;
++
++#ifdef PCI_HAVE_HWDB
++  if (!(flags & PCI_LOOKUP_SKIP_LOCAL))
++    {
++      char modalias[64];
++      const char *key = NULL;
++      struct udev *udev = udev_new();
++      struct udev_hwdb *hwdb = udev_hwdb_new(udev);
++      struct udev_list_entry *entry;
++
++      switch(cat)
++        {
++        case ID_VENDOR:
++          sprintf(modalias, "pci:v%08X*", id1);
++          key = "ID_VENDOR_FROM_DATABASE";
++          break;
++        case ID_DEVICE:
++          sprintf(modalias, "pci:v%08Xd%08X*", id1, id2);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_SUBSYSTEM:
++          sprintf(modalias, "pci:v%08Xd%08Xsv%08Xsd%08X*", id1, id2, id3, id4);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_GEN_SUBSYSTEM:
++          sprintf(modalias, "pci:v*d*sv%08Xsd%08X*", id1, id2);
++          key = "ID_MODEL_FROM_DATABASE";
++          break;
++        case ID_CLASS:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02X*", id1);
++          key = "ID_PCI_CLASS_FROM_DATABASE";
++          break;
++        case ID_SUBCLASS:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02X*", id1, id2);
++          key = "ID_PCI_SUBCLASS_FROM_DATABASE";
++          break;
++        case ID_PROGIF:
++          sprintf(modalias, "pci:v*d*sv*sd*bc%02Xsc%02Xi%02X*", id1, id2, id3);
++          key = "ID_PCI_INTERFACE_FROM_DATABASE";
++          break;
++        }
++
++      if (key)
++          udev_list_entry_foreach(entry, udev_hwdb_get_properties_list_entry(hwdb, modalias, 0))
++              if (strcmp(udev_list_entry_get_name(entry), key) == 0)
++                return udev_list_entry_get_value(entry);
++    }
++#endif
++
++  id12 = id_pair(id1, id2);
++  id34 = id_pair(id3, id4);
+ 
+   if (a->id_hash)
+     {
+-- 
+1.8.5.2
 
