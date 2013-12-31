@@ -1,92 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:50416 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623Ab3LLVu2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Dec 2013 16:50:28 -0500
-From: Marek Vasut <marex@denx.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <lznuaa@gmail.com>, Harro Haan <hrhaan@gmail.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Mohit KUMAR <Mohit.KUMAR@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Richard Zhu <r65037@freescale.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-	Siva Reddy Kallam <siva.kallam@samsung.com>,
-	Srikanth T Shivanand <ts.srikanth@samsung.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Troy Kisky <troy.kisky@boundarydevices.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/7] PCI: imx6: Fix waiting for link up
-Date: Thu, 12 Dec 2013 22:49:59 +0100
-Message-Id: <1386885004-10252-2-git-send-email-marex@denx.de>
-In-Reply-To: <1386885004-10252-1-git-send-email-marex@denx.de>
-References: <1386885004-10252-1-git-send-email-marex@denx.de>
+Received: from v094114.home.net.pl ([79.96.170.134]:59360 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756533Ab3LaUt4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Dec 2013 15:49:56 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to avoid sysfs warnings
+Date: Tue, 31 Dec 2013 22:03:33 +0100
+Message-ID: <6023795.zgEUjY5fWb@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQVEqnWm1j0GckuNsD_FTPxWahZpCnF79sNgKN-JnCDT+w@mail.gmail.com>
+References: <37552283.kG1L4S8Daa@vostro.rjw.lan> <31566676.sHXhScpSQ6@vostro.rjw.lan> <CAE9FiQVEqnWm1j0GckuNsD_FTPxWahZpCnF79sNgKN-JnCDT+w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While waiting for the PHY to report the PCIe link is up, we might
-hit a situation where the link training is still in progress, while
-the PHY already reports the link is up. Add additional check for
-this condition.
+On Tuesday, December 31, 2013 10:45:46 AM Yinghai Lu wrote:
+> On Mon, Dec 30, 2013 at 5:15 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Monday, December 30, 2013 01:51:28 PM Rafael J. Wysocki wrote:
+> >> > We have patches that need to stop ioapic and iommu between
+> >> > pci_stop_root_bus and pci_remove_root_bus.
+> >
+> > BTW, what *exactly* do they need to be stopped between?  After these two patches:
+> 
+> need to stop regular pci drivers before stop "driver" for ioapic/dmar.
+> 
+> >
+> >> > Please check if the problem still happen after
+> >> >
+> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=c4a0a5d964e90b93eb4101c3927b788e083e530f
+> >> >
+> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=e3b439e1d315aff59c1b4f0fc43c5cd2d82b4138
+> >
+> > pci_stop_root_bus() is just a walk over devices on the root bus stopping
+> > them and pci_remove_root_bus() starts with the removal of those devices.
+> >
+> > Surely, those two list walks can be combined into one?
+> 
+> maybe ok, but we have to problem to make sure stop pci drivers before
+> "driver" for ioapic/dmar.
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Frank Li <lznuaa@gmail.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Mohit KUMAR <Mohit.KUMAR@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
-Cc: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/host/pci-imx6.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+That's fine, but ioapic/dmar stopping need not happen between the stopping of
+drivers and removing of devices on the root bus I suppose?
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index c247602..f5541c3 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -48,6 +48,8 @@ struct imx6_pcie {
- #define PL_OFFSET 0x700
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
-+#define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
-+#define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
- 
- #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
- #define PCIE_PHY_CTRL_DATA_LOC 0
-@@ -338,10 +340,17 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
- {
- 	u32 rc, ltssm, rx_valid, temp;
- 
--	/* link is debug bit 36, debug register 1 starts at bit 32 */
--	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << (36 - 32));
--	if (rc)
--		return -EAGAIN;
-+	/*
-+	 * Test if the PHY reports that the link is up and also that
-+	 * the link training finished. It might happen that the PHY
-+	 * reports the link is already up, but the link training bit
-+	 * is still set, so make sure to check the training is done
-+	 * as well here.
-+	 */
-+	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
-+	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
-+	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
-+		return 1;
- 
- 	/*
- 	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
--- 
-1.8.4.3
+Actually, I think that the ioapic/dmar stopping should be carried out after
+removing all of the root bus devices, or it can be racy with respect to a
+driver reload.  Isn't that the case?
+
+> also stop all first and remove all make it much cleaner.
+
+Well, I don't think that's worth special casing, though, because device removal
+may be triggered via sysfs anyway for any PCI device.  In my opinion it would
+be cleaner to use pci_stop_and_remove_bus_device() everywhere for PCI device
+removal.
+
+> and add path is two steps too. Add them all, and then attach driver for all.
+
+The removal need not mirror the probing ...
+
+Thanks,
+Rafael
 
