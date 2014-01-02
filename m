@@ -1,49 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35605 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203AbaAWUAX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 15:00:23 -0500
-Date: Thu, 23 Jan 2014 12:01:12 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Dave Jones <davej@redhat.com>
-Subject: [PATCH] PCI: msi: properly free memory on an error path
-Message-ID: <20140123200112.GA15503@kroah.com>
-References: <20140123184246.GA7461@google.com>
- <20140123193037.GA2605@kroah.com>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:35765 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbaABVeh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 16:34:37 -0500
+Received: by mail-ie0-f171.google.com with SMTP id ar20so15343853iec.2
+        for <linux-pci@vger.kernel.org>; Thu, 02 Jan 2014 13:34:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140123193037.GA2605@kroah.com>
+In-Reply-To: <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com> <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 2 Jan 2014 14:34:17 -0700
+Message-ID: <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Sun, Dec 29, 2013 at 2:23 AM, wzyboy <wzyboy@wzyboy.org> wrote:
+> 2013/12/29 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+>> http://rweverything.com/
+>
+>
+> Here are the output of "PCI" and "PCI Index" of Intel Wireless.
 
-Coverity reported that I forgot to clean up some allocated memory on the
-error path in populate_msi_sysfs(), so this patch fixes that.
+ASPM must be configured on both ends of the link, so for completeness,
+can you also collect the "PCI" output for the bridge leading to the
+7260 device?  Based on the Linux lspci output, this should be
+0000:00:1c.1.
 
-Thanks to Dave Jones for pointing out where the error was, I obviously
-can't read code this morning...
+And I assume the device works well with the Windows driver?
 
-Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
-Cc: Dave Jones <davej@redhat.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/pci/msi.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 39dff3fe57af..6f0474ebe420 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -595,6 +595,7 @@ error_attrs:
- 		++count;
- 		msi_attr = msi_attrs[count];
- 	}
-+	kfree(msi_attrs);
- 	return ret;
- }
- 
--- 
-1.8.5.1.163.gd7aced9
-
+Bjorn
