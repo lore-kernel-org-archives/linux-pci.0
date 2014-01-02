@@ -1,65 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 14 Jan 2014 14:44:19 -0800
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] Add Clovertrail and Merrifeld support to Intel MID
-Message-ID: <20140114224419.GB9834@psi-dev26.jf.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <6023795.zgEUjY5fWb@vostro.rjw.lan>
+References: <37552283.kG1L4S8Daa@vostro.rjw.lan>
+	<31566676.sHXhScpSQ6@vostro.rjw.lan>
+	<CAE9FiQVEqnWm1j0GckuNsD_FTPxWahZpCnF79sNgKN-JnCDT+w@mail.gmail.com>
+	<6023795.zgEUjY5fWb@vostro.rjw.lan>
+Date: Thu, 2 Jan 2014 14:47:04 -0800
+Message-ID: <CAE9FiQXQuX5EOE1jbXfK+G1mf9q=4-fpw1jNs38sza9tcPtqMg@mail.gmail.com>
+Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to
+ avoid sysfs warnings
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 12:07:35PM -0800, David Cohen wrote:
-> Hi,
-> 
-> I've a bunch of Intel MID patches under review but it seems they are becoming
-> old and start to need changes.
-> I gathered an up-to-date version of all of them in this single patch set.
-> 
-> This series implements support of Clovertrail and Merrifield to Intel MID.
-> It also removes the unwanted X86_MDFLD option since *all* Intel MID platforms
-> should be supported through CONFIG_X86_INTEL_MID option.
-> 
-> This makes obsolete the following patches:
-> https://lkml.org/lkml/2013/10/18/480
-> https://lkml.org/lkml/2013/10/22/533
-> http://lkml.indiana.edu/hypermail/linux/kernel/1311.1/02937.html
+On Tue, Dec 31, 2013 at 1:03 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Tuesday, December 31, 2013 10:45:46 AM Yinghai Lu wrote:
+>> On Mon, Dec 30, 2013 at 5:15 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> > On Monday, December 30, 2013 01:51:28 PM Rafael J. Wysocki wrote:
+>> >> > We have patches that need to stop ioapic and iommu between
+>> >> > pci_stop_root_bus and pci_remove_root_bus.
+>> >
+>> > BTW, what *exactly* do they need to be stopped between?  After these two patches:
+>>
+>> need to stop regular pci drivers before stop "driver" for ioapic/dmar.
+>>
+>> >
+>> >> > Please check if the problem still happen after
+>> >> >
+>> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=c4a0a5d964e90b93eb4101c3927b788e083e530f
+>> >> >
+>> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=e3b439e1d315aff59c1b4f0fc43c5cd2d82b4138
+>> >
+>> > pci_stop_root_bus() is just a walk over devices on the root bus stopping
+>> > them and pci_remove_root_bus() starts with the removal of those devices.
+>> >
+>> > Surely, those two list walks can be combined into one?
+>>
+>> maybe ok, but we have to problem to make sure stop pci drivers before
+>> "driver" for ioapic/dmar.
+>
+> That's fine, but ioapic/dmar stopping need not happen between the stopping of
+> drivers and removing of devices on the root bus I suppose?
+>
+> Actually, I think that the ioapic/dmar stopping should be carried out after
+> removing all of the root bus devices, or it can be racy with respect to a
+> driver reload.  Isn't that the case?
 
-Ping :)
-Any comments on this whole patch set?
+No. It should be before removing all root bus devices.
+as they need to access the pci devices during stop ioapic and dmar.
 
-Br, David Cohen
+Also ioapic itself could one one pci device.
 
-> 
-> Br, David
-> 
-> ---
-> David Cohen (3):
->   x86: intel-mid: move Medfield code out of intel-mid.c core file
->   x86: intel-mid: add Merrifield platform support
->   x86: intel-mid: remove deprecated X86_MDFLD and X86_WANT_INTEL_MID
->     configs
-> 
-> Kuppuswamy Sathyanarayanan (1):
->   x86: intel-mid: add Clovertrail platform support
-> 
->  arch/x86/Kconfig                                   |  29 +-----
->  arch/x86/include/asm/intel-mid.h                   |  48 +++++++++-
->  arch/x86/pci/intel_mid_pci.c                       |   6 +-
->  arch/x86/platform/intel-mid/Makefile               |   4 +-
->  arch/x86/platform/intel-mid/intel-mid.c            |  64 +++++++------
->  arch/x86/platform/intel-mid/intel_mid_weak_decls.h |  19 ++++
->  arch/x86/platform/intel-mid/mfld.c                 |  75 +++++++++++++++
->  arch/x86/platform/intel-mid/mrfl.c                 | 103 +++++++++++++++++++++
->  arch/x86/platform/intel-mid/sfi.c                  |  34 +++++--
->  9 files changed, 317 insertions(+), 65 deletions(-)
->  create mode 100644 arch/x86/platform/intel-mid/intel_mid_weak_decls.h
->  create mode 100644 arch/x86/platform/intel-mid/mfld.c
->  create mode 100644 arch/x86/platform/intel-mid/mrfl.c
-> 
-> -- 
-> 1.8.4.2
+Yinghai
