@@ -1,87 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:65009 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbaA3QsL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 11:48:11 -0500
-Received: by mail-oa0-f46.google.com with SMTP id n16so3883327oag.19
-        for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 08:48:10 -0800 (PST)
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:61117 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740AbaABVo6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 16:44:58 -0500
+Received: by mail-ig0-f180.google.com with SMTP id m12so3652658iga.1
+        for <linux-pci@vger.kernel.org>; Thu, 02 Jan 2014 13:44:58 -0800 (PST)
+Date: Thu, 2 Jan 2014 14:44:54 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: linux-pci@vger.kernel.org,
+	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+	'Jason Cooper' <jason@lakedaemon.net>
+Subject: Re: [PATCH] PCI: mvebu: Use max_t() instead of max(resource_size_t,)
+Message-ID: <20140102214454.GA7228@google.com>
+References: <000601cf029b$6bb27e40$43177ac0$%han@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <20140130131236.GW18029@intel.com>
-References: <20140130131236.GW18029@intel.com>
-Date: Thu, 30 Jan 2014 08:48:10 -0800
-Message-ID: <CAE9FiQWDqXNF5Cn5X_muBERMWdZsZFbzmoqWvuPARREz+XO9Gw@mail.gmail.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release
- resources in pci_release_dev()) broke TBT hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <000601cf029b$6bb27e40$43177ac0$%han@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 30, 2014 at 5:12 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> Hi,
->
-> The latest mainline kernel "hangs" when Thunderbolt devices are
-> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
-> getting huge amounts of messages like:
->
-> [  352.717001] pci 0000:02:00.0: PME# disabled
-> [  352.717011] pci 0000:02:00.0: PME# disabled
-> [  352.717021] pci 0000:02:00.0: PME# disabled
-> [  352.717032] pci 0000:02:00.0: PME# disabled
-> [  352.717041] pci 0000:02:00.0: PME# disabled
-> [  352.717051] pci 0000:02:00.0: PME# disabled
-> [  352.717061] pci 0000:02:00.0: PME# disabled
-> [  352.717070] pci 0000:02:00.0: PME# disabled
-> [  352.717083] pci 0000:02:00.0: PME# disabled
-> [  352.717094] pci 0000:02:00.0: PME# disabled
-> [  352.717104] pci 0000:02:00.0: PME# disabled
-> [  352.717113] pci 0000:02:00.0: PME# disabled
-> [  352.717124] pci 0000:02:00.0: PME# disabled
-> [  352.717133] pci 0000:02:00.0: PME# disabled
-> [  352.717143] pci 0000:02:00.0: PME# disabled
-> [  352.717153] pci 0000:02:00.0: PME# disabled
-> [  352.717162] pci 0000:02:00.0: PME# disabled
+On Fri, Dec 27, 2013 at 09:34:36AM +0900, Jingoo Han wrote:
+> Use max_t() instead of max(resource_size_t,) in order to fix
+> the following checkpatch warning.
+> 
+>   WARNING: max() should probably be max_t(resource_size_t, SZ_64K, size)
+>   WARNING: max() should probably be max_t(resource_size_t, SZ_1M, size)
+> 
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-that mean pci_stop_dev() get called again and again ?
+Applied with Jason's ack to pci/host-mvebu for v3.14, thanks!
 
->
-> and then the system becomes really unresponsive.
->
-> Reverting the commit in $subject makes TBT work again.
+Bjorn
 
-Did you bisect to that commit?
-
-Can you test just before
-| 9d16947b75831acd317ab9a53e0e94d160731d33
-| Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-| Date:   Fri Jan 10 15:22:18 2014 +0100
-|
-|    PCI: Add global pci_lock_rescan_remove()
-
-that patch and following patches could change some calling sequence.
-
->
-> Please let me know if you need any additional information. The system I'm
-> testing on is Intel NUC.
-
-I am surprised as
-
-| commit ef83b0781a73f9efcb1228256bfdfb97fc9533a8
-| Author: Yinghai Lu <yinghai@kernel.org>
-| Date:   Sat Nov 30 14:40:29 2013 -0800
-|
-|    PCI: Remove from bus_list and release resources in pci_release_dev()
-
-has been in pci/next for a while.
-So you did not test pci/next before?
-
-Please post boot log with "debug ignore_loglevel initcall_debug".
-
-Thanks
-
-Yinghai
+> ---
+>  drivers/pci/host/pci-mvebu.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index bedc0b1..fa140e1 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -735,9 +735,9 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+>  	 * aligned on their size
+>  	 */
+>  	if (res->flags & IORESOURCE_IO)
+> -		return round_up(start, max((resource_size_t)SZ_64K, size));
+> +		return round_up(start, max_t(resource_size_t, SZ_64K, size));
+>  	else if (res->flags & IORESOURCE_MEM)
+> -		return round_up(start, max((resource_size_t)SZ_1M, size));
+> +		return round_up(start, max_t(resource_size_t, SZ_1M, size));
+>  	else
+>  		return start;
+>  }
+> -- 
+> 1.7.10.4
+> 
+> 
