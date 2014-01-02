@@ -1,38 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andreas Noever <andreas.noever@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Subject: [PATCH 3/8] PCI: Assign CardBus bus number only during the second pass.
-Date: Thu, 23 Jan 2014 21:59:23 +0100
-Message-Id: <1390510768-5652-4-git-send-email-andreas.noever@gmail.com>
-In-Reply-To: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
-References: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:45321 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751130AbaABKwe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 05:52:34 -0500
+Message-ID: <52C544E7.4000501@free-electrons.com>
+Date: Thu, 02 Jan 2014 11:52:23 +0100
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+MIME-Version: 1.0
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Remove redundant code
+References: <1388659296-21569-1-git-send-email-gregory.clement@free-electrons.com> <20140102114638.47457689@skate>
+In-Reply-To: <20140102114638.47457689@skate>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Right now the CardBus code in pci_scan_bridge is executed during both
-passes. Since we always allocate the bus number ourselves it makes sense
-to put it into the second pass.
+On 02/01/2014 11:46, Thomas Petazzoni wrote:
+> Dear Gregory CLEMENT,
+> 
+> On Thu,  2 Jan 2014 11:41:36 +0100, Gregory CLEMENT wrote:
+>> In the commit b42285f66f871a989, Sebastian moved clock enable before
+>> register access, but during the merge of the commit
+>> 9f352f0e6c0fa2dc608812df "PCI: mvebu: Dynamically detect if the PEX
+>> link is up to enable hot plug", the moved part was added back.
+>>
+>> This patch fixes this by removing the redundant code.
+>>
+>> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+>> ---
+>>  drivers/pci/host/pci-mvebu.c | 8 --------
+>>  1 file changed, 8 deletions(-)
+> 
+> This has already been fixed by
+> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/drivers/pci/host/pci-mvebu.c?id=84f47190d6be1cb99cd4a680e1018080d93800a8.
+> 
 
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
----
- drivers/pci/probe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I didn't find it because I only looked for in my emails and I
+wrongly assumed that the LAKML were in CC.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cf05b3e..bed1934 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -831,7 +831,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 		 * do in the second pass.
- 		 */
- 		if (!pass) {
--			if (pcibios_assign_all_busses() || broken)
-+			if (pcibios_assign_all_busses() || broken || is_cardbus)
- 				/* Temporarily disable forwarding of the
- 				   configuration cycles on all bridges in
- 				   this bus segment to avoid possible
+> Thanks!
+> 
+> Thomas
+> 
+
+
 -- 
-1.8.5.3
-
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
