@@ -1,143 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:7408 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:64640 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754350AbaAHGCG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Jan 2014 01:02:06 -0500
-Message-ID: <52CCE9CD.5060404@linux.intel.com>
-Date: Wed, 08 Jan 2014 14:01:49 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Kai Huang <dev.kai.huang@gmail.com>
-CC: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [RFC Patch Part2 V1 14/14] iommu/vt-d: update IOMMU state when
- memory hotplug happens
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>	<1389085234-22296-15-git-send-email-jiang.liu@linux.intel.com> <CAOtp4Kqn5e_51hwrRMgRmam7jXaVC=md7BAuwnG3gJGETj9iQA@mail.gmail.com>
-In-Reply-To: <CAOtp4Kqn5e_51hwrRMgRmam7jXaVC=md7BAuwnG3gJGETj9iQA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752715AbaABVO1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jan 2014 16:14:27 -0500
+Message-ID: <1388697264.30327.250.camel@bling.home>
+Subject: Re: IOMMU groups ... PEX8606 switch?
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Dana Goyette <DanaGoyette@gmail.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+Date: Thu, 02 Jan 2014 14:14:24 -0700
+In-Reply-To: <la4k3n$gia$1@ger.gmane.org>
+References: <l9o1h7$33k$2@ger.gmane.org>
+			 <1388287383.4981.16.camel@ul30vt.home> <l9oj5j$miu$1@ger.gmane.org>
+		 <1388377005.4981.69.camel@ul30vt.home> <l9t26b$i61$1@ger.gmane.org>
+	 <1388691378.30327.235.camel@bling.home> <la4k3n$gia$1@ger.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, 2014-01-02 at 13:01 -0800, Dana Goyette wrote:
+> On 01/02/2014 11:36 AM, Alex Williamson wrote:
+> > On Mon, 2013-12-30 at 16:13 -0800, Dana Goyette wrote:
+> >> On 12/29/2013 08:16 PM, Alex Williamson wrote:
+> >>> On Sat, 2013-12-28 at 23:32 -0800, Dana Goyette wrote:
+> >>>> On 12/28/2013 7:23 PM, Alex Williamson wrote:
+> >>>>> On Sat, 2013-12-28 at 18:31 -0800, Dana Goyette wrote:
+> >>>>>> I have purchased both a SuperMicro X10SAE and an X10SAT, and I need to
+> >>>>>> soon decide which one to keep.
+> >>>>>>
+> >>>>>> The SuperMicro X10SAT has all the PCIe x1 slots hidden behind a PLX
+> >>>>>> PEX8066 switch, which claims to support ACS.  I'd expect the devices
+> >>>>>> downstream of the PLX switch to be in separate groups.
+> >>>>>>
+> >>>>>> With Linux 3.13-rc5 and "enable overrides for missing ACS capabilities"
+> >>>>>> applied and set for the Intel root ports, the devices behind the switch
+> >>>>>> remain stuck in the same group.
+> >>>>>>
+> >>>>>> In terms of passing devices to different VMs, which is better: all
+> >>>>>> devices on different root ports, or all devices behind the one
+> >>>>>> ACS-supporting switch?
+> >>>>>
+> >>>>> Can you provide lspci -vvv info?  If you're getting that for groups
+> >>>>> either the switch has ACS capabilities, but doesn't support the features
+> >>>>> we need or we're doing something wrong.  Thanks,
+> >>>>>
+> >>>> I initially tried attaching the output as a .txt file, but it's too
+> >>>> large.  Anyway, here's the output of lspci -nnvvv (you may notice that I
+> >>>> moved the Radeon to a different slot).
+> >>>
+> >>> Well, something seems amiss since the downstream switch ports all seem
+> >>> to support and enable the correct set of ACS capabilities.  I'm tending
+> >>> to suspect something wrong with the ACS override patch or how it's being
+> >>> used since your IOMMU group is still based at the root port.  Each root
+> >>> port is isolated from the other root ports though, so something is
+> >>> happening with the override patch.  Can you provide the kernel command
+> >>> line you use to enable ACS overrides and the override patch you're
+> >>> using, as it applies to 3.13-rc5?  Thanks,
+> >>>
+> >>> Alex
+> >>>
+> >>> --
+> >>> To unsubscribe from this list: send the line "unsubscribe kvm" in
+> >>> the body of a message to majordomo@vger.kernel.org
+> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>>
+> >> I'm using the original acs-override patch from this post:
+> >> https://lkml.org/lkml/2013/5/30/513
+> >>
+> >> Kernel parameter is:
+> >> pcie_acs_override=id:8086:8c10,id:8086:8c12,id:8086:8c16,id:8086:8c18
+> >>
+> >> When booting a kernel without the override patch, the following devices
+> >> are all in the same group: Intel Root Ports 1, 2, 4, 5; ASMedia SATA
+> >> controller; PLX PEX8606 switch; Renesas USB controller; TI Firewire
+> >> controller; Intel I210 Ethernet controller.
+> >
+> > Ok, here's my shot in the dark; we must be detecting something about the
+> > upstream switch port to make it fail the ACS test and the only thing I
+> > can find that might do this is if the PCI config header on the upstream
+> > switch reported itself as a multifunction device.  Multifunction
+> > upstream switch ports do need ACS capabilities to make sure that traffic
+> > isn't routed back through other functions.  Single function devices do
+> > not.  To test that theory, please provide 'lspci -vxs 4:00.0'.  We're
+> > looking to see whether the byte at 0xe has the MSB set.  If it does, it
+> > lies that it's a multifunction device.  If it doesn't I'll have to get
+> > the dart board back out.
+> >
+> > FWIW, you should be able to work around this by adding id:10b5:8606 to
+> > your list of overrides.  Long term, if this is the problem, we'll want
+> > to add a quirk to sanitize the multifunction device flag.  Thanks,
+> >
+> > Alex
+> >
+> 
+> 04:00.0 is the ASMedia SATA controller; I'll assume you meant the 
+> upstream port of the PLX switch.
 
+Yes, it was 04:00.0 in the previous lspci listing.
 
-On 2014/1/8 13:07, Kai Huang wrote:
-> On Tue, Jan 7, 2014 at 5:00 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> If static identity domain is created, IOMMU driver needs to update
->> si_domain page table when memory hotplug event happens. Otherwise
->> PCI device DMA operations can't access the hot-added memory regions.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->> ---
->>  drivers/iommu/intel-iommu.c |   52 ++++++++++++++++++++++++++++++++++++++++++-
->>  1 file changed, 51 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
->> index 83e3ed4..35a987d 100644
->> --- a/drivers/iommu/intel-iommu.c
->> +++ b/drivers/iommu/intel-iommu.c
->> @@ -33,6 +33,7 @@
->>  #include <linux/dmar.h>
->>  #include <linux/dma-mapping.h>
->>  #include <linux/mempool.h>
->> +#include <linux/memory.h>
->>  #include <linux/timer.h>
->>  #include <linux/iova.h>
->>  #include <linux/iommu.h>
->> @@ -3689,6 +3690,54 @@ static struct notifier_block device_nb = {
->>         .notifier_call = device_notifier,
->>  };
->>
->> +static int intel_iommu_memory_notifier(struct notifier_block *nb,
->> +                                      unsigned long val, void *v)
->> +{
->> +       struct memory_notify *mhp = v;
->> +       unsigned long long start, end;
->> +       struct iova *iova;
->> +
->> +       switch (val) {
->> +       case MEM_GOING_ONLINE:
->> +               start = mhp->start_pfn << PAGE_SHIFT;
->> +               end = ((mhp->start_pfn + mhp->nr_pages) << PAGE_SHIFT) - 1;
->> +               if (iommu_domain_identity_map(si_domain, start, end)) {
->> +                       pr_warn("dmar: failed to build identity map for [%llx-%llx]\n",
->> +                               start, end);
->> +                       return NOTIFY_BAD;
->> +               }
-> 
-> Better to use iommu_prepare_identity_map? For si_domain, if
-> hw_pass_through is used, there's no page table.
-Hi Kai,
-	Good catch!
-Seems function iommu_prepare_identity_map() is designed to handle
-RMRRs. So how about avoiding of registering memory hotplug notifier
-if hw_pass_through is true?
+> 05:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI 
+> Express Gen 2 (5.0 GT/s) Switch (rev ba) (prog-if 00 [Normal decode])
+> 	Flags: bus master, fast devsel, latency 0
+> 	Memory at eeb00000 (32-bit, non-prefetchable) [size=128K]
+> 	Bus: primary=05, secondary=06, subordinate=0c, sec-latency=0
+> 	Memory behind bridge: ee800000-eeafffff
+> 	Capabilities: [40] Power Management version 3
+> 	Capabilities: [48] MSI: Enable+ Count=1/4 Maskable+ 64bit+
+> 	Capabilities: [68] Express Upstream Port, MSI 00
+> 	Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8606 6 Lane, 6 
+> Port PCI Express Gen 2 (5.0 GT/s) Switch
+> 	Capabilities: [100] Device Serial Number ba-86-01-10-b5-df-0e-00
+> 	Capabilities: [fb4] Advanced Error Reporting
+> 	Capabilities: [138] Power Budgeting <?>
+> 	Capabilities: [148] Virtual Channel
+> 	Capabilities: [448] Vendor Specific Information: ID=0000 Rev=0 Len=0cc <?>
+> 	Capabilities: [950] Vendor Specific Information: ID=0001 Rev=0 Len=010 <?>
+> 	Kernel driver in use: pcieport
+> 00: b5 10 06 86 47 05 10 40 ba 00 04 06 10 00 01 00
 
-Thanks!
-Gerry
+Well, that wasn't it.  I'll keep looking and probably send you a patch
+to figure out what's going wrong.  Thanks,
 
-> 
->> +               break;
->> +       case MEM_OFFLINE:
->> +       case MEM_CANCEL_ONLINE:
->> +               /* TODO: enhance RB-tree and IOVA code to support of splitting iova */
->> +               iova = find_iova(&si_domain->iovad, mhp->start_pfn);
->> +               if (iova) {
->> +                       unsigned long start_pfn, last_pfn;
->> +                       struct dmar_drhd_unit *drhd;
->> +                       struct intel_iommu *iommu;
->> +
->> +                       start_pfn = mm_to_dma_pfn(iova->pfn_lo);
->> +                       last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
->> +                       dma_pte_clear_range(si_domain, start_pfn, last_pfn);
->> +                       dma_pte_free_pagetable(si_domain, start_pfn, last_pfn);
->> +                       rcu_read_lock();
->> +                       for_each_active_iommu(iommu, drhd)
->> +                               iommu_flush_iotlb_psi(iommu, si_domain->id,
->> +                                       start_pfn, last_pfn - start_pfn + 1, 0);
->> +                       rcu_read_unlock();
->> +                       __free_iova(&si_domain->iovad, iova);
->> +               }
-> 
-> The same as above. Looks we need to consider hw_pass_through for the si_domain.
-> 
-> -Kai
-> 
->> +               break;
->> +       }
->> +
->> +       return NOTIFY_OK;
->> +}
->> +
->> +static struct notifier_block intel_iommu_memory_nb = {
->> +       .notifier_call = intel_iommu_memory_notifier,
->> +       .priority = 0
->> +};
->> +
->>  int __init intel_iommu_init(void)
->>  {
->>         int ret = -ENODEV;
->> @@ -3761,8 +3810,9 @@ int __init intel_iommu_init(void)
->>         init_iommu_pm_ops();
->>
->>         bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
->> -
->>         bus_register_notifier(&pci_bus_type, &device_nb);
->> +       if (si_domain)
->> +               register_memory_notifier(&intel_iommu_memory_nb);
->>
->>         intel_iommu_enabled = 1;
->>
->> --
->> 1.7.10.4
->>
->> _______________________________________________
->> iommu mailing list
->> iommu@lists.linux-foundation.org
->> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+Alex
+
