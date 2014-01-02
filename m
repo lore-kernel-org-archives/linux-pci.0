@@ -1,234 +1,216 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-CC: <linux-acpi@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	<konrad.wilk@oracle.com>, "David Airlie" <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<intel-gfx@lists.freedesktop.org>,
-	<dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Dave Airlie <airlied@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH v5] ACPI: Fix acpi_evaluate_object() return value check
-Date: Thu, 23 Jan 2014 11:42:39 +0800
-Message-ID: <1390448559-33896-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og119.obsmtp.com ([64.18.0.189]:43376 "HELO
+	exprod5og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753272AbaABV4x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 16:56:53 -0500
+Received: by mail-vb0-f45.google.com with SMTP id i12so7298502vbh.4
+        for <linux-pci@vger.kernel.org>; Thu, 02 Jan 2014 13:56:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20131223174634.GD25089@obsidianresearch.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+	<1387785725-24262-3-git-send-email-tinamdar@apm.com>
+	<20131223174634.GD25089@obsidianresearch.com>
+Date: Thu, 2 Jan 2014 13:56:51 -0800
+Message-ID: <CACoXjcnPvgDX3s8OywLHP6Tu2OrpNzM1Phx+s3RLmKDgu3t8gA@mail.gmail.com>
+Subject: Re: [RFC PATCH 2/3] arm64: dts: APM X-Gene PCIe device tree nodes
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jon Masters <jcm@redhat.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since acpi_evaluate_object() returns acpi_status and not plain int,
-ACPI_FAILURE() should be used for checking its return value. Also
-add some detailed debug info when acpi_evaluate_object() failed.
+On Mon, Dec 23, 2013 at 9:46 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Mon, Dec 23, 2013 at 01:32:03PM +0530, Tanmay Inamdar wrote:
+>> This patch adds the device tree nodes for APM X-Gene PCIe controller and
+>> PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts nodes
+>> are added.
+>
+> Can you include an lspci dump for PCI DT bindings please? It is
+> impossible to review otherwise..
+>
 
-Reviewed-by: Jani Nikula <jani.nikula@intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
-v4->v5: Add some detailed debug info for acpi_evaluate_object() 
-        failure suggested by Bjorn.
-v3->v4: Fix spell error, add Jani Nikula reviewed-by.
-v2->v3: Fix compile error pointed out by Hanjun.
-v1->v2: Add CC to related subsystem MAINTAINERS
----
- drivers/gpu/drm/i915/intel_acpi.c              |   33 ++++++++++++++++-------
- drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |   13 ++++++---
- drivers/gpu/drm/nouveau/nouveau_acpi.c         |   25 +++++++++++-------
- drivers/pci/pci-label.c                        |   10 +++++--
- 4 files changed, 54 insertions(+), 27 deletions(-)
+On the X-Gene evaluation platform, there is only one PCIe port
+enabled. Here is the 'lspci' dump
 
-diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
-index dfff090..e7b526b 100644
---- a/drivers/gpu/drm/i915/intel_acpi.c
-+++ b/drivers/gpu/drm/i915/intel_acpi.c
-@@ -31,11 +31,13 @@ static const u8 intel_dsm_guid[] = {
- static int intel_dsm(acpi_handle handle, int func)
- {
- 	struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
-+	struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
- 	u32 result;
--	int ret = 0;
-+	acpi_status status;
-+	int ret;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -50,10 +52,14 @@ static int intel_dsm(acpi_handle handle, int func)
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (ret) {
--		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
--		return ret;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
-+		DRM_DEBUG_DRIVER(
-+			"failed to evaluate _DSM for %s, exit status %u\n",
-+			(char *)string.pointer,	(unsigned int)status);
-+		kfree(string.pointer);
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-@@ -138,10 +144,12 @@ static char *intel_dsm_mux_type(u8 type)
- static void intel_dsm_platform_mux_info(void)
- {
- 	struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
-+	struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *pkg;
--	int i, ret;
-+	acpi_status status;
-+	int i;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -156,10 +164,15 @@ static void intel_dsm_platform_mux_info(void)
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
--				   &output);
--	if (ret) {
--		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
-+	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle,
-+			"_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_get_name(intel_dsm_priv.dhandle,
-+				ACPI_FULL_PATHNAME, &string);
-+		DRM_DEBUG_DRIVER(
-+			"failed to evaluate _DSM for %s, exit status %u\n",
-+			(char *)string.pointer,	(unsigned int)status);
-+		kfree(string.pointer);
- 		goto out;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-index 1291204..c30ee88 100644
---- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-+++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-@@ -112,17 +112,22 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
- 	};
- 	struct acpi_object_list list = { ARRAY_SIZE(args), args };
- 	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
-+	struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
- 	union acpi_object *obj;
- 	acpi_handle handle;
--	int ret;
-+	acpi_status status;
- 
- 	handle = ACPI_HANDLE(&device->pdev->dev);
- 	if (!handle)
- 		return false;
- 
--	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
--	if (ret) {
--		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
-+	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
-+		nv_debug(mxm, "DSM MXMS failed for %s: exit status %u\n",
-+				(char *)string.pointer,
-+				(unsigned int)status);
-+		kfree(string.pointer);
- 		return false;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index ba0183f..53d24a7 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
--	int i, err;
-+	acpi_status status;
-+	int i;
- 	char args_buff[4];
- 
- 	input.count = 4;
-@@ -101,10 +102,12 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
- 		args_buff[i] = (arg >> i * 8) & 0xFF;
- 	params[3].buffer.pointer = args_buff;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (err) {
--		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
--		return err;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_info(handle,
-+				"failed to evaluate _DSM, exit status %u\n",
-+				(unsigned int)status);
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-@@ -134,7 +137,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
--	int err;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -148,10 +151,12 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
- 	params[3].type = ACPI_TYPE_INTEGER;
- 	params[3].integer.value = arg;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (err) {
--		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
--		return err;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_info(handle,
-+				"failed to evaluate _DSM, exit status %u\n",
-+				(unsigned int)status);
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index d51f45a..0216094 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
- 	union acpi_object *obj;
- 	int len = 0;
- 
--	int err;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -228,9 +228,13 @@ dsm_get_label(acpi_handle handle, int func,
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, output);
--	if (err)
-+	status = acpi_evaluate_object(handle, "_DSM", &input, output);
-+	if (ACPI_FAILURE(status)) {
-+		acpi_handle_info(handle,
-+				"failed to evaluate _DSM, exit status %u\n",
-+				 (unsigned int)status);
- 		return -1;
-+	}
- 
- 	obj = (union acpi_object *)output->pointer;
- 
--- 
-1.7.1
+# lspci -vvv
+00:00.0 Class 0604: Device 19aa:e008 (rev 04)
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Region 0: Memory at <ignored> (64-bit, prefetchable)
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 0000f000-00000fff
+        Memory behind bridge: 00c00000-00cfffff
+        Prefetchable memory behind bridge: 0000000000000000-0000000000bfffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 16384 bytes, PhantFunc 1, Latency
+L0s <1us, L1 unlimited
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+Unsupported-
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq-
+AuxPwr- TransPend+
+                LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM L0s L1,
+Latency L0 unlimited, L1 unlimited
+                        ClockPM- Surprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 8GT/s, Width x8, TrErr- Train- SlotClk+
+DLActive+ BWMgmt- ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd-
+HotPlug- Surprise-
+                        Slot #1, PowerLimit 10.000W; Interlock- NoCompl-
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet-
+CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Off, PwrInd Off, Power- Interlock-
+                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt-
+PresDet- Interlock-
+                        Changed: MRL- PresDet- LinkState+
+                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal-
+PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Not Supported,
+TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms,
+TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range,
+EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -6dB,
+EqualizationComplete+, EqualizationPhase1+
+                         EqualizationPhase2+, EqualizationPhase3+,
+LinkEqualizationRequest-
+        Capabilities: [80] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr+ BadTLP+ BadDLLP+ Rollover- Timeout+ NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [180 v1] #19
+        Capabilities: [150 v1] Vendor Specific Information: ID=0001
+Rev=1 Len=010 <?>
+
+01:00.0 Class 0200: Device 15b3:1003
+        Subsystem: Device 15b3:0049
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 226
+        Region 0: Memory at e000c00000 (64-bit, non-prefetchable) [size=1M]
+        Region 2: Memory at e000000000 (64-bit, prefetchable) [size=8M]
+        Expansion ROM at e000800000 [size=1M]
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [48] Vital Product Data
+                Product Name: CX312A - ConnectX-3 SFP+
+                Read-only fields:
+                        [PN] Part number: MCX312A-XCBT
+                        [EC] Engineering changes: A5
+                        [SN] Serial number: MT1338X00578
+                        [V0] Vendor specific: PCIe Gen3 x8
+                        [RV] Reserved: checksum good, 0 byte(s) reserved
+                Read/write fields:
+                        [V1] Vendor specific: N/A
+                        [YA] Asset tag: N/A
+                        [RW] Read-write area: 105 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 253 byte(s) free
+                        [RW] Read-write area: 252 byte(s) free
+                End
+        Capabilities: [9c] MSI-X: Enable- Count=128 Masked-
+                Vector table: BAR=0 offset=0007c000
+                PBA: BAR=0 offset=0007d000
+        Capabilities: [60] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s
+<64ns, L1 unlimited
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop- FLReset-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
+AuxPwr- TransPend-
+                LnkCap: Port #8, Speed 8GT/s, Width x8, ASPM L0s,
+Latency L0 unlimited, L1 unlimited
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 8GT/s, Width x8, TrErr- Train- SlotClk+
+DLActive- BWMgmt- ABWMgmt-
+                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+,
+LTR-, OBFF Not Supported
+                DevCtl2: Completion Timeout: 50us to 50ms,
+TimeoutDis-, LTR-, OBFF Disabled
+                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range,
+EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -6dB,
+EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-,
+LinkEqualizationRequest-
+        Capabilities: [100 v1] Alternative Routing-ID Interpretation (ARI)
+                ARICap: MFVC- ACS-, Next Function: 0
+                ARICtl: MFVC- ACS-, Function Group: 0
+        Capabilities: [148 v1] Device Serial Number f4-52-14-03-00-0b-dc-90
+        Capabilities: [154 v2] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [18c v1] #19
+        Kernel driver in use: mlx4_core
 
 
+> Regards,
+> Jason
