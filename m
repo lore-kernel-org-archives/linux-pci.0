@@ -1,60 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:50802 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754343AbaAISJA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 13:09:00 -0500
-Received: by mail-ie0-f174.google.com with SMTP id at1so3971450iec.33
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jan 2014 10:09:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140109153513.21446.31778.stgit@bling.home>
-References: <20140109153513.21446.31778.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 9 Jan 2014 11:08:38 -0700
-Message-ID: <CAErSpo4Asnx4JiZvppZLUzxmVymz0t-fHXRFMr81-Qz31XyR+g@mail.gmail.com>
-Subject: Re: [PATCH] pci/iov: VFs are never multifunction
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	sathya.perla@emulex.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ajit.khaparde@emulex.com, Don Dutile <ddutile@redhat.com>,
-	subbu.seetharaman@emulex.com, Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:45768 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750814AbaABTgW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jan 2014 14:36:22 -0500
+Message-ID: <1388691378.30327.235.camel@bling.home>
+Subject: Re: IOMMU groups ... PEX8606 switch?
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Dana Goyette <DanaGoyette@gmail.com>
+Cc: kvm@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 02 Jan 2014 12:36:18 -0700
+In-Reply-To: <l9t26b$i61$1@ger.gmane.org>
+References: <l9o1h7$33k$2@ger.gmane.org>
+		 <1388287383.4981.16.camel@ul30vt.home> <l9oj5j$miu$1@ger.gmane.org>
+	 <1388377005.4981.69.camel@ul30vt.home> <l9t26b$i61$1@ger.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 9, 2014 at 8:36 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> Per the SR-IOV spec rev 1.1:
->
-> 3.4.1.9 Header Type (Offset 0Eh)
->
-> "... For VFs, this register must be RO Zero."
->
-> Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
-> NIC.  When they do it makes us handle ACS testing and therefore IOMMU
-> groups as if they were actual multifunction devices and require ACS
-> capabilities to make sure there's no peer-to-peer between functions.
-> VFs are never traditional multifunction devices, so simply clear this
-> bit before we get any further into setup.
+On Mon, 2013-12-30 at 16:13 -0800, Dana Goyette wrote:
+> On 12/29/2013 08:16 PM, Alex Williamson wrote:
+> > On Sat, 2013-12-28 at 23:32 -0800, Dana Goyette wrote:
+> >> On 12/28/2013 7:23 PM, Alex Williamson wrote:
+> >>> On Sat, 2013-12-28 at 18:31 -0800, Dana Goyette wrote:
+> >>>> I have purchased both a SuperMicro X10SAE and an X10SAT, and I need to
+> >>>> soon decide which one to keep.
+> >>>>
+> >>>> The SuperMicro X10SAT has all the PCIe x1 slots hidden behind a PLX
+> >>>> PEX8066 switch, which claims to support ACS.  I'd expect the devices
+> >>>> downstream of the PLX switch to be in separate groups.
+> >>>>
+> >>>> With Linux 3.13-rc5 and "enable overrides for missing ACS capabilities"
+> >>>> applied and set for the Intel root ports, the devices behind the switch
+> >>>> remain stuck in the same group.
+> >>>>
+> >>>> In terms of passing devices to different VMs, which is better: all
+> >>>> devices on different root ports, or all devices behind the one
+> >>>> ACS-supporting switch?
+> >>>
+> >>> Can you provide lspci -vvv info?  If you're getting that for groups
+> >>> either the switch has ACS capabilities, but doesn't support the features
+> >>> we need or we're doing something wrong.  Thanks,
+> >>>
+> >> I initially tried attaching the output as a .txt file, but it's too
+> >> large.  Anyway, here's the output of lspci -nnvvv (you may notice that I
+> >> moved the Radeon to a different slot).
+> >
+> > Well, something seems amiss since the downstream switch ports all seem
+> > to support and enable the correct set of ACS capabilities.  I'm tending
+> > to suspect something wrong with the ACS override patch or how it's being
+> > used since your IOMMU group is still based at the root port.  Each root
+> > port is isolated from the other root ports though, so something is
+> > happening with the override patch.  Can you provide the kernel command
+> > line you use to enable ACS overrides and the override patch you're
+> > using, as it applies to 3.13-rc5?  Thanks,
+> >
+> > Alex
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe kvm" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> I'm using the original acs-override patch from this post:
+> https://lkml.org/lkml/2013/5/30/513
+> 
+> Kernel parameter is:
+> pcie_acs_override=id:8086:8c10,id:8086:8c12,id:8086:8c16,id:8086:8c18
+> 
+> When booting a kernel without the override patch, the following devices 
+> are all in the same group: Intel Root Ports 1, 2, 4, 5; ASMedia SATA 
+> controller; PLX PEX8606 switch; Renesas USB controller; TI Firewire 
+> controller; Intel I210 Ethernet controller.
 
-This seems reasonable.  Do you have "lspci -vvxxxx" output for this
-device?  I'd like to save it for future reference.
+Ok, here's my shot in the dark; we must be detecting something about the
+upstream switch port to make it fail the ACS test and the only thing I
+can find that might do this is if the PCI config header on the upstream
+switch reported itself as a multifunction device.  Multifunction
+upstream switch ports do need ACS capabilities to make sure that traffic
+isn't routed back through other functions.  Single function devices do
+not.  To test that theory, please provide 'lspci -vxs 4:00.0'.  We're
+looking to see whether the byte at 0xe has the MSB set.  If it does, it
+lies that it's a multifunction device.  If it doesn't I'll have to get
+the dart board back out.
 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/iov.c |    1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 1fe2d6f..e2fbb67 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -84,6 +84,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->         virtfn->dev.parent = dev->dev.parent;
->         virtfn->physfn = pci_dev_get(dev);
->         virtfn->is_virtfn = 1;
-> +       virtfn->multifunction = 0;
->
->         for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->                 res = dev->resource + PCI_IOV_RESOURCES + i;
->
+FWIW, you should be able to work around this by adding id:10b5:8606 to
+your list of overrides.  Long term, if this is the problem, we'll want
+to add a quirk to sanitize the multifunction device flag.  Thanks,
+
+Alex
+
