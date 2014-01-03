@@ -1,64 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jon Mason <jdmason@kudzu.us>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 22/34] vxge: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:41 +0100
-Message-Id: <8eb335d8fbd229124db20e89d81a391faee2567d.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 3 Jan 2014 14:24:13 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH v5 24/33] x86: Move declaration for mp_register_ioapic()
+Message-ID: <20140103212413.GA18987@google.com>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+ <1388707565-16535-25-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1388707565-16535-25-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Thu, Jan 02, 2014 at 04:05:56PM -0800, Yinghai Lu wrote:
+> Address compiling problem that Fengguang report.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/neterion/vxge/vxge-main.c |   15 +++++++++------
- 1 files changed, 9 insertions(+), 6 deletions(-)
+Does this fix a problem that's already in the upstream tree?
 
-diff --git a/drivers/net/ethernet/neterion/vxge/vxge-main.c b/drivers/net/ethernet/neterion/vxge/vxge-main.c
-index 1ded50ca..d6682ed 100644
---- a/drivers/net/ethernet/neterion/vxge/vxge-main.c
-+++ b/drivers/net/ethernet/neterion/vxge/vxge-main.c
-@@ -2352,12 +2352,18 @@ start:
- 	vdev->vxge_entries[j].entry = VXGE_ALARM_MSIX_ID;
- 	vdev->vxge_entries[j].in_use = 0;
- 
--	ret = pci_enable_msix(vdev->pdev, vdev->entries, vdev->intr_cnt);
--	if (ret > 0) {
-+	ret = pci_enable_msix_range(vdev->pdev,
-+				    vdev->entries, 3, vdev->intr_cnt);
-+	if (ret < 0) {
-+		ret = -ENODEV;
-+		goto enable_msix_failed;
-+	} else if (ret < vdev->intr_cnt) {
-+		pci_disable_msix(vdev->pdev);
-+
- 		vxge_debug_init(VXGE_ERR,
- 			"%s: MSI-X enable failed for %d vectors, ret: %d",
- 			VXGE_DRIVER_NAME, vdev->intr_cnt, ret);
--		if ((max_config_vpath != VXGE_USE_DEFAULT) || (ret < 3)) {
-+		if (max_config_vpath != VXGE_USE_DEFAULT) {
- 			ret = -ENODEV;
- 			goto enable_msix_failed;
- 		}
-@@ -2371,9 +2377,6 @@ start:
- 		vxge_close_vpaths(vdev, temp);
- 		vdev->no_of_vpath = temp;
- 		goto start;
--	} else if (ret < 0) {
--		ret = -ENODEV;
--		goto enable_msix_failed;
- 	}
- 	return 0;
- 
--- 
-1.7.7.6
+If it merely fixes a problem that was added somewhere in your patches,
+why don't you fold this fix into the patch that added the problem?
 
+If you included more details, like the exact problem report, I could
+probably have figured this out myself.
+
+Bjorn
+
+> Reported-by: Fengguang Wu <wfg@linux.intel.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+> Cc: Jiang Liu <jiang.liu@huawei.com>
+> ---
+>  arch/x86/include/asm/mpspec.h | 18 +++++++++++++++++-
+>  1 file changed, 17 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+> index b98665f..e9d850e 100644
+> --- a/arch/x86/include/asm/mpspec.h
+> +++ b/arch/x86/include/asm/mpspec.h
+> @@ -95,10 +95,26 @@ static inline void early_reserve_e820_mpc_new(void) { }
+>  #endif
+>  
+>  int generic_processor_info(int apicid, int version);
+> -#ifdef CONFIG_ACPI
+> +#ifdef CONFIG_X86_IO_APIC
+>  int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
+>  int mp_unregister_ioapic(u32 gsi_base);
+>  extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
+> +#else
+> +static inline int __mp_register_ioapic(int id, u32 address, u32 gsi_base,
+> +					 bool hot)
+> +{
+> +	return 0;
+> +}
+> +static inline int mp_unregister_ioapic(u32 gsi_base)
+> +{
+> +	return 0;
+> +}
+> +static inline void mp_register_ioapic(int id, u32 address, u32 gsi_base)
+> +{
+> +}
+> +#endif
+> +
+> +#ifdef CONFIG_ACPI
+>  extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+>  				   u32 gsi);
+>  extern void mp_config_acpi_legacy_irqs(void);
+> -- 
+> 1.8.4
+> 
