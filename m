@@ -1,55 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:64705 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbaAQEOD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 23:14:03 -0500
-Received: by mail-ie0-f177.google.com with SMTP id at1so1871457iec.22
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jan 2014 20:13:59 -0800 (PST)
+Received: from quartz.orcorp.ca ([184.70.90.242]:55541 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751432AbaACSof (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 3 Jan 2014 13:44:35 -0500
+Date: Fri, 3 Jan 2014 11:44:24 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, linux-pci@vger.kernel.org,
+	Gregory Cl??ment <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Issue with the emulated PCI bridge implementation
+Message-ID: <20140103184424.GC12098@obsidianresearch.com>
+References: <20131226160534.36cc4203@skate>
+ <20131226165241.2c50b244@skate>
+ <20140103002656.GA12098@obsidianresearch.com>
+ <201401031322.31433.arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com>
-References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Jan 2014 21:13:39 -0700
-Message-ID: <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.com>
-Subject: Re: In "pci_fixup_video" check if this is or should be the
- primaryvideo d
-To: eiichiro.oiwa.nm@hitachi.com
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	Dave Airlie <airlied@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	David Airlie <airlied@linux.ie>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201401031322.31433.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
-> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
-> June 9, 2003 Chapter 12. VGA Support".
+On Fri, Jan 03, 2014 at 01:22:31PM +0100, Arnd Bergmann wrote:
 
-And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
-pages long.  Is there something there that prohibits two VGA devices
-on the same bus?  I'm not a qemu developer, but if I were, I would
-need a better hint about what is wrong before I could fix it.
+> However the part that made me wonder is that an e1000e with a PCI bridge
+> actually /should/not/ need to allocate an I/O space window with a precious
+> mbus resource, since AFAIK this adapter does not have an I/O space BARs.
 
-Again, sorry if you said this already and I missed it.
+IIRC the e1000 still has a legacy IO port BAR.. (guessing it is used
+for PXE boot on x86?)
 
->>[+cc Michael, Jesse, David, qemu-devel]
->>
->>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
->>> I suggest you should not break the PCI specification, as a developer of proprietary
->>> hypervisor, but I think your patch is no problem.
->>> Your PCI structure is specialized structure for your virtual machine.
->>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
->>> because of breaking the PCI specification.
->>
->>I assume you think qemu is breaking the PCI spec.  What exactly do you
->>think is broken?  Please give specific references to the spec.  This
->>conversation is pretty fragmented, and I came in late, so I apologize
->>if I missed this.
->>
->>Bjorn
->>
+My patch set to allow the DT to turn off IO port allocation is already
+in mainline - drop the IO ranges from the DT and no IO resources are
+consumed at all.
+
+Though, that is an interesting point, a small refinement would be to
+not allocate the pci io map if IO is turned off as well..
+
+Jason
