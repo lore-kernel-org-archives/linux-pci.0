@@ -1,80 +1,156 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:54985 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751744AbaA2Wiy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 17:38:54 -0500
-Received: by mail-ie0-f176.google.com with SMTP id tp5so2662307ieb.7
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 14:38:54 -0800 (PST)
-Date: Wed, 29 Jan 2014 15:38:50 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH] PCI,pciehp: Don't set slot off when found device already
- exists.
-Message-ID: <20140129223850.GH16825@google.com>
-References: <1389600168-23228-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389600168-23228-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 32/33] PCI, x86, ACPI: get ioapic address from acpi device
+Date: Thu,  2 Jan 2014 16:06:04 -0800
+Message-Id: <1388707565-16535-33-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 13, 2014 at 04:02:48PM +0800, Yijing Wang wrote:
-> If we found device already exists during hot add device, we should
-> leave it, not to set slot off.
+Some ioapic controllers do not show up on pci config space,
+or pci device is there but no bar is used and is set by firmware in
+other non standard registers.
 
-Does this fix a defect?  What's the scenario where this fixes a problem
-in the current code?  I think this change makes sense, but I'd like to
-have a better description of the problem that we're fixing.
+We can get ioapic address from ACPI0009's _CRS.
 
-I see the following path that looks like it might be a problem with the
-current code if slot power is off when we resume after a suspend:
+-v2: Use acpi_mem_addr_resource_to_address64() to address MEMORY in _CRS
+     of Rui Wang's machine.
 
-    pciehp_resume
-      pciehp_enable_slot
-        board_added
-          pciehp_configure_device
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/ioapic.c | 86 +++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 71 insertions(+), 15 deletions(-)
 
-Is this the scenario you're addressing?
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 60351b2..54de155 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -32,6 +32,36 @@ struct acpi_pci_ioapic {
+ static LIST_HEAD(ioapic_list);
+ static DEFINE_MUTEX(ioapic_list_lock);
+ 
++static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
++{
++	struct resource *res;
++	struct acpi_resource_address64 addr;
++	acpi_status status;
++	unsigned long flags;
++	u64 start, end;
++
++	status = acpi_mem_addr_resource_to_address64(acpi_res, &addr);
++	if (!ACPI_SUCCESS(status))
++		return AE_OK;
++
++	if (addr.resource_type == ACPI_MEMORY_RANGE) {
++		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
++			return AE_OK;
++		flags = IORESOURCE_MEM;
++	} else
++		return AE_OK;
++
++	start = addr.minimum + addr.translation_offset;
++	end = addr.maximum + addr.translation_offset;
++
++	res = data;
++	res->flags = flags;
++	res->start = start;
++	res->end = end;
++
++	return AE_OK;
++}
++
+ static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
+ 				 u32 *pgsi_base)
+ {
+@@ -54,33 +84,56 @@ static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
+ 		return;
+ 
+ 	dev = acpi_get_pci_dev(handle);
+-	if (!dev)
+-		return;
++	if (!dev || !pci_resource_len(dev, 0)) {
++		struct acpi_device_info *info;
++		char *hid = NULL;
++
++		status = acpi_get_object_info(handle, &info);
++		if (ACPI_FAILURE(status))
++			goto exit_put;
++		if (info->valid & ACPI_VALID_HID)
++			hid = info->hardware_id.string;
++		if (!hid || strcmp(hid, "ACPI0009")) {
++			kfree(info);
++			goto exit_put;
++		}
++		kfree(info);
++		memset(res, 0, sizeof(*res));
++		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
++		if (!res->flags)
++			goto exit_put;
++	}
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+ 	gsi_base = gsb;
+ 	type = "IOxAPIC";
++	if (dev) {
++		ret = pci_enable_device(dev);
++		if (ret < 0)
++			goto exit_put;
+ 
+-	ret = pci_enable_device(dev);
+-	if (ret < 0)
+-		goto exit_put;
+-
+-	pci_set_master(dev);
++		pci_set_master(dev);
+ 
+-	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
+-		type = "IOAPIC";
++		if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
++			type = "IOAPIC";
+ 
+-	if (pci_request_region(dev, 0, type))
+-		goto exit_disable;
++		if (pci_resource_len(dev, 0)) {
++			if (pci_request_region(dev, 0, type))
++				goto exit_disable;
+ 
+-	res = &dev->resource[0];
++			res = &dev->resource[0];
++		}
++	}
+ 
+-	if (acpi_register_ioapic(handle, res->start, gsi_base))
+-		goto exit_release;
++	if (acpi_register_ioapic(handle, res->start, gsi_base)) {
++		if (dev)
++			goto exit_release;
++		return;
++	}
+ 
+ 	pr_info("%s %s %s at %pR, GSI %u\n",
+-		dev_name(&dev->dev), objname, type,
++		dev ? dev_name(&dev->dev) : "", objname, type,
+ 		res, gsi_base);
+ 
+ 	*pdev = dev;
+@@ -100,6 +153,9 @@ static void handle_ioapic_remove(acpi_handle handle, struct pci_dev *dev,
+ {
+ 	acpi_unregister_ioapic(handle, gsi_base);
+ 
++	if (!dev)
++		return;
++
+ 	pci_release_region(dev, 0);
+ 	pci_disable_device(dev);
+ 	pci_dev_put(dev);
+-- 
+1.8.4
 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/hotplug/pciehp_ctrl.c |    3 ++-
->  drivers/pci/hotplug/pciehp_pci.c  |    2 +-
->  2 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 38f0186..f27b0ff 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -224,7 +224,8 @@ static int board_added(struct slot *p_slot)
->  	if (retval) {
->  		ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
->  			 pci_domain_nr(parent), parent->number);
-> -		goto err_exit;
-> +		if (retval != -EEXIST)
-> +			goto err_exit;
->  	}
->  
->  	if (PWR_LED(ctrl))
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index aac7a40..9b87b49 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -48,7 +48,7 @@ int pciehp_configure_device(struct slot *p_slot)
->  			 "at %04x:%02x:00, cannot hot-add\n", pci_name(dev),
->  			 pci_domain_nr(parent), parent->number);
->  		pci_dev_put(dev);
-> -		return -EINVAL;
-> +		return -EEXIST;
->  	}
->  
->  	num = pci_scan_slot(parent, PCI_DEVFN(0, 0));
-> -- 
-> 1.7.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
