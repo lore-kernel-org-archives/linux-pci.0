@@ -1,57 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61189 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753460AbaARHTI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 18 Jan 2014 02:19:08 -0500
-Date: Sat, 18 Jan 2014 08:15:38 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
-	linux-nvme@lists.infradead.org,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Message-ID: <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21427 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752851AbaACAF4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:05:56 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 00/33] x86, irq: Support ioapic controller hotplug
+Date: Thu,  2 Jan 2014 16:05:32 -0800
+Message-Id: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
-> > As the release is supposedly this weekend, do you prefer
-> > the patches to go to your tree or to individual trees after
-> > the release?
-> 
-> I'd be happy to merge them, except for the fact that they probably
-> wouldn't have any time in -next before I ask Linus to pull them.  So
-> how about if we wait until after the release, ask the area maintainers
-> to take them, and if they don't take them, I'll put them in my tree
-> for v3.15?
+Hi,
 
-Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-Whatever works for you ;)
+Intel cpu (from IVB) include cpu cores, mem controller, and IIO.
+When hotplug cpu physically, it will involve cpu hotplug, mem hotplug,
+and pci root hotplug.
 
-I am only concerned with a regression fix "ahci: Fix broken fallback to
-single MSI mode" which would be nice to have in 3.14. But it seems pretty
-much too late.
+IIO includes pci host bridge, ioapic controller and iommu etc.
+pci devices will need to use ioapic and iommu.
+To make pci root bus hotplug working, we need ioapic hotplug support.
 
-> Bjorn
+Now ioapics are with ACPI MADT table. During booting, kernel will parse
+MADT and put info into ioapic arrays.
+Also Bjorn added one pci device based driver, but it is not wired in yet,
+as it need to call acpi_register_ioapic, and that is TBD.
 
-Thanks!
+This patchset will
+1. extend genirq to support reserve/alloc_reserved method.
+   because we want irqs for one ioapic controller to be linear mapping
+   to the gsi range.
+2. change ioapic array operation code so we could insert new ioapic and
+   remove one leave the blank slot.
+3. record irq_base in gsi_config in ioapic struct, and use it to convert gsi
+   to irq for pci device using that ioapic controller
+4. make static ioapic path (from MADT) use same code as hot-add path,
+   with reserve/alloc_reserved method.
+5. change ioapic add/remove to use acpi way, as that is only needed when
+   pci root bus hotplug.
+6. also support the case that ioapic controller is hiding in pci
+   config space or ioapic address is not managed by pci reallocation subsys.
+
+Also include some cleanups
+1. print MSI-X clearly in /proc/interrupts and dmesg.
+2. convert ioapic irq_2_pin to be generic list.
+
+It is based on linus's tree of 2014/01/02 aka v3.11-rc6.
+
+could get them from:
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-x86-irq-3.14
+
+-v3: split last patch to 4 patches per request from Bjorn.
+     drop one patch that will put pci device name in proc/interrupts
+     update changelog.
+-v4: address review from tglx, change to realloc to alloc_reserved.
+     separate x86 code and core code into different patches.
+-v5: refresh to 3.13-rc6. also add patches to move resource_to_addr to generic code.
+
+Rui Wang (1):
+  x86, ioapic: Hotadd of IOAPICs described in static MADT
+
+Yinghai Lu (32):
+  genirq: Split __irq_reserve_irqs from irq_alloc_descs
+  genirq: Add irq_alloc_reserved_desc()
+  genirq: Do not free unallocated irq descriptors
+  x86, irq: Change irq_remap_modify_chip_defaults() to static
+  x86, irq: Modify irq chip once for irq remapping
+  x86, irq: Show MSI-X clearly in debug message
+  x86, irq: Show MSI-X in /proc/interrupt
+  x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
+  ia64, irq: Add dummy create_irq_nr()
+  iommu, irq: Allocate irq_desc for dmar_msi with local node
+  x86, irq: Kill create_irq()
+  x86, irq: Convert irq_2_pin list to generic list
+  x86, irq: Add alloc_reserved_irq_and_cfg_at()
+  x86, irq: Move down arch_early_irq_init()
+  x86, irq: Split out alloc_ioapic_save_registers()
+  xen, irq: Call irq_alloc_reserved_desc_at() at first
+  x86, irq: Reserve irq range and alloc_reserved for booting path
+  x86, irq: Add ioapic_gsi_to_irq
+  x86, irq: Add for_each_ioapic helper
+  x86, irq: More strict checking about registering ioapic
+  x86, irq: Make mp_register_ioapic handle hot-added ioapic
+  x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
+  x86, ioapic: Find usable ioapic id for 64bit.
+  x86: Move declaration for mp_register_ioapic()
+  PCI, x86: Make ioapic hotplug support built-in
+  ACPI: Make map_mat_entry handle x2apic entry
+  ACPI: Move acpi_get_cpuid() to separated file
+  ACPI, ioapic: Add acpi_get_ioapic_id()
+  PCI, x86, ACPI: Link acpi ioapic register to ioapic
+  PCI, x86, ACPI: Enable ioapic hotplug support with acpi host bridge.
+  ACPI, x86/PCI: Move resource_to_addr() to acpi generic
+  PCI, x86, ACPI: get ioapic address from acpi device
+
+ arch/ia64/kernel/irq_ia64.c          |  10 +
+ arch/x86/include/asm/hw_irq.h        |   2 +-
+ arch/x86/include/asm/io_apic.h       |  13 +
+ arch/x86/include/asm/irq_remapping.h |  14 +-
+ arch/x86/include/asm/mpspec.h        |  20 +-
+ arch/x86/kernel/acpi/boot.c          |  40 ++-
+ arch/x86/kernel/apic/apic.c          |   9 +-
+ arch/x86/kernel/apic/io_apic.c       | 485 +++++++++++++++++++++++++----------
+ arch/x86/kernel/devicetree.c         |   2 +-
+ arch/x86/pci/acpi.c                  |  51 +---
+ drivers/acpi/Makefile                |   1 +
+ drivers/acpi/apic_id.c               | 294 +++++++++++++++++++++
+ drivers/acpi/pci_root.c              |   4 +
+ drivers/acpi/processor_core.c        | 191 --------------
+ drivers/acpi/resource.c              |  46 ++++
+ drivers/iommu/amd_iommu_init.c       |   2 +-
+ drivers/iommu/dmar.c                 |   2 +-
+ drivers/iommu/intel_irq_remapping.c  |   2 +-
+ drivers/iommu/irq_remapping.c        |  18 +-
+ drivers/pci/Kconfig                  |   3 +-
+ drivers/pci/ioapic.c                 | 230 ++++++++++++-----
+ drivers/xen/events.c                 |   8 +-
+ include/acpi/processor.h             |   3 -
+ include/linux/acpi.h                 |  16 ++
+ include/linux/irq.h                  |   4 +
+ include/linux/pci-acpi.h             |   8 +
+ kernel/irq/irqdesc.c                 |  80 ++++--
+ 27 files changed, 1050 insertions(+), 508 deletions(-)
+ create mode 100644 drivers/acpi/apic_id.c
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.8.4
+
