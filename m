@@ -1,74 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59930 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932367AbaAaPHF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 10:07:05 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Rasesh Mody <rmody@brocade.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 04/34] bna: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:23 +0100
-Message-Id: <8d67f1e452834fde10b872e80a2c1a432fddaabd.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+Received: from moutng.kundenserver.de ([212.227.17.8]:57944 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752519AbaACTEJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 14:04:09 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, linux-pci@vger.kernel.org,
+	Gregory Cl??ment <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Issue with the emulated PCI bridge implementation
+Date: Fri, 03 Jan 2014 20:03:37 +0100
+Message-ID: <3770300.2dqxYXsVev@wuerfel>
+In-Reply-To: <20140103184424.GC12098@obsidianresearch.com>
+References: <20131226160534.36cc4203@skate> <201401031322.31433.arnd@arndb.de> <20140103184424.GC12098@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Friday 03 January 2014 11:44:24 Jason Gunthorpe wrote:
+> On Fri, Jan 03, 2014 at 01:22:31PM +0100, Arnd Bergmann wrote:
+> 
+> > However the part that made me wonder is that an e1000e with a PCI bridge
+> > actually /should/not/ need to allocate an I/O space window with a precious
+> > mbus resource, since AFAIK this adapter does not have an I/O space BARs.
+> 
+> IIRC the e1000 still has a legacy IO port BAR.. (guessing it is used
+> for PXE boot on x86?)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/brocade/bna/bnad.c |   23 +++++++++--------------
- 1 files changed, 9 insertions(+), 14 deletions(-)
+Ok, that would certainly explain it. I actually found a reference to the
+I/O BAR in the e1000 driver now.
 
-diff --git a/drivers/net/ethernet/brocade/bna/bnad.c b/drivers/net/ethernet/brocade/bna/bnad.c
-index cf64f3d..bf436d0 100644
---- a/drivers/net/ethernet/brocade/bna/bnad.c
-+++ b/drivers/net/ethernet/brocade/bna/bnad.c
-@@ -2666,9 +2666,11 @@ bnad_enable_msix(struct bnad *bnad)
- 	for (i = 0; i < bnad->msix_num; i++)
- 		bnad->msix_table[i].entry = i;
- 
--	ret = pci_enable_msix(bnad->pcidev, bnad->msix_table, bnad->msix_num);
--	if (ret > 0) {
--		/* Not enough MSI-X vectors. */
-+	ret = pci_enable_msix_range(bnad->pcidev, bnad->msix_table,
-+				    1, bnad->msix_num);
-+	if (ret < 0) {
-+		goto intx_mode;
-+	} else if (ret < bnad->msix_num) {
- 		pr_warn("BNA: %d MSI-X vectors allocated < %d requested\n",
- 			ret, bnad->msix_num);
- 
-@@ -2681,18 +2683,11 @@ bnad_enable_msix(struct bnad *bnad)
- 		bnad->msix_num = BNAD_NUM_TXQ + BNAD_NUM_RXP +
- 			 BNAD_MAILBOX_MSIX_VECTORS;
- 
--		if (bnad->msix_num > ret)
--			goto intx_mode;
--
--		/* Try once more with adjusted numbers */
--		/* If this fails, fall back to INTx */
--		ret = pci_enable_msix(bnad->pcidev, bnad->msix_table,
--				      bnad->msix_num);
--		if (ret)
-+		if (bnad->msix_num > ret) {
-+			pci_disable_msix(bnad->pcidev);
- 			goto intx_mode;
--
--	} else if (ret < 0)
--		goto intx_mode;
-+		}
-+	}
- 
- 	pci_intx(bnad->pcidev, 0);
- 
--- 
-1.7.7.6
+> My patch set to allow the DT to turn off IO port allocation is already
+> in mainline - drop the IO ranges from the DT and no IO resources are
+> consumed at all.
 
+Ah, nice! I haven't followed that, but it sounds like a very good
+solution.
+
+> Though, that is an interesting point, a small refinement would be to
+> not allocate the pci io map if IO is turned off as well..
+
+Do you mean not call pci_ioremap_io() and pci_add_resource_offset(), or
+something else? Either way, it sounds like the correct thing to do.
+I wonder if the PCI core has any problems when there is no IO resource,
+but it's probably fine.
+
+	Arnd
