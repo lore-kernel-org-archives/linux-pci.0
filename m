@@ -1,44 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Jan 2014 17:09:38 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [Patch Part1 V3 00/20] Bugfixes and improvements for Intel IOMMU
- drivers
-Message-ID: <20140107160937.GA4446@8bytes.org>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:23184 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855AbaACAGD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:06:03 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	xen-devel@lists.xensource.com
+Subject: [PATCH v5 16/33] xen, irq: Call irq_alloc_reserved_desc_at() at first
+Date: Thu,  2 Jan 2014 16:05:48 -0800
+Message-Id: <1388707565-16535-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 06, 2014 at 02:18:07PM +0800, Jiang Liu wrote:
-> This patchset includes several bugfixes and code improvements for
-> Intel DMA remapping and interrupt remapping drivers. It's also a
-> preparation for Intel IOMMU device hotplug.
-> 
-> It applies to the latest mainstream kernel on top of
-> 	commit 7e3528c3660a2e8602abc7858b0994d611f74bc3
-> 
-> It has been tested on Intel SandyBridge and Romley-4S platforms.
+To make x86 irq allocation to be same with booting path and ioapic
+hot add path, We will pre-reserve irq for all gsi at first.
+We have to use alloc_reserved here, otherwise irq_alloc_desc_at will fail
+because bit is already get marked for pre-reserved in irq bitmaps.
 
-Okay, I reviewed these patches and they are looking fine to me. I
-applied them to my x86/vt-d branch (fixed the detect_intel_iommu()
-problem myself).
-Unless anyone speaks up against it or testing in linux-next shows issues
-I plan to send these changes upstream for v3.14.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: xen-devel@lists.xensource.com
+---
+ drivers/xen/events.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Thanks,
-
-	Joerg
-
+diff --git a/drivers/xen/events.c b/drivers/xen/events.c
+index 4035e83..020cd77 100644
+--- a/drivers/xen/events.c
++++ b/drivers/xen/events.c
+@@ -508,8 +508,12 @@ static int __must_check xen_allocate_irq_gsi(unsigned gsi)
+ 	/* Legacy IRQ descriptors are already allocated by the arch. */
+ 	if (gsi < NR_IRQS_LEGACY)
+ 		irq = gsi;
+-	else
+-		irq = irq_alloc_desc_at(gsi, -1);
++	else {
++		/* for x86, irq already get reserved for gsi */
++		irq = irq_alloc_reserved_desc_at(gsi, -1);
++		if (irq < 0)
++			irq = irq_alloc_desc_at(gsi, -1);
++	}
+ 
+ 	xen_irq_init(irq);
+ 
+-- 
+1.8.4
 
