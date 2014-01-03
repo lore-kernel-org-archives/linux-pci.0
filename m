@@ -1,181 +1,294 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+To: "H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
+	"Rafael J. Wysocki" <rjw@sisk.pl>, x86 <x86@kernel.org>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 31/33] ACPI, x86/PCI: Move resource_to_addr() to acpi generic
-Date: Thu,  2 Jan 2014 16:06:03 -0800
-Message-Id: <1388707565-16535-32-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <lenb@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>
+Subject: [PATCH v2 10/10] IOMMU: Add intel iommu irq-remapping and dmar hotplug support
+Date: Thu,  2 Jan 2014 16:08:17 -0800
+Message-Id: <1388707697-16800-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
+References: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rui wang reported ioapic hot-add does not work on his machine
-that _CRS have MEMORY_FIXED.
-He also proposed to expose resource_to_addr() and use it for ioapic.
+during hostbridge hotadd/hotremove, we call acpi_pci_iommu_add/remove in
+acpi_pci_root_add/remove.
 
-We should move it to acpi generic, as ioapi.c current is in
-drivers/pci/.
+For add, need to after ioapic add.
 
-Or should move it to acpica?
+Run dsm in acpi root device to get iommu entries, and init dmar/irq_remapping
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Donald Dutile <ddutile@redhat.com>
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- arch/x86/pci/acpi.c     | 51 ++-----------------------------------------------
- drivers/acpi/resource.c | 46 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/acpi.h    |  3 +++
- 3 files changed, 51 insertions(+), 49 deletions(-)
+ drivers/acpi/pci_root.c  |   2 +
+ drivers/iommu/dmar.c     | 201 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |   8 ++
+ 3 files changed, 211 insertions(+)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 4f25ec0..9dc42c6 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -219,60 +219,13 @@ static void teardown_mcfg_map(struct pci_root_info *info)
- #endif
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index e666be3..dd82d8b 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -600,6 +600,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+ 	}
  
- static acpi_status
--resource_to_addr(struct acpi_resource *resource,
--			struct acpi_resource_address64 *addr)
--{
--	acpi_status status;
--	struct acpi_resource_memory24 *memory24;
--	struct acpi_resource_memory32 *memory32;
--	struct acpi_resource_fixed_memory32 *fixed_memory32;
--
--	memset(addr, 0, sizeof(*addr));
--	switch (resource->type) {
--	case ACPI_RESOURCE_TYPE_MEMORY24:
--		memory24 = &resource->data.memory24;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory24->minimum;
--		addr->address_length = memory24->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_MEMORY32:
--		memory32 = &resource->data.memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = memory32->minimum;
--		addr->address_length = memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
--		fixed_memory32 = &resource->data.fixed_memory32;
--		addr->resource_type = ACPI_MEMORY_RANGE;
--		addr->minimum = fixed_memory32->address;
--		addr->address_length = fixed_memory32->address_length;
--		addr->maximum = addr->minimum + addr->address_length - 1;
--		return AE_OK;
--	case ACPI_RESOURCE_TYPE_ADDRESS16:
--	case ACPI_RESOURCE_TYPE_ADDRESS32:
--	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		status = acpi_resource_to_address64(resource, addr);
--		if (ACPI_SUCCESS(status) &&
--		    (addr->resource_type == ACPI_MEMORY_RANGE ||
--		    addr->resource_type == ACPI_IO_RANGE) &&
--		    addr->address_length > 0) {
--			return AE_OK;
--		}
--		break;
--	}
--	return AE_ERROR;
--}
--
--static acpi_status
- count_resource(struct acpi_resource *acpi_res, void *data)
- {
- 	struct pci_root_info *info = data;
- 	struct acpi_resource_address64 addr;
- 	acpi_status status;
+ 	acpi_pci_ioapic_add(root);
++	acpi_pci_iommu_add(root);
  
--	status = resource_to_addr(acpi_res, &addr);
-+	status = acpi_mem_addr_resource_to_address64(acpi_res, &addr);
- 	if (ACPI_SUCCESS(status))
- 		info->res_num++;
- 	return AE_OK;
-@@ -288,7 +241,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
- 	unsigned long flags;
- 	u64 start, orig_end, end;
+ 	pci_bus_add_devices(root->bus);
+ 	return 1;
+@@ -615,6 +616,7 @@ static void acpi_pci_root_remove(struct acpi_device *device)
  
--	status = resource_to_addr(acpi_res, &addr);
-+	status = acpi_mem_addr_resource_to_address64(acpi_res, &addr);
- 	if (!ACPI_SUCCESS(status))
- 		return AE_OK;
+ 	pci_stop_root_bus(root->bus);
  
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index b7201fc..6199ddf 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -414,6 +414,52 @@ void acpi_dev_free_resource_list(struct list_head *list)
++	acpi_pci_iommu_remove(root);
+ 	acpi_pci_ioapic_remove(root);
+ 
+ 	device_set_run_wake(root->bus->bridge, false);
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 31d7942..c74f112 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -38,6 +38,7 @@
+ #include <linux/tboot.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
++#include <acpi/acpi.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/iommu_table.h>
+ 
+@@ -1548,3 +1549,203 @@ int __init dmar_ir_support(void)
+ 	return dmar->flags & 0x1;
  }
- EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
- 
-+acpi_status acpi_mem_addr_resource_to_address64(struct acpi_resource *resource,
-+			struct acpi_resource_address64 *addr)
-+{
-+	acpi_status status;
-+	struct acpi_resource_memory24 *memory24;
-+	struct acpi_resource_memory32 *memory32;
-+	struct acpi_resource_fixed_memory32 *fixed_memory32;
+ IOMMU_INIT_POST(detect_intel_iommu);
 +
-+	memset(addr, 0, sizeof(*addr));
-+	switch (resource->type) {
-+	case ACPI_RESOURCE_TYPE_MEMORY24:
-+		memory24 = &resource->data.memory24;
-+		addr->resource_type = ACPI_MEMORY_RANGE;
-+		addr->minimum = memory24->minimum;
-+		addr->address_length = memory24->address_length;
-+		addr->maximum = addr->minimum + addr->address_length - 1;
-+		return AE_OK;
-+	case ACPI_RESOURCE_TYPE_MEMORY32:
-+		memory32 = &resource->data.memory32;
-+		addr->resource_type = ACPI_MEMORY_RANGE;
-+		addr->minimum = memory32->minimum;
-+		addr->address_length = memory32->address_length;
-+		addr->maximum = addr->minimum + addr->address_length - 1;
-+		return AE_OK;
-+	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-+		fixed_memory32 = &resource->data.fixed_memory32;
-+		addr->resource_type = ACPI_MEMORY_RANGE;
-+		addr->minimum = fixed_memory32->address;
-+		addr->address_length = fixed_memory32->address_length;
-+		addr->maximum = addr->minimum + addr->address_length - 1;
-+		return AE_OK;
-+	case ACPI_RESOURCE_TYPE_ADDRESS16:
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+	case ACPI_RESOURCE_TYPE_ADDRESS64:
-+		status = acpi_resource_to_address64(resource, addr);
-+		if (ACPI_SUCCESS(status) &&
-+		    (addr->resource_type == ACPI_MEMORY_RANGE ||
-+		    addr->resource_type == ACPI_IO_RANGE) &&
-+		    addr->address_length > 0) {
-+			return AE_OK;
-+		}
-+		break;
++static u8 dmar_uuid_str[] = "D8C1A3A6-BE9B-4C9B-91BF-C3CB81FC5DAF";
++
++static int acpi_dmar_dsm_support(acpi_handle handle)
++{
++	int support = 0;
++	struct acpi_dsm_context context = {
++		.uuid_str = dmar_uuid_str,
++		.rev = 1,
++		.func_idx = 0,
++	};
++
++	if (ACPI_SUCCESS(acpi_run_dsm(handle, &context))) {
++		u32 *ret = context.ret.pointer;
++		support = ret[0];
++		kfree(context.ret.pointer);
 +	}
-+	return AE_ERROR;
++
++	if (support & 1)
++		return support & 0x0e;
++
++	return 0;
 +}
 +
- struct res_proc_context {
- 	struct list_head *list;
- 	int (*preproc)(struct acpi_resource *, void *);
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index ee8058e..762980a 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -293,6 +293,9 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
- bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
- 				 struct resource *res);
- 
-+acpi_status acpi_mem_addr_resource_to_address64(struct acpi_resource *resource,
-+			struct acpi_resource_address64 *addr);
++static void *acpi_dmar_dsm_run(acpi_handle handle, int idx)
++{
++	struct acpi_dsm_context context = {
++		.uuid_str = dmar_uuid_str,
++		.rev = 1,
++		.func_idx = idx,
++	};
 +
- struct resource_list_entry {
- 	struct list_head node;
- 	struct resource res;
++	if (ACPI_SUCCESS(acpi_run_dsm(handle, &context)))
++		return context.ret.pointer;
++
++	return NULL;
++}
++
++static void handle_iommu_add(acpi_handle handle, void **d, void **a)
++{
++	int support;
++	struct acpi_dmar_header *header;
++	struct dmar_drhd_unit *dmaru = NULL;
++	struct dmar_atsr_unit *atsru = NULL;
++
++	*d = NULL;
++	*a = NULL;
++
++	support = acpi_dmar_dsm_support(handle);
++
++	if (!support)
++		return;
++
++	/* DRHD */
++	if (support & (1<<1)) {
++		header = acpi_dmar_dsm_run(handle, 1);
++		dmar_table_print_dmar_entry(header);
++		__dmar_parse_one_drhd(header, &dmaru);
++	}
++
++	if (!dmaru)
++		return;
++
++	/* ATSR */
++	if (support & (1<<2)) {
++		header = acpi_dmar_dsm_run(handle, 2);
++		dmar_table_print_dmar_entry(header);
++		__dmar_parse_one_atsr(header, &atsru);
++	}
++
++	/* RHSA */
++	if (support & (1<<3)) {
++		header = acpi_dmar_dsm_run(handle, 3);
++		dmar_table_print_dmar_entry(header);
++		dmar_parse_one_rhsa(header);
++		kfree(header);
++	}
++
++	/*
++	 *  only need to init intr_remap and dmar for hot-add ones
++	 *  after enable_IR() or pci_iommu_init
++	 */
++	/*
++	 * TODO: handle parsing failure for pre-installed hotplug one
++	 *	Could make every parse_one duplicate the entry table?
++	 */
++	if (irq_remapping_enabled == 1)
++		intel_enable_irq_remapping_one(dmaru);
++	if (irq_remapping_enabled == 1 || intel_iommu_enabled == 1)
++		dmar_parse_dev(dmaru);
++	if (intel_iommu_enabled == 1) {
++		init_dmar_one(dmaru);
++		if (atsru) {
++			header = atsru->hdr;
++			if (atsr_parse_dev(atsru)) {
++				kfree(header);
++				atsru = NULL;
++			}
++			*a = atsru;
++		}
++	}
++	*d = dmaru;
++}
++
++static void handle_iommu_remove(void *drhd, void *atsr)
++{
++	struct dmar_drhd_unit *dmaru = drhd;
++	struct dmar_atsr_unit *atsru = atsr;
++
++	if (!dmaru)
++		return;
++
++	if (irq_remapping_enabled == 1)
++		disable_irq_remapping_one(dmaru);
++	if (intel_iommu_enabled == 1) {
++		free_dmar_iommu(dmaru->iommu);
++		if (atsru) {
++			kfree(atsru->devices);
++			remove_atsru_from_saved_dev_atsru_list(atsru);
++		}
++	}
++	if (irq_remapping_enabled == 1 || intel_iommu_enabled == 1) {
++		kfree(dmaru->devices);
++		remove_dmaru_from_saved_dev_drhd_list(dmaru);
++	}
++	if (atsru) {
++		kfree(atsru->hdr);
++		list_del(&atsru->list);
++		kfree(atsru);
++	}
++	free_iommu(dmaru->iommu);
++	kfree(dmaru->hdr);
++	list_del(&dmaru->list);
++	kfree(dmaru);
++}
++
++struct acpi_pci_iommu {
++	acpi_handle root_handle;
++	void *dmaru;
++	void *atsru;
++	struct list_head list;
++};
++
++static LIST_HEAD(iommu_list);
++static DEFINE_MUTEX(iommu_list_lock);
++
++static acpi_status register_iommu(acpi_handle handle, u32 lvl,
++				  void *context, void **rv)
++{
++	acpi_handle root_handle = context;
++	void *dmaru, *atsru;
++	struct acpi_pci_iommu *iommu;
++
++	handle_iommu_add(handle, &dmaru, &atsru);
++	if (!dmaru)
++		return AE_OK;
++
++	iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
++	if (!iommu) {
++		pr_err("%s: cannot allocate memory\n", __func__);
++		handle_iommu_remove(dmaru, atsru);
++		return AE_OK;
++	}
++	iommu->root_handle = root_handle;
++	iommu->dmaru = dmaru;
++	iommu->atsru = atsru;
++
++	mutex_lock(&iommu_list_lock);
++	list_add(&iommu->list, &iommu_list);
++	mutex_unlock(&iommu_list_lock);
++
++	return AE_OK;
++}
++
++void acpi_pci_iommu_add(struct acpi_pci_root *root)
++{
++	acpi_status status;
++
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
++				     (u32)1, register_iommu, NULL,
++				     root->device->handle,
++				     NULL);
++	if (ACPI_FAILURE(status))
++		pr_err("%s: register_iommu failure - %d", __func__, status);
++}
++
++void acpi_pci_iommu_remove(struct acpi_pci_root *root)
++{
++	struct acpi_pci_iommu *iommu, *tmp;
++
++	mutex_lock(&iommu_list_lock);
++	list_for_each_entry_safe(iommu, tmp, &iommu_list, list) {
++		if (root->device->handle != iommu->root_handle)
++			continue;
++		list_del(&iommu->list);
++		handle_iommu_remove(iommu->dmaru, iommu->atsru);
++		kfree(iommu);
++	}
++	mutex_unlock(&iommu_list_lock);
++}
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index d2a976a..f00a89f 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -86,4 +86,12 @@ extern bool aer_acpi_firmware_first(void);
+ static inline bool aer_acpi_firmware_first(void) { return false; }
+ #endif
+ 
++#ifdef CONFIG_DMAR_TABLE
++void acpi_pci_iommu_add(struct acpi_pci_root *root);
++void acpi_pci_iommu_remove(struct acpi_pci_root *root);
++#else
++static inline void acpi_pci_iommu_add(struct acpi_pci_root *root) { }
++static inline void acpi_pci_iommu_remove(struct acpi_pci_root *root) { }
++#endif
++
+ #endif	/* _PCI_ACPI_H_ */
 -- 
 1.8.4
 
