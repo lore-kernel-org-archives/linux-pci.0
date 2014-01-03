@@ -1,125 +1,487 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49471 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbaAISZQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jan 2014 13:25:16 -0500
-Message-ID: <1389291911.3209.234.camel@bling.home>
-Subject: Re: [PATCH] pci/iov: VFs are never multifunction
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	sathya.perla@emulex.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ajit.khaparde@emulex.com, Don Dutile <ddutile@redhat.com>,
-	subbu.seetharaman@emulex.com, Myron Stowe <myron.stowe@redhat.com>
-Date: Thu, 09 Jan 2014 11:25:11 -0700
-In-Reply-To: <CAErSpo4Asnx4JiZvppZLUzxmVymz0t-fHXRFMr81-Qz31XyR+g@mail.gmail.com>
-References: <20140109153513.21446.31778.stgit@bling.home>
-	 <CAErSpo4Asnx4JiZvppZLUzxmVymz0t-fHXRFMr81-Qz31XyR+g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 27/33] ACPI: Move acpi_get_cpuid() to separated file
+Date: Thu,  2 Jan 2014 16:05:59 -0800
+Message-Id: <1388707565-16535-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-01-09 at 11:08 -0700, Bjorn Helgaas wrote:
-> On Thu, Jan 9, 2014 at 8:36 AM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > Per the SR-IOV spec rev 1.1:
-> >
-> > 3.4.1.9 Header Type (Offset 0Eh)
-> >
-> > "... For VFs, this register must be RO Zero."
-> >
-> > Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
-> > NIC.  When they do it makes us handle ACS testing and therefore IOMMU
-> > groups as if they were actual multifunction devices and require ACS
-> > capabilities to make sure there's no peer-to-peer between functions.
-> > VFs are never traditional multifunction devices, so simply clear this
-> > bit before we get any further into setup.
-> 
-> This seems reasonable.  Do you have "lspci -vvxxxx" output for this
-> device?  I'd like to save it for future reference.
+Will need to reuse searching MADT for ioapic, but should add
+related function like acpi_get_ioapic_id to processor_core.c
+to pollute the file.
 
-Sure, here's a VF:
+Move related cpu apic id search to separated file.
 
-09:04.0 Ethernet controller: Emulex Corporation OneConnect 10Gb NIC (be3) (rev 01)
-	Subsystem: Emulex Corporation Device e722
-	Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0
-	Region 0: [virtual] Memory at df980000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: [48] MSI-X: Enable+ Count=2 Masked-
-		Vector table: BAR=0 offset=00002000
-		PBA: BAR=0 offset=00003000
-	Capabilities: [c0] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <1us, L1 <16us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-		DevCtl:	Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
-			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop- FLReset-
-			MaxPayload 256 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #0, Speed 5GT/s, Width x8, ASPM L0s L1, Latency L0 <2us, L1 <16us
-			ClockPM- Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 5GT/s, Width x8, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR-, OBFF Not Supported
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [b8] Vital Product Data
-		Product Name: O�L\x00O102-NM, 10GBIT/S ETHERNET ADAPTER, PCIE, 2P, 10GBASE-SR OPTICAL, NIC VF
-		Read-only fields:
-			[PN] Part number: OCe11102-NM
-			[SN] Serial number: BK20210736
-			[V0] Vendor specific: BK20210736
-			[VB] Vendor specific: PW=12W; PCIe 2.0 x8 5GT/s
-			[V1] Vendor specific: Emulex OneConnect OCe11102-NM 2NM 2t PCIe 10GbE CNA
-			[V2] Vendor specific: OCe11102-NM
-			[V4] Vendor specific: 0
-			[RV] Reserved: checksum bad, 29 byte(s) reserved
-		End
-	Capabilities: [100 v1] Alternative Routing-ID Interpretation (ARI)
-		ARICap:	MFVC- ACS-, Next Function: 0
-		ARICtl:	MFVC- ACS-, Function Group: 0
-	Capabilities: [12c v1] Transaction Processing Hints
-		No steering table available
-	Kernel driver in use: vfio-pci
-00: ff ff ff ff 04 00 10 00 01 00 00 02 00 00 80 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 df 10 22 e7
-30: 00 00 00 00 48 00 00 00 00 00 00 00 00 00 00 00
-40: 00 00 00 00 00 00 00 00 11 c0 01 80 00 20 00 00
-50: 00 30 00 00 00 26 c0 90 41 01 01 c0 41 06 00 ff
-60: fc ff f4 00 00 00 00 00 0f 4c a7 09 bf 05 ff ff
-70: e0 e0 ff ff ff ff 08 7c 00 00 00 00 00 c0 00 00
-80: 11 10 00 00 11 10 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 04 00 00 00 00
-b0: ff ff ff ff ff ff ff ff 03 00 fc 80 00 00 00 78
-c0: 10 b8 02 00 02 89 64 10 2e 20 00 00 82 5c 42 00
-d0: 40 00 82 10 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/Makefile         |   1 +
+ drivers/acpi/apic_id.c        | 201 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/processor_core.c | 193 ----------------------------------------
+ include/acpi/processor.h      |   3 -
+ include/linux/acpi.h          |   4 +
+ 5 files changed, 206 insertions(+), 196 deletions(-)
+ create mode 100644 drivers/acpi/apic_id.c
 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >  drivers/pci/iov.c |    1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > index 1fe2d6f..e2fbb67 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -84,6 +84,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
-> >         virtfn->dev.parent = dev->dev.parent;
-> >         virtfn->physfn = pci_dev_get(dev);
-> >         virtfn->is_virtfn = 1;
-> > +       virtfn->multifunction = 0;
-> >
-> >         for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> >                 res = dev->resource + PCI_IOV_RESOURCES + i;
-> >
-
-
+diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+index 0331f91..d922feb 100644
+--- a/drivers/acpi/Makefile
++++ b/drivers/acpi/Makefile
+@@ -34,6 +34,7 @@ acpi-$(CONFIG_ACPI_SLEEP)	+= proc.o
+ acpi-y				+= bus.o glue.o
+ acpi-y				+= scan.o
+ acpi-y				+= resource.o
++acpi-y				+= apic_id.o
+ acpi-y				+= acpi_processor.o
+ acpi-y				+= processor_core.o
+ acpi-y				+= ec.o
+diff --git a/drivers/acpi/apic_id.c b/drivers/acpi/apic_id.c
+new file mode 100644
+index 0000000..bf4e6de
+--- /dev/null
++++ b/drivers/acpi/apic_id.c
+@@ -0,0 +1,201 @@
++/*
++ * acpi_get_cpuid
++ */
++#include <linux/export.h>
++#include <linux/slab.h>
++#include <linux/acpi.h>
++
++#include "internal.h"
++
++static int map_lapic_id(struct acpi_subtable_header *entry,
++		 u32 acpi_id, int *apic_id)
++{
++	struct acpi_madt_local_apic *lapic =
++		(struct acpi_madt_local_apic *)entry;
++
++	if (!(lapic->lapic_flags & ACPI_MADT_ENABLED))
++		return 0;
++
++	if (lapic->processor_id != acpi_id)
++		return 0;
++
++	*apic_id = lapic->id;
++	return 1;
++}
++
++static int map_x2apic_id(struct acpi_subtable_header *entry,
++			 int device_declaration, u32 acpi_id, int *apic_id)
++{
++	struct acpi_madt_local_x2apic *apic =
++		(struct acpi_madt_local_x2apic *)entry;
++
++	if (!(apic->lapic_flags & ACPI_MADT_ENABLED))
++		return 0;
++
++	if (device_declaration && (apic->uid == acpi_id)) {
++		*apic_id = apic->local_apic_id;
++		return 1;
++	}
++
++	return 0;
++}
++
++static int map_lsapic_id(struct acpi_subtable_header *entry,
++		int device_declaration, u32 acpi_id, int *apic_id)
++{
++	struct acpi_madt_local_sapic *lsapic =
++		(struct acpi_madt_local_sapic *)entry;
++
++	if (!(lsapic->lapic_flags & ACPI_MADT_ENABLED))
++		return 0;
++
++	if (device_declaration) {
++		if ((entry->length < 16) || (lsapic->uid != acpi_id))
++			return 0;
++	} else if (lsapic->processor_id != acpi_id)
++		return 0;
++
++	*apic_id = (lsapic->id << 8) | lsapic->eid;
++	return 1;
++}
++
++static int map_madt_entry(int type, u32 acpi_id)
++{
++	unsigned long madt_end, entry;
++	static struct acpi_table_madt *madt;
++	static int read_madt;
++	int apic_id = -1;
++
++	if (!read_madt) {
++		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
++					(struct acpi_table_header **)&madt)))
++			madt = NULL;
++		read_madt++;
++	}
++
++	if (!madt)
++		return apic_id;
++
++	entry = (unsigned long)madt;
++	madt_end = entry + madt->header.length;
++
++	/* Parse all entries looking for a match. */
++
++	entry += sizeof(struct acpi_table_madt);
++	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
++		struct acpi_subtable_header *header =
++			(struct acpi_subtable_header *)entry;
++		if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
++			if (map_lapic_id(header, acpi_id, &apic_id))
++				break;
++		} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
++			if (map_x2apic_id(header, type, acpi_id, &apic_id))
++				break;
++		} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
++			if (map_lsapic_id(header, type, acpi_id, &apic_id))
++				break;
++		}
++		entry += header->length;
++	}
++	return apic_id;
++}
++
++static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
++{
++	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++	union acpi_object *obj;
++	struct acpi_subtable_header *header;
++	int apic_id = -1;
++
++	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
++		goto exit;
++
++	if (!buffer.length || !buffer.pointer)
++		goto exit;
++
++	obj = buffer.pointer;
++	if (obj->type != ACPI_TYPE_BUFFER ||
++	    obj->buffer.length < sizeof(struct acpi_subtable_header)) {
++		goto exit;
++	}
++
++	header = (struct acpi_subtable_header *)obj->buffer.pointer;
++	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
++		map_lapic_id(header, acpi_id, &apic_id);
++	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
++		map_x2apic_id(header, type, acpi_id, &apic_id);
++	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
++		map_lsapic_id(header, type, acpi_id, &apic_id);
++	}
++
++exit:
++	kfree(buffer.pointer);
++	return apic_id;
++}
++
++int acpi_get_apicid(acpi_handle handle, int type, u32 acpi_id)
++{
++	int apic_id;
++
++	apic_id = map_mat_entry(handle, type, acpi_id);
++	if (apic_id == -1)
++		apic_id = map_madt_entry(type, acpi_id);
++
++	return apic_id;
++}
++
++int acpi_map_cpuid(int apic_id, u32 acpi_id)
++{
++#ifdef CONFIG_SMP
++	int i;
++#endif
++
++	if (apic_id == -1) {
++		/*
++		 * On UP processor, there is no _MAT or MADT table.
++		 * So above apic_id is always set to -1.
++		 *
++		 * BIOS may define multiple CPU handles even for UP processor.
++		 * For example,
++		 *
++		 * Scope (_PR)
++                 * {
++		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
++		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
++		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
++		 *     Processor (CPU3, 0x03, 0x00000410, 0x06) {}
++		 * }
++		 *
++		 * Ignores apic_id and always returns 0 for the processor
++		 * handle with acpi id 0 if nr_cpu_ids is 1.
++		 * This should be the case if SMP tables are not found.
++		 * Return -1 for other CPU's handle.
++		 */
++		if (nr_cpu_ids <= 1 && acpi_id == 0)
++			return acpi_id;
++		else
++			return apic_id;
++	}
++
++#ifdef CONFIG_SMP
++	for_each_possible_cpu(i) {
++		if (cpu_physical_id(i) == apic_id)
++			return i;
++	}
++#else
++	/* In UP kernel, only processor 0 is valid */
++	if (apic_id == 0)
++		return apic_id;
++#endif
++	return -1;
++}
++
++int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
++{
++	int apic_id;
++
++	apic_id = acpi_get_apicid(handle, type, acpi_id);
++
++	return acpi_map_cpuid(apic_id, acpi_id);
++}
++EXPORT_SYMBOL_GPL(acpi_get_cpuid);
+diff --git a/drivers/acpi/processor_core.c b/drivers/acpi/processor_core.c
+index 559e762..ad9a850 100644
+--- a/drivers/acpi/processor_core.c
++++ b/drivers/acpi/processor_core.c
+@@ -38,199 +38,6 @@ static struct dmi_system_id processor_idle_dmi_table[] __initdata = {
+ 	{},
+ };
+ 
+-static int map_lapic_id(struct acpi_subtable_header *entry,
+-		 u32 acpi_id, int *apic_id)
+-{
+-	struct acpi_madt_local_apic *lapic =
+-		(struct acpi_madt_local_apic *)entry;
+-
+-	if (!(lapic->lapic_flags & ACPI_MADT_ENABLED))
+-		return 0;
+-
+-	if (lapic->processor_id != acpi_id)
+-		return 0;
+-
+-	*apic_id = lapic->id;
+-	return 1;
+-}
+-
+-static int map_x2apic_id(struct acpi_subtable_header *entry,
+-			 int device_declaration, u32 acpi_id, int *apic_id)
+-{
+-	struct acpi_madt_local_x2apic *apic =
+-		(struct acpi_madt_local_x2apic *)entry;
+-
+-	if (!(apic->lapic_flags & ACPI_MADT_ENABLED))
+-		return 0;
+-
+-	if (device_declaration && (apic->uid == acpi_id)) {
+-		*apic_id = apic->local_apic_id;
+-		return 1;
+-	}
+-
+-	return 0;
+-}
+-
+-static int map_lsapic_id(struct acpi_subtable_header *entry,
+-		int device_declaration, u32 acpi_id, int *apic_id)
+-{
+-	struct acpi_madt_local_sapic *lsapic =
+-		(struct acpi_madt_local_sapic *)entry;
+-
+-	if (!(lsapic->lapic_flags & ACPI_MADT_ENABLED))
+-		return 0;
+-
+-	if (device_declaration) {
+-		if ((entry->length < 16) || (lsapic->uid != acpi_id))
+-			return 0;
+-	} else if (lsapic->processor_id != acpi_id)
+-		return 0;
+-
+-	*apic_id = (lsapic->id << 8) | lsapic->eid;
+-	return 1;
+-}
+-
+-static int map_madt_entry(int type, u32 acpi_id)
+-{
+-	unsigned long madt_end, entry;
+-	static struct acpi_table_madt *madt;
+-	static int read_madt;
+-	int apic_id = -1;
+-
+-	if (!read_madt) {
+-		if (ACPI_FAILURE(acpi_get_table(ACPI_SIG_MADT, 0,
+-					(struct acpi_table_header **)&madt)))
+-			madt = NULL;
+-		read_madt++;
+-	}
+-
+-	if (!madt)
+-		return apic_id;
+-
+-	entry = (unsigned long)madt;
+-	madt_end = entry + madt->header.length;
+-
+-	/* Parse all entries looking for a match. */
+-
+-	entry += sizeof(struct acpi_table_madt);
+-	while (entry + sizeof(struct acpi_subtable_header) < madt_end) {
+-		struct acpi_subtable_header *header =
+-			(struct acpi_subtable_header *)entry;
+-		if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
+-			if (map_lapic_id(header, acpi_id, &apic_id))
+-				break;
+-		} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
+-			if (map_x2apic_id(header, type, acpi_id, &apic_id))
+-				break;
+-		} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
+-			if (map_lsapic_id(header, type, acpi_id, &apic_id))
+-				break;
+-		}
+-		entry += header->length;
+-	}
+-	return apic_id;
+-}
+-
+-static int map_mat_entry(acpi_handle handle, int type, u32 acpi_id)
+-{
+-	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+-	union acpi_object *obj;
+-	struct acpi_subtable_header *header;
+-	int apic_id = -1;
+-
+-	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
+-		goto exit;
+-
+-	if (!buffer.length || !buffer.pointer)
+-		goto exit;
+-
+-	obj = buffer.pointer;
+-	if (obj->type != ACPI_TYPE_BUFFER ||
+-	    obj->buffer.length < sizeof(struct acpi_subtable_header)) {
+-		goto exit;
+-	}
+-
+-	header = (struct acpi_subtable_header *)obj->buffer.pointer;
+-	if (header->type == ACPI_MADT_TYPE_LOCAL_APIC) {
+-		map_lapic_id(header, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_X2APIC) {
+-		map_x2apic_id(header, type, acpi_id, &apic_id);
+-	} else if (header->type == ACPI_MADT_TYPE_LOCAL_SAPIC) {
+-		map_lsapic_id(header, type, acpi_id, &apic_id);
+-	}
+-
+-exit:
+-	kfree(buffer.pointer);
+-	return apic_id;
+-}
+-
+-int acpi_get_apicid(acpi_handle handle, int type, u32 acpi_id)
+-{
+-	int apic_id;
+-
+-	apic_id = map_mat_entry(handle, type, acpi_id);
+-	if (apic_id == -1)
+-		apic_id = map_madt_entry(type, acpi_id);
+-
+-	return apic_id;
+-}
+-
+-int acpi_map_cpuid(int apic_id, u32 acpi_id)
+-{
+-#ifdef CONFIG_SMP
+-	int i;
+-#endif
+-
+-	if (apic_id == -1) {
+-		/*
+-		 * On UP processor, there is no _MAT or MADT table.
+-		 * So above apic_id is always set to -1.
+-		 *
+-		 * BIOS may define multiple CPU handles even for UP processor.
+-		 * For example,
+-		 *
+-		 * Scope (_PR)
+-                 * {
+-		 *     Processor (CPU0, 0x00, 0x00000410, 0x06) {}
+-		 *     Processor (CPU1, 0x01, 0x00000410, 0x06) {}
+-		 *     Processor (CPU2, 0x02, 0x00000410, 0x06) {}
+-		 *     Processor (CPU3, 0x03, 0x00000410, 0x06) {}
+-		 * }
+-		 *
+-		 * Ignores apic_id and always returns 0 for the processor
+-		 * handle with acpi id 0 if nr_cpu_ids is 1.
+-		 * This should be the case if SMP tables are not found.
+-		 * Return -1 for other CPU's handle.
+-		 */
+-		if (nr_cpu_ids <= 1 && acpi_id == 0)
+-			return acpi_id;
+-		else
+-			return apic_id;
+-	}
+-
+-#ifdef CONFIG_SMP
+-	for_each_possible_cpu(i) {
+-		if (cpu_physical_id(i) == apic_id)
+-			return i;
+-	}
+-#else
+-	/* In UP kernel, only processor 0 is valid */
+-	if (apic_id == 0)
+-		return apic_id;
+-#endif
+-	return -1;
+-}
+-
+-int acpi_get_cpuid(acpi_handle handle, int type, u32 acpi_id)
+-{
+-	int apic_id;
+-
+-	apic_id = acpi_get_apicid(handle, type, acpi_id);
+-
+-	return acpi_map_cpuid(apic_id, acpi_id);
+-}
+-EXPORT_SYMBOL_GPL(acpi_get_cpuid);
+-
+ static bool __init processor_physically_present(acpi_handle handle)
+ {
+ 	int cpuid, type;
+diff --git a/include/acpi/processor.h b/include/acpi/processor.h
+index 6eb1d3c..337e731 100644
+--- a/include/acpi/processor.h
++++ b/include/acpi/processor.h
+@@ -314,9 +314,6 @@ static inline int acpi_processor_get_bios_limit(int cpu, unsigned int *limit)
+ 
+ /* in processor_core.c */
+ void acpi_processor_set_pdc(acpi_handle handle);
+-int acpi_get_apicid(acpi_handle, int type, u32 acpi_id);
+-int acpi_map_cpuid(int apic_id, u32 acpi_id);
+-int acpi_get_cpuid(acpi_handle, int type, u32 acpi_id);
+ 
+ /* in processor_throttling.c */
+ int acpi_processor_tstate_has_changed(struct acpi_processor *pr);
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index d9099b1..2f73b81 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -134,6 +134,10 @@ int acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu);
+ int acpi_unmap_lsapic(int cpu);
+ #endif /* CONFIG_ACPI_HOTPLUG_CPU */
+ 
++int acpi_get_apicid(acpi_handle, int type, u32 acpi_id);
++int acpi_map_cpuid(int apic_id, u32 acpi_id);
++int acpi_get_cpuid(acpi_handle, int type, u32 acpi_id);
++
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base);
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base);
+ void acpi_irq_stats_init(void);
+-- 
+1.8.4
 
