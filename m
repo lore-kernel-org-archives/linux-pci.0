@@ -1,139 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <lenb@kernel.org>
-Subject: [PATCH v2 05/10] ACPI: Add acpi_run_dsm()
-Date: Thu,  2 Jan 2014 16:08:12 -0800
-Message-Id: <1388707697-16800-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
-References: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:45567 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752463AbaACTK0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 14:10:26 -0500
+Date: Fri, 3 Jan 2014 20:10:24 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Lior Amsalem <alior@marvell.com>, linux-pci@vger.kernel.org,
+	Gregory Cl??ment <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Issue with the emulated PCI bridge implementation
+Message-ID: <20140103201024.08ca11fb@skate>
+In-Reply-To: <3246739.aRbALcNl1Y@wuerfel>
+References: <20131226160534.36cc4203@skate>
+	<201401031322.31433.arnd@arndb.de>
+	<20140103200106.5a0999a3@skate>
+	<3246739.aRbALcNl1Y@wuerfel>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will need to use that get dmar entries for hotplug
+Dear Arnd Bergmann,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: Rafael J. Wysocki <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/bus.c   | 77 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/acpi.h | 10 +++++++
- 2 files changed, 87 insertions(+)
+On Fri, 03 Jan 2014 20:04:57 +0100, Arnd Bergmann wrote:
 
-diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-index bba9b72..14d18d3 100644
---- a/drivers/acpi/bus.c
-+++ b/drivers/acpi/bus.c
-@@ -283,6 +283,83 @@ out_kfree:
- }
- EXPORT_SYMBOL(acpi_run_osc);
+> > Digging in the LAKML archive, I found a lspci -v output about the
+> > e1000e, and it has an I/O space:
+> 
+> Ok, thanks for the confirmation!
+> 
+> Do you mind posting your hack here? It may be useful for others as
+> well, such as the xgene developers that seem to be doing funny things
+> with their I/O space.
+
+The current hack is the following very ugly piece of code... It runs
+some command and reads back some registers, and you should see some
+well-known values (which can be found in the e1000 datasheet, I don't
+remember them right now).
+
+I'm not sure why I do the pci_request_selected_regions_exclusive() call
+*after* the actual in/out. Probably a mistake, but as I said, this is
+ugly stuff :)
+
+Thomas
+
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index fbf75fd..739ca10 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -6045,7 +6045,7 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (aspm_disable_flag)
+ 		e1000e_disable_aspm(pdev, aspm_disable_flag);
  
-+static void acpi_print_dsm_error(acpi_handle handle,
-+	struct acpi_dsm_context *context, char *error)
-+{
-+	struct acpi_buffer buffer = {ACPI_ALLOCATE_BUFFER};
-+
-+	if (ACPI_FAILURE(acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer)))
-+		printk(KERN_DEBUG "%s for idx %x\n", error, context->func_idx);
-+	else {
-+		printk(KERN_DEBUG "%s:%s for idx %x\n",
-+			(char *)buffer.pointer, error, context->func_idx);
-+		kfree(buffer.pointer);
-+	}
-+}
-+
-+acpi_status acpi_run_dsm(acpi_handle handle, struct acpi_dsm_context *context)
-+{
-+	acpi_status status;
-+	struct acpi_object_list input;
-+	union acpi_object in_params[4];
-+	union acpi_object *out_obj;
-+	u8 uuid[16];
-+	struct acpi_buffer output = {ACPI_ALLOCATE_BUFFER, NULL};
-+
-+	if (!context)
-+		return AE_ERROR;
-+	if (ACPI_FAILURE(acpi_str_to_uuid(context->uuid_str, uuid)))
-+		return AE_ERROR;
-+	context->ret.length = ACPI_ALLOCATE_BUFFER;
-+	context->ret.pointer = NULL;
-+
-+	/* Setting up input parameters */
-+	input.count = 4;
-+	input.pointer = in_params;
-+	in_params[0].type		= ACPI_TYPE_BUFFER;
-+	in_params[0].buffer.length	= 16;
-+	in_params[0].buffer.pointer	= uuid;
-+	in_params[1].type		= ACPI_TYPE_INTEGER;
-+	in_params[1].integer.value	= context->rev;
-+	in_params[2].type		= ACPI_TYPE_INTEGER;
-+	in_params[2].integer.value	= context->func_idx;
-+	in_params[3].type		= ACPI_TYPE_PACKAGE;
-+	in_params[3].package.count	= context->func_argc;
-+	in_params[3].package.elements	= context->func_argv;
-+
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status))
-+		return status;
-+
-+	if (!output.length)
-+		return AE_NULL_OBJECT;
-+
-+	out_obj = output.pointer;
-+	if (out_obj->type != ACPI_TYPE_BUFFER) {
-+		acpi_print_dsm_error(handle, context,
-+			"_DSM evaluation returned wrong type");
-+		status = AE_TYPE;
-+		goto out_kfree;
-+	}
-+
-+	context->ret.length = out_obj->buffer.length;
-+	context->ret.pointer = kmalloc(context->ret.length, GFP_KERNEL);
-+	if (!context->ret.pointer) {
-+		status =  AE_NO_MEMORY;
-+		goto out_kfree;
-+	}
-+	memcpy(context->ret.pointer, out_obj->buffer.pointer,
-+		context->ret.length);
-+	status =  AE_OK;
-+
-+out_kfree:
-+	kfree(output.pointer);
-+	if (status != AE_OK)
-+		context->ret.pointer = NULL;
-+	return status;
-+}
-+EXPORT_SYMBOL(acpi_run_dsm);
-+
- bool osc_sb_apei_support_acked;
- static u8 sb_uuid_str[] = "0811B06E-4A27-44F9-8D60-3CBBC22E7B48";
- static void acpi_bus_osc_support(void)
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 762980a..02daa9c 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -323,6 +323,16 @@ void __init acpi_nvs_nosave(void);
- void __init acpi_nvs_nosave_s3(void);
- #endif /* CONFIG_PM_SLEEP */
+-	err = pci_enable_device_mem(pdev);
++	err = pci_enable_device(pdev);
+ 	if (err)
+ 		return err;
  
-+struct acpi_dsm_context {
-+	char *uuid_str; /* uuid string */
-+	int rev;
-+	int func_idx;	/* function index */
-+	int func_argc;
-+	union acpi_object *func_argv;
-+	struct acpi_buffer ret; /* free by caller if success */
-+};
-+acpi_status acpi_run_dsm(acpi_handle handle, struct acpi_dsm_context *context);
+@@ -6073,6 +6073,34 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (err)
+ 		goto err_pci_reg;
+ 
++	dev_info(&pdev->dev, "==> e1000e: I/O start 0x%x, len 0x%x\n",
++		 pci_resource_start(pdev, 2),
++		 pci_resource_len(pdev, 2));
 +
- struct acpi_osc_context {
- 	char *uuid_str;			/* UUID string */
- 	int rev;
++
++	{
++		unsigned long ioport_base = pci_resource_start(pdev, 2);
++		dev_info(&pdev->dev, "1. 0x%x 0x%x 0x%x 0x%x\n",
++			 inl(ioport_base),
++			 inl(ioport_base + 4),
++			 inl(ioport_base + 8),
++			 inl(ioport_base + 12));
++		outl(0x38, ioport_base);
++		dev_info(&pdev->dev, "2. 0x%x 0x%x 0x%x 0x%x\n",
++			 inl(ioport_base),
++			 inl(ioport_base + 4),
++			 inl(ioport_base + 8),
++			 inl(ioport_base + 12));
++	}
++
++	err = pci_request_selected_regions_exclusive(pdev,
++						     pci_select_bars(pdev, IORESOURCE_IO),
++						     e1000e_driver_name);
++	if (err) {
++		dev_err(&pdev->dev, "Cannot get I/O region\n");
++		goto err_pci_reg;
++	}
++
+ 	/* AER (Advanced Error Reporting) hooks */
+ 	pci_enable_pcie_error_reporting(pdev);
+ 
 -- 
-1.8.4
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
