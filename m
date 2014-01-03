@@ -1,54 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:63253 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751553AbaAON26 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 08:28:58 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: Re: User initiated hotplug and kernel initiated hotplug - where is the synchronization?
-Date: Wed, 15 Jan 2014 14:42:57 +0100
-Message-ID: <18064064.UldA0zYdyf@vostro.rjw.lan>
-In-Reply-To: <635a0ddff97142e2a06f9bd9c3428d01@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <635a0ddff97142e2a06f9bd9c3428d01@DM2PR05MB671.namprd05.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:22024 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754171AbaACAH6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:07:58 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 22/33] x86, irq: Add mp_unregister_ioapic to handle hot-remove ioapic
+Date: Thu,  2 Jan 2014 16:05:54 -0800
+Message-Id: <1388707565-16535-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 15, 2014 09:43:58 AM Rajat Jain wrote:
-> Hello,
+It will free ioapic related irq_desc and also clear allocated_irqs bits.
 
-Hi,
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/mpspec.h  |  1 +
+ arch/x86/kernel/apic/io_apic.c | 45 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
-> I have this doubt lingering on, and I'd appreciate if some one could throw light on this:
-> 
-> The kernel hotplug driver pciehp can initiate hotplug based on what it senses from the HW (button press etc).
-> 
-> The user space can also initiate the same operations by using "rescan" or "remove" attributes in sysfs.
-> 
-> My questions:
-> 
-> 1) Is it safe to mix the above two?
-
-Not right now, but with these patches applied:
-
-https://patchwork.kernel.org/patch/3466551/
-https://patchwork.kernel.org/patch/3466581/
-https://patchwork.kernel.org/patch/3466601/
-https://patchwork.kernel.org/patch/3466591/
-https://patchwork.kernel.org/patch/3466631/
-https://patchwork.kernel.org/patch/3466641/
-https://patchwork.kernel.org/patch/3466651/
-https://patchwork.kernel.org/patch/3491811/
-https://patchwork.kernel.org/patch/3466491/
-https://patchwork.kernel.org/patch/3473341/
-
-it should be.
-
-Thanks!
-
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index 59d8465..b98665f 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -97,6 +97,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ int generic_processor_info(int apicid, int version);
+ #ifdef CONFIG_ACPI
+ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
++int mp_unregister_ioapic(u32 gsi_base);
+ extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ 				   u32 gsi);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 0fdda49..af6cbcd 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -334,6 +334,20 @@ static void __init reserve_ioapic_gsi_irq_extra(void)
+ 	}
+ }
+ 
++static void free_ioapic_gsi_irq_base(int idx)
++{
++	int i;
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
++	int irq_base = gsi_cfg->irq_base;
++	int irq_cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
++
++	if (irq_base < 0)
++		return;
++
++	for (i = irq_base; i < irq_base + irq_cnt; i++)
++		free_irq_at(i, irq_get_chip_data(i));
++}
++
+ static void alloc_ioapic_saved_registers(int idx)
+ {
+ 	if (ioapics[idx].saved_registers)
+@@ -347,6 +361,11 @@ static void alloc_ioapic_saved_registers(int idx)
+ 		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
+ }
+ 
++static void free_ioapic_saved_registers(int idx)
++{
++	kfree(ioapics[idx].saved_registers);
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	int node = cpu_to_node(0);
+@@ -3999,6 +4018,32 @@ void mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	__mp_register_ioapic(id, address, gsi_base, false);
+ }
+ 
++int mp_unregister_ioapic(u32 gsi_base)
++{
++	int idx;
++
++	lock_ioapics();
++
++	idx = __mp_find_ioapic(gsi_base);
++	if (idx < 0) {
++		unlock_ioapics();
++		return -EINVAL;
++	}
++	clear_bit(idx, ioapics_mask);
++
++	free_ioapic_saved_registers(idx);
++
++	free_ioapic_gsi_irq_base(idx);
++
++	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++	memset(&ioapics[idx], 0, sizeof(struct ioapic));
++	nr_ioapics = bitmap_weight(ioapics_mask, MAX_IO_APICS);
++
++	unlock_ioapics();
++
++	return 0;
++}
++
+ /* Enable IOAPIC early just for system timer */
+ void __init pre_init_apic_IRQ0(void)
+ {
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.4
+
