@@ -1,80 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH 7/9] MPT / PCI: Use pci_stop_and_remove_bus_device_locked()
-Date: Fri, 10 Jan 2014 15:27:56 +0100
-Message-ID: <5291802.S1gYQvjIuc@vostro.rjw.lan>
-In-Reply-To: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:23622 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753874AbaACAHh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:07:37 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 04/33] x86, irq: Change irq_remap_modify_chip_defaults() to static
+Date: Thu,  2 Jan 2014 16:05:36 -0800
+Message-Id: <1388707565-16535-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Change irq_remap_modify_chip_defaults() to static, as we have no
+outside user.
 
-Race conditions are theoretically possible between the MPT PCI
-device removal and the generic PCI bus rescan and device removal
-that can be triggered via sysfs.
-
-To avoid those race conditions make the MPT PCI code use
-pci_stop_and_remove_bus_device_locked().
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- drivers/message/fusion/mptbase.c    |    2 +-
- drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
- drivers/scsi/mpt3sas/mpt3sas_base.c |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ arch/x86/include/asm/irq_remapping.h | 6 ------
+ drivers/iommu/irq_remapping.c        | 2 +-
+ 2 files changed, 1 insertion(+), 7 deletions(-)
 
-Index: linux-pm/drivers/scsi/mpt3sas/mpt3sas_base.c
-===================================================================
---- linux-pm.orig/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ linux-pm/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -131,7 +131,7 @@ static int mpt3sas_remove_dead_ioc_func(
- 	pdev = ioc->pdev;
- 	if ((pdev == NULL))
- 		return -1;
--	pci_stop_and_remove_bus_device(pdev);
-+	pci_stop_and_remove_bus_device_locked(pdev);
- 	return 0;
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index d806b22..606f42e 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -56,8 +56,6 @@ extern bool setup_remapped_irq(int irq,
+ 			       struct irq_cfg *cfg,
+ 			       struct irq_chip *chip);
+ 
+-void irq_remap_modify_chip_defaults(struct irq_chip *chip);
+-
+ #else  /* CONFIG_IRQ_REMAP */
+ 
+ static inline void setup_irq_remapping_ops(void) { }
+@@ -91,10 +89,6 @@ static inline void panic_if_irq_remap(const char *msg)
+ {
  }
  
-Index: linux-pm/drivers/scsi/mpt2sas/mpt2sas_base.c
-===================================================================
---- linux-pm.orig/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ linux-pm/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -128,7 +128,7 @@ static int mpt2sas_remove_dead_ioc_func(
- 		pdev = ioc->pdev;
- 		if ((pdev == NULL))
- 			return -1;
--		pci_stop_and_remove_bus_device(pdev);
-+		pci_stop_and_remove_bus_device_locked(pdev);
- 		return 0;
+-static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+-{
+-}
+-
+ static inline bool setup_remapped_irq(int irq,
+ 				      struct irq_cfg *cfg,
+ 				      struct irq_chip *chip)
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 39f81ae..85ae2cf 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -375,7 +375,7 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ 	seq_printf(p, " IR-%s", data->chip->name);
  }
  
-Index: linux-pm/drivers/message/fusion/mptbase.c
-===================================================================
---- linux-pm.orig/drivers/message/fusion/mptbase.c
-+++ linux-pm/drivers/message/fusion/mptbase.c
-@@ -346,7 +346,7 @@ static int mpt_remove_dead_ioc_func(void
- 	if ((pdev == NULL))
- 		return -1;
- 
--	pci_stop_and_remove_bus_device(pdev);
-+	pci_stop_and_remove_bus_device_locked(pdev);
- 	return 0;
- }
- 
+-void irq_remap_modify_chip_defaults(struct irq_chip *chip)
++static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ {
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+-- 
+1.8.4
 
