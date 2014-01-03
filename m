@@ -1,128 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:36978 "EHLO
-	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755534AbaAHJEL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Jan 2014 04:04:11 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 8 Jan 2014 17:03:55 +0800
-Subject: RE: pcie-designware: query on MSI IRQ handling
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FBAF2CCF@EAPEX1MAIL1.st.com>
-References: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com>
-In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to avoid sysfs warnings
+Date: Fri, 03 Jan 2014 01:45:28 +0100
+Message-ID: <2459491.HIKjAnF27k@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXQuX5EOE1jbXfK+G1mf9q=4-fpw1jNs38sza9tcPtqMg@mail.gmail.com>
+References: <37552283.kG1L4S8Daa@vostro.rjw.lan> <6023795.zgEUjY5fWb@vostro.rjw.lan> <CAE9FiQXQuX5EOE1jbXfK+G1mf9q=4-fpw1jNs38sza9tcPtqMg@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Murali,
+On Thursday, January 02, 2014 02:47:04 PM Yinghai Lu wrote:
+> On Tue, Dec 31, 2013 at 1:03 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Tuesday, December 31, 2013 10:45:46 AM Yinghai Lu wrote:
+> >> On Mon, Dec 30, 2013 at 5:15 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> > On Monday, December 30, 2013 01:51:28 PM Rafael J. Wysocki wrote:
+> >> >> > We have patches that need to stop ioapic and iommu between
+> >> >> > pci_stop_root_bus and pci_remove_root_bus.
+> >> >
+> >> > BTW, what *exactly* do they need to be stopped between?  After these two patches:
+> >>
+> >> need to stop regular pci drivers before stop "driver" for ioapic/dmar.
+> >>
+> >> >
+> >> >> > Please check if the problem still happen after
+> >> >> >
+> >> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=c4a0a5d964e90b93eb4101c3927b788e083e530f
+> >> >> >
+> >> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=e3b439e1d315aff59c1b4f0fc43c5cd2d82b4138
+> >> >
+> >> > pci_stop_root_bus() is just a walk over devices on the root bus stopping
+> >> > them and pci_remove_root_bus() starts with the removal of those devices.
+> >> >
+> >> > Surely, those two list walks can be combined into one?
+> >>
+> >> maybe ok, but we have to problem to make sure stop pci drivers before
+> >> "driver" for ioapic/dmar.
+> >
+> > That's fine, but ioapic/dmar stopping need not happen between the stopping of
+> > drivers and removing of devices on the root bus I suppose?
+> >
+> > Actually, I think that the ioapic/dmar stopping should be carried out after
+> > removing all of the root bus devices, or it can be racy with respect to a
+> > driver reload.  Isn't that the case?
+> 
+> No. It should be before removing all root bus devices.
+> as they need to access the pci devices during stop ioapic and dmar.
+> 
+> Also ioapic itself could one one pci device.
 
-> -----Original Message-----
-> From: Karicheri, Muralidharan [mailto:m-karicheri2@ti.com]
-> Sent: Wednesday, January 08, 2014 12:30 AM
-> To: Jingoo Han; Mohit KUMAR DCG; linux-pci@vger.kernel.org
-> Subject: pcie-designware: query on MSI IRQ handling
-> 
-> Hi,
-> 
-> I am porting my current PCI Linux driver (based on v3.8) to designware core
-> driver (pcie-designware.c) to submit the patches to the mailing list and got
-> following question. Could someone clarify this please?
-> 
-> I see the following code in pcie-designware.c
-> 
-> void dw_pcie_msi_init(struct pcie_port *pp) {
-> 	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+Well, if we stop drivers first, then stop ioapic/dmar and *then* remove
+devices, it is possible to rebind a driver to a device after ioapic/dmar has
+been stopped, which I guess will not lead to anything nice?
 
-I think we can implement dw_pcie_get_msi_addr() to get the MSI address as
- below. It checks if any specific ops is implemented then it will get the address
- from there otherwise default as in present case  will be used. You should
- implement get_msi_addr() specific to your platform.
-
-void dw_pcie_get_msi_addr(struct pcie port *pp) 
-{
-   	if (pp->ops->get_msi_addr)
-		pp->msi_data = pp->ops->get_msi_addr;
-	else
-		pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
-}
-
-And then call this from dw_pcie_msi_init() as:
-
-void dw_pcie_msi_init(..) 
-{
-	dw_pcie_get_msi_addr(..); 
-
-	/* program the msi_data */
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-			virt_to_phys((void *)pp->msi_data));
-	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0); }
-}
-
-> 
-> 	/* program the msi_data */
-> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> 			virt_to_phys((void *)pp->msi_data));
-> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0); }
-> 
-> and then in
-> 
-> static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
-> 			struct msi_desc *desc)
-> {
-> 
->          <---Cut--->
-> 
-> 	msg.address_lo = virt_to_phys((void *)pp->msi_data);
-> 	msg.address_hi = 0x0;
-> 	msg.data = pos;
-> 	printk("dw_msi_setup_irq address_lo = %x\n", msg.address_lo);
-> 	write_msi_msg(irq, &msg);
-> }
-> 
-> In our designware IP, in the Application space, there is a MSI_IRQ register
-> that the EP needs to write with msi vector value to generate msi irq. So in our
-> case, pp->msi_data should be updated with address RC's MSI_IRQ register.
-> So I plan to update the msi_data in port's data structure with MSI_IRQ virtual
-> address and not call dw_msi_setup_irq().
-> I am trying to understand how MSI IRQ works on currently supported
-> designware PCIE hardwares (Samsung, Freescale etc). I am assuming
-> dw_pcie_wr_own_conf () write into RC's config space. But in the above
-> code, I see the code is updating the PCIE_MSI_ADDR_LO/HI of the RC's
-> config with a DDR address and in  write_msi_msg() this address along with
-> vector gets written to EP's MSI config space registers. In this case how is the
-> MSI IRQ gets generated from the EP?
-> 
-> EP writes to DDR address with the vector value. Does the PCIE hardware
-> match the address in the MSI irq message from EP with that in
-> PCIE_MSI_ADDR_LO/HI and then raise an IRQ?
-
-Yes.
-
-> Is this part of the Per Vector
-> Masking (PVM) option support as discussed in the PCI spec? Anyone can
-> explain this?
-> 
-> Also as part of my development, I plan to enhance this driver to override the
-> dw_msi_irq_chip with our platform specific chip data since MSI interrupt
-> controller is using application specific registers instead of the one at offset
-> 0x828. I will sending an patch for review once my driver is tested.
-
-So in you controller you do not have regiter offset 0x820-0x830, right?
-Then probably, its not generic MSI controller as implemented in newer verion of IP.
-
-Hmm....if the same registers are in your application space then maybe you can handle
-Similar to to get_msi_addr() as suggested above.
-
-Regards
-Mohit
-> 
-> Thanks
-> 
-> Murali Karicheri
-> Linux Kernel, Software Development
-> 
+Rafael
 
