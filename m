@@ -1,115 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:54421 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752398AbaA3Neg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 08:34:36 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [PATCH V3 7/8] pcie: SPEAr13xx: Add designware pcie support
-Date: Thu, 30 Jan 2014 14:34:19 +0100
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Viresh Kumar <viresh.linux@gmail.com>, spear-devel@list.st.com,
-	linux-pci@vger.kernel.org
-References: <cover.1391077731.git.mohit.kumar@st.com> <1c7f0dd04e9af55886dc74789bfcf92ce900e131.1391077731.git.mohit.kumar@st.com>
-In-Reply-To: <1c7f0dd04e9af55886dc74789bfcf92ce900e131.1391077731.git.mohit.kumar@st.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:63892 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463AbaACU5t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 15:57:49 -0500
+Received: by mail-ie0-f176.google.com with SMTP id at1so16344784iec.21
+        for <linux-pci@vger.kernel.org>; Fri, 03 Jan 2014 12:57:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201401301434.20188.arnd@arndb.de>
+In-Reply-To: <20131227132734.2aa9bc16@nehalam.linuxnetplumber.net>
+References: <20131227132734.2aa9bc16@nehalam.linuxnetplumber.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 3 Jan 2014 13:57:05 -0700
+Message-ID: <CAErSpo4Nt73OhvefjNGoD0d-OYZG_7j_=oQn2RtpnuWoPNt0iw@mail.gmail.com>
+Subject: Re: [PATCH pci-next 1/2] pci: make local function static
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 30 January 2014, Mohit Kumar wrote:
+On Fri, Dec 27, 2013 at 01:27:34PM -0800, Stephen Hemminger wrote:
+> Using 'make namespacecheck' identify code which should be
+> declared static. Checked for users in other driver/archs as well.
+> Compile tested only.
+>
+> Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+>
+> ---
+> Patch against next branch of pci git
+>
+>  drivers/pci/access.c              |    3 -
+>  drivers/pci/hotplug/pciehp.h      |    1
+>  drivers/pci/hotplug/pciehp_core.c |    2
+>  drivers/pci/pci.c                 |   56 +++++++++----------
+>  drivers/pci/pci.h                 |    2
+>  drivers/pci/probe.c               |  111 +++++++++++++++++++-------------------
+>  include/linux/pci.h               |    9 ---
+>  7 files changed, 86 insertions(+), 98 deletions(-)
+>
+> --- a/drivers/pci/pci.c 2013-12-27 12:51:57.592814680 -0800
+> +++ b/drivers/pci/pci.c 2013-12-27 13:00:54.784294985 -0800
+> @@ -265,7 +265,7 @@ int pci_bus_find_capability(struct pci_b
+>   * not support it.  Some capabilities can occur several times, e.g., the
+>   * vendor-specific capability, and this provides a way to find them all.
+>   */
+> -int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
+> +static int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
+>  {
+>   u32 header;
+>   int ttl;
+> @@ -304,7 +304,6 @@ int pci_find_next_ext_capability(struct
+>
+>   return 0;
+>  }
+> -EXPORT_SYMBOL_GPL(pci_find_next_ext_capability);
 
-> @@ -80,6 +80,57 @@
->  			status = "disabled";
->  		};
->  
-> +		pcie0: pcie@b1000000 {
-> +			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-> +			reg = <0xb1000000 0x4000>;
-> +			interrupts = <0 68 0x4>;
-> +			pcie_is_gen1 = <0>;
-> +			num-lanes = <1>;
-> +			phys = <&miphy0 1 0>;
-> +			phy-names = "pcie-phy";
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			device_type = "pci";
-> +			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
-> +				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
-> +				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
-> +			status = "disabled";
-> +		};
+I added pci_find_next_ext_capability() (44a9a36f6be4) because some extended
+capabilities can occur several times and pci_find_ext_capability() can only
+find the first one.
 
-Shouldn't there be more than one interrupt? Normally each root port has
-four legacy IRQs, in order to support bridge devices.
+The only in-tree user of pci_find_next_ext_capability() is
+pci_find_ext_capability(), so we *could* make it static.  But I don't
+think there's much to gain by making it static, and I'm afraid doing
+so will just encourage people to reimplement it in a driver instead of
+using the core interface.
 
-> +	spear13xx_pcie->phy = devm_phy_get(dev, "pcie-phy");
-> +	if (IS_ERR(spear13xx_pcie->phy)) {
-> +		dev_err(dev, "Could not get PHY\n");
-> +		return -EPROBE_DEFER;
-> +	}
+I am a bit dubious about the GPL export, though.  I'm sure I copied
+that from pci_find_ext_capability(), but I don't know why either one
+needs to be GPL.
 
-I think you should only return -EPROBE_DEFER if you got that
-error from the PHY layer. If there is some other problem
-with getting the PHY, you want that returned as a fatal
-error here and not retry the PCIe probe function.
+> --- a/include/linux/pci.h 2013-12-27 12:51:57.592814680 -0800
+> +++ b/include/linux/pci.h 2013-12-27 13:03:11.518137906 -0800
+> @@ -386,8 +386,6 @@ static inline int pci_channel_offline(st
+>   return (pdev->error_state != pci_channel_io_normal);
+>  }
+>
+> -extern struct resource busn_resource;
+> -
+>  struct pci_host_bridge_window {
+>   struct list_head list;
+>   struct resource *res; /* host bridge aperture (CPU address) */
+> @@ -799,7 +797,6 @@ enum pci_lost_interrupt_reason pci_lost_
+>  int pci_find_capability(struct pci_dev *dev, int cap);
+>  int pci_find_next_capability(struct pci_dev *dev, u8 pos, int cap);
+>  int pci_find_ext_capability(struct pci_dev *dev, int cap);
+> -int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
+>  int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+>  int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+>  struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+> @@ -864,7 +861,6 @@ static inline int pci_write_config_dword
+>  int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val);
+>  int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val);
+>  int pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val);
+> -int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val);
 
-> diff --git a/drivers/phy/phy-spear13xx-sata-pcie.c b/drivers/phy/phy-spear13xx-sata-pcie.c
-> index 6adfa64..5eabf51 100644
-> --- a/drivers/phy/phy-spear13xx-sata-pcie.c
-> +++ b/drivers/phy/phy-spear13xx-sata-pcie.c
-> @@ -71,6 +71,80 @@
->  	#define SPEAR1340_PCIE_SATA_MIPHY_CFG_PCIE \
->  			(SPEAR1340_MIPHY_OSC_BYPASS_EXT | \
->  			SPEAR1340_MIPHY_PLL_RATIO_TOP(25))
+I think we should keep this one to preserve the symmetry of this group of
+interfaces.  We could argue about whether drivers should be accessing the
+PCIe capability directly in the first place (especially to write to it),
+but that's a different discussion.
 
-Please split this out into a separate patch.
-
-> +static int spear1310_pcie_miphy_init(struct spear13xx_phy_priv *phypriv)
-> +{
-> +	u32 mask, val;
-> +
-> +	regmap_update_bits(phypriv->misc, SPEAR1310_PCIE_MIPHY_CFG_1,
-> +			SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK,
-> +			SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE);
-> +
-> +	switch (phypriv->id) {
-> +	case 0:
-> +		mask = SPEAR1310_PCIE_CFG_MASK(0);
-> +		val = SPEAR1310_PCIE_CFG_VAL(0);
-> +		break;
-> +	case 1:
-> +		mask = SPEAR1310_PCIE_CFG_MASK(1);
-> +		val = SPEAR1310_PCIE_CFG_VAL(1);
-> +		break;
-> +	case 2:
-> +		mask = SPEAR1310_PCIE_CFG_MASK(2);
-> +		val = SPEAR1310_PCIE_CFG_VAL(2);
-> +		break;
-
-Ah, so this is what the ID gets used for. I would indeed encode this in the
-phy node, unlike the configuration of whether it's used for PCIe or SATA.
-
-> +static int pcie_miphy_init(struct spear13xx_phy_priv *phypriv)
-> +{
-> +	if (of_machine_is_compatible("st,spear1340"))
-> +		return spear1340_pcie_miphy_init(phypriv);
-> +	else if (of_machine_is_compatible("st,spear1310"))
-> +		return spear1310_pcie_miphy_init(phypriv);
-> +	else
-> +		return -EINVAL;
-> +}
-
-You should never check global properties such as the machine compatible
-value to make local decisions. You have two options here: Either use
-two different compatible strings for the phy node, or encode the
-difference in another property. If the only difference between spear1310
-and spear1340 is the location of the register within the "misc" syscon
-space, a good represenation would be to put the register offset next
-to the syscon phandle in the same property. That way it could transparently
-work for future SoCs.
-
-	Arnd
+Bjorn
