@@ -1,101 +1,239 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32418 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932478AbaAaPHK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 10:07:10 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Dimitris Michailidis <dm@chelsio.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 07/34] cxgb4: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:26 +0100
-Message-Id: <f84d46c7894241fc9d164cde3474cb55c710835c.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21899 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753847AbaACAHf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:07:35 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Joerg Roedel <joro@8bytes.org>
+Subject: [PATCH v5 05/33] x86, irq: Modify irq chip once for irq remapping
+Date: Thu,  2 Jan 2014 16:05:37 -0800
+Message-Id: <1388707565-16535-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Current code: after irq remapping is enabled, irq_chip fields are modified
+during every irq setup.
+	mp_register_gsi
+		io_apic_set_pci_routing
+			io_apic_setup_irq_pin
+				setup_ioapic_irq
+					ioapic_register_intr
+						setup_remapped_irq
+	native_setup_msi_irqs
+		setup_msi_irq
+			setup_remapped_irq
+	default_setup_hpet_msi
+		setup_remapped_irq
+that is not efficient.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+We only need to modify those irq chip one time after we enable
+irq remapping.
+
+Change irq_remap_modify_chip_defaults() to __init as it only gets
+called during booting stage, via irq_remap_modify_chips().
+
+Affected irq_chip: ioapic_chip, msi_chip, hpet_msi_type.
+We don't need to use #ifdef in irq_remap_modify_chips():
+IRQ_REMAP only support x86_64 && X86_IO_APIC && PCI_MSI.
+HPET_TIMER is selected when x86_64 is set.
+When we have IRQ_REMAP enabled, al three chips are defined and
+used.
+
+-v3: Remove irq_chip in setup_remapped_irq according to Sebastian.
+     also add missing "\n" in printk.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Joerg Roedel <joro@8bytes.org>
 ---
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   50 +++++++++++------------
- 1 files changed, 24 insertions(+), 26 deletions(-)
+ arch/x86/include/asm/io_apic.h       |  5 +++++
+ arch/x86/include/asm/irq_remapping.h |  8 ++------
+ arch/x86/kernel/apic/apic.c          |  9 ++++++++-
+ arch/x86/kernel/apic/io_apic.c       | 14 ++++++--------
+ drivers/iommu/irq_remapping.c        | 13 ++++++++++---
+ 5 files changed, 31 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index 43ab35f..bd0321d 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -5737,7 +5737,7 @@ static void reduce_ethqs(struct adapter *adap, int n)
- static int enable_msix(struct adapter *adap)
- {
- 	int ofld_need = 0;
--	int i, err, want, need;
-+	int i, want, need;
- 	struct sge *s = &adap->sge;
- 	unsigned int nchan = adap->params.nports;
- 	struct msix_entry entries[MAX_INGQ + 1];
-@@ -5753,32 +5753,30 @@ static int enable_msix(struct adapter *adap)
- 	}
- 	need = adap->params.nports + EXTRA_VECS + ofld_need;
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 459e50a..eaff3ad 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -215,6 +215,11 @@ static inline void io_apic_modify(unsigned int apic, unsigned int reg, unsigned
  
--	while ((err = pci_enable_msix(adap->pdev, entries, want)) >= need)
--		want = err;
-+	want = pci_enable_msix_range(adap->pdev, entries, need, want);
-+	if (want < 0)
-+		return want;
+ extern void io_apic_eoi(unsigned int apic, unsigned int vector);
  
--	if (!err) {
--		/*
--		 * Distribute available vectors to the various queue groups.
--		 * Every group gets its minimum requirement and NIC gets top
--		 * priority for leftovers.
--		 */
--		i = want - EXTRA_VECS - ofld_need;
--		if (i < s->max_ethqsets) {
--			s->max_ethqsets = i;
--			if (i < s->ethqsets)
--				reduce_ethqs(adap, i);
--		}
--		if (is_offload(adap)) {
--			i = want - EXTRA_VECS - s->max_ethqsets;
--			i -= ofld_need - nchan;
--			s->ofldqsets = (i / nchan) * nchan;  /* round down */
--		}
--		for (i = 0; i < want; ++i)
--			adap->msix_info[i].vec = entries[i].vector;
--	} else if (err > 0)
--		dev_info(adap->pdev_dev,
--			 "only %d MSI-X vectors left, not using MSI-X\n", err);
--	return err;
-+	/*
-+	 * Distribute available vectors to the various queue groups.
-+	 * Every group gets its minimum requirement and NIC gets top
-+	 * priority for leftovers.
-+	 */
-+	i = want - EXTRA_VECS - ofld_need;
-+	if (i < s->max_ethqsets) {
-+		s->max_ethqsets = i;
-+		if (i < s->ethqsets)
-+			reduce_ethqs(adap, i);
-+	}
-+	if (is_offload(adap)) {
-+		i = want - EXTRA_VECS - s->max_ethqsets;
-+		i -= ofld_need - nchan;
-+		s->ofldqsets = (i / nchan) * nchan;  /* round down */
-+	}
-+	for (i = 0; i < want; ++i)
-+		adap->msix_info[i].vec = entries[i].vector;
++extern struct irq_chip ioapic_chip;
++extern struct irq_chip msi_chip;
++extern struct irq_chip hpet_msi_type;
++void irq_remap_modify_chips(void);
 +
-+	return 0;
+ #else  /* !CONFIG_X86_IO_APIC */
+ 
+ #define io_apic_assign_pci_irqs 0
+diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
+index 606f42e..304c93f 100644
+--- a/arch/x86/include/asm/irq_remapping.h
++++ b/arch/x86/include/asm/irq_remapping.h
+@@ -52,9 +52,7 @@ extern void compose_remapped_msi_msg(struct pci_dev *pdev,
+ 				     struct msi_msg *msg, u8 hpet_id);
+ extern int setup_hpet_msi_remapped(unsigned int irq, unsigned int id);
+ extern void panic_if_irq_remap(const char *msg);
+-extern bool setup_remapped_irq(int irq,
+-			       struct irq_cfg *cfg,
+-			       struct irq_chip *chip);
++extern bool setup_remapped_irq(int irq, struct irq_cfg *cfg);
+ 
+ #else  /* CONFIG_IRQ_REMAP */
+ 
+@@ -89,9 +87,7 @@ static inline void panic_if_irq_remap(const char *msg)
+ {
  }
  
- #undef EXTRA_VECS
+-static inline bool setup_remapped_irq(int irq,
+-				      struct irq_cfg *cfg,
+-				      struct irq_chip *chip)
++static inline bool setup_remapped_irq(int irq, struct irq_cfg *cfg)
+ {
+ 	return false;
+ }
+diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
+index d278736..37447b1 100644
+--- a/arch/x86/kernel/apic/apic.c
++++ b/arch/x86/kernel/apic/apic.c
+@@ -1572,6 +1572,8 @@ void enable_x2apic(void)
+ int __init enable_IR(void)
+ {
+ #ifdef CONFIG_IRQ_REMAP
++	int ret;
++
+ 	if (!irq_remapping_supported()) {
+ 		pr_debug("intr-remapping not supported\n");
+ 		return -1;
+@@ -1583,7 +1585,12 @@ int __init enable_IR(void)
+ 		return -1;
+ 	}
+ 
+-	return irq_remapping_enable();
++	ret = irq_remapping_enable();
++
++	if (ret >= 0)
++		irq_remap_modify_chips();
++
++	return ret;
+ #endif
+ 	return -1;
+ }
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index e63a5bd..6e9f55b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1238,8 +1238,6 @@ void __setup_vector_irq(int cpu)
+ 	raw_spin_unlock(&vector_lock);
+ }
+ 
+-static struct irq_chip ioapic_chip;
+-
+ #ifdef CONFIG_X86_32
+ static inline int IO_APIC_irq_trigger(int irq)
+ {
+@@ -1280,7 +1278,7 @@ static void ioapic_register_intr(unsigned int irq, struct irq_cfg *cfg,
+ 		fasteoi = false;
+ 	}
+ 
+-	if (setup_remapped_irq(irq, cfg, chip))
++	if (setup_remapped_irq(irq, cfg))
+ 		fasteoi = trigger != 0;
+ 
+ 	hdl = fasteoi ? handle_fasteoi_irq : handle_edge_irq;
+@@ -2516,7 +2514,7 @@ static void ack_apic_level(struct irq_data *data)
+ 	ioapic_irqd_unmask(data, cfg, masked);
+ }
+ 
+-static struct irq_chip ioapic_chip __read_mostly = {
++struct irq_chip ioapic_chip __read_mostly = {
+ 	.name			= "IO-APIC",
+ 	.irq_startup		= startup_ioapic_irq,
+ 	.irq_mask		= mask_ioapic_irq,
+@@ -3098,7 +3096,7 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
+  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
+  * which implement the MSI or MSI-X Capability Structure.
+  */
+-static struct irq_chip msi_chip = {
++struct irq_chip msi_chip = {
+ 	.name			= "PCI-MSI",
+ 	.irq_unmask		= unmask_msi_irq,
+ 	.irq_mask		= mask_msi_irq,
+@@ -3128,7 +3126,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+ 	if (!irq_offset)
+ 		write_msi_msg(irq, &msg);
+ 
+-	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
++	setup_remapped_irq(irq, irq_get_chip_data(irq));
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 
+@@ -3245,7 +3243,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
+ 	return IRQ_SET_MASK_OK_NOCOPY;
+ }
+ 
+-static struct irq_chip hpet_msi_type = {
++struct irq_chip hpet_msi_type = {
+ 	.name = "HPET_MSI",
+ 	.irq_unmask = hpet_msi_unmask,
+ 	.irq_mask = hpet_msi_mask,
+@@ -3266,7 +3264,7 @@ int default_setup_hpet_msi(unsigned int irq, unsigned int id)
+ 
+ 	hpet_msi_write(irq_get_handler_data(irq), &msg);
+ 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	setup_remapped_irq(irq, irq_get_chip_data(irq), chip);
++	setup_remapped_irq(irq, irq_get_chip_data(irq));
+ 
+ 	irq_set_chip_and_handler_name(irq, chip, handle_edge_irq, "edge");
+ 	return 0;
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 85ae2cf..8e4e3af 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -375,19 +375,26 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
+ 	seq_printf(p, " IR-%s", data->chip->name);
+ }
+ 
+-static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
++static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
+ {
++	printk(KERN_DEBUG "irq_chip: %s ==> IR-%s\n", chip->name, chip->name);
+ 	chip->irq_print_chip = ir_print_prefix;
+ 	chip->irq_ack = ir_ack_apic_edge;
+ 	chip->irq_eoi = ir_ack_apic_level;
+ 	chip->irq_set_affinity = x86_io_apic_ops.set_affinity;
+ }
+ 
+-bool setup_remapped_irq(int irq, struct irq_cfg *cfg, struct irq_chip *chip)
++void __init irq_remap_modify_chips(void)
++{
++	irq_remap_modify_chip_defaults(&ioapic_chip);
++	irq_remap_modify_chip_defaults(&msi_chip);
++	irq_remap_modify_chip_defaults(&hpet_msi_type);
++}
++
++bool setup_remapped_irq(int irq, struct irq_cfg *cfg)
+ {
+ 	if (!irq_remapped(cfg))
+ 		return false;
+ 	irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+-	irq_remap_modify_chip_defaults(chip);
+ 	return true;
+ }
 -- 
-1.7.7.6
+1.8.4
 
