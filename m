@@ -1,50 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:47837 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751375AbaANL7V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jan 2014 06:59:21 -0500
-From: Wolfram Sang <wsa@the-dreams.de>
-To: linux-kernel@vger.kernel.org
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 4/7] drivers/pci/host: don't check resource with devm_ioremap_resource
-Date: Tue, 14 Jan 2014 12:58:55 +0100
-Message-Id: <1389700739-3696-4-git-send-email-wsa@the-dreams.de>
-In-Reply-To: <1389700739-3696-1-git-send-email-wsa@the-dreams.de>
-References: <1389700739-3696-1-git-send-email-wsa@the-dreams.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 29/33] PCI, x86, ACPI: Link acpi ioapic register to ioapic
+Date: Thu,  2 Jan 2014 16:06:01 -0800
+Message-Id: <1388707565-16535-30-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-devm_ioremap_resource does sanity checks on the given resource. No need to
-duplicate this in the driver.
+During ioapic hotplug, acpi_register_ioapic will be called.
+Now for x86, that function is blank.
+Fill that will update __mp_register_ioapic to use those ioapic.
 
-Signed-off-by: Wolfram Sang <wsa@the-dreams.de>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ arch/x86/kernel/acpi/boot.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-Should go via subsystem tree
-
- drivers/pci/host/pci-imx6.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index bd70af8..5002e23 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -426,11 +426,6 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		"imprecise external abort");
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 0f9c133..77bf505 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -651,16 +651,26 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
  
- 	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!dbi_base) {
--		dev_err(&pdev->dev, "dbi_base memory resource not found\n");
--		return -ENODEV;
--	}
--
- 	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
- 	if (IS_ERR(pp->dbi_base)) {
- 		ret = PTR_ERR(pp->dbi_base);
+ int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	u64 addr = 0;
++	int apic_id;
++
++	apic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
++
++	if (apic_id < 0)
++		return -1;
++
++	if (phys_addr != addr)
++		pr_warn("ioapic 0x%02x address is not consistent _CRS/dev(%llx) _MAT/MADT(%llx) \n",
++			apic_id, phys_addr, addr);
++
++	return	__mp_register_ioapic(apic_id, phys_addr, gsi_base, true);
+ }
+ 
+ EXPORT_SYMBOL(acpi_register_ioapic);
+ 
+ int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
+ {
+-	/* TBD */
+-	return -EINVAL;
++	return mp_unregister_ioapic(gsi_base);
+ }
+ 
+ EXPORT_SYMBOL(acpi_unregister_ioapic);
 -- 
-1.8.5.1
+1.8.4
 
