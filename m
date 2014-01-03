@@ -1,56 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v5 08/33] x86, irq: Make dmar_msi/hpet_msi irq_chip name consistent
-Date: Thu,  2 Jan 2014 16:05:40 -0800
-Message-Id: <1388707565-16535-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2lp0237.outbound.protection.outlook.com ([207.46.163.237]:56869
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753362AbaACWbF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 3 Jan 2014 17:31:05 -0500
+Date: Fri, 3 Jan 2014 16:16:03 -0600
+From: Scott Wood <scottwood@freescale.com>
+To: Minghuan Lian <Minghuan.Lian@freescale.com>
+CC: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [11/12,v3] pci: fsl: update PCI EDAC driver
+Message-ID: <20140103221603.GA22546@home.buserror.net>
+References: <1382524894-15164-11-git-send-email-Minghuan.Lian@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1382524894-15164-11-git-send-email-Minghuan.Lian@freescale.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All others are using "-" instead of "_".
+On Wed, Oct 23, 2013 at 06:41:33PM +0800, Minghuan Lian wrote:
+> diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+> index 40d2e1d..4a03e1a 100644
+> --- a/arch/powerpc/sysdev/fsl_pci.c
+> +++ b/arch/powerpc/sysdev/fsl_pci.c
+> @@ -236,6 +236,7 @@ void fsl_arch_pci_sys_remove(struct fsl_pci *pci)
+>  	if (!hose)
+>  		return;
+>  
+> +	mpc85xx_pci_err_remove(to_platform_device(pci->dev));
+>  	pcibios_free_controller(hose);
 
-Change dmar_msi and hpet_msi to use "-".
+This causes a linker error if the EDAC driver is enabled, due to commit
+0f1741c74aa6794b1c7fbdd19f26a4f2377a11c6 ("edac/85xx: Remove
+mpc85xx_pci_err_remove").
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index c52085c..241325c 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3204,7 +3204,7 @@ dmar_msi_set_affinity(struct irq_data *data, const struct cpumask *mask,
- }
- 
- static struct irq_chip dmar_msi_type = {
--	.name			= "DMAR_MSI",
-+	.name			= "DMAR-MSI",
- 	.irq_unmask		= dmar_msi_unmask,
- 	.irq_mask		= dmar_msi_mask,
- 	.irq_ack		= ack_apic_edge,
-@@ -3252,7 +3252,7 @@ static int hpet_msi_set_affinity(struct irq_data *data,
- }
- 
- struct irq_chip hpet_msi_type = {
--	.name = "HPET_MSI",
-+	.name = "HPET-MSI",
- 	.irq_unmask = hpet_msi_unmask,
- 	.irq_mask = hpet_msi_mask,
- 	.irq_ack = ack_apic_edge,
--- 
-1.8.4
-
+-Scott
