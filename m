@@ -1,83 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:45972 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756820AbaAIAYW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 19:24:22 -0500
-Received: by mail-ie0-f180.google.com with SMTP id tp5so2878654ieb.11
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jan 2014 16:24:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+2TWzXvZrVZDJA-KkuUVuCP8kwX3GENL_rTf=_dZ_HBqJUArw@mail.gmail.com>
-References: <CA+2TWzXvZrVZDJA-KkuUVuCP8kwX3GENL_rTf=_dZ_HBqJUArw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 8 Jan 2014 17:24:01 -0700
-Message-ID: <CAErSpo4BpCYQ1q8ogqAtn7pbCXkKHM4M4DCffF9m+Gd4tjit1w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Allocate prefetch mmio resource first when possible
-To: threeTigers Lin <threeflytigers@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Li Zefan <lizefan@huawei.com>, Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 25/33] PCI, x86: Make ioapic hotplug support built-in
+Date: Thu,  2 Jan 2014 16:05:57 -0800
+Message-Id: <1388707565-16535-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+ioapic hotplug should be built-in like pci root bus hotplug.
 
-On Wed, Jan 8, 2014 at 11:17 AM, threeTigers Lin
-<threeflytigers@gmail.com> wrote:
-> From f7a37ed1c61b5939ccef810e28b25ecf3bfa9077 Mon Sep 17 00:00:00 2001
-> From: linmuhui <linmuhui@huawei.com>
-> Date: Thu, 9 Jan 2014 01:03:12 +0800
-> Subject: [PATCH] PCI: Allocate prefetch mmio resource first when possible
+Also need to make it depends on X86_IO_APIC.
 
-This patch is not in the standard format and does not apply cleanly.
-See Documentation/SubmittingPatches.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/Kconfig  | 3 ++-
+ drivers/pci/ioapic.c | 6 +++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-> Hi Bjorn,
->
-> PCI bus resources will be set up at pci_bridge_check_ranges() or
-> pci_read_bridge_bases(). In both cases, we can find that the PCI bus'
-> non-pref mmio will be assigned to bus->resource[1] and pref mmio will be
-> assigned to bus->resource[2]. So, in the scenario that we need to allocate
-> pref resources from PCI bus such as hotplug operation, the bus' non-pref
-> mmio will be quickly eaten up first if we try to allocate bus resources in
-> the order from bus->resource[0] to bus->resource[PCI_BRIDGE_RESOURCE_NUM -
-> 1] in the function pci_bus_alloc_resource(), even though there is enough
-> pref mmio resource of the bus. This may lead to the later requester who want
-> to allocate non-pref mmio cannot allocate the resource from the bus. So, I
-> think the order of allocating PCI bus resources in function
-> pci_bus_alloc_resource() should be changed to try pref mmio first when
-> possible.
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index b6a99f7..893503f 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -105,9 +105,10 @@ config PCI_PASID
+ 	  If unsure, say N.
+ 
+ config PCI_IOAPIC
+-	tristate "PCI IO-APIC hotplug support" if X86
++	bool "PCI IO-APIC hotplug support" if X86
+ 	depends on PCI
+ 	depends on ACPI
++	depends on X86_IO_APIC
+ 	default !X86
+ 
+ config PCI_LABEL
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 50ce680..2c2930e 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -113,6 +113,10 @@ static struct pci_driver ioapic_driver = {
+ 	.remove		= ioapic_remove,
+ };
+ 
+-module_pci_driver(ioapic_driver);
++static int __init ioapic_init(void)
++{
++	return pci_register_driver(&ioapic_driver);
++}
++module_init(ioapic_init);
+ 
+ MODULE_LICENSE("GPL");
+-- 
+1.8.4
 
-Don't we do this already?  The code in __pci_assign_resource() looks
-like it should prefer an exact prefetching match.
-
-If that code doesn't work, we should fix it there.  I don't want to
-fiddle with pci_bus_for_each_resource() for this -- that's a really
-arcane place to hide such a fix.
-
-Bjorn
-
-> Signed-off-by: Lin Muhui <linmuhui@huawei.com>
-> ---
->  include/linux/pci.h |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1084a15..238df8f 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1064,7 +1064,8 @@ void pci_bus_remove_resources(struct pci_bus *bus);
->
->  #define pci_bus_for_each_resource(bus, res, i)                         \
->         for (i = 0;                                                     \
-> -           (res = pci_bus_resource_n(bus, i)) || i <
-> PCI_BRIDGE_RESOURCE_NUM; \
-> +           (res = pci_bus_resource_n(bus, (i < PCI_BRIDGE_RESOURCE_NUM ?
-> (PCI_BRIDGE_RESOURCE_NUM - 1 - i) : i)))\
-> +                                        || i < PCI_BRIDGE_RESOURCE_NUM; \
->              i++)
->
->  int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
-> --
-> 1.7.1
->
