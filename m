@@ -1,67 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21568 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753341AbaACAGV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:06:21 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+Received: from moutng.kundenserver.de ([212.227.126.171]:63099 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbaACTNv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 14:13:51 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, linux-pci@vger.kernel.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH v5 24/33] x86: Move declaration for mp_register_ioapic()
-Date: Thu,  2 Jan 2014 16:05:56 -0800
-Message-Id: <1388707565-16535-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Gregory Cl??ment <gregory.clement@free-electrons.com>
+Subject: Re: Issue with the emulated PCI bridge implementation
+Date: Fri, 03 Jan 2014 20:13:19 +0100
+Message-ID: <12006165.Jkey40UWy0@wuerfel>
+In-Reply-To: <20140103201024.08ca11fb@skate>
+References: <20131226160534.36cc4203@skate> <3246739.aRbALcNl1Y@wuerfel> <20140103201024.08ca11fb@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Address compiling problem that Fengguang report.
+On Friday 03 January 2014 20:10:24 Thomas Petazzoni wrote:
+> Dear Arnd Bergmann,
+> 
+> On Fri, 03 Jan 2014 20:04:57 +0100, Arnd Bergmann wrote:
+> 
+> > > Digging in the LAKML archive, I found a lspci -v output about the
+> > > e1000e, and it has an I/O space:
+> > 
+> > Ok, thanks for the confirmation!
+> > 
+> > Do you mind posting your hack here? It may be useful for others as
+> > well, such as the xgene developers that seem to be doing funny things
+> > with their I/O space.
+> 
+> The current hack is the following very ugly piece of code... It runs
+> some command and reads back some registers, and you should see some
+> well-known values (which can be found in the e1000 datasheet, I don't
+> remember them right now).
 
-Reported-by: Fengguang Wu <wfg@linux.intel.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>
----
- arch/x86/include/asm/mpspec.h | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+Totally enough for the purpose, thanks!
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index b98665f..e9d850e 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -95,10 +95,26 @@ static inline void early_reserve_e820_mpc_new(void) { }
- #endif
- 
- int generic_processor_info(int apicid, int version);
--#ifdef CONFIG_ACPI
-+#ifdef CONFIG_X86_IO_APIC
- int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
- int mp_unregister_ioapic(u32 gsi_base);
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
-+#else
-+static inline int __mp_register_ioapic(int id, u32 address, u32 gsi_base,
-+					 bool hot)
-+{
-+	return 0;
-+}
-+static inline int mp_unregister_ioapic(u32 gsi_base)
-+{
-+	return 0;
-+}
-+static inline void mp_register_ioapic(int id, u32 address, u32 gsi_base)
-+{
-+}
-+#endif
-+
-+#ifdef CONFIG_ACPI
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
- 				   u32 gsi);
- extern void mp_config_acpi_legacy_irqs(void);
--- 
-1.8.4
-
+	Arnd
