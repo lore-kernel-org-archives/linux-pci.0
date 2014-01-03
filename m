@@ -1,64 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:47194 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752059AbaAOSEp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 13:04:45 -0500
-Received: by mail-ie0-f169.google.com with SMTP id tq11so578242ieb.14
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2014 10:04:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <83e67f7228074cf2a07e2fab275f55bc@CO1PR05MB523.namprd05.prod.outlook.com>
-References: <635a0ddff97142e2a06f9bd9c3428d01@DM2PR05MB671.namprd05.prod.outlook.com>
- <18064064.UldA0zYdyf@vostro.rjw.lan> <83e67f7228074cf2a07e2fab275f55bc@CO1PR05MB523.namprd05.prod.outlook.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 15 Jan 2014 11:04:24 -0700
-Message-ID: <CAErSpo6FbZdt6KzufOShmh-xOyByq1dstP9Qns0U6rjFeHbz1A@mail.gmail.com>
-Subject: Re: User initiated hotplug and kernel initiated hotplug - where is
- the synchronization?
-To: Guenter Roeck <groeck@juniper.net>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 15/33] x86, irq: Split out alloc_ioapic_save_registers()
+Date: Thu,  2 Jan 2014 16:05:47 -0800
+Message-Id: <1388707565-16535-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 15, 2014 at 9:07 AM, Guenter Roeck <groeck@juniper.net> wrote:
->
->>
->> > I have this doubt lingering on, and I'd appreciate if some one could
->> throw light on this:
->> >
->> > The kernel hotplug driver pciehp can initiate hotplug based on what
->> it senses from the HW (button press etc).
->> >
->> > The user space can also initiate the same operations by using
->> "rescan" or "remove" attributes in sysfs.
->> >
->> > My questions:
->> >
->> > 1) Is it safe to mix the above two?
->>
->> Not right now, but with these patches applied:
->>
->> https://patchwork.kernel.org/patch/3466551/
->> https://patchwork.kernel.org/patch/3466581/
->> https://patchwork.kernel.org/patch/3466601/
->> https://patchwork.kernel.org/patch/3466591/
->> https://patchwork.kernel.org/patch/3466631/
->> https://patchwork.kernel.org/patch/3466641/
->> https://patchwork.kernel.org/patch/3466651/
->> https://patchwork.kernel.org/patch/3491811/
->> https://patchwork.kernel.org/patch/3466491/
->> https://patchwork.kernel.org/patch/3473341/
->>
->> it should be.
->>
->
-> Hi Rafael,
->
-> any idea when those patches will show up in the upstream kernel ?
+Split alloc_ioapic_save_registers() from early_irq_init(),
+so it will be used per ioapic.
 
-I just merged them, so they should appear in -next tomorrow and in
-v3.14-rc1 in a couple weeks.
+Will call that later for hot-added ioapic controller.
 
-Bjorn
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 5822c37..c94dd19 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -283,6 +283,19 @@ static struct irq_cfg *alloc_reserved_irq_and_cfg_at(unsigned int at, int node)
+ /* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
+ static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
+ 
++static void alloc_ioapic_saved_registers(int idx)
++{
++	if (ioapics[idx].saved_registers)
++		return;
++
++	ioapics[idx].saved_registers =
++			kzalloc(sizeof(struct IO_APIC_route_entry) *
++				ioapics[idx].nr_registers, GFP_KERNEL);
++
++	if (!ioapics[idx].saved_registers)
++		pr_err("IOAPIC %d: suspend/resume impossible!\n", idx);
++}
++
+ int __init arch_early_irq_init(void)
+ {
+ 	struct irq_cfg *cfg;
+@@ -291,13 +304,8 @@ int __init arch_early_irq_init(void)
+ 	if (!legacy_pic->nr_legacy_irqs)
+ 		io_apic_irqs = ~0UL;
+ 
+-	for (i = 0; i < nr_ioapics; i++) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
++	for (i = 0; i < nr_ioapics; i++)
++		alloc_ioapic_saved_registers(i);
+ 
+ 	cfg = irq_cfgx;
+ 	count = ARRAY_SIZE(irq_cfgx);
+-- 
+1.8.4
+
