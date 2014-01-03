@@ -1,35 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:35155 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753337AbaACA1F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jan 2014 19:27:05 -0500
-Date: Thu, 2 Jan 2014 17:26:56 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Gregory Cl??ment <gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: Issue with the emulated PCI bridge implementation
-Message-ID: <20140103002656.GA12098@obsidianresearch.com>
-References: <20131226160534.36cc4203@skate>
- <20131226165241.2c50b244@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131226165241.2c50b244@skate>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 11/33] x86, irq: Kill create_irq()
+Date: Thu,  2 Jan 2014 16:05:43 -0800
+Message-Id: <1388707565-16535-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 26, 2013 at 04:52:41PM +0100, Thomas Petazzoni wrote:
+create_irq() will return -1 when failing to allocate.
+create_irq_nr() will return 0 when failing to allocate.
 
-> Here is an implementation of this idea, tested to work with an e1000e
-> card, with the driver modified to do a few read/write to the I/O
-> region. What do you think about it?
+It only causes confusion.
 
-This seems reasonable, the only down side is that a stray read to an
-unused portion of the Linux IO mapping will lock the machine instead
-of getting a page fault - however I don't see that as a blocker.
+Now we have no user for create_irq(), so remove create_irq() for x86.
 
-Regards,
-Jason
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/kernel/apic/io_apic.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
+
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 241325c..86d5466 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2973,21 +2973,6 @@ unsigned int create_irq_nr(unsigned int from, int node)
+ 	return __create_irqs(from, 1, node);
+ }
+ 
+-int create_irq(void)
+-{
+-	int node = cpu_to_node(0);
+-	unsigned int irq_want;
+-	int irq;
+-
+-	irq_want = nr_irqs_gsi;
+-	irq = create_irq_nr(irq_want, node);
+-
+-	if (irq == 0)
+-		irq = -1;
+-
+-	return irq;
+-}
+-
+ void destroy_irq(unsigned int irq)
+ {
+ 	struct irq_cfg *cfg = irq_get_chip_data(irq);
+-- 
+1.8.4
+
