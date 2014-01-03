@@ -1,73 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, x86 <x86@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
 	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 00/20] Bugfixes and improvements for Intel IOMMU drivers
-Date: Mon,  6 Jan 2014 14:18:07 +0800
-Message-Id: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	iommu@lists.linux-foundation.org
+Subject: [PATCH v2 03/10] IOMMU: Don't clean handler data before free_irq()
+Date: Thu,  2 Jan 2014 16:08:10 -0800
+Message-Id: <1388707697-16800-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
+References: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset includes several bugfixes and code improvements for
-Intel DMA remapping and interrupt remapping drivers. It's also a
-preparation for Intel IOMMU device hotplug.
+need that in __free_irq.
 
-It applies to the latest mainstream kernel on top of
-	commit 7e3528c3660a2e8602abc7858b0994d611f74bc3
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>
+Cc: iommu@lists.linux-foundation.org
+---
+ drivers/iommu/intel-iommu.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-It has been tested on Intel SandyBridge and Romley-4S platforms.
-
-Thanks!
-
-V2->V3:
-1) address review comments of last round
-
-Jiang Liu (20):
-  iommu/vt-d: use dedicated bitmap to track remapping entry allocation
-    status
-  iommu/vt-d: fix PCI device reference leakage on error recovery path
-  iommu/vt-d: fix a race window in allocating domain ID for virtual
-    machines
-  iommu/vt-d: fix resource leakage on error recovery path in
-    iommu_init_domains()
-  iommu/vt-d, trivial: refine support of 64bit guest address
-  iommu/vt-d, trivial: print correct domain id of static identity
-    domain
-  iommu/vt-d, trivial: check suitable flag in function
-    detect_intel_iommu()
-  iommu/vt-d, trivial: clean up unused code
-  iommu/vt-d: mark internal functions as static
-  iommu/vt-d, trivial: use defined macro instead of hardcoding
-  iommu/vt-d, trivial: simplify code with existing macros
-  iommu/vt-d: fix invalid memory access when freeing DMAR irq
-  iommu/vt-d: keep shared resources when failed to initialize iommu
-    devices
-  iommu/vt-d: avoid double free in error recovery path
-  iommu/vt-d: fix access after free issue in function free_dmar_iommu()
-  iommu/vt-d: release invalidation queue when destroying IOMMU unit
-  iommu/vt-d: fix wrong return value of dmar_table_init()
-  iommu/vt-d, PCI, trivial: use dev_is_pci() instead of hardcoding
-  iommu/vt-d, trivial: clean sparse warnings
-  iommu/vt-d: free all resources if failed to initialize DMARs
-
- drivers/iommu/dmar.c                |  137 +++++++++++++--------
- drivers/iommu/intel-iommu.c         |  232 ++++++++++++++---------------------
- drivers/iommu/intel_irq_remapping.c |   98 +++++++--------
- drivers/iommu/irq_remapping.c       |    6 +-
- include/linux/dma_remapping.h       |    4 -
- include/linux/dmar.h                |   17 +--
- include/linux/intel-iommu.h         |    3 +-
- 7 files changed, 229 insertions(+), 268 deletions(-)
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 865a65c..9751ee7 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1315,7 +1315,6 @@ void free_dmar_iommu(struct intel_iommu *iommu)
+ 		iommu_disable_translation(iommu);
+ 
+ 	if (iommu->irq) {
+-		irq_set_handler_data(iommu->irq, NULL);
+ 		/* This will mask the irq */
+ 		free_irq(iommu->irq, iommu);
+ 		destroy_irq(iommu->irq);
 -- 
-1.7.10.4
+1.8.4
 
