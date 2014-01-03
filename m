@@ -1,85 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64662 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754033AbaAaP17 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 10:27:59 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 3 Jan 2014 17:50:08 +0000
+From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [Update][PATCH 4/5][RFT] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
-Date: Fri, 31 Jan 2014 16:42:21 +0100
-Message-ID: <4082824.GsiGP0lQhc@vostro.rjw.lan>
-In-Reply-To: <20140131152836.GJ18029@intel.com>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <18315277.jcVt0SJ67s@vostro.rjw.lan> <20140131152836.GJ18029@intel.com>
+	"Rafael J. Wysocki" <rjw@sisk.pl>, <xen-devel@lists.xensource.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>
+Subject: Re: [Xen-devel] [PATCH v5 16/33] xen, irq: Call irq_alloc_reserved_desc_at()
+ at first
+In-Reply-To: <1388707565-16535-17-git-send-email-yinghai@kernel.org>
+Message-ID: <alpine.DEB.2.02.1401031749340.8667@kaball.uk.xensource.com>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org> <1388707565-16535-17-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 31, 2014 05:28:36 PM Mika Westerberg wrote:
-> On Wed, Jan 29, 2014 at 01:00:57AM +0100, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Use the observation that the ACPI scan handler of the device object
-> > in acpi_hotplug_notify_cb() can be obtained from that device object's
-> > handler pointer and do not pass it as data to
-> > acpi_install_hotplug_notify_handler() in acpi_scan_init_hotplug().
-> > 
-> > That allows the second argument of acpi_install_hotplug_notify_handler()
-> > to be dropped, so do it and update its callers accordingly.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >  drivers/acpi/scan.c                |   31 ++++++++++++++++++-------------
-> >  drivers/pci/hotplug/acpiphp_glue.c |    2 +-
-> >  include/acpi/acpi_bus.h            |    2 +-
-> >  3 files changed, 20 insertions(+), 15 deletions(-)
-> > 
-> > Index: linux-pm/drivers/acpi/scan.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/acpi/scan.c
-> > +++ linux-pm/drivers/acpi/scan.c
-> > @@ -487,7 +487,6 @@ static void acpi_device_hotplug(void *da
-> >  
-> >  static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
-> >  {
-> > -	struct acpi_scan_handler *handler = data;
-> >  	u32 ost_code = ACPI_OST_SC_SUCCESS;
-> >  	struct acpi_device *adev;
-> >  	acpi_status status;
-> > @@ -503,13 +502,6 @@ static void acpi_hotplug_notify_cb(acpi_
-> >  
-> >  	case ACPI_NOTIFY_EJECT_REQUEST:
-> >  		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
-> > -		if (handler && !handler->hotplug.enabled) {
-> > -			acpi_handle_err(handle, "Eject disabled\n");
-> > -			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
-> > -			goto out;
-> > -		}
-> > -		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
-> > -					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
-> >  		break;
-> >  
-> >  	case ACPI_NOTIFY_DEVICE_WAKE:
-> > @@ -535,11 +527,24 @@ static void acpi_hotplug_notify_cb(acpi_
-> >  		goto out;
-> >  	}
-> >  
-> > +	mutex_lock(&acpi_scan_lock);
+On Thu, 2 Jan 2014, Yinghai Lu wrote:
+> To make x86 irq allocation to be same with booting path and ioapic
+> hot add path, We will pre-reserve irq for all gsi at first.
+> We have to use alloc_reserved here, otherwise irq_alloc_desc_at will fail
+> because bit is already get marked for pre-reserved in irq bitmaps.
 > 
-> This is weird. I'm testing against your test-next branch which has this
-> patch included. If I remove locking here, TBT hotplug works fine. Otherwise
-> I can see the first hotplug/unplug works but after that I cannot get any
-> events anymore.
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: xen-devel@lists.xensource.com
+> ---
+>  drivers/xen/events.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/xen/events.c b/drivers/xen/events.c
+> index 4035e83..020cd77 100644
+> --- a/drivers/xen/events.c
+> +++ b/drivers/xen/events.c
+> @@ -508,8 +508,12 @@ static int __must_check xen_allocate_irq_gsi(unsigned gsi)
+>  	/* Legacy IRQ descriptors are already allocated by the arch. */
+>  	if (gsi < NR_IRQS_LEGACY)
+>  		irq = gsi;
+> -	else
+> -		irq = irq_alloc_desc_at(gsi, -1);
+> +	else {
+> +		/* for x86, irq already get reserved for gsi */
+> +		irq = irq_alloc_reserved_desc_at(gsi, -1);
+> +		if (irq < 0)
+> +			irq = irq_alloc_desc_at(gsi, -1);
+> +	}
 
-Weird indeed.  I don't seem to be able to reproduce that on my Aspire S5.
+This is common code. On ARM I get:
 
-What system are you testing on?
+drivers/xen/events.c: In function 'xen_allocate_irq_gsi':
+drivers/xen/events.c:513:3: error: implicit declaration of function 'irq_alloc_reserved_desc_at' [-Werror=implicit-function-declaration]
+   irq = irq_alloc_reserved_desc_at(gsi, -1);
+   ^
+cc1: some warnings being treated as errors
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
