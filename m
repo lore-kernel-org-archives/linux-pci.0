@@ -1,72 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23897 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932617AbaAaPHe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 10:07:34 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Amir Vadai <amirv@mellanox.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 18/34] mlx4: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:37 +0100
-Message-Id: <2f6674dabb90d4cbca3ef4039c3b893f2e5e9ec4.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21607 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752848AbaACAGa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:06:30 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 13/33] x86, irq: Add alloc_reserved_irq_and_cfg_at()
+Date: Thu,  2 Jan 2014 16:05:45 -0800
+Message-Id: <1388707565-16535-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+For ioapic hot-add support, it would be easy if we have continuous
+irq numbers for new added ioapic controller.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+We can reserve irq range at first, then allocate those
+pre-reserved one when it is needed.
+
+Add alloc_reserved_irq_and_cfg_at() to really allocate irq_desc and cfg,
+because pre-reserved only mark bits in allocate_irqs bit maps.
+
+Also fallback to alloc_irq_and_cfg_at(), and it is needed as
+we do not actually reserved irq for io apic irq yet.
+
+This patch is x86 arch code.
+
+-v2: update changelog by adding reasons, requested by Konrad.
+-v3: according to tglx, separate to another patch, and use
+     alloc_reserved_... instead of realloc_...
+     also add handling for one possible path in
+       alloc_reserved_irq_and_cfg_at().
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- drivers/net/ethernet/mellanox/mlx4/main.c |   19 ++++---------------
- 1 files changed, 4 insertions(+), 15 deletions(-)
+ arch/x86/kernel/apic/io_apic.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
-index d711158..a9d1249 100644
---- a/drivers/net/ethernet/mellanox/mlx4/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/main.c
-@@ -1976,7 +1976,6 @@ static void mlx4_enable_msi_x(struct mlx4_dev *dev)
- 	int nreq = min_t(int, dev->caps.num_ports *
- 			 min_t(int, netif_get_num_default_rss_queues() + 1,
- 			       MAX_MSIX_P_PORT) + MSIX_LEGACY_SZ, MAX_MSIX);
--	int err;
- 	int i;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index b943012..4b836ea 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -301,6 +301,29 @@ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+ 	irq_free_desc(at);
+ }
  
- 	if (msi_x) {
-@@ -1990,22 +1989,12 @@ static void mlx4_enable_msi_x(struct mlx4_dev *dev)
- 		for (i = 0; i < nreq; ++i)
- 			entries[i].entry = i;
- 
--	retry:
--		err = pci_enable_msix(dev->pdev, entries, nreq);
--		if (err) {
--			/* Try again if at least 2 vectors are available */
--			if (err > 1) {
--				mlx4_info(dev, "Requested %d vectors, "
--					  "but only %d MSI-X vectors available, "
--					  "trying again\n", nreq, err);
--				nreq = err;
--				goto retry;
--			}
-+		nreq = pci_enable_msix_range(dev->pdev, entries, 2, nreq);
++static struct irq_cfg *alloc_reserved_irq_and_cfg_at(unsigned int at, int node)
++{
++	struct irq_cfg *cfg;
++	int res;
 +
-+		if (nreq < 0) {
- 			kfree(entries);
- 			goto no_msi;
--		}
--
--		if (nreq <
-+		} else if (nreq <
- 		    MSIX_LEGACY_SZ + dev->caps.num_ports * MIN_MSIX_P_PORT) {
- 			/*Working in legacy mode , all EQ's shared*/
- 			dev->caps.comp_pool           = 0;
++	res = irq_alloc_reserved_desc_at(at, node);
++
++	if (res >= 0) {
++		cfg = irq_desc_get_chip_data(irq_to_desc(at));
++		if (cfg)
++			return cfg;
++
++		cfg = alloc_irq_cfg(at, node);
++		if (cfg)
++			irq_set_chip_data(at, cfg);
++		else
++			irq_free_desc(at);
++
++		return cfg;
++	}
++
++	return alloc_irq_and_cfg_at(at, node);
++}
+ 
+ struct io_apic {
+ 	unsigned int index;
+@@ -3357,7 +3380,7 @@ int arch_setup_ht_irq(unsigned int irq, struct pci_dev *dev)
+ static int
+ io_apic_setup_irq_pin(unsigned int irq, int node, struct io_apic_irq_attr *attr)
+ {
+-	struct irq_cfg *cfg = alloc_irq_and_cfg_at(irq, node);
++	struct irq_cfg *cfg = alloc_reserved_irq_and_cfg_at(irq, node);
+ 	int ret;
+ 
+ 	if (!cfg)
 -- 
-1.7.7.6
+1.8.4
 
