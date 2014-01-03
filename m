@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23622 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753874AbaACAHh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:07:37 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
 	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
@@ -13,63 +9,94 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Joerg Roedel <joro@8bytes.org>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v5 04/33] x86, irq: Change irq_remap_modify_chip_defaults() to static
-Date: Thu,  2 Jan 2014 16:05:36 -0800
-Message-Id: <1388707565-16535-5-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v5 20/33] x86, irq: More strict checking about registering ioapic
+Date: Thu,  2 Jan 2014 16:05:52 -0800
+Message-Id: <1388707565-16535-21-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
 References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq_remap_modify_chip_defaults() to static, as we have no
-outside user.
+1. check overlaping gsi range
+for hot-add ioapic case, BIOS may have some entries in MADT
+and also have setting in pci root bus with _GSB of DSDT.
+
+2. check if entries is in right range.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 Cc: Joerg Roedel <joro@8bytes.org>
 Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- arch/x86/include/asm/irq_remapping.h | 6 ------
- drivers/iommu/irq_remapping.c        | 2 +-
- 2 files changed, 1 insertion(+), 7 deletions(-)
+ arch/x86/kernel/apic/io_apic.c | 30 ++++++++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/include/asm/irq_remapping.h b/arch/x86/include/asm/irq_remapping.h
-index d806b22..606f42e 100644
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -56,8 +56,6 @@ extern bool setup_remapped_irq(int irq,
- 			       struct irq_cfg *cfg,
- 			       struct irq_chip *chip);
- 
--void irq_remap_modify_chip_defaults(struct irq_chip *chip);
--
- #else  /* CONFIG_IRQ_REMAP */
- 
- static inline void setup_irq_remapping_ops(void) { }
-@@ -91,10 +89,6 @@ static inline void panic_if_irq_remap(const char *msg)
- {
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 5dd3886..d43894e 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3826,12 +3826,9 @@ void __init ioapic_insert_resources(void)
+ 	}
  }
  
--static inline void irq_remap_modify_chip_defaults(struct irq_chip *chip)
--{
--}
+-int mp_find_ioapic(u32 gsi)
++static int __mp_find_ioapic(u32 gsi)
+ {
+-	int i = 0;
 -
- static inline bool setup_remapped_irq(int irq,
- 				      struct irq_cfg *cfg,
- 				      struct irq_chip *chip)
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 39f81ae..85ae2cf 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -375,7 +375,7 @@ static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- 	seq_printf(p, " IR-%s", data->chip->name);
+-	if (nr_ioapics == 0)
+-		return -1;
++	int i;
+ 
+ 	/* Find the IOAPIC that manages this GSI. */
+ 	for_each_ioapic(i) {
+@@ -3841,10 +3838,19 @@ int mp_find_ioapic(u32 gsi)
+ 			return i;
+ 	}
+ 
+-	printk(KERN_ERR "ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
+ 	return -1;
  }
  
--void irq_remap_modify_chip_defaults(struct irq_chip *chip)
-+static void irq_remap_modify_chip_defaults(struct irq_chip *chip)
++int mp_find_ioapic(u32 gsi)
++{
++	int ret = __mp_find_ioapic(gsi);
++
++	if (ret == -1)
++		pr_err("ERROR: Unable to locate IOAPIC for GSI %d\n", gsi);
++
++	return ret;
++}
++
+ int mp_find_ioapic_pin(int ioapic, u32 gsi)
  {
- 	chip->irq_print_chip = ir_print_prefix;
- 	chip->irq_ack = ir_ack_apic_edge;
+ 	struct mp_ioapic_gsi *gsi_cfg;
+@@ -3896,6 +3902,11 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	if (bad_ioapic(address))
+ 		return;
+ 
++	/* already registered ? */
++	idx = __mp_find_ioapic(gsi_base);
++	if (idx >= 0)
++		return;
++
+ 	idx = find_first_zero_bit(ioapics_mask, MAX_IO_APICS);
+ 	if (idx >= MAX_IO_APICS) {
+ 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded, skipping\n",
+@@ -3922,6 +3933,13 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	 * and to prevent reprogramming of IOAPIC pins (PCI GSIs).
+ 	 */
+ 	entries = io_apic_get_redir_entries(idx);
++
++	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
++		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++		memset(&ioapics[idx], 0, sizeof(struct ioapic));
++		return;
++	}
++
+ 	gsi_cfg = mp_ioapic_gsi_routing(idx);
+ 	gsi_cfg->gsi_base = gsi_base;
+ 	gsi_cfg->gsi_end = gsi_base + entries - 1;
 -- 
 1.8.4
 
