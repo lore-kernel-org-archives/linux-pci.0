@@ -1,103 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:48325 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754115AbaADA1x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 19:27:53 -0500
-Received: by mail-ig0-f170.google.com with SMTP id k19so2446569igc.1
-        for <linux-pci@vger.kernel.org>; Fri, 03 Jan 2014 16:27:53 -0800 (PST)
-Date: Fri, 3 Jan 2014 17:27:50 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Michael Ellerman <michael@ellerman.id.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tejun Heo <tj@kernel.org>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	Mark Lord <kernel@start.ca>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 0/4] Introduce pci_enable_msi/msix_range() interfaces
-Message-ID: <20140104002750.GD18987@google.com>
-References: <cover.1388262668.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1388262668.git.agordeev@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21806 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731AbaACAHS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:07:18 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 17/33] x86, irq: Reserve irq range and alloc_reserved for booting path
+Date: Thu,  2 Jan 2014 16:05:49 -0800
+Message-Id: <1388707565-16535-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 30, 2013 at 08:28:12AM +0100, Alexander Gordeev wrote:
-> This series is against "next" branch in Bjorn's repo:
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-> 
-> Changes from v4 to v5:
->   - pci_auto_enable_msi* functions renamed to pci_enable_msi* ones;
->   - pci_enable_msi_range() and pci_enable_msix_range() are the only
->     basic interfaces left to enable MSI/MSI-X operation;
->   - pci_enable_msi(), pci_enable_msi_block() and pci_enable_msix() old
->     interfaces deprecated in favour of pci_enable_msi/msix_range() ones;
->     description of the old interfaces is removed from the documentation;
->   - pci_get_msi_vec_count()  renamed to pci_msi_vec_count() and
->     pci_get_msix_vec_count() renamed to pci_msix_vec_count();
-> 
-> Changes from v3 to v4:
->   - pcim_enable_msi* functions renamed to pci_auto_enable_msi* ones;
->   - PowerPC patches dropped;
->   - pci_get_msi_cap()     renamed to pci_get_msi_vec_count() and
->     pci_msix_table_size() renamed to pci_get_msix_vec_count();
-> 
-> Changes from v2 to v3:
->   - new public interfaces commented in drivers/pci/msi.c;
->   - patch "Make quota traversing and requesting race-safe" explained;
->   - pci_enable_msi/msix() 'nvec' arg type changed from 'unsigned int' to 'int';
->   - pcim_enable_msi*() arg 'nvec' renamed to 'maxvec' when upper limit passed;
->   - pcim_enable_msi*(..., maxvec, minvec) arg order swapped to minvec, maxvec;
->   - "PCI: Fail MSI/MSI-X initialization if device is not in PCI_D0" commit
->     869a161 and "PCI/MSI: Factor out pci_get_msi_cap() interface" patch
->     conflicts resolved;
-> 
-> This update introduces pci_enable_msi_range() function which
-> supersedes pci_enable_msi() and pci_enable_msi_block()
-> interfaces for MSI and pci_enable_msi_range() function which
-> supersedes pci_enable_msix() interface for MSI-X interrupts.
-> 
-> The plan is to convert all drivers to the new interfaces and
-> then remove existing pci_enable_msi(), pci_enable_msi_block()
-> and pci_enable_msix() functions.
-> 
-> The newly introduced functions return either a negative error
-> code or a number of successfully allocated MSI/MSI-X interrupts.
-> 
-> Unlike the old interfaces where the "third" state indicates
-> a possible number of MSI interrupts that could have been
-> allocated, the new interfaces allow device drivers not to deal
-> with tri-state return values and hide fallback logic behind
-> the implementation.
-> 
-> As result, device drivers are expected to have more clearer
-> and straight code.
-> 
-> The tree could be found in "pci-next-msi-v5" branch in repo:
-> https://github.com/a-gordeev/linux.git
-> 
-> Alexander Gordeev (4):
->   PCI/MSI: Factor out pci_msi_vec_count() interface
->   PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
->   PCI/MSI: Introduce pci_msix_vec_count() interface
->   PCI/MSI: Introduce pci_enable_msi/msix_range() interfaces
+We will use reserve and alloc_reserved_irq_and_cfg_at for hotplug ioapic path.
 
-I applied all four of these to my pci/msi branch for v3.14.  Thanks
-a lot for all your work on this!  I'm looking forward to the driver
-conversions and bug fixes :)
+To make thing simple, we could make booting path use same code.
 
-Bjorn
+All irq range for all GSIs will be reserved at first, and alloc_reserved
+will really allocate those irq_desc/cfg when it is used.
 
->  Documentation/PCI/MSI-HOWTO.txt |  308 ++++++++++++++++++++++++++-------------
->  drivers/ata/ahci.c              |   56 +++++---
->  drivers/pci/msi.c               |  150 +++++++++++++++-----
->  drivers/pci/pcie/portdrv_core.c |    7 +-
->  include/linux/pci.h             |   27 +++-
->  5 files changed, 385 insertions(+), 163 deletions(-)
-> 
-> -- 
-> 1.7.7.6
-> 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/io_apic.h |  1 +
+ arch/x86/kernel/apic/io_apic.c | 80 +++++++++++++++++++++++++++++++-----------
+ 2 files changed, 60 insertions(+), 21 deletions(-)
+
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index eaff3ad..8181fd8 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -176,6 +176,7 @@ extern void setup_ioapic_ids_from_mpc_nocheck(void);
+ struct mp_ioapic_gsi{
+ 	u32 gsi_base;
+ 	u32 gsi_end;
++	u32 irq_base;
+ };
+ extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index c94dd19..a1af837 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -280,8 +280,47 @@ static struct irq_cfg *alloc_reserved_irq_and_cfg_at(unsigned int at, int node)
+ 	return alloc_irq_and_cfg_at(at, node);
+ }
+ 
+-/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
+-static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
++static int reserve_ioapic_gsi_irq_base(int idx)
++{
++	int irq;
++	struct mp_ioapic_gsi *gsi_cfg = mp_ioapic_gsi_routing(idx);
++	int cnt = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
++
++	irq = __irq_reserve_irqs(-1, gsi_cfg->gsi_base, cnt);
++	if (irq >= 0) {
++		gsi_cfg->irq_base = irq;
++		apic_printk(APIC_VERBOSE, KERN_INFO
++			"IOAPIC[%d]: apic_id %d, GSI %d-%d ==> irq %d-%d reserved\n",
++			idx, mpc_ioapic_id(idx),
++			gsi_cfg->gsi_base, gsi_cfg->gsi_end,
++			irq, irq + cnt - 1);
++	} else
++		apic_printk(APIC_VERBOSE, KERN_WARNING
++			"IOAPIC[%d]: apic_id %d, GSI %d-%d ==> irq reserve failed\n",
++			idx, mpc_ioapic_id(idx),
++			gsi_cfg->gsi_base, gsi_cfg->gsi_end);
++
++	return irq;
++}
++
++static void __init reserve_ioapic_gsi_irq_extra(void)
++{
++	int irq;
++
++	/* to prevent hot add ioapic taking those slots */
++	if (gsi_top) {
++		irq = irq_reserve_irqs(gsi_top, NR_IRQS_LEGACY);
++		if (irq >= 0)
++			apic_printk(APIC_VERBOSE, KERN_INFO
++				"IOAPIC[extra]: GSI %d-%d ==> irq %d-%d reserved\n",
++				gsi_top, gsi_top + NR_IRQS_LEGACY - 1,
++				irq, irq + NR_IRQS_LEGACY - 1);
++		else
++			apic_printk(APIC_VERBOSE, KERN_WARNING
++				"IOAPIC[extra]: GSI %d-%d ==> irq reserve failed\n",
++				gsi_top, gsi_top + NR_IRQS_LEGACY - 1);
++	}
++}
+ 
+ static void alloc_ioapic_saved_registers(int idx)
+ {
+@@ -298,8 +337,9 @@ static void alloc_ioapic_saved_registers(int idx)
+ 
+ int __init arch_early_irq_init(void)
+ {
++	int node = cpu_to_node(0);
+ 	struct irq_cfg *cfg;
+-	int count, node, i;
++	int i;
+ 
+ 	if (!legacy_pic->nr_legacy_irqs)
+ 		io_apic_irqs = ~0UL;
+@@ -307,26 +347,23 @@ int __init arch_early_irq_init(void)
+ 	for (i = 0; i < nr_ioapics; i++)
+ 		alloc_ioapic_saved_registers(i);
+ 
+-	cfg = irq_cfgx;
+-	count = ARRAY_SIZE(irq_cfgx);
+-	node = cpu_to_node(0);
++	for (i = 0; i < nr_ioapics; i++)
++		reserve_ioapic_gsi_irq_base(i);
+ 
+-	/* Make sure the legacy interrupts are marked in the bitmap */
+-	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
++	reserve_ioapic_gsi_irq_extra();
+ 
+-	for (i = 0; i < count; i++) {
+-		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
+-		irq_set_chip_data(i, &cfg[i]);
+-		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
+-		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
+-		/*
+-		 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+-		 */
+-		if (i < legacy_pic->nr_legacy_irqs) {
+-			cfg[i].vector = IRQ0_VECTOR + i;
+-			cpumask_setall(cfg[i].domain);
++	/*
++	 * For legacy IRQ's, start with assigning irq0 to irq15 to
++	 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++	 */
++	for (i = 0; i < legacy_pic->nr_legacy_irqs; i++) {
++		cfg = alloc_reserved_irq_and_cfg_at(i, node);
++		if (!cfg) {
++			pr_warn("can not allocate irq_desc/cfg for %d\n", i);
++			continue;
+ 		}
++		cfg->vector = IRQ0_VECTOR + i;
++		cpumask_setall(cfg->domain);
+ 	}
+ 
+ 	return 0;
+@@ -3468,7 +3505,8 @@ int __init arch_probe_nr_irqs(void)
+ 	if (nr < nr_irqs)
+ 		nr_irqs = nr;
+ 
+-	return NR_IRQS_LEGACY;
++	/* x86 arch code will allocate irq_desc/cfg */
++	return 0;
+ }
+ 
+ int io_apic_set_pci_routing(struct device *dev, int irq,
+-- 
+1.8.4
+
