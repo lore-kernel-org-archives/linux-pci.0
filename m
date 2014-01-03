@@ -1,64 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:35247 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751316AbaAMGQK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jan 2014 01:16:10 -0500
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D3C00A@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
- <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
- <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
- <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
- <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
- <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
- <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com>
- <CALkVjQbjnAk0mFZ-3zjx_15xXEaaiMaVxMMLD1HEUJhVtYXg4g@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303D3C00A@HASMSX103.ger.corp.intel.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Mon, 13 Jan 2014 14:15:54 +0800
-Message-ID: <CALkVjQZ9Tc7Xx9ANzcp_4_7_=BCLM7EHS+oJUxQ57QXuSiv+YA@mail.gmail.com>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Pavel Machek <pavel@ucw.cz>, Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 18/33] x86, irq: Add ioapic_gsi_to_irq
+Date: Thu,  2 Jan 2014 16:05:50 -0800
+Message-Id: <1388707565-16535-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2014/1/13 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
-> Small update from the bugzilla (https://bugzilla.kernel.org/show_bug.cgi?id=64541).
-> The bug is solved... There seem to be a hardware bug with the L1 OFF exit timer. To solve this bug we need *not* to rely on the internal clock and need to keep using the external clock. The internal clock isn't reliable enough and can lead to loss of synchronization between the bridge and the device upon L1 OFF transition.
-> This issue has been seen in simulation and not on real hardware... until now... The windows driver has a workaround for this hardware bug, this is why the issue wasn't seen on Windows. I am porting the work around to the Linux driver.
->
-> Thank you wzyboy for your patience...
->
-> Then end.
+For hot add ioapic, irq_base is not equal to gsi_base.
+We need a way to do mapping between gsi and irq.
 
+Also remove irq_to_gsi() that is confusing, just use that array
+directly as we only have one caller and it already check
+input irq before use it.
 
-So this is a hardware bug instead of a driver bug? Oh...
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/io_apic.h |  1 +
+ arch/x86/kernel/acpi/boot.c    | 22 +++++-----------------
+ arch/x86/kernel/apic/io_apic.c | 29 ++++++++++++++++++++++++++++-
+ 3 files changed, 34 insertions(+), 18 deletions(-)
 
-I'm glad this is finally solved since 2013-11-03. Thanks to all,
-providing me with wordarounds, without which I could only use wired
-network. :-)
-
-Cheers.
-
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index 8181fd8..02ac411 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -180,6 +180,7 @@ struct mp_ioapic_gsi{
+ };
+ extern struct mp_ioapic_gsi  mp_gsi_routing[];
+ extern u32 gsi_top;
++int ioapic_gsi_to_irq(u32 gsi);
+ int mp_find_ioapic(u32 gsi);
+ int mp_find_ioapic_pin(int ioapic, u32 gsi);
+ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 6c0b43b..0f9c133 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -113,6 +113,10 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 		}
+ 	}
+ 
++#ifdef CONFIG_X86_IO_APIC
++	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
++		return ioapic_gsi_to_irq(gsi);
++#endif
+ 	/* Provide an identity mapping of gsi == irq
+ 	 * except on truly weird platforms that have
+ 	 * non isa irqs in the first 16 gsis.
+@@ -125,22 +129,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
+ 	return irq;
+ }
+ 
+-static u32 irq_to_gsi(int irq)
+-{
+-	unsigned int gsi;
+-
+-	if (irq < NR_IRQS_LEGACY)
+-		gsi = isa_irq_to_gsi[irq];
+-	else if (irq < gsi_top)
+-		gsi = irq;
+-	else if (irq < (gsi_top + NR_IRQS_LEGACY))
+-		gsi = irq - gsi_top;
+-	else
+-		gsi = 0xffffffff;
+-
+-	return gsi;
+-}
+-
+ /*
+  * This is just a simple wrapper around early_ioremap(),
+  * with sanity checks for phys == 0 and size == 0.
+@@ -530,7 +518,7 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+ {
+ 	if (isa_irq >= 16)
+ 		return -1;
+-	*gsi = irq_to_gsi(isa_irq);
++	*gsi = isa_irq_to_gsi[isa_irq];
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index a1af837..066611f 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -1041,13 +1041,16 @@ static int pin_2_irq(int idx, int apic, int pin)
+ 
+ 	if (test_bit(bus, mp_bus_not_pci)) {
+ 		irq = mp_irqs[idx].srcbusirq;
+-	} else {
++	} else if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
+ 		u32 gsi = gsi_cfg->gsi_base + pin;
+ 
+ 		if (gsi >= NR_IRQS_LEGACY)
+ 			irq = gsi;
+ 		else
+ 			irq = gsi_top + gsi;
++	} else {
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
+ 	}
+ 
+ #ifdef CONFIG_X86_32
+@@ -1473,6 +1476,30 @@ static void __init setup_IO_APIC_irqs(void)
+ 		__io_apic_setup_irqs(ioapic_idx);
+ }
+ 
++int ioapic_gsi_to_irq(u32 gsi)
++{
++	int ioapic_idx = 0, irq = gsi;
++	struct mp_ioapic_gsi *gsi_cfg;
++
++	ioapic_idx = mp_find_ioapic(gsi);
++	if (ioapic_idx < 0)
++		return -1;
++
++	gsi_cfg = mp_ioapic_gsi_routing(ioapic_idx);
++	if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
++		if (gsi < NR_IRQS_LEGACY)
++			irq = gsi_top + gsi;
++	} else {
++		int pin = mp_find_ioapic_pin(ioapic_idx, gsi);
++
++		if (pin < 0)
++			return -1;
++		/* hotadd ioapic */
++		irq = gsi_cfg->irq_base + pin;
++	}
++
++	return irq;
++}
+ /*
+  * for the gsit that is not in first ioapic
+  * but could not use acpi_register_gsi()
 -- 
-wzyboy
+1.8.4
+
