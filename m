@@ -1,73 +1,206 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:58306 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321AbaAILjb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 06:39:31 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Subject: Re: pcie-designware: query on MSI IRQ handling
-Date: Thu, 9 Jan 2014 12:39:20 +0100
-Cc: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com> <3E54258959B69E4282D79E01AB1F32B7046639CA@DFLE11.ent.ti.com> <2CC2A0A4A178534D93D5159BF3BCB66189FBAF2E89@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189FBAF2E89@EAPEX1MAIL1.st.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201401091239.20839.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 21/33] x86, irq: Make mp_register_ioapic handle hot-added ioapic
+Date: Thu,  2 Jan 2014 16:05:53 -0800
+Message-Id: <1388707565-16535-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 09 January 2014, Mohit KUMAR DCG wrote:
-> - To just clarify this dw PCIe driver consists 3 parts:
-> 1. Common part: Common PCIe code (host_init() etc..) this should
->  be common to all hosts. As already discussed it should be ideally
->  moved out from this driver. It is in todo list and will move to separate
->  file in due course of time.
-> 
-> 2.  Viewport handling: ATU translation code
-> 
-> 3. MSI specific code
-> 
-> Synopsys controllers version 3.70+have been standardized for viewport
->  handling and msi implementation. Current dw driver covers these standard
->  implementation for viewport and MSI.
-> 
-> Now I can understand that you are using only common part of dw driver 
-> And have specific viewport and msi implementation. So its getting a bit
->  messy if you modify the driver for your specific implementation as
->  discussed in this thread.
-> 
-> So ideally I will suggest that you should move the common code (point 1)
->  to outside this driver, and then use this along with your specific viewport
->  and msi implementation.
-> 
-> Arnd, Jingoo,
-> 
-> Do you agree with above comments?
+It needs to reserve irq range in allocated_irqs bitmaps
+and irq_base will be used to get right irq for ioapic/pin or gsi.
 
-I think it depends a bit on how much code ends up being shared in the first
-category, and whether it's easily separable from the second one. I assume
-the MSI implementation is fairly isolated already.
+also need to use lock to protect ioapics_mask to avoid racing.
 
-I definitely agree with the general principle of layering drivers in this
-way, specific version of the driver basically uses exported functions of
-the more general driver like
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ arch/x86/include/asm/mpspec.h  |  1 +
+ arch/x86/kernel/apic/io_apic.c | 74 ++++++++++++++++++++++++++++++++----------
+ 2 files changed, 57 insertions(+), 18 deletions(-)
 
-st-pcie -> dw-pcie-3.7 -> dw-pcie -> pci-common
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index 3142a94..59d8465 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -96,6 +96,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ 
+ int generic_processor_info(int apicid, int version);
+ #ifdef CONFIG_ACPI
++int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
+ extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ 				   u32 gsi);
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index d43894e..0fdda49 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -94,6 +94,16 @@ static struct ioapic {
+ } ioapics[MAX_IO_APICS];
+ 
+ DECLARE_BITMAP(ioapics_mask, MAX_IO_APICS);
++static DEFINE_MUTEX(ioapics_mask_lock);
++
++static void lock_ioapics(void)
++{
++	mutex_lock(&ioapics_mask_lock);
++}
++static void unlock_ioapics(void)
++{
++	mutex_unlock(&ioapics_mask_lock);
++}
+ 
+ #define mpc_ioapic_ver(ioapic_idx)	ioapics[ioapic_idx].mp_config.apicver
+ 
+@@ -3556,7 +3566,7 @@ int io_apic_set_pci_routing(struct device *dev, int irq,
+ }
+ 
+ #ifdef CONFIG_X86_32
+-static int __init io_apic_get_unique_id(int ioapic, int apic_id)
++static int io_apic_get_unique_id(int ioapic, int apic_id)
+ {
+ 	union IO_APIC_reg_00 reg_00;
+ 	static physid_mask_t apic_id_map = PHYSID_MASK_NONE;
+@@ -3631,7 +3641,7 @@ static int __init io_apic_get_unique_id(int ioapic, int apic_id)
+ 	return apic_id;
+ }
+ 
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 io_apic_unique_id(u8 id)
+ {
+ 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
+ 	    !APIC_XAPIC(apic_version[boot_cpu_physical_apicid]))
+@@ -3640,7 +3650,7 @@ static u8 __init io_apic_unique_id(u8 id)
+ 		return id;
+ }
+ #else
+-static u8 __init io_apic_unique_id(u8 id)
++static u8 io_apic_unique_id(u8 id)
+ {
+ 	int i;
+ 	DECLARE_BITMAP(used, 256);
+@@ -3893,25 +3903,28 @@ static __init int bad_ioapic_register(int idx)
+ 	return 0;
+ }
+ 
+-void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
++int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
+ {
+ 	int idx;
+ 	int entries;
+ 	struct mp_ioapic_gsi *gsi_cfg;
++	int ret = -EINVAL;
+ 
+ 	if (bad_ioapic(address))
+-		return;
++		return ret;
++
++	lock_ioapics();
+ 
+ 	/* already registered ? */
+ 	idx = __mp_find_ioapic(gsi_base);
+ 	if (idx >= 0)
+-		return;
++		goto out;
+ 
+ 	idx = find_first_zero_bit(ioapics_mask, MAX_IO_APICS);
+ 	if (idx >= MAX_IO_APICS) {
+ 		pr_warn("WARNING: Max # of I/O APICs (%d) exceeded, skipping\n",
+ 			MAX_IO_APICS);
+-		return;
++		goto out;
+ 	}
+ 
+ 	ioapics[idx].mp_config.type = MP_IOAPIC;
+@@ -3920,10 +3933,8 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 
+ 	set_fixmap_nocache(FIX_IO_APIC_BASE_0 + idx, address);
+ 
+-	if (bad_ioapic_register(idx)) {
+-		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
+-		return;
+-	}
++	if (bad_ioapic_register(idx))
++		goto clear_out;
+ 
+ 	ioapics[idx].mp_config.apicid = io_apic_unique_id(id);
+ 	ioapics[idx].mp_config.apicver = io_apic_get_version(idx);
+@@ -3934,11 +3945,8 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	 */
+ 	entries = io_apic_get_redir_entries(idx);
+ 
+-	if (!entries || entries > MP_MAX_IOAPIC_PIN) {
+-		clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
+-		memset(&ioapics[idx], 0, sizeof(struct ioapic));
+-		return;
+-	}
++	if (!entries || entries > MP_MAX_IOAPIC_PIN)
++		goto clear_out;
+ 
+ 	gsi_cfg = mp_ioapic_gsi_routing(idx);
+ 	gsi_cfg->gsi_base = gsi_base;
+@@ -3949,8 +3957,21 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 	 */
+ 	ioapics[idx].nr_registers = entries;
+ 
+-	if (gsi_cfg->gsi_end >= gsi_top)
+-		gsi_top = gsi_cfg->gsi_end + 1;
++	if (!hotadd) {
++		/*
++		 * irqs will be reserved in arch_early_irq_init()
++		 * don't need to update gsi_top for hot add case
++		 */
++		if (gsi_cfg->gsi_end >= gsi_top)
++			gsi_top = gsi_cfg->gsi_end + 1;
++	} else {
++		int irq = reserve_ioapic_gsi_irq_base(idx);
++
++		if (irq < 0)
++			goto clear_out;
++
++		alloc_ioapic_saved_registers(idx);
++	}
+ 
+ 	pr_info("IOAPIC[%d]: apic_id %d, version %d, address 0x%x, GSI %d-%d\n",
+ 		idx, mpc_ioapic_id(idx),
+@@ -3959,6 +3980,23 @@ void __init mp_register_ioapic(int id, u32 address, u32 gsi_base)
+ 
+ 	set_bit(idx, ioapics_mask);
+ 	nr_ioapics = bitmap_weight(ioapics_mask, MAX_IO_APICS);
++
++	unlock_ioapics();
++
++	return 0;
++
++clear_out:
++	clear_fixmap(FIX_IO_APIC_BASE_0 + idx);
++	memset(&ioapics[idx], 0, sizeof(struct ioapic));
++out:
++	unlock_ioapics();
++
++	return ret;
++}
++
++void mp_register_ioapic(int id, u32 address, u32 gsi_base)
++{
++	__mp_register_ioapic(id, address, gsi_base, false);
+ }
+ 
+ /* Enable IOAPIC early just for system timer */
+-- 
+1.8.4
 
-I have two comments about the specifics here:
-
-* On most architectures, the MSI controller is integrated into the primary
-  irqchip. If a dw-pcie-3.7+ is used on such a machine, I guess it will
-  just ignore the MSI part
-* On server systems, the setup of the viewport would typically be handled
-  by the firmware before the kernel is started, and the kernel does not
-  actually need to know about it.
-
-This means we might actually want to split out the MSI and viewport 
-parts into two separate pieces of code that can optionally be used
-by any of the SoC specific host drivers.
-
-	Arnd
