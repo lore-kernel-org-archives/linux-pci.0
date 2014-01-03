@@ -1,222 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:59615 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753257AbaA0AcW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jan 2014 19:32:22 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 5/11] ACPI / hotplug / PCI: Store acpi_device pointer in acpiphp_context
-Date: Mon, 27 Jan 2014 01:41:17 +0100
-Message-ID: <2392255.TACRzd2AD0@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:64093 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753166AbaACVxK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 16:53:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20140102.192133.1585340046080167370.davem@davemloft.net>
+References: <1388234173-31654-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	<20140102.192133.1585340046080167370.davem@davemloft.net>
+Date: Fri, 3 Jan 2014 13:53:08 -0800
+Message-ID: <CAEuXFEw=A0mppxtgzpmnh3feLiKYb+LJQvFRMrW3C4h+jHpO2Q@mail.gmail.com>
+Subject: Re: [net-next] pci_regs.h: Add PCI bus link speed and width defines
+From: Jesse Brandeburg <jesse.brandeburg@gmail.com>
+To: David Miller <davem@davemloft.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	NetDEV list <netdev@vger.kernel.org>, gospo@redhat.com,
+	sassmann@redhat.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bjorn.helgaas@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
++linux-pci
 
-After recent modifications of the ACPI core making it create a struct
-acpi_device object for every namespace node representing a device
-regardless of the current status of that device the ACPIPHP code
-can store a struct acpi_device pointer instead of an ACPI handle
-in struct acpiphp_context.  This immediately makes it possible to
-avoid making potentially costly calls to acpi_bus_get_device() in
-two places and allows some more simplifications to be made going
-forward.
+<and see note below>
 
-The reason why that is correct is because ACPIPHP only installs
-hotify handlers for namespace nodes that exist when
-acpiphp_enumerate_slots() is called for their parent bridge.
-That only happens if the parent bridge has an ACPI companion
-associated with it, which means that the ACPI namespace scope
-in question has been scanned already at that point.  That, in
-turn, means that struct acpi_device objects have been created
-for all namespace nodes in that scope and pointers to those
-objects can be stored directly instead of their ACPI handles.
+On Thu, Jan 2, 2014 at 4:21 PM, David Miller <davem@davemloft.net> wrote:
+> From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> Date: Sat, 28 Dec 2013 04:36:13 -0800
+>
+>> Add missing PCI bus link speed 8.0 GT/s and bus link widths of
+>> x1, x2, x4 and x8.
+>>
+>> CC: <linux-kernel@vger.kernel.org>
+>> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+>
+> Can a PCI person please ACK this?  This is a prerequisite for some
+> networking driver changes Jeff would like to push to me.
+>
+> Thanks.
+>
+>> ---
+>>  include/uapi/linux/pci_regs.h | 5 +++++
+>>  1 file changed, 5 insertions(+)
+>>
+>> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+>> index 4a98e85..c870c2a 100644
+>> --- a/include/uapi/linux/pci_regs.h
+>> +++ b/include/uapi/linux/pci_regs.h
+>> @@ -489,7 +489,12 @@
+>>  #define  PCI_EXP_LNKSTA_CLS  0x000f  /* Current Link Speed */
+>>  #define  PCI_EXP_LNKSTA_CLS_2_5GB 0x0001 /* Current Link Speed 2.5GT/s */
+>>  #define  PCI_EXP_LNKSTA_CLS_5_0GB 0x0002 /* Current Link Speed 5.0GT/s */
+>> +#define  PCI_EXP_LNKSTA_CLS_8_0GB 0x0003 /* Current Link Speed 8.0GT/s */
+>>  #define  PCI_EXP_LNKSTA_NLW  0x03f0  /* Negotiated Link Width */
+>> +#define  PCI_EXP_LNKSTA_NLW_X1       0x0010  /* Current Link Width x1 */
+>> +#define  PCI_EXP_LNKSTA_NLW_X2       0x0020  /* Current Link Width x2 */
+>> +#define  PCI_EXP_LNKSTA_NLW_X4       0x0040  /* Current Link Width x4 */
+>> +#define  PCI_EXP_LNKSTA_NLW_X8       0x0080  /* Current Link Width x8 */
+>>  #define  PCI_EXP_LNKSTA_NLW_SHIFT 4  /* start of NLW mask in link status */
+>>  #define  PCI_EXP_LNKSTA_LT   0x0800  /* Link Training */
+>>  #define  PCI_EXP_LNKSTA_SLC  0x1000  /* Slot Clock Configuration */
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    9 +++++--
- drivers/pci/hotplug/acpiphp_glue.c |   44 +++++++++++++++++--------------------
- 2 files changed, 28 insertions(+), 25 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -117,8 +117,8 @@ struct acpiphp_func {
- };
- 
- struct acpiphp_context {
--	acpi_handle handle;
- 	struct acpiphp_func func;
-+	struct acpi_device *adev;
- 	struct acpiphp_bridge *bridge;
- 	unsigned int refcount;
- };
-@@ -128,9 +128,14 @@ static inline struct acpiphp_context *fu
- 	return container_of(func, struct acpiphp_context, func);
- }
- 
-+static inline struct acpi_device *func_to_acpi_device(struct acpiphp_func *func)
-+{
-+	return func_to_context(func)->adev;
-+}
-+
- static inline acpi_handle func_to_handle(struct acpiphp_func *func)
- {
--	return func_to_context(func)->handle;
-+	return func_to_acpi_device(func)->handle;
- }
- 
- /*
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -73,11 +73,11 @@ static void acpiphp_context_handler(acpi
- 
- /**
-  * acpiphp_init_context - Create hotplug context and grab a reference to it.
-- * @handle: ACPI object handle to create the context for.
-+ * @adev: ACPI device object to create the context for.
-  *
-  * Call under acpiphp_context_lock.
-  */
--static struct acpiphp_context *acpiphp_init_context(acpi_handle handle)
-+static struct acpiphp_context *acpiphp_init_context(struct acpi_device *adev)
- {
- 	struct acpiphp_context *context;
- 	acpi_status status;
-@@ -86,9 +86,9 @@ static struct acpiphp_context *acpiphp_i
- 	if (!context)
- 		return NULL;
- 
--	context->handle = handle;
-+	context->adev = adev;
- 	context->refcount = 1;
--	status = acpi_attach_data(handle, acpiphp_context_handler, context);
-+	status = acpi_attach_data(adev->handle, acpiphp_context_handler, context);
- 	if (ACPI_FAILURE(status)) {
- 		kfree(context);
- 		return NULL;
-@@ -118,7 +118,7 @@ static struct acpiphp_context *acpiphp_g
- 
- /**
-  * acpiphp_put_context - Drop a reference to ACPI hotplug context.
-- * @handle: ACPI object handle to put the context for.
-+ * @context: ACPI hotplug context to drop a reference to.
-  *
-  * The context object is removed if there are no more references to it.
-  *
-@@ -130,7 +130,7 @@ static void acpiphp_put_context(struct a
- 		return;
- 
- 	WARN_ON(context->bridge);
--	acpi_detach_data(context->handle, acpiphp_context_handler);
-+	acpi_detach_data(context->adev->handle, acpiphp_context_handler);
- 	kfree(context);
- }
- 
-@@ -265,6 +265,7 @@ static acpi_status register_slot(acpi_ha
- {
- 	struct acpiphp_bridge *bridge = data;
- 	struct acpiphp_context *context;
-+	struct acpi_device *adev;
- 	struct acpiphp_slot *slot;
- 	struct acpiphp_func *newfunc;
- 	acpi_status status = AE_OK;
-@@ -284,12 +285,14 @@ static acpi_status register_slot(acpi_ha
- 				"can't evaluate _ADR (%#x)\n", status);
- 		return AE_OK;
- 	}
-+	if (acpi_bus_get_device(handle, &adev))
-+		return AE_OK;
- 
- 	device = (adr >> 16) & 0xffff;
- 	function = adr & 0xffff;
- 
- 	mutex_lock(&acpiphp_context_lock);
--	context = acpiphp_init_context(handle);
-+	context = acpiphp_init_context(adev);
- 	if (!context) {
- 		mutex_unlock(&acpiphp_context_lock);
- 		acpi_handle_err(handle, "No hotplug context\n");
-@@ -625,12 +628,8 @@ static void disable_slot(struct acpiphp_
- 		pci_dev_put(pdev);
- 	}
- 
--	list_for_each_entry(func, &slot->funcs, sibling) {
--		struct acpi_device *adev;
--
--		if (!acpi_bus_get_device(func_to_handle(func), &adev))
--			acpi_bus_trim(adev);
--	}
-+	list_for_each_entry(func, &slot->funcs, sibling)
-+		acpi_bus_trim(func_to_acpi_device(func));
- 
- 	slot->flags &= (~SLOT_ENABLED);
- }
-@@ -644,13 +643,10 @@ static bool slot_no_hotplug(struct acpip
- {
- 	struct acpiphp_func *func;
- 
--	list_for_each_entry(func, &slot->funcs, sibling) {
--		struct acpi_device *adev = NULL;
--
--		acpi_bus_get_device(func_to_handle(func), &adev);
--		if (acpiphp_no_hotplug(adev))
-+	list_for_each_entry(func, &slot->funcs, sibling)
-+		if (acpiphp_no_hotplug(func_to_acpi_device(func)))
- 			return true;
--	}
-+
- 	return false;
- }
- 
-@@ -899,7 +895,7 @@ static void hotplug_event(acpi_handle ha
- static void hotplug_event_work(void *data, u32 type)
- {
- 	struct acpiphp_context *context = data;
--	acpi_handle handle = context->handle;
-+	acpi_handle handle = context->adev->handle;
- 
- 	acpi_scan_lock_acquire();
- 	pci_lock_rescan_remove();
-@@ -959,7 +955,7 @@ static void handle_hotplug_event(acpi_ha
- 
- 	mutex_lock(&acpiphp_context_lock);
- 	context = acpiphp_get_context(handle);
--	if (context && !WARN_ON(context->handle != handle)) {
-+	if (context && !WARN_ON(context->adev->handle != handle)) {
- 		get_bridge(context->func.parent);
- 		acpiphp_put_context(context);
- 		acpi_hotplug_execute(hotplug_event_work, context, type);
-@@ -983,16 +979,18 @@ static void handle_hotplug_event(acpi_ha
- void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
- 	struct acpiphp_bridge *bridge;
-+	struct acpi_device *adev;
- 	acpi_handle handle;
- 	acpi_status status;
- 
- 	if (acpiphp_disabled)
- 		return;
- 
--	handle = ACPI_HANDLE(bus->bridge);
--	if (!handle)
-+	adev = ACPI_COMPANION(bus->bridge);
-+	if (!adev)
- 		return;
- 
-+	handle = adev->handle;
- 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
- 	if (!bridge) {
- 		acpi_handle_err(handle, "No memory for bridge object\n");
-
+also note that these defines from this patch are already partially
+defined in drivers/pci/probe.c but likely need to move into a header
+file and be consolidated throughout the kernel.  That said I don't see
+any issue with adding these as a separate set of defines in
+uapi/linux/pci_regs.h
