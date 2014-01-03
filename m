@@ -1,109 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1389304708.3209.257.camel@bling.home>
-References: <20140109153513.21446.31778.stgit@bling.home> <CAErSpo4Asnx4JiZvppZLUzxmVymz0t-fHXRFMr81-Qz31XyR+g@mail.gmail.com>
- <1389291911.3209.234.camel@bling.home> <CAErSpo6vA=f1RSnpkWumYxs3tQ8uM8NKuWqck4GRb6gL5HvqiA@mail.gmail.com>
- <1389304708.3209.257.camel@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 9 Jan 2014 16:20:50 -0700
-Message-ID: <CAErSpo7xEKzWF8oetskQAcLcwJUw4VPByXgbMUkurVcK2caRgA@mail.gmail.com>
-Subject: Re: [PATCH] pci/iov: VFs are never multifunction
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Nishank Trivedi <nistrive@cisco.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	sathya.perla@emulex.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ajit.khaparde@emulex.com, Don Dutile <ddutile@redhat.com>,
-	subbu.seetharaman@emulex.com, Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21568 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753341AbaACAGV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:06:21 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v5 24/33] x86: Move declaration for mp_register_ioapic()
+Date: Thu,  2 Jan 2014 16:05:56 -0800
+Message-Id: <1388707565-16535-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+to Nishank]
+Address compiling problem that Fengguang report.
 
-On Thu, Jan 9, 2014 at 2:58 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Thu, 2014-01-09 at 14:39 -0700, Bjorn Helgaas wrote:
->> On Thu, Jan 9, 2014 at 11:25 AM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > On Thu, 2014-01-09 at 11:08 -0700, Bjorn Helgaas wrote:
->> >> On Thu, Jan 9, 2014 at 8:36 AM, Alex Williamson
->> >> <alex.williamson@redhat.com> wrote:
->> >> > Per the SR-IOV spec rev 1.1:
->> >> >
->> >> > 3.4.1.9 Header Type (Offset 0Eh)
->> >> >
->> >> > "... For VFs, this register must be RO Zero."
->> >> >
->> >> > Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
->> >> > NIC.  When they do it makes us handle ACS testing and therefore IOMMU
->> >> > groups as if they were actual multifunction devices and require ACS
->> >> > capabilities to make sure there's no peer-to-peer between functions.
->> >> > VFs are never traditional multifunction devices, so simply clear this
->> >> > bit before we get any further into setup.
->> >>
->> >> This seems reasonable.  Do you have "lspci -vvxxxx" output for this
->> >> device?  I'd like to save it for future reference.
->> >
->> > Sure, here's a VF:
->> >
->> > 09:04.0 Ethernet controller: Emulex Corporation OneConnect 10Gb NIC (be3) (rev 01)
->> >         Subsystem: Emulex Corporation Device e722
->>
->> Thanks!  I put this in
->> https://bugzilla.kernel.org/show_bug.cgi?id=68431, and I'll add a
->> reference to the changelog.
->>
->> But I wonder if we can make this slightly more generic by doing
->> something like this in pci_setup_device():
->>
->>   dev->multifunction = (PCI_FUNC(dev->devfn) == 0) && (hdr_type & 0x80);
->>
->> That's basically what lspci does in pci_generic_scan_bus(), and
->> section 3.2.2.3.4 of the PCI 3.0 spec sort of implies that we should
->> only look at the bit 7 of the header type for function 0:
->>
->>   If a single function device is detected (i.e., bit 7 in the Header
->>   Type register of function 0 is 0), no more functions for that
->>   Device Number will be checked. If a multi-function device is
->>   detected (i.e., bit 7 in the Header Type register of function 0
->>   is 1), then all remaining Function Numbers will be checked.
->
-> We could do that and rely only on pci_scan_slot() to set multifunction=1
-> for the other functions, but that doesn't completely solve this problem.
-> VFs can occupy function zero and the example device would still set
-> multifunction with that test.  Thanks,
+Reported-by: Fengguang Wu <wfg@linux.intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/x86/include/asm/mpspec.h | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
-Duh, it would help if I actually paid attention to your lspci output...
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index b98665f..e9d850e 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -95,10 +95,26 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ #endif
+ 
+ int generic_processor_info(int apicid, int version);
+-#ifdef CONFIG_ACPI
++#ifdef CONFIG_X86_IO_APIC
+ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hot);
+ int mp_unregister_ioapic(u32 gsi_base);
+ extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
++#else
++static inline int __mp_register_ioapic(int id, u32 address, u32 gsi_base,
++					 bool hot)
++{
++	return 0;
++}
++static inline int mp_unregister_ioapic(u32 gsi_base)
++{
++	return 0;
++}
++static inline void mp_register_ioapic(int id, u32 address, u32 gsi_base)
++{
++}
++#endif
++
++#ifdef CONFIG_ACPI
+ extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+ 				   u32 gsi);
+ extern void mp_config_acpi_legacy_irqs(void);
+-- 
+1.8.4
 
-The reason I'm thinking about this is that virtfn_add() is only used
-when we enable SR-IOV.  If we clear dev->multifunction there, we only
-end up with the correct value if we start with SR-IOV disabled, and
-then enable it.
-
-If SR-IOV were enabled by the firmware before Linux boots, we wouldn't
-go through the virtfn_add() path, and dev->multifunction might still
-be wrong.
-
-I'm pretty sure Nishank said there were Cisco boxes that enable SR-IOV
-in the firmware, but I don't know how that works.  It looks like we
-would disable SR-IOV during enumeration in the path below:
-
-  pci_scan_slot
-    pci_scan_single_device
-      pci_device_add
-        pci_init_capabilities
-          pci_iov_init
-            sriov_init
-              pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl)
-              if (ctrl & PCI_SRIOV_CTRL_VFE)
-                pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0)
-
->From that path, it *looks* like it doesn't really matter whether
-SR-IOV is enabled at handoff, because we disable it anyway.
-
-So I'm not sure if I misunderstood Nishank or what.  I think it would
-be cool if we could enumerate previously-enabled VFs, but maybe there
-are other issues that would make that impossible.
-
-Bjorn
