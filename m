@@ -1,41 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15409 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753224AbaA3OEi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Jan 2014 09:04:38 -0500
-Date: Thu, 30 Jan 2014 15:06:31 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and
- pci_enable_msix_range()
-Message-ID: <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
- <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
- <52E7CCAD.5070008@linux.vnet.ibm.com>
- <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:38377 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753870AbaACWrR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 17:47:17 -0500
+Received: by mail-ie0-f181.google.com with SMTP id e14so16587657iej.40
+        for <linux-pci@vger.kernel.org>; Fri, 03 Jan 2014 14:47:16 -0800 (PST)
+Date: Fri, 3 Jan 2014 15:47:13 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v5 25/33] PCI, x86: Make ioapic hotplug support built-in
+Message-ID: <20140103224713.GC18987@google.com>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+ <1388707565-16535-26-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <1388707565-16535-26-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 29, 2014 at 02:26:52PM +0100, Alexander Gordeev wrote:
-> > Do you want me to rediff your patches on top of this one,
-> > or do you want to keep the entire MSI series together
-> > and do the rediff? Otherwise the patches seem fine.
+[fixed Rafael's email address; I imagine you got a few bounces :)]
+
+On Thu, Jan 02, 2014 at 04:05:57PM -0800, Yinghai Lu wrote:
+> ioapic hotplug should be built-in like pci root bus hotplug.
 > 
-> I would prefer the former.
+> Also need to make it depends on X86_IO_APIC.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Hi Brian,
+Most of this series is x86-specific and outside the scope of PCI, so I
+assume somebody else will deal with it.
 
-I am sending the refreshed patches on top of "ipr: Handle early EEH".
+This particular patch doesn't seem to depend on anything else, so I'll
+merge it.
 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+> ---
+>  drivers/pci/Kconfig  | 3 ++-
+>  drivers/pci/ioapic.c | 6 +++++-
+>  2 files changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index b6a99f7..893503f 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -105,9 +105,10 @@ config PCI_PASID
+>  	  If unsure, say N.
+>  
+>  config PCI_IOAPIC
+> -	tristate "PCI IO-APIC hotplug support" if X86
+> +	bool "PCI IO-APIC hotplug support" if X86
+>  	depends on PCI
+>  	depends on ACPI
+> +	depends on X86_IO_APIC
+>  	default !X86
+>  
+>  config PCI_LABEL
+> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+> index 50ce680..2c2930e 100644
+> --- a/drivers/pci/ioapic.c
+> +++ b/drivers/pci/ioapic.c
+> @@ -113,6 +113,10 @@ static struct pci_driver ioapic_driver = {
+>  	.remove		= ioapic_remove,
+>  };
+>  
+> -module_pci_driver(ioapic_driver);
+> +static int __init ioapic_init(void)
+> +{
+> +	return pci_register_driver(&ioapic_driver);
+> +}
+> +module_init(ioapic_init);
+>  
+>  MODULE_LICENSE("GPL");
+> -- 
+> 1.8.4
+> 
