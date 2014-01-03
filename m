@@ -1,70 +1,142 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH 06/17] x86/PCI: Add x86_pci_root_bus_node() to look up NUMA
- node from PCI bus
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
-	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 29 Jan 2014 11:18:11 -0700
-Message-ID: <20140129181811.15476.19897.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH v5 14/33] x86, irq: Move down arch_early_irq_init()
+Date: Thu,  2 Jan 2014 16:05:46 -0800
+Message-Id: <1388707565-16535-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The AMD early_fill_mp_bus_info() already allocates a struct pci_root_info
-for each PCI host bridge it finds, and that structure contains the NUMA
-node number.  We don't need to keep the same information in the
-mp_bus_to_node[] table.
+Change position only.
 
-This adds x86_pci_root_bus_node(), which returns the NUMA node number, or
-NUMA_NO_NODE if the node is unknown.
+Prepare to update arch_early_irq_init() that needs to call some static
+functions.
 
-Note that unlike get_mp_bus_to_node(), x86_pci_root_bus_node() only works
-for root buses.  For example, if amd_bus.c finds a host bridge on node 1 to
-[bus 00-0f], get_mp_bus_to_node() returns 1 for any bus between 00 and 0f,
-but x86_pci_root_bus_node() returns 1 for bus 00 and NUMA_NO_NODE for buses
-01-0f.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- arch/x86/include/asm/topology.h |    1 +
- arch/x86/pci/bus_numa.c         |   10 ++++++++++
- 2 files changed, 11 insertions(+)
+ arch/x86/kernel/apic/io_apic.c | 89 +++++++++++++++++++++---------------------
+ 1 file changed, 44 insertions(+), 45 deletions(-)
 
-diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
-index d35f24e231cd..09046a1a6c35 100644
---- a/arch/x86/include/asm/topology.h
-+++ b/arch/x86/include/asm/topology.h
-@@ -131,6 +131,7 @@ static inline void arch_fix_phys_package_id(int num, u32 slot)
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 4b836ea..5822c37 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -185,51 +185,6 @@ static struct irq_pin_list *alloc_irq_pin_list(int node)
+ 	return kzalloc_node(sizeof(struct irq_pin_list), GFP_KERNEL, node);
  }
  
- struct pci_bus;
-+int x86_pci_root_bus_node(int bus);
- void x86_pci_root_bus_resources(int bus, struct list_head *resources);
- 
- #ifdef CONFIG_SMP
-diff --git a/arch/x86/pci/bus_numa.c b/arch/x86/pci/bus_numa.c
-index c2735feb2508..2e36a4469549 100644
---- a/arch/x86/pci/bus_numa.c
-+++ b/arch/x86/pci/bus_numa.c
-@@ -20,6 +20,16 @@ static struct pci_root_info *x86_find_pci_root_info(int bus)
- 	return NULL;
+-
+-/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
+-static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
+-
+-int __init arch_early_irq_init(void)
+-{
+-	struct irq_cfg *cfg;
+-	int count, node, i;
+-
+-	if (!legacy_pic->nr_legacy_irqs)
+-		io_apic_irqs = ~0UL;
+-
+-	for (i = 0; i < nr_ioapics; i++) {
+-		ioapics[i].saved_registers =
+-			kzalloc(sizeof(struct IO_APIC_route_entry) *
+-				ioapics[i].nr_registers, GFP_KERNEL);
+-		if (!ioapics[i].saved_registers)
+-			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
+-	}
+-
+-	cfg = irq_cfgx;
+-	count = ARRAY_SIZE(irq_cfgx);
+-	node = cpu_to_node(0);
+-
+-	/* Make sure the legacy interrupts are marked in the bitmap */
+-	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
+-
+-	for (i = 0; i < count; i++) {
+-		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
+-		irq_set_chip_data(i, &cfg[i]);
+-		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
+-		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
+-		/*
+-		 * For legacy IRQ's, start with assigning irq0 to irq15 to
+-		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
+-		 */
+-		if (i < legacy_pic->nr_legacy_irqs) {
+-			cfg[i].vector = IRQ0_VECTOR + i;
+-			cpumask_setall(cfg[i].domain);
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+ 	return irq_get_chip_data(irq);
+@@ -325,6 +280,50 @@ static struct irq_cfg *alloc_reserved_irq_and_cfg_at(unsigned int at, int node)
+ 	return alloc_irq_and_cfg_at(at, node);
  }
  
-+int x86_pci_root_bus_node(int bus)
++/* irq_cfg is indexed by the sum of all RTEs in all I/O APICs. */
++static struct irq_cfg irq_cfgx[NR_IRQS_LEGACY];
++
++int __init arch_early_irq_init(void)
 +{
-+	struct pci_root_info *info = x86_find_pci_root_info(bus);
++	struct irq_cfg *cfg;
++	int count, node, i;
 +
-+	if (!info)
-+		return NUMA_NO_NODE;
++	if (!legacy_pic->nr_legacy_irqs)
++		io_apic_irqs = ~0UL;
 +
-+	return info->node;
++	for (i = 0; i < nr_ioapics; i++) {
++		ioapics[i].saved_registers =
++			kzalloc(sizeof(struct IO_APIC_route_entry) *
++				ioapics[i].nr_registers, GFP_KERNEL);
++		if (!ioapics[i].saved_registers)
++			pr_err("IOAPIC %d: suspend/resume impossible!\n", i);
++	}
++
++	cfg = irq_cfgx;
++	count = ARRAY_SIZE(irq_cfgx);
++	node = cpu_to_node(0);
++
++	/* Make sure the legacy interrupts are marked in the bitmap */
++	irq_reserve_irqs(0, legacy_pic->nr_legacy_irqs);
++
++	for (i = 0; i < count; i++) {
++		INIT_LIST_HEAD(&cfg[i].irq_2_pin);
++		irq_set_chip_data(i, &cfg[i]);
++		zalloc_cpumask_var_node(&cfg[i].domain, GFP_KERNEL, node);
++		zalloc_cpumask_var_node(&cfg[i].old_domain, GFP_KERNEL, node);
++		/*
++		 * For legacy IRQ's, start with assigning irq0 to irq15 to
++		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
++		 */
++		if (i < legacy_pic->nr_legacy_irqs) {
++			cfg[i].vector = IRQ0_VECTOR + i;
++			cpumask_setall(cfg[i].domain);
++		}
++	}
++
++	return 0;
 +}
 +
- void x86_pci_root_bus_resources(int bus, struct list_head *resources)
- {
- 	struct pci_root_info *info = x86_find_pci_root_info(bus);
+ struct io_apic {
+ 	unsigned int index;
+ 	unsigned int unused[3];
+-- 
+1.8.4
 
