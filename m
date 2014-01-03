@@ -1,98 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:25941 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932072AbaAaKGL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 05:06:11 -0500
-Date: 31 Jan 2014 05:06:10 -0500
-Message-ID: <20140131100610.9498.qmail@science.horizon.com>
-From: "George Spelvin" <linux@horizon.com>
-To: acooks@linux.com, linux@horizon.com
-Subject: Re: Who understand the IOMMU code?
-Cc: dwmw2@infradead.org, fenghua.yu@intel.com,
-	iommu@lists.linux-foundation.org, jiang.liu@linux.intel.com,
-	linux-pci@vger.kernel.org
-In-Reply-To: <CAJtEV7YLC=iSbzWS8PWDo8JWY_fyaRckxtLC3aCqU7sx+O4UPQ@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:23263 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192AbaACAGR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:06:17 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Rui Wang <rui.y.wang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 33/33] x86, ioapic: Hotadd of IOAPICs described in static MADT
+Date: Thu,  2 Jan 2014 16:06:05 -0800
+Message-Id: <1388707565-16535-34-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> I'm trying to improve it, but even limiting myself to intel-iommu.c,
->> it's definitely hairy.
+From: Rui Wang <rui.y.wang@intel.com>
 
-> What's hairy? The patch, the problem, or the iommu code?
+For IOAPICs described in static MADT, we already called __mp_register_ioapic()
+in arch_early_irq_init(). During boot PCI root hotadd will call it again and
+will find it already registered, thus register_ioapic() won't add it to the
+ioapic_list. Subsequent hot-removal will also fail because it is not
+found on the ioapic_list.
 
-The iommu code.  The problem is pretty straightforward, it's just the
-existing code I'm trying to patch that's already large and complex and
-figuring out how to fit in as neatly as possible is a challenge.
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/kernel/apic/io_apic.c | 4 +++-
+ drivers/pci/ioapic.c           | 3 ++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
->> Right now, I'm trying to figure out where to remove the additional
->> mapping.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 248a21d..ad28933 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3964,8 +3964,10 @@ int __mp_register_ioapic(int id, u32 address, u32 gsi_base, bool hotadd)
+ 
+ 	/* already registered ? */
+ 	idx = __mp_find_ioapic(gsi_base);
+-	if (idx >= 0)
++	if (idx >= 0) {
++		ret = -EEXIST;
+ 		goto out;
++	}
+ 
+ 	idx = find_first_zero_bit(ioapics_mask, MAX_IO_APICS);
+ 	if (idx >= MAX_IO_APICS) {
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 54de155..0a23295 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -126,7 +126,8 @@ static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
+ 		}
+ 	}
+ 
+-	if (acpi_register_ioapic(handle, res->start, gsi_base)) {
++	ret = acpi_register_ioapic(handle, res->start, gsi_base);
++	if (ret && ret != -EEXIST) {
+ 		if (dev)
+ 			goto exit_release;
+ 		return;
+-- 
+1.8.4
 
-> Which additional mapping?
-
-The additional requester_id -> IOMMU domain mapping that is set up for
-the additional devfn(s).
-
-> Are you implying that the patch adds redundant context entries or
-> are you talking about folding the quirk_map_multi_requester_ids() and
-> quirk_map_requester_id() functions into the main code path?
-
-I'm working on a complete rewrite, using the existing PCI quirk system,
-although with yours as a base, and I'm having a hard time convincing
-myself that the quirk_unmap_* functions are in the right place.
-
-> Let me see if I understand you correctly.
-> 1) You don't like the simple patch that clearly shows the problem (and offers
->    a simple work-around), because it's too ugly.
-
-Yes.  I want something that can get merged upstream, and I don't think the
-existing one has much of a chance.  If nothing else, the linear search
-through exception lists each time a mapping is set up will quickly
-become a bottleneck.
-
-> 2) You complain that "this stuff" (presumably the stuff you didn't
->    learn from the ugly patch) is hard to understand.
-
-Well, the target of the complaint is my own knowledge.  I'm not claiming
-the complexity is *unnecessary*, just that it is hard to follow.
-
-> 3) You question whether anyone else understands "this stuff".
-> 4) You want to know whether anyone is qualified to review your patch when
->     you 'finish it' ...
-> 5) ... as long as someone just help you a little bit?
->
-> It that really what you meant?
-
-Pretty much.  Figuring out whose blessing I need and at least making
-initial contact seems like an obvious prerequisite to getting a patch
-merged,
-
-The help I need is primarily not breaking the existing code, which
-requires a clear understanding of what it's supposed to do.
-
-Really, I just want to find *someone* with authority in this area who
-responds to e-mail.  I can escalate to someone higher on the patch merge
-hierarchy, but I want to make it very clear that I tried before going
-that route.
-
-I was hoping that chatting to you on appropriate public mailing lists
-would attract some attention, but maybe I have to be more direct.
-
-> I don't think you understood the relevance of Alex's patch set for a
-> "PCIe requester ID interface", that I referred you to.
-
-I think I didn't understand it as well the first itme I read it.
-Certainly it's a nice cleanup, and would be a better place to put the
-relevant quirks.  If, as you say, it gets un-stalled.
-
-I've just now been re-reading the discussion, and it's a lot more
-comprehensible now that I've read a number of PCIe and IOMMU specification
-documents.
-
-I still have to wrap my head around ACS, though.  That also affects the
-code heavily.
-
-> Ultimately, this isn't going anywhere until David Woodhouse, the Intel iommu
-> maintainer, gets involved. I have not yet found the magical incantation to
-> achieve that.
-
-I may have to ask Joerg.
