@@ -1,34 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18251 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755290AbaAHMTF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 07:19:05 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<wil6210@qca.qualcomm.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 7/7] wil6210: Use new interfaces for MSI enablement
-Date: Wed, 8 Jan 2014 14:19:01 +0200
-Message-ID: <6233363.QgbOXU7oZU@lx-vladimir>
-In-Reply-To: <20140108115400.GD20157@dhcp-26-207.brq.redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com> <1649789.pNiBbZVqTd@lx-vladimir> <20140108115400.GD20157@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 31/33] ACPI, x86/PCI: Move resource_to_addr() to acpi generic
+Date: Thu,  2 Jan 2014 16:06:03 -0800
+Message-Id: <1388707565-16535-32-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 08, 2014 12:54:01 PM Alexander Gordeev wrote:
-> Vladimir,
-> 
-> This series is against pci/msi branch in Bjorn Helgaas's repo:
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-> 
-> Commit 302a252 "PCI/MSI: Add pci_enable_msi_range() and pci_enable_msix_range()"
-> 
+Rui wang reported ioapic hot-add does not work on his machine
+that _CRS have MEMORY_FIXED.
+He also proposed to expose resource_to_addr() and use it for ioapic.
 
-Thanks, see it. New code don't distinguish between negative and positive error
-values, same as old code. I'll fix it.
+We should move it to acpi generic, as ioapi.c current is in
+drivers/pci/.
 
-Meanwhile, below my
+Or should move it to acpica?
 
-Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/acpi.c     | 51 ++-----------------------------------------------
+ drivers/acpi/resource.c | 46 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/acpi.h    |  3 +++
+ 3 files changed, 51 insertions(+), 49 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 4f25ec0..9dc42c6 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -219,60 +219,13 @@ static void teardown_mcfg_map(struct pci_root_info *info)
+ #endif
+ 
+ static acpi_status
+-resource_to_addr(struct acpi_resource *resource,
+-			struct acpi_resource_address64 *addr)
+-{
+-	acpi_status status;
+-	struct acpi_resource_memory24 *memory24;
+-	struct acpi_resource_memory32 *memory32;
+-	struct acpi_resource_fixed_memory32 *fixed_memory32;
+-
+-	memset(addr, 0, sizeof(*addr));
+-	switch (resource->type) {
+-	case ACPI_RESOURCE_TYPE_MEMORY24:
+-		memory24 = &resource->data.memory24;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = memory24->minimum;
+-		addr->address_length = memory24->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_MEMORY32:
+-		memory32 = &resource->data.memory32;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = memory32->minimum;
+-		addr->address_length = memory32->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+-		fixed_memory32 = &resource->data.fixed_memory32;
+-		addr->resource_type = ACPI_MEMORY_RANGE;
+-		addr->minimum = fixed_memory32->address;
+-		addr->address_length = fixed_memory32->address_length;
+-		addr->maximum = addr->minimum + addr->address_length - 1;
+-		return AE_OK;
+-	case ACPI_RESOURCE_TYPE_ADDRESS16:
+-	case ACPI_RESOURCE_TYPE_ADDRESS32:
+-	case ACPI_RESOURCE_TYPE_ADDRESS64:
+-		status = acpi_resource_to_address64(resource, addr);
+-		if (ACPI_SUCCESS(status) &&
+-		    (addr->resource_type == ACPI_MEMORY_RANGE ||
+-		    addr->resource_type == ACPI_IO_RANGE) &&
+-		    addr->address_length > 0) {
+-			return AE_OK;
+-		}
+-		break;
+-	}
+-	return AE_ERROR;
+-}
+-
+-static acpi_status
+ count_resource(struct acpi_resource *acpi_res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+ 	struct acpi_resource_address64 addr;
+ 	acpi_status status;
+ 
+-	status = resource_to_addr(acpi_res, &addr);
++	status = acpi_mem_addr_resource_to_address64(acpi_res, &addr);
+ 	if (ACPI_SUCCESS(status))
+ 		info->res_num++;
+ 	return AE_OK;
+@@ -288,7 +241,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	unsigned long flags;
+ 	u64 start, orig_end, end;
+ 
+-	status = resource_to_addr(acpi_res, &addr);
++	status = acpi_mem_addr_resource_to_address64(acpi_res, &addr);
+ 	if (!ACPI_SUCCESS(status))
+ 		return AE_OK;
+ 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index b7201fc..6199ddf 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -414,6 +414,52 @@ void acpi_dev_free_resource_list(struct list_head *list)
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_free_resource_list);
+ 
++acpi_status acpi_mem_addr_resource_to_address64(struct acpi_resource *resource,
++			struct acpi_resource_address64 *addr)
++{
++	acpi_status status;
++	struct acpi_resource_memory24 *memory24;
++	struct acpi_resource_memory32 *memory32;
++	struct acpi_resource_fixed_memory32 *fixed_memory32;
++
++	memset(addr, 0, sizeof(*addr));
++	switch (resource->type) {
++	case ACPI_RESOURCE_TYPE_MEMORY24:
++		memory24 = &resource->data.memory24;
++		addr->resource_type = ACPI_MEMORY_RANGE;
++		addr->minimum = memory24->minimum;
++		addr->address_length = memory24->address_length;
++		addr->maximum = addr->minimum + addr->address_length - 1;
++		return AE_OK;
++	case ACPI_RESOURCE_TYPE_MEMORY32:
++		memory32 = &resource->data.memory32;
++		addr->resource_type = ACPI_MEMORY_RANGE;
++		addr->minimum = memory32->minimum;
++		addr->address_length = memory32->address_length;
++		addr->maximum = addr->minimum + addr->address_length - 1;
++		return AE_OK;
++	case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
++		fixed_memory32 = &resource->data.fixed_memory32;
++		addr->resource_type = ACPI_MEMORY_RANGE;
++		addr->minimum = fixed_memory32->address;
++		addr->address_length = fixed_memory32->address_length;
++		addr->maximum = addr->minimum + addr->address_length - 1;
++		return AE_OK;
++	case ACPI_RESOURCE_TYPE_ADDRESS16:
++	case ACPI_RESOURCE_TYPE_ADDRESS32:
++	case ACPI_RESOURCE_TYPE_ADDRESS64:
++		status = acpi_resource_to_address64(resource, addr);
++		if (ACPI_SUCCESS(status) &&
++		    (addr->resource_type == ACPI_MEMORY_RANGE ||
++		    addr->resource_type == ACPI_IO_RANGE) &&
++		    addr->address_length > 0) {
++			return AE_OK;
++		}
++		break;
++	}
++	return AE_ERROR;
++}
++
+ struct res_proc_context {
+ 	struct list_head *list;
+ 	int (*preproc)(struct acpi_resource *, void *);
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index ee8058e..762980a 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -293,6 +293,9 @@ unsigned long acpi_dev_irq_flags(u8 triggering, u8 polarity, u8 shareable);
+ bool acpi_dev_resource_interrupt(struct acpi_resource *ares, int index,
+ 				 struct resource *res);
+ 
++acpi_status acpi_mem_addr_resource_to_address64(struct acpi_resource *resource,
++			struct acpi_resource_address64 *addr);
++
+ struct resource_list_entry {
+ 	struct list_head node;
+ 	struct resource res;
+-- 
+1.8.4
+
