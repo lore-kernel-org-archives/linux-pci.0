@@ -1,103 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:38630 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbaAGS2C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 13:28:02 -0500
-Received: by mail-ie0-f173.google.com with SMTP id to1so829984ieb.18
-        for <linux-pci@vger.kernel.org>; Tue, 07 Jan 2014 10:28:01 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.17.10]:53166 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbaACMWk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 07:22:40 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Subject: Re: Issue with the emulated PCI bridge implementation
+Date: Fri, 3 Jan 2014 13:22:31 +0100
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>, linux-pci@vger.kernel.org,
+	"Gregory Cl??ment" <gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <20131226160534.36cc4203@skate> <20131226165241.2c50b244@skate> <20140103002656.GA12098@obsidianresearch.com>
+In-Reply-To: <20140103002656.GA12098@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <52CBC4D1.5080706@gmail.com>
-References: <52CBC4D1.5080706@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 Jan 2014 11:27:40 -0700
-Message-ID: <CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>
-Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port range.
-To: "`VL" <vl.homutov@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201401031322.31433.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+On Friday 03 January 2014, Jason Gunthorpe wrote:
+> On Thu, Dec 26, 2013 at 04:52:41PM +0100, Thomas Petazzoni wrote:
+> 
+> > Here is an implementation of this idea, tested to work with an e1000e
+> > card, with the driver modified to do a few read/write to the I/O
+> > region. What do you think about it?
+> 
+> This seems reasonable, the only down side is that a stray read to an
+> unused portion of the Linux IO mapping will lock the machine instead
+> of getting a page fault - however I don't see that as a blocker.
+> 
 
-On Tue, Jan 7, 2014 at 2:11 AM, `VL <vl.homutov@gmail.com> wrote:
-> Hello,
->
-> I'm having an issue with my M-Audio Delta 44 soundcard installed into
-> the PCI->PCIe adapter. When installed into PCI slot on my old computer,
-> it works perfectly, but the new one lacks PCI slots, so I installed it using
-> the adapter (http://www.espada-tech.ru/pr_-12351.shtml)
->
-> lspci shows the audio card:
->
-> 07:00.0 Multimedia audio controller: VIA Technologies Inc. ICE1712 [Envy24]
-> PCI Multi-Channel I/O Controller (rev 02)
->
-> but the driver won't load:
->
-> snd_ice1712 0000:07:00.0: Refused to change power state, currently in D3
-> ice1712: No matching model found for ID 0x6c6c6c6c
-> invalid EEPROM (size = 108)
-> snd_ice1712: probe of 0000:07:00.0 failed with error -5
->
-> Unknown ID and EEPROM size may differ from boot to boot.
->
-> Looking into message I see this:
->
-> [    0.384542] pci 0000:05:01.0: BAR 7: can't assign io (size 0x1000)
-> [    0.384714] pci 0000:06:00.0: BAR 7: can't assign io (size 0x1000)
-> [    0.384885] pci 0000:07:00.0: BAR 3: can't assign io (size 0x40)
-> [    0.385056] pci 0000:07:00.0: BAR 0: can't assign io (size 0x20)
-> [    0.385227] pci 0000:07:00.0: BAR 1: can't assign io (size 0x10)
-> [    0.385411] pci 0000:07:00.0: BAR 2: can't assign io (size 0x10)
+I've scratched my head a bit over this patch, and I couldn't find anything
+wrong with it in the end, as long as we don't have any other device
+in the system that also wants its share of the I/O space (e.g. a
+PCMCIA port on the SRAM interface), but then we'd probably need other
+changes as well.
 
-Yep, this is the problem.  We ran out of I/O space.  We had 8K leading
-to the switch, but 4K go to the Realtek NIC, and 4K go to SATA:
+However the part that made me wonder is that an e1000e with a PCI bridge
+actually /should/not/ need to allocate an I/O space window with a precious
+mbus resource, since AFAIK this adapter does not have an I/O space BARs.
 
-pci 0000:00:1c.3:   bridge window [io  0xb000-0xcfff]  to [bus 04-0d]
-pci 0000:05:05.0:   bridge window [io  0xc000-0xcfff]  to [bus 09]
-pci 0000:09:00.0: reg 0x10: [io  0xc000-0xc0ff]  Realtek NIC
-pci 0000:05:09.0:   bridge window [io  0xb000-0xbfff]  to [bus 0d]
-pci 0000:0d:00.0: reg 0x10: [io  0xb050-0xb057]  SATA
+Thomas, can you send the 'lspci -v' output of the system with this card
+to confirm that the I/O space is actually needed? If not, we should probably
+review the core PCI code to see why the bridge code tries to add this window.
 
-It seems like there *is* I/O space available in the system, so I'm not
-sure why BIOS didn't assign enough here.  But it's still a bug that
-Linux couldn't fix it.
-
-> The bridge is based on PLX PEX 8112(?) chip and lspci shows:
->
-> 04:00.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI Express
-> Gen 2 (5.0 GT/s) Switch (rev ba)
-> 05:01.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI Express
-> Gen 2 (5.0 GT/s) Switch (rev ba)
-> 05:04.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI Express
-> Gen 2 (5.0 GT/s) Switch (rev ba)
-> 05:05.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI Express
-> Gen 2 (5.0 GT/s) Switch (rev ba)
-> 05:06.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI Express
-> Gen 2 (5.0 GT/s) Switch (rev ba)
-> 05:07.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI Express
-> Gen 2 (5.0 GT/s) Switch (rev ba)
-> 05:08.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI Express
-> Gen 2 (5.0 GT/s) Switch (rev ba)
-> 05:09.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI Express
-> Gen 2 (5.0 GT/s) Switch (rev ba)
-> 06:00.0 PCI bridge: PLX Technology, Inc. PEX 8111 PCI Express-to-PCI Bridge
-> (rev 21)
->
-> my kernel is 3.11.10:
->
-> lspci -vvv: http://dpaste.com/1539094/
-> dmesg: http://dpaste.com/1539095/
->
-> I've tried to boot with pci=realloc, but the system hangs in this case
-> (looks like during initialization
-> of sound card driver, but I'm not sure, since it hangs completely: no kernel
-> panic, system just stopped
-> in the middle of usual boot message)
-
-Is there any way you can capture the output with a serial console or a
-video camera?
-
-Bjorn
+	Arnd
