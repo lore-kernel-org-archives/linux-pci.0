@@ -1,107 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:58357 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877AbaAJPuN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 10:50:13 -0500
-Received: by mail-ie0-f169.google.com with SMTP id e14so5371839iej.14
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 07:50:12 -0800 (PST)
-Date: Fri, 10 Jan 2014 08:50:09 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci: Add "try" reset interfaces
-Message-ID: <20140110155009.GA25635@google.com>
-References: <20131216221229.3393.6171.stgit@bling.home>
- <CAErSpo7ZYsES6kZXjcwr-gwKaXm7DzHBvUGz+cpZBBH7stAAAQ@mail.gmail.com>
- <1389138319.3209.142.camel@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389138319.3209.142.camel@bling.home>
+Received: from mga02.intel.com ([134.134.136.20]:53793 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754240AbaADBvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 3 Jan 2014 20:51:32 -0500
+Message-ID: <1388800272.2275.7.camel@jtkirshe-mobl>
+Subject: Re: [net-next] pci_regs.h: Add PCI bus link speed and width defines
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: bhelgaas@google.com, jesse.brandeburg@gmail.com,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	gospo@redhat.com, sassmann@redhat.com,
+	linux-kernel@vger.kernel.org, bjorn.helgaas@hp.com
+Date: Fri, 03 Jan 2014 17:51:12 -0800
+In-Reply-To: <20140103.204826.924684292174040714.davem@davemloft.net>
+References: <CAErSpo7TJXTCxpFKWXLTaHmqXXnYQdnpNeWt+cehSaES2Jh30w@mail.gmail.com>
+	 <20140103.193008.684316024702680161.davem@davemloft.net>
+	 <1388798859.2275.5.camel@jtkirshe-mobl>
+	 <20140103.204826.924684292174040714.davem@davemloft.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-BXTfQvhXaAdBDn0qA9FR"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 07, 2014 at 04:45:19PM -0700, Alex Williamson wrote:
-> On Tue, 2014-01-07 at 16:15 -0700, Bjorn Helgaas wrote:
-> > Hi Alex,
-> > 
-> > Sorry for the delay in looking at this.
-> > 
-> > On Mon, Dec 16, 2013 at 3:14 PM, Alex Williamson
-> > <alex.williamson@redhat.com> wrote:
-> > > When doing a function/slot/bus reset PCI grabs the device_lock for
-> > > each device to block things like suspend and driver probes, which is
-> > > all well and good, but call paths exist where this lock may already be
-> > > held.  This creates an opportunity for deadlock.  For instance, vfio
-> > > allows userspace to issue resets so long as it owns the device(s).
-> > > If a driver unbind .remove callback races with userspace issuing a
-> > > reset, we have a deadlock as userspace gets stuck waiting on
-> > > device_lock while another thread has device_lock and waits for .remove
-> > > to complete.
-> > 
-> > Are you talking about vfio_pci_remove() (the vfio_pci_driver .remove()
-> > method) racing with vfio_pci_ioctl()?
-> 
-> Yes, for instance if the admin does something like attempt to unbind the
-> device from vfio-pci while it's in use.  This can also happen indirectly
-> if the device is going away, such as a PF driver attempting to remove
-> its VFs.
-> 
-> > Or maybe it's vfio_pci_release (the vfio_pci_ops .release() method),
-> > since it looks like you want to use pci_try_reset_function() there and
-> > in vfio_pci_ioctl()?
-> 
-> That one too.  If any reset races with pci_driver.remove, whether it be
-> from ioctl or my own release callback, we'll hit a deadlock.
-> 
-> > Either way, aren't there at least potentially more locking issues than
-> > just the reset problem?  Seems like any ioctl that might take the
-> > device_lock could have the same problem.
-> 
-> I don't know of any others, but our QE folks hit this one pretty
-> regularly.  It can all be explained away as user error, but a user
-> should not be able to cause a kernel deadlock, which is why the user
-> exposed interfaces are converted to use this try-lock interface.
-> 
-> >   How do you make sure there's
-> > no userspace owner of the device before you release the device or
-> > remove the driver?
-> 
-> Userspace has a file descriptor for the device, so we know through
-> reference counting when the device becomes unused.  When our
-> pci_driver.remove() callback happens we block until the user releases
-> the device, so perhaps it more accurate to describe it as a nested lock
-> problem than a race, but the paths are asynchronous so even if we tested
-> the lock in advance there's a potential race.
 
-If I understand correctly, the deadlock happens when A (userspace) has a file
-descriptor for the device, and B waits in this path:
+--=-BXTfQvhXaAdBDn0qA9FR
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  driver_detach
-    device_lock                     # take device_lock
-    __device_release_driver
-      pci_device_remove             # pci_bus_type.remove
-	vfio_pci_remove             # pci_driver .remove
-	  vfio_del_group_dev
-	    wait_event(vfio.release_q, !vfio_dev_present)   # wait (holding device_lock)
+On Fri, 2014-01-03 at 20:48 -0500, David Miller wrote:
+> From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> Date: Fri, 03 Jan 2014 17:27:39 -0800
+>=20
+> > What do you want to do with the current series of patches
+> > (mainly the ixgbe LER patches) on my tree?  I know that there is a
+> > thread going on between Joe Perches and Mark, but it sounded like Mark
+> > is working on a follow-on patch to address Joe's concerns.
+>=20
+> I want the LER config option removed.
 
-Now B is stuck until A gives up the file descriptor.  I haven't traced that
-path, but I assume giving up the file descriptor involves the
-vfio_device_put() ...  vfio_device_release() path to wake up B.
+Ok.
 
-If A tries to acquire device_lock for any reason, we deadlock because A
-is waiting for B to release the lock, and B is waiting for A to release the
-file descriptor.
+--=-BXTfQvhXaAdBDn0qA9FR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-You're fixing the case where A does a VFIO_DEVICE_RESET ioctl that calls
-pci_reset_function().  It looks like a VFIO_DEVICE_SET_IRQS ioctl will have
-the same problem because it can acquire device_lock in
-vfio_pci_set_err_trigger().
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-It makes me uneasy that B (in the kernel) waits indefinitely for A
-(userspace) to do something.  If A is malicious and simply does nothing, it
-will cause all other paths that acquire device_lock to hang, e.g., suspend
-and hibernate, AER reporting (e.g., report_error_detected()), and various
-USB events.
+iQIcBAABCgAGBQJSx2kQAAoJEOVv75VaS+3OsBcQAIFtIvX8tivJfLPFq4jsxl/e
+KIkY0PoRFMfuAARBRYOjw+uqhIXVr4r1CuJTCV2taqUDGY0n0o66+uTGwhxi8TfQ
+a5dbs3pJnEH2SOmpB3fQXUerLrU2QYhoRk6WXNi5LMOzJ20AFesIN5ruNX7hRrnr
+cBr+PcbVcCeyZ5tFYu5HST1dceyIDJSEFI5Z8osRr94eJgit/Z2DX78E9474rW5m
+4frdS5cfdgT/2CSyQPhOF/a6iRdwTgC+bRFsKVGtKh52Zb992Li+Sp9wP6HVWbsE
+V787F83M34TOiyAQXovGvZE1VWb+dvgskw9VjBV7chRh2Frb3a6eS0NCujR3i1hY
+yJzxFteHo3OnwiNeFPlsBtDElh/MwHcSQfSRNMcpOppD0BTh8bAYkaK7E8UitRik
+V+Wz7XND92XxDyWnkVmZtdCeWGYakofdVlrdwgHDFMmkBAjzD7oWAorbKHXYI9td
+x86g2oCKV9C8TGos0uFFWvKEF9ICDYoNFWosixzA0IGNVwhdySQp3H4kAb/eW9kp
+mrZQtsVAwy3zYjSFaWYplDq6kalmGFn3S4T5cRqIbYWjTr8CbmUj3yO0gkgYRa3U
+lu1Z8lgwXM5dE4NIoqRX1sHvjT+/3eZgMQlvmHAFEA/9D6CUfbjtBUPK6uF1OFlD
+3nCWD5jaUQM4WatYB71q
+=/dO+
+-----END PGP SIGNATURE-----
 
-Bjorn
+--=-BXTfQvhXaAdBDn0qA9FR--
+
