@@ -1,40 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:62204 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751929AbaAJAqq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 19:46:46 -0500
-Received: by mail-ie0-f174.google.com with SMTP id at1so4477696iec.33
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jan 2014 16:46:46 -0800 (PST)
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:41530 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872AbaADABF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 19:01:05 -0500
+Received: by mail-ig0-f182.google.com with SMTP id c10so2366794igq.3
+        for <linux-pci@vger.kernel.org>; Fri, 03 Jan 2014 16:01:03 -0800 (PST)
 MIME-Version: 1.0
-Date: Thu, 9 Jan 2014 16:46:45 -0800
-Message-ID: <CAE9FiQUGpBTijNGX6T=mLgoVa7wVegOMye8uGOqhKq93-1hyqQ@mail.gmail.com>
-Subject: about mpss with pcie_bus_perf
-From: Yinghai Lu <yinghai@kernel.org>
-To: Myron Stowe <mstowe@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20140103.185607.1380379872647540168.davem@davemloft.net>
+References: <20140102.192133.1585340046080167370.davem@davemloft.net>
+ <CAEuXFEw=A0mppxtgzpmnh3feLiKYb+LJQvFRMrW3C4h+jHpO2Q@mail.gmail.com>
+ <CAErSpo7K3OBuTEZrXmhQ3iXtLf3M5JNnEqmAvaceroJ46VAOKg@mail.gmail.com> <20140103.185607.1380379872647540168.davem@davemloft.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 3 Jan 2014 17:00:42 -0700
+Message-ID: <CAErSpo7TJXTCxpFKWXLTaHmqXXnYQdnpNeWt+cehSaES2Jh30w@mail.gmail.com>
+Subject: Re: [net-next] pci_regs.h: Add PCI bus link speed and width defines
+To: David Miller <davem@davemloft.net>
+Cc: jesse.brandeburg@gmail.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	netdev <netdev@vger.kernel.org>,
+	"gospo@redhat.com" <gospo@redhat.com>,
+	"sassmann@redhat.com" <sassmann@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	bjorn.helgaas@hp.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-looks like we have some problem with MPSS.
+On Fri, Jan 3, 2014 at 4:56 PM, David Miller <davem@davemloft.net> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> Date: Fri, 3 Jan 2014 15:15:57 -0700
+>
+>> However, I do raise my eyebrows a bit at drivers that poke around in
+>> the PCIe capability.  I would prefer to have PCI core interfaces that
+>> handle that instead.  But I haven't seen Jeff's changes yet.
+>
+> The changes just read the link status to interpret the speed at which
+> the PCI-E link is running at.
 
-+-02.2-[10-1f]----00.0-[11-13]--+-02.0-[12]--+-00.0
-                           |                      |                   \-00.1
-                           |                      \-03.0-[13]----00.0
+Several drivers want to do that.  It'd be nice if somebody abstracted
+that out somehow.  Jacob added pcie_get_minimum_link() which is
+similar.  But maybe Jeff needs something more in this case.
 
-kernel boot with pce_bus_perf:
-00:02.2: cap/ctl: 256/256
-10:00.0: cap/ctl: 256/256
-11:02.0: cap/ctl: 256/256
-12:00.0: cap/ctl: 128/128
-12:00.1: cap/ctl: 128/128
+In any case, it's not a blocker for this patch.
 
-11:03.0: cap/ctl: 256/256
-13:00.0: cap/ctl: 256/256
-
-Should we set MPSS to 128?
-
-Thanks
-
-Yinghai
+Bjorn
