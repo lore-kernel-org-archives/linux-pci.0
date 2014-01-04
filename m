@@ -1,51 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39651 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753150AbaA3NFd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Jan 2014 08:05:33 -0500
-Date: Thu, 30 Jan 2014 15:12:36 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: linux-pci@vger.kernel.org
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Commit ef83b0781a73f (PCI: Remove from bus_list and release
- resources in pci_release_dev()) broke TBT hotplug
-Message-ID: <20140130131236.GW18029@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from shards.monkeyblade.net ([149.20.54.216]:35715 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101AbaADBsa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 20:48:30 -0500
+Date: Fri, 03 Jan 2014 20:48:26 -0500 (EST)
+Message-Id: <20140103.204826.924684292174040714.davem@davemloft.net>
+To: jeffrey.t.kirsher@intel.com
+Cc: bhelgaas@google.com, jesse.brandeburg@gmail.com,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	gospo@redhat.com, sassmann@redhat.com,
+	linux-kernel@vger.kernel.org, bjorn.helgaas@hp.com
+Subject: Re: [net-next] pci_regs.h: Add PCI bus link speed and width defines
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1388798859.2275.5.camel@jtkirshe-mobl>
+References: <CAErSpo7TJXTCxpFKWXLTaHmqXXnYQdnpNeWt+cehSaES2Jh30w@mail.gmail.com>
+	<20140103.193008.684316024702680161.davem@davemloft.net>
+	<1388798859.2275.5.camel@jtkirshe-mobl>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Date: Fri, 03 Jan 2014 17:27:39 -0800
 
-The latest mainline kernel "hangs" when Thunderbolt devices are
-hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
-getting huge amounts of messages like:
+> What do you want to do with the current series of patches
+> (mainly the ixgbe LER patches) on my tree?  I know that there is a
+> thread going on between Joe Perches and Mark, but it sounded like Mark
+> is working on a follow-on patch to address Joe's concerns.
 
-[  352.717001] pci 0000:02:00.0: PME# disabled
-[  352.717011] pci 0000:02:00.0: PME# disabled
-[  352.717021] pci 0000:02:00.0: PME# disabled
-[  352.717032] pci 0000:02:00.0: PME# disabled
-[  352.717041] pci 0000:02:00.0: PME# disabled
-[  352.717051] pci 0000:02:00.0: PME# disabled
-[  352.717061] pci 0000:02:00.0: PME# disabled
-[  352.717070] pci 0000:02:00.0: PME# disabled
-[  352.717083] pci 0000:02:00.0: PME# disabled
-[  352.717094] pci 0000:02:00.0: PME# disabled
-[  352.717104] pci 0000:02:00.0: PME# disabled
-[  352.717113] pci 0000:02:00.0: PME# disabled
-[  352.717124] pci 0000:02:00.0: PME# disabled
-[  352.717133] pci 0000:02:00.0: PME# disabled
-[  352.717143] pci 0000:02:00.0: PME# disabled
-[  352.717153] pci 0000:02:00.0: PME# disabled
-[  352.717162] pci 0000:02:00.0: PME# disabled
-
-and then the system becomes really unresponsive.
-
-Reverting the commit in $subject makes TBT work again.
-
-Please let me know if you need any additional information. The system I'm
-testing on is Intel NUC.
-
-Thanks.
+I want the LER config option removed.
