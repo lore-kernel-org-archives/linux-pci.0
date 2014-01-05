@@ -1,242 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21996 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753849AbaACAHx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:07:53 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Vinod Koul <vinod.koul@intel.com>, Dan Williams <djbw@fb.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Donald Dutile <ddutile@redhat.com>
-Subject: [PATCH v2 09/10] IOMMU: Add dmar_parse_one_drhd()
-Date: Thu,  2 Jan 2014 16:08:16 -0800
-Message-Id: <1388707697-16800-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
-References: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:56234 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674AbaAERxH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jan 2014 12:53:07 -0500
+MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <20131218010207.GC15119@google.com>
+References: <52B0AEAD.6050604@gmail.com>
+	<20131218010207.GC15119@google.com>
+Date: Sun, 5 Jan 2014 09:53:05 -0800
+Message-ID: <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
+Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently, during removal
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>, yinghai@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To parse new hot-added iommu dmar entry table
+Hello Bjorn,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Vinod Koul <vinod.koul@intel.com>
-Cc: Dan Williams <djbw@fb.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Donald Dutile <ddutile@redhat.com>
----
- drivers/iommu/dmar.c | 51 +++++++++++++++++++++++++++++++++++++++++----------
- include/linux/dmar.h | 47 ++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 79 insertions(+), 19 deletions(-)
+Just checking on the fate of this patch set...
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 78e75ad..31d7942 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -167,8 +167,9 @@ int dmar_parse_dev_scope(void *start, void *end, int *cnt,
-  * structure which uniquely represent one DMA remapping hardware unit
-  * present in the platform
-  */
--static int __init
--dmar_parse_one_drhd(struct acpi_dmar_header *header)
-+static int
-+__dmar_parse_one_drhd(struct acpi_dmar_header *header,
-+		      struct dmar_drhd_unit **pdmaru)
- {
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct dmar_drhd_unit *dmaru;
-@@ -190,10 +191,18 @@ dmar_parse_one_drhd(struct acpi_dmar_header *header)
- 		return ret;
- 	}
- 	dmar_register_drhd_unit(dmaru);
-+	if (pdmaru)
-+		*pdmaru = dmaru;
- 	return 0;
- }
- 
--static int __init dmar_parse_dev(struct dmar_drhd_unit *dmaru)
-+static int __init
-+dmar_parse_one_drhd(struct acpi_dmar_header *header)
-+{
-+	return __dmar_parse_one_drhd(header, NULL);
-+}
-+
-+static int dmar_parse_dev(struct dmar_drhd_unit *dmaru)
- {
- 	struct acpi_dmar_hardware_unit *drhd;
- 	int ret = 0;
-@@ -214,10 +223,10 @@ static int __init dmar_parse_dev(struct dmar_drhd_unit *dmaru)
- 	return ret;
- }
- 
--#ifdef CONFIG_ACPI_NUMA
--static int __init
-+static int
- dmar_parse_one_rhsa(struct acpi_dmar_header *header)
- {
-+#ifdef CONFIG_ACPI_NUMA
- 	struct acpi_dmar_rhsa *rhsa;
- 	struct dmar_drhd_unit *drhd;
- 
-@@ -241,12 +250,11 @@ dmar_parse_one_rhsa(struct acpi_dmar_header *header)
- 		dmi_get_system_info(DMI_BIOS_VERSION),
- 		dmi_get_system_info(DMI_PRODUCT_VERSION));
- 
-+#endif
- 	return 0;
- }
--#endif
- 
--static void __init
--dmar_table_print_dmar_entry(struct acpi_dmar_header *header)
-+static void dmar_table_print_dmar_entry(struct acpi_dmar_header *header)
- {
- 	struct acpi_dmar_hardware_unit *drhd;
- 	struct acpi_dmar_reserved_memory *rmrr;
-@@ -358,9 +366,7 @@ parse_dmar_table(void)
- 			ret = dmar_parse_one_atsr(entry_header);
- 			break;
- 		case ACPI_DMAR_HARDWARE_AFFINITY:
--#ifdef CONFIG_ACPI_NUMA
- 			ret = dmar_parse_one_rhsa(entry_header);
--#endif
- 			break;
- 		default:
- 			pr_warn("Unknown DMAR structure type %d\n",
-@@ -545,6 +551,23 @@ void restore_dev_to_drhd(struct pci_dev *dev)
- 		drhd->devices[i] = pci_dev_get(dev);
- }
- 
-+static void remove_dmaru_from_saved_list(void *drhd,
-+				  struct list_head *lh)
-+{
-+	struct dev_dmaru *m, *n;
-+
-+	list_for_each_entry_safe(m, n, lh, list) {
-+		if (m->dmaru == drhd) {
-+			list_del(&m->list);
-+			kfree(m);
-+		}
-+	}
-+}
-+static void remove_dmaru_from_saved_dev_drhd_list(void *drhd)
-+{
-+	remove_dmaru_from_saved_list(drhd, &saved_dev_drhd_list);
-+}
-+
- #ifdef CONFIG_INTEL_IOMMU
- static LIST_HEAD(saved_dev_atsr_list);
- void remove_dev_from_atsr(struct pci_dev *dev)
-@@ -587,6 +610,14 @@ void restore_dev_to_atsr(struct pci_dev *dev)
- 	if (atsr)
- 		atsr->devices[i] = pci_dev_get(dev);
- }
-+static void remove_atsru_from_saved_dev_atsru_list(void *atsr)
-+{
-+	remove_dmaru_from_saved_list(atsr, &saved_dev_atsr_list);
-+}
-+#else
-+static void remove_atsru_from_saved_dev_atsru_list(struct dmar_atsr_unit *atsr)
-+{
-+}
- #endif  /* CONFIG_INTEL_IOMMU */
- 
- int __init dmar_table_init(void)
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 0a3dd71..81e8678 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -33,6 +33,7 @@ struct acpi_dmar_header;
- #define DMAR_X2APIC_OPT_OUT	0x2
- 
- struct intel_iommu;
-+struct dmar_drhd_unit;
- #ifdef CONFIG_DMAR_TABLE
- extern struct acpi_table_header *dmar_tbl;
- struct dmar_drhd_unit {
-@@ -136,6 +137,15 @@ void restore_dev_to_drhd(struct pci_dev *dev);
- void remove_dev_from_atsr(struct pci_dev *dev);
- void restore_dev_to_atsr(struct pci_dev *dev);
- 
-+struct dmar_atsr_unit {
-+	struct list_head list;		/* list of ATSR units */
-+	struct acpi_dmar_header *hdr;	/* ACPI header */
-+	struct pci_dev **devices;	/* target devices */
-+	int devices_cnt;		/* target device count */
-+	u16 segment;			/* PCI domain */
-+	u8 include_all:1;		/* include all ports */
-+};
-+
- #ifdef CONFIG_INTEL_IOMMU
- extern int iommu_detected, no_iommu;
- extern struct list_head dmar_rmrr_units;
-@@ -152,24 +162,19 @@ struct dmar_rmrr_unit {
- 	list_for_each_entry(rmrr, &dmar_rmrr_units, list)
- 
- extern struct list_head dmar_atsr_units;
--struct dmar_atsr_unit {
--	struct list_head list;		/* list of ATSR units */
--	struct acpi_dmar_header *hdr;	/* ACPI header */
--	struct pci_dev **devices;	/* target devices */
--	int devices_cnt;		/* target device count */
--	u16 segment;			/* PCI domain */
--	u8 include_all:1;		/* include all ports */
--};
--
- #define for_each_atsr_unit(atsr) \
- 	list_for_each_entry(atsr, &dmar_atsr_units, list)
- 
- int dmar_parse_rmrr_atsr_dev(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
-+int __dmar_parse_one_atsr(struct acpi_dmar_header *header,
-+			  struct dmar_atsr_unit **patsru);
-+int atsr_parse_dev(struct dmar_atsr_unit *atsru);
- extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 				struct pci_dev ***devices, u16 segment);
- extern int intel_iommu_init(void);
-+int init_dmar_one(struct dmar_drhd_unit *drhd);
- #else /* !CONFIG_INTEL_IOMMU: */
- static inline int intel_iommu_init(void) { return -ENODEV; }
- static inline int dmar_parse_one_rmrr(struct acpi_dmar_header *header)
-@@ -180,10 +185,34 @@ static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
- {
- 	return 0;
- }
-+static inline int __dmar_parse_one_atsr(struct acpi_dmar_header *header,
-+			  struct dmar_atsr_unit **patsru)
-+{
-+	return 0;
-+}
-+static inline int atsr_parse_dev(struct dmar_atsr_unit *atsru)
-+{
-+	return 0;
-+}
- static inline int dmar_parse_rmrr_atsr_dev(void)
- {
- 	return 0;
- }
-+static inline int init_dmar_one(struct dmar_drhd_unit *drhd)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_INTEL_IOMMU */
- 
-+#ifdef CONFIG_IRQ_REMAP
-+void disable_irq_remapping_one(struct dmar_drhd_unit *drhd);
-+int intel_enable_irq_remapping_one(struct dmar_drhd_unit *drhd);
-+#else
-+static inline void disable_irq_remapping_one(struct dmar_drhd_unit *drhd) { }
-+static inline int intel_enable_irq_remapping_one(struct dmar_drhd_unit *drhd)
-+{
-+	return 0;
-+}
-+#endif
-+
- #endif /* __DMAR_H__ */
--- 
-1.8.4
+On Tue, Dec 17, 2013 at 5:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc yinghai@kernel.org (seems to be Yinghai's preferred email]
+>
+> On Tue, Dec 17, 2013 at 12:06:05PM -0800, Rajat Jain wrote:
+>> We need future link up events for hot-add, thus don't disable
+>> the link permanently during device removal. Also, remove the static
+>> functions that are now left unused.
+>
+> The changelog should mention that this reverts part of 2debd9289997 ("PCI:
+> pciehp: Disable/enable link during slot power off/on").
 
+Sure. Do you want me to submit another patch set (bumping up the
+version) with this change log, or you'd want to add this change log
+while merging?
+
+>
+> Yinghai, can you tell us whether this is an issue on your systems?
+
+As Yinghai confirms further down this thread, his issue was confirmed
+by Intel to be a bug in the repeater chip.
+----------------------------------
+Yinghai writes:
+> According to HW guys and Intel, that should be bug of repeater.
+>
+---------------------------------
+ I don't know about the details of his scenario, except that when the
+adapter was disabled the repeater kept on flapping the link up & down
+(and hence disabling the link solved the problem then). Yinghai
+couldn't test, but I believe with this patch even if we disable
+presence detect interrupt, the "adapter present / no present" messages
+would (rightly) convert to "Link Up / Link Down" messages (since the
+repeater keeps on flapping the link).
+
+Since it is a platform specific bug, I'm not sure what can be done to
+remove those messages except may be reduce the verbosity? If you'd
+like I could change all the INFO messages to DBG messages.
+
+Please let me know how to proceed further on this. Also, did you get a
+chance to look at the subsequent patches of this patch set, I was
+wondering if you had any comments there?
+
+Thanks,
+
+Rajat
+
+>
+>> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+>> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+>> ---
+>> v3: no change, created by splitting the patch v2 [2/4]
+>> v2: (non existent)
+>> v1: (non existent)
+>>
+>>  drivers/pci/hotplug/pciehp_hpc.c |   18 ------------------
+>>  1 file changed, 18 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>> index b45b568..ab12555 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -278,11 +278,6 @@ static void pcie_wait_link_active(struct controller *ctrl)
+>>       __pcie_wait_link_active(ctrl, true);
+>>  }
+>>
+>> -static void pcie_wait_link_not_active(struct controller *ctrl)
+>> -{
+>> -     __pcie_wait_link_active(ctrl, false);
+>> -}
+>> -
+>>  static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+>>  {
+>>       u32 l;
+>> @@ -383,11 +378,6 @@ static int pciehp_link_enable(struct controller *ctrl)
+>>       return __pciehp_link_set(ctrl, true);
+>>  }
+>>
+>> -static int pciehp_link_disable(struct controller *ctrl)
+>> -{
+>> -     return __pciehp_link_set(ctrl, false);
+>> -}
+>> -
+>>  int pciehp_get_attention_status(struct slot *slot, u8 *status)
+>>  {
+>>       struct controller *ctrl = slot->ctrl;
+>> @@ -620,14 +610,6 @@ int pciehp_power_off_slot(struct slot * slot)
+>>       u16 cmd_mask;
+>>       int retval;
+>>
+>> -     /* Disable the link at first */
+>> -     pciehp_link_disable(ctrl);
+>> -     /* wait the link is down */
+>> -     if (ctrl->link_active_reporting)
+>> -             pcie_wait_link_not_active(ctrl);
+>> -     else
+>> -             msleep(1000);
+>> ->>       slot_cmd = POWER_OFF;
+>>       cmd_mask = PCI_EXP_SLTCTL_PCC;
+>>       retval = pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
+>> --
+>> 1.7.9.5
+>>
