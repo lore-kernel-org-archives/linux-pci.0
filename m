@@ -1,71 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16592 "EHLO mx1.redhat.com"
+Received: from plane.gmane.org ([80.91.229.3]:42093 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751664AbaASKla (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Jan 2014 05:41:30 -0500
-Date: Sun, 19 Jan 2014 12:44:10 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: eiichiro.oiwa.nm@hitachi.com
-Cc: bhelgaas@google.com, linux@eikelenboom.it, airlied@redhat.com,
-	gregkh@linuxfoundation.org, konrad.wilk@oracle.com,
-	linux-pci@vger.kernel.org, jbarnes@virtuousgeek.org,
-	airlied@linux.ie
-Subject: Re: In "pci_fixup_video" check if this is or should be
- theprimaryvideo d
-Message-ID: <20140119104410.GB4195@redhat.com>
-References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com>
- <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c>
- <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com>
+	id S1751057AbaAEH5u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 5 Jan 2014 02:57:50 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1Vziah-0007Tf-Im
+	for linux-pci@vger.kernel.org; Sun, 05 Jan 2014 08:57:47 +0100
+Received: from 173-228-55-65.static.sonic.net ([173.228.55.65])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Sun, 05 Jan 2014 08:57:47 +0100
+Received: from DanaGoyette by 173-228-55-65.static.sonic.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Sun, 05 Jan 2014 08:57:47 +0100
+To: linux-pci@vger.kernel.org
+From: Dana Goyette <DanaGoyette@gmail.com>
+Subject: Re: IOMMU groups ... PEX8606 switch?
+Date: Sat, 04 Jan 2014 23:57:33 -0800
+Message-ID: <lab391$po7$1@ger.gmane.org>
+References: <l9o1h7$33k$2@ger.gmane.org>			 <1388287383.4981.16.camel@ul30vt.home> <l9oj5j$miu$1@ger.gmane.org>		 <1388377005.4981.69.camel@ul30vt.home> <l9t26b$i61$1@ger.gmane.org>	 <1388793837.3169.73.camel@bling.home> <la9n9k$g63$1@ger.gmane.org> <1388866954.3169.77.camel@bling.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1388866954.3169.77.camel@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 07:43:30PM +0900, eiichiro.oiwa.nm@hitachi.com wrote:
-> Because legacy VGA is only one device on x86 System, I think qemu has to emulate a bridge
-> for legacy VGA. The VGA Enable bit on its bridge control register has to set to 1. The VGA
-> Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards 
-> on the same system, I think its system needs two bridges for each device. These bridges
-> need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
-> to 1. Another VGA Enable bit for second VGA has to set to 0.
-> 
-> 
-> >On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
-> >> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
-> >> June 9, 2003 Chapter 12. VGA Support".
-> >
-> >And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
-> >pages long.  Is there something there that prohibits two VGA devices
-> >on the same bus?  I'm not a qemu developer, but if I were, I would
-> >need a better hint about what is wrong before I could fix it.
-> >
-> >Again, sorry if you said this already and I missed it.
-> >
-> >>>[+cc Michael, Jesse, David, qemu-devel]
-> >>>
-> >>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
-> >>>> I suggest you should not break the PCI specification, as a developer of proprietary
-> >>>> hypervisor, but I think your patch is no problem.
-> >>>> Your PCI structure is specialized structure for your virtual machine.
-> >>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
-> >>>> because of breaking the PCI specification.
-> >>>
-> >>>I assume you think qemu is breaking the PCI spec.  What exactly do you
-> >>>think is broken?  Please give specific references to the spec.  This
-> >>>conversation is pretty fragmented, and I came in late, so I apologize
-> >>>if I missed this.
-> >>>
-> >>>Bjorn
-> >>>
-> >
+(Re-sending to gmane.linux.kernel.pci so the solution ends up there, as 
+  well.)
 
-None of the bridges included in QEMU implements VGA support.
-The spec explicitly says its optional, so that's ok.
+On 01/04/2014 12:22 PM, Alex Williamson wrote:
+> On Sat, 2014-01-04 at 11:26 -0800, Dana Goyette wrote:
+>> On 01/03/2014 04:03 PM, Alex Williamson wrote:
+>>> On Mon, 2013-12-30 at 16:13 -0800, Dana Goyette wrote:
+>>>> On 12/29/2013 08:16 PM, Alex Williamson wrote:
+>>>>> On Sat, 2013-12-28 at 23:32 -0800, Dana Goyette wrote:
+>>>>>> On 12/28/2013 7:23 PM, Alex Williamson wrote:
+>>>>>>> On Sat, 2013-12-28 at 18:31 -0800, Dana Goyette wrote:
+>>>>>>>> I have purchased both a SuperMicro X10SAE and an X10SAT, and I need to
+>>>>>>>> soon decide which one to keep.
+>>>>>>>>
+>>>>>>>> The SuperMicro X10SAT has all the PCIe x1 slots hidden behind a PLX
+>>>>>>>> PEX8066 switch, which claims to support ACS.  I'd expect the devices
+>>>>>>>> downstream of the PLX switch to be in separate groups.
+>>>>>>>>
+>>>>>>>> With Linux 3.13-rc5 and "enable overrides for missing ACS capabilities"
+>>>>>>>> applied and set for the Intel root ports, the devices behind the switch
+>>>>>>>> remain stuck in the same group.
+>>>>>>>>
+>>>>>>>> In terms of passing devices to different VMs, which is better: all
+>>>>>>>> devices on different root ports, or all devices behind the one
+>>>>>>>> ACS-supporting switch?
+>>>>>>> Can you provide lspci -vvv info?  If you're getting that for groups
+>>>>>>> either the switch has ACS capabilities, but doesn't support the features
+>>>>>>> we need or we're doing something wrong.  Thanks,
+>>>>>>>
+>>>>>> I initially tried attaching the output as a .txt file, but it's too
+>>>>>> large.  Anyway, here's the output of lspci -nnvvv (you may notice that I
+>>>>>> moved the Radeon to a different slot).
+>>>>> Well, something seems amiss since the downstream switch ports all seem
+>>>>> to support and enable the correct set of ACS capabilities.  I'm tending
+>>>>> to suspect something wrong with the ACS override patch or how it's being
+>>>>> used since your IOMMU group is still based at the root port.  Each root
+>>>>> port is isolated from the other root ports though, so something is
+>>>>> happening with the override patch.  Can you provide the kernel command
+>>>>> line you use to enable ACS overrides and the override patch you're
+>>>>> using, as it applies to 3.13-rc5?  Thanks,
+>>>>>
+>>>>> Alex
+>>>>>
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe kvm" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>
+>>>> I'm using the original acs-override patch from this post:
+>>>> https://lkml.org/lkml/2013/5/30/513
+>>>>
+>>>> Kernel parameter is:
+>>>> pcie_acs_override=id:8086:8c10,id:8086:8c12,id:8086:8c16,id:8086:8c18
+>
+> Actually, you're not:
+>
+> pcie_acs_override=id:8086:8c10,id:8086:8c16,id:8086:8c18,id:8086:ac1a,id:8086:8c1c,id:8086:8c1e,id:10b5:8606
+>
+> And we register all of them:
+>
+> [    0.000000] PCIe ACS bypass added for 8086:8c10
+> [    0.000000] PCIe ACS bypass added for 8086:8c16
+> [    0.000000] PCIe ACS bypass added for 8086:8c18
+> [    0.000000] PCIe ACS bypass added for 8086:ac1a
+> [    0.000000] PCIe ACS bypass added for 8086:8c1c
+> [    0.000000] PCIe ACS bypass added for 8086:8c1e
+> [    0.000000] PCIe ACS bypass added for 10b5:8606
+>
+> However, note that the root port causing you trouble is 8086:8c12, which
+> isn't provided as an override, therefore the code is doing the right
+> thing and grouping all devices behind that root port together.
+>
 
-As a result, you need to put device which has to work in
-VGA mode on the root bus, any device behind a bridge
-won't work in VGA mode (but might work in non VGA mode).
+Thanks for catching that -- I certainly missed it!
+I've added the override for that root port and removed the override for 
+the PLX switch; now all the ports are indeed in separate groups.
 
--- 
-MST
+Do we yet know if it'll be possible to properly isolate the Intel root 
+ports, without this ACS override?
+
+--
+To unsubscribe from this list: send the line "unsubscribe kvm" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
