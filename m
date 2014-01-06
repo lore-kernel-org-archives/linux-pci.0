@@ -1,179 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-CC: <linux-acpi@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<intel-gfx@lists.freedesktop.org>,
-	<dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Airlie <airlied@redhat.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:35701 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752515AbaAFGRy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jan 2014 01:17:54 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH v2] ACPI: Fix acpi_evaluate_object() return value check
-Date: Fri, 17 Jan 2014 09:29:51 +0800
-Message-ID: <1389922191-28664-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 02/20] iommu/vt-d: fix PCI device reference leakage on error recovery path
+Date: Mon,  6 Jan 2014 14:18:09 +0800
+Message-Id: <1388989107-4795-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix acpi_evaluate_object() return value check,
-shoud acpi_status not int.
+Function dmar_parse_dev_scope() should release the PCI device reference
+count gained in function dmar_parse_one_dev_scope() on error recovery,
+otherwise it will cause PCI device object leakage.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+This patch also introduces dmar_free_dev_scope(), which will be used
+to support DMAR device hotplug.
+
+Reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
+ drivers/iommu/dmar.c |   14 ++++++++++++--
+ include/linux/dmar.h |    1 +
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-v1->v2: Add CC to the related subsystem MAINTAINERS.
-
----
- drivers/gpu/drm/i915/intel_acpi.c              |   13 +++++++------
- drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    6 +++---
- drivers/gpu/drm/nouveau/nouveau_acpi.c         |   13 +++++++------
- drivers/pci/pci-label.c                        |    6 +++---
- 4 files changed, 20 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
-index dfff090..7ea00e5 100644
---- a/drivers/gpu/drm/i915/intel_acpi.c
-+++ b/drivers/gpu/drm/i915/intel_acpi.c
-@@ -35,7 +35,7 @@ static int intel_dsm(acpi_handle handle, int func)
- 	union acpi_object params[4];
- 	union acpi_object *obj;
- 	u32 result;
--	int ret = 0;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -50,8 +50,8 @@ static int intel_dsm(acpi_handle handle, int func)
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (ret) {
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
- 		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
- 		return ret;
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 8b452c9..c17dbf7 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -100,7 +100,6 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
+ 	if (!pdev) {
+ 		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
+ 			segment, scope->bus, path->device, path->function);
+-		*dev = NULL;
+ 		return 0;
  	}
-@@ -141,7 +141,8 @@ static void intel_dsm_platform_mux_info(void)
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *pkg;
--	int i, ret;
-+	acpi_status status;
-+	int i;
+ 	if ((scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT && \
+@@ -151,7 +150,7 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 			ret = dmar_parse_one_dev_scope(scope,
+ 				&(*devices)[index], segment);
+ 			if (ret) {
+-				kfree(*devices);
++				dmar_free_dev_scope(devices, cnt);
+ 				return ret;
+ 			}
+ 			index ++;
+@@ -162,6 +161,17 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 	return 0;
+ }
  
- 	input.count = 4;
- 	input.pointer = params;
-@@ -156,9 +157,9 @@ static void intel_dsm_platform_mux_info(void)
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
-+	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
- 				   &output);
--	if (ret) {
-+	if (ACPI_FAILURE(status)) {
- 		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
- 		goto out;
- 	}
-diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-index 1291204..3920943 100644
---- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-+++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-@@ -114,14 +114,14 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
- 	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
- 	union acpi_object *obj;
- 	acpi_handle handle;
--	int ret;
-+	acpi_status status;
- 
- 	handle = ACPI_HANDLE(&device->pdev->dev);
- 	if (!handle)
- 		return false;
- 
--	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
--	if (ret) {
-+	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
-+	if (ACPI_FAILURE(status)) {
- 		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
- 		return false;
- 	}
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index ba0183f..6f810f2 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
--	int i, err;
-+	acpi_status status;
-+	int i;
- 	char args_buff[4];
- 
- 	input.count = 4;
-@@ -101,8 +102,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
- 		args_buff[i] = (arg >> i * 8) & 0xFF;
- 	params[3].buffer.pointer = args_buff;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (err) {
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
- 		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
- 		return err;
- 	}
-@@ -134,7 +135,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
--	int err;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -148,8 +149,8 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
- 	params[3].type = ACPI_TYPE_INTEGER;
- 	params[3].integer.value = arg;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (err) {
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
- 		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
- 		return err;
- 	}
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index d51f45a..3c21f1b 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
- 	union acpi_object *obj;
- 	int len = 0;
- 
--	int err;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -228,8 +228,8 @@ dsm_get_label(acpi_handle handle, int func,
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, output);
--	if (err)
-+	status = acpi_evaluate_object(handle, "_DSM", &input, output);
-+	if (ACPI_FAILURE(status))
- 		return -1;
- 
- 	obj = (union acpi_object *)output->pointer;
++void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt)
++{
++	if (*devices && *cnt) {
++		while (--*cnt >= 0)
++			pci_dev_put((*devices)[*cnt]);
++		kfree(*devices);
++		*devices = NULL;
++		*cnt = 0;
++	}
++}
++
+ /**
+  * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
+  * structure which uniquely represent one DMA remapping hardware unit
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index b029d1a..8adfce0 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -159,6 +159,7 @@ extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
+ extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
+ extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 				struct pci_dev ***devices, u16 segment);
++extern void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt);
+ extern int intel_iommu_init(void);
+ #else /* !CONFIG_INTEL_IOMMU: */
+ static inline int intel_iommu_init(void) { return -ENODEV; }
 -- 
-1.7.1
-
+1.7.10.4
 
