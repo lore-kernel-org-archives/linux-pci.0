@@ -1,52 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db9lp0253.outbound.messaging.microsoft.com ([213.199.154.253]:3430
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752171AbaAFD5a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jan 2014 22:57:30 -0500
-Message-ID: <52CA29C1.9010405@freescale.com>
-Date: Mon, 6 Jan 2014 11:57:53 +0800
-From: Lian Minghuan-b31939 <b31939@freescale.com>
-MIME-Version: 1.0
-To: Scott Wood <scottwood@freescale.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-CC: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [11/12,v3] pci: fsl: update PCI EDAC driver
-References: <1382524894-15164-11-git-send-email-Minghuan.Lian@freescale.com> <20140103221603.GA22546@home.buserror.net>
-In-Reply-To: <20140103221603.GA22546@home.buserror.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:13043 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752591AbaAFGRq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jan 2014 01:17:46 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 01/20] iommu/vt-d: use dedicated bitmap to track remapping entry allocation status
+Date: Mon,  6 Jan 2014 14:18:08 +0800
+Message-Id: <1388989107-4795-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Scott,
+Currently Intel interrupt remapping drivers uses the "present" flag bit
+in remapping entry to track whether an entry is allocated or not.
+It works as follow:
+1) allocate a remapping entry and set its "present" flag bit to 1
+2) compose other fields for the entry
+3) update the remapping entry with the composed value
 
-I think we should reverse this commit
+The remapping hardware may access the entry between step 1 and step 3,
+which then observers an entry with the "present" flag set but random
+values in all other fields.
 
-0f1741c74aa6794b1c7fbdd19f26a4f2377a11c6.
+This patch introduces a dedicated bitmap to track remapping entry
+allocation status instead of sharing the "present" flag with hardware,
+thus eliminate the race window. It also simplifies the implementation.
 
-PCI controller driver is a platform driver supports probe and remove,
-when removing the driver we should call mpc85xx_pci_err_remove() to free EDAC PCI resource.
+Tested-and-reviewed-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel_irq_remapping.c |   55 +++++++++++++++++------------------
+ include/linux/intel-iommu.h         |    1 +
+ 2 files changed, 27 insertions(+), 29 deletions(-)
 
-Thanks,
-Minghuan
-
-On 01/04/2014 06:16 AM, Scott Wood wrote:
-> On Wed, Oct 23, 2013 at 06:41:33PM +0800, Minghuan Lian wrote:
->> diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
->> index 40d2e1d..4a03e1a 100644
->> --- a/arch/powerpc/sysdev/fsl_pci.c
->> +++ b/arch/powerpc/sysdev/fsl_pci.c
->> @@ -236,6 +236,7 @@ void fsl_arch_pci_sys_remove(struct fsl_pci *pci)
->>   	if (!hose)
->>   		return;
->>   
->> +	mpc85xx_pci_err_remove(to_platform_device(pci->dev));
->>   	pcibios_free_controller(hose);
-> This causes a linker error if the EDAC driver is enabled, due to commit
-> 0f1741c74aa6794b1c7fbdd19f26a4f2377a11c6 ("edac/85xx: Remove
-> mpc85xx_pci_err_remove").
->
-> -Scott
-
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index bab10b1..deef3d4 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -72,7 +72,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
+ 	u16 index, start_index;
+ 	unsigned int mask = 0;
+ 	unsigned long flags;
+-	int i;
+ 
+ 	if (!count || !irq_iommu)
+ 		return -1;
+@@ -96,32 +95,17 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
+ 	}
+ 
+ 	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
+-	do {
+-		for (i = index; i < index + count; i++)
+-			if  (table->base[i].present)
+-				break;
+-		/* empty index found */
+-		if (i == index + count)
+-			break;
+-
+-		index = (index + count) % INTR_REMAP_TABLE_ENTRIES;
+-
+-		if (index == start_index) {
+-			raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+-			printk(KERN_ERR "can't allocate an IRTE\n");
+-			return -1;
+-		}
+-	} while (1);
+-
+-	for (i = index; i < index + count; i++)
+-		table->base[i].present = 1;
+-
+-	cfg->remapped = 1;
+-	irq_iommu->iommu = iommu;
+-	irq_iommu->irte_index =  index;
+-	irq_iommu->sub_handle = 0;
+-	irq_iommu->irte_mask = mask;
+-
++	index = bitmap_find_free_region(table->bitmap,
++					INTR_REMAP_TABLE_ENTRIES, mask);
++	if (index < 0) {
++		pr_warn("IR%d: can't allocate an IRTE\n", iommu->seq_id);
++	} else {
++		cfg->remapped = 1;
++		irq_iommu->iommu = iommu;
++		irq_iommu->irte_index =  index;
++		irq_iommu->sub_handle = 0;
++		irq_iommu->irte_mask = mask;
++	}
+ 	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
+ 
+ 	return index;
+@@ -254,6 +238,8 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
+ 		set_64bit(&entry->low, 0);
+ 		set_64bit(&entry->high, 0);
+ 	}
++	bitmap_release_region(iommu->ir_table->bitmap, index,
++			      irq_iommu->irte_mask);
+ 
+ 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
+ }
+@@ -453,6 +439,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ {
+ 	struct ir_table *ir_table;
+ 	struct page *pages;
++	unsigned long *bitmap;
+ 
+ 	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
+ 					     GFP_ATOMIC);
+@@ -464,13 +451,23 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+ 				 INTR_REMAP_PAGE_ORDER);
+ 
+ 	if (!pages) {
+-		printk(KERN_ERR "failed to allocate pages of order %d\n",
+-		       INTR_REMAP_PAGE_ORDER);
++		pr_err("IR%d: failed to allocate pages of order %d\n",
++		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
+ 		kfree(iommu->ir_table);
+ 		return -ENOMEM;
+ 	}
+ 
++	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
++			 sizeof(long), GFP_ATOMIC);
++	if (bitmap == NULL) {
++		pr_err("IR%d: failed to allocate bitmap\n", iommu->seq_id);
++		__free_pages(pages, INTR_REMAP_PAGE_ORDER);
++		kfree(ir_table);
++		return -ENOMEM;
++	}
++
+ 	ir_table->base = page_address(pages);
++	ir_table->bitmap = bitmap;
+ 
+ 	iommu_set_irq_remapping(iommu, mode);
+ 	return 0;
+diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
+index d380c5e..de1e5e9 100644
+--- a/include/linux/intel-iommu.h
++++ b/include/linux/intel-iommu.h
+@@ -288,6 +288,7 @@ struct q_inval {
+ 
+ struct ir_table {
+ 	struct irte *base;
++	unsigned long *bitmap;
+ };
+ #endif
+ 
+-- 
+1.7.10.4
 
