@@ -1,65 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35380 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055AbaAWTdP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 14:33:15 -0500
-Date: Thu, 23 Jan 2014 11:34:05 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Dave Jones <davej@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [scan-admin@coverity.com: New Defects reported by Coverity Scan
- for Linux]
-Message-ID: <20140123193405.GB2605@kroah.com>
-References: <20140123184246.GA7461@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140123184246.GA7461@google.com>
+Received: from mga03.intel.com ([143.182.124.21]:37985 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753026AbaAFGSq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jan 2014 01:18:46 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 17/20] iommu/vt-d: fix wrong return value of dmar_table_init()
+Date: Mon,  6 Jan 2014 14:18:24 +0800
+Message-Id: <1388989107-4795-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 11:42:46AM -0700, Bjorn Helgaas wrote:
-> FYI.  I think the first two (related to "name") are valid.  I haven't
-> figured out the "msi_attrs" one yet.
+If dmar_table_init() fails to detect DMAR table on the first call,
+it will return wrong result on following calls because it always
+sets dmar_table_initialized no matter if succeeds or fails to
+detect DMAR table.
 
-I've send a fix for the first two to you now, that should resolve this
-issue.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/dmar.c |   29 ++++++++++++++---------------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
 
-But the last one, I can't figure out either.  I think Coverity doesn't
-realize that we saved off the pointer and can get back to it later on,
-as it's a non-trivial pointer chain involved here.
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index bb635fb..c4b271d 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -472,24 +472,23 @@ int __init dmar_table_init(void)
+ 	static int dmar_table_initialized;
+ 	int ret;
+ 
+-	if (dmar_table_initialized)
+-		return 0;
+-
+-	dmar_table_initialized = 1;
+-
+-	ret = parse_dmar_table();
+-	if (ret) {
+-		if (ret != -ENODEV)
+-			pr_info("parse DMAR table failure.\n");
+-		return ret;
+-	}
++	if (dmar_table_initialized == 0) {
++		ret = parse_dmar_table();
++		if (ret < 0) {
++			if (ret != -ENODEV)
++				pr_info("parse DMAR table failure.\n");
++		} else  if (list_empty(&dmar_drhd_units)) {
++			pr_info("No DMAR devices found\n");
++			ret = -ENODEV;
++		}
+ 
+-	if (list_empty(&dmar_drhd_units)) {
+-		pr_info("No DMAR devices found\n");
+-		return -ENODEV;
++		if (ret < 0)
++			dmar_table_initialized = ret;
++		else
++			dmar_table_initialized = 1;
+ 	}
+ 
+-	return 0;
++	return dmar_table_initialized < 0 ? dmar_table_initialized : 0;
+ }
+ 
+ static void warn_invalid_dmar(u64 addr, const char *message)
+-- 
+1.7.10.4
 
-Dave, you stare at Coverity bug reports all the time, can you make any
-sense out of the following report:
-
-> Please find the latest report on new defect(s) introduced to Linux found with Coverity Scan.
-> 
-> ...
-> 
-> 
-> ** CID 1163317:  Resource leak  (RESOURCE_LEAK)
-> /drivers/pci/msi.c: 592 in populate_msi_sysfs()
-> 
-> ...
-> ________________________________________________________________________________________________________
-> *** CID 1163317:  Resource leak  (RESOURCE_LEAK)
-> /drivers/pci/msi.c: 592 in populate_msi_sysfs()
-> 586     		msi_dev_attr = container_of(msi_attr, struct device_attribute, attr);
-> 587     		kfree(msi_attr->name);
-> 588     		kfree(msi_dev_attr);
-> 589     		++count;
-> 590     		msi_attr = msi_attrs[count];
-> 591     	}
-> >>>     CID 1163317:  Resource leak  (RESOURCE_LEAK)
-> >>>     Variable "msi_attrs" going out of scope leaks the storage it points to.
-> 592     	return ret;
-> 593     }
-> 594     
-> 595     /**
-> 596      * msi_capability_init - configure device's MSI capability structure
-> 597      * @dev: pointer to the pci_dev data structure of MSI device function
-> 
-> ...
-> 
-> To view the defects in Coverity Scan visit, http://scan.coverity.com/projects/128?tab=Overview
-> 
-> ----- End forwarded message -----
