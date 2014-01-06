@@ -1,85 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:63890 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753574AbaAYULz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Jan 2014 15:11:55 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Tanmay Inamdar <tinamdar@apm.com>, devicetree@vger.kernel.org,
-	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	patches <patches@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
-Date: Sat, 25 Jan 2014 21:11:34 +0100
-Message-ID: <5086198.ZOWZ5xuyna@wuerfel>
-In-Reply-To: <CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com>
-References: <1389742458-7693-1-git-send-email-tinamdar@apm.com> <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com> <CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga03.intel.com ([143.182.124.21]:37985 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753112AbaAFGSt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jan 2014 01:18:49 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Jiri Kosina <trivial@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 18/20] iommu/vt-d, PCI, trivial: use dev_is_pci() instead of hardcoding
+Date: Mon,  6 Jan 2014 14:18:25 +0800
+Message-Id: <1388989107-4795-19-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 24 January 2014 13:28:22 Tanmay Inamdar wrote:
-> On Thu, Jan 16, 2014 at 5:10 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> > On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> >> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
+Use helper dev_is_pci() instead of hardcoding.
 
-> >>
-> >>> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port, u32 *lanes)
-> >>> +{
-> >>> +     void *csr_base = port->csr_base;
-> >>> +     u32 val32;
-> >>> +     u64 start_time, time;
-> >>> +
-> >>> +     /*
-> >>> +      * A component enters the LTSSM Detect state within
-> >>> +      * 20ms of the end of fundamental core reset.
-> >>> +      */
-> >>> +     msleep(XGENE_LTSSM_DETECT_WAIT);
-> >>> +     port->link_up = 0;
-> >>> +     start_time = jiffies;
-> >>> +     do {
-> >>> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
-> >>> +             if (val32 & LINK_UP_MASK) {
-> >>> +                     port->link_up = 1;
-> >>> +                     port->link_speed = PIPE_PHY_RATE_RD(val32);
-> >>> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
-> >>> +                     *lanes = val32 >> 26;
-> >>> +             }
-> >>> +             time = jiffies_to_msecs(jiffies - start_time);
-> >>> +     } while ((!port->link_up) || (time <= XGENE_LTSSM_L0_WAIT));
-> >>> +}
-> >>
-> >> Maybe another msleep() in the loop? It seems weird to first do an
-> >> unconditional sleep but then busy-wait for the result.
-> >
-> > ok.
-> 
-> This loop can execute for maximum 4 msec. So putting msleep(1) won't
-> get us much.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 03780eb..6fce741 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -2703,7 +2703,7 @@ static int iommu_no_mapping(struct device *dev)
+ 	struct pci_dev *pdev;
+ 	int found;
  
-4 msec is still quite a long time for a busy loop that can be spent doing
-useful work in another thread.
+-	if (unlikely(dev->bus != &pci_bus_type))
++	if (unlikely(!dev_is_pci(dev)))
+ 		return 1;
+ 
+ 	pdev = to_pci_dev(dev);
+-- 
+1.7.10.4
 
-> >>
-> >> Another general note: Your "compatible" strings are rather unspecific.
-> >> Do you have a version number for this IP block? I suppose that it's related
-> >> to one that has been used in other chips before, or will be used in future
-> >> chips, if it's not actually licensed from some other company.
-> >
-> > I will have to check this.
-> >
-> 
-> We have decided to stick with current compatible string for now.
-
-Can you elaborate on your reasoning? Does this mean X-Gene is a one-off
-product and you won't be doing any new chips based on the same hardware
-components?
-
-	Arnd
