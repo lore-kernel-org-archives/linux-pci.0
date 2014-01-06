@@ -1,76 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 82-68-191-81.dsl.posilan.com ([82.68.191.81]:51235 "EHLO
-	rainbowdash.ducie.codethink.co.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754471AbaA1Jr6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 04:47:58 -0500
-From: Ben Dooks <ben.dooks@codethink.co.uk>
-To: linux-kernel@lists.codethink.co.uk
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Subject: [PATCH 3/3] PCI: rcar: fix bridge logic abort
-Date: Tue, 28 Jan 2014 09:47:48 +0000
-Message-Id: <1390902468-7753-4-git-send-email-ben.dooks@codethink.co.uk>
-In-Reply-To: <1390902468-7753-1-git-send-email-ben.dooks@codethink.co.uk>
-References: <1390902468-7753-1-git-send-email-ben.dooks@codethink.co.uk>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:31552 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbaAFBIr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jan 2014 20:08:47 -0500
+Message-ID: <52CA020C.60206@huawei.com>
+Date: Mon, 6 Jan 2014 09:08:28 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<sparclinux@vger.kernel.org>, <guohanjun@huawei.com>
+Subject: Re: [PATCH v3] sparc/PCI: Use dev_is_pci() to identify PCI devices
+References: <1386741626-35744-1-git-send-email-wangyijing@huawei.com> <20140104.210533.653844636617320862.davem@davemloft.net>
+In-Reply-To: <20140104.210533.653844636617320862.davem@davemloft.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The bridge logic at slot 0 only supports reads up to 0x40 and the
-rest of the PCI configuration space for this slot is marked as
-reserved in the manual.
+On 2014/1/5 10:05, David Miller wrote:
+> From: Yijing Wang <wangyijing@huawei.com>
+> Date: Wed, 11 Dec 2013 14:00:26 +0800
+> 
+>> Use dev_is_pci() instead of checking bus type directly.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Applied.
+> 
+> 
+Hi David,
+   This patch has been merged in Bjorn's pci tree, so will have some conflict between yours and Bjorn's tree?
 
-Trying a read from offset 0x100 is producing an error from the
-bridge. With error interrupts enabled, the following is printed:
-
-pci-rcar-gen2 ee0d0000.pci: error irq: status 00000014
-
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
----
-Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
----
- drivers/pci/host/pci-rcar-gen2.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index 01ba069..17ad857 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -119,6 +119,10 @@ static void __iomem *rcar_pci_cfg_base(struct pci_bus *bus, unsigned int devfn,
- 	if (slot > 2)
- 		return NULL;
- 
-+	/* bridge logic only has registers to 0x40 */
-+	if (slot == 0x0 && where >= 0x40)
-+		return NULL;
-+
- 	val = slot ? RCAR_AHBPCI_WIN1_DEVICE | RCAR_AHBPCI_WIN_CTR_CFG :
- 		     RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG;
- 
-@@ -134,6 +138,8 @@ static int rcar_pci_read_config(struct pci_bus *bus, unsigned int devfn,
- 	if (!reg)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
-+	dev_info(&bus->dev, "fn %08x, read %08x, size %d\n", devfn, where, size);
-+
- 	switch (size) {
- 	case 1:
- 		*val = ioread8(reg);
-@@ -157,6 +163,8 @@ static int rcar_pci_write_config(struct pci_bus *bus, unsigned int devfn,
- 	if (!reg)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
-+	dev_info(&bus->dev, "devfn %08x: write %08x to %08x, size %d\n", devfn, val, where, size);
-+
- 	switch (size) {
- 	case 1:
- 		iowrite8(val, reg);
 -- 
-1.8.5.2
+Thanks!
+Yijing
 
