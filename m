@@ -1,74 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:37405 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751523AbaANLUA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 06:20:00 -0500
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <yan@linux.vnet.ibm.com>;
-	Tue, 14 Jan 2014 21:19:58 +1000
-Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [9.190.234.120])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id B0B262BB0053
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 22:19:54 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0EB11vu63373348
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 22:01:01 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0EBJrJ4000818
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 22:19:54 +1100
-Date: Tue, 14 Jan 2014 19:19:47 +0800
-From: Guo Chao <yan@linux.vnet.ibm.com>
-To: Jack Morgenstein <jackm@dev.mellanox.co.il>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	yinghai@kernel.org, bhelgaas@google.com, amirv@mellanox.com,
-	ogerlitz@mellanox.com, eugenia@mellanox.com,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-Message-ID: <20140114111947.GA9083@yanx>
-References: <20140114062215.GA19345@richard>
- <20140114105031.71882944@jpm-OptiPlex-GX620>
- <20140114091525.GB27684@richard>
- <20140114122532.0e2b6a64@jpm-OptiPlex-GX620>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140114122532.0e2b6a64@jpm-OptiPlex-GX620>
+Received: from mga14.intel.com ([143.182.124.37]:28563 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752767AbaAFGSW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jan 2014 01:18:22 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Jiri Kosina <trivial@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 06/20] iommu/vt-d, trivial: print correct domain id of static identity domain
+Date: Mon,  6 Jan 2014 14:18:13 +0800
+Message-Id: <1388989107-4795-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 12:25:32PM +0200, Jack Morgenstein wrote:
-> I suspect one of the following scenarios:
-> 
-> 1. BAR 0 contains a "PPF Selection" (i.e., ownership) semaphore:  The first PF probe which
-> reads the semaphore "acquires" it (i.e., the first read grabs the semaphore (the read returns zero).
-> Subsequent reads return non-zero.  When the PF driver is unloaded, it calls "mlx4_free_ownership()",
+Field si_domain->id is set by iommu_attach_domain(), so we should only
+print domain id for static identity domain after calling
+iommu_attach_domain(si_domain, iommu), otherwise it's always zero.
 
-The read returns 0x1000000. Does it look like a typical value from a
-second read?
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> which writes a zero into the semaphore dword, so that the next read will return zero.
-> 
-> In this scenario, initialization of the "PPF selection" semaphore to zero has been compromised somehow, so that
-> even the first read attempt returns a non-zero value.  In this scenario, note that the ioremap DID succeed, or
-> we would see the "Failed to obtain ownership bit" message in the error log.  Maybe pre-fetching has something
-> to do with this? (i.e., maybe if the BAR is not prefetched, the initial value of the semaphore is compromised).
-> 
-
-BAR 0 itself is a 64-bit non-prefetchable BAR and not effected by the
-patch. It's ROM BAR moved from prefetchable window to non-prefetchable
-window. Another change can be seen is the relative position of BAR0 and
-ROM BAR.
-
-Thanks,
-Guo Chao
-
-> 2. For some reason the same PF is being probed twice by the
-> kernel.  In this case the second probe attempt fails because the PF has
-> already been probed once.
-> 
-> This is the reason that I want to see the entire log -- to see if
-> indeed the device is being "double-probed"
-> 
-> -Jack
-> 
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index b2e73c2..3a0cf5d 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -2248,8 +2248,6 @@ static int __init si_domain_init(int hw)
+ 	if (!si_domain)
+ 		return -EFAULT;
+ 
+-	pr_debug("Identity mapping domain is domain %d\n", si_domain->id);
+-
+ 	for_each_active_iommu(iommu, drhd) {
+ 		ret = iommu_attach_domain(si_domain, iommu);
+ 		if (ret) {
+@@ -2264,6 +2262,8 @@ static int __init si_domain_init(int hw)
+ 	}
+ 
+ 	si_domain->flags = DOMAIN_FLAG_STATIC_IDENTITY;
++	pr_debug("IOMMU: identity mapping domain is domain %d\n",
++		 si_domain->id);
+ 
+ 	if (hw)
+ 		return 0;
+-- 
+1.7.10.4
 
