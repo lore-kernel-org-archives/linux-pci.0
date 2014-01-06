@@ -1,102 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:45567 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752463AbaACTK0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 14:10:26 -0500
-Date: Fri, 3 Jan 2014 20:10:24 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Lior Amsalem <alior@marvell.com>, linux-pci@vger.kernel.org,
-	Gregory Cl??ment <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: Issue with the emulated PCI bridge implementation
-Message-ID: <20140103201024.08ca11fb@skate>
-In-Reply-To: <3246739.aRbALcNl1Y@wuerfel>
-References: <20131226160534.36cc4203@skate>
-	<201401031322.31433.arnd@arndb.de>
-	<20140103200106.5a0999a3@skate>
-	<3246739.aRbALcNl1Y@wuerfel>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:53829 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754806AbaAFUA3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 15:00:29 -0500
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1401031749340.8667@kaball.uk.xensource.com>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+	<1388707565-16535-17-git-send-email-yinghai@kernel.org>
+	<alpine.DEB.2.02.1401031749340.8667@kaball.uk.xensource.com>
+Date: Mon, 6 Jan 2014 12:00:28 -0800
+Message-ID: <CAE9FiQVba9K_3LDkHTP4YZJ-FzwE_mF3h6iiXEFb1shUUmhGpg@mail.gmail.com>
+Subject: Re: [Xen-devel] [PATCH v5 16/33] xen, irq: Call irq_alloc_reserved_desc_at()
+ at first
+From: Yinghai Lu <yinghai@kernel.org>
+To: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Xen Devel <xen-devel@lists.xensource.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
+On Fri, Jan 3, 2014 at 9:50 AM, Stefano Stabellini
+<stefano.stabellini@eu.citrix.com> wrote:
 
-On Fri, 03 Jan 2014 20:04:57 +0100, Arnd Bergmann wrote:
+>>  drivers/xen/events.c | 8 ++++++--
+>>  1 file changed, 6 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/xen/events.c b/drivers/xen/events.c
+>> index 4035e83..020cd77 100644
+>> --- a/drivers/xen/events.c
+>> +++ b/drivers/xen/events.c
+>> @@ -508,8 +508,12 @@ static int __must_check xen_allocate_irq_gsi(unsigned gsi)
+>>       /* Legacy IRQ descriptors are already allocated by the arch. */
+>>       if (gsi < NR_IRQS_LEGACY)
+>>               irq = gsi;
+>> -     else
+>> -             irq = irq_alloc_desc_at(gsi, -1);
+>> +     else {
+>> +             /* for x86, irq already get reserved for gsi */
+>> +             irq = irq_alloc_reserved_desc_at(gsi, -1);
+>> +             if (irq < 0)
+>> +                     irq = irq_alloc_desc_at(gsi, -1);
+>> +     }
+>
+> This is common code. On ARM I get:
+>
+> drivers/xen/events.c: In function 'xen_allocate_irq_gsi':
+> drivers/xen/events.c:513:3: error: implicit declaration of function 'irq_alloc_reserved_desc_at' [-Werror=implicit-function-declaration]
+>    irq = irq_alloc_reserved_desc_at(gsi, -1);
+>    ^
+> cc1: some warnings being treated as errors
 
-> > Digging in the LAKML archive, I found a lspci -v output about the
-> > e1000e, and it has an I/O space:
-> 
-> Ok, thanks for the confirmation!
-> 
-> Do you mind posting your hack here? It may be useful for others as
-> well, such as the xgene developers that seem to be doing funny things
-> with their I/O space.
+It's strange.
 
-The current hack is the following very ugly piece of code... It runs
-some command and reads back some registers, and you should see some
-well-known values (which can be found in the e1000 datasheet, I don't
-remember them right now).
+that is defined with irq_alloc_desc_at in parallel in
+include/linux/irq.h and kernel/irq/irqdesc.c.
 
-I'm not sure why I do the pci_request_selected_regions_exclusive() call
-*after* the actual in/out. Probably a mistake, but as I said, this is
-ugly stuff :)
+Did you try the whole tree, or just this patch?
 
-Thomas
+Thanks
 
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index fbf75fd..739ca10 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -6045,7 +6045,7 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (aspm_disable_flag)
- 		e1000e_disable_aspm(pdev, aspm_disable_flag);
- 
--	err = pci_enable_device_mem(pdev);
-+	err = pci_enable_device(pdev);
- 	if (err)
- 		return err;
- 
-@@ -6073,6 +6073,34 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (err)
- 		goto err_pci_reg;
- 
-+	dev_info(&pdev->dev, "==> e1000e: I/O start 0x%x, len 0x%x\n",
-+		 pci_resource_start(pdev, 2),
-+		 pci_resource_len(pdev, 2));
-+
-+
-+	{
-+		unsigned long ioport_base = pci_resource_start(pdev, 2);
-+		dev_info(&pdev->dev, "1. 0x%x 0x%x 0x%x 0x%x\n",
-+			 inl(ioport_base),
-+			 inl(ioport_base + 4),
-+			 inl(ioport_base + 8),
-+			 inl(ioport_base + 12));
-+		outl(0x38, ioport_base);
-+		dev_info(&pdev->dev, "2. 0x%x 0x%x 0x%x 0x%x\n",
-+			 inl(ioport_base),
-+			 inl(ioport_base + 4),
-+			 inl(ioport_base + 8),
-+			 inl(ioport_base + 12));
-+	}
-+
-+	err = pci_request_selected_regions_exclusive(pdev,
-+						     pci_select_bars(pdev, IORESOURCE_IO),
-+						     e1000e_driver_name);
-+	if (err) {
-+		dev_err(&pdev->dev, "Cannot get I/O region\n");
-+		goto err_pci_reg;
-+	}
-+
- 	/* AER (Advanced Error Reporting) hooks */
- 	pci_enable_pcie_error_reporting(pdev);
- 
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Yinghai
