@@ -1,70 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48950 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756360AbaAHQis (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 11:38:48 -0500
-Message-ID: <52CD7F0F.9030209@canonical.com>
-Date: Wed, 08 Jan 2014 11:38:39 -0500
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
- mmio
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com> <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-In-Reply-To: <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 00/20] Bugfixes and improvements for Intel IOMMU drivers
+Date: Mon,  6 Jan 2014 14:18:07 +0800
+Message-Id: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/11/2013 02:55 PM, Yinghai Lu wrote:
-> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
->> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
->>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> That doesn't answer my question at all.
->>>>
->>>> I understand that this change makes it so Joseph doesn't have to use
->>>> "pci=realloc=off".  But why should auto-reallocation be limited to
->>>> buses that have resources above 4GB?  That doesn't make any sense.
->>>>
->>>> We should fix the reallocation code so it can deal with this case.  If
->>>> there's not enough space for everything, obviously we have to leave
->>>> something unassigned.  A ROM BAR is a good candidate for leaving
->>>> unassigned, because most of the time we can get along without it.
->>> Yes, that is ideal and not that simple.
->>> but that would be hard to backport to old kernels.
->>>
->>> BTW, Joseph, can you try
->>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>> for-pci-3.14
->>> with pci=realloc=on
->>>
->>> on that system?
->>>
->>> Thanks
->>>
->>> Yinghai
->> I noticed there was some back and forth on this thread.  Do you still
->> want me to test this version, Yinghai?
-> Yes, if that works, we would not need to put the patch in upstream for limiting
-> realloc auto scope.
->
-> Thanks
->
-> Yinghai
-Hi Yinghai,
+This patchset includes several bugfixes and code improvements for
+Intel DMA remapping and interrupt remapping drivers. It's also a
+preparation for Intel IOMMU device hotplug.
 
-Sorry for the delay.  The bug reporter was finally able to test your
-patch.  He reports that this version of the patch does in fact fix the
-bug.  See comment #72 here:
+It applies to the latest mainstream kernel on top of
+	commit 7e3528c3660a2e8602abc7858b0994d611f74bc3
 
-http://pad.lv/1245938
+It has been tested on Intel SandyBridge and Romley-4S platforms.
 
-Thanks again for all your help!
+Thanks!
 
-Joe
+V2->V3:
+1) address review comments of last round
+
+Jiang Liu (20):
+  iommu/vt-d: use dedicated bitmap to track remapping entry allocation
+    status
+  iommu/vt-d: fix PCI device reference leakage on error recovery path
+  iommu/vt-d: fix a race window in allocating domain ID for virtual
+    machines
+  iommu/vt-d: fix resource leakage on error recovery path in
+    iommu_init_domains()
+  iommu/vt-d, trivial: refine support of 64bit guest address
+  iommu/vt-d, trivial: print correct domain id of static identity
+    domain
+  iommu/vt-d, trivial: check suitable flag in function
+    detect_intel_iommu()
+  iommu/vt-d, trivial: clean up unused code
+  iommu/vt-d: mark internal functions as static
+  iommu/vt-d, trivial: use defined macro instead of hardcoding
+  iommu/vt-d, trivial: simplify code with existing macros
+  iommu/vt-d: fix invalid memory access when freeing DMAR irq
+  iommu/vt-d: keep shared resources when failed to initialize iommu
+    devices
+  iommu/vt-d: avoid double free in error recovery path
+  iommu/vt-d: fix access after free issue in function free_dmar_iommu()
+  iommu/vt-d: release invalidation queue when destroying IOMMU unit
+  iommu/vt-d: fix wrong return value of dmar_table_init()
+  iommu/vt-d, PCI, trivial: use dev_is_pci() instead of hardcoding
+  iommu/vt-d, trivial: clean sparse warnings
+  iommu/vt-d: free all resources if failed to initialize DMARs
+
+ drivers/iommu/dmar.c                |  137 +++++++++++++--------
+ drivers/iommu/intel-iommu.c         |  232 ++++++++++++++---------------------
+ drivers/iommu/intel_irq_remapping.c |   98 +++++++--------
+ drivers/iommu/irq_remapping.c       |    6 +-
+ include/linux/dma_remapping.h       |    4 -
+ include/linux/dmar.h                |   17 +--
+ include/linux/intel-iommu.h         |    3 +-
+ 7 files changed, 229 insertions(+), 268 deletions(-)
+
+-- 
+1.7.10.4
 
