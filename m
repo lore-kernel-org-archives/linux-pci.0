@@ -1,101 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64189 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752039AbaACNXw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 08:23:52 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: [GIT PULL] ACPI and power management fixes for v3.13-rc7
-Date: Fri, 03 Jan 2014 14:37:33 +0100
-Message-ID: <4606291.Jt1hNa9vKs@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Jiri Kosina <trivial@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 19/20] iommu/vt-d, trivial: clean sparse warnings
+Date: Mon,  6 Jan 2014 14:18:26 +0800
+Message-Id: <1388989107-4795-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Clean up most sparse warnings in Intel DMA and interrupt remapping
+drivers.
 
-Please pull from the git repository at
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/dmar.c                |    8 ++++----
+ drivers/iommu/intel-iommu.c         |    4 ++--
+ drivers/iommu/intel_irq_remapping.c |    4 ++--
+ drivers/iommu/irq_remapping.c       |    6 +++---
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm+acpi-3.13-rc7
-
-to receive ACPI and power management fixes for 3.13-rc7
-with top-most commit 0a405fe97fd54d5e89560c6d0f4070ff43862a49
-
-  Merge branches 'pm-cpufreq' and 'pm-cpuidle'
-
-on top of commit 802eee95bde72fd0cd0f3a5b2098375a487d1eda
-
-  Linux 3.13-rc6
-
-These commits, except for one, are regression fixes and the remaining
-one fixes a divide error leading to a kernel panic.  The majority of
-the regressions fixed here were introduced during the 3.12 cycle, one
-of them is from this cycle and one is older.
-
-Specifics:
-
-- VGA switcheroo was broken for some users as a result of the ACPI-based
-  PCI hotplug (ACPIPHP) changes in 3.12, because some previously ignored
-  hotplug events started to be handled.  The fix causes them to be
-  ignored again.
-
-- There are two more issues related to cpufreq's suspend/resume handling
-  changes from the 3.12 cycle addressed by Viresh Kumar's fixes.
-
-- intel_pstate triggers a divide error in a timer function if the P-state
-  information it needs is missing during initialization.  This leads to
-  kernel panics on nested KVM clients and is fixed by failing the
-  initialization cleanly in those cases.
-
-- PCI initalization code changes during the 3.9 cycle uncovered BIOS
-  issues related to ACPI wakeup notifications (some BIOSes send them
-  for devices that aren't supposed to support ACPI wakeup).  Work around
-  them by installing an ACPI wakeup notify handler for all PCI devices
-  with ACPI support.
-
-- The Calxeda cpuilde driver's probe function is tagged as __init, which
-  is incorrect and causes a section mismatch to occur during build.  Fix
-  from Andre Przywara removes the __init tag from there.
-
-- During the 3.12 cycle ACPIPHP started to print warnings about missing
-  _ADR for devices that legitimately don't have it.  Fix from Toshi Kani
-  makes it only print the warnings where they make sense.
-
-All the best in 2014 and thanks!
-
-
----------------
-
-Andre Przywara (1):
-      ARM/cpuidle: remove __init tag from Calxeda cpuidle probe function
-
-Rafael J. Wysocki (4):
-      cpufreq: Clean up after a failing light-weight initialization
-      PCI / ACPI: Install wakeup notify handlers for all PCI devs with ACPI
-      intel_pstate: Fail initialization if P-state information is missing
-      ACPIPHP / radeon / nouveau: Fix VGA switcheroo problem related to hotplug
-
-Toshi Kani (1):
-      ACPI / PCI / hotplug: Avoid warning when _ADR not present
-
-Viresh Kumar (1):
-      cpufreq: preserve user_policy across suspend/resume
-
----------------
-
- drivers/acpi/bus.c                           | 10 ++++++++
- drivers/cpufreq/cpufreq.c                    | 37 +++++++++++++++++-----------
- drivers/cpufreq/intel_pstate.c               |  5 ++++
- drivers/cpuidle/cpuidle-calxeda.c            |  2 +-
- drivers/gpu/drm/nouveau/nouveau_acpi.c       | 16 ++++++++++--
- drivers/gpu/drm/radeon/radeon_atpx_handler.c | 16 ++++++++++--
- drivers/pci/hotplug/acpiphp_glue.c           | 30 +++++++++++++++++++---
- drivers/pci/pci-acpi.c                       | 21 +++++++++-------
- include/acpi/acpi_bus.h                      |  4 ++-
- 9 files changed, 108 insertions(+), 33 deletions(-)
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index c4b271d..248332e 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -572,7 +572,7 @@ static int __init detect_intel_iommu(void)
+ 			x86_init.iommu.iommu_init = intel_iommu_init;
+ #endif
+ 	}
+-	early_acpi_os_unmap_memory(dmar_tbl, dmar_tbl_size);
++	early_acpi_os_unmap_memory((void __iomem *)dmar_tbl, dmar_tbl_size);
+ 	dmar_tbl = NULL;
+ 
+ 	return ret ? 1 : -ENODEV;
+@@ -1064,7 +1064,7 @@ int dmar_enable_qi(struct intel_iommu *iommu)
+ 	desc_page = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO, 0);
+ 	if (!desc_page) {
+ 		kfree(qi);
+-		iommu->qi = 0;
++		iommu->qi = NULL;
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -1074,7 +1074,7 @@ int dmar_enable_qi(struct intel_iommu *iommu)
+ 	if (!qi->desc_status) {
+ 		free_page((unsigned long) qi->desc);
+ 		kfree(qi);
+-		iommu->qi = 0;
++		iommu->qi = NULL;
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -1125,7 +1125,7 @@ static const char *irq_remap_fault_reasons[] =
+ 	"Blocked an interrupt request due to source-id verification failure",
+ };
+ 
+-const char *dmar_get_fault_reason(u8 fault_reason, int *fault_type)
++static const char *dmar_get_fault_reason(u8 fault_reason, int *fault_type)
+ {
+ 	if (fault_reason >= 0x20 && (fault_reason - 0x20 <
+ 					ARRAY_SIZE(irq_remap_fault_reasons))) {
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 6fce741..c28e9fe 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -382,7 +382,7 @@ struct device_domain_info {
+ 
+ static void flush_unmaps_timeout(unsigned long data);
+ 
+-DEFINE_TIMER(unmap_timer,  flush_unmaps_timeout, 0, 0);
++static DEFINE_TIMER(unmap_timer,  flush_unmaps_timeout, 0, 0);
+ 
+ #define HIGH_WATER_MARK 250
+ struct deferred_flush_tables {
+@@ -3127,7 +3127,7 @@ static int intel_mapping_error(struct device *dev, dma_addr_t dma_addr)
+ 	return !dma_addr;
+ }
+ 
+-struct dma_map_ops intel_dma_ops = {
++static struct dma_map_ops intel_dma_ops = {
+ 	.alloc = intel_alloc_coherent,
+ 	.free = intel_free_coherent,
+ 	.map_sg = intel_map_sg,
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index ea425de..f307a3f 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -48,7 +48,7 @@ static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
+ 	return cfg ? &cfg->irq_2_iommu : NULL;
+ }
+ 
+-int get_irte(int irq, struct irte *entry)
++static int get_irte(int irq, struct irte *entry)
+ {
+ 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
+ 	unsigned long flags;
+@@ -797,7 +797,7 @@ static int __init parse_ioapics_under_ir(void)
+ 	return 1;
+ }
+ 
+-int __init ir_dev_scope_init(void)
++static int __init ir_dev_scope_init(void)
+ {
+ 	if (!irq_remapping_enabled)
+ 		return 0;
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 39f81ae..228632c9 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -150,7 +150,7 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+ 		return do_setup_msix_irqs(dev, nvec);
+ }
+ 
+-void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
++static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
+ {
+ 	/*
+ 	 * Intr-remapping uses pin number as the virtual vector
+@@ -295,8 +295,8 @@ int setup_ioapic_remapped_entry(int irq,
+ 					     vector, attr);
+ }
+ 
+-int set_remapped_irq_affinity(struct irq_data *data, const struct cpumask *mask,
+-			      bool force)
++static int set_remapped_irq_affinity(struct irq_data *data,
++				     const struct cpumask *mask, bool force)
+ {
+ 	if (!config_enabled(CONFIG_SMP) || !remap_ops ||
+ 	    !remap_ops->set_affinity)
+-- 
+1.7.10.4
 
