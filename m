@@ -1,64 +1,314 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:4899 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753994AbaAHCdX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 21:33:23 -0500
-Message-ID: <52CCB8E9.6020501@linux.intel.com>
-Date: Wed, 08 Jan 2014 10:33:13 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:24243 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460AbaAFDPA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jan 2014 22:15:00 -0500
+Message-ID: <52CA1F01.9070709@huawei.com>
+Date: Mon, 6 Jan 2014 11:12:01 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: "Dongsheng.Wang@freescale.com" <Dongsheng.Wang@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rjw@rjwysocki.net" <rjw@rjwysocki.net>
-CC: Scott Wood <scottwood@freescale.com>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 1/2] pci: Fix root port bus->self is NULL
-References: <1389081848-26506-1-git-send-email-dongsheng.wang@freescale.com> <52CBBA86.7020401@huawei.com> <52CBC0B6.1090904@linux.intel.com> <80033eb36b0f40d682aeecc8b99dbd95@BN1PR03MB188.namprd03.prod.outlook.com>
-In-Reply-To: <80033eb36b0f40d682aeecc8b99dbd95@BN1PR03MB188.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
+To: Yinghai Lu <yinghai@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>,
+	"Tony Luck" <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, x86 <x86@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, Len Brown <lenb@kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>
+Subject: Re: [PATCH v2 10/10] IOMMU: Add intel iommu irq-remapping and dmar
+ hotplug support
+References: <1388707697-16800-1-git-send-email-yinghai@kernel.org> <1388707697-16800-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707697-16800-11-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Yinghai,
+   Maybe we should add some guards to protect from initializing DMAR when we disable Intel IOMMU
+like append intel_iommu=off to boot command.
+
+Thanks!
+Yijing.
+
+On 2014/1/3 8:08, Yinghai Lu wrote:
+> during hostbridge hotadd/hotremove, we call acpi_pci_iommu_add/remove in
+> acpi_pci_root_add/remove.
+> 
+> For add, need to after ioapic add.
+> 
+> Run dsm in acpi root device to get iommu entries, and init dmar/irq_remapping
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Donald Dutile <ddutile@redhat.com>
+> Cc: linux-acpi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/acpi/pci_root.c  |   2 +
+>  drivers/iommu/dmar.c     | 201 +++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-acpi.h |   8 ++
+>  3 files changed, 211 insertions(+)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index e666be3..dd82d8b 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -600,6 +600,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  	}
+>  
+>  	acpi_pci_ioapic_add(root);
+> +	acpi_pci_iommu_add(root);
+>  
+>  	pci_bus_add_devices(root->bus);
+>  	return 1;
+> @@ -615,6 +616,7 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+>  
+>  	pci_stop_root_bus(root->bus);
+>  
+> +	acpi_pci_iommu_remove(root);
+>  	acpi_pci_ioapic_remove(root);
+>  
+>  	device_set_run_wake(root->bus->bridge, false);
+> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+> index 31d7942..c74f112 100644
+> --- a/drivers/iommu/dmar.c
+> +++ b/drivers/iommu/dmar.c
+> @@ -38,6 +38,7 @@
+>  #include <linux/tboot.h>
+>  #include <linux/dmi.h>
+>  #include <linux/slab.h>
+> +#include <acpi/acpi.h>
+>  #include <asm/irq_remapping.h>
+>  #include <asm/iommu_table.h>
+>  
+> @@ -1548,3 +1549,203 @@ int __init dmar_ir_support(void)
+>  	return dmar->flags & 0x1;
+>  }
+>  IOMMU_INIT_POST(detect_intel_iommu);
+> +
+> +static u8 dmar_uuid_str[] = "D8C1A3A6-BE9B-4C9B-91BF-C3CB81FC5DAF";
+> +
+> +static int acpi_dmar_dsm_support(acpi_handle handle)
+> +{
+> +	int support = 0;
+> +	struct acpi_dsm_context context = {
+> +		.uuid_str = dmar_uuid_str,
+> +		.rev = 1,
+> +		.func_idx = 0,
+> +	};
+> +
+> +	if (ACPI_SUCCESS(acpi_run_dsm(handle, &context))) {
+> +		u32 *ret = context.ret.pointer;
+> +		support = ret[0];
+> +		kfree(context.ret.pointer);
+> +	}
+> +
+> +	if (support & 1)
+> +		return support & 0x0e;
+> +
+> +	return 0;
+> +}
+> +
+> +static void *acpi_dmar_dsm_run(acpi_handle handle, int idx)
+> +{
+> +	struct acpi_dsm_context context = {
+> +		.uuid_str = dmar_uuid_str,
+> +		.rev = 1,
+> +		.func_idx = idx,
+> +	};
+> +
+> +	if (ACPI_SUCCESS(acpi_run_dsm(handle, &context)))
+> +		return context.ret.pointer;
+> +
+> +	return NULL;
+> +}
+> +
+> +static void handle_iommu_add(acpi_handle handle, void **d, void **a)
+> +{
+> +	int support;
+> +	struct acpi_dmar_header *header;
+> +	struct dmar_drhd_unit *dmaru = NULL;
+> +	struct dmar_atsr_unit *atsru = NULL;
+> +
+> +	*d = NULL;
+> +	*a = NULL;
+> +
+> +	support = acpi_dmar_dsm_support(handle);
+> +
+> +	if (!support)
+> +		return;
+> +
+> +	/* DRHD */
+> +	if (support & (1<<1)) {
+> +		header = acpi_dmar_dsm_run(handle, 1);
+> +		dmar_table_print_dmar_entry(header);
+> +		__dmar_parse_one_drhd(header, &dmaru);
+> +	}
+> +
+> +	if (!dmaru)
+> +		return;
+> +
+> +	/* ATSR */
+> +	if (support & (1<<2)) {
+> +		header = acpi_dmar_dsm_run(handle, 2);
+> +		dmar_table_print_dmar_entry(header);
+> +		__dmar_parse_one_atsr(header, &atsru);
+> +	}
+> +
+> +	/* RHSA */
+> +	if (support & (1<<3)) {
+> +		header = acpi_dmar_dsm_run(handle, 3);
+> +		dmar_table_print_dmar_entry(header);
+> +		dmar_parse_one_rhsa(header);
+> +		kfree(header);
+> +	}
+> +
+> +	/*
+> +	 *  only need to init intr_remap and dmar for hot-add ones
+> +	 *  after enable_IR() or pci_iommu_init
+> +	 */
+> +	/*
+> +	 * TODO: handle parsing failure for pre-installed hotplug one
+> +	 *	Could make every parse_one duplicate the entry table?
+> +	 */
+> +	if (irq_remapping_enabled == 1)
+> +		intel_enable_irq_remapping_one(dmaru);
+> +	if (irq_remapping_enabled == 1 || intel_iommu_enabled == 1)
+> +		dmar_parse_dev(dmaru);
+> +	if (intel_iommu_enabled == 1) {
+> +		init_dmar_one(dmaru);
+> +		if (atsru) {
+> +			header = atsru->hdr;
+> +			if (atsr_parse_dev(atsru)) {
+> +				kfree(header);
+> +				atsru = NULL;
+> +			}
+> +			*a = atsru;
+> +		}
+> +	}
+> +	*d = dmaru;
+> +}
+> +
+> +static void handle_iommu_remove(void *drhd, void *atsr)
+> +{
+> +	struct dmar_drhd_unit *dmaru = drhd;
+> +	struct dmar_atsr_unit *atsru = atsr;
+> +
+> +	if (!dmaru)
+> +		return;
+> +
+> +	if (irq_remapping_enabled == 1)
+> +		disable_irq_remapping_one(dmaru);
+> +	if (intel_iommu_enabled == 1) {
+> +		free_dmar_iommu(dmaru->iommu);
+> +		if (atsru) {
+> +			kfree(atsru->devices);
+> +			remove_atsru_from_saved_dev_atsru_list(atsru);
+> +		}
+> +	}
+> +	if (irq_remapping_enabled == 1 || intel_iommu_enabled == 1) {
+> +		kfree(dmaru->devices);
+> +		remove_dmaru_from_saved_dev_drhd_list(dmaru);
+> +	}
+> +	if (atsru) {
+> +		kfree(atsru->hdr);
+> +		list_del(&atsru->list);
+> +		kfree(atsru);
+> +	}
+> +	free_iommu(dmaru->iommu);
+> +	kfree(dmaru->hdr);
+> +	list_del(&dmaru->list);
+> +	kfree(dmaru);
+> +}
+> +
+> +struct acpi_pci_iommu {
+> +	acpi_handle root_handle;
+> +	void *dmaru;
+> +	void *atsru;
+> +	struct list_head list;
+> +};
+> +
+> +static LIST_HEAD(iommu_list);
+> +static DEFINE_MUTEX(iommu_list_lock);
+> +
+> +static acpi_status register_iommu(acpi_handle handle, u32 lvl,
+> +				  void *context, void **rv)
+> +{
+> +	acpi_handle root_handle = context;
+> +	void *dmaru, *atsru;
+> +	struct acpi_pci_iommu *iommu;
+> +
+> +	handle_iommu_add(handle, &dmaru, &atsru);
+> +	if (!dmaru)
+> +		return AE_OK;
+> +
+> +	iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
+> +	if (!iommu) {
+> +		pr_err("%s: cannot allocate memory\n", __func__);
+> +		handle_iommu_remove(dmaru, atsru);
+> +		return AE_OK;
+> +	}
+> +	iommu->root_handle = root_handle;
+> +	iommu->dmaru = dmaru;
+> +	iommu->atsru = atsru;
+> +
+> +	mutex_lock(&iommu_list_lock);
+> +	list_add(&iommu->list, &iommu_list);
+> +	mutex_unlock(&iommu_list_lock);
+> +
+> +	return AE_OK;
+> +}
+> +
+> +void acpi_pci_iommu_add(struct acpi_pci_root *root)
+> +{
+> +	acpi_status status;
+> +
+> +	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, root->device->handle,
+> +				     (u32)1, register_iommu, NULL,
+> +				     root->device->handle,
+> +				     NULL);
+> +	if (ACPI_FAILURE(status))
+> +		pr_err("%s: register_iommu failure - %d", __func__, status);
+> +}
+> +
+> +void acpi_pci_iommu_remove(struct acpi_pci_root *root)
+> +{
+> +	struct acpi_pci_iommu *iommu, *tmp;
+> +
+> +	mutex_lock(&iommu_list_lock);
+> +	list_for_each_entry_safe(iommu, tmp, &iommu_list, list) {
+> +		if (root->device->handle != iommu->root_handle)
+> +			continue;
+> +		list_del(&iommu->list);
+> +		handle_iommu_remove(iommu->dmaru, iommu->atsru);
+> +		kfree(iommu);
+> +	}
+> +	mutex_unlock(&iommu_list_lock);
+> +}
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index d2a976a..f00a89f 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -86,4 +86,12 @@ extern bool aer_acpi_firmware_first(void);
+>  static inline bool aer_acpi_firmware_first(void) { return false; }
+>  #endif
+>  
+> +#ifdef CONFIG_DMAR_TABLE
+> +void acpi_pci_iommu_add(struct acpi_pci_root *root);
+> +void acpi_pci_iommu_remove(struct acpi_pci_root *root);
+> +#else
+> +static inline void acpi_pci_iommu_add(struct acpi_pci_root *root) { }
+> +static inline void acpi_pci_iommu_remove(struct acpi_pci_root *root) { }
+> +#endif
+> +
+>  #endif	/* _PCI_ACPI_H_ */
+> 
 
 
-On 2014/1/7 17:51, Dongsheng.Wang@freescale.com wrote:
->>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c index
->>>> 38e403d..7f2d1ab 100644
->>>> --- a/drivers/pci/probe.c
->>>> +++ b/drivers/pci/probe.c
->>>> @@ -1472,6 +1472,9 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
->>>>  	if (!dev->is_added)
->>>>  		nr++;
->>>>
->>>> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
->>>> +		bus->self = dev;
->>>
->>> In this case, bus is the pci root bus I think, so why set bus->self = root
->> port ?
->>> "bus->self" should pointer to the pci device that bridge out this bus.
->> Yes, this patch seems wrong. If dev is root port, bus should be root bus, so we
->> shouldn't set root_bus->self = pci_dev_of_root_port.
->>
-> Why the root bus->self pointer to the bridge?
-> If child bus create from root bus, the child->self will get the bridge(root port) pci device.
-> 
->> Actually PCI core has correctly setup pci_bus->self for secondary bus of PCIe
->> root port.
-> Yes, right. But the root-bus->self is NULL. I think the root bus should get root port
-> pci device for itself. If there is no bridge at board how to get the root port device?
-Hi Dongsheng,
-	PCI root bus represents PCI host bridge, which has no
-corresponding PCI device.
+-- 
+Thanks!
+Yijing
 
-> 
-> -Dongsheng
-> 
->>
->> Thanks!
->> Gerry
->>
-> 
