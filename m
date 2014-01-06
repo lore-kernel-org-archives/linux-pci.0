@@ -1,259 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 5/5][RFT] ACPI / hotplug: Dispach hotplug notifications from acpi_bus_notify()
-Date: Tue, 28 Jan 2014 23:16:44 +0100
-Message-ID: <5444171.vsYCTAB6nQ@vostro.rjw.lan>
-In-Reply-To: <1508034.JFmpIOzjVZ@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:13062 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752768AbaAFGSW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jan 2014 01:18:22 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Jiri Kosina <trivial@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 08/20] iommu/vt-d, trivial: clean up unused code
+Date: Mon,  6 Jan 2014 14:18:15 +0800
+Message-Id: <1388989107-4795-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Remove dead code from VT-d related files.
 
-Since acpi_bus_notify() is executed on all notifications for all
-devices anyway, rename acpi_hotplug_notify_cb() to acpi_system_notify()
-and call it directly from acpi_bus_notify() instead of installing
-notify handlers pointing to it for all hotplug devices.
-
-This change reduces both the size and complexity of ACPI-base device
-hotplug code.  Moreover, since acpi_system_notify() only does
-significant things for devices that either have an ACPI scan handler,
-or have a hotplug context with .eject() defined, and those devices
-had notify handlers pointing to acpi_hotplug_notify_cb() installed
-before anyway, this change shouldn't modify functionality, except for
-executing _OST with the ACPI_OST_SC_NON_SPECIFIC_FAILURE status code
-for devices that were not handled at all previously.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/acpi/bus.c                 |   42 -----------------------------------
- drivers/acpi/internal.h            |    1 
- drivers/acpi/scan.c                |   44 -------------------------------------
- drivers/pci/hotplug/acpiphp.h      |    1 
- drivers/pci/hotplug/acpiphp_glue.c |   16 +++++--------
- include/acpi/acpi_bus.h            |    2 -
- 6 files changed, 10 insertions(+), 96 deletions(-)
+ drivers/iommu/dmar.c        |    2 --
+ drivers/iommu/intel-iommu.c |   25 -------------------------
+ 2 files changed, 27 deletions(-)
 
-Index: linux-pm/drivers/acpi/bus.c
-===================================================================
---- linux-pm.orig/drivers/acpi/bus.c
-+++ linux-pm/drivers/acpi/bus.c
-@@ -345,47 +345,7 @@ static void acpi_bus_notify(acpi_handle
- 	ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Notification %#02x to handle %p\n",
- 			  type, handle));
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 5e7ba3b..f5f7b7d 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -1113,8 +1113,6 @@ static const char *irq_remap_fault_reasons[] =
+ 	"Blocked an interrupt request due to source-id verification failure",
+ };
  
--	switch (type) {
+-#define MAX_FAULT_REASON_IDX 	(ARRAY_SIZE(fault_reason_strings) - 1)
 -
--	case ACPI_NOTIFY_BUS_CHECK:
--		/* TBD */
--		break;
--
--	case ACPI_NOTIFY_DEVICE_CHECK:
--		/* TBD */
--		break;
--
--	case ACPI_NOTIFY_DEVICE_WAKE:
--		/* TBD */
--		break;
--
--	case ACPI_NOTIFY_EJECT_REQUEST:
--		/* TBD */
--		break;
--
--	case ACPI_NOTIFY_DEVICE_CHECK_LIGHT:
--		/* TBD: Exactly what does 'light' mean? */
--		break;
--
--	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
--		/* TBD */
--		break;
--
--	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
--		/* TBD */
--		break;
--
--	case ACPI_NOTIFY_POWER_FAULT:
--		/* TBD */
--		break;
--
--	default:
--		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
--				  "Received unknown/unsupported notification [%08x]\n",
--				  type));
--		break;
--	}
--
-+	acpi_system_notify(handle, type);
- 	acpi_bus_get_device(handle, &device);
- 	if (device) {
- 		driver = device->driver;
-Index: linux-pm/drivers/acpi/internal.h
-===================================================================
---- linux-pm.orig/drivers/acpi/internal.h
-+++ linux-pm/drivers/acpi/internal.h
-@@ -74,6 +74,7 @@ static inline void acpi_lpss_init(void)
- 
- bool acpi_queue_hotplug_work(struct work_struct *work);
- bool acpi_scan_is_offline(struct acpi_device *adev, bool uevent);
-+void acpi_system_notify(acpi_handle handle, u32 type);
- 
- /* --------------------------------------------------------------------------
-                      Device Node Initialization / Removal
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -485,7 +485,7 @@ static void acpi_device_hotplug(void *da
- 	unlock_device_hotplug();
- }
- 
--static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
-+void acpi_system_notify(acpi_handle handle, u32 type)
+ const char *dmar_get_fault_reason(u8 fault_reason, int *fault_type)
  {
- 	u32 ost_code = ACPI_OST_SC_SUCCESS;
- 	struct acpi_device *adev;
-@@ -551,18 +551,6 @@ static void acpi_hotplug_notify_cb(acpi_
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ 	if (fault_reason >= 0x20 && (fault_reason - 0x20 <
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 3a0cf5d..751db33 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -289,26 +289,6 @@ static inline void dma_clear_pte(struct dma_pte *pte)
+ 	pte->val = 0;
  }
  
--void acpi_install_hotplug_notify_handler(acpi_handle handle)
+-static inline void dma_set_pte_readable(struct dma_pte *pte)
 -{
--	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				    acpi_hotplug_notify_cb, NULL);
+-	pte->val |= DMA_PTE_READ;
 -}
 -
--void acpi_remove_hotplug_notify_handler(acpi_handle handle)
+-static inline void dma_set_pte_writable(struct dma_pte *pte)
 -{
--	acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				   acpi_hotplug_notify_cb);
+-	pte->val |= DMA_PTE_WRITE;
 -}
 -
- static ssize_t real_power_state_show(struct device *dev,
- 				     struct device_attribute *attr, char *buf)
- {
-@@ -1982,34 +1970,6 @@ void acpi_scan_hotplug_enabled(struct ac
- 	mutex_unlock(&acpi_scan_lock);
- }
- 
--static void acpi_scan_init_hotplug(acpi_handle handle, int type)
+-static inline void dma_set_pte_snp(struct dma_pte *pte)
 -{
--	struct acpi_device_pnp pnp = {};
--	struct acpi_hardware_id *hwid;
--	struct acpi_scan_handler *handler;
--
--	INIT_LIST_HEAD(&pnp.ids);
--	acpi_set_pnp_ids(handle, &pnp, type);
--
--	if (!pnp.type.hardware_id)
--		goto out;
--
--	/*
--	 * This relies on the fact that acpi_install_notify_handler() will not
--	 * install the same notify handler routine twice for the same handle.
--	 */
--	list_for_each_entry(hwid, &pnp.ids, list) {
--		handler = acpi_scan_match_handler(hwid->id, NULL);
--		if (handler) {
--			acpi_install_hotplug_notify_handler(handle);
--			break;
--		}
--	}
--
--out:
--	acpi_free_pnp_ids(&pnp);
+-	pte->val |= DMA_PTE_SNP;
 -}
 -
- static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl_not_used,
- 				      void *not_used, void **return_value)
+-static inline void dma_set_pte_prot(struct dma_pte *pte, unsigned long prot)
+-{
+-	pte->val = (pte->val & ~3) | (prot & 3);
+-}
+-
+ static inline u64 dma_pte_addr(struct dma_pte *pte)
  {
-@@ -2031,8 +1991,6 @@ static acpi_status acpi_bus_check_add(ac
- 		return AE_OK;
- 	}
- 
--	acpi_scan_init_hotplug(handle, type);
--
- 	acpi_add_single_object(&device, handle, type, sta);
- 	if (!device)
- 		return AE_CTRL_DEPTH;
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -292,7 +292,6 @@ static acpi_status register_slot(acpi_ha
- 	newfunc = &context->func;
- 	newfunc->function = function;
- 	newfunc->parent = bridge;
--	mutex_unlock(&acpiphp_context_lock);
- 
- 	if (acpi_has_method(handle, "_EJ0"))
- 		newfunc->flags = FUNC_HAS_EJ0;
-@@ -300,8 +299,14 @@ static acpi_status register_slot(acpi_ha
- 	if (acpi_has_method(handle, "_STA"))
- 		newfunc->flags |= FUNC_HAS_STA;
- 
-+	/*
-+	 * Dock stations' notify handler should be used for dock devices instead
-+	 * of the common one, so clear hp.event in their contexts.
-+	 */
- 	if (acpi_has_method(handle, "_DCK"))
--		newfunc->flags |= FUNC_HAS_DCK;
-+		context->hp.event = NULL;
-+
-+	mutex_unlock(&acpiphp_context_lock);
- 
- 	/* search for objects that share the same slot */
- 	list_for_each_entry(slot, &bridge->slots, node)
-@@ -369,10 +374,6 @@ static acpi_status register_slot(acpi_ha
- 			pr_debug("failed to register dock device\n");
- 	}
- 
--	/* install notify handler */
--	if (!(newfunc->flags & FUNC_HAS_DCK))
--		acpi_install_hotplug_notify_handler(handle);
--
- 	return AE_OK;
+ #ifdef CONFIG_64BIT
+@@ -319,11 +299,6 @@ static inline u64 dma_pte_addr(struct dma_pte *pte)
+ #endif
  }
  
-@@ -409,9 +410,6 @@ static void cleanup_bridge(struct acpiph
- 
- 			if (is_dock_device(handle))
- 				unregister_hotplug_dock_device(handle);
+-static inline void dma_set_pte_pfn(struct dma_pte *pte, unsigned long pfn)
+-{
+-	pte->val |= (uint64_t)pfn << VTD_PAGE_SHIFT;
+-}
 -
--			if (!(func->flags & FUNC_HAS_DCK))
--				acpi_remove_hotplug_notify_handler(handle);
- 		}
- 		slot->flags |= SLOT_IS_GOING_AWAY;
- 		if (slot->slot)
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -435,8 +435,6 @@ static inline bool acpi_device_enumerate
- typedef void (*acpi_hp_callback)(void *data, u32 src);
- 
- acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
--void acpi_install_hotplug_notify_handler(acpi_handle handle);
--void acpi_remove_hotplug_notify_handler(acpi_handle handle);
- 
- /**
-  * module_acpi_driver(acpi_driver) - Helper macro for registering an ACPI driver
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -167,7 +167,6 @@ struct acpiphp_attention_info
- 
- #define FUNC_HAS_STA		(0x00000001)
- #define FUNC_HAS_EJ0		(0x00000002)
--#define FUNC_HAS_DCK            (0x00000004)
- 
- /* function prototypes */
- 
+ static inline bool dma_pte_present(struct dma_pte *pte)
+ {
+ 	return (pte->val & 3) != 0;
+-- 
+1.7.10.4
 
