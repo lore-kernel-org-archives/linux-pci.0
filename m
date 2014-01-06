@@ -1,93 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:35701 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752515AbaAFGRy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:17:54 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Joerg Roedel <joro@8bytes.org>,
 	David Woodhouse <dwmw2@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
+	Vinod Koul <vinod.koul@intel.com>,
+	Jiri Kosina <trivial@kernel.org>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Ashok Raj <ashok.raj@intel.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Tony Luck <tony.luck@intel.com>,
 	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 02/20] iommu/vt-d: fix PCI device reference leakage on error recovery path
-Date: Mon,  6 Jan 2014 14:18:09 +0800
-Message-Id: <1388989107-4795-3-git-send-email-jiang.liu@linux.intel.com>
+Subject: [Patch Part1 V3 07/20] iommu/vt-d, trivial: check suitable flag in function detect_intel_iommu()
+Date: Mon,  6 Jan 2014 14:18:14 +0800
+Message-Id: <1388989107-4795-8-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function dmar_parse_dev_scope() should release the PCI device reference
-count gained in function dmar_parse_one_dev_scope() on error recovery,
-otherwise it will cause PCI device object leakage.
-
-This patch also introduces dmar_free_dev_scope(), which will be used
-to support DMAR device hotplug.
+Flag irq_remapping_enabled is only set by intel_enable_irq_remapping(),
+which is called after detect_intel_iommu(). So moving pr_info() from
+detect_intel_iommu() to intel_enable_irq_remapping(), which also
+slightly simplifies implementation.
 
 Reviewed-by: Yijing Wang <wangyijing@huawei.com>
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/dmar.c |   14 ++++++++++++--
- include/linux/dmar.h |    1 +
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/iommu/dmar.c                |    8 --------
+ drivers/iommu/intel_irq_remapping.c |    2 ++
+ 2 files changed, 2 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 8b452c9..c17dbf7 100644
+index c17dbf7..5e7ba3b 100644
 --- a/drivers/iommu/dmar.c
 +++ b/drivers/iommu/dmar.c
-@@ -100,7 +100,6 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
- 	if (!pdev) {
- 		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
- 			segment, scope->bus, path->device, path->function);
--		*dev = NULL;
- 		return 0;
+@@ -556,14 +556,6 @@ int __init detect_intel_iommu(void)
+ 	if (ret)
+ 		ret = check_zero_address();
+ 	{
+-		struct acpi_table_dmar *dmar;
+-
+-		dmar = (struct acpi_table_dmar *) dmar_tbl;
+-
+-		if (ret && irq_remapping_enabled && cpu_has_x2apic &&
+-		    dmar->flags & 0x1)
+-			pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
+-
+ 		if (ret && !no_iommu && !iommu_detected && !dmar_disabled) {
+ 			iommu_detected = 1;
+ 			/* Make sure ACS will be enabled */
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index deef3d4..2616e8a 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -561,6 +561,8 @@ static int __init intel_enable_irq_remapping(void)
  	}
- 	if ((scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT && \
-@@ -151,7 +150,7 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 			ret = dmar_parse_one_dev_scope(scope,
- 				&(*devices)[index], segment);
- 			if (ret) {
--				kfree(*devices);
-+				dmar_free_dev_scope(devices, cnt);
- 				return ret;
- 			}
- 			index ++;
-@@ -162,6 +161,17 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 	return 0;
- }
  
-+void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt)
-+{
-+	if (*devices && *cnt) {
-+		while (--*cnt >= 0)
-+			pci_dev_put((*devices)[*cnt]);
-+		kfree(*devices);
-+		*devices = NULL;
-+		*cnt = 0;
-+	}
-+}
+ 	if (x2apic_present) {
++		pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
 +
- /**
-  * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
-  * structure which uniquely represent one DMA remapping hardware unit
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index b029d1a..8adfce0 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -159,6 +159,7 @@ extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
- extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 				struct pci_dev ***devices, u16 segment);
-+extern void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt);
- extern int intel_iommu_init(void);
- #else /* !CONFIG_INTEL_IOMMU: */
- static inline int intel_iommu_init(void) { return -ENODEV; }
+ 		eim = !dmar_x2apic_optout();
+ 		if (!eim)
+ 			printk(KERN_WARNING
 -- 
 1.7.10.4
 
