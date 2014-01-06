@@ -1,71 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy19-pub.mail.unifiedlayer.com ([70.40.200.33]:47055 "HELO
+	oproxy19-pub.mail.unifiedlayer.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755677AbaAFQv2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 11:51:28 -0500
+Date: Mon, 6 Jan 2014 08:47:16 -0800
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
+Cc: Stephen Hemminger <stephen@networkplumber.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH 4/9] PCMCIA / cardbus: Use global PCI rescan-remove locking
-Date: Fri, 10 Jan 2014 15:25:34 +0100
-Message-ID: <2463755.ZN6tpTxA86@vostro.rjw.lan>
-In-Reply-To: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH pci-next 2/2] pci: remove dead code
+Message-ID: <20140106084716.068edc9f@jbarnes-desktop>
+In-Reply-To: <CAErSpo49y7q_E4kHtFsZ-hOkbeWaAgEAt38YdP1TJ6Dk0XwOWw@mail.gmail.com>
+References: <20131227132530.5c02d9d8@nehalam.linuxnetplumber.net>
+	<20131227132710.7190647c@nehalam.linuxnetplumber.net>
+	<CAErSpo49y7q_E4kHtFsZ-hOkbeWaAgEAt38YdP1TJ6Dk0XwOWw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, 2 Jan 2014 16:12:52 -0700
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Multiple race conditions are possible between the cardbus PCI
-device addition and removal and the generic PCI bus rescan and device
-removal that can be triggered via sysfs.
+> [+cc Jesse, Myron]
+> 
+> On Fri, Dec 27, 2013 at 2:27 PM, Stephen Hemminger
+> <stephen@networkplumber.org> wrote:
+> >
+> > My philosophy is unused code is dead code.
+> > And dead code is subject to bit rot and is likely source of bugs.
+> > Use it or lose it.
+> >
+> > Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+> 
+> This removes pci_enable_ido(), pci_enable_obff(), pci_enable_ltr(),
+> etc., which I think you added, Jesse.  In principle I like the idea of
+> removing code that isn't being used.  Of course, these might be used
+> by out-of-tree drivers, but I don't think we should go *too* far out
+> of our way to support them.
+> 
+> Anybody have any objections to removing them?  Obviously they'll still
+> be in the git history, so it would be trivial to resurrect them.
 
-To avoid those race conditions make the cardbus code use global
-PCI rescan-remove locking.
+No objections.  If driver folks haven't yet found a use for them (and/or
+hw is scarce) there's no reason to keep these.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pcmcia/cardbus.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-Index: linux-pm/drivers/pcmcia/cardbus.c
-===================================================================
---- linux-pm.orig/drivers/pcmcia/cardbus.c
-+++ linux-pm/drivers/pcmcia/cardbus.c
-@@ -70,6 +70,8 @@ int __ref cb_alloc(struct pcmcia_socket
- 	struct pci_dev *dev;
- 	unsigned int max, pass;
- 
-+	pci_lock_rescan_remove();
-+
- 	s->functions = pci_scan_slot(bus, PCI_DEVFN(0, 0));
- 	pci_fixup_cardbus(bus);
- 
-@@ -93,6 +95,7 @@ int __ref cb_alloc(struct pcmcia_socket
- 
- 	pci_bus_add_devices(bus);
- 
-+	pci_unlock_rescan_remove();
- 	return 0;
- }
- 
-@@ -115,6 +118,10 @@ void cb_free(struct pcmcia_socket *s)
- 	if (!bus)
- 		return;
- 
-+	pci_lock_rescan_remove();
-+
- 	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
- 		pci_stop_and_remove_bus_device(dev);
-+
-+	pci_unlock_rescan_remove();
- }
-
+-- 
+Jesse Barnes, Intel Open Source Technology Center
