@@ -1,124 +1,229 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db9lp0251.outbound.messaging.microsoft.com ([213.199.154.251]:48388
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751052AbaAFGJl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 01:09:41 -0500
+Message-ID: <52CA48C0.2020307@freescale.com>
+Date: Mon, 6 Jan 2014 14:10:08 +0800
+From: Lian Minghuan-b31939 <b31939@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <38648196.Uh7omNjHIu@vostro.rjw.lan>
-References: <1390448559-33896-1-git-send-email-wangyijing@huawei.com>
- <CAErSpo7YBGnPF9gz4rwwEdk8uF2h2aNAZWhSAd-X=tAOWOhRow@mail.gmail.com> <38648196.Uh7omNjHIu@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 24 Jan 2014 07:54:29 -0700
-Message-ID: <CAErSpo5VGy9nCnrOAZtU9OjMsXxz5q_x2rVn596mqg1TWTT64g@mail.gmail.com>
-Subject: Re: [PATCH v5] ACPI: Fix acpi_evaluate_object() return value check
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Airlie <airlied@linux.ie>,
-	intel-gfx@lists.freedesktop.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: Scott Wood <scottwood@freescale.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+CC: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [02/12,v3] pci: fsl: add structure fsl_pci
+References: <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com> <20140103221923.GB22546@home.buserror.net>
+In-Reply-To: <20140103221923.GB22546@home.buserror.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 5:33 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Thursday, January 23, 2014 11:21:01 AM Bjorn Helgaas wrote:
->> On Wed, Jan 22, 2014 at 8:42 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> > Since acpi_evaluate_object() returns acpi_status and not plain int,
->> > ACPI_FAILURE() should be used for checking its return value. Also
->> > add some detailed debug info when acpi_evaluate_object() failed.
->> >
->> > Reviewed-by: Jani Nikula <jani.nikula@intel.com>
->> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> > ---
->> > v4->v5: Add some detailed debug info for acpi_evaluate_object()
->> >         failure suggested by Bjorn.
->> > v3->v4: Fix spell error, add Jani Nikula reviewed-by.
->> > v2->v3: Fix compile error pointed out by Hanjun.
->> > v1->v2: Add CC to related subsystem MAINTAINERS
->> > ---
->> >  drivers/gpu/drm/i915/intel_acpi.c              |   33 ++++++++++++++++-------
->> >  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |   13 ++++++---
->> >  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   25 +++++++++++-------
->> >  drivers/pci/pci-label.c                        |   10 +++++--
->> >  4 files changed, 54 insertions(+), 27 deletions(-)
->> >
->> > diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
->> > index dfff090..e7b526b 100644
->> > --- a/drivers/gpu/drm/i915/intel_acpi.c
->> > +++ b/drivers/gpu/drm/i915/intel_acpi.c
->> > @@ -31,11 +31,13 @@ static const u8 intel_dsm_guid[] = {
->> >  static int intel_dsm(acpi_handle handle, int func)
->> >  {
->> >         struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
->> > +       struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
->> >         struct acpi_object_list input;
->> >         union acpi_object params[4];
->> >         union acpi_object *obj;
->> >         u32 result;
->> > -       int ret = 0;
->> > +       acpi_status status;
->> > +       int ret;
->> >
->> >         input.count = 4;
->> >         input.pointer = params;
->> > @@ -50,10 +52,14 @@ static int intel_dsm(acpi_handle handle, int func)
->> >         params[3].package.count = 0;
->> >         params[3].package.elements = NULL;
->> >
->> > -       ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
->> > -       if (ret) {
->> > -               DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
->> > -               return ret;
->> > +       status = acpi_evaluate_object(handle, "_DSM", &input, &output);
->> > +       if (ACPI_FAILURE(status)) {
->> > +               acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
->> > +               DRM_DEBUG_DRIVER(
->> > +                       "failed to evaluate _DSM for %s, exit status %u\n",
->> > +                       (char *)string.pointer, (unsigned int)status);
->> > +               kfree(string.pointer);
->> > +               return -EINVAL;
+On 01/04/2014 06:19 AM, Scott Wood wrote:
+> On Wed, Oct 23, 2013 at 06:41:24PM +0800, Minghuan Lian wrote:
+>> PowerPC uses structure pci_controller to describe PCI controller,
+>> but ARM uses structure pci_sys_data. In order to support PowerPC
+>> and ARM simultaneously, the patch adds a structure fsl_pci that
+>> contains most of the members of the pci_controller and pci_sys_data.
+>> Meanwhile, it defines a interface fsl_arch_sys_to_pci() which should
+>> be implemented in architecture-specific PCI controller driver to
+>> convert pci_controller or pci_sys_data to fsl_pci.
 >>
->> I said "too bad there isn't an *easy* way" to include more
->> information.  IMHO this is too ugly and error-prone to use
->> consistently.  And if you are going to add more information, why did
->> you only do it for some of the calls and not others?
+>> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 >>
->> I considered adding a %p extension to print the pathname; I don't know
->> if that's worthwhile or not.  I think it would be ideal if we had a
->> struct device and could use dev_info(), and then a way to connect the
->> struct device with an ACPI path, like maybe a dmesg note when we
->> create the struct device corresponding to an ACPI Device node.
+>> ---
+>> change log:
+>> v1-v3:
+>> Derived from http://patchwork.ozlabs.org/patch/278965/
+>>
+>> Based on upstream master.
+>> Based on the discussion of RFC version here
+>> http://patchwork.ozlabs.org/patch/274487/
+>>
+>>   include/linux/fsl/pci-common.h | 41 +++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 41 insertions(+)
+>>
+>> diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
+>> index 5e4f683..e56a040 100644
+>> --- a/include/linux/fsl/pci-common.h
+>> +++ b/include/linux/fsl/pci-common.h
+>> @@ -102,5 +102,46 @@ struct ccsr_pci {
+>>   
+>>   };
+>>   
+>> +/*
+>> + * Structure of a PCI controller (host bridge)
+>> + */
+>> +struct fsl_pci {
+>> +	struct list_head node;
+>> +	bool is_pcie;
+>> +	struct device_node *dn;
+>> +	struct device *dev;
+>> +
+>> +	int first_busno;
+>> +	int last_busno;
+>> +	int self_busno;
+>> +	struct resource busn;
+>> +
+>> +	struct pci_ops *ops;
+>> +	struct ccsr_pci __iomem *regs;
+>> +
+>> +	u32 indirect_type;
+>> +
+>> +	struct resource io_resource;
+>> +	resource_size_t io_base_phys;
+>> +	resource_size_t pci_io_size;
+>> +
+>> +	struct resource mem_resources[3];
+>> +	resource_size_t mem_offset[3];
+>> +
+>> +	int global_number;	/* PCI domain number */
+>> +
+>> +	resource_size_t dma_window_base_cur;
+>> +	resource_size_t dma_window_size;
+>> +
+>> +	void *sys;
+>> +};
+> I don't like the extent to which this duplicates (not moves) PPC's struct
+> pci_controller.  Also this leaves some fields like "indirect_type"
+> unexplained (PPC_INDIRECT_TYPE_xxx is only in the PPC header).
 >
-> Well, we can generally print something like that from pci_acpi_setup().
->
-> What about the below?  Wouldn't it generate too much output on some systems?
+> Does the arch-independent part of the driver really need all this?  Given
+> how closely this tracks the PPC code, how would this work on ARM?
+[Minghuan] I added the duplicate fields because PPC's struct 
+pci_controller need them.
+The common PCI driver gets the related information and pass to PowerPC 
+driver.
+And I do hope PowerPC driver to parse dts or access controller to get 
+the information again.
+please see the following code for PowerPC:
+int fsl_arch_pci_sys_register(struct fsl_pci *pci)
++{
++    struct pci_controller *hose;
 
-Yeah, that probably would generate an awful lot of output.  I was just
-hoping to avoid treating ACPI pathnames as first-class objects.  What
-do you think about a %p extension?  I played with that once, but I
-seem to have lost the patch.
++    hose = pcibios_alloc_controller(pci->dn);
++
++    hose->private_data = pci;
++    hose->parent = pci->dev;
++    hose->first_busno = pci->first_busno;
++    hose->last_busno = pci->last_busno;
++    hose->ops = pci->ops;
++
++    hose->io_base_virt = ioremap(pci->io_base_phys + 
+pci->io_resource.start,
++                     pci->pci_io_size);
++    hose->pci_io_size = pci->io_resource.start + pci->pci_io_size;
++    hose->io_base_phys = pci->io_base_phys;
++    hose->io_resource = pci->io_resource;
++
++    memcpy(hose->mem_offset, pci->mem_offset, sizeof(hose->mem_offset));
++    memcpy(hose->mem_resources, pci->mem_resources,
++        sizeof(hose->mem_resources));
++    hose->dma_window_base_cur = pci->dma_window_base_cur;
++    hose->dma_window_size = pci->dma_window_size;
++    pci->sys = hose;
++....
++    return 0;
++}
 
-> ---
->  drivers/pci/pci-acpi.c |    2 ++
->  1 file changed, 2 insertions(+)
+
+
+The following is for ARM, I will submit them after verification:
+
++
++static inline struct fsl_pcie *sys_to_pcie(struct pci_sys_data *sys)
++{
++    return sys->private_data;
++}
++
++static int fsl_pcie_setup(int nr, struct pci_sys_data *sys)
++{
++    struct fsl_pcie *pcie;
++
++    pcie = sys_to_pcie(sys);
++
++    if (!pcie)
++        return 0;
++
++    pcie->sys = sys;
++
++    sys->io_offset = pcie->io_base_phys;
++    pci_ioremap_io(sys->io_offset, pcie->io_resource.start);
++    pci_add_resource_offset(&sys->resources, &pcie->io_resource,
++                sys->io_offset);
++
++    sys->mem_offset = pcie->mem_offset;
++    pci_add_resource_offset(&sys->resources, &pcie->mem_resource,
++                sys->mem_offset);
++
++    return 1;
++}
++
++static struct pci_bus *
++fsl_pcie_scan_bus(int nr, struct pci_sys_data *sys)
++{
++    struct pci_bus *bus;
++    struct fsl_pcie *pcie = sys_to_pcie(sys);
++
++    bus = pci_create_root_bus(pcie->dev, sys->busnr,
++                  pcie->ops, sys, &sys->resources);
++    if (!bus)
++        return NULL;
++
++    pci_scan_child_bus(bus);
++
++    return bus;
++}
++
++static int fsl_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++{
++    struct of_irq oirq;
++    int ret;
++
++    ret = of_irq_map_pci(dev, &oirq);
++    if (ret)
++        return ret;
++
++    return irq_create_of_mapping(oirq.controller, oirq.specifier,
++                     oirq.size);
++}
++
++static struct hw_pci fsl_hw_pcie = {
++    .ops        = &fsl_indirect_pci_ops;
++    .setup        = fsl_pcie_setup,
++    .scan        = fsl_pcie_scan_bus,
++    .map_irq    = fsl_pcie_map_irq,
++};
+
++static struct pci_bus *
++fake_pci_bus(struct fsl_pcie *pcie, int busnr)
++{
++    static struct pci_bus bus;
++    static struct pci_sys_data sys;
++
++    bus.number = busnr;
++    bus.sysdata = &sys;
++    sys.private_data = pcie;
++    bus.ops = pcie->ops;
++    return &bus;
++}
++
++static int fsl_pcie_register(struct fsl_pcie *pcie)
++{
++    pcie->controller = fsl_hw_pcie.nr_controllers;
++    fsl_hw_pcie.nr_controllers = 1;
++    fsl_hw_pcie.private_data = (void **)&pcie;
++
++    pci_common_init(&fsl_hw_pcie);
++    pci_assign_unassigned_resources();
++#ifdef CONFIG_PCI_DOMAINS
++    fsl_hw_pcie.domain++;
++#endif
++}
+
+
+
 >
-> Index: linux-pm/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -330,6 +330,8 @@ static void pci_acpi_setup(struct device
->         if (!adev)
->                 return;
->
-> +       acpi_handle_info(adev->handle, "bound to %s\n", dev_name(dev));
-> +
->         pci_acpi_add_pm_notifier(adev, pci_dev);
->         if (!adev->wakeup.flags.valid)
->                 return;
->
+> -Scott
+
+
