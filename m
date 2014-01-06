@@ -1,59 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21782 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753687AbaACAHO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:07:14 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Donald Dutile <ddutile@redhat.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	stable@vger.kernel.org
-Subject: [PATCH v5 10/33] iommu, irq: Allocate irq_desc for dmar_msi with local node
-Date: Thu,  2 Jan 2014 16:05:42 -0800
-Message-Id: <1388707565-16535-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: [Patch Part1 V3 03/20] iommu/vt-d: fix a race window in allocating domain ID for virtual machines
+Date: Mon,  6 Jan 2014 14:18:10 +0800
+Message-Id: <1388989107-4795-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-iommu irq's irq_desc should be on local node ram.
+Function intel_iommu_domain_init() may be concurrently called by upper
+layer without serialization, so use atomic_t to protect domain id
+allocation.
 
-Fix the return value checking problem.
-  create_irq() will return -1 when fail to allocate.
-  create_irq_nr() will return 0 when fail to allocate.
-here only check !irq, so need to change it to use create_irq_nr instead.
-
--v2: According to Sebastian, add cc to stable.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Donald Dutile <ddutile@redhat.com>
-Acked-by: Donald Dutile <ddutile@redhat.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: stable@vger.kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/iommu/dmar.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/iommu/intel-iommu.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 8b452c9..f4eaa50 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1277,7 +1277,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
- 	if (iommu->irq)
- 		return 0;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 43b9bfe..b8e3b48 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3877,7 +3877,7 @@ static void vm_domain_remove_all_dev_info(struct dmar_domain *domain)
+ }
  
--	irq = create_irq();
-+	irq = create_irq_nr(0, iommu->node);
- 	if (!irq) {
- 		pr_err("IOMMU: no free vectors\n");
- 		return -EINVAL;
+ /* domain id for virtual machine, it won't be set in context */
+-static unsigned long vm_domid;
++static atomic_t vm_domid = ATOMIC_INIT(0);
+ 
+ static struct dmar_domain *iommu_alloc_vm_domain(void)
+ {
+@@ -3887,7 +3887,7 @@ static struct dmar_domain *iommu_alloc_vm_domain(void)
+ 	if (!domain)
+ 		return NULL;
+ 
+-	domain->id = vm_domid++;
++	domain->id = atomic_inc_return(&vm_domid);
+ 	domain->nid = -1;
+ 	memset(domain->iommu_bmp, 0, sizeof(domain->iommu_bmp));
+ 	domain->flags = DOMAIN_FLAG_VIRTUAL_MACHINE;
 -- 
-1.8.4
+1.7.10.4
 
