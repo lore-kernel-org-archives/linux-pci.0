@@ -1,50 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:50707 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbaAGPpG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 10:45:06 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Tanmay Inamdar <tinamdar@apm.com>, devicetree@vger.kernel.org,
-	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	patches <patches@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
-Date: Tue, 07 Jan 2014 16:44:30 +0100
-Message-ID: <4687115.Uo6IImEscY@wuerfel>
-In-Reply-To: <201401071635.02006.arnd@arndb.de>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com> <CACoXjc=h8W=9jx4d2Y+F9hmgQsuMTgG4080jZGbtddv10OgtMA@mail.gmail.com> <201401071635.02006.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga14.intel.com ([143.182.124.37]:13062 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752515AbaAFGSV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Jan 2014 01:18:21 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part1 V3 04/20] iommu/vt-d: fix resource leakage on error recovery path in iommu_init_domains()
+Date: Mon,  6 Jan 2014 14:18:11 +0800
+Message-Id: <1388989107-4795-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 07 January 2014 16:35:01 Arnd Bergmann wrote:
-> > >> +SoC specific DT Entry:
-> > >> +     pcie0: pcie@1f2b0000 {
-> > >> +             status = "disabled";
-> > >> +             device_type = "pci";
-> > >> +             compatible = "xgene,pcie";
-> > >> +             #interrupt-cells = <1>;
-> > >> +             #size-cells = <2>;
-> > >> +             #address-cells = >;
-> > >> +             reg = < 0x00 0x1f2b0000 0x0 0x00010000>;
-> > >> +             ranges = <0x02000000 0x0 0x00000000 0xe0 0x00000000 0x0 0x10000000 /* mem*/
-> > >
-> > >
-> > > Also, do you support no prefetchable memory?
-> > 
-> > HW has either IO or Memory regions for mapping device's memory space.
-> > There is no separate prefetchable memory space.
-> 
-> Are you sure the memory is non-prefetchable then? I would have expected
-> 0x42000000 rather than 0x02000000, but I could be misremembering it.
+Release allocated resources on error recovery path in function
+iommu_init_domains().
 
-Nevermind. I just checked and you are right: if you only have
-one memory range, it has to be non-prefetchable.
+Also improve printk messages in iommu_init_domains().
 
-	Arnd
+Acked-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index b8e3b48..e32d815 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1255,8 +1255,8 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ 	unsigned long nlongs;
+ 
+ 	ndomains = cap_ndoms(iommu->cap);
+-	pr_debug("IOMMU %d: Number of Domains supported <%ld>\n", iommu->seq_id,
+-			ndomains);
++	pr_debug("IOMMU%d: Number of Domains supported <%ld>\n",
++		 iommu->seq_id, ndomains);
+ 	nlongs = BITS_TO_LONGS(ndomains);
+ 
+ 	spin_lock_init(&iommu->lock);
+@@ -1266,13 +1266,17 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ 	 */
+ 	iommu->domain_ids = kcalloc(nlongs, sizeof(unsigned long), GFP_KERNEL);
+ 	if (!iommu->domain_ids) {
+-		printk(KERN_ERR "Allocating domain id array failed\n");
++		pr_err("IOMMU%d: allocating domain id array failed\n",
++		       iommu->seq_id);
+ 		return -ENOMEM;
+ 	}
+ 	iommu->domains = kcalloc(ndomains, sizeof(struct dmar_domain *),
+ 			GFP_KERNEL);
+ 	if (!iommu->domains) {
+-		printk(KERN_ERR "Allocating domain array failed\n");
++		pr_err("IOMMU%d: allocating domain array failed\n",
++		       iommu->seq_id);
++		kfree(iommu->domain_ids);
++		iommu->domain_ids = NULL;
+ 		return -ENOMEM;
+ 	}
+ 
+-- 
+1.7.10.4
+
