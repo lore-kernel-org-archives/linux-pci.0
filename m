@@ -1,82 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Casey Leedom <leedom@chelsio.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 09/34] cxgb4vf: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:28 +0100
-Message-Id: <bcf76e68c08022d968ef52241e94bbf1c3f65fc3.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db9lp0253.outbound.messaging.microsoft.com ([213.199.154.253]:3430
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752171AbaAFD5a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jan 2014 22:57:30 -0500
+Message-ID: <52CA29C1.9010405@freescale.com>
+Date: Mon, 6 Jan 2014 11:57:53 +0800
+From: Lian Minghuan-b31939 <b31939@freescale.com>
+MIME-Version: 1.0
+To: Scott Wood <scottwood@freescale.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+CC: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
+	Zang Roy-R61911 <r61911@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [11/12,v3] pci: fsl: update PCI EDAC driver
+References: <1382524894-15164-11-git-send-email-Minghuan.Lian@freescale.com> <20140103221603.GA22546@home.buserror.net>
+In-Reply-To: <20140103221603.GA22546@home.buserror.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Hi Scott,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |   34 +++++++++----------
- 1 files changed, 16 insertions(+), 18 deletions(-)
+I think we should reverse this commit
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-index 509fed9..1d0fe9b 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-@@ -2444,7 +2444,7 @@ static void reduce_ethqs(struct adapter *adapter, int n)
-  */
- static int enable_msix(struct adapter *adapter)
- {
--	int i, err, want, need;
-+	int i, want, need, nqsets;
- 	struct msix_entry entries[MSIX_ENTRIES];
- 	struct sge *s = &adapter->sge;
- 
-@@ -2460,25 +2460,23 @@ static int enable_msix(struct adapter *adapter)
- 	 */
- 	want = s->max_ethqsets + MSIX_EXTRAS;
- 	need = adapter->params.nports + MSIX_EXTRAS;
--	while ((err = pci_enable_msix(adapter->pdev, entries, want)) >= need)
--		want = err;
- 
--	if (err == 0) {
--		int nqsets = want - MSIX_EXTRAS;
--		if (nqsets < s->max_ethqsets) {
--			dev_warn(adapter->pdev_dev, "only enough MSI-X vectors"
--				 " for %d Queue Sets\n", nqsets);
--			s->max_ethqsets = nqsets;
--			if (nqsets < s->ethqsets)
--				reduce_ethqs(adapter, nqsets);
--		}
--		for (i = 0; i < want; ++i)
--			adapter->msix_info[i].vec = entries[i].vector;
--	} else if (err > 0) {
--		dev_info(adapter->pdev_dev, "only %d MSI-X vectors left,"
--			 " not using MSI-X\n", err);
-+	want = pci_enable_msix_range(adapter->pdev, entries, need, want);
-+	if (want < 0)
-+		return want;
-+
-+	nqsets = want - MSIX_EXTRAS;
-+	if (nqsets < s->max_ethqsets) {
-+		dev_warn(adapter->pdev_dev, "only enough MSI-X vectors"
-+			 " for %d Queue Sets\n", nqsets);
-+		s->max_ethqsets = nqsets;
-+		if (nqsets < s->ethqsets)
-+			reduce_ethqs(adapter, nqsets);
- 	}
--	return err;
-+	for (i = 0; i < want; ++i)
-+		adapter->msix_info[i].vec = entries[i].vector;
-+
-+	return 0;
- }
- 
- static const struct net_device_ops cxgb4vf_netdev_ops	= {
--- 
-1.7.7.6
+0f1741c74aa6794b1c7fbdd19f26a4f2377a11c6.
+
+PCI controller driver is a platform driver supports probe and remove,
+when removing the driver we should call mpc85xx_pci_err_remove() to free EDAC PCI resource.
+
+Thanks,
+Minghuan
+
+On 01/04/2014 06:16 AM, Scott Wood wrote:
+> On Wed, Oct 23, 2013 at 06:41:33PM +0800, Minghuan Lian wrote:
+>> diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+>> index 40d2e1d..4a03e1a 100644
+>> --- a/arch/powerpc/sysdev/fsl_pci.c
+>> +++ b/arch/powerpc/sysdev/fsl_pci.c
+>> @@ -236,6 +236,7 @@ void fsl_arch_pci_sys_remove(struct fsl_pci *pci)
+>>   	if (!hose)
+>>   		return;
+>>   
+>> +	mpc85xx_pci_err_remove(to_platform_device(pci->dev));
+>>   	pcibios_free_controller(hose);
+> This causes a linker error if the EDAC driver is enabled, due to commit
+> 0f1741c74aa6794b1c7fbdd19f26a4f2377a11c6 ("edac/85xx: Remove
+> mpc85xx_pci_err_remove").
+>
+> -Scott
+
 
