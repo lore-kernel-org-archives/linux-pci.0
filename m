@@ -1,40 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:33939 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932414AbaAaNmc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 08:42:32 -0500
-Date: Fri, 31 Jan 2014 15:49:25 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release
- resources in pci_release_dev()) broke TBT hotplug
-Message-ID: <20140131134925.GI18029@intel.com>
-References: <20140130131236.GW18029@intel.com>
- <1418039.AWHqDGWMFa@vostro.rjw.lan>
- <20140131123606.GF18029@intel.com>
- <1426729.BFFFkbZrqa@vostro.rjw.lan>
+Received: from v094114.home.net.pl ([79.96.170.134]:49198 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751840AbaAFU17 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 15:27:59 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to avoid sysfs warnings
+Date: Mon, 06 Jan 2014 21:41:46 +0100
+Message-ID: <4679785.iPCX7mECEL@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQV1tui+nHMFF419dpTOKt_x4US6R=3uPhDvUDJ0zoMrEg@mail.gmail.com>
+References: <37552283.kG1L4S8Daa@vostro.rjw.lan> <2459491.HIKjAnF27k@vostro.rjw.lan> <CAE9FiQV1tui+nHMFF419dpTOKt_x4US6R=3uPhDvUDJ0zoMrEg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426729.BFFFkbZrqa@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 31, 2014 at 02:49:21PM +0100, Rafael J. Wysocki wrote:
-> > Jan 31 20:05:57 buildroot kern.debug kernel: [  439.672933] pci_bus 0000:03: busn_res: [bus 03-3a] is released
+On Monday, January 06, 2014 11:28:43 AM Yinghai Lu wrote:
+> On Thu, Jan 2, 2014 at 4:45 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Thursday, January 02, 2014 02:47:04 PM Yinghai Lu wrote:
+> >>
+> >> No. It should be before removing all root bus devices.
+> >> as they need to access the pci devices during stop ioapic and dmar.
+> >>
+> >> Also ioapic itself could one one pci device.
+> >
+> > Well, if we stop drivers first, then stop ioapic/dmar and *then* remove
+> > devices, it is possible to rebind a driver to a device after ioapic/dmar has
+> > been stopped, which I guess will not lead to anything nice?
 > 
-> OK, so my guess wasn't right.  We seem to call pci_release_dev for all of the
-> devices that go away after unplug.
+> Not sure how that could happen.
 > 
-> Do I think correctly that the below doesn't happen with the Yinghai's commit
-> reverted?
+> If it would really happen, we could set dev->match_driver to 0 in pci_stop_dev.
 
-Yes, with that commit reverted everything works fine.
+Simply, run "modprobe -r driver && modprobe driver" in a loop and
+remove the PCI host bridge the given device is on in parallel to that.  Chances
+are, you'll see some nice breakage.
 
-> Can you please check how the PCI sysfs directory structure changes after unplug
-> with the Yinghai's commit present and reverted and what the difference is?
+Also what happens if somebody uses the "remove" sysfs attribute on a device
+needed by ioapic/dmar?
 
-OK, I'll check that and report back.
+Rafael
+
