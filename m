@@ -1,104 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og118.obsmtp.com ([64.18.0.160]:43632 "HELO
-	exprod5og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754547AbaA0Wy1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jan 2014 17:54:27 -0500
-Received: by mail-ve0-f175.google.com with SMTP id c14so3868362vea.20
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jan 2014 14:54:25 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v7 07/15] agp/intel: Rename gtt_bus_addr to gtt_phys_addr
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:56:02 -0700
+Message-ID: <20140107005602.10786.2964.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <5086198.ZOWZ5xuyna@wuerfel>
-References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
-	<CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
-	<CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com>
-	<5086198.ZOWZ5xuyna@wuerfel>
-Date: Mon, 27 Jan 2014 14:54:25 -0800
-Message-ID: <CACoXjcnTnhWS-5yOgiHA5yVaBjdH1DVzmSsknEBJLB+CFR0EyA@mail.gmail.com>
-Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, devicetree@vger.kernel.org,
-	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	patches <patches@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 25, 2014 at 12:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Friday 24 January 2014 13:28:22 Tanmay Inamdar wrote:
->> On Thu, Jan 16, 2014 at 5:10 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
->> > On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> >> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
->
->> >>
->> >>> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port, u32 *lanes)
->> >>> +{
->> >>> +     void *csr_base = port->csr_base;
->> >>> +     u32 val32;
->> >>> +     u64 start_time, time;
->> >>> +
->> >>> +     /*
->> >>> +      * A component enters the LTSSM Detect state within
->> >>> +      * 20ms of the end of fundamental core reset.
->> >>> +      */
->> >>> +     msleep(XGENE_LTSSM_DETECT_WAIT);
->> >>> +     port->link_up = 0;
->> >>> +     start_time = jiffies;
->> >>> +     do {
->> >>> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
->> >>> +             if (val32 & LINK_UP_MASK) {
->> >>> +                     port->link_up = 1;
->> >>> +                     port->link_speed = PIPE_PHY_RATE_RD(val32);
->> >>> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
->> >>> +                     *lanes = val32 >> 26;
->> >>> +             }
->> >>> +             time = jiffies_to_msecs(jiffies - start_time);
->> >>> +     } while ((!port->link_up) || (time <= XGENE_LTSSM_L0_WAIT));
->> >>> +}
->> >>
->> >> Maybe another msleep() in the loop? It seems weird to first do an
->> >> unconditional sleep but then busy-wait for the result.
->> >
->> > ok.
->>
->> This loop can execute for maximum 4 msec. So putting msleep(1) won't
->> get us much.
->
-> 4 msec is still quite a long time for a busy loop that can be spent doing
-> useful work in another thread.
->
+The only use of gtt_bus_addr is as an argument to ioremap(), so it is a CPU
+physical address, not a bus address.  Rename it to gtt_phys_addr to reflect
+this.
 
-Right. If 'msleep(1)' is used, then 'checkpatch' throws a warning
-saying that it can actually sleep for 20ms in some cases. I will check
-if 'usleep_range' is useful here.
+No functional change.
 
->> >>
->> >> Another general note: Your "compatible" strings are rather unspecific.
->> >> Do you have a version number for this IP block? I suppose that it's related
->> >> to one that has been used in other chips before, or will be used in future
->> >> chips, if it's not actually licensed from some other company.
->> >
->> > I will have to check this.
->> >
->>
->> We have decided to stick with current compatible string for now.
->
-> Can you elaborate on your reasoning? Does this mean X-Gene is a one-off
-> product and you won't be doing any new chips based on the same hardware
-> components?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/char/agp/intel-gtt.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-The current convention is to key upon the family name - X-Gene. Future
-chips will also be a part of X-Gene family. Right now it is unclear if
-there are any obvious feature additions to be done in Linux PCIe
-driver. Until then same driver is expected to work as is in future
-chips.
+diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+index b8e2014cb9cb..54202ffcf467 100644
+--- a/drivers/char/agp/intel-gtt.c
++++ b/drivers/char/agp/intel-gtt.c
+@@ -64,7 +64,7 @@ static struct _intel_private {
+ 	struct pci_dev *pcidev;	/* device one */
+ 	struct pci_dev *bridge_dev;
+ 	u8 __iomem *registers;
+-	phys_addr_t gtt_bus_addr;
++	phys_addr_t gtt_phys_addr;
+ 	u32 PGETBL_save;
+ 	u32 __iomem *gtt;		/* I915G */
+ 	bool clear_fake_agp; /* on first access via agp, fill with scratch */
+@@ -191,7 +191,7 @@ static int i810_setup(void)
+ 	writel(virt_to_phys(gtt_table) | I810_PGETBL_ENABLED,
+ 	       intel_private.registers+I810_PGETBL_CTL);
+ 
+-	intel_private.gtt_bus_addr = reg_addr + I810_PTE_BASE;
++	intel_private.gtt_phys_addr = reg_addr + I810_PTE_BASE;
+ 
+ 	if ((readl(intel_private.registers+I810_DRAM_CTL)
+ 		& I810_DRAM_ROW_0) == I810_DRAM_ROW_0_SDRAM) {
+@@ -636,10 +636,10 @@ static int intel_gtt_init(void)
+ 
+ 	intel_private.gtt = NULL;
+ 	if (intel_gtt_can_wc())
+-		intel_private.gtt = ioremap_wc(intel_private.gtt_bus_addr,
++		intel_private.gtt = ioremap_wc(intel_private.gtt_phys_addr,
+ 					       gtt_map_size);
+ 	if (intel_private.gtt == NULL)
+-		intel_private.gtt = ioremap(intel_private.gtt_bus_addr,
++		intel_private.gtt = ioremap(intel_private.gtt_phys_addr,
+ 					    gtt_map_size);
+ 	if (intel_private.gtt == NULL) {
+ 		intel_private.driver->cleanup();
+@@ -796,7 +796,7 @@ static int i830_setup(void)
+ 	if (!intel_private.registers)
+ 		return -ENOMEM;
+ 
+-	intel_private.gtt_bus_addr = reg_addr + I810_PTE_BASE;
++	intel_private.gtt_phys_addr = reg_addr + I810_PTE_BASE;
+ 
+ 	return 0;
+ }
+@@ -1123,13 +1123,13 @@ static int i9xx_setup(void)
+ 	case 3:
+ 		pci_read_config_dword(intel_private.pcidev,
+ 				      I915_PTEADDR, &gtt_addr);
+-		intel_private.gtt_bus_addr = gtt_addr;
++		intel_private.gtt_phys_addr = gtt_addr;
+ 		break;
+ 	case 5:
+-		intel_private.gtt_bus_addr = reg_addr + MB(2);
++		intel_private.gtt_phys_addr = reg_addr + MB(2);
+ 		break;
+ 	default:
+-		intel_private.gtt_bus_addr = reg_addr + KB(512);
++		intel_private.gtt_phys_addr = reg_addr + KB(512);
+ 		break;
+ 	}
+ 
 
->
->         Arnd
