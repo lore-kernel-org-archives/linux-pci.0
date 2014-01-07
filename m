@@ -1,127 +1,436 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50221 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751836AbaAIXj4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jan 2014 18:39:56 -0500
-Message-ID: <1389310776.3209.277.camel@bling.home>
-Subject: Re: [PATCH] pci/iov: VFs are never multifunction
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Nishank Trivedi <nistrive@cisco.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	sathya.perla@emulex.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ajit.khaparde@emulex.com, Don Dutile <ddutile@redhat.com>,
-	subbu.seetharaman@emulex.com, Myron Stowe <myron.stowe@redhat.com>
-Date: Thu, 09 Jan 2014 16:39:36 -0700
-In-Reply-To: <CAErSpo7xEKzWF8oetskQAcLcwJUw4VPByXgbMUkurVcK2caRgA@mail.gmail.com>
-References: <20140109153513.21446.31778.stgit@bling.home>
-	 <CAErSpo4Asnx4JiZvppZLUzxmVymz0t-fHXRFMr81-Qz31XyR+g@mail.gmail.com>
-	 <1389291911.3209.234.camel@bling.home>
-	 <CAErSpo6vA=f1RSnpkWumYxs3tQ8uM8NKuWqck4GRb6gL5HvqiA@mail.gmail.com>
-	 <1389304708.3209.257.camel@bling.home>
-	 <CAErSpo7xEKzWF8oetskQAcLcwJUw4VPByXgbMUkurVcK2caRgA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:40661 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757541AbaAGAzo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:55:44 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so18619250ieb.8
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:55:42 -0800 (PST)
+Subject: [PATCH v7 04/15] agp: Support 64-bit APBASE
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:55:40 -0700
+Message-ID: <20140107005540.10786.65852.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-01-09 at 16:20 -0700, Bjorn Helgaas wrote:
-> [+to Nishank]
-> 
-> On Thu, Jan 9, 2014 at 2:58 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Thu, 2014-01-09 at 14:39 -0700, Bjorn Helgaas wrote:
-> >> On Thu, Jan 9, 2014 at 11:25 AM, Alex Williamson
-> >> <alex.williamson@redhat.com> wrote:
-> >> > On Thu, 2014-01-09 at 11:08 -0700, Bjorn Helgaas wrote:
-> >> >> On Thu, Jan 9, 2014 at 8:36 AM, Alex Williamson
-> >> >> <alex.williamson@redhat.com> wrote:
-> >> >> > Per the SR-IOV spec rev 1.1:
-> >> >> >
-> >> >> > 3.4.1.9 Header Type (Offset 0Eh)
-> >> >> >
-> >> >> > "... For VFs, this register must be RO Zero."
-> >> >> >
-> >> >> > Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
-> >> >> > NIC.  When they do it makes us handle ACS testing and therefore IOMMU
-> >> >> > groups as if they were actual multifunction devices and require ACS
-> >> >> > capabilities to make sure there's no peer-to-peer between functions.
-> >> >> > VFs are never traditional multifunction devices, so simply clear this
-> >> >> > bit before we get any further into setup.
-> >> >>
-> >> >> This seems reasonable.  Do you have "lspci -vvxxxx" output for this
-> >> >> device?  I'd like to save it for future reference.
-> >> >
-> >> > Sure, here's a VF:
-> >> >
-> >> > 09:04.0 Ethernet controller: Emulex Corporation OneConnect 10Gb NIC (be3) (rev 01)
-> >> >         Subsystem: Emulex Corporation Device e722
-> >>
-> >> Thanks!  I put this in
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=68431, and I'll add a
-> >> reference to the changelog.
-> >>
-> >> But I wonder if we can make this slightly more generic by doing
-> >> something like this in pci_setup_device():
-> >>
-> >>   dev->multifunction = (PCI_FUNC(dev->devfn) == 0) && (hdr_type & 0x80);
-> >>
-> >> That's basically what lspci does in pci_generic_scan_bus(), and
-> >> section 3.2.2.3.4 of the PCI 3.0 spec sort of implies that we should
-> >> only look at the bit 7 of the header type for function 0:
-> >>
-> >>   If a single function device is detected (i.e., bit 7 in the Header
-> >>   Type register of function 0 is 0), no more functions for that
-> >>   Device Number will be checked. If a multi-function device is
-> >>   detected (i.e., bit 7 in the Header Type register of function 0
-> >>   is 1), then all remaining Function Numbers will be checked.
-> >
-> > We could do that and rely only on pci_scan_slot() to set multifunction=1
-> > for the other functions, but that doesn't completely solve this problem.
-> > VFs can occupy function zero and the example device would still set
-> > multifunction with that test.  Thanks,
-> 
-> Duh, it would help if I actually paid attention to your lspci output...
-> 
-> The reason I'm thinking about this is that virtfn_add() is only used
-> when we enable SR-IOV.  If we clear dev->multifunction there, we only
-> end up with the correct value if we start with SR-IOV disabled, and
-> then enable it.
-> 
-> If SR-IOV were enabled by the firmware before Linux boots, we wouldn't
-> go through the virtfn_add() path, and dev->multifunction might still
-> be wrong.
-> 
-> I'm pretty sure Nishank said there were Cisco boxes that enable SR-IOV
-> in the firmware, but I don't know how that works.  It looks like we
-> would disable SR-IOV during enumeration in the path below:
-> 
->   pci_scan_slot
->     pci_scan_single_device
->       pci_device_add
->         pci_init_capabilities
->           pci_iov_init
->             sriov_init
->               pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl)
->               if (ctrl & PCI_SRIOV_CTRL_VFE)
->                 pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0)
-> 
-> From that path, it *looks* like it doesn't really matter whether
-> SR-IOV is enabled at handoff, because we disable it anyway.
-> 
-> So I'm not sure if I misunderstood Nishank or what.  I think it would
-> be cool if we could enumerate previously-enabled VFs, but maybe there
-> are other issues that would make that impossible.
+Per the AGP 3.0 spec, APBASE is a standard PCI BAR and may be either 32
+bits or 64 bits wide.  Many drivers read APBASE directly, but they only
+handled 32-bit BARs.
 
-VFs don't have vendor/device IDs, that's provided by the PF SR-IOV
-capability.  We'd need to go reverse engineer which PF they came from to
-set that up, so it doesn't really seem worthwhile.  I have seen devices
-with various modes of operation, SR-IOV or multifunction.  Depending on
-how the device firmware is configured they can pretend to be something
-that looks more like a traditional multifunction device or generate VFs.
-Those typically exist to work around system firmware that doesn't
-support SR-IOV and doesn't leave properly sized apertures.  Thanks,
+The PCI core reads APBASE at enumeration-time.  Use pci_bus_address()
+instead of reading it again in the driver.  This works correctly for both
+32-bit and 64-bit BARs.
 
-Alex
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/char/agp/agp.h          |    1 +
+ drivers/char/agp/ali-agp.c      |    4 ++-
+ drivers/char/agp/amd-k7-agp.c   |    6 ++---
+ drivers/char/agp/amd64-agp.c    |    5 +---
+ drivers/char/agp/ati-agp.c      |    9 +++----
+ drivers/char/agp/efficeon-agp.c |    5 ++--
+ drivers/char/agp/generic.c      |    4 ++-
+ drivers/char/agp/intel-agp.c    |   48 ++++++++++++++++-----------------------
+ drivers/char/agp/nvidia-agp.c   |    5 ++--
+ drivers/char/agp/sis-agp.c      |    5 ++--
+ drivers/char/agp/via-agp.c      |   13 +++++------
+ 11 files changed, 44 insertions(+), 61 deletions(-)
+
+diff --git a/drivers/char/agp/agp.h b/drivers/char/agp/agp.h
+index 923f99df4f1c..b709749c8639 100644
+--- a/drivers/char/agp/agp.h
++++ b/drivers/char/agp/agp.h
+@@ -239,6 +239,7 @@ long compat_agp_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+ 
+ /* Chipset independent registers (from AGP Spec) */
+ #define AGP_APBASE	0x10
++#define AGP_APERTURE_BAR	0
+ 
+ #define AGPSTAT		0x4
+ #define AGPCMD		0x8
+diff --git a/drivers/char/agp/ali-agp.c b/drivers/char/agp/ali-agp.c
+index 443cd6751ca2..19db03667650 100644
+--- a/drivers/char/agp/ali-agp.c
++++ b/drivers/char/agp/ali-agp.c
+@@ -85,8 +85,8 @@ static int ali_configure(void)
+ 	pci_write_config_dword(agp_bridge->dev, ALI_TLBCTRL, ((temp & 0xffffff00) | 0x00000010));
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ #if 0
+ 	if (agp_bridge->type == ALI_M1541) {
+diff --git a/drivers/char/agp/amd-k7-agp.c b/drivers/char/agp/amd-k7-agp.c
+index 779f0ab845a9..9898ed6d5b9a 100644
+--- a/drivers/char/agp/amd-k7-agp.c
++++ b/drivers/char/agp/amd-k7-agp.c
+@@ -126,7 +126,6 @@ static int amd_create_gatt_table(struct agp_bridge_data *bridge)
+ 	unsigned long __iomem *cur_gatt;
+ 	unsigned long addr;
+ 	int retval;
+-	u32 temp;
+ 	int i;
+ 
+ 	value = A_SIZE_LVL2(agp_bridge->current_size);
+@@ -149,9 +148,8 @@ static int amd_create_gatt_table(struct agp_bridge_data *bridge)
+ 	 * used to program the agp master not the cpu
+ 	 */
+ 
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
+-	agp_bridge->gart_bus_addr = addr;
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* Calculate the agp offset */
+ 	for (i = 0; i < value->num_entries / 1024; i++, addr += 0x00400000) {
+diff --git a/drivers/char/agp/amd64-agp.c b/drivers/char/agp/amd64-agp.c
+index d79d692d05b8..95326ac610f6 100644
+--- a/drivers/char/agp/amd64-agp.c
++++ b/drivers/char/agp/amd64-agp.c
+@@ -269,7 +269,6 @@ static int agp_aperture_valid(u64 aper, u32 size)
+  */
+ static int fix_northbridge(struct pci_dev *nb, struct pci_dev *agp, u16 cap)
+ {
+-	u32 aper_low, aper_hi;
+ 	u64 aper, nb_aper;
+ 	int order = 0;
+ 	u32 nb_order, nb_base;
+@@ -295,9 +294,7 @@ static int fix_northbridge(struct pci_dev *nb, struct pci_dev *agp, u16 cap)
+ 		apsize |= 0xf00;
+ 	order = 7 - hweight16(apsize);
+ 
+-	pci_read_config_dword(agp, 0x10, &aper_low);
+-	pci_read_config_dword(agp, 0x14, &aper_hi);
+-	aper = (aper_low & ~((1<<22)-1)) | ((u64)aper_hi << 32);
++	aper = pci_bus_address(agp, AGP_APERTURE_BAR);
+ 
+ 	/*
+ 	 * On some sick chips APSIZE is 0. This means it wants 4G
+diff --git a/drivers/char/agp/ati-agp.c b/drivers/char/agp/ati-agp.c
+index 03c1dc1ab552..53cb310d433e 100644
+--- a/drivers/char/agp/ati-agp.c
++++ b/drivers/char/agp/ati-agp.c
+@@ -211,10 +211,10 @@ static int ati_configure(void)
+ 	else
+ 		pci_write_config_dword(agp_bridge->dev, ATI_RS300_IG_AGPMODE, 0x20000);
+ 
+-	/* address to map too */
++	/* address to map to */
+ 	/*
+-	pci_read_config_dword(agp_bridge.dev, AGP_APBASE, &temp);
+-	agp_bridge.gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge.gart_bus_addr = pci_bus_address(agp_bridge.dev,
++						   AGP_APERTURE_BAR);
+ 	printk(KERN_INFO PFX "IGP320 gart_bus_addr: %x\n", agp_bridge.gart_bus_addr);
+ 	*/
+ 	writel(0x60000, ati_generic_private.registers+ATI_GART_FEATURE_ID);
+@@ -385,8 +385,7 @@ static int ati_create_gatt_table(struct agp_bridge_data *bridge)
+ 	 * This is a bus address even on the alpha, b/c its
+ 	 * used to program the agp master not the cpu
+ 	 */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	addr = pci_bus_address(agp_bridge->dev, AGP_APERTURE_BAR);
+ 	agp_bridge->gart_bus_addr = addr;
+ 
+ 	/* Calculate the agp offset */
+diff --git a/drivers/char/agp/efficeon-agp.c b/drivers/char/agp/efficeon-agp.c
+index 6974d5032053..533cb6d229b8 100644
+--- a/drivers/char/agp/efficeon-agp.c
++++ b/drivers/char/agp/efficeon-agp.c
+@@ -128,7 +128,6 @@ static void efficeon_cleanup(void)
+ 
+ static int efficeon_configure(void)
+ {
+-	u32 temp;
+ 	u16 temp2;
+ 	struct aper_size_info_lvl2 *current_size;
+ 
+@@ -141,8 +140,8 @@ static int efficeon_configure(void)
+ 			      current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* agpctrl */
+ 	pci_write_config_dword(agp_bridge->dev, INTEL_AGPCTRL, 0x2280);
+diff --git a/drivers/char/agp/generic.c b/drivers/char/agp/generic.c
+index a0df182f6f7d..f39437addb58 100644
+--- a/drivers/char/agp/generic.c
++++ b/drivers/char/agp/generic.c
+@@ -1396,8 +1396,8 @@ int agp3_generic_configure(void)
+ 
+ 	current_size = A_SIZE_16(agp_bridge->current_size);
+ 
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* set aperture size */
+ 	pci_write_config_word(agp_bridge->dev, agp_bridge->capndx+AGPAPSIZE, current_size->size_value);
+diff --git a/drivers/char/agp/intel-agp.c b/drivers/char/agp/intel-agp.c
+index a426ee1f57a6..a7c276585a9f 100644
+--- a/drivers/char/agp/intel-agp.c
++++ b/drivers/char/agp/intel-agp.c
+@@ -118,7 +118,6 @@ static void intel_8xx_cleanup(void)
+ 
+ static int intel_configure(void)
+ {
+-	u32 temp;
+ 	u16 temp2;
+ 	struct aper_size_info_16 *current_size;
+ 
+@@ -128,8 +127,8 @@ static int intel_configure(void)
+ 	pci_write_config_word(agp_bridge->dev, INTEL_APSIZE, current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* attbase - aperture base */
+ 	pci_write_config_dword(agp_bridge->dev, INTEL_ATTBASE, agp_bridge->gatt_bus_addr);
+@@ -148,7 +147,7 @@ static int intel_configure(void)
+ 
+ static int intel_815_configure(void)
+ {
+-	u32 temp, addr;
++	u32 addr;
+ 	u8 temp2;
+ 	struct aper_size_info_8 *current_size;
+ 
+@@ -167,8 +166,8 @@ static int intel_815_configure(void)
+ 			current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	pci_read_config_dword(agp_bridge->dev, INTEL_ATTBASE, &addr);
+ 	addr &= INTEL_815_ATTBASE_MASK;
+@@ -208,7 +207,6 @@ static void intel_820_cleanup(void)
+ 
+ static int intel_820_configure(void)
+ {
+-	u32 temp;
+ 	u8 temp2;
+ 	struct aper_size_info_8 *current_size;
+ 
+@@ -218,8 +216,8 @@ static int intel_820_configure(void)
+ 	pci_write_config_byte(agp_bridge->dev, INTEL_APSIZE, current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* attbase - aperture base */
+ 	pci_write_config_dword(agp_bridge->dev, INTEL_ATTBASE, agp_bridge->gatt_bus_addr);
+@@ -239,7 +237,6 @@ static int intel_820_configure(void)
+ 
+ static int intel_840_configure(void)
+ {
+-	u32 temp;
+ 	u16 temp2;
+ 	struct aper_size_info_8 *current_size;
+ 
+@@ -249,8 +246,8 @@ static int intel_840_configure(void)
+ 	pci_write_config_byte(agp_bridge->dev, INTEL_APSIZE, current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* attbase - aperture base */
+ 	pci_write_config_dword(agp_bridge->dev, INTEL_ATTBASE, agp_bridge->gatt_bus_addr);
+@@ -268,7 +265,6 @@ static int intel_840_configure(void)
+ 
+ static int intel_845_configure(void)
+ {
+-	u32 temp;
+ 	u8 temp2;
+ 	struct aper_size_info_8 *current_size;
+ 
+@@ -282,9 +278,9 @@ static int intel_845_configure(void)
+ 				       agp_bridge->apbase_config);
+ 	} else {
+ 		/* address to map to */
+-		pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-		agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
+-		agp_bridge->apbase_config = temp;
++		agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++							    AGP_APERTURE_BAR);
++		agp_bridge->apbase_config = agp_bridge->gart_bus_addr;
+ 	}
+ 
+ 	/* attbase - aperture base */
+@@ -303,7 +299,6 @@ static int intel_845_configure(void)
+ 
+ static int intel_850_configure(void)
+ {
+-	u32 temp;
+ 	u16 temp2;
+ 	struct aper_size_info_8 *current_size;
+ 
+@@ -313,8 +308,8 @@ static int intel_850_configure(void)
+ 	pci_write_config_byte(agp_bridge->dev, INTEL_APSIZE, current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* attbase - aperture base */
+ 	pci_write_config_dword(agp_bridge->dev, INTEL_ATTBASE, agp_bridge->gatt_bus_addr);
+@@ -332,7 +327,6 @@ static int intel_850_configure(void)
+ 
+ static int intel_860_configure(void)
+ {
+-	u32 temp;
+ 	u16 temp2;
+ 	struct aper_size_info_8 *current_size;
+ 
+@@ -342,8 +336,8 @@ static int intel_860_configure(void)
+ 	pci_write_config_byte(agp_bridge->dev, INTEL_APSIZE, current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* attbase - aperture base */
+ 	pci_write_config_dword(agp_bridge->dev, INTEL_ATTBASE, agp_bridge->gatt_bus_addr);
+@@ -361,7 +355,6 @@ static int intel_860_configure(void)
+ 
+ static int intel_830mp_configure(void)
+ {
+-	u32 temp;
+ 	u16 temp2;
+ 	struct aper_size_info_8 *current_size;
+ 
+@@ -371,8 +364,8 @@ static int intel_830mp_configure(void)
+ 	pci_write_config_byte(agp_bridge->dev, INTEL_APSIZE, current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* attbase - aperture base */
+ 	pci_write_config_dword(agp_bridge->dev, INTEL_ATTBASE, agp_bridge->gatt_bus_addr);
+@@ -390,7 +383,6 @@ static int intel_830mp_configure(void)
+ 
+ static int intel_7505_configure(void)
+ {
+-	u32 temp;
+ 	u16 temp2;
+ 	struct aper_size_info_8 *current_size;
+ 
+@@ -400,8 +392,8 @@ static int intel_7505_configure(void)
+ 	pci_write_config_byte(agp_bridge->dev, INTEL_APSIZE, current_size->size_value);
+ 
+ 	/* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* attbase - aperture base */
+ 	pci_write_config_dword(agp_bridge->dev, INTEL_ATTBASE, agp_bridge->gatt_bus_addr);
+diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
+index be42a2312dc9..ab65d55272c4 100644
+--- a/drivers/char/agp/nvidia-agp.c
++++ b/drivers/char/agp/nvidia-agp.c
+@@ -115,9 +115,8 @@ static int nvidia_configure(void)
+ 	pci_write_config_byte(agp_bridge->dev, NVIDIA_0_APSIZE,
+ 		current_size->size_value);
+ 
+-    /* address to map to */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &apbase);
+-	apbase &= PCI_BASE_ADDRESS_MEM_MASK;
++	/* address to map to */
++	apbase = pci_bus_address(agp_bridge->dev, AGP_APERTURE_BAR);
+ 	agp_bridge->gart_bus_addr = apbase;
+ 	aplimit = apbase + (current_size->size * 1024 * 1024) - 1;
+ 	pci_write_config_dword(nvidia_private.dev_2, NVIDIA_2_APBASE, apbase);
+diff --git a/drivers/char/agp/sis-agp.c b/drivers/char/agp/sis-agp.c
+index 79c838c434bc..2c74038da459 100644
+--- a/drivers/char/agp/sis-agp.c
++++ b/drivers/char/agp/sis-agp.c
+@@ -50,13 +50,12 @@ static void sis_tlbflush(struct agp_memory *mem)
+ 
+ static int sis_configure(void)
+ {
+-	u32 temp;
+ 	struct aper_size_info_8 *current_size;
+ 
+ 	current_size = A_SIZE_8(agp_bridge->current_size);
+ 	pci_write_config_byte(agp_bridge->dev, SIS_TLBCNTRL, 0x05);
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 	pci_write_config_dword(agp_bridge->dev, SIS_ATTBASE,
+ 			       agp_bridge->gatt_bus_addr);
+ 	pci_write_config_byte(agp_bridge->dev, SIS_APSIZE,
+diff --git a/drivers/char/agp/via-agp.c b/drivers/char/agp/via-agp.c
+index 74d3aa3773bf..228f20cddc05 100644
+--- a/drivers/char/agp/via-agp.c
++++ b/drivers/char/agp/via-agp.c
+@@ -43,16 +43,15 @@ static int via_fetch_size(void)
+ 
+ static int via_configure(void)
+ {
+-	u32 temp;
+ 	struct aper_size_info_8 *current_size;
+ 
+ 	current_size = A_SIZE_8(agp_bridge->current_size);
+ 	/* aperture size */
+ 	pci_write_config_byte(agp_bridge->dev, VIA_APSIZE,
+ 			      current_size->size_value);
+-	/* address to map too */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	/* address to map to */
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* GART control register */
+ 	pci_write_config_dword(agp_bridge->dev, VIA_GARTCTRL, 0x0000000f);
+@@ -132,9 +131,9 @@ static int via_configure_agp3(void)
+ 
+ 	current_size = A_SIZE_16(agp_bridge->current_size);
+ 
+-	/* address to map too */
+-	pci_read_config_dword(agp_bridge->dev, AGP_APBASE, &temp);
+-	agp_bridge->gart_bus_addr = (temp & PCI_BASE_ADDRESS_MEM_MASK);
++	/* address to map to */
++	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
++						    AGP_APERTURE_BAR);
+ 
+ 	/* attbase - aperture GATT base */
+ 	pci_write_config_dword(agp_bridge->dev, VIA_AGP3_ATTBASE,
 
