@@ -1,105 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:40295
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751821AbaAHFCT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 00:02:19 -0500
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 10/12][v4] pci: fsl: support function fsl_pci_assign_primary
-Date: Wed, 8 Jan 2014 13:02:01 +0800
-Message-ID: <1389157323-3088-10-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-qa0-f50.google.com ([209.85.216.50]:65314 "EHLO
+	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753830AbaAGSAS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 13:00:18 -0500
+From: Tejun Heo <tj@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
+	heiko.carstens@de.ibm.com, stern@rowland.harvard.edu,
+	JBottomley@parallels.com, bhelgaas@google.com,
+	Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH 09/12] pci: use device_remove_file_self() instead of device_schedule_callback()
+Date: Tue,  7 Jan 2014 12:59:47 -0500
+Message-Id: <1389117590-25705-10-git-send-email-tj@kernel.org>
+In-Reply-To: <1389117590-25705-1-git-send-email-tj@kernel.org>
+References: <1389117590-25705-1-git-send-email-tj@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change pci_ids to fsl_pci_ids Freescale-specific name and change
-static to extern modifier for using in fsl_pci_assign_primary().
+driver-core now supports synchrnous self-deletion of attributes and
+the asynchrnous removal mechanism is scheduled for removal.  Use it
+instead of device_schedule_callback().  This makes "remove" behave
+synchronously.
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
 ---
-change log:
-v4:
-no change
-v1-v3:
-Derived from http://patchwork.ozlabs.org/patch/278965/
+ drivers/pci/pci-sysfs.c | 24 ++++++------------------
+ 1 file changed, 6 insertions(+), 18 deletions(-)
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
-
- arch/powerpc/sysdev/fsl_pci.c     | 5 +++--
- drivers/pci/host/pci-fsl-common.c | 4 ++--
- include/linux/fsl/pci-common.h    | 2 ++
- 3 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index 38e8dca..6d9bec4 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -736,7 +736,8 @@ void fsl_pci_assign_primary(void)
- 		of_node_put(np);
- 		np = fsl_pci_primary;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c91e6c1..94d1cb8 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -352,32 +352,20 @@ static struct device_attribute dev_rescan_attr = __ATTR(rescan,
+ 							(S_IWUSR|S_IWGRP),
+ 							NULL, dev_rescan_store);
  
--		if (of_match_node(pci_ids, np) && of_device_is_available(np))
-+		if (of_match_node(fsl_pci_ids, np) &&
-+		    of_device_is_available(np))
- 			return;
- 	}
+-static void remove_callback(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	mutex_lock(&pci_remove_rescan_mutex);
+-	pci_stop_and_remove_bus_device(pdev);
+-	mutex_unlock(&pci_remove_rescan_mutex);
+-}
+-
+ static ssize_t
+-remove_store(struct device *dev, struct device_attribute *dummy,
++remove_store(struct device *dev, struct device_attribute *attr,
+ 	     const char *buf, size_t count)
+ {
+-	int ret = 0;
+ 	unsigned long val;
  
-@@ -745,7 +746,7 @@ void fsl_pci_assign_primary(void)
- 	 * designate one as primary.  This can go away once
- 	 * various bugs with primary-less systems are fixed.
- 	 */
--	for_each_matching_node(np, pci_ids) {
-+	for_each_matching_node(np, fsl_pci_ids) {
- 		if (of_device_is_available(np)) {
- 			fsl_pci_primary = np;
- 			of_node_put(np);
-diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
-index e3696eb..0be7bc0 100644
---- a/drivers/pci/host/pci-fsl-common.c
-+++ b/drivers/pci/host/pci-fsl-common.c
-@@ -637,7 +637,7 @@ no_bridge:
- 	return -ENODEV;
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+-	/* An attribute cannot be unregistered by one of its own methods,
+-	 * so we have to use this roundabout approach.
+-	 */
+-	if (val)
+-		ret = device_schedule_callback(dev, remove_callback);
+-	if (ret)
+-		count = ret;
++	if (val && device_remove_file_self(dev, attr)) {
++		mutex_lock(&pci_remove_rescan_mutex);
++		pci_stop_and_remove_bus_device(to_pci_dev(dev));
++		mutex_unlock(&pci_remove_rescan_mutex);
++	}
+ 	return count;
  }
- 
--static const struct of_device_id pci_ids[] = {
-+const struct of_device_id fsl_pci_ids[] = {
- 	{ .compatible = "fsl,mpc8540-pci", },
- 	{ .compatible = "fsl,mpc8548-pcie", },
- 	{ .compatible = "fsl,mpc8610-pci", },
-@@ -728,7 +728,7 @@ static struct platform_driver fsl_pci_driver = {
- 	.driver = {
- 		.name = "fsl-pci",
- 		.pm = PCI_PM_OPS,
--		.of_match_table = pci_ids,
-+		.of_match_table = fsl_pci_ids,
- 	},
- 	.probe = fsl_pci_probe,
- 	.remove = fsl_pci_remove,
-diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
-index 8d33354..3247682 100644
---- a/include/linux/fsl/pci-common.h
-+++ b/include/linux/fsl/pci-common.h
-@@ -143,6 +143,8 @@ struct fsl_pci {
- 	void *sys;
- };
- 
-+extern const struct of_device_id fsl_pci_ids[];
-+
- /*
-  * Convert architecture specific pci controller structure to fsl_pci
-  * PowerPC uses structure pci_controller and ARM uses structure pci_sys_data
+ static struct device_attribute dev_remove_attr = __ATTR(remove,
 -- 
-1.8.1.2
-
+1.8.4.2
 
