@@ -1,46 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:43916 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754556AbaAAVPj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jan 2014 16:15:39 -0500
-Received: by mail-bk0-f41.google.com with SMTP id v15so4362711bkz.14
-        for <linux-pci@vger.kernel.org>; Wed, 01 Jan 2014 13:15:37 -0800 (PST)
-From: Erik Ekman <erik@kryo.se>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Erik Ekman <erik@kryo.se>
-Subject: [PATCH] PCI: Update documentation 00-INDEX file
-Date: Wed,  1 Jan 2014 22:15:25 +0100
-Message-Id: <1388610925-12850-1-git-send-email-erik@kryo.se>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:39500 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757189AbaAGAzg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:55:36 -0500
+Received: by mail-ie0-f170.google.com with SMTP id qd12so19635719ieb.1
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:55:35 -0800 (PST)
+Subject: [PATCH v7 03/15] PCI: Add pci_bus_address() to get bus address of a
+ BAR
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:55:33 -0700
+Message-ID: <20140107005533.10786.78922.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI-DMA-mapping.txt moved to general docs and became DMA-API-HOWTO.txt in 5e07c2c73
-Add new file about PCI Express I/O Virtualization
+We store BAR information as a struct resource, which contains the CPU
+address, not the bus address.  Drivers often need the bus address, and
+there's currently no convenient way to get it, so they often read the
+BAR directly, or use the resource address (which doesn't work if there's
+any translation between CPU and bus addresses).
 
-Signed-off-by: Erik Ekman <erik@kryo.se>
+Add pci_bus_address() to make this convenient.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- Documentation/PCI/00-INDEX | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/linux/pci.h |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index 812b17f..147231f 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -2,12 +2,12 @@
- 	- this file
- MSI-HOWTO.txt
- 	- the Message Signaled Interrupts (MSI) Driver Guide HOWTO and FAQ.
--PCI-DMA-mapping.txt
--	- info for PCI drivers using DMA portably across all platforms
- PCIEBUS-HOWTO.txt
- 	- a guide describing the PCI Express Port Bus driver
- pci-error-recovery.txt
- 	- info on PCI error recovery
-+pci-iov-howto.txt
-+	- the PCI Express I/O Virtualization HOWTO
- pci.txt
- 	- info on the PCI subsystem for device driver authors
- pcieaer-howto.txt
--- 
-1.8.4.2
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index bf32412704a7..966b286b5d53 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1077,6 +1077,14 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 						  resource_size_t),
+ 			void *alignf_data);
+ 
++static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
++{
++	struct pci_bus_region region;
++
++	pcibios_resource_to_bus(pdev->bus, &region, &pdev->resource[bar]);
++	return region.start;
++}
++
+ /* Proper probing supporting hot-pluggable devices */
+ int __must_check __pci_register_driver(struct pci_driver *, struct module *,
+ 				       const char *mod_name);
 
