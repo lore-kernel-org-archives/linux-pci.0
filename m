@@ -1,144 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:64913 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684AbaAORi1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 12:38:27 -0500
-Received: by mail-ie0-f175.google.com with SMTP id tp5so2404260ieb.6
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2014 09:38:26 -0800 (PST)
-Date: Wed, 15 Jan 2014 10:38:23 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [Update][PATCH 8/9] powerpc / eeh_driver: Use global PCI
- rescan-remove locking
-Message-ID: <20140115173823.GA24030@google.com>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
- <20440867.YaQfKrcfsQ@vostro.rjw.lan>
- <4447911.Q1f9tEzrXs@vostro.rjw.lan>
- <1476201.kR505WbUas@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476201.kR505WbUas@vostro.rjw.lan>
+Received: from mga09.intel.com ([134.134.136.24]:40167 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750849AbaAGJAG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jan 2014 04:00:06 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V1 00/14] Enhance DMAR drivers to handle PCI/memory hotplug events
+Date: Tue,  7 Jan 2014 17:00:20 +0800
+Message-Id: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 15, 2014 at 02:36:36PM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: powerpc / eeh_driver: Use global PCI rescan-remove locking
-> 
-> Race conditions are theoretically possible between the PCI device
-> addition and removal in the PPC64 PCI error recovery driver and
-> the generic PCI bus rescan and device removal that can be triggered
-> via sysfs.
-> 
-> To avoid those race conditions make PPC64 PCI error recovery driver
-> use global PCI rescan-remove locking around PCI device addition and
-> removal.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> The previous version had wrong function names in the last hunk, sorry about
-> that.
+Intel DMA/interrupt remapping drivers scan available PCI/memory devices
+at startup and cache discovered hardware topologies. They don't update
+cached information if PCI/memory hotplug event happens at runtime, then
+the stale information may break DMA/interrupt remapping logic.
 
-I replaced the previous version and re-pushed the pci/locking branch,
-thanks!
+This patchset first (Patch 1-8) tries to introduces some helper
+functions and fixes several bugs, then (Patch 9,10) uses a global
+rwsem and RCU to protect global DMA/interrupt remapping data
+structures, and finally (Patch 11-14) hook PCI/memory hotplug events
+to update cached information.
 
-> 
-> Rafael
-> 
-> ---
->  arch/powerpc/kernel/eeh_driver.c |   19 ++++++++++++++++---
->  1 file changed, 16 insertions(+), 3 deletions(-)
-> 
-> Index: linux-pm/arch/powerpc/kernel/eeh_driver.c
-> ===================================================================
-> --- linux-pm.orig/arch/powerpc/kernel/eeh_driver.c
-> +++ linux-pm/arch/powerpc/kernel/eeh_driver.c
-> @@ -369,7 +369,9 @@ static void *eeh_rmv_device(void *data,
->  	edev->mode |= EEH_DEV_DISCONNECTED;
->  	(*removed)++;
->  
-> +	pci_lock_rescan_remove();
->  	pci_stop_and_remove_bus_device(dev);
-> +	pci_unlock_rescan_remove();
->  
->  	return NULL;
->  }
-> @@ -416,10 +418,13 @@ static int eeh_reset_device(struct eeh_p
->  	 * into pcibios_add_pci_devices().
->  	 */
->  	eeh_pe_state_mark(pe, EEH_PE_KEEP);
-> -	if (bus)
-> +	if (bus) {
-> +		pci_lock_rescan_remove();
->  		pcibios_remove_pci_devices(bus);
-> -	else if (frozen_bus)
-> +		pci_unlock_rescan_remove();
-> +	} else if (frozen_bus) {
->  		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
-> +	}
->  
->  	/* Reset the pci controller. (Asserts RST#; resets config space).
->  	 * Reconfigure bridges and devices. Don't try to bring the system
-> @@ -429,6 +434,8 @@ static int eeh_reset_device(struct eeh_p
->  	if (rc)
->  		return rc;
->  
-> +	pci_lock_rescan_remove();
-> +
->  	/* Restore PE */
->  	eeh_ops->configure_bridge(pe);
->  	eeh_pe_restore_bars(pe);
-> @@ -462,6 +469,7 @@ static int eeh_reset_device(struct eeh_p
->  	pe->tstamp = tstamp;
->  	pe->freeze_count = cnt;
->  
-> +	pci_unlock_rescan_remove();
->  	return 0;
->  }
->  
-> @@ -618,8 +626,11 @@ perm_error:
->  	eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
->  
->  	/* Shut down the device drivers for good. */
-> -	if (frozen_bus)
-> +	if (frozen_bus) {
-> +		pci_lock_rescan_remove();
->  		pcibios_remove_pci_devices(frozen_bus);
-> +		pci_unlock_rescan_remove();
-> +	}
->  }
->  
->  static void eeh_handle_special_event(void)
-> @@ -692,6 +703,7 @@ static void eeh_handle_special_event(voi
->  	if (rc == 2 || rc == 1)
->  		eeh_handle_normal_event(pe);
->  	else {
-> +		pci_lock_rescan_remove();
->  		list_for_each_entry_safe(hose, tmp,
->  			&hose_list, list_node) {
->  			phb_pe = eeh_phb_pe_get(hose);
-> @@ -703,6 +715,7 @@ static void eeh_handle_special_event(voi
->  			eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
->  			pcibios_remove_pci_devices(bus);
->  		}
-> +		pci_unlock_rescan_remove();
->  	}
->  }
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It's also a preparation for supporting of DMA/interrupt remapping
+hotplug.
+
+Jiang Liu (14):
+  iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
+  iommu/vt-d: move private structures and variables into intel-iommu.c
+  iommu/vt-d: simplify function get_domain_for_dev()
+  iommu/vt-d: free resources if failed to create domain for PCIe
+    endpoint
+  iommu/vt-d: create device_domain_info structure for intermediate P2P
+    bridges
+  iommu/vt-d: fix incorrect iommu_count for si_domain
+  iommu/vt-d: fix error in detect ATS capability
+  iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
+    entries
+  iommu/vt-d: introduce a rwsem to protect global data structures
+  iommu/vt-d: use RCU to protect global resources in interrupt context
+  iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
+    hotplug happens
+  iommu/vt-d, PCI: unify the way to process DMAR device scope array
+  iommu/vt-d: update device to static identity domain mapping for PCI
+    hotplug
+  iommu/vt-d: update IOMMU state when memory hotplug happens
+
+ drivers/iommu/dmar.c                |  412 +++++++++++++++++--------
+ drivers/iommu/intel-iommu.c         |  583 +++++++++++++++++++++--------------
+ drivers/iommu/intel_irq_remapping.c |  108 ++++---
+ include/linux/dmar.h                |   75 +++--
+ 4 files changed, 753 insertions(+), 425 deletions(-)
+
+-- 
+1.7.10.4
+
