@@ -1,70 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:56264 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753395AbaAQTlK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jan 2014 14:41:10 -0500
-Received: by mail-ie0-f169.google.com with SMTP id tq11so4084198ieb.0
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jan 2014 11:41:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com> <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 17 Jan 2014 12:40:50 -0700
-Message-ID: <CAErSpo4g_xm4vZWZDgyjtJu+z5ARSerQLrtJ6W_peXv4bKwcgg@mail.gmail.com>
-Subject: Re: [PATCH v2 5/9] nvme: Fix invalid call to irq_set_affinity_hint()
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	linux-nvme@lists.infradead.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:3277 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751262AbaAGJAz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jan 2014 04:00:55 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [RFC Patch Part2 V1 14/14] iommu/vt-d: update IOMMU state when memory hotplug happens
+Date: Tue,  7 Jan 2014 17:00:34 +0800
+Message-Id: <1389085234-22296-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 9:02 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> In case MSI-X and MSI initialization failed the function
-> irq_set_affinity_hint() is called with uninitialized value
-> in dev->entry[0].vector. This update fixes the issue.
+If static identity domain is created, IOMMU driver needs to update
+si_domain page table when memory hotplug event happens. Otherwise
+PCI device DMA operations can't access the hot-added memory regions.
 
-dev->entry[0].vector is initialized in nvme_dev_map(), and it's used
-for free_irq() above the area of your patch, so I don't think this is
-actually a bug, though it might be somewhat confusing.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   52 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 51 insertions(+), 1 deletion(-)
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/block/nvme-core.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-> index 26d03fa..e292450 100644
-> --- a/drivers/block/nvme-core.c
-> +++ b/drivers/block/nvme-core.c
-> @@ -1790,15 +1790,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
->                         vecs = 32;
->                 for (;;) {
->                         result = pci_enable_msi_block(pdev, vecs);
-> -                       if (result == 0) {
-> -                               for (i = 0; i < vecs; i++)
-> -                                       dev->entry[i].vector = i + pdev->irq;
-> -                               break;
-> +                       if (result > 0) {
-> +                               vecs = result;
-> +                               continue;
->                         } else if (result < 0) {
->                                 vecs = 1;
-> -                               break;
->                         }
-> -                       vecs = result;
-> +                       for (i = 0; i < vecs; i++)
-> +                               dev->entry[i].vector = i + pdev->irq;
-> +                       break;
->                 }
->         }
->
-> --
-> 1.7.7.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 83e3ed4..35a987d 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -33,6 +33,7 @@
+ #include <linux/dmar.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/mempool.h>
++#include <linux/memory.h>
+ #include <linux/timer.h>
+ #include <linux/iova.h>
+ #include <linux/iommu.h>
+@@ -3689,6 +3690,54 @@ static struct notifier_block device_nb = {
+ 	.notifier_call = device_notifier,
+ };
+ 
++static int intel_iommu_memory_notifier(struct notifier_block *nb,
++				       unsigned long val, void *v)
++{
++	struct memory_notify *mhp = v;
++	unsigned long long start, end;
++	struct iova *iova;
++
++	switch (val) {
++	case MEM_GOING_ONLINE:
++		start = mhp->start_pfn << PAGE_SHIFT;
++		end = ((mhp->start_pfn + mhp->nr_pages) << PAGE_SHIFT) - 1;
++		if (iommu_domain_identity_map(si_domain, start, end)) {
++			pr_warn("dmar: failed to build identity map for [%llx-%llx]\n",
++				start, end);
++			return NOTIFY_BAD;
++		}
++		break;
++	case MEM_OFFLINE:
++	case MEM_CANCEL_ONLINE:
++		/* TODO: enhance RB-tree and IOVA code to support of splitting iova */
++		iova = find_iova(&si_domain->iovad, mhp->start_pfn);
++		if (iova) {
++			unsigned long start_pfn, last_pfn;
++			struct dmar_drhd_unit *drhd;
++			struct intel_iommu *iommu;
++
++			start_pfn = mm_to_dma_pfn(iova->pfn_lo);
++			last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
++			dma_pte_clear_range(si_domain, start_pfn, last_pfn);
++			dma_pte_free_pagetable(si_domain, start_pfn, last_pfn);
++			rcu_read_lock();
++			for_each_active_iommu(iommu, drhd)
++				iommu_flush_iotlb_psi(iommu, si_domain->id,
++					start_pfn, last_pfn - start_pfn + 1, 0);
++			rcu_read_unlock();
++			__free_iova(&si_domain->iovad, iova);
++		}
++		break;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block intel_iommu_memory_nb = {
++	.notifier_call = intel_iommu_memory_notifier,
++	.priority = 0
++};
++
+ int __init intel_iommu_init(void)
+ {
+ 	int ret = -ENODEV;
+@@ -3761,8 +3810,9 @@ int __init intel_iommu_init(void)
+ 	init_iommu_pm_ops();
+ 
+ 	bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
+-
+ 	bus_register_notifier(&pci_bus_type, &device_nb);
++	if (si_domain)
++		register_memory_notifier(&intel_iommu_memory_nb);
+ 
+ 	intel_iommu_enabled = 1;
+ 
+-- 
+1.7.10.4
+
