@@ -1,95 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 3/11] ACPI / hotplug / PCI: Drop acpiphp_bus_trim()
-Date: Mon, 27 Jan 2014 01:39:43 +0100
-Message-ID: <3449224.XnJj9bubey@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:39494 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756262AbaAGAEB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:04:01 -0500
+Received: by mail-ie0-f179.google.com with SMTP id x13so19577897ief.10
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:03:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
+References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com> <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 6 Jan 2014 17:03:39 -0700
+Message-ID: <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
+Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently, during removal
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yhlu.kernel@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Sun, Jan 5, 2014 at 10:53 AM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> Hello Bjorn,
+>
+> Just checking on the fate of this patch set...
+>
+> On Tue, Dec 17, 2013 at 5:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc yinghai@kernel.org (seems to be Yinghai's preferred email]
+>>
+>> On Tue, Dec 17, 2013 at 12:06:05PM -0800, Rajat Jain wrote:
+>>> We need future link up events for hot-add, thus don't disable
+>>> the link permanently during device removal. Also, remove the static
+>>> functions that are now left unused.
+>>
+>> The changelog should mention that this reverts part of 2debd9289997 ("PCI:
+>> pciehp: Disable/enable link during slot power off/on").
+>
+> Sure. Do you want me to submit another patch set (bumping up the
+> version) with this change log, or you'd want to add this change log
+> while merging?
+>
+>>
+>> Yinghai, can you tell us whether this is an issue on your systems?
+>
+> As Yinghai confirms further down this thread, his issue was confirmed
+> by Intel to be a bug in the repeater chip.
+> ----------------------------------
+> Yinghai writes:
+>> According to HW guys and Intel, that should be bug of repeater.
+>>
+> ---------------------------------
+>  I don't know about the details of his scenario, except that when the
+> adapter was disabled the repeater kept on flapping the link up & down
+> (and hence disabling the link solved the problem then). Yinghai
+> couldn't test, but I believe with this patch even if we disable
+> presence detect interrupt, the "adapter present / no present" messages
+> would (rightly) convert to "Link Up / Link Down" messages (since the
+> repeater keeps on flapping the link).
+>
+> Since it is a platform specific bug, I'm not sure what can be done to
+> remove those messages except may be reduce the verbosity? If you'd
+> like I could change all the INFO messages to DBG messages.
 
-If trim_stale_devices() calls acpi_bus_trim() directly, we can
-save a potentially costly acpi_bus_get_device() invocation.  After
-making that change acpiphp_bus_trim() would only be called from one
-place, so move the code from it to that place and drop it.
+Even if it's a defect in a particular piece of hardware, I don't want
+to regress on that hardware, even if the regression is just extra
+messages that we didn't see before.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   30 +++++++++++-------------------
- 1 file changed, 11 insertions(+), 19 deletions(-)
+I think ideally we would add some sort of quirk for that hardware so
+it works just as well as it does today.  I think extra messages will
+lead to a bug reports from users.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -468,19 +468,6 @@ static unsigned char acpiphp_max_busnr(s
- }
- 
- /**
-- * acpiphp_bus_trim - Trim device objects in an ACPI namespace subtree.
-- * @handle: ACPI device object handle to start from.
-- */
--static void acpiphp_bus_trim(acpi_handle handle)
--{
--	struct acpi_device *adev = NULL;
--
--	acpi_bus_get_device(handle, &adev);
--	if (adev)
--		acpi_bus_trim(adev);
--}
--
--/**
-  * acpiphp_bus_add - Scan ACPI namespace subtree.
-  * @handle: ACPI object handle to start the scan from.
-  */
-@@ -638,8 +625,12 @@ static void disable_slot(struct acpiphp_
- 		pci_dev_put(pdev);
- 	}
- 
--	list_for_each_entry(func, &slot->funcs, sibling)
--		acpiphp_bus_trim(func_to_handle(func));
-+	list_for_each_entry(func, &slot->funcs, sibling) {
-+		struct acpi_device *adev;
-+
-+		if (!acpi_bus_get_device(func_to_handle(func), &adev))
-+			acpi_bus_trim(adev);
-+	}
- 
- 	slot->flags &= (~SLOT_ENABLED);
- }
-@@ -711,11 +702,12 @@ static unsigned int get_slot_status(stru
-  */
- static void trim_stale_devices(struct pci_dev *dev)
- {
--	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
- 	struct pci_bus *bus = dev->subordinate;
- 	bool alive = false;
- 
--	if (handle) {
-+	if (adev) {
-+		acpi_handle handle = adev->handle;
- 		acpi_status status;
- 		unsigned long long sta;
- 
-@@ -731,8 +723,8 @@ static void trim_stale_devices(struct pc
- 	}
- 	if (!alive) {
- 		pci_stop_and_remove_bus_device(dev);
--		if (handle)
--			acpiphp_bus_trim(handle);
-+		if (adev)
-+			acpi_bus_trim(adev);
- 	} else if (bus) {
- 		struct pci_dev *child, *tmp;
- 
-
+Bjorn
