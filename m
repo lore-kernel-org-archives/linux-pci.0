@@ -1,162 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:48283 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaAKB1H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:27:07 -0500
-Received: by mail-pa0-f42.google.com with SMTP id lj1so5499974pab.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:06 -0800 (PST)
-Subject: [PATCH v2 03/12] PCI: Remove unused Optimized Buffer Flush/Fill
- support
-To: Stephen Hemminger <stephen@networkplumber.org>,
-	linux-pci@vger.kernel.org
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:43839 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757817AbaAGA4M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:56:12 -0500
+Received: by mail-ig0-f180.google.com with SMTP id m12so277312iga.1
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:56:12 -0800 (PST)
+Subject: [PATCH v7 08/15] agp/intel: Support 64-bit GMADR
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yu Zhao <yu.zhao@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Date: Fri, 10 Jan 2014 18:27:03 -0700
-Message-ID: <20140111012703.14505.20187.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:56:09 -0700
+Message-ID: <20140107005609.10786.29922.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
+From: Yinghai Lu <yinghai@kernel.org>
 
-My philosophy is unused code is dead code.  And dead code is subject to bit
-rot and is a likely source of bugs.  Use it or lose it.
+Per the Intel 915G/915GV/... Chipset spec (document number 301467-005),
+GMADR is a standard PCI BAR.
 
-This reverts 48a92a8179b3 ("PCI: add OBFF enable/disable support"),
-removing these interfaces:
+The PCI core reads GMADR at enumeration-time.  Use pci_bus_address()
+instead of reading it again in the driver.  This works correctly for both
+32-bit and 64-bit BARs.  The spec above only mentions 32-bit GMADR, but
+Yinghai's patch (link below) indicates some devices have a 64-bit GMADR.
 
-    pci_enable_obff()
-    pci_disable_obff()
-
-[bhelgaas: split to separate patch, also remove prototypes from pci.h]
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+[bhelgaas: reworked starting from http://lkml.kernel.org/r/1385851238-21085-13-git-send-email-yinghai@kernel.org]
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>
 ---
- drivers/pci/pci.c   |   73 ---------------------------------------------------
- include/linux/pci.h |   16 -----------
- 2 files changed, 89 deletions(-)
+ drivers/char/agp/intel-agp.h |    4 ++--
+ drivers/char/agp/intel-gtt.c |   12 ++++--------
+ 2 files changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 020f672deabb..84a24d16778f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2150,79 +2150,6 @@ void pci_disable_ido(struct pci_dev *dev, unsigned long type)
- }
- EXPORT_SYMBOL(pci_disable_ido);
+diff --git a/drivers/char/agp/intel-agp.h b/drivers/char/agp/intel-agp.h
+index 1042c1b90376..0bf5590fd0f9 100644
+--- a/drivers/char/agp/intel-agp.h
++++ b/drivers/char/agp/intel-agp.h
+@@ -55,7 +55,7 @@
+ #define INTEL_I860_ERRSTS	0xc8
  
--/**
-- * pci_enable_obff - enable optimized buffer flush/fill
-- * @dev: PCI device
-- * @type: type of signaling to use
-- *
-- * Try to enable @type OBFF signaling on @dev.  It will try using WAKE#
-- * signaling if possible, falling back to message signaling only if
-- * WAKE# isn't supported.  @type should indicate whether the PCIe link
-- * be brought out of L0s or L1 to send the message.  It should be either
-- * %PCI_EXP_OBFF_SIGNAL_ALWAYS or %PCI_OBFF_SIGNAL_L0.
-- *
-- * If your device can benefit from receiving all messages, even at the
-- * power cost of bringing the link back up from a low power state, use
-- * %PCI_EXP_OBFF_SIGNAL_ALWAYS.  Otherwise, use %PCI_OBFF_SIGNAL_L0 (the
-- * preferred type).
-- *
-- * RETURNS:
-- * Zero on success, appropriate error number on failure.
-- */
--int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
--{
--	u32 cap;
--	u16 ctrl;
+ /* Intel i810 registers */
+-#define I810_GMADDR		0x10
++#define I810_GMADR_BAR		0
+ #define I810_MMADDR		0x14
+ #define I810_PTE_BASE		0x10000
+ #define I810_PTE_MAIN_UNCACHED	0x00000000
+@@ -113,7 +113,7 @@
+ #define INTEL_I850_ERRSTS	0xc8
+ 
+ /* intel 915G registers */
+-#define I915_GMADDR	0x18
++#define I915_GMADR_BAR	2
+ #define I915_MMADDR	0x10
+ #define I915_PTEADDR	0x1C
+ #define I915_GMCH_GMS_STOLEN_48M	(0x6 << 4)
+diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+index 54202ffcf467..560f66bffebb 100644
+--- a/drivers/char/agp/intel-gtt.c
++++ b/drivers/char/agp/intel-gtt.c
+@@ -608,9 +608,8 @@ static bool intel_gtt_can_wc(void)
+ 
+ static int intel_gtt_init(void)
+ {
+-	u32 gma_addr;
+ 	u32 gtt_map_size;
 -	int ret;
--
--	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
--	if (!(cap & PCI_EXP_DEVCAP2_OBFF_MASK))
--		return -ENOTSUPP; /* no OBFF support at all */
--
--	/* Make sure the topology supports OBFF as well */
--	if (dev->bus->self) {
--		ret = pci_enable_obff(dev->bus->self, type);
--		if (ret)
--			return ret;
--	}
--
--	pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &ctrl);
--	if (cap & PCI_EXP_DEVCAP2_OBFF_WAKE)
--		ctrl |= PCI_EXP_DEVCTL2_OBFF_WAKE_EN;
--	else {
--		switch (type) {
--		case PCI_EXP_OBFF_SIGNAL_L0:
--			if (!(ctrl & PCI_EXP_DEVCTL2_OBFF_WAKE_EN))
--				ctrl |= PCI_EXP_DEVCTL2_OBFF_MSGA_EN;
--			break;
--		case PCI_EXP_OBFF_SIGNAL_ALWAYS:
--			ctrl &= ~PCI_EXP_DEVCTL2_OBFF_WAKE_EN;
--			ctrl |= PCI_EXP_DEVCTL2_OBFF_MSGB_EN;
--			break;
--		default:
--			WARN(1, "bad OBFF signal type\n");
--			return -ENOTSUPP;
--		}
--	}
--	pcie_capability_write_word(dev, PCI_EXP_DEVCTL2, ctrl);
--
--	return 0;
--}
--EXPORT_SYMBOL(pci_enable_obff);
--
--/**
-- * pci_disable_obff - disable optimized buffer flush/fill
-- * @dev: PCI device
-- *
-- * Disable OBFF on @dev.
-- */
--void pci_disable_obff(struct pci_dev *dev)
--{
--	pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2,
--				   PCI_EXP_DEVCTL2_OBFF_WAKE_EN);
--}
--EXPORT_SYMBOL(pci_disable_obff);
--
- static int pci_acs_enable;
++	int ret, bar;
  
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ee26454746ba..b8cbe52c7a48 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1002,13 +1002,6 @@ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- void pci_enable_ido(struct pci_dev *dev, unsigned long type);
- void pci_disable_ido(struct pci_dev *dev, unsigned long type);
+ 	ret = intel_private.driver->setup();
+ 	if (ret != 0)
+@@ -660,14 +659,11 @@ static int intel_gtt_init(void)
+ 	}
  
--enum pci_obff_signal_type {
--	PCI_EXP_OBFF_SIGNAL_L0 = 0,
--	PCI_EXP_OBFF_SIGNAL_ALWAYS = 1,
--};
--int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type);
--void pci_disable_obff(struct pci_dev *dev);
+ 	if (INTEL_GTT_GEN <= 2)
+-		pci_read_config_dword(intel_private.pcidev, I810_GMADDR,
+-				      &gma_addr);
++		bar = I810_GMADR_BAR;
+ 	else
+-		pci_read_config_dword(intel_private.pcidev, I915_GMADDR,
+-				      &gma_addr);
 -
- /* For use by arch with custom probe code */
- void set_pcie_port_type(struct pci_dev *pdev);
- void set_pcie_hotplug_bridge(struct pci_dev *pdev);
-@@ -1427,15 +1420,6 @@ static inline void pci_disable_ido(struct pci_dev *dev, unsigned long type)
- {
+-	intel_private.gma_bus_addr = (gma_addr & PCI_BASE_ADDRESS_MEM_MASK);
++		bar = I915_GMADR_BAR;
+ 
++	intel_private.gma_bus_addr = pci_bus_address(intel_private.pcidev, bar);
+ 	return 0;
  }
  
--static inline int pci_enable_obff(struct pci_dev *dev, unsigned long type)
--{
--	return 0;
--}
--
--static inline void pci_disable_obff(struct pci_dev *dev)
--{
--}
--
- static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
- {
- 	return -EIO;
 
