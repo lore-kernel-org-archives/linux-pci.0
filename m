@@ -1,67 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45267 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752261AbaA3RgS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Jan 2014 12:36:18 -0500
-Message-ID: <1391103376.6959.72.camel@bling.home>
-Subject: Re: [PATCH] vfio: Set PCI_DEV_FLAGS_ASSIGNED when assigning device
- to guest
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bandan Das <bsd@redhat.com>
-Cc: kvm@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>
-Date: Thu, 30 Jan 2014 10:36:16 -0700
-In-Reply-To: <1391103225.6959.71.camel@bling.home>
-References: <jpgeh3ppelz.fsf@redhat.com>
-	 <1391103225.6959.71.camel@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from exprod5og112.obsmtp.com ([64.18.0.24]:60317 "HELO
+	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756705AbaAGC4W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 21:56:22 -0500
+Received: by mail-vb0-f51.google.com with SMTP id 11so9185990vbe.24
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 18:56:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140103005253.GB12098@obsidianresearch.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+	<1387785725-24262-3-git-send-email-tinamdar@apm.com>
+	<20131223174634.GD25089@obsidianresearch.com>
+	<CACoXjcnPvgDX3s8OywLHP6Tu2OrpNzM1Phx+s3RLmKDgu3t8gA@mail.gmail.com>
+	<20140103005253.GB12098@obsidianresearch.com>
+Date: Mon, 6 Jan 2014 18:56:21 -0800
+Message-ID: <CACoXjcnykxdjekfmz6B3Ovk-+naCCOCWFZ3t=ZaMWAEPyVs_eQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 2/3] arm64: dts: APM X-Gene PCIe device tree nodes
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jon Masters <jcm@redhat.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[cc +linux-pci]
+On Thu, Jan 2, 2014 at 4:52 PM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Thu, Jan 02, 2014 at 01:56:51PM -0800, Tanmay Inamdar wrote:
+>> On Mon, Dec 23, 2013 at 9:46 AM, Jason Gunthorpe
+>> <jgunthorpe@obsidianresearch.com> wrote:
+>> > On Mon, Dec 23, 2013 at 01:32:03PM +0530, Tanmay Inamdar wrote:
+>> >> This patch adds the device tree nodes for APM X-Gene PCIe controller and
+>> >> PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts nodes
+>> >> are added.
+>> >
+>> > Can you include an lspci dump for PCI DT bindings please? It is
+>> > impossible to review otherwise..
+>> >
+>>
+>> On the X-Gene evaluation platform, there is only one PCIe port
+>> enabled. Here is the 'lspci' dump
+>
+> This is a bit hard to read withouth more context, but:
+>
+>> # lspci -vvv
+>> 00:00.0 Class 0604: Device 19aa:e008 (rev 04)
+>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>
+> This is an on-chip device? (19aa does not seem to be a VID I can find)
 
-On Thu, 2014-01-30 at 10:33 -0700, Alex Williamson wrote:
-> On Thu, 2014-01-30 at 22:54 +0530, Bandan Das wrote:
-> > Some drivers such as ixgbe rely on pci_vfs_assigned() to prevent
-> > disabling sr-iov when vfs are still assigned during hotplug
-> > event or module removal. Set and unset PCI_DEV_FLAGS_ASSIGNED
-> > appropriately
-> 
-> This flag has always felt like a band-aide for KVM device assignment
-> because a device could be used without an actual driver attached to the
-> device.  vfio-pci is an actual driver, so why should it matter whether
-> the device is assigned or in use by ixgbevf or in use by pci-vfio?  It
-> seems like sr-iov shouldn't be disabled so long as either a driver or
-> this (needs to be deprecated) flag are set.  Thanks,
-> 
-> Alex
-> 
-> > ---
-> >  drivers/vfio/pci/vfio_pci.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> > index 7ba0424..7cc7ed6 100644
-> > --- a/drivers/vfio/pci/vfio_pci.c
-> > +++ b/drivers/vfio/pci/vfio_pci.c
-> > @@ -90,6 +90,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
-> >  		vdev->has_vga = true;
-> >  #endif
-> >  
-> > +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> >  	return 0;
-> >  }
-> >  
-> > @@ -149,6 +150,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
-> >  				__func__, dev_name(&pdev->dev), ret);
-> >  	}
-> >  
-> > +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> >  	pci_restore_state(pdev);
-> >  }
-> >  
-> 
-> 
+oops.. looks like vendor and device IDs are jumbled. You can look for
+e008 vendor ID.
+I will fix it in next version.
 
+>
+> Ideally this is the on-chip PCI-PCI bridge which represents the port.
+>
+> The problem I see is that your DT binding has a top level stanza per
+> port.
+>
+> We *really* prefer to see a single stanza for all ports - but this
+> requires the HW to be able to fit into the Linux resource assignment
+> model - a single resource pool for all ports and standard PCI-PCI
+> bridge config access to assign the resource to a port.
+>
+> If your HW can't do this (eg because the port aperture 0xe000000000 is
+> hard wired) then the fall back is to place every port in a distinct
+> domain, with a distinct DT node and have overlapping bus numbers
+> and fixed windows. I don't see PCI domain support in your driver..
 
+Thanks for the suggestion. I will think over this.
 
+>
+> There is some kind of an addressing problem because you've done this:
+>
+> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+> +{
+> +       int i;
+> +
+> +       for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> +               dev->resource[i].start = dev->resource[i].end = 0;
+> +               dev->resource[i].flags = 0;
+> +       }
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_BRIDGE_DEVICEID,
+> +                        xgene_pcie_fixup_bridge);
+>
+> Which is usually a sign that something is wonky with how the HW is
+> being fit into the PCI core.
+
+We map the whole DDR range (eg 256 GB) into host's BAR. The Linux PCI
+resource management tries to fit the host's memory into the ranges
+provided (eg 0xe000000000).
+Please let me know if there is any use case to do this mapping.
+
+>
+>> ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>         Latency: 0, Cache Line Size: 64 bytes
+>>         Region 0: Memory at <ignored> (64-bit, prefetchable)
+>>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>>         I/O behind bridge: 0000f000-00000fff
+>>         Memory behind bridge: 00c00000-00cfffff
+>
+> [..]
+>
+>> 01:00.0 Class 0200: Device 15b3:1003
+>>         Region 0: Memory at e000c00000 (64-bit, non-prefetchable) [size=1M]
+>>         Region 2: Memory at e000000000 (64-bit, prefetchable)
+>>         [size=8M]
+>
+> Something funky is going on here too, the 64 bit address e000000000
+> should be reflected in the 'memory behind bridge' above, not
+> truncated.
+
+That's the Mellanox device that is plugged into the system. The
+device's memory gets mapped at '0xe0xxxxxxxx'
+
+>
+> ranges = <0x02000000 0x0 0x00000000 0x90 0x00000000 0x0 0x10000000 /* mem*/
+> +                                 0x01000000 0x0 0x80000000 0x90 0x80000000 0x0 0x00010000 /* io */
+> +                                 0x00000000 0x0 0xd0000000 0x90 0xd0000000 0x0 0x00200000 /* cfg */
+> +                                 0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
+>
+> Ranges has a defined meaning, MSI shouldn't be in ranges, and 'cfg' is
+> only OK if the address encoding exactly matches the funky PCI-E extended
+> configuration address format. You can move these to regs or other
+> properties
+
+ok
+
+>
+> (MSI is tricky, I'm not aware of DT binding work for MSI :()
+>
+
+It does not. This is the range required to be mapped by the controller
+to support MSI. I know it is not a standard way of doing. I was just
+trying to utilize 'of_pci_range_to_resource' api.
+
+> Also, unrelated, can you please double check that your HW cannot
+> generate 8 and 16 bit configuration write TLPs natively? The
+> xgene_pcie_cfg_out8/16 hack is not desirable if it can be avoided.
+>
+
+Sadly HW cannot generate 8 and 16 bit configuration transactions.
+
+> Regards,
+> Jason
