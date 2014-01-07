@@ -1,133 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30157 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754150AbaAUKFp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Jan 2014 05:05:45 -0500
-Date: Tue, 21 Jan 2014 11:07:19 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-nvme@lists.infradead.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: [PATCH 2/2] nvme: Cleanup nvme_dev_start() and fix IRQ leak
-Message-ID: <20140121100719.GC8847@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
- <CAErSpo4g_xm4vZWZDgyjtJu+z5ARSerQLrtJ6W_peXv4bKwcgg@mail.gmail.com>
- <alpine.LRH.2.03.1401171419370.25844@AMR>
- <20140120083835.GA19068@dhcp-26-207.brq.redhat.com>
- <20140120084212.GC19068@dhcp-26-207.brq.redhat.com>
- <alpine.LRH.2.03.1401201541000.25844@AMR>
- <20140121100311.GA8847@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v7 09/15] agp/intel: Use pci_bus_address() to get MMADR bus
+ address
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:56:17 -0700
+Message-ID: <20140107005617.10786.81226.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140121100311.GA8847@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an attempt to make handling of admin queue in a
-single scope. This update also fixes a IRQ leak in case
-nvme_setup_io_queues() failed to allocate enough iomem
-and bailed out with -ENOMEM errno.
+Per the Intel 915G/915GV/... Chipset spec (document number 301467-005),
+MMADR is a standard PCI BAR.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+The PCI core reads MMADR at enumeration-time.  Use pci_bus_address()
+instead of reading it again in the driver.  This works correctly for both
+32-bit and 64-bit BARs.  The spec above only mentions 32-bit MMADR, but we
+should still use the standard interface.
+
+Also, stop clearing the low 19 bits of the bus address because it's invalid
+to use addresses outside the region defined by the BAR.  The spec claims
+MMADR is 512KB; if that's the case, those bits will be zero anyway.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/block/nvme-core.c |   37 +++++++++++++++++++++----------------
- 1 files changed, 21 insertions(+), 16 deletions(-)
+ drivers/char/agp/intel-agp.h |    4 ++--
+ drivers/char/agp/intel-gtt.c |   10 +++-------
+ 2 files changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index c790679..010a789 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -1414,6 +1414,7 @@ static int nvme_configure_admin_queue(struct nvme_dev *dev)
- 	if (result)
- 		return result;
+diff --git a/drivers/char/agp/intel-agp.h b/drivers/char/agp/intel-agp.h
+index 0bf5590fd0f9..18bbaafb8509 100644
+--- a/drivers/char/agp/intel-agp.h
++++ b/drivers/char/agp/intel-agp.h
+@@ -56,7 +56,7 @@
  
-+	dev->entry[0].vector = dev->pci_dev->irq;
- 	result = queue_request_irq(dev, nvmeq, "nvme admin");
- 	if (result)
- 		return result;
-@@ -1424,6 +1425,12 @@ static int nvme_configure_admin_queue(struct nvme_dev *dev)
- 	return result;
- }
+ /* Intel i810 registers */
+ #define I810_GMADR_BAR		0
+-#define I810_MMADDR		0x14
++#define I810_MMADR_BAR		1
+ #define I810_PTE_BASE		0x10000
+ #define I810_PTE_MAIN_UNCACHED	0x00000000
+ #define I810_PTE_LOCAL		0x00000002
+@@ -114,7 +114,7 @@
  
-+static void nvme_teardown_admin_queue(struct nvme_dev *dev)
-+{
-+	nvme_disable_queue(dev, 0);
-+	nvme_free_queue(dev->queues[0]);
-+}
-+
- struct nvme_iod *nvme_map_user_pages(struct nvme_dev *dev, int write,
- 				unsigned long addr, unsigned length)
+ /* intel 915G registers */
+ #define I915_GMADR_BAR	2
+-#define I915_MMADDR	0x10
++#define I915_MMADR_BAR	0
+ #define I915_PTEADDR	0x1C
+ #define I915_GMCH_GMS_STOLEN_48M	(0x6 << 4)
+ #define I915_GMCH_GMS_STOLEN_64M	(0x7 << 4)
+diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
+index 560f66bffebb..58916f32c0f3 100644
+--- a/drivers/char/agp/intel-gtt.c
++++ b/drivers/char/agp/intel-gtt.c
+@@ -181,8 +181,7 @@ static int i810_setup(void)
+ 		return -ENOMEM;
+ 	intel_private.i81x_gtt_table = gtt_table;
+ 
+-	pci_read_config_dword(intel_private.pcidev, I810_MMADDR, &reg_addr);
+-	reg_addr &= 0xfff80000;
++	reg_addr = pci_bus_address(intel_private.pcidev, I810_MMADR_BAR);
+ 
+ 	intel_private.registers = ioremap(reg_addr, KB(64));
+ 	if (!intel_private.registers)
+@@ -785,8 +784,7 @@ static int i830_setup(void)
  {
-@@ -1869,17 +1876,10 @@ static size_t db_bar_size(struct nvme_dev *dev, unsigned nr_io_queues)
- 	return 4096 + ((nr_io_queues + 1) * 8 * dev->db_stride);
- }
+ 	u32 reg_addr;
  
--static int nvme_setup_io_queues(struct nvme_dev *dev)
-+static int nvme_setup_io_queues(struct nvme_dev *dev, int nr_io_queues)
- {
- 	struct pci_dev *pdev = dev->pci_dev;
--	int result, cpu, i, vecs, nr_io_queues, size, q_depth;
+-	pci_read_config_dword(intel_private.pcidev, I810_MMADDR, &reg_addr);
+-	reg_addr &= 0xfff80000;
++	reg_addr = pci_bus_address(intel_private.pcidev, I810_MMADR_BAR);
+ 
+ 	intel_private.registers = ioremap(reg_addr, KB(64));
+ 	if (!intel_private.registers)
+@@ -1107,9 +1105,7 @@ static int i9xx_setup(void)
+ 	u32 reg_addr, gtt_addr;
+ 	int size = KB(512);
+ 
+-	pci_read_config_dword(intel_private.pcidev, I915_MMADDR, &reg_addr);
 -
--	nr_io_queues = num_online_cpus();
--	result = set_queue_count(dev, nr_io_queues);
--	if (result < 0)
--		return result;
--	if (result < nr_io_queues)
--		nr_io_queues = result;
-+	int result, cpu, i, vecs, size, q_depth;
+-	reg_addr &= 0xfff80000;
++	reg_addr = pci_bus_address(intel_private.pcidev, I915_MMADR_BAR);
  
- 	size = db_bar_size(dev, nr_io_queues);
- 	if (size > 8192) {
-@@ -1896,9 +1896,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 		dev->queues[0]->q_db = dev->dbs;
- 	}
- 
--	/* Deregister the admin queue's interrupt */
--	free_irq(dev->entry[0].vector, dev->queues[0]);
--
- 	vecs = nr_io_queues;
- 	for (i = 0; i < vecs; i++)
- 		dev->entry[i].entry = i;
-@@ -2069,7 +2066,6 @@ static int nvme_dev_map(struct nvme_dev *dev)
- 	if (pci_enable_device_mem(pdev))
- 		return result;
- 
--	dev->entry[0].vector = pdev->irq;
- 	pci_set_master(pdev);
- 	bars = pci_select_bars(pdev, IORESOURCE_MEM);
- 	if (pci_request_selected_regions(pdev, bars, "nvme"))
-@@ -2402,11 +2398,20 @@ static int nvme_dev_start(struct nvme_dev *dev)
- 	list_add(&dev->node, &dev_list);
- 	spin_unlock(&dev_list_lock);
- 
--	result = nvme_setup_io_queues(dev);
--	if (result && result != -EBUSY)
-+	result = set_queue_count(dev, num_online_cpus());
-+	if (result == -EBUSY)
-+		return -EBUSY;
-+
-+	nvme_teardown_admin_queue(dev);
-+
-+	if (result)
- 		goto disable;
- 
--	return result;
-+	result = nvme_setup_io_queues(dev, result);
-+	if (result)
-+		goto disable;
-+
-+	return 0;
- 
-  disable:
- 	spin_lock(&dev_list_lock);
--- 
-1.7.7.6
+ 	intel_private.registers = ioremap(reg_addr, size);
+ 	if (!intel_private.registers)
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
