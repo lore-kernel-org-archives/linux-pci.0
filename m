@@ -1,71 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50128 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754143AbaAGVjR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 16:39:17 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH 4/7] nvme: Use new interfaces for MSI/MSI-X enablement
-Date: Tue,  7 Jan 2014 19:05:39 +0100
-Message-Id: <1d0440eface1cf3e939758c8c51e987608c046a8.1389103215.git.agordeev@redhat.com>
-In-Reply-To: <cover.1389103215.git.agordeev@redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:42976 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757838AbaAGA4k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:56:40 -0500
+Received: by mail-ig0-f180.google.com with SMTP id m12so278220iga.1
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:56:39 -0800 (PST)
+Subject: [PATCH v7 12/15] agp/ati: Use PCI_COMMAND instead of hard-coded 4
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:56:38 -0700
+Message-ID: <20140107005637.10786.2267.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/block/nvme-core.c |   33 ++++++++-------------------------
- 1 files changed, 8 insertions(+), 25 deletions(-)
+We're accessing the PCI_COMMAND register here, so use the appropriate
+#define.  The bit we're writing (1 << 14) isn't defined by the PCI or PCIe
+spec, so we don't have a name for it.
 
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index 26d03fa..adf26c2 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -1774,32 +1774,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	/* Deregister the admin queue's interrupt */
- 	free_irq(dev->entry[0].vector, dev->queues[0]);
+No functional change.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/char/agp/ati-agp.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/char/agp/ati-agp.c b/drivers/char/agp/ati-agp.c
+index ba83c11186ce..18a7a6baa304 100644
+--- a/drivers/char/agp/ati-agp.c
++++ b/drivers/char/agp/ati-agp.c
+@@ -221,8 +221,8 @@ static int ati_configure(void)
+ 	readl(ati_generic_private.registers+ATI_GART_FEATURE_ID);	/* PCI Posting.*/
  
--	vecs = nr_io_queues;
--	for (i = 0; i < vecs; i++)
-+	for (i = 0; i < nr_io_queues; i++)
- 		dev->entry[i].entry = i;
--	for (;;) {
--		result = pci_enable_msix(pdev, dev->entry, vecs);
--		if (result <= 0)
--			break;
--		vecs = result;
--	}
--
--	if (result < 0) {
--		vecs = nr_io_queues;
--		if (vecs > 32)
--			vecs = 32;
--		for (;;) {
--			result = pci_enable_msi_block(pdev, vecs);
--			if (result == 0) {
--				for (i = 0; i < vecs; i++)
--					dev->entry[i].vector = i + pdev->irq;
--				break;
--			} else if (result < 0) {
--				vecs = 1;
--				break;
--			}
--			vecs = result;
--		}
-+	vecs = pci_enable_msix_range(pdev, dev->entry, 1, nr_io_queues);
-+	if (vecs < 0) {
-+		vecs = pci_enable_msi_range(pdev, 1, min(nr_io_queues, 32));
-+		if (vecs < 0)
-+			vecs = 1;
-+		for (i = 0; i < vecs; i++)
-+			dev->entry[i].vector = i + pdev->irq;
- 	}
+ 	/* SIGNALED_SYSTEM_ERROR @ NB_STATUS */
+-	pci_read_config_dword(agp_bridge->dev, 4, &temp);
+-	pci_write_config_dword(agp_bridge->dev, 4, temp | (1<<14));
++	pci_read_config_dword(agp_bridge->dev, PCI_COMMAND, &temp);
++	pci_write_config_dword(agp_bridge->dev, PCI_COMMAND, temp | (1<<14));
  
- 	/*
--- 
-1.7.7.6
+ 	/* Write out the address of the gatt table */
+ 	writel(agp_bridge->gatt_bus_addr, ati_generic_private.registers+ATI_GART_BASE);
 
