@@ -1,45 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:45296 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750748AbaABKql (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 05:46:41 -0500
-Date: Thu, 2 Jan 2014 11:46:38 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: mvebu: Remove redundant code
-Message-ID: <20140102114638.47457689@skate>
-In-Reply-To: <1388659296-21569-1-git-send-email-gregory.clement@free-electrons.com>
-References: <1388659296-21569-1-git-send-email-gregory.clement@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50137 "EHLO
+	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754415AbaAGVjx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 16:39:53 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	ath10k@lists.infradead.org, linux-nvme@lists.infradead.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 0/7] Phase out pci_enable_msi_block()
+Date: Tue,  7 Jan 2014 19:05:35 +0100
+Message-Id: <cover.1389103215.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Gregory CLEMENT,
+As result of recent deprecation of MSI-X/MSI enablement
+interfaces pci_enable_msi_block(), pci_enable_msi() and
+pci_enable_msix() all drivers need to be updated to use
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-On Thu,  2 Jan 2014 11:41:36 +0100, Gregory CLEMENT wrote:
-> In the commit b42285f66f871a989, Sebastian moved clock enable before
-> register access, but during the merge of the commit
-> 9f352f0e6c0fa2dc608812df "PCI: mvebu: Dynamically detect if the PEX
-> link is up to enable hot plug", the moved part was added back.
-> 
-> This patch fixes this by removing the redundant code.
-> 
-> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-> ---
->  drivers/pci/host/pci-mvebu.c | 8 --------
->  1 file changed, 8 deletions(-)
+This is the first in a series of updates, to phase out
+pci_enable_msi_block() function.
 
-This has already been fixed by
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/drivers/pci/host/pci-mvebu.c?id=84f47190d6be1cb99cd4a680e1018080d93800a8.
+This series is against pci/msi branch in Bjorn Helgaas's repo:
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
 
 Thanks!
 
-Thomas
+Alexander Gordeev (7):
+  ipr: Do not call pci_disable_msi/msix() if pci_enable_msi/msix()
+    failed
+  ipr: Use new interfaces for MSI/MSI-X enablement
+  ahci: Use new interfaces for MSI/MSI-X enablement
+  nvme: Use new interfaces for MSI/MSI-X enablement
+  vfio: Use new interfaces for MSI/MSI-X enablement
+  ath10k: Use new interfaces for MSI enablement
+  wil6210: Use new interfaces for MSI enablement
+
+ drivers/ata/ahci.c                          |   15 +++-----
+ drivers/block/nvme-core.c                   |   33 ++++-------------
+ drivers/net/wireless/ath/ath10k/pci.c       |   22 ++++++------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++---------
+ drivers/scsi/ipr.c                          |   51 +++++++++-----------------
+ drivers/vfio/pci/vfio_pci_intrs.c           |    8 ++--
+ 6 files changed, 66 insertions(+), 99 deletions(-)
+
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.7.7.6
+
