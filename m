@@ -1,105 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:64367 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932170AbaAaR7X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 12:59:23 -0500
-Received: by mail-oa0-f54.google.com with SMTP id i4so5659680oah.27
-        for <linux-pci@vger.kernel.org>; Fri, 31 Jan 2014 09:59:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <309B89C4C689E141A5FF6A0C5FB2118B7314C430@ORSMSX101.amr.corp.intel.com>
-References: <20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <309B89C4C689E141A5FF6A0C5FB2118B7314C430@ORSMSX101.amr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 31 Jan 2014 10:59:02 -0700
-Message-ID: <CAErSpo627wEtBypSrX8QGLW=QAnpa0q-g2z+kSM9hBdRcFNv-Q@mail.gmail.com>
-Subject: Re: [E1000-devel] [PATCH 0/2] Remove dead code
-To: "Brown, Aaron F" <aaron.f.brown@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Tanmay Inamdar' <tinamdar@apm.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Grant Likely' <grant.likely@linaro.org>,
+	'Catalin Marinas' <catalin.marinas@arm.com>,
+	'Rob Landley' <rob@landley.net>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	'patches' <patches@apm.com>, 'Jon Masters' <jcm@redhat.com>,
+	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Jingoo Han' <jg1.han@samsung.com>,
+	'Thierry Reding' <thierry.reding@gmail.com>,
+	'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR' <Mohit.KUMAR@st.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+ <1387785725-24262-2-git-send-email-tinamdar@apm.com>
+ <007401cf0a81$51429250$f3c7b6f0$%han@samsung.com>
+ <CACoXjcmqUixctokJ9COLWAsaDTUyVKk9vTAbW1hUhUdcgaj-kg@mail.gmail.com>
+In-reply-to: <CACoXjcmqUixctokJ9COLWAsaDTUyVKk9vTAbW1hUhUdcgaj-kg@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] pci: APM X-Gene PCIe controller driver
+Date: Tue, 07 Jan 2014 12:31:46 +0900
+Message-id: <001101cf0b58$fe73e730$fb5bb590$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 31, 2014 at 2:10 AM, Brown, Aaron F <aaron.f.brown@intel.com> wrote:
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Thursday, January 30, 2014 11:21 AM
->> To: linux-pci@vger.kernel.org
->> Cc: e1000-devel@lists.sourceforge.net; Arjan van de Ven; linux-
->> kernel@vger.kernel.org
->> Subject: [E1000-devel] [PATCH 0/2] Remove dead code
->>
->> This is a rework of part of Stephen's patch [1].
->>
->> This removes the MMIO exclusivity support that was added as part of an
->> e1000e bug hunt.
->>
->> The e1000e driver still uses pci_request_selected_regions_exclusive(), but
->> there are no callers of pci_request_region_exclusive() and
->> pci_request_regions_exclusive().  I thought it was cleaner to remove the
->> whole thing than to leave parts of it in place.  But I could easily be
->> convinced to leave part or all of this in place if people think it's still
->> useful.
->
-> Thanks Bjorn, I have added these to Jeff's queue.
+On Tuesday, January 07, 2014 11:45 AM, Tanmay Inamdar wrote:
+> On Sun, Jan 5, 2014 at 5:47 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> > On Monday, December 23, 2013 5:02 PM, Tanmay Inamdar wrote:
+> >>
+> >> This patch adds the AppliedMicro X-gene SOC PCIe controller driver.
+> >> APM X-Gene PCIe controller supports maximum upto 8 lanes and
+> >> GEN3 speed. X-Gene has maximum 5 PCIe ports supported.
+> >
+> > (+cc Jason Gunthorpe, Arnd Bergmann)
+> >
+> > Hi Tanmay Inamdar,
+> >
+> > I added some minor comments. :-)
+> >
+> >>
+> >> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> >> ---
+> >>  drivers/pci/host/Kconfig      |    5 +
+> >>  drivers/pci/host/Makefile     |    1 +
+> >>  drivers/pci/host/pcie-xgene.c | 1017 +++++++++++++++++++++++++++++++++++++++++
+> >
+> > Would you change the file name to 'pci-xgene.c'?
+> > Now, all PCI host drivers are using the prefix 'pci-', not 'pcie-'.
+> 
+> I guess designware is an exception. There is
+> "drivers/pci/host/pcie-designware.c"
 
-Let's wait for a bit more discussion on this.
+(+cc Thierry Reding, Pratyush Anand, Mohit KUMAR)
 
-For one thing, Fengguang's autobuilder found a handful of issues,
-including a couple more users of the exclusive mappings.  For another,
-Arjan reminded me that the e1000e bug hung was for a problem that
-bricked the device, requiring replacement of the part or significant
-effort to fix the EEPROM.  I *suspect* this is a potential issue for
-many devices, but if the e1000e is particularly susceptible for some
-reason, we might want to keep the exclusive mappings for it.
+Now, the current naming rule is "PCI-" prefix as below.
 
-If you want to apply just the e1000e part that removes its use of
-pci_request_selected_regions_exclusive(), I would have no complaints
-about that, of course.  But we can't apply the whole thing as-is
-without at least fixing the build issues.
+  - Samsung Exynos: "pci"-exynos.c
+  - Freescale i.MX6: "pci"-imx6.c
+  - Marvell: pci-mvebu.c
+  - Nvidia Tegra: pci-tegra.c
+  - Renesas R-Car: pci-rcar-gen2.c
 
->> It also removes SR-IOV migration support, which is completely unused, as
->> far as I can tell.
->>
->> [1]
->> http://lkml.kernel.org/r/20131227132710.7190647c@nehalam.linuxnetplumber.n
->> et
->>
->> ---
->>
->> Bjorn Helgaas (2):
->>       PCI: Remove unused MMIO exclusivity support
->>       PCI: Remove unused SR-IOV VF Migration support
->>
->>
->>  Documentation/PCI/pci-iov-howto.txt        |    4 -
->>  Documentation/kernel-parameters.txt        |    4 -
->>  arch/x86/mm/init.c                         |    2
->>  drivers/net/ethernet/intel/e1000e/netdev.c |    3 -
->>  drivers/pci/iov.c                          |  119 -----------------------
->> -----
->>  drivers/pci/pci-sysfs.c                    |    3 -
->>  drivers/pci/pci.c                          |  112 +++--------------------
->> ---
->>  drivers/pci/pci.h                          |    4 -
->>  include/linux/ioport.h                     |    5 -
->>  include/linux/pci.h                        |    7 --
->>  kernel/resource.c                          |   54 -------------
->>  11 files changed, 14 insertions(+), 303 deletions(-)
->>
->> --------------------------------------------------------------------------
->> ----
->> WatchGuard Dimension instantly turns raw network data into actionable
->> security intelligence. It gives you real-time visual feedback on key
->> security issues and trends.  Skip the complicated setup - simply import a
->> virtual appliance and go from zero to informed in seconds.
->> http://pubads.g.doubleclick.net/gampad/clk?id=123612991&iu=/4140/ostg.clkt
->> rk
->> _______________________________________________
->> E1000-devel mailing list
->> E1000-devel@lists.sourceforge.net
->> https://lists.sourceforge.net/lists/listinfo/e1000-devel
->> To learn more about Intel&#174; Ethernet, visit
->> http://communities.intel.com/community/wired
+According to the Thierry Reding's comment,
+"I think we should keep these sorted alphabetically. Also Tegra and
+Marvell are PCIe controllers but they still use the pci- prefix instead
+of pcie-. Perhaps it'd be good to keep consistency here? I initially
+chose pci- because from a software point of view it doesn't matter all
+that much whether it's PCI or PCIe and because the drivers are part of
+the PCI subsystem. However if Exynos now uses the pcie- prefix it makes
+it look like Tegra and Marvell are plain old PCI."
+(https://groups.google.com/forum/#!msg/linux.kernel/qtimJoNSc3w/_1aayHaG54YJ)
+
+However, "pcie-designware.c" is common layer driver for other
+SoC PCI host drivers that use Synopsys Designware PCI IP.
+Thus, currently it is shared by other SoC PCI host drivers
+such as pci-exynos.c, and pci-imx6.c. Also, ST PCI driver will
+use pcie-designware.c as common layer.
+
+Originally, "pci"-designware.c was used. However, Pratyush Anand
+suggested "pci"-designware.c can be renamed to "pcie"-designware.c,
+because Synopsys PCI IP and Synopsys PCI Express IP are different.
+So, currently "pcie"-designware.c is used.
+
+So, if there is no special reason, "pci-" prefix can be used.
+Thank you.
+
+Best regards,
+Jingoo Han
+
