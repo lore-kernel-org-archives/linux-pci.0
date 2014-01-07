@@ -1,69 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:53829 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754806AbaAFUA3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 15:00:29 -0500
+Received: from comal.ext.ti.com ([198.47.26.152]:54719 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751054AbaAGTAO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 14:00:14 -0500
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: Jingoo Han <jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: pcie-designware: query on MSI IRQ handling
+Date: Tue, 7 Jan 2014 19:00:05 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1401031749340.8667@kaball.uk.xensource.com>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-	<1388707565-16535-17-git-send-email-yinghai@kernel.org>
-	<alpine.DEB.2.02.1401031749340.8667@kaball.uk.xensource.com>
-Date: Mon, 6 Jan 2014 12:00:28 -0800
-Message-ID: <CAE9FiQVba9K_3LDkHTP4YZJ-FzwE_mF3h6iiXEFb1shUUmhGpg@mail.gmail.com>
-Subject: Re: [Xen-devel] [PATCH v5 16/33] xen, irq: Call irq_alloc_reserved_desc_at()
- at first
-From: Yinghai Lu <yinghai@kernel.org>
-To: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Xen Devel <xen-devel@lists.xensource.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 3, 2014 at 9:50 AM, Stefano Stabellini
-<stefano.stabellini@eu.citrix.com> wrote:
+Hi,
 
->>  drivers/xen/events.c | 8 ++++++--
->>  1 file changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/xen/events.c b/drivers/xen/events.c
->> index 4035e83..020cd77 100644
->> --- a/drivers/xen/events.c
->> +++ b/drivers/xen/events.c
->> @@ -508,8 +508,12 @@ static int __must_check xen_allocate_irq_gsi(unsigned gsi)
->>       /* Legacy IRQ descriptors are already allocated by the arch. */
->>       if (gsi < NR_IRQS_LEGACY)
->>               irq = gsi;
->> -     else
->> -             irq = irq_alloc_desc_at(gsi, -1);
->> +     else {
->> +             /* for x86, irq already get reserved for gsi */
->> +             irq = irq_alloc_reserved_desc_at(gsi, -1);
->> +             if (irq < 0)
->> +                     irq = irq_alloc_desc_at(gsi, -1);
->> +     }
->
-> This is common code. On ARM I get:
->
-> drivers/xen/events.c: In function 'xen_allocate_irq_gsi':
-> drivers/xen/events.c:513:3: error: implicit declaration of function 'irq_alloc_reserved_desc_at' [-Werror=implicit-function-declaration]
->    irq = irq_alloc_reserved_desc_at(gsi, -1);
->    ^
-> cc1: some warnings being treated as errors
+I am porting my current PCI Linux driver (based on v3.8) to designware
+core driver (pcie-designware.c) to submit the patches to the mailing list
+and got following question. Could someone clarify this please?
 
-It's strange.
+I see the following code in pcie-designware.c
 
-that is defined with irq_alloc_desc_at in parallel in
-include/linux/irq.h and kernel/irq/irqdesc.c.
+void dw_pcie_msi_init(struct pcie_port *pp)
+{
+	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
 
-Did you try the whole tree, or just this patch?
+	/* program the msi_data */
+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+			virt_to_phys((void *)pp->msi_data));
+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
+}
+
+and then in 
+
+static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+			struct msi_desc *desc)
+{
+
+         <---Cut--->
+
+	msg.address_lo = virt_to_phys((void *)pp->msi_data);
+	msg.address_hi = 0x0;
+	msg.data = pos;
+	printk("dw_msi_setup_irq address_lo = %x\n", msg.address_lo);
+	write_msi_msg(irq, &msg);
+}
+
+In our designware IP, in the Application space, there is a MSI_IRQ register
+that the EP needs to write with msi vector value to generate msi irq. So in
+our case, pp->msi_data should be updated with address RC's MSI_IRQ
+register. So I plan to update the msi_data in port's data structure with
+MSI_IRQ virtual address and not call dw_msi_setup_irq().
+
+I am trying to understand how MSI IRQ works on currently supported
+designware PCIE hardwares (Samsung, Freescale etc). I am assuming
+dw_pcie_wr_own_conf () write into RC's config space. But in the above
+code, I see the code is updating the PCIE_MSI_ADDR_LO/HI
+of the RC's config with a DDR address and in  write_msi_msg() this address
+along with vector gets written to EP's MSI config space registers. In this case
+how is the MSI IRQ gets generated from the EP?
+
+EP writes to DDR address with the vector value. Does the PCIE hardware
+match the address in the MSI irq message from EP with that in 
+PCIE_MSI_ADDR_LO/HI and then raise an IRQ? Is this part of the Per Vector
+Masking (PVM) option support as discussed in the PCI spec? Anyone
+can explain this?
+
+Also as part of my development, I plan to enhance this driver to override the
+dw_msi_irq_chip with our platform specific chip data since MSI interrupt
+controller is using application specific registers instead of the one at offset
+0x828. I will sending an patch for review once my driver is tested.     
 
 Thanks
 
-Yinghai
+Murali Karicheri
+Linux Kernel, Software Development
+
+
