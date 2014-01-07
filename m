@@ -1,57 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:36305 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752843AbaAROjR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 18 Jan 2014 09:39:17 -0500
-Received: by mail-ie0-f180.google.com with SMTP id at1so3699002iec.39
-        for <linux-pci@vger.kernel.org>; Sat, 18 Jan 2014 06:39:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com> <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
- <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:59399 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757963AbaAGA5B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:57:01 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so18620340ieb.8
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:57:00 -0800 (PST)
+Subject: [PATCH v7 15/15] PCI: Allocate 64-bit BARs above 4G when possible
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 18 Jan 2014 07:38:55 -0700
-Message-ID: <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
-	linux-nvme@lists.infradead.org,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:56:58 -0700
+Message-ID: <20140107005658.10786.98616.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
->> > As the release is supposedly this weekend, do you prefer
->> > the patches to go to your tree or to individual trees after
->> > the release?
->>
->> I'd be happy to merge them, except for the fact that they probably
->> wouldn't have any time in -next before I ask Linus to pull them.  So
->> how about if we wait until after the release, ask the area maintainers
->> to take them, and if they don't take them, I'll put them in my tree
->> for v3.15?
->
-> Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-> Whatever works for you ;)
->
-> I am only concerned with a regression fix "ahci: Fix broken fallback to
-> single MSI mode" which would be nice to have in 3.14. But it seems pretty
-> much too late.
+From: Yinghai Lu <yinghai@kernel.org>
 
-Tejun, if you want to ack that one, I can put it in either the first
-3.14 pull request or a subsequent one.  Either way, since it's a
-regression fix, we should be able to get it in 3.14.
+Try to allocate space for 64-bit BARs above 4G first, to preserve the space
+below 4G for 32-bit BARs.  If there's no space above 4G available, fall
+back to allocating anywhere.
 
-Bjorn
+[bhelgaas: reworked starting from http://lkml.kernel.org/r/1387485843-17403-2-git-send-email-yinghai@kernel.org]
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/bus.c |   16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 58beaaba50ee..107ad9a5b8aa 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -101,6 +101,8 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+ static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
+ static struct pci_bus_region pci_64_bit = {0,
+ 				(resource_size_t) 0xffffffffffffffffULL};
++static struct pci_bus_region pci_high = {(resource_size_t) 0x100000000ULL,
++				(resource_size_t) 0xffffffffffffffffULL};
+ 
+ /*
+  * @res contains CPU addresses.  Clip it so the corresponding bus addresses
+@@ -196,8 +198,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+  * alignment and type, try to find an acceptable resource allocation
+  * for a specific device resource.
+  */
+-int
+-pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
++int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 		resource_size_t size, resource_size_t align,
+ 		resource_size_t min, unsigned int type_mask,
+ 		resource_size_t (*alignf)(void *,
+@@ -206,10 +207,19 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 					  resource_size_t),
+ 		void *alignf_data)
+ {
+-	if (res->flags & IORESOURCE_MEM_64)
++	int rc;
++
++	if (res->flags & IORESOURCE_MEM_64) {
++		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
++					       type_mask, alignf, alignf_data,
++					       &pci_high);
++		if (rc == 0)
++			return 0;
++
+ 		return pci_bus_alloc_from_region(bus, res, size, align, min,
+ 						 type_mask, alignf, alignf_data,
+ 						 &pci_64_bit);
++	}
+ 
+ 	return pci_bus_alloc_from_region(bus, res, size, align, min,
+ 					 type_mask, alignf, alignf_data,
+
