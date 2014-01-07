@@ -1,116 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:29833
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753095AbaAIUpq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 15:45:46 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Rajat Jain <rajatjain@juniper.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatxjain@gmail.com>
-CC: Rajat Jain <rajatjain.linux@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yhlu.kernel@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
- during removal
-Date: Thu, 9 Jan 2014 20:45:34 +0000
-Message-ID: <bfe1b6a0b2494c71be43fea45f413575@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
- <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
- <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
- <4b24688d857e432eb7ecf9095c95b742@DM2PR05MB671.namprd05.prod.outlook.com>
-In-Reply-To: <4b24688d857e432eb7ecf9095c95b742@DM2PR05MB671.namprd05.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga03-in.huawei.com ([119.145.14.66]:8633 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751063AbaAGI2i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 03:28:38 -0500
+Message-ID: <52CBBA86.7020401@huawei.com>
+Date: Tue, 7 Jan 2014 16:27:50 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
+To: Dongsheng Wang <dongsheng.wang@freescale.com>,
+	<bhelgaas@google.com>, <rjw@rjwysocki.net>
+CC: <scottwood@freescale.com>, <galak@codeaurora.org>,
+	<roy.zang@freescale.com>, <linux-pci@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH 1/2] pci: Fix root port bus->self is NULL
+References: <1389081848-26506-1-git-send-email-dongsheng.wang@freescale.com>
+In-Reply-To: <1389081848-26506-1-git-send-email-dongsheng.wang@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgt
-cGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdl
-ci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUmFqYXQgSmFpbg0KPiBTZW50OiBUdWVzZGF5LCBK
-YW51YXJ5IDA3LCAyMDE0IDEwOjIxIEFNDQo+IFRvOiBCam9ybiBIZWxnYWFzOyBSYWphdCBKYWlu
-DQo+IENjOiBSYWphdCBKYWluOyBLZW5qaSBLYW5lc2hpZ2U7IEFsZXggV2lsbGlhbXNvbjsgWWlq
-aW5nIFdhbmc7IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdl
-ci5rZXJuZWwub3JnOyBZaW5naGFpIEx1OyBHdWVudGVyDQo+IFJvZWNrOyBZaW5naGFpIEx1DQo+
-IFN1YmplY3Q6IFJFOiBbUEFUQ0ggdjMgNC84XSBwY2llaHA6IERvbid0IGRpc2FibGUgdGhlIGxp
-bmsgcGVybWFuZW50bHksDQo+IGR1cmluZyByZW1vdmFsDQo+IA0KPiBIZWxsbyBCam9ybiAvIFlp
-bmdoYWksDQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTogQmpv
-cm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4gU2VudDogTW9uZGF5
-LCBKYW51YXJ5IDA2LCAyMDE0IDQ6MDQgUE0NCj4gPiBUbzogUmFqYXQgSmFpbg0KPiA+IENjOiBS
-YWphdCBKYWluOyBLZW5qaSBLYW5lc2hpZ2U7IEFsZXggV2lsbGlhbXNvbjsgWWlqaW5nIFdhbmc7
-IGxpbnV4LQ0KPiA+IHBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
-bC5vcmc7IFlpbmdoYWkgTHU7IEd1ZW50ZXINCj4gPiBSb2VjazsgUmFqYXQgSmFpbjsgWWluZ2hh
-aSBMdQ0KPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMgNC84XSBwY2llaHA6IERvbid0IGRpc2Fi
-bGUgdGhlIGxpbmsNCj4gPiBwZXJtYW5lbnRseSwgZHVyaW5nIHJlbW92YWwNCj4gPg0KPiA+IE9u
-IFN1biwgSmFuIDUsIDIwMTQgYXQgMTA6NTMgQU0sIFJhamF0IEphaW4gPHJhamF0eGphaW5AZ21h
-aWwuY29tPg0KPiA+IHdyb3RlOg0KPiA+ID4gSGVsbG8gQmpvcm4sDQo+ID4gPg0KPiA+ID4gSnVz
-dCBjaGVja2luZyBvbiB0aGUgZmF0ZSBvZiB0aGlzIHBhdGNoIHNldC4uLg0KPiA+ID4NCj4gPiA+
-IE9uIFR1ZSwgRGVjIDE3LCAyMDEzIGF0IDU6MDIgUE0sIEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFz
-QGdvb2dsZS5jb20+DQo+ID4gd3JvdGU6DQo+ID4gPj4gWytjYyB5aW5naGFpQGtlcm5lbC5vcmcg
-KHNlZW1zIHRvIGJlIFlpbmdoYWkncyBwcmVmZXJyZWQgZW1haWxdDQo+ID4gPj4NCj4gPiA+PiBP
-biBUdWUsIERlYyAxNywgMjAxMyBhdCAxMjowNjowNVBNIC0wODAwLCBSYWphdCBKYWluIHdyb3Rl
-Og0KPiA+ID4+PiBXZSBuZWVkIGZ1dHVyZSBsaW5rIHVwIGV2ZW50cyBmb3IgaG90LWFkZCwgdGh1
-cyBkb24ndCBkaXNhYmxlIHRoZQ0KPiA+ID4+PiBsaW5rIHBlcm1hbmVudGx5IGR1cmluZyBkZXZp
-Y2UgcmVtb3ZhbC4gQWxzbywgcmVtb3ZlIHRoZSBzdGF0aWMNCj4gPiA+Pj4gZnVuY3Rpb25zIHRo
-YXQgYXJlIG5vdyBsZWZ0IHVudXNlZC4NCj4gPiA+Pg0KPiA+ID4+IFRoZSBjaGFuZ2Vsb2cgc2hv
-dWxkIG1lbnRpb24gdGhhdCB0aGlzIHJldmVydHMgcGFydCBvZiAyZGViZDkyODk5OTcNCj4gPiAo
-IlBDSToNCj4gPiA+PiBwY2llaHA6IERpc2FibGUvZW5hYmxlIGxpbmsgZHVyaW5nIHNsb3QgcG93
-ZXIgb2ZmL29uIikuDQo+ID4gPg0KPiA+ID4gU3VyZS4gRG8geW91IHdhbnQgbWUgdG8gc3VibWl0
-IGFub3RoZXIgcGF0Y2ggc2V0IChidW1waW5nIHVwIHRoZQ0KPiA+ID4gdmVyc2lvbikgd2l0aCB0
-aGlzIGNoYW5nZSBsb2csIG9yIHlvdSdkIHdhbnQgdG8gYWRkIHRoaXMgY2hhbmdlIGxvZw0KPiA+
-ID4gd2hpbGUgbWVyZ2luZz8NCj4gPiA+DQo+ID4gPj4NCj4gPiA+PiBZaW5naGFpLCBjYW4geW91
-IHRlbGwgdXMgd2hldGhlciB0aGlzIGlzIGFuIGlzc3VlIG9uIHlvdXIgc3lzdGVtcz8NCj4gPiA+
-DQo+ID4gPiBBcyBZaW5naGFpIGNvbmZpcm1zIGZ1cnRoZXIgZG93biB0aGlzIHRocmVhZCwgaGlz
-IGlzc3VlIHdhcw0KPiA+ID4gY29uZmlybWVkIGJ5IEludGVsIHRvIGJlIGEgYnVnIGluIHRoZSBy
-ZXBlYXRlciBjaGlwLg0KPiA+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0K
-PiA+ID4gWWluZ2hhaSB3cml0ZXM6DQo+ID4gPj4gQWNjb3JkaW5nIHRvIEhXIGd1eXMgYW5kIElu
-dGVsLCB0aGF0IHNob3VsZCBiZSBidWcgb2YgcmVwZWF0ZXIuDQo+ID4gPj4NCj4gPiA+IC0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+ID4gIEkgZG9uJ3Qga25vdyBhYm91dCB0
-aGUgZGV0YWlscyBvZiBoaXMgc2NlbmFyaW8sIGV4Y2VwdCB0aGF0IHdoZW4NCj4gPiA+IHRoZSBh
-ZGFwdGVyIHdhcyBkaXNhYmxlZCB0aGUgcmVwZWF0ZXIga2VwdCBvbiBmbGFwcGluZyB0aGUgbGlu
-ayB1cCAmDQo+ID4gPiBkb3duIChhbmQgaGVuY2UgZGlzYWJsaW5nIHRoZSBsaW5rIHNvbHZlZCB0
-aGUgcHJvYmxlbSB0aGVuKS4gWWluZ2hhaQ0KPiA+ID4gY291bGRuJ3QgdGVzdCwgYnV0IEkgYmVs
-aWV2ZSB3aXRoIHRoaXMgcGF0Y2ggZXZlbiBpZiB3ZSBkaXNhYmxlDQo+ID4gPiBwcmVzZW5jZSBk
-ZXRlY3QgaW50ZXJydXB0LCB0aGUgImFkYXB0ZXIgcHJlc2VudCAvIG5vIHByZXNlbnQiDQo+ID4g
-PiBtZXNzYWdlcyB3b3VsZCAocmlnaHRseSkgY29udmVydCB0byAiTGluayBVcCAvIExpbmsgRG93
-biIgbWVzc2FnZXMNCj4gPiA+IChzaW5jZSB0aGUgcmVwZWF0ZXIga2VlcHMgb24gZmxhcHBpbmcg
-dGhlIGxpbmspLg0KPiA+ID4NCj4gPiA+IFNpbmNlIGl0IGlzIGEgcGxhdGZvcm0gc3BlY2lmaWMg
-YnVnLCBJJ20gbm90IHN1cmUgd2hhdCBjYW4gYmUgZG9uZQ0KPiA+ID4gdG8gcmVtb3ZlIHRob3Nl
-IG1lc3NhZ2VzIGV4Y2VwdCBtYXkgYmUgcmVkdWNlIHRoZSB2ZXJib3NpdHk/IElmDQo+ID4gPiB5
-b3UnZCBsaWtlIEkgY291bGQgY2hhbmdlIGFsbCB0aGUgSU5GTyBtZXNzYWdlcyB0byBEQkcgbWVz
-c2FnZXMuDQo+ID4NCj4gPiBFdmVuIGlmIGl0J3MgYSBkZWZlY3QgaW4gYSBwYXJ0aWN1bGFyIHBp
-ZWNlIG9mIGhhcmR3YXJlLCBJIGRvbid0IHdhbnQNCj4gPiB0byByZWdyZXNzIG9uIHRoYXQgaGFy
-ZHdhcmUsIGV2ZW4gaWYgdGhlIHJlZ3Jlc3Npb24gaXMganVzdCBleHRyYQ0KPiA+IG1lc3NhZ2Vz
-IHRoYXQgd2UgZGlkbid0IHNlZSBiZWZvcmUuDQo+ID4NCj4gPiBJIHRoaW5rIGlkZWFsbHkgd2Ug
-d291bGQgYWRkIHNvbWUgc29ydCBvZiBxdWlyayBmb3IgdGhhdCBoYXJkd2FyZSBzbw0KPiA+IGl0
-IHdvcmtzIGp1c3QgYXMgd2VsbCBhcyBpdCBkb2VzIHRvZGF5LiAgSSB0aGluayBleHRyYSBtZXNz
-YWdlcyB3aWxsDQo+ID4gbGVhZCB0byBhIGJ1ZyByZXBvcnRzIGZyb20gdXNlcnMuDQo+IA0KPiBT
-dXJlLCBJIGNhbiBkbyB0aGF0LiBJIHRoaW5rIHdoYXQgdGhlIHF1aXJrIHdvdWxkIGhhdmUgdG8g
-ZG8gaXMgdGhhdCBmb3INCj4gdGhhdCBwYXJ0aWN1bGFyIHBsYXRmb3JtLCBkb24ndCBlbmFibGUg
-dGhlIGxpbmstc3RhdGUgYmFzZWQgaG90cGx1Zy4NCj4gKFNpbmNlIGxpbmstc3RhdGUgaG90cGx1
-ZyB3aWxsIG5vdCB3b3JrIGlmIHdlIGRpc2FibGUgdGhlIGxpbmsNCj4gcGVybWFuZW50bHkgYXMg
-d2UgZG8gdG9kYXkgb24gY2FyZCByZW1vdmFsKS4NCj4gDQo+IEJ1dCB0aGUgcXVlc3Rpb24gaXMg
-aG93IHRvIGRldGVybWluZSB0aGF0IHRoZSBxdWlyayBoYXMgdG8gYmUgYXBwbGllZD8gSQ0KPiB0
-aGluayB0aGUgb2JqZWN0aXZlIGlzIHRvIGFwcGx5IHRoZSBxdWlyayB0byB0aGUgcGxhdGZvcm1z
-IHRoYXQgaGF2ZSBhDQo+ICJQQ0llIHJlcGVhdGVyIi4gU2luY2UgdGhpcyBkb2VzIG5vdCBkZXBl
-bmQgb24gYSBQQ0kgZGV2aWNlIC8gdmVuZG9yIElELA0KPiBhbmQgSSB0aGluayB0aGUgUENJZSBy
-ZXBlYXRlciBpcyBwcm9iYWJseSBub3QgZXZlbiB2aXNpYmxlIHRvIHRoZSBwY2llaHANCj4gb3Ig
-dGhlIFBDSSBzdWJzeXN0ZW0sIGhvdyBkbyBJIGRldGVybWluZSB0aGF0IHRoZSBxdWlyayBoYXMg
-dG8gYmUNCj4gYXBwbGllZD8NCg0KQW55IGlkZWFzIG9uIGhvdyBkbyBJIGlkZW50aWZ5IHRoZSBw
-bGF0Zm9ybXMgdGhhdCBtYXkgaGF2ZSB0aGlzIHByb2JsZW0/IA0KDQpUaGFua3MsDQoNClJhamF0
-DQoNCg0KPiANCj4gSWYgKGh3X2hhc19wY2llX3JlcGVhdGVyKQ0KPiAJRG9uJ3QgdXNlIGxpbmst
-c3RhdGUgaG90cGx1ZyAoYW5kIGRpc2FibGUgbGluayBwZXJtYW5lbnRseSBkdXJpbmcNCj4gY2Fy
-ZCByZW1vdmFsKSBFbHNlDQo+IAlVc2UgbGluay1zdGF0ZSBob3RwbHVnIChhbmQgZG9uJ3QgZGlz
-YWJsZSB0aGUgbGluayBwZXJtYW5lbnRseSkNCj4gDQo+IA0KPiBZaW5naGFpOiBTaW5jZSBJIGRv
-IG5vdCBoYXZlIHRoYXQgaGFyZHdhcmUsIEkgd2lsbCBuZWVkIHNvbWUgaGVscCBpbg0KPiB0ZXN0
-aW5nIHRoZSBwYXRjaCB3aXRoIHRoZSBxdWlyay4gSSB3YXMgd29uZGVyaW5nIGlmIHlvdSdkIHN0
-aWxsIGhhdmUNCj4gdGhhdCBoYXJkd2FyZSBhcm91bmQgYW5kIHdvdWxkIGJlIGFibGUgdG8gaGVs
-cCBtZSB3aXRoIHRlc3Rpbmc/DQo+IA0KPiBUaGFua3MsDQo+IA0KPiBSYWphdA0KPiAEIHsubiAr
-ICAgICAgICslICBsendtICBiIOunsiAgciAgelggIBpcICkgICB3KmpnICAgHiAgICAg3aJqLyAg
-IHog3pYgIDIg3pkNCj4gJiAp36EgYSAgfyAgHiBHICAgaCAPIGo6K3YgICB3INmlDQo=
+On 2014/1/7 16:04, Dongsheng Wang wrote:
+> From: Wang Dongsheng <dongsheng.wang@freescale.com>
+> 
+> the root port bus->self always NULL, so put root port pci device
+> into root port bus->self.
+> 
+> Signed-off-by: Wang Dongsheng <dongsheng.wang@freescale.com>
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 38e403d..7f2d1ab 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1472,6 +1472,9 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
+>  	if (!dev->is_added)
+>  		nr++;
+>  
+> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+> +		bus->self = dev;
+
+In this case, bus is the pci root bus I think, so why set bus->self = root port ?
+"bus->self" should pointer to the pci device that bridge out this bus.
+
+> +
+>  	for (fn = next_fn(bus, dev, 0); fn > 0; fn = next_fn(bus, dev, fn)) {
+>  		dev = pci_scan_single_device(bus, devfn + fn);
+>  		if (dev) {
+> 
+
+
+-- 
+Thanks!
+Yijing
 
