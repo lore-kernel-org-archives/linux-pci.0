@@ -1,70 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34633 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbaAJQT1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 11:19:27 -0500
-Message-ID: <52D01D82.5070202@canonical.com>
-Date: Fri, 10 Jan 2014 11:19:14 -0500
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from quartz.orcorp.ca ([184.70.90.242]:56123 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752349AbaAGR1t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jan 2014 12:27:49 -0500
+Date: Tue, 7 Jan 2014 10:27:34 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches <patches@apm.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
- mmio
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com> <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-In-Reply-To: <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Jon Masters <jcm@redhat.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC PATCH 2/3] arm64: dts: APM X-Gene PCIe device tree nodes
+Message-ID: <20140107172734.GC4227@obsidianresearch.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+ <1387785725-24262-3-git-send-email-tinamdar@apm.com>
+ <20131223174634.GD25089@obsidianresearch.com>
+ <CACoXjcnPvgDX3s8OywLHP6Tu2OrpNzM1Phx+s3RLmKDgu3t8gA@mail.gmail.com>
+ <20140103005253.GB12098@obsidianresearch.com>
+ <CACoXjcnykxdjekfmz6B3Ovk-+naCCOCWFZ3t=ZaMWAEPyVs_eQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACoXjcnykxdjekfmz6B3Ovk-+naCCOCWFZ3t=ZaMWAEPyVs_eQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/11/2013 02:55 PM, Yinghai Lu wrote:
-> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
->> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
->>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> That doesn't answer my question at all.
->>>>
->>>> I understand that this change makes it so Joseph doesn't have to use
->>>> "pci=realloc=off".  But why should auto-reallocation be limited to
->>>> buses that have resources above 4GB?  That doesn't make any sense.
->>>>
->>>> We should fix the reallocation code so it can deal with this case.  If
->>>> there's not enough space for everything, obviously we have to leave
->>>> something unassigned.  A ROM BAR is a good candidate for leaving
->>>> unassigned, because most of the time we can get along without it.
->>> Yes, that is ideal and not that simple.
->>> but that would be hard to backport to old kernels.
->>>
->>> BTW, Joseph, can you try
->>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>> for-pci-3.14
->>> with pci=realloc=on
->>>
->>> on that system?
->>>
->>> Thanks
->>>
->>> Yinghai
->> I noticed there was some back and forth on this thread.  Do you still
->> want me to test this version, Yinghai?
-> Yes, if that works, we would not need to put the patch in upstream for limiting
-> realloc auto scope.
->
-> Thanks
->
-> Yinghai
+On Mon, Jan 06, 2014 at 06:56:21PM -0800, Tanmay Inamdar wrote:
 
-Another user has confirmed that at test kernel from your branch[0] does
-resolve the bug.
+> > There is some kind of an addressing problem because you've done this:
+> >
+> > +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+> > +{
+> > +       int i;
+> > +
+> > +       for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> > +               dev->resource[i].start = dev->resource[i].end = 0;
+> > +               dev->resource[i].flags = 0;
+> > +       }
+> > +}
+> > +DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_BRIDGE_DEVICEID,
+> > +                        xgene_pcie_fixup_bridge);
+> >
+> > Which is usually a sign that something is wonky with how the HW is
+> > being fit into the PCI core.
+> 
+> We map the whole DDR range (eg 256 GB) into host's BAR. The Linux PCI
+> resource management tries to fit the host's memory into the ranges
+> provided (eg 0xe000000000).
+> Please let me know if there is any use case to do this mapping.
 
-Thanks,
+If you need to set the bridge's BAR like this, then the bridge is not
+non-conforming.. Bridge BAR's should be 0 size unless the bridge
+itself has registers.
 
-Joe
+Do any registers in this config space work properly? Does the
+secondary status reflect the physical link status properly?
 
-[0]
+If it is *really* broken you might just consider hiding it from the
+Linux core.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> >>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> >> <TAbort- <MAbort- >SERR- <PERR- INTx-
+> >>         Latency: 0, Cache Line Size: 64 bytes
+> >>         Region 0: Memory at <ignored> (64-bit, prefetchable)
+> >>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> >>         I/O behind bridge: 0000f000-00000fff
+> >>         Memory behind bridge: 00c00000-00cfffff
+> >
+> > [..]
+> >
+> >> 01:00.0 Class 0200: Device 15b3:1003
+> >>         Region 0: Memory at e000c00000 (64-bit, non-prefetchable) [size=1M]
+> >>         Region 2: Memory at e000000000 (64-bit, prefetchable)
+> >>         [size=8M]
+> >
+> > Something funky is going on here too, the 64 bit address e000000000
+> > should be reflected in the 'memory behind bridge' above, not
+> > truncated.
+> 
+> That's the Mellanox device that is plugged into the system. The
+> device's memory gets mapped at '0xe0xxxxxxxx'
 
+Right, but the bridge setup above has:
+
+> >>         Memory behind bridge: 00c00000-00cfffff
+
+Which is wrong, it doesn't include the range '0xe0xxxxxxxx'
+
+Jason
