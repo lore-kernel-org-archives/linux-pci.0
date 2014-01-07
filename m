@@ -1,197 +1,282 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
-Date: Fri, 17 Jan 2014 16:07:36 +0100
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-References: <1389742458-7693-1-git-send-email-tinamdar@apm.com> <201401151339.58593.arnd@arndb.de> <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
-In-Reply-To: <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:55493 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754533AbaAGXQP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 18:16:15 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so1177435iec.23
+        for <linux-pci@vger.kernel.org>; Tue, 07 Jan 2014 15:16:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201401171607.37561.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20131216221229.3393.6171.stgit@bling.home>
+References: <20131216221229.3393.6171.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 7 Jan 2014 16:15:54 -0700
+Message-ID: <CAErSpo7ZYsES6kZXjcwr-gwKaXm7DzHBvUGz+cpZBBH7stAAAQ@mail.gmail.com>
+Subject: Re: [PATCH] pci: Add "try" reset interfaces
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 17 January 2014, Tanmay Inamdar wrote:
-> On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Wednesday 15 January 2014, Tanmay Inamdar wrote:
-> >> This patch adds the AppliedMicro X-Gene SOC PCIe controller driver.
-> >> X-Gene PCIe controller supports maxmum upto 8 lanes and GEN3 speed.
-> >> X-Gene has maximum 5 PCIe ports supported.
-> >>
-> >> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> >
-> > This already looks much better than the first version, but I have a more
-> > comments. Most importantly, it would help to know how the root ports
-> > are structured. Is this a standard root complex and multiple ports,
-> > multiple root complexes with one port each, or a nonstandard organization
-> > that is a mix of those two models?
-> 
-> This is multiple root complexes with one port each.
+Hi Alex,
 
-Ok.
+Sorry for the delay in looking at this.
 
-> > I also wonder why you need to do this at all. If there isn't a global
-> > config space for all ports, but rather a separate type0/type1 config
-> > cycle based on the bus number, I see that as an indication that the
-> > ports are in fact separate domains and should each start with bus 0.
-> 
-> It is not a standard ECAM layout. We also have a separate RTDID
-> register as well to program bus, device, function. While accessing EP
-> config space, we have to set the bit 17:16 as 2b'01. The same config
-> space address is utilized for enabling a customized nonstandard PCIe
-> DMA feature. The bits are defined to differentiate the access purpose.
-> The feature is not supported in this driver yet.
-> 
-> Secondly I don't think it will matter if each port starts with bus 0.
-> As long as we set the correct BDF in RTDID and set correct bits in
-> config address, the config reads and writes would work. Right?
+On Mon, Dec 16, 2013 at 3:14 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> When doing a function/slot/bus reset PCI grabs the device_lock for
+> each device to block things like suspend and driver probes, which is
+> all well and good, but call paths exist where this lock may already be
+> held.  This creates an opportunity for deadlock.  For instance, vfio
+> allows userspace to issue resets so long as it owns the device(s).
+> If a driver unbind .remove callback races with userspace issuing a
+> reset, we have a deadlock as userspace gets stuck waiting on
+> device_lock while another thread has device_lock and waits for .remove
+> to complete.
 
-Yes, I think the current code will work (aside from my other comment),
-but it seems unnecessary to do this if you use pci domains correctly:
+Are you talking about vfio_pci_remove() (the vfio_pci_driver .remove()
+method) racing with vfio_pci_ioctl()?
 
-If you have one pci domain and one root port per root complex, you
-would not get any config space cycles for the root port and can
-do away with the special case here, as well as with the
-xgene_pcie_fixup_bridge() that seems to be a special case to
-avoid touching the root ports as well.
+Or maybe it's vfio_pci_release (the vfio_pci_ops .release() method),
+since it looks like you want to use pci_try_reset_function() there and
+in vfio_pci_ioctl()?
 
-> >
-> >> +     switch (restype) {
-> >> +     case IORESOURCE_MEM:
-> >> +             res = &port->mem.res;
-> >> +             pci_addr = port->mem.pci_addr;
-> >> +             min_size = SZ_128M;
-> >> +             break;
-> >> +     case IORESOURCE_IO:
-> >> +             res = &port->io.res;
-> >> +             pci_addr = port->io.pci_addr;
-> >> +             min_size = 128;
-> >> +             flag |= OB_LO_IO;
-> >> +             break;
-> >> +     }
-> >
-> > I assume this works ok, but seems wrong in one detail: If the resource
-> > is marked IORESOURCE_IO, res->start is supposed to be in I/O space, not
-> > in memory space, which would make it the wrong number to program
-> > into the hardware registers.
+Either way, aren't there at least potentially more locking issues than
+just the reset problem?  Seems like any ioctl that might take the
+device_lock could have the same problem.  How do you make sure there's
+no userspace owner of the device before you release the device or
+remove the driver?
 
-Sorry, I was actually wrong with my statement above and I thought I had
-deleted my comment before sending the mail.
+Bjorn
 
-> Yes for using ioport resource. However we have decided to defer using
-> it since 'pci_ioremap_io' is not yet supported from arm64 side.
-> 
-> From HW point of view, for memory mapped IO space, it is nothing but a
-> piece taken out of the ranges in address map for outbound accesses. So
-> while configuring registers from SOC side, it should take the CPU
-> address which is address from SOC address map. Right?
-> 
-> Later on we can have a separate io resource like 'realio' similar to
-> what pci-mvebu.c does.
-
-I think your code is actually correct here, but please also add the
-pci_ioremap_io implementation for arm64 in a separate patch in this
-series. It shouldn't be hard and we need it for every pci host driver
-anyway.
-
-> >> +static int xgene_pcie_setup(int nr, struct pci_sys_data *sys)
-> >> +{
-> >> +     struct xgene_pcie_port *pp = xgene_pcie_sys_to_port(sys);
-> >> +
-> >> +     if (pp == NULL)
-> >> +             return 0;
-> >> +
-> >> +     sys->mem_offset = pp->mem.res.start - pp->mem.pci_addr;
-> >> +     pci_add_resource_offset(&sys->resources, &pp->mem.res,
-> >> +                             sys->mem_offset);
-> >> +     return 1;
-> >> +}
-
-> > Also, what would be a reason for the port to be zero here? If
-> > it's something that can't happen in practice, don't try to handle
-> > it gracefully. You can use BUG_ON() for fatal conditions that
-> > are supposed to be impossible to reach.
-> 
-> This function is a hook to upper layer. We register nr_controllers in
-> hw_pci structure as MAX_PORTS we support. It can happen that number of
-> ports actually enabled from device tree are less than the number in
-> nr_controllers.
-
-I see. I'll comment more on this below.
-
-> >> +     if (!port->link_up)
-> >> +             dev_info(port->dev, "(rc) link down\n");
-> >> +     else
-> >> +             dev_info(port->dev, "(rc) x%d gen-%d link up\n",
-> >> +                             lanes, port->link_speed + 1);
-> >> +#ifdef CONFIG_PCI_DOMAINS
-> >> +     xgene_pcie_hw.domain++;
-> >> +#endif
-> >> +     xgene_pcie_hw.private_data[index++] = port;
-> >> +     platform_set_drvdata(pdev, port);
-> >> +     return 0;
-> >> +}
-> >
-> > Do you have multiple domains or not? I don't see how it can work if you
-> > make the domain setup conditional on a kernel configuration option.
-> > If you in fact have multiple domains, make sure in Kconfig that
-> > CONFIG_PCI_DOMAINS is enabled. Otherwise don't mess with the domain
-> > number...
-> 
-> It is enabled in Kconfig.
-
-Ok, then remove the #ifdef here.
-
-> >> +static int __init xgene_pcie_init(void)
-> >> +{
-> >> +     void *private;
-> >> +     int ret;
-> >> +
-> >> +     pr_info("X-Gene: PCIe driver\n");
-> >> +
-> >> +     /* allocate private data to keep xgene_pcie_port information */
-> >> +     private = kzalloc((XGENE_PCIE_MAX_PORTS * sizeof(void *)), GFP_KERNEL);
-> >
-> > This should not be done unconditionally: There is no point in printing
-> > a message or allocating memory if you don't actually run on a system
-> > with this device.
-> 
-> I am doing this here because I have one instance of hw_pci structure
-> with multiple pcie controllers. I can't do it from probe since it will
-> be called once per instance in device tree.
-> 
-> >
-> >> +     xgene_pcie_hw.private_data = private;
-> >> +     ret = platform_driver_probe(&xgene_pcie_driver,
-> >> +                                 xgene_pcie_probe_bridge);
-> >> +     if (ret)
-> >> +             return ret;
-> >> +     pci_common_init(&xgene_pcie_hw);
-> >> +     return 0;
-> >
-> > This seems wrong: You should not use platform_driver_probe() because
-> > that has issues with deferred probing.
-> 
-> I think 'platform_driver_probe' prevents the deferred probing.
-> 'pci_common_init' needs to be called only once with current driver
-> structure. The probes for all pcie ports should be finished (ports
-> initialized) before 'pci_common_init' gets called.
-
-I think it would be cleaner for dynamically registered host controllers
-to call pci_common_init_dev() with nr_controllers=1 once for each root
-complex in the probe() function. This should take care of a few other
-things I've mentioned as well.
-
-	Arnd
+> To resolve this, we can make a version of the reset
+> interfaces which use trylock.  With this, we can safely attempt a
+> reset and return error to userspace if there is contention.
+>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/pci.c   |  155 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |    3 +
+>  2 files changed, 158 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 33120d1..de6416f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3445,6 +3445,18 @@ static void pci_dev_lock(struct pci_dev *dev)
+>         device_lock(&dev->dev);
+>  }
+>
+> +/* Return 1 on successful lock, 0 on contention */
+> +static int pci_dev_trylock(struct pci_dev *dev)
+> +{
+> +       if (pci_cfg_access_trylock(dev)) {
+> +               if (device_trylock(&dev->dev))
+> +                       return 1;
+> +               pci_cfg_access_unlock(dev);
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+>  static void pci_dev_unlock(struct pci_dev *dev)
+>  {
+>         device_unlock(&dev->dev);
+> @@ -3588,6 +3600,34 @@ int pci_reset_function(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_reset_function);
+>
+> +/**
+> + * pci_try_reset_function - quiesce and reset a PCI device function
+> + * @dev: PCI device to reset
+> + *
+> + * Same as above, except return -EAGAIN if unable to lock device.
+> + */
+> +int pci_try_reset_function(struct pci_dev *dev)
+> +{
+> +       int rc;
+> +
+> +       rc = pci_dev_reset(dev, 1);
+> +       if (rc)
+> +               return rc;
+> +
+> +       pci_dev_save_and_disable(dev);
+> +
+> +       if (pci_dev_trylock(dev)) {
+> +               rc = __pci_dev_reset(dev, 0);
+> +               pci_dev_unlock(dev);
+> +       } else
+> +               rc = -EAGAIN;
+> +
+> +       pci_dev_restore(dev);
+> +
+> +       return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_try_reset_function);
+> +
+>  /* Lock devices from the top of the tree down */
+>  static void pci_bus_lock(struct pci_bus *bus)
+>  {
+> @@ -3612,6 +3652,32 @@ static void pci_bus_unlock(struct pci_bus *bus)
+>         }
+>  }
+>
+> +/* Return 1 on successful lock, 0 on contention */
+> +static int pci_bus_trylock(struct pci_bus *bus)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> +               if (!pci_dev_trylock(dev))
+> +                       goto unlock;
+> +               if (dev->subordinate) {
+> +                       if (!pci_bus_trylock(dev->subordinate)) {
+> +                               pci_dev_unlock(dev);
+> +                               goto unlock;
+> +                       }
+> +               }
+> +       }
+> +       return 1;
+> +
+> +unlock:
+> +       list_for_each_entry_continue_reverse(dev, &bus->devices, bus_list) {
+> +               if (dev->subordinate)
+> +                       pci_bus_unlock(dev->subordinate);
+> +               pci_dev_unlock(dev);
+> +       }
+> +       return 0;
+> +}
+> +
+>  /* Lock devices from the top of the tree down */
+>  static void pci_slot_lock(struct pci_slot *slot)
+>  {
+> @@ -3640,6 +3706,37 @@ static void pci_slot_unlock(struct pci_slot *slot)
+>         }
+>  }
+>
+> +/* Return 1 on successful lock, 0 on contention */
+> +static int pci_slot_trylock(struct pci_slot *slot)
+> +{
+> +       struct pci_dev *dev;
+> +
+> +       list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+> +               if (!dev->slot || dev->slot != slot)
+> +                       continue;
+> +               if (!pci_dev_trylock(dev))
+> +                       goto unlock;
+> +               if (dev->subordinate) {
+> +                       if (!pci_bus_trylock(dev->subordinate)) {
+> +                               pci_dev_unlock(dev);
+> +                               goto unlock;
+> +                       }
+> +               }
+> +       }
+> +       return 1;
+> +
+> +unlock:
+> +       list_for_each_entry_continue_reverse(dev,
+> +                                            &slot->bus->devices, bus_list) {
+> +               if (!dev->slot || dev->slot != slot)
+> +                       continue;
+> +               if (dev->subordinate)
+> +                       pci_bus_unlock(dev->subordinate);
+> +               pci_dev_unlock(dev);
+> +       }
+> +       return 0;
+> +}
+> +
+>  /* Save and disable devices from the top of the tree down */
+>  static void pci_bus_save_and_disable(struct pci_bus *bus)
+>  {
+> @@ -3763,6 +3860,35 @@ int pci_reset_slot(struct pci_slot *slot)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_reset_slot);
+>
+> +/**
+> + * pci_try_reset_slot - Try to reset a PCI slot
+> + * @slot: PCI slot to reset
+> + *
+> + * Same as above except return -EAGAIN if the slot cannot be locked
+> + */
+> +int pci_try_reset_slot(struct pci_slot *slot)
+> +{
+> +       int rc;
+> +
+> +       rc = pci_slot_reset(slot, 1);
+> +       if (rc)
+> +               return rc;
+> +
+> +       pci_slot_save_and_disable(slot);
+> +
+> +       if (pci_slot_trylock(slot)) {
+> +               might_sleep();
+> +               rc = pci_reset_hotplug_slot(slot->hotplug, 0);
+> +               pci_slot_unlock(slot);
+> +       } else
+> +               rc = -EAGAIN;
+> +
+> +       pci_slot_restore(slot);
+> +
+> +       return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_try_reset_slot);
+> +
+>  static int pci_bus_reset(struct pci_bus *bus, int probe)
+>  {
+>         if (!bus->self)
+> @@ -3822,6 +3948,35 @@ int pci_reset_bus(struct pci_bus *bus)
+>  EXPORT_SYMBOL_GPL(pci_reset_bus);
+>
+>  /**
+> + * pci_try_reset_bus - Try to reset a PCI bus
+> + * @bus: top level PCI bus to reset
+> + *
+> + * Same as above except return -EAGAIN if the bus cannot be locked
+> + */
+> +int pci_try_reset_bus(struct pci_bus *bus)
+> +{
+> +       int rc;
+> +
+> +       rc = pci_bus_reset(bus, 1);
+> +       if (rc)
+> +               return rc;
+> +
+> +       pci_bus_save_and_disable(bus);
+> +
+> +       if (pci_bus_trylock(bus)) {
+> +               might_sleep();
+> +               pci_reset_bridge_secondary_bus(bus->self);
+> +               pci_bus_unlock(bus);
+> +       } else
+> +               rc = -EAGAIN;
+> +
+> +       pci_bus_restore(bus);
+> +
+> +       return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_try_reset_bus);
+> +
+> +/**
+>   * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
+>   * @dev: PCI device to query
+>   *
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1084a15..34629df 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -951,10 +951,13 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>  int __pci_reset_function(struct pci_dev *dev);
+>  int __pci_reset_function_locked(struct pci_dev *dev);
+>  int pci_reset_function(struct pci_dev *dev);
+> +int pci_try_reset_function(struct pci_dev *dev);
+>  int pci_probe_reset_slot(struct pci_slot *slot);
+>  int pci_reset_slot(struct pci_slot *slot);
+> +int pci_try_reset_slot(struct pci_slot *slot);
+>  int pci_probe_reset_bus(struct pci_bus *bus);
+>  int pci_reset_bus(struct pci_bus *bus);
+> +int pci_try_reset_bus(struct pci_bus *bus);
+>  void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+>  void pci_update_resource(struct pci_dev *dev, int resno);
+>  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+>
