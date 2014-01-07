@@ -1,77 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:30904 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281AbaAWFwU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 00:52:20 -0500
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MZU00B4CAZ7BYB0@mailout1.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 23 Jan 2014 14:52:19 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: =?ISO-8859-1?Q?'Bj=F8rn_Erik_Nilsen'?= <ben@datarespons.no>
-Cc: linux-pci@vger.kernel.org, 'Mohit KUMAR' <Mohit.KUMAR@st.com>,
-	'Harro Haan' <hrhaan@gmail.com>, 'Marek Vasut' <marex@denx.de>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <25.15.01844.D5C20E25@epmailin6.samsung.com>
-In-reply-to: <25.15.01844.D5C20E25@epmailin6.samsung.com>
-Subject: Re: designware/imx6: question regarding MSI
-Date: Thu, 23 Jan 2014 14:52:19 +0900
-Message-id: <000201cf17ff$47025bf0$d50713d0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:37224 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757925AbaAGA4r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:56:47 -0500
+Received: by mail-ie0-f169.google.com with SMTP id e14so19748243iej.28
+        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:56:46 -0800 (PST)
+Subject: [PATCH v7 13/15] PCI: Split out bridge window override of minimum
+ allocation address
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:56:44 -0700
+Message-ID: <20140107005644.10786.41340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 23, 2014 5:39 AM, Jingoo Han wrote:
-> 
-> I’m currently playing with MSI support in pci-imx6.c using Harro Haan’s patch [*].
-> 
-> Are there any technical reasons why dw_pcie_msi_init cannot be called from dw_msi_setup_irq? Or rather,
-> why it should not?
+pci_bus_alloc_resource() avoids allocating space below the "min" supplied
+by the caller (usually PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM).  This is to
+protect badly documented motherboard resources.  But if we're allocating
+space inside an already-configured PCI-PCI bridge window, we ignore "min".
 
-No, there is no special reason.
-The patch (call dw_pcie_msi_init from dw_msi_setup_irq) would be
-good. Thank you for your effort.
+See 688d191821de ("pci: make bus resource start address override minimum IO
+address").
 
-Mohit, Pratyush,
-If you have different opinions, please let us know. :-)
+This patch moves the check to make it more visible and simplify future
+patches.  No functional change.
 
-Best regards,
-Jingoo Han
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/bus.c |   15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-> 
-> I’m asking because I have a hotplug scenario where this little hack (call dw_pcie_msi_init from
-> dw_msi_setup_irq) fixes a problem with MSI. I therefore need to understand whether it is a sensible
-> hack or just crap, and more importantly; how it can be fixed properly.
-> 
-> Scenario:
-> 
-> (remove endpoints)
-> # echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove
-> # echo 1 > /sys/bus/pci/devices/0000:01:00.1/remove
-> 
-> # take fpga in and out of reset (this will mess up the configuration space of the bridge)
-> 
-> (reset bridge)
-> # echo 1 > /sys/bus/pci/devices/0000:00:00.0/reset
-> 
-> (rescan bus)
-> # echo 1 > /sys/bus/pci/rescan
-> 
-> At this point everything works fine except MSI. With above mention hack it works like a charm.
-> 
-> I would be grateful if someone could shed light on this. I might have missed some important details.
-> 
-> 
-> Best regards,
-> Bjørn Erik Nilsen
-> 
-> [*]
-> 
-> From: Harro Haan <hrhaan@gmail.com>
-> Date: Thu, 5 Dec 2013 14:06:37 +0100
-> Subject: [PATCH 2/2] PCI: imx6: add support for MSI
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index fc1b74013743..6f2f47a7b6c6 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -147,11 +147,18 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 		    !(res->flags & IORESOURCE_PREFETCH))
+ 			continue;
+ 
++		/*
++		 * "min" is typically PCIBIOS_MIN_IO or PCIBIOS_MIN_MEM to
++		 * protect badly documented motherboard resources, but if
++		 * this is an already-configured bridge window, its start
++		 * overrides "min".
++		 */
++		if (r->start)
++			min = r->start;
++
+ 		/* Ok, try it out.. */
+-		ret = allocate_resource(r, res, size,
+-					r->start ? : min,
+-					max, align,
+-					alignf, alignf_data);
++		ret = allocate_resource(r, res, size, min, max,
++					align, alignf, alignf_data);
+ 		if (ret == 0)
+ 			break;
+ 	}
 
