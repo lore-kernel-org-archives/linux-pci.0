@@ -1,62 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:35056 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335AbaA2JNK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 04:13:10 -0500
-Message-ID: <52E8C622.5030603@codethink.co.uk>
-Date: Wed, 29 Jan 2014 09:13:06 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v7 00/15] PCI: Allocate 64-bit BARs above 4G when possible
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:55:12 -0700
+Message-ID: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Valentine <valentine.barshak@cogentembedded.com>
-CC: linux-kernel@lists.codethink.co.uk, linux-sh@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: rcar: fix bridge logic configuration accesses
-References: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk> <1390903616-8073-4-git-send-email-ben.dooks@codethink.co.uk> <52E807E9.8060900@cogentembedded.com>
-In-Reply-To: <52E807E9.8060900@cogentembedded.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28/01/14 19:41, Valentine wrote:
-> On 01/28/2014 02:06 PM, Ben Dooks wrote:
->> The bridge logic at slot 0 only supports reads up to 0x40 and the
->> rest of the PCI configuration space for this slot is marked as
->> reserved in the manual.
->>
->> Trying a read from offset 0x100 is producing an error from the
->> bridge. With error interrupts enabled, the following is printed:
->
-> I don't think this is a critical error.
-> The bridge works fine after an attempt to access the unsupported
-> PCIe/PCI-X 2 area.
->
-> If you want to prevent the access, I'm OK with it.
-> But I think it's better to do "if (where <= 0x100)"
-> and drop the slot check since all other slots do not support
-> access beyond 0x100 as well.
+This is basically v7 of Yinghai's patch series:
+http://lkml.kernel.org/r/1387485843-17403-1-git-send-email-yinghai@kernel.org
 
-The bridge specifically says that the registers end at 0x40 so
-that really should stay.
+The goal is to try to put 64-bit BARs above 4G so we can preserve the
+32-bit bus address space for 32-bit BARs.
 
-We're seeing external aborts being generated from somewhere, and
-it seems that either the bridge or the USB drivers are responsible
-for generating them.
+There are a whole bunch of AGP updates at the beginning because some AGP
+devices have 64-bit BARs, but most of the AGP drivers read the aperture
+bus address directly from the BAR, and they only handle 32-bit BARs.
+Putting BARs above 4G would break those drivers, so we tried to fix them
+up first.  Yinghai fixed intel-gtt.c, and I made similar fixes to all
+the other AGP drivers I could find.
 
-> The PCI code attempts to access beyond 0x100 only once when probing PCI
-> bridges
-> to see if they support PCIe/PCI-X 2 area which is 4K.
-> The area beyond 0x40 is never accessed because the bridge does not
-> expose any PCI capabilities.
->
->>
->> pci-rcar-gen2 ee0d0000.pci: error irq: status 00000014
->
-> Did you experience any problems other than this message
-> printed by the IRQ handler introduced by the previous patch?
->
+Some of the AGP updates are related to the fact that most of the drivers
+assume the PCI bus address is the same as the CPU physical address.  For
+example, they read the bus address from the BAR, then call ioremap() on
+it.  This is wrong, because ioremap() expects a CPU physical address,
+not a bus address.  In most cases, I think AGP devices are in simple
+systems where (bus_address == CPU_physical_address), so these updates
+probably don't fix any broken systems.  I'm pretty sure there are more
+things like this that should be fixed.
+
+The important PCI changes are the last two:
+
+      PCI: Enforce bus address limits in resource allocation
+      PCI: Allocate 64-bit BARs above 4G when possible
+
+The first fixes a long-standing bug: we would never assign space to a
+32-bit BAR if the *CPU* address didn't fit in 32 bits.  But the important
+thing is the *bus* address, and that may fit in 32 bits even if the CPU
+address doesn't.
+
+The second is the one that tries to allocate space above 4G for 64-bit
+BARs.  If that fails, we fall back to allocating space anywhere.  It's
+possible this will expose other broken drivers that can't deal with
+64-bit BARs being above 4G.
+
+I kept Yinghai as the author of the patches that originated with him,
+but I reworked them substantially to try to simplify the series, so any
+bugs here are most likely my fault.  If my rework made things worse, or
+if it makes your life difficult, I will consider doing something
+different; just let me know.
+
+---
+
+Bjorn Helgaas (11):
+      PCI: Change pci_bus_region addresses to dma_addr_t
+      PCI: Add pci_bus_address() to get bus address of a BAR
+      agp: Support 64-bit APBASE
+      agp: Use pci_resource_start() to get CPU physical address for BAR
+      drm/i915: Rename gtt_bus_addr to gtt_phys_addr
+      agp/intel: Rename gtt_bus_addr to gtt_phys_addr
+      agp/intel: Use pci_bus_address() to get MMADR bus address
+      agp/intel: Use pci_bus_address() to get GTTADR bus address
+      agp/intel: Use CPU physical address, not bus address, for ioremap()
+      agp/ati: Use PCI_COMMAND instead of hard-coded 4
+      PCI: Split out bridge window override of minimum allocation address
+
+Yinghai Lu (4):
+      PCI: Convert pcibios_resource_to_bus() to take a pci_bus, not a pci_dev
+      agp/intel: Support 64-bit GMADR
+      PCI: Enforce bus address limits in resource allocation
+      PCI: Allocate 64-bit BARs above 4G when possible
 
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+ arch/alpha/kernel/pci-sysfs.c       |    4 +
+ arch/powerpc/kernel/pci-common.c    |    4 +
+ arch/powerpc/kernel/pci_of_scan.c   |    4 +
+ arch/sparc/kernel/pci.c             |    6 +-
+ arch/x86/include/asm/pci.h          |    1 
+ drivers/char/agp/agp.h              |    1 
+ drivers/char/agp/ali-agp.c          |    4 +
+ drivers/char/agp/amd-k7-agp.c       |   14 ++--
+ drivers/char/agp/amd64-agp.c        |    5 -
+ drivers/char/agp/ati-agp.c          |   21 +++---
+ drivers/char/agp/efficeon-agp.c     |    5 +
+ drivers/char/agp/generic.c          |    4 +
+ drivers/char/agp/intel-agp.c        |   48 +++++--------
+ drivers/char/agp/intel-agp.h        |   10 +--
+ drivers/char/agp/intel-gtt.c        |   47 +++++--------
+ drivers/char/agp/nvidia-agp.c       |    9 +-
+ drivers/char/agp/sis-agp.c          |    5 +
+ drivers/char/agp/via-agp.c          |   13 ++--
+ drivers/gpu/drm/i915/i915_gem_gtt.c |    6 +-
+ drivers/pci/bus.c                   |  128 +++++++++++++++++++++++++++--------
+ drivers/pci/host-bridge.c           |   19 ++---
+ drivers/pci/probe.c                 |   18 ++---
+ drivers/pci/quirks.c                |    2 -
+ drivers/pci/rom.c                   |    2 -
+ drivers/pci/setup-bus.c             |   16 ++--
+ drivers/pci/setup-res.c             |    2 -
+ drivers/pcmcia/i82092.c             |    2 -
+ drivers/pcmcia/yenta_socket.c       |    6 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c |    5 +
+ drivers/video/arkfb.c               |    2 -
+ drivers/video/s3fb.c                |    2 -
+ drivers/video/vt8623fb.c            |    2 -
+ include/linux/pci.h                 |   20 +++--
+ 33 files changed, 241 insertions(+), 196 deletions(-)
