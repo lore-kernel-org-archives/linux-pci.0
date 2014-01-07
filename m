@@ -1,96 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og118.obsmtp.com ([64.18.0.160]:53096 "HELO
-	exprod5og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753213AbaAXVdp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jan 2014 16:33:45 -0500
-Received: by mail-pa0-f53.google.com with SMTP id lj1so3703797pab.12
-        for <linux-pci@vger.kernel.org>; Fri, 24 Jan 2014 13:33:43 -0800 (PST)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [RFC PATCH V3 3/4] dt-bindings: pci: xgene pcie device tree bindings
-Date: Fri, 24 Jan 2014 13:32:47 -0800
-Message-Id: <1390599168-13150-4-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
-References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+Received: from mga09.intel.com ([134.134.136.24]:40167 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752204AbaAGJAJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jan 2014 04:00:09 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V1 01/14] iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
+Date: Tue,  7 Jan 2014 17:00:21 +0800
+Message-Id: <1389085234-22296-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for X-Gene PCIe driver. The driver resides
-under 'drivers/pci/host/pci-xgene.c' file.
+Factor out function dmar_alloc_dev_scope() from dmar_parse_dev_scope()
+for later reuse.
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++++++++++++++++++++
- 1 file changed, 52 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
+ drivers/iommu/dmar.c |   28 ++++++++++++++++------------
+ include/linux/dmar.h |    1 +
+ 2 files changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pci.txt b/Documentation/devicetree/bindings/pci/xgene-pci.txt
-new file mode 100644
-index 0000000..60e4a54
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pci.txt
-@@ -0,0 +1,52 @@
-+* AppliedMicro X-Gene PCIe interface
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 248332e..4a4c9a1 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -117,13 +117,9 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
+ 	return 0;
+ }
+ 
+-int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
+-				struct pci_dev ***devices, u16 segment)
++void *dmar_alloc_dev_scope(void *start, void *end, int *cnt)
+ {
+ 	struct acpi_dmar_device_scope *scope;
+-	void * tmp = start;
+-	int index;
+-	int ret;
+ 
+ 	*cnt = 0;
+ 	while (start < end) {
+@@ -138,15 +134,24 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 		start += scope->length;
+ 	}
+ 	if (*cnt == 0)
+-		return 0;
++		return NULL;
 +
-+Required properties:
-+- device_type: set to "pci"
-+- compatible: should contain "xgene,pcie" to identify the core.
-+- reg: A list of physical base address and length for each set of controller
-+       registers. Must contain an entry for each entry in the reg-names
-+       property.
-+- reg-names: Must include the following entries:
-+  "csr": controller configuration registers.
-+  "cfg": pcie configuration space registers.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- ranges: ranges for the outbound memory, I/O regions.
-+- dma-ranges: ranges for the inbound memory regions.
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+- clocks: from common clock binding: handle to pci clock.
++	return kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
++}
 +
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+
-+Example:
-+
-+SoC specific DT Entry:
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+			0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+		reg-names = "csr", "cfg";
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		clocks = <&pcie0clk 0>;
-+	};
-+
-+Board specific DT Entry:
-+	&pcie0 {
-+		status = "ok";
-+	};
++int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
++				struct pci_dev ***devices, u16 segment)
++{
++	struct acpi_dmar_device_scope *scope;
++	int index, ret;
+ 
+-	*devices = kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
+-	if (!*devices)
++	*devices = dmar_alloc_dev_scope(start, end, cnt);
++	if (*cnt == 0)
++		return 0;
++	else if (!*devices)
+ 		return -ENOMEM;
+ 
+-	start = tmp;
+-	index = 0;
+-	while (start < end) {
++	for (index = 0; start < end; start += scope->length) {
+ 		scope = start;
+ 		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT ||
+ 		    scope->entry_type == ACPI_DMAR_SCOPE_TYPE_BRIDGE) {
+@@ -158,7 +163,6 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 			}
+ 			index ++;
+ 		}
+-		start += scope->length;
+ 	}
+ 
+ 	return 0;
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index bd5026b..198eb09 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -151,6 +151,7 @@ struct dmar_atsr_unit {
+ int dmar_parse_rmrr_atsr_dev(void);
+ extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
+ extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
++extern void *dmar_alloc_dev_scope(void *start, void *end, int *cnt);
+ extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 				struct pci_dev ***devices, u16 segment);
+ extern void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt);
 -- 
-1.7.9.5
+1.7.10.4
 
