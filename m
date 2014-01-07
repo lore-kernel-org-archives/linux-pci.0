@@ -1,87 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:60726 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325AbaAGJLr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 04:11:47 -0500
-Received: by mail-lb0-f182.google.com with SMTP id l4so79528lbv.13
-        for <linux-pci@vger.kernel.org>; Tue, 07 Jan 2014 01:11:46 -0800 (PST)
-Received: from [10.0.0.100] ([87.245.166.81])
-        by mx.google.com with ESMTPSA id bl6sm44525667lbb.5.2014.01.07.01.11.45
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Tue, 07 Jan 2014 01:11:45 -0800 (PST)
-Message-ID: <52CBC4D1.5080706@gmail.com>
-Date: Tue, 07 Jan 2014 13:11:45 +0400
-From: `VL <vl.homutov@gmail.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:60606 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752220AbaAGPfI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 10:35:08 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
+Date: Tue, 7 Jan 2014 16:35:01 +0100
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jon Masters <jcm@redhat.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com> <201401031049.20932.arnd@arndb.de> <CACoXjc=h8W=9jx4d2Y+F9hmgQsuMTgG4080jZGbtddv10OgtMA@mail.gmail.com>
+In-Reply-To: <CACoXjc=h8W=9jx4d2Y+F9hmgQsuMTgG4080jZGbtddv10OgtMA@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: pci->pcie bridge issue: kernel unable to find a free I/O port range.
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201401071635.02006.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Tuesday 07 January 2014, Tanmay Inamdar wrote:
+> On Fri, Jan 3, 2014 at 1:49 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >> +Required properties:
+> >> +- status: Either "ok" or "disabled".
+> >> +- device_type: set to "pci"
+> >> +- compatible: should contain "xgene,pcie" to identify the core.
+> >> +- reg: base addresses and lengths of the pcie controller configuration
+> >> +     space register.
+> >> +- #address-cells: set to <3>
+> >> +- #size-cells: set to <2>
+> >> +- ranges: ranges for the PCI memory, I/O regions, config and MSI regions
+> >> +- #interrupt-cells: set to <1>
+> >> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> >> +     to define the mapping of the PCIe interface to interrupt
+> >> +     numbers.
+> >> +- clocks: from common clock binding: handle to pci clock.
+> >> +- clock-names: from common clock binding. Should be "pcieclk".
+> >> +
+> >
+> > Better use an anonymous clock?
+> 
+> Sorry. Can you please elaborate?
 
-I'm having an issue with my M-Audio Delta 44 soundcard installed into
-the PCI->PCIe adapter. When installed into PCI slot on my old computer,
-it works perfectly, but the new one lacks PCI slots, so I installed it 
-using
-the adapter (http://www.espada-tech.ru/pr_-12351.shtml)
+I mean drop the "clock-names" property.
 
-lspci shows the audio card:
+> >> +SoC specific DT Entry:
+> >> +     pcie0: pcie@1f2b0000 {
+> >> +             status = "disabled";
+> >> +             device_type = "pci";
+> >> +             compatible = "xgene,pcie";
+> >> +             #interrupt-cells = <1>;
+> >> +             #size-cells = <2>;
+> >> +             #address-cells = <3>;
+> >> +             reg = < 0x00 0x1f2b0000 0x0 0x00010000>;
+> >> +             ranges = <0x02000000 0x0 0x00000000 0xe0 0x00000000 0x0 0x10000000 /* mem*/
+> >
+> >
+> > Also, do you support no prefetchable memory?
+> 
+> HW has either IO or Memory regions for mapping device's memory space.
+> There is no separate prefetchable memory space.
 
-07:00.0 Multimedia audio controller: VIA Technologies Inc. ICE1712 
-[Envy24] PCI Multi-Channel I/O Controller (rev 02)
+Are you sure the memory is non-prefetchable then? I would have expected
+0x42000000 rather than 0x02000000, but I could be misremembering it.
 
-but the driver won't load:
+> >
+> >> +                       0x00000000 0x0 0xd0000000 0xe0 0xd0000000 0x0 0x00200000 /* cfg */
+> >
+> > config space is not normally in the ranges property, and I think you will need
+> > it in the pcie node itself as a 'reg' property so the code can access it.
+> 
+> pcie-designware.c does it that way. I just followed their implementation.
 
-snd_ice1712 0000:07:00.0: Refused to change power state, currently in D3
-ice1712: No matching model found for ID 0x6c6c6c6c
-invalid EEPROM (size = 108)
-snd_ice1712: probe of 0000:07:00.0 failed with error -5
+I don't remember what led to that, it still seems wrong and I can't find anything
+in the PCI binding for host bridges telling their config space this way.
 
-Unknown ID and EEPROM size may differ from boot to boot.
+> >> +             interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+> >> +             interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1>;
+> >
+> > Only one IRQ for all devices?
+> 
+> The node represents a port. I believe that Linux framework uses only
+> one of the legacy IRQs per port. Rest all remain unused. Hence I
+> removed them. Please correct me if I am wrong.
 
-Looking into message I see this:
+Any PCI device can normally have four interrupts (IntA through IntD), which are
+traditionally separate pins on a PCI bus, but get emulated on PCIe. While it's
+not common for any normal device to use more than one IRQ, a bridge device
+will swizzle these (virtual) IRQ lines, so a device behind the bridge actually
+gets a different host IRQ.
 
-[    0.384542] pci 0000:05:01.0: BAR 7: can't assign io (size 0x1000)
-[    0.384714] pci 0000:06:00.0: BAR 7: can't assign io (size 0x1000)
-[    0.384885] pci 0000:07:00.0: BAR 3: can't assign io (size 0x40)
-[    0.385056] pci 0000:07:00.0: BAR 0: can't assign io (size 0x20)
-[    0.385227] pci 0000:07:00.0: BAR 1: can't assign io (size 0x10)
-[    0.385411] pci 0000:07:00.0: BAR 2: can't assign io (size 0x10)
-
-
-The bridge is based on PLX PEX 8112(?) chip and lspci shows:
-
-04:00.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI 
-Express Gen 2 (5.0 GT/s) Switch (rev ba)
-05:01.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI 
-Express Gen 2 (5.0 GT/s) Switch (rev ba)
-05:04.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI 
-Express Gen 2 (5.0 GT/s) Switch (rev ba)
-05:05.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI 
-Express Gen 2 (5.0 GT/s) Switch (rev ba)
-05:06.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI 
-Express Gen 2 (5.0 GT/s) Switch (rev ba)
-05:07.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI 
-Express Gen 2 (5.0 GT/s) Switch (rev ba)
-05:08.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI 
-Express Gen 2 (5.0 GT/s) Switch (rev ba)
-05:09.0 PCI bridge: PLX Technology, Inc. PEX 8608 8-lane, 8-Port PCI 
-Express Gen 2 (5.0 GT/s) Switch (rev ba)
-06:00.0 PCI bridge: PLX Technology, Inc. PEX 8111 PCI Express-to-PCI 
-Bridge (rev 21)
-
-my kernel is 3.11.10:
-
-lspci -vvv: http://dpaste.com/1539094/
-dmesg: http://dpaste.com/1539095/
-
-I've tried to boot with pci=realloc, but the system hangs in this case 
-(looks like during initialization
-of sound card driver, but I'm not sure, since it hangs completely: no 
-kernel panic, system just stopped
-in the middle of usual boot message)
-
-Feel free to ask for more information.
+	Arnd
