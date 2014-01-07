@@ -1,51 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54302 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750942AbaATIhC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jan 2014 03:37:02 -0500
-Date: Mon, 20 Jan 2014 09:38:36 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
+Received: from mail-db9lp0249.outbound.messaging.microsoft.com ([213.199.154.249]:16191
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752049AbaAGSUq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 13:20:46 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatxjain@gmail.com>
+CC: Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-nvme@lists.infradead.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 5/9] nvme: Fix invalid call to irq_set_affinity_hint()
-Message-ID: <20140120083835.GA19068@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
- <CAErSpo4g_xm4vZWZDgyjtJu+z5ARSerQLrtJ6W_peXv4bKwcgg@mail.gmail.com>
- <alpine.LRH.2.03.1401171419370.25844@AMR>
+	Yinghai Lu <yhlu.kernel@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
+ during removal
+Date: Tue, 7 Jan 2014 18:20:36 +0000
+Message-ID: <4b24688d857e432eb7ecf9095c95b742@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
+ <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
+ <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
+In-Reply-To: <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.03.1401171419370.25844@AMR>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 03:01:10PM -0700, Keith Busch wrote:
-> >dev->entry[0].vector is initialized in nvme_dev_map(), and it's used
-> >for free_irq() above the area of your patch, so I don't think this is
-> >actually a bug, though it might be somewhat confusing.
-> 
-> It is confusing, but there's a reason. :)
-> 
-> We send a single command using legacy irq to discover how many msix
-> vectors we want. The legacy entry needs to be set some time before calling
-> request_irq in nvme_configure_admin_queue, but also within nvme_dev_start
-> (for power-management). I don't think there's a place to set it that
-> won't look odd when looking at nvme_setup_io_queues. I settled on
-> 'nvme_dev_map' was because 'nvme_dev_unmap' invalidates the entries,
-> so this seemed to provide some amount of symmetry.
+SGVsbG8gQmpvcm4gLyBZaW5naGFpLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+
+IEZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiBTZW50
+OiBNb25kYXksIEphbnVhcnkgMDYsIDIwMTQgNDowNCBQTQ0KPiBUbzogUmFqYXQgSmFpbg0KPiBD
+YzogUmFqYXQgSmFpbjsgS2VuamkgS2FuZXNoaWdlOyBBbGV4IFdpbGxpYW1zb247IFlpamluZyBX
+YW5nOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
+bmVsLm9yZzsgWWluZ2hhaSBMdTsgR3VlbnRlcg0KPiBSb2VjazsgUmFqYXQgSmFpbjsgWWluZ2hh
+aSBMdQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYzIDQvOF0gcGNpZWhwOiBEb24ndCBkaXNhYmxl
+IHRoZSBsaW5rIHBlcm1hbmVudGx5LA0KPiBkdXJpbmcgcmVtb3ZhbA0KPiANCj4gT24gU3VuLCBK
+YW4gNSwgMjAxNCBhdCAxMDo1MyBBTSwgUmFqYXQgSmFpbiA8cmFqYXR4amFpbkBnbWFpbC5jb20+
+DQo+IHdyb3RlOg0KPiA+IEhlbGxvIEJqb3JuLA0KPiA+DQo+ID4gSnVzdCBjaGVja2luZyBvbiB0
+aGUgZmF0ZSBvZiB0aGlzIHBhdGNoIHNldC4uLg0KPiA+DQo+ID4gT24gVHVlLCBEZWMgMTcsIDIw
+MTMgYXQgNTowMiBQTSwgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gd3Jv
+dGU6DQo+ID4+IFsrY2MgeWluZ2hhaUBrZXJuZWwub3JnIChzZWVtcyB0byBiZSBZaW5naGFpJ3Mg
+cHJlZmVycmVkIGVtYWlsXQ0KPiA+Pg0KPiA+PiBPbiBUdWUsIERlYyAxNywgMjAxMyBhdCAxMjow
+NjowNVBNIC0wODAwLCBSYWphdCBKYWluIHdyb3RlOg0KPiA+Pj4gV2UgbmVlZCBmdXR1cmUgbGlu
+ayB1cCBldmVudHMgZm9yIGhvdC1hZGQsIHRodXMgZG9uJ3QgZGlzYWJsZSB0aGUNCj4gPj4+IGxp
+bmsgcGVybWFuZW50bHkgZHVyaW5nIGRldmljZSByZW1vdmFsLiBBbHNvLCByZW1vdmUgdGhlIHN0
+YXRpYw0KPiA+Pj4gZnVuY3Rpb25zIHRoYXQgYXJlIG5vdyBsZWZ0IHVudXNlZC4NCj4gPj4NCj4g
+Pj4gVGhlIGNoYW5nZWxvZyBzaG91bGQgbWVudGlvbiB0aGF0IHRoaXMgcmV2ZXJ0cyBwYXJ0IG9m
+IDJkZWJkOTI4OTk5Nw0KPiAoIlBDSToNCj4gPj4gcGNpZWhwOiBEaXNhYmxlL2VuYWJsZSBsaW5r
+IGR1cmluZyBzbG90IHBvd2VyIG9mZi9vbiIpLg0KPiA+DQo+ID4gU3VyZS4gRG8geW91IHdhbnQg
+bWUgdG8gc3VibWl0IGFub3RoZXIgcGF0Y2ggc2V0IChidW1waW5nIHVwIHRoZQ0KPiA+IHZlcnNp
+b24pIHdpdGggdGhpcyBjaGFuZ2UgbG9nLCBvciB5b3UnZCB3YW50IHRvIGFkZCB0aGlzIGNoYW5n
+ZSBsb2cNCj4gPiB3aGlsZSBtZXJnaW5nPw0KPiA+DQo+ID4+DQo+ID4+IFlpbmdoYWksIGNhbiB5
+b3UgdGVsbCB1cyB3aGV0aGVyIHRoaXMgaXMgYW4gaXNzdWUgb24geW91ciBzeXN0ZW1zPw0KPiA+
+DQo+ID4gQXMgWWluZ2hhaSBjb25maXJtcyBmdXJ0aGVyIGRvd24gdGhpcyB0aHJlYWQsIGhpcyBp
+c3N1ZSB3YXMgY29uZmlybWVkDQo+ID4gYnkgSW50ZWwgdG8gYmUgYSBidWcgaW4gdGhlIHJlcGVh
+dGVyIGNoaXAuDQo+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+IFlp
+bmdoYWkgd3JpdGVzOg0KPiA+PiBBY2NvcmRpbmcgdG8gSFcgZ3V5cyBhbmQgSW50ZWwsIHRoYXQg
+c2hvdWxkIGJlIGJ1ZyBvZiByZXBlYXRlci4NCj4gPj4NCj4gPiAtLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0NCj4gPiAgSSBkb24ndCBrbm93IGFib3V0IHRoZSBkZXRhaWxzIG9mIGhp
+cyBzY2VuYXJpbywgZXhjZXB0IHRoYXQgd2hlbiB0aGUNCj4gPiBhZGFwdGVyIHdhcyBkaXNhYmxl
+ZCB0aGUgcmVwZWF0ZXIga2VwdCBvbiBmbGFwcGluZyB0aGUgbGluayB1cCAmIGRvd24NCj4gPiAo
+YW5kIGhlbmNlIGRpc2FibGluZyB0aGUgbGluayBzb2x2ZWQgdGhlIHByb2JsZW0gdGhlbikuIFlp
+bmdoYWkNCj4gPiBjb3VsZG4ndCB0ZXN0LCBidXQgSSBiZWxpZXZlIHdpdGggdGhpcyBwYXRjaCBl
+dmVuIGlmIHdlIGRpc2FibGUNCj4gPiBwcmVzZW5jZSBkZXRlY3QgaW50ZXJydXB0LCB0aGUgImFk
+YXB0ZXIgcHJlc2VudCAvIG5vIHByZXNlbnQiIG1lc3NhZ2VzDQo+ID4gd291bGQgKHJpZ2h0bHkp
+IGNvbnZlcnQgdG8gIkxpbmsgVXAgLyBMaW5rIERvd24iIG1lc3NhZ2VzIChzaW5jZSB0aGUNCj4g
+PiByZXBlYXRlciBrZWVwcyBvbiBmbGFwcGluZyB0aGUgbGluaykuDQo+ID4NCj4gPiBTaW5jZSBp
+dCBpcyBhIHBsYXRmb3JtIHNwZWNpZmljIGJ1ZywgSSdtIG5vdCBzdXJlIHdoYXQgY2FuIGJlIGRv
+bmUgdG8NCj4gPiByZW1vdmUgdGhvc2UgbWVzc2FnZXMgZXhjZXB0IG1heSBiZSByZWR1Y2UgdGhl
+IHZlcmJvc2l0eT8gSWYgeW91J2QNCj4gPiBsaWtlIEkgY291bGQgY2hhbmdlIGFsbCB0aGUgSU5G
+TyBtZXNzYWdlcyB0byBEQkcgbWVzc2FnZXMuDQo+IA0KPiBFdmVuIGlmIGl0J3MgYSBkZWZlY3Qg
+aW4gYSBwYXJ0aWN1bGFyIHBpZWNlIG9mIGhhcmR3YXJlLCBJIGRvbid0IHdhbnQgdG8NCj4gcmVn
+cmVzcyBvbiB0aGF0IGhhcmR3YXJlLCBldmVuIGlmIHRoZSByZWdyZXNzaW9uIGlzIGp1c3QgZXh0
+cmEgbWVzc2FnZXMNCj4gdGhhdCB3ZSBkaWRuJ3Qgc2VlIGJlZm9yZS4NCj4gDQo+IEkgdGhpbmsg
+aWRlYWxseSB3ZSB3b3VsZCBhZGQgc29tZSBzb3J0IG9mIHF1aXJrIGZvciB0aGF0IGhhcmR3YXJl
+IHNvIGl0DQo+IHdvcmtzIGp1c3QgYXMgd2VsbCBhcyBpdCBkb2VzIHRvZGF5LiAgSSB0aGluayBl
+eHRyYSBtZXNzYWdlcyB3aWxsIGxlYWQNCj4gdG8gYSBidWcgcmVwb3J0cyBmcm9tIHVzZXJzLg0K
+DQpTdXJlLCBJIGNhbiBkbyB0aGF0LiBJIHRoaW5rIHdoYXQgdGhlIHF1aXJrIHdvdWxkIGhhdmUg
+dG8gZG8gaXMgdGhhdCBmb3IgdGhhdCBwYXJ0aWN1bGFyIHBsYXRmb3JtLCBkb24ndCBlbmFibGUg
+dGhlIGxpbmstc3RhdGUgYmFzZWQgaG90cGx1Zy4gKFNpbmNlIGxpbmstc3RhdGUgaG90cGx1ZyB3
+aWxsIG5vdCB3b3JrIGlmIHdlIGRpc2FibGUgdGhlIGxpbmsgcGVybWFuZW50bHkgYXMgd2UgZG8g
+dG9kYXkgb24gY2FyZCByZW1vdmFsKS4NCg0KQnV0IHRoZSBxdWVzdGlvbiBpcyBob3cgdG8gZGV0
+ZXJtaW5lIHRoYXQgdGhlIHF1aXJrIGhhcyB0byBiZSBhcHBsaWVkPyBJIHRoaW5rIHRoZSBvYmpl
+Y3RpdmUgaXMgdG8gYXBwbHkgdGhlIHF1aXJrIHRvIHRoZSBwbGF0Zm9ybXMgdGhhdCBoYXZlIGEg
+IlBDSWUgcmVwZWF0ZXIiLiBTaW5jZSB0aGlzIGRvZXMgbm90IGRlcGVuZCBvbiBhIFBDSSBkZXZp
+Y2UgLyB2ZW5kb3IgSUQsIGFuZCBJIHRoaW5rIHRoZSBQQ0llIHJlcGVhdGVyIGlzIHByb2JhYmx5
+IG5vdCBldmVuIHZpc2libGUgdG8gdGhlIHBjaWVocCBvciB0aGUgUENJIHN1YnN5c3RlbSwgaG93
+IGRvIEkgZGV0ZXJtaW5lIHRoYXQgdGhlIHF1aXJrIGhhcyB0byBiZSBhcHBsaWVkPw0KDQpJZiAo
+aHdfaGFzX3BjaWVfcmVwZWF0ZXIpDQoJRG9uJ3QgdXNlIGxpbmstc3RhdGUgaG90cGx1ZyAoYW5k
+IGRpc2FibGUgbGluayBwZXJtYW5lbnRseSBkdXJpbmcgY2FyZCByZW1vdmFsKQ0KRWxzZQ0KCVVz
+ZSBsaW5rLXN0YXRlIGhvdHBsdWcgKGFuZCBkb24ndCBkaXNhYmxlIHRoZSBsaW5rIHBlcm1hbmVu
+dGx5KQ0KCQ0KDQpZaW5naGFpOiBTaW5jZSBJIGRvIG5vdCBoYXZlIHRoYXQgaGFyZHdhcmUsIEkg
+d2lsbCBuZWVkIHNvbWUgaGVscCBpbiB0ZXN0aW5nIHRoZSBwYXRjaCB3aXRoIHRoZSBxdWlyay4g
+SSB3YXMgd29uZGVyaW5nIGlmIHlvdSdkIHN0aWxsIGhhdmUgdGhhdCBoYXJkd2FyZSBhcm91bmQg
+YW5kIHdvdWxkIGJlIGFibGUgdG8gaGVscCBtZSB3aXRoIHRlc3Rpbmc/DQoNClRoYW5rcywNCg0K
+UmFqYXQNCg==
 
-I am sending v3 of the patch which concerns Bjorn's comment.
-
-I am also sending two follow-up patches an attempt to make nvme_dev_start()
-more readable and fix couple of (what I suspect are) issues.
-
-Thanks!
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
