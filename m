@@ -1,70 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:2448 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752955AbaAFGSg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:18:36 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 14/20] iommu/vt-d: avoid double free in error recovery path
-Date: Mon,  6 Jan 2014 14:18:21 +0800
-Message-Id: <1388989107-4795-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from moutng.kundenserver.de ([212.227.17.9]:50707 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198AbaAGPpG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 10:45:06 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Tanmay Inamdar <tinamdar@apm.com>, devicetree@vger.kernel.org,
+	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
+Date: Tue, 07 Jan 2014 16:44:30 +0100
+Message-ID: <4687115.Uo6IImEscY@wuerfel>
+In-Reply-To: <201401071635.02006.arnd@arndb.de>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com> <CACoXjc=h8W=9jx4d2Y+F9hmgQsuMTgG4080jZGbtddv10OgtMA@mail.gmail.com> <201401071635.02006.arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The g_iommus array will be freed twice when failed to initialize IOMMU
-devices, so fix the double free.
+On Tuesday 07 January 2014 16:35:01 Arnd Bergmann wrote:
+> > >> +SoC specific DT Entry:
+> > >> +     pcie0: pcie@1f2b0000 {
+> > >> +             status = "disabled";
+> > >> +             device_type = "pci";
+> > >> +             compatible = "xgene,pcie";
+> > >> +             #interrupt-cells = <1>;
+> > >> +             #size-cells = <2>;
+> > >> +             #address-cells = >;
+> > >> +             reg = < 0x00 0x1f2b0000 0x0 0x00010000>;
+> > >> +             ranges = <0x02000000 0x0 0x00000000 0xe0 0x00000000 0x0 0x10000000 /* mem*/
+> > >
+> > >
+> > > Also, do you support no prefetchable memory?
+> > 
+> > HW has either IO or Memory regions for mapping device's memory space.
+> > There is no separate prefetchable memory space.
+> 
+> Are you sure the memory is non-prefetchable then? I would have expected
+> 0x42000000 rather than 0x02000000, but I could be misremembering it.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+Nevermind. I just checked and you are right: if you only have
+one memory range, it has to be non-prefetchable.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 60fa821..ccf7304 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1295,19 +1295,10 @@ static void free_dmar_iommu(struct intel_iommu *iommu)
- 	iommu->domains = NULL;
- 	iommu->domain_ids = NULL;
- 
--	g_iommus[iommu->seq_id] = NULL;
--
--	/* if all iommus are freed, free g_iommus */
--	for (i = 0; i < g_num_of_iommus; i++) {
--		if (g_iommus[i])
--			break;
--	}
--
--	if (i == g_num_of_iommus)
--		kfree(g_iommus);
--
- 	/* free context mapping */
- 	free_context_table(iommu);
-+
-+	g_iommus[iommu->seq_id] = NULL;
- }
- 
- static struct dmar_domain *alloc_domain(void)
-@@ -2624,6 +2615,7 @@ error:
- 	for_each_active_iommu(iommu, drhd)
- 		free_dmar_iommu(iommu);
- 	kfree(g_iommus);
-+	g_iommus = NULL;
- 	return ret;
- }
- 
--- 
-1.7.10.4
-
+	Arnd
