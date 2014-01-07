@@ -1,194 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:65419 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaAKB07 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:26:59 -0500
-Received: by mail-pd0-f171.google.com with SMTP id x10so563688pdj.30
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:26:58 -0800 (PST)
-Subject: [PATCH v2 02/12] PCI: Remove unused Latency Tolerance Reporting
- support
-To: Stephen Hemminger <stephen@networkplumber.org>,
-	linux-pci@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v7 05/15] agp: Use pci_resource_start() to get CPU physical
+ address for BAR
+To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yu Zhao <yu.zhao@intel.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Date: Fri, 10 Jan 2014 18:26:56 -0700
-Message-ID: <20140111012656.14505.15407.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Date: Mon, 06 Jan 2014 17:55:47 -0700
+Message-ID: <20140107005547.10786.23438.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
+amd_irongate_configure(), ati_configure(), and nvidia_configure() call
+ioremap() on an address read directly from a BAR.  But a BAR contains a
+bus address, and ioremap() expects a CPU physical address.  Use
+pci_resource_start() to obtain the physical address.
 
-My philosophy is unused code is dead code.  And dead code is subject to bit
-rot and is a likely source of bugs.  Use it or lose it.
-
-This reverts 51c2e0a7e5bc ("PCI: add latency tolerance reporting
-enable/disable support"), removing these interfaces:
-
-    pci_enable_ltr()
-    pci_disable_ltr()
-    pci_set_ltr()
-
-[bhelgaas: split to separate patch, also remove prototypes from pci.h]
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jesse Barnes <jbarnes@virtuousgeek.org>
 ---
- drivers/pci/pci.c   |  123 ---------------------------------------------------
- include/linux/pci.h |    4 --
- 2 files changed, 127 deletions(-)
+ drivers/char/agp/amd-k7-agp.c |    8 ++++----
+ drivers/char/agp/ati-agp.c    |    8 ++++----
+ drivers/char/agp/nvidia-agp.c |    4 +++-
+ 3 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 33120d156668..020f672deabb 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2223,129 +2223,6 @@ void pci_disable_obff(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_disable_obff);
+diff --git a/drivers/char/agp/amd-k7-agp.c b/drivers/char/agp/amd-k7-agp.c
+index 9898ed6d5b9a..e8c2e9167e89 100644
+--- a/drivers/char/agp/amd-k7-agp.c
++++ b/drivers/char/agp/amd-k7-agp.c
+@@ -11,7 +11,7 @@
+ #include <linux/slab.h>
+ #include "agp.h"
  
--/**
-- * pci_ltr_supported - check whether a device supports LTR
-- * @dev: PCI device
-- *
-- * RETURNS:
-- * True if @dev supports latency tolerance reporting, false otherwise.
-- */
--static bool pci_ltr_supported(struct pci_dev *dev)
--{
--	u32 cap;
--
--	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
--
--	return cap & PCI_EXP_DEVCAP2_LTR;
--}
--
--/**
-- * pci_enable_ltr - enable latency tolerance reporting
-- * @dev: PCI device
-- *
-- * Enable LTR on @dev if possible, which means enabling it first on
-- * upstream ports.
-- *
-- * RETURNS:
-- * Zero on success, errno on failure.
-- */
--int pci_enable_ltr(struct pci_dev *dev)
--{
--	int ret;
--
--	/* Only primary function can enable/disable LTR */
--	if (PCI_FUNC(dev->devfn) != 0)
--		return -EINVAL;
--
--	if (!pci_ltr_supported(dev))
--		return -ENOTSUPP;
--
--	/* Enable upstream ports first */
--	if (dev->bus->self) {
--		ret = pci_enable_ltr(dev->bus->self);
--		if (ret)
--			return ret;
--	}
--
--	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
--					PCI_EXP_DEVCTL2_LTR_EN);
--}
--EXPORT_SYMBOL(pci_enable_ltr);
--
--/**
-- * pci_disable_ltr - disable latency tolerance reporting
-- * @dev: PCI device
-- */
--void pci_disable_ltr(struct pci_dev *dev)
--{
--	/* Only primary function can enable/disable LTR */
--	if (PCI_FUNC(dev->devfn) != 0)
--		return;
--
--	if (!pci_ltr_supported(dev))
--		return;
--
--	pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2,
--				   PCI_EXP_DEVCTL2_LTR_EN);
--}
--EXPORT_SYMBOL(pci_disable_ltr);
--
--static int __pci_ltr_scale(int *val)
--{
--	int scale = 0;
--
--	while (*val > 1023) {
--		*val = (*val + 31) / 32;
--		scale++;
--	}
--	return scale;
--}
--
--/**
-- * pci_set_ltr - set LTR latency values
-- * @dev: PCI device
-- * @snoop_lat_ns: snoop latency in nanoseconds
-- * @nosnoop_lat_ns: nosnoop latency in nanoseconds
-- *
-- * Figure out the scale and set the LTR values accordingly.
-- */
--int pci_set_ltr(struct pci_dev *dev, int snoop_lat_ns, int nosnoop_lat_ns)
--{
--	int pos, ret, snoop_scale, nosnoop_scale;
--	u16 val;
--
--	if (!pci_ltr_supported(dev))
--		return -ENOTSUPP;
--
--	snoop_scale = __pci_ltr_scale(&snoop_lat_ns);
--	nosnoop_scale = __pci_ltr_scale(&nosnoop_lat_ns);
--
--	if (snoop_lat_ns > PCI_LTR_VALUE_MASK ||
--	    nosnoop_lat_ns > PCI_LTR_VALUE_MASK)
--		return -EINVAL;
--
--	if ((snoop_scale > (PCI_LTR_SCALE_MASK >> PCI_LTR_SCALE_SHIFT)) ||
--	    (nosnoop_scale > (PCI_LTR_SCALE_MASK >> PCI_LTR_SCALE_SHIFT)))
--		return -EINVAL;
--
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
--	if (!pos)
--		return -ENOTSUPP;
--
--	val = (snoop_scale << PCI_LTR_SCALE_SHIFT) | snoop_lat_ns;
--	ret = pci_write_config_word(dev, pos + PCI_LTR_MAX_SNOOP_LAT, val);
--	if (ret != 4)
--		return -EIO;
--
--	val = (nosnoop_scale << PCI_LTR_SCALE_SHIFT) | nosnoop_lat_ns;
--	ret = pci_write_config_word(dev, pos + PCI_LTR_MAX_NOSNOOP_LAT, val);
--	if (ret != 4)
--		return -EIO;
--
--	return 0;
--}
--EXPORT_SYMBOL(pci_set_ltr);
--
- static int pci_acs_enable;
+-#define AMD_MMBASE	0x14
++#define AMD_MMBASE_BAR	1
+ #define AMD_APSIZE	0xac
+ #define AMD_MODECNTL	0xb0
+ #define AMD_MODECNTL2	0xb2
+@@ -205,6 +205,7 @@ static int amd_irongate_fetch_size(void)
+ static int amd_irongate_configure(void)
+ {
+ 	struct aper_size_info_lvl2 *current_size;
++	phys_addr_t reg;
+ 	u32 temp;
+ 	u16 enable_reg;
  
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1084a15175e0..ee26454746ba 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1009,10 +1009,6 @@ enum pci_obff_signal_type {
- int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type);
- void pci_disable_obff(struct pci_dev *dev);
+@@ -212,9 +213,8 @@ static int amd_irongate_configure(void)
  
--int pci_enable_ltr(struct pci_dev *dev);
--void pci_disable_ltr(struct pci_dev *dev);
--int pci_set_ltr(struct pci_dev *dev, int snoop_lat_ns, int nosnoop_lat_ns);
--
- /* For use by arch with custom probe code */
- void set_pcie_port_type(struct pci_dev *pdev);
- void set_pcie_hotplug_bridge(struct pci_dev *pdev);
+ 	if (!amd_irongate_private.registers) {
+ 		/* Get the memory mapped registers */
+-		pci_read_config_dword(agp_bridge->dev, AMD_MMBASE, &temp);
+-		temp = (temp & PCI_BASE_ADDRESS_MEM_MASK);
+-		amd_irongate_private.registers = (volatile u8 __iomem *) ioremap(temp, 4096);
++		reg = pci_resource_start(agp_bridge->dev, AMD_MMBASE_BAR);
++		amd_irongate_private.registers = (volatile u8 __iomem *) ioremap(reg, 4096);
+ 		if (!amd_irongate_private.registers)
+ 			return -ENOMEM;
+ 	}
+diff --git a/drivers/char/agp/ati-agp.c b/drivers/char/agp/ati-agp.c
+index 53cb310d433e..ba83c11186ce 100644
+--- a/drivers/char/agp/ati-agp.c
++++ b/drivers/char/agp/ati-agp.c
+@@ -12,7 +12,7 @@
+ #include <asm/agp.h>
+ #include "agp.h"
+ 
+-#define ATI_GART_MMBASE_ADDR	0x14
++#define ATI_GART_MMBASE_BAR	1
+ #define ATI_RS100_APSIZE	0xac
+ #define ATI_RS100_IG_AGPMODE	0xb0
+ #define ATI_RS300_APSIZE	0xf8
+@@ -196,12 +196,12 @@ static void ati_cleanup(void)
+ 
+ static int ati_configure(void)
+ {
++	phys_addr_t reg;
+ 	u32 temp;
+ 
+ 	/* Get the memory mapped registers */
+-	pci_read_config_dword(agp_bridge->dev, ATI_GART_MMBASE_ADDR, &temp);
+-	temp = (temp & 0xfffff000);
+-	ati_generic_private.registers = (volatile u8 __iomem *) ioremap(temp, 4096);
++	reg = pci_resource_start(agp_bridge->dev, ATI_GART_MMBASE_BAR);
++	ati_generic_private.registers = (volatile u8 __iomem *) ioremap(reg, 4096);
+ 
+ 	if (!ati_generic_private.registers)
+ 		return -ENOMEM;
+diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
+index ab65d55272c4..a1861b75eb31 100644
+--- a/drivers/char/agp/nvidia-agp.c
++++ b/drivers/char/agp/nvidia-agp.c
+@@ -106,6 +106,7 @@ static int nvidia_configure(void)
+ {
+ 	int i, rc, num_dirs;
+ 	u32 apbase, aplimit;
++	phys_addr_t apbase_phys;
+ 	struct aper_size_info_8 *current_size;
+ 	u32 temp;
+ 
+@@ -152,8 +153,9 @@ static int nvidia_configure(void)
+ 	pci_write_config_dword(agp_bridge->dev, NVIDIA_0_APSIZE, temp | 0x100);
+ 
+ 	/* map aperture */
++	apbase_phys = pci_resource_start(agp_bridge->dev, AGP_APERTURE_BAR);
+ 	nvidia_private.aperture =
+-		(volatile u32 __iomem *) ioremap(apbase, 33 * PAGE_SIZE);
++		(volatile u32 __iomem *) ioremap(apbase_phys, 33 * PAGE_SIZE);
+ 
+ 	if (!nvidia_private.aperture)
+ 		return -ENOMEM;
 
