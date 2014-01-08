@@ -1,46 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:59288 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753317AbaA3OSg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 09:18:36 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [RFC PATCH V3 0/4] APM X-Gene PCIe controller
-Date: Thu, 30 Jan 2014 15:17:51 +0100
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	patches@apm.com, jcm@redhat.com
-References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:48950 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756360AbaAHQis (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 11:38:48 -0500
+Message-ID: <52CD7F0F.9030209@canonical.com>
+Date: Wed, 08 Jan 2014 11:38:39 -0500
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201401301517.51352.arnd@arndb.de>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
+ mmio
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com> <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+In-Reply-To: <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 24 January 2014, Tanmay Inamdar wrote:
-> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-> cards.
-> 
-> X-Gene PCIe controller driver has depedency on the pcie arch support for
-> arm64. The arm64 pcie arch support is not yet part of mainline Linux kernel
-> and approach for arch support is under discussion with arm64 maintainers.
-> The reference patch can be found here --> https://lkml.org/lkml/2013/10/23/244
-> 
-> If someone wishes to test PCIe on X-Gene, arch support patch must be applied
-> before the patches in this patch set.
+On 12/11/2013 02:55 PM, Yinghai Lu wrote:
+> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
+>>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> That doesn't answer my question at all.
+>>>>
+>>>> I understand that this change makes it so Joseph doesn't have to use
+>>>> "pci=realloc=off".  But why should auto-reallocation be limited to
+>>>> buses that have resources above 4GB?  That doesn't make any sense.
+>>>>
+>>>> We should fix the reallocation code so it can deal with this case.  If
+>>>> there's not enough space for everything, obviously we have to leave
+>>>> something unassigned.  A ROM BAR is a good candidate for leaving
+>>>> unassigned, because most of the time we can get along without it.
+>>> Yes, that is ideal and not that simple.
+>>> but that would be hard to backport to old kernels.
+>>>
+>>> BTW, Joseph, can you try
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>> for-pci-3.14
+>>> with pci=realloc=on
+>>>
+>>> on that system?
+>>>
+>>> Thanks
+>>>
+>>> Yinghai
+>> I noticed there was some back and forth on this thread.  Do you still
+>> want me to test this version, Yinghai?
+> Yes, if that works, we would not need to put the patch in upstream for limiting
+> realloc auto scope.
+>
+> Thanks
+>
+> Yinghai
+Hi Yinghai,
 
-This is starting to look really good now. I have a few small comments left,
-otherwise it can get merged. As mentioned in one of my review comments, it
-would be good to have the arch support patch posted along with the driver.
+Sorry for the delay.  The bug reporter was finally able to test your
+patch.  He reports that this version of the patch does in fact fix the
+bug.  See comment #72 here:
 
-	Arnd
+http://pad.lv/1245938
+
+Thanks again for all your help!
+
+Joe
 
