@@ -1,102 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:47627 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367AbaANTEa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 14:04:30 -0500
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: RE: pcie-designware: query on MSI IRQ handling
-Date: Tue, 14 Jan 2014 19:04:16 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B704666887@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com>
- <3E54258959B69E4282D79E01AB1F32B7046639CA@DFLE11.ent.ti.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189FBAF2E89@EAPEX1MAIL1.st.com>
- <201401091239.20839.arnd@arndb.de>
-In-Reply-To: <201401091239.20839.arnd@arndb.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:58203 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757284AbaAHUnf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 15:43:35 -0500
 MIME-Version: 1.0
+In-Reply-To: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+Date: Wed, 8 Jan 2014 12:43:35 -0800
+Message-ID: <CAE9FiQUgfuQ9nXNOOCcYAKVeN05o+TX6e35qe5nSkyxB-DpyGg@mail.gmail.com>
+Subject: Re: [Patch Part2 V1 00/14] Enhance DMAR drivers to handle PCI/memory
+ hotplug events
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dmaengine@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: Arnd Bergmann [mailto:arnd@arndb.de]
->Sent: Thursday, January 09, 2014 6:39 AM
->To: Mohit KUMAR DCG
->Cc: Karicheri, Muralidharan; Jingoo Han; linux-pci@vger.kernel.org
->Subject: Re: pcie-designware: query on MSI IRQ handling
+On Tue, Jan 7, 2014 at 1:00 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> Intel DMA/interrupt remapping drivers scan available PCI/memory devices
+> at startup and cache discovered hardware topologies. They don't update
+> cached information if PCI/memory hotplug event happens at runtime, then
+> the stale information may break DMA/interrupt remapping logic.
 >
->On Thursday 09 January 2014, Mohit KUMAR DCG wrote:
->> - To just clarify this dw PCIe driver consists 3 parts:
->> 1. Common part: Common PCIe code (host_init() etc..) this should  be
->> common to all hosts. As already discussed it should be ideally  moved
->> out from this driver. It is in todo list and will move to separate
->> file in due course of time.
->>
->> 2.  Viewport handling: ATU translation code
->>
->> 3. MSI specific code
->>
->> Synopsys controllers version 3.70+have been standardized for viewport
->> handling and msi implementation. Current dw driver covers these
->> standard  implementation for viewport and MSI.
->>
->> Now I can understand that you are using only common part of dw driver
->> And have specific viewport and msi implementation. So its getting a
->> bit  messy if you modify the driver for your specific implementation
->> as  discussed in this thread.
->>
->> So ideally I will suggest that you should move the common code (point
->> 1)  to outside this driver, and then use this along with your specific
->> viewport  and msi implementation.
->>
->> Arnd, Jingoo,
->>
->> Do you agree with above comments?
+> This patchset first (Patch 1-8) tries to introduces some helper
+> functions and fixes several bugs, then (Patch 9,10) uses a global
+> rwsem and RCU to protect global DMA/interrupt remapping data
+> structures, and finally (Patch 11-14) hook PCI/memory hotplug events
+> to update cached information.
 >
->I think it depends a bit on how much code ends up being shared in the first category, and
->whether it's easily separable from the second one. I assume the MSI implementation is fairly
->isolated already.
+> It's also a preparation for supporting of DMA/interrupt remapping
+> hotplug.
 >
->I definitely agree with the general principle of layering drivers in this way, specific version of
->the driver basically uses exported functions of the more general driver like
+> Jiang Liu (14):
+>   iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
+>   iommu/vt-d: move private structures and variables into intel-iommu.c
+>   iommu/vt-d: simplify function get_domain_for_dev()
+>   iommu/vt-d: free resources if failed to create domain for PCIe
+>     endpoint
+>   iommu/vt-d: create device_domain_info structure for intermediate P2P
+>     bridges
+>   iommu/vt-d: fix incorrect iommu_count for si_domain
+>   iommu/vt-d: fix error in detect ATS capability
+>   iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
+>     entries
+>   iommu/vt-d: introduce a rwsem to protect global data structures
+>   iommu/vt-d: use RCU to protect global resources in interrupt context
+>   iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
+>     hotplug happens
+>   iommu/vt-d, PCI: unify the way to process DMAR device scope array
+>   iommu/vt-d: update device to static identity domain mapping for PCI
+>     hotplug
+>   iommu/vt-d: update IOMMU state when memory hotplug happens
 >
->st-pcie -> dw-pcie-3.7 -> dw-pcie -> pci-common
->
->I have two comments about the specifics here:
->
->* On most architectures, the MSI controller is integrated into the primary
->  irqchip. If a dw-pcie-3.7+ is used on such a machine, I guess it will
->  just ignore the MSI part
->* On server systems, the setup of the viewport would typically be handled
->  by the firmware before the kernel is started, and the kernel does not
->  actually need to know about it.
->
+>  drivers/iommu/dmar.c                |  412 +++++++++++++++++--------
+>  drivers/iommu/intel-iommu.c         |  583 +++++++++++++++++++++--------------
+>  drivers/iommu/intel_irq_remapping.c |  108 ++++---
+>  include/linux/dmar.h                |   75 +++--
+>  4 files changed, 753 insertions(+), 425 deletions(-)
 
-I agree on this layering. For our designware IP, the Legacy IRQ
-controller has 1 host irq per function where as common designware driver
-uses 1 irq for this. So the irq map function has to be different as well.
 
-Mohit, Jingoo, et all,
+Hi, Jiang,
 
-Is there a timeline that you have in mind for making this change to designware
-core driver? I have my initial driver based on designware core driver working
-using e1000e PCI Nic and want to send my patch for review. I may be able to
-work with you on restructuring the code as discussed here. Please let me know
-how you would like to handle this?
+What is relationship between your two patchset with my iommu hotplug patchset?
 
-On a high level, I gather that we need to move all of the ATU and MSI specific
-code to separate files so that appropriate drivers can pull in these files for
-the driver. For keystone PCIe that I am working on, these files gets excluded
-and the same implemented in keystone PCIe driver.
+https://lkml.org/lkml/2014/1/2/527
+
+or yours will just replace mine?
 
 Thanks
 
-Murali
-
->This means we might actually want to split out the MSI and viewport parts into two separate
->pieces of code that can optionally be used by any of the SoC specific host drivers.
->
->	Arnd
+Yinghai
