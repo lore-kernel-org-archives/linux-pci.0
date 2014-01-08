@@ -1,225 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:50585 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753338AbaAIDMp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 22:12:45 -0500
-Message-ID: <52CE131A.3020103@huawei.com>
-Date: Thu, 9 Jan 2014 11:10:18 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:50635 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717AbaAHU2m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 15:28:42 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so2592422iec.37
+        for <linux-pci@vger.kernel.org>; Wed, 08 Jan 2014 12:28:41 -0800 (PST)
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-CC: Ashok Raj <ashok.raj@intel.com>, Tony Luck <tony.luck@intel.com>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <dmaengine@vger.kernel.org>
-Subject: Re: [Patch Part2 V1 07/14] iommu/vt-d: fix error in detect ATS capability
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com> <1389085234-22296-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1389085234-22296-8-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <52CD2387.2030403@gmail.com>
+References: <52CBC4D1.5080706@gmail.com>
+	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>
+	<52CD2387.2030403@gmail.com>
+Date: Wed, 8 Jan 2014 12:28:41 -0800
+Message-ID: <CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>
+Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port range.
+From: Yinghai Lu <yinghai@kernel.org>
+To: "`VL" <vl.homutov@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a issue, our BIOS also supports several ATSR which have the same segment.
-Good fix :)
+On Wed, Jan 8, 2014 at 2:08 AM, `VL <vl.homutov@gmail.com> wrote:
+>
+> I've enabled netconsole and got some output.
+> Here it is: http://dpaste.com/1542030/
 
-On 2014/1/7 17:00, Jiang Liu wrote:
-> Current Intel IOMMU driver only matches a PCIe root port with the first
-> DRHD unit with the samge segment number. It will report false result
-> if there are multiple DRHD units with the same segment number, thus fail
-> to detect ATS capability for some PCIe devices.
-> 
-> This patch refines function dmar_find_matched_atsr_unit() to search all
-> DRHD units with the same segment number.
-> 
-> An example DMAR table entries as below:
-> [1D0h 0464  2]                Subtable Type : 0002 <Root Port ATS Capability>
-> [1D2h 0466  2]                       Length : 0028
-> [1D4h 0468  1]                        Flags : 00
-> [1D5h 0469  1]                     Reserved : 00
-> [1D6h 0470  2]           PCI Segment Number : 0000
-> 
-> [1D8h 0472  1]      Device Scope Entry Type : 02
-> [1D9h 0473  1]                 Entry Length : 08
-> [1DAh 0474  2]                     Reserved : 0000
-> [1DCh 0476  1]               Enumeration ID : 00
-> [1DDh 0477  1]               PCI Bus Number : 00
-> [1DEh 0478  2]                     PCI Path : [02, 00]
-> 
-> [1E0h 0480  1]      Device Scope Entry Type : 02
-> [1E1h 0481  1]                 Entry Length : 08
-> [1E2h 0482  2]                     Reserved : 0000
-> [1E4h 0484  1]               Enumeration ID : 00
-> [1E5h 0485  1]               PCI Bus Number : 00
-> [1E6h 0486  2]                     PCI Path : [03, 00]
-> 
-> [1E8h 0488  1]      Device Scope Entry Type : 02
-> [1E9h 0489  1]                 Entry Length : 08
-> [1EAh 0490  2]                     Reserved : 0000
-> [1ECh 0492  1]               Enumeration ID : 00
-> [1EDh 0493  1]               PCI Bus Number : 00
-> [1EEh 0494  2]                     PCI Path : [03, 02]
-> 
-> [1F0h 0496  1]      Device Scope Entry Type : 02
-> [1F1h 0497  1]                 Entry Length : 08
-> [1F2h 0498  2]                     Reserved : 0000
-> [1F4h 0500  1]               Enumeration ID : 00
-> [1F5h 0501  1]               PCI Bus Number : 00
-> [1F6h 0502  2]                     PCI Path : [03, 03]
-> 
-> [1F8h 0504  2]                Subtable Type : 0002 <Root Port ATS Capability>
-> [1FAh 0506  2]                       Length : 0020
-> [1FCh 0508  1]                        Flags : 00
-> [1FDh 0509  1]                     Reserved : 00
-> [1FEh 0510  2]           PCI Segment Number : 0000
-> 
-> [200h 0512  1]      Device Scope Entry Type : 02
-> [201h 0513  1]                 Entry Length : 08
-> [202h 0514  2]                     Reserved : 0000
-> [204h 0516  1]               Enumeration ID : 00
-> [205h 0517  1]               PCI Bus Number : 40
-> [206h 0518  2]                     PCI Path : [02, 00]
-> 
-> [208h 0520  1]      Device Scope Entry Type : 02
-> [209h 0521  1]                 Entry Length : 08
-> [20Ah 0522  2]                     Reserved : 0000
-> [20Ch 0524  1]               Enumeration ID : 00
-> [20Dh 0525  1]               PCI Bus Number : 40
-> [20Eh 0526  2]                     PCI Path : [02, 02]
-> 
-> [210h 0528  1]      Device Scope Entry Type : 02
-> [211h 0529  1]                 Entry Length : 08
-> [212h 0530  2]                     Reserved : 0000
-> [214h 0532  1]               Enumeration ID : 00
-> [215h 0533  1]               PCI Bus Number : 40
-> [216h 0534  2]                     PCI Path : [03, 00]
-> 
-> [218h 0536  2]                Subtable Type : 0002 <Root Port ATS Capability>
-> [21Ah 0538  2]                       Length : 0020
-> [21Ch 0540  1]                        Flags : 00
-> [21Dh 0541  1]                     Reserved : 00
-> [21Eh 0542  2]           PCI Segment Number : 0000
-> 
-> [220h 0544  1]      Device Scope Entry Type : 02
-> [221h 0545  1]                 Entry Length : 08
-> [222h 0546  2]                     Reserved : 0000
-> [224h 0548  1]               Enumeration ID : 00
-> [225h 0549  1]               PCI Bus Number : 80
-> [226h 0550  2]                     PCI Path : [02, 00]
-> 
-> [228h 0552  1]      Device Scope Entry Type : 02
-> [229h 0553  1]                 Entry Length : 08
-> [22Ah 0554  2]                     Reserved : 0000
-> [22Ch 0556  1]               Enumeration ID : 00
-> [22Dh 0557  1]               PCI Bus Number : 80
-> [22Eh 0558  2]                     PCI Path : [02, 02]
-> 
-> [230h 0560  1]      Device Scope Entry Type : 02
-> [231h 0561  1]                 Entry Length : 08
-> [232h 0562  2]                     Reserved : 0000
-> [234h 0564  1]               Enumeration ID : 00
-> [235h 0565  1]               PCI Bus Number : 80
-> [236h 0566  2]                     PCI Path : [03, 00]
-> 
-> [238h 0568  2]                Subtable Type : 0002 <Root Port ATS Capability>
-> [23Ah 0570  2]                       Length : 0020
-> [23Ch 0572  1]                        Flags : 00
-> [23Dh 0573  1]                     Reserved : 00
-> [23Eh 0574  2]           PCI Segment Number : 0000
-> 
-> [240h 0576  1]      Device Scope Entry Type : 02
-> [241h 0577  1]                 Entry Length : 08
-> [242h 0578  2]                     Reserved : 0000
-> [244h 0580  1]               Enumeration ID : 00
-> [245h 0581  1]               PCI Bus Number : C0
-> [246h 0582  2]                     PCI Path : [02, 00]
-> 
-> [248h 0584  1]      Device Scope Entry Type : 02
-> [249h 0585  1]                 Entry Length : 08
-> [24Ah 0586  2]                     Reserved : 0000
-> [24Ch 0588  1]               Enumeration ID : 00
-> [24Dh 0589  1]               PCI Bus Number : C0
-> [24Eh 0590  2]                     PCI Path : [02, 02]
-> 
-> [250h 0592  1]      Device Scope Entry Type : 02
-> [251h 0593  1]                 Entry Length : 08
-> [252h 0594  2]                     Reserved : 0000
-> [254h 0596  1]               Enumeration ID : 00
-> [255h 0597  1]               PCI Bus Number : C0
-> [256h 0598  2]                     PCI Path : [03, 00]
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/iommu/intel-iommu.c |   37 +++++++++++++++++--------------------
->  1 file changed, 17 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index 7038b38..b0028e2 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -3556,37 +3556,34 @@ int dmar_find_matched_atsr_unit(struct pci_dev *dev)
->  {
->  	int i;
->  	struct pci_bus *bus;
-> +	struct pci_dev *bridge = NULL;
->  	struct acpi_dmar_atsr *atsr;
->  	struct dmar_atsr_unit *atsru;
->  
->  	dev = pci_physfn(dev);
-> -
-> -	list_for_each_entry(atsru, &dmar_atsr_units, list) {
-> -		atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
-> -		if (atsr->segment == pci_domain_nr(dev->bus))
-> -			goto found;
-> -	}
-> -
-> -	return 0;
-> -
-> -found:
->  	for (bus = dev->bus; bus; bus = bus->parent) {
-> -		struct pci_dev *bridge = bus->self;
-> -
-> +		bridge = bus->self;
->  		if (!bridge || !pci_is_pcie(bridge) ||
->  		    pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE)
->  			return 0;
-> -
-> -		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
-> -			for (i = 0; i < atsru->devices_cnt; i++)
-> -				if (atsru->devices[i] == bridge)
-> -					return 1;
-> +		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT)
->  			break;
-> -		}
->  	}
-> +	if (!bridge)
-> +		return 0;
->  
-> -	if (atsru->include_all)
-> -		return 1;
-> +	list_for_each_entry_rcu(atsru, &dmar_atsr_units, list) {
-> +		atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
-> +		if (atsr->segment != pci_domain_nr(dev->bus))
-> +			continue;
-> +
-> +		for (i = 0; i < atsru->devices_cnt; i++)
-> +			if (atsru->devices[i] == bridge)
-> +				return 1;
-> +
-> +		if (atsru->include_all)
-> +			return 1;
-> +	}
->  
->  	return 0;
->  }
-> 
+It does include any realloc message.
 
+> Note that since the hang occurs on the module load, netconsole was unable
+> to send latest messages and the log looks clear
+>
+> I've rebuilt kernel with sound driver compiled in, and the hang occured
+> during
+> kernel load, userspace was not reached (but in this case, netconsole was
+> useless at
+> all) and I've made a photo of screen (attached). Note there is ACPI warning
+> about
+> system IO conflict.
 
--- 
-Thanks!
-Yijing
+Can you enable
 
+CONFIG_PCI_DEBUG=y
+
+and boot with "debug ignore_loglevel initcall_debug"?
+
+Thanks
+
+Yinghai
