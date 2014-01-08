@@ -1,42 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:32968 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751AbaAIUaL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 15:30:11 -0500
-MIME-Version: 1.0
-In-Reply-To: <52CDF037.2070806@linux.intel.com>
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
-	<CAE9FiQUgfuQ9nXNOOCcYAKVeN05o+TX6e35qe5nSkyxB-DpyGg@mail.gmail.com>
-	<52CDF037.2070806@linux.intel.com>
-Date: Thu, 9 Jan 2014 12:30:10 -0800
-Message-ID: <CAE9FiQXEe8+5JC0GN+Y28f0Zk2w7z50fNQCZnO9w9z05VZqZHA@mail.gmail.com>
-Subject: Re: [Patch Part2 V1 00/14] Enhance DMAR drivers to handle PCI/memory
- hotplug events
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
+Received: from mail-bl2lp0204.outbound.protection.outlook.com ([207.46.163.204]:8476
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753865AbaAHDvf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jan 2014 22:51:35 -0500
+From: "Dongsheng.Wang@freescale.com" <Dongsheng.Wang@freescale.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>
+CC: Scott Wood <scottwood@freescale.com>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Roy Zang <tie-fei.zang@freescale.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dmaengine@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: RE: [PATCH 1/2] pci: Fix root port bus->self is NULL
+Date: Wed, 8 Jan 2014 03:51:14 +0000
+Message-ID: <0dcbb762af7a411984315b0ee5313718@BN1PR03MB188.namprd03.prod.outlook.com>
+References: <1389081848-26506-1-git-send-email-dongsheng.wang@freescale.com>
+ <52CBBA86.7020401@huawei.com> <52CBC0B6.1090904@linux.intel.com>
+ <80033eb36b0f40d682aeecc8b99dbd95@BN1PR03MB188.namprd03.prod.outlook.com>
+ <52CCB8E9.6020501@linux.intel.com>
+In-Reply-To: <52CCB8E9.6020501@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 8, 2014 at 4:41 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->
->         I have reviewed your v2 patch set, I think we are doing the
-> same task. If you agree, I will try to combine our two versions.
-
-Sure. Please do.
-
-Thanks
-
-Yinghai
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmlhbmcgTGl1IFttYWls
+dG86amlhbmcubGl1QGxpbnV4LmludGVsLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBKYW51YXJ5
+IDA4LCAyMDE0IDEwOjMzIEFNDQo+IFRvOiBXYW5nIERvbmdzaGVuZy1CNDA1MzQ7IFlpamluZyBX
+YW5nOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyByandAcmp3eXNvY2tpLm5ldA0KPiBDYzogV29vZCBT
+Y290dC1CMDc0MjE7IGdhbGFrQGNvZGVhdXJvcmEub3JnOyBaYW5nIFJveS1SNjE5MTE7IGxpbnV4
+LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZw0K
+PiBTdWJqZWN0OiBSZTogW1BBVENIIDEvMl0gcGNpOiBGaXggcm9vdCBwb3J0IGJ1cy0+c2VsZiBp
+cyBOVUxMDQo+IA0KPiANCj4gDQo+IE9uIDIwMTQvMS83IDE3OjUxLCBEb25nc2hlbmcuV2FuZ0Bm
+cmVlc2NhbGUuY29tIHdyb3RlOg0KPiA+Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wcm9i
+ZS5jIGIvZHJpdmVycy9wY2kvcHJvYmUuYyBpbmRleA0KPiA+Pj4+IDM4ZTQwM2QuLjdmMmQxYWIg
+MTAwNjQ0DQo+ID4+Pj4gLS0tIGEvZHJpdmVycy9wY2kvcHJvYmUuYw0KPiA+Pj4+ICsrKyBiL2Ry
+aXZlcnMvcGNpL3Byb2JlLmMNCj4gPj4+PiBAQCAtMTQ3Miw2ICsxNDcyLDkgQEAgaW50IHBjaV9z
+Y2FuX3Nsb3Qoc3RydWN0IHBjaV9idXMgKmJ1cywgaW50IGRldmZuKQ0KPiA+Pj4+ICAJaWYgKCFk
+ZXYtPmlzX2FkZGVkKQ0KPiA+Pj4+ICAJCW5yKys7DQo+ID4+Pj4NCj4gPj4+PiArCWlmIChwY2lf
+cGNpZV90eXBlKGRldikgPT0gUENJX0VYUF9UWVBFX1JPT1RfUE9SVCkNCj4gPj4+PiArCQlidXMt
+PnNlbGYgPSBkZXY7DQo+ID4+Pg0KPiA+Pj4gSW4gdGhpcyBjYXNlLCBidXMgaXMgdGhlIHBjaSBy
+b290IGJ1cyBJIHRoaW5rLCBzbyB3aHkgc2V0IGJ1cy0+c2VsZg0KPiA+Pj4gPSByb290DQo+ID4+
+IHBvcnQgPw0KPiA+Pj4gImJ1cy0+c2VsZiIgc2hvdWxkIHBvaW50ZXIgdG8gdGhlIHBjaSBkZXZp
+Y2UgdGhhdCBicmlkZ2Ugb3V0IHRoaXMgYnVzLg0KPiA+PiBZZXMsIHRoaXMgcGF0Y2ggc2VlbXMg
+d3JvbmcuIElmIGRldiBpcyByb290IHBvcnQsIGJ1cyBzaG91bGQgYmUgcm9vdA0KPiA+PiBidXMs
+IHNvIHdlIHNob3VsZG4ndCBzZXQgcm9vdF9idXMtPnNlbGYgPSBwY2lfZGV2X29mX3Jvb3RfcG9y
+dC4NCj4gPj4NCj4gPiBXaHkgdGhlIHJvb3QgYnVzLT5zZWxmIHBvaW50ZXIgdG8gdGhlIGJyaWRn
+ZT8NCj4gPiBJZiBjaGlsZCBidXMgY3JlYXRlIGZyb20gcm9vdCBidXMsIHRoZSBjaGlsZC0+c2Vs
+ZiB3aWxsIGdldCB0aGUgYnJpZGdlKHJvb3QNCj4gcG9ydCkgcGNpIGRldmljZS4NCj4gPg0KPiA+
+PiBBY3R1YWxseSBQQ0kgY29yZSBoYXMgY29ycmVjdGx5IHNldHVwIHBjaV9idXMtPnNlbGYgZm9y
+IHNlY29uZGFyeSBidXMNCj4gPj4gb2YgUENJZSByb290IHBvcnQuDQo+ID4gWWVzLCByaWdodC4g
+QnV0IHRoZSByb290LWJ1cy0+c2VsZiBpcyBOVUxMLiBJIHRoaW5rIHRoZSByb290IGJ1cw0KPiA+
+IHNob3VsZCBnZXQgcm9vdCBwb3J0IHBjaSBkZXZpY2UgZm9yIGl0c2VsZi4gSWYgdGhlcmUgaXMg
+bm8gYnJpZGdlIGF0IGJvYXJkIGhvdw0KPiB0byBnZXQgdGhlIHJvb3QgcG9ydCBkZXZpY2U/DQo+
+IEhpIERvbmdzaGVuZywNCj4gCVBDSSByb290IGJ1cyByZXByZXNlbnRzIFBDSSBob3N0IGJyaWRn
+ZSwgd2hpY2ggaGFzIG5vIGNvcnJlc3BvbmRpbmcgUENJDQo+IGRldmljZS4NCj4gDQpZZXMsIGFn
+cmVlLiBJZiBtb3JlIHRoYW4gb25lIGJyaWRnZSBvbiB0aGUgcm9vdCBidXMsIHRoaXMgcGF0Y2gg
+aXMgd3JvbmcuDQoNClRoYW5rcyBmb3IgeW91ciByZXZpZXcuIDopDQoNCi1Eb25nc2hlbmcNCg0K
+PiA+DQo+ID4gLURvbmdzaGVuZw0KPiA+DQo+ID4+DQo+ID4+IFRoYW5rcyENCj4gPj4gR2VycnkN
+Cj4gPj4NCj4gPg0KPiANCg0K
