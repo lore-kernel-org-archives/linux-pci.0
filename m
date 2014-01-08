@@ -1,533 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og113.obsmtp.com ([64.18.0.26]:53382 "HELO
-	exprod5og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752846AbaAXV2X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jan 2014 16:28:23 -0500
-Received: by mail-ve0-f180.google.com with SMTP id db12so2261868veb.39
-        for <linux-pci@vger.kernel.org>; Fri, 24 Jan 2014 13:28:22 -0800 (PST)
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:33999
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751821AbaAHFCK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 00:02:10 -0500
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>
+CC: Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 12/12][v4] pci: fsl: fix function check_pci_ctl_endpt_part
+Date: Wed, 8 Jan 2014 13:02:03 +0800
+Message-ID: <1389157323-3088-12-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
-References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
-	<1389742458-7693-2-git-send-email-tinamdar@apm.com>
-	<201401151339.58593.arnd@arndb.de>
-	<CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
-Date: Fri, 24 Jan 2014 13:28:22 -0800
-Message-ID: <CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com>
-Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 16, 2014 at 5:10 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
->>> This patch adds the AppliedMicro X-Gene SOC PCIe controller driver.
->>> X-Gene PCIe controller supports maxmum upto 8 lanes and GEN3 speed.
->>> X-Gene has maximum 5 PCIe ports supported.
->>>
->>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
->>
->> This already looks much better than the first version, but I have a more
->> comments. Most importantly, it would help to know how the root ports
->> are structured. Is this a standard root complex and multiple ports,
->> multiple root complexes with one port each, or a nonstandard organization
->> that is a mix of those two models?
->
-> This is multiple root complexes with one port each.
->
->>
->>> +
->>> +/* When the address bit [17:16] is 2'b01, the Configuration access will be
->>> + * treated as Type 1 and it will be forwarded to external PCIe device.
->>> + */
->>> +static void __iomem *xgene_pcie_get_cfg_base(struct pci_bus *bus)
->>> +{
->>> +     struct xgene_pcie_port *port = xgene_pcie_bus_to_port(bus);
->>> +     u64 addr = (u64)port->cfg_base;
->>> +
->>> +     if (bus->number >= (port->first_busno + 1))
->>> +             addr |= AXI_EP_CFG_ACCESS;
->>> +
->>> +     return (void *)addr;
->>> +}
->>
->> Wrong type, it should be 'void __iomem *'. Also you can't assume that
->> bit operations work on virtual __iomem addresses, so it should be better
->> to just add a constant integer to the pointer, which is a valid
->> operation.
->
-> ok.
->
->>
->> I also wonder why you need to do this at all. If there isn't a global
->> config space for all ports, but rather a separate type0/type1 config
->> cycle based on the bus number, I see that as an indication that the
->> ports are in fact separate domains and should each start with bus 0.
->
-> It is not a standard ECAM layout. We also have a separate RTDID
-> register as well to program bus, device, function. While accessing EP
-> config space, we have to set the bit 17:16 as 2b'01. The same config
-> space address is utilized for enabling a customized nonstandard PCIe
-> DMA feature. The bits are defined to differentiate the access purpose.
-> The feature is not supported in this driver yet.
->
-> Secondly I don't think it will matter if each port starts with bus 0.
-> As long as we set the correct BDF in RTDID and set correct bits in
-> config address, the config reads and writes would work. Right?
->
->>
->>> +static void xgene_pcie_setup_lanes(struct xgene_pcie_port *port)
->>> +{
->>> +     void *csr_base = port->csr_base;
->>> +     u32 val;
->>> +
->>> +     val = readl(csr_base + BRIDGE_8G_CFG_8);
->>> +     val = eq_pre_cursor_lane0_set(val, 0x7);
->>> +     val = eq_pre_cursor_lane1_set(val, 0x7);
->>> +     writel(val, csr_base + BRIDGE_8G_CFG_8);
->>> +
->>> +     val = readl(csr_base + BRIDGE_8G_CFG_9);
->>> +     val = eq_pre_cursor_lane0_set(val, 0x7);
->>> +     val = eq_pre_cursor_lane1_set(val, 0x7);
->>> +     writel(val, csr_base + BRIDGE_8G_CFG_9);
->>> +
->>> +     val = readl(csr_base + BRIDGE_8G_CFG_10);
->>> +     val = eq_pre_cursor_lane0_set(val, 0x7);
->>> +     val = eq_pre_cursor_lane1_set(val, 0x7);
->>> +     writel(val, csr_base + BRIDGE_8G_CFG_10);
->>> +
->>> +     val = readl(csr_base + BRIDGE_8G_CFG_11);
->>> +     val = eq_pre_cursor_lane0_set(val, 0x7);
->>> +     val = eq_pre_cursor_lane1_set(val, 0x7);
->>> +     writel(val, csr_base + BRIDGE_8G_CFG_11);
->>> +
->>> +     val = readl(csr_base + BRIDGE_8G_CFG_4);
->>> +     val = (val & ~0x30) | (1 << 4);
->>> +     writel(val, csr_base + BRIDGE_8G_CFG_4);
->>> +}
->>
->> Please document what you are actually setting here. If the configuration
->> of the lanes is always the same, why do you have to set it here. If not,
->> why do you set constant values?
->
-> Good point. Let me check if these values should be constant or tune-able.
->
->>
->>> +static void xgene_pcie_setup_link(struct xgene_pcie_port *port)
->>> +{
->>> +     void *csr_base = port->csr_base;
->>> +     u32 val;
->>> +
->>> +     val = readl(csr_base + BRIDGE_CFG_14);
->>> +     val |= DIRECT_TO_8GTS_MASK;
->>> +     val |= SUPPORT_5GTS_MASK;
->>> +     val |= SUPPORT_8GTS_MASK;
->>> +     val |= DIRECT_TO_5GTS_MASK;
->>> +     writel(val, csr_base + BRIDGE_CFG_14);
->>> +
->>> +     val = readl(csr_base + BRIDGE_CFG_14);
->>> +     val &= ~ADVT_INFINITE_CREDITS;
->>> +     writel(val, csr_base + BRIDGE_CFG_14);
->>> +
->>> +     val = readl(csr_base + BRIDGE_8G_CFG_0);
->>> +     val |= (val & ~0xf) | 7;
->>> +     val |= (val & ~0xf00) | ((7 << 8) & 0xf00);
->>> +     writel(val, csr_base + BRIDGE_8G_CFG_0);
->>> +
->>> +     val = readl(csr_base + BRIDGE_8G_CFG_0);
->>> +     val |= DWNSTRM_EQ_SKP_PHS_2_3;
->>> +     writel(val, csr_base + BRIDGE_8G_CFG_0);
->>> +}
->>
->> Same here.
->>
->>> +static void xgene_pcie_program_core(void *csr_base)
->>> +{
->>> +     u32 val;
->>> +
->>> +     val = readl(csr_base + BRIDGE_CFG_0);
->>> +     val |= AER_OPTIONAL_ERROR_EN;
->>> +     writel(val, csr_base + BRIDGE_CFG_0);
->>> +     writel(0x0, csr_base + INTXSTATUSMASK);
->>> +     val = readl(csr_base + BRIDGE_CTRL_1);
->>> +     val = (val & ~0xffff) | XGENE_PCIE_DEV_CTRL;
->>> +     writel(val, csr_base + BRIDGE_CTRL_1);
->>> +}
->>
->> 'program_core'?
->
-> Some of the PCIe core related misc configurations.
->
->>
->>> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port, u32 *lanes)
->>> +{
->>> +     void *csr_base = port->csr_base;
->>> +     u32 val32;
->>> +     u64 start_time, time;
->>> +
->>> +     /*
->>> +      * A component enters the LTSSM Detect state within
->>> +      * 20ms of the end of fundamental core reset.
->>> +      */
->>> +     msleep(XGENE_LTSSM_DETECT_WAIT);
->>> +     port->link_up = 0;
->>> +     start_time = jiffies;
->>> +     do {
->>> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
->>> +             if (val32 & LINK_UP_MASK) {
->>> +                     port->link_up = 1;
->>> +                     port->link_speed = PIPE_PHY_RATE_RD(val32);
->>> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
->>> +                     *lanes = val32 >> 26;
->>> +             }
->>> +             time = jiffies_to_msecs(jiffies - start_time);
->>> +     } while ((!port->link_up) || (time <= XGENE_LTSSM_L0_WAIT));
->>> +}
->>
->> Maybe another msleep() in the loop? It seems weird to first do an
->> unconditional sleep but then busy-wait for the result.
->
-> ok.
+The new FSL PCI driver does not use cfg_addr of pci_controller,
+we may directly access PCI CCSR using fsl_pci->regs.
 
-This loop can execute for maximum 4 msec. So putting msleep(1) won't
-get us much.
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v4:
+no change
+v1-v3:
+The new patch to fix function check_pci_ctl_endpt_part
 
->
->>
->>> +static void xgene_pcie_setup_primary_bus(struct xgene_pcie_port *port,
->>> +                                      u32 first_busno, u32 last_busno)
->>> +{
->>> +     u32 val;
->>> +     void *cfg_addr = port->cfg_base;
->>> +
->>> +     val = readl(cfg_addr + PCI_PRIMARY_BUS);
->>> +     val &= ~PCI_PRIMARY_BUS_MASK;
->>> +     val |= (last_busno << 16) | ((first_busno + 1) << 8) | (first_busno);
->>> +     writel(val, cfg_addr + PCI_PRIMARY_BUS);
->>> +}
->>
->> Please explain what you are doing here. As mentioned above, I would expect
->> that each domain has visibility of all 255 buses. You shouldn't need any hacks
->> where you try to artificially squeeze the ports into a single domain when
->> they are separate in hardware.
->
-> ok. I will check and get back.
+Based on upstream master.
+Based on the discussion of RFC version here
+http://patchwork.ozlabs.org/patch/274487/
 
-You are right. I have removed this hack. It will be fixed in next version.
+ arch/powerpc/sysdev/fsl_pci.h   | 5 -----
+ drivers/iommu/fsl_pamu_domain.c | 6 ++++--
+ include/linux/fsl/pci-common.h  | 1 +
+ 3 files changed, 5 insertions(+), 7 deletions(-)
 
->
->>
->>> +/*
->>> + * read configuration values from DTS
->>> + */
->>> +static int xgene_pcie_read_dts_config(struct xgene_pcie_port *port)
->>
->> The comment and function name don't seem to match what the function
->> does. The main purpose of this function seems to be to ioremap
->> the resources, which have nothing to with configuration.
->
-> ok.
->
->>
->>> +{
->>> +     struct device_node *np = port->node;
->>> +     struct resource csr_res;
->>> +     struct resource cfg_res;
->>> +
->>> +     /* Get CSR space registers address */
->>> +     if (of_address_to_resource(np, 0, &csr_res))
->>> +             return -EINVAL;
->>> +
->>> +     port->csr_base = devm_ioremap_nocache(port->dev, csr_res.start,
->>> +                                           resource_size(&csr_res));
->>
->> You can also use platform_get_resource() to access the resource
->> that is already there, rather than creating another one.
->
-> ok.
->
->>
->>> +static void xgene_pcie_setup_ob_reg(struct xgene_pcie_port *port,
->>> +                                 u32 addr, u32 restype)
->>> +{
->>> +     struct resource *res = NULL;
->>> +     void *base = port->csr_base + addr;
->>> +     resource_size_t size;
->>> +     u64 cpu_addr = 0;
->>> +     u64 pci_addr = 0;
->>> +     u64 mask = 0;
->>> +     u32 min_size = 0;
->>
->> A general note: don't initialize local variables to a bogus valus (e.g. 0)
->> in their declaration. It prevents the compiler from warning about
->> incorrect uses.
->
-> ok.
->
->>
->>> +     u32 flag = EN_REG;
->>
->> This one on the other hand is ok, because you are actually going to
->> use that value.
->>
->>> +     switch (restype) {
->>> +     case IORESOURCE_MEM:
->>> +             res = &port->mem.res;
->>> +             pci_addr = port->mem.pci_addr;
->>> +             min_size = SZ_128M;
->>> +             break;
->>> +     case IORESOURCE_IO:
->>> +             res = &port->io.res;
->>> +             pci_addr = port->io.pci_addr;
->>> +             min_size = 128;
->>> +             flag |= OB_LO_IO;
->>> +             break;
->>> +     }
->>
->> I assume this works ok, but seems wrong in one detail: If the resource
->> is marked IORESOURCE_IO, res->start is supposed to be in I/O space, not
->> in memory space, which would make it the wrong number to program
->> into the hardware registers.
->
-> Yes for using ioport resource. However we have decided to defer using
-> it since 'pci_ioremap_io' is not yet supported from arm64 side.
->
-> From HW point of view, for memory mapped IO space, it is nothing but a
-> piece taken out of the ranges in address map for outbound accesses. So
-> while configuring registers from SOC side, it should take the CPU
-> address which is address from SOC address map. Right?
->
-> Later on we can have a separate io resource like 'realio' similar to
-> what pci-mvebu.c does.
->
->>
->>> +static int xgene_pcie_parse_map_ranges(struct xgene_pcie_port *port)
->>> +{
->>> +     struct device_node *np = port->node;
->>> +     struct of_pci_range range;
->>> +     struct of_pci_range_parser parser;
->>> +     struct device *dev = port->dev;
->>> +
->>> +     if (of_pci_range_parser_init(&parser, np)) {
->>> +             dev_err(dev, "missing ranges property\n");
->>> +             return -EINVAL;
->>> +     }
->>> +
->>> +     /* Get the I/O, memory, config ranges from DT */
->>
->> The comment needs updating now that you don't read config space here any more.
->
-> ok.
->
->>
->>> +/* X-Gene PCIe support maximum 3 inbound memory regions
->>> + * This function helps to select a region based on size of region
->>> + */
->>> +static int xgene_pcie_select_ib_reg(u64 size)
->>> +{
->>> +     static u8 ib_reg_mask;
->>> +
->>> +     if ((size > 4) && (size < SZ_16M) && !(ib_reg_mask & (1 << 1))) {
->>> +             ib_reg_mask |= (1 << 1);
->>> +             return 1;
->>> +     }
->>> +
->>> +     if ((size > SZ_1K) && (size < SZ_1T) && !(ib_reg_mask & (1 << 0))) {
->>> +             ib_reg_mask |= (1 << 0);
->>> +             return 0;
->>> +     }
->>> +
->>> +     if ((size > SZ_1M) && (size < SZ_1T) && !(ib_reg_mask & (1 << 2))) {
->>> +             ib_reg_mask |= (1 << 2);
->>> +             return 2;
->>> +     }
->>> +     return -EINVAL;
->>> +}
->>
->> Shouldn't the ib_reg_mask variable be per host bridge? Static variables
->> are dangerous if you ever get multiple instances of the hardware in one
->> system.
->
-> Yes. You are right. Thanks.
->
->>
->>> +static int xgene_pcie_parse_map_dma_ranges(struct xgene_pcie_port *port)
->>> +{
->>> +     struct device_node *np = port->node;
->>> +     struct of_pci_range range;
->>> +     struct of_pci_range_parser parser;
->>> +     struct device *dev = port->dev;
->>> +     int region;
->>> +
->>> +     if (pci_dma_range_parser_init(&parser, np)) {
->>> +             dev_err(dev, "missing dma-ranges property\n");
->>> +             return -EINVAL;
->>> +     }
->>> +
->>> +     /* Get the dma-ranges from DT */
->>> +     for_each_of_pci_range(&parser, &range) {
->>> +             u64 restype = range.flags & IORESOURCE_TYPE_BITS;
->>> +             u64 end = range.cpu_addr + range.size - 1;
->>> +             dev_dbg(port->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
->>> +                     range.flags, range.cpu_addr, end, range.pci_addr);
->>> +             region = xgene_pcie_select_ib_reg(range.size);
->>> +             if (region == -EINVAL) {
->>> +                     dev_warn(port->dev, "invalid pcie dma-range config\n");
->>> +                     continue;
->>> +             }
->>> +             xgene_pcie_setup_ib_reg(port, &range, restype, region);
->>> +     }
->>> +     return 0;
->>> +}
->>
->> I guess is could even be a local variable in this function, which you pass
->> by reference.
->>
->>> +
->>> +static int xgene_pcie_setup(int nr, struct pci_sys_data *sys)
->>> +{
->>> +     struct xgene_pcie_port *pp = xgene_pcie_sys_to_port(sys);
->>> +
->>> +     if (pp == NULL)
->>> +             return 0;
->>> +
->>> +     sys->mem_offset = pp->mem.res.start - pp->mem.pci_addr;
->>> +     pci_add_resource_offset(&sys->resources, &pp->mem.res,
->>> +                             sys->mem_offset);
->>> +     return 1;
->>> +}
->>
->> Please follow the regular error handling conventions, which are to
->> pass a negative errno value on error and zero on success.
->
-> ok.
->
->>
->> Also, what would be a reason for the port to be zero here? If
->> it's something that can't happen in practice, don't try to handle
->> it gracefully. You can use BUG_ON() for fatal conditions that
->> are supposed to be impossible to reach.
->
-> This function is a hook to upper layer. We register nr_controllers in
-> hw_pci structure as MAX_PORTS we support. It can happen that number of
-> ports actually enabled from device tree are less than the number in
-> nr_controllers.
->
->>
->>> +static struct pci_bus __init *xgene_pcie_scan_bus(int nr,
->>> +                                               struct pci_sys_data *sys)
->>> +{
->>> +     struct xgene_pcie_port *pp = xgene_pcie_sys_to_port(sys);
->>> +
->>> +     pp->first_busno = sys->busnr;
->>> +     xgene_pcie_setup_primary_bus(pp, sys->busnr, 0xff);
->>> +     return pci_scan_root_bus(NULL, sys->busnr, &xgene_pcie_ops,
->>> +                              sys, &sys->resources);
->>> +}
->>
->> You have a number of helper functions that don't seem to gain
->> much at all. Just move the call to pci_scan_root_bus() into
->> xgene_pcie_setup_primary_bus() here, and use that as the .scan
->> callback.
->>
->
-> I can do that if I can get rid of setup_primary_bus api. Let me check.
->
->>
->>> +     if (!port->link_up)
->>> +             dev_info(port->dev, "(rc) link down\n");
->>> +     else
->>> +             dev_info(port->dev, "(rc) x%d gen-%d link up\n",
->>> +                             lanes, port->link_speed + 1);
->>> +#ifdef CONFIG_PCI_DOMAINS
->>> +     xgene_pcie_hw.domain++;
->>> +#endif
->>> +     xgene_pcie_hw.private_data[index++] = port;
->>> +     platform_set_drvdata(pdev, port);
->>> +     return 0;
->>> +}
->>
->> Do you have multiple domains or not? I don't see how it can work if you
->> make the domain setup conditional on a kernel configuration option.
->> If you in fact have multiple domains, make sure in Kconfig that
->> CONFIG_PCI_DOMAINS is enabled. Otherwise don't mess with the domain
->> number...
->
-> It is enabled in Kconfig.
->
->>
->>> +static const struct of_device_id xgene_pcie_match_table[] __initconst = {
->>> +     {.compatible = "apm,xgene-pcie",},
->>> +     {},
->>> +};
->>
->> Another general note: Your "compatible" strings are rather unspecific.
->> Do you have a version number for this IP block? I suppose that it's related
->> to one that has been used in other chips before, or will be used in future
->> chips, if it's not actually licensed from some other company.
->
-> I will have to check this.
->
+diff --git a/arch/powerpc/sysdev/fsl_pci.h b/arch/powerpc/sysdev/fsl_pci.h
+index ae4dbe2..3176eb2 100644
+--- a/arch/powerpc/sysdev/fsl_pci.h
++++ b/arch/powerpc/sysdev/fsl_pci.h
+@@ -16,11 +16,6 @@
+ 
+ struct platform_device;
+ 
+-
+-/* FSL PCI controller BRR1 register */
+-#define PCI_FSL_BRR1      0xbf8
+-#define PCI_FSL_BRR1_VER 0xffff
+-
+ extern void fsl_pcibios_fixup_bus(struct pci_bus *bus);
+ extern int mpc83xx_add_bridge(struct device_node *dev);
+ u64 fsl_pci_immrbar_base(struct pci_controller *hose);
+diff --git a/drivers/iommu/fsl_pamu_domain.c b/drivers/iommu/fsl_pamu_domain.c
+index c857c30..dd7bc25 100644
+--- a/drivers/iommu/fsl_pamu_domain.c
++++ b/drivers/iommu/fsl_pamu_domain.c
+@@ -36,6 +36,7 @@
+ 
+ #include <asm/pci-bridge.h>
+ #include <sysdev/fsl_pci.h>
++#include <linux/fsl/pci-common.h>
+ 
+ #include "fsl_pamu_domain.h"
+ #include "pci.h"
+@@ -908,10 +909,11 @@ static struct iommu_group *get_device_iommu_group(struct device *dev)
+ static  bool check_pci_ctl_endpt_part(struct pci_controller *pci_ctl)
+ {
+ 	u32 version;
++	struct fsl_pci *pci = fsl_arch_sys_to_pci(pci_ctl);
+ 
+ 	/* Check the PCI controller version number by readding BRR1 register */
+-	version = in_be32(pci_ctl->cfg_addr + (PCI_FSL_BRR1 >> 2));
+-	version &= PCI_FSL_BRR1_VER;
++	version = in_be32(&pci->regs->block_rev1);
++	version &= PCIE_IP_REV_MASK;
+ 	/* If PCI controller version is >= 0x204 we can partition endpoints*/
+ 	if (version >= 0x204)
+ 		return 1;
+diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
+index 3247682..4e4191e 100644
+--- a/include/linux/fsl/pci-common.h
++++ b/include/linux/fsl/pci-common.h
+@@ -18,6 +18,7 @@
+ #define PCIE_LTSSM_L0	0x16		/* L0 state */
+ #define PCIE_IP_REV_2_2		0x02080202 /* PCIE IP block version Rev2.2 */
+ #define PCIE_IP_REV_3_0		0x02080300 /* PCIE IP block version Rev3.0 */
++#define PCIE_IP_REV_MASK	0xffff
+ #define PIWAR_EN		0x80000000	/* Enable */
+ #define PIWAR_PF		0x20000000	/* prefetch */
+ #define PIWAR_TGI_LOCAL		0x00f00000	/* target - local memory */
+-- 
+1.8.1.2
 
-We have decided to stick with current compatible string for now.
 
->>
->>> +static int __init xgene_pcie_init(void)
->>> +{
->>> +     void *private;
->>> +     int ret;
->>> +
->>> +     pr_info("X-Gene: PCIe driver\n");
->>> +
->>> +     /* allocate private data to keep xgene_pcie_port information */
->>> +     private = kzalloc((XGENE_PCIE_MAX_PORTS * sizeof(void *)), GFP_KERNEL);
->>
->> This should not be done unconditionally: There is no point in printing
->> a message or allocating memory if you don't actually run on a system
->> with this device.
->
-> I am doing this here because I have one instance of hw_pci structure
-> with multiple pcie controllers. I can't do it from probe since it will
-> be called once per instance in device tree.
->
->>
->>> +     if (private == NULL)
->>> +             return -ENOMEM;
->>
->> Style: if you are testing for an object, just write 'if (private)' or
->> 'if (!private)', but don't compare against NULL.
->
-> ok.
->
->>
->>> +     xgene_pcie_hw.private_data = private;
->>> +     ret = platform_driver_probe(&xgene_pcie_driver,
->>> +                                 xgene_pcie_probe_bridge);
->>> +     if (ret)
->>> +             return ret;
->>> +     pci_common_init(&xgene_pcie_hw);
->>> +     return 0;
->>
->> This seems wrong: You should not use platform_driver_probe() because
->> that has issues with deferred probing.
->
-> I think 'platform_driver_probe' prevents the deferred probing.
-> 'pci_common_init' needs to be called only once with current driver
-> structure. The probes for all pcie ports should be finished (ports
-> initialized) before 'pci_common_init' gets called.
->
->>
->>         Arnd
