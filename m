@@ -1,46 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 30 Jan 2014 14:48:54 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 2/3] ath10k: Disable MSI in case IRQ configuration is unknown
-Message-ID: <20140130134853.GB31909@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:52000 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755738AbaAHMpC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 07:45:02 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-pci@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 6/7] ath10k: Use new interfaces for MSI enablement
+References: <cover.1389103215.git.agordeev@redhat.com>
+	<dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
+	<87txdehog9.fsf@kamboji.qca.qualcomm.com>
+	<20140108090449.GC20157@dhcp-26-207.brq.redhat.com>
+Date: Wed, 8 Jan 2014 14:44:55 +0200
+In-Reply-To: <20140108090449.GC20157@dhcp-26-207.brq.redhat.com> (Alexander
+	Gordeev's message of "Wed, 8 Jan 2014 10:04:50 +0100")
+Message-ID: <87ob3mfxrs.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In case IRQ configuration is unknown possibly enabled MSIs
-are left enabled in ath10k_pci_deinit_irq(). This update
-fixes the described misbehaviour.
+Alexander Gordeev <agordeev@redhat.com> writes:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> On Wed, Jan 08, 2014 at 10:23:18AM +0200, Kalle Valo wrote:
+>
+>> Do you want me to take this patch to my ath.git tree or how were you
+>> planning to handle it?
+>
+> I see no option other than pushing it thru pci.git tree at this stage.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 6525e1f..563ce77 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2480,6 +2480,8 @@ static int ath10k_pci_deinit_irq(struct ath10k *ar)
- 	case MSI_NUM_REQUEST:
- 		pci_disable_msi(ar_pci->pdev);
- 		return 0;
-+	default:
-+		pci_disable_msi(ar_pci->pdev);
- 	}
- 
- 	ath10k_warn("unknown irq configuration upon deinit\n");
--- 
-1.7.7.6
+Thanks, I'll then just drop it from my queue.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Kalle Valo
