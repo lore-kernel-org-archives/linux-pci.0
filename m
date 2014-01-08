@@ -1,87 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47699 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751410AbaAaJKJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 04:10:09 -0500
-From: "Brown, Aaron F" <aaron.f.brown@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:36978 "EHLO
+	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755534AbaAHJEL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jan 2014 04:04:11 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>,
+	Jingoo Han <jg1.han@samsung.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [E1000-devel] [PATCH 0/2] Remove dead code
-Date: Fri, 31 Jan 2014 09:10:06 +0000
-Message-ID: <309B89C4C689E141A5FF6A0C5FB2118B7314C430@ORSMSX101.amr.corp.intel.com>
-References: <20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Date: Wed, 8 Jan 2014 17:03:55 +0800
+Subject: RE: pcie-designware: query on MSI IRQ handling
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FBAF2CCF@EAPEX1MAIL1.st.com>
+References: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com>
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Thursday, January 30, 2014 11:21 AM
-> To: linux-pci@vger.kernel.org
-> Cc: e1000-devel@lists.sourceforge.net; Arjan van de Ven; linux-
-> kernel@vger.kernel.org
-> Subject: [E1000-devel] [PATCH 0/2] Remove dead code
-> 
-> This is a rework of part of Stephen's patch [1].
-> 
-> This removes the MMIO exclusivity support that was added as part of an
-> e1000e bug hunt.
-> 
-> The e1000e driver still uses pci_request_selected_regions_exclusive(), but
-> there are no callers of pci_request_region_exclusive() and
-> pci_request_regions_exclusive().  I thought it was cleaner to remove the
-> whole thing than to leave parts of it in place.  But I could easily be
-> convinced to leave part or all of this in place if people think it's still
-> useful.
+Hello Murali,
 
-Thanks Bjorn, I have added these to Jeff's queue.
+> -----Original Message-----
+> From: Karicheri, Muralidharan [mailto:m-karicheri2@ti.com]
+> Sent: Wednesday, January 08, 2014 12:30 AM
+> To: Jingoo Han; Mohit KUMAR DCG; linux-pci@vger.kernel.org
+> Subject: pcie-designware: query on MSI IRQ handling
+> 
+> Hi,
+> 
+> I am porting my current PCI Linux driver (based on v3.8) to designware core
+> driver (pcie-designware.c) to submit the patches to the mailing list and got
+> following question. Could someone clarify this please?
+> 
+> I see the following code in pcie-designware.c
+> 
+> void dw_pcie_msi_init(struct pcie_port *pp) {
+> 	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+
+I think we can implement dw_pcie_get_msi_addr() to get the MSI address as
+ below. It checks if any specific ops is implemented then it will get the address
+ from there otherwise default as in present case  will be used. You should
+ implement get_msi_addr() specific to your platform.
+
+void dw_pcie_get_msi_addr(struct pcie port *pp) 
+{
+   	if (pp->ops->get_msi_addr)
+		pp->msi_data = pp->ops->get_msi_addr;
+	else
+		pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+}
+
+And then call this from dw_pcie_msi_init() as:
+
+void dw_pcie_msi_init(..) 
+{
+	dw_pcie_get_msi_addr(..); 
+
+	/* program the msi_data */
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+			virt_to_phys((void *)pp->msi_data));
+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0); }
+}
 
 > 
-> It also removes SR-IOV migration support, which is completely unused, as
-> far as I can tell.
+> 	/* program the msi_data */
+> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> 			virt_to_phys((void *)pp->msi_data));
+> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0); }
 > 
-> [1]
-> http://lkml.kernel.org/r/20131227132710.7190647c@nehalam.linuxnetplumber.n
-> et
+> and then in
 > 
-> ---
+> static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
+> 			struct msi_desc *desc)
+> {
 > 
-> Bjorn Helgaas (2):
->       PCI: Remove unused MMIO exclusivity support
->       PCI: Remove unused SR-IOV VF Migration support
+>          <---Cut--->
 > 
+> 	msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> 	msg.address_hi = 0x0;
+> 	msg.data = pos;
+> 	printk("dw_msi_setup_irq address_lo = %x\n", msg.address_lo);
+> 	write_msi_msg(irq, &msg);
+> }
 > 
->  Documentation/PCI/pci-iov-howto.txt        |    4 -
->  Documentation/kernel-parameters.txt        |    4 -
->  arch/x86/mm/init.c                         |    2
->  drivers/net/ethernet/intel/e1000e/netdev.c |    3 -
->  drivers/pci/iov.c                          |  119 -----------------------
-> -----
->  drivers/pci/pci-sysfs.c                    |    3 -
->  drivers/pci/pci.c                          |  112 +++--------------------
-> ---
->  drivers/pci/pci.h                          |    4 -
->  include/linux/ioport.h                     |    5 -
->  include/linux/pci.h                        |    7 --
->  kernel/resource.c                          |   54 -------------
->  11 files changed, 14 insertions(+), 303 deletions(-)
+> In our designware IP, in the Application space, there is a MSI_IRQ register
+> that the EP needs to write with msi vector value to generate msi irq. So in our
+> case, pp->msi_data should be updated with address RC's MSI_IRQ register.
+> So I plan to update the msi_data in port's data structure with MSI_IRQ virtual
+> address and not call dw_msi_setup_irq().
+> I am trying to understand how MSI IRQ works on currently supported
+> designware PCIE hardwares (Samsung, Freescale etc). I am assuming
+> dw_pcie_wr_own_conf () write into RC's config space. But in the above
+> code, I see the code is updating the PCIE_MSI_ADDR_LO/HI of the RC's
+> config with a DDR address and in  write_msi_msg() this address along with
+> vector gets written to EP's MSI config space registers. In this case how is the
+> MSI IRQ gets generated from the EP?
 > 
-> --------------------------------------------------------------------------
-> ----
-> WatchGuard Dimension instantly turns raw network data into actionable
-> security intelligence. It gives you real-time visual feedback on key
-> security issues and trends.  Skip the complicated setup - simply import a
-> virtual appliance and go from zero to informed in seconds.
-> http://pubads.g.doubleclick.net/gampad/clk?id=123612991&iu=/4140/ostg.clkt
-> rk
-> _______________________________________________
-> E1000-devel mailing list
-> E1000-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/e1000-devel
-> To learn more about Intel&#174; Ethernet, visit
-> http://communities.intel.com/community/wired
+> EP writes to DDR address with the vector value. Does the PCIE hardware
+> match the address in the MSI irq message from EP with that in
+> PCIE_MSI_ADDR_LO/HI and then raise an IRQ?
+
+Yes.
+
+> Is this part of the Per Vector
+> Masking (PVM) option support as discussed in the PCI spec? Anyone can
+> explain this?
+> 
+> Also as part of my development, I plan to enhance this driver to override the
+> dw_msi_irq_chip with our platform specific chip data since MSI interrupt
+> controller is using application specific registers instead of the one at offset
+> 0x828. I will sending an patch for review once my driver is tested.
+
+So in you controller you do not have regiter offset 0x820-0x830, right?
+Then probably, its not generic MSI controller as implemented in newer verion of IP.
+
+Hmm....if the same registers are in your application space then maybe you can handle
+Similar to to get_msi_addr() as suggested above.
+
+Regards
+Mohit
+> 
+> Thanks
+> 
+> Murali Karicheri
+> Linux Kernel, Software Development
+> 
+
