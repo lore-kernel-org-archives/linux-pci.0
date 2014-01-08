@@ -1,51 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:45268 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750748AbaABKl5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 05:41:57 -0500
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: [PATCH] PCI: mvebu: Remove redundant code
-Date: Thu,  2 Jan 2014 11:41:36 +0100
-Message-Id: <1388659296-21569-1-git-send-email-gregory.clement@free-electrons.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54963 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755679AbaAHMc0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jan 2014 07:32:26 -0500
+Date: Wed, 8 Jan 2014 13:34:29 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	wil6210@qca.qualcomm.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 7/7] wil6210: Use new interfaces for MSI enablement
+Message-ID: <20140108123429.GE20157@dhcp-26-207.brq.redhat.com>
+References: <cover.1389103215.git.agordeev@redhat.com>
+ <1649789.pNiBbZVqTd@lx-vladimir>
+ <20140108115400.GD20157@dhcp-26-207.brq.redhat.com>
+ <6233363.QgbOXU7oZU@lx-vladimir>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6233363.QgbOXU7oZU@lx-vladimir>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the commit b42285f66f871a989, Sebastian moved clock enable before
-register access, but during the merge of the commit
-9f352f0e6c0fa2dc608812df "PCI: mvebu: Dynamically detect if the PEX
-link is up to enable hot plug", the moved part was added back.
+On Wed, Jan 08, 2014 at 02:19:01PM +0200, Vladimir Kondratiev wrote:
+> Thanks, see it. New code don't distinguish between negative and positive error
+> values, same as old code. I'll fix it.
 
-This patch fixes this by removing the redundant code.
+As the patch seems okay for you, I am not quite getting what else needs
+to be fixed? :)
 
-Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
----
- drivers/pci/host/pci-mvebu.c | 8 --------
- 1 file changed, 8 deletions(-)
+> Meanwhile, below my
+> 
+> Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 2aa7b77c7c88..0b4b99fa1fb5 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -954,14 +954,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 
- 		mvebu_pcie_set_local_dev_nr(port, 1);
- 
--		port->clk = of_clk_get_by_name(child, NULL);
--		if (IS_ERR(port->clk)) {
--			dev_err(&pdev->dev, "PCIe%d.%d: cannot get clock\n",
--			       port->port, port->lane);
--			iounmap(port->base);
--			continue;
--		}
--
- 		port->dn = child;
- 		spin_lock_init(&port->conf_lock);
- 		mvebu_sw_pci_bridge_init(port);
+Thanks, Vladimir!
+
 -- 
-1.8.1.2
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
