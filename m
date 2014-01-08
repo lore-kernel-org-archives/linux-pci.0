@@ -1,105 +1,160 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qe0-f49.google.com ([209.85.128.49]:60345 "EHLO
+	mail-qe0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291AbaAHGON (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 01:14:13 -0500
 MIME-Version: 1.0
-In-Reply-To: <20131216221615.3539.78656.stgit@bling.home>
-References: <20131216221615.3539.78656.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 14 Jan 2014 16:48:07 -0700
-Message-ID: <CAErSpo74iO-cD71+q-Bz52r4Eg1p9KpGQQXLnQ3zUxzs54YSuw@mail.gmail.com>
-Subject: Re: [PATCH] vfio-pci: Use pci "try" reset interface
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <52CCE9CD.5060404@linux.intel.com>
+References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+	<1389085234-22296-15-git-send-email-jiang.liu@linux.intel.com>
+	<CAOtp4Kqn5e_51hwrRMgRmam7jXaVC=md7BAuwnG3gJGETj9iQA@mail.gmail.com>
+	<52CCE9CD.5060404@linux.intel.com>
+Date: Wed, 8 Jan 2014 14:14:12 +0800
+Message-ID: <CAOtp4KqvzrJr=Z5xj-vZnnL--W6R2CjZ=m0rFgR9DzxVKjfwSQ@mail.gmail.com>
+Subject: Re: [RFC Patch Part2 V1 14/14] iommu/vt-d: update IOMMU state when
+ memory hotplug happens
+From: Kai Huang <dev.kai.huang@gmail.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 3:16 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> PCI resets will attempt to take the device_lock for any device to be
-> reset.  This is a problem if that lock is already held, for instance
-> in the device remove path.  It's not sufficient to simply kill the
-> user process or skip the reset if called after .remove as a race could
-> result in the same deadlock.  Instead, we handle all resets as "best
-> effort" using the PCI "try" reset interfaces.  This prevents the user
-> from being able to induce a deadlock by triggering a reset.
+On Wed, Jan 8, 2014 at 2:01 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
 >
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
 >
-> This depends on the proposed pci "try" function/slot/bus reset patch.
->
->  drivers/vfio/pci/vfio_pci.c |   29 +++++++++--------------------
->  1 file changed, 9 insertions(+), 20 deletions(-)
->
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index 6ab71b9..576e34e 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -139,25 +139,14 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
->         pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
->
->         /*
-> -        * Careful, device_lock may already be held.  This is the case if
-> -        * a driver unbind is blocked.  Try to get the locks ourselves to
-> -        * prevent a deadlock.
-> +        * Try to reset the device.  The success of this is dependent on
-> +        * being able to lock the device, which is not always possible.
->          */
->         if (vdev->reset_works) {
-> -               bool reset_done = false;
-> -
-> -               if (pci_cfg_access_trylock(pdev)) {
-> -                       if (device_trylock(&pdev->dev)) {
-> -                               __pci_reset_function_locked(pdev);
-> -                               reset_done = true;
-> -                               device_unlock(&pdev->dev);
-> -                       }
-> -                       pci_cfg_access_unlock(pdev);
-> -               }
-> -
-> -               if (!reset_done)
-> -                       pr_warn("%s: Unable to acquire locks for reset of %s\n",
-> -                               __func__, dev_name(&pdev->dev));
-> +               int ret = pci_try_reset_function(pdev);
-> +               if (ret)
-> +                       pr_debug("%s: reset of device %s = %d\n",
-> +                               __func__, dev_name(&pdev->dev), ret);
+> On 2014/1/8 13:07, Kai Huang wrote:
+>> On Tue, Jan 7, 2014 at 5:00 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>>> If static identity domain is created, IOMMU driver needs to update
+>>> si_domain page table when memory hotplug event happens. Otherwise
+>>> PCI device DMA operations can't access the hot-added memory regions.
+>>>
+>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>> ---
+>>>  drivers/iommu/intel-iommu.c |   52 ++++++++++++++++++++++++++++++++++++++++++-
+>>>  1 file changed, 51 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+>>> index 83e3ed4..35a987d 100644
+>>> --- a/drivers/iommu/intel-iommu.c
+>>> +++ b/drivers/iommu/intel-iommu.c
+>>> @@ -33,6 +33,7 @@
+>>>  #include <linux/dmar.h>
+>>>  #include <linux/dma-mapping.h>
+>>>  #include <linux/mempool.h>
+>>> +#include <linux/memory.h>
+>>>  #include <linux/timer.h>
+>>>  #include <linux/iova.h>
+>>>  #include <linux/iommu.h>
+>>> @@ -3689,6 +3690,54 @@ static struct notifier_block device_nb = {
+>>>         .notifier_call = device_notifier,
+>>>  };
+>>>
+>>> +static int intel_iommu_memory_notifier(struct notifier_block *nb,
+>>> +                                      unsigned long val, void *v)
+>>> +{
+>>> +       struct memory_notify *mhp = v;
+>>> +       unsigned long long start, end;
+>>> +       struct iova *iova;
+>>> +
+>>> +       switch (val) {
+>>> +       case MEM_GOING_ONLINE:
+>>> +               start = mhp->start_pfn << PAGE_SHIFT;
+>>> +               end = ((mhp->start_pfn + mhp->nr_pages) << PAGE_SHIFT) - 1;
+>>> +               if (iommu_domain_identity_map(si_domain, start, end)) {
+>>> +                       pr_warn("dmar: failed to build identity map for [%llx-%llx]\n",
+>>> +                               start, end);
+>>> +                       return NOTIFY_BAD;
+>>> +               }
+>>
+>> Better to use iommu_prepare_identity_map? For si_domain, if
+>> hw_pass_through is used, there's no page table.
+> Hi Kai,
+>         Good catch!
+> Seems function iommu_prepare_identity_map() is designed to handle
+> RMRRs. So how about avoiding of registering memory hotplug notifier
+> if hw_pass_through is true?
 
-Why is this a pr_debug() instead of dev_dbg()?  I see vfio_pci.c seems
-to always use pr_*() instead of dev_*(), so you probably have a
-reason.
+I think that's also fine :)
 
-The text of the message ("vfio_pci_disable: reset of device
-0000:00:00.1 = -35") doesn't seem terribly clear; as a user, I'd have
-to go look up the code to know whether I should be concerned about it.
- Maybe it should be explicit that the device was not reset?
+Btw, I have a related question to memory hotplug but not related to
+intel IOMMU specifically. For the devices use DMA remapping, suppose
+the device is already using the memory that we are trying to remove,
+is this case, looks we need to change the existing iova <-> pa
+mappings for the pa that is in the memory range about to be removed,
+and reset the mapping to different pa (iova remains the same). Does
+existing code have this covered? Is there a generic IOMMU layer memory
+hotplug notifier to handle memory removal?
 
->         }
+-Kai
 >
->         pci_restore_state(pdev);
-> @@ -514,7 +503,7 @@ static long vfio_pci_ioctl(void *device_data,
+> Thanks!
+> Gerry
 >
->         } else if (cmd == VFIO_DEVICE_RESET) {
->                 return vdev->reset_works ?
-> -                       pci_reset_function(vdev->pdev) : -EINVAL;
-> +                       pci_try_reset_function(vdev->pdev) : -EINVAL;
->
->         } else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
->                 struct vfio_pci_hot_reset_info hdr;
-> @@ -684,8 +673,8 @@ reset_info_exit:
->                                                     &info, slot);
->                 if (!ret)
->                         /* User has access, do the reset */
-> -                       ret = slot ? pci_reset_slot(vdev->pdev->slot) :
-> -                                    pci_reset_bus(vdev->pdev->bus);
-> +                       ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
-> +                                    pci_try_reset_bus(vdev->pdev->bus);
->
->  hot_reset_release:
->                 for (i--; i >= 0; i--)
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>> +               break;
+>>> +       case MEM_OFFLINE:
+>>> +       case MEM_CANCEL_ONLINE:
+>>> +               /* TODO: enhance RB-tree and IOVA code to support of splitting iova */
+>>> +               iova = find_iova(&si_domain->iovad, mhp->start_pfn);
+>>> +               if (iova) {
+>>> +                       unsigned long start_pfn, last_pfn;
+>>> +                       struct dmar_drhd_unit *drhd;
+>>> +                       struct intel_iommu *iommu;
+>>> +
+>>> +                       start_pfn = mm_to_dma_pfn(iova->pfn_lo);
+>>> +                       last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
+>>> +                       dma_pte_clear_range(si_domain, start_pfn, last_pfn);
+>>> +                       dma_pte_free_pagetable(si_domain, start_pfn, last_pfn);
+>>> +                       rcu_read_lock();
+>>> +                       for_each_active_iommu(iommu, drhd)
+>>> +                               iommu_flush_iotlb_psi(iommu, si_domain->id,
+>>> +                                       start_pfn, last_pfn - start_pfn + 1, 0);
+>>> +                       rcu_read_unlock();
+>>> +                       __free_iova(&si_domain->iovad, iova);
+>>> +               }
+>>
+>> The same as above. Looks we need to consider hw_pass_through for the si_domain.
+>>
+>> -Kai
+>>
+>>> +               break;
+>>> +       }
+>>> +
+>>> +       return NOTIFY_OK;
+>>> +}
+>>> +
+>>> +static struct notifier_block intel_iommu_memory_nb = {
+>>> +       .notifier_call = intel_iommu_memory_notifier,
+>>> +       .priority = 0
+>>> +};
+>>> +
+>>>  int __init intel_iommu_init(void)
+>>>  {
+>>>         int ret = -ENODEV;
+>>> @@ -3761,8 +3810,9 @@ int __init intel_iommu_init(void)
+>>>         init_iommu_pm_ops();
+>>>
+>>>         bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
+>>> -
+>>>         bus_register_notifier(&pci_bus_type, &device_nb);
+>>> +       if (si_domain)
+>>> +               register_memory_notifier(&intel_iommu_memory_nb);
+>>>
+>>>         intel_iommu_enabled = 1;
+>>>
+>>> --
+>>> 1.7.10.4
+>>>
+>>> _______________________________________________
+>>> iommu mailing list
+>>> iommu@lists.linux-foundation.org
+>>> https://lists.linuxfoundation.org/mailman/listinfo/iommu
