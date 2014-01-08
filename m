@@ -1,88 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v7 07/15] agp/intel: Rename gtt_bus_addr to gtt_phys_addr
-To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:56:02 -0700
-Message-ID: <20140107005602.10786.2964.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:8075
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751756AbaAHFCJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 00:02:09 -0500
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>
+CC: Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 09/12][v4] pci: fsl: update PCI PM driver
+Date: Wed, 8 Jan 2014 13:02:00 +0800
+Message-ID: <1389157323-3088-9-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The only use of gtt_bus_addr is as an argument to ioremap(), so it is a CPU
-physical address, not a bus address.  Rename it to gtt_phys_addr to reflect
-this.
+The patch updates PCI PM driver, uses fsl_pci instead of
+pci_controller.
 
-No functional change.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 ---
- drivers/char/agp/intel-gtt.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+change log:
+v4:
+no change
+v1-v3:
+Derived from http://patchwork.ozlabs.org/patch/278965/
 
-diff --git a/drivers/char/agp/intel-gtt.c b/drivers/char/agp/intel-gtt.c
-index b8e2014cb9cb..54202ffcf467 100644
---- a/drivers/char/agp/intel-gtt.c
-+++ b/drivers/char/agp/intel-gtt.c
-@@ -64,7 +64,7 @@ static struct _intel_private {
- 	struct pci_dev *pcidev;	/* device one */
- 	struct pci_dev *bridge_dev;
- 	u8 __iomem *registers;
--	phys_addr_t gtt_bus_addr;
-+	phys_addr_t gtt_phys_addr;
- 	u32 PGETBL_save;
- 	u32 __iomem *gtt;		/* I915G */
- 	bool clear_fake_agp; /* on first access via agp, fill with scratch */
-@@ -191,7 +191,7 @@ static int i810_setup(void)
- 	writel(virt_to_phys(gtt_table) | I810_PGETBL_ENABLED,
- 	       intel_private.registers+I810_PGETBL_CTL);
+Based on upstream master.
+Based on the discussion of RFC version here
+http://patchwork.ozlabs.org/patch/274487/
+
+ drivers/pci/host/pci-fsl-common.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
+index d608550..e3696eb 100644
+--- a/drivers/pci/host/pci-fsl-common.c
++++ b/drivers/pci/host/pci-fsl-common.c
+@@ -702,19 +702,12 @@ static int fsl_pci_remove(struct platform_device *pdev)
+ #ifdef CONFIG_PM
+ static int fsl_pci_resume(struct device *dev)
+ {
+-	struct pci_controller *hose;
+-	struct resource pci_rsrc;
++	struct fsl_pci *pci = dev_get_drvdata(dev);
  
--	intel_private.gtt_bus_addr = reg_addr + I810_PTE_BASE;
-+	intel_private.gtt_phys_addr = reg_addr + I810_PTE_BASE;
+-	hose = pci_find_hose_for_OF_device(dev->of_node);
+-	if (!hose)
++	if (!pci)
+ 		return -ENODEV;
  
- 	if ((readl(intel_private.registers+I810_DRAM_CTL)
- 		& I810_DRAM_ROW_0) == I810_DRAM_ROW_0_SDRAM) {
-@@ -636,10 +636,10 @@ static int intel_gtt_init(void)
- 
- 	intel_private.gtt = NULL;
- 	if (intel_gtt_can_wc())
--		intel_private.gtt = ioremap_wc(intel_private.gtt_bus_addr,
-+		intel_private.gtt = ioremap_wc(intel_private.gtt_phys_addr,
- 					       gtt_map_size);
- 	if (intel_private.gtt == NULL)
--		intel_private.gtt = ioremap(intel_private.gtt_bus_addr,
-+		intel_private.gtt = ioremap(intel_private.gtt_phys_addr,
- 					    gtt_map_size);
- 	if (intel_private.gtt == NULL) {
- 		intel_private.driver->cleanup();
-@@ -796,7 +796,7 @@ static int i830_setup(void)
- 	if (!intel_private.registers)
- 		return -ENOMEM;
- 
--	intel_private.gtt_bus_addr = reg_addr + I810_PTE_BASE;
-+	intel_private.gtt_phys_addr = reg_addr + I810_PTE_BASE;
+-	if (of_address_to_resource(dev->of_node, 0, &pci_rsrc)) {
+-		dev_err(dev, "Get pci register base failed.");
+-		return -ENODEV;
+-	}
+-
+-	setup_pci_atmu(hose);
++	setup_pci_atmu(pci);
  
  	return 0;
  }
-@@ -1123,13 +1123,13 @@ static int i9xx_setup(void)
- 	case 3:
- 		pci_read_config_dword(intel_private.pcidev,
- 				      I915_PTEADDR, &gtt_addr);
--		intel_private.gtt_bus_addr = gtt_addr;
-+		intel_private.gtt_phys_addr = gtt_addr;
- 		break;
- 	case 5:
--		intel_private.gtt_bus_addr = reg_addr + MB(2);
-+		intel_private.gtt_phys_addr = reg_addr + MB(2);
- 		break;
- 	default:
--		intel_private.gtt_bus_addr = reg_addr + KB(512);
-+		intel_private.gtt_phys_addr = reg_addr + KB(512);
- 		break;
- 	}
- 
+-- 
+1.8.1.2
+
 
