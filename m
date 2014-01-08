@@ -1,91 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:32789 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaAKB1p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:27:45 -0500
-Received: by mail-pb0-f51.google.com with SMTP id up15so5157570pbc.38
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:44 -0800 (PST)
-Subject: [PATCH v2 08/12] PCI: Remove unused pci_renumber_slot()
-To: Stephen Hemminger <stephen@networkplumber.org>,
-	linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yu Zhao <yu.zhao@intel.com>, Alex Chiang <achiang@canonical.com>
-Date: Fri, 10 Jan 2014 18:27:42 -0700
-Message-ID: <20140111012742.14505.76364.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:58630 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757624AbaAHXlx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 18:41:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4679785.iPCX7mECEL@vostro.rjw.lan>
+References: <37552283.kG1L4S8Daa@vostro.rjw.lan>
+	<2459491.HIKjAnF27k@vostro.rjw.lan>
+	<CAE9FiQV1tui+nHMFF419dpTOKt_x4US6R=3uPhDvUDJ0zoMrEg@mail.gmail.com>
+	<4679785.iPCX7mECEL@vostro.rjw.lan>
+Date: Wed, 8 Jan 2014 15:41:52 -0800
+Message-ID: <CAE9FiQXYskZcfccVO6OacYchfA=cd0Ns9EF1CbwERS7MR05bUA@mail.gmail.com>
+Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to
+ avoid sysfs warnings
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
+On Mon, Jan 6, 2014 at 12:41 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
 
-My philosophy is unused code is dead code.  And dead code is subject to bit
-rot and is a likely source of bugs.  Use it or lose it.
+>> Not sure how that could happen.
+>>
+>> If it would really happen, we could set dev->match_driver to 0 in pci_stop_dev.
+>
+> Simply, run "modprobe -r driver && modprobe driver" in a loop and
+> remove the PCI host bridge the given device is on in parallel to that.  Chances
+> are, you'll see some nice breakage.
 
-This reverts part of f46753c5e354 ("PCI: introduce pci_slot") and
-d25b7c8d6ba2 ("PCI: rename pci_update_slot_number to pci_renumber_slot"),
-removing this interface:
+I would suggest using match_driver prevent driver from attaching again.
 
-    pci_renumber_slot()
-
-[bhelgaas: split to separate patch]
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Chiang <achiang@canonical.com>
 ---
- drivers/pci/slot.c  |   26 --------------------------
- include/linux/pci.h |    1 -
- 2 files changed, 27 deletions(-)
+ drivers/pci/remove.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-index 448ca562d1f8..7dd62fa9d0bd 100644
---- a/drivers/pci/slot.c
-+++ b/drivers/pci/slot.c
-@@ -320,32 +320,6 @@ err:
- EXPORT_SYMBOL_GPL(pci_create_slot);
- 
- /**
-- * pci_renumber_slot - update %struct pci_slot -> number
-- * @slot: &struct pci_slot to update
-- * @slot_nr: new number for slot
-- *
-- * The primary purpose of this interface is to allow callers who earlier
-- * created a placeholder slot in pci_create_slot() by passing a -1 as
-- * slot_nr, to update their %struct pci_slot with the correct @slot_nr.
-- */
--void pci_renumber_slot(struct pci_slot *slot, int slot_nr)
--{
--	struct pci_slot *tmp;
--
--	down_write(&pci_bus_sem);
--
--	list_for_each_entry(tmp, &slot->bus->slots, list) {
--		WARN_ON(tmp->number == slot_nr);
--		goto out;
--	}
--
--	slot->number = slot_nr;
--out:
--	up_write(&pci_bus_sem);
--}
--EXPORT_SYMBOL_GPL(pci_renumber_slot);
--
--/**
-  * pci_destroy_slot - decrement refcount for physical PCI slot
-  * @slot: struct pci_slot to decrement
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 583348275085..9d860912dd88 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -763,7 +763,6 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
- 				 const char *name,
- 				 struct hotplug_slot *hotplug);
- void pci_destroy_slot(struct pci_slot *slot);
--void pci_renumber_slot(struct pci_slot *slot, int slot_nr);
- int pci_scan_slot(struct pci_bus *bus, int devfn);
- struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
+Index: linux-2.6/drivers/pci/remove.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/remove.c
++++ linux-2.6/drivers/pci/remove.c
+@@ -11,6 +11,7 @@ static void pci_stop_dev(struct pci_dev
+         pci_proc_detach_device(dev);
+         pci_remove_sysfs_dev_files(dev);
+         device_release_driver(&dev->dev);
++        dev->match_driver = false;
+         dev->is_added = 0;
+     }
 
+
+>
+> Also what happens if somebody uses the "remove" sysfs attribute on a device
+> needed by ioapic/dmar?
+
+Good question, we will have problem in that case.
+To make it simple, we may hide the "remove" in sysfs for ioapic pci device ?
+
+Thanks
+
+Yinghai
