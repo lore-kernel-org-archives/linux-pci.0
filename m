@@ -1,282 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:55493 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754533AbaAGXQP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 18:16:15 -0500
-Received: by mail-ie0-f178.google.com with SMTP id lx4so1177435iec.23
-        for <linux-pci@vger.kernel.org>; Tue, 07 Jan 2014 15:16:14 -0800 (PST)
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:58169 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752078AbaAHG15 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 01:27:57 -0500
 MIME-Version: 1.0
-In-Reply-To: <20131216221229.3393.6171.stgit@bling.home>
-References: <20131216221229.3393.6171.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 Jan 2014 16:15:54 -0700
-Message-ID: <CAErSpo7ZYsES6kZXjcwr-gwKaXm7DzHBvUGz+cpZBBH7stAAAQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add "try" reset interfaces
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <52CCEE80.20001@linux.intel.com>
+References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+	<1389085234-22296-15-git-send-email-jiang.liu@linux.intel.com>
+	<CAOtp4Kqn5e_51hwrRMgRmam7jXaVC=md7BAuwnG3gJGETj9iQA@mail.gmail.com>
+	<52CCE9CD.5060404@linux.intel.com>
+	<CAOtp4KqvzrJr=Z5xj-vZnnL--W6R2CjZ=m0rFgR9DzxVKjfwSQ@mail.gmail.com>
+	<52CCEE80.20001@linux.intel.com>
+Date: Wed, 8 Jan 2014 14:27:56 +0800
+Message-ID: <CAOtp4KptOrCEoO8uc6gH=c+t1qJccE=yDFYXcZcCBTRy6LJc3g@mail.gmail.com>
+Subject: Re: [RFC Patch Part2 V1 14/14] iommu/vt-d: update IOMMU state when
+ memory hotplug happens
+From: Kai Huang <dev.kai.huang@gmail.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
+On Wed, Jan 8, 2014 at 2:21 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>
+>
+> On 2014/1/8 14:14, Kai Huang wrote:
+>> On Wed, Jan 8, 2014 at 2:01 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>>>
+>>>
+>>> On 2014/1/8 13:07, Kai Huang wrote:
+>>>> On Tue, Jan 7, 2014 at 5:00 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>>>>> If static identity domain is created, IOMMU driver needs to update
+>>>>> si_domain page table when memory hotplug event happens. Otherwise
+>>>>> PCI device DMA operations can't access the hot-added memory regions.
+>>>>>
+>>>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>>>> ---
+>>>>>  drivers/iommu/intel-iommu.c |   52 ++++++++++++++++++++++++++++++++++++++++++-
+>>>>>  1 file changed, 51 insertions(+), 1 deletion(-)
+>>>>>
+>>>>> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+>>>>> index 83e3ed4..35a987d 100644
+>>>>> --- a/drivers/iommu/intel-iommu.c
+>>>>> +++ b/drivers/iommu/intel-iommu.c
+>>>>> @@ -33,6 +33,7 @@
+>>>>>  #include <linux/dmar.h>
+>>>>>  #include <linux/dma-mapping.h>
+>>>>>  #include <linux/mempool.h>
+>>>>> +#include <linux/memory.h>
+>>>>>  #include <linux/timer.h>
+>>>>>  #include <linux/iova.h>
+>>>>>  #include <linux/iommu.h>
+>>>>> @@ -3689,6 +3690,54 @@ static struct notifier_block device_nb = {
+>>>>>         .notifier_call = device_notifier,
+>>>>>  };
+>>>>>
+>>>>> +static int intel_iommu_memory_notifier(struct notifier_block *nb,
+>>>>> +                                      unsigned long val, void *v)
+>>>>> +{
+>>>>> +       struct memory_notify *mhp = v;
+>>>>> +       unsigned long long start, end;
+>>>>> +       struct iova *iova;
+>>>>> +
+>>>>> +       switch (val) {
+>>>>> +       case MEM_GOING_ONLINE:
+>>>>> +               start = mhp->start_pfn << PAGE_SHIFT;
+>>>>> +               end = ((mhp->start_pfn + mhp->nr_pages) << PAGE_SHIFT) - 1;
+>>>>> +               if (iommu_domain_identity_map(si_domain, start, end)) {
+>>>>> +                       pr_warn("dmar: failed to build identity map for [%llx-%llx]\n",
+>>>>> +                               start, end);
+>>>>> +                       return NOTIFY_BAD;
+>>>>> +               }
+>>>>
+>>>> Better to use iommu_prepare_identity_map? For si_domain, if
+>>>> hw_pass_through is used, there's no page table.
+>>> Hi Kai,
+>>>         Good catch!
+>>> Seems function iommu_prepare_identity_map() is designed to handle
+>>> RMRRs. So how about avoiding of registering memory hotplug notifier
+>>> if hw_pass_through is true?
+>>
+>> I think that's also fine :)
+>>
+>> Btw, I have a related question to memory hotplug but not related to
+>> intel IOMMU specifically. For the devices use DMA remapping, suppose
+>> the device is already using the memory that we are trying to remove,
+>> is this case, looks we need to change the existing iova <-> pa
+>> mappings for the pa that is in the memory range about to be removed,
+>> and reset the mapping to different pa (iova remains the same). Does
+>> existing code have this covered? Is there a generic IOMMU layer memory
+>> hotplug notifier to handle memory removal?
+> That's a big issue about how to reclaim memory in use. Current rule
+> is that memory used by DMA won't be removed until released.
+>
 
-Sorry for the delay in looking at this.
+Understood. Thanks.
 
-On Mon, Dec 16, 2013 at 3:14 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> When doing a function/slot/bus reset PCI grabs the device_lock for
-> each device to block things like suspend and driver probes, which is
-> all well and good, but call paths exist where this lock may already be
-> held.  This creates an opportunity for deadlock.  For instance, vfio
-> allows userspace to issue resets so long as it owns the device(s).
-> If a driver unbind .remove callback races with userspace issuing a
-> reset, we have a deadlock as userspace gets stuck waiting on
-> device_lock while another thread has device_lock and waits for .remove
-> to complete.
-
-Are you talking about vfio_pci_remove() (the vfio_pci_driver .remove()
-method) racing with vfio_pci_ioctl()?
-
-Or maybe it's vfio_pci_release (the vfio_pci_ops .release() method),
-since it looks like you want to use pci_try_reset_function() there and
-in vfio_pci_ioctl()?
-
-Either way, aren't there at least potentially more locking issues than
-just the reset problem?  Seems like any ioctl that might take the
-device_lock could have the same problem.  How do you make sure there's
-no userspace owner of the device before you release the device or
-remove the driver?
-
-Bjorn
-
-> To resolve this, we can make a version of the reset
-> interfaces which use trylock.  With this, we can safely attempt a
-> reset and return error to userspace if there is contention.
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/pci.c   |  155 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |    3 +
->  2 files changed, 158 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 33120d1..de6416f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3445,6 +3445,18 @@ static void pci_dev_lock(struct pci_dev *dev)
->         device_lock(&dev->dev);
->  }
->
-> +/* Return 1 on successful lock, 0 on contention */
-> +static int pci_dev_trylock(struct pci_dev *dev)
-> +{
-> +       if (pci_cfg_access_trylock(dev)) {
-> +               if (device_trylock(&dev->dev))
-> +                       return 1;
-> +               pci_cfg_access_unlock(dev);
-> +       }
-> +
-> +       return 0;
-> +}
-> +
->  static void pci_dev_unlock(struct pci_dev *dev)
->  {
->         device_unlock(&dev->dev);
-> @@ -3588,6 +3600,34 @@ int pci_reset_function(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_reset_function);
->
-> +/**
-> + * pci_try_reset_function - quiesce and reset a PCI device function
-> + * @dev: PCI device to reset
-> + *
-> + * Same as above, except return -EAGAIN if unable to lock device.
-> + */
-> +int pci_try_reset_function(struct pci_dev *dev)
-> +{
-> +       int rc;
-> +
-> +       rc = pci_dev_reset(dev, 1);
-> +       if (rc)
-> +               return rc;
-> +
-> +       pci_dev_save_and_disable(dev);
-> +
-> +       if (pci_dev_trylock(dev)) {
-> +               rc = __pci_dev_reset(dev, 0);
-> +               pci_dev_unlock(dev);
-> +       } else
-> +               rc = -EAGAIN;
-> +
-> +       pci_dev_restore(dev);
-> +
-> +       return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_try_reset_function);
-> +
->  /* Lock devices from the top of the tree down */
->  static void pci_bus_lock(struct pci_bus *bus)
->  {
-> @@ -3612,6 +3652,32 @@ static void pci_bus_unlock(struct pci_bus *bus)
->         }
->  }
->
-> +/* Return 1 on successful lock, 0 on contention */
-> +static int pci_bus_trylock(struct pci_bus *bus)
-> +{
-> +       struct pci_dev *dev;
-> +
-> +       list_for_each_entry(dev, &bus->devices, bus_list) {
-> +               if (!pci_dev_trylock(dev))
-> +                       goto unlock;
-> +               if (dev->subordinate) {
-> +                       if (!pci_bus_trylock(dev->subordinate)) {
-> +                               pci_dev_unlock(dev);
-> +                               goto unlock;
-> +                       }
-> +               }
-> +       }
-> +       return 1;
-> +
-> +unlock:
-> +       list_for_each_entry_continue_reverse(dev, &bus->devices, bus_list) {
-> +               if (dev->subordinate)
-> +                       pci_bus_unlock(dev->subordinate);
-> +               pci_dev_unlock(dev);
-> +       }
-> +       return 0;
-> +}
-> +
->  /* Lock devices from the top of the tree down */
->  static void pci_slot_lock(struct pci_slot *slot)
->  {
-> @@ -3640,6 +3706,37 @@ static void pci_slot_unlock(struct pci_slot *slot)
->         }
->  }
->
-> +/* Return 1 on successful lock, 0 on contention */
-> +static int pci_slot_trylock(struct pci_slot *slot)
-> +{
-> +       struct pci_dev *dev;
-> +
-> +       list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-> +               if (!dev->slot || dev->slot != slot)
-> +                       continue;
-> +               if (!pci_dev_trylock(dev))
-> +                       goto unlock;
-> +               if (dev->subordinate) {
-> +                       if (!pci_bus_trylock(dev->subordinate)) {
-> +                               pci_dev_unlock(dev);
-> +                               goto unlock;
-> +                       }
-> +               }
-> +       }
-> +       return 1;
-> +
-> +unlock:
-> +       list_for_each_entry_continue_reverse(dev,
-> +                                            &slot->bus->devices, bus_list) {
-> +               if (!dev->slot || dev->slot != slot)
-> +                       continue;
-> +               if (dev->subordinate)
-> +                       pci_bus_unlock(dev->subordinate);
-> +               pci_dev_unlock(dev);
-> +       }
-> +       return 0;
-> +}
-> +
->  /* Save and disable devices from the top of the tree down */
->  static void pci_bus_save_and_disable(struct pci_bus *bus)
->  {
-> @@ -3763,6 +3860,35 @@ int pci_reset_slot(struct pci_slot *slot)
->  }
->  EXPORT_SYMBOL_GPL(pci_reset_slot);
->
-> +/**
-> + * pci_try_reset_slot - Try to reset a PCI slot
-> + * @slot: PCI slot to reset
-> + *
-> + * Same as above except return -EAGAIN if the slot cannot be locked
-> + */
-> +int pci_try_reset_slot(struct pci_slot *slot)
-> +{
-> +       int rc;
-> +
-> +       rc = pci_slot_reset(slot, 1);
-> +       if (rc)
-> +               return rc;
-> +
-> +       pci_slot_save_and_disable(slot);
-> +
-> +       if (pci_slot_trylock(slot)) {
-> +               might_sleep();
-> +               rc = pci_reset_hotplug_slot(slot->hotplug, 0);
-> +               pci_slot_unlock(slot);
-> +       } else
-> +               rc = -EAGAIN;
-> +
-> +       pci_slot_restore(slot);
-> +
-> +       return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_try_reset_slot);
-> +
->  static int pci_bus_reset(struct pci_bus *bus, int probe)
->  {
->         if (!bus->self)
-> @@ -3822,6 +3948,35 @@ int pci_reset_bus(struct pci_bus *bus)
->  EXPORT_SYMBOL_GPL(pci_reset_bus);
->
->  /**
-> + * pci_try_reset_bus - Try to reset a PCI bus
-> + * @bus: top level PCI bus to reset
-> + *
-> + * Same as above except return -EAGAIN if the bus cannot be locked
-> + */
-> +int pci_try_reset_bus(struct pci_bus *bus)
-> +{
-> +       int rc;
-> +
-> +       rc = pci_bus_reset(bus, 1);
-> +       if (rc)
-> +               return rc;
-> +
-> +       pci_bus_save_and_disable(bus);
-> +
-> +       if (pci_bus_trylock(bus)) {
-> +               might_sleep();
-> +               pci_reset_bridge_secondary_bus(bus->self);
-> +               pci_bus_unlock(bus);
-> +       } else
-> +               rc = -EAGAIN;
-> +
-> +       pci_bus_restore(bus);
-> +
-> +       return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_try_reset_bus);
-> +
-> +/**
->   * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
->   * @dev: PCI device to query
->   *
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1084a15..34629df 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -951,10 +951,13 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->  int __pci_reset_function(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev);
->  int pci_reset_function(struct pci_dev *dev);
-> +int pci_try_reset_function(struct pci_dev *dev);
->  int pci_probe_reset_slot(struct pci_slot *slot);
->  int pci_reset_slot(struct pci_slot *slot);
-> +int pci_try_reset_slot(struct pci_slot *slot);
->  int pci_probe_reset_bus(struct pci_bus *bus);
->  int pci_reset_bus(struct pci_bus *bus);
-> +int pci_try_reset_bus(struct pci_bus *bus);
->  void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
->  void pci_update_resource(struct pci_dev *dev, int resno);
->  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
->
+-Kai
+>>
+>> -Kai
+>>>
+>>> Thanks!
+>>> Gerry
+>>>
+>>>>
+>>>>> +               break;
+>>>>> +       case MEM_OFFLINE:
+>>>>> +       case MEM_CANCEL_ONLINE:
+>>>>> +               /* TODO: enhance RB-tree and IOVA code to support of splitting iova */
+>>>>> +               iova = find_iova(&si_domain->iovad, mhp->start_pfn);
+>>>>> +               if (iova) {
+>>>>> +                       unsigned long start_pfn, last_pfn;
+>>>>> +                       struct dmar_drhd_unit *drhd;
+>>>>> +                       struct intel_iommu *iommu;
+>>>>> +
+>>>>> +                       start_pfn = mm_to_dma_pfn(iova->pfn_lo);
+>>>>> +                       last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
+>>>>> +                       dma_pte_clear_range(si_domain, start_pfn, last_pfn);
+>>>>> +                       dma_pte_free_pagetable(si_domain, start_pfn, last_pfn);
+>>>>> +                       rcu_read_lock();
+>>>>> +                       for_each_active_iommu(iommu, drhd)
+>>>>> +                               iommu_flush_iotlb_psi(iommu, si_domain->id,
+>>>>> +                                       start_pfn, last_pfn - start_pfn + 1, 0);
+>>>>> +                       rcu_read_unlock();
+>>>>> +                       __free_iova(&si_domain->iovad, iova);
+>>>>> +               }
+>>>>
+>>>> The same as above. Looks we need to consider hw_pass_through for the si_domain.
+>>>>
+>>>> -Kai
+>>>>
+>>>>> +               break;
+>>>>> +       }
+>>>>> +
+>>>>> +       return NOTIFY_OK;
+>>>>> +}
+>>>>> +
+>>>>> +static struct notifier_block intel_iommu_memory_nb = {
+>>>>> +       .notifier_call = intel_iommu_memory_notifier,
+>>>>> +       .priority = 0
+>>>>> +};
+>>>>> +
+>>>>>  int __init intel_iommu_init(void)
+>>>>>  {
+>>>>>         int ret = -ENODEV;
+>>>>> @@ -3761,8 +3810,9 @@ int __init intel_iommu_init(void)
+>>>>>         init_iommu_pm_ops();
+>>>>>
+>>>>>         bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
+>>>>> -
+>>>>>         bus_register_notifier(&pci_bus_type, &device_nb);
+>>>>> +       if (si_domain)
+>>>>> +               register_memory_notifier(&intel_iommu_memory_nb);
+>>>>>
+>>>>>         intel_iommu_enabled = 1;
+>>>>>
+>>>>> --
+>>>>> 1.7.10.4
+>>>>>
+>>>>> _______________________________________________
+>>>>> iommu mailing list
+>>>>> iommu@lists.linux-foundation.org
+>>>>> https://lists.linuxfoundation.org/mailman/listinfo/iommu
