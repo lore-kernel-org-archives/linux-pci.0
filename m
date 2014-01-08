@@ -1,51 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:53166 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbaACMWk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 07:22:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: Issue with the emulated PCI bridge implementation
-Date: Fri, 3 Jan 2014 13:22:31 +0100
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, linux-pci@vger.kernel.org,
-	"Gregory Cl??ment" <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <20131226160534.36cc4203@skate> <20131226165241.2c50b244@skate> <20140103002656.GA12098@obsidianresearch.com>
-In-Reply-To: <20140103002656.GA12098@obsidianresearch.com>
+Received: from mga01.intel.com ([192.55.52.88]:13652 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755291AbaAHIoK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jan 2014 03:44:10 -0500
+Message-ID: <52CD0FD7.7040208@linux.intel.com>
+Date: Wed, 08 Jan 2014 16:44:07 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201401031322.31433.arnd@arndb.de>
+To: Joerg Roedel <joro@8bytes.org>
+CC: David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: Re: [Patch Part1 V3 09/20] iommu/vt-d: mark internal functions as
+ static
+References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com> <1388989107-4795-10-git-send-email-jiang.liu@linux.intel.com> <20140107152523.GG2742@8bytes.org>
+In-Reply-To: <20140107152523.GG2742@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 03 January 2014, Jason Gunthorpe wrote:
-> On Thu, Dec 26, 2013 at 04:52:41PM +0100, Thomas Petazzoni wrote:
+Hi Joerg,
+	Thanks for fix up this issue!
+I forgot to test the changes against IA64 platform. There's another
+issue related to IA64, I will send out the patch soon. I have setup
+cross compilation environment for IA64 and verified all changes
+passing compilation tests.
+
+Thanks!
+Gerry
+
+On 2014/1/7 23:25, Joerg Roedel wrote:
+> On Mon, Jan 06, 2014 at 02:18:16PM +0800, Jiang Liu wrote:
+>> Function detect_intel_iommu()/alloc_iommu()/parse_ioapics_under_ir()
+>> are only used internally, so mark them as static.
 > 
-> > Here is an implementation of this idea, tested to work with an e1000e
-> > card, with the driver modified to do a few read/write to the I/O
-> > region. What do you think about it?
+> Doesn't seem to be true for detect_intel_iommu which is used in ia64
+> setup code, no?
 > 
-> This seems reasonable, the only down side is that a stray read to an
-> unused portion of the Linux IO mapping will lock the machine instead
-> of getting a page fault - however I don't see that as a blocker.
 > 
-
-I've scratched my head a bit over this patch, and I couldn't find anything
-wrong with it in the end, as long as we don't have any other device
-in the system that also wants its share of the I/O space (e.g. a
-PCMCIA port on the SRAM interface), but then we'd probably need other
-changes as well.
-
-However the part that made me wonder is that an e1000e with a PCI bridge
-actually /should/not/ need to allocate an I/O space window with a precious
-mbus resource, since AFAIK this adapter does not have an I/O space BARs.
-
-Thomas, can you send the 'lspci -v' output of the system with this card
-to confirm that the I/O space is actually needed? If not, we should probably
-review the core PCI code to see why the bridge code tries to add this window.
-
-	Arnd
+> 	Joerg
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
