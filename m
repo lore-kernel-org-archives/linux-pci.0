@@ -1,357 +1,405 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5004 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752932AbaAHG5k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Jan 2014 01:57:40 -0500
-Message-ID: <52CCF6E0.5070306@linux.intel.com>
-Date: Wed, 08 Jan 2014 14:57:36 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Kai Huang <dev.kai.huang@gmail.com>
-CC: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:20014
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751104AbaAHFBv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 00:01:51 -0500
+From: Minghuan Lian <Minghuan.Lian@freescale.com>
+To: <linuxppc-dev@lists.ozlabs.org>
+CC: Zang Roy-R61911 <r61911@freescale.com>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [Patch Part2 V1 03/14] iommu/vt-d: simplify function get_domain_for_dev()
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>	<1389085234-22296-4-git-send-email-jiang.liu@linux.intel.com>	<CAOtp4KrK8yOktru+hgLSxYNZ67Nm2WYVGi2aGaJ3JJWLrdOq_g@mail.gmail.com>	<52CCE6AE.1070809@linux.intel.com>	<CAOtp4Kqo5m-uOKfr8WDwH1v3+23iSv9_329xS=K76Kpq-QXdVw@mail.gmail.com>	<52CCF0A9.70703@linux.intel.com> <CAOtp4KpVbS6twWHukFWODDuwujG8BX6zYXOZiGRQM17f49UQ3w@mail.gmail.com>
-In-Reply-To: <CAOtp4KpVbS6twWHukFWODDuwujG8BX6zYXOZiGRQM17f49UQ3w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	<linux-pci@vger.kernel.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>
+Subject: [PATCH 05/12][v4] pci: fsl: port PCI ATMU related code
+Date: Wed, 8 Jan 2014 13:01:56 +0800
+Message-ID: <1389157323-3088-5-git-send-email-Minghuan.Lian@freescale.com>
+In-Reply-To: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
+References: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The patch ports PCI ATMU related code, just uses general IO API
+iowrite32be/ioread32be instead of out_be32/in_be32, uses structure
+fsl_pci instead of PowerPC's pci_controller and uses dev_*()
+instead of pr_*() to output the information.
+The patch also provides the weak function
+fsl_arch_pci64_dma_offset(), the architecture-specific driver may
+return different offset.
+
+Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+---
+change log:
+v4:
+no change
+v1-v3:
+Derived from http://patchwork.ozlabs.org/patch/278965/
+
+Based on upstream master.
+Based on the discussion of RFC version here
+http://patchwork.ozlabs.org/patch/274487/
+
+ drivers/pci/host/pci-fsl-common.c | 190 ++++++++++++++++++++------------------
+ include/linux/fsl/pci-common.h    |   3 +
+ 2 files changed, 103 insertions(+), 90 deletions(-)
+
+diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
+index a706100..26ee4c3 100644
+--- a/drivers/pci/host/pci-fsl-common.c
++++ b/drivers/pci/host/pci-fsl-common.c
+@@ -35,6 +35,10 @@
+ #include <sysdev/fsl_soc.h>
+ #include <sysdev/fsl_pci.h>
+ 
++u64 __weak fsl_arch_pci64_dma_offset(void)
++{
++	return 0;
++}
+ 
+ int __weak fsl_arch_pci_exclude_device(struct fsl_pci *pci, u8 bus, u8 devfn)
+ {
+@@ -225,8 +229,8 @@ static int early_fsl_find_capability(struct fsl_pci *pci,
+ }
+ 
+ static int setup_one_atmu(struct ccsr_pci __iomem *pci,
+-	unsigned int index, const struct resource *res,
+-	resource_size_t offset)
++			  unsigned int index, const struct resource *res,
++			  resource_size_t offset)
+ {
+ 	resource_size_t pci_addr = res->start - offset;
+ 	resource_size_t phys_addr = res->start;
+@@ -247,10 +251,10 @@ static int setup_one_atmu(struct ccsr_pci __iomem *pci,
+ 		if (index + i >= 5)
+ 			return -1;
+ 
+-		out_be32(&pci->pow[index + i].potar, pci_addr >> 12);
+-		out_be32(&pci->pow[index + i].potear, (u64)pci_addr >> 44);
+-		out_be32(&pci->pow[index + i].powbar, phys_addr >> 12);
+-		out_be32(&pci->pow[index + i].powar, flags | (bits - 1));
++		iowrite32be(pci_addr >> 12, &pci->pow[index + i].potar);
++		iowrite32be((u64)pci_addr >> 44, &pci->pow[index + i].potear);
++		iowrite32be(phys_addr >> 12, &pci->pow[index + i].powbar);
++		iowrite32be(flags | (bits - 1), &pci->pow[index + i].powar);
+ 
+ 		pci_addr += (resource_size_t)1U << bits;
+ 		phys_addr += (resource_size_t)1U << bits;
+@@ -261,21 +265,19 @@ static int setup_one_atmu(struct ccsr_pci __iomem *pci,
+ }
+ 
+ /* atmu setup for fsl pci/pcie controller */
+-static void setup_pci_atmu(struct pci_controller *hose)
++static void setup_pci_atmu(struct fsl_pci *pci)
+ {
+-	struct ccsr_pci __iomem *pci = hose->private_data;
+ 	int i, j, n, mem_log, win_idx = 3, start_idx = 1, end_idx = 4;
+ 	u64 mem, sz, paddr_hi = 0;
+ 	u64 offset = 0, paddr_lo = ULLONG_MAX;
+ 	u32 pcicsrbar = 0, pcicsrbar_sz;
+ 	u32 piwar = PIWAR_EN | PIWAR_PF | PIWAR_TGI_LOCAL |
+ 			PIWAR_READ_SNOOP | PIWAR_WRITE_SNOOP;
+-	const char *name = hose->dn->full_name;
+ 	const u64 *reg;
+ 	int len;
+ 
+-	if (early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP)) {
+-		if (in_be32(&pci->block_rev1) >= PCIE_IP_REV_2_2) {
++	if (pci->is_pcie) {
++		if (in_be32(&pci->regs->block_rev1) >= PCIE_IP_REV_2_2) {
+ 			win_idx = 2;
+ 			start_idx = 0;
+ 			end_idx = 3;
+@@ -283,47 +285,54 @@ static void setup_pci_atmu(struct pci_controller *hose)
+ 	}
+ 
+ 	/* Disable all windows (except powar0 since it's ignored) */
+-	for(i = 1; i < 5; i++)
+-		out_be32(&pci->pow[i].powar, 0);
++	for (i = 1; i < 5; i++)
++		iowrite32be(0, &pci->regs->pow[i].powar);
+ 	for (i = start_idx; i < end_idx; i++)
+-		out_be32(&pci->piw[i].piwar, 0);
++		iowrite32be(0, &pci->regs->piw[i].piwar);
+ 
+ 	/* Setup outbound MEM window */
+-	for(i = 0, j = 1; i < 3; i++) {
+-		if (!(hose->mem_resources[i].flags & IORESOURCE_MEM))
++	for (i = 0, j = 1; i < 3; i++) {
++		if (!(pci->mem_resources[i].flags & IORESOURCE_MEM))
+ 			continue;
+ 
+-		paddr_lo = min(paddr_lo, (u64)hose->mem_resources[i].start);
+-		paddr_hi = max(paddr_hi, (u64)hose->mem_resources[i].end);
++		paddr_lo = min_t(u64, paddr_lo, pci->mem_resources[i].start);
++		paddr_hi = max_t(u64, paddr_hi, pci->mem_resources[i].end);
+ 
+ 		/* We assume all memory resources have the same offset */
+-		offset = hose->mem_offset[i];
+-		n = setup_one_atmu(pci, j, &hose->mem_resources[i], offset);
++		offset = pci->mem_offset[i];
++		n = setup_one_atmu(pci->regs, j, &pci->mem_resources[i],
++				   offset);
+ 
+ 		if (n < 0 || j >= 5) {
+-			pr_err("Ran out of outbound PCI ATMUs for resource %d!\n", i);
+-			hose->mem_resources[i].flags |= IORESOURCE_DISABLED;
++			dev_err(pci->dev,
++				"Ran out of outbound PCI ATMUs for resource %d!\n",
++				i);
++			pci->mem_resources[i].flags |= IORESOURCE_DISABLED;
+ 		} else
+ 			j += n;
+ 	}
+ 
+ 	/* Setup outbound IO window */
+-	if (hose->io_resource.flags & IORESOURCE_IO) {
+-		if (j >= 5) {
+-			pr_err("Ran out of outbound PCI ATMUs for IO resource\n");
+-		} else {
+-			pr_debug("PCI IO resource start 0x%016llx, size 0x%016llx, "
+-				 "phy base 0x%016llx.\n",
+-				 (u64)hose->io_resource.start,
+-				 (u64)resource_size(&hose->io_resource),
+-				 (u64)hose->io_base_phys);
+-			out_be32(&pci->pow[j].potar, (hose->io_resource.start >> 12));
+-			out_be32(&pci->pow[j].potear, 0);
+-			out_be32(&pci->pow[j].powbar, (hose->io_base_phys >> 12));
++	if (pci->io_resource.flags & IORESOURCE_IO) {
++		if (j >= 5)
++			dev_err(pci->dev,
++				"Ran out of outbound PCI ATMUs for IO resource\n");
++		else {
++			dev_dbg(pci->dev,
++				 "PCI IO resource start 0x%016llx,"
++				 "size 0x%016llx, phy base 0x%016llx.\n",
++				 (u64)pci->io_resource.start,
++				 (u64)resource_size(&pci->io_resource),
++				 (u64)pci->io_base_phys);
++			iowrite32be(pci->io_resource.start >> 12,
++				    &pci->regs->pow[j].potar);
++			iowrite32be(0, &pci->regs->pow[j].potear);
++			iowrite32be(pci->io_base_phys >> 12,
++				    &pci->regs->pow[j].powbar);
+ 			/* Enable, IO R/W */
+-			out_be32(&pci->pow[j].powar, 0x80088000
+-				| (ilog2(hose->io_resource.end
+-				- hose->io_resource.start + 1) - 1));
++			iowrite32be(0x80088000 |
++				  (ilog2(resource_size(&pci->io_resource)) - 1),
++				  &pci->regs->pow[j].powar);
+ 		}
+ 	}
+ 
+@@ -332,18 +341,20 @@ static void setup_pci_atmu(struct pci_controller *hose)
+ 	paddr_lo -= offset;
+ 
+ 	if (paddr_hi == paddr_lo) {
+-		pr_err("%s: No outbound window space\n", name);
++		dev_err(pci->dev, "No outbound window space\n");
+ 		return;
+ 	}
+ 
+ 	if (paddr_lo == 0) {
+-		pr_err("%s: No space for inbound window\n", name);
++		dev_err(pci->dev, "No space for inbound window\n");
+ 		return;
+ 	}
+ 
+ 	/* setup PCSRBAR/PEXCSRBAR */
+-	early_write_config_dword(hose, 0, 0, PCI_BASE_ADDRESS_0, 0xffffffff);
+-	early_read_config_dword(hose, 0, 0, PCI_BASE_ADDRESS_0, &pcicsrbar_sz);
++	early_fsl_write_config_dword(pci, 0, 0, PCI_BASE_ADDRESS_0,
++				     0xffffffff);
++	early_fsl_read_config_dword(pci, 0, 0, PCI_BASE_ADDRESS_0,
++				    &pcicsrbar_sz);
+ 	pcicsrbar_sz = ~pcicsrbar_sz + 1;
+ 
+ 	if (paddr_hi < (0x100000000ull - pcicsrbar_sz) ||
+@@ -351,11 +362,12 @@ static void setup_pci_atmu(struct pci_controller *hose)
+ 		pcicsrbar = 0x100000000ull - pcicsrbar_sz;
+ 	else
+ 		pcicsrbar = (paddr_lo - pcicsrbar_sz) & -pcicsrbar_sz;
+-	early_write_config_dword(hose, 0, 0, PCI_BASE_ADDRESS_0, pcicsrbar);
++	early_fsl_write_config_dword(pci, 0, 0, PCI_BASE_ADDRESS_0,
++				     pcicsrbar);
+ 
+-	paddr_lo = min(paddr_lo, (u64)pcicsrbar);
++	paddr_lo = min_t(u64, paddr_lo, pcicsrbar);
+ 
+-	pr_info("%s: PCICSRBAR @ 0x%x\n", name, pcicsrbar);
++	dev_info(pci->dev, "PCICSRBAR @ 0x%x\n", pcicsrbar);
+ 
+ 	/* Setup inbound mem window */
+ 	mem = memblock_end_of_DRAM();
+@@ -372,17 +384,19 @@ static void setup_pci_atmu(struct pci_controller *hose)
+ 	 * can avoid allocating a new ATMU by extending the DDR ATMU by one
+ 	 * page.
+ 	 */
+-	reg = of_get_property(hose->dn, "msi-address-64", &len);
++	reg = of_get_property(pci->dn, "msi-address-64", &len);
+ 	if (reg && (len == sizeof(u64))) {
+ 		u64 address = be64_to_cpup(reg);
+ 
+ 		if ((address >= mem) && (address < (mem + PAGE_SIZE))) {
+-			pr_info("%s: extending DDR ATMU to cover MSIIR", name);
++			dev_info(pci->dev,
++				 "extending DDR ATMU to cover MSIIR\n");
+ 			mem += PAGE_SIZE;
+ 		} else {
+ 			/* TODO: Create a new ATMU for MSIIR */
+-			pr_warn("%s: msi-address-64 address of %llx is "
+-				"unsupported\n", name, address);
++			dev_warn(pci->dev,
++				 "msi-address-64 address of %llx is "
++				 "unsupported\n", address);
+ 		}
+ 	}
+ 
+@@ -390,25 +404,26 @@ static void setup_pci_atmu(struct pci_controller *hose)
+ 	mem_log = ilog2(sz);
+ 
+ 	/* PCIe can overmap inbound & outbound since RX & TX are separated */
+-	if (early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP)) {
++	if (pci->is_pcie) {
+ 		/* Size window to exact size if power-of-two or one size up */
+ 		if ((1ull << mem_log) != mem) {
+ 			mem_log++;
+ 			if ((1ull << mem_log) > mem)
+-				pr_info("%s: Setting PCI inbound window "
+-					"greater than memory size\n", name);
++				dev_info(pci->dev,
++					 "Setting PCI inbound window "
++					 "greater than memory size\n");
+ 		}
+ 
+ 		piwar |= ((mem_log - 1) & PIWAR_SZ_MASK);
+ 
+ 		/* Setup inbound memory window */
+-		out_be32(&pci->piw[win_idx].pitar,  0x00000000);
+-		out_be32(&pci->piw[win_idx].piwbar, 0x00000000);
+-		out_be32(&pci->piw[win_idx].piwar,  piwar);
++		iowrite32be(0, &pci->regs->piw[win_idx].pitar);
++		iowrite32be(0, &pci->regs->piw[win_idx].piwbar);
++		iowrite32be(piwar, &pci->regs->piw[win_idx].piwar);
+ 		win_idx--;
+ 
+-		hose->dma_window_base_cur = 0x00000000;
+-		hose->dma_window_size = (resource_size_t)sz;
++		pci->dma_window_base_cur = 0x00000000;
++		pci->dma_window_size = (resource_size_t)sz;
+ 
+ 		/*
+ 		 * if we have >4G of memory setup second PCI inbound window to
+@@ -425,28 +440,22 @@ static void setup_pci_atmu(struct pci_controller *hose)
+ 			piwar = (piwar & ~PIWAR_SZ_MASK) | (mem_log - 1);
+ 
+ 			/* Setup inbound memory window */
+-			out_be32(&pci->piw[win_idx].pitar,  0x00000000);
+-			out_be32(&pci->piw[win_idx].piwbear,
+-					pci64_dma_offset >> 44);
+-			out_be32(&pci->piw[win_idx].piwbar,
+-					pci64_dma_offset >> 12);
+-			out_be32(&pci->piw[win_idx].piwar,  piwar);
+-
+-			/*
+-			 * install our own dma_set_mask handler to fixup dma_ops
+-			 * and dma_offset
+-			 */
+-			ppc_md.dma_set_mask = fsl_pci_dma_set_mask;
+-
+-			pr_info("%s: Setup 64-bit PCI DMA window\n", name);
++			iowrite32be(0, &pci->regs->piw[win_idx].pitar);
++			iowrite32be(fsl_arch_pci64_dma_offset() >> 44,
++				    &pci->regs->piw[win_idx].piwbear);
++			iowrite32be(fsl_arch_pci64_dma_offset() >> 12,
++				    &pci->regs->piw[win_idx].piwbar);
++			iowrite32be(piwar,
++				    &pci->regs->piw[win_idx].piwar);
+ 		}
+ 	} else {
+ 		u64 paddr = 0;
+ 
+ 		/* Setup inbound memory window */
+-		out_be32(&pci->piw[win_idx].pitar,  paddr >> 12);
+-		out_be32(&pci->piw[win_idx].piwbar, paddr >> 12);
+-		out_be32(&pci->piw[win_idx].piwar,  (piwar | (mem_log - 1)));
++		iowrite32be(paddr >> 12, &pci->regs->piw[win_idx].pitar);
++		iowrite32be(paddr >> 12, &pci->regs->piw[win_idx].piwbar);
++		iowrite32be((piwar | (mem_log - 1)),
++			    &pci->regs->piw[win_idx].piwar);
+ 		win_idx--;
+ 
+ 		paddr += 1ull << mem_log;
+@@ -456,35 +465,36 @@ static void setup_pci_atmu(struct pci_controller *hose)
+ 			mem_log = ilog2(sz);
+ 			piwar |= (mem_log - 1);
+ 
+-			out_be32(&pci->piw[win_idx].pitar,  paddr >> 12);
+-			out_be32(&pci->piw[win_idx].piwbar, paddr >> 12);
+-			out_be32(&pci->piw[win_idx].piwar,  piwar);
++			iowrite32be(paddr >> 12,
++				    &pci->regs->piw[win_idx].pitar);
++			iowrite32be(paddr >> 12,
++				    &pci->regs->piw[win_idx].piwbar);
++			iowrite32be(piwar,
++				    &pci->regs->piw[win_idx].piwar);
+ 			win_idx--;
+ 
+ 			paddr += 1ull << mem_log;
+ 		}
+ 
+-		hose->dma_window_base_cur = 0x00000000;
+-		hose->dma_window_size = (resource_size_t)paddr;
++		pci->dma_window_base_cur = 0x00000000;
++		pci->dma_window_size = (resource_size_t)paddr;
+ 	}
+ 
+-	if (hose->dma_window_size < mem) {
+-#ifdef CONFIG_SWIOTLB
+-		ppc_swiotlb_enable = 1;
+-#else
+-		pr_err("%s: ERROR: Memory size exceeds PCI ATMU ability to "
+-			"map - enable CONFIG_SWIOTLB to avoid dma errors.\n",
+-			 name);
++	if (pci->dma_window_size < mem) {
++#ifndef CONFIG_SWIOTLB
++		dev_err(pci->dev,
++			"Memory size exceeds PCI ATMU ability to "
++			"map - enable CONFIG_SWIOTLB to avoid dma errors.\n");
+ #endif
+ 		/* adjusting outbound windows could reclaim space in mem map */
+ 		if (paddr_hi < 0xffffffffull)
+-			pr_warning("%s: WARNING: Outbound window cfg leaves "
++			dev_warn(pci->dev,
++				 "Outbound window cfg leaves "
+ 				"gaps in memory map. Adjusting the memory map "
+-				"could reduce unnecessary bounce buffering.\n",
+-				name);
++				"could reduce unnecessary bounce buffering.\n");
+ 
+-		pr_info("%s: DMA window size is 0x%llx\n", name,
+-			(u64)hose->dma_window_size);
++		dev_info(pci->dev, "DMA window size is 0x%llx\n",
++			 (u64)pci->dma_window_size);
+ 	}
+ }
+ 
+diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
+index fd6c497..02bcf5b 100644
+--- a/include/linux/fsl/pci-common.h
++++ b/include/linux/fsl/pci-common.h
+@@ -163,5 +163,8 @@ int fsl_arch_pci_exclude_device(struct fsl_pci *pci, u8 bus, u8 devfn);
+  */
+ extern struct pci_bus *fsl_arch_fake_pci_bus(struct fsl_pci *pci, int busnr);
+ 
++/* Return PCI64 DMA offset */
++u64 fsl_arch_pci64_dma_offset(void);
++
+ #endif /* __PCI_COMMON_H */
+ #endif /* __KERNEL__ */
+-- 
+1.8.1.2
 
 
-On 2014/1/8 14:48, Kai Huang wrote:
-> On Wed, Jan 8, 2014 at 2:31 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>
->>
->> On 2014/1/8 14:06, Kai Huang wrote:
->>> On Wed, Jan 8, 2014 at 1:48 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>>>
->>>>
->>>> On 2014/1/8 11:06, Kai Huang wrote:
->>>>>
->>>>>
->>>>>
->>>>> On Tue, Jan 7, 2014 at 5:00 PM, Jiang Liu <jiang.liu@linux.intel.com
->>>>> <mailto:jiang.liu@linux.intel.com>> wrote:
->>>>>
->>>>>     Function get_domain_for_dev() is a little complex, simplify it
->>>>>     by factoring out dmar_search_domain_by_dev_info() and
->>>>>     dmar_insert_dev_info().
->>>>>
->>>>>     Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com
->>>>>     <mailto:jiang.liu@linux.intel.com>>
->>>>>     ---
->>>>>      drivers/iommu/intel-iommu.c |  161
->>>>>     ++++++++++++++++++++-----------------------
->>>>>      1 file changed, 75 insertions(+), 86 deletions(-)
->>>>>
->>>>>     diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
->>>>>     index 1704e97..da65884 100644
->>>>>     --- a/drivers/iommu/intel-iommu.c
->>>>>     +++ b/drivers/iommu/intel-iommu.c
->>>>>     @@ -1957,18 +1957,70 @@ find_domain(struct pci_dev *pdev)
->>>>>             return NULL;
->>>>>      }
->>>>>
->>>>>     +static inline struct dmar_domain *
->>>>>     +dmar_search_domain_by_dev_info(int segment, int bus, int devfn)
->>>>>     +{
->>>>>     +       struct device_domain_info *info;
->>>>>     +
->>>>>     +       list_for_each_entry(info, &device_domain_list, global)
->>>>>     +               if (info->segment == segment && info->bus == bus &&
->>>>>     +                   info->devfn == devfn)
->>>>>     +                       return info->domain;
->>>>>     +
->>>>>     +       return NULL;
->>>>>     +}
->>>>>     +
->>>>>     +static int dmar_insert_dev_info(int segment, int bus, int devfn,
->>>>>     +                               struct pci_dev *dev, struct
->>>>>     dmar_domain **domp)
->>>>>     +{
->>>>>     +       struct dmar_domain *found, *domain = *domp;
->>>>>     +       struct device_domain_info *info;
->>>>>     +       unsigned long flags;
->>>>>     +
->>>>>     +       info = alloc_devinfo_mem();
->>>>>     +       if (!info)
->>>>>     +               return -ENOMEM;
->>>>>     +
->>>>>     +       info->segment = segment;
->>>>>     +       info->bus = bus;
->>>>>     +       info->devfn = devfn;
->>>>>     +       info->dev = dev;
->>>>>     +       info->domain = domain;
->>>>>     +       if (!dev)
->>>>>     +               domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
->>>>>     +
->>>>>     +       spin_lock_irqsave(&device_domain_lock, flags);
->>>>>     +       if (dev)
->>>>>     +               found = find_domain(dev);
->>>>>     +       else
->>>>>     +               found = dmar_search_domain_by_dev_info(segment, bus,
->>>>>     devfn);
->>>>>     +       if (found) {
->>>>>     +               spin_unlock_irqrestore(&device_domain_lock, flags);
->>>>>     +               free_devinfo_mem(info);
->>>>>     +               if (found != domain) {
->>>>>     +                       domain_exit(domain);
->>>>>     +                       *domp = found;
->>>>>     +               }
->>>>>     +       } else {
->>>>>     +               list_add(&info->link, &domain->devices);
->>>>>     +               list_add(&info->global, &device_domain_list);
->>>>>     +               if (dev)
->>>>>     +                       dev->dev.archdata.iommu = info;
->>>>>     +               spin_unlock_irqrestore(&device_domain_lock, flags);
->>>>>     +       }
->>>>>     +
->>>>>     +       return 0;
->>>>>     +}
->>>>>
->>>>>
->>>>> I am a little bit confused about the "alloc before check" sequence in
->>>>> above function. I believe the purpose of allocating the
->>>>> device_domain_info before searching the domain with spin_lock hold is to
->>>>> avoid the memory allocation in the spin_lock? In this case, why can't we
->>>>> use mutex instead of spin_lock? In my understanding, if we use mutex, we
->>>>> can first check if the domain exists or not before we really allocate
->>>>> device_domain_info, right?
->>>> Hi Kai,
->>>>         Thanks for review!
->>>>         The domain->devices list may be access in interrupt context,
->>>> so we need to protect it with spin_lock_irqsave(). Otherwise it may
->>>> case deadlock.
->>>>
->>>
->>> Thanks. That's what I am thinking. I observed lots of other iommu
->>> functions also use spin_lock.
->>>
->>>>>
->>>>> Another question is when is info->iommu field initialized? Looks it is
->>>>> not initialized here?
->>>> It's set in function iommu_support_dev_iotlb() for devices supporting
->>>> device IOTLB.
->>>
->>> Thanks. I see in iommu_support_dev_iotlb, info->iommu won't be set
->>> unless the device supports iotlb and ATS. Does this mean the
->>> info->iommu won't be used if the device doesn't support iotlb?
->>>
->>> If this is true, looks it's not convenient to find the IOMMU that
->>> handles the device via info, as it's possible that different IOMMUs
->>> share the same domain, and we don't know which IOMMU actually handles
->>> this device if we try to find it via the info->domain.
->> It's a little heavy to find info by walking the list too:)
->> Please refer to domain_get_iommu() for the way to find iommu associated
->> with a domain.
->>
-> Looks domain_get_iommu just returns the first IOMMU in the bitmap, so
-> it can't return the IOMMU that *really* handles the device in
-> hardware. But I guess from domain's view, probably we don't care which
-> IOMMU really handles the device, cause if multiple IOMMUs share the
-> same domain, the IOMMUs should have the same (or very similar)
-> capabilities, so referencing the first IOMMU to check some
-> capabilities (that's what I see in code so far) should work for the
-> domain layer API.
-> 
-> But looks it's safe to set info->iommu in get_domain_for_dev anyway
-> (and remove it in iommu_support_dev_iotlb)? In this case it's easier
-> when we want to get IOMMU from info.
-> 
-> Of course, it's just my opinion, and probably is wrong, it's totally
-> up to you if want to do this or not. :)
-Actually I'm on your side, I think it's better to initialize info->iommu
-in function dmar_insert_dev_info() too. Will try that way.
-
-> 
-> -Kai
-> 
->>>
->>> -Kai
->>>
->>>>
->>>>>
->>>>> -Kai
->>>>>
->>>>>     +
->>>>>      /* domain is initialized */
->>>>>      static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev,
->>>>>     int gaw)
->>>>>      {
->>>>>     -       struct dmar_domain *domain, *found = NULL;
->>>>>     +       struct dmar_domain *domain;
->>>>>             struct intel_iommu *iommu;
->>>>>             struct dmar_drhd_unit *drhd;
->>>>>     -       struct device_domain_info *info, *tmp;
->>>>>     -       struct pci_dev *dev_tmp;
->>>>>     +       struct pci_dev *bridge;
->>>>>             unsigned long flags;
->>>>>     -       int bus = 0, devfn = 0;
->>>>>     -       int segment;
->>>>>     -       int ret;
->>>>>     +       int segment, bus, devfn;
->>>>>
->>>>>             domain = find_domain(pdev);
->>>>>             if (domain)
->>>>>     @@ -1976,119 +2028,56 @@ static struct dmar_domain
->>>>>     *get_domain_for_dev(struct pci_dev *pdev, int gaw)
->>>>>
->>>>>             segment = pci_domain_nr(pdev->bus);
->>>>>
->>>>>     -       dev_tmp = pci_find_upstream_pcie_bridge(pdev);
->>>>>     -       if (dev_tmp) {
->>>>>     -               if (pci_is_pcie(dev_tmp)) {
->>>>>     -                       bus = dev_tmp->subordinate->number;
->>>>>     +       bridge = pci_find_upstream_pcie_bridge(pdev);
->>>>>     +       if (bridge) {
->>>>>     +               if (pci_is_pcie(bridge)) {
->>>>>     +                       bus = bridge->subordinate->number;
->>>>>                             devfn = 0;
->>>>>                     } else {
->>>>>     -                       bus = dev_tmp->bus->number;
->>>>>     -                       devfn = dev_tmp->devfn;
->>>>>     +                       bus = bridge->bus->number;
->>>>>     +                       devfn = bridge->devfn;
->>>>>                     }
->>>>>                     spin_lock_irqsave(&device_domain_lock, flags);
->>>>>     -               list_for_each_entry(info, &device_domain_list, global) {
->>>>>     -                       if (info->segment == segment &&
->>>>>     -                           info->bus == bus && info->devfn == devfn) {
->>>>>     -                               found = info->domain;
->>>>>     -                               break;
->>>>>     -                       }
->>>>>     -               }
->>>>>     +               domain = dmar_search_domain_by_dev_info(segment,
->>>>>     bus, devfn);
->>>>>                     spin_unlock_irqrestore(&device_domain_lock, flags);
->>>>>                     /* pcie-pci bridge already has a domain, uses it */
->>>>>     -               if (found) {
->>>>>     -                       domain = found;
->>>>>     +               if (domain)
->>>>>                             goto found_domain;
->>>>>     -               }
->>>>>             }
->>>>>
->>>>>     -       domain = alloc_domain();
->>>>>     -       if (!domain)
->>>>>     -               goto error;
->>>>>     -
->>>>>     -       /* Allocate new domain for the device */
->>>>>             drhd = dmar_find_matched_drhd_unit(pdev);
->>>>>             if (!drhd) {
->>>>>                     printk(KERN_ERR "IOMMU: can't find DMAR for device
->>>>>     %s\n",
->>>>>                             pci_name(pdev));
->>>>>     -               free_domain_mem(domain);
->>>>>                     return NULL;
->>>>>             }
->>>>>             iommu = drhd->iommu;
->>>>>
->>>>>     -       ret = iommu_attach_domain(domain, iommu);
->>>>>     -       if (ret) {
->>>>>     +       /* Allocate new domain for the device */
->>>>>     +       domain = alloc_domain();
->>>>>     +       if (!domain)
->>>>>     +               goto error;
->>>>>     +       if (iommu_attach_domain(domain, iommu)) {
->>>>>                     free_domain_mem(domain);
->>>>>                     goto error;
->>>>>             }
->>>>>     -
->>>>>             if (domain_init(domain, gaw)) {
->>>>>                     domain_exit(domain);
->>>>>                     goto error;
->>>>>             }
->>>>>
->>>>>             /* register pcie-to-pci device */
->>>>>     -       if (dev_tmp) {
->>>>>     -               info = alloc_devinfo_mem();
->>>>>     -               if (!info) {
->>>>>     +       if (bridge) {
->>>>>     +               if (dmar_insert_dev_info(segment, bus, devfn, NULL,
->>>>>     &domain)) {
->>>>>                             domain_exit(domain);
->>>>>                             goto error;
->>>>>                     }
->>>>>     -               info->segment = segment;
->>>>>     -               info->bus = bus;
->>>>>     -               info->devfn = devfn;
->>>>>     -               info->dev = NULL;
->>>>>     -               info->domain = domain;
->>>>>     -               /* This domain is shared by devices under p2p bridge */
->>>>>     -               domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
->>>>>     -
->>>>>     -               /* pcie-to-pci bridge already has a domain, uses it */
->>>>>     -               found = NULL;
->>>>>     -               spin_lock_irqsave(&device_domain_lock, flags);
->>>>>     -               list_for_each_entry(tmp, &device_domain_list, global) {
->>>>>     -                       if (tmp->segment == segment &&
->>>>>     -                           tmp->bus == bus && tmp->devfn == devfn) {
->>>>>     -                               found = tmp->domain;
->>>>>     -                               break;
->>>>>     -                       }
->>>>>     -               }
->>>>>     -               if (found) {
->>>>>     -                       spin_unlock_irqrestore(&device_domain_lock,
->>>>>     flags);
->>>>>     -                       free_devinfo_mem(info);
->>>>>     -                       domain_exit(domain);
->>>>>     -                       domain = found;
->>>>>     -               } else {
->>>>>     -                       list_add(&info->link, &domain->devices);
->>>>>     -                       list_add(&info->global, &device_domain_list);
->>>>>     -                       spin_unlock_irqrestore(&device_domain_lock,
->>>>>     flags);
->>>>>     -               }
->>>>>             }
->>>>>
->>>>>      found_domain:
->>>>>     -       info = alloc_devinfo_mem();
->>>>>     -       if (!info)
->>>>>     -               goto error;
->>>>>     -       info->segment = segment;
->>>>>     -       info->bus = pdev->bus->number;
->>>>>     -       info->devfn = pdev->devfn;
->>>>>     -       info->dev = pdev;
->>>>>     -       info->domain = domain;
->>>>>     -       spin_lock_irqsave(&device_domain_lock, flags);
->>>>>     -       /* somebody is fast */
->>>>>     -       found = find_domain(pdev);
->>>>>     -       if (found != NULL) {
->>>>>     -               spin_unlock_irqrestore(&device_domain_lock, flags);
->>>>>     -               if (found != domain) {
->>>>>     -                       domain_exit(domain);
->>>>>     -                       domain = found;
->>>>>     -               }
->>>>>     -               free_devinfo_mem(info);
->>>>>     +       if (dmar_insert_dev_info(segment, pdev->bus->number,
->>>>>     pdev->devfn,
->>>>>     +                                pdev, &domain) == 0)
->>>>>                     return domain;
->>>>>     -       }
->>>>>     -       list_add(&info->link, &domain->devices);
->>>>>     -       list_add(&info->global, &device_domain_list);
->>>>>     -       pdev->dev.archdata.iommu = info;
->>>>>     -       spin_unlock_irqrestore(&device_domain_lock, flags);
->>>>>     -       return domain;
->>>>>      error:
->>>>>             /* recheck it here, maybe others set it */
->>>>>             return find_domain(pdev);
->>>>>     --
->>>>>     1.7.10.4
->>>>>
->>>>>     _______________________________________________
->>>>>     iommu mailing list
->>>>>     iommu@lists.linux-foundation.org
->>>>>     <mailto:iommu@lists.linux-foundation.org>
->>>>>     https://lists.linuxfoundation.org/mailman/listinfo/iommu
->>>>>
->>>>>
