@@ -1,57 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:41301 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757266AbaAIAMz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 19:12:55 -0500
-Received: by mail-ig0-f181.google.com with SMTP id k19so6106337igc.2
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jan 2014 16:12:54 -0800 (PST)
-Date: Wed, 8 Jan 2014 17:12:52 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Scott Wood <scottwood@freescale.com>
-Cc: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	linuxppc-dev@lists.ozlabs.org,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 02/12][v4] pci: fsl: add structure fsl_pci
-Message-ID: <20140109001252.GA20070@google.com>
-References: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
- <1389157323-3088-2-git-send-email-Minghuan.Lian@freescale.com>
- <1389218288.25654.26.camel@snotra.buserror.net>
+Received: from devils.ext.ti.com ([198.47.26.153]:44517 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755769AbaAHPtC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 10:49:02 -0500
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: Pratyush Anand <pratyush.anand@st.com>
+CC: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>
+Subject: RE: pcie designware question
+Date: Wed, 8 Jan 2014 15:48:52 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B704663866@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
+ <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
+ <2CC2A0A4A178534D93D5159BF3BCB66189F96BAC51@EAPEX1MAIL1.st.com>
+ <52B46E4D.6020805@ti.com> <20140108065535.GC2689@pratyush-vbox>
+In-Reply-To: <20140108065535.GC2689@pratyush-vbox>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389218288.25654.26.camel@snotra.buserror.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 08, 2014 at 03:58:08PM -0600, Scott Wood wrote:
-> On Wed, 2014-01-08 at 13:01 +0800, Minghuan Lian wrote:
-> > PowerPC uses structure pci_controller to describe PCI controller,
-> > but ARM uses structure pci_sys_data. In order to support PowerPC
-> > and ARM simultaneously, the patch adds a structure fsl_pci that
-> > contains most of the members of the pci_controller and pci_sys_data.
-> > Meanwhile, it defines a interface fsl_arch_sys_to_pci() which should
-> > be implemented in architecture-specific PCI controller driver to
-> > convert pci_controller or pci_sys_data to fsl_pci.
-> > 
-> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> > ---
-> > change log:
-> > v4:
-> > Added indirect type macro
-> > v1-v3:
-> > Derived from http://patchwork.ozlabs.org/patch/278965/
-> > 
-> > Based on upstream master.
-> > Based on the discussion of RFC version here
-> > http://patchwork.ozlabs.org/patch/274487/
-> > 
-> >  include/linux/fsl/pci-common.h | 48 ++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 48 insertions(+)
-> 
-> Same comments on this patchset as last time.
+>> Mohit,
+>>
+>> I have checked with our hardware team and they confirmed that ATU
+>> registers are not implemented in our PCIE
+>
+>Which PCIe designware IP version you are using? At least since version 3.71 support of
+>viewport is available in IP. Older version was handling address translation using side band
+>signals implemented through vendor specific application registers. May be your case is also
+>similar.
+>
+Pratyush,
 
-Minghuan, when you address Scott's comments, can you also add a
-MAINTAINERS update?
+Thanks for responding.
 
-Bjorn
+Is there a register that I can poke to know the IP version. I have asked this to our
+hardware folks to know the version. I guess it is older than 3.71.
+
+>> SS. So we need to have  a way to disable this in the core driver so
+>> that  we can handle it in our glue layer driver.
+>> But this will be a regression on the existing driver. How do we handle this?
+>
+>May be you can add rd/wr_other_conf in struct pcie_host_ops.
+>Change designware driver to handle vendor specific rd/wr_other_conf, if it exists, else use
+>generic rd/wr_other_conf.
+>
+Yes, that is indeed what I did to solve this. I will be sending a patch for this once
+my driver is tested.
+
+Murali
+>In your vendor specific rd/wr_other_conf handler you can implement translation using your
+>application registers.
+>
+>Regards
+>Pratyush
+>>
+>> Murali
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>> info at  http://vger.kernel.org/majordomo-info.html
