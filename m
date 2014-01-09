@@ -1,145 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 82-68-191-81.dsl.posilan.com ([82.68.191.81]:51236 "EHLO
-	rainbowdash.ducie.codethink.co.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754595AbaA1Jr6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 04:47:58 -0500
-From: Ben Dooks <ben.dooks@codethink.co.uk>
-To: linux-kernel@lists.codethink.co.uk
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Subject: [PATCH 2/3] PCI: rcar: add error interrupt handling
-Date: Tue, 28 Jan 2014 09:47:47 +0000
-Message-Id: <1390902468-7753-3-git-send-email-ben.dooks@codethink.co.uk>
-In-Reply-To: <1390902468-7753-1-git-send-email-ben.dooks@codethink.co.uk>
-References: <1390902468-7753-1-git-send-email-ben.dooks@codethink.co.uk>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:63497 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751751AbaAIUxS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 15:53:18 -0500
+Received: by mail-ig0-f172.google.com with SMTP id hl1so17175743igb.5
+        for <linux-pci@vger.kernel.org>; Thu, 09 Jan 2014 12:53:17 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <loom.20140109T201208-15@post.gmane.org>
+References: <CA+sq2CfthYc3Eda3GRa-Q-TA9gq+ygBTLrPjvzhRquikm220GA@mail.gmail.com>
+ <CAErSpo6rigeEY7RbpcRrm2N7gKxA+rAwEX7_iD7r706hvM0_MA@mail.gmail.com> <loom.20140109T201208-15@post.gmane.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 9 Jan 2014 13:52:57 -0700
+Message-ID: <CAErSpo5PRS4KYZgYmPKcBCCS9QoHtpzBc8pkjh-+V=fq6OA=FQ@mail.gmail.com>
+Subject: Re: Query regarding ARI configuration of a on-board PCIe device.
+To: Scott Lurndal <kdb@lurndal.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add option to enable interrupts to report any errors from
-the AHB-PCI bridge to help find any issues with the bridge
-when in use.
+On Thu, Jan 9, 2014 at 12:16 PM, Scott Lurndal <kdb@lurndal.org> wrote:
+> Bjorn Helgaas <bhelgaas <at> google.com> writes:
+>
+>>
+>> On Thu, Jan 9, 2014 at 3:51 AM, Sunil Kovvuri <sunil.kovvuri <at>
+> gmail.com> wrote:
+>> > Hi,
+>> >
+>> > I have a platform which has a on-board PCIe device attached to PCIe port.
+>> > This device is an ethernet device with SRIOV capability having morethan
+>> > 8 virtual functions.
+>> >
+>> > I am going through Linux's ARI configuration code and saw that it is
+> checking
+>> > if upstream bridge supports ARI or not. In our case its a on-board
+> device and
+>> > no bridge is involved.
+>> >
+>> > Need some help or ideas on how i can configure ARI on the device so that
+>> > all VFs gets added.
+>> >
+>> > Do i need to change the ARI configuration code or is there a way to fake a
+>> > PCI bridge for this purpose ?
+>>
+>> I assume you're referring to pci_configure_ari().  A PCIe endpoint
+>> such as your ethernet device always has an upstream bridge.  In your
+>> case, the device is on-board and there's no PCIe switch involved, but
+>> the root port is the upstream device, and it is handled as a bridge.
+>>
+>> It looks like pci_configure_ari() should enable ARI by default when it
+>> is supported.  But apparently it isn't being enabled on your system?
+>> Can you collect the "lspci -vv" output for the root port and the NIC?
+>>
+>> Bjorn
+>>
+>
+>
+> Hi Bjorn,
+>
+>    For the sake of discussion, let's assume that the device in question,
+> which is intended to appear to software as a pci-express SR-IOV device
+> with more than 8 functions (i.e. ARI), has a PCI-Express configuration
+> space which is slotted into an ECAM region for discovery and
+> configuration.  The device itself is directly attached to the host-bridge
+> and doesn't have an associated root port.
+>
+>    In this case, the check for bridge in pci_configure_ari() is
+> problematic because there is no root port (the host bridge is
+> transparent to software).
 
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
----
-Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
----
- drivers/pci/host/Kconfig         |  9 ++++++
- drivers/pci/host/pci-rcar-gen2.c | 60 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 69 insertions(+)
+I don't think the topology you describe is legal.  A directly-attached
+device that is not part of the hierarchy below a Root Port would have
+to be a Root Complex Integrated Endpoint.  The device would indicate
+its support for ARI with an ARI extended capability, but the spec (sec
+7.23) says an Integrated Endpoint can't have an ARI capability.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 47d46c6..6d4c46e 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -33,4 +33,13 @@ config PCI_RCAR_GEN2
- 	  There are 3 internal PCI controllers available with a single
- 	  built-in EHCI/OHCI host controller present on each one.
- 
-+config PCI_RCAR_GEN2_ERRIRQ
-+	bool "Enable error reporting interrupt support"
-+	depends on PCI_RCAR_GEN2
-+	help
-+	  Say Y here to enable support for the bus-error interrupts from
-+	  the PCI controller bridge.
-+
-+	  This is here for aiding in debugging issues with the hardware.
-+
- endmenu
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index 674f7fe..01ba069 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -39,9 +39,26 @@
- 
- #define RCAR_PCI_INT_ENABLE_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x20)
- #define RCAR_PCI_INT_STATUS_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x24)
-+#define RCAR_PCI_INT_SIGTABORT		(1 << 0)
-+#define RCAR_PCI_INT_SIGRETABORT	(1 << 1)
-+#define RCAR_PCI_INT_REMABORT		(1 << 2)
-+#define RCAR_PCI_INT_PERR		(1 << 3)
-+#define RCAR_PCI_INT_SIGSERR		(1 << 4)
-+#define RCAR_PCI_INT_RESERR		(1 << 5)
-+#define RCAR_PCI_INT_WIN1ERR		(1 << 12)
-+#define RCAR_PCI_INT_WIN2ERR		(1 << 13)
- #define RCAR_PCI_INT_A			(1 << 16)
- #define RCAR_PCI_INT_B			(1 << 17)
- #define RCAR_PCI_INT_PME		(1 << 19)
-+#define RCAR_PCI_INT_ALLERRORS (RCAR_PCI_INT_SIGTABORT		| \
-+				RCAR_PCI_INT_SIGRETABORT	| \
-+				RCAR_PCI_INT_SIGRETABORT	| \
-+				RCAR_PCI_INT_REMABORT		| \
-+				RCAR_PCI_INT_PERR		| \
-+				RCAR_PCI_INT_SIGSERR		| \
-+				RCAR_PCI_INT_RESERR		| \
-+				RCAR_PCI_INT_WIN1ERR		| \
-+				RCAR_PCI_INT_WIN2ERR)
- 
- #define RCAR_AHB_BUS_CTR_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x30)
- #define RCAR_AHB_BUS_MMODE_HTRANS	(1 << 0)
-@@ -164,6 +181,47 @@ static int __init rcar_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 	return priv->irq;
- }
- 
-+#ifdef CONFIG_PCI_RCAR_GEN2_ERRIRQ
-+static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
-+{
-+	struct rcar_pci_priv *priv = pw;
-+	u32 status = ioread32(priv->reg + RCAR_PCI_INT_STATUS_REG);
-+
-+	if (status & RCAR_PCI_INT_ALLERRORS) {
-+		dev_err(priv->dev, "error irq: status %08x\n", status);
-+
-+		/* clear the error(s) */
-+		iowrite32(status & RCAR_PCI_INT_ALLERRORS,
-+			  priv->reg + RCAR_PCI_INT_STATUS_REG);
-+		return IRQ_HANDLED;
-+	}
-+
-+	return IRQ_NONE;
-+}
-+
-+static void rcar_pci_setup_errirq(struct rcar_pci_priv *priv)
-+{
-+	int ret;
-+	u32 val;
-+
-+	ret = devm_request_irq(priv->dev, priv->irq, rcar_pci_err_irq,
-+			       IRQF_SHARED, "error irq", priv);
-+	if (ret) {
-+		dev_err(priv->dev, "cannot claim IRQ for error handling\n");
-+		return;
-+	}
-+
-+	val = ioread32(priv->reg + RCAR_PCI_INT_ENABLE_REG);
-+	val |= RCAR_PCI_INT_ALLERRORS;
-+	iowrite32(val, priv->reg + RCAR_PCI_INT_ENABLE_REG);
-+
-+	dev_info(priv->dev, "irq mask now %08x\n", val);
-+}
-+#else
-+static inline void rcar_pci_setup_errirq(struct rcar_pci_priv *priv) { }
-+
-+#endif
-+
- /* PCI host controller setup */
- static int __init rcar_pci_setup(int nr, struct pci_sys_data *sys)
- {
-@@ -224,6 +282,8 @@ static int __init rcar_pci_setup(int nr, struct pci_sys_data *sys)
- 	iowrite32(RCAR_PCI_INT_A | RCAR_PCI_INT_B | RCAR_PCI_INT_PME,
- 		  reg + RCAR_PCI_INT_ENABLE_REG);
- 
-+	rcar_pci_setup_errirq(priv);
-+
- 	/* Add PCI resources */
- 	pci_add_resource(&sys->resources, &priv->io_res);
- 	pci_add_resource(&sys->resources, &priv->mem_res);
--- 
-1.8.5.2
+If I understand ARI correctly, an endpoint has to indicate support for
+it with the ARI capability, but you actually enable support for it in
+the downstream port leading to the endpoint (assuming *it* also
+supports ARI).
 
+I guess if you posit an integrated endpoint with an ARI capability, I
+could imagine an ARI-enable switch in the host bridge, but that's not
+architected, so there would have to be host bridge driver code to
+enable it.
+
+Bjorn
