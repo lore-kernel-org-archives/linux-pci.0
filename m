@@ -1,88 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:48323 "EHLO
-	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751414AbaAPJTx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 04:19:53 -0500
-Date: Thu, 16 Jan 2014 14:49:08 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	spear-devel <spear-devel@list.st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>
-Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header
- file
-Message-ID: <20140116091908.GC2290@pratyush-vbox>
-References: <cover.1386752447.git.mohit.kumar@st.com>
- <201312112348.06755.arnd@arndb.de>
- <2CC2A0A4A178534D93D5159BF3BCB66189F95F669D@EAPEX1MAIL1.st.com>
- <201312142002.38423.arnd@arndb.de>
- <2CC2A0A4A178534D93D5159BF3BCB66189FBE8D5D6@EAPEX1MAIL1.st.com>
+Received: from 8bytes.org ([85.214.48.195]:39731 "EHLO mail.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751411AbaAIMBi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jan 2014 07:01:38 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mail.8bytes.org (Postfix) with SMTP id 5934E12B14F
+	for <linux-pci@vger.kernel.org>; Thu,  9 Jan 2014 13:01:37 +0100 (CET)
+Date: Thu, 9 Jan 2014 13:01:35 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: ethan zhao <ethan.zhao@oracle.com>
+Cc: dwmw2@infradead.org, yinghai@kernel.org, bhelgaas@google.com,
+	jiang.liu@linux.intel.com, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH Trivial] intel-iommu: check return value of
+ device_to_iommu() before using it
+Message-ID: <20140109120135.GJ29041@8bytes.org>
+References: <52CE0252.4090106@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189FBE8D5D6@EAPEX1MAIL1.st.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52CE0252.4090106@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 16, 2014 at 03:25:41PM +0800, Mohit KUMAR DCG wrote:
-> Hi Arnd,
+On Thu, Jan 09, 2014 at 09:58:42AM +0800, ethan zhao wrote:
+>  drivers/iommu/intel-iommu.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 > 
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index 40203ad..5b4531a 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -1105,6 +1105,8 @@ static struct device_domain_info
+> *iommu_support_dev_iotlb(
+>      struct device_domain_info *info;
+>      struct intel_iommu *iommu = device_to_iommu(segment, bus, devfn);
 > 
-> > -----Original Message-----
-> > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > Sent: Sunday, December 15, 2013 12:33 AM
-> > To: Mohit KUMAR DCG
-> > Cc: linux-arm-kernel@lists.infradead.org; linux-pci@vger.kernel.org;
-> > Pratyush ANAND; spear-devel; Viresh Kumar
-> > Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to
-> > header file
-> > 
-> > On Friday 13 December 2013, Mohit KUMAR DCG wrote:
-> > > > The RST bits should probably go into a drivers/reset driver. Not
-> > > > sure what the other registers do, but I'm sure we can find a driver
-> > > > for these too, possibly they should be part of the PHY driver?
-> > >
-> > > -  Perhaps if we implement phy and reset driver then we may not
-> > > require to move these definitions and it will address most of your
-> > > comments on SPEar13xx pcie driver. I am understanding and working on
-> > > this.l
-> > >
-> 
-> Though we are almost ready with v2. But few concerns:
-> 
-> There are Spear soc common register used for misc configurations of clock, reset etc  for all ips.  Few of 
-> registers from the same area are also used for pcie/sata muxing and auxiliary clock configurations.
-> For example: sata_miphy_init in arch/arm/mach-spear/spear1340.c also uses these registers.
-> 
-> We have moved all these sata specific spear1340 configurations in a separate driver.  On the basis of spear-ahci dt 
-> Node this driver's probe is called, which further adds ahci platform driver.
-> We plan to put all spear1340/1310_pcie_miphy_init/exit functions of patch 9/12 of this series in
-> The same driver.
-> 
-> Now our concern is, what could be the best place to keep that driver, phy, reset or any other framework?
-> Or we keep this new driver in arch/arm/mach-spear only.
+> +    if (!iommu)
+> +        return NULL;
+>      if (!ecap_dev_iotlb_support(iommu->ecap))
+>          return NULL;
 
-I think this misc configuration register block resource should be
-passed to syscon (drivers/mfd/syscon.c) driver.
+This call can not fail, iommu_support_dev_iotlb() is only called from
+domain_context_mapping_one() which does the iommu==NULL check on its
+own before the call.
 
-regmap_update_bits should be used to update these registers and hence
-to configure pcie/sata settings.
 
-As far as place is concerned, that can be kept into mfd and can be
-named as spear13xx-syscon.c
+	Joerg
 
-Whats your opinion arnd?
 
-Regards
-Pratyush
-
-> 
-> Regards
-> Mohit
-> 
-> > 
-> > Ok, very good.
-> > 
-> > 	Arnd
