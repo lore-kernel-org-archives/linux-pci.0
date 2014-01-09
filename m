@@ -1,75 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:53906 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753411AbaA0AcW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jan 2014 19:32:22 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 6/11] ACPI / hotplug / PCI: Drop acpiphp_bus_add()
-Date: Mon, 27 Jan 2014 01:41:59 +0100
-Message-ID: <2004943.zYTADWJ10j@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Received: from mga14.intel.com ([143.182.124.37]:25766 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756485AbaAIAlc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jan 2014 19:41:32 -0500
+Message-ID: <52CDF037.2070806@linux.intel.com>
+Date: Thu, 09 Jan 2014 08:41:27 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dmaengine@vger.kernel.org
+Subject: Re: [Patch Part2 V1 00/14] Enhance DMAR drivers to handle PCI/memory
+ hotplug events
+References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com> <CAE9FiQUgfuQ9nXNOOCcYAKVeN05o+TX6e35qe5nSkyxB-DpyGg@mail.gmail.com>
+In-Reply-To: <CAE9FiQUgfuQ9nXNOOCcYAKVeN05o+TX6e35qe5nSkyxB-DpyGg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-acpiphp_bus_add() is only called from one place, so move the code out
-of it into that place and drop it.  Also make that code use
-func_to_acpi_device() to get the struct acpi_device pointer it needs
-instead of calling acpi_bus_get_device() which may be costly.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+On 2014/1/9 4:43, Yinghai Lu wrote:
+> On Tue, Jan 7, 2014 at 1:00 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>> Intel DMA/interrupt remapping drivers scan available PCI/memory devices
+>> at startup and cache discovered hardware topologies. They don't update
+>> cached information if PCI/memory hotplug event happens at runtime, then
+>> the stale information may break DMA/interrupt remapping logic.
+>>
+>> This patchset first (Patch 1-8) tries to introduces some helper
+>> functions and fixes several bugs, then (Patch 9,10) uses a global
+>> rwsem and RCU to protect global DMA/interrupt remapping data
+>> structures, and finally (Patch 11-14) hook PCI/memory hotplug events
+>> to update cached information.
+>>
+>> It's also a preparation for supporting of DMA/interrupt remapping
+>> hotplug.
+>>
+>> Jiang Liu (14):
+>>   iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
+>>   iommu/vt-d: move private structures and variables into intel-iommu.c
+>>   iommu/vt-d: simplify function get_domain_for_dev()
+>>   iommu/vt-d: free resources if failed to create domain for PCIe
+>>     endpoint
+>>   iommu/vt-d: create device_domain_info structure for intermediate P2P
+>>     bridges
+>>   iommu/vt-d: fix incorrect iommu_count for si_domain
+>>   iommu/vt-d: fix error in detect ATS capability
+>>   iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
+>>     entries
+>>   iommu/vt-d: introduce a rwsem to protect global data structures
+>>   iommu/vt-d: use RCU to protect global resources in interrupt context
+>>   iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
+>>     hotplug happens
+>>   iommu/vt-d, PCI: unify the way to process DMAR device scope array
+>>   iommu/vt-d: update device to static identity domain mapping for PCI
+>>     hotplug
+>>   iommu/vt-d: update IOMMU state when memory hotplug happens
+>>
+>>  drivers/iommu/dmar.c                |  412 +++++++++++++++++--------
+>>  drivers/iommu/intel-iommu.c         |  583 +++++++++++++++++++++--------------
+>>  drivers/iommu/intel_irq_remapping.c |  108 ++++---
+>>  include/linux/dmar.h                |   75 +++--
+>>  4 files changed, 753 insertions(+), 425 deletions(-)
+> 
+> 
+> Hi, Jiang,
+> 
+> What is relationship between your two patchset with my iommu hotplug patchset?
+> 
+> https://lkml.org/lkml/2014/1/2/527
+> 
+> or yours will just replace mine?
+Hi Yinghai,
+	I have reviewed your v2 patch set, I think we are doing the
+same task. If you agree, I will try to combine our two versions.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -470,20 +470,6 @@ static unsigned char acpiphp_max_busnr(s
- 	return max;
- }
- 
--/**
-- * acpiphp_bus_add - Scan ACPI namespace subtree.
-- * @handle: ACPI object handle to start the scan from.
-- */
--static void acpiphp_bus_add(acpi_handle handle)
--{
--	struct acpi_device *adev = NULL;
--
--	acpi_bus_scan(handle);
--	acpi_bus_get_device(handle, &adev);
--	if (acpi_device_enumerated(adev))
--		acpi_device_set_power(adev, ACPI_STATE_D0);
--}
--
- static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
-@@ -523,9 +509,13 @@ static int acpiphp_rescan_slot(struct ac
- {
- 	struct acpiphp_func *func;
- 
--	list_for_each_entry(func, &slot->funcs, sibling)
--		acpiphp_bus_add(func_to_handle(func));
-+	list_for_each_entry(func, &slot->funcs, sibling) {
-+		struct acpi_device *adev = func_to_acpi_device(func);
- 
-+		acpi_bus_scan(adev->handle);
-+		if (acpi_device_enumerated(adev))
-+			acpi_device_set_power(adev, ACPI_STATE_D0);
-+	}
- 	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
- }
- 
-
+Thanks!
+Gerry
+> 
+> Thanks
+> 
+> Yinghai
+> 
