@@ -1,86 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH 05/17] x86/PCI: Drop return value of pcibios_scan_root()
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:46875 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752274AbaAITUF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jan 2014 14:20:05 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1W1L99-00062a-L3
+	for linux-pci@vger.kernel.org; Thu, 09 Jan 2014 20:20:03 +0100
+Received: from 64.2.3.195.ptr.us.xo.net ([64.2.3.195])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 09 Jan 2014 20:20:03 +0100
+Received: from kdb by 64.2.3.195.ptr.us.xo.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 09 Jan 2014 20:20:03 +0100
 To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
-	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 29 Jan 2014 11:18:03 -0700
-Message-ID: <20140129181803.15476.65726.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+From: Scott Lurndal <kdb@lurndal.org>
+Subject: Re: Query regarding ARI configuration of a on-board PCIe device.
+Date: Thu, 9 Jan 2014 19:16:03 +0000 (UTC)
+Message-ID: <loom.20140109T201208-15@post.gmane.org>
+References: <CA+sq2CfthYc3Eda3GRa-Q-TA9gq+ygBTLrPjvzhRquikm220GA@mail.gmail.com> <CAErSpo6rigeEY7RbpcRrm2N7gKxA+rAwEX7_iD7r706hvM0_MA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Nobody really uses the return value of pcibios_scan_root() (one place uses
-it to control a printk, but the printk is not very useful).  This converts
-pcibios_scan_root() to a void function.
+Bjorn Helgaas <bhelgaas <at> google.com> writes:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/include/asm/pci.h |    2 +-
- arch/x86/pci/common.c      |    6 ++----
- arch/x86/pci/irq.c         |    4 +---
- 3 files changed, 4 insertions(+), 8 deletions(-)
+> 
+> On Thu, Jan 9, 2014 at 3:51 AM, Sunil Kovvuri <sunil.kovvuri <at>
+gmail.com> wrote:
+> > Hi,
+> >
+> > I have a platform which has a on-board PCIe device attached to PCIe port.
+> > This device is an ethernet device with SRIOV capability having morethan
+> > 8 virtual functions.
+> >
+> > I am going through Linux's ARI configuration code and saw that it is
+checking
+> > if upstream bridge supports ARI or not. In our case its a on-board
+device and
+> > no bridge is involved.
+> >
+> > Need some help or ideas on how i can configure ARI on the device so that
+> > all VFs gets added.
+> >
+> > Do i need to change the ARI configuration code or is there a way to fake a
+> > PCI bridge for this purpose ?
+> 
+> I assume you're referring to pci_configure_ari().  A PCIe endpoint
+> such as your ethernet device always has an upstream bridge.  In your
+> case, the device is on-board and there's no PCIe switch involved, but
+> the root port is the upstream device, and it is handled as a bridge.
+> 
+> It looks like pci_configure_ari() should enable ARI by default when it
+> is supported.  But apparently it isn't being enabled on your system?
+> Can you collect the "lspci -vv" output for the root port and the NIC?
+> 
+> Bjorn
+> 
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index b52f9c0ec5fb..96ae4f4040bb 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -65,7 +65,7 @@ extern unsigned long pci_mem_start;
- 
- extern int pcibios_enabled;
- void pcibios_config_init(void);
--struct pci_bus *pcibios_scan_root(int bus);
-+void pcibios_scan_root(int bus);
- 
- void pcibios_set_master(struct pci_dev *dev);
- void pcibios_penalize_isa_irq(int irq, int active);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 52ad00c2e198..600e5925f1a4 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -456,7 +456,7 @@ void __init dmi_check_pciprobe(void)
- 	dmi_check_system(pciprobe_dmi_table);
- }
- 
--struct pci_bus *pcibios_scan_root(int busnum)
-+void pcibios_scan_root(int busnum)
- {
- 	struct pci_bus *bus;
- 	struct pci_sysdata *sd;
-@@ -465,7 +465,7 @@ struct pci_bus *pcibios_scan_root(int busnum)
- 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
- 	if (!sd) {
- 		printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busnum);
--		return NULL;
-+		return;
- 	}
- 	sd->node = get_mp_bus_to_node(busnum);
- 	x86_pci_root_bus_resources(busnum, &resources);
-@@ -475,8 +475,6 @@ struct pci_bus *pcibios_scan_root(int busnum)
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
- 	}
--
--	return bus;
- }
- 
- void __init pcibios_set_cache_line_size(void)
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 8658874165c2..84112f55dd7a 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -138,9 +138,7 @@ static void __init pirq_peer_trick(void)
- 	for (i = 1; i < 256; i++) {
- 		if (!busmap[i] || pci_find_bus(0, i))
- 			continue;
--		if (pcibios_scan_root(i))
--			printk(KERN_INFO "PCI: Discovered primary peer "
--			       "bus %02x [IRQ]\n", i);
-+		pcibios_scan_root(i);
- 	}
- 	pcibios_last_bus = -1;
- }
+
+Hi Bjorn,
+
+   For the sake of discussion, let's assume that the device in question,
+which is intended to appear to software as a pci-express SR-IOV device
+with more than 8 functions (i.e. ARI), has a PCI-Express configuration
+space which is slotted into an ECAM region for discovery and
+configuration.  The device itself is directly attached to the host-bridge
+and doesn't have an associated root port.
+
+   In this case, the check for bridge in pci_configure_ari() is
+problematic because there is no root port (the host bridge is
+transparent to software).
+
+thanks,
+scott
+
 
