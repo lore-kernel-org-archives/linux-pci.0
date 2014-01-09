@@ -1,115 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:59795 "EHLO
-	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750753AbaAXGsl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jan 2014 01:48:41 -0500
-Date: Fri, 24 Jan 2014 12:18:22 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: =?iso-8859-1?Q?Bj=F8rn?= Erik Nilsen <ben@datarespons.no>
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	'Harro Haan' <hrhaan@gmail.com>, 'Marek Vasut' <marex@denx.de>
-Subject: Re: designware/imx6: question regarding MSI
-Message-ID: <20140124064822.GF2369@pratyush-vbox>
-References: <25.15.01844.D5C20E25@epmailin6.samsung.com>
- <000201cf17ff$47025bf0$d50713d0$%han@samsung.com>
- <20140123065104.GA26318@pratyush-vbox>
- <56523137843406465091127182657491@psmtp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <56523137843406465091127182657491@psmtp.com>
+Received: from mx1.redhat.com ([209.132.183.28]:23749 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751098AbaAIV6i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jan 2014 16:58:38 -0500
+Message-ID: <1389304708.3209.257.camel@bling.home>
+Subject: Re: [PATCH] pci/iov: VFs are never multifunction
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	sathya.perla@emulex.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ajit.khaparde@emulex.com, Don Dutile <ddutile@redhat.com>,
+	subbu.seetharaman@emulex.com, Myron Stowe <myron.stowe@redhat.com>
+Date: Thu, 09 Jan 2014 14:58:28 -0700
+In-Reply-To: <CAErSpo6vA=f1RSnpkWumYxs3tQ8uM8NKuWqck4GRb6gL5HvqiA@mail.gmail.com>
+References: <20140109153513.21446.31778.stgit@bling.home>
+	 <CAErSpo4Asnx4JiZvppZLUzxmVymz0t-fHXRFMr81-Qz31XyR+g@mail.gmail.com>
+	 <1389291911.3209.234.camel@bling.home>
+	 <CAErSpo6vA=f1RSnpkWumYxs3tQ8uM8NKuWqck4GRb6gL5HvqiA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 11:20:55PM +0800, Bjørn Erik Nilsen wrote:
-> Hi Pratyush,
+On Thu, 2014-01-09 at 14:39 -0700, Bjorn Helgaas wrote:
+> On Thu, Jan 9, 2014 at 11:25 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Thu, 2014-01-09 at 11:08 -0700, Bjorn Helgaas wrote:
+> >> On Thu, Jan 9, 2014 at 8:36 AM, Alex Williamson
+> >> <alex.williamson@redhat.com> wrote:
+> >> > Per the SR-IOV spec rev 1.1:
+> >> >
+> >> > 3.4.1.9 Header Type (Offset 0Eh)
+> >> >
+> >> > "... For VFs, this register must be RO Zero."
+> >> >
+> >> > Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
+> >> > NIC.  When they do it makes us handle ACS testing and therefore IOMMU
+> >> > groups as if they were actual multifunction devices and require ACS
+> >> > capabilities to make sure there's no peer-to-peer between functions.
+> >> > VFs are never traditional multifunction devices, so simply clear this
+> >> > bit before we get any further into setup.
+> >>
+> >> This seems reasonable.  Do you have "lspci -vvxxxx" output for this
+> >> device?  I'd like to save it for future reference.
+> >
+> > Sure, here's a VF:
+> >
+> > 09:04.0 Ethernet controller: Emulex Corporation OneConnect 10Gb NIC (be3) (rev 01)
+> >         Subsystem: Emulex Corporation Device e722
 > 
-> On Thu, 2014-01-23 at 07:51 +0100, Pratyush Anand wrote:
-> > On Thu, Jan 23, 2014 at 01:52:19PM +0800, Jingoo Han wrote:
-> > > On Thursday, January 23, 2014 5:39 AM, Jingoo Han wrote:
-> > > > 
-> > > > I’m currently playing with MSI support in pci-imx6.c using Harro Haan’s patch [*].
-> > > > 
-> > > > Are there any technical reasons why dw_pcie_msi_init cannot be called from dw_msi_setup_irq? Or rather,
-> > > > why it should not?
-> > > 
-> > > No, there is no special reason.
-> > > The patch (call dw_pcie_msi_init from dw_msi_setup_irq) would be
-> > > good. Thank you for your effort.
-> > > 
-> > > Mohit, Pratyush,
-> > > If you have different opinions, please let us know. :-)
-> > 
-> > dw_msi_setup_irq will be called for each function which needs msi
-> > assignment. However, dw_pcie_msi_init should be called only once. So,
-> > in my opinion calling dw_pcie_msi_init from dw_msi_setup_irq would not
-> > be the best option.
-> > 
-> > @Bjørn, can you help us with tracing calling sequence of
-> > dw_pcie_setup & dw_pcie_scan_bus. I think when you do "reset bridge",
-> > it will call dw_pcie_setup and when you do "rescan bus", it will call
-> > dw_pcie_scan_bus. If yes, then you can move dw_pcie_msi_init to
-> > dw_pcie_setup.
+> Thanks!  I put this in
+> https://bugzilla.kernel.org/show_bug.cgi?id=68431, and I'll add a
+> reference to the changelog.
 > 
+> But I wonder if we can make this slightly more generic by doing
+> something like this in pci_setup_device():
 > 
-> It looks like dw_pcie_setup and dw_pcie_scan_bus is only called when
-> booting. Resetting the bridge or scanning the bus will not trigger any
-> of these functions, unfortunately.
+>   dev->multifunction = (PCI_FUNC(dev->devfn) == 0) && (hdr_type & 0x80);
+> 
+> That's basically what lspci does in pci_generic_scan_bus(), and
+> section 3.2.2.3.4 of the PCI 3.0 spec sort of implies that we should
+> only look at the bit 7 of the header type for function 0:
+> 
+>   If a single function device is detected (i.e., bit 7 in the Header
+>   Type register of function 0 is 0), no more functions for that
+>   Device Number will be checked. If a multi-function device is
+>   detected (i.e., bit 7 in the Header Type register of function 0
+>   is 1), then all remaining Function Numbers will be checked.
 
-Yes, I browsed pcie sysfs rescan and reset code and it does not go
-into that path. Sorry for the wrong pointers. I should have looked
-into code earlier :(
+We could do that and rely only on pci_scan_slot() to set multifunction=1
+for the other functions, but that doesn't completely solve this problem.
+VFs can occupy function zero and the example device would still set
+multifunction with that test.  Thanks,
 
-Coming to the issue, I am still not convinced that msi_init part should
-go to msi_setup_irq. May be something is missing.
-@Mohit, Jingoo: How does remove, reset and rescan behave with your
-platform.
+Alex
 
-Regards
-Pratyush
-
-> 
-> I have looked for other hooks too, without luck.
-> 
-> > 
-> > Regards
-> > Pratyush
-> > 
-> > > 
-> > > Best regards,
-> > > Jingoo Han
-> > > 
-> > > > 
-> > > > I’m asking because I have a hotplug scenario where this little hack (call dw_pcie_msi_init from
-> > > > dw_msi_setup_irq) fixes a problem with MSI. I therefore need to understand whether it is a sensible
-> > > > hack or just crap, and more importantly; how it can be fixed properly.
-> > > > 
-> > > > Scenario:
-> > > > 
-> > > > (remove endpoints)
-> > > > # echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove
-> > > > # echo 1 > /sys/bus/pci/devices/0000:01:00.1/remove
-> > > > 
-> > > > # take fpga in and out of reset (this will mess up the configuration space of the bridge)
-> > > > 
-> > > > (reset bridge)
-> > > > # echo 1 > /sys/bus/pci/devices/0000:00:00.0/reset
-> > > > 
-> > > > (rescan bus)
-> > > > # echo 1 > /sys/bus/pci/rescan
-> > > > 
-> > > > At this point everything works fine except MSI. With above mention hack it works like a charm.
-> > > > 
-> > > > I would be grateful if someone could shed light on this. I might have missed some important details.
-> > > > 
-> > > > 
-> > > > Best regards,
-> > > > Bjørn Erik Nilsen
-> > > > 
-> > > > [*]
-> > > > 
-> > > > From: Harro Haan <hrhaan@gmail.com>
-> > > > Date: Thu, 5 Dec 2013 14:06:37 +0100
-> > > > Subject: [PATCH 2/2] PCI: imx6: add support for MSI
-> 
