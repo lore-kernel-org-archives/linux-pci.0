@@ -1,321 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:2448 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752803AbaAFGS0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:18:26 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiri Kosina <trivial@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 11/20] iommu/vt-d, trivial: simplify code with existing macros
-Date: Mon,  6 Jan 2014 14:18:18 +0800
-Message-Id: <1388989107-4795-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:58624 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753095AbaAIUoL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 15:44:11 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4BpCYQ1q8ogqAtn7pbCXkKHM4M4DCffF9m+Gd4tjit1w@mail.gmail.com>
+References: <CA+2TWzXvZrVZDJA-KkuUVuCP8kwX3GENL_rTf=_dZ_HBqJUArw@mail.gmail.com>
+	<CAErSpo4BpCYQ1q8ogqAtn7pbCXkKHM4M4DCffF9m+Gd4tjit1w@mail.gmail.com>
+Date: Thu, 9 Jan 2014 12:44:10 -0800
+Message-ID: <CAE9FiQUU6-mtXQUpV=HFXaXpbL9-1UdFjkoed2+ROjJMtHQWSQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Allocate prefetch mmio resource first when possible
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: threeTigers Lin <threeflytigers@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Li Zefan <lizefan@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify vt-d related code with existing macros and introduce a new
-macro for_each_active_drhd_unit() to enumerate all active DRHD unit.
+On Wed, Jan 8, 2014 at 4:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Yinghai]
+>
+> On Wed, Jan 8, 2014 at 11:17 AM, threeTigers Lin
+> <threeflytigers@gmail.com> wrote:
+>> From f7a37ed1c61b5939ccef810e28b25ecf3bfa9077 Mon Sep 17 00:00:00 2001
+>> From: linmuhui <linmuhui@huawei.com>
+>> Date: Thu, 9 Jan 2014 01:03:12 +0800
+>> Subject: [PATCH] PCI: Allocate prefetch mmio resource first when possible
+>
+> This patch is not in the standard format and does not apply cleanly.
+> See Documentation/SubmittingPatches.
+>
+>> Hi Bjorn,
+>>
+>> PCI bus resources will be set up at pci_bridge_check_ranges() or
+>> pci_read_bridge_bases(). In both cases, we can find that the PCI bus'
+>> non-pref mmio will be assigned to bus->resource[1] and pref mmio will be
+>> assigned to bus->resource[2]. So, in the scenario that we need to allocate
+>> pref resources from PCI bus such as hotplug operation, the bus' non-pref
+>> mmio will be quickly eaten up first if we try to allocate bus resources in
+>> the order from bus->resource[0] to bus->resource[PCI_BRIDGE_RESOURCE_NUM -
+>> 1] in the function pci_bus_alloc_resource(), even though there is enough
+>> pref mmio resource of the bus. This may lead to the later requester who want
+>> to allocate non-pref mmio cannot allocate the resource from the bus. So, I
+>> think the order of allocating PCI bus resources in function
+>> pci_bus_alloc_resource() should be changed to try pref mmio first when
+>> possible.
+>
+> Don't we do this already?  The code in __pci_assign_resource() looks
+> like it should prefer an exact prefetching match.
+>
+> If that code doesn't work, we should fix it there.  I don't want to
+> fiddle with pci_bus_for_each_resource() for this -- that's a really
+> arcane place to hide such a fix.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c                |    7 ++---
- drivers/iommu/intel-iommu.c         |   55 ++++++++---------------------------
- drivers/iommu/intel_irq_remapping.c |   31 +++++++-------------
- include/linux/dmar.h                |    4 +++
- 4 files changed, 29 insertions(+), 68 deletions(-)
+Looks like he was trying to do sorting work like we try to do with
+root bus resource before, but with new patches in pci/resource, we do
+NOT need to do that anymore.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index f02a4fd..7ecc7b8 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -1305,15 +1305,14 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
- int __init enable_drhd_fault_handling(void)
- {
- 	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
- 
- 	/*
- 	 * Enable fault control interrupt.
- 	 */
--	for_each_drhd_unit(drhd) {
--		int ret;
--		struct intel_iommu *iommu = drhd->iommu;
-+	for_each_iommu(iommu, drhd) {
- 		u32 fault_status;
--		ret = dmar_set_interrupt(iommu);
-+		int ret = dmar_set_interrupt(iommu);
- 
- 		if (ret) {
- 			pr_err("DRHD %Lx: failed to enable fault, interrupt, ret %d\n",
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 751db33..9e67954 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -628,9 +628,7 @@ static struct intel_iommu *device_to_iommu(int segment, u8 bus, u8 devfn)
- 	struct dmar_drhd_unit *drhd = NULL;
- 	int i;
- 
--	for_each_drhd_unit(drhd) {
--		if (drhd->ignored)
--			continue;
-+	for_each_active_drhd_unit(drhd) {
- 		if (segment != drhd->segment)
- 			continue;
- 
-@@ -2470,11 +2468,7 @@ static int __init init_dmars(void)
- 		goto error;
- 	}
- 
--	for_each_drhd_unit(drhd) {
--		if (drhd->ignored)
--			continue;
--
--		iommu = drhd->iommu;
-+	for_each_active_iommu(iommu, drhd) {
- 		g_iommus[iommu->seq_id] = iommu;
- 
- 		ret = iommu_init_domains(iommu);
-@@ -2498,12 +2492,7 @@ static int __init init_dmars(void)
- 	/*
- 	 * Start from the sane iommu hardware state.
- 	 */
--	for_each_drhd_unit(drhd) {
--		if (drhd->ignored)
--			continue;
--
--		iommu = drhd->iommu;
--
-+	for_each_active_iommu(iommu, drhd) {
- 		/*
- 		 * If the queued invalidation is already initialized by us
- 		 * (for example, while enabling interrupt-remapping) then
-@@ -2523,12 +2512,7 @@ static int __init init_dmars(void)
- 		dmar_disable_qi(iommu);
- 	}
- 
--	for_each_drhd_unit(drhd) {
--		if (drhd->ignored)
--			continue;
--
--		iommu = drhd->iommu;
--
-+	for_each_active_iommu(iommu, drhd) {
- 		if (dmar_enable_qi(iommu)) {
- 			/*
- 			 * Queued Invalidate not enabled, use Register Based
-@@ -2611,17 +2595,16 @@ static int __init init_dmars(void)
- 	 *   global invalidate iotlb
- 	 *   enable translation
- 	 */
--	for_each_drhd_unit(drhd) {
-+	for_each_iommu(iommu, drhd) {
- 		if (drhd->ignored) {
- 			/*
- 			 * we always have to disable PMRs or DMA may fail on
- 			 * this device
- 			 */
- 			if (force_on)
--				iommu_disable_protect_mem_regions(drhd->iommu);
-+				iommu_disable_protect_mem_regions(iommu);
- 			continue;
- 		}
--		iommu = drhd->iommu;
- 
- 		iommu_flush_write_buffer(iommu);
- 
-@@ -2643,12 +2626,8 @@ static int __init init_dmars(void)
- 
- 	return 0;
- error:
--	for_each_drhd_unit(drhd) {
--		if (drhd->ignored)
--			continue;
--		iommu = drhd->iommu;
-+	for_each_active_iommu(iommu, drhd)
- 		free_iommu(iommu);
--	}
- 	kfree(g_iommus);
- 	return ret;
- }
-@@ -3296,9 +3275,9 @@ static void __init init_no_remapping_devices(void)
- 		}
- 	}
- 
--	for_each_drhd_unit(drhd) {
-+	for_each_active_drhd_unit(drhd) {
- 		int i;
--		if (drhd->ignored || drhd->include_all)
-+		if (drhd->include_all)
- 			continue;
- 
- 		for (i = 0; i < drhd->devices_cnt; i++)
-@@ -3647,6 +3626,7 @@ int __init intel_iommu_init(void)
- {
- 	int ret = 0;
- 	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
- 
- 	/* VT-d is required for a TXT/tboot launch, so enforce that */
- 	force_on = tboot_force_iommu();
-@@ -3660,16 +3640,9 @@ int __init intel_iommu_init(void)
- 	/*
- 	 * Disable translation if already enabled prior to OS handover.
- 	 */
--	for_each_drhd_unit(drhd) {
--		struct intel_iommu *iommu;
--
--		if (drhd->ignored)
--			continue;
--
--		iommu = drhd->iommu;
-+	for_each_active_iommu(iommu, drhd)
- 		if (iommu->gcmd & DMA_GCMD_TE)
- 			iommu_disable_translation(iommu);
--	}
- 
- 	if (dmar_dev_scope_init() < 0) {
- 		if (force_on)
-@@ -3912,11 +3885,7 @@ static void iommu_free_vm_domain(struct dmar_domain *domain)
- 	unsigned long i;
- 	unsigned long ndomains;
- 
--	for_each_drhd_unit(drhd) {
--		if (drhd->ignored)
--			continue;
--		iommu = drhd->iommu;
--
-+	for_each_active_iommu(iommu, drhd) {
- 		ndomains = cap_ndoms(iommu->cap);
- 		for_each_set_bit(i, iommu->domain_ids, ndomains) {
- 			if (iommu->domains[i] == domain) {
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 451c7f1..ea425de 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -520,6 +520,7 @@ static int __init dmar_x2apic_optout(void)
- static int __init intel_irq_remapping_supported(void)
- {
- 	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
- 
- 	if (disable_irq_remap)
- 		return 0;
-@@ -538,12 +539,9 @@ static int __init intel_irq_remapping_supported(void)
- 	if (!dmar_ir_support())
- 		return 0;
- 
--	for_each_drhd_unit(drhd) {
--		struct intel_iommu *iommu = drhd->iommu;
--
-+	for_each_iommu(iommu, drhd)
- 		if (!ecap_ir_support(iommu->ecap))
- 			return 0;
--	}
- 
- 	return 1;
- }
-@@ -551,6 +549,7 @@ static int __init intel_irq_remapping_supported(void)
- static int __init intel_enable_irq_remapping(void)
- {
- 	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
- 	bool x2apic_present;
- 	int setup = 0;
- 	int eim = 0;
-@@ -573,9 +572,7 @@ static int __init intel_enable_irq_remapping(void)
- 				"Use 'intremap=no_x2apic_optout' to override BIOS request.\n");
- 	}
- 
--	for_each_drhd_unit(drhd) {
--		struct intel_iommu *iommu = drhd->iommu;
--
-+	for_each_iommu(iommu, drhd) {
- 		/*
- 		 * If the queued invalidation is already initialized,
- 		 * shouldn't disable it.
-@@ -600,9 +597,7 @@ static int __init intel_enable_irq_remapping(void)
- 	/*
- 	 * check for the Interrupt-remapping support
- 	 */
--	for_each_drhd_unit(drhd) {
--		struct intel_iommu *iommu = drhd->iommu;
--
-+	for_each_iommu(iommu, drhd) {
- 		if (!ecap_ir_support(iommu->ecap))
- 			continue;
- 
-@@ -616,10 +611,8 @@ static int __init intel_enable_irq_remapping(void)
- 	/*
- 	 * Enable queued invalidation for all the DRHD's.
- 	 */
--	for_each_drhd_unit(drhd) {
--		int ret;
--		struct intel_iommu *iommu = drhd->iommu;
--		ret = dmar_enable_qi(iommu);
-+	for_each_iommu(iommu, drhd) {
-+		int ret = dmar_enable_qi(iommu);
- 
- 		if (ret) {
- 			printk(KERN_ERR "DRHD %Lx: failed to enable queued, "
-@@ -632,9 +625,7 @@ static int __init intel_enable_irq_remapping(void)
- 	/*
- 	 * Setup Interrupt-remapping for all the DRHD's now.
- 	 */
--	for_each_drhd_unit(drhd) {
--		struct intel_iommu *iommu = drhd->iommu;
--
-+	for_each_iommu(iommu, drhd) {
- 		if (!ecap_ir_support(iommu->ecap))
- 			continue;
- 
-@@ -778,19 +769,17 @@ static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
- static int __init parse_ioapics_under_ir(void)
- {
- 	struct dmar_drhd_unit *drhd;
-+	struct intel_iommu *iommu;
- 	int ir_supported = 0;
- 	int ioapic_idx;
- 
--	for_each_drhd_unit(drhd) {
--		struct intel_iommu *iommu = drhd->iommu;
--
-+	for_each_iommu(iommu, drhd)
- 		if (ecap_ir_support(iommu->ecap)) {
- 			if (ir_parse_ioapic_hpet_scope(drhd->hdr, iommu))
- 				return -1;
- 
- 			ir_supported = 1;
- 		}
--	}
- 
- 	if (!ir_supported)
- 		return 0;
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index f614357..bd5026b 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -53,6 +53,10 @@ extern struct list_head dmar_drhd_units;
- #define for_each_drhd_unit(drhd) \
- 	list_for_each_entry(drhd, &dmar_drhd_units, list)
- 
-+#define for_each_active_drhd_unit(drhd)					\
-+	list_for_each_entry(drhd, &dmar_drhd_units, list)		\
-+		if (drhd->ignored) {} else
-+
- #define for_each_active_iommu(i, drhd)					\
- 	list_for_each_entry(drhd, &dmar_drhd_units, list)		\
- 		if (i=drhd->iommu, drhd->ignored) {} else
--- 
-1.7.10.4
+Hi, Lin,
 
+Can you check linus/master + pci/next + pci/resource
+
+and
+
+http://patchwork.ozlabs.org/patch/303740/
+PCI: Try best to allocate pref mmio 64bit above 4g
+
+would fix the problem in your setup?
+
+Thanks
+
+Yinghai
