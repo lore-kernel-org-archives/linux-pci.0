@@ -1,55 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33975 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752917AbaA3Nrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Jan 2014 08:47:35 -0500
-Date: Thu, 30 Jan 2014 14:49:09 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 3/3] ath10k: Use pci_enable_msi_range()
-Message-ID: <20140130134908.GC31909@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:57119 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932294AbaAHX4h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 18:56:37 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to avoid sysfs warnings
+Date: Thu, 09 Jan 2014 01:10:26 +0100
+Message-ID: <1473769.SaDXEol2iJ@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXYskZcfccVO6OacYchfA=cd0Ns9EF1CbwERS7MR05bUA@mail.gmail.com>
+References: <37552283.kG1L4S8Daa@vostro.rjw.lan> <4679785.iPCX7mECEL@vostro.rjw.lan> <CAE9FiQXYskZcfccVO6OacYchfA=cd0Ns9EF1CbwERS7MR05bUA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Wednesday, January 08, 2014 03:41:52 PM Yinghai Lu wrote:
+> On Mon, Jan 6, 2014 at 12:41 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> 
+> >> Not sure how that could happen.
+> >>
+> >> If it would really happen, we could set dev->match_driver to 0 in pci_stop_dev.
+> >
+> > Simply, run "modprobe -r driver && modprobe driver" in a loop and
+> > remove the PCI host bridge the given device is on in parallel to that.  Chances
+> > are, you'll see some nice breakage.
+> 
+> I would suggest using match_driver prevent driver from attaching again.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Yes, we can do that.  Some locking is needed for it to be non-racy, however.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 563ce77..ad2a6cf 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2411,8 +2411,9 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
- 	/* Try MSI-X */
- 	if (ath10k_pci_irq_mode == ATH10K_PCI_IRQ_AUTO && msix_supported) {
- 		ar_pci->num_msi_intrs = MSI_NUM_REQUEST;
--		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
--		if (ret == 0)
-+		ret = pci_enable_msi_range(ar_pci->pdev, ar_pci->num_msi_intrs,
-+							 ar_pci->num_msi_intrs);
-+		if (ret > 0)
- 			return 0;
- 
- 		/* fall-through */
--- 
-1.7.7.6
+Anyway, we still have the problem with race conditions between different PCI
+removal/rescan code paths.  And I'm still going to prepare a patch to use
+the remove-rescan mutex to address those race conditions and that patch should
+help here too.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+> 
+> ---
+>  drivers/pci/remove.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> Index: linux-2.6/drivers/pci/remove.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/remove.c
+> +++ linux-2.6/drivers/pci/remove.c
+> @@ -11,6 +11,7 @@ static void pci_stop_dev(struct pci_dev
+>          pci_proc_detach_device(dev);
+>          pci_remove_sysfs_dev_files(dev);
+>          device_release_driver(&dev->dev);
+> +        dev->match_driver = false;
+>          dev->is_added = 0;
+>      }
+> 
+> 
+> >
+> > Also what happens if somebody uses the "remove" sysfs attribute on a device
+> > needed by ioapic/dmar?
+> 
+> Good question, we will have problem in that case.
+> To make it simple, we may hide the "remove" in sysfs for ioapic pci device ?
+
+Yeah, we need to do that if using that attribute may lead to problems.
+
+Thanks,
+Rafael
+
