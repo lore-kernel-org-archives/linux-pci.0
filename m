@@ -1,71 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:37284 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752328AbaAUDxu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 22:53:50 -0500
-Date: 20 Jan 2014 22:53:49 -0500
-Message-ID: <20140121035349.14201.qmail@science.horizon.com>
-From: "George Spelvin" <linux@horizon.com>
-To: acooks@gmail.com, linux@horizon.com
-Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
-Cc: alex.williamson@redhat.com, iommu@lists.linux-foundation.org,
-	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <CAJtEV7YBr69iHHFZ7PNzZH_Hhu5HuM0ifOnzhr+GyzGqgErT4g@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1389304708.3209.257.camel@bling.home>
+References: <20140109153513.21446.31778.stgit@bling.home> <CAErSpo4Asnx4JiZvppZLUzxmVymz0t-fHXRFMr81-Qz31XyR+g@mail.gmail.com>
+ <1389291911.3209.234.camel@bling.home> <CAErSpo6vA=f1RSnpkWumYxs3tQ8uM8NKuWqck4GRb6gL5HvqiA@mail.gmail.com>
+ <1389304708.3209.257.camel@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 9 Jan 2014 16:20:50 -0700
+Message-ID: <CAErSpo7xEKzWF8oetskQAcLcwJUw4VPByXgbMUkurVcK2caRgA@mail.gmail.com>
+Subject: Re: [PATCH] pci/iov: VFs are never multifunction
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Nishank Trivedi <nistrive@cisco.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	sathya.perla@emulex.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ajit.khaparde@emulex.com, Don Dutile <ddutile@redhat.com>,
+	subbu.seetharaman@emulex.com, Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> It only works on Intel IOMMUs, and sort of duplicates the functionality
->> of your quirk.
+[+to Nishank]
+
+On Thu, Jan 9, 2014 at 2:58 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Thu, 2014-01-09 at 14:39 -0700, Bjorn Helgaas wrote:
+>> On Thu, Jan 9, 2014 at 11:25 AM, Alex Williamson
+>> <alex.williamson@redhat.com> wrote:
+>> > On Thu, 2014-01-09 at 11:08 -0700, Bjorn Helgaas wrote:
+>> >> On Thu, Jan 9, 2014 at 8:36 AM, Alex Williamson
+>> >> <alex.williamson@redhat.com> wrote:
+>> >> > Per the SR-IOV spec rev 1.1:
+>> >> >
+>> >> > 3.4.1.9 Header Type (Offset 0Eh)
+>> >> >
+>> >> > "... For VFs, this register must be RO Zero."
+>> >> >
+>> >> > Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
+>> >> > NIC.  When they do it makes us handle ACS testing and therefore IOMMU
+>> >> > groups as if they were actual multifunction devices and require ACS
+>> >> > capabilities to make sure there's no peer-to-peer between functions.
+>> >> > VFs are never traditional multifunction devices, so simply clear this
+>> >> > bit before we get any further into setup.
+>> >>
+>> >> This seems reasonable.  Do you have "lspci -vvxxxx" output for this
+>> >> device?  I'd like to save it for future reference.
+>> >
+>> > Sure, here's a VF:
+>> >
+>> > 09:04.0 Ethernet controller: Emulex Corporation OneConnect 10Gb NIC (be3) (rev 01)
+>> >         Subsystem: Emulex Corporation Device e722
 >>
->> Obviously, I hate the duplication and would like to fold them together,
->> but there are a few fundamental differences.
+>> Thanks!  I put this in
+>> https://bugzilla.kernel.org/show_bug.cgi?id=68431, and I'll add a
+>> reference to the changelog.
+>>
+>> But I wonder if we can make this slightly more generic by doing
+>> something like this in pci_setup_device():
+>>
+>>   dev->multifunction = (PCI_FUNC(dev->devfn) == 0) && (hdr_type & 0x80);
+>>
+>> That's basically what lspci does in pci_generic_scan_bus(), and
+>> section 3.2.2.3.4 of the PCI 3.0 spec sort of implies that we should
+>> only look at the bit 7 of the header type for function 0:
+>>
+>>   If a single function device is detected (i.e., bit 7 in the Header
+>>   Type register of function 0 is 0), no more functions for that
+>>   Device Number will be checked. If a multi-function device is
+>>   detected (i.e., bit 7 in the Header Type register of function 0
+>>   is 1), then all remaining Function Numbers will be checked.
+>
+> We could do that and rely only on pci_scan_slot() to set multifunction=1
+> for the other functions, but that doesn't completely solve this problem.
+> VFs can occupy function zero and the example device would still set
+> multifunction with that test.  Thanks,
 
-> Hang on! The existing quirk only worked for vfio groups last time I
-> checked and didn't actually solve the problem for using the device on
-> the host.
+Duh, it would help if I actually paid attention to your lspci output...
 
-I'd believe there are additional differences I haven't figured out,
-but it sure seems similar enough to be potentially mergeable.
+The reason I'm thinking about this is that virtfn_add() is only used
+when we enable SR-IOV.  If we clear dev->multifunction there, we only
+end up with the correct value if we start with SR-IOV disabled, and
+then enable it.
 
-I want to either do that, or understand the differences well enough
-to explain them in a comment and tell future coders which should
-be used in whatr circumstances.
+If SR-IOV were enabled by the firmware before Linux boots, we wouldn't
+go through the virtfn_add() path, and dev->multifunction might still
+be wrong.
 
-> Alex had done a bunch of work to support requester id quirks (see
-> http://marc.info/?l=linux-pci&m=137357663626523&w=3), but that seems
-> blocked.
+I'm pretty sure Nishank said there were Cisco boxes that enable SR-IOV
+in the firmware, but I don't know how that works.  It looks like we
+would disable SR-IOV during enumeration in the path below:
 
-Thank you for this pointer.  If only I understood it better, :-(
+  pci_scan_slot
+    pci_scan_single_device
+      pci_device_add
+        pci_init_capabilities
+          pci_iov_init
+            sriov_init
+              pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl)
+              if (ctrl & PCI_SRIOV_CTRL_VFE)
+                pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0)
 
->> - Marvell SATA controllers which exist only as devid 00.0, but generate
->>   request devids of 00.1.  (The latter function might be PATA support
->>   on chips which support that.)
+>From that path, it *looks* like it doesn't really matter whether
+SR-IOV is enabled at handoff, because we disable it anyway.
 
-> No, I can prove that both .0 and .1 are used on the 9172 controller,
-> depending on which of the two SATA port(s) is(are) in use. If you have
-> the same hardware, I suggest you verify this.
+So I'm not sure if I misunderstood Nishank or what.  I think it would
+be cool if we could enumerate previously-enabled VFs, but maybe there
+are other issues that would make that impossible.
 
-Thank you for the confirmation (that's a second thing that makes Alex's
-current solution incompatible), but I wasn't trying to imply that they
-didn't also generate DMA as .0; I was just saying that the only function
-which shows up in PCI config space and thus has a struct pci_dev allocated
-for it is .0.
-
-I was trying to draw attention to the fact that there is no struct pci_dev
-for .1 which can be used for Alex's interface.
-
->> But I'm not quite sure what the locking rules are on the whole swap_pci_ref
->> business.  Or if the Ricoh devices have to be handled more carefully
->> because multiple functions need to arbitrate over the IOMMU tables
->> for function 0.
-
-> The Ricoh firewire function simply uses the wrong requester ID. The
-> other functions work correctly. Remapping only the firewire specific
-> function of the multifunction device (as in my patch) fixes the
-> problem.
-
-Good to know, but can function 0 generate DMA that we need to worry about?
-(I believe it's an SD host controller, 1180:e822.)
-
-That's what I was worried about.  Both devices trying to do IOMMU mapping
-at the same time and stepping on each other.
+Bjorn
