@@ -1,66 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1389368751.3209.294.camel@bling.home>
-Subject: Re: [PATCH v3 5/7] vfio: Use new interfaces for MSI/MSI-X enablement
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55343 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750912AbaAIPgM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jan 2014 10:36:12 -0500
+Subject: [PATCH] pci/iov: VFs are never multifunction
 From: Alex Williamson <alex.williamson@redhat.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Fri, 10 Jan 2014 08:45:51 -0700
-In-Reply-To: <20140110074247.GA4883@dhcp-26-207.brq.redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
-	 <1c2ab7cdd9f18f98ee86c73b182f4ee0697f7495.1389103215.git.agordeev@redhat.com>
-	 <1389119653.3209.124.camel@bling.home>
-	 <20140108074224.GA20157@dhcp-26-207.brq.redhat.com>
-	 <20140108075757.GB20157@dhcp-26-207.brq.redhat.com>
-	 <1389188753.3209.156.camel@bling.home>
-	 <20140110074247.GA4883@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: sathya.perla@emulex.com, linux-kernel@vger.kernel.org,
+	ajit.khaparde@emulex.com, ddutile@redhat.com,
+	subbu.seetharaman@emulex.com, myron.stowe@redhat.com
+Date: Thu, 09 Jan 2014 08:36:08 -0700
+Message-ID: <20140109153513.21446.31778.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-01-10 at 08:42 +0100, Alexander Gordeev wrote:
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Per the SR-IOV spec rev 1.1:
 
-Thanks for the changes.
+3.4.1.9 Header Type (Offset 0Eh)
 
-Acked-by: Alex Williamson <alex.williamson@redhat.com>
+"... For VFs, this register must be RO Zero."
 
-> ---
->  drivers/vfio/pci/vfio_pci_intrs.c |   12 ++++++++----
->  1 files changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-> index 641bc87..4a9db1d 100644
-> --- a/drivers/vfio/pci/vfio_pci_intrs.c
-> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
-> @@ -482,15 +482,19 @@ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
->  		for (i = 0; i < nvec; i++)
->  			vdev->msix[i].entry = i;
->  
-> -		ret = pci_enable_msix(pdev, vdev->msix, nvec);
-> -		if (ret) {
-> +		ret = pci_enable_msix_range(pdev, vdev->msix, 1, nvec);
-> +		if (ret < nvec) {
-> +			if (ret > 0)
-> +				pci_disable_msix(pdev);
->  			kfree(vdev->msix);
->  			kfree(vdev->ctx);
->  			return ret;
->  		}
->  	} else {
-> -		ret = pci_enable_msi_block(pdev, nvec);
-> -		if (ret) {
-> +		ret = pci_enable_msi_range(pdev, 1, nvec);
-> +		if (ret < nvec) {
-> +			if (ret > 0)
-> +				pci_disable_msi(pdev);
->  			kfree(vdev->ctx);
->  			return ret;
->  		}
-> -- 
-> 1.7.7.6
-> 
+Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
+NIC.  When they do it makes us handle ACS testing and therefore IOMMU
+groups as if they were actual multifunction devices and require ACS
+capabilities to make sure there's no peer-to-peer between functions.
+VFs are never traditional multifunction devices, so simply clear this
+bit before we get any further into setup.
 
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/iov.c |    1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 1fe2d6f..e2fbb67 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -84,6 +84,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	virtfn->dev.parent = dev->dev.parent;
+ 	virtfn->physfn = pci_dev_get(dev);
+ 	virtfn->is_virtfn = 1;
++	virtfn->multifunction = 0;
+ 
+ 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+ 		res = dev->resource + PCI_IOV_RESOURCES + i;
 
