@@ -1,68 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:36827 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaAKB1w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:27:52 -0500
-Received: by mail-pd0-f182.google.com with SMTP id v10so5207428pde.41
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:52 -0800 (PST)
-Subject: [PATCH v2 09/12] PCI: Remove unused alloc_pci_dev()
-To: Stephen Hemminger <stephen@networkplumber.org>,
-	linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yu Zhao <yu.zhao@intel.com>
-Date: Fri, 10 Jan 2014 18:27:50 -0700
-Message-ID: <20140111012749.14505.39904.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:50802 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754343AbaAISJA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 13:09:00 -0500
+Received: by mail-ie0-f174.google.com with SMTP id at1so3971450iec.33
+        for <linux-pci@vger.kernel.org>; Thu, 09 Jan 2014 10:09:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20140109153513.21446.31778.stgit@bling.home>
+References: <20140109153513.21446.31778.stgit@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 9 Jan 2014 11:08:38 -0700
+Message-ID: <CAErSpo4Asnx4JiZvppZLUzxmVymz0t-fHXRFMr81-Qz31XyR+g@mail.gmail.com>
+Subject: Re: [PATCH] pci/iov: VFs are never multifunction
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	sathya.perla@emulex.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ajit.khaparde@emulex.com, Don Dutile <ddutile@redhat.com>,
+	subbu.seetharaman@emulex.com, Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
+On Thu, Jan 9, 2014 at 8:36 AM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> Per the SR-IOV spec rev 1.1:
+>
+> 3.4.1.9 Header Type (Offset 0Eh)
+>
+> "... For VFs, this register must be RO Zero."
+>
+> Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
+> NIC.  When they do it makes us handle ACS testing and therefore IOMMU
+> groups as if they were actual multifunction devices and require ACS
+> capabilities to make sure there's no peer-to-peer between functions.
+> VFs are never traditional multifunction devices, so simply clear this
+> bit before we get any further into setup.
 
-My philosophy is unused code is dead code.  And dead code is subject to bit
-rot and is a likely source of bugs.  Use it or lose it.
+This seems reasonable.  Do you have "lspci -vvxxxx" output for this
+device?  I'd like to save it for future reference.
 
-This removes this unused and deprecated interface:
-
-    alloc_pci_dev()
-
-[bhelgaas: split to separate patch]
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    6 ------
- include/linux/pci.h |    1 -
- 2 files changed, 7 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 38e403dddf6e..a4f53b677185 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1242,12 +1242,6 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_alloc_dev);
- 
--struct pci_dev *alloc_pci_dev(void)
--{
--	return pci_alloc_dev(NULL);
--}
--EXPORT_SYMBOL(alloc_pci_dev);
--
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 				 int crs_timeout)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9d860912dd88..da76c757d0ac 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -375,7 +375,6 @@ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
- }
- 
- struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
--struct pci_dev * __deprecated alloc_pci_dev(void);
- 
- #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
- #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
-
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/pci/iov.c |    1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 1fe2d6f..e2fbb67 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -84,6 +84,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>         virtfn->dev.parent = dev->dev.parent;
+>         virtfn->physfn = pci_dev_get(dev);
+>         virtfn->is_virtfn = 1;
+> +       virtfn->multifunction = 0;
+>
+>         for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>                 res = dev->resource + PCI_IOV_RESOURCES + i;
+>
