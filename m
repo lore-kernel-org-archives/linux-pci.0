@@ -1,212 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:14097
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751104AbaAHFCJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 00:02:09 -0500
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 11/12][v4] pci: fsl: update PCI EDAC driver
-Date: Wed, 8 Jan 2014 13:02:02 +0800
-Message-ID: <1389157323-3088-11-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <bfe1b6a0b2494c71be43fea45f413575@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
+ <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
+ <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
+ <4b24688d857e432eb7ecf9095c95b742@DM2PR05MB671.namprd05.prod.outlook.com> <bfe1b6a0b2494c71be43fea45f413575@DM2PR05MB671.namprd05.prod.outlook.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 9 Jan 2014 13:58:21 -0700
+Message-ID: <CAErSpo4gGW2r4X7UuefwcYTX=c4irWc60w2UCT0e_U-uSaujow@mail.gmail.com>
+Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently, during removal
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yhlu.kernel@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. The pci-fsl-common driver has set fsl_pci to device as drvdata,
-so EDAC driver can not call dev_set_drvdata() again. fsl_pci
-contains regs field to point PCI CCSR, so EDAC may directly use
-the pointer and not need to call devm_ioremap().
-2. Add mpc85xx_pci_err_remove() to disable PCI error interrupt
-and delete PCI EDAC from EDAC subsystem.
-3. AER uses the same IRQ, so change IRQ handling mode as shared
-to avoid AER can not request IRQ.
+On Thu, Jan 9, 2014 at 1:45 PM, Rajat Jain <rajatjain@juniper.net> wrote:
+> Hi Bjorn,
+>
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>> owner@vger.kernel.org] On Behalf Of Rajat Jain
+>> Sent: Tuesday, January 07, 2014 10:21 AM
+>> To: Bjorn Helgaas; Rajat Jain
+>> Cc: Rajat Jain; Kenji Kaneshige; Alex Williamson; Yijing Wang; linux-
+>> pci@vger.kernel.org; linux-kernel@vger.kernel.org; Yinghai Lu; Guenter
+>> Roeck; Yinghai Lu
+>> Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
+>> during removal
+>>
+>> Hello Bjorn / Yinghai,
+>>
+>> > -----Original Message-----
+>> > From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> > Sent: Monday, January 06, 2014 4:04 PM
+>> > To: Rajat Jain
+>> > Cc: Rajat Jain; Kenji Kaneshige; Alex Williamson; Yijing Wang; linux-
+>> > pci@vger.kernel.org; linux-kernel@vger.kernel.org; Yinghai Lu; Guenter
+>> > Roeck; Rajat Jain; Yinghai Lu
+>> > Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link
+>> > permanently, during removal
+>> >
+>> > On Sun, Jan 5, 2014 at 10:53 AM, Rajat Jain <rajatxjain@gmail.com>
+>> > wrote:
+>> > > Hello Bjorn,
+>> > >
+>> > > Just checking on the fate of this patch set...
+>> > >
+>> > > On Tue, Dec 17, 2013 at 5:02 PM, Bjorn Helgaas <bhelgaas@google.com>
+>> > wrote:
+>> > >> [+cc yinghai@kernel.org (seems to be Yinghai's preferred email]
+>> > >>
+>> > >> On Tue, Dec 17, 2013 at 12:06:05PM -0800, Rajat Jain wrote:
+>> > >>> We need future link up events for hot-add, thus don't disable the
+>> > >>> link permanently during device removal. Also, remove the static
+>> > >>> functions that are now left unused.
+>> > >>
+>> > >> The changelog should mention that this reverts part of 2debd9289997
+>> > ("PCI:
+>> > >> pciehp: Disable/enable link during slot power off/on").
+>> > >
+>> > > Sure. Do you want me to submit another patch set (bumping up the
+>> > > version) with this change log, or you'd want to add this change log
+>> > > while merging?
+>> > >
+>> > >>
+>> > >> Yinghai, can you tell us whether this is an issue on your systems?
+>> > >
+>> > > As Yinghai confirms further down this thread, his issue was
+>> > > confirmed by Intel to be a bug in the repeater chip.
+>> > > ----------------------------------
+>> > > Yinghai writes:
+>> > >> According to HW guys and Intel, that should be bug of repeater.
+>> > >>
+>> > > ---------------------------------
+>> > >  I don't know about the details of his scenario, except that when
+>> > > the adapter was disabled the repeater kept on flapping the link up &
+>> > > down (and hence disabling the link solved the problem then). Yinghai
+>> > > couldn't test, but I believe with this patch even if we disable
+>> > > presence detect interrupt, the "adapter present / no present"
+>> > > messages would (rightly) convert to "Link Up / Link Down" messages
+>> > > (since the repeater keeps on flapping the link).
+>> > >
+>> > > Since it is a platform specific bug, I'm not sure what can be done
+>> > > to remove those messages except may be reduce the verbosity? If
+>> > > you'd like I could change all the INFO messages to DBG messages.
+>> >
+>> > Even if it's a defect in a particular piece of hardware, I don't want
+>> > to regress on that hardware, even if the regression is just extra
+>> > messages that we didn't see before.
+>> >
+>> > I think ideally we would add some sort of quirk for that hardware so
+>> > it works just as well as it does today.  I think extra messages will
+>> > lead to a bug reports from users.
+>>
+>> Sure, I can do that. I think what the quirk would have to do is that for
+>> that particular platform, don't enable the link-state based hotplug.
+>> (Since link-state hotplug will not work if we disable the link
+>> permanently as we do today on card removal).
+>>
+>> But the question is how to determine that the quirk has to be applied? I
+>> think the objective is to apply the quirk to the platforms that have a
+>> "PCIe repeater". Since this does not depend on a PCI device / vendor ID,
+>> and I think the PCIe repeater is probably not even visible to the pciehp
+>> or the PCI subsystem, how do I determine that the quirk has to be
+>> applied?
+>
+> Any ideas on how do I identify the platforms that may have this problem?
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-change log:
-v4:
-Changed IRQ handling mode as shared to avoid aer can not request IRQ.
-v1-v3:
-Derived from http://patchwork.ozlabs.org/patch/278965/
-Added mpc85xx_pci_err_remove()
+I sure don't know.  I suspect you're right that the PCIe repeater is
+invisible to software, at least in terms of PCI config space.  Maybe
+we could use DMI to identify platforms.  That's not a very good
+solution because we have to come up with a list, but I can't think of
+a better way.  Yinghai knows more about the platform and might have
+better ideas.
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
+Bjorn
 
- arch/powerpc/sysdev/fsl_pci.h |  6 +++++
- drivers/edac/mpc85xx_edac.c   | 61 +++++++++++++++++++++++++------------------
- drivers/edac/mpc85xx_edac.h   |  1 +
- 4 files changed, 43 insertions(+), 26 deletions(-)
-
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index 6d9bec4..2e3455e 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -236,6 +236,7 @@ void fsl_arch_pci_sys_remove(struct fsl_pci *pci)
- 	if (!hose)
- 		return;
- 
-+	mpc85xx_pci_err_remove(to_platform_device(pci->dev));
- 	pcibios_free_controller(hose);
- }
- 
-diff --git a/arch/powerpc/sysdev/fsl_pci.h b/arch/powerpc/sysdev/fsl_pci.h
-index ce77aad..ae4dbe2 100644
---- a/arch/powerpc/sysdev/fsl_pci.h
-+++ b/arch/powerpc/sysdev/fsl_pci.h
-@@ -35,11 +35,17 @@ static inline void fsl_pci_assign_primary(void) {}
- 
- #ifdef CONFIG_EDAC_MPC85XX
- int mpc85xx_pci_err_probe(struct platform_device *op);
-+int mpc85xx_pci_err_remove(struct platform_device *op);
- #else
- static inline int mpc85xx_pci_err_probe(struct platform_device *op)
- {
- 	return -ENOTSUPP;
- }
-+static inline int mpc85xx_pci_err_remove(struct platform_device *op)
-+{
-+	return -ENOTSUPP;
-+}
-+
- #endif
- 
- #ifdef CONFIG_FSL_PCI
-diff --git a/drivers/edac/mpc85xx_edac.c b/drivers/edac/mpc85xx_edac.c
-index fd46b0b..ea37db9 100644
---- a/drivers/edac/mpc85xx_edac.c
-+++ b/drivers/edac/mpc85xx_edac.c
-@@ -21,6 +21,7 @@
- 
- #include <linux/of_platform.h>
- #include <linux/of_device.h>
-+#include <linux/fsl/pci-common.h>
- #include "edac_module.h"
- #include "edac_core.h"
- #include "mpc85xx_edac.h"
-@@ -214,11 +215,13 @@ static irqreturn_t mpc85xx_pci_isr(int irq, void *dev_id)
- 
- int mpc85xx_pci_err_probe(struct platform_device *op)
- {
-+	struct fsl_pci *fslpci;
- 	struct edac_pci_ctl_info *pci;
- 	struct mpc85xx_pci_pdata *pdata;
--	struct resource r;
- 	int res = 0;
- 
-+	fslpci = platform_get_drvdata(op);
-+
- 	if (!devres_open_group(&op->dev, mpc85xx_pci_err_probe, GFP_KERNEL))
- 		return -ENOMEM;
- 
-@@ -239,7 +242,6 @@ int mpc85xx_pci_err_probe(struct platform_device *op)
- 	pdata = pci->pvt_info;
- 	pdata->name = "mpc85xx_pci_err";
- 	pdata->irq = NO_IRQ;
--	dev_set_drvdata(&op->dev, pci);
- 	pci->dev = &op->dev;
- 	pci->mod_name = EDAC_MOD_STR;
- 	pci->ctl_name = pdata->name;
-@@ -250,30 +252,8 @@ int mpc85xx_pci_err_probe(struct platform_device *op)
- 
- 	pdata->edac_idx = edac_pci_idx++;
- 
--	res = of_address_to_resource(op->dev.of_node, 0, &r);
--	if (res) {
--		printk(KERN_ERR "%s: Unable to get resource for "
--		       "PCI err regs\n", __func__);
--		goto err;
--	}
--
- 	/* we only need the error registers */
--	r.start += 0xe00;
--
--	if (!devm_request_mem_region(&op->dev, r.start, resource_size(&r),
--					pdata->name)) {
--		printk(KERN_ERR "%s: Error while requesting mem region\n",
--		       __func__);
--		res = -EBUSY;
--		goto err;
--	}
--
--	pdata->pci_vbase = devm_ioremap(&op->dev, r.start, resource_size(&r));
--	if (!pdata->pci_vbase) {
--		printk(KERN_ERR "%s: Unable to setup PCI err regs\n", __func__);
--		res = -ENOMEM;
--		goto err;
--	}
-+	pdata->pci_vbase = (void *)fslpci->regs + MPC85XX_PCI_ERR_OFFSET;
- 
- 	orig_pci_err_cap_dr =
- 	    in_be32(pdata->pci_vbase + MPC85XX_PCI_ERR_CAP_DR);
-@@ -297,7 +277,8 @@ int mpc85xx_pci_err_probe(struct platform_device *op)
- 	if (edac_op_state == EDAC_OPSTATE_INT) {
- 		pdata->irq = irq_of_parse_and_map(op->dev.of_node, 0);
- 		res = devm_request_irq(&op->dev, pdata->irq,
--				       mpc85xx_pci_isr, IRQF_DISABLED,
-+				       mpc85xx_pci_isr,
-+				       IRQF_DISABLED | IRQF_SHARED,
- 				       "[EDAC] PCI err", pci);
- 		if (res < 0) {
- 			printk(KERN_ERR
-@@ -327,6 +308,34 @@ err:
- }
- EXPORT_SYMBOL(mpc85xx_pci_err_probe);
- 
-+int mpc85xx_pci_err_remove(struct platform_device *op)
-+{
-+	struct edac_pci_ctl_info *pci;
-+	struct mpc85xx_pci_pdata *pdata;
-+
-+	edac_dbg(0, "\n");
-+
-+	pci = edac_pci_del_device(&op->dev);
-+
-+	if (!pci)
-+		return -EINVAL;
-+
-+	pdata = pci->pvt_info;
-+
-+	out_be32(pdata->pci_vbase + MPC85XX_PCI_ERR_CAP_DR,
-+		 orig_pci_err_cap_dr);
-+
-+	out_be32(pdata->pci_vbase + MPC85XX_PCI_ERR_EN, orig_pci_err_en);
-+
-+	if (edac_op_state == EDAC_OPSTATE_INT)
-+		irq_dispose_mapping(pdata->irq);
-+
-+	edac_pci_free_ctl_info(pci);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(mpc85xx_pci_err_remove);
-+
- #endif				/* CONFIG_PCI */
- 
- /**************************** L2 Err device ***************************/
-diff --git a/drivers/edac/mpc85xx_edac.h b/drivers/edac/mpc85xx_edac.h
-index 932016f..3ba235a 100644
---- a/drivers/edac/mpc85xx_edac.h
-+++ b/drivers/edac/mpc85xx_edac.h
-@@ -131,6 +131,7 @@
- #define PCI_EDE_PERR_MASK	(PCI_EDE_TGT_PERR | PCI_EDE_MST_PERR | \
- 				PCI_EDE_ADDR_PERR)
- 
-+#define MPC85XX_PCI_ERR_OFFSET		0x0e00
- #define MPC85XX_PCI_ERR_DR		0x0000
- #define MPC85XX_PCI_ERR_CAP_DR		0x0004
- #define MPC85XX_PCI_ERR_EN		0x0008
--- 
-1.8.1.2
-
-
+>> If (hw_has_pcie_repeater)
+>>       Don't use link-state hotplug (and disable link permanently during
+>> card removal) Else
+>>       Use link-state hotplug (and don't disable the link permanently)
+>>
+>>
+>> Yinghai: Since I do not have that hardware, I will need some help in
+>> testing the patch with the quirk. I was wondering if you'd still have
+>> that hardware around and would be able to help me with testing?
+>>
+>> Thanks,
+>>
+>> Rajat
+>>   {.n +       +%  lzwm  b 맲  r  zX   \ )   w*jg         ݢj/   z ޖ  2 ޙ
+>> & )ߡ a       G   h   j:+v   w ٥
