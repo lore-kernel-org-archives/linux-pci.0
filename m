@@ -1,240 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:42969 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245AbaA2J26 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 04:28:58 -0500
-Received: by mail-wg0-f54.google.com with SMTP id x13so2979748wgg.9
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 01:28:57 -0800 (PST)
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:29833
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753095AbaAIUpq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 15:45:46 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Rajat Jain <rajatjain@juniper.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatxjain@gmail.com>
+CC: Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yhlu.kernel@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
+ during removal
+Date: Thu, 9 Jan 2014 20:45:34 +0000
+Message-ID: <bfe1b6a0b2494c71be43fea45f413575@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
+ <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
+ <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
+ <4b24688d857e432eb7ecf9095c95b742@DM2PR05MB671.namprd05.prod.outlook.com>
+In-Reply-To: <4b24688d857e432eb7ecf9095c95b742@DM2PR05MB671.namprd05.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAM9uW_7CB_E2Ok=BvVCVqyGTpKk9GX8HqN12B2m59Dj12ZW+HA@mail.gmail.com>
-References: <CAM9uW_75p7rt4V82TysSKmVbsYYgWqYwgaecyHMa+q4kSRwzUw@mail.gmail.com>
- <CAErSpo472PpApvYf1oV5kyW24u7GJrzMhTtMw3TZ4A2pM7jZ9g@mail.gmail.com> <CAM9uW_7CB_E2Ok=BvVCVqyGTpKk9GX8HqN12B2m59Dj12ZW+HA@mail.gmail.com>
-From: Kamel BOUHARA <k.bouhara@gmail.com>
-Date: Wed, 29 Jan 2014 10:28:37 +0100
-Message-ID: <CAM9uW_56VQTui7ggin2kCHH=5JfS2SCm--T51azUZA3da8st9g@mail.gmail.com>
-Subject: Fwd: PCIe trouble on imx6q
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
----------- Forwarded message ----------
-From: Kamel BOUHARA <k.bouhara@gmail.com>
-Date: 2014-01-29
-Subject: Re: PCIe trouble on imx6q
-To: Bjorn Helgaas <bhelgaas@google.com>
+SGkgQmpvcm4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgt
+cGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdl
+ci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUmFqYXQgSmFpbg0KPiBTZW50OiBUdWVzZGF5LCBK
+YW51YXJ5IDA3LCAyMDE0IDEwOjIxIEFNDQo+IFRvOiBCam9ybiBIZWxnYWFzOyBSYWphdCBKYWlu
+DQo+IENjOiBSYWphdCBKYWluOyBLZW5qaSBLYW5lc2hpZ2U7IEFsZXggV2lsbGlhbXNvbjsgWWlq
+aW5nIFdhbmc7IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdl
+ci5rZXJuZWwub3JnOyBZaW5naGFpIEx1OyBHdWVudGVyDQo+IFJvZWNrOyBZaW5naGFpIEx1DQo+
+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggdjMgNC84XSBwY2llaHA6IERvbid0IGRpc2FibGUgdGhlIGxp
+bmsgcGVybWFuZW50bHksDQo+IGR1cmluZyByZW1vdmFsDQo+IA0KPiBIZWxsbyBCam9ybiAvIFlp
+bmdoYWksDQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTogQmpv
+cm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4gU2VudDogTW9uZGF5
+LCBKYW51YXJ5IDA2LCAyMDE0IDQ6MDQgUE0NCj4gPiBUbzogUmFqYXQgSmFpbg0KPiA+IENjOiBS
+YWphdCBKYWluOyBLZW5qaSBLYW5lc2hpZ2U7IEFsZXggV2lsbGlhbXNvbjsgWWlqaW5nIFdhbmc7
+IGxpbnV4LQ0KPiA+IHBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
+bC5vcmc7IFlpbmdoYWkgTHU7IEd1ZW50ZXINCj4gPiBSb2VjazsgUmFqYXQgSmFpbjsgWWluZ2hh
+aSBMdQ0KPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMgNC84XSBwY2llaHA6IERvbid0IGRpc2Fi
+bGUgdGhlIGxpbmsNCj4gPiBwZXJtYW5lbnRseSwgZHVyaW5nIHJlbW92YWwNCj4gPg0KPiA+IE9u
+IFN1biwgSmFuIDUsIDIwMTQgYXQgMTA6NTMgQU0sIFJhamF0IEphaW4gPHJhamF0eGphaW5AZ21h
+aWwuY29tPg0KPiA+IHdyb3RlOg0KPiA+ID4gSGVsbG8gQmpvcm4sDQo+ID4gPg0KPiA+ID4gSnVz
+dCBjaGVja2luZyBvbiB0aGUgZmF0ZSBvZiB0aGlzIHBhdGNoIHNldC4uLg0KPiA+ID4NCj4gPiA+
+IE9uIFR1ZSwgRGVjIDE3LCAyMDEzIGF0IDU6MDIgUE0sIEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFz
+QGdvb2dsZS5jb20+DQo+ID4gd3JvdGU6DQo+ID4gPj4gWytjYyB5aW5naGFpQGtlcm5lbC5vcmcg
+KHNlZW1zIHRvIGJlIFlpbmdoYWkncyBwcmVmZXJyZWQgZW1haWxdDQo+ID4gPj4NCj4gPiA+PiBP
+biBUdWUsIERlYyAxNywgMjAxMyBhdCAxMjowNjowNVBNIC0wODAwLCBSYWphdCBKYWluIHdyb3Rl
+Og0KPiA+ID4+PiBXZSBuZWVkIGZ1dHVyZSBsaW5rIHVwIGV2ZW50cyBmb3IgaG90LWFkZCwgdGh1
+cyBkb24ndCBkaXNhYmxlIHRoZQ0KPiA+ID4+PiBsaW5rIHBlcm1hbmVudGx5IGR1cmluZyBkZXZp
+Y2UgcmVtb3ZhbC4gQWxzbywgcmVtb3ZlIHRoZSBzdGF0aWMNCj4gPiA+Pj4gZnVuY3Rpb25zIHRo
+YXQgYXJlIG5vdyBsZWZ0IHVudXNlZC4NCj4gPiA+Pg0KPiA+ID4+IFRoZSBjaGFuZ2Vsb2cgc2hv
+dWxkIG1lbnRpb24gdGhhdCB0aGlzIHJldmVydHMgcGFydCBvZiAyZGViZDkyODk5OTcNCj4gPiAo
+IlBDSToNCj4gPiA+PiBwY2llaHA6IERpc2FibGUvZW5hYmxlIGxpbmsgZHVyaW5nIHNsb3QgcG93
+ZXIgb2ZmL29uIikuDQo+ID4gPg0KPiA+ID4gU3VyZS4gRG8geW91IHdhbnQgbWUgdG8gc3VibWl0
+IGFub3RoZXIgcGF0Y2ggc2V0IChidW1waW5nIHVwIHRoZQ0KPiA+ID4gdmVyc2lvbikgd2l0aCB0
+aGlzIGNoYW5nZSBsb2csIG9yIHlvdSdkIHdhbnQgdG8gYWRkIHRoaXMgY2hhbmdlIGxvZw0KPiA+
+ID4gd2hpbGUgbWVyZ2luZz8NCj4gPiA+DQo+ID4gPj4NCj4gPiA+PiBZaW5naGFpLCBjYW4geW91
+IHRlbGwgdXMgd2hldGhlciB0aGlzIGlzIGFuIGlzc3VlIG9uIHlvdXIgc3lzdGVtcz8NCj4gPiA+
+DQo+ID4gPiBBcyBZaW5naGFpIGNvbmZpcm1zIGZ1cnRoZXIgZG93biB0aGlzIHRocmVhZCwgaGlz
+IGlzc3VlIHdhcw0KPiA+ID4gY29uZmlybWVkIGJ5IEludGVsIHRvIGJlIGEgYnVnIGluIHRoZSBy
+ZXBlYXRlciBjaGlwLg0KPiA+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0K
+PiA+ID4gWWluZ2hhaSB3cml0ZXM6DQo+ID4gPj4gQWNjb3JkaW5nIHRvIEhXIGd1eXMgYW5kIElu
+dGVsLCB0aGF0IHNob3VsZCBiZSBidWcgb2YgcmVwZWF0ZXIuDQo+ID4gPj4NCj4gPiA+IC0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+ID4gIEkgZG9uJ3Qga25vdyBhYm91dCB0
+aGUgZGV0YWlscyBvZiBoaXMgc2NlbmFyaW8sIGV4Y2VwdCB0aGF0IHdoZW4NCj4gPiA+IHRoZSBh
+ZGFwdGVyIHdhcyBkaXNhYmxlZCB0aGUgcmVwZWF0ZXIga2VwdCBvbiBmbGFwcGluZyB0aGUgbGlu
+ayB1cCAmDQo+ID4gPiBkb3duIChhbmQgaGVuY2UgZGlzYWJsaW5nIHRoZSBsaW5rIHNvbHZlZCB0
+aGUgcHJvYmxlbSB0aGVuKS4gWWluZ2hhaQ0KPiA+ID4gY291bGRuJ3QgdGVzdCwgYnV0IEkgYmVs
+aWV2ZSB3aXRoIHRoaXMgcGF0Y2ggZXZlbiBpZiB3ZSBkaXNhYmxlDQo+ID4gPiBwcmVzZW5jZSBk
+ZXRlY3QgaW50ZXJydXB0LCB0aGUgImFkYXB0ZXIgcHJlc2VudCAvIG5vIHByZXNlbnQiDQo+ID4g
+PiBtZXNzYWdlcyB3b3VsZCAocmlnaHRseSkgY29udmVydCB0byAiTGluayBVcCAvIExpbmsgRG93
+biIgbWVzc2FnZXMNCj4gPiA+IChzaW5jZSB0aGUgcmVwZWF0ZXIga2VlcHMgb24gZmxhcHBpbmcg
+dGhlIGxpbmspLg0KPiA+ID4NCj4gPiA+IFNpbmNlIGl0IGlzIGEgcGxhdGZvcm0gc3BlY2lmaWMg
+YnVnLCBJJ20gbm90IHN1cmUgd2hhdCBjYW4gYmUgZG9uZQ0KPiA+ID4gdG8gcmVtb3ZlIHRob3Nl
+IG1lc3NhZ2VzIGV4Y2VwdCBtYXkgYmUgcmVkdWNlIHRoZSB2ZXJib3NpdHk/IElmDQo+ID4gPiB5
+b3UnZCBsaWtlIEkgY291bGQgY2hhbmdlIGFsbCB0aGUgSU5GTyBtZXNzYWdlcyB0byBEQkcgbWVz
+c2FnZXMuDQo+ID4NCj4gPiBFdmVuIGlmIGl0J3MgYSBkZWZlY3QgaW4gYSBwYXJ0aWN1bGFyIHBp
+ZWNlIG9mIGhhcmR3YXJlLCBJIGRvbid0IHdhbnQNCj4gPiB0byByZWdyZXNzIG9uIHRoYXQgaGFy
+ZHdhcmUsIGV2ZW4gaWYgdGhlIHJlZ3Jlc3Npb24gaXMganVzdCBleHRyYQ0KPiA+IG1lc3NhZ2Vz
+IHRoYXQgd2UgZGlkbid0IHNlZSBiZWZvcmUuDQo+ID4NCj4gPiBJIHRoaW5rIGlkZWFsbHkgd2Ug
+d291bGQgYWRkIHNvbWUgc29ydCBvZiBxdWlyayBmb3IgdGhhdCBoYXJkd2FyZSBzbw0KPiA+IGl0
+IHdvcmtzIGp1c3QgYXMgd2VsbCBhcyBpdCBkb2VzIHRvZGF5LiAgSSB0aGluayBleHRyYSBtZXNz
+YWdlcyB3aWxsDQo+ID4gbGVhZCB0byBhIGJ1ZyByZXBvcnRzIGZyb20gdXNlcnMuDQo+IA0KPiBT
+dXJlLCBJIGNhbiBkbyB0aGF0LiBJIHRoaW5rIHdoYXQgdGhlIHF1aXJrIHdvdWxkIGhhdmUgdG8g
+ZG8gaXMgdGhhdCBmb3INCj4gdGhhdCBwYXJ0aWN1bGFyIHBsYXRmb3JtLCBkb24ndCBlbmFibGUg
+dGhlIGxpbmstc3RhdGUgYmFzZWQgaG90cGx1Zy4NCj4gKFNpbmNlIGxpbmstc3RhdGUgaG90cGx1
+ZyB3aWxsIG5vdCB3b3JrIGlmIHdlIGRpc2FibGUgdGhlIGxpbmsNCj4gcGVybWFuZW50bHkgYXMg
+d2UgZG8gdG9kYXkgb24gY2FyZCByZW1vdmFsKS4NCj4gDQo+IEJ1dCB0aGUgcXVlc3Rpb24gaXMg
+aG93IHRvIGRldGVybWluZSB0aGF0IHRoZSBxdWlyayBoYXMgdG8gYmUgYXBwbGllZD8gSQ0KPiB0
+aGluayB0aGUgb2JqZWN0aXZlIGlzIHRvIGFwcGx5IHRoZSBxdWlyayB0byB0aGUgcGxhdGZvcm1z
+IHRoYXQgaGF2ZSBhDQo+ICJQQ0llIHJlcGVhdGVyIi4gU2luY2UgdGhpcyBkb2VzIG5vdCBkZXBl
+bmQgb24gYSBQQ0kgZGV2aWNlIC8gdmVuZG9yIElELA0KPiBhbmQgSSB0aGluayB0aGUgUENJZSBy
+ZXBlYXRlciBpcyBwcm9iYWJseSBub3QgZXZlbiB2aXNpYmxlIHRvIHRoZSBwY2llaHANCj4gb3Ig
+dGhlIFBDSSBzdWJzeXN0ZW0sIGhvdyBkbyBJIGRldGVybWluZSB0aGF0IHRoZSBxdWlyayBoYXMg
+dG8gYmUNCj4gYXBwbGllZD8NCg0KQW55IGlkZWFzIG9uIGhvdyBkbyBJIGlkZW50aWZ5IHRoZSBw
+bGF0Zm9ybXMgdGhhdCBtYXkgaGF2ZSB0aGlzIHByb2JsZW0/IA0KDQpUaGFua3MsDQoNClJhamF0
+DQoNCg0KPiANCj4gSWYgKGh3X2hhc19wY2llX3JlcGVhdGVyKQ0KPiAJRG9uJ3QgdXNlIGxpbmst
+c3RhdGUgaG90cGx1ZyAoYW5kIGRpc2FibGUgbGluayBwZXJtYW5lbnRseSBkdXJpbmcNCj4gY2Fy
+ZCByZW1vdmFsKSBFbHNlDQo+IAlVc2UgbGluay1zdGF0ZSBob3RwbHVnIChhbmQgZG9uJ3QgZGlz
+YWJsZSB0aGUgbGluayBwZXJtYW5lbnRseSkNCj4gDQo+IA0KPiBZaW5naGFpOiBTaW5jZSBJIGRv
+IG5vdCBoYXZlIHRoYXQgaGFyZHdhcmUsIEkgd2lsbCBuZWVkIHNvbWUgaGVscCBpbg0KPiB0ZXN0
+aW5nIHRoZSBwYXRjaCB3aXRoIHRoZSBxdWlyay4gSSB3YXMgd29uZGVyaW5nIGlmIHlvdSdkIHN0
+aWxsIGhhdmUNCj4gdGhhdCBoYXJkd2FyZSBhcm91bmQgYW5kIHdvdWxkIGJlIGFibGUgdG8gaGVs
+cCBtZSB3aXRoIHRlc3Rpbmc/DQo+IA0KPiBUaGFua3MsDQo+IA0KPiBSYWphdA0KPiAEIHsubiAr
+ICAgICAgICslICBsendtICBiIOunsiAgciAgelggIBpcICkgICB3KmpnICAgHiAgICAg3aJqLyAg
+IHog3pYgIDIg3pkNCj4gJiAp36EgYSAgfyAgHiBHICAgaCAPIGo6K3YgICB3INmlDQo=
 
-
-2014-01-28 Bjorn Helgaas <bhelgaas@google.com>:
-> [+cc Richard, Shawn, linux-arm-kernel (all from MAINTAINERS)]
->
-> On Tue, Jan 28, 2014 at 1:02 AM, Kamel BOUHARA <k.bouhara@gmail.com> wrote:
->> Hello,
->>
->> Im getting trouble with kernel 3.13 at boot time, the pcie link failed
->> to get up with the following log:
->> ------------[ cut here ]------------
->> WARNING: CPU: 0 PID: 1 at drivers/gpio/gpiolib.c:159 gpio_to_desc+0x34/0x48()
->> invalid GPIO -2
->> Modules linked in:
->> CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.13.0+ #4
->> Backtrace:
->> [<8001217c>] (dump_backtrace) from [<80012460>] (show_stack+0x18/0x1c)
->>  r6:802b9548 r5:00000000 r4:808d3060 r3:00000000
->> [<80012448>] (show_stack) from [<806414fc>] (dump_stack+0x84/0x9c)
->> [<80641478>] (dump_stack) from [<800289f8>] (warn_slowpath_common+0x70/0x94)
->>  r5:00000009 r4:bf05bcb0
->> [<80028988>] (warn_slowpath_common) from [<80028a54>]
->> (warn_slowpath_fmt+0x38/0x40)
->>  r8:01f00000 r7:00000000 r6:0011cc11 r5:808b68c0 r4:bf24fa30
->> [<80028a20>] (warn_slowpath_fmt) from [<802b9548>] (gpio_to_desc+0x34/0x48)
->>  r3:fffffffe r2:807d23fc
->> [<802b9514>] (gpio_to_desc) from [<802d9de0>] (imx6_pcie_host_init+0x174/0x434)
->> [<802d9c6c>] (imx6_pcie_host_init) from [<80886dbc>]
->> (dw_pcie_host_init+0x348/0x41c)
->>  r6:00000000 r5:808d52cc r4:00000020 r3:802d9c6c
->> [<80886a74>] (dw_pcie_host_init) from [<808871d4>] (imx6_pcie_probe+0x320/0x3dc)
->>  r10:00000000 r9:000000c4 r8:808d539c r7:bf7e3384 r6:bf24fa30 r5:bf135810
->>  r4:bf24fa10
->> [<80886eb4>] (imx6_pcie_probe) from [<8034b670>] (platform_drv_probe+0x20/0x50)
->>  r8:808d539c r7:00000000 r6:00000000 r5:808d539c r4:bf135810
->> [<8034b650>] (platform_drv_probe) from [<80349c74>]
->> (driver_probe_device+0x118/0x234)
->>  r5:bf135810 r4:80e526b8
->> [<80349b5c>] (driver_probe_device) from [<80349e78>] (__driver_attach+0x9c/0xa0)
->>  r8:80886e90 r7:00000000 r6:bf135844 r5:808d539c r4:bf135810 r3:00000000
->> [<80349ddc>] (__driver_attach) from [<8034806c>] (bus_for_each_dev+0x68/0x9c)
->>  r6:80349ddc r5:808d539c r4:00000000 r3:00000000
->> [<80348004>] (bus_for_each_dev) from [<8034972c>] (driver_attach+0x20/0x28)
->>  r6:808df6a8 r5:bf1f5e00 r4:808d539c
->> [<8034970c>] (driver_attach) from [<803493b0>] (bus_add_driver+0x148/0x1f4)
->> [<80349268>] (bus_add_driver) from [<8034a4c8>] (driver_register+0x80/0x100)
->>  r7:8090e640 r6:8090e640 r5:00000005 r4:808d539c
->> [<8034a448>] (driver_register) from [<8034b63c>]
->> (__platform_driver_register+0x50/0x64)
->>  r5:00000005 r4:808d5388
->> [<8034b5ec>] (__platform_driver_register) from [<8034b6e0>]
->> (platform_driver_probe+0x28/0xac)
->> [<8034b6b8>] (platform_driver_probe) from [<80886ea8>]
->> (imx6_pcie_init+0x18/0x24)
->>  r5:00000005 r4:808aa104
->> [<80886e90>] (imx6_pcie_init) from [<80008978>] (do_one_initcall+0x100/0x164)
->> [<80008878>] (do_one_initcall) from [<8085ecc0>]
->> (kernel_init_freeable+0x10c/0x1d0)
->>  r10:8089e060 r9:000000c4 r8:8089e050 r7:8090e640 r6:8090e640 r5:00000005
->>  r4:808aa104
->> [<8085ebb4>] (kernel_init_freeable) from [<8063b67c>] (kernel_init+0x10/0x120)
->>  r10:00000000 r9:00000000 r8:00000000 r7:00000000 r6:00000000 r5:8063b66c
->>  r4:00000000
->> [<8063b66c>] (kernel_init) from [<8000e9c8>] (ret_from_fork+0x14/0x2c)
->>  r4:00000000 r3:ffffffff
->> ---[ end trace b5e746dfc2398cd6 ]---
->> ------------[ cut here ]------------
->> WARNING: CPU: 0 PID: 1 at drivers/gpio/gpiolib.c:159 gpio_to_desc+0x34/0x48()
->> invalid GPIO -2
->> Modules linked in:
->> CPU: 0 PID: 1 Comm: swapper/0 Tainted: G        W    3.13.0+ #4
->> Backtrace:
->> [<8001217c>] (dump_backtrace) from [<80012460>] (show_stack+0x18/0x1c)
->>  r6:802b9548 r5:00000000 r4:808d3060 r3:00000000
->> [<80012448>] (show_stack) from [<806414fc>] (dump_stack+0x84/0x9c)
->> [<80641478>] (dump_stack) from [<800289f8>] (warn_slowpath_common+0x70/0x94)
->>  r5:00000009 r4:bf05bcb0
->> [<80028988>] (warn_slowpath_common) from [<80028a54>]
->> (warn_slowpath_fmt+0x38/0x40)
->>  r8:01f00000 r7:00000000 r6:0011cc11 r5:808b68c0 r4:bf24fa30
->> [<80028a20>] (warn_slowpath_fmt) from [<802b9548>] (gpio_to_desc+0x34/0x48)
->>  r3:fffffffe r2:807d23fc
->> [<802b9514>] (gpio_to_desc) from [<802d9df8>] (imx6_pcie_host_init+0x18c/0x434)
->> [<802d9c6c>] (imx6_pcie_host_init) from [<80886dbc>]
->> (dw_pcie_host_init+0x348/0x41c)
->>  r6:00000000 r5:808d52cc r4:00000020 r3:802d9c6c
->> [<80886a74>] (dw_pcie_host_init) from [<808871d4>] (imx6_pcie_probe+0x320/0x3dc)
->>  r10:00000000 r9:000000c4 r8:808d539c r7:bf7e3384 r6:bf24fa30 r5:bf135810
->>  r4:bf24fa10
->> [<80886eb4>] (imx6_pcie_probe) from [<8034b670>] (platform_drv_probe+0x20/0x50)
->>  r8:808d539c r7:00000000 r6:00000000 r5:808d539c r4:bf135810
->> [<8034b650>] (platform_drv_probe) from [<80349c74>]
->> (driver_probe_device+0x118/0x234)
->>  r5:bf135810 r4:80e526b8
->> [<80349b5c>] (driver_probe_device) from [<80349e78>] (__driver_attach+0x9c/0xa0)
->>  r8:80886e90 r7:00000000 r6:bf135844 r5:808d539c r4:bf135810 r3:00000000
->> [<80349ddc>] (__driver_attach) from [<8034806c>] (bus_for_each_dev+0x68/0x9c)
->>  r6:80349ddc r5:808d539c r4:00000000 r3:00000000
->> [<80348004>] (bus_for_each_dev) from [<8034972c>] (driver_attach+0x20/0x28)
->>  r6:808df6a8 r5:bf1f5e00 r4:808d539c
->> [<8034970c>] (driver_attach) from [<803493b0>] (bus_add_driver+0x148/0x1f4)
->> [<80349268>] (bus_add_driver) from [<8034a4c8>] (driver_register+0x80/0x100)
->>  r7:8090e640 r6:8090e640 r5:00000005 r4:808d539c
->> [<8034a448>] (driver_register) from [<8034b63c>]
->> (__platform_driver_register+0x50/0x64)
->>  r5:00000005 r4:808d5388
->> [<8034b5ec>] (__platform_driver_register) from [<8034b6e0>]
->> (platform_driver_probe+0x28/0xac)
->> [<8034b6b8>] (platform_driver_probe) from [<80886ea8>]
->> (imx6_pcie_init+0x18/0x24)
->>  r5:00000005 r4:808aa104
->> [<80886e90>] (imx6_pcie_init) from [<80008978>] (do_one_initcall+0x100/0x164)
->> [<80008878>] (do_one_initcall) from [<8085ecc0>]
->> (kernel_init_freeable+0x10c/0x1d0)
->>  r10:8089e060 r9:000000c4 r8:8089e050 r7:8090e640 r6:8090e640 r5:00000005
->>  r4:808aa104
->> [<8085ebb4>] (kernel_init_freeable) from [<8063b67c>] (kernel_init+0x10/0x120)
->>  r10:00000000 r9:00000000 r8:00000000 r7:00000000 r6:00000000 r5:8063b66c
->>  r4:00000000
->> [<8063b66c>] (kernel_init) from [<8000e9c8>] (ret_from_fork+0x14/0x2c)
->>  r4:00000000 r3:ffffffff
->> ---[ end trace b5e746dfc2398cd7 ]---
->> imx6q-pcie 1ffc000.pcie: phy link never came up
->> PCI host bridge to bus 0000:00
->> pci_bus 0000:00: root bus resource [io  0x1000-0x10000]
->> pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
->> pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
->
-> Not related to the GPIO/link problem, but something's wrong here --
-> the host bridge driver should be telling us what bus numbers are
-> behind the host bridge.  Since it didn't, the PCI core had to guess.
->
->> PCI: bus0: Fast back to back transfers disabled
->> PCI: bus1: Fast back to back transfers enabled
->> pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
->> pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-0x0110ffff pref]
->> pci 0000:00:00.0: PCI bridge to [bus 01]
->> pci 0000:00:00.0: PCI bridge to [bus 01]
->>
->> Please, any help is welcome.
->> Regards,
->> Kamel.B
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-So I suppose, this is not a hardware issue rather a  bad configuration ?
-Maybe the following log from lspci will be helpful ?
-
-root@phyFLEX-i:~ lspci -vvv
-00:00.0 PCI bridge: Device 16c3:abcd (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr+ Stepping- SERR+ FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Region 0: Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        I/O behind bridge: 0000f000-00000fff
-        Memory behind bridge: fff00000-000fffff
-        Prefetchable memory behind bridge: fff00000-000fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- <SERR- <PERR-
-        [virtual] Expansion ROM at 01100000 [disabled] [size=64K]
-        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA
-PME(D0+,D1+,D2-,D3hot+,D3cold+)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Mask+ 64bit+ Count=1/1 Enable+
-                Address: 0000000090000000  Data: 0000
-                Masking: 00000000  Pending: 00000000
-        Capabilities: [70] Express (v2) Root Port (Slot-), MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
-<64ns, L1 <1us
-                        ExtTag- RBE+ FLReset-
-                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+
-Unsupported+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
-AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1,
-Latency L0 <1us, L1 <8us
-                        ClockPM- Surprise- LLActRep+ BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
-SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal-
-PMEIntEna+ CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ ARIFwd-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance-
-SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range,
-EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB
-        Capabilities: [100] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [140] Virtual Channel <?>
-        Kernel driver in use: pcieport
