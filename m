@@ -1,60 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:46856 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754631AbaA1P2w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jan 2014 10:28:52 -0500
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Tue, 28 Jan 2014 10:28:51 -0500
-Message-ID: <52E7CCAD.5070008@linux.vnet.ibm.com>
-Date: Tue, 28 Jan 2014 09:28:45 -0600
-From: Brian King <brking@linux.vnet.ibm.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:45972 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756820AbaAIAYW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 19:24:22 -0500
+Received: by mail-ie0-f180.google.com with SMTP id tp5so2878654ieb.11
+        for <linux-pci@vger.kernel.org>; Wed, 08 Jan 2014 16:24:21 -0800 (PST)
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: Brian King <brking@us.ibm.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	linux-scsi@vger.kernel.org, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
-References: <cover.1389904166.git.agordeev@redhat.com> <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com> <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CA+2TWzXvZrVZDJA-KkuUVuCP8kwX3GENL_rTf=_dZ_HBqJUArw@mail.gmail.com>
+References: <CA+2TWzXvZrVZDJA-KkuUVuCP8kwX3GENL_rTf=_dZ_HBqJUArw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 8 Jan 2014 17:24:01 -0700
+Message-ID: <CAErSpo4BpCYQ1q8ogqAtn7pbCXkKHM4M4DCffF9m+Gd4tjit1w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Allocate prefetch mmio resource first when possible
+To: threeTigers Lin <threeflytigers@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Li Zefan <lizefan@huawei.com>, Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/28/2014 03:54 AM, Alexander Gordeev wrote:
-> On Fri, Jan 17, 2014 at 05:02:18PM +0100, Alexander Gordeev wrote:
->> As result deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range() and pci_enable_msix_range()
->> interfaces.
->>
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> 
-> Brian, James,
-> 
-> Could you please review patches 3 and 4?
+[+cc Yinghai]
 
-These look like they will conflict with a recent patch to
-the ipr driver:
+On Wed, Jan 8, 2014 at 11:17 AM, threeTigers Lin
+<threeflytigers@gmail.com> wrote:
+> From f7a37ed1c61b5939ccef810e28b25ecf3bfa9077 Mon Sep 17 00:00:00 2001
+> From: linmuhui <linmuhui@huawei.com>
+> Date: Thu, 9 Jan 2014 01:03:12 +0800
+> Subject: [PATCH] PCI: Allocate prefetch mmio resource first when possible
 
-http://www.spinics.net/lists/linux-scsi/msg71644.html
+This patch is not in the standard format and does not apply cleanly.
+See Documentation/SubmittingPatches.
 
-Do you want me to rediff your patches on top of this one,
-or do you want to keep the entire MSI series together
-and do the rediff? Otherwise the patches seem fine.
+> Hi Bjorn,
+>
+> PCI bus resources will be set up at pci_bridge_check_ranges() or
+> pci_read_bridge_bases(). In both cases, we can find that the PCI bus'
+> non-pref mmio will be assigned to bus->resource[1] and pref mmio will be
+> assigned to bus->resource[2]. So, in the scenario that we need to allocate
+> pref resources from PCI bus such as hotplug operation, the bus' non-pref
+> mmio will be quickly eaten up first if we try to allocate bus resources in
+> the order from bus->resource[0] to bus->resource[PCI_BRIDGE_RESOURCE_NUM -
+> 1] in the function pci_bus_alloc_resource(), even though there is enough
+> pref mmio resource of the bus. This may lead to the later requester who want
+> to allocate non-pref mmio cannot allocate the resource from the bus. So, I
+> think the order of allocating PCI bus resources in function
+> pci_bus_alloc_resource() should be changed to try pref mmio first when
+> possible.
 
-Thanks,
+Don't we do this already?  The code in __pci_assign_resource() looks
+like it should prefer an exact prefetching match.
 
-Brian
+If that code doesn't work, we should fix it there.  I don't want to
+fiddle with pci_bus_for_each_resource() for this -- that's a really
+arcane place to hide such a fix.
 
+Bjorn
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+> Signed-off-by: Lin Muhui <linmuhui@huawei.com>
+> ---
+>  include/linux/pci.h |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1084a15..238df8f 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1064,7 +1064,8 @@ void pci_bus_remove_resources(struct pci_bus *bus);
+>
+>  #define pci_bus_for_each_resource(bus, res, i)                         \
+>         for (i = 0;                                                     \
+> -           (res = pci_bus_resource_n(bus, i)) || i <
+> PCI_BRIDGE_RESOURCE_NUM; \
+> +           (res = pci_bus_resource_n(bus, (i < PCI_BRIDGE_RESOURCE_NUM ?
+> (PCI_BRIDGE_RESOURCE_NUM - 1 - i) : i)))\
+> +                                        || i < PCI_BRIDGE_RESOURCE_NUM; \
+>              i++)
+>
+>  int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+> --
+> 1.7.1
+>
