@@ -1,107 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:37766 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742AbaAOULB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 15:11:01 -0500
-Received: by mail-ig0-f176.google.com with SMTP id j1so11442771iga.3
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2014 12:11:00 -0800 (PST)
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:53737 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751691AbaAJRGr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 12:06:47 -0500
 MIME-Version: 1.0
-In-Reply-To: <20140115033854.18253.62934.stgit@bling.home>
-References: <20140115033854.18253.62934.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 15 Jan 2014 13:10:39 -0700
-Message-ID: <CAErSpo5545u1pHoDnAs-F=xgdLYs+xu_XtSixDi1+UcGj2zPVg@mail.gmail.com>
-Subject: Re: [PATCH v2] vfio-pci: Use pci "try" reset interface
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20140110094132.GC3444@yanx>
+References: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
+	<1387485843-17403-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo5VWREGptW0MU0wLJUa3h23DXMZPGkdJFMTx5WAGL8J6Q@mail.gmail.com>
+	<CAE9FiQU88EO=e+CR7RKnZ6r7ofSwi9J1QisnrnDyDz6Qh367YQ@mail.gmail.com>
+	<CAE9FiQVZ9yrcViFNx5q65ot=nNP=JBuvotpEjUis2FF11wjg6w@mail.gmail.com>
+	<20140110094132.GC3444@yanx>
+Date: Fri, 10 Jan 2014 09:06:46 -0800
+Message-ID: <CAE9FiQUw7pubrKcK6yubSXtV60BZaH+ZhsDKieiyQ0api=peXA@mail.gmail.com>
+Subject: Re: [PATCH v6 2/2] PCI: Try best to allocate pref mmio 64bit above 4g
+From: Yinghai Lu <yinghai@kernel.org>
+To: Guo Chao <yan@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 8:45 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> PCI resets will attempt to take the device_lock for any device to be
-> reset.  This is a problem if that lock is already held, for instance
-> in the device remove path.  It's not sufficient to simply kill the
-> user process or skip the reset if called after .remove as a race could
-> result in the same deadlock.  Instead, we handle all resets as "best
-> effort" using the PCI "try" reset interfaces.  This prevents the user
-> from being able to induce a deadlock by triggering a reset.
+On Fri, Jan 10, 2014 at 1:41 AM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+> On Wed, Jan 08, 2014 at 03:34:54PM -0800, Yinghai Lu wrote:
+> Just FYI, a Mellanox net card failed after exactly this patch.
 >
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
+> 3.13-rc7 + bjorn's series is OK. After this patch applied, Mellanox
+> driver complains:
 >
-> v2: Update error message to make it clear that device reset failed
->     and change back to pr_warn to make sure it's visible.  I'll
->     address whether dev_warn would be more appropriate in future
->     updates.
+>  |mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping PF.
+>  |mlx4_core: probe of 0003:05:00.0 failed with error -22
 >
-> Bjorn, if this looks good and you don't mind, please take this in
-> through your tree so that it syncs with the introduction of the
-> pci_try_reset interfaces.  Thanks!
+> This is caused by MMIO read from BAR 0 (64-bit non-prefetchable) returns
+> non-zore value.
+>
+> Resource assignment, as far as we can see, works fine. The noticable
+> effect of this patch is putting ROM BAR under non-prefetachable. I try
+> to revert this effect by adding MEM_64 to its ROM resource and it works
+> again (system does not expose 4G above aperture yet). Not sure what's
+> the root cause, looks like a driver/firmware/hardware defect.
 
-I applied this to pci/reset (along with the try_reset implementation)
-and pushed it to my "next" branch, thanks!
+Interesting. Can you  post boot log with "debug ignore_loglevel initcall_debug"
+and with/without this patch?
 
->  drivers/vfio/pci/vfio_pci.c |   29 +++++++++--------------------
->  1 file changed, 9 insertions(+), 20 deletions(-)
->
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index 6ab71b9..2319d20 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -139,25 +139,14 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
->         pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
->
->         /*
-> -        * Careful, device_lock may already be held.  This is the case if
-> -        * a driver unbind is blocked.  Try to get the locks ourselves to
-> -        * prevent a deadlock.
-> +        * Try to reset the device.  The success of this is dependent on
-> +        * being able to lock the device, which is not always possible.
->          */
->         if (vdev->reset_works) {
-> -               bool reset_done = false;
-> -
-> -               if (pci_cfg_access_trylock(pdev)) {
-> -                       if (device_trylock(&pdev->dev)) {
-> -                               __pci_reset_function_locked(pdev);
-> -                               reset_done = true;
-> -                               device_unlock(&pdev->dev);
-> -                       }
-> -                       pci_cfg_access_unlock(pdev);
-> -               }
-> -
-> -               if (!reset_done)
-> -                       pr_warn("%s: Unable to acquire locks for reset of %s\n",
-> -                               __func__, dev_name(&pdev->dev));
-> +               int ret = pci_try_reset_function(pdev);
-> +               if (ret)
-> +                       pr_warn("%s: Failed to reset device %s (%d)\n",
-> +                               __func__, dev_name(&pdev->dev), ret);
->         }
->
->         pci_restore_state(pdev);
-> @@ -514,7 +503,7 @@ static long vfio_pci_ioctl(void *device_data,
->
->         } else if (cmd == VFIO_DEVICE_RESET) {
->                 return vdev->reset_works ?
-> -                       pci_reset_function(vdev->pdev) : -EINVAL;
-> +                       pci_try_reset_function(vdev->pdev) : -EINVAL;
->
->         } else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
->                 struct vfio_pci_hot_reset_info hdr;
-> @@ -684,8 +673,8 @@ reset_info_exit:
->                                                     &info, slot);
->                 if (!ret)
->                         /* User has access, do the reset */
-> -                       ret = slot ? pci_reset_slot(vdev->pdev->slot) :
-> -                                    pci_reset_bus(vdev->pdev->bus);
-> +                       ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
-> +                                    pci_try_reset_bus(vdev->pdev->bus);
->
->  hot_reset_release:
->                 for (i--; i >= 0; i--)
->
+Thanks
+
+Yinghai
