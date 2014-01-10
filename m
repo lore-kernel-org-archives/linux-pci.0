@@ -1,50 +1,73 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 15/34] igbvf: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:34 +0100
-Message-Id: <3de48ccd00189524a07c6d38f0533caa3e5d4293.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
+	heiko.carstens@de.ibm.com, stern@rowland.harvard.edu,
+	JBottomley@parallels.com, bhelgaas@google.com,
+	Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH 11/14] pci: use device_remove_file_self() instead of device_schedule_callback()
+Date: Fri, 10 Jan 2014 08:46:57 -0500
+Message-Id: <1389361620-5086-12-git-send-email-tj@kernel.org>
+In-Reply-To: <1389361620-5086-1-git-send-email-tj@kernel.org>
+References: <1389361620-5086-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+driver-core now supports synchrnous self-deletion of attributes and
+the asynchrnous removal mechanism is scheduled for removal.  Use it
+instead of device_schedule_callback().  This makes "remove" behave
+synchronously.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/net/ethernet/intel/igbvf/netdev.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/pci-sysfs.c | 24 ++++++------------------
+ 1 file changed, 6 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/igbvf/netdev.c b/drivers/net/ethernet/intel/igbvf/netdev.c
-index 675435f..e2c6d80 100644
---- a/drivers/net/ethernet/intel/igbvf/netdev.c
-+++ b/drivers/net/ethernet/intel/igbvf/netdev.c
-@@ -1043,11 +1043,11 @@ static void igbvf_set_interrupt_capability(struct igbvf_adapter *adapter)
- 		for (i = 0; i < 3; i++)
- 			adapter->msix_entries[i].entry = i;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c91e6c1..94d1cb8 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -352,32 +352,20 @@ static struct device_attribute dev_rescan_attr = __ATTR(rescan,
+ 							(S_IWUSR|S_IWGRP),
+ 							NULL, dev_rescan_store);
  
--		err = pci_enable_msix(adapter->pdev,
--		                      adapter->msix_entries, 3);
-+		err = pci_enable_msix_range(adapter->pdev,
-+		                            adapter->msix_entries, 3, 3);
- 	}
+-static void remove_callback(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	mutex_lock(&pci_remove_rescan_mutex);
+-	pci_stop_and_remove_bus_device(pdev);
+-	mutex_unlock(&pci_remove_rescan_mutex);
+-}
+-
+ static ssize_t
+-remove_store(struct device *dev, struct device_attribute *dummy,
++remove_store(struct device *dev, struct device_attribute *attr,
+ 	     const char *buf, size_t count)
+ {
+-	int ret = 0;
+ 	unsigned long val;
  
--	if (err) {
-+	if (err < 0) {
- 		/* MSI-X failed */
- 		dev_err(&adapter->pdev->dev,
- 		        "Failed to initialize MSI-X interrupts.\n");
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+-	/* An attribute cannot be unregistered by one of its own methods,
+-	 * so we have to use this roundabout approach.
+-	 */
+-	if (val)
+-		ret = device_schedule_callback(dev, remove_callback);
+-	if (ret)
+-		count = ret;
++	if (val && device_remove_file_self(dev, attr)) {
++		mutex_lock(&pci_remove_rescan_mutex);
++		pci_stop_and_remove_bus_device(to_pci_dev(dev));
++		mutex_unlock(&pci_remove_rescan_mutex);
++	}
+ 	return count;
+ }
+ static struct device_attribute dev_remove_attr = __ATTR(remove,
 -- 
-1.7.7.6
+1.8.4.2
 
