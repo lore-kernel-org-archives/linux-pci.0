@@ -1,82 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:38998 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752618AbaAGScA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 13:32:00 -0500
-Date: Tue, 7 Jan 2014 11:31:48 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tanmay Inamdar <tinamdar@apm.com>, devicetree@vger.kernel.org,
-	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	patches <patches@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
-Message-ID: <20140107183148.GD4227@obsidianresearch.com>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
- <201401031049.20932.arnd@arndb.de>
- <CACoXjc=h8W=9jx4d2Y+F9hmgQsuMTgG4080jZGbtddv10OgtMA@mail.gmail.com>
- <201401071635.02006.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201401071635.02006.arnd@arndb.de>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:38563 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755293AbaAJN5w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 08:57:52 -0500
+From: Tejun Heo <tj@kernel.org>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
+	heiko.carstens@de.ibm.com, stern@rowland.harvard.edu,
+	JBottomley@parallels.com, bhelgaas@google.com,
+	Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH 11/14] pci: use device_remove_file_self() instead of device_schedule_callback()
+Date: Fri, 10 Jan 2014 08:57:28 -0500
+Message-Id: <1389362251-8128-12-git-send-email-tj@kernel.org>
+In-Reply-To: <1389362251-8128-1-git-send-email-tj@kernel.org>
+References: <1389362251-8128-1-git-send-email-tj@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 07, 2014 at 04:35:01PM +0100, Arnd Bergmann wrote:
+driver-core now supports synchrnous self-deletion of attributes and
+the asynchrnous removal mechanism is scheduled for removal.  Use it
+instead of device_schedule_callback().  This makes "remove" behave
+synchronously.
 
-> > >> +                       0x00000000 0x0 0xd0000000 0xe0 0xd0000000 0x0 0x00200000 /* cfg */
-> > >
-> > > config space is not normally in the ranges property, and I think you will need
-> > > it in the pcie node itself as a 'reg' property so the code can access it.
-> > 
-> > pcie-designware.c does it that way. I just followed their implementation.
-> 
-> I don't remember what led to that, it still seems wrong and I can't
-> find anything in the PCI binding for host bridges telling their
-> config space this way.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/pci-sysfs.c | 24 ++++++------------------
+ 1 file changed, 6 insertions(+), 18 deletions(-)
 
-When we discussed the mvebu PCI driver (which is, so far, the most
-throughly discussed PCI binding) it was concluded that the config
-space ranges like the above was OK only if it exactly described the
-standard ECAM layout.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index c91e6c1..94d1cb8 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -352,32 +352,20 @@ static struct device_attribute dev_rescan_attr = __ATTR(rescan,
+ 							(S_IWUSR|S_IWGRP),
+ 							NULL, dev_rescan_store);
+ 
+-static void remove_callback(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	mutex_lock(&pci_remove_rescan_mutex);
+-	pci_stop_and_remove_bus_device(pdev);
+-	mutex_unlock(&pci_remove_rescan_mutex);
+-}
+-
+ static ssize_t
+-remove_store(struct device *dev, struct device_attribute *dummy,
++remove_store(struct device *dev, struct device_attribute *attr,
+ 	     const char *buf, size_t count)
+ {
+-	int ret = 0;
+ 	unsigned long val;
+ 
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+-	/* An attribute cannot be unregistered by one of its own methods,
+-	 * so we have to use this roundabout approach.
+-	 */
+-	if (val)
+-		ret = device_schedule_callback(dev, remove_callback);
+-	if (ret)
+-		count = ret;
++	if (val && device_remove_file_self(dev, attr)) {
++		mutex_lock(&pci_remove_rescan_mutex);
++		pci_stop_and_remove_bus_device(to_pci_dev(dev));
++		mutex_unlock(&pci_remove_rescan_mutex);
++	}
+ 	return count;
+ }
+ static struct device_attribute dev_remove_attr = __ATTR(remove,
+-- 
+1.8.4.2
 
-Idea being that standard/core code should be able to see that ranges,
-map the range and issue config accesses via the ECAM rules.
-
-> > >> +             interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-> > >> +             interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1>;
-> > >
-> > > Only one IRQ for all devices?
-> > 
-> > The node represents a port. I believe that Linux framework uses only
-> > one of the legacy IRQs per port. Rest all remain unused. Hence I
-> > removed them. Please correct me if I am wrong.
-> 
-> Any PCI device can normally have four interrupts (IntA through
-> IntD), which are traditionally separate pins on a PCI bus, but get
-> emulated on PCIe. While it's not common for any normal device to use
-> more than one IRQ, a bridge device will swizzle these (virtual) IRQ
-> lines, so a device behind the bridge actually gets a different host
-> IRQ.
-
-Agree, the binding should handle all four INTA,B,C,D assertions
-delivered to the port. 
-
-If HW is able to decode the 4 ints into seperate Linux interrupt
-numbers then that should be described. If HW routes them all to a
-single number then interrupt-map-mask should be all 0.
-
-Arnd's point about swizzling effects the layout of the
-interrupt-map. When it is placed at the pcie-controller node level the
-map will incorporate one swizzle of the on-the-wire INTx messages. If
-the HW doesn't swizzle the INTx as the TLP passes through the bridge
-then it probably makes more sense to put the interrupt-map in the DT
-node of the bridge like mvebu does.
-
-Jason
