@@ -1,126 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64640 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752715AbaABVO1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jan 2014 16:14:27 -0500
-Message-ID: <1388697264.30327.250.camel@bling.home>
-Subject: Re: IOMMU groups ... PEX8606 switch?
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Dana Goyette <DanaGoyette@gmail.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Date: Thu, 02 Jan 2014 14:14:24 -0700
-In-Reply-To: <la4k3n$gia$1@ger.gmane.org>
-References: <l9o1h7$33k$2@ger.gmane.org>
-			 <1388287383.4981.16.camel@ul30vt.home> <l9oj5j$miu$1@ger.gmane.org>
-		 <1388377005.4981.69.camel@ul30vt.home> <l9t26b$i61$1@ger.gmane.org>
-	 <1388691378.30327.235.camel@bling.home> <la4k3n$gia$1@ger.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 10 Jan 2014 17:41:32 +0800
+From: Guo Chao <yan@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 2/2] PCI: Try best to allocate pref mmio 64bit above 4g
+Message-ID: <20140110094132.GC3444@yanx>
+References: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
+ <1387485843-17403-3-git-send-email-yinghai@kernel.org>
+ <CAErSpo5VWREGptW0MU0wLJUa3h23DXMZPGkdJFMTx5WAGL8J6Q@mail.gmail.com>
+ <CAE9FiQU88EO=e+CR7RKnZ6r7ofSwi9J1QisnrnDyDz6Qh367YQ@mail.gmail.com>
+ <CAE9FiQVZ9yrcViFNx5q65ot=nNP=JBuvotpEjUis2FF11wjg6w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVZ9yrcViFNx5q65ot=nNP=JBuvotpEjUis2FF11wjg6w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-01-02 at 13:01 -0800, Dana Goyette wrote:
-> On 01/02/2014 11:36 AM, Alex Williamson wrote:
-> > On Mon, 2013-12-30 at 16:13 -0800, Dana Goyette wrote:
-> >> On 12/29/2013 08:16 PM, Alex Williamson wrote:
-> >>> On Sat, 2013-12-28 at 23:32 -0800, Dana Goyette wrote:
-> >>>> On 12/28/2013 7:23 PM, Alex Williamson wrote:
-> >>>>> On Sat, 2013-12-28 at 18:31 -0800, Dana Goyette wrote:
-> >>>>>> I have purchased both a SuperMicro X10SAE and an X10SAT, and I need to
-> >>>>>> soon decide which one to keep.
-> >>>>>>
-> >>>>>> The SuperMicro X10SAT has all the PCIe x1 slots hidden behind a PLX
-> >>>>>> PEX8066 switch, which claims to support ACS.  I'd expect the devices
-> >>>>>> downstream of the PLX switch to be in separate groups.
-> >>>>>>
-> >>>>>> With Linux 3.13-rc5 and "enable overrides for missing ACS capabilities"
-> >>>>>> applied and set for the Intel root ports, the devices behind the switch
-> >>>>>> remain stuck in the same group.
-> >>>>>>
-> >>>>>> In terms of passing devices to different VMs, which is better: all
-> >>>>>> devices on different root ports, or all devices behind the one
-> >>>>>> ACS-supporting switch?
-> >>>>>
-> >>>>> Can you provide lspci -vvv info?  If you're getting that for groups
-> >>>>> either the switch has ACS capabilities, but doesn't support the features
-> >>>>> we need or we're doing something wrong.  Thanks,
-> >>>>>
-> >>>> I initially tried attaching the output as a .txt file, but it's too
-> >>>> large.  Anyway, here's the output of lspci -nnvvv (you may notice that I
-> >>>> moved the Radeon to a different slot).
-> >>>
-> >>> Well, something seems amiss since the downstream switch ports all seem
-> >>> to support and enable the correct set of ACS capabilities.  I'm tending
-> >>> to suspect something wrong with the ACS override patch or how it's being
-> >>> used since your IOMMU group is still based at the root port.  Each root
-> >>> port is isolated from the other root ports though, so something is
-> >>> happening with the override patch.  Can you provide the kernel command
-> >>> line you use to enable ACS overrides and the override patch you're
-> >>> using, as it applies to 3.13-rc5?  Thanks,
-> >>>
-> >>> Alex
-> >>>
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe kvm" in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>
-> >> I'm using the original acs-override patch from this post:
-> >> https://lkml.org/lkml/2013/5/30/513
+On Wed, Jan 08, 2014 at 03:34:54PM -0800, Yinghai Lu wrote:
+> On Sun, Dec 22, 2013 at 5:14 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Sun, Dec 22, 2013 at 4:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> On Thu, Dec 19, 2013 at 1:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
 > >>
-> >> Kernel parameter is:
-> >> pcie_acs_override=id:8086:8c10,id:8086:8c12,id:8086:8c16,id:8086:8c18
+> >> Let me see if I can figure out what you're trying to do here.  Please
+> >> correct me if I'm wrong:
 > >>
-> >> When booting a kernel without the override patch, the following devices
-> >> are all in the same group: Intel Root Ports 1, 2, 4, 5; ASMedia SATA
-> >> controller; PLX PEX8606 switch; Renesas USB controller; TI Firewire
-> >> controller; Intel I210 Ethernet controller.
+> >>> When one of children resources does not support MEM_64, MEM_64 for
+> >>> bridge get reset, so pull down whole pref resource on the bridge under 4G.
+> >>
+> >> When we allocate space for a bridge's prefetchable window, we
+> >> currently look at the devices behind the bridge and put the window
+> >> below 4GB if any of those children has a 32-bit prefetchable BAR.
+> >>
+> >> This maximizes the use of prefetch, at the cost of using more 32-bit
+> >> address space.
 > >
-> > Ok, here's my shot in the dark; we must be detecting something about the
-> > upstream switch port to make it fail the ACS test and the only thing I
-> > can find that might do this is if the PCI config header on the upstream
-> > switch reported itself as a multifunction device.  Multifunction
-> > upstream switch ports do need ACS capabilities to make sure that traffic
-> > isn't routed back through other functions.  Single function devices do
-> > not.  To test that theory, please provide 'lspci -vxs 4:00.0'.  We're
-> > looking to see whether the byte at 0xe has the MSB set.  If it does, it
-> > lies that it's a multifunction device.  If it doesn't I'll have to get
-> > the dart board back out.
+> > yes. and we have problem when we have 8 sockets or 32 sockets system,
+> > will have limit 32bit space.
+> > but we have enough above 4G 64bit mmio for prefetchable.
 > >
-> > FWIW, you should be able to work around this by adding id:10b5:8606 to
-> > your list of overrides.  Long term, if this is the problem, we'll want
-> > to add a quirk to sanitize the multifunction device flag.  Thanks,
+> >>
+> >>> If the bridge support pref mem 64, will only allocate that with pref mem64 to
+> >>> children that support it.
+> >>> For children resources if they only support pref mem 32, will allocate them
+> >>> from non pref mem instead.
+> >>
+> >> You are changing this so that we will always try to put a bridge's
+> >> 64-bit prefetchable window above 4GB, regardless of what devices are
+> >> behind the bridge.  If a device behind the bridge has a 32-bit
+> >> prefetchable BAR, we will place that BAR in the bridge's 32-bit
+> >> non-prefetchable window.
 > >
-> > Alex
+> > Yes. so we can keep IORESOURCE_MEM64 in the flags for PREF.
 > >
+> >>
+> >> This minimizes the use of the 32-bit address space, at the cost of not
+> >> being able to use prefetch as much.
+> >>
+> >>> If the bridge only support 32bit pref mmio, will still have all children pref
+> >>> mmio under that.
+> >>
+> >> Obviously, if a bridge has a prefetchable window that's only 32 bits,
+> >> 64-bit prefetchable BARs behind the bridge will have to be in that
+> >> 32-bit prefetchable window or the 32-bit non-prefetchable window.  And
+> >> if the bridge has no prefetchable window at all, every memory BAR
+> >> behind the bridge will have to be in the 32-bit non-prefetchable
+> >> window.
+> >
+> > Yes.
+> >
+> >>
+> >> I'll look at the actual patch later; I just want to make sure I
+> >> understand your intent first.
 > 
-> 04:00.0 is the ASMedia SATA controller; I'll assume you meant the 
-> upstream port of the PLX switch.
+> Hi, Bjorn,
+> 
+> Can you check and add this one to your pci/resource branch?
+> With that we can close the loop for 64bit mmio resource allocation.
+> 
 
-Yes, it was 04:00.0 in the previous lspci listing.
+Just FYI, a Mellanox net card failed after exactly this patch.
 
-> 05:00.0 PCI bridge: PLX Technology, Inc. PEX 8606 6 Lane, 6 Port PCI 
-> Express Gen 2 (5.0 GT/s) Switch (rev ba) (prog-if 00 [Normal decode])
-> 	Flags: bus master, fast devsel, latency 0
-> 	Memory at eeb00000 (32-bit, non-prefetchable) [size=128K]
-> 	Bus: primary=05, secondary=06, subordinate=0c, sec-latency=0
-> 	Memory behind bridge: ee800000-eeafffff
-> 	Capabilities: [40] Power Management version 3
-> 	Capabilities: [48] MSI: Enable+ Count=1/4 Maskable+ 64bit+
-> 	Capabilities: [68] Express Upstream Port, MSI 00
-> 	Capabilities: [a4] Subsystem: PLX Technology, Inc. PEX 8606 6 Lane, 6 
-> Port PCI Express Gen 2 (5.0 GT/s) Switch
-> 	Capabilities: [100] Device Serial Number ba-86-01-10-b5-df-0e-00
-> 	Capabilities: [fb4] Advanced Error Reporting
-> 	Capabilities: [138] Power Budgeting <?>
-> 	Capabilities: [148] Virtual Channel
-> 	Capabilities: [448] Vendor Specific Information: ID=0000 Rev=0 Len=0cc <?>
-> 	Capabilities: [950] Vendor Specific Information: ID=0001 Rev=0 Len=010 <?>
-> 	Kernel driver in use: pcieport
-> 00: b5 10 06 86 47 05 10 40 ba 00 04 06 10 00 01 00
+3.13-rc7 + bjorn's series is OK. After this patch applied, Mellanox
+driver complains:
 
-Well, that wasn't it.  I'll keep looking and probably send you a patch
-to figure out what's going wrong.  Thanks,
+ |mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping PF.
+ |mlx4_core: probe of 0003:05:00.0 failed with error -22
 
-Alex
+This is caused by MMIO read from BAR 0 (64-bit non-prefetchable) returns
+non-zore value.
+
+Resource assignment, as far as we can see, works fine. The noticable
+effect of this patch is putting ROM BAR under non-prefetachable. I try
+to revert this effect by adding MEM_64 to its ROM resource and it works
+again (system does not expose 4G above aperture yet). Not sure what's
+the root cause, looks like a driver/firmware/hardware defect.
+
+Thanks
+Guo Chao
+
+> Thanks
+> 
+> Yinghai
+> 
 
