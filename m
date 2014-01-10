@@ -1,66 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qe0-f53.google.com ([209.85.128.53]:34465 "EHLO
-	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752499AbaARO7p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 18 Jan 2014 09:59:45 -0500
-Date: Sat, 18 Jan 2014 09:59:40 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brian King <brking@us.ibm.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
-	linux-nvme@lists.infradead.org,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Message-ID: <20140118145940.GE3640@htj.dyndns.org>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
- <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
- <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:59563 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109AbaAJRNi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 12:13:38 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+In-Reply-To: <52D01D82.5070202@canonical.com>
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
+	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
+	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
+	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
+	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
+	<52A8BAC5.70006@canonical.com>
+	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+	<52D01D82.5070202@canonical.com>
+Date: Fri, 10 Jan 2014 09:13:37 -0800
+Message-ID: <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
+From: Yinghai Lu <yinghai@kernel.org>
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
-> On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
-> >> > As the release is supposedly this weekend, do you prefer
-> >> > the patches to go to your tree or to individual trees after
-> >> > the release?
-> >>
-> >> I'd be happy to merge them, except for the fact that they probably
-> >> wouldn't have any time in -next before I ask Linus to pull them.  So
-> >> how about if we wait until after the release, ask the area maintainers
-> >> to take them, and if they don't take them, I'll put them in my tree
-> >> for v3.15?
-> >
-> > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-> > Whatever works for you ;)
-> >
-> > I am only concerned with a regression fix "ahci: Fix broken fallback to
-> > single MSI mode" which would be nice to have in 3.14. But it seems pretty
-> > much too late.
-> 
-> Tejun, if you want to ack that one, I can put it in either the first
-> 3.14 pull request or a subsequent one.  Either way, since it's a
-> regression fix, we should be able to get it in 3.14.
+On Fri, Jan 10, 2014 at 8:19 AM, Joseph Salisbury
+<joseph.salisbury@canonical.com> wrote:
+> On 12/11/2013 02:55 PM, Yinghai Lu wrote:
+>> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
+>> <joseph.salisbury@canonical.com> wrote:
+>>> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
+>>>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>> That doesn't answer my question at all.
+>>>>>
+>>>>> I understand that this change makes it so Joseph doesn't have to use
+>>>>> "pci=realloc=off".  But why should auto-reallocation be limited to
+>>>>> buses that have resources above 4GB?  That doesn't make any sense.
+>>>>>
+>>>>> We should fix the reallocation code so it can deal with this case.  If
+>>>>> there's not enough space for everything, obviously we have to leave
+>>>>> something unassigned.  A ROM BAR is a good candidate for leaving
+>>>>> unassigned, because most of the time we can get along without it.
+>>>> Yes, that is ideal and not that simple.
+>>>> but that would be hard to backport to old kernels.
+>>>>
+>>>> BTW, Joseph, can you try
+>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>>> for-pci-3.14
+>>>> with pci=realloc=on
+>>>>
+>>>> on that system?
+>>>>
+>>>> Thanks
+>>>>
+>>>> Yinghai
+>>> I noticed there was some back and forth on this thread.  Do you still
+>>> want me to test this version, Yinghai?
+>> Yes, if that works, we would not need to put the patch in upstream for limiting
+>> realloc auto scope.
+>>
+>
+> Another user has confirmed that at test kernel from your branch[0] does
+> resolve the bug.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Hi, Joe,
 
-Please feel free to route it any way you see fit.
+Bjorn does not want to limit auto realloc, so this patch can not make
+to upstream at this point.
 
-Thanks!
+so we may have to ask user to append "pci=realloc=off" before we find
+more smart way to realloc
+resource.
 
--- 
-tejun
+Thanks
+
+Yinghai
