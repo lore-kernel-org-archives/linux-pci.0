@@ -1,84 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:58203 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757284AbaAHUnf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 15:43:35 -0500
-MIME-Version: 1.0
-In-Reply-To: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
-Date: Wed, 8 Jan 2014 12:43:35 -0800
-Message-ID: <CAE9FiQUgfuQ9nXNOOCcYAKVeN05o+TX6e35qe5nSkyxB-DpyGg@mail.gmail.com>
-Subject: Re: [Patch Part2 V1 00/14] Enhance DMAR drivers to handle PCI/memory
- hotplug events
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu <iommu@lists.linux-foundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dmaengine@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH 7/9] MPT / PCI: Use pci_stop_and_remove_bus_device_locked()
+Date: Fri, 10 Jan 2014 15:27:56 +0100
+Message-ID: <5291802.S1gYQvjIuc@vostro.rjw.lan>
+In-Reply-To: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 7, 2014 at 1:00 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> Intel DMA/interrupt remapping drivers scan available PCI/memory devices
-> at startup and cache discovered hardware topologies. They don't update
-> cached information if PCI/memory hotplug event happens at runtime, then
-> the stale information may break DMA/interrupt remapping logic.
->
-> This patchset first (Patch 1-8) tries to introduces some helper
-> functions and fixes several bugs, then (Patch 9,10) uses a global
-> rwsem and RCU to protect global DMA/interrupt remapping data
-> structures, and finally (Patch 11-14) hook PCI/memory hotplug events
-> to update cached information.
->
-> It's also a preparation for supporting of DMA/interrupt remapping
-> hotplug.
->
-> Jiang Liu (14):
->   iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
->   iommu/vt-d: move private structures and variables into intel-iommu.c
->   iommu/vt-d: simplify function get_domain_for_dev()
->   iommu/vt-d: free resources if failed to create domain for PCIe
->     endpoint
->   iommu/vt-d: create device_domain_info structure for intermediate P2P
->     bridges
->   iommu/vt-d: fix incorrect iommu_count for si_domain
->   iommu/vt-d: fix error in detect ATS capability
->   iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
->     entries
->   iommu/vt-d: introduce a rwsem to protect global data structures
->   iommu/vt-d: use RCU to protect global resources in interrupt context
->   iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
->     hotplug happens
->   iommu/vt-d, PCI: unify the way to process DMAR device scope array
->   iommu/vt-d: update device to static identity domain mapping for PCI
->     hotplug
->   iommu/vt-d: update IOMMU state when memory hotplug happens
->
->  drivers/iommu/dmar.c                |  412 +++++++++++++++++--------
->  drivers/iommu/intel-iommu.c         |  583 +++++++++++++++++++++--------------
->  drivers/iommu/intel_irq_remapping.c |  108 ++++---
->  include/linux/dmar.h                |   75 +++--
->  4 files changed, 753 insertions(+), 425 deletions(-)
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+Race conditions are theoretically possible between the MPT PCI
+device removal and the generic PCI bus rescan and device removal
+that can be triggered via sysfs.
 
-Hi, Jiang,
+To avoid those race conditions make the MPT PCI code use
+pci_stop_and_remove_bus_device_locked().
 
-What is relationship between your two patchset with my iommu hotplug patchset?
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/message/fusion/mptbase.c    |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-https://lkml.org/lkml/2014/1/2/527
+Index: linux-pm/drivers/scsi/mpt3sas/mpt3sas_base.c
+===================================================================
+--- linux-pm.orig/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ linux-pm/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -131,7 +131,7 @@ static int mpt3sas_remove_dead_ioc_func(
+ 	pdev = ioc->pdev;
+ 	if ((pdev == NULL))
+ 		return -1;
+-	pci_stop_and_remove_bus_device(pdev);
++	pci_stop_and_remove_bus_device_locked(pdev);
+ 	return 0;
+ }
+ 
+Index: linux-pm/drivers/scsi/mpt2sas/mpt2sas_base.c
+===================================================================
+--- linux-pm.orig/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ linux-pm/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -128,7 +128,7 @@ static int mpt2sas_remove_dead_ioc_func(
+ 		pdev = ioc->pdev;
+ 		if ((pdev == NULL))
+ 			return -1;
+-		pci_stop_and_remove_bus_device(pdev);
++		pci_stop_and_remove_bus_device_locked(pdev);
+ 		return 0;
+ }
+ 
+Index: linux-pm/drivers/message/fusion/mptbase.c
+===================================================================
+--- linux-pm.orig/drivers/message/fusion/mptbase.c
++++ linux-pm/drivers/message/fusion/mptbase.c
+@@ -346,7 +346,7 @@ static int mpt_remove_dead_ioc_func(void
+ 	if ((pdev == NULL))
+ 		return -1;
+ 
+-	pci_stop_and_remove_bus_device(pdev);
++	pci_stop_and_remove_bus_device_locked(pdev);
+ 	return 0;
+ }
+ 
 
-or yours will just replace mine?
-
-Thanks
-
-Yinghai
