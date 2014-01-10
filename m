@@ -1,211 +1,173 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 20/20] iommu/vt-d: free all resources if failed to initialize DMARs
-Date: Mon,  6 Jan 2014 14:18:27 +0800
-Message-Id: <1388989107-4795-21-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g6t0186.atlanta.hp.com ([15.193.32.63]:18103 "EHLO
+	g6t0186.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752277AbaAJWHp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 17:07:45 -0500
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
+Subject: [PATCHv3 1/6] Crashdump-Accepting-Active-IOMMU-Flags-and-Prototype
+Date: Fri, 10 Jan 2014 15:07:27 -0700
+Message-Id: <1389391652-52422-2-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
+References: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance intel_iommu_init() to free all resources if failed to
-initialize DMAR hardware.
+The following series implements a fix for:
+A kdump problem about DMA that has been discussed for a long time. That is,
+when a kernel panics and boots into the kdump kernel, DMA started by the
+panicked kernel is not stopped before the kdump kernel is booted and the
+kdump kernel disables the IOMMU while this DMA continues.  This causes the
+IOMMU to stop translating the DMA addresses as IOVAs and begin to treat them
+as physical memory addresses -- which causes the DMA to either:
+(1) generate DMAR errors or (2) generate PCI SERR errors or (3) transfer
+data to or from incorrect areas of memory. Often this causes the dump to fail.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This patch set modifies the behavior of the iommu in the (new) crashdump kernel:
+1. to accept the iommu hardware in an active state,
+2. to leave the current translations in-place so that legacy DMA will continue
+   using its current buffers until the device drivers in the crashdump kernel
+   initialize and initialize their devices,
+3. to use different portions of the iova address ranges for the device drivers
+   in the crashdump kernel than the iova ranges that were in-use at the time
+   of the panic.
+4. to mark as in-use each domain-id that an IOMMU was using at the
+   time of the panic -- so that if the crashdump kernel contains a
+   device that was not in the panicked kernel (and therefore needs
+   a new domain-id) that device will be given an unused domain-id.
+
+Advantages of this approach:
+1. All manipulation of the IO-device is done by the Linux device-driver
+   for that device.
+2. This approach behaves in a manner very similar to operation without an
+   active iommu.
+3. Any activity between the IO-device and its RMRR areas is handled by the
+   device-driver in the same manner as during a non-kdump boot.
+4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
+   This supports the practice of creating a special kdump kernel without
+   drivers for any devices that are not required for taking a crashdump.
+
+This patch contains global flags used by many sections of the code and
+prototypes of the interface functions which are coded at the end of
+the source file.
+
+Static struct 'pr_dbg' contains bit-flags that control the amount of debug
+print placed on the console.  Note that the amount of print increases greatly
+(probably geometrically if not faster) as additional bits further down the
+structure are enabled.  These flags and the pr_debug() lines scattered
+throughout the code are only for the developer or analyst.  At this time,
+no means is provided to modify the flags without a re-compile.
+
+v1->v2:
+Updated patch description
+
+v2->v3:
+No change
+
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
 ---
- drivers/iommu/intel-iommu.c |   81 ++++++++++++++++++++++++++-----------------
- 1 file changed, 49 insertions(+), 32 deletions(-)
+ drivers/iommu/intel-iommu.c | 75 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 75 insertions(+)
 
 diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index c28e9fe..0863e25 100644
+index 43b9bfe..17c4537 100644
 --- a/drivers/iommu/intel-iommu.c
 +++ b/drivers/iommu/intel-iommu.c
-@@ -2615,6 +2615,7 @@ static int __init init_dmars(void)
- error:
- 	for_each_active_iommu(iommu, drhd)
- 		free_dmar_iommu(iommu);
-+	kfree(deferred_flush);
- 	kfree(g_iommus);
- 	g_iommus = NULL;
- 	return ret;
-@@ -3459,18 +3460,12 @@ static int __init
- rmrr_parse_dev(struct dmar_rmrr_unit *rmrru)
- {
- 	struct acpi_dmar_reserved_memory *rmrr;
--	int ret;
+@@ -48,6 +48,7 @@
  
- 	rmrr = (struct acpi_dmar_reserved_memory *) rmrru->hdr;
--	ret = dmar_parse_dev_scope((void *)(rmrr + 1),
--		((void *)rmrr) + rmrr->header.length,
--		&rmrru->devices_cnt, &rmrru->devices, rmrr->segment);
--
--	if (ret || (rmrru->devices_cnt == 0)) {
--		list_del(&rmrru->list);
--		kfree(rmrru);
--	}
--	return ret;
-+	return dmar_parse_dev_scope((void *)(rmrr + 1),
-+				    ((void *)rmrr) + rmrr->header.length,
-+				    &rmrru->devices_cnt, &rmrru->devices,
-+				    rmrr->segment);
+ #include "irq_remapping.h"
+ #include "pci.h"
++#include <linux/crash_dump.h>
+ 
+ #define ROOT_SIZE		VTD_PAGE_SIZE
+ #define CONTEXT_SIZE		VTD_PAGE_SIZE
+@@ -164,6 +165,80 @@ static inline unsigned long virt_to_dma_pfn(void *p)
+ 	return page_to_dma_pfn(virt_to_page(p));
  }
  
- static LIST_HEAD(dmar_atsr_units);
-@@ -3495,23 +3490,39 @@ int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr)
- 
- static int __init atsr_parse_dev(struct dmar_atsr_unit *atsru)
- {
--	int rc;
- 	struct acpi_dmar_atsr *atsr;
- 
- 	if (atsru->include_all)
- 		return 0;
- 
- 	atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
--	rc = dmar_parse_dev_scope((void *)(atsr + 1),
--				(void *)atsr + atsr->header.length,
--				&atsru->devices_cnt, &atsru->devices,
--				atsr->segment);
--	if (rc || !atsru->devices_cnt) {
--		list_del(&atsru->list);
--		kfree(atsru);
-+	return dmar_parse_dev_scope((void *)(atsr + 1),
-+				    (void *)atsr + atsr->header.length,
-+				    &atsru->devices_cnt, &atsru->devices,
-+				    atsr->segment);
-+}
++#ifdef CONFIG_CRASH_DUMP
++/* ===================================================================
++ * Crashdump Accepting Active IOMMU
++ * Enhances the crashdump kernel to deal with an active iommu
++ * and legacy DMA from the (old) panic'd kernel in a manner similar to how
++ * legacy DMA is handled when no hardware iommu was in use by the old kernel --
++ * allow the legacy DMA to continue into its current buffers.
++ *
++ * This code:
++ * 1. accepts the iommu hardware in an active state from the old kernel,
++ * 2. leaves the current translations in-place so that legacy DMA will
++ *    continue to use its current buffers,
++ * 3. allocates to the device drivers in the crashdump kernel
++ *    portions of the iova address ranges that are different
++ *    from the iova address ranges that were being used by the old kernel
++ *    at the time of the panic.
++ * -------------------------------------------------------------------
++ */
 +
-+static void intel_iommu_free_atsr(struct dmar_atsr_unit *atsru)
-+{
-+	dmar_free_dev_scope(&atsru->devices, &atsru->devices_cnt);
-+	kfree(atsru);
-+}
++/* Flags for Crashdump Accepting Active IOMMU */
 +
-+static void intel_iommu_free_dmars(void)
-+{
-+	struct dmar_rmrr_unit *rmrru, *rmrr_n;
-+	struct dmar_atsr_unit *atsru, *atsr_n;
++static int crashdump_accepting_active_iommu;	/* activate this feature */
++static int intel_iommu_translation_tables_are_mapped;	/* table copy done */
 +
-+	list_for_each_entry_safe(rmrru, rmrr_n, &dmar_rmrr_units, list) {
-+		list_del(&rmrru->list);
-+		dmar_free_dev_scope(&rmrru->devices, &rmrru->devices_cnt);
-+		kfree(rmrru);
- 	}
- 
--	return rc;
-+	list_for_each_entry_safe(atsru, atsr_n, &dmar_atsr_units, list) {
-+		list_del(&atsru->list);
-+		intel_iommu_free_atsr(atsru);
-+	}
- }
- 
- int dmar_find_matched_atsr_unit(struct pci_dev *dev)
-@@ -3555,17 +3566,17 @@ found:
- 
- int __init dmar_parse_rmrr_atsr_dev(void)
- {
--	struct dmar_rmrr_unit *rmrr, *rmrr_n;
--	struct dmar_atsr_unit *atsr, *atsr_n;
-+	struct dmar_rmrr_unit *rmrr;
-+	struct dmar_atsr_unit *atsr;
- 	int ret = 0;
- 
--	list_for_each_entry_safe(rmrr, rmrr_n, &dmar_rmrr_units, list) {
-+	list_for_each_entry(rmrr, &dmar_rmrr_units, list) {
- 		ret = rmrr_parse_dev(rmrr);
- 		if (ret)
- 			return ret;
- 	}
- 
--	list_for_each_entry_safe(atsr, atsr_n, &dmar_atsr_units, list) {
-+	list_for_each_entry(atsr, &dmar_atsr_units, list) {
- 		ret = atsr_parse_dev(atsr);
- 		if (ret)
- 			return ret;
-@@ -3612,7 +3623,7 @@ static struct notifier_block device_nb = {
- 
- int __init intel_iommu_init(void)
- {
--	int ret = 0;
-+	int ret = -ENODEV;
- 	struct dmar_drhd_unit *drhd;
- 	struct intel_iommu *iommu;
- 
-@@ -3622,7 +3633,7 @@ int __init intel_iommu_init(void)
- 	if (dmar_table_init()) {
- 		if (force_on)
- 			panic("tboot: Failed to initialize DMAR table\n");
--		return 	-ENODEV;
-+		goto out_free_dmar;
- 	}
- 
- 	/*
-@@ -3635,16 +3646,16 @@ int __init intel_iommu_init(void)
- 	if (dmar_dev_scope_init() < 0) {
- 		if (force_on)
- 			panic("tboot: Failed to initialize DMAR device scope\n");
--		return 	-ENODEV;
-+		goto out_free_dmar;
- 	}
- 
- 	if (no_iommu || dmar_disabled)
--		return -ENODEV;
-+		goto out_free_dmar;
- 
- 	if (iommu_init_mempool()) {
- 		if (force_on)
- 			panic("tboot: Failed to initialize iommu memory\n");
--		return 	-ENODEV;
-+		goto out_free_dmar;
- 	}
- 
- 	if (list_empty(&dmar_rmrr_units))
-@@ -3656,7 +3667,7 @@ int __init intel_iommu_init(void)
- 	if (dmar_init_reserved_ranges()) {
- 		if (force_on)
- 			panic("tboot: Failed to reserve iommu ranges\n");
--		return 	-ENODEV;
-+		goto out_free_mempool;
- 	}
- 
- 	init_no_remapping_devices();
-@@ -3666,9 +3677,7 @@ int __init intel_iommu_init(void)
- 		if (force_on)
- 			panic("tboot: Failed to initialize DMARs\n");
- 		printk(KERN_ERR "IOMMU: dmar init failed\n");
--		put_iova_domain(&reserved_iova_list);
--		iommu_exit_mempool();
--		return ret;
-+		goto out_free_reserved_range;
- 	}
- 	printk(KERN_INFO
- 	"PCI-DMA: Intel(R) Virtualization Technology for Directed I/O\n");
-@@ -3688,6 +3697,14 @@ int __init intel_iommu_init(void)
- 	intel_iommu_enabled = 1;
- 
- 	return 0;
++static struct {				/* run-time pr_debug() flags */
++	unsigned in_crashdump:1;	/* if crashdump_accepting_active_iommu */
++	unsigned domain_get:1;		/* pr_debug in domain_get* functions */
++	unsigned copy_page_table:1;	/* enter/leave copy_page_table() */
++	unsigned copy_page_addr:1;	/* enter/leave copy_page_addr() */
++	unsigned addr_ranges:1;		/* accumulated addr ranges */
++	unsigned reserved_ranges:1;	/* accumulated addr ranges reserved */
++	unsigned page_addr:1;		/* adr(each page table) */
++	unsigned enter_oldcopy:1;	/* enter oldcopy() parameters */
++	unsigned leave_oldcopy:1;	/* leave oldcopy() parameters */
++} pr_dbg  = {				/* Enable flags below here */
++	.in_crashdump = 1,
++	.domain_get = 1,
++	.copy_page_table = 1,
++	.copy_page_addr = 0,
++	.addr_ranges = 0,
++	.reserved_ranges = 0,
++	.page_addr = 0,
++	.enter_oldcopy = 0,
++	.leave_oldcopy = 0,
++};
 +
-+out_free_reserved_range:
-+	put_iova_domain(&reserved_iova_list);
-+out_free_mempool:
-+	iommu_exit_mempool();
-+out_free_dmar:
-+	intel_iommu_free_dmars();
-+	return ret;
- }
++/* Prototypes of interface functions for Crashdump Accepting Active IOMMU */
++
++static int
++copy_intel_iommu_translation_tables(struct dmar_drhd_unit *drhd,
++	struct root_entry **root_old_p, struct root_entry **root_new_p);
++
++static int
++domain_get_did_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
++
++static int
++domain_get_gaw_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
++
++static u64
++domain_get_pgd_from_old_kernel(struct intel_iommu *iommu, struct pci_dev *pdev);
++
++static void
++domain_get_ranges_from_old_kernel(struct dmar_domain *domain,
++		  struct intel_iommu *iommu, struct pci_dev *pdev);
++static int
++intel_iommu_get_dids_from_old_kernel(struct intel_iommu *iommu);
++
++/* Debug-print functions for  Crashdump Accepting Active IOMMU */
++
++static void
++print_intel_iommu_registers(struct dmar_drhd_unit *drhd);
++#endif	/* CONFIG_CRASH_DUMP */
++
++
+ /* global iommu list, set NULL for ignored DMAR units */
+ static struct intel_iommu **g_iommus;
  
- static void iommu_detach_dependent_devices(struct intel_iommu *iommu,
 -- 
-1.7.10.4
+Bill Sumner <bill.sumner@hp.com>
 
