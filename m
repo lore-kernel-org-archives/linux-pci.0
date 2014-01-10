@@ -1,80 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:60042 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaAKB1h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:27:37 -0500
-Received: by mail-pa0-f44.google.com with SMTP id fa1so5497848pad.3
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:37 -0800 (PST)
-Subject: [PATCH v2 07/12] PCI: Remove unused pcie_aspm_enabled()
-To: Stephen Hemminger <stephen@networkplumber.org>,
-	linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yu Zhao <yu.zhao@intel.com>,
-	Andrew Patterson <andrew.patterson@hp.com>
-Date: Fri, 10 Jan 2014 18:27:34 -0700
-Message-ID: <20140111012734.14505.57102.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:49265 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752397AbaAJOQT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 09:16:19 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH 6/9] platform / x86: Use global PCI rescan-remove locking
+Date: Fri, 10 Jan 2014 15:27:08 +0100
+Message-ID: <1493412.bZ2k5bhngZ@vostro.rjw.lan>
+In-Reply-To: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-My philosophy is unused code is dead code.  And dead code is subject to bit
-rot and is a likely source of bugs.  Use it or lose it.
+Multiple race conditions are possible between the rfkill hotplug in
+the asus-wmi and eeepc-laptop drivers and the generic PCI bus rescan
+and device removal that can be triggered via sysfs.
 
-This reverts part of 3e1b16002af2 ("ACPI/PCI: PCIe ASPM _OSC support
-capabilities called when root bridge added"), removing this interface:
+To avoid those race conditions make asus-wmi and eeepc-laptop use
+global PCI rescan-remove locking around the rfkill hotplug.
 
-    pcie_aspm_enabled()
-
-[bhelgaas: split to separate patch]
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Andrew Patterson <andrew.patterson@hp.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/pcie/aspm.c |   12 ------------
- include/linux/pci.h     |    2 --
- 2 files changed, 14 deletions(-)
+ drivers/platform/x86/asus-wmi.c     |    2 ++
+ drivers/platform/x86/eeepc-laptop.c |    2 ++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index f1272dc54de1..e1e7026b838d 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -984,18 +984,6 @@ void pcie_no_aspm(void)
+Index: linux-pm/drivers/platform/x86/asus-wmi.c
+===================================================================
+--- linux-pm.orig/drivers/platform/x86/asus-wmi.c
++++ linux-pm/drivers/platform/x86/asus-wmi.c
+@@ -605,6 +605,7 @@ static void asus_rfkill_hotplug(struct a
+ 	mutex_unlock(&asus->wmi_lock);
+ 
+ 	mutex_lock(&asus->hotplug_lock);
++	pci_lock_rescan_remove();
+ 
+ 	if (asus->wlan.rfkill)
+ 		rfkill_set_sw_state(asus->wlan.rfkill, blocked);
+@@ -655,6 +656,7 @@ static void asus_rfkill_hotplug(struct a
  	}
+ 
+ out_unlock:
++	pci_unlock_rescan_remove();
+ 	mutex_unlock(&asus->hotplug_lock);
  }
  
--/**
-- * pcie_aspm_enabled - is PCIe ASPM enabled?
-- *
-- * Returns true if ASPM has not been disabled by the command-line option
-- * pcie_aspm=off.
-- **/
--int pcie_aspm_enabled(void)
--{
--       return !aspm_disabled;
--}
--EXPORT_SYMBOL(pcie_aspm_enabled);
--
- bool pcie_aspm_support_enabled(void)
- {
- 	return aspm_support_enabled;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index bf1f385bf14d..583348275085 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1198,10 +1198,8 @@ extern bool pcie_ports_auto;
- #endif
+Index: linux-pm/drivers/platform/x86/eeepc-laptop.c
+===================================================================
+--- linux-pm.orig/drivers/platform/x86/eeepc-laptop.c
++++ linux-pm/drivers/platform/x86/eeepc-laptop.c
+@@ -591,6 +591,7 @@ static void eeepc_rfkill_hotplug(struct
+ 		rfkill_set_sw_state(eeepc->wlan_rfkill, blocked);
  
- #ifndef CONFIG_PCIEASPM
--static inline int pcie_aspm_enabled(void) { return 0; }
- static inline bool pcie_aspm_support_enabled(void) { return false; }
- #else
--int pcie_aspm_enabled(void);
- bool pcie_aspm_support_enabled(void);
- #endif
+ 	mutex_lock(&eeepc->hotplug_lock);
++	pci_lock_rescan_remove();
+ 
+ 	if (eeepc->hotplug_slot) {
+ 		port = acpi_get_pci_dev(handle);
+@@ -648,6 +649,7 @@ out_put_dev:
+ 	}
+ 
+ out_unlock:
++	pci_unlock_rescan_remove();
+ 	mutex_unlock(&eeepc->hotplug_lock);
+ }
  
 
