@@ -1,76 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 10/11] ACPI / hotplug / PCI: Use acpi_handle_debug() in hotplug_event()
-Date: Mon, 27 Jan 2014 01:45:26 +0100
-Message-ID: <13914527.ifKH1txkRD@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20140107183148.GD4227@obsidianresearch.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+	<201401031049.20932.arnd@arndb.de>
+	<CACoXjc=h8W=9jx4d2Y+F9hmgQsuMTgG4080jZGbtddv10OgtMA@mail.gmail.com>
+	<201401071635.02006.arnd@arndb.de>
+	<20140107183148.GD4227@obsidianresearch.com>
+Date: Thu, 9 Jan 2014 17:32:13 -0800
+Message-ID: <CACoXjc=G1d7hEPUy_cC7bN63akJdKcQfpUQgEC+JcUdL-=0XBg@mail.gmail.com>
+Subject: Re: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jan 7, 2014 at 10:31 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Tue, Jan 07, 2014 at 04:35:01PM +0100, Arnd Bergmann wrote:
+>
+>> > >> +                       0x00000000 0x0 0xd0000000 0xe0 0xd0000000 0x0 0x00200000 /* cfg */
+>> > >
+>> > > config space is not normally in the ranges property, and I think you will need
+>> > > it in the pcie node itself as a 'reg' property so the code can access it.
+>> >
+>> > pcie-designware.c does it that way. I just followed their implementation.
+>>
+>> I don't remember what led to that, it still seems wrong and I can't
+>> find anything in the PCI binding for host bridges telling their
+>> config space this way.
+>
+> When we discussed the mvebu PCI driver (which is, so far, the most
+> throughly discussed PCI binding) it was concluded that the config
+> space ranges like the above was OK only if it exactly described the
+> standard ECAM layout.
+>
+> Idea being that standard/core code should be able to see that ranges,
+> map the range and issue config accesses via the ECAM rules.
 
-Make hotplug_event() use acpi_handle_debug() instead of an open-coded
-debug message printing and clean up the messages printed by it.
+Ok. Thanks.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+>
+>> > >> +             interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+>> > >> +             interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1>;
+>> > >
+>> > > Only one IRQ for all devices?
+>> >
+>> > The node represents a port. I believe that Linux framework uses only
+>> > one of the legacy IRQs per port. Rest all remain unused. Hence I
+>> > removed them. Please correct me if I am wrong.
+>>
+>> Any PCI device can normally have four interrupts (IntA through
+>> IntD), which are traditionally separate pins on a PCI bus, but get
+>> emulated on PCIe. While it's not common for any normal device to use
+>> more than one IRQ, a bridge device will swizzle these (virtual) IRQ
+>> lines, so a device behind the bridge actually gets a different host
+>> IRQ.
+>
+> Agree, the binding should handle all four INTA,B,C,D assertions
+> delivered to the port.
+>
+> If HW is able to decode the 4 ints into seperate Linux interrupt
+> numbers then that should be described. If HW routes them all to a
+> single number then interrupt-map-mask should be all 0.
+>
+> Arnd's point about swizzling effects the layout of the
+> interrupt-map. When it is placed at the pcie-controller node level the
+> map will incorporate one swizzle of the on-the-wire INTx messages. If
+> the HW doesn't swizzle the INTx as the TLP passes through the bridge
+> then it probably makes more sense to put the interrupt-map in the DT
+> node of the bridge like mvebu does.
+>
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -794,9 +794,6 @@ static void hotplug_event(acpi_handle ha
- 	struct acpiphp_func *func = &context->func;
- 	struct acpiphp_slot *slot = func->slot;
- 	struct acpiphp_bridge *bridge;
--	char objname[64];
--	struct acpi_buffer buffer = { .length = sizeof(objname),
--				      .pointer = objname };
- 
- 	mutex_lock(&acpiphp_context_lock);
- 	bridge = context->bridge;
-@@ -805,14 +802,10 @@ static void hotplug_event(acpi_handle ha
- 
- 	mutex_unlock(&acpiphp_context_lock);
- 
--	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
--
- 	switch (type) {
- 	case ACPI_NOTIFY_BUS_CHECK:
- 		/* bus re-enumerate */
--		pr_debug("%s: Bus check notify on %s\n", __func__, objname);
--		pr_debug("%s: re-enumerating slots under %s\n",
--			 __func__, objname);
-+		acpi_handle_debug(handle, "Bus check in %s()\n", __func__);
- 		if (bridge)
- 			acpiphp_check_bridge(bridge);
- 		else if (!(slot->flags & SLOT_IS_GOING_AWAY))
-@@ -822,7 +815,7 @@ static void hotplug_event(acpi_handle ha
- 
- 	case ACPI_NOTIFY_DEVICE_CHECK:
- 		/* device check */
--		pr_debug("%s: Device check notify on %s\n", __func__, objname);
-+		acpi_handle_debug(handle, "Device check in %s()\n", __func__);
- 		if (bridge) {
- 			acpiphp_check_bridge(bridge);
- 		} else if (!(slot->flags & SLOT_IS_GOING_AWAY)) {
-@@ -837,7 +830,7 @@ static void hotplug_event(acpi_handle ha
- 
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
--		pr_debug("%s: Device eject notify on %s\n", __func__, objname);
-+		acpi_handle_debug(handle, "Eject request in %s()\n", __func__);
- 		acpiphp_disable_and_eject_slot(slot);
- 		break;
- 	}
+Ok.
 
+> Jason
