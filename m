@@ -1,97 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:38435 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbaA2JNv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 04:13:51 -0500
-Received: by mail-lb0-f180.google.com with SMTP id n15so1198181lbi.25
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 01:13:49 -0800 (PST)
-Message-ID: <52E8C64B.8060307@cogentembedded.com>
-Date: Wed, 29 Jan 2014 13:13:47 +0400
-From: Valentine <valentine.barshak@cogentembedded.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:34633 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213AbaAJQT1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 11:19:27 -0500
+Message-ID: <52D01D82.5070202@canonical.com>
+Date: Fri, 10 Jan 2014 11:19:14 -0500
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
-To: Simon Horman <horms@verge.net.au>
-CC: Ben Dooks <ben.dooks@codethink.co.uk>,
-	linux-kernel@lists.codethink.co.uk, linux-sh@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: rcar: fix bridge logic configuration accesses
-References: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk> <1390903616-8073-4-git-send-email-ben.dooks@codethink.co.uk> <52E807E9.8060900@cogentembedded.com> <20140129064234.GG23833@verge.net.au>
-In-Reply-To: <20140129064234.GG23833@verge.net.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
+ mmio
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com> <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+In-Reply-To: <CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/29/2014 10:42 AM, Simon Horman wrote:
-> On Tue, Jan 28, 2014 at 11:41:29PM +0400, Valentine wrote:
->> On 01/28/2014 02:06 PM, Ben Dooks wrote:
->>> The bridge logic at slot 0 only supports reads up to 0x40 and the
->>> rest of the PCI configuration space for this slot is marked as
->>> reserved in the manual.
+On 12/11/2013 02:55 PM, Yinghai Lu wrote:
+> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
+>>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> That doesn't answer my question at all.
+>>>>
+>>>> I understand that this change makes it so Joseph doesn't have to use
+>>>> "pci=realloc=off".  But why should auto-reallocation be limited to
+>>>> buses that have resources above 4GB?  That doesn't make any sense.
+>>>>
+>>>> We should fix the reallocation code so it can deal with this case.  If
+>>>> there's not enough space for everything, obviously we have to leave
+>>>> something unassigned.  A ROM BAR is a good candidate for leaving
+>>>> unassigned, because most of the time we can get along without it.
+>>> Yes, that is ideal and not that simple.
+>>> but that would be hard to backport to old kernels.
 >>>
->>> Trying a read from offset 0x100 is producing an error from the
->>> bridge. With error interrupts enabled, the following is printed:
->>
->> I don't think this is a critical error.
->> The bridge works fine after an attempt to access the unsupported PCIe/PCI-X 2 area.
->>
->> If you want to prevent the access, I'm OK with it.
->> But I think it's better to do "if (where <= 0x100)"
->> and drop the slot check since all other slots do not support
->> access beyond 0x100 as well.
->>
->> The PCI code attempts to access beyond 0x100 only once when probing PCI bridges
->> to see if they support PCIe/PCI-X 2 area which is 4K.
->> The area beyond 0x40 is never accessed because the bridge does not expose any PCI capabilities.
->>
+>>> BTW, Joseph, can you try
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>> for-pci-3.14
+>>> with pci=realloc=on
 >>>
->>> pci-rcar-gen2 ee0d0000.pci: error irq: status 00000014
->>
->> Did you experience any problems other than this message
->> printed by the IRQ handler introduced by the previous patch?
+>>> on that system?
+>>>
+>>> Thanks
+>>>
+>>> Yinghai
+>> I noticed there was some back and forth on this thread.  Do you still
+>> want me to test this version, Yinghai?
+> Yes, if that works, we would not need to put the patch in upstream for limiting
+> realloc auto scope.
 >
-> I am wondering if the documentation for the r8a7790 and r8a7791 are
-> the same with regards to the <= 0x100 limit.
+> Thanks
 >
+> Yinghai
 
-It is the same since it is neither a PCIe nor a PCI-X 2 device.
+Another user has confirmed that at test kernel from your branch[0] does
+resolve the bug.
 
 Thanks,
-Val.
 
->>
->>>
->>> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
->>> ---
->>> Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
->>> Cc: Simon Horman <horms@verge.net.au>
->>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>> Cc: linux-pci@vger.kernel.org
->>> Cc: linux-sh@vger.kernel.org
->>> ---
->>>   drivers/pci/host/pci-rcar-gen2.c | 4 ++++
->>>   1 file changed, 4 insertions(+)
->>>
->>> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
->>> index 01ba069..42f0105 100644
->>> --- a/drivers/pci/host/pci-rcar-gen2.c
->>> +++ b/drivers/pci/host/pci-rcar-gen2.c
->>> @@ -119,6 +119,10 @@ static void __iomem *rcar_pci_cfg_base(struct pci_bus *bus, unsigned int devfn,
->>>   	if (slot > 2)
->>>   		return NULL;
->>>
->>> +	/* bridge logic only has registers to 0x40 */
->>> +	if (slot == 0x0 && where >= 0x40)
->>> +		return NULL;
->>> +
->>>   	val = slot ? RCAR_AHBPCI_WIN1_DEVICE | RCAR_AHBPCI_WIN_CTR_CFG :
->>>   		     RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG;
->>>
->>>
->>
->> Thanks,
->> Val.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+Joe
+
+[0]
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
 
