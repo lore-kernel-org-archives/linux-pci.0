@@ -1,111 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:57492 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849AbaAFWam (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 17:30:42 -0500
-MIME-Version: 1.0
-In-Reply-To: <20140103212413.GA18987@google.com>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-	<1388707565-16535-25-git-send-email-yinghai@kernel.org>
-	<20140103212413.GA18987@google.com>
-Date: Mon, 6 Jan 2014 14:30:41 -0800
-Message-ID: <CAE9FiQU2SEj7L=pjtTOewxExKJhoG3LbJ+YsVbNJ2O_9Kevz5A@mail.gmail.com>
-Subject: Re: [PATCH v5 24/33] x86: Move declaration for mp_register_ioapic()
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:10213 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751762AbaAJRIf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Jan 2014 12:08:35 -0500
+Message-ID: <1389373712.3209.311.camel@bling.home>
+Subject: Re: [PATCH] pci: Add "try" reset interfaces
+From: Alex Williamson <alex.williamson@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: multipart/mixed; boundary=001a1134c7925c25b304ef54cf8b
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Fri, 10 Jan 2014 10:08:32 -0700
+In-Reply-To: <20140110155009.GA25635@google.com>
+References: <20131216221229.3393.6171.stgit@bling.home>
+	 <CAErSpo7ZYsES6kZXjcwr-gwKaXm7DzHBvUGz+cpZBBH7stAAAQ@mail.gmail.com>
+	 <1389138319.3209.142.camel@bling.home> <20140110155009.GA25635@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a1134c7925c25b304ef54cf8b
-Content-Type: text/plain; charset=ISO-8859-1
+On Fri, 2014-01-10 at 08:50 -0700, Bjorn Helgaas wrote:
+> On Tue, Jan 07, 2014 at 04:45:19PM -0700, Alex Williamson wrote:
+> > On Tue, 2014-01-07 at 16:15 -0700, Bjorn Helgaas wrote:
+> > > Hi Alex,
+> > > 
+> > > Sorry for the delay in looking at this.
+> > > 
+> > > On Mon, Dec 16, 2013 at 3:14 PM, Alex Williamson
+> > > <alex.williamson@redhat.com> wrote:
+> > > > When doing a function/slot/bus reset PCI grabs the device_lock for
+> > > > each device to block things like suspend and driver probes, which is
+> > > > all well and good, but call paths exist where this lock may already be
+> > > > held.  This creates an opportunity for deadlock.  For instance, vfio
+> > > > allows userspace to issue resets so long as it owns the device(s).
+> > > > If a driver unbind .remove callback races with userspace issuing a
+> > > > reset, we have a deadlock as userspace gets stuck waiting on
+> > > > device_lock while another thread has device_lock and waits for .remove
+> > > > to complete.
+> > > 
+> > > Are you talking about vfio_pci_remove() (the vfio_pci_driver .remove()
+> > > method) racing with vfio_pci_ioctl()?
+> > 
+> > Yes, for instance if the admin does something like attempt to unbind the
+> > device from vfio-pci while it's in use.  This can also happen indirectly
+> > if the device is going away, such as a PF driver attempting to remove
+> > its VFs.
+> > 
+> > > Or maybe it's vfio_pci_release (the vfio_pci_ops .release() method),
+> > > since it looks like you want to use pci_try_reset_function() there and
+> > > in vfio_pci_ioctl()?
+> > 
+> > That one too.  If any reset races with pci_driver.remove, whether it be
+> > from ioctl or my own release callback, we'll hit a deadlock.
+> > 
+> > > Either way, aren't there at least potentially more locking issues than
+> > > just the reset problem?  Seems like any ioctl that might take the
+> > > device_lock could have the same problem.
+> > 
+> > I don't know of any others, but our QE folks hit this one pretty
+> > regularly.  It can all be explained away as user error, but a user
+> > should not be able to cause a kernel deadlock, which is why the user
+> > exposed interfaces are converted to use this try-lock interface.
+> > 
+> > >   How do you make sure there's
+> > > no userspace owner of the device before you release the device or
+> > > remove the driver?
+> > 
+> > Userspace has a file descriptor for the device, so we know through
+> > reference counting when the device becomes unused.  When our
+> > pci_driver.remove() callback happens we block until the user releases
+> > the device, so perhaps it more accurate to describe it as a nested lock
+> > problem than a race, but the paths are asynchronous so even if we tested
+> > the lock in advance there's a potential race.
+> 
+> If I understand correctly, the deadlock happens when A (userspace) has a file
+> descriptor for the device, and B waits in this path:
+> 
+>   driver_detach
+>     device_lock                     # take device_lock
+>     __device_release_driver
+>       pci_device_remove             # pci_bus_type.remove
+> 	vfio_pci_remove             # pci_driver .remove
+> 	  vfio_del_group_dev
+> 	    wait_event(vfio.release_q, !vfio_dev_present)   # wait (holding device_lock)
+> 
+> Now B is stuck until A gives up the file descriptor.  I haven't traced that
+> path, but I assume giving up the file descriptor involves the
+> vfio_device_put() ...  vfio_device_release() path to wake up B.
+> 
+> If A tries to acquire device_lock for any reason, we deadlock because A
+> is waiting for B to release the lock, and B is waiting for A to release the
+> file descriptor.
 
-On Fri, Jan 3, 2014 at 1:24 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Jan 02, 2014 at 04:05:56PM -0800, Yinghai Lu wrote:
->> Address compiling problem that Fengguang report.
->
-> Does this fix a problem that's already in the upstream tree?
->
-> If it merely fixes a problem that was added somewhere in your patches,
-> why don't you fold this fix into the patch that added the problem?
->
-> If you included more details, like the exact problem report, I could
-> probably have figured this out myself.
+Correct
 
-please check updated changelog:
+> You're fixing the case where A does a VFIO_DEVICE_RESET ioctl that calls
+> pci_reset_function().  It looks like a VFIO_DEVICE_SET_IRQS ioctl will have
+> the same problem because it can acquire device_lock in
+> vfio_pci_set_err_trigger().
 
----
-Subject: [PATCH] x86: Move declaration for mp_register_ioapic()
+There's no reason for that path to use device_lock, I've already posted
+a separate patch to remove it there and will include it in my v3.14 pull
+request.
 
-Preparing patch for ioapic hotplug:
-        PCI, x86, ACPI: Link acpi ioapic register to ioapic
-as it adds calling in
-        arch/x86/kernel/acpi/boot.c::acpi_register_ioapic()
-                                     acpi_unregister_ioapic()
+> It makes me uneasy that B (in the kernel) waits indefinitely for A
+> (userspace) to do something.  If A is malicious and simply does nothing, it
+> will cause all other paths that acquire device_lock to hang, e.g., suspend
+> and hibernate, AER reporting (e.g., report_error_detected()), and various
+> USB events.
 
-Address compiling problem when
- CONFIG_ACPI is defined
- CONFIG_X86_IOAPIC is not defined.
+Are there USB events that would ever grab the PCI dev's device_lock?
+Blocking until userspace releases the device is certainly not an ideal
+situation, but releasing a userspace owned device is not as simple as a
+kernel owned device.  We can notify the user, but there's still no
+guarantee the device will be released.  We can try to take back the
+device, but we don't have any way to revoke the mmaps.  Even if the wait
+in B was not indefinite, I think we'd still run into device_lock
+problems.  Using the same paths you outline above, assume that B
+eventually kills the userspace process and moves on.  There's still a
+window where userspace can get stuck on device_lock and I'm not sure
+what's going to happen if the user process gets killed while it's stuck
+in the kernel waiting on device_lock.  The only other alternative I see
+is to release device_lock while we wait at B and re-acquire, but that
+makes me just as uneasy.  Using try_lock seems like the best short term
+approach to prioritize kernel-base locks over user requested locks.
+Thanks,
 
-Change condition to X86_IO_APIC instead of ACPI.
+Alex
 
--v2: update changelog requested by Bjorn.
-
------
-
---001a1134c7925c25b304ef54cf8b
-Content-Type: text/x-patch; charset=US-ASCII; name="move_mp_register.patch"
-Content-Disposition: attachment; filename="move_mp_register.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hq4as3vf0
-
-U3ViamVjdDogW1BBVENIXSB4ODY6IE1vdmUgZGVjbGFyYXRpb24gZm9yIG1wX3JlZ2lzdGVyX2lv
-YXBpYygpCgpQcmVwYXJpbmcgcGF0Y2ggZm9yIGlvYXBpYyBob3RwbHVnOgoJUENJLCB4ODYsIEFD
-UEk6IExpbmsgYWNwaSBpb2FwaWMgcmVnaXN0ZXIgdG8gaW9hcGljCmFzIGl0IGFkZHMgY2FsbGlu
-ZyBpbgoJYXJjaC94ODYva2VybmVsL2FjcGkvYm9vdC5jOjphY3BpX3JlZ2lzdGVyX2lvYXBpYygp
-CgkJCQkgICAgIGFjcGlfdW5yZWdpc3Rlcl9pb2FwaWMoKQoKQWRkcmVzcyBjb21waWxpbmcgcHJv
-YmxlbSB3aGVuCiBDT05GSUdfQUNQSSBpcyBkZWZpbmVkCiBDT05GSUdfWDg2X0lPQVBJQyBpcyBu
-b3QgZGVmaW5lZC4KCkNoYW5nZSBjb25kaXRpb24gdG8gWDg2X0lPX0FQSUMgaW5zdGVhZCBvZiBB
-Q1BJLgoKLXYyOiB1cGRhdGUgY2hhbmdlbG9nIHJlcXVlc3RlZCBieSBCam9ybi4KClJlcG9ydGVk
-LWJ5OiBGZW5nZ3VhbmcgV3UgPHdmZ0BsaW51eC5pbnRlbC5jb20+ClNpZ25lZC1vZmYtYnk6IFlp
-bmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KQ2M6IFBhdWwgR29ydG1ha2VyIDxwYXVsLmdv
-cnRtYWtlckB3aW5kcml2ZXIuY29tPgpDYzogSmlhbmcgTGl1IDxqaWFuZy5saXVAaHVhd2VpLmNv
-bT4KCi0tLQogYXJjaC94ODYvaW5jbHVkZS9hc20vaW9fYXBpYy5oIHwgICAgMSAtCiBhcmNoL3g4
-Ni9pbmNsdWRlL2FzbS9tcHNwZWMuaCAgfCAgIDE4ICsrKysrKysrKysrKysrKysrLQogMiBmaWxl
-cyBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4
-LTIuNi9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9tcHNwZWMuaAo9PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0y
-LjYub3JpZy9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9tcHNwZWMuaAorKysgbGludXgtMi42L2FyY2gv
-eDg2L2luY2x1ZGUvYXNtL21wc3BlYy5oCkBAIC05NSwxMCArOTUsMjYgQEAgc3RhdGljIGlubGlu
-ZSB2b2lkIGVhcmx5X3Jlc2VydmVfZTgyMF9tcAogI2VuZGlmCiAKIGludCBnZW5lcmljX3Byb2Nl
-c3Nvcl9pbmZvKGludCBhcGljaWQsIGludCB2ZXJzaW9uKTsKLSNpZmRlZiBDT05GSUdfQUNQSQor
-I2lmZGVmIENPTkZJR19YODZfSU9fQVBJQwogaW50IF9fbXBfcmVnaXN0ZXJfaW9hcGljKGludCBp
-ZCwgdTMyIGFkZHJlc3MsIHUzMiBnc2lfYmFzZSwgYm9vbCBob3QpOwogaW50IG1wX3VucmVnaXN0
-ZXJfaW9hcGljKHUzMiBnc2lfYmFzZSk7CiBleHRlcm4gdm9pZCBtcF9yZWdpc3Rlcl9pb2FwaWMo
-aW50IGlkLCB1MzIgYWRkcmVzcywgdTMyIGdzaV9iYXNlKTsKKyNlbHNlCitzdGF0aWMgaW5saW5l
-IGludCBfX21wX3JlZ2lzdGVyX2lvYXBpYyhpbnQgaWQsIHUzMiBhZGRyZXNzLCB1MzIgZ3NpX2Jh
-c2UsCisJCQkJCSBib29sIGhvdCkKK3sKKwlyZXR1cm4gMDsKK30KK3N0YXRpYyBpbmxpbmUgaW50
-IG1wX3VucmVnaXN0ZXJfaW9hcGljKHUzMiBnc2lfYmFzZSkKK3sKKwlyZXR1cm4gMDsKK30KK3N0
-YXRpYyBpbmxpbmUgdm9pZCBtcF9yZWdpc3Rlcl9pb2FwaWMoaW50IGlkLCB1MzIgYWRkcmVzcywg
-dTMyIGdzaV9iYXNlKQoreworfQorI2VuZGlmCisKKyNpZmRlZiBDT05GSUdfQUNQSQogZXh0ZXJu
-IHZvaWQgbXBfb3ZlcnJpZGVfbGVnYWN5X2lycSh1OCBidXNfaXJxLCB1OCBwb2xhcml0eSwgdTgg
-dHJpZ2dlciwKIAkJCQkgICB1MzIgZ3NpKTsKIGV4dGVybiB2b2lkIG1wX2NvbmZpZ19hY3BpX2xl
-Z2FjeV9pcnFzKHZvaWQpOwpJbmRleDogbGludXgtMi42L2FyY2gveDg2L2luY2x1ZGUvYXNtL2lv
-X2FwaWMuaAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9hcmNoL3g4Ni9pbmNsdWRlL2Fz
-bS9pb19hcGljLmgKKysrIGxpbnV4LTIuNi9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9pb19hcGljLmgK
-QEAgLTE4OSw3ICsxODksNiBAQCBleHRlcm4gdTMyIGdzaV90b3A7CiBpbnQgaW9hcGljX2dzaV90
-b19pcnEodTMyIGdzaSk7CiBpbnQgbXBfZmluZF9pb2FwaWModTMyIGdzaSk7CiBpbnQgbXBfZmlu
-ZF9pb2FwaWNfcGluKGludCBpb2FwaWMsIHUzMiBnc2kpOwotdm9pZCBfX2luaXQgbXBfcmVnaXN0
-ZXJfaW9hcGljKGludCBpZCwgdTMyIGFkZHJlc3MsIHUzMiBnc2lfYmFzZSk7CiBleHRlcm4gdm9p
-ZCBfX2luaXQgcHJlX2luaXRfYXBpY19JUlEwKHZvaWQpOwogCiBleHRlcm4gdm9pZCBtcF9zYXZl
-X2lycShzdHJ1Y3QgbXBjX2ludHNyYyAqbSk7Cg==
---001a1134c7925c25b304ef54cf8b--
