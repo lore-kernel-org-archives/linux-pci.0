@@ -1,59 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:60196 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037AbaANTbE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 14:31:04 -0500
-Received: by mail-ig0-f174.google.com with SMTP id hl1so5599286igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 11:31:03 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH 4/9] PCMCIA / cardbus: Use global PCI rescan-remove locking
+Date: Fri, 10 Jan 2014 15:25:34 +0100
+Message-ID: <2463755.ZN6tpTxA86@vostro.rjw.lan>
+In-Reply-To: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <52D102EF.5070303@gmail.com>
-References: <52CBC4D1.5080706@gmail.com>
-	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>
-	<52CD2387.2030403@gmail.com>
-	<CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>
-	<52CE301E.60108@gmail.com>
-	<CAE9FiQWxpRMX-0vyd5hML-Hnto8H+C83dcne9FBZcN9qsmGCEw@mail.gmail.com>
-	<52CF7A17.60703@gmail.com>
-	<CAE9FiQVPtNk2LN4TVMzXX72TN8bjDTyD74y_BH05rfw=NArD3Q@mail.gmail.com>
-	<52D102EF.5070303@gmail.com>
-Date: Tue, 14 Jan 2014 11:31:03 -0800
-Message-ID: <CAE9FiQU=4qABcZLJzF13aYSmzryB1=WkO+NYvs0LTj9Kt_1ajA@mail.gmail.com>
-Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port range.
-From: Yinghai Lu <yinghai@kernel.org>
-To: "`VL" <vl.homutov@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 11, 2014 at 12:38 AM, `VL <vl.homutov@gmail.com> wrote:
->> there is no 07:00.0 in the print out.
->
-> Well, so it looks like procedure, doing earlydump somehow misses this
-> device.
-> I have collected one more log (without pci=realloc but with debug) so I'm
-> pretty sure
-> that device is there (it appears later in dmesg output) but still not shown
-> in earlydump -
-> it shows 00:06, then 00:09.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-looks like the your adapter need more time to settle down?
+Multiple race conditions are possible between the cardbus PCI
+device addition and removal and the generic PCI bus rescan and device
+removal that can be triggered via sysfs.
 
-Can you check if you can enable slow boot mode in BIOS setup?
+To avoid those race conditions make the cardbus code use global
+PCI rescan-remove locking.
 
->
-> http://inspert.ru/pci/dmesg-earlydump.txt
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pcmcia/cardbus.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-looks like that server is down.
+Index: linux-pm/drivers/pcmcia/cardbus.c
+===================================================================
+--- linux-pm.orig/drivers/pcmcia/cardbus.c
++++ linux-pm/drivers/pcmcia/cardbus.c
+@@ -70,6 +70,8 @@ int __ref cb_alloc(struct pcmcia_socket
+ 	struct pci_dev *dev;
+ 	unsigned int max, pass;
+ 
++	pci_lock_rescan_remove();
++
+ 	s->functions = pci_scan_slot(bus, PCI_DEVFN(0, 0));
+ 	pci_fixup_cardbus(bus);
+ 
+@@ -93,6 +95,7 @@ int __ref cb_alloc(struct pcmcia_socket
+ 
+ 	pci_bus_add_devices(bus);
+ 
++	pci_unlock_rescan_remove();
+ 	return 0;
+ }
+ 
+@@ -115,6 +118,10 @@ void cb_free(struct pcmcia_socket *s)
+ 	if (!bus)
+ 		return;
+ 
++	pci_lock_rescan_remove();
++
+ 	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
+ 		pci_stop_and_remove_bus_device(dev);
++
++	pci_unlock_rescan_remove();
+ }
 
->
-> First messages about 00:07 are:
->
-> [    0.402838] pci 0000:07:00.0: [1412:1712] type 00 class 0x040100
-> [    0.403042] pci 0000:07:00.0: reg 0x10: [io  0x0000-0x001f]
-> [    0.403230] pci 0000:07:00.0: reg 0x14: [io  0x0000-0x000f]
-> [    0.403418] pci 0000:07:00.0: reg 0x18: [io  0x0000-0x000f]
-> [    0.403607] pci 0000:07:00.0: reg 0x1c: [io  0x0000-0x003f]
-> [    0.403888] pci 0000:07:00.0: supports D2,
->
