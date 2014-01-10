@@ -1,63 +1,470 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:44269 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750841AbaAUTPT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Jan 2014 14:15:19 -0500
-Date: Tue, 21 Jan 2014 11:15:14 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Chris Cheng <chris.cheng@atrustcorp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	USB list <linux-usb@vger.kernel.org>,
-	"Chen, Jamie" <jamie.chen@intel.com>,
-	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: USB EHCI broken on Celeron N2920 (Bay Trail)
-Message-ID: <20140121191514.GD9905@xanatos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAAzarHXkEZNKbWzbMAwHYWNm_=m1uiyGGWHSWv6T7-ARAELaHg@mail.gmail.com>
- <20140117182231.GA18421@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bill Sumner <bill.sumner@hp.com>
+To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
+	joro@8bytes.org
+Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
+Subject: [PATCHv3 6/6] Crashdump-Accepting-Active-IOMMU-Call-From-Mainline
+Date: Fri, 10 Jan 2014 15:07:32 -0700
+Message-Id: <1389391652-52422-7-git-send-email-bill.sumner@hp.com>
+In-Reply-To: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
+References: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Chris,
+At a high level, this code operates primarily during iommu initialization
+and device-driver initialization
 
-We think the Baytrail BIOS has an issue where it doesn't set the EHCI
-PCI interrupt enable bit when the computer is in "EHCI only mode".
-Please try this patch:
+During intel-iommu hardware initialization:
+In intel_iommu_init(void)
+* If (This is the crash kernel)
+  .  Set flag: crashdump_accepting_active_iommu (all changes below check this)
+  .  Skip disabling the iommu hardware translations
 
-http://marc.info/?l=linux-usb&m=138998295909608&w=2
+In init_dmars()
+* Duplicate the intel iommu translation tables from the old kernel
+  in the new kernel
+  . The root-entry table, all context-entry tables,
+    and all page-translation-entry tables
+  . The duplicate tables contain updated physical addresses to link them together.
+  . The duplicate tables are mapped into kernel virtual addresses
+    in the new kernel which allows most of the existing iommu code
+    to operate without change.
+  . Do some minimal sanity-checks during the copy
+  . Place the address of the new root-entry structure into "struct intel_iommu"
 
-Sarah Sharp
+* Skip setting-up new domains for 'si', 'rmrr', 'isa'
+  . Translations for 'rmrr' and 'isa' ranges have been copied from the old kernel
+  . This patch has not yet been tested with iommu pass-through enabled
 
-On Tue, Jan 21, 2014 at 10:04:41PM +0800, Chris Cheng wrote:
-> I'm sorry forgot kernel version: 3.13.0 .
-> --
-> Chris Cheng  鄭宇廷
-> Atrust Computer Corp.  冠信電腦股份有限公司
-> http://www.atrustcorp.com
-> Tel: +886-3-3288837 ext.1074
-> 3F., No.361, Fusing 1st Rd., Gueishan Township, Taoyuan County 333, Taiwan
-> 333 桃園縣龜山鄉復興一路361號3F
-> 
-> 
-> 2014/1/21 Chris Cheng <chris.cheng@atrustcorp.com>:
-> > Here is kernel message:
-> >
-> > [    2.939251] usb 1-1: new high-speed USB device number 2 using ehci-pci
-> > [   18.490987] usb 1-1: device not accepting address 2, error -110
-> > [   18.595095] usb 1-1: new high-speed USB device number 3 using ehci-pci
-> > [   34.182233] usb 1-1: device not accepting address 3, error -110
-> > [   34.286352] usb 1-1: new high-speed USB device number 4 using ehci-pci
-> > [   44.744589] usb 1-1: device not accepting address 4, error -110
-> > [   44.849590] usb 1-1: new high-speed USB device number 5 using ehci-pci
-> > [   55.307858] usb 1-1: device not accepting address 5, error -110
-> > [   55.310239] hub 1-0:1.0: unable to enumerate USB device on port 1
-> >
-> > Thanks.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+* Existing (unchanged) code near the end of dmar_init:
+  . Loads the address of the (now new) root-entry structure from
+    "struct intel_iommu" into the iommu hardware and does the hardware flushes.
+    This changes the active translation tables from the ones in the old kernel
+    to the copies in the new kernel.
+  . This is legal because the translations in the two sets of tables are
+    currently identical:
+      Virtualization Technology for Directed I/O. Architecture Specification,
+      February 2011, Rev. 1.3  (section 11.2, paragraph 2)
+
+In iommu_init_domains()
+* Mark as in-use all domain-id's from the old kernel
+  . In case the new kernel contains a device that was not in the old kernel
+    and a new, unused domain-id is actually needed, the bitmap will give us one.
+
+When a new domain is created for a device:
+* If (this device has a context in the old kernel)
+  . Get domain-id, address-width, and IOVA ranges from the old kernel context;
+  . Get address(page-entry-tables) from the copy in the new kernel;
+  . And apply all of the above values to the new domain structure.
+* Else
+  . Create a new domain as normal
+
+v1->v2:
+Updated patch description
+
+v2->v3:
+No change
+
+Signed-off-by: Bill Sumner <bill.sumner@hp.com>
+---
+ drivers/iommu/intel-iommu.c | 272 +++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 204 insertions(+), 68 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 457ac80b..4f702d1 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -21,6 +21,8 @@
+  * Author: Fenghua Yu <fenghua.yu@intel.com>
+  */
+ 
++/* #define DEBUG 1 */  	/* Enable/Disable debug print in this source file */
++
+ #include <linux/init.h>
+ #include <linux/bitmap.h>
+ #include <linux/debugfs.h>
+@@ -1357,6 +1359,12 @@ static int iommu_init_domains(struct intel_iommu *iommu)
+ 	 */
+ 	if (cap_caching_mode(iommu->cap))
+ 		set_bit(0, iommu->domain_ids);
++
++#ifdef CONFIG_CRASH_DUMP
++	if (crashdump_accepting_active_iommu)
++		intel_iommu_get_dids_from_old_kernel(iommu);
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	return 0;
+ }
+ 
+@@ -1430,7 +1438,8 @@ static struct dmar_domain *alloc_domain(void)
+ }
+ 
+ static int iommu_attach_domain(struct dmar_domain *domain,
+-			       struct intel_iommu *iommu)
++			       struct intel_iommu *iommu,
++			       int domain_number)
+ {
+ 	int num;
+ 	unsigned long ndomains;
+@@ -1440,12 +1449,15 @@ static int iommu_attach_domain(struct dmar_domain *domain,
+ 
+ 	spin_lock_irqsave(&iommu->lock, flags);
+ 
+-	num = find_first_zero_bit(iommu->domain_ids, ndomains);
+-	if (num >= ndomains) {
+-		spin_unlock_irqrestore(&iommu->lock, flags);
+-		printk(KERN_ERR "IOMMU: no free domain ids\n");
+-		return -ENOMEM;
+-	}
++	if (domain_number < 0) {
++		num = find_first_zero_bit(iommu->domain_ids, ndomains);
++		if (num >= ndomains) {
++			spin_unlock_irqrestore(&iommu->lock, flags);
++			printk(KERN_ERR "IOMMU: no free domain ids\n");
++			return -ENOMEM;
++		}
++	} else
++		num = domain_number;
+ 
+ 	domain->id = num;
+ 	set_bit(num, iommu->domain_ids);
+@@ -2056,8 +2068,17 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 	int bus = 0, devfn = 0;
+ 	int segment;
+ 	int ret;
++	int did = -1;	/* Default to "no domain_id supplied" */
+ 
+ 	domain = find_domain(pdev);
++
++#ifdef CONFIG_CRASH_DUMP
++	if (domain)
++		if (pr_dbg.in_crashdump && crashdump_accepting_active_iommu)
++			pr_debug("IOMMU: Found domain (%d) for device %s\n",
++				domain->id, pci_name(pdev));
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	if (domain)
+ 		return domain;
+ 
+@@ -2088,6 +2109,12 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 		}
+ 	}
+ 
++#ifdef CONFIG_CRASH_DUMP
++	if (pr_dbg.in_crashdump && crashdump_accepting_active_iommu)
++		pr_debug("IOMMU: Allocating new domain for device %s\n",
++			pci_name(pdev));
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	domain = alloc_domain();
+ 	if (!domain)
+ 		goto error;
+@@ -2102,7 +2129,26 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 	}
+ 	iommu = drhd->iommu;
+ 
+-	ret = iommu_attach_domain(domain, iommu);
++#ifdef CONFIG_CRASH_DUMP
++	/* See if this device had a did & gaw in the old kernel */
++	if (crashdump_accepting_active_iommu) {
++		did = domain_get_did_from_old_kernel(iommu, pdev);
++		if (did > 0 || (did == 0 && !cap_caching_mode(iommu->cap))) {
++			ret = domain_get_gaw_from_old_kernel(iommu, pdev);
++			if (ret > 0)
++				gaw = ret;
++			else
++				did = -1;
++		} else
++			did = -1;
++	}
++
++	if (pr_dbg.in_crashdump && crashdump_accepting_active_iommu)
++		pr_debug("IOMMU: new domain for device %s: gaw(%d) did(%d)\n",
++			pci_name(pdev), gaw, did);
++#endif /* CONFIG_CRASH_DUMP */
++
++	ret = iommu_attach_domain(domain, iommu, did);
+ 	if (ret) {
+ 		free_domain_mem(domain);
+ 		goto error;
+@@ -2113,6 +2159,23 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 		goto error;
+ 	}
+ 
++#ifdef CONFIG_CRASH_DUMP
++	if (crashdump_accepting_active_iommu && did >= 0) {
++		u64 temp_pgd;	/* Top page-translation-table */
++
++		domain_get_ranges_from_old_kernel(domain, iommu, pdev);
++
++		temp_pgd = domain_get_pgd_from_old_kernel(iommu, pdev);
++		if (temp_pgd) {
++			if (domain->pgd)
++				free_pgtable_page(domain->pgd);
++			domain->pgd = (struct dma_pte *)temp_pgd;
++		}
++		pr_debug("IOMMU: New Domain for device %s Did:%d Pgd: 0x%12.12llx\n",
++			pci_name(pdev), did, temp_pgd);
++	}
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	/* register pcie-to-pci device */
+ 	if (dev_tmp) {
+ 		info = alloc_devinfo_mem();
+@@ -2323,7 +2386,7 @@ static int __init si_domain_init(int hw)
+ 	pr_debug("Identity mapping domain is domain %d\n", si_domain->id);
+ 
+ 	for_each_active_iommu(iommu, drhd) {
+-		ret = iommu_attach_domain(si_domain, iommu);
++		ret = iommu_attach_domain(si_domain, iommu, (int) -1);
+ 		if (ret) {
+ 			domain_exit(si_domain);
+ 			return -EFAULT;
+@@ -2531,6 +2594,10 @@ static int __init init_dmars(void)
+ 	struct pci_dev *pdev;
+ 	struct intel_iommu *iommu;
+ 	int i, ret;
++#ifdef CONFIG_CRASH_DUMP
++	struct root_entry *root_old_phys;
++	struct root_entry *root_new_virt;
++#endif /* CONFIG_CRASH_DUMP */
+ 
+ 	/*
+ 	 * for each drhd
+@@ -2578,16 +2645,41 @@ static int __init init_dmars(void)
+ 		if (ret)
+ 			goto error;
+ 
+-		/*
+-		 * TBD:
+-		 * we could share the same root & context tables
+-		 * among all IOMMU's. Need to Split it later.
+-		 */
+-		ret = iommu_alloc_root_entry(iommu);
+-		if (ret) {
+-			printk(KERN_ERR "IOMMU: allocate root entry failed\n");
+-			goto error;
++#ifdef CONFIG_CRASH_DUMP
++		if (crashdump_accepting_active_iommu) {
++			print_intel_iommu_registers(drhd);
++
++			pr_debug("Calling copy_intel_iommu_translation_tables\n");
++			pr_debug("(lists tables in OLD KERNEL during copy)\n");
++			ret = copy_intel_iommu_translation_tables(drhd,
++					&root_old_phys, &root_new_virt);
++			if (ret) {
++				pr_err("IOMMU: Copy translate tables failed\n");
++
++				/* Best to stop trying */
++				crashdump_accepting_active_iommu = false;
++				goto error;
++			}
++			iommu->root_entry = root_new_virt;
++			pr_debug("IOMMU: root_new_virt:0x%12.12llx phys:0x%12.12llx\n",
++				(u64)root_new_virt,
++				virt_to_phys(root_new_virt));
++		} else {
++#endif /* CONFIG_CRASH_DUMP */
++			/*
++			 * TBD:
++			 * we could share the same root & context tables
++			 * among all IOMMU's. Need to Split it later.
++			 */
++			ret = iommu_alloc_root_entry(iommu);
++			if (ret) {
++				printk(KERN_ERR "IOMMU: allocate root entry failed\n");
++				goto error;
++			}
++#ifdef CONFIG_CRASH_DUMP
+ 		}
++#endif /* CONFIG_CRASH_DUMP */
++
+ 		if (!ecap_pass_through(iommu->ecap))
+ 			hw_pass_through = 0;
+ 	}
+@@ -2656,50 +2748,69 @@ static int __init init_dmars(void)
+ 
+ 	check_tylersburg_isoch();
+ 
+-	/*
+-	 * If pass through is not set or not enabled, setup context entries for
+-	 * identity mappings for rmrr, gfx, and isa and may fall back to static
+-	 * identity mapping if iommu_identity_mapping is set.
+-	 */
+-	if (iommu_identity_mapping) {
+-		ret = iommu_prepare_static_identity_mapping(hw_pass_through);
+-		if (ret) {
+-			printk(KERN_CRIT "Failed to setup IOMMU pass-through\n");
+-			goto error;
++#ifdef CONFIG_CRASH_DUMP
++	if (!crashdump_accepting_active_iommu) {
++		/* Skip setting-up new domains for si, rmrr, and the isa bus
++		 * on the expectation that these translations
++		 * were copied from the old kernel.
++		 *
++		 * NOTE: Indented the existing code below because it is now
++		 * conditional upon the 'if' statement above.
++		 * This pushed many of the lines over 80 characters.
++		 * Chose to leave them and live with the 'checkpatch' warnings
++		 * about "over 80 characters".
++		 */
++#endif /* CONFIG_CRASH_DUMP */
++		/*
++		 * If pass through is not set or not enabled, setup context entries for
++		 * identity mappings for rmrr, gfx, and isa and may fall back to static
++		 * identity mapping if iommu_identity_mapping is set.
++		 */
++		if (iommu_identity_mapping) {
++			ret = iommu_prepare_static_identity_mapping(hw_pass_through);
++			if (ret) {
++				printk(KERN_CRIT "Failed to setup IOMMU pass-through\n");
++				goto error;
++			}
+ 		}
+-	}
+-	/*
+-	 * For each rmrr
+-	 *   for each dev attached to rmrr
+-	 *   do
+-	 *     locate drhd for dev, alloc domain for dev
+-	 *     allocate free domain
+-	 *     allocate page table entries for rmrr
+-	 *     if context not allocated for bus
+-	 *           allocate and init context
+-	 *           set present in root table for this bus
+-	 *     init context with domain, translation etc
+-	 *    endfor
+-	 * endfor
+-	 */
+-	printk(KERN_INFO "IOMMU: Setting RMRR:\n");
+-	for_each_rmrr_units(rmrr) {
+-		for (i = 0; i < rmrr->devices_cnt; i++) {
+-			pdev = rmrr->devices[i];
+-			/*
+-			 * some BIOS lists non-exist devices in DMAR
+-			 * table.
+-			 */
+-			if (!pdev)
+-				continue;
+-			ret = iommu_prepare_rmrr_dev(rmrr, pdev);
+-			if (ret)
+-				printk(KERN_ERR
+-				       "IOMMU: mapping reserved region failed\n");
++		/*
++		 * For each rmrr
++		 *   for each dev attached to rmrr
++		 *   do
++		 *     locate drhd for dev, alloc domain for dev
++		 *     allocate free domain
++		 *     allocate page table entries for rmrr
++		 *     if context not allocated for bus
++		 *           allocate and init context
++		 *           set present in root table for this bus
++		 *     init context with domain, translation etc
++		 *    endfor
++		 * endfor
++		 */
++		printk(KERN_INFO "IOMMU: Setting RMRR:\n");
++		for_each_rmrr_units(rmrr) {
++			for (i = 0; i < rmrr->devices_cnt; i++) {
++				pdev = rmrr->devices[i];
++				/*
++				 * some BIOS lists non-exist devices in DMAR
++				 * table.
++				 */
++				if (!pdev)
++					continue;
++				ret = iommu_prepare_rmrr_dev(rmrr, pdev);
++				if (ret)
++					printk(KERN_ERR
++					       "IOMMU: mapping reserved region failed\n");
++			}
+ 		}
+-	}
+ 
+-	iommu_prepare_isa();
++		iommu_prepare_isa();
++#ifdef CONFIG_CRASH_DUMP
++	} else {
++		intel_iommu_translation_tables_are_mapped = true;
++		pr_debug("intel_iommu_translation_tables_are_mapped = true\n");
++	}
++#endif /* CONFIG_CRASH_DUMP */
+ 
+ 	/*
+ 	 * for each drhd
+@@ -2893,6 +3004,12 @@ static dma_addr_t __intel_map_single(struct device *hwdev, phys_addr_t paddr,
+ 
+ 	BUG_ON(dir == DMA_NONE);
+ 
++#ifdef CONFIG_CRASH_DUMP
++	if (pr_dbg.in_crashdump && crashdump_accepting_active_iommu)
++		pr_debug("ENTER %s paddr(0x%12.12llx) size(0x%12.12lx)\n",
++			 __func__, paddr, size);
++#endif /* CONFIG_CRASH_DUMP */
++
+ 	if (iommu_no_mapping(hwdev))
+ 		return paddr;
+ 
+@@ -2935,6 +3052,12 @@ static dma_addr_t __intel_map_single(struct device *hwdev, phys_addr_t paddr,
+ 
+ 	start_paddr = (phys_addr_t)iova->pfn_lo << PAGE_SHIFT;
+ 	start_paddr += paddr & ~PAGE_MASK;
++
++#ifdef CONFIG_CRASH_DUMP
++	if (pr_dbg.in_crashdump && crashdump_accepting_active_iommu)
++		pr_debug("LEAVE %s dma_addr_t(0x%16.16llx)\n",
++			 __func__, start_paddr);
++#endif /* CONFIG_CRASH_DUMP */
+ 	return start_paddr;
+ 
+ error:
+@@ -3754,19 +3877,32 @@ int __init intel_iommu_init(void)
+ 		return 	-ENODEV;
+ 	}
+ 
++#ifdef CONFIG_CRASH_DUMP
+ 	/*
+-	 * Disable translation if already enabled prior to OS handover.
++	 * If (This is the crash kernel)
++	 *    Set: copy iommu translate tables from old kernel
++	 *    Skip disabling the iommu hardware translations
+ 	 */
+-	for_each_drhd_unit(drhd) {
+-		struct intel_iommu *iommu;
++	if (is_kdump_kernel()) {
++		crashdump_accepting_active_iommu = true;
++		pr_info("IOMMU crashdump_accepting_active_iommu = true\n");
++		pr_info("IOMMU Skip disabling iommu hardware translations\n");
++	} else
++#endif /* CONFIG_CRASH_DUMP */
++		/*
++		 * Disable translation if already enabled prior to OS handover.
++		 */
++		for_each_drhd_unit(drhd) {
++			struct intel_iommu *iommu;
+ 
+-		if (drhd->ignored)
+-			continue;
++			if (drhd->ignored)
++				continue;
++
++			iommu = drhd->iommu;
++			if (iommu->gcmd & DMA_GCMD_TE)
++				iommu_disable_translation(iommu);
++		}
+ 
+-		iommu = drhd->iommu;
+-		if (iommu->gcmd & DMA_GCMD_TE)
+-			iommu_disable_translation(iommu);
+-	}
+ 
+ 	if (dmar_dev_scope_init() < 0) {
+ 		if (force_on)
+-- 
+Bill Sumner <bill.sumner@hp.com>
 
