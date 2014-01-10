@@ -1,216 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og119.obsmtp.com ([64.18.0.189]:43376 "HELO
-	exprod5og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753272AbaABV4x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 16:56:53 -0500
-Received: by mail-vb0-f45.google.com with SMTP id i12so7298502vbh.4
-        for <linux-pci@vger.kernel.org>; Thu, 02 Jan 2014 13:56:51 -0800 (PST)
+Received: from youngberry.canonical.com ([91.189.89.112]:36095 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544AbaAJVyb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 16:54:31 -0500
+Message-ID: <52D06C0C.9020300@canonical.com>
+Date: Fri, 10 Jan 2014 16:54:20 -0500
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <20131223174634.GD25089@obsidianresearch.com>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
-	<1387785725-24262-3-git-send-email-tinamdar@apm.com>
-	<20131223174634.GD25089@obsidianresearch.com>
-Date: Thu, 2 Jan 2014 13:56:51 -0800
-Message-ID: <CACoXjcnPvgDX3s8OywLHP6Tu2OrpNzM1Phx+s3RLmKDgu3t8gA@mail.gmail.com>
-Subject: Re: [RFC PATCH 2/3] arm64: dts: APM X-Gene PCIe device tree nodes
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	patches <patches@apm.com>,
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jon Masters <jcm@redhat.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
+ mmio
+References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com>	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>	<52D01D82.5070202@canonical.com> <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 23, 2013 at 9:46 AM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Mon, Dec 23, 2013 at 01:32:03PM +0530, Tanmay Inamdar wrote:
->> This patch adds the device tree nodes for APM X-Gene PCIe controller and
->> PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts nodes
->> are added.
+On 01/10/2014 12:13 PM, Yinghai Lu wrote:
+> On Fri, Jan 10, 2014 at 8:19 AM, Joseph Salisbury
+> <joseph.salisbury@canonical.com> wrote:
+>> On 12/11/2013 02:55 PM, Yinghai Lu wrote:
+>>> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
+>>> <joseph.salisbury@canonical.com> wrote:
+>>>> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
+>>>>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>>> That doesn't answer my question at all.
+>>>>>>
+>>>>>> I understand that this change makes it so Joseph doesn't have to use
+>>>>>> "pci=realloc=off".  But why should auto-reallocation be limited to
+>>>>>> buses that have resources above 4GB?  That doesn't make any sense.
+>>>>>>
+>>>>>> We should fix the reallocation code so it can deal with this case.  If
+>>>>>> there's not enough space for everything, obviously we have to leave
+>>>>>> something unassigned.  A ROM BAR is a good candidate for leaving
+>>>>>> unassigned, because most of the time we can get along without it.
+>>>>> Yes, that is ideal and not that simple.
+>>>>> but that would be hard to backport to old kernels.
+>>>>>
+>>>>> BTW, Joseph, can you try
+>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>>>> for-pci-3.14
+>>>>> with pci=realloc=on
+>>>>>
+>>>>> on that system?
+>>>>>
+>>>>> Thanks
+>>>>>
+>>>>> Yinghai
+>>>> I noticed there was some back and forth on this thread.  Do you still
+>>>> want me to test this version, Yinghai?
+>>> Yes, if that works, we would not need to put the patch in upstream for limiting
+>>> realloc auto scope.
+>>>
+>> Another user has confirmed that at test kernel from your branch[0] does
+>> resolve the bug.
+> Hi, Joe,
 >
-> Can you include an lspci dump for PCI DT bindings please? It is
-> impossible to review otherwise..
+> Bjorn does not want to limit auto realloc, so this patch can not make
+> to upstream at this point.
 >
+> so we may have to ask user to append "pci=realloc=off" before we find
+> more smart way to realloc
+> resource.
+>
+> Thanks
+>
+> Yinghai
+Hi Yinghai,
 
-On the X-Gene evaluation platform, there is only one PCIe port
-enabled. Here is the 'lspci' dump
+In a prior email you mentioned: "Yes, if that works, we would not need
+to put the patch in upstream for limiting realloc auto scope."  Is the
+git tree at
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+somehow different now?
 
-# lspci -vvv
-00:00.0 Class 0604: Device 19aa:e008 (rev 04)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Region 0: Memory at <ignored> (64-bit, prefetchable)
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        I/O behind bridge: 0000f000-00000fff
-        Memory behind bridge: 00c00000-00cfffff
-        Prefetchable memory behind bridge: 0000000000000000-0000000000bfffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity+ SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-                DevCap: MaxPayload 16384 bytes, PhantFunc 1, Latency
-L0s <1us, L1 unlimited
-                        ExtTag- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq-
-AuxPwr- TransPend+
-                LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM L0s L1,
-Latency L0 unlimited, L1 unlimited
-                        ClockPM- Surprise+ LLActRep+ BwNot+
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 8GT/s, Width x8, TrErr- Train- SlotClk+
-DLActive+ BWMgmt- ABWMgmt-
-                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd-
-HotPlug- Surprise-
-                        Slot #1, PowerLimit 10.000W; Interlock- NoCompl-
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet-
-CmdCplt- HPIrq- LinkChg-
-                        Control: AttnInd Off, PwrInd Off, Power- Interlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt-
-PresDet- Interlock-
-                        Changed: MRL- PresDet- LinkState+
-                RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal-
-PMEIntEna- CRSVisible-
-                RootCap: CRSVisible-
-                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-                DevCap2: Completion Timeout: Not Supported,
-TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
-                DevCtl2: Completion Timeout: 50us to 50ms,
-TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
-                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range,
-EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB,
-EqualizationComplete+, EqualizationPhase1+
-                         EqualizationPhase2+, EqualizationPhase3+,
-LinkEqualizationRequest-
-        Capabilities: [80] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr+ BadTLP+ BadDLLP+ Rollover- Timeout+ NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [180 v1] #19
-        Capabilities: [150 v1] Vendor Specific Information: ID=0001
-Rev=1 Len=010 <?>
+Thanks,
 
-01:00.0 Class 0200: Device 15b3:1003
-        Subsystem: Device 15b3:0049
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 226
-        Region 0: Memory at e000c00000 (64-bit, non-prefetchable) [size=1M]
-        Region 2: Memory at e000000000 (64-bit, prefetchable) [size=8M]
-        Expansion ROM at e000800000 [size=1M]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [48] Vital Product Data
-                Product Name: CX312A - ConnectX-3 SFP+
-                Read-only fields:
-                        [PN] Part number: MCX312A-XCBT
-                        [EC] Engineering changes: A5
-                        [SN] Serial number: MT1338X00578
-                        [V0] Vendor specific: PCIe Gen3 x8
-                        [RV] Reserved: checksum good, 0 byte(s) reserved
-                Read/write fields:
-                        [V1] Vendor specific: N/A
-                        [YA] Asset tag: N/A
-                        [RW] Read-write area: 105 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 253 byte(s) free
-                        [RW] Read-write area: 252 byte(s) free
-                End
-        Capabilities: [9c] MSI-X: Enable- Count=128 Masked-
-                Vector table: BAR=0 offset=0007c000
-                PBA: BAR=0 offset=0007d000
-        Capabilities: [60] Express (v2) Endpoint, MSI 00
-                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s
-<64ns, L1 unlimited
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop- FLReset-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
-AuxPwr- TransPend-
-                LnkCap: Port #8, Speed 8GT/s, Width x8, ASPM L0s,
-Latency L0 unlimited, L1 unlimited
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 8GT/s, Width x8, TrErr- Train- SlotClk+
-DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+,
-LTR-, OBFF Not Supported
-                DevCtl2: Completion Timeout: 50us to 50ms,
-TimeoutDis-, LTR-, OBFF Disabled
-                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range,
-EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB,
-EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-,
-LinkEqualizationRequest-
-        Capabilities: [100 v1] Alternative Routing-ID Interpretation (ARI)
-                ARICap: MFVC- ACS-, Next Function: 0
-                ARICtl: MFVC- ACS-, Function Group: 0
-        Capabilities: [148 v1] Device Serial Number f4-52-14-03-00-0b-dc-90
-        Capabilities: [154 v2] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [18c v1] #19
-        Kernel driver in use: mlx4_core
+Joe
 
-
-> Regards,
-> Jason
