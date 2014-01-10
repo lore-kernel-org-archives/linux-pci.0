@@ -1,68 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:40167 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750849AbaAGJAG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 04:00:06 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V1 00/14] Enhance DMAR drivers to handle PCI/memory hotplug events
-Date: Tue,  7 Jan 2014 17:00:20 +0800
-Message-Id: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:52419 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751364AbaAJOQX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 09:16:23 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [PATCH 0/9] PCI: Eliminate race conditions between hotplug and sysfs rescan/remove (Was: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once)
+Date: Fri, 10 Jan 2014 15:20:44 +0100
+Message-ID: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
+In-Reply-To: <1992931.Zv6xBcN8V4@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <CAErSpo6edmz5nkSYogbYk1FFYsCCwNV_-rir2jGP2JBnvOx+iw@mail.gmail.com> <1992931.Zv6xBcN8V4@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Intel DMA/interrupt remapping drivers scan available PCI/memory devices
-at startup and cache discovered hardware topologies. They don't update
-cached information if PCI/memory hotplug event happens at runtime, then
-the stale information may break DMA/interrupt remapping logic.
+[Cc: adding linux-scsi for the MPT changes, Ben for powerpc, Matthew for
+ platform/x86 and Konrad for Xen]
 
-This patchset first (Patch 1-8) tries to introduces some helper
-functions and fixes several bugs, then (Patch 9,10) uses a global
-rwsem and RCU to protect global DMA/interrupt remapping data
-structures, and finally (Patch 11-14) hook PCI/memory hotplug events
-to update cached information.
+On Friday, December 06, 2013 02:21:50 AM Rafael J. Wysocki wrote:
 
-It's also a preparation for supporting of DMA/interrupt remapping
-hotplug.
+[...]
 
-Jiang Liu (14):
-  iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
-  iommu/vt-d: move private structures and variables into intel-iommu.c
-  iommu/vt-d: simplify function get_domain_for_dev()
-  iommu/vt-d: free resources if failed to create domain for PCIe
-    endpoint
-  iommu/vt-d: create device_domain_info structure for intermediate P2P
-    bridges
-  iommu/vt-d: fix incorrect iommu_count for si_domain
-  iommu/vt-d: fix error in detect ATS capability
-  iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
-    entries
-  iommu/vt-d: introduce a rwsem to protect global data structures
-  iommu/vt-d: use RCU to protect global resources in interrupt context
-  iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
-    hotplug happens
-  iommu/vt-d, PCI: unify the way to process DMAR device scope array
-  iommu/vt-d: update device to static identity domain mapping for PCI
-    hotplug
-  iommu/vt-d: update IOMMU state when memory hotplug happens
+> 
+> OK
+> 
+> To be a bit more constructive, as the next step I'd try to use
+> pci_remove_rescan_mutex to serialize all PCI hotplug operations (as I said
+> above) without making the other changes made by my patch.  Does that sound
+> reasonable?
 
- drivers/iommu/dmar.c                |  412 +++++++++++++++++--------
- drivers/iommu/intel-iommu.c         |  583 +++++++++++++++++++++--------------
- drivers/iommu/intel_irq_remapping.c |  108 ++++---
- include/linux/dmar.h                |   75 +++--
- 4 files changed, 753 insertions(+), 425 deletions(-)
+Well, no answer here, so as a followup, a series implementing that idea
+follows.
 
--- 
-1.7.10.4
+I *hope* I found all of the places that need to be synchronized vs the bus
+rescan and device removal that can be triggered via sysfs, but I might overlook
+something.  Also in some cases I wasn't quite sure how much stuff to put under
+the lock, because said stuff is not exactly straightforward.
+
+Enjoy!
+
+Rafael
 
