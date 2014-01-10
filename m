@@ -1,61 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:58546 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411AbaAaJ3G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 04:29:06 -0500
-From: Sander Eikelenboom <linux@eikelenboom.it>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
-	linux-ia64@vger.kernel.org
-Subject: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary prevents it from reading it's own rom. It will get the content of the shadowrom at C000 instead, which is of the primary VGA card and the driver of the secondary card will bail out.
-Date: Fri, 31 Jan 2014 10:28:22 +0100
-Message-Id: <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
-In-Reply-To: <20140130000831.GJ16825@google.com>
-References: <20140130000831.GJ16825@google.com>
+Received: from exprod5og105.obsmtp.com ([64.18.0.180]:55648 "HELO
+	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754138AbaAJBUv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 20:20:51 -0500
+Received: by mail-vb0-f54.google.com with SMTP id g10so2797420vbg.27
+        for <linux-pci@vger.kernel.org>; Thu, 09 Jan 2014 17:20:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201401071028.00225.arnd@arndb.de>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
+	<201401031307.50312.arnd@arndb.de>
+	<CACoXjck9KvQjB-8t3GYa95pZ6AwAyhyRKVg=5CYog_nFAfCiAQ@mail.gmail.com>
+	<201401071028.00225.arnd@arndb.de>
+Date: Thu, 9 Jan 2014 17:20:50 -0800
+Message-ID: <CACoXjc=GCXSKuQBohf8-6vCsxxM3EJf72mriBaS0iaKhiCAuoQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] pci: APM X-Gene PCIe controller driver
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn / Tony,
+On Tue, Jan 7, 2014 at 1:27 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Tuesday 07 January 2014, Tanmay Inamdar wrote:
+>> > Also, the implementation is wrong since the I/O port range already needs
+>> > to be ioremapped in order for inb/outb to work. There is already a
+>> > generic implementation of this in include/asm-generic/iomap.h, which
+>> > correctly calls ioport_map. Make sure that arm64 uses this implementation
+>> > and provides an ioport_map() function like
+>> >
+>> > static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+>> > {
+>> >         return PCI_IOBASE + port;
+>> > }
+>>
+>> For X-Gene, IO regions are memory mapped IO regions. So I am not sure
+>> if 'ioport_map'
+>> would work.
+>
+> It should. In fact all ARM and ARM64 platforms I have seen (and most powerpc
+> ones) have their IO region memory mapped. The way we handle this in Linux
+> is to map the IO space to a fixed virtual address at the time the host
+> controller is initialized, and all accesses to an IO port translate to
+> a access in this virtual address. See the inb()/outb() implementation on
+> arm and arm64, as well as the arm pci_ioremap_io() function for more
+> details.
+>
 
-I fixed up ia64 as well and brought it inline again with the x86 code,
-but i don't have a ia64 machine, so that part is untested.
-Perhaps Tony is able to review/test it ?
+Yes. arm64 has to support pci_ioremap_io and pci_iomap in order to
+support IO regions. Thanks.
 
-Sander
+>> >> +static void xgene_pcie_setup_lanes(struct xgene_pcie_port *port)
+>> >> +{
+>> >> +     void *csr_base = port->csr_base;
+>> >> +     u32 val;
+>> >> +
+>> > ...
+>> >> +static void xgene_pcie_setup_link(struct xgene_pcie_port *port)
+>> >> +{
+>> >> +     void *csr_base = port->csr_base;
+>> >> +     u32 val;
+>> >> +
+>> >
+>> > Don't these belong into the PHY driver? Can the setup be done in the
+>> > firmware instead so we don't have to bother with it in Linux?
+>> > Presumably you already need PCI support at boot time already if
+>> > you want to boot from a PCI device.
+>>
+>> They do look like phy setup functions but they are part of PCIe core
+>> register space.
+>
+> Ok.
+>
+>> >> +static void xgene_pcie_config_pims(void *csr_base, u32 addr,
+>> >> +                                u64 pim, resource_size_t size)
+>> >> +{
+>> >> +     u32 val;
+>> >> +
+>> >> +     xgene_pcie_out32(csr_base + addr, lower_32_bits(pim));
+>> >> +     val = upper_32_bits(pim) | EN_COHERENCY;
+>> >> +     xgene_pcie_out32(csr_base + addr + 0x04, val);
+>> >> +     xgene_pcie_out32(csr_base + addr + 0x08, 0x0);
+>> >> +     xgene_pcie_out32(csr_base + addr + 0x0c, 0x0);
+>> >> +     val = lower_32_bits(size);
+>> >> +     xgene_pcie_out32(csr_base + addr + 0x10, val);
+>> >> +     val = upper_32_bits(size);
+>> >> +     xgene_pcie_out32(csr_base + addr + 0x14, val);
+>> >> +}
+>> >
+>> > I suspect this is for programming the inbound translation window for
+>> > DMA transactions (maybe add a comment?), and the second 64-bit word is
+>> > for the bus-side address. Are you sure you want a translation starting
+>> > at zero, rather than an identity-mapping like this?
+>>
+>> Actually it is an unused sub-region. I will remove setting to 0. It
+>> defaults to 0 anyways.
+>
+> Is it always an identity-mapping then?
+>
+Yes.
 
+>> >> +struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+>> >> +{
+>> >> +     struct xgene_pcie_port *port = xgene_pcie_bus_to_port(bus);
+>> >> +
+>> >> +     return of_node_get(port->node);
+>> >> +}
+>> >
+>> > Another pointless wrapper to remove.
+>>
+>> If I remove this, then we get a failure while parsing irqs
+>> "pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-22"
+>
+> I mean it would be just as easy to open-code the function in the
+> callers, and more readable.
+>
+>> >> +static int xgene_pcie_populate_inbound_regions(struct xgene_pcie_port *port)
+>> >> +{
+>> >> +     struct resource *msi_res = &port->res[XGENE_MSI];
+>> >> +     phys_addr_t ddr_size = memblock_phys_mem_size();
+>> >> +     phys_addr_t ddr_base = memblock_start_of_DRAM();
+>> >
+>> > This looks fragile. What about discontiguous memory? It's probably better to
+>> > leave this setup to the firmware, which already has to do it.
+>>
+>> Idea is to map whole RAM. The memory controller in X-Gene does not
+>> allow holes or discontinuity in RAM.
+>
+> There might be holes in the memory map for other reasons, e.g. some part of
+> memory could be reserved for use by a particular piece of software.
+> There is actually a definition for a "dma-ranges" property that is normally
+> use to communicate this information, i.e. which bus addresses for DMA
+> translate into which parent bus (or memory) addresses. I think it would
+> be more logical to use that property.
 
+Yes. You are right. We will get more flexibility with this.
 
-Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary
-prevents it from reading it's own rom. It will get the content of the shadowrom
-at C000 instead, which is of the primary VGA card and the driver of the
-secondary card will bail out.
-
-Fix this by checking if the arch code or vga-arbitration has already
-determined the vga_default_device, if so only apply the fix to this
-primary video device and let the comment reflect this.
-
-v2:
-    - Fix pci_fixup_video both in x86 and ia64
-
-
-Sander Eikelenboom (1):
-  Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the
-    primary     prevents it from reading it's own rom. It will get the
-    content of the shadowrom     at C000 instead, which is of the
-    primary VGA card and the driver of the     secondary card will bail
-    out.
-
- arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
- arch/x86/pci/fixup.c  |   18 ++++++++++--------
- 2 files changed, 23 insertions(+), 19 deletions(-)
-
--- 
-1.7.10.4
-
+>
+>         Arnd
