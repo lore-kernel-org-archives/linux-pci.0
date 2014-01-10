@@ -1,46 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:34641 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbaATUfu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 15:35:50 -0500
-Date: Mon, 20 Jan 2014 12:36:36 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: "Chen, Jamie" <jamie.chen@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	USB list <linux-usb@vger.kernel.org>,
-	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: EHCI host broken -- interrupts disabled
-Message-ID: <20140120203636.GA30640@kroah.com>
-References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
- <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
- <20140117182231.GA18421@google.com>
- <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
- <20140120193918.GD5545@xanatos>
+Received: from mail-ve0-f175.google.com ([209.85.128.175]:59481 "EHLO
+	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbaAJCQb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 21:16:31 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140120193918.GD5545@xanatos>
+In-Reply-To: <20140109120135.GJ29041@8bytes.org>
+References: <52CE0252.4090106@oracle.com>
+	<20140109120135.GJ29041@8bytes.org>
+Date: Fri, 10 Jan 2014 10:16:30 +0800
+Message-ID: <CABawtvO5jOOanD_5Bzt6ebNOJaMUTvKNs8V9wah5QW_mBC1EFA@mail.gmail.com>
+Subject: Re: [PATCH Trivial] intel-iommu: check return value of
+ device_to_iommu() before using it
+From: Ethan Zhao <ethan.kernel@gmail.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: ethan zhao <ethan.zhao@oracle.com>, dwmw2@infradead.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, jiang.liu@linux.intel.com,
+	iommu@lists.linux-foundation.org,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 20, 2014 at 11:39:18AM -0800, Sarah Sharp wrote:
-> On Mon, Jan 20, 2014 at 12:15:47PM +0000, Chen, Jamie wrote:
-> > Try to apply this patch to kernel 3.8.0.
-> > 
-> > Make sure the ehci can work fine and lspci show that PCI_COMMAND_INTX_DISABLE is 0.
-> > 
-> > The patch can resolved this issue.
-> 
-> Great!  Thanks for testing, Jamie.
-> 
-> Bjorn, can you add me to the Cc list for this patch?  I'd like to notify
-> other Linux distros when it lands so they can pick it up.
+On Thu, Jan 9, 2014 at 8:01 PM, Joerg Roedel <joro@8bytes.org> wrote:
+> On Thu, Jan 09, 2014 at 09:58:42AM +0800, ethan zhao wrote:
+>>  drivers/iommu/intel-iommu.c |    2 ++
+>>  1 files changed, 2 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+>> index 40203ad..5b4531a 100644
+>> --- a/drivers/iommu/intel-iommu.c
+>> +++ b/drivers/iommu/intel-iommu.c
+>> @@ -1105,6 +1105,8 @@ static struct device_domain_info
+>> *iommu_support_dev_iotlb(
+>>      struct device_domain_info *info;
+>>      struct intel_iommu *iommu = device_to_iommu(segment, bus, devfn);
+>>
+>> +    if (!iommu)
+>> +        return NULL;
+>>      if (!ecap_dev_iotlb_support(iommu->ecap))
+>>          return NULL;
+>
+> This call can not fail, iommu_support_dev_iotlb() is only called from
+> domain_context_mapping_one() which does the iommu==NULL check on its
+> own before the call.
+>
+Agree, till now, was checked in domain_context_mapping_one(), but how
+about if we query information with iommu_support_dev_iotlb() in other
+code ?
 
-Might as well mark it for stable@vger.kernel.org, so that it does
-automatically get propagated to the distros...
-
-thanks,
-
-greg k-h
+Thanks,
+Ethan
+>
+>         Joerg
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
