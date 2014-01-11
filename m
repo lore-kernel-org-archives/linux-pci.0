@@ -1,66 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
-	heiko.carstens@de.ibm.com, stern@rowland.harvard.edu,
-	JBottomley@parallels.com, bhelgaas@google.com,
-	Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH 08/11] pci: use device_remove_file_self() instead of device_schedule_callback()
-Date: Tue, 28 Jan 2014 18:21:48 -0500
-Message-Id: <1390951311-15325-9-git-send-email-tj@kernel.org>
-In-Reply-To: <1390951311-15325-1-git-send-email-tj@kernel.org>
-References: <1390951311-15325-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:60042 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbaAKB1h (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:27:37 -0500
+Received: by mail-pa0-f44.google.com with SMTP id fa1so5497848pad.3
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:37 -0800 (PST)
+Subject: [PATCH v2 07/12] PCI: Remove unused pcie_aspm_enabled()
+To: Stephen Hemminger <stephen@networkplumber.org>,
+	linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yu Zhao <yu.zhao@intel.com>,
+	Andrew Patterson <andrew.patterson@hp.com>
+Date: Fri, 10 Jan 2014 18:27:34 -0700
+Message-ID: <20140111012734.14505.57102.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-driver-core now supports synchrnous self-deletion of attributes and
-the asynchrnous removal mechanism is scheduled for removal.  Use it
-instead of device_schedule_callback().  This makes "remove" behave
-synchronously.
+From: Stephen Hemminger <stephen@networkplumber.org>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+My philosophy is unused code is dead code.  And dead code is subject to bit
+rot and is a likely source of bugs.  Use it or lose it.
+
+This reverts part of 3e1b16002af2 ("ACPI/PCI: PCIe ASPM _OSC support
+capabilities called when root bridge added"), removing this interface:
+
+    pcie_aspm_enabled()
+
+[bhelgaas: split to separate patch]
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Andrew Patterson <andrew.patterson@hp.com>
 ---
- drivers/pci/pci-sysfs.c | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+ drivers/pci/pcie/aspm.c |   12 ------------
+ include/linux/pci.h     |    2 --
+ 2 files changed, 14 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 276ef9c..4e0acef 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -351,28 +351,17 @@ static struct device_attribute dev_rescan_attr = __ATTR(rescan,
- 							(S_IWUSR|S_IWGRP),
- 							NULL, dev_rescan_store);
- 
--static void remove_callback(struct device *dev)
--{
--	pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
--}
--
- static ssize_t
--remove_store(struct device *dev, struct device_attribute *dummy,
-+remove_store(struct device *dev, struct device_attribute *attr,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
- 	unsigned long val;
- 
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
--	/* An attribute cannot be unregistered by one of its own methods,
--	 * so we have to use this roundabout approach.
--	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
-+	if (val && device_remove_file_self(dev, attr))
-+		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
- 	return count;
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index f1272dc54de1..e1e7026b838d 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -984,18 +984,6 @@ void pcie_no_aspm(void)
+ 	}
  }
- static struct device_attribute dev_remove_attr = __ATTR(remove,
--- 
-1.8.5.3
+ 
+-/**
+- * pcie_aspm_enabled - is PCIe ASPM enabled?
+- *
+- * Returns true if ASPM has not been disabled by the command-line option
+- * pcie_aspm=off.
+- **/
+-int pcie_aspm_enabled(void)
+-{
+-       return !aspm_disabled;
+-}
+-EXPORT_SYMBOL(pcie_aspm_enabled);
+-
+ bool pcie_aspm_support_enabled(void)
+ {
+ 	return aspm_support_enabled;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index bf1f385bf14d..583348275085 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1198,10 +1198,8 @@ extern bool pcie_ports_auto;
+ #endif
+ 
+ #ifndef CONFIG_PCIEASPM
+-static inline int pcie_aspm_enabled(void) { return 0; }
+ static inline bool pcie_aspm_support_enabled(void) { return false; }
+ #else
+-int pcie_aspm_enabled(void);
+ bool pcie_aspm_support_enabled(void);
+ #endif
+ 
 
