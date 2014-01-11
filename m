@@ -1,72 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:31884 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753456AbaATTBE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 14:01:04 -0500
-Date: 20 Jan 2014 14:01:02 -0500
-Message-ID: <20140120190102.13636.qmail@science.horizon.com>
-From: "George Spelvin" <linux@horizon.com>
-To: acooks@gmail.com, linux@horizon.com
-Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
-Cc: iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org,
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:49165 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbaAKB13 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:27:29 -0500
+Received: by mail-pd0-f179.google.com with SMTP id y13so2751972pdi.10
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:29 -0800 (PST)
+Subject: [PATCH v2 06/12] PCI: Remove unused pci_vpd_truncate()
+To: Stephen Hemminger <stephen@networkplumber.org>,
 	linux-pci@vger.kernel.org
-In-Reply-To: <CAJtEV7ZsM2YHHETRGNwXnGi7uq0mJen73i-Yp3EXoDrnni=o=g@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yu Zhao <yu.zhao@intel.com>
+Date: Fri, 10 Jan 2014 18:27:26 -0700
+Message-ID: <20140111012726.14505.74201.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> I massaged it a bit to fit my personal idea of "cleaner".
->> The biggest logic change is the elimination of the fn_mapped
->> variable from quirk_map_multi_requester_ids.
+From: Stephen Hemminger <stephen@networkplumber.org>
 
-> Thanks, that was detritus left over from debugging.
+My philosophy is unused code is dead code.  And dead code is subject to bit
+rot and is a likely source of bugs.  Use it or lose it.
 
-The code still does the exact same thing; I just derive the value from
-(fn_map & ((1<<fn)-1)) if it's required.
+This reverts db5679437a2b ("PCI: add interface to set visible size of
+VPD"), removing this interface:
 
->> I also got rid of the "fn_map << fn" logic (which is never false).
+    pci_vpd_truncate()
 
-> What if function 0 is not present? There were cases where the Marvell
-> 9172 only used function 1 (when only one port is in use). I don't
-> think it's safe to assume that function 0 is present when you're
-> trying to compensate for broken devices.
+[bhelgaas: split to separate patch, also remove prototype from pci.h]
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/access.c |   24 ------------------------
+ include/linux/pci.h  |    1 -
+ 2 files changed, 25 deletions(-)
 
-Er... can you explain?  I did not change what the code *does* in the
-slightest, only the was it figures out what to do.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 0857ca981fae..7f8b78c08879 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -381,30 +381,6 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ }
+ 
+ /**
+- * pci_vpd_truncate - Set available Vital Product Data size
+- * @dev:	pci device struct
+- * @size:	available memory in bytes
+- *
+- * Adjust size of available VPD area.
+- */
+-int pci_vpd_truncate(struct pci_dev *dev, size_t size)
+-{
+-	if (!dev->vpd)
+-		return -EINVAL;
+-
+-	/* limited by the access method */
+-	if (size > dev->vpd->len)
+-		return -EINVAL;
+-
+-	dev->vpd->len = size;
+-	if (dev->vpd->attr)
+-		dev->vpd->attr->size = size;
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(pci_vpd_truncate);
+-
+-/**
+  * pci_cfg_access_lock - Lock PCI config reads/writes
+  * @dev:	pci device struct
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index efd0b8b67705..bf1f385bf14d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1009,7 +1009,6 @@ unsigned int pci_rescan_bus(struct pci_bus *bus);
+ /* Vital product data routines */
+ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+-int pci_vpd_truncate(struct pci_dev *dev, size_t size);
+ 
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
 
-I took this it out because it does nothing; it can be statically proved
-that the expression is always non-zero.
-
-Because "fn_map" is a non-zero 8-bit value and "fn" is an integer in
-the range 0-7, the value "fn_map << fn" is a non-zero 15-bit value.
-15 bits can't overflow (even on a PDP-11 with 16-bit ints), so this is
-a non-zero value, and the loop will never terminate because of it.
-
-It sure looked like a bug to me, but I couldn't figure out what it
-was supposed to do.  Can you enlighten me?  "fn_map >> fn" (shifting
-right rather than left) achieves early termination of the loop, but
-isn't essential.
-
->> +       fn_map &= ~(1<<PCI_FUNC(pdev->devfn));  /* Skip the normal case */
-
-> Do you really find this "cleaner", as in more readable?
-
-I find it easier to think about fn_map as the bitmap of functions to
-be operated on.  Rather than have two conditions in the following loop.
-
-The confusing thing is "why are we skipping that function?"  (Because this
-is a quirk and the "normal case" has already been handled.)  It would be
-nicer if all the domain_context_mapping_one calls were grouped together.
-
-I would like to see if there's a clean way to combine this with phantom
-function support (which I haven't find the code for yet).
-
->> +       for (i = pci_dev_dma_source_map; i->devfn; i++) {
-
-> The bug that Martin Oehrling pointed out in the ticket is still there.
-
-Ah, thank you; I had missed that that.  Yes, it should be testing
-i->vendor.  You really get devices using the wrong slot as well as
-function?  Wow!
-
-Using multiple functions is at least anticipated in the PCI spec,
-even if they do it wrong.
