@@ -1,106 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50128 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754235AbaAGVj0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 16:39:26 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:63213 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbaAKB2I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:28:08 -0500
+Received: by mail-pb0-f53.google.com with SMTP id ma3so5102126pbc.26
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:28:07 -0800 (PST)
+Subject: [PATCH v2 11/12] PCI: Reorder pci.h so actual interfaces come
+ before stubs
+To: Stephen Hemminger <stephen@networkplumber.org>,
 	linux-pci@vger.kernel.org
-Subject: [PATCH 6/7] ath10k: Use new interfaces for MSI enablement
-Date: Tue,  7 Jan 2014 19:05:41 +0100
-Message-Id: <dc640013c28e6e24b4f7293a8adbd2b60a8f48c4.1389103215.git.agordeev@redhat.com>
-In-Reply-To: <cover.1389103215.git.agordeev@redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yu Zhao <yu.zhao@intel.com>
+Date: Fri, 10 Jan 2014 18:28:05 -0700
+Message-ID: <20140111012804.14505.28679.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This update also fixes a stylistic (naming and messaging only)
-confusion of MSI-X vs multiple MSIs which are not the same.
+Consistently use the:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+    #ifdef CONFIG_PCI_FOO
+    int pci_foo(...);
+    #else
+    static inline int pci_foo(...) { return -1; }
+    #endif
+
+pattern, instead of sometimes using "#ifndef CONFIG_PCI_FOO".
+
+No functional change.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+ include/linux/pci.h |   43 ++++++++++++++++++++-----------------------
+ 1 file changed, 20 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 9e86a81..08807fe 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2073,14 +2073,14 @@ static void ath10k_pci_tasklet(unsigned long data)
- 	}
- }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 169ef1944d14..9da6a0cf2776 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1127,7 +1127,19 @@ struct msix_entry {
+ };
  
--static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
-+static int ath10k_pci_start_intr_multi_msi(struct ath10k *ar, int num)
+ 
+-#ifndef CONFIG_PCI_MSI
++#ifdef CONFIG_PCI_MSI
++int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
++int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
++void pci_msi_shutdown(struct pci_dev *dev);
++void pci_disable_msi(struct pci_dev *dev);
++int pci_msix_table_size(struct pci_dev *dev);
++int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
++void pci_msix_shutdown(struct pci_dev *dev);
++void pci_disable_msix(struct pci_dev *dev);
++void msi_remove_pci_irq_vectors(struct pci_dev *dev);
++void pci_restore_msi_state(struct pci_dev *dev);
++int pci_msi_enabled(void);
++#else
+ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
  {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
- 	int i;
- 
--	ret = pci_enable_msi_block(ar_pci->pdev, num);
--	if (ret)
-+	ret = pci_enable_msi_range(ar_pci->pdev, num, num);
-+	if (ret < 0)
- 		return ret;
- 
- 	ret = request_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW,
-@@ -2111,16 +2111,16 @@ static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
- 		}
- 	}
- 
--	ath10k_info("MSI-X interrupt handling (%d intrs)\n", num);
-+	ath10k_info("Multi MSI interrupt handling (%d intrs)\n", num);
+ 	return -1;
+@@ -1168,18 +1180,6 @@ static inline int pci_msi_enabled(void)
+ {
  	return 0;
  }
+-#else
+-int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+-void pci_msi_shutdown(struct pci_dev *dev);
+-void pci_disable_msi(struct pci_dev *dev);
+-int pci_msix_table_size(struct pci_dev *dev);
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+-void pci_msix_shutdown(struct pci_dev *dev);
+-void pci_disable_msix(struct pci_dev *dev);
+-void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+-void pci_restore_msi_state(struct pci_dev *dev);
+-int pci_msi_enabled(void);
+ #endif
  
--static int ath10k_pci_start_intr_msi(struct ath10k *ar)
-+static int ath10k_pci_start_intr_single_msi(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
+ #ifdef CONFIG_PCIEPORTBUS
+@@ -1190,10 +1190,10 @@ extern bool pcie_ports_auto;
+ #define pcie_ports_auto		false
+ #endif
  
--	ret = pci_enable_msi(ar_pci->pdev);
-+	ret = pci_enable_msi_range(ar_pci->pdev, 1, 1);
- 	if (ret < 0)
- 		return ret;
+-#ifndef CONFIG_PCIEASPM
+-static inline bool pcie_aspm_support_enabled(void) { return false; }
+-#else
++#ifdef CONFIG_PCIEASPM
+ bool pcie_aspm_support_enabled(void);
++#else
++static inline bool pcie_aspm_support_enabled(void) { return false; }
+ #endif
  
-@@ -2132,7 +2132,7 @@ static int ath10k_pci_start_intr_msi(struct ath10k *ar)
- 		return ret;
- 	}
+ #ifdef CONFIG_PCIEAER
+@@ -1204,15 +1204,12 @@ static inline void pci_no_aer(void) { }
+ static inline bool pci_aer_available(void) { return false; }
+ #endif
  
--	ath10k_info("MSI interrupt handling\n");
-+	ath10k_info("Single MSI interrupt handling\n");
- 	return 0;
- }
+-#ifndef CONFIG_PCIE_ECRC
+-static inline void pcie_set_ecrc_checking(struct pci_dev *dev)
+-{
+-	return;
+-}
+-static inline void pcie_ecrc_get_policy(char *str) {};
+-#else
++#ifdef CONFIG_PCIE_ECRC
+ void pcie_set_ecrc_checking(struct pci_dev *dev);
+ void pcie_ecrc_get_policy(char *str);
++#else
++static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
++static inline void pcie_ecrc_get_policy(char *str) { }
+ #endif
  
-@@ -2199,20 +2199,20 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
- 		num = 1;
- 
- 	if (num > 1) {
--		ret = ath10k_pci_start_intr_msix(ar, num);
-+		ret = ath10k_pci_start_intr_multi_msi(ar, num);
- 		if (ret == 0)
- 			goto exit;
- 
--		ath10k_warn("MSI-X didn't succeed (%d), trying MSI\n", ret);
-+		ath10k_warn("Multi MSI failed (%d), trying single MSI\n", ret);
- 		num = 1;
- 	}
- 
- 	if (num == 1) {
--		ret = ath10k_pci_start_intr_msi(ar);
-+		ret = ath10k_pci_start_intr_single_msi(ar);
- 		if (ret == 0)
- 			goto exit;
- 
--		ath10k_warn("MSI didn't succeed (%d), trying legacy INTR\n",
-+		ath10k_warn("Single MSI failed (%d), trying legacy INTR\n",
- 			    ret);
- 		num = 0;
- 	}
--- 
-1.7.7.6
+ #define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
 
