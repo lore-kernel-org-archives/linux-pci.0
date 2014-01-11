@@ -1,101 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12826 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932481AbaAaTUX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 14:20:23 -0500
-From: "Brown, Aaron F" <aaron.f.brown@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [E1000-devel] [PATCH 0/2] Remove dead code
-Date: Fri, 31 Jan 2014 19:20:20 +0000
-Message-ID: <309B89C4C689E141A5FF6A0C5FB2118B7314C6DB@ORSMSX101.amr.corp.intel.com>
-References: <20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <309B89C4C689E141A5FF6A0C5FB2118B7314C430@ORSMSX101.amr.corp.intel.com>
- <CAErSpo627wEtBypSrX8QGLW=QAnpa0q-g2z+kSM9hBdRcFNv-Q@mail.gmail.com>
-In-Reply-To: <CAErSpo627wEtBypSrX8QGLW=QAnpa0q-g2z+kSM9hBdRcFNv-Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:43066 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbaAKB1O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:27:14 -0500
+Received: by mail-pd0-f170.google.com with SMTP id g10so5278798pdj.1
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:13 -0800 (PST)
+Subject: [PATCH v2 04/12] PCI: Remove unused ID-Based Ordering support
+To: Stephen Hemminger <stephen@networkplumber.org>,
+	linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yu Zhao <yu.zhao@intel.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Date: Fri, 10 Jan 2014 18:27:11 -0700
+Message-ID: <20140111012711.14505.25027.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gU2Vu
-dDogRnJpZGF5LCBKYW51YXJ5IDMxLCAyMDE0IDk6NTkgQU0NCj4gVG86IEJyb3duLCBBYXJvbiBG
-DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBlMTAwMC1kZXZlbEBsaXN0cy5zb3Vy
-Y2Vmb3JnZS5uZXQ7IEFyamFuDQo+IHZhbiBkZSBWZW47IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
-bC5vcmcNCj4gU3ViamVjdDogUmU6IFtFMTAwMC1kZXZlbF0gW1BBVENIIDAvMl0gUmVtb3ZlIGRl
-YWQgY29kZQ0KPiANCj4gT24gRnJpLCBKYW4gMzEsIDIwMTQgYXQgMjoxMCBBTSwgQnJvd24sIEFh
-cm9uIEYgPGFhcm9uLmYuYnJvd25AaW50ZWwuY29tPg0KPiB3cm90ZToNCj4gPj4gRnJvbTogQmpv
-cm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4+IFNlbnQ6IFRodXJz
-ZGF5LCBKYW51YXJ5IDMwLCAyMDE0IDExOjIxIEFNDQo+ID4+IFRvOiBsaW51eC1wY2lAdmdlci5r
-ZXJuZWwub3JnDQo+ID4+IENjOiBlMTAwMC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQ7IEFy
-amFuIHZhbiBkZSBWZW47IGxpbnV4LQ0KPiA+PiBrZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+ID4+
-IFN1YmplY3Q6IFtFMTAwMC1kZXZlbF0gW1BBVENIIDAvMl0gUmVtb3ZlIGRlYWQgY29kZQ0KPiA+
-Pg0KPiA+PiBUaGlzIGlzIGEgcmV3b3JrIG9mIHBhcnQgb2YgU3RlcGhlbidzIHBhdGNoIFsxXS4N
-Cj4gPj4NCj4gPj4gVGhpcyByZW1vdmVzIHRoZSBNTUlPIGV4Y2x1c2l2aXR5IHN1cHBvcnQgdGhh
-dCB3YXMgYWRkZWQgYXMgcGFydCBvZg0KPiA+PiBhbiBlMTAwMGUgYnVnIGh1bnQuDQo+ID4+DQo+
-ID4+IFRoZSBlMTAwMGUgZHJpdmVyIHN0aWxsIHVzZXMNCj4gPj4gcGNpX3JlcXVlc3Rfc2VsZWN0
-ZWRfcmVnaW9uc19leGNsdXNpdmUoKSwgYnV0IHRoZXJlIGFyZSBubyBjYWxsZXJzIG9mDQo+ID4+
-IHBjaV9yZXF1ZXN0X3JlZ2lvbl9leGNsdXNpdmUoKSBhbmQgcGNpX3JlcXVlc3RfcmVnaW9uc19l
-eGNsdXNpdmUoKS4NCj4gPj4gSSB0aG91Z2h0IGl0IHdhcyBjbGVhbmVyIHRvIHJlbW92ZSB0aGUg
-d2hvbGUgdGhpbmcgdGhhbiB0byBsZWF2ZQ0KPiA+PiBwYXJ0cyBvZiBpdCBpbiBwbGFjZS4gIEJ1
-dCBJIGNvdWxkIGVhc2lseSBiZSBjb252aW5jZWQgdG8gbGVhdmUgcGFydA0KPiA+PiBvciBhbGwg
-b2YgdGhpcyBpbiBwbGFjZSBpZiBwZW9wbGUgdGhpbmsgaXQncyBzdGlsbCB1c2VmdWwuDQo+ID4N
-Cj4gPiBUaGFua3MgQmpvcm4sIEkgaGF2ZSBhZGRlZCB0aGVzZSB0byBKZWZmJ3MgcXVldWUuDQo+
-IA0KPiBMZXQncyB3YWl0IGZvciBhIGJpdCBtb3JlIGRpc2N1c3Npb24gb24gdGhpcy4NCj4gDQo+
-IEZvciBvbmUgdGhpbmcsIEZlbmdndWFuZydzIGF1dG9idWlsZGVyIGZvdW5kIGEgaGFuZGZ1bCBv
-ZiBpc3N1ZXMsDQo+IGluY2x1ZGluZyBhIGNvdXBsZSBtb3JlIHVzZXJzIG9mIHRoZSBleGNsdXNp
-dmUgbWFwcGluZ3MuICBGb3IgYW5vdGhlciwNCj4gQXJqYW4gcmVtaW5kZWQgbWUgdGhhdCB0aGUg
-ZTEwMDBlIGJ1ZyBodW5nIHdhcyBmb3IgYSBwcm9ibGVtIHRoYXQgYnJpY2tlZA0KPiB0aGUgZGV2
-aWNlLCByZXF1aXJpbmcgcmVwbGFjZW1lbnQgb2YgdGhlIHBhcnQgb3Igc2lnbmlmaWNhbnQgZWZm
-b3J0IHRvIGZpeA0KPiB0aGUgRUVQUk9NLiAgSSAqc3VzcGVjdCogdGhpcyBpcyBhIHBvdGVudGlh
-bCBpc3N1ZSBmb3IgbWFueSBkZXZpY2VzLCBidXQNCj4gaWYgdGhlIGUxMDAwZSBpcyBwYXJ0aWN1
-bGFybHkgc3VzY2VwdGlibGUgZm9yIHNvbWUgcmVhc29uLCB3ZSBtaWdodCB3YW50DQo+IHRvIGtl
-ZXAgdGhlIGV4Y2x1c2l2ZSBtYXBwaW5ncyBmb3IgaXQuDQo+IA0KPiBJZiB5b3Ugd2FudCB0byBh
-cHBseSBqdXN0IHRoZSBlMTAwMGUgcGFydCB0aGF0IHJlbW92ZXMgaXRzIHVzZSBvZg0KPiBwY2lf
-cmVxdWVzdF9zZWxlY3RlZF9yZWdpb25zX2V4Y2x1c2l2ZSgpLCBJIHdvdWxkIGhhdmUgbm8gY29t
-cGxhaW50cyBhYm91dA0KPiB0aGF0LCBvZiBjb3Vyc2UuDQoNClllcywgdGhhdCB3YXMgbXkgbWFp
-biBpbnRlbnQuICBJIGRpZCBwdWxsIHRoZW0gYm90aCBpbiBidXQgdGhlIHNlY29uZCB3YXMgbW9y
-ZSBhcyBhIGhlYWRzIHVwIHRvIG91ciB2aXJ0dWFsaXphdGlvbiBndXlzIHRoZW4gYXMgYSByZXF1
-ZXN0IHRvIHRlc3QuDQoNCj4gIEJ1dCB3ZSBjYW4ndCBhcHBseSB0aGUgd2hvbGUgdGhpbmcgYXMt
-aXMgd2l0aG91dCBhdA0KPiBsZWFzdCBmaXhpbmcgdGhlIGJ1aWxkIGlzc3Vlcy4NCg0KVGhhbmtz
-IGZvciB0aGUgaGVhZHMgdXAgb24gdGhhdC4gIEknbGwgc29ydCBvdXQgc29tZXRoaW5nIHRoYXQg
-YnVpbGRzIHdpdGggdGhlIGUxMDAwZSBwYXJ0cyByZW1vdmVkIG9uIG15IGVuZC4NCg0KPiANCj4g
-Pj4gSXQgYWxzbyByZW1vdmVzIFNSLUlPViBtaWdyYXRpb24gc3VwcG9ydCwgd2hpY2ggaXMgY29t
-cGxldGVseSB1bnVzZWQsDQo+ID4+IGFzIGZhciBhcyBJIGNhbiB0ZWxsLg0KPiA+Pg0KPiA+PiBb
-MV0NCj4gPj4gaHR0cDovL2xrbWwua2VybmVsLm9yZy9yLzIwMTMxMjI3MTMyNzEwLjcxOTA2NDdj
-QG5laGFsYW0ubGludXhuZXRwbHVtDQo+ID4+IGJlci5uDQo+ID4+IGV0DQo+ID4+DQo+ID4+IC0t
-LQ0KPiA+Pg0KPiA+PiBCam9ybiBIZWxnYWFzICgyKToNCj4gPj4gICAgICAgUENJOiBSZW1vdmUg
-dW51c2VkIE1NSU8gZXhjbHVzaXZpdHkgc3VwcG9ydA0KPiA+PiAgICAgICBQQ0k6IFJlbW92ZSB1
-bnVzZWQgU1ItSU9WIFZGIE1pZ3JhdGlvbiBzdXBwb3J0DQo+ID4+DQo+ID4+DQo+ID4+ICBEb2N1
-bWVudGF0aW9uL1BDSS9wY2ktaW92LWhvd3RvLnR4dCAgICAgICAgfCAgICA0IC0NCj4gPj4gIERv
-Y3VtZW50YXRpb24va2VybmVsLXBhcmFtZXRlcnMudHh0ICAgICAgICB8ICAgIDQgLQ0KPiA+PiAg
-YXJjaC94ODYvbW0vaW5pdC5jICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgMg0KPiA+PiAg
-ZHJpdmVycy9uZXQvZXRoZXJuZXQvaW50ZWwvZTEwMDBlL25ldGRldi5jIHwgICAgMyAtDQo+ID4+
-ICBkcml2ZXJzL3BjaS9pb3YuYyAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTE5IC0tLS0t
-LS0tLS0tLS0tLS0tLS0tDQo+IC0tLQ0KPiA+PiAtLS0tLQ0KPiA+PiAgZHJpdmVycy9wY2kvcGNp
-LXN5c2ZzLmMgICAgICAgICAgICAgICAgICAgIHwgICAgMyAtDQo+ID4+ICBkcml2ZXJzL3BjaS9w
-Y2kuYyAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTEyICsrKy0tLS0tLS0tLS0tLS0tLS0t
-DQo+IC0tLQ0KPiA+PiAtLS0NCj4gPj4gIGRyaXZlcnMvcGNpL3BjaS5oICAgICAgICAgICAgICAg
-ICAgICAgICAgICB8ICAgIDQgLQ0KPiA+PiAgaW5jbHVkZS9saW51eC9pb3BvcnQuaCAgICAgICAg
-ICAgICAgICAgICAgIHwgICAgNSAtDQo+ID4+ICBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgICAg
-ICAgICAgICAgICAgICAgfCAgICA3IC0tDQo+ID4+ICBrZXJuZWwvcmVzb3VyY2UuYyAgICAgICAg
-ICAgICAgICAgICAgICAgICAgfCAgIDU0IC0tLS0tLS0tLS0tLS0NCj4gPj4gIDExIGZpbGVzIGNo
-YW5nZWQsIDE0IGluc2VydGlvbnMoKyksIDMwMyBkZWxldGlvbnMoLSkNCj4gPj4NCj4gPj4gLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tDQo+ID4+IC0tLS0tDQo+ID4+IC0tLS0NCj4gPj4gV2F0Y2hHdWFyZCBEaW1lbnNp
-b24gaW5zdGFudGx5IHR1cm5zIHJhdyBuZXR3b3JrIGRhdGEgaW50byBhY3Rpb25hYmxlDQo+ID4+
-IHNlY3VyaXR5IGludGVsbGlnZW5jZS4gSXQgZ2l2ZXMgeW91IHJlYWwtdGltZSB2aXN1YWwgZmVl
-ZGJhY2sgb24ga2V5DQo+ID4+IHNlY3VyaXR5IGlzc3VlcyBhbmQgdHJlbmRzLiAgU2tpcCB0aGUg
-Y29tcGxpY2F0ZWQgc2V0dXAgLSBzaW1wbHkNCj4gPj4gaW1wb3J0IGEgdmlydHVhbCBhcHBsaWFu
-Y2UgYW5kIGdvIGZyb20gemVybyB0byBpbmZvcm1lZCBpbiBzZWNvbmRzLg0KPiA+PiBodHRwOi8v
-cHViYWRzLmcuZG91YmxlY2xpY2submV0L2dhbXBhZC9jbGs/aWQ9MTIzNjEyOTkxJml1PS80MTQw
-L29zdGcNCj4gPj4gLmNsa3QNCj4gPj4gcmsNCj4gPj4gX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18NCj4gPj4gRTEwMDAtZGV2ZWwgbWFpbGluZyBsaXN0DQo+
-ID4+IEUxMDAwLWRldmVsQGxpc3RzLnNvdXJjZWZvcmdlLm5ldA0KPiA+PiBodHRwczovL2xpc3Rz
-LnNvdXJjZWZvcmdlLm5ldC9saXN0cy9saXN0aW5mby9lMTAwMC1kZXZlbA0KPiA+PiBUbyBsZWFy
-biBtb3JlIGFib3V0IEludGVsJiMxNzQ7IEV0aGVybmV0LCB2aXNpdA0KPiA+PiBodHRwOi8vY29t
-bXVuaXRpZXMuaW50ZWwuY29tL2NvbW11bml0eS93aXJlZA0K
+From: Stephen Hemminger <stephen@networkplumber.org>
+
+My philosophy is unused code is dead code.  And dead code is subject to bit
+rot and is a likely source of bugs.  Use it or lose it.
+
+This reverts b48d4425b602 ("PCI: add ID-based ordering enable/disable
+support"), removing these interfaces:
+
+    pci_enable_ido()
+    pci_disable_ido()
+
+[bhelgaas: split to separate patch, also remove prototypes from pci.h]
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+---
+ drivers/pci/pci.c   |   40 ----------------------------------------
+ include/linux/pci.h |   13 -------------
+ 2 files changed, 53 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 84a24d16778f..6db2f1a441e9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2110,46 +2110,6 @@ void pci_configure_ari(struct pci_dev *dev)
+ 	}
+ }
+ 
+-/**
+- * pci_enable_ido - enable ID-based Ordering on a device
+- * @dev: the PCI device
+- * @type: which types of IDO to enable
+- *
+- * Enable ID-based ordering on @dev.  @type can contain the bits
+- * %PCI_EXP_IDO_REQUEST and/or %PCI_EXP_IDO_COMPLETION to indicate
+- * which types of transactions are allowed to be re-ordered.
+- */
+-void pci_enable_ido(struct pci_dev *dev, unsigned long type)
+-{
+-	u16 ctrl = 0;
+-
+-	if (type & PCI_EXP_IDO_REQUEST)
+-		ctrl |= PCI_EXP_DEVCTL2_IDO_REQ_EN;
+-	if (type & PCI_EXP_IDO_COMPLETION)
+-		ctrl |= PCI_EXP_DEVCTL2_IDO_CMP_EN;
+-	if (ctrl)
+-		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2, ctrl);
+-}
+-EXPORT_SYMBOL(pci_enable_ido);
+-
+-/**
+- * pci_disable_ido - disable ID-based ordering on a device
+- * @dev: the PCI device
+- * @type: which types of IDO to disable
+- */
+-void pci_disable_ido(struct pci_dev *dev, unsigned long type)
+-{
+-	u16 ctrl = 0;
+-
+-	if (type & PCI_EXP_IDO_REQUEST)
+-		ctrl |= PCI_EXP_DEVCTL2_IDO_REQ_EN;
+-	if (type & PCI_EXP_IDO_COMPLETION)
+-		ctrl |= PCI_EXP_DEVCTL2_IDO_CMP_EN;
+-	if (ctrl)
+-		pcie_capability_clear_word(dev, PCI_EXP_DEVCTL2, ctrl);
+-}
+-EXPORT_SYMBOL(pci_disable_ido);
+-
+ static int pci_acs_enable;
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b8cbe52c7a48..f2284f1332db 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -997,11 +997,6 @@ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 	return __pci_enable_wake(dev, state, false, enable);
+ }
+ 
+-#define PCI_EXP_IDO_REQUEST	(1<<0)
+-#define PCI_EXP_IDO_COMPLETION	(1<<1)
+-void pci_enable_ido(struct pci_dev *dev, unsigned long type);
+-void pci_disable_ido(struct pci_dev *dev, unsigned long type);
+-
+ /* For use by arch with custom probe code */
+ void set_pcie_port_type(struct pci_dev *pdev);
+ void set_pcie_hotplug_bridge(struct pci_dev *pdev);
+@@ -1412,14 +1407,6 @@ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 	return 0;
+ }
+ 
+-static inline void pci_enable_ido(struct pci_dev *dev, unsigned long type)
+-{
+-}
+-
+-static inline void pci_disable_ido(struct pci_dev *dev, unsigned long type)
+-{
+-}
+-
+ static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
+ {
+ 	return -EIO;
+
