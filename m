@@ -1,117 +1,158 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Airlie <airlied@linux.ie>,
-	intel-gfx@lists.freedesktop.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH v5] ACPI: Fix acpi_evaluate_object() return value check
-Date: Fri, 24 Jan 2014 16:36:21 +0100
-Message-ID: <11909895.7rJ1jejxPI@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5VGy9nCnrOAZtU9OjMsXxz5q_x2rVn596mqg1TWTT64g@mail.gmail.com>
-References: <1390448559-33896-1-git-send-email-wangyijing@huawei.com> <38648196.Uh7omNjHIu@vostro.rjw.lan> <CAErSpo5VGy9nCnrOAZtU9OjMsXxz5q_x2rVn596mqg1TWTT64g@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:62324 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750875AbaAKIiK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jan 2014 03:38:10 -0500
+Received: by mail-lb0-f178.google.com with SMTP id u14so82284lbd.23
+        for <linux-pci@vger.kernel.org>; Sat, 11 Jan 2014 00:38:08 -0800 (PST)
+Message-ID: <52D102EF.5070303@gmail.com>
+Date: Sat, 11 Jan 2014 12:38:07 +0400
+From: `VL <vl.homutov@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port
+ range.
+References: <52CBC4D1.5080706@gmail.com>	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>	<52CD2387.2030403@gmail.com>	<CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>	<52CE301E.60108@gmail.com>	<CAE9FiQWxpRMX-0vyd5hML-Hnto8H+C83dcne9FBZcN9qsmGCEw@mail.gmail.com>	<52CF7A17.60703@gmail.com> <CAE9FiQVPtNk2LN4TVMzXX72TN8bjDTyD74y_BH05rfw=NArD3Q@mail.gmail.com>
+In-Reply-To: <CAE9FiQVPtNk2LN4TVMzXX72TN8bjDTyD74y_BH05rfw=NArD3Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 24, 2014 07:54:29 AM Bjorn Helgaas wrote:
-> On Thu, Jan 23, 2014 at 5:33 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Thursday, January 23, 2014 11:21:01 AM Bjorn Helgaas wrote:
-> >> On Wed, Jan 22, 2014 at 8:42 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> >> > Since acpi_evaluate_object() returns acpi_status and not plain int,
-> >> > ACPI_FAILURE() should be used for checking its return value. Also
-> >> > add some detailed debug info when acpi_evaluate_object() failed.
-> >> >
-> >> > Reviewed-by: Jani Nikula <jani.nikula@intel.com>
-> >> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> >> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> >> > ---
-> >> > v4->v5: Add some detailed debug info for acpi_evaluate_object()
-> >> >         failure suggested by Bjorn.
-> >> > v3->v4: Fix spell error, add Jani Nikula reviewed-by.
-> >> > v2->v3: Fix compile error pointed out by Hanjun.
-> >> > v1->v2: Add CC to related subsystem MAINTAINERS
-> >> > ---
-> >> >  drivers/gpu/drm/i915/intel_acpi.c              |   33 ++++++++++++++++-------
-> >> >  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |   13 ++++++---
-> >> >  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   25 +++++++++++-------
-> >> >  drivers/pci/pci-label.c                        |   10 +++++--
-> >> >  4 files changed, 54 insertions(+), 27 deletions(-)
-> >> >
-> >> > diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
-> >> > index dfff090..e7b526b 100644
-> >> > --- a/drivers/gpu/drm/i915/intel_acpi.c
-> >> > +++ b/drivers/gpu/drm/i915/intel_acpi.c
-> >> > @@ -31,11 +31,13 @@ static const u8 intel_dsm_guid[] = {
-> >> >  static int intel_dsm(acpi_handle handle, int func)
-> >> >  {
-> >> >         struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
-> >> > +       struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
-> >> >         struct acpi_object_list input;
-> >> >         union acpi_object params[4];
-> >> >         union acpi_object *obj;
-> >> >         u32 result;
-> >> > -       int ret = 0;
-> >> > +       acpi_status status;
-> >> > +       int ret;
-> >> >
-> >> >         input.count = 4;
-> >> >         input.pointer = params;
-> >> > @@ -50,10 +52,14 @@ static int intel_dsm(acpi_handle handle, int func)
-> >> >         params[3].package.count = 0;
-> >> >         params[3].package.elements = NULL;
-> >> >
-> >> > -       ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> >> > -       if (ret) {
-> >> > -               DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
-> >> > -               return ret;
-> >> > +       status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> >> > +       if (ACPI_FAILURE(status)) {
-> >> > +               acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
-> >> > +               DRM_DEBUG_DRIVER(
-> >> > +                       "failed to evaluate _DSM for %s, exit status %u\n",
-> >> > +                       (char *)string.pointer, (unsigned int)status);
-> >> > +               kfree(string.pointer);
-> >> > +               return -EINVAL;
-> >>
-> >> I said "too bad there isn't an *easy* way" to include more
-> >> information.  IMHO this is too ugly and error-prone to use
-> >> consistently.  And if you are going to add more information, why did
-> >> you only do it for some of the calls and not others?
-> >>
-> >> I considered adding a %p extension to print the pathname; I don't know
-> >> if that's worthwhile or not.  I think it would be ideal if we had a
-> >> struct device and could use dev_info(), and then a way to connect the
-> >> struct device with an ACPI path, like maybe a dmesg note when we
-> >> create the struct device corresponding to an ACPI Device node.
-> >
-> > Well, we can generally print something like that from pci_acpi_setup().
-> >
-> > What about the below?  Wouldn't it generate too much output on some systems?
-> 
-> Yeah, that probably would generate an awful lot of output.  I was just
-> hoping to avoid treating ACPI pathnames as first-class objects.  What
-> do you think about a %p extension?  I played with that once, but I
-> seem to have lost the patch.
+On 10.01.2014 09:19, Yinghai Lu wrote:
+> On Thu, Jan 9, 2014 at 8:41 PM, `VL <vl.homutov@gmail.com> wrote:
+>> On 10.01.2014 00:17, Yinghai Lu wrote:
+>>> On Wed, Jan 8, 2014 at 9:14 PM, `VL <vl.homutov@gmail.com> wrote:
+>>>> I've put all logs here: http://inspert.ru/pci/
+>>>>> CONFIG_PCI_DEBUG=y
+>>>>>
+>>>>> and boot with "debug ignore_loglevel initcall_debug"?
+>>> Jan  9 08:51:49 10 pci 0000:04:00.0: BAR 7: assigned [io  0x2000-0x4fff]
+>>> Jan  9 08:51:49 10 pci 0000:05:01.0: BAR 7: assigned [io  0x2000-0x2fff]
+>>> Jan  9 08:51:49 10 pci 0000:06:00.0: BAR 7: assigned [io  0x2000-0x2fff]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: assigned [io  0x2000-0x203f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: error updating (0x002001
+>>> != 0xffffffff)
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: set to [io  0x2000-0x203f]
+>>> (PCI address [0x2000-0x203f])
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: assigned [io  0x2040-0x205f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: error updating (0x002041
+>>> != 0xffffffff)
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: set to [io  0x2040-0x205f]
+>>> (PCI address [0x2040-0x205f])
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: assigned [io  0x2060-0x206f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: error updating (0x002061
+>>> != 0xffffffff)
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: set to [io  0x2060-0x206f]
+>>> (PCI address [0x2060-0x206f])
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: assigned [io  0x2070-0x207f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: error updating (0x002071
+>>> != 0xffffffff)
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: set to [io  0x2070-0x207f]
+>>> (PCI address [0x2070-0x207f])
+>>> Jan  9 08:51:49 10 pci 0000:06:00.0: PCI bridge to [bus 07]
+>>> Jan  9 08:51:49 10 pci 0000:06:00.0:   bridge window [io  0x2000-0x2fff]
+>>> Jan  9 08:51:49 10 pci 0000:05:01.0: PCI bridge to [bus 06-07]
+>>> Jan  9 08:51:49 10 pci 0000:05:01.0:   bridge window [io  0x2000-0x2fff]
+>>> Jan  9 08:51:49 10 pci 0000:0d:00.0: BAR 0: set to [io  0x4020-0x4027]
+>>> (PCI address [0x4020-0x4027])
+>>> Jan  9 08:51:49 10 pci 0000:0d:00.0: BAR 2: assigned [io  0x4028-0x402f]
+>>> Jan  9 08:51:49 10 pci 0000:0d:00.0: BAR 3: assigned [io  0x4034-0x4037]
+>>> Jan  9 08:51:49 10 pci 0000:0d:00.0: BAR 3: set to [io  0x4034-0x4037]
+>>> (PCI address [0x4034-0x4037])
+>>> Jan  9 08:51:49 10 pci 0000:05:09.0: PCI bridge to [bus 0d]
+>>> Jan  9 08:51:49 10 pci 0000:05:09.0:   bridge window [io  0x4000-0x4fff]
+>>> Jan  9 08:51:49 10 pci 0000:05:09.0:   bridge window [mem
+>>> 0xf7600000-0xf76fffff]
+>>> Jan  9 08:51:49 10 pci 0000:04:00.0: PCI bridge to [bus 05-0d]
+>>> Jan  9 08:51:49 10 pci 0000:04:00.0:   bridge window [io  0x2000-0x4fff]
+>>> Jan  9 08:51:49 10 pci 0000:04:00.0:   bridge window [mem
+>>> 0xf7200000-0xf77fffff]
+>>> Jan  9 08:51:49 10 pci 0000:04:00.0:   bridge window [mem
+>>> 0xf0000000-0xf00fffff 64bit pref]
+>>> Jan  9 08:51:49 10 pci 0000:00:1c.3: PCI bridge to [bus 04-0d]
+>>> Jan  9 08:51:49 10 pci 0000:00:1c.3:   bridge window [io  0x2000-0x4fff]
+>>> Jan  9 08:51:49 10 pci 0000:00:1c.3:   bridge window [mem
+>>> 0xf7200000-0xf78fffff]
+>>> Jan  9 08:51:49 10 pci 0000:00:1c.3:   bridge window [mem
+>>> 0xf0000000-0xf00fffff 64bit pref]
+>>>
+>>> The realloc code does reassign big range to the devices.
+>>>
+>>> but one device refuse to change bar to new assigned vaule, or it is
+>>> read-only?
+>>>
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: assigned [io  0x2000-0x203f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: error updating (0x002001
+>>> != 0xffffffff)
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: set to [io  0x2000-0x203f]
+>>> (PCI address [0x2000-0x203f])
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: assigned [io  0x2040-0x205f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: error updating (0x002041
+>>> != 0xffffffff)
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: set to [io  0x2040-0x205f]
+>>> (PCI address [0x2040-0x205f])
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: assigned [io  0x2060-0x206f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: error updating (0x002061
+>>> != 0xffffffff)
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: set to [io  0x2060-0x206f]
+>>> (PCI address [0x2060-0x206f])
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: assigned [io  0x2070-0x207f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: error updating (0x002071
+>>> != 0xffffffff)
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: set to [io  0x2070-0x207f]
+>>> (PCI address [0x2070-0x207f])
+>>>
+>>>
+>>> also BIOS does not assign any vaule to it:
+>>>
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: reg 0x10: [io  0x0000-0x001f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: reg 0x18: [io  0x0000-0x000f]
+>>> Jan  9 08:51:49 10 pci 0000:07:00.0: reg 0x1c: [io  0x0000-0x003f]
+>>>
+>>> It is strange 05:01.0/07:00.0 does not work, but 05:09.0/0d:00.0 does
+>>> work.
+>>>
+>>> Can you boot with "pci=earlydump"?
+>>>
+>>> Yinghai
+>> Here it is: http://inspert.ru/pci/netconsole-realloc-earlydump.txt
+> there is no 07:00.0 in the print out.
+Well, so it looks like procedure, doing earlydump somehow misses this 
+device.
+I have collected one more log (without pci=realloc but with debug) so 
+I'm pretty sure
+that device is there (it appears later in dmesg output) but still not 
+shown in earlydump -
+it shows 00:06, then 00:09.
 
-Well, it may be worth doing.  However, that information is readily available from
-sysfs anyway, you only need to follow the firmware_node link in the PCI device's
-sysfs directory and read the path attribute from there.  For example, on my
-system:
+http://inspert.ru/pci/dmesg-earlydump.txt
 
-$ cat /sys/devices/pci0000:00/0000:00:1c.4/0000:0b:00.0/firmware_node/path
-\_SB_.PCI0.RP05.PXSX
+First messages about 00:07 are:
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+[    0.402838] pci 0000:07:00.0: [1412:1712] type 00 class 0x040100
+[    0.403042] pci 0000:07:00.0: reg 0x10: [io  0x0000-0x001f]
+[    0.403230] pci 0000:07:00.0: reg 0x14: [io  0x0000-0x000f]
+[    0.403418] pci 0000:07:00.0: reg 0x18: [io  0x0000-0x000f]
+[    0.403607] pci 0000:07:00.0: reg 0x1c: [io  0x0000-0x003f]
+[    0.403888] pci 0000:07:00.0: supports D2,
+
+then:
+
+[    0.457334] pnp 00:05: disabling [io  0x002e-0x002f] because it 
+overlaps 0000:07:00.0 BAR 3 [io  0x0000-0x003f]
+
+[    0.459820] system 00:07: [io  0x1854-0x1857] has been reserved
+[    0.459991] system 00:07: Plug and Play ACPI device, IDs INT3f0d 
+PNP0c02 (active)
+
+[    0.460592] pnp 00:09: disabling [io  0x0010-0x001f] because it 
+overlaps 0000:07:00.0 BAR 0 [io  0x0000-0x001f]
+[    0.460908] pnp 00:09: disabling [io  0x0010-0x001f disabled] because 
+it overlaps 0000:07:00.0 BAR 3 [io  0x0000-0x003f]
+[    0.461208] pnp 00:09: disabling [io  0x0022-0x003f] because it 
+overlaps 0000:07:00.0 BAR 3 [io  0x0000-0x003f]
+
+
+
