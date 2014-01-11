@@ -1,63 +1,185 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:58186 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbaAKB0v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:26:51 -0500
+Received: by mail-pa0-f54.google.com with SMTP id kl14so5408596pab.41
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:26:51 -0800 (PST)
+Subject: [PATCH v2 01/12] PCI: Removed unused parts of Page Request
+ Interface support
+To: Stephen Hemminger <stephen@networkplumber.org>,
+	linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yu Zhao <yu.zhao@intel.com>, Joerg Roedel <joro@8bytes.org>
+Date: Fri, 10 Jan 2014 18:26:47 -0700
+Message-ID: <20140111012647.14505.34032.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <6023795.zgEUjY5fWb@vostro.rjw.lan>
-References: <37552283.kG1L4S8Daa@vostro.rjw.lan>
-	<31566676.sHXhScpSQ6@vostro.rjw.lan>
-	<CAE9FiQVEqnWm1j0GckuNsD_FTPxWahZpCnF79sNgKN-JnCDT+w@mail.gmail.com>
-	<6023795.zgEUjY5fWb@vostro.rjw.lan>
-Date: Thu, 2 Jan 2014 14:47:04 -0800
-Message-ID: <CAE9FiQXQuX5EOE1jbXfK+G1mf9q=4-fpw1jNs38sza9tcPtqMg@mail.gmail.com>
-Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to
- avoid sysfs warnings
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Tejun Heo <tj@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 31, 2013 at 1:03 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Tuesday, December 31, 2013 10:45:46 AM Yinghai Lu wrote:
->> On Mon, Dec 30, 2013 at 5:15 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> > On Monday, December 30, 2013 01:51:28 PM Rafael J. Wysocki wrote:
->> >> > We have patches that need to stop ioapic and iommu between
->> >> > pci_stop_root_bus and pci_remove_root_bus.
->> >
->> > BTW, what *exactly* do they need to be stopped between?  After these two patches:
->>
->> need to stop regular pci drivers before stop "driver" for ioapic/dmar.
->>
->> >
->> >> > Please check if the problem still happen after
->> >> >
->> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=c4a0a5d964e90b93eb4101c3927b788e083e530f
->> >> >
->> >> > http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/patch/?id=e3b439e1d315aff59c1b4f0fc43c5cd2d82b4138
->> >
->> > pci_stop_root_bus() is just a walk over devices on the root bus stopping
->> > them and pci_remove_root_bus() starts with the removal of those devices.
->> >
->> > Surely, those two list walks can be combined into one?
->>
->> maybe ok, but we have to problem to make sure stop pci drivers before
->> "driver" for ioapic/dmar.
->
-> That's fine, but ioapic/dmar stopping need not happen between the stopping of
-> drivers and removing of devices on the root bus I suppose?
->
-> Actually, I think that the ioapic/dmar stopping should be carried out after
-> removing all of the root bus devices, or it can be racy with respect to a
-> driver reload.  Isn't that the case?
+From: Stephen Hemminger <stephen@networkplumber.org>
 
-No. It should be before removing all root bus devices.
-as they need to access the pci devices during stop ioapic and dmar.
+My philosophy is unused code is dead code.  And dead code is subject to bit
+rot and is a likely source of bugs.  Use it or lose it.
 
-Also ioapic itself could one one pci device.
+This reverts parts of c320b976d783 ("PCI: Add implementation for PRI
+capability"), removing these interfaces:
 
-Yinghai
+    pci_pri_enabled()
+    pci_pri_stopped()
+    pci_pri_status()
+
+[bhelgaas: split to separate patch]
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Joerg Roedel <joro@8bytes.org>
+---
+ drivers/pci/ats.c       |   82 -----------------------------------------------
+ include/linux/pci-ats.h |   17 ----------
+ 2 files changed, 99 deletions(-)
+
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index e52d7ffa38b9..a8099d4d0c9d 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -235,27 +235,6 @@ void pci_disable_pri(struct pci_dev *pdev)
+ EXPORT_SYMBOL_GPL(pci_disable_pri);
+ 
+ /**
+- * pci_pri_enabled - Checks if PRI capability is enabled
+- * @pdev: PCI device structure
+- *
+- * Returns true if PRI is enabled on the device, false otherwise
+- */
+-bool pci_pri_enabled(struct pci_dev *pdev)
+-{
+-	u16 control;
+-	int pos;
+-
+-	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+-	if (!pos)
+-		return false;
+-
+-	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
+-
+-	return (control & PCI_PRI_CTRL_ENABLE) ? true : false;
+-}
+-EXPORT_SYMBOL_GPL(pci_pri_enabled);
+-
+-/**
+  * pci_reset_pri - Resets device's PRI state
+  * @pdev: PCI device structure
+  *
+@@ -282,67 +261,6 @@ int pci_reset_pri(struct pci_dev *pdev)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pci_reset_pri);
+-
+-/**
+- * pci_pri_stopped - Checks whether the PRI capability is stopped
+- * @pdev: PCI device structure
+- *
+- * Returns true if the PRI capability on the device is disabled and the
+- * device has no outstanding PRI requests, false otherwise. The device
+- * indicates this via the STOPPED bit in the status register of the
+- * capability.
+- * The device internal state can be cleared by resetting the PRI state
+- * with pci_reset_pri(). This can force the capability into the STOPPED
+- * state.
+- */
+-bool pci_pri_stopped(struct pci_dev *pdev)
+-{
+-	u16 control, status;
+-	int pos;
+-
+-	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+-	if (!pos)
+-		return true;
+-
+-	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
+-	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
+-
+-	if (control & PCI_PRI_CTRL_ENABLE)
+-		return false;
+-
+-	return (status & PCI_PRI_STATUS_STOPPED) ? true : false;
+-}
+-EXPORT_SYMBOL_GPL(pci_pri_stopped);
+-
+-/**
+- * pci_pri_status - Request PRI status of a device
+- * @pdev: PCI device structure
+- *
+- * Returns negative value on failure, status on success. The status can
+- * be checked against status-bits. Supported bits are currently:
+- * PCI_PRI_STATUS_RF:      Response failure
+- * PCI_PRI_STATUS_UPRGI:   Unexpected Page Request Group Index
+- * PCI_PRI_STATUS_STOPPED: PRI has stopped
+- */
+-int pci_pri_status(struct pci_dev *pdev)
+-{
+-	u16 status, control;
+-	int pos;
+-
+-	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+-	if (!pos)
+-		return -EINVAL;
+-
+-	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
+-	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
+-
+-	/* Stopped bit is undefined when enable == 1, so clear it */
+-	if (control & PCI_PRI_CTRL_ENABLE)
+-		status &= ~PCI_PRI_STATUS_STOPPED;
+-
+-	return status;
+-}
+-EXPORT_SYMBOL_GPL(pci_pri_status);
+ #endif /* CONFIG_PCI_PRI */
+ 
+ #ifdef CONFIG_PCI_PASID
+diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+index 68bcefd7fca0..72031785fe1d 100644
+--- a/include/linux/pci-ats.h
++++ b/include/linux/pci-ats.h
+@@ -56,10 +56,7 @@ static inline int pci_ats_enabled(struct pci_dev *dev)
+ 
+ int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
+ void pci_disable_pri(struct pci_dev *pdev);
+-bool pci_pri_enabled(struct pci_dev *pdev);
+ int pci_reset_pri(struct pci_dev *pdev);
+-bool pci_pri_stopped(struct pci_dev *pdev);
+-int pci_pri_status(struct pci_dev *pdev);
+ 
+ #else /* CONFIG_PCI_PRI */
+ 
+@@ -72,25 +69,11 @@ static inline void pci_disable_pri(struct pci_dev *pdev)
+ {
+ }
+ 
+-static inline bool pci_pri_enabled(struct pci_dev *pdev)
+-{
+-	return false;
+-}
+-
+ static inline int pci_reset_pri(struct pci_dev *pdev)
+ {
+ 	return -ENODEV;
+ }
+ 
+-static inline bool pci_pri_stopped(struct pci_dev *pdev)
+-{
+-	return true;
+-}
+-
+-static inline int pci_pri_status(struct pci_dev *pdev)
+-{
+-	return -ENODEV;
+-}
+ #endif /* CONFIG_PCI_PRI */
+ 
+ #ifdef CONFIG_PCI_PASID
+
