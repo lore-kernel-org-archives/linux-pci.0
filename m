@@ -1,50 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:62611 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752983AbaA3OVk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 09:21:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [RFC PATCH V3 0/4] APM X-Gene PCIe controller
-Date: Thu, 30 Jan 2014 15:21:11 +0100
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dann Frazier <dann.frazier@canonical.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm" <linux-arm-kernel@lists.infradead.org>,
-	linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
-References: <1390599168-13150-1-git-send-email-tinamdar@apm.com> <CAErSpo7Dfd4NJBEDuVe1VCvZObFq1YvV2x77S60Z4-CZq89QJw@mail.gmail.com> <CACoXjc=LSrLK=kd9GJoHWJovVDC+TfH2bZO-2Ht9jMoBrL9eag@mail.gmail.com>
-In-Reply-To: <CACoXjc=LSrLK=kd9GJoHWJovVDC+TfH2bZO-2Ht9jMoBrL9eag@mail.gmail.com>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:59258 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbaAKB0m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:26:42 -0500
+Received: by mail-pd0-f169.google.com with SMTP id v10so5276986pde.0
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:26:42 -0800 (PST)
+Subject: [PATCH v2 00/12] Remove dead code
+To: Stephen Hemminger <stephen@networkplumber.org>,
+	linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yu Zhao <yu.zhao@intel.com>
+Date: Fri, 10 Jan 2014 18:26:39 -0700
+Message-ID: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201401301521.11665.arnd@arndb.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 30 January 2014, Tanmay Inamdar wrote:
-> >
-> > When you repost, please make sure you fix whatever problem is
-> > preventing your email from appearing on the vger mailing lists.  I
-> > won't apply things that haven't appeared on the linux-pci list,
-> > because that list is the opportunity for other people to review them.
-> >
-> You are absolutely right. If the patches are not reaching mailing
-> list, they should not appear on archive list as well. However I am
-> seeing my patches recorded on archives. So I am not sure if they are
-> actually getting dropped on linux-pci or any other mailing list.
-> 
-> http://www.spinics.net/lists/linux-pci/msg28198.html
-> http://article.gmane.org/gmane.linux.kernel.pci/28442/match=tanmay+inamdar
+This is basically a v2 of Stephen's patches [1,2].
 
-Very strange. I can also confirm that I received the patches through
-the linux-arm-kernel and devicetree mailing lists without problems.
+I split them up into smaller patches because we're removing some PCIe 3.0
+functionality (ID-Based Ordering, Optimized Buffer Flush/Fill, and Latency
+Tolerance Reporting) that people might care about, and splitting it makes
+that more visible and easier to add back in the future.
 
-	Arnd
+I kept pci_sriov_migration() and sriov_migration().  I think we could and
+should remove these, but they were added by 74bb1bcc7dbb ("PCI: handle
+SR-IOV Virtual Function Migration"), and I think we probably could revert
+that commit entirely.  I just got tired of poking at this, so I left that
+for somebody more interested.
+
+pci_request_region_exclusive() and pci_request_regions_exclusive() were
+added by e8de1481fd71 ("resource: allow MMIO exclusivity for device
+drivers").  This series removes them but keeps the rest of that commit,
+including pci_request_selected_regions_exclusive() and some other stuff.
+e8de1481fd71 was for debugging a bad memory corruption, and e1000e is the
+only user I see.  I'm not sure it's worth keeping all that stuff just for
+one driver.  But again, I got tired of fiddling with this, so I just kept
+Stephen's patch removing the obvious parts.
+
+I left pci_cfg_space_size() global because it is used by powerpc and sparc.
+
+I also left pci_find_next_ext_capability() global and exported.  It is used
+internally and is also the only way for drivers to find capabilities that
+can occur multiple times (though admittedly nones use it today).
+
+I intend to merge this or an updated version for v3.14.  It's currently on
+my pci/cleanup branch [3].
+
+Bjorn
+
+[1] http://lkml.kernel.org/r/20131227132734.2aa9bc16@nehalam.linuxnetplumber.net
+[2] http://lkml.kernel.org/r/20131227132710.7190647c@nehalam.linuxnetplumber.net
+[3] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/cleanup
+
+---
+
+Bjorn Helgaas (2):
+      PCI: Reorder pci.h so actual interfaces come before stubs
+      PCI: Cleanup pci.h whitespace
+
+Stephen Hemminger (10):
+      PCI: Removed unused parts of Page Request Interface support
+      PCI: Remove unused Latency Tolerance Reporting support
+      PCI: Remove unused Optimized Buffer Flush/Fill support
+      PCI: Remove unused ID-Based Ordering support
+      PCI: Remove unused exclusive region support
+      PCI: Remove unused pci_vpd_truncate()
+      PCI: Remove unused pcie_aspm_enabled()
+      PCI: Remove unused pci_renumber_slot()
+      PCI: Remove unused alloc_pci_dev()
+      PCI: Make local functions static
+
+
+ drivers/pci/access.c              |   24 ---
+ drivers/pci/ats.c                 |   82 ---------
+ drivers/pci/hotplug/pciehp.h      |    1 
+ drivers/pci/hotplug/pciehp_core.c |    2 
+ drivers/pci/pci.c                 |  336 +++----------------------------------
+ drivers/pci/pci.h                 |    2 
+ drivers/pci/pcie/aspm.c           |   12 -
+ drivers/pci/probe.c               |  117 ++++++-------
+ drivers/pci/slot.c                |   26 ---
+ include/linux/pci-ats.h           |   17 --
+ include/linux/pci.h               |  129 +++-----------
+ 11 files changed, 114 insertions(+), 634 deletions(-)
