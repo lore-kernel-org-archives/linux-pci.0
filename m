@@ -1,50 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog122.obsmtp.com ([207.126.144.153]:33666 "EHLO
-	eu1sys200aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752844AbaA3Ktt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 05:49:49 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <arnd@arndb.de>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>, <linux-pci@vger.kernel.org>
-Subject: [PATCH V3 8/8] MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
-Date: Thu, 30 Jan 2014 16:18:50 +0530
-Message-ID: <839dacd5c1f0ea125d2f243968783a4c7a66c881.1391077731.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1391077731.git.mohit.kumar@st.com>
-References: <cover.1391077731.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from moutng.kundenserver.de ([212.227.17.8]:55725 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753654AbaAKNHA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jan 2014 08:07:00 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
+Date: Sat, 11 Jan 2014 14:06:52 +0100
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jon Masters <jcm@redhat.com>
+References: <1387785725-24262-1-git-send-email-tinamdar@apm.com> <201401071635.02006.arnd@arndb.de> <CACoXjckkovQdB5Pk3Tn4uGkm5+HuEfWYb6E1MiUOPpuZ2b7qNA@mail.gmail.com>
+In-Reply-To: <CACoXjckkovQdB5Pk3Tn4uGkm5+HuEfWYb6E1MiUOPpuZ2b7qNA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201401111406.52935.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Mohit Kumar as maintainer for ST SPEAr13xx PCIe driver.
+On Saturday 11 January 2014, Tanmay Inamdar wrote:
+> On Tue, Jan 7, 2014 at 7:35 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Tuesday 07 January 2014, Tanmay Inamdar wrote:
+> >> On Fri, Jan 3, 2014 at 1:49 AM, Arnd Bergmann <arnd@arndb.de> wrote:
 
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-pci@vger.kernel.org
----
- MAINTAINERS |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+> >> >
+> >> > Better use an anonymous clock?
+> >>
+> >> Sorry. Can you please elaborate?
+> >
+> > I mean drop the "clock-names" property.
+> >
+> Did you mean clock-names in pcie-clock node or pcie node? I can drop
+> clock-names from pcie clock node. However if I drop clock-names from
+> pcie node, then clk_get call from pcie host driver would result in
+> failure. Right?
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8285ed4..fd03da6 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6462,6 +6462,12 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/pci-exynos.c
- 
-+PCIE DRIVER FOR ST SPEAR13XX
-+M:	Mohit Kumar <mohit.kumar@st.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	drivers/pci/host/pcie-spear13xx.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
--- 
-1.7.0.1
+I meant drop it from the pcie node, and change the clk_get call
+to pass NULL instead of the name, which will get the handle for
+the only clock provided. You only need clock-names if you have
+more than one clock in the device node and want to identify them.
 
+The pcie-clock node should not have a "clock-names" property at
+all, unless it has a "clocks" property as well and refers to
+its clock parent with it.
+
+I already noticed in another review that the xgene clocks get this
+part wrong and that should be fixed for all those clock provides,
+but it's unrelated to what I was talking about here.
+
+	Arnd
