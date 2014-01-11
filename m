@@ -1,123 +1,376 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:43042 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752181AbaACAxC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jan 2014 19:53:02 -0500
-Date: Thu, 2 Jan 2014 17:52:53 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	patches <patches@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jon Masters <jcm@redhat.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH 2/3] arm64: dts: APM X-Gene PCIe device tree nodes
-Message-ID: <20140103005253.GB12098@obsidianresearch.com>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
- <1387785725-24262-3-git-send-email-tinamdar@apm.com>
- <20131223174634.GD25089@obsidianresearch.com>
- <CACoXjcnPvgDX3s8OywLHP6Tu2OrpNzM1Phx+s3RLmKDgu3t8gA@mail.gmail.com>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:48288 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbaAKB2A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:28:00 -0500
+Received: by mail-pd0-f179.google.com with SMTP id y13so2742919pdi.38
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:59 -0800 (PST)
+Subject: [PATCH v2 10/12] PCI: Make local functions static
+To: Stephen Hemminger <stephen@networkplumber.org>,
+	linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yu Zhao <yu.zhao@intel.com>
+Date: Fri, 10 Jan 2014 18:27:57 -0700
+Message-ID: <20140111012757.14505.76129.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACoXjcnPvgDX3s8OywLHP6Tu2OrpNzM1Phx+s3RLmKDgu3t8gA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 02, 2014 at 01:56:51PM -0800, Tanmay Inamdar wrote:
-> On Mon, Dec 23, 2013 at 9:46 AM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
-> > On Mon, Dec 23, 2013 at 01:32:03PM +0530, Tanmay Inamdar wrote:
-> >> This patch adds the device tree nodes for APM X-Gene PCIe controller and
-> >> PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts nodes
-> >> are added.
-> >
-> > Can you include an lspci dump for PCI DT bindings please? It is
-> > impossible to review otherwise..
-> >
-> 
-> On the X-Gene evaluation platform, there is only one PCIe port
-> enabled. Here is the 'lspci' dump
+From: Stephen Hemminger <stephen@networkplumber.org>
 
-This is a bit hard to read withouth more context, but:
+Using 'make namespacecheck' identify code which should be declared static.
+Checked for users in other driver/archs as well.  Compile tested only.
 
-> # lspci -vvv
-> 00:00.0 Class 0604: Device 19aa:e008 (rev 04)
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+This stops exporting the following interfaces to modules:
 
-This is an on-chip device? (19aa does not seem to be a VID I can find)
+    pci_target_state()
+    pci_load_saved_state()
 
-Ideally this is the on-chip PCI-PCI bridge which represents the port.
+[bhelgaas: retained pci_find_next_ext_capability() and pci_cfg_space_size()]
+Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp.h      |    1 
+ drivers/pci/hotplug/pciehp_core.c |    2 -
+ drivers/pci/pci.c                 |   54 +++++++++---------
+ drivers/pci/pci.h                 |    2 -
+ drivers/pci/probe.c               |  111 +++++++++++++++++++------------------
+ include/linux/pci.h               |    5 --
+ 6 files changed, 84 insertions(+), 91 deletions(-)
 
-The problem I see is that your DT binding has a top level stanza per
-port.
-
-We *really* prefer to see a single stanza for all ports - but this
-requires the HW to be able to fit into the Linux resource assignment
-model - a single resource pool for all ports and standard PCI-PCI
-bridge config access to assign the resource to a port.
-
-If your HW can't do this (eg because the port aperture 0xe000000000 is
-hard wired) then the fall back is to place every port in a distinct
-domain, with a distinct DT node and have overlapping bus numbers
-and fixed windows. I don't see PCI domain support in your driver..
-
-There is some kind of an addressing problem because you've done this:
-
-+static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+		dev->resource[i].start = dev->resource[i].end = 0;
-+		dev->resource[i].flags = 0;
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_BRIDGE_DEVICEID,
-+			 xgene_pcie_fixup_bridge);
-
-Which is usually a sign that something is wonky with how the HW is
-being fit into the PCI core.
-
-> ParErr+ Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Region 0: Memory at <ignored> (64-bit, prefetchable)
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->         I/O behind bridge: 0000f000-00000fff
->         Memory behind bridge: 00c00000-00cfffff
-
-[..]
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 21e865ded1dc..8de88b052715 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -43,7 +43,6 @@
+ extern bool pciehp_poll_mode;
+ extern int pciehp_poll_time;
+ extern bool pciehp_debug;
+-extern bool pciehp_force;
  
-> 01:00.0 Class 0200: Device 15b3:1003
->         Region 0: Memory at e000c00000 (64-bit, non-prefetchable) [size=1M]
->         Region 2: Memory at e000000000 (64-bit, prefetchable)
->         [size=8M]
+ #define dbg(format, arg...)						\
+ do {									\
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index bbd48bbe4e9b..67cbd3e90ffd 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -41,7 +41,7 @@
+ bool pciehp_debug;
+ bool pciehp_poll_mode;
+ int pciehp_poll_time;
+-bool pciehp_force;
++static bool pciehp_force;
+ 
+ #define DRIVER_VERSION	"0.4"
+ #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 730471a74fba..57529ffdff20 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -657,6 +657,28 @@ static int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state)
+ }
+ 
+ /**
++ * pci_wakeup - Wake up a PCI device
++ * @pci_dev: Device to handle.
++ * @ign: ignored parameter
++ */
++static int pci_wakeup(struct pci_dev *pci_dev, void *ign)
++{
++	pci_wakeup_event(pci_dev);
++	pm_request_resume(&pci_dev->dev);
++	return 0;
++}
++
++/**
++ * pci_wakeup_bus - Walk given bus and wake up devices on it
++ * @bus: Top bus of the subtree to walk.
++ */
++static void pci_wakeup_bus(struct pci_bus *bus)
++{
++	if (bus)
++		pci_walk_bus(bus, pci_wakeup, NULL);
++}
++
++/**
+  * __pci_start_power_transition - Start power transition of a PCI device
+  * @dev: PCI device to handle.
+  * @state: State to put the device into.
+@@ -835,8 +857,8 @@ EXPORT_SYMBOL(pci_choose_state);
+ #define PCI_EXP_SAVE_REGS	7
+ 
+ 
+-static struct pci_cap_saved_state *pci_find_saved_cap(
+-	struct pci_dev *pci_dev, char cap)
++static struct pci_cap_saved_state *pci_find_saved_cap(struct pci_dev *pci_dev,
++						      char cap)
+ {
+ 	struct pci_cap_saved_state *tmp;
+ 
+@@ -1071,7 +1093,8 @@ EXPORT_SYMBOL_GPL(pci_store_saved_state);
+  * @dev: PCI device that we're dealing with
+  * @state: Saved state returned from pci_store_saved_state()
+  */
+-int pci_load_saved_state(struct pci_dev *dev, struct pci_saved_state *state)
++static int pci_load_saved_state(struct pci_dev *dev,
++				struct pci_saved_state *state)
+ {
+ 	struct pci_cap_saved_data *cap;
+ 
+@@ -1099,7 +1122,6 @@ int pci_load_saved_state(struct pci_dev *dev, struct pci_saved_state *state)
+ 	dev->state_saved = true;
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(pci_load_saved_state);
+ 
+ /**
+  * pci_load_and_free_saved_state - Reload the save state pointed to by state,
+@@ -1531,27 +1553,6 @@ void pci_pme_wakeup_bus(struct pci_bus *bus)
+ 		pci_walk_bus(bus, pci_pme_wakeup, (void *)true);
+ }
+ 
+-/**
+- * pci_wakeup - Wake up a PCI device
+- * @pci_dev: Device to handle.
+- * @ign: ignored parameter
+- */
+-static int pci_wakeup(struct pci_dev *pci_dev, void *ign)
+-{
+-	pci_wakeup_event(pci_dev);
+-	pm_request_resume(&pci_dev->dev);
+-	return 0;
+-}
+-
+-/**
+- * pci_wakeup_bus - Walk given bus and wake up devices on it
+- * @bus: Top bus of the subtree to walk.
+- */
+-void pci_wakeup_bus(struct pci_bus *bus)
+-{
+-	if (bus)
+-		pci_walk_bus(bus, pci_wakeup, NULL);
+-}
+ 
+ /**
+  * pci_pme_capable - check the capability of PCI device to generate PME#
+@@ -1765,7 +1766,7 @@ int pci_wake_from_d3(struct pci_dev *dev, bool enable)
+  * If the platform can't manage @dev, return the deepest state from which it
+  * can generate wake events, based on any available PME info.
+  */
+-pci_power_t pci_target_state(struct pci_dev *dev)
++static pci_power_t pci_target_state(struct pci_dev *dev)
+ {
+ 	pci_power_t target_state = PCI_D3hot;
+ 
+@@ -4160,7 +4161,6 @@ EXPORT_SYMBOL(pci_restore_state);
+ EXPORT_SYMBOL(pci_pme_capable);
+ EXPORT_SYMBOL(pci_pme_active);
+ EXPORT_SYMBOL(pci_wake_from_d3);
+-EXPORT_SYMBOL(pci_target_state);
+ EXPORT_SYMBOL(pci_prepare_to_sleep);
+ EXPORT_SYMBOL(pci_back_from_sleep);
+ EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 9c91ecc1301b..4df38df224f4 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -6,7 +6,6 @@
+ #define PCI_CFG_SPACE_SIZE	256
+ #define PCI_CFG_SPACE_EXP_SIZE	4096
+ 
+-extern const unsigned char pcix_bus_speed[];
+ extern const unsigned char pcie_link_speed[];
+ 
+ /* Functions internal to the PCI core code */
+@@ -68,7 +67,6 @@ void pci_power_up(struct pci_dev *dev);
+ void pci_disable_enabled_device(struct pci_dev *dev);
+ int pci_finish_runtime_suspend(struct pci_dev *dev);
+ int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
+-void pci_wakeup_bus(struct pci_bus *bus);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a4f53b677185..7fef23ba6bc6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -16,7 +16,7 @@
+ #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
+ #define CARDBUS_RESERVE_BUSNR	3
+ 
+-struct resource busn_resource = {
++static struct resource busn_resource = {
+ 	.name	= "PCI busn",
+ 	.start	= 0,
+ 	.end	= 255,
+@@ -518,7 +518,7 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 	return bridge;
+ }
+ 
+-const unsigned char pcix_bus_speed[] = {
++static const unsigned char pcix_bus_speed[] = {
+ 	PCI_SPEED_UNKNOWN,		/* 0 */
+ 	PCI_SPEED_66MHz_PCIX,		/* 1 */
+ 	PCI_SPEED_100MHz_PCIX,		/* 2 */
+@@ -999,6 +999,60 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+ 		pdev->is_hotplug_bridge = 1;
+ }
+ 
++
++/**
++ * pci_cfg_space_size - get the configuration space size of the PCI device.
++ * @dev: PCI device
++ *
++ * Regular PCI devices have 256 bytes, but PCI-X 2 and PCI Express devices
++ * have 4096 bytes.  Even if the device is capable, that doesn't mean we can
++ * access it.  Maybe we don't have a way to generate extended config space
++ * accesses, or the device is behind a reverse Express bridge.  So we try
++ * reading the dword at 0x100 which must either be 0 or a valid extended
++ * capability header.
++ */
++static int pci_cfg_space_size_ext(struct pci_dev *dev)
++{
++	u32 status;
++	int pos = PCI_CFG_SPACE_SIZE;
++
++	if (pci_read_config_dword(dev, pos, &status) != PCIBIOS_SUCCESSFUL)
++		goto fail;
++	if (status == 0xffffffff)
++		goto fail;
++
++	return PCI_CFG_SPACE_EXP_SIZE;
++
++ fail:
++	return PCI_CFG_SPACE_SIZE;
++}
++
++int pci_cfg_space_size(struct pci_dev *dev)
++{
++	int pos;
++	u32 status;
++	u16 class;
++
++	class = dev->class >> 8;
++	if (class == PCI_CLASS_BRIDGE_HOST)
++		return pci_cfg_space_size_ext(dev);
++
++	if (!pci_is_pcie(dev)) {
++		pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
++		if (!pos)
++			goto fail;
++
++		pci_read_config_dword(dev, pos + PCI_X_STATUS, &status);
++		if (!(status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ)))
++			goto fail;
++	}
++
++	return pci_cfg_space_size_ext(dev);
++
++ fail:
++	return PCI_CFG_SPACE_SIZE;
++}
++
+ #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
+ 
+ /**
+@@ -1173,59 +1227,6 @@ static void pci_release_dev(struct device *dev)
+ 	kfree(pci_dev);
+ }
+ 
+-/**
+- * pci_cfg_space_size - get the configuration space size of the PCI device.
+- * @dev: PCI device
+- *
+- * Regular PCI devices have 256 bytes, but PCI-X 2 and PCI Express devices
+- * have 4096 bytes.  Even if the device is capable, that doesn't mean we can
+- * access it.  Maybe we don't have a way to generate extended config space
+- * accesses, or the device is behind a reverse Express bridge.  So we try
+- * reading the dword at 0x100 which must either be 0 or a valid extended
+- * capability header.
+- */
+-int pci_cfg_space_size_ext(struct pci_dev *dev)
+-{
+-	u32 status;
+-	int pos = PCI_CFG_SPACE_SIZE;
+-
+-	if (pci_read_config_dword(dev, pos, &status) != PCIBIOS_SUCCESSFUL)
+-		goto fail;
+-	if (status == 0xffffffff)
+-		goto fail;
+-
+-	return PCI_CFG_SPACE_EXP_SIZE;
+-
+- fail:
+-	return PCI_CFG_SPACE_SIZE;
+-}
+-
+-int pci_cfg_space_size(struct pci_dev *dev)
+-{
+-	int pos;
+-	u32 status;
+-	u16 class;
+-
+-	class = dev->class >> 8;
+-	if (class == PCI_CLASS_BRIDGE_HOST)
+-		return pci_cfg_space_size_ext(dev);
+-
+-	if (!pci_is_pcie(dev)) {
+-		pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+-		if (!pos)
+-			goto fail;
+-
+-		pci_read_config_dword(dev, pos + PCI_X_STATUS, &status);
+-		if (!(status & (PCI_X_STATUS_266MHZ | PCI_X_STATUS_533MHZ)))
+-			goto fail;
+-	}
+-
+-	return pci_cfg_space_size_ext(dev);
+-
+- fail:
+-	return PCI_CFG_SPACE_SIZE;
+-}
+-
+ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index da76c757d0ac..169ef1944d14 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -384,8 +384,6 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ 	return (pdev->error_state != pci_channel_io_normal);
+ }
+ 
+-extern struct resource busn_resource;
+-
+ struct pci_host_bridge_window {
+ 	struct list_head list;
+ 	struct resource *res;		/* host bridge aperture (CPU address) */
+@@ -971,7 +969,6 @@ void __iomem __must_check *pci_platform_rom(struct pci_dev *pdev, size_t *size);
+ int pci_save_state(struct pci_dev *dev);
+ void pci_restore_state(struct pci_dev *dev);
+ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev);
+-int pci_load_saved_state(struct pci_dev *dev, struct pci_saved_state *state);
+ int pci_load_and_free_saved_state(struct pci_dev *dev,
+ 				  struct pci_saved_state **state);
+ int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state);
+@@ -982,7 +979,6 @@ void pci_pme_active(struct pci_dev *dev, bool enable);
+ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 		      bool runtime, bool enable);
+ int pci_wake_from_d3(struct pci_dev *dev, bool enable);
+-pci_power_t pci_target_state(struct pci_dev *dev);
+ int pci_prepare_to_sleep(struct pci_dev *dev);
+ int pci_back_from_sleep(struct pci_dev *dev);
+ bool pci_dev_run_wake(struct pci_dev *dev);
+@@ -1093,7 +1089,6 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+ 		  void *userdata);
+-int pci_cfg_space_size_ext(struct pci_dev *dev);
+ int pci_cfg_space_size(struct pci_dev *dev);
+ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
 
-Something funky is going on here too, the 64 bit address e000000000
-should be reflected in the 'memory behind bridge' above, not
-truncated.
-
-ranges = <0x02000000 0x0 0x00000000 0x90 0x00000000 0x0 0x10000000 /* mem*/
-+				  0x01000000 0x0 0x80000000 0x90 0x80000000 0x0 0x00010000 /* io */
-+				  0x00000000 0x0 0xd0000000 0x90 0xd0000000 0x0 0x00200000 /* cfg */
-+				  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
-
-Ranges has a defined meaning, MSI shouldn't be in ranges, and 'cfg' is
-only OK if the address encoding exactly matches the funky PCI-E extended
-configuration address format. You can move these to regs or other
-properties
-
-(MSI is tricky, I'm not aware of DT binding work for MSI :()
-
-Also, unrelated, can you please double check that your HW cannot
-generate 8 and 16 bit configuration write TLPs natively? The
-xgene_pcie_cfg_out8/16 hack is not desirable if it can be avoided.
-
-Regards,
-Jason
