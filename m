@@ -1,58 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0240.outbound.protection.outlook.com ([207.46.163.240]:17496
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751929AbaAGHN4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 02:13:56 -0500
-Message-ID: <1389078829.11795.138.camel@snotra.buserror.net>
-Subject: Re: [03/12,v3] pci: fsl: add PCI indirect access support
-From: Scott Wood <scottwood@freescale.com>
-To: Lian Minghuan-b31939 <b31939@freescale.com>
-CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 Jan 2014 01:13:49 -0600
-In-Reply-To: <52CA40D8.1090805@freescale.com>
-References: <1382524894-15164-3-git-send-email-Minghuan.Lian@freescale.com>
-	 <20140103223306.GC22546@home.buserror.net> <52CA40D8.1090805@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from szxga03-in.huawei.com ([119.145.14.66]:65267 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291AbaAMI2y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jan 2014 03:28:54 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
+	"Hanjun Guo" <guohanjun@huawei.com>
+Subject: [PATCH] PCI,pciehp: Don't set slot off when found device already exists.
+Date: Mon, 13 Jan 2014 16:02:48 +0800
+Message-ID: <1389600168-23228-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-01-06 at 13:36 +0800, Lian Minghuan-b31939 wrote:
-> HI Scott,
-> 
-> please see my comments inline.
-> 
-> On 01/04/2014 06:33 AM, Scott Wood wrote:
-> > A lot of this seems duplicated from arch/powerpc/sysdev/indirect_pci.c.
-> >
-> > How generally applicable is that file to non-PPC implementations?  At a
-> > minimum I see a similar file in arch/microblaze.  It should probably
-> > eventually be moved to common code, rather than duplicated again.  A
-> > prerequisite for that would be making common the dependencies it has on
-> > the rest of what is currently arch PCI infrastructure; until then, it's
-> > probably better to just have the common fsl-pci code know how to
-> > interface with the appropriate PPC/ARM code rather than trying to copy
-> > the infrastructure as well.
-> [Minghuan] Yes, This is a duplicate except it uses struct fsl_pci. But 
-> it is hard to be move to common code.
-> because every indirect read/write functions use different PCI controller 
-> structure which is very basic structure and ARM has no this structure.
-> If we can not establish a unified pci controller structure, we can only 
-> abstract out a simple structure which includes indirect access related 
-> fields,
-> and need a callback function to get the pointer like this: 
-> ((powerpc/microblaze/mips/ pci_controller 
-> *)(pci_bus->sysdata))->indirect_struct.
-> Should we provide the common code for indirect access API or wait for 
-> the common PCI controller structure?
+If we found device already exists during hot add device, we should
+leave it, not to set slot off.
 
-Either work with the PCI maintainer to come up with a common structure,
-or leave the code where it is and call into it.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c |    3 ++-
+ drivers/pci/hotplug/pciehp_pci.c  |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
--Scott
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 38f0186..f27b0ff 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -224,7 +224,8 @@ static int board_added(struct slot *p_slot)
+ 	if (retval) {
+ 		ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
+ 			 pci_domain_nr(parent), parent->number);
+-		goto err_exit;
++		if (retval != -EEXIST)
++			goto err_exit;
+ 	}
+ 
+ 	if (PWR_LED(ctrl))
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index aac7a40..9b87b49 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -48,7 +48,7 @@ int pciehp_configure_device(struct slot *p_slot)
+ 			 "at %04x:%02x:00, cannot hot-add\n", pci_name(dev),
+ 			 pci_domain_nr(parent), parent->number);
+ 		pci_dev_put(dev);
+-		return -EINVAL;
++		return -EEXIST;
+ 	}
+ 
+ 	num = pci_scan_slot(parent, PCI_DEVFN(0, 0));
+-- 
+1.7.1
 
 
