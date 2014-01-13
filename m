@@ -1,282 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 31 Jan 2014 12:26:20 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci/quirks: Enable quirks for PCIe ACS on Intel PCH
- root ports
-Message-ID: <20140131192620.GB8834@google.com>
-References: <20140120215502.29567.11291.stgit@bling.home>
- <20140120220152.29567.3645.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:50862 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751019AbaAMAtV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Jan 2014 19:49:21 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>
+Subject: [PATCH] PCI / remove: Check parent kobject in pci_destroy_dev() (was: Re: [PATCH v2 04/10] PCI: Destroy pci dev only once)
+Date: Mon, 13 Jan 2014 02:03:16 +0100
+Message-ID: <3407940.L2vvqCPqy4@vostro.rjw.lan>
+In-Reply-To: <1519414.GDlGZFCTSR@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <CAE9FiQV1KvpzfTmzbERS8heAE1z5zf=CjXnnjS9ZMBqmhY7rkw@mail.gmail.com> <1519414.GDlGZFCTSR@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140120220152.29567.3645.stgit@bling.home>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 20, 2014 at 03:01:52PM -0700, Alex Williamson wrote:
-> Many of the currently available Intel PCH-based root ports do not
-> provide PCIe ACS capabilities.  Without this, we must assume that
-> peer-to-peer traffic between multifunction root ports and between
-> devices behind root ports is possible.  This lack of isolation is
-> exposed by grouping the devices together in the same IOMMU group.
-> If we want to expose these devices to userspace, vfio uses IOMMU
-> groups as the unit of ownership, thus making it very difficult to
-> assign individual devices to separate users.
+On Saturday, December 07, 2013 02:27:51 AM Rafael J. Wysocki wrote:
+> On Thursday, December 05, 2013 10:52:36 PM Yinghai Lu wrote:
+> > On Mon, Dec 2, 2013 at 6:49 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > >
+> > > Scenario 5: pci_stop_and_remove_bus_device() is run concurrently
+> > >   for a device and its parent bridge via remove_callback().
+> > >
+> > >   In that case both code paths attempt to acquire
+> > >   pci_remove_rescan_mutex.  If the child device removal acquires
+> > >   it first, there will be no problems.  However, if the parent
+> > >   bridge removal acquires it first, it will eventually execute
+> > >   pci_destroy_dev() for the child device, but that device will
+> > >   not be freed yet due to the reference held by the concurrent
+> > >   child removal.  Consequently, both pci_stop_bus_device() and
+> > >   pci_remove_bus_device() will be executed for that device
+> > >   unnecessarily and pci_destroy_dev() will see a corrupted list
+> > >   head in that object.  Moreover, an excess put_device() will
+> > >   be executed for that device in that case which may lead to a
+> > >   use-after-free in the final kobject_put() done by
+> > >   sysfs_schedule_callback_work().
+> > >
+> > > Index: linux-pm/include/linux/pci.h
+> > > ===================================================================
+> > > --- linux-pm.orig/include/linux/pci.h
+> > > +++ linux-pm/include/linux/pci.h
+> > > @@ -321,6 +321,7 @@ struct pci_dev {
+> > >         unsigned int    multifunction:1;/* Part of multi-function device */
+> > >         /* keep track of device state */
+> > >         unsigned int    is_added:1;
+> > > +       unsigned int    is_gone:1;
+> > >         unsigned int    is_busmaster:1; /* device is busmaster */
+> > >         unsigned int    no_msi:1;       /* device may not use msi */
+> > >         unsigned int    block_cfg_access:1;     /* config space access is blocked */
+> > > Index: linux-pm/drivers/pci/remove.c
+> > > ===================================================================
+> > > --- linux-pm.orig/drivers/pci/remove.c
+> > > +++ linux-pm/drivers/pci/remove.c
+> > > @@ -34,6 +34,7 @@ static void pci_stop_dev(struct pci_dev
+> > >
+> > >  static void pci_destroy_dev(struct pci_dev *dev)
+> > >  {
+> > > +       dev->is_gone = 1;
+> > >         device_del(&dev->dev);
+> > >
+> > >         down_write(&pci_bus_sem);
+> > > @@ -109,8 +110,10 @@ static void pci_remove_bus_device(struct
+> > >   */
+> > >  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+> > >  {
+> > > -       pci_stop_bus_device(dev);
+> > > -       pci_remove_bus_device(dev);
+> > > +       if (!dev->is_gone) {
+> > > +               pci_stop_bus_device(dev);
+> > > +               pci_remove_bus_device(dev);
+> > > +       }
+> > >  }
+> > >  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+> > >
+> > 
+> > Yes, above change should address sys double remove problem.
 > 
-> The good news is that the chipset does provide ACS-like isolation
-> capabilities, but we do need to verify and enable those capabilities
-> if the BIOS has not done so.  This patch implements the device
-> specific enabling and testing of equivalent ACS function for these
-> devices.
+> I've just realized that we don't need a new flag for that, though.
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/quirks.c |  176 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 176 insertions(+)
+> It looks like we only need to check dev->dev.kobj.parent and return if that is
+> NULL, because that means pci_destroy_dev() has run for that device already
+> (I'm wondering why device_del() doesn't clear dev->parent, BTW, it looks like
+> it should do that?).
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 4be1cd5..3439a02 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -24,6 +24,7 @@
->  #include <linux/ioport.h>
->  #include <linux/sched.h>
->  #include <linux/ktime.h>
-> +#include <linux/atomic.h>
->  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
->  #include "pci.h"
->  
-> @@ -3423,6 +3424,74 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
->  #endif
->  }
->  
-> +/*
-> + * Many Intel PCH root ports do provide ACS-like features to disable peer
-> + * transactions and validate bus numbers in requests, but do not provide an
-> + * actual PCIe ACS capability.  This is the list of device IDs known to fall
-> + * into that category as provided by Intel in Red Hat bugzilla 1037684.
+> Of course, that still is going to be racy if we don't hold
+> pci_remove_rescan_mutex around pci_stop_and_remove_bus_device() in every code
+> path using it (or use another similar synchronization mechanism).
 
-Is there any documentation for this?  I'd feel better if we had a public
-statement from Intel that "these devices support ACS and this is how you do
-it."  The standard PCIe ACS capability is an explicit statement that the
-vendor intends to support the feature as documented in the spec.  If we put
-in undocumented quirks, we may end up relying on something the vendor has
-not qualified and does not intend to actually support.
+Before I forget about this, on top of the series I sent out on Friday.
 
-I see the device ID list in the RH bugzilla, of course, but I don't see the
-name of anybody in Intel who stands behind the list and the knobs used in
-this patch.  I expect you'll remind me that we don't have any better
-documentation for 15b100dfd1c9 ("PCI: Claim ACS support for AMD southbridge
-devices"), which is true.  Mea culpa.
+Thanks,
+Rafael
 
-> + */
-> +static const u16 pci_quirk_intel_pch_acs_ids[] = {
-> +	/* Ibexpeak PCH */
-> +	0x3b42, 0x3b43, 0x3b44, 0x3b45, 0x3b46, 0x3b47, 0x3b48, 0x3b49,
-> +	0x3b4a, 0x3b4b, 0x3b4c, 0x3b4d, 0x3b4e, 0x3b4f, 0x3b50, 0x3b51,
-> +	/* Cougarpoint PCH */
-> +	0x1c10, 0x1c11, 0x1c12, 0x1c13, 0x1c14, 0x1c15, 0x1c16, 0x1c17,
-> +	0x1c18, 0x1c19, 0x1c1a, 0x1c1b, 0x1c1c, 0x1c1d, 0x1c1e, 0x1c1f,
-> +	/* Pantherpoint PCH */
-> +	0x1e10, 0x1e11, 0x1e12, 0x1e13, 0x1e14, 0x1e15, 0x1e16, 0x1e17,
-> +	0x1e18, 0x1e19, 0x1e1a, 0x1e1b, 0x1e1c, 0x1e1d, 0x1e1e, 0x1e1f,
-> +	/* Lynxpoint-H PCH */
-> +	0x8c10, 0x8c11, 0x8c12, 0x8c13, 0x8c14, 0x8c15, 0x8c16, 0x8c17,
-> +	0x8c18, 0x8c19, 0x8c1a, 0x8c1b, 0x8c1c, 0x8c1d, 0x8c1e, 0x8c1f,
-> +	/* Lynxpoint-LP PCH */
-> +	0x9c10, 0x9c11, 0x9c12, 0x9c13, 0x9c14, 0x9c15, 0x9c16, 0x9c17,
-> +	0x9c18, 0x9c19, 0x9c1a, 0x9c1b,
-> +	/* Wildcat PCH */
-> +	0x9c90, 0x9c91, 0x9c92, 0x9c93, 0x9c94, 0x9c95, 0x9c96, 0x9c97,
-> +	0x9c98, 0x9c99, 0x9c9a, 0x9c9b,
-> +};
-> +
-> +/*
-> + * We can have multiple PCHs in a system and it is possible that we can
-> + * fail to enable ACS support on some of them.  To keep it simple we
-> + * handle them as all or nothing with the following values:
-> + *  0: ACS is not enabled
-> + * -1: ACS enable failed
-> + * >0: ACS enabled
-> + */
-> +static atomic_t intel_pch_acs_quirk_status = ATOMIC_INIT(0);
-> +
-> +#define INTEL_PCH_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_SV)
-> +
-> +static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
-> +{
-> +	int i;
-> +
-> +	/* Filter out a few obvious non-matches first */
-> +	if (!pci_is_pcie(dev) ||
-> +	    pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT || dev->bus->number)
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: PCI / remove: Check parent kobject in pci_destroy_dev()
 
-Why the bus number test?  Does this work correctly on systems like this?
+If pci_stop_and_remove_bus_device() is run concurrently for a device
+and its parent bridge via remove_callback(), both code paths attempt
+to acquire pci_rescan_remove_lock.  If the child device removal
+acquires it first, there will be no problems.  However, if the parent
+bridge removal acquires it first, it will eventually execute
+pci_destroy_dev() for the child device, but that device object will
+not be freed yet due to the reference held by the concurrent child
+removal.  Consequently, both pci_stop_bus_device() and
+pci_remove_bus_device() will be executed for that device unnecessarily
+and pci_destroy_dev() will see a corrupted list head in that object.
+Moreover, an excess put_device() will be executed for that device in
+that case which may lead to a use-after-free in the final
+kobject_put() done by sysfs_schedule_callback_work().
 
-  ACPI: PCI Root Bridge [PCI0] (0000:00)
-  ACPI: PCI Root Bridge [PCI1] (0000:80)
-  pci 0000:00:01.0: [8086:3c02] type 01 class 0x060400
-  pci 0000:80:01.0: [8086:3c02] type 01 class 0x060400
+To avoid that problem, make pci_destroy_dev() check if the device's
+parent kobject is NULL, which only happens after device_del() has
+already run for it.  Make pci_destroy_dev() return immediately
+whithout doing anything in that case.
 
-  00:01.0 PCI bridge: Intel Sandy Bridge IIO PCI Express Root Port 1a
-  80:01.0 PCI bridge: Intel Sandy Bridge IIO PCI Express Root Port 1a
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/remove.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-> +		return false;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(pci_quirk_intel_pch_acs_ids); i++)
-> +		if (pci_quirk_intel_pch_acs_ids[i] == dev->device)
-> +			return true;
-> +
-> +	return false;
-> +}
-> +
-> +static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
-> +{
-> +	u16 flags = 0;
-> +
-> +	if (!pci_quirk_intel_pch_acs_match(dev))
-> +		return -ENOTTY;
-> +
-> +	if (atomic_read(&intel_pch_acs_quirk_status) > 0)
-> +		flags = INTEL_PCH_ACS_FLAGS;
-> +
-> +	return acs_flags & ~flags ? 0 : 1;
-> +}
-> +
->  static const struct pci_dev_acs_enabled {
->  	u16 vendor;
->  	u16 device;
-> @@ -3434,6 +3503,7 @@ static const struct pci_dev_acs_enabled {
->  	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
->  	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
-> +	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
->  	{ 0 }
->  };
->  
-> @@ -3462,11 +3532,117 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
->  	return -ENOTTY;
->  }
->  
-> +/* Config space offset of Root Complex Base Address register */
-> +#define INTEL_LPC_RCBA_REG 0xf0
-> +/* 31:14 RCBA address */
-> +#define INTEL_LPC_RCBA_MASK 0xffffc000
-> +/* RCBA Enable */
-> +#define INTEL_LPC_RCBA_ENABLE (1 << 0)
-> +
-> +/* Backbone Scratch Pad Register */
-> +#define INTEL_BSPR_REG 0x1104
-> +/* Backbone Peer Non-Posted Disable */
-> +#define INTEL_BSPR_REG_BPNPD (1 << 8)
-> +/* Backbone Peer Posted Disable */
-> +#define INTEL_BSPR_REG_BPPD  (1 << 9)
-> +
-> +/* Upstream Peer Decode Configuration Register */
-> +#define INTEL_UPDCR_REG 0x1114
-> +/* 5:0 Peer Decode Enable bits */
-> +#define INTEL_UPDCR_REG_MASK 0x3f
-> +
-> +static int pci_quirk_enable_intel_lpc_acs(struct pci_dev *dev)
-> +{
-> +	u32 rcba, bspr, updcr;
-> +	void __iomem *rcba_mem;
-> +
-> +	/*
-> +	 * Read the RCBA register from the LPC (D31:F0).  PCH root ports
-> +	 * are D28:F* and therefore get probed before LPC, thus we can't
-> +	 * use pci_get_slot/pci_read_config_dword here.
-> +	 */
-> +	pci_bus_read_config_dword(dev->bus, PCI_DEVFN(31, 0),
-> +				  INTEL_LPC_RCBA_REG, &rcba);
-> +	if (!(rcba & INTEL_LPC_RCBA_ENABLE))
-> +		return -EINVAL;
-> +
-> +	rcba_mem = ioremap_nocache(rcba & INTEL_LPC_RCBA_MASK,
-> +				   PAGE_ALIGN(INTEL_UPDCR_REG));
-> +	if (!rcba_mem)
-> +		return -ENOMEM;
-> +
-> +	/*
-> +	 * The BSPR can disallow peer cycles, but it's set by soft strap and
-> +	 * therefore read-only.  If both posted and non-posted peer cycles are
-> +	 * disallowed, we're ok.  If either are allowed, then we need to use
-> +	 * the UPDCR to disable peer decodes for each port.  This provides the
-> +	 * PCIe ACS equivalent of PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF
-> +	 */
-> +	bspr = readl(rcba_mem + INTEL_BSPR_REG);
-> +	bspr &= INTEL_BSPR_REG_BPNPD | INTEL_BSPR_REG_BPPD;
-> +	if (bspr != (INTEL_BSPR_REG_BPNPD | INTEL_BSPR_REG_BPPD)) {
-> +		updcr = readl(rcba_mem + INTEL_UPDCR_REG);
-> +		if (updcr & INTEL_UPDCR_REG_MASK) {
-> +			dev_info(&dev->dev, "Disabling UPDCR peer decodes\n");
-> +			updcr &= ~INTEL_UPDCR_REG_MASK;
-> +			writel(updcr, rcba_mem + INTEL_UPDCR_REG);
-> +		}
-> +	}
-> +
-> +	iounmap(rcba_mem);
-> +	return 0;
-> +}
-> +
-> +/* Miscellaneous Port Configuration register */
-> +#define INTEL_MPC_REG 0xd8
-> +/* MPC: Invalid Receive Bus Number Check Enable */
-> +#define INTEL_MPC_REG_IRBNCE (1 << 26)
-> +
-> +static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
-> +{
-> +	u32 mpc;
-> +
-> +	/*
-> +	 * When enabled, the IRBNCE bit of the MPC register enables the
-> +	 * equivalent of PCI ACS Source Validation (PCI_ACS_SV), which
-> +	 * ensures that requester IDs fall within the bus number range
-> +	 * of the bridge.  Enable if not already.
-> +	 */
-> +	pci_read_config_dword(dev, INTEL_MPC_REG, &mpc);
-> +	if (!(mpc & INTEL_MPC_REG_IRBNCE)) {
-> +		dev_info(&dev->dev, "Enabling MPC IRBNCE\n");
-> +		mpc |= INTEL_MPC_REG_IRBNCE;
-> +		pci_write_config_word(dev, INTEL_MPC_REG, mpc);
-> +	}
-> +}
-> +
-> +static int pci_quirk_enable_intel_pch_acs(struct pci_dev *dev)
-> +{
-> +	if (!pci_quirk_intel_pch_acs_match(dev))
-> +		return -ENOTTY;
-> +
-> +	if (atomic_read(&intel_pch_acs_quirk_status) < 0)
-> +		return 0;
-> +
-> +	if (pci_quirk_enable_intel_lpc_acs(dev)) {
-> +		dev_warn(&dev->dev, "Failed to enable Intel PCH ACS quirk\n");
-> +		atomic_set(&intel_pch_acs_quirk_status, -1);
+Index: linux-pm/drivers/pci/remove.c
+===================================================================
+--- linux-pm.orig/drivers/pci/remove.c
++++ linux-pm/drivers/pci/remove.c
+@@ -34,6 +34,9 @@ static void pci_stop_dev(struct pci_dev
+ 
+ static void pci_destroy_dev(struct pci_dev *dev)
+ {
++	if (!dev->dev.kobj.parent)
++		return;
++
+ 	device_del(&dev->dev);
+ 
+ 	down_write(&pci_bus_sem);
 
-This means we handle hot-added Root Ports differently than those present at
-boot.  If the system supports ACS, then we hot-add a Root Port that doesn't
-support ACS, then remove it, I think the system (with original
-configuration) no longer supports ACS.
-
-> +		return 0;
-> +	}
-> +
-> +	pci_quirk_enable_intel_rp_mpc_acs(dev);
-> +
-> +	atomic_inc_unless_negative(&intel_pch_acs_quirk_status);
-> +
-> +	return 0;
-> +}
-> +
->  static const struct pci_dev_enable_acs {
->  	u16 vendor;
->  	u16 device;
->  	int (*enable_acs)(struct pci_dev *dev);
->  } pci_dev_enable_acs[] = {
-> +	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_pch_acs },
->  	{ 0 }
->  };
->  
-> 
