@@ -1,154 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:65447 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751997AbaAaAYV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 19:24:21 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
-Date: Fri, 31 Jan 2014 01:38:42 +0100
-Message-ID: <2622847.3aWjiMW5oK@vostro.rjw.lan>
-In-Reply-To: <1560693.rdg5lbdvCP@vostro.rjw.lan>
-References: <20140130131236.GW18029@intel.com> <CAE9FiQUmuaarJEhOQogusyv3EpBPDjRTtRvbh4U4QCJqfs0Vvw@mail.gmail.com> <1560693.rdg5lbdvCP@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga11.intel.com ([192.55.52.93]:58033 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751832AbaAMW0e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jan 2014 17:26:34 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, alex.williamson@redhat.com,
+	bhelgaas@google.com
+Cc: Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 2/2] NVMe: Implement pci reset callback
+Date: Mon, 13 Jan 2014 15:26:28 -0700
+Message-Id: <1389651988-27392-3-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
+References: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 31, 2014 12:59:06 AM Rafael J. Wysocki wrote:
-> On Thursday, January 30, 2014 03:39:02 PM Yinghai Lu wrote:
-> > On Thu, Jan 30, 2014 at 3:39 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
-> > >>
-> > >> --047d7b5d2ea4eb937804f132eedf
-> > >> Content-Type: text/plain; charset=ISO-8859-1
-> > >>
-> > >> >> The latest mainline kernel "hangs" when Thunderbolt devices are
-> > >> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
-> > >> >> getting huge amounts of messages like:
-> > >> >>
-> > >> >> [  352.717001] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717011] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717021] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717032] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717041] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717051] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717061] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717070] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717083] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717094] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717104] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717113] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717124] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717133] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717143] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717153] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717162] pci 0000:02:00.0: PME# disabled
-> > >> >
-> > >> > that mean pci_stop_dev() get called again and again ?
-> > >>
-> > >> please check if attached patch could help.
-> > >
-> > > Well, it looks like what happens is an endless loop in
-> > > acpiphp_glue.c:disable_slot().
-> > >
-> > > dev_in_slot() returns the first device in the list, so
-> > > pci_stop_and_remove_bus_device() is called for it, but it
-> > > doesn't remove the device from bus->devices any more, so
-> > > dev_in_slot() will return the same device next time and
-> > > so on forever.
-> > >
-> > ...
-> > >
-> > > So the above won't help in my opinion.
-> > >
-> > > I wonder, however, if this patch helps instead:
-> > >
-> > > https://patchwork.kernel.org/patch/3540701/
-> > >
-> > > I thought it would be 3.15 material, but it very well can go in earlier if
-> > > it happens to address this particular problem.
-> > 
-> > Agree, that should fix the problem.
-> > 
-> > but please use list_for_each_entry_safe_reverse
-> > instead.
-> 
-> OK, I will.
+Initiates nvme controller reset sequence when pci layer notifies of slot
+reset. The driver's slot_reset handling is skipped if the nvme polling
+kthread happened to try accessing a device register while the reset was in
+progress, which would have scheduled the nvme device to be reset anyway.
 
-Mika, below is an updated patch to try.
-
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / hotplug / PCI: Simplify disable_slot()
+ drivers/block/nvme-core.c |   36 ++++++++++++++++++++++++++++++++++--
+ include/linux/nvme.h      |    1 +
+ 2 files changed, 35 insertions(+), 2 deletions(-)
 
-After recent PCI core changes related to the rescan/remove locking,
-the ACPIPHP's disable_slot() function is only called under the
-general PCI rescan/remove lock, so it doesn't have to use
-dev_in_slot() any more to avoid race conditions.  Make it simply
-walk the devices on the bus and drop the ones in the slot being
-disabled and drop dev_in_slot() which has no more users.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   28 +++++-----------------------
- 1 file changed, 5 insertions(+), 23 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -604,32 +604,15 @@ static void __ref enable_slot(struct acp
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index b59a93a..1f5c18a 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -1750,6 +1750,7 @@ static int nvme_kthread(void *data)
+ 							dev->initialized) {
+ 				if (work_busy(&dev->reset_work))
+ 					continue;
++				dev->reset = 1;
+ 				list_del_init(&dev->node);
+ 				dev_warn(&dev->pci_dev->dev,
+ 					"Failed status, reset controller\n");
+@@ -2088,6 +2089,7 @@ static int nvme_dev_map(struct nvme_dev *dev)
  	}
+ 	dev->db_stride = 1 << NVME_CAP_STRIDE(readq(&dev->bar->cap));
+ 	dev->dbs = ((void __iomem *)dev->bar) + 4096;
++	dev->reset = 0;
+ 
+ 	return 0;
+ 
+@@ -2265,7 +2267,10 @@ static void nvme_dev_shutdown(struct nvme_dev *dev)
+ 	list_del_init(&dev->node);
+ 	spin_unlock(&dev_list_lock);
+ 
+-	if (!dev->bar || (dev->bar && readl(&dev->bar->csts) == -1)) {
++	if (!dev->bar || (dev->bar && readl(&dev->bar->csts) == -1) ||
++							dev->reset) {
++		if (dev->bar)
++			nvme_shutdown_ctrl(dev);
+ 		for (i = dev->queue_count - 1; i >= 0; i--) {
+ 			struct nvme_queue *nvmeq = dev->queues[i];
+ 			nvme_suspend_queue(nvmeq);
+@@ -2575,7 +2580,6 @@ static void nvme_remove(struct pci_dev *pdev)
+ #define nvme_error_detected NULL
+ #define nvme_dump_registers NULL
+ #define nvme_link_reset NULL
+-#define nvme_slot_reset NULL
+ #define nvme_error_resume NULL
+ 
+ static int nvme_suspend(struct device *dev)
+@@ -2599,6 +2603,34 @@ static int nvme_resume(struct device *dev)
+ 	return 0;
  }
  
--/* return first device in slot, acquiring a reference on it */
--static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
--{
--	struct pci_bus *bus = slot->bus;
--	struct pci_dev *dev;
--	struct pci_dev *ret = NULL;
--
--	down_read(&pci_bus_sem);
--	list_for_each_entry(dev, &bus->devices, bus_list)
--		if (PCI_SLOT(dev->devfn) == slot->device) {
--			ret = pci_dev_get(dev);
--			break;
--		}
--	up_read(&pci_bus_sem);
--
--	return ret;
--}
--
- /**
-  * disable_slot - disable a slot
-  * @slot: ACPI PHP slot
-  */
- static void disable_slot(struct acpiphp_slot *slot)
- {
-+	struct pci_bus *bus = slot->bus;
-+	struct pci_dev *dev, *prev;
- 	struct acpiphp_func *func;
--	struct pci_dev *pdev;
++
++/**
++ * nvme_slot_reset - handle nvme device that has been reset
++ * @pdev: pci device that has been through a pci slot or function reset
++ *
++ * Called by pci error recovery. We assume the device is in a state requiring
++ * initialization, so set the device reset flag first to prevent wasting time
++ * taking the controller offline with admin commands that we expect to timeout.
++ */
++static pci_ers_result_t nvme_slot_reset(struct pci_dev *pdev)
++{
++	struct nvme_dev *dev = pci_get_drvdata(pdev);
++
++	spin_lock(&dev_list_lock);
++	if (!work_busy(&dev->reset_work)) {
++		list_del_init(&dev->node);
++		dev->reset = 1;
++	} else {
++		spin_unlock(&dev_list_lock);
++		return PCI_ERS_RESULT_RECOVERED;
++	}
++	spin_unlock(&dev_list_lock);
++
++	nvme_dev_reset(dev);
++	return dev->initialized ? PCI_ERS_RESULT_RECOVERED :
++				PCI_ERS_RESULT_DISCONNECT;
++}
++
+ static SIMPLE_DEV_PM_OPS(nvme_dev_pm_ops, nvme_suspend, nvme_resume);
  
- 	/*
- 	 * enable_slot() enumerates all functions in this device via
-@@ -637,10 +620,9 @@ static void disable_slot(struct acpiphp_
- 	 * methods (_EJ0, etc.) or not.  Therefore, we remove all functions
- 	 * here.
- 	 */
--	while ((pdev = dev_in_slot(slot))) {
--		pci_stop_and_remove_bus_device(pdev);
--		pci_dev_put(pdev);
--	}
-+	list_for_each_entry_safe_reverse(dev, prev, &bus->devices, bus_list)
-+		if (PCI_SLOT(dev->devfn) == slot->device)
-+			pci_stop_and_remove_bus_device(dev);
+ static const struct pci_error_handlers nvme_err_handler = {
+diff --git a/include/linux/nvme.h b/include/linux/nvme.h
+index 69ae03f..febce6f 100644
+--- a/include/linux/nvme.h
++++ b/include/linux/nvme.h
+@@ -97,6 +97,7 @@ struct nvme_dev {
+ 	u16 oncs;
+ 	u16 abort_limit;
+ 	u8 initialized;
++	u8 reset;
+ };
  
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		acpiphp_bus_trim(func_to_handle(func));
+ /*
+-- 
+1.7.10.4
 
