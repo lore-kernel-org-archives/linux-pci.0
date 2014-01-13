@@ -1,147 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:43681 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbaAJWHp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 17:07:45 -0500
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
-Subject: [PATCHv3 0/6] Crashdump Accepting Active IOMMU
-Date: Fri, 10 Jan 2014 15:07:26 -0700
-Message-Id: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <CAErSpo4gGW2r4X7UuefwcYTX=c4irWc60w2UCT0e_U-uSaujow@mail.gmail.com>
+References: <52B0AEAD.6050604@gmail.com>
+	<20131218010207.GC15119@google.com>
+	<CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
+	<CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
+	<4b24688d857e432eb7ecf9095c95b742@DM2PR05MB671.namprd05.prod.outlook.com>
+	<bfe1b6a0b2494c71be43fea45f413575@DM2PR05MB671.namprd05.prod.outlook.com>
+	<CAErSpo4gGW2r4X7UuefwcYTX=c4irWc60w2UCT0e_U-uSaujow@mail.gmail.com>
+Date: Mon, 13 Jan 2014 00:30:39 -0800
+Message-ID: <CAA93t1pwLNeCXPXOO1yTPiREVP=sos1bwpob=VnLhSm_zocEkw@mail.gmail.com>
+Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently, during removal
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yhlu.kernel@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v2->v3:
-1. Commented-out "#define DEBUG 1" to eliminate debug messages
-2. Updated the comments about changes in each version in all patches in the set.
-3. Fixed: one-line added to Copy-Translations" patch to initialize the iovad
-          struct as recommended by Baoquan He [bhe@redhat.com]
-          init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
-
-v1->v2:
-The following series implements a fix for:
-A kdump problem about DMA that has been discussed for a long time. That is,
-when a kernel panics and boots into the kdump kernel, DMA started by the 
-panicked kernel is not stopped before the kdump kernel is booted and the 
-kdump kernel disables the IOMMU while this DMA continues.  This causes the
-IOMMU to stop translating the DMA addresses as IOVAs and begin to treat them 
-as physical memory addresses -- which causes the DMA to either:
-(1) generate DMAR errors or (2) generate PCI SERR errors or (3) transfer  
-data to or from incorrect areas of memory. Often this causes the dump to fail.
-
-This patch set modifies the behavior of the iommu in the (new) crashdump kernel: 
-1. to accept the iommu hardware in an active state, 
-2. to leave the current translations in-place so that legacy DMA will continue
-   using its current buffers until the device drivers in the crashdump kernel
-   initialize and initialize their devices,
-3. to use different portions of the iova address ranges for the device drivers
-   in the crashdump kernel than the iova ranges that were in-use at the time
-   of the panic.  
-
-Advantages of this approach:
-1. All manipulation of the IO-device is done by the Linux device-driver
-   for that device.
-2. This approach behaves in a manner very similar to operation without an
-   active iommu.
-3. Any activity between the IO-device and its RMRR areas is handled by the
-   device-driver in the same manner as during a non-kdump boot.
-4. If an IO-device has no driver in the kdump kernel, it is simply left alone.
-   This supports the practice of creating a special kdump kernel without
-   drivers for any devices that are not required for taking a crashdump. 
-
-Changes since the RFC version of this patch:
-1. Consolidated all of the operational code into the "copy..." functions.
-   The "process..." functions were primarily used for diagnostics and
-   exploration; however, there was a small amount of operational code that
-   used the "process..." functions.
-   This operational code has been moved into the "copy..." functions.
-
-2. Removed the "Process ..." functions and the diagnostic code that ran
-   on that function set.  This removed about 1/4 of the code -- which this
-   operational patch set no longer needs.  These portions of the RFC patch
-   could be formatted as a separate patch and submitted independently
-   at a later date. 
-
-3. Re-formatted the code to the Linux Coding Standards.
-   The checkpatch script still finds some lines to complain about;
-   however most of these lines are either (1) lines that I did not change,
-   or (2) lines that only changed by adding a level of indent which pushed
-   them over 80-characters, or (3) new lines whose intent is far clearer when
-   longer than 80-characters.
-
-4. Updated the remaining debug print to be significantly more flexible.
-   This allows control over the amount of debug print to the console --
-   which can vary widely.
-
-5. Fixed a couple of minor bugs found by testing on a machine with a
-   very large IO configuration.
-
-At a high level, this code operates primarily during iommu initialization
-and device-driver initialization
-
-During intel-iommu hardware initialization:
-In intel_iommu_init(void)
-* If (This is the crash kernel)
-  .  Set flag: crashdump_accepting_active_iommu (all changes below check this)
-  .  Skip disabling the iommu hardware translations
-
-In init_dmars()
-* Duplicate the intel iommu translation tables from the old kernel
-  in the new kernel
-  . The root-entry table, all context-entry tables,
-    and all page-translation-entry tables
-  . The duplicate tables contain updated physical addresses to link them together.
-  . The duplicate tables are mapped into kernel virtual addresses
-    in the new kernel which allows most of the existing iommu code
-    to operate without change.
-  . Do some minimal sanity-checks during the copy
-  . Place the address of the new root-entry structure into "struct intel_iommu"
-
-* Skip setting-up new domains for 'si', 'rmrr', 'isa' 
-  . Translations for 'rmrr' and 'isa' ranges have been copied from the old kernel
-  . This patch has not yet been tested with iommu pass-through enabled
-
-* Existing (unchanged) code near the end of dmar_init:
-  . Loads the address of the (now new) root-entry structure from
-    "struct intel_iommu" into the iommu hardware and does the hardware flushes.
-    This changes the active translation tables from the ones in the old kernel
-    to the copies in the new kernel.
-  . This is legal because the translations in the two sets of tables are
-    currently identical:
-      Virtualization Technology for Directed I/O. Architecture Specification,
-      February 2011, Rev. 1.3  (section 11.2, paragraph 2) 
-
-In iommu_init_domains()
-* Mark as in-use all domain-id's from the old kernel
-  . In case the new kernel contains a device that was not in the old kernel
-    and a new, unused domain-id is actually needed, the bitmap will give us one.
-
-When a new domain is created for a device:
-* If (this device has a context in the old kernel)
-  . Get domain-id, address-width, and IOVA ranges from the old kernel context;
-  . Get address(page-entry-tables) from the copy in the new kernel;
-  . And apply all of the above values to the new domain structure.
-* Else
-  . Create a new domain as normal
+Hi Yinghai / Bjorn,
 
 
-Bill Sumner (6):
-  Crashdump-Accepting-Active-IOMMU-Flags-and-Prototype
-  Crashdump-Accepting-Active-IOMMU-Utility-functions
-  Crashdump-Accepting-Active-IOMMU-Domain-Interfaces
-  Crashdump-Accepting-Active-IOMMU-Copy-Translations
-  Crashdump-Accepting-Active-IOMMU-Debug-Print-IOMMU
-  Crashdump-Accepting-Active-IOMMU-Call-From-Mainline
+On Thu, Jan 9, 2014 at 12:58 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> >
+>>> > On Sun, Jan 5, 2014 at 10:53 AM, Rajat Jain <rajatxjain@gmail.com>
+>>> > wrote:
+>>> > > Hello Bjorn,
+>>> > >
+>>> > > Just checking on the fate of this patch set...
+>>> > >
+>>> > > On Tue, Dec 17, 2013 at 5:02 PM, Bjorn Helgaas <bhelgaas@google.com>
+>>> > wrote:
+>>> > >> [+cc yinghai@kernel.org (seems to be Yinghai's preferred email]
+>>> > >>
+>>> > >> On Tue, Dec 17, 2013 at 12:06:05PM -0800, Rajat Jain wrote:
+>>> > >>> We need future link up events for hot-add, thus don't disable the
+>>> > >>> link permanently during device removal. Also, remove the static
+>>> > >>> functions that are now left unused.
+>>> > >>
+>>> > >> The changelog should mention that this reverts part of 2debd9289997
+>>> > ("PCI:
+>>> > >> pciehp: Disable/enable link during slot power off/on").
+>>> > >
+>>> > > Sure. Do you want me to submit another patch set (bumping up the
+>>> > > version) with this change log, or you'd want to add this change log
+>>> > > while merging?
+>>> > >
+>>> > >>
+>>> > >> Yinghai, can you tell us whether this is an issue on your systems?
+>>> > >
+>>> > > As Yinghai confirms further down this thread, his issue was
+>>> > > confirmed by Intel to be a bug in the repeater chip.
+>>> > > ----------------------------------
+>>> > > Yinghai writes:
+>>> > >> According to HW guys and Intel, that should be bug of repeater.
+>>> > >>
+>>> > > ---------------------------------
+>>> > >  I don't know about the details of his scenario, except that when
+>>> > > the adapter was disabled the repeater kept on flapping the link up &
+>>> > > down (and hence disabling the link solved the problem then). Yinghai
+>>> > > couldn't test, but I believe with this patch even if we disable
+>>> > > presence detect interrupt, the "adapter present / no present"
+>>> > > messages would (rightly) convert to "Link Up / Link Down" messages
+>>> > > (since the repeater keeps on flapping the link).
+>>> > >
+>>> > > Since it is a platform specific bug, I'm not sure what can be done
+>>> > > to remove those messages except may be reduce the verbosity? If
+>>> > > you'd like I could change all the INFO messages to DBG messages.
+>>> >
+>>> > Even if it's a defect in a particular piece of hardware, I don't want
+>>> > to regress on that hardware, even if the regression is just extra
+>>> > messages that we didn't see before.
+>>> >
+>>> > I think ideally we would add some sort of quirk for that hardware so
+>>> > it works just as well as it does today.  I think extra messages will
+>>> > lead to a bug reports from users.
+>>>
+>>> Sure, I can do that. I think what the quirk would have to do is that for
+>>> that particular platform, don't enable the link-state based hotplug.
+>>> (Since link-state hotplug will not work if we disable the link
+>>> permanently as we do today on card removal).
+>>>
+>>> But the question is how to determine that the quirk has to be applied? I
+>>> think the objective is to apply the quirk to the platforms that have a
+>>> "PCIe repeater". Since this does not depend on a PCI device / vendor ID,
+>>> and I think the PCIe repeater is probably not even visible to the pciehp
+>>> or the PCI subsystem, how do I determine that the quirk has to be
+>>> applied?
+>>
+>> Any ideas on how do I identify the platforms that may have this problem?
+>
+> I sure don't know.  I suspect you're right that the PCIe repeater is
+> invisible to software, at least in terms of PCI config space.  Maybe
+> we could use DMI to identify platforms.  That's not a very good
+> solution because we have to come up with a list, but I can't think of
+> a better way.  Yinghai knows more about the platform and might have
+> better ideas.
 
- drivers/iommu/intel-iommu.c | 1293 ++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 1225 insertions(+), 68 deletions(-)
+Yinghai: I am trying to understand what exactly is this platform bug
+and how to add a quirk such that this platform remains unaffected. Can
+you please help me by suggesting how to decide if this is _the_
+platform that has the bug (the pcie repeater).
 
--- 
-Bill Sumner <bill.sumner@hp.com>
+Bjorn: It seems to be that identification of this platform will be out
+PCI code (since the bug seems to be in a pcie repeater chip which is
+not a PCI device visible to SW). So even if we find a way to identify
+this platform (e.g DMI) , I doubt if you'd want me to add that in the
+pciehp code (which is platform independent so far). At best, the only
+way out I can see is to provide a knob from the pciehp, that can be
+use by the platform code to either enable or disable the link state
+hotplug. It could go back towards using a module parameter like
+pciehp_use_link_events. Please suggest.
 
+The only other way I can think of, is that I can remove the debug
+message altogether (Link up / Link down). (Or the user can change the
+verbosity).
+
+Humm, when I think of it, we're trying to address a bug of a chip
+which is not a PCI device, into pciehp. I'm praying it doesn't bring
+this patch set to a dead end :-)
+
+Thanks,
+
+Rajat
+
+>
+> Bjorn
+>
+>>> If (hw_has_pcie_repeater)
+>>>       Don't use link-state hotplug (and disable link permanently during
+>>> card removal) Else
+>>>       Use link-state hotplug (and don't disable the link permanently)
+>>>
+>>>
+>>> Yinghai: Since I do not have that hardware, I will need some help in
+>>> testing the patch with the quirk. I was wondering if you'd still have
+>>> that hardware around and would be able to help me with testing?
+>>>
+>>> Thanks,
+>>>
+>>> Rajat
+>>>   {.n +       +%  lzwm  b 맲  r  zX   \ )   w*jg         ݢj/   z ޖ  2 ޙ
+>>> & )ߡ a       G   h   j:+v   w ٥
