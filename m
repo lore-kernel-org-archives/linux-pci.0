@@ -1,78 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:10085 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408AbaAUVVF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jan 2014 16:21:05 -0500
-Message-ID: <1390338897.1792.467.camel@misato.fc.hp.com>
-Subject: Re: [Patch v1 1/3] ACPI: add callback prepare() into
- acpi_hotplug_handler
-From: Toshi Kani <toshi.kani@hp.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devel@acpica.org
-Date: Tue, 21 Jan 2014 14:14:57 -0700
-In-Reply-To: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:40731 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751762AbaAMW0e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jan 2014 17:26:34 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, alex.williamson@redhat.com,
+	bhelgaas@google.com
+Cc: Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2 0/2] PCI: driver function reset notification
+Date: Mon, 13 Jan 2014 15:26:26 -0700
+Message-Id: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2014-01-18 at 10:48 +0800, Jiang Liu wrote:
-> Add callback prepare() into acpi_hotplug_handler, which will get called
-> at the very beginning of ACPI hotplug event handler. The ACPI core will
-> ignore the event if prepare() returns NOTIFY_STOP.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/acpi/scan.c     |    4 ++++
->  include/acpi/acpi_bus.h |    1 +
->  2 files changed, 5 insertions(+)
-> 
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index fd39459..6b0f419 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -392,6 +392,10 @@ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
->  	struct acpi_device *adev;
->  	acpi_status status;
->  
-> +	if (handler->prepare &&
-> +	    handler->prepare(handle, type, data) == NOTIFY_STOP)
-> +		return;
+Here's version 2 of this patch with a driver implementing the intended
+use as an example.
 
-The OS is responsible for calling _OST when it is implemented.  So you
-cannot just return here.  See acpi_hotplug_unsupported(handle, type)
-next line.  Also, please describe why prepare() needs to be added.
+The NVMe stuff requires using the maintainer's tree to get the newly
+added nvme reset handling code. Willy's repo is located here:
 
-Thanks,
--Toshi
+git.infradead.org/users/willy/linux-nvme.git
 
+v1->v2:
 
+As suggested, I'm reusing the slot_reset error handler instead of defining
+a new one for function_reset.
 
-> +
->  	if (!handler->hotplug.enabled)
->  		return acpi_hotplug_unsupported(handle, type);
->  
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index ddabed1..09a73bd 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -113,6 +113,7 @@ static inline struct acpi_hotplug_profile *to_acpi_hotplug_profile(
->  struct acpi_scan_handler {
->  	const struct acpi_device_id *ids;
->  	struct list_head list_node;
-> +	int (*prepare)(acpi_handle handle, u32 type, void *context);
->  	int (*attach)(struct acpi_device *dev, const struct acpi_device_id *id);
->  	void (*detach)(struct acpi_device *dev);
->  	struct acpi_hotplug_profile hotplug;
+I moved invoking the callback further up the this call stack. The test
+case I use resets the device via sysfs, and the pci device's command
+register is cleared at the previous point, so the callback couldn't
+actually do anything useful other than schedule something to handle
+it after pci_dev_restore is called. The previous location would break
+other driver slot_reset implementations and make my nvme implementation
+a little more complicated.
 
+Actually ... I'm a little concered to be using slot_reset instead of
+defining a new callback for FLR. From looking at other device drivers,
+I'm not sure they would expect to have their slot_reset invoked in
+this situation.
+
+Keith Busch (2):
+  PCI: call pci reset callback to pci_driver on FLR
+  NVMe: Implement pci reset callback
+
+ drivers/block/nvme-core.c |   36 ++++++++++++++++++++++++++++++++++--
+ drivers/pci/pci.c         |    6 ++++++
+ include/linux/nvme.h      |    1 +
+ 3 files changed, 41 insertions(+), 2 deletions(-)
+
+-- 
+1.7.10.4
 
