@@ -1,114 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:62470 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753097AbaAaAmY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 19:42:24 -0500
-Received: by mail-vb0-f46.google.com with SMTP id o19so2474488vbm.19
-        for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 16:42:23 -0800 (PST)
+Received: from mga09.intel.com ([134.134.136.24]:51910 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750771AbaAMGCG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jan 2014 01:02:06 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bj?rn Mork <bjorn@mork.no>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Mon, 13 Jan 2014 06:01:46 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D3C00A@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com>
+ <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com>
+ <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+ <CAErSpo4ZxJ8T8ih1+svqjpUNbJo-WezP=9OatDTuLk3u=zkCLw@mail.gmail.com>
+ <CALkVjQbjnAk0mFZ-3zjx_15xXEaaiMaVxMMLD1HEUJhVtYXg4g@mail.gmail.com>
+In-Reply-To: <CALkVjQbjnAk0mFZ-3zjx_15xXEaaiMaVxMMLD1HEUJhVtYXg4g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20140130201219.20665.qmail@science.horizon.com>
-References: <20140130201219.20665.qmail@science.horizon.com>
-Date: Fri, 31 Jan 2014 08:42:23 +0800
-Message-ID: <CAJtEV7YLC=iSbzWS8PWDo8JWY_fyaRckxtLC3aCqU7sx+O4UPQ@mail.gmail.com>
-Subject: Re: Who understand the IOMMU code?
-From: Andrew Cooks <acooks@linux.com>
-To: George Spelvin <linux@horizon.com>
-Cc: David Woodhouse <dwmw2@infradead.org>, fenghua.yu@intel.com,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	jiang.liu@linux.intel.com,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31 January 2014 04:12, George Spelvin <linux@horizon.com> wrote:
->
-> I'm trying to add a quirk to the IOMMU code to handle certain buggy
-> devices which use the wrong requester id (devfn) for PCIe requests.
-> In my case, there are a number of Marvell SATA controllers, popular with
-> motherboard manufacturers, which generate DMA from functions 0 and 1,
-> even though they only support function 0.
->
-> Andrew cooks wrote a working (but, to my eyes, ugly) patch; see
-> https://bugzilla.kernel.org/show_bug.cgi?id=42679#c22
->
-> I'm trying to improve it, but even limiting myself to intel-iommu.c,
-> it's definitely hairy.
-
-What's hairy? The patch, the problem, or the iommu code?
-
-> Right now, I'm trying to figure out where to remove the additional
-> mapping.
-
-Which additional mapping? Are you implying that the patch adds redundant
-context entries or are you talking about folding the
-quirk_map_multi_requester_ids()
-and quirk_map_requester_id()  functions into the main code path?
-
-> Currently I'm looking at adding another clear_context_table() call
-> before iommu_detach_dev() in domain_remove_one_dev_info(); my goal is
-> to piggyback on iommu_detach_dev's flush calls.
->
-> But I'm having trouble figuring out the whole device_domain_info list
-> business.
->
-> In particular, does the comparison of domain, bus, and
-> devinfo ever produce a different result than just comparing
-> info->dev to pdev?
->
-> I have a flag in the pci_device warning about the quirk, but
-> I'm having trouble finding the function that's the opposite of
-> domain_context_mapping().
->
-> Does anyone actually understand this stuff well enough to review my
-> patches when I finish?  May I ask for a bit of guidance on the way?
-> Right now I don't even understand the Intel iommu code, much less all
-> ther others I should be patching for a full fix.
-
-Let me see if I understand you correctly.
-1) You don't like the simple patch that clearly shows the problem (and offers
-    a simple work-around), because it's too ugly.
-2) You complain that "this stuff" (presumably the stuff you didn't
-learn from the
-    ugly patch) is hard to understand.
-3) You question whether anyone else understands "this stuff".
-4) You want to know whether anyone is qualified to review your patch when
-    you 'finish it' ...
-5) ... as long as someone just help you a little bit?
-
-It that really what you meant?
-
-> The same code points would also be a good place to add phantom functions
-> support some day.
-
-
-I don't think you understood the relevance of Alex's patch set for a
-"PCIe requester ID interface", that I referred you to.
-
-Firstly, finding the full set of requester ids that an iommu might see for every
-pdev below it is a bigger problem than just quirky Marvell SATA controllers and
-phantom functions (which may or may not actually be used by anyone). PCIe
-bridges, even spec compliant ones, introduce similar issues.
-
-Secondly, that patch tries to unify the quirky and non quirky cases under the
-pcie_for_each_requester() function, which seems like the prefered approach.
-
-Thirdly, that patch was written and reviewed by people who do actually
-understand how "this stuff" works, so there is much to learn from it if you want
-to write the solution that is ultimately accepted into mainline and convince
-them that you can (and will) maintain it.
-
-Here's the link to the patch posting and review again:
-https://lists.linuxfoundation.org/pipermail/iommu/2013-July/006083.html
-
-When you've read and understood that discussion, have another look at the
-current domain_context_mapping() and try to see the resemblance between
-the handling of bridging, dependant devices and quirky devices.
-
-Ultimately, this isn't going anywhere until David Woodhouse, the Intel iommu
-maintainer, gets involved. I have not yet found the magical incantation to
-achieve that.
-
-May the odds be ever in your favour!
-
-a.
+PiA+IEFTUE0gbXVzdCBiZSBjb25maWd1cmVkIG9uIGJvdGggZW5kcyBvZiB0aGUgbGluaywgc28g
+Zm9yIGNvbXBsZXRlbmVzcywNCj4gPiBjYW4geW91IGFsc28gY29sbGVjdCB0aGUgIlBDSSIgb3V0
+cHV0IGZvciB0aGUgYnJpZGdlIGxlYWRpbmcgdG8gdGhlDQo+ID4gNzI2MCBkZXZpY2U/ICBCYXNl
+ZCBvbiB0aGUgTGludXggbHNwY2kgb3V0cHV0LCB0aGlzIHNob3VsZCBiZQ0KPiA+IDAwMDA6MDA6
+MWMuMS4NCj4gPg0KPiA+IEFuZCBJIGFzc3VtZSB0aGUgZGV2aWNlIHdvcmtzIHdlbGwgd2l0aCB0
+aGUgV2luZG93cyBkcml2ZXI/DQo+IA0KPiANCj4gSGVyZSBhcmUgdGhlICJQQ0kiIGFuZCAiUENJ
+IEluZGV4IiBkYXRhIGZvciAwMDAwOjAwOjFjOjEuDQo+IA0KPiBBbmQgeWVzIHRoZSBOSUMgd29y
+a3MgbmljZSBpbiBXaW5kb3dzLg0KPiANCg0KU21hbGwgdXBkYXRlIGZyb20gdGhlIGJ1Z3ppbGxh
+IChodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dpP2lkPTY0NTQxKS4NClRo
+ZSBidWcgaXMgc29sdmVkLi4uIFRoZXJlIHNlZW0gdG8gYmUgYSBoYXJkd2FyZSBidWcgd2l0aCB0
+aGUgTDEgT0ZGIGV4aXQgdGltZXIuIFRvIHNvbHZlIHRoaXMgYnVnIHdlIG5lZWQgKm5vdCogdG8g
+cmVseSBvbiB0aGUgaW50ZXJuYWwgY2xvY2sgYW5kIG5lZWQgdG8ga2VlcCB1c2luZyB0aGUgZXh0
+ZXJuYWwgY2xvY2suIFRoZSBpbnRlcm5hbCBjbG9jayBpc24ndCByZWxpYWJsZSBlbm91Z2ggYW5k
+IGNhbiBsZWFkIHRvIGxvc3Mgb2Ygc3luY2hyb25pemF0aW9uIGJldHdlZW4gdGhlIGJyaWRnZSBh
+bmQgdGhlIGRldmljZSB1cG9uIEwxIE9GRiB0cmFuc2l0aW9uLg0KVGhpcyBpc3N1ZSBoYXMgYmVl
+biBzZWVuIGluIHNpbXVsYXRpb24gYW5kIG5vdCBvbiByZWFsIGhhcmR3YXJlLi4uIHVudGlsIG5v
+dy4uLiBUaGUgd2luZG93cyBkcml2ZXIgaGFzIGEgd29ya2Fyb3VuZCBmb3IgdGhpcyBoYXJkd2Fy
+ZSBidWcsIHRoaXMgaXMgd2h5IHRoZSBpc3N1ZSB3YXNuJ3Qgc2VlbiBvbiBXaW5kb3dzLiBJIGFt
+IHBvcnRpbmcgdGhlIHdvcmsgYXJvdW5kIHRvIHRoZSBMaW51eCBkcml2ZXIuDQoNClRoYW5rIHlv
+dSB3enlib3kgZm9yIHlvdXIgcGF0aWVuY2UuLi4NCg0KVGhlbiBlbmQuDQo=
