@@ -1,45 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:36701 "EHLO
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:55839 "EHLO
 	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755628AbaAGAzV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:55:21 -0500
-Received: by mail-ie0-f179.google.com with SMTP id x13so19620695ief.38
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:55:21 -0800 (PST)
-Subject: [PATCH v7 01/15] PCI: Change pci_bus_region addresses to dma_addr_t
-To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+	with ESMTP id S1751246AbaAMTMY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jan 2014 14:12:24 -0500
+Received: by mail-ie0-f179.google.com with SMTP id tp5so2544222ieb.24
+        for <linux-pci@vger.kernel.org>; Mon, 13 Jan 2014 11:12:23 -0800 (PST)
+Date: Mon, 13 Jan 2014 12:12:20 -0700
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:55:19 -0700
-Message-ID: <20140107005519.10786.93870.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
+Message-ID: <20140113191220.GA6525@google.com>
+References: <cover.1389103215.git.agordeev@redhat.com>
+ <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Struct pci_bus_region contains bus addresses, which are type dma_addr_t,
-not resource_size_t.
+On Tue, Jan 07, 2014 at 07:05:38PM +0100, Alexander Gordeev wrote:
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/ata/ahci.c |   15 ++++++---------
+>  1 files changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 8516f4d..cfdb079 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1098,13 +1098,13 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+>  int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+>  			 struct ahci_host_priv *hpriv)
+>  {
+> -	int rc, nvec;
+> +	int nvec;
+>  
+>  	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+>  		goto intx;
+>  
+> -	rc = pci_msi_vec_count(pdev);
+> -	if (rc < 0)
+> +	nvec = pci_msi_vec_count(pdev);
+> +	if (nvec < 0)
+>  		goto intx;
+>  
+>  	/*
+> @@ -1112,19 +1112,16 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+>  	 * Message mode could be enforced. In this case assume that advantage
+>  	 * of multipe MSIs is negated and use single MSI mode instead.
+>  	 */
+> -	if (rc < n_ports)
+> +	if (nvec < n_ports)
+>  		goto single_msi;
+>  
+> -	nvec = rc;
+> -	rc = pci_enable_msi_block(pdev, nvec);
+> -	if (rc)
+> +	if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
+>  		goto intx;
+>  
+>  	return nvec;
+>  
+>  single_msi:
+> -	rc = pci_enable_msi(pdev);
+> -	if (rc)
+> +	if (pci_enable_msi_range(pdev, 1, 1) < 0)
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/linux/pci.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This part doesn't seem like an improvement.  There are a hundred or so
+callers of pci_enable_msi() that only want a single MSI.  Is there any
+benefit in changing them to use pci_enable_msi_range()?
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1084a15175e0..7d5555270491 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -551,8 +551,8 @@ int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
- 		  int reg, int len, u32 val);
- 
- struct pci_bus_region {
--	resource_size_t start;
--	resource_size_t end;
-+	dma_addr_t start;
-+	dma_addr_t end;
- };
- 
- struct pci_dynids {
+I guess I agreed (maybe even suggested) to deprecate pci_enable_msi(),
+but it doesn't suffer from the tri-state return value problem, and I'm
+having second thoughts.
 
+>  		goto intx;
+>  	return 1;
+>  
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
