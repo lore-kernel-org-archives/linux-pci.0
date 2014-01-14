@@ -1,100 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:56249 "EHLO
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:60196 "EHLO
 	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbaA3AIe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 19:08:34 -0500
-Received: by mail-ig0-f174.google.com with SMTP id hl1so16368779igb.1
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 16:08:34 -0800 (PST)
-Date: Wed, 29 Jan 2014 17:08:31 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: eiichiro.oiwa.nm@hitachi.com, Dave Airlie <airlied@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: In "pci_fixup_video" check if this is or should be the primary
- video devi
-Message-ID: <20140130000831.GJ16825@google.com>
-References: <1389499841-6097-1-git-send-email-linux@eikelenboom.it>
- <XNM1$9$0$4$$3$3$7$A$9006858U52d4d109@hitachi.com>
- <6310129377.20140114162641@eikelenboom.it>
- <XNM1$9$0$4$$3$3$7$A$9006860U52d614ca@hitachi.com>
- <126550032.20140115203605@eikelenboom.it>
- <CAErSpo7Bjo3rVCnuf9fkKc=T33Z5ZBzS+nHOBqDDKt1j4u0yWg@mail.gmail.com>
- <1524137311.20140115232528@eikelenboom.it>
+	with ESMTP id S1752037AbaANTbE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 14:31:04 -0500
+Received: by mail-ig0-f174.google.com with SMTP id hl1so5599286igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 11:31:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1524137311.20140115232528@eikelenboom.it>
+In-Reply-To: <52D102EF.5070303@gmail.com>
+References: <52CBC4D1.5080706@gmail.com>
+	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>
+	<52CD2387.2030403@gmail.com>
+	<CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>
+	<52CE301E.60108@gmail.com>
+	<CAE9FiQWxpRMX-0vyd5hML-Hnto8H+C83dcne9FBZcN9qsmGCEw@mail.gmail.com>
+	<52CF7A17.60703@gmail.com>
+	<CAE9FiQVPtNk2LN4TVMzXX72TN8bjDTyD74y_BH05rfw=NArD3Q@mail.gmail.com>
+	<52D102EF.5070303@gmail.com>
+Date: Tue, 14 Jan 2014 11:31:03 -0800
+Message-ID: <CAE9FiQU=4qABcZLJzF13aYSmzryB1=WkO+NYvs0LTj9Kt_1ajA@mail.gmail.com>
+Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port range.
+From: Yinghai Lu <yinghai@kernel.org>
+To: "`VL" <vl.homutov@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 15, 2014 at 11:25:28PM +0100, Sander Eikelenboom wrote:
-> Date: Sun, 12 Jan 2014 04:49:44 +0100
-> Subject: [PATCH] In "pci_fixup_video" check if this is or should be the
->  primary video device to prevent setting the
->  IORESOURCE_ROM_SHADOW flag on a secondary VGA card
-> To: Dave Airlie <airlied@redhat.com>,
->     Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
->     Greg Kroah-Hartman <gregkh@suse.de>
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
->     linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
-> 
-> Setting the IORESOURCE_ROM_SHADOW flag on a secondary VGA card prevents if from
-> reading it's own rom. It will get the content of the shadowrom at C000 instead,
-> which is of the primary VGA card and the driver of the secondary card will bail
-> out.
-> 
-> Fix this by checking if this is or should be the primary video device before
-> applying the fix and let the comment reflect this.
-> 
-> Signed-off-by: Sander Eikelenboom <linux@eikelenboom.it>
-> ---
->  arch/x86/pci/fixup.c |   17 +++++++++--------
->  1 file changed, 9 insertions(+), 8 deletions(-)
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index b046e07..525e49a 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -314,9 +314,9 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,        PCI_DEVICE_ID_INTEL_MCH_PC1,    pcie_r
->   * IORESOURCE_ROM_SHADOW is used to associate the boot video
->   * card with this copy. On laptops this copy has to be used since
->   * the main ROM may be compressed or combined with another image.
-> - * See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
-> - * is marked here since the boot video device will be the only enabled
-> - * video device at this point.
-> + * See pci_map_rom() for use of this flag. Before we mark the device
-> + * with IORESOURCE_ROM_SHADOW we have to check if this is or should become
-> + * the primary video card, since this quirk is ran for all video devices.
->   */
->  
->  static void pci_fixup_video(struct pci_dev *pdev)
-> @@ -347,12 +347,13 @@ static void pci_fixup_video(struct pci_dev *pdev)
->                 }
->                 bus = bus->parent;
->         }
-> -       pci_read_config_word(pdev, PCI_COMMAND, &config);
-> -       if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-> -               pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-> -               dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
-> -               if (!vga_default_device())
-> +       if (!vga_default_device() || pdev == vga_default_device()) {
-> +               pci_read_config_word(pdev, PCI_COMMAND, &config);
-> +               if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-> +                       pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-> +                       dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
->                         vga_set_default_device(pdev);
-> +               }
+On Sat, Jan 11, 2014 at 12:38 AM, `VL <vl.homutov@gmail.com> wrote:
+>> there is no 07:00.0 in the print out.
+>
+> Well, so it looks like procedure, doing earlydump somehow misses this
+> device.
+> I have collected one more log (without pci=realloc but with debug) so I'm
+> pretty sure
+> that device is there (it appears later in dmesg output) but still not shown
+> in earlydump -
+> it shows 00:06, then 00:09.
 
-ia64 also has a pci_fixup_video() that is essentially the same.  Can you
-fix that one as well, unless there is a reason why the fix applies only to
-x86 and not to ia64?
+looks like the your adapter need more time to settle down?
 
->         }
->  }
->  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-> -- 
-> 1.7.10.4
+Can you check if you can enable slow boot mode in BIOS setup?
 
+>
+> http://inspert.ru/pci/dmesg-earlydump.txt
 
+looks like that server is down.
+
+>
+> First messages about 00:07 are:
+>
+> [    0.402838] pci 0000:07:00.0: [1412:1712] type 00 class 0x040100
+> [    0.403042] pci 0000:07:00.0: reg 0x10: [io  0x0000-0x001f]
+> [    0.403230] pci 0000:07:00.0: reg 0x14: [io  0x0000-0x000f]
+> [    0.403418] pci 0000:07:00.0: reg 0x18: [io  0x0000-0x000f]
+> [    0.403607] pci 0000:07:00.0: reg 0x1c: [io  0x0000-0x003f]
+> [    0.403888] pci 0000:07:00.0: supports D2,
+>
