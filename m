@@ -1,186 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:44591
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751104AbaAHFB5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 00:01:57 -0500
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 07/12][v4] pci: fsl: port PCI platform driver
-Date: Wed, 8 Jan 2014 13:01:58 +0800
-Message-ID: <1389157323-3088-7-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:49728 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbaANI16 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 03:27:58 -0500
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 14 Jan 2014 13:57:56 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 7E168E0057
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:00:44 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0E8RoYk51708126
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 13:57:50 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0E8RphZ027386
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 13:57:52 +0530
+Date: Tue, 14 Jan 2014 16:27:49 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Or Gerlitz <ogerlitz@mellanox.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	yinghai@kernel.org, bhelgaas@google.com, amirv@mellanox.com,
+	jackm@dev.mellanox.co.il, eugenia@mellanox.com,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>
+Subject: Re: mlx4_core probe error after applying Yinghai's patch
+Message-ID: <20140114082749.GA21105@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20140114062215.GA19345@richard>
+ <52D4ED5D.80105@mellanox.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52D4ED5D.80105@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. The patch ports FSL PCI platform driver. probe function
-initialize fsl_pci and register it to architecture PCI system,
-remove function removes fsl_pci from architecture PCI system.
-fsl_arch_pci_sys_register() and fsl_arch_pci_sys_remove() should
-be implemented in architecture-specific driver to provide
-register/remove functionality.
-2. Remove architecture-specific header and unnecessary header.
-3. Change Kconfig and Makefile to support FSL PCI common driver
+On Tue, Jan 14, 2014 at 09:55:09AM +0200, Or Gerlitz wrote:
+>On 14/01/2014 08:22, Wei Yang wrote:
+>>All,
+>>
+>>I am testing Yinghai's patch based on 3.13-rc1, after applying these four
+>>patches, there is an error during probe for mlx4_core.
+>>
+>>Code base we did the test:
+>>   $ git oneline -5
+>>   298a335 PCI: Try best to allocate pref mmio 64bit above 4g
+>>   b730e81 PCI: Try to allocate mem64 above 4G at first
+>>   4e27325 PCI: Don't use 4G bus address directly in resource allocation
+>>   ab6c20f PCI: pcibus address to resource converting take bus instead of dev
+>>   6ce4eac Linux 3.13-rc1
+>>Error log:
+>>   mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping PF.
+>>   mlx4_core: probe of 0003:05:00.0 failed with error -22
+>>
+>>My analysis:
+>>   After careful investigation, I guess this error is not introduced by
+>>   Yinghai's patch. This looks more like an error from device itself. Since
+>>   this error really happens after applying Yinghai's patch(especially the last
+>>   one 298a335), I would like to include Yinghai in this loop.
+>
+>Sorry, can you provide pointers please? I don't see 298a335 on Linus
+>3.13-rc8+ tree nor in net-next,
+>
+>$ git log --oneline --author=Yinghai v3.12..
+>e7cc5cf PCI: Remove duplicate pci_disable_device() from
+>pcie_portdrv_remove()
+>cf3e1fe PCI: Workaround missing pci_set_master in pci drivers
+>bee7f9c ACPI / x86: Increase override tables number limit
+>6979287 x86/mm: Add 'step_size' comments to init_mem_mapping()
+>
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
----
-change log:
-v4:
-no change
-v1-v3:
-Derived from http://patchwork.ozlabs.org/patch/278965/
+Or
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
+Thanks for your reply. The SHA index in only on my system, since as I know the
+last patch is not in upstream yet.
 
- arch/powerpc/Kconfig              |  1 +
- drivers/pci/host/Kconfig          | 10 +++++++++
- drivers/pci/host/Makefile         |  1 +
- drivers/pci/host/pci-fsl-common.c | 43 +++++++++++++++++++++++++++++++--------
- include/linux/fsl/pci-common.h    |  6 ++++++
- 5 files changed, 52 insertions(+), 9 deletions(-)
+You can find the first three patches here:
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/ pci/resource
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index b44b52c..c708d80 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -694,6 +694,7 @@ config FSL_SOC
- 
- config FSL_PCI
-  	bool
-+	select PCI_FSL_COMMON if FSL_SOC_BOOKE || PPC_86xx
- 	select PPC_INDIRECT_PCI
- 	select PCI_QUIRKS
- 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 47d46c6..290afaa 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -33,4 +33,14 @@ config PCI_RCAR_GEN2
- 	  There are 3 internal PCI controllers available with a single
- 	  built-in EHCI/OHCI host controller present on each one.
- 
-+config PCI_FSL_COMMON
-+	bool "Common driver for Freescale PCI/PCIe controller"
-+	depends on FSL_SOC_BOOKE || PPC_86xx
-+	help
-+	  This driver provides common support for PCI/PCIE controller
-+	  on Freescale embedded processors 85xx/86xx/QorIQ/Layerscape.
-+	  Additional drivers must be enabled in order to provide some
-+	  architecture-dependent functions and register the controller
-+	  to PCI subsystem.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 13fb333..1f8de80 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
-+obj-$(CONFIG_PCI_FSL_COMMON) += pci-fsl-common.o
-diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
-index 7184ac7..d608550 100644
---- a/drivers/pci/host/pci-fsl-common.c
-+++ b/drivers/pci/host/pci-fsl-common.c
-@@ -16,16 +16,12 @@
-  */
- #include <linux/kernel.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
--#include <linux/string.h>
- #include <linux/init.h>
--#include <linux/bootmem.h>
- #include <linux/memblock.h>
- #include <linux/log2.h>
--#include <linux/slab.h>
--#include <linux/uaccess.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/fsl/pci-common.h>
- 
- #include <asm/io.h>
- #include <asm/prom.h>
-@@ -665,12 +661,40 @@ static const struct of_device_id pci_ids[] = {
- static int fsl_pci_probe(struct platform_device *pdev)
- {
- 	int ret;
--	struct device_node *node;
-+	struct fsl_pci *pci;
- 
--	node = pdev->dev.of_node;
--	ret = fsl_add_bridge(pdev, fsl_pci_primary == node);
-+	if (!of_device_is_available(pdev->dev.of_node)) {
-+		dev_dbg(&pdev->dev, "disabled\n");
-+		return -ENODEV;
-+	}
-+
-+	pci = devm_kzalloc(&pdev->dev, sizeof(*pci), GFP_KERNEL);
-+	if (!pci) {
-+		dev_err(&pdev->dev, "no memory for fsl_pci\n");
-+		return -ENOMEM;
-+	}
-+
-+	ret = fsl_pci_setup(pdev, pci);
-+	if (ret)
-+		return ret;
-+
-+	ret = fsl_arch_pci_sys_register(pci);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to register pcie to Arch\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int fsl_pci_remove(struct platform_device *pdev)
-+{
-+	struct fsl_pci *pci = platform_get_drvdata(pdev);
-+
-+	if (!pci)
-+		return -ENODEV;
- 
--	mpc85xx_pci_err_probe(pdev);
-+	fsl_arch_pci_sys_remove(pci);
- 
- 	return 0;
- }
-@@ -714,6 +738,7 @@ static struct platform_driver fsl_pci_driver = {
- 		.of_match_table = pci_ids,
- 	},
- 	.probe = fsl_pci_probe,
-+	.remove = fsl_pci_remove,
- };
- 
- static int __init fsl_pci_init(void)
-diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
-index 02bcf5b..8d33354 100644
---- a/include/linux/fsl/pci-common.h
-+++ b/include/linux/fsl/pci-common.h
-@@ -166,5 +166,11 @@ extern struct pci_bus *fsl_arch_fake_pci_bus(struct fsl_pci *pci, int busnr);
- /* Return PCI64 DMA offset */
- u64 fsl_arch_pci64_dma_offset(void);
- 
-+/* Register PCI/PCIe controller to architecture system */
-+extern int fsl_arch_pci_sys_register(struct fsl_pci *pci);
-+
-+/* Remove PCI/PCIe controller from architecture system */
-+extern void fsl_arch_pci_sys_remove(struct fsl_pci *pci);
-+
- #endif /* __PCI_COMMON_H */
- #endif /* __KERNEL__ */
+And the last one is here:
+https://lkml.org/lkml/2013/12/19/701
+
+BTW, this card is flushed with FW built in IBM.
+
+Yinghai,
+
+If these are not the latest one, please let us know.
+
+And 
+
+>So  are you referring to patches on the PCI development tree
+>git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git "next"
+>branch? which
+>
+>Or.
+
 -- 
-1.8.1.2
-
+Richard Yang
+Help you, Help me
 
