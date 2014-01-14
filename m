@@ -1,124 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34593 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753942AbaAaKp4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 05:45:56 -0500
-Date: Fri, 31 Jan 2014 12:53:01 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release
- resources in pci_release_dev()) broke TBT hotplug
-Message-ID: <20140131105301.GD18029@intel.com>
-References: <20140130131236.GW18029@intel.com>
- <CAE9FiQUmuaarJEhOQogusyv3EpBPDjRTtRvbh4U4QCJqfs0Vvw@mail.gmail.com>
- <1560693.rdg5lbdvCP@vostro.rjw.lan>
- <2622847.3aWjiMW5oK@vostro.rjw.lan>
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:37476 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213AbaANJRI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 04:17:08 -0500
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 14 Jan 2014 14:47:03 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id C2DDC1258051
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:48:34 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0E9GwfV54329362
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:46:58 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0E9GwFK018227
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:46:59 +0530
+Date: Tue, 14 Jan 2014 17:16:57 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Jack Morgenstein <jackm@dev.mellanox.co.il>
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org, bhelgaas@google.com,
+	amirv@mellanox.com, ogerlitz@mellanox.com, eugenia@mellanox.com,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>
+Subject: Re: mlx4_core probe error after applying Yinghai's patch
+Message-ID: <20140114091657.GC27684@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20140114062215.GA19345@richard>
+ <20140114105412.16756f4e@jpm-OptiPlex-GX620>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2622847.3aWjiMW5oK@vostro.rjw.lan>
+In-Reply-To: <20140114105412.16756f4e@jpm-OptiPlex-GX620>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 31, 2014 at 01:38:42AM +0100, Rafael J. Wysocki wrote:
-> On Friday, January 31, 2014 12:59:06 AM Rafael J. Wysocki wrote:
-> > On Thursday, January 30, 2014 03:39:02 PM Yinghai Lu wrote:
-> > > On Thu, Jan 30, 2014 at 3:39 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > > On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
-> > > >>
-> > > >> --047d7b5d2ea4eb937804f132eedf
-> > > >> Content-Type: text/plain; charset=ISO-8859-1
-> > > >>
-> > > >> >> The latest mainline kernel "hangs" when Thunderbolt devices are
-> > > >> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
-> > > >> >> getting huge amounts of messages like:
-> > > >> >>
-> > > >> >> [  352.717001] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717011] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717021] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717032] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717041] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717051] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717061] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717070] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717083] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717094] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717104] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717113] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717124] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717133] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717143] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717153] pci 0000:02:00.0: PME# disabled
-> > > >> >> [  352.717162] pci 0000:02:00.0: PME# disabled
-> > > >> >
-> > > >> > that mean pci_stop_dev() get called again and again ?
-> > > >>
-> > > >> please check if attached patch could help.
-> > > >
-> > > > Well, it looks like what happens is an endless loop in
-> > > > acpiphp_glue.c:disable_slot().
-> > > >
-> > > > dev_in_slot() returns the first device in the list, so
-> > > > pci_stop_and_remove_bus_device() is called for it, but it
-> > > > doesn't remove the device from bus->devices any more, so
-> > > > dev_in_slot() will return the same device next time and
-> > > > so on forever.
-> > > >
-> > > ...
-> > > >
-> > > > So the above won't help in my opinion.
-> > > >
-> > > > I wonder, however, if this patch helps instead:
-> > > >
-> > > > https://patchwork.kernel.org/patch/3540701/
-> > > >
-> > > > I thought it would be 3.15 material, but it very well can go in earlier if
-> > > > it happens to address this particular problem.
-> > > 
-> > > Agree, that should fix the problem.
-> > > 
-> > > but please use list_for_each_entry_safe_reverse
-> > > instead.
-> > 
-> > OK, I will.
-> 
-> Mika, below is an updated patch to try.
-> 
-> ---
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: ACPI / hotplug / PCI: Simplify disable_slot()
-> 
-> After recent PCI core changes related to the rescan/remove locking,
-> the ACPIPHP's disable_slot() function is only called under the
-> general PCI rescan/remove lock, so it doesn't have to use
-> dev_in_slot() any more to avoid race conditions.  Make it simply
-> walk the devices on the bus and drop the ones in the slot being
-> disabled and drop dev_in_slot() which has no more users.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jan 14, 2014 at 10:54:12AM +0200, Jack Morgenstein wrote:
+>Hi,
+>In addition, I would like to know if you have enabled SRIOV in the
+>driver.
 
-Thanks for the fix.
+I have disabled SR-IOV cap in order to focus on the exact problem.
 
-Unfortunately, it now crashes here after I re-plug the TBT chain (I have
-both of your patches applied):
+>
+>Please provide the output of the console command below.
+>
+>grep "mlx4_core" /etc/modprobe.d/*.conf
 
-int sysfs_create_bin_file(struct kobject *kobj,
-                          const struct bin_attribute *attr)
-{
-	BUG_ON(!kobj || !kobj->sd || !attr); <--
+Output like below:
 
-Since I don't have proper serial console to that machine, all I see is the
-end of the backtrace :-(
+[root@tian-lp1 lib]# grep "mlx4_core" /etc/modprobe.d/*.conf
+[root@tian-lp1 lib]#
 
-Here is a hand copied backtrace from the screen:
+>
+>
+>Thanks.
+>
+>-Jack
 
-pci_create_sysfs_dev_files()
-pci_bus_add_device()
-pci_bus_add_devices()
-enable_slot()
-acpiphp_check_bridge()
-hotplug_event()
-...
+-- 
+Richard Yang
+Help you, Help me
+
