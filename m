@@ -1,46 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:57325 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbaAJXMt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 18:12:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <52D06C0C.9020300@canonical.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
-	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
-	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
-	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
-	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
-	<52A8BAC5.70006@canonical.com>
-	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-	<52D01D82.5070202@canonical.com>
-	<CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
-	<52D06C0C.9020300@canonical.com>
-Date: Fri, 10 Jan 2014 15:12:48 -0800
-Message-ID: <CAE9FiQV39fmZ8DF9=SfjmvrdEnS+7pX+dj5q2x5e3m4pSBiaBA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:63502 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbaANLVH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 06:21:07 -0500
+Received: by mail-ee0-f41.google.com with SMTP id e49so144921eek.14
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 03:21:06 -0800 (PST)
+Date: Tue, 14 Jan 2014 13:21:00 +0200
+From: Jack Morgenstein <jackm@dev.mellanox.co.il>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	yinghai@kernel.org, bhelgaas@google.com, amirv@mellanox.com,
+	ogerlitz@mellanox.com, eugenia@mellanox.com,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>
+Subject: Re: mlx4_core probe error after applying Yinghai's patch
+Message-ID: <20140114132100.1bc5d621@jpm-OptiPlex-GX620>
+In-Reply-To: <52d51b4c.c413ec0a.290f.03c3SMTPIN_ADDED_BROKEN@mx.google.com>
+References: <20140114062215.GA19345@richard>
+	<20140114105031.71882944@jpm-OptiPlex-GX620>
+	<20140114091525.GB27684@richard>
+	<20140114122532.0e2b6a64@jpm-OptiPlex-GX620>
+	<52d51b4c.c413ec0a.290f.03c3SMTPIN_ADDED_BROKEN@mx.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 10, 2014 at 1:54 PM, Joseph Salisbury
-<joseph.salisbury@canonical.com> wrote:
-> On 01/10/2014 12:13 PM, Yinghai Lu wrote:
->
-> In a prior email you mentioned: "Yes, if that works, we would not need
-> to put the patch in upstream for limiting realloc auto scope."  Is the
-> git tree at
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> somehow different now?
+On Tue, 14 Jan 2014 19:10:55 +0800
+Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
 
-but you boot with "pci=realloc=off", right?
+> The problem happened only when BAR#0 and BAR#6 were allocated
+> from same non-profetchable P2P window. So we guessed the problem
+> had relationship with ROM BAR#6 and we read multiple bytes from
+> BAR#0+0x8069c:
+> 
+> BAR#0+0x8069c: 0x00001000
+> BAR#0+0x806a0: 0x0
+> BAR#0+0x806a4: 0x0
+> BAR#0+0x806a8: 0x0
+> BAR#0+0x806ac: 0x0
+> 
+> My question is 0x0 is expected value from (BAR#0 + 0x806a*) ? :-)
 
-Anyway please try pci/next to see if there is any help.
+Yes, the first time the value is read from dword 0x8069c, it should be
+zero.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next
+-Jack
