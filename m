@@ -1,152 +1,217 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Pavel Machek <pavel@ucw.cz>, Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v5 18/33] x86, irq: Add ioapic_gsi_to_irq
-Date: Thu,  2 Jan 2014 16:05:50 -0800
-Message-Id: <1388707565-16535-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:35058 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472AbaANRPX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 12:15:23 -0500
+Received: by mail-ig0-f179.google.com with SMTP id c10so2121359igq.0
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 09:15:22 -0800 (PST)
+Received: from localhost ([172.29.122.186])
+        by mx.google.com with ESMTPSA id f5sm2089360igc.4.2014.01.14.09.15.21
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Tue, 14 Jan 2014 09:15:21 -0800 (PST)
+Subject: [PATCH 1/2] PCI: Reorder so actual code comes before stubs
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 14 Jan 2014 10:15:20 -0700
+Message-ID: <20140114171520.9148.72643.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140114171308.9148.47907.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140114171308.9148.47907.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For hot add ioapic, irq_base is not equal to gsi_base.
-We need a way to do mapping between gsi and irq.
+Consistently use the:
 
-Also remove irq_to_gsi() that is confusing, just use that array
-directly as we only have one caller and it already check
-input irq before use it.
+    #ifdef CONFIG_PCI_FOO
+    int pci_foo(...);
+    #else
+    static inline int pci_foo(...) { return -1; }
+    #endif
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Pavel Machek <pavel@ucw.cz>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+pattern, instead of sometimes using "#ifndef CONFIG_PCI_FOO".
+
+No functional change.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/include/asm/io_apic.h |  1 +
- arch/x86/kernel/acpi/boot.c    | 22 +++++-----------------
- arch/x86/kernel/apic/io_apic.c | 29 ++++++++++++++++++++++++++++-
- 3 files changed, 34 insertions(+), 18 deletions(-)
+ drivers/pci/pci-label.c |   57 +++++++++++++++++++++--------------------------
+ include/linux/pci.h     |   46 +++++++++++++++++++-------------------
+ 2 files changed, 48 insertions(+), 55 deletions(-)
 
-diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
-index 8181fd8..02ac411 100644
---- a/arch/x86/include/asm/io_apic.h
-+++ b/arch/x86/include/asm/io_apic.h
-@@ -180,6 +180,7 @@ struct mp_ioapic_gsi{
- };
- extern struct mp_ioapic_gsi  mp_gsi_routing[];
- extern u32 gsi_top;
-+int ioapic_gsi_to_irq(u32 gsi);
- int mp_find_ioapic(u32 gsi);
- int mp_find_ioapic_pin(int ioapic, u32 gsi);
- void __init mp_register_ioapic(int id, u32 address, u32 gsi_base);
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 6c0b43b..0f9c133 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -113,6 +113,10 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 		}
- 	}
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index d51f45aa669e..6f5d343d251c 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -34,21 +34,7 @@
  
-+#ifdef CONFIG_X86_IO_APIC
-+	if (acpi_irq_model == ACPI_IRQ_MODEL_IOAPIC)
-+		return ioapic_gsi_to_irq(gsi);
-+#endif
- 	/* Provide an identity mapping of gsi == irq
- 	 * except on truly weird platforms that have
- 	 * non isa irqs in the first 16 gsis.
-@@ -125,22 +129,6 @@ static unsigned int gsi_to_irq(unsigned int gsi)
- 	return irq;
- }
+ #define	DEVICE_LABEL_DSM	0x07
  
--static u32 irq_to_gsi(int irq)
+-#ifndef CONFIG_DMI
+-
+-static inline int
+-pci_create_smbiosname_file(struct pci_dev *pdev)
 -{
--	unsigned int gsi;
--
--	if (irq < NR_IRQS_LEGACY)
--		gsi = isa_irq_to_gsi[irq];
--	else if (irq < gsi_top)
--		gsi = irq;
--	else if (irq < (gsi_top + NR_IRQS_LEGACY))
--		gsi = irq - gsi_top;
--	else
--		gsi = 0xffffffff;
--
--	return gsi;
+-	return -1;
 -}
 -
- /*
-  * This is just a simple wrapper around early_ioremap(),
-  * with sanity checks for phys == 0 and size == 0.
-@@ -530,7 +518,7 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+-static inline void
+-pci_remove_smbiosname_file(struct pci_dev *pdev)
+-{
+-}
+-
+-#else
+-
++#ifdef CONFIG_DMI
+ enum smbios_attr_enum {
+ 	SMBIOS_ATTR_NONE = 0,
+ 	SMBIOS_ATTR_LABEL_SHOW,
+@@ -156,31 +142,20 @@ pci_remove_smbiosname_file(struct pci_dev *pdev)
  {
- 	if (isa_irq >= 16)
- 		return -1;
--	*gsi = irq_to_gsi(isa_irq);
-+	*gsi = isa_irq_to_gsi[isa_irq];
+ 	sysfs_remove_group(&pdev->dev.kobj, &smbios_attr_group);
+ }
+-
+-#endif
+-
+-#ifndef CONFIG_ACPI
+-
+-static inline int
+-pci_create_acpi_index_label_files(struct pci_dev *pdev)
+-{
+-	return -1;
+-}
+-
++#else
+ static inline int
+-pci_remove_acpi_index_label_files(struct pci_dev *pdev)
++pci_create_smbiosname_file(struct pci_dev *pdev)
+ {
+ 	return -1;
+ }
+ 
+-static inline bool
+-device_has_dsm(struct device *dev)
++static inline void
++pci_remove_smbiosname_file(struct pci_dev *pdev)
+ {
+-	return false;
+ }
++#endif
+ 
+-#else
+-
++#ifdef CONFIG_ACPI
+ static const char device_label_dsm_uuid[] = {
+ 	0xD0, 0x37, 0xC9, 0xE5, 0x53, 0x35, 0x7A, 0x4D,
+ 	0x91, 0x17, 0xEA, 0x4D, 0x19, 0xC3, 0x43, 0x4D
+@@ -364,6 +339,24 @@ pci_remove_acpi_index_label_files(struct pci_dev *pdev)
+ 	sysfs_remove_group(&pdev->dev.kobj, &acpi_attr_group);
  	return 0;
  }
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index a1af837..066611f 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -1041,13 +1041,16 @@ static int pin_2_irq(int idx, int apic, int pin)
- 
- 	if (test_bit(bus, mp_bus_not_pci)) {
- 		irq = mp_irqs[idx].srcbusirq;
--	} else {
-+	} else if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
- 		u32 gsi = gsi_cfg->gsi_base + pin;
- 
- 		if (gsi >= NR_IRQS_LEGACY)
- 			irq = gsi;
- 		else
- 			irq = gsi_top + gsi;
-+	} else {
-+		/* hotadd ioapic */
-+		irq = gsi_cfg->irq_base + pin;
- 	}
- 
- #ifdef CONFIG_X86_32
-@@ -1473,6 +1476,30 @@ static void __init setup_IO_APIC_irqs(void)
- 		__io_apic_setup_irqs(ioapic_idx);
- }
- 
-+int ioapic_gsi_to_irq(u32 gsi)
++#else
++static inline int
++pci_create_acpi_index_label_files(struct pci_dev *pdev)
 +{
-+	int ioapic_idx = 0, irq = gsi;
-+	struct mp_ioapic_gsi *gsi_cfg;
-+
-+	ioapic_idx = mp_find_ioapic(gsi);
-+	if (ioapic_idx < 0)
-+		return -1;
-+
-+	gsi_cfg = mp_ioapic_gsi_routing(ioapic_idx);
-+	if (gsi_cfg->gsi_base == gsi_cfg->irq_base) {
-+		if (gsi < NR_IRQS_LEGACY)
-+			irq = gsi_top + gsi;
-+	} else {
-+		int pin = mp_find_ioapic_pin(ioapic_idx, gsi);
-+
-+		if (pin < 0)
-+			return -1;
-+		/* hotadd ioapic */
-+		irq = gsi_cfg->irq_base + pin;
-+	}
-+
-+	return irq;
++	return -1;
 +}
- /*
-  * for the gsit that is not in first ioapic
-  * but could not use acpi_register_gsi()
--- 
-1.8.4
++
++static inline int
++pci_remove_acpi_index_label_files(struct pci_dev *pdev)
++{
++	return -1;
++}
++
++static inline bool
++device_has_dsm(struct device *dev)
++{
++	return false;
++}
+ #endif
+ 
+ void pci_create_firmware_label_files(struct pci_dev *pdev)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eba7764b1586..39a3609c8cda 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1149,7 +1149,22 @@ struct msix_entry {
+ };
+ 
+ 
+-#ifndef CONFIG_PCI_MSI
++#ifdef CONFIG_PCI_MSI
++int pci_msi_vec_count(struct pci_dev *dev);
++int pci_enable_msi_block(struct pci_dev *dev, int nvec);
++void pci_msi_shutdown(struct pci_dev *dev);
++void pci_disable_msi(struct pci_dev *dev);
++int pci_msix_vec_count(struct pci_dev *dev);
++int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
++void pci_msix_shutdown(struct pci_dev *dev);
++void pci_disable_msix(struct pci_dev *dev);
++void msi_remove_pci_irq_vectors(struct pci_dev *dev);
++void pci_restore_msi_state(struct pci_dev *dev);
++int pci_msi_enabled(void);
++int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
++int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
++			  int minvec, int maxvec);
++#else
+ static inline int pci_msi_vec_count(struct pci_dev *dev)
+ {
+ 	return -ENOSYS;
+@@ -1200,21 +1215,6 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
+ {
+ 	return -ENOSYS;
+ }
+-#else
+-int pci_msi_vec_count(struct pci_dev *dev);
+-int pci_enable_msi_block(struct pci_dev *dev, int nvec);
+-void pci_msi_shutdown(struct pci_dev *dev);
+-void pci_disable_msi(struct pci_dev *dev);
+-int pci_msix_vec_count(struct pci_dev *dev);
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+-void pci_msix_shutdown(struct pci_dev *dev);
+-void pci_disable_msix(struct pci_dev *dev);
+-void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+-void pci_restore_msi_state(struct pci_dev *dev);
+-int pci_msi_enabled(void);
+-int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
+-int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+-			  int minvec, int maxvec);
+ #endif
+ 
+ #ifdef CONFIG_PCIEPORTBUS
+@@ -1225,10 +1225,10 @@ extern bool pcie_ports_auto;
+ #define pcie_ports_auto		false
+ #endif
+ 
+-#ifndef CONFIG_PCIEASPM
+-static inline bool pcie_aspm_support_enabled(void) { return false; }
+-#else
++#ifdef CONFIG_PCIEASPM
+ bool pcie_aspm_support_enabled(void);
++#else
++static inline bool pcie_aspm_support_enabled(void) { return false; }
+ #endif
+ 
+ #ifdef CONFIG_PCIEAER
+@@ -1239,15 +1239,15 @@ static inline void pci_no_aer(void) { }
+ static inline bool pci_aer_available(void) { return false; }
+ #endif
+ 
+-#ifndef CONFIG_PCIE_ECRC
++#ifdef CONFIG_PCIE_ECRC
++void pcie_set_ecrc_checking(struct pci_dev *dev);
++void pcie_ecrc_get_policy(char *str);
++#else
+ static inline void pcie_set_ecrc_checking(struct pci_dev *dev)
+ {
+ 	return;
+ }
+ static inline void pcie_ecrc_get_policy(char *str) {};
+-#else
+-void pcie_set_ecrc_checking(struct pci_dev *dev);
+-void pcie_ecrc_get_policy(char *str);
+ #endif
+ 
+ #define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
 
