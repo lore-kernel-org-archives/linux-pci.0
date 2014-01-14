@@ -1,63 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 29/33] PCI, x86, ACPI: Link acpi ioapic register to ioapic
-Date: Thu,  2 Jan 2014 16:06:01 -0800
-Message-Id: <1388707565-16535-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:38896 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751689AbaANKOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jan 2014 05:14:19 -0500
+Message-ID: <1389694446.6933.14.camel@pasglop>
+Subject: Re: [PATCH] powerpc: dma-mapping: Return dma_direct_ops variable
+ when dev == NULL
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Chunhe Lan <Chunhe.Lan@freescale.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Date: Tue, 14 Jan 2014 21:14:06 +1100
+In-Reply-To: <1389692656-27758-1-git-send-email-Chunhe.Lan@freescale.com>
+References: <1389692656-27758-1-git-send-email-Chunhe.Lan@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During ioapic hotplug, acpi_register_ioapic will be called.
-Now for x86, that function is blank.
-Fill that will update __mp_register_ioapic to use those ioapic.
+On Tue, 2014-01-14 at 17:44 +0800, Chunhe Lan wrote:
+> Without this patch, kind of below error will be dumped if
+> 'insmod ixgbevf.ko' is executed:
+> 
+>     ixgbevf: Intel(R) 10 Gigabit PCI Express Virtual Function
+>              Network Driver - version 2.7.12-k
+>     ixgbevf: Copyright (c) 2009 - 2012 Intel Corporation.
+>     ixgbevf 0000:01:10.0: enabling device (0000 -> 0002)
+>     ixgbevf 0000:01:10.0: No usable DMA configuration, aborting
+>     ixgbevf: probe of 0000:01:10.0 failed with error -5
+>     ......
+>     ......
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/kernel/acpi/boot.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+That's not right. The DMA ops must be set properly for the VF somewhere
+in the arch code instead. When creating VFs, is there a hook allowing
+the arch to fix things up ?
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 0f9c133..77bf505 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -651,16 +651,26 @@ EXPORT_SYMBOL(acpi_unmap_lsapic);
- 
- int acpi_register_ioapic(acpi_handle handle, u64 phys_addr, u32 gsi_base)
- {
--	/* TBD */
--	return -EINVAL;
-+	u64 addr = 0;
-+	int apic_id;
-+
-+	apic_id = acpi_get_ioapic_id(handle, gsi_base, &addr);
-+
-+	if (apic_id < 0)
-+		return -1;
-+
-+	if (phys_addr != addr)
-+		pr_warn("ioapic 0x%02x address is not consistent _CRS/dev(%llx) _MAT/MADT(%llx) \n",
-+			apic_id, phys_addr, addr);
-+
-+	return	__mp_register_ioapic(apic_id, phys_addr, gsi_base, true);
- }
- 
- EXPORT_SYMBOL(acpi_register_ioapic);
- 
- int acpi_unregister_ioapic(acpi_handle handle, u32 gsi_base)
- {
--	/* TBD */
--	return -EINVAL;
-+	return mp_unregister_ioapic(gsi_base);
- }
- 
- EXPORT_SYMBOL(acpi_unregister_ioapic);
--- 
-1.8.4
+(Also adding linux-pci on CC)
+
+Ben.
+
+> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Tested-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+> ---
+>  arch/powerpc/include/asm/dma-mapping.h |   13 +++++++++----
+>  1 files changed, 9 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/dma-mapping.h b/arch/powerpc/include/asm/dma-mapping.h
+> index e27e9ad..b8c10de 100644
+> --- a/arch/powerpc/include/asm/dma-mapping.h
+> +++ b/arch/powerpc/include/asm/dma-mapping.h
+> @@ -84,10 +84,15 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+>  	 * only ISA DMA device we support is the floppy and we have a hack
+>  	 * in the floppy driver directly to get a device for us.
+>  	 */
+> -	if (unlikely(dev == NULL))
+> -		return NULL;
+> -
+> -	return dev->archdata.dma_ops;
+> +	if (dev && dev->archdata.dma_ops)
+> +		return dev->archdata.dma_ops;
+> +	/*
+> +	 * In some cases (for example, use the Intel(R) 10 Gigabit PCI
+> +	 * expression Virtual Function Network Driver -- ixgbevf.ko),
+> +	 * their value of dev is the NULL. If return NULL, the driver is
+> +	 * aborting. So return dma_direct_ops variable when dev == NULL.
+> +	 */
+> +	return &dma_direct_ops;
+>  }
+>  
+>  static inline void set_dma_ops(struct device *dev, struct dma_map_ops *ops)
+
 
