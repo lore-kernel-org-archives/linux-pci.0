@@ -1,264 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:33832 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbaANXjL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 18:39:11 -0500
-Received: by mail-ie0-f175.google.com with SMTP id tp5so1315926ieb.34
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 15:39:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131216221229.3393.6171.stgit@bling.home>
-References: <20131216221229.3393.6171.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 14 Jan 2014 16:38:50 -0700
-Message-ID: <CAErSpo5zmU6qQgrBpbXbJjbQDgAOtJ=KMurDK-P_EcdSFJcLuQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add "try" reset interfaces
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from exprod5og102.obsmtp.com ([64.18.0.143]:35437 "HELO
+	exprod5og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752176AbaANXer (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 18:34:47 -0500
+Received: by mail-pa0-f54.google.com with SMTP id fa1so312880pad.41
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 15:34:46 -0800 (PST)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH V2 3/4] dt-bindings: pci: xgene pcie device tree bindings
+Date: Tue, 14 Jan 2014 15:34:17 -0800
+Message-Id: <1389742458-7693-4-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 3:14 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> When doing a function/slot/bus reset PCI grabs the device_lock for
-> each device to block things like suspend and driver probes, which is
-> all well and good, but call paths exist where this lock may already be
-> held.  This creates an opportunity for deadlock.  For instance, vfio
-> allows userspace to issue resets so long as it owns the device(s).
-> If a driver unbind .remove callback races with userspace issuing a
-> reset, we have a deadlock as userspace gets stuck waiting on
-> device_lock while another thread has device_lock and waits for .remove
-> to complete.  To resolve this, we can make a version of the reset
-> interfaces which use trylock.  With this, we can safely attempt a
-> reset and return error to userspace if there is contention.
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+This patch adds the bindings for X-Gene PCIe driver. The driver resides
+under 'drivers/pci/host/pci-xgene.c' file.
 
-Applied to pci/reset for v3.14, thanks!
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ .../devicetree/bindings/pci/xgene-pcie.txt         |   45 ++++++++++++++++++++
+ 1 file changed, 45 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
 
-> ---
->  drivers/pci/pci.c   |  155 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |    3 +
->  2 files changed, 158 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 33120d1..de6416f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3445,6 +3445,18 @@ static void pci_dev_lock(struct pci_dev *dev)
->         device_lock(&dev->dev);
->  }
->
-> +/* Return 1 on successful lock, 0 on contention */
-> +static int pci_dev_trylock(struct pci_dev *dev)
-> +{
-> +       if (pci_cfg_access_trylock(dev)) {
-> +               if (device_trylock(&dev->dev))
-> +                       return 1;
-> +               pci_cfg_access_unlock(dev);
-> +       }
-> +
-> +       return 0;
-> +}
-> +
->  static void pci_dev_unlock(struct pci_dev *dev)
->  {
->         device_unlock(&dev->dev);
-> @@ -3588,6 +3600,34 @@ int pci_reset_function(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_reset_function);
->
-> +/**
-> + * pci_try_reset_function - quiesce and reset a PCI device function
-> + * @dev: PCI device to reset
-> + *
-> + * Same as above, except return -EAGAIN if unable to lock device.
-> + */
-> +int pci_try_reset_function(struct pci_dev *dev)
-> +{
-> +       int rc;
-> +
-> +       rc = pci_dev_reset(dev, 1);
-> +       if (rc)
-> +               return rc;
-> +
-> +       pci_dev_save_and_disable(dev);
-> +
-> +       if (pci_dev_trylock(dev)) {
-> +               rc = __pci_dev_reset(dev, 0);
-> +               pci_dev_unlock(dev);
-> +       } else
-> +               rc = -EAGAIN;
-> +
-> +       pci_dev_restore(dev);
-> +
-> +       return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_try_reset_function);
-> +
->  /* Lock devices from the top of the tree down */
->  static void pci_bus_lock(struct pci_bus *bus)
->  {
-> @@ -3612,6 +3652,32 @@ static void pci_bus_unlock(struct pci_bus *bus)
->         }
->  }
->
-> +/* Return 1 on successful lock, 0 on contention */
-> +static int pci_bus_trylock(struct pci_bus *bus)
-> +{
-> +       struct pci_dev *dev;
-> +
-> +       list_for_each_entry(dev, &bus->devices, bus_list) {
-> +               if (!pci_dev_trylock(dev))
-> +                       goto unlock;
-> +               if (dev->subordinate) {
-> +                       if (!pci_bus_trylock(dev->subordinate)) {
-> +                               pci_dev_unlock(dev);
-> +                               goto unlock;
-> +                       }
-> +               }
-> +       }
-> +       return 1;
-> +
-> +unlock:
-> +       list_for_each_entry_continue_reverse(dev, &bus->devices, bus_list) {
-> +               if (dev->subordinate)
-> +                       pci_bus_unlock(dev->subordinate);
-> +               pci_dev_unlock(dev);
-> +       }
-> +       return 0;
-> +}
-> +
->  /* Lock devices from the top of the tree down */
->  static void pci_slot_lock(struct pci_slot *slot)
->  {
-> @@ -3640,6 +3706,37 @@ static void pci_slot_unlock(struct pci_slot *slot)
->         }
->  }
->
-> +/* Return 1 on successful lock, 0 on contention */
-> +static int pci_slot_trylock(struct pci_slot *slot)
-> +{
-> +       struct pci_dev *dev;
-> +
-> +       list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-> +               if (!dev->slot || dev->slot != slot)
-> +                       continue;
-> +               if (!pci_dev_trylock(dev))
-> +                       goto unlock;
-> +               if (dev->subordinate) {
-> +                       if (!pci_bus_trylock(dev->subordinate)) {
-> +                               pci_dev_unlock(dev);
-> +                               goto unlock;
-> +                       }
-> +               }
-> +       }
-> +       return 1;
-> +
-> +unlock:
-> +       list_for_each_entry_continue_reverse(dev,
-> +                                            &slot->bus->devices, bus_list) {
-> +               if (!dev->slot || dev->slot != slot)
-> +                       continue;
-> +               if (dev->subordinate)
-> +                       pci_bus_unlock(dev->subordinate);
-> +               pci_dev_unlock(dev);
-> +       }
-> +       return 0;
-> +}
-> +
->  /* Save and disable devices from the top of the tree down */
->  static void pci_bus_save_and_disable(struct pci_bus *bus)
->  {
-> @@ -3763,6 +3860,35 @@ int pci_reset_slot(struct pci_slot *slot)
->  }
->  EXPORT_SYMBOL_GPL(pci_reset_slot);
->
-> +/**
-> + * pci_try_reset_slot - Try to reset a PCI slot
-> + * @slot: PCI slot to reset
-> + *
-> + * Same as above except return -EAGAIN if the slot cannot be locked
-> + */
-> +int pci_try_reset_slot(struct pci_slot *slot)
-> +{
-> +       int rc;
-> +
-> +       rc = pci_slot_reset(slot, 1);
-> +       if (rc)
-> +               return rc;
-> +
-> +       pci_slot_save_and_disable(slot);
-> +
-> +       if (pci_slot_trylock(slot)) {
-> +               might_sleep();
-> +               rc = pci_reset_hotplug_slot(slot->hotplug, 0);
-> +               pci_slot_unlock(slot);
-> +       } else
-> +               rc = -EAGAIN;
-> +
-> +       pci_slot_restore(slot);
-> +
-> +       return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_try_reset_slot);
-> +
->  static int pci_bus_reset(struct pci_bus *bus, int probe)
->  {
->         if (!bus->self)
-> @@ -3822,6 +3948,35 @@ int pci_reset_bus(struct pci_bus *bus)
->  EXPORT_SYMBOL_GPL(pci_reset_bus);
->
->  /**
-> + * pci_try_reset_bus - Try to reset a PCI bus
-> + * @bus: top level PCI bus to reset
-> + *
-> + * Same as above except return -EAGAIN if the bus cannot be locked
-> + */
-> +int pci_try_reset_bus(struct pci_bus *bus)
-> +{
-> +       int rc;
-> +
-> +       rc = pci_bus_reset(bus, 1);
-> +       if (rc)
-> +               return rc;
-> +
-> +       pci_bus_save_and_disable(bus);
-> +
-> +       if (pci_bus_trylock(bus)) {
-> +               might_sleep();
-> +               pci_reset_bridge_secondary_bus(bus->self);
-> +               pci_bus_unlock(bus);
-> +       } else
-> +               rc = -EAGAIN;
-> +
-> +       pci_bus_restore(bus);
-> +
-> +       return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_try_reset_bus);
-> +
-> +/**
->   * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
->   * @dev: PCI device to query
->   *
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1084a15..34629df 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -951,10 +951,13 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
->  int __pci_reset_function(struct pci_dev *dev);
->  int __pci_reset_function_locked(struct pci_dev *dev);
->  int pci_reset_function(struct pci_dev *dev);
-> +int pci_try_reset_function(struct pci_dev *dev);
->  int pci_probe_reset_slot(struct pci_slot *slot);
->  int pci_reset_slot(struct pci_slot *slot);
-> +int pci_try_reset_slot(struct pci_slot *slot);
->  int pci_probe_reset_bus(struct pci_bus *bus);
->  int pci_reset_bus(struct pci_bus *bus);
-> +int pci_try_reset_bus(struct pci_bus *bus);
->  void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
->  void pci_update_resource(struct pci_dev *dev, int resno);
->  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
->
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pcie.txt b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
+new file mode 100644
+index 0000000..19b9c28
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
+@@ -0,0 +1,45 @@
++* AppliedMicro X-Gene PCIe interface
++
++Required properties:
++- status: Either "ok" or "disabled".
++- device_type: set to "pci"
++- compatible: should contain "xgene,pcie" to identify the core.
++- reg: base addresses and lengths of the pcie controller configuration
++	space register.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- ranges: ranges for the outbound memory, I/O regions.
++- dma-ranges: ranges for the inbound memory regions.
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: handle to pci clock.
++
++Example:
++
++SoC specific DT Entry:
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000
++			0xe0 0xd0000000 0x0 0x00200000>;
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		clocks = <&pcie0clk 0>;
++	};
++
++Board specific DT Entry:
++	&pcie0 {
++		status = "ok";
++	};
+-- 
+1.7.9.5
+
