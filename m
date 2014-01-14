@@ -1,327 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:64901 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065AbaANXRR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 18:17:17 -0500
-Received: by mail-ig0-f170.google.com with SMTP id m12so8801173iga.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 15:17:16 -0800 (PST)
-Received: from google.com ([172.29.122.187])
-        by mx.google.com with ESMTPSA id q8sm3616644igi.1.2014.01.14.15.17.14
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-        Tue, 14 Jan 2014 15:17:15 -0800 (PST)
-Date: Tue, 14 Jan 2014 16:17:13 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Subject: Changes for v3.14 merge window
-Message-ID: <20140114231713.GA6336@google.com>
+Received: from mx1.redhat.com ([209.132.183.28]:1279 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750906AbaANIsm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jan 2014 03:48:42 -0500
+Date: Tue, 14 Jan 2014 09:50:40 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
+Message-ID: <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
+References: <cover.1389103215.git.agordeev@redhat.com>
+ <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
+ <20140113191220.GA6525@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140113191220.GA6525@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Here are the contents of my "next" branch, planned for release in v3.14.
-Let me know if I'm missing something important.
+On Mon, Jan 13, 2014 at 12:12:20PM -0700, Bjorn Helgaas wrote:
+> > -	nvec = rc;
+> > -	rc = pci_enable_msi_block(pdev, nvec);
+> > -	if (rc)
+> > +	if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
+> >  		goto intx;
+> >  
+> >  	return nvec;
+> >  
+> >  single_msi:
+> > -	rc = pci_enable_msi(pdev);
+> > -	if (rc)
+> > +	if (pci_enable_msi_range(pdev, 1, 1) < 0)
+> 
+> This part doesn't seem like an improvement.  There are a hundred or so
+> callers of pci_enable_msi() that only want a single MSI.  Is there any
+> benefit in changing them to use pci_enable_msi_range()?
 
-I'm already planning to merge Alex Williamson's "try_reset" stuff.
+In this particular case it reads better to me as one sees on the screen
+pci_enable_msi_range(pdev, nvec, nvec) and pci_enable_msi_range(pdev, 1, 1)
+calls. That allows to avoid switching in mind between negative-or-positive
+return in the former call and negative-or-zero return from pci_enable_msi()
+if we had it.
+
+But in most cases when single MSI is enabled we do cause complication
+with the patterns below (which I expect I am going be hated for ;) ):
 
 
-Alex Williamson (4):
-      PCI: Add pci_wait_for_pending() (refactor pci_wait_for_pending_transaction())
-      PCI: Add support for save/restore of extended capabilities
-      PCI: Add Virtual Channel to save/restore support
-      PCI: Rename PCI_VC_PORT_REG1/2 to PCI_VC_PORT_CAP1/2
+-	rc = pci_enable_msi(pdev);
+-	if (rc)
++	rc = pci_enable_msi_range(pdev, 1, 1);
++	if (rc < 0)
+		...
 
-Alexander Duyck (1):
-      PCI: Avoid unnecessary CPU switch when calling driver .probe() method
 
-Alexander Gordeev (9):
-      s390/PCI: Fix single MSI only check
-      s390/PCI: Remove superfluous check of MSI type
-      PCI/MSI: Return msix_capability_init() failure if populate_msi_sysfs() fails
-      PCI/MSI: Return -ENOSYS for unimplemented interfaces, not -1
-      PCI/MSI: Make pci_enable_msi/msix() 'nvec' argument type as int
-      PCI/MSI: Add pci_msi_vec_count()
-      PCI/MSI: Remove pci_enable_msi_block_auto()
-      PCI/MSI: Add pci_msix_vec_count()
-      PCI/MSI: Add pci_enable_msi_range() and pci_enable_msix_range()
+-	rc = pci_enable_msi(pdev);
+-	if (!rc)
++	rc = pci_enable_msi_range(pdev, 1, 1);
++	if (rc > 0)
+		...
 
-Andrew Lunn (1):
-      PCI: mvebu: Remove duplicate of_clk_get_by_name() call
+ 
+I think we have a tradeoff between the interface simplicity and code clarity.
+What if we try to address both goals by making pci_enable_msi() a helper over
+pci_enable_msi_range(pdev, 1, 1)? In this case the return value will match
+negative-or-positive binary semantics while reads almost as good as it used to:
 
-Betty Dall (3):
-      PCI/AER: Ignore non-PCIe AER error sources in aer_hest_parse()
-      ACPICA: Add helper macros to extract bus/segment numbers from HEST table.
-      PCI/AER: Support ACPI HEST AER error sources for PCI domains other than 0
 
-Bjorn Helgaas (56):
-      Revert "workqueue: allow work_on_cpu() to be called recursively"
-      PCI: designware: Use typical "for" loop idiom
-      MAINTAINERS: Add DesignWare, i.MX6, Armada, R-Car PCI host maintainers
-      PCI: Prevent bus conflicts while checking for bridge apertures
-      PCI: Stop clearing bridge Secondary Status when setting up I/O aperture
-      Merge branch 'for-linus' into next
-      Merge branch 'pci/misc' into next
-      Merge branch 'pci/yijing-dev_is_pci' into next
-      PCI/AER: Consolidate HEST error source parsers
-      PCI: pciehp: Drop pciehp_readw()/pciehp_writew() wrappers
-      PCI: pciehp: Remove error checks when accessing PCIe Capability
-      PCI: pciehp: Make various functions void since they can't fail
-      PCI: pciehp: Announce slot capabilities (slot #, button, LEDs, etc)
-      PCI: pciehp: Simplify "Power Fault Detected" checking/clearing
-      PCI: pciehp: Use symbolic constants, not hard-coded bitmask
-      PCI: pciehp: Use symbolic constants for Slot Control fields
-      PCI: pciehp: Move Attention & Power Indicator support tests to accessors
-      Merge branch 'eisa' into next
-      Merge branch 'pci/aer' into next
-      Merge branch 'pci/deletion' into next
-      Merge branch 'pci/host-designware' into next
-      Merge branch 'pci/host-imx6' into next
-      Merge branch 'pci/host-mvebu' into next
-      Merge branch 'pci/host-rcar' into next
-      Merge branch 'pci/host-tegra' into next
-      Merge branch 'pci/pciehp' into next
-      Merge branch 'pci/vc' into next
-      PCI/portdrv: Cleanup error paths
-      PCI/portdrv: Remove extra get_device()/put_device() for pcie_device
-      Merge branch 'pci/host-imx6' into next
-      Merge branch 'pci/host-mvebu' into next
-      Merge branch 'pci/host-designware' into next
-      Merge branch 'pci/deletion' into next
-      Merge branch 'pci/msi' into next
-      Merge branch 'pci/misc' into next
-      PCI: Change pci_bus_region addresses to dma_addr_t
-      PCI: Add pci_bus_address() to get bus address of a BAR
-      agp: Support 64-bit APBASE
-      agp: Use pci_resource_start() to get CPU physical address for BAR
-      drm/i915: Rename gtt_bus_addr to gtt_phys_addr
-      agp/intel: Rename gtt_bus_addr to gtt_phys_addr
-      agp/intel: Use pci_bus_address() to get MMADR bus address
-      agp/intel: Use pci_bus_address() to get GTTADR bus address
-      agp/intel: Use CPU physical address, not bus address, for ioremap()
-      agp/ati: Use PCI_COMMAND instead of hard-coded 4
-      PCI: Split out bridge window override of minimum allocation address
-      Merge branch 'pci/host-designware' into next
-      Merge branch 'pci/host-mvebu' into next
-      Merge branch 'pci/misc' into next
-      Merge branch 'pci/msi' into next
-      Merge branch 'pci/resource' into next
-      Merge branch 'pci/aer' into next
-      Merge branch 'pci/dead-code' into next
-      PCI: Reorder so actual code comes before stubs
-      PCI: Cleanup pci.h whitespace
-      Merge branch 'pci/ifndefs' into next
+-	rc = pci_enable_msi(pdev);
+-	if (rc)
++	rc = pci_enable_msi(pdev);
++	if (rc < 0)
+		...
 
-Bjørn Erik Nilsen (2):
-      PCI: designware: Fix crash in dw_msi_teardown_irq()
-      PCI: designware: Remove redundant call to pci_write_config_word()
 
-Borislav Petkov (2):
-      PCI/AER: Add a TLP header print helper
-      PCI/AER: Clean up error printing code a bit
+-	rc = pci_enable_msi(pdev);
+-	if (!rc)
++	rc = pci_enable_msi(pdev);
++	if (rc > 0)
+		...
 
-DuanZhenzhong (1):
-      PCI: Drop "irq" param from *_restore_msi_irqs()
 
-Eric Brower (1):
-      PCI: Disable Gen2 for Tegra20 and Tegra30
+The whole interface would not be inflated as well, with just:
 
-Erik Ekman (1):
-      PCI: Update documentation 00-INDEX file
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index a8d0100..fa0b27d 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -158,6 +158,9 @@ static int foo_driver_enable_single_msi(struct pci_dev *pdev)
+ 	return pci_enable_msi_range(pdev, 1, 1);
+ }
+ 
++A helper function pci_enable_msi() could be used instead. Note, as just
++one MSI is requested it could return either a negative errno or 1.
++
+ 4.2.2 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
 
-Fabio Estevam (2):
-      PCI: imx6: Remove unneeded check of platform_get_resource()
-      PCI: imx6: Remove unneeded 'goto err'
 
-Geert Uytterhoeven (1):
-      PCI/portdrv: Remove superfluous name cast
-
-Greg Kroah-Hartman (1):
-      PCI/MSI: Export MSI mode using attributes, not kobjects
-
-Harro Haan (1):
-      PCI: designware: Fix missing MSI IRQs
-
-Jason Gunthorpe (4):
-      PCI: mvebu: Drop writes to bridge Secondary Status register
-      PCI: mvebu: Return 'unsupported' for Interrupt Line and Interrupt Pin
-      PCI: mvebu: Obey bridge PCI_COMMAND_MEM and PCI_COMMAND_IO bits
-      PCI: mvebu: Support a bridge with no IO port window
-
-Jingoo Han (2):
-      PCI: mvebu: Use max_t() instead of max(resource_size_t,)
-      PCI: designware: Fix indent code style
-
-Joe Perches (1):
-      PCI/checkpatch: Deprecate DEFINE_PCI_DEVICE_TABLE
-
-Khalid Aziz (1):
-      PCI: Disable Bus Master only on kexec reboot
-
-Levente Kurusa (2):
-      EISA: Call put_device() if device_register() fails
-      PCI/portdrv: Add put_device() after device_register() failure
-
-Marek Vasut (5):
-      PCI: imx6: Make reset-gpio optional
-      PCI: imx6: Report "link up" only after link training completes
-      PCI: imx6: Factor out PHY reset
-      PCI: imx6: Factor out link up wait loop
-      PCI: imx6: Start link in Gen1 before negotiating for Gen2 mode
-
-Michal Marek (1):
-      PCI: Omit PCI ID macro strings to shorten quirk names
-
-Pratyush Anand (2):
-      PCI: designware: Add dw_pcie prefix before cfg_read/write
-      PCI: designware: Fix I/O transfers by using CPU (not realio) address
-
-Rafael J. Wysocki (2):
-      PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
-      PCI: Move device_del() from pci_stop_dev() to pci_destroy_dev()
-
-Richard Zhu (1):
-      PCI: imx6: Fix bugs in PCIe startup code
-
-Sachin Kamat (1):
-      PCI: mvebu: Remove redundant of_match_ptr
-
-Stephen Hemminger (9):
-      PCI: Removed unused parts of Page Request Interface support
-      PCI: Remove unused Latency Tolerance Reporting support
-      PCI: Remove unused Optimized Buffer Flush/Fill support
-      PCI: Remove unused ID-Based Ordering support
-      PCI: Remove unused pci_vpd_truncate()
-      PCI: Remove unused pcie_aspm_enabled()
-      PCI: Remove unused pci_renumber_slot()
-      PCI: Remove unused alloc_pci_dev()
-      PCI: Make local functions static
-
-Thomas Petazzoni (1):
-      PCI: mvebu: Call pci_ioremap_io() at startup instead of dynamically
-
-Valentine Barshak (1):
-      PCI: rcar: Add runtime PM support
-
-Wei Yongjun (1):
-      PCI: rcar: Fix rcar_pci_probe() return value check
-
-Yijing Wang (8):
-      PCI: Use dev_is_pci() to identify PCI devices
-      x86/PCI: Use dev_is_pci() to identify PCI devices
-      ia64/PCI: Use dev_is_pci() to identify PCI devices
-      sparc/PCI: Use dev_is_pci() to identify PCI devices
-      parisc/PCI: Use dev_is_pci() to identify PCI devices
-      arm/PCI: Use dev_is_pci() to identify PCI devices
-      arm/PCI: Use dev_is_pci() to identify PCI devices
-      alpha/PCI: Use dev_is_pci() to identify PCI devices
-
-Yinghai Lu (8):
-      PCI: Use device_release_driver() in pci_stop_root_bus()
-      PCI: Move pci_proc_attach_device() to pci_bus_add_device()
-      PCI: Remove from bus_list and release resources in pci_release_dev()
-      PCI: Convert pcibios_resource_to_bus() to take a pci_bus, not a pci_dev
-      PCI: Convert ioapic to be builtin only, not modular
-      agp/intel: Support 64-bit GMADR
-      PCI: Enforce bus address limits in resource allocation
-      PCI: Allocate 64-bit BARs above 4G when possible
-
-ethan.zhao (1):
-      PCI: Clear NumVFs when disabling SR-IOV in sriov_init()
-
- Documentation/ABI/testing/sysfs-bus-pci            |  11 +-
- Documentation/PCI/00-INDEX                         |   4 +-
- Documentation/PCI/MSI-HOWTO.txt                    | 308 ++++++++++-----
- Documentation/PCI/pci.txt                          |   6 +-
- .../devicetree/bindings/pci/designware-pcie.txt    |   2 +
- MAINTAINERS                                        |  33 ++
- arch/alpha/kernel/pci-sysfs.c                      |   4 +-
- arch/alpha/kernel/pci_iommu.c                      |   2 +-
- arch/arm/common/it8152.c                           |   4 +-
- arch/arm/mach-ixp4xx/common-pci.c                  |   6 +-
- arch/ia64/hp/common/sba_iommu.c                    |   2 +-
- arch/ia64/sn/pci/pci_dma.c                         |  24 +-
- arch/parisc/kernel/drivers.c                       |  22 +-
- arch/powerpc/kernel/pci-common.c                   |   4 +-
- arch/powerpc/kernel/pci_of_scan.c                  |   4 +-
- arch/s390/pci/pci.c                                |   4 +-
- arch/sparc/kernel/iommu.c                          |   2 +-
- arch/sparc/kernel/ioport.c                         |   5 +-
- arch/sparc/kernel/pci.c                            |   6 +-
- arch/x86/include/asm/pci.h                         |   3 +-
- arch/x86/include/asm/x86_init.h                    |   2 +-
- arch/x86/kernel/acpi/boot.c                        |   4 +-
- arch/x86/kernel/x86_init.c                         |   4 +-
- arch/x86/pci/xen.c                                 |   2 +-
- drivers/ata/ahci.c                                 |  56 ++-
- drivers/char/agp/agp.h                             |   1 +
- drivers/char/agp/ali-agp.c                         |   4 +-
- drivers/char/agp/amd-k7-agp.c                      |  12 +-
- drivers/char/agp/amd64-agp.c                       |   5 +-
- drivers/char/agp/ati-agp.c                         |  21 +-
- drivers/char/agp/efficeon-agp.c                    |   5 +-
- drivers/char/agp/generic.c                         |   4 +-
- drivers/char/agp/intel-agp.c                       |  48 +--
- drivers/char/agp/intel-agp.h                       |  10 +-
- drivers/char/agp/intel-gtt.c                       |  47 +--
- drivers/char/agp/nvidia-agp.c                      |   9 +-
- drivers/char/agp/sis-agp.c                         |   5 +-
- drivers/char/agp/via-agp.c                         |  13 +-
- drivers/eisa/eisa-bus.c                            |   4 +-
- drivers/gpu/drm/i915/i915_gem_gtt.c                |   6 +-
- drivers/pci/Kconfig                                |   3 +-
- drivers/pci/Makefile                               |   2 +-
- drivers/pci/access.c                               |  24 --
- drivers/pci/ats.c                                  |  82 ----
- drivers/pci/bus.c                                  | 133 +++++--
- drivers/pci/host-bridge.c                          |  19 +-
- drivers/pci/host/pci-exynos.c                      |   5 +-
- drivers/pci/host/pci-imx6.c                        | 225 +++++++----
- drivers/pci/host/pci-mvebu.c                       | 104 +++--
- drivers/pci/host/pci-rcar-gen2.c                   |  12 +-
- drivers/pci/host/pci-tegra.c                       |   2 +-
- drivers/pci/host/pcie-designware.c                 |  91 +++--
- drivers/pci/host/pcie-designware.h                 |   4 +-
- drivers/pci/hotplug/pciehp.h                       |  15 +-
- drivers/pci/hotplug/pciehp_core.c                  |  17 +-
- drivers/pci/hotplug/pciehp_ctrl.c                  |  90 ++---
- drivers/pci/hotplug/pciehp_hpc.c                   | 380 ++++++------------
- drivers/pci/hotplug/pciehp_pci.c                   |   6 +-
- drivers/pci/ioapic.c                               |   6 +-
- drivers/pci/iov.c                                  |   1 +
- drivers/pci/msi.c                                  | 348 +++++++++++------
- drivers/pci/pci-acpi.c                             |   2 +-
- drivers/pci/pci-driver.c                           |  38 +-
- drivers/pci/pci-label.c                            |  57 ++-
- drivers/pci/pci.c                                  | 388 +++++-------------
- drivers/pci/pci.h                                  |   2 -
- drivers/pci/pcie/aer/aerdrv_acpi.c                 |  56 +--
- drivers/pci/pcie/aer/aerdrv_errprint.c             |  95 ++---
- drivers/pci/pcie/aspm.c                            |  12 -
- drivers/pci/pcie/portdrv_core.c                    |  36 +-
- drivers/pci/probe.c                                | 158 ++++----
- drivers/pci/quirks.c                               |   2 +-
- drivers/pci/remove.c                               |  25 +-
- drivers/pci/rom.c                                  |   2 +-
- drivers/pci/setup-bus.c                            |  32 +-
- drivers/pci/setup-res.c                            |   2 +-
- drivers/pci/slot.c                                 |  26 --
- drivers/pci/vc.c                                   | 434 +++++++++++++++++++++
- drivers/pcmcia/i82092.c                            |   2 +-
- drivers/pcmcia/yenta_socket.c                      |   6 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c                |   5 +-
- drivers/vfio/pci/vfio_pci_config.c                 |  12 +-
- drivers/video/arkfb.c                              |   2 +-
- drivers/video/s3fb.c                               |   2 +-
- drivers/video/vt8623fb.c                           |   2 +-
- include/acpi/actbl1.h                              |  10 +-
- include/linux/kexec.h                              |   3 +
- include/linux/msi.h                                |   4 +-
- include/linux/pci-ats.h                            |  17 -
- include/linux/pci.h                                | 376 ++++++------------
- include/uapi/linux/pci_regs.h                      |  37 +-
- kernel/kexec.c                                     |   4 +
- kernel/workqueue.c                                 |  32 +-
- scripts/checkpatch.pl                              |  11 +-
- 94 files changed, 2222 insertions(+), 1957 deletions(-)
- create mode 100644 drivers/pci/vc.c
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
