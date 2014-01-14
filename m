@@ -1,63 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v5 11/33] x86, irq: Kill create_irq()
-Date: Thu,  2 Jan 2014 16:05:43 -0800
-Message-Id: <1388707565-16535-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 14 Jan 2014 14:44:19 -0800
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/4] Add Clovertrail and Merrifeld support to Intel MID
+Message-ID: <20140114224419.GB9834@psi-dev26.jf.intel.com>
+References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-create_irq() will return -1 when failing to allocate.
-create_irq_nr() will return 0 when failing to allocate.
+On Mon, Dec 16, 2013 at 12:07:35PM -0800, David Cohen wrote:
+> Hi,
+> 
+> I've a bunch of Intel MID patches under review but it seems they are becoming
+> old and start to need changes.
+> I gathered an up-to-date version of all of them in this single patch set.
+> 
+> This series implements support of Clovertrail and Merrifield to Intel MID.
+> It also removes the unwanted X86_MDFLD option since *all* Intel MID platforms
+> should be supported through CONFIG_X86_INTEL_MID option.
+> 
+> This makes obsolete the following patches:
+> https://lkml.org/lkml/2013/10/18/480
+> https://lkml.org/lkml/2013/10/22/533
+> http://lkml.indiana.edu/hypermail/linux/kernel/1311.1/02937.html
 
-It only causes confusion.
+Ping :)
+Any comments on this whole patch set?
 
-Now we have no user for create_irq(), so remove create_irq() for x86.
+Br, David Cohen
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c | 15 ---------------
- 1 file changed, 15 deletions(-)
-
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 241325c..86d5466 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2973,21 +2973,6 @@ unsigned int create_irq_nr(unsigned int from, int node)
- 	return __create_irqs(from, 1, node);
- }
- 
--int create_irq(void)
--{
--	int node = cpu_to_node(0);
--	unsigned int irq_want;
--	int irq;
--
--	irq_want = nr_irqs_gsi;
--	irq = create_irq_nr(irq_want, node);
--
--	if (irq == 0)
--		irq = -1;
--
--	return irq;
--}
--
- void destroy_irq(unsigned int irq)
- {
- 	struct irq_cfg *cfg = irq_get_chip_data(irq);
--- 
-1.8.4
-
+> 
+> Br, David
+> 
+> ---
+> David Cohen (3):
+>   x86: intel-mid: move Medfield code out of intel-mid.c core file
+>   x86: intel-mid: add Merrifield platform support
+>   x86: intel-mid: remove deprecated X86_MDFLD and X86_WANT_INTEL_MID
+>     configs
+> 
+> Kuppuswamy Sathyanarayanan (1):
+>   x86: intel-mid: add Clovertrail platform support
+> 
+>  arch/x86/Kconfig                                   |  29 +-----
+>  arch/x86/include/asm/intel-mid.h                   |  48 +++++++++-
+>  arch/x86/pci/intel_mid_pci.c                       |   6 +-
+>  arch/x86/platform/intel-mid/Makefile               |   4 +-
+>  arch/x86/platform/intel-mid/intel-mid.c            |  64 +++++++------
+>  arch/x86/platform/intel-mid/intel_mid_weak_decls.h |  19 ++++
+>  arch/x86/platform/intel-mid/mfld.c                 |  75 +++++++++++++++
+>  arch/x86/platform/intel-mid/mrfl.c                 | 103 +++++++++++++++++++++
+>  arch/x86/platform/intel-mid/sfi.c                  |  34 +++++--
+>  9 files changed, 317 insertions(+), 65 deletions(-)
+>  create mode 100644 arch/x86/platform/intel-mid/intel_mid_weak_decls.h
+>  create mode 100644 arch/x86/platform/intel-mid/mfld.c
+>  create mode 100644 arch/x86/platform/intel-mid/mrfl.c
+> 
+> -- 
+> 1.8.4.2
