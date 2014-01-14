@@ -1,67 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:46729 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750702AbaAIFOI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 00:14:08 -0500
-Received: by mail-lb0-f177.google.com with SMTP id q8so1953805lbi.36
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jan 2014 21:14:07 -0800 (PST)
-Message-ID: <52CE301E.60108@gmail.com>
-Date: Thu, 09 Jan 2014 09:14:06 +0400
-From: `VL <vl.homutov@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12306 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949AbaANIwl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jan 2014 03:52:41 -0500
+Date: Tue, 14 Jan 2014 09:54:41 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
+Message-ID: <20140114085441.GB6873@dhcp-26-207.brq.redhat.com>
+References: <cover.1389103215.git.agordeev@redhat.com>
+ <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
+ <20140113191220.GA6525@google.com>
+ <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port
- range.
-References: <52CBC4D1.5080706@gmail.com>	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>	<52CD2387.2030403@gmail.com> <CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>
-In-Reply-To: <CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I've put all logs here: http://inspert.ru/pci/
+On Tue, Jan 14, 2014 at 09:50:40AM +0100, Alexander Gordeev wrote:
+> What if we try to address both goals by making pci_enable_msi() a helper over
+> pci_enable_msi_range(pdev, 1, 1)?
 
-On 09.01.2014 00:28, Yinghai Lu wrote:
-> On Wed, Jan 8, 2014 at 2:08 AM, `VL <vl.homutov@gmail.com> wrote:
->> I've enabled netconsole and got some output.
->> Here it is: http://dpaste.com/1542030/
-> It does include any realloc message.
-not sure I understood you.
-The message I was talking about is:
+Or pci_enable_msi_single() to help reading and avoid drivers conversion mess.
 
-Jan  8 12:51:52 10 Some PCI device resources are unassigned, try booting 
-with pci=realloc
-
-and you can see it in this log: 
-http://inspert.ru/pci/netconsole-norealloc.txt
-
-The kernel hangs if I add this option.
->
->> Note that since the hang occurs on the module load, netconsole was 
->> unable
->> to send latest messages and the log looks clear
->>
->> I've rebuilt kernel with sound driver compiled in, and the hang occured
->> during
->> kernel load, userspace was not reached (but in this case, netconsole was
->> useless at
->> all) and I've made a photo of screen (attached). Note there is ACPI 
->> warning
->> about
->> system IO conflict.
-> Can you enable
->
-> CONFIG_PCI_DEBUG=y
->
-> and boot with "debug ignore_loglevel initcall_debug"?
-
-Here it is: http://inspert.ru/pci/netconsole-pcidebug.txt
-
-(problem is when snd_ice17 is loaded; this is for the card installed 
-into adapter)
->
-> Thanks
->
-> Yinghai
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
