@@ -1,57 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:16407 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750880AbaAOAIa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jan 2014 19:08:30 -0500
-Date: Tue, 14 Jan 2014 16:13:35 -0800
-From: David Cohen <david.a.cohen@linux.intel.com>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, x86@kernel.org,
-	bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] Add Clovertrail and Merrifeld support to Intel MID
-Message-ID: <20140115001335.GA18183@psi-dev26.jf.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
- <20140114224419.GB9834@psi-dev26.jf.intel.com>
- <52D5CDA1.3050306@zytor.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52D5CDA1.3050306@zytor.com>
+Received: from exprod5og118.obsmtp.com ([64.18.0.160]:46849 "HELO
+	exprod5og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752180AbaANXet (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 18:34:49 -0500
+Received: by mail-pd0-f180.google.com with SMTP id q10so304458pdj.25
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 15:34:48 -0800 (PST)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH V2 4/4] MAINTAINERS: entry for APM X-Gene PCIe host driver
+Date: Tue, 14 Jan 2014 15:34:18 -0800
+Message-Id: <1389742458-7693-5-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 03:52:01PM -0800, H. Peter Anvin wrote:
-> On 01/14/2014 02:44 PM, David Cohen wrote:
-> > On Mon, Dec 16, 2013 at 12:07:35PM -0800, David Cohen wrote:
-> >> Hi,
-> >>
-> >> I've a bunch of Intel MID patches under review but it seems they are becoming
-> >> old and start to need changes.
-> >> I gathered an up-to-date version of all of them in this single patch set.
-> >>
-> >> This series implements support of Clovertrail and Merrifield to Intel MID.
-> >> It also removes the unwanted X86_MDFLD option since *all* Intel MID platforms
-> >> should be supported through CONFIG_X86_INTEL_MID option.
-> >>
-> >> This makes obsolete the following patches:
-> >> https://lkml.org/lkml/2013/10/18/480
-> >> https://lkml.org/lkml/2013/10/22/533
-> >> http://lkml.indiana.edu/hypermail/linux/kernel/1311.1/02937.html
-> > 
-> > Ping :)
-> > Any comments on this whole patch set?
-> > 
-> 
-> You got some feedback from Bjorn and Ingo... mostly description-related,
-> but that is important enough.
+Add entry for AppliedMicro X-Gene PCIe host driver.
 
-Hm. I believe I sent new patch versions based on those comments. But I
-guess I failed to spot my new patches were my reply :(
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ MAINTAINERS |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Br, David
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6c20792..9e3ed53 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6531,6 +6531,13 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*designware*
+ 
++PCI DRIVER FOR APPLIEDMICRO XGENE
++M:	Tanmay Inamdar <tinamdar@apm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org
++S:	Maintained
++F:	drivers/pci/host/pci-xgene.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
+-- 
+1.7.9.5
 
-> 
-> Other than that we should queue it up ASAP.
-> 
-> 	-hpa
-> 
