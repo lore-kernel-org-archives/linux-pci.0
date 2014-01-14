@@ -1,77 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4199 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752657AbaAQQBU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jan 2014 11:01:20 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 6/9] nvme: Use pci_enable_msi_range() and pci_enable_msix_range()
-Date: Fri, 17 Jan 2014 17:02:20 +0100
-Message-Id: <aab7de499d2186f4b9d6adac836ea0554f23ed65.1389904166.git.agordeev@redhat.com>
-In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:58934 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751889AbaANWcD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 17:32:03 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Marek Vasut' <marex@denx.de>, 'Wolfram Sang' <wsa@the-dreams.de>,
+	'Fabio Estevam' <fabio.estevam@freescale.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	'Richard Zhu' <r65037@freescale.com>,
+	linux-pci@vger.kernel.org, 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Shawn Guo' <shawn.guo@linaro.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1389700739-3696-1-git-send-email-wsa@the-dreams.de>
+ <1389700739-3696-4-git-send-email-wsa@the-dreams.de>
+ <201401141417.03349.marex@denx.de>
+In-reply-to: <201401141417.03349.marex@denx.de>
+Subject: Re: [PATCH 4/7] drivers/pci/host: don't check resource with
+ devm_ioremap_resource
+Date: Wed, 15 Jan 2014 07:32:01 +0900
+Message-id: <001701cf1178$7191ec10$54b5c430$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Tuesday, January 14, 2014 10:17 PM, Marek Vasut wrote:
+> On Tuesday, January 14, 2014 at 12:58:55 PM, Wolfram Sang wrote:
+> > devm_ioremap_resource does sanity checks on the given resource. No need to
+> > duplicate this in the driver.
+> >
+> > Signed-off-by: Wolfram Sang <wsa@the-dreams.de>
+> 
+> True that,
+> 
+> Acked-by: Marek Vasut <marex@denx.de>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/block/nvme-core.c |   33 ++++++++-------------------------
- 1 files changed, 8 insertions(+), 25 deletions(-)
+(+cc Fabio Estevam)
 
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index e292450..adf26c2 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -1774,32 +1774,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	/* Deregister the admin queue's interrupt */
- 	free_irq(dev->entry[0].vector, dev->queues[0]);
- 
--	vecs = nr_io_queues;
--	for (i = 0; i < vecs; i++)
-+	for (i = 0; i < nr_io_queues; i++)
- 		dev->entry[i].entry = i;
--	for (;;) {
--		result = pci_enable_msix(pdev, dev->entry, vecs);
--		if (result <= 0)
--			break;
--		vecs = result;
--	}
--
--	if (result < 0) {
--		vecs = nr_io_queues;
--		if (vecs > 32)
--			vecs = 32;
--		for (;;) {
--			result = pci_enable_msi_block(pdev, vecs);
--			if (result > 0) {
--				vecs = result;
--				continue;
--			} else if (result < 0) {
--				vecs = 1;
--			}
--			for (i = 0; i < vecs; i++)
--				dev->entry[i].vector = i + pdev->irq;
--			break;
--		}
-+	vecs = pci_enable_msix_range(pdev, dev->entry, 1, nr_io_queues);
-+	if (vecs < 0) {
-+		vecs = pci_enable_msi_range(pdev, 1, min(nr_io_queues, 32));
-+		if (vecs < 0)
-+			vecs = 1;
-+		for (i = 0; i < vecs; i++)
-+			dev->entry[i].vector = i + pdev->irq;
- 	}
- 
- 	/*
--- 
-1.7.7.6
+Hi all,
+
+The same patch was already sent by Fabio Estevam a month ago.[1]
+Also, it was applied to pci/next tree.[2]
+
+[1] http://www.spinics.net/lists/linux-pci/msg26873.html
+[2] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=next&id=ebb034a4ce9fc37877b3df2b85b9c33d43349586
+
+Best regards,
+Jingoo Han
+
+> 
+> > ---
+> >
+> > Should go via subsystem tree
+> >
+> >  drivers/pci/host/pci-imx6.c | 5 -----
+> >  1 file changed, 5 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index bd70af8..5002e23 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -426,11 +426,6 @@ static int __init imx6_pcie_probe(struct
+> > platform_device *pdev) "imprecise external abort");
+> >
+> >  	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> > -	if (!dbi_base) {
+> > -		dev_err(&pdev->dev, "dbi_base memory resource not found\n");
+> > -		return -ENODEV;
+> > -	}
+> > -
+> >  	pp->dbi_base = devm_ioremap_resource(&pdev->dev, dbi_base);
+> >  	if (IS_ERR(pp->dbi_base)) {
+> >  		ret = PTR_ERR(pp->dbi_base);
+> 
+> Best regards,
+> Marek Vasut
 
