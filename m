@@ -1,96 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:37701 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbaA3HJC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 02:09:02 -0500
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 30 Jan 2014 12:38:57 +0530
-Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id DA9B81258054
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 12:40:39 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0U78lwh25755696
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 12:38:47 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0U78qmu024278
-	for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 12:38:53 +0530
-Date: Thu, 30 Jan 2014 15:08:50 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Or Gerlitz <ogerlitz@mellanox.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>, yinghai@kernel.org,
-	bhelgaas@google.com, amirv@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-Message-ID: <20140130070850.GA24083@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20140114103712.GD27684@richard>
- <20140114132340.50df7d6f@jpm-OptiPlex-GX620>
- <52d52032.4981e00a.3dcc.ffff81fdSMTPIN_ADDED_BROKEN@mx.google.com>
- <20140115094113.64ca756e@jpm-OptiPlex-GX620>
- <1389772791.6933.84.camel@pasglop>
- <52d653d3.8425e00a.76d0.1e60SMTPIN_ADDED_BROKEN@mx.google.com>
- <20140115160204.24a44af0@jpm-OptiPlex-GX620>
- <20140116020946.GA8702@richard>
- <20140116021429.GB8702@richard>
- <52E8C0D6.3030105@mellanox.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52E8C0D6.3030105@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH V2 0/4] APM X-Gene PCIe controller
+Date: Tue, 14 Jan 2014 15:34:14 -0800
+Message-Id: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 29, 2014 at 10:50:30AM +0200, Or Gerlitz wrote:
->On 16/01/2014 04:14, Wei Yang wrote:
->>>>>+static void mlx4_shutdown(struct pci_dev *pdev)
->>>>>+{
->>>>>+       mlx4_remove_one(pdev);
->>>>>+}
->>>>>+
->>>>>  int mlx4_restart_one(struct pci_dev *pdev)
->>>>>  {
->>>>>         struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
->>>>>@@ -2582,6 +2590,7 @@ static struct pci_driver mlx4_driver = {
->>>>>         .id_table       = mlx4_pci_table,
->>>>>         .probe          = mlx4_init_one,
->>>>>         .remove         = mlx4_remove_one,
->>>>>+       .shutdown       = mlx4_shutdown,
->>>>>         .err_handler    = &mlx4_err_handler,
->>>>>  };
->>>>>
->>>>>Thanks,
->>>>>Gavin
->
->Guys,
->
->Did you converge here?  I don't see this patch in Linus tree, so
->wasn't sure where the discussion went eventually.
+This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+cards.
 
-Or,
+X-Gene PCIe controller driver has depedency on the pcie arch support for
+arm64. The arm64 pcie arch support is not yet part of mainline Linux kernel
+and approach for arch support is under discussion with arm64 maintainers.
+The reference patch can be found here --> https://lkml.org/lkml/2013/10/23/244
 
-Even this patch really could make the machine boot up, we didn't find the root 
-cause of the failure as mentioned in the first mail. I will find some time to
-dig into it if I have more time and will send you update if I find it.
+If someone wishes to test PCIe on X-Gene, arch support patch must be applied
+before the patches in this patch set.
 
-For this patch, we(Gavin and I) don't think it is a formal patch. We send it
-here just let you know we find a work around and this one really helps. As I
-mentioned in the previous mail, we suggest you guys to create a formal patch
-with this function, since you are more familiar with this device and the
-driver.
+changes since V1:
+1. added PCI domain support
+2. reading cpu and pci addresses from device tree to configure regions.
+3. got rid of unnecessary wrappers for readl and writel.
+4. got rid of endpoint configuration code.
+5. added 'dma-ranges' property support to read inbound region configuration.
+6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
+7. dropped 'clock-names' property from bindings
+8. added comments whereever requested.
 
-If you think it would be nice for a patch from us, I am very glad to do
-this.:-)
+Tanmay Inamdar (4):
+  pci: APM X-Gene PCIe controller driver
+  arm64:dts: APM X-Gene PCIe device tree nodes
+  dt-bindings: pci: xgene pcie device tree bindings
+  MAINTAINERS: entry for APM X-Gene PCIe host driver
 
->
->Or.
->
->Or.
+ .../devicetree/bindings/pci/xgene-pcie.txt         |   45 +
+ MAINTAINERS                                        |    7 +
+ arch/arm64/boot/dts/apm-mustang.dts                |    4 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |  144 +++
+ drivers/pci/host/Kconfig                           |   10 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-xgene.c                       |  934 ++++++++++++++++++++
+ 7 files changed, 1145 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
+ create mode 100644 drivers/pci/host/pci-xgene.c
 
 -- 
-Richard Yang
-Help you, Help me
+1.7.9.5
 
