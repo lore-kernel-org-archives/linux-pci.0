@@ -1,156 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 32/33] PCI, x86, ACPI: get ioapic address from acpi device
-Date: Thu,  2 Jan 2014 16:06:04 -0800
-Message-Id: <1388707565-16535-33-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:47627 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367AbaANTEa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 14:04:30 -0500
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: RE: pcie-designware: query on MSI IRQ handling
+Date: Tue, 14 Jan 2014 19:04:16 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B704666887@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com>
+ <3E54258959B69E4282D79E01AB1F32B7046639CA@DFLE11.ent.ti.com>
+ <2CC2A0A4A178534D93D5159BF3BCB66189FBAF2E89@EAPEX1MAIL1.st.com>
+ <201401091239.20839.arnd@arndb.de>
+In-Reply-To: <201401091239.20839.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some ioapic controllers do not show up on pci config space,
-or pci device is there but no bar is used and is set by firmware in
-other non standard registers.
+>-----Original Message-----
+>From: Arnd Bergmann [mailto:arnd@arndb.de]
+>Sent: Thursday, January 09, 2014 6:39 AM
+>To: Mohit KUMAR DCG
+>Cc: Karicheri, Muralidharan; Jingoo Han; linux-pci@vger.kernel.org
+>Subject: Re: pcie-designware: query on MSI IRQ handling
+>
+>On Thursday 09 January 2014, Mohit KUMAR DCG wrote:
+>> - To just clarify this dw PCIe driver consists 3 parts:
+>> 1. Common part: Common PCIe code (host_init() etc..) this should  be
+>> common to all hosts. As already discussed it should be ideally  moved
+>> out from this driver. It is in todo list and will move to separate
+>> file in due course of time.
+>>
+>> 2.  Viewport handling: ATU translation code
+>>
+>> 3. MSI specific code
+>>
+>> Synopsys controllers version 3.70+have been standardized for viewport
+>> handling and msi implementation. Current dw driver covers these
+>> standard  implementation for viewport and MSI.
+>>
+>> Now I can understand that you are using only common part of dw driver
+>> And have specific viewport and msi implementation. So its getting a
+>> bit  messy if you modify the driver for your specific implementation
+>> as  discussed in this thread.
+>>
+>> So ideally I will suggest that you should move the common code (point
+>> 1)  to outside this driver, and then use this along with your specific
+>> viewport  and msi implementation.
+>>
+>> Arnd, Jingoo,
+>>
+>> Do you agree with above comments?
+>
+>I think it depends a bit on how much code ends up being shared in the first category, and
+>whether it's easily separable from the second one. I assume the MSI implementation is fairly
+>isolated already.
+>
+>I definitely agree with the general principle of layering drivers in this way, specific version of
+>the driver basically uses exported functions of the more general driver like
+>
+>st-pcie -> dw-pcie-3.7 -> dw-pcie -> pci-common
+>
+>I have two comments about the specifics here:
+>
+>* On most architectures, the MSI controller is integrated into the primary
+>  irqchip. If a dw-pcie-3.7+ is used on such a machine, I guess it will
+>  just ignore the MSI part
+>* On server systems, the setup of the viewport would typically be handled
+>  by the firmware before the kernel is started, and the kernel does not
+>  actually need to know about it.
+>
 
-We can get ioapic address from ACPI0009's _CRS.
+I agree on this layering. For our designware IP, the Legacy IRQ
+controller has 1 host irq per function where as common designware driver
+uses 1 irq for this. So the irq map function has to be different as well.
 
--v2: Use acpi_mem_addr_resource_to_address64() to address MEMORY in _CRS
-     of Rui Wang's machine.
+Mohit, Jingoo, et all,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/ioapic.c | 86 +++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 71 insertions(+), 15 deletions(-)
+Is there a timeline that you have in mind for making this change to designware
+core driver? I have my initial driver based on designware core driver working
+using e1000e PCI Nic and want to send my patch for review. I may be able to
+work with you on restructuring the code as discussed here. Please let me know
+how you would like to handle this?
 
-diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-index 60351b2..54de155 100644
---- a/drivers/pci/ioapic.c
-+++ b/drivers/pci/ioapic.c
-@@ -32,6 +32,36 @@ struct acpi_pci_ioapic {
- static LIST_HEAD(ioapic_list);
- static DEFINE_MUTEX(ioapic_list_lock);
- 
-+static acpi_status setup_res(struct acpi_resource *acpi_res, void *data)
-+{
-+	struct resource *res;
-+	struct acpi_resource_address64 addr;
-+	acpi_status status;
-+	unsigned long flags;
-+	u64 start, end;
-+
-+	status = acpi_mem_addr_resource_to_address64(acpi_res, &addr);
-+	if (!ACPI_SUCCESS(status))
-+		return AE_OK;
-+
-+	if (addr.resource_type == ACPI_MEMORY_RANGE) {
-+		if (addr.info.mem.caching == ACPI_PREFETCHABLE_MEMORY)
-+			return AE_OK;
-+		flags = IORESOURCE_MEM;
-+	} else
-+		return AE_OK;
-+
-+	start = addr.minimum + addr.translation_offset;
-+	end = addr.maximum + addr.translation_offset;
-+
-+	res = data;
-+	res->flags = flags;
-+	res->start = start;
-+	res->end = end;
-+
-+	return AE_OK;
-+}
-+
- static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
- 				 u32 *pgsi_base)
- {
-@@ -54,33 +84,56 @@ static void handle_ioapic_add(acpi_handle handle, struct pci_dev **pdev,
- 		return;
- 
- 	dev = acpi_get_pci_dev(handle);
--	if (!dev)
--		return;
-+	if (!dev || !pci_resource_len(dev, 0)) {
-+		struct acpi_device_info *info;
-+		char *hid = NULL;
-+
-+		status = acpi_get_object_info(handle, &info);
-+		if (ACPI_FAILURE(status))
-+			goto exit_put;
-+		if (info->valid & ACPI_VALID_HID)
-+			hid = info->hardware_id.string;
-+		if (!hid || strcmp(hid, "ACPI0009")) {
-+			kfree(info);
-+			goto exit_put;
-+		}
-+		kfree(info);
-+		memset(res, 0, sizeof(*res));
-+		acpi_walk_resources(handle, METHOD_NAME__CRS, setup_res, res);
-+		if (!res->flags)
-+			goto exit_put;
-+	}
- 
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
- 	gsi_base = gsb;
- 	type = "IOxAPIC";
-+	if (dev) {
-+		ret = pci_enable_device(dev);
-+		if (ret < 0)
-+			goto exit_put;
- 
--	ret = pci_enable_device(dev);
--	if (ret < 0)
--		goto exit_put;
--
--	pci_set_master(dev);
-+		pci_set_master(dev);
- 
--	if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
--		type = "IOAPIC";
-+		if (dev->class == PCI_CLASS_SYSTEM_PIC_IOAPIC)
-+			type = "IOAPIC";
- 
--	if (pci_request_region(dev, 0, type))
--		goto exit_disable;
-+		if (pci_resource_len(dev, 0)) {
-+			if (pci_request_region(dev, 0, type))
-+				goto exit_disable;
- 
--	res = &dev->resource[0];
-+			res = &dev->resource[0];
-+		}
-+	}
- 
--	if (acpi_register_ioapic(handle, res->start, gsi_base))
--		goto exit_release;
-+	if (acpi_register_ioapic(handle, res->start, gsi_base)) {
-+		if (dev)
-+			goto exit_release;
-+		return;
-+	}
- 
- 	pr_info("%s %s %s at %pR, GSI %u\n",
--		dev_name(&dev->dev), objname, type,
-+		dev ? dev_name(&dev->dev) : "", objname, type,
- 		res, gsi_base);
- 
- 	*pdev = dev;
-@@ -100,6 +153,9 @@ static void handle_ioapic_remove(acpi_handle handle, struct pci_dev *dev,
- {
- 	acpi_unregister_ioapic(handle, gsi_base);
- 
-+	if (!dev)
-+		return;
-+
- 	pci_release_region(dev, 0);
- 	pci_disable_device(dev);
- 	pci_dev_put(dev);
--- 
-1.8.4
+On a high level, I gather that we need to move all of the ATU and MSI specific
+code to separate files so that appropriate drivers can pull in these files for
+the driver. For keystone PCIe that I am working on, these files gets excluded
+and the same implemented in keystone PCIe driver.
 
+Thanks
+
+Murali
+
+>This means we might actually want to split out the MSI and viewport parts into two separate
+>pieces of code that can optionally be used by any of the SoC specific host drivers.
+>
+>	Arnd
