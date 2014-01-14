@@ -1,159 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <52CCEE80.20001@linux.intel.com>
-Date: Wed, 08 Jan 2014 14:21:52 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:59042 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369AbaANJPm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 04:15:42 -0500
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 14 Jan 2014 14:45:32 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 090BEE0056
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:48:22 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0E9FOmW41025602
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:45:24 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0E9FRCu010782
+	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:45:28 +0530
+Date: Tue, 14 Jan 2014 17:15:25 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Jack Morgenstein <jackm@dev.mellanox.co.il>
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org, bhelgaas@google.com,
+	amirv@mellanox.com, ogerlitz@mellanox.com, eugenia@mellanox.com,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>
+Subject: Re: mlx4_core probe error after applying Yinghai's patch
+Message-ID: <20140114091525.GB27684@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20140114062215.GA19345@richard>
+ <20140114105031.71882944@jpm-OptiPlex-GX620>
 MIME-Version: 1.0
-To: Kai Huang <dev.kai.huang@gmail.com>
-CC: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [RFC Patch Part2 V1 14/14] iommu/vt-d: update IOMMU state when
- memory hotplug happens
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>	<1389085234-22296-15-git-send-email-jiang.liu@linux.intel.com>	<CAOtp4Kqn5e_51hwrRMgRmam7jXaVC=md7BAuwnG3gJGETj9iQA@mail.gmail.com>	<52CCE9CD.5060404@linux.intel.com> <CAOtp4KqvzrJr=Z5xj-vZnnL--W6R2CjZ=m0rFgR9DzxVKjfwSQ@mail.gmail.com>
-In-Reply-To: <CAOtp4KqvzrJr=Z5xj-vZnnL--W6R2CjZ=m0rFgR9DzxVKjfwSQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140114105031.71882944@jpm-OptiPlex-GX620>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jan 14, 2014 at 10:50:31AM +0200, Jack Morgenstein wrote:
+>On Tue, 14 Jan 2014 14:22:15 +0800
+>Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+>
+>> Error log:
+>>   mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping
+>> PF. mlx4_core: probe of 0003:05:00.0 failed with error -22
+>
+>1. Please include the full error log starting from host bootup and
+>driver start
+
+Will provide one later. 
+
+>
+>2. What FW is loaded on the card?
+
+$ mst status
+MST modules:
+------------
+    MST PCI module loaded
+    MST PCI configuration module loaded
+
+MST devices:
+------------
+/dev/mst/mt4099_pciconf0         - PCI configuration cycles access.
+                                   domain:bus:dev.fn=0003:05:00.0 addr.reg=88 data.reg=92
+                                   Chip revision is: 01
+/dev/mst/mt4099_pci_cr0          - PCI direct access.
+                                   domain:bus:dev.fn=0003:05:00.0 bar=0x3d0508d300000 size=0x100000
+                                   Chip revision is: 01
 
 
-On 2014/1/8 14:14, Kai Huang wrote:
-> On Wed, Jan 8, 2014 at 2:01 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>
->>
->> On 2014/1/8 13:07, Kai Huang wrote:
->>> On Tue, Jan 7, 2014 at 5:00 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>>> If static identity domain is created, IOMMU driver needs to update
->>>> si_domain page table when memory hotplug event happens. Otherwise
->>>> PCI device DMA operations can't access the hot-added memory regions.
->>>>
->>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>>> ---
->>>>  drivers/iommu/intel-iommu.c |   52 ++++++++++++++++++++++++++++++++++++++++++-
->>>>  1 file changed, 51 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
->>>> index 83e3ed4..35a987d 100644
->>>> --- a/drivers/iommu/intel-iommu.c
->>>> +++ b/drivers/iommu/intel-iommu.c
->>>> @@ -33,6 +33,7 @@
->>>>  #include <linux/dmar.h>
->>>>  #include <linux/dma-mapping.h>
->>>>  #include <linux/mempool.h>
->>>> +#include <linux/memory.h>
->>>>  #include <linux/timer.h>
->>>>  #include <linux/iova.h>
->>>>  #include <linux/iommu.h>
->>>> @@ -3689,6 +3690,54 @@ static struct notifier_block device_nb = {
->>>>         .notifier_call = device_notifier,
->>>>  };
->>>>
->>>> +static int intel_iommu_memory_notifier(struct notifier_block *nb,
->>>> +                                      unsigned long val, void *v)
->>>> +{
->>>> +       struct memory_notify *mhp = v;
->>>> +       unsigned long long start, end;
->>>> +       struct iova *iova;
->>>> +
->>>> +       switch (val) {
->>>> +       case MEM_GOING_ONLINE:
->>>> +               start = mhp->start_pfn << PAGE_SHIFT;
->>>> +               end = ((mhp->start_pfn + mhp->nr_pages) << PAGE_SHIFT) - 1;
->>>> +               if (iommu_domain_identity_map(si_domain, start, end)) {
->>>> +                       pr_warn("dmar: failed to build identity map for [%llx-%llx]\n",
->>>> +                               start, end);
->>>> +                       return NOTIFY_BAD;
->>>> +               }
->>>
->>> Better to use iommu_prepare_identity_map? For si_domain, if
->>> hw_pass_through is used, there's no page table.
->> Hi Kai,
->>         Good catch!
->> Seems function iommu_prepare_identity_map() is designed to handle
->> RMRRs. So how about avoiding of registering memory hotplug notifier
->> if hw_pass_through is true?
-> 
-> I think that's also fine :)
-> 
-> Btw, I have a related question to memory hotplug but not related to
-> intel IOMMU specifically. For the devices use DMA remapping, suppose
-> the device is already using the memory that we are trying to remove,
-> is this case, looks we need to change the existing iova <-> pa
-> mappings for the pa that is in the memory range about to be removed,
-> and reset the mapping to different pa (iova remains the same). Does
-> existing code have this covered? Is there a generic IOMMU layer memory
-> hotplug notifier to handle memory removal?
-That's a big issue about how to reclaim memory in use. Current rule
-is that memory used by DMA won't be removed until released.
+# mlxburn -d  /dev/mst/mt4099_pci_cr0 -fwver
+-I- FW Version: 2.30.3200
 
-> 
-> -Kai
->>
->> Thanks!
->> Gerry
->>
->>>
->>>> +               break;
->>>> +       case MEM_OFFLINE:
->>>> +       case MEM_CANCEL_ONLINE:
->>>> +               /* TODO: enhance RB-tree and IOVA code to support of splitting iova */
->>>> +               iova = find_iova(&si_domain->iovad, mhp->start_pfn);
->>>> +               if (iova) {
->>>> +                       unsigned long start_pfn, last_pfn;
->>>> +                       struct dmar_drhd_unit *drhd;
->>>> +                       struct intel_iommu *iommu;
->>>> +
->>>> +                       start_pfn = mm_to_dma_pfn(iova->pfn_lo);
->>>> +                       last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
->>>> +                       dma_pte_clear_range(si_domain, start_pfn, last_pfn);
->>>> +                       dma_pte_free_pagetable(si_domain, start_pfn, last_pfn);
->>>> +                       rcu_read_lock();
->>>> +                       for_each_active_iommu(iommu, drhd)
->>>> +                               iommu_flush_iotlb_psi(iommu, si_domain->id,
->>>> +                                       start_pfn, last_pfn - start_pfn + 1, 0);
->>>> +                       rcu_read_unlock();
->>>> +                       __free_iova(&si_domain->iovad, iova);
->>>> +               }
->>>
->>> The same as above. Looks we need to consider hw_pass_through for the si_domain.
->>>
->>> -Kai
->>>
->>>> +               break;
->>>> +       }
->>>> +
->>>> +       return NOTIFY_OK;
->>>> +}
->>>> +
->>>> +static struct notifier_block intel_iommu_memory_nb = {
->>>> +       .notifier_call = intel_iommu_memory_notifier,
->>>> +       .priority = 0
->>>> +};
->>>> +
->>>>  int __init intel_iommu_init(void)
->>>>  {
->>>>         int ret = -ENODEV;
->>>> @@ -3761,8 +3810,9 @@ int __init intel_iommu_init(void)
->>>>         init_iommu_pm_ops();
->>>>
->>>>         bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
->>>> -
->>>>         bus_register_notifier(&pci_bus_type, &device_nb);
->>>> +       if (si_domain)
->>>> +               register_memory_notifier(&intel_iommu_memory_nb);
->>>>
->>>>         intel_iommu_enabled = 1;
->>>>
->>>> --
->>>> 1.7.10.4
->>>>
->>>> _______________________________________________
->>>> iommu mailing list
->>>> iommu@lists.linux-foundation.org
->>>> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+
+>
+>3. Please provide output of "lspci -vv -nn" for the Mellanox device(s)
+
+$lspci | grep Mel
+0003:05:00.0 Network controller: Mellanox Technologies MT27500 Family [ConnectX-3]
+$lspci -s 0003:05:00.0 -n
+0003:05:00.0 0280: 15b3:1003
+
+The output with -vvv is attached in the first mail.
+
+-- 
+Richard Yang
+Help you, Help me
+
