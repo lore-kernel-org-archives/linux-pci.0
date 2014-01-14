@@ -1,54 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:45321 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751130AbaABKwe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 05:52:34 -0500
-Message-ID: <52C544E7.4000501@free-electrons.com>
-Date: Thu, 02 Jan 2014 11:52:23 +0100
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: mvebu: Remove redundant code
-References: <1388659296-21569-1-git-send-email-gregory.clement@free-electrons.com> <20140102114638.47457689@skate>
-In-Reply-To: <20140102114638.47457689@skate>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from numidia.opendz.org ([98.142.220.152]:43554 "EHLO
+	numidia.opendz.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750906AbaANXRs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 18:17:48 -0500
+From: Djalal Harouni <tixxdz@opendz.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Djalal Harouni <tixxdz@opendz.org>
+Subject: [PATCH] PCI: fix a memory leak of pci_host_bridge on error path
+Date: Wed, 15 Jan 2014 00:11:19 +0100
+Message-Id: <1389741079-12976-1-git-send-email-tixxdz@opendz.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/01/2014 11:46, Thomas Petazzoni wrote:
-> Dear Gregory CLEMENT,
-> 
-> On Thu,  2 Jan 2014 11:41:36 +0100, Gregory CLEMENT wrote:
->> In the commit b42285f66f871a989, Sebastian moved clock enable before
->> register access, but during the merge of the commit
->> 9f352f0e6c0fa2dc608812df "PCI: mvebu: Dynamically detect if the PEX
->> link is up to enable hot plug", the moved part was added back.
->>
->> This patch fixes this by removing the redundant code.
->>
->> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
->> ---
->>  drivers/pci/host/pci-mvebu.c | 8 --------
->>  1 file changed, 8 deletions(-)
-> 
-> This has already been fixed by
-> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/drivers/pci/host/pci-mvebu.c?id=84f47190d6be1cb99cd4a680e1018080d93800a8.
-> 
+On error paths make sure that the pci_host_bridge struct is freed.
 
-I didn't find it because I only looked for in my emails and I
-wrongly assumed that the LAKML were in CC.
+Signed-off-by: Djalal Harouni <tixxdz@opendz.org>
+---
+On top of linux-next.
 
-> Thanks!
-> 
-> Thomas
-> 
+ drivers/pci/probe.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 23cdfac..483566c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1771,15 +1771,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	bridge->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+ 	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
+-		goto err_out;
+-	}
++	if (error)
++		goto host_bridge_err;
+ 
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+-		goto err_out;
++		goto host_bridge_err;
+ 	}
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+@@ -1836,6 +1834,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ class_dev_reg_err:
+ 	put_device(&bridge->dev);
+ 	device_unregister(&bridge->dev);
++host_bridge_err:
++	kfree(bridge);
+ err_out:
+ 	kfree(b);
+ 	return NULL;
 -- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.11.7
+
