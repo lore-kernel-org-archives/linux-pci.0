@@ -1,64 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([122.248.162.6]:37476 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbaANJRI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 04:17:08 -0500
-Received: from /spool/local
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 14 Jan 2014 14:47:03 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id C2DDC1258051
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:48:34 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0E9GwfV54329362
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:46:58 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0E9GwFK018227
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:46:59 +0530
-Date: Tue, 14 Jan 2014 17:16:57 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Jack Morgenstein <jackm@dev.mellanox.co.il>
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org, bhelgaas@google.com,
-	amirv@mellanox.com, ogerlitz@mellanox.com, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:60810 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750999AbaANH5g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 02:57:36 -0500
+Message-ID: <52D4ED5D.80105@mellanox.com>
+Date: Tue, 14 Jan 2014 09:55:09 +0200
+From: Or Gerlitz <ogerlitz@mellanox.com>
+MIME-Version: 1.0
+To: Wei Yang <weiyang@linux.vnet.ibm.com>, <linux-pci@vger.kernel.org>,
+	<yinghai@kernel.org>, <bhelgaas@google.com>, <amirv@mellanox.com>,
+	<jackm@dev.mellanox.co.il>, <eugenia@mellanox.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>
+CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
 	Benjamin Herrenschmidt <benh@au1.ibm.com>
 Subject: Re: mlx4_core probe error after applying Yinghai's patch
-Message-ID: <20140114091657.GC27684@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
 References: <20140114062215.GA19345@richard>
- <20140114105412.16756f4e@jpm-OptiPlex-GX620>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140114105412.16756f4e@jpm-OptiPlex-GX620>
+In-Reply-To: <20140114062215.GA19345@richard>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 10:54:12AM +0200, Jack Morgenstein wrote:
->Hi,
->In addition, I would like to know if you have enabled SRIOV in the
->driver.
-
-I have disabled SR-IOV cap in order to focus on the exact problem.
-
+On 14/01/2014 08:22, Wei Yang wrote:
+> All,
 >
->Please provide the output of the console command below.
+> I am testing Yinghai's patch based on 3.13-rc1, after applying these four
+> patches, there is an error during probe for mlx4_core.
 >
->grep "mlx4_core" /etc/modprobe.d/*.conf
-
-Output like below:
-
-[root@tian-lp1 lib]# grep "mlx4_core" /etc/modprobe.d/*.conf
-[root@tian-lp1 lib]#
-
+> Code base we did the test:
+>    $ git oneline -5
+>    298a335 PCI: Try best to allocate pref mmio 64bit above 4g
+>    b730e81 PCI: Try to allocate mem64 above 4G at first
+>    4e27325 PCI: Don't use 4G bus address directly in resource allocation
+>    ab6c20f PCI: pcibus address to resource converting take bus instead of dev
+>    6ce4eac Linux 3.13-rc1
+>    
+> Error log:
+>    mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping PF.
+>    mlx4_core: probe of 0003:05:00.0 failed with error -22
 >
->
->Thanks.
->
->-Jack
+> My analysis:
+>    After careful investigation, I guess this error is not introduced by
+>    Yinghai's patch. This looks more like an error from device itself. Since
+>    this error really happens after applying Yinghai's patch(especially the last
+>    one 298a335), I would like to include Yinghai in this loop.
 
--- 
-Richard Yang
-Help you, Help me
+Sorry, can you provide pointers please? I don't see 298a335 on Linus 
+3.13-rc8+ tree nor in net-next,
 
+$ git log --oneline --author=Yinghai v3.12..
+e7cc5cf PCI: Remove duplicate pci_disable_device() from 
+pcie_portdrv_remove()
+cf3e1fe PCI: Workaround missing pci_set_master in pci drivers
+bee7f9c ACPI / x86: Increase override tables number limit
+6979287 x86/mm: Add 'step_size' comments to init_mem_mapping()
+
+So  are you referring to patches on the PCI development tree
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git "next" 
+branch? which
+
+Or.
