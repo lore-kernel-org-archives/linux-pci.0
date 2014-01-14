@@ -1,74 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:13062 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752515AbaAFGSV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:18:21 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 04/20] iommu/vt-d: fix resource leakage on error recovery path in iommu_init_domains()
-Date: Mon,  6 Jan 2014 14:18:11 +0800
-Message-Id: <1388989107-4795-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:49358 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751594AbaANRPQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 12:15:16 -0500
+Received: by mail-ie0-f182.google.com with SMTP id as1so747975iec.13
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 09:15:15 -0800 (PST)
+Received: from localhost ([172.29.122.186])
+        by mx.google.com with ESMTPSA id ft2sm2087388igb.5.2014.01.14.09.15.14
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Tue, 14 Jan 2014 09:15:15 -0800 (PST)
+Subject: [PATCH 0/2] Trivial cleanups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 14 Jan 2014 10:15:14 -0700
+Message-ID: <20140114171308.9148.47907.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Release allocated resources on error recovery path in function
-iommu_init_domains().
+No functional change in these.  One is just whitespace (this accounts
+for all the line deletions), and the other changes "#ifndef ... #else ...
+#endif" to the positive form "#ifdef ... #else ... #endif".
 
-Also improve printk messages in iommu_init_domains().
+I plan these for v3.14 unless there are objections.
 
-Acked-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/intel-iommu.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index b8e3b48..e32d815 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1255,8 +1255,8 @@ static int iommu_init_domains(struct intel_iommu *iommu)
- 	unsigned long nlongs;
- 
- 	ndomains = cap_ndoms(iommu->cap);
--	pr_debug("IOMMU %d: Number of Domains supported <%ld>\n", iommu->seq_id,
--			ndomains);
-+	pr_debug("IOMMU%d: Number of Domains supported <%ld>\n",
-+		 iommu->seq_id, ndomains);
- 	nlongs = BITS_TO_LONGS(ndomains);
- 
- 	spin_lock_init(&iommu->lock);
-@@ -1266,13 +1266,17 @@ static int iommu_init_domains(struct intel_iommu *iommu)
- 	 */
- 	iommu->domain_ids = kcalloc(nlongs, sizeof(unsigned long), GFP_KERNEL);
- 	if (!iommu->domain_ids) {
--		printk(KERN_ERR "Allocating domain id array failed\n");
-+		pr_err("IOMMU%d: allocating domain id array failed\n",
-+		       iommu->seq_id);
- 		return -ENOMEM;
- 	}
- 	iommu->domains = kcalloc(ndomains, sizeof(struct dmar_domain *),
- 			GFP_KERNEL);
- 	if (!iommu->domains) {
--		printk(KERN_ERR "Allocating domain array failed\n");
-+		pr_err("IOMMU%d: allocating domain array failed\n",
-+		       iommu->seq_id);
-+		kfree(iommu->domain_ids);
-+		iommu->domain_ids = NULL;
- 		return -ENOMEM;
- 	}
- 
--- 
-1.7.10.4
+Bjorn Helgaas (2):
+      PCI: Reorder so actual code comes before stubs
+      PCI: Cleanup pci.h whitespace
 
+
+ drivers/pci/pci-label.c |   57 ++++------
+ include/linux/pci.h     |  266 ++++++++++++-----------------------------------
+ 2 files changed, 93 insertions(+), 230 deletions(-)
