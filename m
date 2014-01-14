@@ -1,49 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55343 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750912AbaAIPgM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jan 2014 10:36:12 -0500
-Subject: [PATCH] pci/iov: VFs are never multifunction
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: sathya.perla@emulex.com, linux-kernel@vger.kernel.org,
-	ajit.khaparde@emulex.com, ddutile@redhat.com,
-	subbu.seetharaman@emulex.com, myron.stowe@redhat.com
-Date: Thu, 09 Jan 2014 08:36:08 -0700
-Message-ID: <20140109153513.21446.31778.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:34433 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbaANIuf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 03:50:35 -0500
+Received: by mail-ee0-f50.google.com with SMTP id d17so51261eek.37
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 00:50:34 -0800 (PST)
+Date: Tue, 14 Jan 2014 10:50:31 +0200
+From: Jack Morgenstein <jackm@dev.mellanox.co.il>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org, bhelgaas@google.com,
+	amirv@mellanox.com, ogerlitz@mellanox.com, eugenia@mellanox.com,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>
+Subject: Re: mlx4_core probe error after applying Yinghai's patch
+Message-ID: <20140114105031.71882944@jpm-OptiPlex-GX620>
+In-Reply-To: <20140114062215.GA19345@richard>
+References: <20140114062215.GA19345@richard>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per the SR-IOV spec rev 1.1:
+On Tue, 14 Jan 2014 14:22:15 +0800
+Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
 
-3.4.1.9 Header Type (Offset 0Eh)
+> Error log:
+>   mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping
+> PF. mlx4_core: probe of 0003:05:00.0 failed with error -22
 
-"... For VFs, this register must be RO Zero."
+1. Please include the full error log starting from host bootup and
+driver start
 
-Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
-NIC.  When they do it makes us handle ACS testing and therefore IOMMU
-groups as if they were actual multifunction devices and require ACS
-capabilities to make sure there's no peer-to-peer between functions.
-VFs are never traditional multifunction devices, so simply clear this
-bit before we get any further into setup.
+2. What FW is loaded on the card?
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/iov.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 1fe2d6f..e2fbb67 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -84,6 +84,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 	virtfn->dev.parent = dev->dev.parent;
- 	virtfn->physfn = pci_dev_get(dev);
- 	virtfn->is_virtfn = 1;
-+	virtfn->multifunction = 0;
- 
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = dev->resource + PCI_IOV_RESOURCES + i;
-
+3. Please provide output of "lspci -vv -nn" for the Mellanox device(s)
