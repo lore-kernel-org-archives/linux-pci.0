@@ -1,89 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og102.obsmtp.com ([64.18.0.143]:35437 "HELO
-	exprod5og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752176AbaANXer (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 18:34:47 -0500
-Received: by mail-pa0-f54.google.com with SMTP id fa1so312880pad.41
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 15:34:46 -0800 (PST)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [RFC PATCH V2 3/4] dt-bindings: pci: xgene pcie device tree bindings
-Date: Tue, 14 Jan 2014 15:34:17 -0800
-Message-Id: <1389742458-7693-4-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
-References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:57392 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841AbaANRcH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 12:32:07 -0500
+Received: by mail-ie0-f177.google.com with SMTP id ar20so765697iec.22
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 09:32:07 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
+References: <cover.1389103215.git.agordeev@redhat.com> <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
+ <20140113191220.GA6525@google.com> <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 14 Jan 2014 10:31:46 -0700
+Message-ID: <CAErSpo7QSLsbKL=rPj0Uavf1y8A+mxdXhdW-hK689xzGw7O=rw@mail.gmail.com>
+Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tejun Heo <tj@kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for X-Gene PCIe driver. The driver resides
-under 'drivers/pci/host/pci-xgene.c' file.
+On Tue, Jan 14, 2014 at 1:50 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Mon, Jan 13, 2014 at 12:12:20PM -0700, Bjorn Helgaas wrote:
+>> > -   nvec = rc;
+>> > -   rc = pci_enable_msi_block(pdev, nvec);
+>> > -   if (rc)
+>> > +   if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
+>> >             goto intx;
+>> >
+>> >     return nvec;
+>> >
+>> >  single_msi:
+>> > -   rc = pci_enable_msi(pdev);
+>> > -   if (rc)
+>> > +   if (pci_enable_msi_range(pdev, 1, 1) < 0)
+>>
+>> This part doesn't seem like an improvement.  There are a hundred or so
+>> callers of pci_enable_msi() that only want a single MSI.  Is there any
+>> benefit in changing them to use pci_enable_msi_range()?
+>
+> In this particular case it reads better to me as one sees on the screen
+> pci_enable_msi_range(pdev, nvec, nvec) and pci_enable_msi_range(pdev, 1, 1)
+> calls. That allows to avoid switching in mind between negative-or-positive
+> return in the former call and negative-or-zero return from pci_enable_msi()
+> if we had it.
+>
+> But in most cases when single MSI is enabled we do cause complication
+> with the patterns below (which I expect I am going be hated for ;) ):
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- .../devicetree/bindings/pci/xgene-pcie.txt         |   45 ++++++++++++++++++++
- 1 file changed, 45 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
+I don't want to touch those hundred pci_enable_msi() callers at all.
+So I think we should have something like this:
 
-diff --git a/Documentation/devicetree/bindings/pci/xgene-pcie.txt b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
-new file mode 100644
-index 0000000..19b9c28
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
-@@ -0,0 +1,45 @@
-+* AppliedMicro X-Gene PCIe interface
-+
-+Required properties:
-+- status: Either "ok" or "disabled".
-+- device_type: set to "pci"
-+- compatible: should contain "xgene,pcie" to identify the core.
-+- reg: base addresses and lengths of the pcie controller configuration
-+	space register.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- ranges: ranges for the outbound memory, I/O regions.
-+- dma-ranges: ranges for the inbound memory regions.
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+- clocks: from common clock binding: handle to pci clock.
-+
-+Example:
-+
-+SoC specific DT Entry:
-+	pcie0: pcie@1f2b0000 {
-+		status = "disabled";
-+		device_type = "pci";
-+		compatible = "apm,xgene-pcie";
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = < 0x00 0x1f2b0000 0x0 0x00010000
-+			0xe0 0xd0000000 0x0 0x00200000>;
-+		ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
-+			  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
-+		dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+		clocks = <&pcie0clk 0>;
-+	};
-+
-+Board specific DT Entry:
-+	&pcie0 {
-+		status = "ok";
-+	};
--- 
-1.7.9.5
+    /* Return 0 for success (one MSI enabled) or negative errno */
+    static inline int pci_enable_msi(struct pci_dev *dev)
+    {
+        int rc;
 
+        rc = pci_enable_msi_range(pdev, 1, 1);
+        if (rc == 1)
+            return 0;
+        return rc;
+    }
