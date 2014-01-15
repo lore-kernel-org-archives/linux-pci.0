@@ -1,69 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog105.obsmtp.com ([207.126.144.119]:37975 "EHLO
-	eu1sys200aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753008AbaAWK5i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 05:57:38 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <pratyush.anand@st.com>, <linux-arm-kernel@lists.infradead.org>,
-	<spear-devel@list.st.com>, <linux-pci@vger.kernel.org>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Subject: [PATCH V2 0/8] PCI: Add SPEAr13xx PCIe support
-Date: Thu, 23 Jan 2014 16:26:40 +0530
-Message-ID: <cover.1390471111.git.mohit.kumar@st.com>
+Received: from mail-db9lp0248.outbound.messaging.microsoft.com ([213.199.154.248]:32304
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752044AbaAOJoH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 04:44:07 -0500
+Received: from mail106-db9 (localhost [127.0.0.1])	by
+ mail106-db9-R.bigfish.com (Postfix) with ESMTP id D539380149	for
+ <linux-pci@vger.kernel.org>; Wed, 15 Jan 2014 09:44:05 +0000 (UTC)
+Received: from DB9EHSMHS027.bigfish.com (unknown [10.174.16.233])	by
+ mail106-db9.bigfish.com (Postfix) with ESMTP id B221F3A00BD	for
+ <linux-pci@vger.kernel.org>; Wed, 15 Jan 2014 09:44:03 +0000 (UTC)
+From: Rajat Jain <rajatjain@juniper.net>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Guenter Roeck <groeck@juniper.net>
+Subject: User initiated hotplug and kernel initiated hotplug - where is the
+ synchronization?
+Date: Wed, 15 Jan 2014 09:43:58 +0000
+Message-ID: <635a0ddff97142e2a06f9bd9c3428d01@DM2PR05MB671.namprd05.prod.outlook.com>
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-First five patches are improvement and fixes for SPEAr13xx support.
-
-PCIe driver support for SPEAr1310/40 platform board is added.
-These patches are tested with SPEAr1310 evaluation board:
-	- INTEL PRO 100/100 EP card
-	- USB xhci gen2 card
- 	- Above cards connected through LeCROY PTC switch
-
-Modifications for SATA are tested with SPEAr1340-evb board
-
-Changes since v1:
-- Few patches of the series are already accepted and applied to mainline e.g.
- pcie designware driver improvements,fixes for IO translation bug, PCIe dw
- driver maintainer. So dropped these from v2.
-- Incorporated comment to move the common/reset PCIe code to the seperate driver
-- PCIe and SATA share common PHY configuration registers, so move SATA
- platform code to the system config driver
-- Incorporated comments for FUSE_FS option for defconfig 
-- Incorporated comments to move back the SPEAr1340 definations from .h file
-
-Mohit Kumar (3):
-  SPEAr13xx: Set dt field entry <stmmac,phy-addr> for phy probe
-  SPEAr13xx: defconfig: Update
-  MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
-
-Pratyush Anand (5):
-  ahci: Add a driver_data field to struct ahci_platform_data
-  SPEAr13xx: Fixup: Move SPEAr1340 SATA platform code to system cfg
-    driver
-  clk: SPEAr13xx: Fix pcie clock name
-  SPEAr13xx: Fix static mapping table
-  pcie: SPEAr13xx: Add designware pcie support
-
- MAINTAINERS                              |    6 +
- arch/arm/boot/dts/spear13xx.dtsi         |   63 ++++-
- arch/arm/configs/spear13xx_defconfig     |   16 +
- arch/arm/mach-spear/Kconfig              |    2 +
- arch/arm/mach-spear/include/mach/spear.h |    4 +-
- arch/arm/mach-spear/spear1340.c          |  127 +---------
- arch/arm/mach-spear/spear13xx.c          |    2 +-
- drivers/clk/spear/spear1310_clock.c      |    6 +-
- drivers/clk/spear/spear1340_clock.c      |    2 +-
- drivers/mfd/Makefile                     |    1 +
- drivers/mfd/spear13xx-cfg.c              |  444 ++++++++++++++++++++++++++++++
- drivers/pci/host/Kconfig                 |    5 +
- drivers/pci/host/Makefile                |    1 +
- drivers/pci/host/pcie-spear13xx.c        |  394 ++++++++++++++++++++++++++
- include/linux/ahci_platform.h            |    1 +
- 15 files changed, 939 insertions(+), 135 deletions(-)
- create mode 100644 drivers/mfd/spear13xx-cfg.c
- create mode 100644 drivers/pci/host/pcie-spear13xx.c
+SGVsbG8sDQoNCkkgaGF2ZSB0aGlzIGRvdWJ0IGxpbmdlcmluZyBvbiwgYW5kIEknZCBhcHByZWNp
+YXRlIGlmIHNvbWUgb25lIGNvdWxkIHRocm93IGxpZ2h0IG9uIHRoaXM6DQoNClRoZSBrZXJuZWwg
+aG90cGx1ZyBkcml2ZXIgcGNpZWhwIGNhbiBpbml0aWF0ZSBob3RwbHVnIGJhc2VkIG9uIHdoYXQg
+aXQgc2Vuc2VzIGZyb20gdGhlIEhXIChidXR0b24gcHJlc3MgZXRjKS4NCg0KVGhlIHVzZXIgc3Bh
+Y2UgY2FuIGFsc28gaW5pdGlhdGUgdGhlIHNhbWUgb3BlcmF0aW9ucyBieSB1c2luZyAicmVzY2Fu
+IiBvciAicmVtb3ZlIiBhdHRyaWJ1dGVzIGluIHN5c2ZzLg0KDQpNeSBxdWVzdGlvbnM6DQoNCjEp
+IElzIGl0IHNhZmUgdG8gbWl4IHRoZSBhYm92ZSB0d28/IEluIG90aGVyIHdvcmRzIGNvdWxkIHRo
+ZXJlIGJlIHJhY2UgY29uZGl0aW9ucyBiZWNhdXNlIHVzZXIgaW5pdGlhdGVkIGhvdHBsdWcgY291
+bGQgaW50ZXJmZXJlIHdpdGgga2VybmVsIGluaXRpYXRlZCBob3RwbHVnIGFuZCB2aWNlIHZlcnNh
+PyBXaG8gZW5zdXJlcyB0aGF0IHRoZSBhdG9taWNpdHkgb2Ygc3VjaCBvcGVyYXRpb25zIGlzIHBy
+ZXNlcnZlZD8NCg0KMikgQ2FuIHlvdSBwb2ludCBtZSB0byBhbnkgbG9ja3MgdGhhdCBhcmUgcHJl
+c2VudCBhbmQgSSBtYXkgaGF2ZSBtaXNzZWQgZm9yIGhhbmRsaW5nIHN1Y2ggc2NlbmFyaW9zPw0K
+DQpUaGFua3MsDQoNClJhamF0DQo=
 
