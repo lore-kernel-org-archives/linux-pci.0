@@ -1,74 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44335 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932654AbaAaPHs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 10:07:48 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Himanshu Madhani <himanshu.madhani@qlogic.com>,
-	Rajesh Borundia <rajesh.borundia@qlogic.com>,
-	Shahed Shaikh <shahed.shaikh@qlogic.com>,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 27/34] qlcnic: Cleanup qlcnic_enable_msix() return values
-Date: Fri, 31 Jan 2014 16:08:46 +0100
-Message-Id: <55f301267b3b9c1fa409dad293067e58c467cb6c.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:43571
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751637AbaAODg1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 22:36:27 -0500
+Message-ID: <52D60238.2040204@freescale.com>
+Date: Wed, 15 Jan 2014 11:36:24 +0800
+From: Chunhe Lan <b25806@freescale.com>
+MIME-Version: 1.0
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: Chunhe Lan <Chunhe.Lan@freescale.com>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] powerpc: dma-mapping: Return dma_direct_ops variable
+ when dev == NULL
+References: <1389692656-27758-1-git-send-email-Chunhe.Lan@freescale.com> <1389694446.6933.14.camel@pasglop>
+In-Reply-To: <1389694446.6933.14.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+On 01/14/2014 06:14 PM, Benjamin Herrenschmidt wrote:
+> On Tue, 2014-01-14 at 17:44 +0800, Chunhe Lan wrote:
+>> Without this patch, kind of below error will be dumped if
+>> 'insmod ixgbevf.ko' is executed:
+>>
+>>      ixgbevf: Intel(R) 10 Gigabit PCI Express Virtual Function
+>>               Network Driver - version 2.7.12-k
+>>      ixgbevf: Copyright (c) 2009 - 2012 Intel Corporation.
+>>      ixgbevf 0000:01:10.0: enabling device (0000 -> 0002)
+>>      ixgbevf 0000:01:10.0: No usable DMA configuration, aborting
+>>      ixgbevf: probe of 0000:01:10.0 failed with error -5
+>>      ......
+>>      ......
+> That's not right. The DMA ops must be set properly for the VF somewhere
+> in the arch code instead. When creating VFs, is there a hook allowing
+> the arch to fix things up ?
+>
+> (Also adding linux-pci on CC)
+>
+> Ben.
+>
+>> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+>> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> Tested-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+>> ---
+>>   arch/powerpc/include/asm/dma-mapping.h |   13 +++++++++----
+>>   1 files changed, 9 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/arch/powerpc/include/asm/dma-mapping.h b/arch/powerpc/include/asm/dma-mapping.h
+>> index e27e9ad..b8c10de 100644
+>> --- a/arch/powerpc/include/asm/dma-mapping.h
+>> +++ b/arch/powerpc/include/asm/dma-mapping.h
+>> @@ -84,10 +84,15 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+         I see the get_dma_ops function in 
+arch/*x86*/include/asm/dma-mapping.h as the following:
 
-diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-index 1f79d47..3d2eb14 100644
---- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-+++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-@@ -684,7 +684,7 @@ restore:
- int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
- {
- 	struct pci_dev *pdev = adapter->pdev;
--	int err = -1, vector;
-+	int err, vector;
- 
- 	if (!adapter->msix_entries) {
- 		adapter->msix_entries = kcalloc(num_msix,
-@@ -706,7 +706,7 @@ enable_msix:
- 			adapter->flags |= QLCNIC_MSIX_ENABLED;
- 			adapter->ahw->num_msix = num_msix;
- 			dev_info(&pdev->dev, "using msi-x interrupts\n");
--			return err;
-+			return 0;
- 		} else if (err > 0) {
- 			dev_info(&pdev->dev,
- 				 "Unable to allocate %d MSI-X vectors, Available vectors %d\n",
-@@ -715,12 +715,12 @@ enable_msix:
- 			if (qlcnic_82xx_check(adapter)) {
- 				num_msix = rounddown_pow_of_two(err);
- 				if (err < QLCNIC_82XX_MINIMUM_VECTOR)
--					return -EIO;
-+					return -ENOSPC;
- 			} else {
- 				num_msix = rounddown_pow_of_two(err - 1);
- 				num_msix += 1;
- 				if (err < QLCNIC_83XX_MINIMUM_VECTOR)
--					return -EIO;
-+					return -ENOSPC;
- 			}
- 
- 			if (qlcnic_82xx_check(adapter) &&
-@@ -747,7 +747,7 @@ enable_msix:
- 		}
- 	}
- 
--	return err;
-+	return -EIO;
- }
- 
- static int qlcnic_82xx_calculate_msix_vector(struct qlcnic_adapter *adapter)
--- 
-1.7.7.6
+  32 static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+  33 {
+  34 #ifndef CONFIG_X86_DEV_DMA_OPS
+  35         return dma_ops;
+  36 #else
+  37         if (unlikely(!dev) || !dev->archdata.dma_ops)
+  38                 return dma_ops;
+  39         else
+  40                 return dev->archdata.dma_ops;
+  41 #endif
+  42 }
+
+         And also  see the get_dma_ops function in 
+arch/*arm*/include/asm/dma-mapping.h as the following:
+
+  18 static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+  19 {
+  20         if (dev && dev->archdata.dma_ops)
+  21                 return dev->archdata.dma_ops;
+  22         return &arm_dma_ops;
+  23 }
+
+       Why not powerpc use this method to process dev == NULL ?
+
+Thanks,
+-Chunhe
+
+>>   	 * only ISA DMA device we support is the floppy and we have a hack
+>>   	 * in the floppy driver directly to get a device for us.
+>>   	 */
+>> -	if (unlikely(dev == NULL))
+>> -		return NULL;
+>> -
+>> -	return dev->archdata.dma_ops;
+>> +	if (dev && dev->archdata.dma_ops)
+>> +		return dev->archdata.dma_ops;
+>> +	/*
+>> +	 * In some cases (for example, use the Intel(R) 10 Gigabit PCI
+>> +	 * expression Virtual Function Network Driver -- ixgbevf.ko),
+>> +	 * their value of dev is the NULL. If return NULL, the driver is
+>> +	 * aborting. So return dma_direct_ops variable when dev == NULL.
+>> +	 */
+>> +	return &dma_direct_ops;
+>>   }
+>>   
+>>   static inline void set_dma_ops(struct device *dev, struct dma_map_ops *ops)
+>
+>
+>
+
+
 
