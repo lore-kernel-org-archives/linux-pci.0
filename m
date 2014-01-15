@@ -1,129 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57112 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751684AbaAONWh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 08:22:37 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [Update][PATCH 8/9] powerpc / eeh_driver: Use global PCI rescan-remove locking
-Date: Wed, 15 Jan 2014 14:36:36 +0100
-Message-ID: <1476201.kR505WbUas@vostro.rjw.lan>
-In-Reply-To: <4447911.Q1f9tEzrXs@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <20440867.YaQfKrcfsQ@vostro.rjw.lan> <4447911.Q1f9tEzrXs@vostro.rjw.lan>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:39505 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751754AbaAORun (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 12:50:43 -0500
+Received: by mail-ie0-f169.google.com with SMTP id tq11so554183ieb.14
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2014 09:50:43 -0800 (PST)
+Received: from localhost ([172.29.122.199])
+        by mx.google.com with ESMTPSA id ft2sm7598578igb.5.2014.01.15.09.50.42
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Wed, 15 Jan 2014 09:50:42 -0800 (PST)
+Subject: [PATCH] PCI: Fix pci_check_and_unmask_intx() comment typos
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Jan 2014 10:50:41 -0700
+Message-ID: <20140115175041.31331.85063.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: powerpc / eeh_driver: Use global PCI rescan-remove locking
+Fix typos in pci_check_and_unmask_intx() function comment.
 
-Race conditions are theoretically possible between the PCI device
-addition and removal in the PPC64 PCI error recovery driver and
-the generic PCI bus rescan and device removal that can be triggered
-via sysfs.
-
-To avoid those race conditions make PPC64 PCI error recovery driver
-use global PCI rescan-remove locking around PCI device addition and
-removal.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
+ drivers/pci/pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The previous version had wrong function names in the last hunk, sorry about
-that.
-
-Rafael
-
----
- arch/powerpc/kernel/eeh_driver.c |   19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
-
-Index: linux-pm/arch/powerpc/kernel/eeh_driver.c
-===================================================================
---- linux-pm.orig/arch/powerpc/kernel/eeh_driver.c
-+++ linux-pm/arch/powerpc/kernel/eeh_driver.c
-@@ -369,7 +369,9 @@ static void *eeh_rmv_device(void *data,
- 	edev->mode |= EEH_DEV_DISCONNECTED;
- 	(*removed)++;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 33120d156668..4f89a99e2de3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3138,7 +3138,7 @@ bool pci_check_and_mask_intx(struct pci_dev *dev)
+ EXPORT_SYMBOL_GPL(pci_check_and_mask_intx);
  
-+	pci_lock_rescan_remove();
- 	pci_stop_and_remove_bus_device(dev);
-+	pci_unlock_rescan_remove();
- 
- 	return NULL;
- }
-@@ -416,10 +418,13 @@ static int eeh_reset_device(struct eeh_p
- 	 * into pcibios_add_pci_devices().
- 	 */
- 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
--	if (bus)
-+	if (bus) {
-+		pci_lock_rescan_remove();
- 		pcibios_remove_pci_devices(bus);
--	else if (frozen_bus)
-+		pci_unlock_rescan_remove();
-+	} else if (frozen_bus) {
- 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
-+	}
- 
- 	/* Reset the pci controller. (Asserts RST#; resets config space).
- 	 * Reconfigure bridges and devices. Don't try to bring the system
-@@ -429,6 +434,8 @@ static int eeh_reset_device(struct eeh_p
- 	if (rc)
- 		return rc;
- 
-+	pci_lock_rescan_remove();
-+
- 	/* Restore PE */
- 	eeh_ops->configure_bridge(pe);
- 	eeh_pe_restore_bars(pe);
-@@ -462,6 +469,7 @@ static int eeh_reset_device(struct eeh_p
- 	pe->tstamp = tstamp;
- 	pe->freeze_count = cnt;
- 
-+	pci_unlock_rescan_remove();
- 	return 0;
- }
- 
-@@ -618,8 +626,11 @@ perm_error:
- 	eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
- 
- 	/* Shut down the device drivers for good. */
--	if (frozen_bus)
-+	if (frozen_bus) {
-+		pci_lock_rescan_remove();
- 		pcibios_remove_pci_devices(frozen_bus);
-+		pci_unlock_rescan_remove();
-+	}
- }
- 
- static void eeh_handle_special_event(void)
-@@ -692,6 +703,7 @@ static void eeh_handle_special_event(voi
- 	if (rc == 2 || rc == 1)
- 		eeh_handle_normal_event(pe);
- 	else {
-+		pci_lock_rescan_remove();
- 		list_for_each_entry_safe(hose, tmp,
- 			&hose_list, list_node) {
- 			phb_pe = eeh_phb_pe_get(hose);
-@@ -703,6 +715,7 @@ static void eeh_handle_special_event(voi
- 			eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
- 			pcibios_remove_pci_devices(bus);
- 		}
-+		pci_unlock_rescan_remove();
- 	}
- }
- 
+ /**
+- * pci_check_and_mask_intx - unmask INTx of no interrupt is pending
++ * pci_check_and_unmask_intx - unmask INTx if no interrupt is pending
+  * @dev: the PCI device to operate on
+  *
+  * Check if the device dev has its INTx line asserted, unmask it if not
 
