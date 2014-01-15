@@ -1,50 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:41248 "EHLO
-	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750926AbaA2Ivo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 03:51:44 -0500
-Message-ID: <52E8C0D6.3030105@mellanox.com>
-Date: Wed, 29 Jan 2014 10:50:30 +0200
-From: Or Gerlitz <ogerlitz@mellanox.com>
-MIME-Version: 1.0
-To: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Jack Morgenstein <jackm@dev.mellanox.co.il>
-CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	<yinghai@kernel.org>, <bhelgaas@google.com>, <amirv@mellanox.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, <linux-pci@vger.kernel.org>
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-References: <20140114062215.GA19345@richard> <20140114105031.71882944@jpm-OptiPlex-GX620> <20140114103712.GD27684@richard> <20140114132340.50df7d6f@jpm-OptiPlex-GX620> <52d52032.4981e00a.3dcc.ffff81fdSMTPIN_ADDED_BROKEN@mx.google.com> <20140115094113.64ca756e@jpm-OptiPlex-GX620> <1389772791.6933.84.camel@pasglop> <52d653d3.8425e00a.76d0.1e60SMTPIN_ADDED_BROKEN@mx.google.com> <20140115160204.24a44af0@jpm-OptiPlex-GX620> <20140116020946.GA8702@richard> <20140116021429.GB8702@richard>
-In-Reply-To: <20140116021429.GB8702@richard>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:6564 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751503AbaAODTj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jan 2014 22:19:39 -0500
+Message-ID: <1389755971.8705.5.camel@bling.home>
+Subject: Re: [PATCH] vfio-pci: Use pci "try" reset interface
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Date: Tue, 14 Jan 2014 20:19:31 -0700
+In-Reply-To: <CAErSpo74iO-cD71+q-Bz52r4Eg1p9KpGQQXLnQ3zUxzs54YSuw@mail.gmail.com>
+References: <20131216221615.3539.78656.stgit@bling.home>
+	 <CAErSpo74iO-cD71+q-Bz52r4Eg1p9KpGQQXLnQ3zUxzs54YSuw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/01/2014 04:14, Wei Yang wrote:
-> >>>+static void mlx4_shutdown(struct pci_dev *pdev)
-> >>>+{
-> >>>+       mlx4_remove_one(pdev);
-> >>>+}
-> >>>+
-> >>>  int mlx4_restart_one(struct pci_dev *pdev)
-> >>>  {
-> >>>         struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
-> >>>@@ -2582,6 +2590,7 @@ static struct pci_driver mlx4_driver = {
-> >>>         .id_table       = mlx4_pci_table,
-> >>>         .probe          = mlx4_init_one,
-> >>>         .remove         = mlx4_remove_one,
-> >>>+       .shutdown       = mlx4_shutdown,
-> >>>         .err_handler    = &mlx4_err_handler,
-> >>>  };
-> >>>
-> >>>Thanks,
-> >>>Gavin
+On Tue, 2014-01-14 at 16:48 -0700, Bjorn Helgaas wrote:
+> On Mon, Dec 16, 2013 at 3:16 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > PCI resets will attempt to take the device_lock for any device to be
+> > reset.  This is a problem if that lock is already held, for instance
+> > in the device remove path.  It's not sufficient to simply kill the
+> > user process or skip the reset if called after .remove as a race could
+> > result in the same deadlock.  Instead, we handle all resets as "best
+> > effort" using the PCI "try" reset interfaces.  This prevents the user
+> > from being able to induce a deadlock by triggering a reset.
+> >
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >
+> > This depends on the proposed pci "try" function/slot/bus reset patch.
+> >
+> >  drivers/vfio/pci/vfio_pci.c |   29 +++++++++--------------------
+> >  1 file changed, 9 insertions(+), 20 deletions(-)
+> >
+> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> > index 6ab71b9..576e34e 100644
+> > --- a/drivers/vfio/pci/vfio_pci.c
+> > +++ b/drivers/vfio/pci/vfio_pci.c
+> > @@ -139,25 +139,14 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+> >         pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
+> >
+> >         /*
+> > -        * Careful, device_lock may already be held.  This is the case if
+> > -        * a driver unbind is blocked.  Try to get the locks ourselves to
+> > -        * prevent a deadlock.
+> > +        * Try to reset the device.  The success of this is dependent on
+> > +        * being able to lock the device, which is not always possible.
+> >          */
+> >         if (vdev->reset_works) {
+> > -               bool reset_done = false;
+> > -
+> > -               if (pci_cfg_access_trylock(pdev)) {
+> > -                       if (device_trylock(&pdev->dev)) {
+> > -                               __pci_reset_function_locked(pdev);
+> > -                               reset_done = true;
+> > -                               device_unlock(&pdev->dev);
+> > -                       }
+> > -                       pci_cfg_access_unlock(pdev);
+> > -               }
+> > -
+> > -               if (!reset_done)
+> > -                       pr_warn("%s: Unable to acquire locks for reset of %s\n",
+> > -                               __func__, dev_name(&pdev->dev));
+> > +               int ret = pci_try_reset_function(pdev);
+> > +               if (ret)
+> > +                       pr_debug("%s: reset of device %s = %d\n",
+> > +                               __func__, dev_name(&pdev->dev), ret);
+> 
+> Why is this a pr_debug() instead of dev_dbg()?  I see vfio_pci.c seems
+> to always use pr_*() instead of dev_*(), so you probably have a
+> reason.
 
-Guys,
+Inertia and lack of anyone suggesting it are probably the biggest
+reasons.  As you note, I've been using pr_foo throughout the file, so
+I'd probably prefer consistency and fix them in a separate patch.
 
-Did you converge here?  I don't see this patch in Linus tree, so wasn't 
-sure where the discussion went eventually.
+> The text of the message ("vfio_pci_disable: reset of device
+> 0000:00:00.1 = -35") doesn't seem terribly clear; as a user, I'd have
+> to go look up the code to know whether I should be concerned about it.
+>  Maybe it should be explicit that the device was not reset?
 
-Or.
+Sure, I'll tweak the message to make it more clear that it failed and
+include the return value as extra info.  Thanks,
 
-Or.
+Alex
+
+> >         }
+> >
+> >         pci_restore_state(pdev);
+> > @@ -514,7 +503,7 @@ static long vfio_pci_ioctl(void *device_data,
+> >
+> >         } else if (cmd == VFIO_DEVICE_RESET) {
+> >                 return vdev->reset_works ?
+> > -                       pci_reset_function(vdev->pdev) : -EINVAL;
+> > +                       pci_try_reset_function(vdev->pdev) : -EINVAL;
+> >
+> >         } else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
+> >                 struct vfio_pci_hot_reset_info hdr;
+> > @@ -684,8 +673,8 @@ reset_info_exit:
+> >                                                     &info, slot);
+> >                 if (!ret)
+> >                         /* User has access, do the reset */
+> > -                       ret = slot ? pci_reset_slot(vdev->pdev->slot) :
+> > -                                    pci_reset_bus(vdev->pdev->bus);
+> > +                       ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
+> > +                                    pci_try_reset_bus(vdev->pdev->bus);
+> >
+> >  hot_reset_release:
+> >                 for (i--; i >= 0; i--)
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
