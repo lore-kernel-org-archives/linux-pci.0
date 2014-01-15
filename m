@@ -1,39 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:35552 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751711AbaA1Juc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 04:50:32 -0500
-Message-ID: <52E77D62.9010704@codethink.co.uk>
-Date: Tue, 28 Jan 2014 09:50:26 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Received: from moutng.kundenserver.de ([212.227.126.186]:57932 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004AbaAOJ6U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 04:58:20 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [RFC PATCH V2 3/4] dt-bindings: pci: xgene pcie device tree bindings
+Date: Wed, 15 Jan 2014 10:57:42 +0100
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	patches@apm.com, jcm@redhat.com
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com> <1389742458-7693-4-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1389742458-7693-4-git-send-email-tinamdar@apm.com>
 MIME-Version: 1.0
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-CC: linux-kernel@lists.codethink.co.uk,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: rcar: fix bridge logic abort
-References: <1390902468-7753-1-git-send-email-ben.dooks@codethink.co.uk> <1390902468-7753-4-git-send-email-ben.dooks@codethink.co.uk>
-In-Reply-To: <1390902468-7753-4-git-send-email-ben.dooks@codethink.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201401151057.43044.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28/01/14 09:47, Ben Dooks wrote:
-> The bridge logic at slot 0 only supports reads up to 0x40 and the
-> rest of the PCI configuration space for this slot is marked as
-> reserved in the manual.
->
-> Trying a read from offset 0x100 is producing an error from the
-> bridge. With error interrupts enabled, the following is printed:
->
-> pci-rcar-gen2 ee0d0000.pci: error irq: status 00000014
->
-> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+On Wednesday 15 January 2014, Tanmay Inamdar wrote:
+> This patch adds the bindings for X-Gene PCIe driver. The driver resides
+> under 'drivers/pci/host/pci-xgene.c' file.
+> 
+> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  .../devicetree/bindings/pci/xgene-pcie.txt         |   45 ++++++++++++++++++++
+>  1 file changed, 45 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/xgene-pcie.txt b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
+> new file mode 100644
+> index 0000000..19b9c28
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
+> @@ -0,0 +1,45 @@
+> +* AppliedMicro X-Gene PCIe interface
+> +
+> +Required properties:
+> +- status: Either "ok" or "disabled".
 
-apologies, did not remove the debug code from this.
+"status" isn't normally a required property. The default interpretation is
+that a node without a status property is active.
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+> +- device_type: set to "pci"
+> +- compatible: should contain "xgene,pcie" to identify the core.
+> +- reg: base addresses and lengths of the pcie controller configuration
+> +	space register.
+
+Doesn't match the code or example: You only list one area here, but
+you actually need to register sets.
+
+Looks good otherwise now.
+
+	Arnd
