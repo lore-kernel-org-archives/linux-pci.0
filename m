@@ -1,113 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41761 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751538AbaASSW5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 19 Jan 2014 13:22:57 -0500
-Date: Sun, 19 Jan 2014 20:27:30 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	eiichiro.oiwa.nm@hitachi.com, bhelgaas@google.com,
-	airlied@redhat.com, gregkh@linuxfoundation.org,
-	konrad.wilk@oracle.com, linux-pci@vger.kernel.org,
-	jbarnes@virtuousgeek.org, airlied@linux.ie
-Subject: Re: In "pci_fixup_video" check if this is or should be
- theprimaryvideo d
-Message-ID: <20140119182730.GA5867@redhat.com>
-References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com>
- <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c>
- <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com>
- <20140119104410.GB4195@redhat.com>
- <1390140269.8705.95.camel@bling.home>
- <20140119150926.GB5463@redhat.com>
- <252084946.20140119161438@eikelenboom.it>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:64913 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684AbaAORi1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 12:38:27 -0500
+Received: by mail-ie0-f175.google.com with SMTP id tp5so2404260ieb.6
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2014 09:38:26 -0800 (PST)
+Date: Wed, 15 Jan 2014 10:38:23 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [Update][PATCH 8/9] powerpc / eeh_driver: Use global PCI
+ rescan-remove locking
+Message-ID: <20140115173823.GA24030@google.com>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org>
+ <20440867.YaQfKrcfsQ@vostro.rjw.lan>
+ <4447911.Q1f9tEzrXs@vostro.rjw.lan>
+ <1476201.kR505WbUas@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <252084946.20140119161438@eikelenboom.it>
+In-Reply-To: <1476201.kR505WbUas@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 19, 2014 at 04:14:38PM +0100, Sander Eikelenboom wrote:
+On Wed, Jan 15, 2014 at 02:36:36PM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Subject: powerpc / eeh_driver: Use global PCI rescan-remove locking
 > 
-> Sunday, January 19, 2014, 4:09:26 PM, you wrote:
+> Race conditions are theoretically possible between the PCI device
+> addition and removal in the PPC64 PCI error recovery driver and
+> the generic PCI bus rescan and device removal that can be triggered
+> via sysfs.
 > 
-> > On Sun, Jan 19, 2014 at 07:04:29AM -0700, Alex Williamson wrote:
-> >> On Sun, 2014-01-19 at 12:44 +0200, Michael S. Tsirkin wrote:
-> >> > On Fri, Jan 17, 2014 at 07:43:30PM +0900, eiichiro.oiwa.nm@hitachi.com wrote:
-> >> > > Because legacy VGA is only one device on x86 System, I think qemu has to emulate a bridge
-> >> > > for legacy VGA. The VGA Enable bit on its bridge control register has to set to 1. The VGA
-> >> > > Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards 
-> >> > > on the same system, I think its system needs two bridges for each device. These bridges
-> >> > > need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
-> >> > > to 1. Another VGA Enable bit for second VGA has to set to 0.
-> >> > > 
-> >> > > 
-> >> > > >On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
-> >> > > >> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
-> >> > > >> June 9, 2003 Chapter 12. VGA Support".
-> >> > > >
-> >> > > >And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
-> >> > > >pages long.  Is there something there that prohibits two VGA devices
-> >> > > >on the same bus?  I'm not a qemu developer, but if I were, I would
-> >> > > >need a better hint about what is wrong before I could fix it.
-> >> > > >
-> >> > > >Again, sorry if you said this already and I missed it.
-> >> > > >
-> >> > > >>>[+cc Michael, Jesse, David, qemu-devel]
-> >> > > >>>
-> >> > > >>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
-> >> > > >>>> I suggest you should not break the PCI specification, as a developer of proprietary
-> >> > > >>>> hypervisor, but I think your patch is no problem.
-> >> > > >>>> Your PCI structure is specialized structure for your virtual machine.
-> >> > > >>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
-> >> > > >>>> because of breaking the PCI specification.
-> >> > > >>>
-> >> > > >>>I assume you think qemu is breaking the PCI spec.  What exactly do you
-> >> > > >>>think is broken?  Please give specific references to the spec.  This
-> >> > > >>>conversation is pretty fragmented, and I came in late, so I apologize
-> >> > > >>>if I missed this.
-> >> > > >>>
-> >> > > >>>Bjorn
-> >> > > >>>
-> >> > > >
-> >> > 
-> >> > None of the bridges included in QEMU implements VGA support.
-> >> > The spec explicitly says its optional, so that's ok.
-> >> > 
-> >> > As a result, you need to put device which has to work in
-> >> > VGA mode on the root bus, any device behind a bridge
-> >> > won't work in VGA mode (but might work in non VGA mode).
-> >> 
-> >> The ioh3420 root ports support VGA, so a q35 model is an option for
-> >> multiple VGA devices.
+> To avoid those race conditions make PPC64 PCI error recovery driver
+> use global PCI rescan-remove locking around PCI device addition and
+> removal.
 > 
-> > Hmm, you are right, I forgot you implemented this in March.
-> > In fact, I see that you updated bridges to support VGA
-> > so if user wants to put both devices behind bridges,
-> > that's also possible.
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
 > 
+> The previous version had wrong function names in the last hunk, sorry about
+> that.
+
+I replaced the previous version and re-pushed the pci/locking branch,
+thanks!
+
 > 
-> Unfortunately Xen seems to be old "pc" for the moment and the passthrough
-> implementation doesn't seem to have the support for defining and using bridges either.
-
-What do you base this claim on?
-Did you actually try?
-Bridges work fine for pc too.
-See this for how to create a bridge and put a device behind it:
-http://lists.gnu.org/archive/html/qemu-devel/2012-02/msg02765.html
-this should work for all pci devices.
-
-> With my limited c coding skills i also can't find how in hw/xen_pt.c it actually inits a
-> pci device in Qemu.
-
-hw/xen_pt.c means you use an old Qemu.
-It's now in hw/xen/xen_pt.c
-This is the relevant code:
-    type_register_static(&xen_pci_passthrough_info);
-As you can see parent is TYPE_PCI_DEVICE
-which will make xen-pci-passthrough a pci device.
-
-
-> Although I still find it strange that the pci_video_fixup is ignoring the decisions that the
-> vga arbitration code has already made .. (make the device with the vgacon be the
-> primary card unless arch code overrides), for the moment i will keep my patch in my private patch queue then :-)
+> Rafael
+> 
+> ---
+>  arch/powerpc/kernel/eeh_driver.c |   19 ++++++++++++++++---
+>  1 file changed, 16 insertions(+), 3 deletions(-)
+> 
+> Index: linux-pm/arch/powerpc/kernel/eeh_driver.c
+> ===================================================================
+> --- linux-pm.orig/arch/powerpc/kernel/eeh_driver.c
+> +++ linux-pm/arch/powerpc/kernel/eeh_driver.c
+> @@ -369,7 +369,9 @@ static void *eeh_rmv_device(void *data,
+>  	edev->mode |= EEH_DEV_DISCONNECTED;
+>  	(*removed)++;
+>  
+> +	pci_lock_rescan_remove();
+>  	pci_stop_and_remove_bus_device(dev);
+> +	pci_unlock_rescan_remove();
+>  
+>  	return NULL;
+>  }
+> @@ -416,10 +418,13 @@ static int eeh_reset_device(struct eeh_p
+>  	 * into pcibios_add_pci_devices().
+>  	 */
+>  	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+> -	if (bus)
+> +	if (bus) {
+> +		pci_lock_rescan_remove();
+>  		pcibios_remove_pci_devices(bus);
+> -	else if (frozen_bus)
+> +		pci_unlock_rescan_remove();
+> +	} else if (frozen_bus) {
+>  		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
+> +	}
+>  
+>  	/* Reset the pci controller. (Asserts RST#; resets config space).
+>  	 * Reconfigure bridges and devices. Don't try to bring the system
+> @@ -429,6 +434,8 @@ static int eeh_reset_device(struct eeh_p
+>  	if (rc)
+>  		return rc;
+>  
+> +	pci_lock_rescan_remove();
+> +
+>  	/* Restore PE */
+>  	eeh_ops->configure_bridge(pe);
+>  	eeh_pe_restore_bars(pe);
+> @@ -462,6 +469,7 @@ static int eeh_reset_device(struct eeh_p
+>  	pe->tstamp = tstamp;
+>  	pe->freeze_count = cnt;
+>  
+> +	pci_unlock_rescan_remove();
+>  	return 0;
+>  }
+>  
+> @@ -618,8 +626,11 @@ perm_error:
+>  	eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
+>  
+>  	/* Shut down the device drivers for good. */
+> -	if (frozen_bus)
+> +	if (frozen_bus) {
+> +		pci_lock_rescan_remove();
+>  		pcibios_remove_pci_devices(frozen_bus);
+> +		pci_unlock_rescan_remove();
+> +	}
+>  }
+>  
+>  static void eeh_handle_special_event(void)
+> @@ -692,6 +703,7 @@ static void eeh_handle_special_event(voi
+>  	if (rc == 2 || rc == 1)
+>  		eeh_handle_normal_event(pe);
+>  	else {
+> +		pci_lock_rescan_remove();
+>  		list_for_each_entry_safe(hose, tmp,
+>  			&hose_list, list_node) {
+>  			phb_pe = eeh_phb_pe_get(hose);
+> @@ -703,6 +715,7 @@ static void eeh_handle_special_event(voi
+>  			eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
+>  			pcibios_remove_pci_devices(bus);
+>  		}
+> +		pci_unlock_rescan_remove();
+>  	}
+>  }
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
