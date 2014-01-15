@@ -1,61 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:53781 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932146AbaA1UTV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 15:19:21 -0500
-Received: by mail-la0-f41.google.com with SMTP id mc6so797038lab.14
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jan 2014 12:19:19 -0800 (PST)
-Message-ID: <52E810C4.102@cogentembedded.com>
-Date: Wed, 29 Jan 2014 00:19:16 +0400
-From: Valentine <valentine.barshak@cogentembedded.com>
-MIME-Version: 1.0
-To: Ben Dooks <ben.dooks@codethink.co.uk>,
-	linux-kernel@lists.codethink.co.uk
-CC: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: rcar: check platform_get_irq() return code
-References: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk> <1390903616-8073-2-git-send-email-ben.dooks@codethink.co.uk>
-In-Reply-To: <1390903616-8073-2-git-send-email-ben.dooks@codethink.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from gate.crashing.org ([63.228.1.57]:53099 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750880AbaAODru (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jan 2014 22:47:50 -0500
+Message-ID: <1389757657.6933.54.camel@pasglop>
+Subject: Re: [PATCH] powerpc: dma-mapping: Return dma_direct_ops variable
+ when dev == NULL
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Chunhe Lan <b25806@freescale.com>
+Cc: Chunhe Lan <Chunhe.Lan@freescale.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Date: Wed, 15 Jan 2014 14:47:37 +1100
+In-Reply-To: <52D60238.2040204@freescale.com>
+References: <1389692656-27758-1-git-send-email-Chunhe.Lan@freescale.com>
+	 <1389694446.6933.14.camel@pasglop> <52D60238.2040204@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/28/2014 02:06 PM, Ben Dooks wrote:
-> The current code does not check the return from platform_get_irq()
-> so add an error check and return if this call does fail.
->
+On Wed, 2014-01-15 at 11:36 +0800, Chunhe Lan wrote:
 
-If you have really experienced this error your platform data is incorrect.
+> >
+> >> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+> >> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> >> Tested-by: Chunhe Lan <Chunhe.Lan@freescale.com>
+> >> ---
+> >>   arch/powerpc/include/asm/dma-mapping.h |   13 +++++++++----
+> >>   1 files changed, 9 insertions(+), 4 deletions(-)
+> >>
+> >> diff --git a/arch/powerpc/include/asm/dma-mapping.h b/arch/powerpc/include/asm/dma-mapping.h
+> >> index e27e9ad..b8c10de 100644
+> >> --- a/arch/powerpc/include/asm/dma-mapping.h
+> >> +++ b/arch/powerpc/include/asm/dma-mapping.h
+> >> @@ -84,10 +84,15 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+>          I see the get_dma_ops function in 
+> arch/*x86*/include/asm/dma-mapping.h as the following:
+> 
+>   32 static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+>   33 {
+>   34 #ifndef CONFIG_X86_DEV_DMA_OPS
+>   35         return dma_ops;
+>   36 #else
+>   37         if (unlikely(!dev) || !dev->archdata.dma_ops)
+>   38                 return dma_ops;
+>   39         else
+>   40                 return dev->archdata.dma_ops;
+>   41 #endif
+>   42 }
+> 
+>          And also  see the get_dma_ops function in  
+> arch/*arm*/include/asm/dma-mapping.h as the following:
+> 
+>   18 static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+>   19 {
+>   20         if (dev && dev->archdata.dma_ops)
+>   21                 return dev->archdata.dma_ops;
+>   22         return &arm_dma_ops;
+>   23 }
+> 
+>        Why not powerpc use this method to process dev == NULL ?
 
-> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+Because we don't :-) We used to and removed this. Due to how our HW
+works it might not be correct. When an iommu is enabled for example
+you simply cannot use the direct ops.
 
-Acked-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+So the right fix is to properly establish the iommu for the VFs like
+we do for the PFs.
 
-> ---
-> Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
-> Cc: Simon Horman <horms@verge.net.au>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
-> ---
->   drivers/pci/host/pci-rcar-gen2.c | 5 +++++
->   1 file changed, 5 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> index ea65bac..674f7fe 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -308,6 +308,11 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
->   	priv->reg = reg;
->   	priv->dev = &pdev->dev;
->
-> +	if (priv->irq < 0) {
-> +		dev_err(&pdev->dev, "no valid irq found\n");
-> +		return priv->irq;
-> +	}
-> +
->   	return rcar_pci_add_controller(priv);
->   }
->
->
+> Thanks,
+> -Chunhe
+> 
+> >>   	 * only ISA DMA device we support is the floppy and we have a hack
+> >>   	 * in the floppy driver directly to get a device for us.
+> >>   	 */
+> >> -	if (unlikely(dev == NULL))
+> >> -		return NULL;
+> >> -
+> >> -	return dev->archdata.dma_ops;
+> >> +	if (dev && dev->archdata.dma_ops)
+> >> +		return dev->archdata.dma_ops;
+> >> +	/*
+> >> +	 * In some cases (for example, use the Intel(R) 10 Gigabit PCI
+> >> +	 * expression Virtual Function Network Driver -- ixgbevf.ko),
+> >> +	 * their value of dev is the NULL. If return NULL, the driver is
+> >> +	 * aborting. So return dma_direct_ops variable when dev == NULL.
+> >> +	 */
+> >> +	return &dma_direct_ops;
+> >>   }
+> >>   
+> >>   static inline void set_dma_ops(struct device *dev, struct dma_map_ops *ops)
+> >
+> >
+> >
+> 
+> 
+
 
