@@ -1,67 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2lp0209.outbound.protection.outlook.com ([207.46.163.209]:42133
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753170AbaAGIeF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 03:34:05 -0500
-Message-ID: <1389083623.11795.162.camel@snotra.buserror.net>
-Subject: Re: [02/12,v3] pci: fsl: add structure fsl_pci
-From: Scott Wood <scottwood@freescale.com>
-To: Lian Minghuan-b31939 <b31939@freescale.com>
-CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 Jan 2014 02:33:43 -0600
-In-Reply-To: <52CA48C0.2020307@freescale.com>
-References: <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com>
-	 <20140103221923.GB22546@home.buserror.net> <52CA48C0.2020307@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:62411 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754AbaAOJKr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 04:10:47 -0500
+Received: by mail-lb0-f178.google.com with SMTP id u14so548718lbd.23
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2014 01:10:46 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAE9FiQU=4qABcZLJzF13aYSmzryB1=WkO+NYvs0LTj9Kt_1ajA@mail.gmail.com>
+References: <52CBC4D1.5080706@gmail.com>
+	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>
+	<52CD2387.2030403@gmail.com>
+	<CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>
+	<52CE301E.60108@gmail.com>
+	<CAE9FiQWxpRMX-0vyd5hML-Hnto8H+C83dcne9FBZcN9qsmGCEw@mail.gmail.com>
+	<52CF7A17.60703@gmail.com>
+	<CAE9FiQVPtNk2LN4TVMzXX72TN8bjDTyD74y_BH05rfw=NArD3Q@mail.gmail.com>
+	<52D102EF.5070303@gmail.com>
+	<CAE9FiQU=4qABcZLJzF13aYSmzryB1=WkO+NYvs0LTj9Kt_1ajA@mail.gmail.com>
+Date: Wed, 15 Jan 2014 13:10:46 +0400
+Message-ID: <CAA__XvTqOtfqzFAdSuUBdr-YAe5SxhUg_FPXr3xvibio_CqbXg@mail.gmail.com>
+Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port range.
+From: "`VL" <vl.homutov@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-01-06 at 14:10 +0800, Lian Minghuan-b31939 wrote:
-> On 01/04/2014 06:19 AM, Scott Wood wrote:
-> > I don't like the extent to which this duplicates (not moves) PPC's struct
-> > pci_controller.  Also this leaves some fields like "indirect_type"
-> > unexplained (PPC_INDIRECT_TYPE_xxx is only in the PPC header).
-> >
-> > Does the arch-independent part of the driver really need all this?  Given
-> > how closely this tracks the PPC code, how would this work on ARM?
-> [Minghuan] I added the duplicate fields because PPC's struct 
-> pci_controller need them.
+> looks like the your adapter need more time to settle down?
+> Can you check if you can enable slow boot mode in BIOS setup?
 
-I think a better approach would be to create a cleanly architected
-arch-independent driver.  Share what you reasonably can with the current
-fsl_pci.c, but not to the extent of propagating PPCisms that don't match
-up with what we ultimately want to see in generic code, or copying
-things that ought to be controller-independent infrastructure into
-controller-specific code.
+yes, probably. I'll try to repeat steps with disabled fast boot.
 
-See these threads:
-http://www.spinics.net/lists/linux-pci/msg25769.html
-https://lkml.org/lkml/2013/5/4/103
+> looks like that server is down.
 
-> The following is for ARM, I will submit them after verification:
-[snip]
-> +static int fsl_pcie_register(struct fsl_pcie *pcie)
-> +{
-> +    pcie->controller = fsl_hw_pcie.nr_controllers;
-> +    fsl_hw_pcie.nr_controllers = 1;
-> +    fsl_hw_pcie.private_data = (void **)&pcie;
+should be up now
 
-I believe this should be:
-	fsl_hw_pcie.private_data = pcie;
-
-> +    pci_common_init(&fsl_hw_pcie);
-> +    pci_assign_unassigned_resources();
-> +#ifdef CONFIG_PCI_DOMAINS
-> +    fsl_hw_pcie.domain++;
-> +#endif
-
-What serializes that non-atomic increment?
-
--Scott
-
-
+On Tue, Jan 14, 2014 at 11:31 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Jan 11, 2014 at 12:38 AM, `VL <vl.homutov@gmail.com> wrote:
+>>> there is no 07:00.0 in the print out.
+>>
+>> Well, so it looks like procedure, doing earlydump somehow misses this
+>> device.
+>> I have collected one more log (without pci=realloc but with debug) so I'm
+>> pretty sure
+>> that device is there (it appears later in dmesg output) but still not shown
+>> in earlydump -
+>> it shows 00:06, then 00:09.
+>
+> looks like the your adapter need more time to settle down?
+>
+> Can you check if you can enable slow boot mode in BIOS setup?
+>
+>>
+>> http://inspert.ru/pci/dmesg-earlydump.txt
+>
+> looks like that server is down.
+>
+>>
+>> First messages about 00:07 are:
+>>
+>> [    0.402838] pci 0000:07:00.0: [1412:1712] type 00 class 0x040100
+>> [    0.403042] pci 0000:07:00.0: reg 0x10: [io  0x0000-0x001f]
+>> [    0.403230] pci 0000:07:00.0: reg 0x14: [io  0x0000-0x000f]
+>> [    0.403418] pci 0000:07:00.0: reg 0x18: [io  0x0000-0x000f]
+>> [    0.403607] pci 0000:07:00.0: reg 0x1c: [io  0x0000-0x003f]
+>> [    0.403888] pci 0000:07:00.0: supports D2,
+>>
