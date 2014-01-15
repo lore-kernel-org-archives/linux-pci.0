@@ -1,110 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
-Date: Fri, 3 Jan 2014 10:49:20 +0100
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	patches@apm.com, linux-kernel@vger.kernel.org, jcm@redhat.com
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com> <1387785725-24262-4-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1387785725-24262-4-git-send-email-tinamdar@apm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db8lp0188.outbound.messaging.microsoft.com ([213.199.154.188]:42753
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752254AbaAOQHO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 11:07:14 -0500
+From: Guenter Roeck <groeck@juniper.net>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Rajat Jain <rajatjain@juniper.net>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: User initiated hotplug and kernel initiated hotplug - where is
+ the synchronization?
+Date: Wed, 15 Jan 2014 16:07:02 +0000
+Message-ID: <83e67f7228074cf2a07e2fab275f55bc@CO1PR05MB523.namprd05.prod.outlook.com>
+References: <635a0ddff97142e2a06f9bd9c3428d01@DM2PR05MB671.namprd05.prod.outlook.com>
+ <18064064.UldA0zYdyf@vostro.rjw.lan>
+In-Reply-To: <18064064.UldA0zYdyf@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201401031049.20932.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 23 December 2013, Tanmay Inamdar wrote:
-> This patch adds the bindings for X-Gene PCIe driver. The driver resides
-> under 'drivers/pci/host/pcie-xgene.c' file.
-> 
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  .../devicetree/bindings/pci/xgene-pcie.txt         |   43 ++++++++++++++++++++
->  1 file changed, 43 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/xgene-pcie.txt b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
-> new file mode 100644
-> index 0000000..d92da4f
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
-> @@ -0,0 +1,43 @@
-> +* AppliedMicro X-Gene PCIe interface
-> +
-> +Required properties:
-> +- status: Either "ok" or "disabled".
-> +- device_type: set to "pci"
-> +- compatible: should contain "xgene,pcie" to identify the core.
-> +- reg: base addresses and lengths of the pcie controller configuration
-> +	space register.
-> +- #address-cells: set to <3>
-> +- #size-cells: set to <2>
-> +- ranges: ranges for the PCI memory, I/O regions, config and MSI regions
-> +- #interrupt-cells: set to <1>
-> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> +	to define the mapping of the PCIe interface to interrupt
-> +	numbers.
-> +- clocks: from common clock binding: handle to pci clock.
-> +- clock-names: from common clock binding. Should be "pcieclk".
-> +
+DQo+IA0KPiA+IEkgaGF2ZSB0aGlzIGRvdWJ0IGxpbmdlcmluZyBvbiwgYW5kIEknZCBhcHByZWNp
+YXRlIGlmIHNvbWUgb25lIGNvdWxkDQo+IHRocm93IGxpZ2h0IG9uIHRoaXM6DQo+ID4NCj4gPiBU
+aGUga2VybmVsIGhvdHBsdWcgZHJpdmVyIHBjaWVocCBjYW4gaW5pdGlhdGUgaG90cGx1ZyBiYXNl
+ZCBvbiB3aGF0DQo+IGl0IHNlbnNlcyBmcm9tIHRoZSBIVyAoYnV0dG9uIHByZXNzIGV0YykuDQo+
+ID4NCj4gPiBUaGUgdXNlciBzcGFjZSBjYW4gYWxzbyBpbml0aWF0ZSB0aGUgc2FtZSBvcGVyYXRp
+b25zIGJ5IHVzaW5nDQo+ICJyZXNjYW4iIG9yICJyZW1vdmUiIGF0dHJpYnV0ZXMgaW4gc3lzZnMu
+DQo+ID4NCj4gPiBNeSBxdWVzdGlvbnM6DQo+ID4NCj4gPiAxKSBJcyBpdCBzYWZlIHRvIG1peCB0
+aGUgYWJvdmUgdHdvPw0KPiANCj4gTm90IHJpZ2h0IG5vdywgYnV0IHdpdGggdGhlc2UgcGF0Y2hl
+cyBhcHBsaWVkOg0KPiANCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8zNDY2
+NTUxLw0KPiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzM0NjY1ODEvDQo+IGh0
+dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMzQ2NjYwMS8NCj4gaHR0cHM6Ly9wYXRj
+aHdvcmsua2VybmVsLm9yZy9wYXRjaC8zNDY2NTkxLw0KPiBodHRwczovL3BhdGNod29yay5rZXJu
+ZWwub3JnL3BhdGNoLzM0NjY2MzEvDQo+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0
+Y2gvMzQ2NjY0MS8NCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8zNDY2NjUx
+Lw0KPiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzM0OTE4MTEvDQo+IGh0dHBz
+Oi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMzQ2NjQ5MS8NCj4gaHR0cHM6Ly9wYXRjaHdv
+cmsua2VybmVsLm9yZy9wYXRjaC8zNDczMzQxLw0KPiANCj4gaXQgc2hvdWxkIGJlLg0KPiANCg0K
+SGkgUmFmYWVsLA0KDQphbnkgaWRlYSB3aGVuIHRob3NlIHBhdGNoZXMgd2lsbCBzaG93IHVwIGlu
+IHRoZSB1cHN0cmVhbSBrZXJuZWwgPw0KDQpUaGFua3MsDQpHdWVudGVyDQoNCg==
 
-Better use an anonymous clock?
-
-The driver also seems to use a phy that is not defined here.
-
-> +Example:
-> +
-> +SoC specific DT Entry:
-> +	pcie0: pcie@1f2b0000 {
-> +		status = "disabled";
-> +		device_type = "pci";
-> +		compatible = "xgene,pcie";
-> +		#interrupt-cells = <1>;
-> +		#size-cells = <2>;
-> +		#address-cells = <3>;
-> +		reg = < 0x00 0x1f2b0000 0x0 0x00010000>;
-> +		ranges = <0x02000000 0x0 0x00000000 0xe0 0x00000000 0x0 0x10000000 /* mem*/
-
-This is an awfully small memory space for a 64 bit machine. Is that a hardware bug you
-are working around? If not, please make it as large as you can to allow for arbitrary
-extension cards with large BARs, at least 4GB.
-
-Also, do you support no prefetchable memory?
-
-> +			  0x01000000 0x0 0x80000000 0xe0 0x80000000 0x0 0x00010000 /* io */
-
-I/O space at 0x80000000? That won't work with a lot of devices. Can you make it start
-at bus address 0?
-
-> +			  0x00000000 0x0 0xd0000000 0xe0 0xd0000000 0x0 0x00200000 /* cfg */
-
-config space is not normally in the ranges property, and I think you will need
-it in the pcie node itself as a 'reg' property so the code can access it.
-
-> +			  0x00000000 0x0 0x79000000 0x00 0x79000000 0x0 0x00800000>; /* msi */
-
-Same here. Also I suspect this is a separate irqchip that isn't actually part
-of the PCIe host. If they are separate devices, I'd strongly recommend modeling
-them as separate device-nodes in DT to make reuse easier.
-
-> +		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-> +		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1>;
-
-Only one IRQ for all devices?
-
-> +		clocks = <&pcie0clk 0>;
-> +		clock-names = "pcieclk"
-> +	};
-> +
-> +Board specific DT Entry:
-> +	&pcie0 {
-> +		status = "ok";
-> +	};
-
-	Arnd
