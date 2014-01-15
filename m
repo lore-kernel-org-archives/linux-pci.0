@@ -1,59 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:65022 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752873AbaA3NpD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 08:45:03 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [PATCH V3 7/8] pcie: SPEAr13xx: Add designware pcie support
-Date: Thu, 30 Jan 2014 14:44:57 +0100
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Viresh Kumar <viresh.linux@gmail.com>, spear-devel@list.st.com,
-	linux-pci@vger.kernel.org
-References: <cover.1391077731.git.mohit.kumar@st.com> <1c7f0dd04e9af55886dc74789bfcf92ce900e131.1391077731.git.mohit.kumar@st.com> <201401301434.20188.arnd@arndb.de>
-In-Reply-To: <201401301434.20188.arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:51224 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751214AbaAODpR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jan 2014 22:45:17 -0500
+Subject: [PATCH v2] vfio-pci: Use pci "try" reset interface
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, alex.williamson@redhat.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org
+Date: Tue, 14 Jan 2014 20:45:09 -0700
+Message-ID: <20140115033854.18253.62934.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201401301444.57541.arnd@arndb.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 30 January 2014, Arnd Bergmann wrote:
-> > +             pcie0: pcie@b1000000 {
-> > +                     compatible = "st,spear1340-pcie", "snps,dw-pcie";
-> > +                     reg = <0xb1000000 0x4000>;
-> > +                     interrupts = <0 68 0x4>;
-> > +                     pcie_is_gen1 = <0>;
-> > +                     num-lanes = <1>;
-> > +                     phys = <&miphy0 1 0>;
-> > +                     phy-names = "pcie-phy";
-> > +                     #address-cells = <3>;
-> > +                     #size-cells = <2>;
-> > +                     device_type = "pci";
-> > +                     ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
-> > +                             0x81000000 0 0   0x80020000 0 0x00010000   /* downstream I/O */
-> > +                             0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
-> > +                     status = "disabled";
-> > +             };
-> 
-> Shouldn't there be more than one interrupt? Normally each root port has
-> four legacy IRQs, in order to support bridge devices.
-> 
+PCI resets will attempt to take the device_lock for any device to be
+reset.  This is a problem if that lock is already held, for instance
+in the device remove path.  It's not sufficient to simply kill the
+user process or skip the reset if called after .remove as a race could
+result in the same deadlock.  Instead, we handle all resets as "best
+effort" using the PCI "try" reset interfaces.  This prevents the user
+from being able to induce a deadlock by triggering a reset.
 
-Sorry, my mistake: I was thinking of the interrupt map for legacy IRQs.
-The interrupt here is used only for the integrated MSI controller, right?
-That seems fine from the DT bindings perspective but raises two other
-questions:
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-1. Are you not lacking an interrupt-map property to enable legacy IntA
-   IRQs?
+v2: Update error message to make it clear that device reset failed
+    and change back to pr_warn to make sure it's visible.  I'll
+    address whether dev_warn would be more appropriate in future
+    updates.
 
-2. If the MSI controller is integrated in the pcie host controller,
-   does that maintain the PCIe ordering guarantees between inbound
-   DMA and MSI, or is it possible that the <0 68 0x4> IRQ gets
-   raised at the CPU before the the DMA transfer becomes visible to
-   the CPU in main memory?
+Bjorn, if this looks good and you don't mind, please take this in
+through your tree so that it syncs with the introduction of the
+pci_try_reset interfaces.  Thanks!
 
-	Arnd
+ drivers/vfio/pci/vfio_pci.c |   29 +++++++++--------------------
+ 1 file changed, 9 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 6ab71b9..2319d20 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -139,25 +139,14 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 	pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
+ 
+ 	/*
+-	 * Careful, device_lock may already be held.  This is the case if
+-	 * a driver unbind is blocked.  Try to get the locks ourselves to
+-	 * prevent a deadlock.
++	 * Try to reset the device.  The success of this is dependent on
++	 * being able to lock the device, which is not always possible.
+ 	 */
+ 	if (vdev->reset_works) {
+-		bool reset_done = false;
+-
+-		if (pci_cfg_access_trylock(pdev)) {
+-			if (device_trylock(&pdev->dev)) {
+-				__pci_reset_function_locked(pdev);
+-				reset_done = true;
+-				device_unlock(&pdev->dev);
+-			}
+-			pci_cfg_access_unlock(pdev);
+-		}
+-
+-		if (!reset_done)
+-			pr_warn("%s: Unable to acquire locks for reset of %s\n",
+-				__func__, dev_name(&pdev->dev));
++		int ret = pci_try_reset_function(pdev);
++		if (ret)
++			pr_warn("%s: Failed to reset device %s (%d)\n",
++				__func__, dev_name(&pdev->dev), ret);
+ 	}
+ 
+ 	pci_restore_state(pdev);
+@@ -514,7 +503,7 @@ static long vfio_pci_ioctl(void *device_data,
+ 
+ 	} else if (cmd == VFIO_DEVICE_RESET) {
+ 		return vdev->reset_works ?
+-			pci_reset_function(vdev->pdev) : -EINVAL;
++			pci_try_reset_function(vdev->pdev) : -EINVAL;
+ 
+ 	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
+ 		struct vfio_pci_hot_reset_info hdr;
+@@ -684,8 +673,8 @@ reset_info_exit:
+ 						    &info, slot);
+ 		if (!ret)
+ 			/* User has access, do the reset */
+-			ret = slot ? pci_reset_slot(vdev->pdev->slot) :
+-				     pci_reset_bus(vdev->pdev->bus);
++			ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
++				     pci_try_reset_bus(vdev->pdev->bus);
+ 
+ hot_reset_release:
+ 		for (i--; i >= 0; i--)
+
