@@ -1,60 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:28563 "EHLO mga14.intel.com"
+Received: from gir.skynet.ie ([193.1.99.77]:49619 "EHLO gir.skynet.ie"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752767AbaAFGSW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:18:22 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
+	id S1750718AbaAOFOJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jan 2014 00:14:09 -0500
+Date: Wed, 15 Jan 2014 05:14:04 +0000 (GMT)
+From: Dave Airlie <airlied@linux.ie>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiri Kosina <trivial@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 06/20] iommu/vt-d, trivial: print correct domain id of static identity domain
-Date: Mon,  6 Jan 2014 14:18:13 +0800
-Message-Id: <1388989107-4795-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 00/15] PCI: Allocate 64-bit BARs above 4G when
+ possible
+In-Reply-To: <20140110213402.GB25635@google.com>
+Message-ID: <alpine.DEB.2.00.1401150513400.3314@skynet.skynet.ie>
+References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140110213402.GB25635@google.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Field si_domain->id is set by iommu_attach_domain(), so we should only
-print domain id for static identity domain after calling
-iommu_attach_domain(si_domain, iommu), otherwise it's always zero.
+> 
+> I added Daniel's Reviewed-by to the AGP patches (except the trivial
+> PCI_COMMAND change in ati_configure()).
+> 
+> I added the incremental patch below to fix these warnings found by
+> Fengguang's autobuilder in the original b1e0e392f5dd commit:
+> 
+>   drivers/char/agp/amd-k7-agp.c:115:38: warning: 'addr' may be used uninitialized in this function [-Wmaybe-uninitialized]
+>   drivers/pci/bus.c:105:5: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+> 
+> Finally, I merged the pci/resource branch with these changes into my "next"
+> branch, so it should appear in v3.14-rc1.
+> 
+> Dave, let me know if you have any issue with these AGP changes going
+> through my tree.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+None, all fine by me.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index b2e73c2..3a0cf5d 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -2248,8 +2248,6 @@ static int __init si_domain_init(int hw)
- 	if (!si_domain)
- 		return -EFAULT;
- 
--	pr_debug("Identity mapping domain is domain %d\n", si_domain->id);
--
- 	for_each_active_iommu(iommu, drhd) {
- 		ret = iommu_attach_domain(si_domain, iommu);
- 		if (ret) {
-@@ -2264,6 +2262,8 @@ static int __init si_domain_init(int hw)
- 	}
- 
- 	si_domain->flags = DOMAIN_FLAG_STATIC_IDENTITY;
-+	pr_debug("IOMMU: identity mapping domain is domain %d\n",
-+		 si_domain->id);
- 
- 	if (hw)
- 		return 0;
--- 
-1.7.10.4
+Acked-by: Dave Airlie <airlied@linux.ie>
 
+Dave.
+> 
+> Bjorn
+> 
+> 
+> diff --git a/drivers/char/agp/amd-k7-agp.c b/drivers/char/agp/amd-k7-agp.c
+> index e8c2e9167e89..3661a51e93e2 100644
+> --- a/drivers/char/agp/amd-k7-agp.c
+> +++ b/drivers/char/agp/amd-k7-agp.c
+> @@ -148,8 +148,8 @@ static int amd_create_gatt_table(struct agp_bridge_data *bridge)
+>  	 * used to program the agp master not the cpu
+>  	 */
+>  
+> -	agp_bridge->gart_bus_addr = pci_bus_address(agp_bridge->dev,
+> -						    AGP_APERTURE_BAR);
+> +	addr = pci_bus_address(agp_bridge->dev, AGP_APERTURE_BAR);
+> +	agp_bridge->gart_bus_addr = addr;
+>  
+>  	/* Calculate the agp offset */
+>  	for (i = 0; i < value->num_entries / 1024; i++, addr += 0x00400000) {
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 107ad9a5b8aa..86fb8ec5e448 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -99,10 +99,12 @@ void pci_bus_remove_resources(struct pci_bus *bus)
+>  }
+>  
+>  static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
+> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>  static struct pci_bus_region pci_64_bit = {0,
+> -				(resource_size_t) 0xffffffffffffffffULL};
+> -static struct pci_bus_region pci_high = {(resource_size_t) 0x100000000ULL,
+> -				(resource_size_t) 0xffffffffffffffffULL};
+> +				(dma_addr_t) 0xffffffffffffffffULL};
+> +static struct pci_bus_region pci_high = {(dma_addr_t) 0x100000000ULL,
+> +				(dma_addr_t) 0xffffffffffffffffULL};
+> +#endif
+>  
+>  /*
+>   * @res contains CPU addresses.  Clip it so the corresponding bus addresses
+> @@ -207,6 +209,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+>  					  resource_size_t),
+>  		void *alignf_data)
+>  {
+> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>  	int rc;
+>  
+>  	if (res->flags & IORESOURCE_MEM_64) {
+> @@ -220,6 +223,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+>  						 type_mask, alignf, alignf_data,
+>  						 &pci_64_bit);
+>  	}
+> +#endif
+>  
+>  	return pci_bus_alloc_from_region(bus, res, size, align, min,
+>  					 type_mask, alignf, alignf_data,
+> 
+> 
