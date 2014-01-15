@@ -1,59 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1390272375-28728-1-git-send-email-wangyijing@huawei.com>
-References: <1390272375-28728-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Jan 2014 14:37:45 -0700
-Message-ID: <CAErSpo4_VCVHcq2cs_HP-_0kFSnUWsxsr6Y1iiR==3XLNaVc2w@mail.gmail.com>
-Subject: Re: [PATCH v4] ACPI: Fix acpi_evaluate_object() return value check
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	David Airlie <airlied@linux.ie>,
-	intel-gfx@lists.freedesktop.org,
-	DRI mailing list <dri-devel@lists.freedesktop.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:57112 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751684AbaAONWh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 08:22:37 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: [Update][PATCH 8/9] powerpc / eeh_driver: Use global PCI rescan-remove locking
+Date: Wed, 15 Jan 2014 14:36:36 +0100
+Message-ID: <1476201.kR505WbUas@vostro.rjw.lan>
+In-Reply-To: <4447911.Q1f9tEzrXs@vostro.rjw.lan>
+References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <20440867.YaQfKrcfsQ@vostro.rjw.lan> <4447911.Q1f9tEzrXs@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 20, 2014 at 7:46 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Since acpi_evaluate_object() returns acpi_status and not plain int,
-> ACPI_FAILURE() should be used for checking its return value.
->
-> Reviewed-by: Jani Nikula <jani.nikula@intel.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
-> v3->v4: Fix spell error, add Jani Nikula reviewed-by.
-> v2->v3: Fix compile error pointed out by Hanjun.
-> v1->v2: Add CC to related subsystem MAINTAINERS
-> ---
->  drivers/gpu/drm/i915/intel_acpi.c              |   24 ++++++++++++++----------
->  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    9 +++++----
->  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   23 +++++++++++++----------
->  drivers/pci/pci-label.c                        |    9 ++++++---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: powerpc / eeh_driver: Use global PCI rescan-remove locking
 
-For the drivers/pci/pci-label.c part,
+Race conditions are theoretically possible between the PCI device
+addition and removal in the PPC64 PCI error recovery driver and
+the generic PCI bus rescan and device removal that can be triggered
+via sysfs.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+To avoid those race conditions make PPC64 PCI error recovery driver
+use global PCI rescan-remove locking around PCI device addition and
+removal.
 
-> +       status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> +       if (ACPI_FAILURE(status)) {
-> +               DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
-> +                               acpi_format_exception(status));
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-It's too bad there isn't an easy way to produce more informative error
-messages, e.g., by including a namespace path or something.  A message
-like:
+The previous version had wrong function names in the last hunk, sorry about
+that.
 
-    failed to evaluate _DSM: A requested entity is not found
+Rafael
 
-is only useful if there's enough context to figure out what's going on.
+---
+ arch/powerpc/kernel/eeh_driver.c |   19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
 
-Bjorn
+Index: linux-pm/arch/powerpc/kernel/eeh_driver.c
+===================================================================
+--- linux-pm.orig/arch/powerpc/kernel/eeh_driver.c
++++ linux-pm/arch/powerpc/kernel/eeh_driver.c
+@@ -369,7 +369,9 @@ static void *eeh_rmv_device(void *data,
+ 	edev->mode |= EEH_DEV_DISCONNECTED;
+ 	(*removed)++;
+ 
++	pci_lock_rescan_remove();
+ 	pci_stop_and_remove_bus_device(dev);
++	pci_unlock_rescan_remove();
+ 
+ 	return NULL;
+ }
+@@ -416,10 +418,13 @@ static int eeh_reset_device(struct eeh_p
+ 	 * into pcibios_add_pci_devices().
+ 	 */
+ 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+-	if (bus)
++	if (bus) {
++		pci_lock_rescan_remove();
+ 		pcibios_remove_pci_devices(bus);
+-	else if (frozen_bus)
++		pci_unlock_rescan_remove();
++	} else if (frozen_bus) {
+ 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
++	}
+ 
+ 	/* Reset the pci controller. (Asserts RST#; resets config space).
+ 	 * Reconfigure bridges and devices. Don't try to bring the system
+@@ -429,6 +434,8 @@ static int eeh_reset_device(struct eeh_p
+ 	if (rc)
+ 		return rc;
+ 
++	pci_lock_rescan_remove();
++
+ 	/* Restore PE */
+ 	eeh_ops->configure_bridge(pe);
+ 	eeh_pe_restore_bars(pe);
+@@ -462,6 +469,7 @@ static int eeh_reset_device(struct eeh_p
+ 	pe->tstamp = tstamp;
+ 	pe->freeze_count = cnt;
+ 
++	pci_unlock_rescan_remove();
+ 	return 0;
+ }
+ 
+@@ -618,8 +626,11 @@ perm_error:
+ 	eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
+ 
+ 	/* Shut down the device drivers for good. */
+-	if (frozen_bus)
++	if (frozen_bus) {
++		pci_lock_rescan_remove();
+ 		pcibios_remove_pci_devices(frozen_bus);
++		pci_unlock_rescan_remove();
++	}
+ }
+ 
+ static void eeh_handle_special_event(void)
+@@ -692,6 +703,7 @@ static void eeh_handle_special_event(voi
+ 	if (rc == 2 || rc == 1)
+ 		eeh_handle_normal_event(pe);
+ 	else {
++		pci_lock_rescan_remove();
+ 		list_for_each_entry_safe(hose, tmp,
+ 			&hose_list, list_node) {
+ 			phb_pe = eeh_phb_pe_get(hose);
+@@ -703,6 +715,7 @@ static void eeh_handle_special_event(voi
+ 			eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
+ 			pcibios_remove_pci_devices(bus);
+ 		}
++		pci_unlock_rescan_remove();
+ 	}
+ }
+ 
+
