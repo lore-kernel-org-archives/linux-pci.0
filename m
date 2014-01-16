@@ -1,49 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH 0/5][RFT] ACPI / hotplug / PCI: Consolidation of ACPIPHP with ACPI core device hotplug
-Date: Wed, 29 Jan 2014 00:57:06 +0100
-Message-ID: <1693151.2qrLZHyp0o@vostro.rjw.lan>
-In-Reply-To: <1508034.JFmpIOzjVZ@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:48323 "EHLO
+	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751414AbaAPJTx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 04:19:53 -0500
+Date: Thu, 16 Jan 2014 14:49:08 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	spear-devel <spear-devel@list.st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>
+Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header
+ file
+Message-ID: <20140116091908.GC2290@pratyush-vbox>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <201312112348.06755.arnd@arndb.de>
+ <2CC2A0A4A178534D93D5159BF3BCB66189F95F669D@EAPEX1MAIL1.st.com>
+ <201312142002.38423.arnd@arndb.de>
+ <2CC2A0A4A178534D93D5159BF3BCB66189FBE8D5D6@EAPEX1MAIL1.st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189FBE8D5D6@EAPEX1MAIL1.st.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 28, 2014 11:10:30 PM Rafael J. Wysocki wrote:
-> Hi All,
+On Thu, Jan 16, 2014 at 03:25:41PM +0800, Mohit KUMAR DCG wrote:
+> Hi Arnd,
 > 
-> It looks like there's time for more adventurous stuff. :-)
 > 
-> The following series is on top of the one I sent on Sunday:
+> > -----Original Message-----
+> > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > Sent: Sunday, December 15, 2013 12:33 AM
+> > To: Mohit KUMAR DCG
+> > Cc: linux-arm-kernel@lists.infradead.org; linux-pci@vger.kernel.org;
+> > Pratyush ANAND; spear-devel; Viresh Kumar
+> > Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to
+> > header file
+> > 
+> > On Friday 13 December 2013, Mohit KUMAR DCG wrote:
+> > > > The RST bits should probably go into a drivers/reset driver. Not
+> > > > sure what the other registers do, but I'm sure we can find a driver
+> > > > for these too, possibly they should be part of the PHY driver?
+> > >
+> > > -  Perhaps if we implement phy and reset driver then we may not
+> > > require to move these definitions and it will address most of your
+> > > comments on SPEar13xx pcie driver. I am understanding and working on
+> > > this.l
+> > >
 > 
-> https://lkml.org/lkml/2014/1/26/191
+> Though we are almost ready with v2. But few concerns:
 > 
-> The final outcome of the patches below is that all ACPI hotplug notifications
-> for PCI devices and for core system things like CPU, memory, PCI roots etc.,
-> will be dispatched from acpi_bus_notify() and it is not necessary to install a
-> separate hotplug notify handler for each device any more.
+> There are Spear soc common register used for misc configurations of clock, reset etc  for all ips.  Few of 
+> registers from the same area are also used for pcie/sata muxing and auxiliary clock configurations.
+> For example: sata_miphy_init in arch/arm/mach-spear/spear1340.c also uses these registers.
 > 
-> [1/5] Attach ACPIPHP hotplug contexts to struct acpi_device objects.
-> [2/5] Introduce wrappers for installing and removing hotplug notify handlers
->       (those wrappers go away later on, but they are useful for separating
->        changes).
-> [3/5] Consolidate ACPI hotplug signaling for PCI and ACPI core.
-> [4/5] Simplify notify handle registration wrapper.
-> [5/5] Dispatch ACPI hotplug notifications for "core" devices and PCI from acpi_bus_notify().
+> We have moved all these sata specific spear1340 configurations in a separate driver.  On the basis of spear-ahci dt 
+> Node this driver's probe is called, which further adds ahci platform driver.
+> We plan to put all spear1340/1310_pcie_miphy_init/exit functions of patch 9/12 of this series in
+> The same driver.
+> 
+> Now our concern is, what could be the best place to keep that driver, phy, reset or any other framework?
+> Or we keep this new driver in arch/arm/mach-spear only.
 
-Unfortunately, I realized that patches [3-5/5] were buggy.  The bugs were
-kind of subtle and might not be easy to reproduce, but they were bugs anyway. :-)
+I think this misc configuration register block resource should be
+passed to syscon (drivers/mfd/syscon.c) driver.
 
-A respin of the whole series follows.
+regmap_update_bits should be used to update these registers and hence
+to configure pcie/sata settings.
 
-Thanks!
+As far as place is concerned, that can be kept into mfd and can be
+named as spear13xx-syscon.c
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Whats your opinion arnd?
+
+Regards
+Pratyush
+
+> 
+> Regards
+> Mohit
+> 
+> > 
+> > Ok, very good.
+> > 
+> > 	Arnd
