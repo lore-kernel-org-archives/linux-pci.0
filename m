@@ -1,102 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47957 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753782AbaA3SiJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Jan 2014 13:38:09 -0500
-Message-ID: <1391107087.6959.79.camel@bling.home>
-Subject: Re: [PATCH] vfio: Set PCI_DEV_FLAGS_ASSIGNED when assigning device
- to guest
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bandan Das <bsd@redhat.com>
-Cc: kvm@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>
-Date: Thu, 30 Jan 2014 11:38:07 -0700
-In-Reply-To: <jpg7g9hl4yg.fsf@redhat.com>
-References: <jpgeh3ppelz.fsf@redhat.com>
-	 <1391103225.6959.71.camel@bling.home> <1391103376.6959.72.camel@bling.home>
-	 <jpg7g9hl4yg.fsf@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eu1sys200aog123.obsmtp.com ([207.126.144.155]:41720 "EHLO
+	eu1sys200aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750910AbaAPH0R convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Jan 2014 02:26:17 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	spear-devel <spear-devel@list.st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>
+Date: Thu, 16 Jan 2014 15:25:41 +0800
+Subject: RE: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header
+ file
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FBE8D5D6@EAPEX1MAIL1.st.com>
+References: <cover.1386752447.git.mohit.kumar@st.com>
+ <201312112348.06755.arnd@arndb.de>
+ <2CC2A0A4A178534D93D5159BF3BCB66189F95F669D@EAPEX1MAIL1.st.com>
+ <201312142002.38423.arnd@arndb.de>
+In-Reply-To: <201312142002.38423.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-01-30 at 23:36 +0530, Bandan Das wrote:
-> Alex Williamson <alex.williamson@redhat.com> writes:
+Hi Arnd,
+
+
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Sunday, December 15, 2013 12:33 AM
+> To: Mohit KUMAR DCG
+> Cc: linux-arm-kernel@lists.infradead.org; linux-pci@vger.kernel.org;
+> Pratyush ANAND; spear-devel; Viresh Kumar
+> Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to
+> header file
 > 
-> > [cc +linux-pci]
+> On Friday 13 December 2013, Mohit KUMAR DCG wrote:
+> > > The RST bits should probably go into a drivers/reset driver. Not
+> > > sure what the other registers do, but I'm sure we can find a driver
+> > > for these too, possibly they should be part of the PHY driver?
 > >
-> > On Thu, 2014-01-30 at 10:33 -0700, Alex Williamson wrote:
-> >> On Thu, 2014-01-30 at 22:54 +0530, Bandan Das wrote:
-> >> > Some drivers such as ixgbe rely on pci_vfs_assigned() to prevent
-> >> > disabling sr-iov when vfs are still assigned during hotplug
-> >> > event or module removal. Set and unset PCI_DEV_FLAGS_ASSIGNED
-> >> > appropriately
-> >> 
-> >> This flag has always felt like a band-aide for KVM device assignment
-> >> because a device could be used without an actual driver attached to the
-> >> device.  vfio-pci is an actual driver, so why should it matter whether
-> >> the device is assigned or in use by ixgbevf or in use by pci-vfio?  It
-> >> seems like sr-iov shouldn't be disabled so long as either a driver or
-> >> this (needs to be deprecated) flag are set.  Thanks,
+> > -  Perhaps if we implement phy and reset driver then we may not
+> > require to move these definitions and it will address most of your
+> > comments on SPEar13xx pcie driver. I am understanding and working on
+> > this.l
+> >
+
+Though we are almost ready with v2. But few concerns:
+
+There are Spear soc common register used for misc configurations of clock, reset etc  for all ips.  Few of 
+registers from the same area are also used for pcie/sata muxing and auxiliary clock configurations.
+For example: sata_miphy_init in arch/arm/mach-spear/spear1340.c also uses these registers.
+
+We have moved all these sata specific spear1340 configurations in a separate driver.  On the basis of spear-ahci dt 
+Node this driver's probe is called, which further adds ahci platform driver.
+We plan to put all spear1340/1310_pcie_miphy_init/exit functions of patch 9/12 of this series in
+The same driver.
+
+Now our concern is, what could be the best place to keep that driver, phy, reset or any other framework?
+Or we keep this new driver in arch/arm/mach-spear only.
+
+Regards
+Mohit
+
 > 
-> With cases such as vfio-pci, not having this flag set will disable sriov
-> while a guest is using it resulting in a hung guest.
-
-That sounds like a bug, why would a PF disable sr-iov while there's
-still a driver attached to the VF?  Is the PF assuming the driver can
-reconnect to the VF later or continue w/o a VF?  How can it make such an
-assumption?
-
->  I am unfamiliar if 
-> similar scenarios are applicable to other test cases. If the flag needs
-> to be set, what's a better place then ? Or how does the PF driver decide not 
-> to disable sr-iov, should it be based on - as long as the device is bound to 
-> a driver ?
-
-It seems like a better approach would be for drivers that are capable of
-having the VF removed from under them to set a flag, which would allow
-the PF driver to be told rather than assume it can disable sr-iov.  Then
-it would be a feature flag rather than some made-up association with
-device assignment.  Thanks,
-
-Alex
-
-> >> > ---
-> >> >  drivers/vfio/pci/vfio_pci.c | 2 ++
-> >> >  1 file changed, 2 insertions(+)
-> >> > 
-> >> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> >> > index 7ba0424..7cc7ed6 100644
-> >> > --- a/drivers/vfio/pci/vfio_pci.c
-> >> > +++ b/drivers/vfio/pci/vfio_pci.c
-> >> > @@ -90,6 +90,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
-> >> >  		vdev->has_vga = true;
-> >> >  #endif
-> >> >  
-> >> > +	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
-> >> >  	return 0;
-> >> >  }
-> >> >  
-> >> > @@ -149,6 +150,7 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
-> >> >  				__func__, dev_name(&pdev->dev), ret);
-> >> >  	}
-> >> >  
-> >> > +	pdev->dev_flags &= ~PCI_DEV_FLAGS_ASSIGNED;
-> >> >  	pci_restore_state(pdev);
-> >> >  }
-> >> >  
-> >> 
-> >> 
-> >
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe kvm" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+> Ok, very good.
+> 
+> 	Arnd
