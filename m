@@ -1,122 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 30 Jan 2014 15:10:32 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
-Subject: [PATCH v2 2/2] ipr: Use pci_enable_msi_range() and
- pci_enable_msix_range()
-Message-ID: <20140130141031.GC32349@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
- <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
- <52E7CCAD.5070008@linux.vnet.ibm.com>
- <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
- <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:53033 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751389AbaAPNTh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 08:19:37 -0500
+Received: by mail-ie0-f177.google.com with SMTP id at1so677813iec.36
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jan 2014 05:19:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <XNM1$9$0$4$$3$3$7$A$9006862U52d758ed@hitachi.com>
+References: <1389499841-6097-1-git-send-email-linux@eikelenboom.it>
+ <XNM1$9$0$4$$3$3$7$A$9006858U52d4d109@hitachi.com> <6310129377.20140114162641@eikelenboom.it>
+ <XNM1$9$0$4$$3$3$7$A$9006860U52d614ca@hitachi.com> <126550032.20140115203605@eikelenboom.it>
+ <CAErSpo7Bjo3rVCnuf9fkKc=T33Z5ZBzS+nHOBqDDKt1j4u0yWg@mail.gmail.c>
+ <1524137311.20140115232528@eikelenboom.it> <XNM1$9$0$4$$3$3$7$A$9006862U52d758ed@hitachi.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 16 Jan 2014 06:19:16 -0700
+Message-ID: <CAErSpo7GFN2e3GOzb_+4oAZAQiUQZUV+ijQDKvQzVinBbTNvFA@mail.gmail.com>
+Subject: Re: In "pci_fixup_video" check if this is or should be the primary
+ video d
+To: eiichiro.oiwa.nm@hitachi.com
+Cc: Sander Eikelenboom <linux@eikelenboom.it>,
+	Dave Airlie <airlied@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	David Airlie <airlied@linux.ie>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+[+cc Michael, Jesse, David, qemu-devel]
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/scsi/ipr.c |   47 ++++++++++++++++++-----------------------------
- 1 files changed, 18 insertions(+), 29 deletions(-)
+On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> I suggest you should not break the PCI specification, as a developer of proprietary
+> hypervisor, but I think your patch is no problem.
+> Your PCI structure is specialized structure for your virtual machine.
+> Maybe, your virtual machine will be causing another problem on Linux or other kernels
+> because of breaking the PCI specification.
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 48d0cfc..70f40ca 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9317,51 +9317,40 @@ static void ipr_wait_for_pci_err_recovery(struct ipr_ioa_cfg *ioa_cfg)
- static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
- {
- 	struct msix_entry entries[IPR_MAX_MSIX_VECTORS];
--	int i, err, vectors;
-+	int i, vectors;
- 
- 	for (i = 0; i < ARRAY_SIZE(entries); ++i)
- 		entries[i].entry = i;
- 
--	vectors = ipr_number_of_msix;
--
--	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
--			vectors = err;
--
--	if (err < 0) {
-+	vectors = pci_enable_msix_range(ioa_cfg->pdev,
-+					entries, 1, ipr_number_of_msix);
-+	if (vectors < 0) {
- 		ipr_wait_for_pci_err_recovery(ioa_cfg);
--		return err;
-+		return vectors;
- 	}
- 
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = entries[i].vector;
--		ioa_cfg->nvectors = vectors;
--	}
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = entries[i].vector;
-+	ioa_cfg->nvectors = vectors;
- 
--	return err;
-+	return 0;
- }
- 
- static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
- {
--	int i, err, vectors;
-+	int i, vectors;
- 
--	vectors = ipr_number_of_msix;
--
--	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
--			vectors = err;
--
--	if (err < 0) {
-+	vectors = pci_enable_msi_range(ioa_cfg->pdev, 1, ipr_number_of_msix);
-+	if (vectors < 0) {
- 		ipr_wait_for_pci_err_recovery(ioa_cfg);
--		return err;
-+		return vectors;
- 	}
- 
--	if (!err) {
--		for (i = 0; i < vectors; i++)
--			ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
--		ioa_cfg->nvectors = vectors;
--	}
-+	for (i = 0; i < vectors; i++)
-+		ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
-+	ioa_cfg->nvectors = vectors;
- 
--	return err;
-+	return 0;
- }
- 
- static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
-@@ -9426,7 +9415,7 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
-  * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
-  * @pdev:		PCI device struct
-  *
-- * Description: The return value from pci_enable_msi() can not always be
-+ * Description: The return value from pci_enable_msi_range() can not always be
-  * trusted.  This routine sets up and initiates a test interrupt to determine
-  * if the interrupt is received via the ipr_test_intr() service routine.
-  * If the tests fails, the driver will fall back to LSI.
--- 
-1.7.7.6
+I assume you think qemu is breaking the PCI spec.  What exactly do you
+think is broken?  Please give specific references to the spec.  This
+conversation is pretty fragmented, and I came in late, so I apologize
+if I missed this.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Bjorn
