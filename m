@@ -1,62 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:58697 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753105AbaAUXDI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jan 2014 18:03:08 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devel@acpica.org
-Subject: Re: [Patch v1 1/3] ACPI: add callback prepare() into acpi_hotplug_handler
-Date: Wed, 22 Jan 2014 00:17:17 +0100
-Message-ID: <2201697.uqWgsYrLat@vostro.rjw.lan>
-In-Reply-To: <1390338897.1792.467.camel@misato.fc.hp.com>
-References: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com> <1390338897.1792.467.camel@misato.fc.hp.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:56378 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752617AbaAPLeD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 06:34:03 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header file
+Date: Thu, 16 Jan 2014 12:33:40 +0100
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"spear-devel" <spear-devel@list.st.com>,
+	Viresh Kumar <viresh.linux@gmail.com>
+References: <cover.1386752447.git.mohit.kumar@st.com> <2CC2A0A4A178534D93D5159BF3BCB66189FBE8D5D6@EAPEX1MAIL1.st.com> <20140116091908.GC2290@pratyush-vbox>
+In-Reply-To: <20140116091908.GC2290@pratyush-vbox>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201401161233.40811.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 21, 2014 02:14:57 PM Toshi Kani wrote:
-> On Sat, 2014-01-18 at 10:48 +0800, Jiang Liu wrote:
-> > Add callback prepare() into acpi_hotplug_handler, which will get called
-> > at the very beginning of ACPI hotplug event handler. The ACPI core will
-> > ignore the event if prepare() returns NOTIFY_STOP.
+On Thursday 16 January 2014, Pratyush Anand wrote:
+> > Though we are almost ready with v2. But few concerns:
 > > 
-> > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> > ---
-> >  drivers/acpi/scan.c     |    4 ++++
-> >  include/acpi/acpi_bus.h |    1 +
-> >  2 files changed, 5 insertions(+)
+> > There are Spear soc common register used for misc configurations of clock, reset etc  for all ips.  Few of 
+> > registers from the same area are also used for pcie/sata muxing and auxiliary clock configurations.
+> > For example: sata_miphy_init in arch/arm/mach-spear/spear1340.c also uses these registers.
 > > 
-> > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> > index fd39459..6b0f419 100644
-> > --- a/drivers/acpi/scan.c
-> > +++ b/drivers/acpi/scan.c
-> > @@ -392,6 +392,10 @@ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
-> >  	struct acpi_device *adev;
-> >  	acpi_status status;
-> >  
-> > +	if (handler->prepare &&
-> > +	    handler->prepare(handle, type, data) == NOTIFY_STOP)
-> > +		return;
+> > We have moved all these sata specific spear1340 configurations in a separate driver.  On the basis of spear-ahci dt 
+> > Node this driver's probe is called, which further adds ahci platform driver.
+> > We plan to put all spear1340/1310_pcie_miphy_init/exit functions of patch 9/12 of this series in
+> > The same driver.
+> > 
+> > Now our concern is, what could be the best place to keep that driver, phy, reset or any other framework?
+> > Or we keep this new driver in arch/arm/mach-spear only.
 > 
-> The OS is responsible for calling _OST when it is implemented.  So you
-> cannot just return here.  See acpi_hotplug_unsupported(handle, type)
-> next line.  Also, please describe why prepare() needs to be added.
+> I think this misc configuration register block resource should be
+> passed to syscon (drivers/mfd/syscon.c) driver.
+> 
+> regmap_update_bits should be used to update these registers and hence
+> to configure pcie/sata settings.
+> 
+> As far as place is concerned, that can be kept into mfd and can be
+> named as spear13xx-syscon.c
+> 
+> Whats your opinion arnd?
 
-I don't think it's needed any more, please see:
+That sounds exactly like what I would have suggested, thanks!
 
-http://marc.info/?l=linux-acpi&m=139001691317575&w=2
+One question remains, which is what driver should directly use 
+syscon_regmap_lookup_by_phandle() to get the syscon registers themselves,
+and which ones should use a higher-level abstraction from spear13xx-syscon.c.
 
-Thanks,
-Rafael
+We can decide this on a case-by-case basis, but in general I would suggest
+to have drivers use syscon_regmap_lookup_by_phandle directly as long as
+it doesn't cause significant code duplication between drivers.
 
+	Arnd
