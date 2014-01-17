@@ -1,50 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:49198 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751840AbaAFU17 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 15:27:59 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH][tentative] PCI / ACPI: Rework PCI host bridge removal to avoid sysfs warnings
-Date: Mon, 06 Jan 2014 21:41:46 +0100
-Message-ID: <4679785.iPCX7mECEL@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQV1tui+nHMFF419dpTOKt_x4US6R=3uPhDvUDJ0zoMrEg@mail.gmail.com>
-References: <37552283.kG1L4S8Daa@vostro.rjw.lan> <2459491.HIKjAnF27k@vostro.rjw.lan> <CAE9FiQV1tui+nHMFF419dpTOKt_x4US6R=3uPhDvUDJ0zoMrEg@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53793 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751567AbaAQJYT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jan 2014 04:24:19 -0500
+Date: Fri, 17 Jan 2014 10:26:20 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Subject: [PATCH 10/9] PCI/MSI: Undeprecate pci_enable_msi()
+Message-ID: <20140117092620.GA29340@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 06, 2014 11:28:43 AM Yinghai Lu wrote:
-> On Thu, Jan 2, 2014 at 4:45 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Thursday, January 02, 2014 02:47:04 PM Yinghai Lu wrote:
-> >>
-> >> No. It should be before removing all root bus devices.
-> >> as they need to access the pci devices during stop ioapic and dmar.
-> >>
-> >> Also ioapic itself could one one pci device.
-> >
-> > Well, if we stop drivers first, then stop ioapic/dmar and *then* remove
-> > devices, it is possible to rebind a driver to a device after ioapic/dmar has
-> > been stopped, which I guess will not lead to anything nice?
-> 
-> Not sure how that could happen.
-> 
-> If it would really happen, we could set dev->match_driver to 0 in pci_stop_dev.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ Documentation/PCI/MSI-HOWTO.txt |   23 ++++++++++++++++++++---
+ 1 files changed, 20 insertions(+), 3 deletions(-)
 
-Simply, run "modprobe -r driver && modprobe driver" in a loop and
-remove the PCI host bridge the given device is on in parallel to that.  Chances
-are, you'll see some nice breakage.
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index a8d0100..3c3080e 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -82,7 +82,19 @@ Most of the hard work is done for the driver in the PCI layer.  It simply
+ has to request that the PCI layer set up the MSI capability for this
+ device.
+ 
+-4.2.1 pci_enable_msi_range
++4.2.1 pci_enable_msi
++
++int pci_enable_msi(struct pci_dev *dev)
++
++A successful call allocates ONE interrupt to the device, regardless
++of how many MSIs the device supports.  The device is switched from
++pin-based interrupt mode to MSI mode.  The dev->irq number is changed
++to a new number which represents the message signaled interrupt;
++consequently, this function should be called before the driver calls
++request_irq(), because an MSI is delivered via a vector that is
++different from the vector of a pin-based interrupt.
++
++4.2.2 pci_enable_msi_range
+ 
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 
+@@ -158,7 +170,12 @@ static int foo_driver_enable_single_msi(struct pci_dev *pdev)
+ 	return pci_enable_msi_range(pdev, 1, 1);
+ }
+ 
+-4.2.2 pci_disable_msi
++Note, unlike pci_enable_msi() function, which could be also used to
++enable the single MSI mode, pci_enable_msi_range() returns either a
++negative errno or 1 (not negative errno or 0 - as pci_enable_msi()
++does).
++
++4.2.3 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+ 
+@@ -172,7 +189,7 @@ on any interrupt for which it previously called request_irq().
+ Failure to do so results in a BUG_ON(), leaving the device with
+ MSI enabled and thus leaking its vector.
+ 
+-4.2.3 pci_msi_vec_count
++4.2.4 pci_msi_vec_count
+ 
+ int pci_msi_vec_count(struct pci_dev *dev)
+ 
+-- 
+1.7.7.6
 
-Also what happens if somebody uses the "remove" sysfs attribute on a device
-needed by ioapic/dmar?
-
-Rafael
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
