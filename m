@@ -1,47 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:62853 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751248AbaAQQU7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jan 2014 11:20:59 -0500
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 25/34] forcedeth: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:44 +0100
-Message-Id: <76d50819eba2af613e37b97abd328287c5ea346c.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Matthew Wilcox <willy@linux.intel.com>,
+	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 5/9] nvme: Fix invalid call to irq_set_affinity_hint()
+Date: Fri, 17 Jan 2014 17:02:19 +0100
+Message-Id: <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+In case MSI-X and MSI initialization failed the function
+irq_set_affinity_hint() is called with uninitialized value
+in dev->entry[0].vector. This update fixes the issue.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/net/ethernet/nvidia/forcedeth.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/block/nvme-core.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
-index 74da489..bad3c05 100644
---- a/drivers/net/ethernet/nvidia/forcedeth.c
-+++ b/drivers/net/ethernet/nvidia/forcedeth.c
-@@ -3946,8 +3946,11 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 	if (np->msi_flags & NV_MSI_X_CAPABLE) {
- 		for (i = 0; i < (np->msi_flags & NV_MSI_X_VECTORS_MASK); i++)
- 			np->msi_x_entry[i].entry = i;
--		ret = pci_enable_msix(np->pci_dev, np->msi_x_entry, (np->msi_flags & NV_MSI_X_VECTORS_MASK));
--		if (ret == 0) {
-+		ret = pci_enable_msix_range(np->pci_dev,
-+					    np->msi_x_entry,
-+					    np->msi_flags & NV_MSI_X_VECTORS_MASK,
-+					    np->msi_flags & NV_MSI_X_VECTORS_MASK);
-+		if (ret > 0) {
- 			np->msi_flags |= NV_MSI_X_ENABLED;
- 			if (optimization_mode == NV_OPTIMIZATION_MODE_THROUGHPUT && !intr_test) {
- 				/* Request irq for rx handling */
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index 26d03fa..e292450 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -1790,15 +1790,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 			vecs = 32;
+ 		for (;;) {
+ 			result = pci_enable_msi_block(pdev, vecs);
+-			if (result == 0) {
+-				for (i = 0; i < vecs; i++)
+-					dev->entry[i].vector = i + pdev->irq;
+-				break;
++			if (result > 0) {
++				vecs = result;
++				continue;
+ 			} else if (result < 0) {
+ 				vecs = 1;
+-				break;
+ 			}
+-			vecs = result;
++			for (i = 0; i < vecs; i++)
++				dev->entry[i].vector = i + pdev->irq;
++			break;
+ 		}
+ 	}
+ 
 -- 
 1.7.7.6
 
