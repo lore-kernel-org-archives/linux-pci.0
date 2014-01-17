@@ -1,39 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:35511 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753901AbaAaMAT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 07:00:19 -0500
-Received: by mail-qc0-f170.google.com with SMTP id e9so6894843qcy.15
-        for <linux-pci@vger.kernel.org>; Fri, 31 Jan 2014 04:00:18 -0800 (PST)
-Date: Fri, 31 Jan 2014 07:00:15 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Peter Chang <dpf@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PATCH: platforms: avoid queuing work if possible
-Message-ID: <20140131120015.GE26148@htj.dyndns.org>
-References: <CAF2xp_HgT+2zmxHTYpxRFiK-pfQKQJhJ74SJhQVER4s2ZZX0PQ@mail.gmail.com>
- <20140131115340.GD26148@htj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140131115340.GD26148@htj.dyndns.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 7/9] vfio: Use pci_enable_msi_range() and pci_enable_msix_range()
+Date: Fri, 17 Jan 2014 17:02:21 +0100
+Message-Id: <c6523b6507c3aa0ab911e111f501699dce99c3f4.1389904167.git.agordeev@redhat.com>
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 31, 2014 at 06:53:40AM -0500, Tejun Heo wrote:
-> The patch description doesn't describe the reasons for the change at
-> all.  What issues have you encountered?  What are you trying to
-> achieve?
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Okay, is it that on NUMA configurations the probing ends up being
-bounced through work_on_cpu(), so tracking whether "async" was used
-doesn't work making module probing finish before async probing is
-complete?  If that's the case, wouldn't a more generic workaround be
-handling that in work_on_cpu()?  You can change work_for_cpu_fn() to
-clear ASYNC_USED before invoking the function and transfer the bit to
-struct work_for_cpu so that work_on_cpu() can again transfer it to the
-calling task.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/vfio/pci/vfio_pci_intrs.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
 
-Thanks.
-
+diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+index 641bc87..4a9db1d 100644
+--- a/drivers/vfio/pci/vfio_pci_intrs.c
++++ b/drivers/vfio/pci/vfio_pci_intrs.c
+@@ -482,15 +482,19 @@ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
+ 		for (i = 0; i < nvec; i++)
+ 			vdev->msix[i].entry = i;
+ 
+-		ret = pci_enable_msix(pdev, vdev->msix, nvec);
+-		if (ret) {
++		ret = pci_enable_msix_range(pdev, vdev->msix, 1, nvec);
++		if (ret < nvec) {
++			if (ret > 0)
++				pci_disable_msix(pdev);
+ 			kfree(vdev->msix);
+ 			kfree(vdev->ctx);
+ 			return ret;
+ 		}
+ 	} else {
+-		ret = pci_enable_msi_block(pdev, nvec);
+-		if (ret) {
++		ret = pci_enable_msi_range(pdev, 1, nvec);
++		if (ret < nvec) {
++			if (ret > 0)
++				pci_disable_msi(pdev);
+ 			kfree(vdev->ctx);
+ 			return ret;
+ 		}
 -- 
-tejun
+1.7.7.6
+
