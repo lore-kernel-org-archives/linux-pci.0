@@ -1,32 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12306 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949AbaANIwl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jan 2014 03:52:41 -0500
-Date: Tue, 14 Jan 2014 09:54:41 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
-	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
-Message-ID: <20140114085441.GB6873@dhcp-26-207.brq.redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
- <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
- <20140113191220.GA6525@google.com>
- <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:42770 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951AbaAQR1A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jan 2014 12:27:00 -0500
+Received: by mail-ig0-f171.google.com with SMTP id uy17so2154803igb.4
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jan 2014 09:26:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <1389899441.8705.60.camel@bling.home>
+References: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
+ <CAErSpo6W9-Gg55T_dO_F6KJ+RK9mWhDtZUHdW-Ke4NP-da7-uA@mail.gmail.com> <1389899441.8705.60.camel@bling.home>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 17 Jan 2014 10:26:39 -0700
+Message-ID: <CAErSpo5BsWz02DotrnKSXWJ_z6vQk+BWz-Rof+0S8V=hASFskg@mail.gmail.com>
+Subject: Re: [PATCHv2 0/2] PCI: driver function reset notification
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 09:50:40AM +0100, Alexander Gordeev wrote:
-> What if we try to address both goals by making pci_enable_msi() a helper over
-> pci_enable_msi_range(pdev, 1, 1)?
+On Thu, Jan 16, 2014 at 12:10 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Thu, 2014-01-16 at 11:49 -0700, Bjorn Helgaas wrote:
 
-Or pci_enable_msi_single() to help reading and avoid drivers conversion mess.
+>> In the general case, we don't know what the device *is* after a reset
+>> because it could have loaded new firmware.  It could require more
+>> resources or even a different driver.
+>>
+>> I know it would cause Alex heartburn to make reset look like hotplug.
+>
+> Yes it would.  I agree that it's theoretically possible for a device to
+> undergo a metamorphosis to something new at reset, but in practice it
+> just doesn't happen.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Maybe not in your world, but this definitely happens, and it
+definitely causes hassles for people.  Some resort to hacks like
+rebooting the whole system because we don't support this well.
+
+I mentioned these before, so you may have seen them already:
+
+    http://forums.xilinx.com/t5/PCI-Express/PC-is-hung-if-run-the-second-program-FPGA-by-JTAG/td-p/20871
+    http://www.alteraforum.com/forum/archive/index.php/t-28477.html
+    http://www.alteraforum.com/forum/showthread.php?t=35091
+    https://github.com/NetFPGA/NetFPGA-public/wiki/Restore-PCIE-Configuration
+    http://lkml.indiana.edu/hypermail/linux/kernel/1104.3/02544.html
+
+My fear is that we're building a lot of stuff based on assumptions
+about how things typically operate.  That works most of the time, but
+it does fail on important corner cases that are spec-compliant but
+atypical.  From the PCI subsystem point of view, that makes me uneasy.
+
+Bjorn
