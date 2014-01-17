@@ -1,137 +1,221 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:59583 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824AbaAWADp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jan 2014 19:03:45 -0500
-Date: Thu, 23 Jan 2014 01:03:37 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jani Nikula <jani.nikula@linux.intel.com>
+To: Yijing Wang <wangyijing@huawei.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: linux-acpi@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
+	David Airlie <airlied@linux.ie>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH v5 02/33] genirq: Add irq_alloc_reserved_desc()
-In-Reply-To: <1388707565-16535-3-git-send-email-yinghai@kernel.org>
-Message-ID: <alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org> <1388707565-16535-3-git-send-email-yinghai@kernel.org>
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH v3] ACPI: Fix acpi_evaluate_object() return value check
+In-Reply-To: <1389932513-27684-1-git-send-email-wangyijing@huawei.com>
+References: <1389932513-27684-1-git-send-email-wangyijing@huawei.com>
+Date: Fri, 17 Jan 2014 09:46:48 +0200
+Message-ID: <87d2jr82zb.fsf@intel.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai,
+On Fri, 17 Jan 2014, Yijing Wang <wangyijing@huawei.com> wrote:
+> Fix acpi_evaluate_object() return value check,
+> shoud acpi_status not int.
 
-On Thu, 2 Jan 2014, Yinghai Lu wrote:
+Please spellcheck.
 
-> For ioapic hot-add support, it would be easy if we have continuous
-> irq numbers for hot added ioapic controller.
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+> v2->v3: Fix compile error pointed out by Hanjun.
+> v1->v2: Add CC to related subsystem MAINTAINERS
+> ---
+>  drivers/gpu/drm/i915/intel_acpi.c              |   24 ++++++++++++++----------
+>  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    9 +++++----
+>  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   23 +++++++++++++----------
+>  drivers/pci/pci-label.c                        |    9 ++++++---
+>  4 files changed, 38 insertions(+), 27 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
+> index dfff090..87e8f74 100644
+> --- a/drivers/gpu/drm/i915/intel_acpi.c
+> +++ b/drivers/gpu/drm/i915/intel_acpi.c
+> @@ -35,7 +35,8 @@ static int intel_dsm(acpi_handle handle, int func)
+>  	union acpi_object params[4];
+>  	union acpi_object *obj;
+>  	u32 result;
+> -	int ret = 0;
+> +	acpi_status status;
+> +	int ret;
+>  
+>  	input.count = 4;
+>  	input.pointer = params;
+> @@ -50,10 +51,11 @@ static int intel_dsm(acpi_handle handle, int func)
+>  	params[3].package.count = 0;
+>  	params[3].package.elements = NULL;
+>  
+> -	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> -	if (ret) {
+> -		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+> -		return ret;
+> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> +	if (ACPI_FAILURE(status)) {
+> +		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
+> +				acpi_format_exception(status));
+> +		return -EINVAL;
+>  	}
+>  
+>  	obj = (union acpi_object *)output.pointer;
+> @@ -141,7 +143,8 @@ static void intel_dsm_platform_mux_info(void)
+>  	struct acpi_object_list input;
+>  	union acpi_object params[4];
+>  	union acpi_object *pkg;
+> -	int i, ret;
+> +	acpi_status status;
+> +	int i;
+>  
+>  	input.count = 4;
+>  	input.pointer = params;
+> @@ -156,10 +159,11 @@ static void intel_dsm_platform_mux_info(void)
+>  	params[3].package.count = 0;
+>  	params[3].package.elements = NULL;
+>  
+> -	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
+> -				   &output);
+> -	if (ret) {
+> -		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+> +	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle,
+> +			"_DSM", &input, &output);
+> +	if (ACPI_FAILURE(status)) {
+> +		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
+> +				acpi_format_exception(status));
+>  		goto out;
+>  	}
 
-I really don't care about easy. Easy to solve problems are for
-wimps.
+In the two hunks above, one of the error paths calls
+kfree(output.pointer), the other doesn't. Which one is wrong?
 
-What you really want to say is, that ioapic hot-add support requires a
-contiguous irq number space for a hotplugged ioapic to avoid expensive
-translations in the ioapic hotplug code.
+The fix for that should probably be a follow-up patch; this patch is
 
-That's a proper reason for making that change to the core code.
- 
-> We can reserve irq range at first, and later allocate desc for those
-> pre-reserved irqs when they are needed.
-> 
-> The reasons for not allocating them during reserving:
-> 1. only several pins of one ioapic are used, allocate for all pins, will
->    waste memory for not used pins.
-> 2. allocate later when is needed could make sure irq_desc is allocated
->    on local node ram, as dev->node is set at that point.
-> 
-> -v2: update changelog by adding reasons, requested by Konrad.
-> -v3: according to tglx:
->        separate core code change with arch code change.
+Reviewed-by: Jani Nikula <jani.nikula@intel.com>
 
-Thanks for splitting the patches!
 
-Now the scope of this change becomes more obvious and what I already
-suspected before becomes crystal clear.
+>  
+> diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+> index 1291204..c5e7a2b 100644
+> --- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+> +++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+> @@ -114,15 +114,16 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
+>  	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
+>  	union acpi_object *obj;
+>  	acpi_handle handle;
+> -	int ret;
+> +	acpi_status status;
+>  
+>  	handle = ACPI_HANDLE(&device->pdev->dev);
+>  	if (!handle)
+>  		return false;
+>  
+> -	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
+> -	if (ret) {
+> -		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
+> +	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
+> +	if (ACPI_FAILURE(status)) {
+> +		nv_debug(mxm, "DSM MXMS failed: %s\n",
+> +				acpi_format_exception(status));
+>  		return false;
+>  	}
+>  
+> diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> index ba0183f..de3068b 100644
+> --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+> @@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+>  	struct acpi_object_list input;
+>  	union acpi_object params[4];
+>  	union acpi_object *obj;
+> -	int i, err;
+> +	acpi_status status;
+> +	int i;
+>  	char args_buff[4];
+>  
+>  	input.count = 4;
+> @@ -101,10 +102,11 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+>  		args_buff[i] = (arg >> i * 8) & 0xFF;
+>  	params[3].buffer.pointer = args_buff;
+>  
+> -	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> -	if (err) {
+> -		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+> -		return err;
+> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> +	if (ACPI_FAILURE(status)) {
+> +		pr_info("failed to evaluate _DSM: %s\n",
+> +				acpi_format_exception(status));
+> +		return -EINVAL;
+>  	}
+>  
+>  	obj = (union acpi_object *)output.pointer;
+> @@ -134,7 +136,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+>  	struct acpi_object_list input;
+>  	union acpi_object params[4];
+>  	union acpi_object *obj;
+> -	int err;
+> +	acpi_status status;
+>  
+>  	input.count = 4;
+>  	input.pointer = params;
+> @@ -148,10 +150,11 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+>  	params[3].type = ACPI_TYPE_INTEGER;
+>  	params[3].integer.value = arg;
+>  
+> -	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> -	if (err) {
+> -		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+> -		return err;
+> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> +	if (ACPI_FAILURE(status)) {
+> +		pr_info("failed to evaluate _DSM: %s\n",
+> +				acpi_format_exception(status));
+> +		return -EINVAL;
+>  	}
+>  
+>  	obj = (union acpi_object *)output.pointer;
+> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+> index d51f45a..7ba4de6 100644
+> --- a/drivers/pci/pci-label.c
+> +++ b/drivers/pci/pci-label.c
+> @@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
+>  	union acpi_object *obj;
+>  	int len = 0;
+>  
+> -	int err;
+> +	acpi_status status;
+>  
+>  	input.count = 4;
+>  	input.pointer = params;
+> @@ -228,9 +228,12 @@ dsm_get_label(acpi_handle handle, int func,
+>  	params[3].package.count = 0;
+>  	params[3].package.elements = NULL;
+>  
+> -	err = acpi_evaluate_object(handle, "_DSM", &input, output);
+> -	if (err)
+> +	status = acpi_evaluate_object(handle, "_DSM", &input, output);
+> +	if (ACPI_FAILURE(status)) {
+> +		pr_info("failed to evaluate _DSM: %s\n",
+> +				acpi_format_exception(status));
+>  		return -1;
+> +	}
+>  
+>  	obj = (union acpi_object *)output->pointer;
+>  
+> -- 
+> 1.7.1
+>
+>
 
-The initial intention of irq_reserve_irqs() was to cope with the
-legacy interrupts to prevent the dynamic allocator from giving them
-out, but it was at least a misnomer if not even a misconception.
-
-Did you notice that? No!
-
-Did you even think why irq_reserve_irqs() exists? No!
-
-You just hacked it into submission for your purpose. As usual, sigh!
-
-What prevents a user of __irq_alloc_reserved_desc() to request
-something completely out of its range? Nothing as you happily return
-an existing interrupt via:
-
-+       if (irq_to_desc(irq))
-+               return irq;
-
-which is true for all already existing interrupts. So some random off
-by one is going to cause a spurious and extremly hard to debug
-issue. Brilliant.
-
-No, we are not going to play the "it works for Yinghai" game again. I
-wasted enough time with that already.
-
-There is a clear step by step approach to get this done proper:
-
- 1) Get rid of the existing misconception/misnomer of
-    irq_reserve_irqs().
-    
-    Make it explicit that this is dealing with legacy irq spaces. It's
-    not that hard as there are only two users in tree which are both
-    trivial to fix. 
-
- 2) Provide a proper reservation mechanism which does not piggypack
-    blindly on the allocation bitmap.
-
-    So what you want is a reservation which:
-
-    A) Marks the irq range in the allocation bitmap
-
-       This prevents other code pathes to stomp on that range.
-
-    B) Stores a unique generated ID in a separate radix tree for that
-       particular irq range.
-
-       The generated ID is returned to the caller as it is required
-       for actually allocating an interrupt from that range.
-
-       We don't have to bother with making this conditional as the
-       initial memory consumption of the radix tree is minimal and we
-       only expand it when we actually use that hotplug feature.
-
-  3) Provide a proper alloc_reserved_irqdesc() function
-
-     This function verifies against the reservation ID which was
-     handed out by the reservation function.
-
-     It's questionable whether we want to allow the reuse of already
-     allocated irq descriptors. I'm leaning to avoid that. See #4
-
-  4) Provide a proper mechanism to free the registered irq descriptors
-     and the reservation range when the physical device is removed
-     from the system. So you don't have to preserve state in the
-     ioapic code. Physical hotplug is not a high frequency hotpath
-     operation.
-
-  5) Modify the x86 ioapic code to always use the reserve first and
-     allocate later mechanism to avoid ifdeffery and pointless
-     conditional code pathes. That also ensures proper test coverage.
-
-     TBH, I could not be bothered to look at your x86 related changes,
-     but I expect they are from the "make it work for Yinghai"
-     departement as well. I'll review them once the core code changes
-     are in an acceptable shape.
-
-Thanks,
-
-	tglx
+-- 
+Jani Nikula, Intel Open Source Technology Center
