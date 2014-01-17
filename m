@@ -1,64 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51359 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752026AbaARCro (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jan 2014 21:47:44 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devel@acpica.org
-Subject: [Patch v1 1/3] ACPI: add callback prepare() into acpi_hotplug_handler
-Date: Sat, 18 Jan 2014 10:48:15 +0800
-Message-Id: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 9/9] wil6210: Use pci_enable_msi_range()
+Date: Fri, 17 Jan 2014 17:02:23 +0100
+Message-Id: <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add callback prepare() into acpi_hotplug_handler, which will get called
-at the very beginning of ACPI hotplug event handler. The ACPI core will
-ignore the event if prepare() returns NOTIFY_STOP.
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/acpi/scan.c     |    4 ++++
- include/acpi/acpi_bus.h |    1 +
- 2 files changed, 5 insertions(+)
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++++++------------
+ 1 files changed, 19 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index fd39459..6b0f419 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -392,6 +392,10 @@ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
- 	struct acpi_device *adev;
- 	acpi_status status;
- 
-+	if (handler->prepare &&
-+	    handler->prepare(handle, type, data) == NOTIFY_STOP)
-+		return;
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index eeceab3..4e1bf54 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -41,30 +41,32 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
+ 	switch (use_msi) {
+ 	case 3:
+ 	case 1:
++		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
++		break;
+ 	case 0:
++		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
+ 		break;
+ 	default:
+-		wil_err(wil, "Invalid use_msi=%d, default to 1\n",
+-			use_msi);
++		wil_err(wil, "Invalid use_msi=%d, default to 1\n", use_msi);
+ 		use_msi = 1;
+ 	}
+-	wil->n_msi = use_msi;
+-	if (wil->n_msi) {
+-		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
+-		rc = pci_enable_msi_block(pdev, wil->n_msi);
+-		if (rc && (wil->n_msi == 3)) {
+-			wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
+-			wil->n_msi = 1;
+-			rc = pci_enable_msi_block(pdev, wil->n_msi);
+-		}
+-		if (rc) {
+-			wil_err(wil, "pci_enable_msi failed, use INTx\n");
+-			wil->n_msi = 0;
+-		}
+-	} else {
+-		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
 +
- 	if (!handler->hotplug.enabled)
- 		return acpi_hotplug_unsupported(handle, type);
++	switch (use_msi) {
++	case 3:
++		if (pci_enable_msi_range(pdev, 3, 3) > 0)
++			break;
++		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
++		use_msi = 1;
++		/* fallthrough */
++	case 1:
++		if (!pci_enable_msi(pdev))
++			break;
++		wil_err(wil, "pci_enable_msi failed, use INTx\n");
++		use_msi = 0;
+ 	}
  
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index ddabed1..09a73bd 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -113,6 +113,7 @@ static inline struct acpi_hotplug_profile *to_acpi_hotplug_profile(
- struct acpi_scan_handler {
- 	const struct acpi_device_id *ids;
- 	struct list_head list_node;
-+	int (*prepare)(acpi_handle handle, u32 type, void *context);
- 	int (*attach)(struct acpi_device *dev, const struct acpi_device_id *id);
- 	void (*detach)(struct acpi_device *dev);
- 	struct acpi_hotplug_profile hotplug;
++	wil->n_msi = use_msi;
++
+ 	rc = wil6210_init_irq(wil, pdev->irq);
+ 	if (rc)
+ 		goto stop_master;
 -- 
-1.7.10.4
+1.7.7.6
 
