@@ -1,108 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:59124 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933017AbaAaSYm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 13:24:42 -0500
-Received: by mail-la0-f44.google.com with SMTP id hr13so64410lab.17
-        for <linux-pci@vger.kernel.org>; Fri, 31 Jan 2014 10:24:40 -0800 (PST)
-Message-ID: <52EBF885.30309@cogentembedded.com>
-Date: Fri, 31 Jan 2014 22:24:53 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:33738 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752823AbaAQSWf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jan 2014 13:22:35 -0500
+Received: by mail-ie0-f177.google.com with SMTP id at1so2851037iec.36
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jan 2014 10:22:34 -0800 (PST)
+Date: Fri, 17 Jan 2014 11:22:31 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	"Chen, Jamie" <jamie.chen@intel.com>,
+	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: EHCI host broken -- interrupts disabled
+Message-ID: <20140117182231.GA18421@google.com>
+References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
+ <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org
-CC: Hyong-Youb Kim <hykim@myri.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 20/34] myri10ge: Use pci_enable_msix_range()
-References: <cover.1391172839.git.agordeev@redhat.com> <1253b3c920637ab6bb987defb88d1698ac1e4851.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <1253b3c920637ab6bb987defb88d1698ac1e4851.1391172839.git.agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+On Thu, Jan 16, 2014 at 02:40:35PM -0500, Alan Stern wrote:
+> On Thu, 16 Jan 2014, Bjorn Helgaas wrote:
+> 
+> > I think dev->irq is supposed to be valid after pci_enable_device(), so
+> > it seems like it would make sense to clear PCI_COMMAND_INTX_DISABLE
+> > there.
+> 
+> Okay.
+> 
+> > I don't know why a BIOS would leave PCI_COMMAND_INTX_DISABLE set for
+> > the EHCI device.  Does it support MSI, and the BIOS assumes the OS
+> > should use that?  I don't see any MSI support in the EHCI code.  In
+> 
+> As far as I know, there aren't any EHCI designs that use MSI.  And
+> there is no particular reason why a BIOS would leave INTX_DISABLE set,
+> although come to think of it, there doesn't seem to be any reason why a
+> BIOS should leave that bit clear either.
+> 
+> > any case, this doesn't seem like something we need to depend on the
+> > BIOS to do for us.
+> 
+> Could you post a patch for Gaggery or Jamie to try out?
 
-On 01/31/2014 06:08 PM, Alexander Gordeev wrote:
+Can you try the patch below?  This is against 6e2d98dc1af4, the tip of the
+PCI "next" branch, but it should apply easily to any recent kernel.
 
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
+Can you also collect the dmesg and "lspci -vv" output for reference, in
+case we need to tweak or rework this in the future?  Please remove any
+non-public details from that information before posting it.
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->   drivers/net/ethernet/myricom/myri10ge/myri10ge.c |   32 ++++++++++-----------
->   1 files changed, 15 insertions(+), 17 deletions(-)
+Bjorn
 
-> diff --git a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-> index 68026f7..9f717d6 100644
-> --- a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-> +++ b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-> @@ -2329,16 +2329,14 @@ static int myri10ge_request_irq(struct myri10ge_priv *mgp)
->   	status = 0;
->   	if (myri10ge_msi) {
->   		if (mgp->num_slices > 1) {
-> -			status =
-> -			    pci_enable_msix(pdev, mgp->msix_vectors,
-> -					    mgp->num_slices);
-> -			if (status == 0) {
-> -				mgp->msix_enabled = 1;
-> -			} else {
-> +			status = pci_enable_msix_range(pdev, mgp->msix_vectors,
-> +					mgp->num_slices, mgp->num_slices);
-> +			if (status < 0) {
->   				dev_err(&pdev->dev,
->   					"Error %d setting up MSI-X\n", status);
->   				return status;
->   			}
-> +			mgp->msix_enabled = 1;
->   		}
->   		if (mgp->msix_enabled == 0) {
->   			status = pci_enable_msi(pdev);
-> @@ -3901,23 +3899,23 @@ static void myri10ge_probe_slices(struct myri10ge_priv *mgp)
->   	}
->
->   	while (mgp->num_slices > 1) {
-> -		/* make sure it is a power of two */
-> -		while (!is_power_of_2(mgp->num_slices))
-> -			mgp->num_slices--;
-> +		mgp->num_slices = rounddown_pow_of_two(mgp->num_slices);
->   		if (mgp->num_slices == 1)
->   			goto disable_msix;
-> -		status = pci_enable_msix(pdev, mgp->msix_vectors,
-> -					 mgp->num_slices);
-> -		if (status == 0) {
-> -			pci_disable_msix(pdev);
-> +		status = pci_enable_msix_range(pdev, mgp->msix_vectors,
-> +					mgp->num_slices, mgp->num_slices);
 
-    The continuation line(s) should be aligned to start right under 'pdev', 
-according to the networking coding rules.
+PCI: Enable INTx if BIOS left it disabled
 
-> +		if (status < 0)
-> +			goto disable_msix;
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-    Hm, if enabling MSI failed, we don't need to disable it, right? So, 
-perhaps the label should be renamed?
+Some firmware leaves the Interrupt Disable bit set even if the device uses
+INTx interrupts.  Clear Interrupt Disable so we get those interrupts.
 
-> +
-> +		pci_disable_msix(pdev);
-> +
-> +		if (status == mgp->num_slices) {
->   			if (old_allocated)
->   				kfree(old_fw);
->   			return;
-> -		}
-> -		if (status > 0)
-> +		} else {
->   			mgp->num_slices = status;
-> -		else
-> -			goto disable_msix;
-> +		}
->   	}
->
->   disable_msix:
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-WBR, Sergei
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b6d4afa8ba40..0b6a1119b818 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1181,6 +1181,8 @@ EXPORT_SYMBOL_GPL(pci_load_and_free_saved_state);
+ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ {
+ 	int err;
++	u16 cmd;
++	u8 pin;
+ 
+ 	err = pci_set_power_state(dev, PCI_D0);
+ 	if (err < 0 && err != -EIO)
+@@ -1190,6 +1192,14 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ 		return err;
+ 	pci_fixup_device(pci_fixup_enable, dev);
+ 
++	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
++	if (pin) {
++		pci_read_config_word(dev, PCI_COMMAND, &cmd);
++		if (cmd & PCI_COMMAND_INTX_DISABLE)
++			pci_write_config_word(dev, PCI_COMMAND,
++					      cmd & ~PCI_COMMAND_INTX_DISABLE);
++	}
++
+ 	return 0;
+ }
+ 
