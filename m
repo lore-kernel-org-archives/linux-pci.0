@@ -1,64 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:50168 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753458AbaA0AcY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jan 2014 19:32:24 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 1/11] ACPI / hotplug / PCI: Proper kerneldoc comments for enumeration/removal
-Date: Mon, 27 Jan 2014 01:38:06 +0100
-Message-ID: <13004664.yV6PfsiXzU@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <201401151057.43044.arnd@arndb.de>
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
+	<1389742458-7693-4-git-send-email-tinamdar@apm.com>
+	<201401151057.43044.arnd@arndb.de>
+Date: Thu, 16 Jan 2014 17:17:26 -0800
+Message-ID: <CACoXjcmQ5esXH+8OSuFN0r_qLRt1fqfu+oZ56OnfOt4J2pWLvw@mail.gmail.com>
+Subject: Re: [RFC PATCH V2 3/4] dt-bindings: pci: xgene pcie device tree bindings
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Jan 15, 2014 at 1:57 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
+>> This patch adds the bindings for X-Gene PCIe driver. The driver resides
+>> under 'drivers/pci/host/pci-xgene.c' file.
+>>
+>> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>> ---
+>>  .../devicetree/bindings/pci/xgene-pcie.txt         |   45 ++++++++++++++++++++
+>>  1 file changed, 45 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/xgene-pcie.txt b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
+>> new file mode 100644
+>> index 0000000..19b9c28
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/xgene-pcie.txt
+>> @@ -0,0 +1,45 @@
+>> +* AppliedMicro X-Gene PCIe interface
+>> +
+>> +Required properties:
+>> +- status: Either "ok" or "disabled".
+>
+> "status" isn't normally a required property. The default interpretation is
+> that a node without a status property is active.
 
-Add proper kerneldoc comments describing acpiphp_enumerate_slots()
-and acpiphp_remove_slots().
+ok. I will move 'status' under optional properties.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+>
+>> +- device_type: set to "pci"
+>> +- compatible: should contain "xgene,pcie" to identify the core.
+>> +- reg: base addresses and lengths of the pcie controller configuration
+>> +     space register.
+>
+> Doesn't match the code or example: You only list one area here, but
+> you actually need to register sets.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -986,9 +986,12 @@ static void handle_hotplug_event(acpi_ha
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
--/*
-- * Create hotplug slots for the PCI bus.
-- * It should always return 0 to avoid skipping following notifiers.
-+/**
-+ * acpiphp_enumerate_slots - Enumerate PCI slots for a given bus.
-+ * @bus: PCI bus to enumerate the slots for.
-+ *
-+ * A "slot" is an object associated with a PCI device number.  All functions
-+ * (PCI devices) with the same bus and device number belong to the same slot.
-  */
- void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
-@@ -1061,7 +1064,10 @@ void acpiphp_enumerate_slots(struct pci_
- 	}
- }
- 
--/* Destroy hotplug slots associated with the PCI bus */
-+/**
-+ * acpiphp_remove_slots - Remove slot objects associated with a given bus.
-+ * @bus: PCI bus to remove the slot objects for.
-+ */
- void acpiphp_remove_slots(struct pci_bus *bus)
- {
- 	struct acpiphp_bridge *bridge;
+ok. I will update
 
+>
+> Looks good otherwise now.
+>
+>         Arnd
