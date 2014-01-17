@@ -1,73 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:61196 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986AbaA2KGm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 05:06:42 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+CC: <linux-acpi@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	David Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<intel-gfx@lists.freedesktop.org>,
+	<dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH v2] ACPI: Fix acpi_evaluate_object() return value check
+Date: Fri, 17 Jan 2014 09:29:51 +0800
+Message-ID: <1389922191-28664-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140129061722.GB23833@verge.net.au>
-References: <1390754945-28142-1-git-send-email-ben.dooks@codethink.co.uk>
-	<1390754945-28142-2-git-send-email-ben.dooks@codethink.co.uk>
-	<52E6559D.6090708@cogentembedded.com>
-	<52E65EAD.9000909@codethink.co.uk>
-	<20140129061722.GB23833@verge.net.au>
-Date: Wed, 29 Jan 2014 11:06:42 +0100
-Message-ID: <CAMuHMdVSWM5wYeA1OarFEv_yYCJR1FSm5Ercjyc5qtcVameSsw@mail.gmail.com>
-Subject: Re: [PATCH 1/8] pci-rcar-gen2: add of match table
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Simon Horman <horms@verge.net.au>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	linux-kernel@lists.codethink.co.uk,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 29, 2014 at 7:17 AM, Simon Horman <horms@verge.net.au> wrote:
->> >>+static struct of_device_id rcar_pci_of_match[] = {
->> >>+    { .compatible = "renesas,pci-r8a7790", },
->> >
->> >    Why only H2 SoC, if the driver is for both Gen2 SoCs?
->>
->> I can add a "renesas,pci-rcar-gen2" as a fallback match however
->> I've not got anything other than an r8a7790 to test on. Also the
->> compatible properties are preferably named after the soc.
->
-> I'm not sure what the "best practice" is here but I propose that
-> you add both "renesas,pci-rcar-gen2" and "renesas,pci-r8a7790" now.
+Fix acpi_evaluate_object() return value check,
+shoud acpi_status not int.
 
-To the driver or to the '90 DTS?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
 
-If the DTS says
+v1->v2: Add CC to the related subsystem MAINTAINERS.
 
-    compatible = "renesas,pci-r8a7790", "renesas,pci-rcar-gen2"
+---
+ drivers/gpu/drm/i915/intel_acpi.c              |   13 +++++++------
+ drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    6 +++---
+ drivers/gpu/drm/nouveau/nouveau_acpi.c         |   13 +++++++------
+ drivers/pci/pci-label.c                        |    6 +++---
+ 4 files changed, 20 insertions(+), 18 deletions(-)
 
-then the driver can just live with "renesas,pci-rcar-gen2" for now.
+diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
+index dfff090..7ea00e5 100644
+--- a/drivers/gpu/drm/i915/intel_acpi.c
++++ b/drivers/gpu/drm/i915/intel_acpi.c
+@@ -35,7 +35,7 @@ static int intel_dsm(acpi_handle handle, int func)
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+ 	u32 result;
+-	int ret = 0;
++	acpi_status status;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -50,8 +50,8 @@ static int intel_dsm(acpi_handle handle, int func)
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
+ 
+-	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (ret) {
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
+ 		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+ 		return ret;
+ 	}
+@@ -141,7 +141,8 @@ static void intel_dsm_platform_mux_info(void)
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *pkg;
+-	int i, ret;
++	acpi_status status;
++	int i;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -156,9 +157,9 @@ static void intel_dsm_platform_mux_info(void)
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
+ 
+-	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
++	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
+ 				   &output);
+-	if (ret) {
++	if (ACPI_FAILURE(status)) {
+ 		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+ 		goto out;
+ 	}
+diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+index 1291204..3920943 100644
+--- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
++++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+@@ -114,14 +114,14 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
+ 	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
+ 	union acpi_object *obj;
+ 	acpi_handle handle;
+-	int ret;
++	acpi_status status;
+ 
+ 	handle = ACPI_HANDLE(&device->pdev->dev);
+ 	if (!handle)
+ 		return false;
+ 
+-	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
+-	if (ret) {
++	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
++	if (ACPI_FAILURE(status)) {
+ 		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
+ 		return false;
+ 	}
+diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+index ba0183f..6f810f2 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
++++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+@@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+-	int i, err;
++	acpi_status status;
++	int i;
+ 	char args_buff[4];
+ 
+ 	input.count = 4;
+@@ -101,8 +102,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+ 		args_buff[i] = (arg >> i * 8) & 0xFF;
+ 	params[3].buffer.pointer = args_buff;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (err) {
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
+ 		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+ 		return err;
+ 	}
+@@ -134,7 +135,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+-	int err;
++	acpi_status status;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -148,8 +149,8 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+ 	params[3].type = ACPI_TYPE_INTEGER;
+ 	params[3].integer.value = arg;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (err) {
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
+ 		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+ 		return err;
+ 	}
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index d51f45a..3c21f1b 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
+ 	union acpi_object *obj;
+ 	int len = 0;
+ 
+-	int err;
++	acpi_status status;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -228,8 +228,8 @@ dsm_get_label(acpi_handle handle, int func,
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, output);
+-	if (err)
++	status = acpi_evaluate_object(handle, "_DSM", &input, output);
++	if (ACPI_FAILURE(status))
+ 		return -1;
+ 
+ 	obj = (union acpi_object *)output->pointer;
+-- 
+1.7.1
 
-> And that "renesas,pci-r8a7791" can be added once the code has been
-> integrated and tested on that platform.
 
-And later we can add
-
-    compatible = "renesas,pci-r8a7791", "renesas,pci-rcar-gen2"
-
-to the '91 DTS if it turns out to be compatible.
-
-If the '91 turns out to be incompatible, or partially compatible, the driver
-can be updated later to handle both "renesas,pci-r8a7790" and
-"renesas,pci-r8a7791" and differentiate between them.
-
-(That's what I was instructed to do with SPI ;-)
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
