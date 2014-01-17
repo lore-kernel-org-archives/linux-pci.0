@@ -1,48 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:63502 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbaANLVH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 06:21:07 -0500
-Received: by mail-ee0-f41.google.com with SMTP id e49so144921eek.14
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 03:21:06 -0800 (PST)
-Date: Tue, 14 Jan 2014 13:21:00 +0200
-From: Jack Morgenstein <jackm@dev.mellanox.co.il>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	yinghai@kernel.org, bhelgaas@google.com, amirv@mellanox.com,
-	ogerlitz@mellanox.com, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-Message-ID: <20140114132100.1bc5d621@jpm-OptiPlex-GX620>
-In-Reply-To: <52d51b4c.c413ec0a.290f.03c3SMTPIN_ADDED_BROKEN@mx.google.com>
-References: <20140114062215.GA19345@richard>
-	<20140114105031.71882944@jpm-OptiPlex-GX620>
-	<20140114091525.GB27684@richard>
-	<20140114122532.0e2b6a64@jpm-OptiPlex-GX620>
-	<52d51b4c.c413ec0a.290f.03c3SMTPIN_ADDED_BROKEN@mx.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:41360 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276AbaAQVAw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jan 2014 16:00:52 -0500
+Received: by mail-ie0-f177.google.com with SMTP id at1so3083035iec.36
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jan 2014 13:00:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 17 Jan 2014 14:00:32 -0700
+Message-ID: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-nvme@lists.infradead.org,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 14 Jan 2014 19:10:55 +0800
-Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+On Fri, Jan 17, 2014 at 9:02 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> This series is against "next" branch in Bjorn's repo:
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+>
+> Changes from v1 to v2:
+>   - added a regression fix "ahci: Fix broken fallback to single
+>     MSI mode" as patch 1/9;
+>   - the series is reordered to move the regression fix in front;
+>   - at Bjorn's request pci_enable_msi() is un-deprecated;
+>   - as result, pci_enable_msi_range(pdev, 1, 1) styled calls
+>     rolled back to pci_enable_msi(pdev);
+>   - nvme bug fix moved out as a separate patch 5/9 "nvme: Fix
+>     invalid call to irq_set_affinity_hint()"
+>   - patches changelog elaborated a bit;
+>
+> Bjorn,
+>
+> As the release is supposedly this weekend, do you prefer
+> the patches to go to your tree or to individual trees after
+> the release?
 
-> The problem happened only when BAR#0 and BAR#6 were allocated
-> from same non-profetchable P2P window. So we guessed the problem
-> had relationship with ROM BAR#6 and we read multiple bytes from
-> BAR#0+0x8069c:
-> 
-> BAR#0+0x8069c: 0x00001000
-> BAR#0+0x806a0: 0x0
-> BAR#0+0x806a4: 0x0
-> BAR#0+0x806a8: 0x0
-> BAR#0+0x806ac: 0x0
-> 
-> My question is 0x0 is expected value from (BAR#0 + 0x806a*) ? :-)
+I'd be happy to merge them, except for the fact that they probably
+wouldn't have any time in -next before I ask Linus to pull them.  So
+how about if we wait until after the release, ask the area maintainers
+to take them, and if they don't take them, I'll put them in my tree
+for v3.15?
 
-Yes, the first time the value is read from dword 0x8069c, it should be
-zero.
-
--Jack
+Bjorn
