@@ -1,228 +1,197 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
+Date: Fri, 17 Jan 2014 16:07:36 +0100
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, linux-doc@vger.kernel.org,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH 3/9] ACPI / hotplug / PCI: Use global PCI rescan-remove locking
-Date: Fri, 10 Jan 2014 15:24:41 +0100
-Message-ID: <1889108.hSyl0lYrWr@vostro.rjw.lan>
-In-Reply-To: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com> <201401151339.58593.arnd@arndb.de> <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
+In-Reply-To: <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201401171607.37561.arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Friday 17 January 2014, Tanmay Inamdar wrote:
+> On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Wednesday 15 January 2014, Tanmay Inamdar wrote:
+> >> This patch adds the AppliedMicro X-Gene SOC PCIe controller driver.
+> >> X-Gene PCIe controller supports maxmum upto 8 lanes and GEN3 speed.
+> >> X-Gene has maximum 5 PCIe ports supported.
+> >>
+> >> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> >
+> > This already looks much better than the first version, but I have a more
+> > comments. Most importantly, it would help to know how the root ports
+> > are structured. Is this a standard root complex and multiple ports,
+> > multiple root complexes with one port each, or a nonstandard organization
+> > that is a mix of those two models?
+> 
+> This is multiple root complexes with one port each.
 
-Multiple race conditions are possible between the ACPI-based PCI
-hotplug (ACPIPHP) and the generic PCI bus rescan and device removal
-that can be triggered via sysfs.
+Ok.
 
-To avoid those race conditions make the ACPIPHP code use global PCI
-rescan-remove locking.
+> > I also wonder why you need to do this at all. If there isn't a global
+> > config space for all ports, but rather a separate type0/type1 config
+> > cycle based on the bus number, I see that as an indication that the
+> > ports are in fact separate domains and should each start with bus 0.
+> 
+> It is not a standard ECAM layout. We also have a separate RTDID
+> register as well to program bus, device, function. While accessing EP
+> config space, we have to set the bit 17:16 as 2b'01. The same config
+> space address is utilized for enabling a customized nonstandard PCIe
+> DMA feature. The bits are defined to differentiate the access purpose.
+> The feature is not supported in this driver yet.
+> 
+> Secondly I don't think it will matter if each port starts with bus 0.
+> As long as we set the correct BDF in RTDID and set correct bits in
+> config address, the config reads and writes would work. Right?
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    5 +++-
- drivers/pci/hotplug/acpiphp_core.c |    2 -
- drivers/pci/hotplug/acpiphp_glue.c |   43 ++++++++++++++++++++++++++++++++-----
- 3 files changed, 43 insertions(+), 7 deletions(-)
+Yes, I think the current code will work (aside from my other comment),
+but it seems unnecessary to do this if you use pci domains correctly:
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -77,6 +77,8 @@ struct acpiphp_bridge {
- 
- 	/* PCI-to-PCI bridge device */
- 	struct pci_dev *pci_dev;
-+
-+	bool is_going_away;
- };
- 
- 
-@@ -150,6 +152,7 @@ struct acpiphp_attention_info
- /* slot flags */
- 
- #define SLOT_ENABLED		(0x00000001)
-+#define SLOT_IS_GOING_AWAY	(0x00000002)
- 
- /* function flags */
- 
-@@ -169,7 +172,7 @@ void acpiphp_unregister_hotplug_slot(str
- typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
- 
- int acpiphp_enable_slot(struct acpiphp_slot *slot);
--int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot);
-+int acpiphp_disable_slot(struct acpiphp_slot *slot);
- u8 acpiphp_get_power_status(struct acpiphp_slot *slot);
- u8 acpiphp_get_attention_status(struct acpiphp_slot *slot);
- u8 acpiphp_get_latch_status(struct acpiphp_slot *slot);
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -432,6 +432,7 @@ static void cleanup_bridge(struct acpiph
- 					pr_err("failed to remove notify handler\n");
- 			}
- 		}
-+		slot->flags |= SLOT_IS_GOING_AWAY;
- 		if (slot->slot)
- 			acpiphp_unregister_hotplug_slot(slot);
- 	}
-@@ -439,6 +440,8 @@ static void cleanup_bridge(struct acpiph
- 	mutex_lock(&bridge_mutex);
- 	list_del(&bridge->list);
- 	mutex_unlock(&bridge_mutex);
-+
-+	bridge->is_going_away = true;
- }
- 
- /**
-@@ -757,6 +760,10 @@ static void acpiphp_check_bridge(struct
- {
- 	struct acpiphp_slot *slot;
- 
-+	/* Bail out if the bridge is going away. */
-+	if (bridge->is_going_away)
-+		return;
-+
- 	list_for_each_entry(slot, &bridge->slots, node) {
- 		struct pci_bus *bus = slot->bus;
- 		struct pci_dev *dev, *tmp;
-@@ -827,6 +834,8 @@ void acpiphp_check_host_bridge(acpi_hand
- 	}
- }
- 
-+static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot);
-+
- static void hotplug_event(acpi_handle handle, u32 type, void *data)
- {
- 	struct acpiphp_context *context = data;
-@@ -856,6 +865,9 @@ static void hotplug_event(acpi_handle ha
- 		} else {
- 			struct acpiphp_slot *slot = func->slot;
- 
-+			if (slot->flags & SLOT_IS_GOING_AWAY)
-+				break;
-+
- 			mutex_lock(&slot->crit_sect);
- 			enable_slot(slot);
- 			mutex_unlock(&slot->crit_sect);
-@@ -871,6 +883,9 @@ static void hotplug_event(acpi_handle ha
- 			struct acpiphp_slot *slot = func->slot;
- 			int ret;
- 
-+			if (slot->flags & SLOT_IS_GOING_AWAY)
-+				break;
-+
- 			/*
- 			 * Check if anything has changed in the slot and rescan
- 			 * from the parent if that's the case.
-@@ -900,9 +915,11 @@ static void hotplug_event_work(void *dat
- 	acpi_handle handle = context->handle;
- 
- 	acpi_scan_lock_acquire();
-+	pci_lock_rescan_remove();
- 
- 	hotplug_event(handle, type, context);
- 
-+	pci_unlock_rescan_remove();
- 	acpi_scan_lock_release();
- 	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
- 	put_bridge(context->func.parent);
-@@ -1070,12 +1087,19 @@ void acpiphp_remove_slots(struct pci_bus
-  */
- int acpiphp_enable_slot(struct acpiphp_slot *slot)
- {
-+	pci_lock_rescan_remove();
-+
-+	if (slot->flags & SLOT_IS_GOING_AWAY)
-+		return -ENODEV;
-+
- 	mutex_lock(&slot->crit_sect);
- 	/* configure all functions */
- 	if (!(slot->flags & SLOT_ENABLED))
- 		enable_slot(slot);
- 
- 	mutex_unlock(&slot->crit_sect);
-+
-+	pci_unlock_rescan_remove();
- 	return 0;
- }
- 
-@@ -1083,10 +1107,12 @@ int acpiphp_enable_slot(struct acpiphp_s
-  * acpiphp_disable_and_eject_slot - power off and eject slot
-  * @slot: ACPI PHP slot
-  */
--int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot)
-+static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
--	int retval = 0;
-+
-+	if (slot->flags & SLOT_IS_GOING_AWAY)
-+		return -ENODEV;
- 
- 	mutex_lock(&slot->crit_sect);
- 
-@@ -1104,9 +1130,18 @@ int acpiphp_disable_and_eject_slot(struc
- 		}
- 
- 	mutex_unlock(&slot->crit_sect);
--	return retval;
-+	return 0;
- }
- 
-+int acpiphp_disable_slot(struct acpiphp_slot *slot)
-+{
-+	int ret;
-+
-+	pci_lock_rescan_remove();
-+	ret = acpiphp_disable_and_eject_slot(slot);
-+	pci_unlock_rescan_remove();
-+	return ret;
-+}
- 
- /*
-  * slot enabled:  1
-@@ -1117,7 +1152,6 @@ u8 acpiphp_get_power_status(struct acpip
- 	return (slot->flags & SLOT_ENABLED);
- }
- 
--
- /*
-  * latch   open:  1
-  * latch closed:  0
-@@ -1127,7 +1161,6 @@ u8 acpiphp_get_latch_status(struct acpip
- 	return !(get_slot_status(slot) & ACPI_STA_DEVICE_UI);
- }
- 
--
- /*
-  * adapter presence : 1
-  *          absence : 0
-Index: linux-pm/drivers/pci/hotplug/acpiphp_core.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_core.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_core.c
-@@ -156,7 +156,7 @@ static int disable_slot(struct hotplug_s
- 	pr_debug("%s - physical_slot = %s\n", __func__, slot_name(slot));
- 
- 	/* disable the specified slot */
--	return acpiphp_disable_and_eject_slot(slot->acpi_slot);
-+	return acpiphp_disable_slot(slot->acpi_slot);
- }
- 
- 
+If you have one pci domain and one root port per root complex, you
+would not get any config space cycles for the root port and can
+do away with the special case here, as well as with the
+xgene_pcie_fixup_bridge() that seems to be a special case to
+avoid touching the root ports as well.
 
+> >
+> >> +     switch (restype) {
+> >> +     case IORESOURCE_MEM:
+> >> +             res = &port->mem.res;
+> >> +             pci_addr = port->mem.pci_addr;
+> >> +             min_size = SZ_128M;
+> >> +             break;
+> >> +     case IORESOURCE_IO:
+> >> +             res = &port->io.res;
+> >> +             pci_addr = port->io.pci_addr;
+> >> +             min_size = 128;
+> >> +             flag |= OB_LO_IO;
+> >> +             break;
+> >> +     }
+> >
+> > I assume this works ok, but seems wrong in one detail: If the resource
+> > is marked IORESOURCE_IO, res->start is supposed to be in I/O space, not
+> > in memory space, which would make it the wrong number to program
+> > into the hardware registers.
+
+Sorry, I was actually wrong with my statement above and I thought I had
+deleted my comment before sending the mail.
+
+> Yes for using ioport resource. However we have decided to defer using
+> it since 'pci_ioremap_io' is not yet supported from arm64 side.
+> 
+> From HW point of view, for memory mapped IO space, it is nothing but a
+> piece taken out of the ranges in address map for outbound accesses. So
+> while configuring registers from SOC side, it should take the CPU
+> address which is address from SOC address map. Right?
+> 
+> Later on we can have a separate io resource like 'realio' similar to
+> what pci-mvebu.c does.
+
+I think your code is actually correct here, but please also add the
+pci_ioremap_io implementation for arm64 in a separate patch in this
+series. It shouldn't be hard and we need it for every pci host driver
+anyway.
+
+> >> +static int xgene_pcie_setup(int nr, struct pci_sys_data *sys)
+> >> +{
+> >> +     struct xgene_pcie_port *pp = xgene_pcie_sys_to_port(sys);
+> >> +
+> >> +     if (pp == NULL)
+> >> +             return 0;
+> >> +
+> >> +     sys->mem_offset = pp->mem.res.start - pp->mem.pci_addr;
+> >> +     pci_add_resource_offset(&sys->resources, &pp->mem.res,
+> >> +                             sys->mem_offset);
+> >> +     return 1;
+> >> +}
+
+> > Also, what would be a reason for the port to be zero here? If
+> > it's something that can't happen in practice, don't try to handle
+> > it gracefully. You can use BUG_ON() for fatal conditions that
+> > are supposed to be impossible to reach.
+> 
+> This function is a hook to upper layer. We register nr_controllers in
+> hw_pci structure as MAX_PORTS we support. It can happen that number of
+> ports actually enabled from device tree are less than the number in
+> nr_controllers.
+
+I see. I'll comment more on this below.
+
+> >> +     if (!port->link_up)
+> >> +             dev_info(port->dev, "(rc) link down\n");
+> >> +     else
+> >> +             dev_info(port->dev, "(rc) x%d gen-%d link up\n",
+> >> +                             lanes, port->link_speed + 1);
+> >> +#ifdef CONFIG_PCI_DOMAINS
+> >> +     xgene_pcie_hw.domain++;
+> >> +#endif
+> >> +     xgene_pcie_hw.private_data[index++] = port;
+> >> +     platform_set_drvdata(pdev, port);
+> >> +     return 0;
+> >> +}
+> >
+> > Do you have multiple domains or not? I don't see how it can work if you
+> > make the domain setup conditional on a kernel configuration option.
+> > If you in fact have multiple domains, make sure in Kconfig that
+> > CONFIG_PCI_DOMAINS is enabled. Otherwise don't mess with the domain
+> > number...
+> 
+> It is enabled in Kconfig.
+
+Ok, then remove the #ifdef here.
+
+> >> +static int __init xgene_pcie_init(void)
+> >> +{
+> >> +     void *private;
+> >> +     int ret;
+> >> +
+> >> +     pr_info("X-Gene: PCIe driver\n");
+> >> +
+> >> +     /* allocate private data to keep xgene_pcie_port information */
+> >> +     private = kzalloc((XGENE_PCIE_MAX_PORTS * sizeof(void *)), GFP_KERNEL);
+> >
+> > This should not be done unconditionally: There is no point in printing
+> > a message or allocating memory if you don't actually run on a system
+> > with this device.
+> 
+> I am doing this here because I have one instance of hw_pci structure
+> with multiple pcie controllers. I can't do it from probe since it will
+> be called once per instance in device tree.
+> 
+> >
+> >> +     xgene_pcie_hw.private_data = private;
+> >> +     ret = platform_driver_probe(&xgene_pcie_driver,
+> >> +                                 xgene_pcie_probe_bridge);
+> >> +     if (ret)
+> >> +             return ret;
+> >> +     pci_common_init(&xgene_pcie_hw);
+> >> +     return 0;
+> >
+> > This seems wrong: You should not use platform_driver_probe() because
+> > that has issues with deferred probing.
+> 
+> I think 'platform_driver_probe' prevents the deferred probing.
+> 'pci_common_init' needs to be called only once with current driver
+> structure. The probes for all pcie ports should be finished (ports
+> initialized) before 'pci_common_init' gets called.
+
+I think it would be cleaner for dynamically registered host controllers
+to call pci_common_init_dev() with nr_controllers=1 once for each root
+complex in the probe() function. This should take care of a few other
+things I've mentioned as well.
+
+	Arnd
