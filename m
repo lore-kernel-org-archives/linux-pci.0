@@ -1,161 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:13043 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52628 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591AbaAFGRq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:17:46 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 01/20] iommu/vt-d: use dedicated bitmap to track remapping entry allocation status
-Date: Mon,  6 Jan 2014 14:18:08 +0800
-Message-Id: <1388989107-4795-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1751354AbaAQQAi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jan 2014 11:00:38 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/9] ahci: Use pci_enable_msi_range()
+Date: Fri, 17 Jan 2014 17:02:16 +0100
+Message-Id: <761bec2771db60ca5cd86dfbf63ff0f2dbc43031.1389904166.git.agordeev@redhat.com>
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently Intel interrupt remapping drivers uses the "present" flag bit
-in remapping entry to track whether an entry is allocated or not.
-It works as follow:
-1) allocate a remapping entry and set its "present" flag bit to 1
-2) compose other fields for the entry
-3) update the remapping entry with the composed value
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-The remapping hardware may access the entry between step 1 and step 3,
-which then observers an entry with the "present" flag set but random
-values in all other fields.
-
-This patch introduces a dedicated bitmap to track remapping entry
-allocation status instead of sharing the "present" flag with hardware,
-thus eliminate the race window. It also simplifies the implementation.
-
-Tested-and-reviewed-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/iommu/intel_irq_remapping.c |   55 +++++++++++++++++------------------
- include/linux/intel-iommu.h         |    1 +
- 2 files changed, 27 insertions(+), 29 deletions(-)
+ drivers/ata/ahci.c |   20 +++++++++-----------
+ 1 files changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index bab10b1..deef3d4 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -72,7 +72,6 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
- 	u16 index, start_index;
- 	unsigned int mask = 0;
- 	unsigned long flags;
--	int i;
- 
- 	if (!count || !irq_iommu)
- 		return -1;
-@@ -96,32 +95,17 @@ static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
- 	}
- 
- 	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
--	do {
--		for (i = index; i < index + count; i++)
--			if  (table->base[i].present)
--				break;
--		/* empty index found */
--		if (i == index + count)
--			break;
--
--		index = (index + count) % INTR_REMAP_TABLE_ENTRIES;
--
--		if (index == start_index) {
--			raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
--			printk(KERN_ERR "can't allocate an IRTE\n");
--			return -1;
--		}
--	} while (1);
--
--	for (i = index; i < index + count; i++)
--		table->base[i].present = 1;
--
--	cfg->remapped = 1;
--	irq_iommu->iommu = iommu;
--	irq_iommu->irte_index =  index;
--	irq_iommu->sub_handle = 0;
--	irq_iommu->irte_mask = mask;
--
-+	index = bitmap_find_free_region(table->bitmap,
-+					INTR_REMAP_TABLE_ENTRIES, mask);
-+	if (index < 0) {
-+		pr_warn("IR%d: can't allocate an IRTE\n", iommu->seq_id);
-+	} else {
-+		cfg->remapped = 1;
-+		irq_iommu->iommu = iommu;
-+		irq_iommu->irte_index =  index;
-+		irq_iommu->sub_handle = 0;
-+		irq_iommu->irte_mask = mask;
-+	}
- 	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
- 
- 	return index;
-@@ -254,6 +238,8 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 		set_64bit(&entry->low, 0);
- 		set_64bit(&entry->high, 0);
- 	}
-+	bitmap_release_region(iommu->ir_table->bitmap, index,
-+			      irq_iommu->irte_mask);
- 
- 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
- }
-@@ -453,6 +439,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index df24eef4..73ffd39 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1098,13 +1098,13 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 			 struct ahci_host_priv *hpriv)
  {
- 	struct ir_table *ir_table;
- 	struct page *pages;
-+	unsigned long *bitmap;
+-	int rc, nvec;
++	int nvec;
  
- 	ir_table = iommu->ir_table = kzalloc(sizeof(struct ir_table),
- 					     GFP_ATOMIC);
-@@ -464,13 +451,23 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu, int mode)
- 				 INTR_REMAP_PAGE_ORDER);
+ 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+ 		goto intx;
  
- 	if (!pages) {
--		printk(KERN_ERR "failed to allocate pages of order %d\n",
--		       INTR_REMAP_PAGE_ORDER);
-+		pr_err("IR%d: failed to allocate pages of order %d\n",
-+		       iommu->seq_id, INTR_REMAP_PAGE_ORDER);
- 		kfree(iommu->ir_table);
- 		return -ENOMEM;
- 	}
+-	rc = pci_msi_vec_count(pdev);
+-	if (rc < 0)
++	nvec = pci_msi_vec_count(pdev);
++	if (nvec < 0)
+ 		goto intx;
  
-+	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
-+			 sizeof(long), GFP_ATOMIC);
-+	if (bitmap == NULL) {
-+		pr_err("IR%d: failed to allocate bitmap\n", iommu->seq_id);
-+		__free_pages(pages, INTR_REMAP_PAGE_ORDER);
-+		kfree(ir_table);
-+		return -ENOMEM;
-+	}
-+
- 	ir_table->base = page_address(pages);
-+	ir_table->bitmap = bitmap;
+ 	/*
+@@ -1112,21 +1112,19 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 	 * Message mode could be enforced. In this case assume that advantage
+ 	 * of multipe MSIs is negated and use single MSI mode instead.
+ 	 */
+-	if (rc < n_ports)
++	if (nvec < n_ports)
+ 		goto single_msi;
  
- 	iommu_set_irq_remapping(iommu, mode);
- 	return 0;
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index d380c5e..de1e5e9 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -288,6 +288,7 @@ struct q_inval {
+-	nvec = rc;
+-	rc = pci_enable_msi_block(pdev, nvec);
+-	if (rc < 0)
+-		goto intx;
+-	else if (rc > 0)
++	nvec = pci_enable_msi_range(pdev, nvec, nvec);
++	if (nvec == -ENOSPC)
+ 		goto single_msi;
++	else if (nvec < 0)
++		goto intx;
  
- struct ir_table {
- 	struct irte *base;
-+	unsigned long *bitmap;
- };
- #endif
+ 	return nvec;
+ 
+ single_msi:
+-	rc = pci_enable_msi(pdev);
+-	if (rc)
++	if (pci_enable_msi(pdev))
+ 		goto intx;
+ 	return 1;
  
 -- 
-1.7.10.4
+1.7.7.6
 
