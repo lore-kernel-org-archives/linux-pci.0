@@ -1,41 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:53048 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752766AbaAROfS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 18 Jan 2014 09:35:18 -0500
-Received: by mail-ie0-f181.google.com with SMTP id tq11so4533290ieb.26
-        for <linux-pci@vger.kernel.org>; Sat, 18 Jan 2014 06:35:18 -0800 (PST)
-Subject: [PATCH 1/2] Revert "EISA: Log device resources in dmesg"
-To: linux-kernel@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Joseph Salisbury <joseph.salisbury@canonical.com>
-Date: Sat, 18 Jan 2014 07:35:16 -0700
-Message-ID: <20140118143516.32751.54245.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140118143308.32751.27410.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140118143308.32751.27410.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <52D9F98A.2090003@linux.intel.com>
+Date: Sat, 18 Jan 2014 11:48:26 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [Patch v1 2/3] ACPI, PCI: reuse ACPI hotplug framework to support
+ PCI host bridge hotplug
+References: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com>	<1390013297-23462-2-git-send-email-jiang.liu@linux.intel.com> <CAE9FiQXS-vctiWtXBcw8g6dqPEJGSND+GXB1t64kEoCiygBhjQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQXS-vctiWtXBcw8g6dqPEJGSND+GXB1t64kEoCiygBhjQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit a2080d0c561c546d73cb8b296d4b7ca414e6860b.
+Hi yinghai,
+	Sorry for the noise. I didn't noticed Rafael's work,
+so I generated this patchset when encountered this issue
+during testing PCI host bridge hotplug. It should achieve
+the same goal.
+Thanks!
+Gerry
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/eisa/eisa-bus.c |    1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/eisa/eisa-bus.c b/drivers/eisa/eisa-bus.c
-index 8842cde69177..1b86fe0c2e80 100644
---- a/drivers/eisa/eisa-bus.c
-+++ b/drivers/eisa/eisa-bus.c
-@@ -288,7 +288,6 @@ static int __init eisa_request_resources(struct eisa_root_device *root,
- 			edev->res[i].flags = IORESOURCE_IO | IORESOURCE_BUSY;
- 		}
- 
--		dev_printk(KERN_DEBUG, &edev->dev, "%pR\n", &edev->res[i]);
- 		if (request_resource(root->res, &edev->res[i]))
- 			goto failed;
- 	}
-
+On 2014/1/18 11:23, Yinghai Lu wrote:
+> ACPI / hotplug: Make ACPI PCI root hotplug use common hotplug code
