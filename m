@@ -1,41 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db8lp0188.outbound.messaging.microsoft.com ([213.199.154.188]:42753
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752254AbaAOQHO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jan 2014 11:07:14 -0500
-From: Guenter Roeck <groeck@juniper.net>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Rajat Jain <rajatjain@juniper.net>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: User initiated hotplug and kernel initiated hotplug - where is
- the synchronization?
-Date: Wed, 15 Jan 2014 16:07:02 +0000
-Message-ID: <83e67f7228074cf2a07e2fab275f55bc@CO1PR05MB523.namprd05.prod.outlook.com>
-References: <635a0ddff97142e2a06f9bd9c3428d01@DM2PR05MB671.namprd05.prod.outlook.com>
- <18064064.UldA0zYdyf@vostro.rjw.lan>
-In-Reply-To: <18064064.UldA0zYdyf@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:39801 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753086AbaAWAhu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jan 2014 19:37:50 -0500
+In-Reply-To: <1389922191-28664-1-git-send-email-wangyijing@huawei.com>
+References: <1389922191-28664-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [PATCH v2] ACPI: Fix acpi_evaluate_object() return value check
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Date: Sat, 18 Jan 2014 11:36:09 -0500
+To: Yijing Wang <wangyijing@huawei.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	intel-gfx@lists.freedesktop.org, Hanjun Guo <guohanjun@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@redhat.com>
+Message-ID: <6b9ddc30-6148-428d-b581-fe49158c2cab@email.android.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IA0KPiA+IEkgaGF2ZSB0aGlzIGRvdWJ0IGxpbmdlcmluZyBvbiwgYW5kIEknZCBhcHByZWNp
-YXRlIGlmIHNvbWUgb25lIGNvdWxkDQo+IHRocm93IGxpZ2h0IG9uIHRoaXM6DQo+ID4NCj4gPiBU
-aGUga2VybmVsIGhvdHBsdWcgZHJpdmVyIHBjaWVocCBjYW4gaW5pdGlhdGUgaG90cGx1ZyBiYXNl
-ZCBvbiB3aGF0DQo+IGl0IHNlbnNlcyBmcm9tIHRoZSBIVyAoYnV0dG9uIHByZXNzIGV0YykuDQo+
-ID4NCj4gPiBUaGUgdXNlciBzcGFjZSBjYW4gYWxzbyBpbml0aWF0ZSB0aGUgc2FtZSBvcGVyYXRp
-b25zIGJ5IHVzaW5nDQo+ICJyZXNjYW4iIG9yICJyZW1vdmUiIGF0dHJpYnV0ZXMgaW4gc3lzZnMu
-DQo+ID4NCj4gPiBNeSBxdWVzdGlvbnM6DQo+ID4NCj4gPiAxKSBJcyBpdCBzYWZlIHRvIG1peCB0
-aGUgYWJvdmUgdHdvPw0KPiANCj4gTm90IHJpZ2h0IG5vdywgYnV0IHdpdGggdGhlc2UgcGF0Y2hl
-cyBhcHBsaWVkOg0KPiANCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8zNDY2
-NTUxLw0KPiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzM0NjY1ODEvDQo+IGh0
-dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMzQ2NjYwMS8NCj4gaHR0cHM6Ly9wYXRj
-aHdvcmsua2VybmVsLm9yZy9wYXRjaC8zNDY2NTkxLw0KPiBodHRwczovL3BhdGNod29yay5rZXJu
-ZWwub3JnL3BhdGNoLzM0NjY2MzEvDQo+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0
-Y2gvMzQ2NjY0MS8NCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8zNDY2NjUx
-Lw0KPiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzM0OTE4MTEvDQo+IGh0dHBz
-Oi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMzQ2NjQ5MS8NCj4gaHR0cHM6Ly9wYXRjaHdv
-cmsua2VybmVsLm9yZy9wYXRjaC8zNDczMzQxLw0KPiANCj4gaXQgc2hvdWxkIGJlLg0KPiANCg0K
-SGkgUmFmYWVsLA0KDQphbnkgaWRlYSB3aGVuIHRob3NlIHBhdGNoZXMgd2lsbCBzaG93IHVwIGlu
-IHRoZSB1cHN0cmVhbSBrZXJuZWwgPw0KDQpUaGFua3MsDQpHdWVudGVyDQoNCg==
+Yijing Wang <wangyijing@huawei.com> wrote:
+>Fix acpi_evaluate_object() return value check,
+>shoud acpi_status not int.
+
+Should be?
+Your mailer also ate the word 'to' .
+>
+>Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>---
+>
+>v1->v2: Add CC to the related subsystem MAINTAINERS.
+>
+>---
+> drivers/gpu/drm/i915/intel_acpi.c              |   13 +++++++------
+> drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    6 +++---
+> drivers/gpu/drm/nouveau/nouveau_acpi.c         |   13 +++++++------
+> drivers/pci/pci-label.c                        |    6 +++---
+> 4 files changed, 20 insertions(+), 18 deletions(-)
+>
+>diff --git a/drivers/gpu/drm/i915/intel_acpi.c
+>b/drivers/gpu/drm/i915/intel_acpi.c
+>index dfff090..7ea00e5 100644
+>--- a/drivers/gpu/drm/i915/intel_acpi.c
+>+++ b/drivers/gpu/drm/i915/intel_acpi.c
+>@@ -35,7 +35,7 @@ static int intel_dsm(acpi_handle handle, int func)
+> 	union acpi_object params[4];
+> 	union acpi_object *obj;
+> 	u32 result;
+>-	int ret = 0;
+>+	acpi_status status;
+> 
+> 	input.count = 4;
+> 	input.pointer = params;
+>@@ -50,8 +50,8 @@ static int intel_dsm(acpi_handle handle, int func)
+> 	params[3].package.count = 0;
+> 	params[3].package.elements = NULL;
+> 
+>-	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>-	if (ret) {
+>+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>+	if (ACPI_FAILURE(status)) {
+> 		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+> 		return ret;
+> 	}
+>@@ -141,7 +141,8 @@ static void intel_dsm_platform_mux_info(void)
+> 	struct acpi_object_list input;
+> 	union acpi_object params[4];
+> 	union acpi_object *pkg;
+>-	int i, ret;
+>+	acpi_status status;
+>+	int i;
+> 
+> 	input.count = 4;
+> 	input.pointer = params;
+>@@ -156,9 +157,9 @@ static void intel_dsm_platform_mux_info(void)
+> 	params[3].package.count = 0;
+> 	params[3].package.elements = NULL;
+> 
+>-	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
+>+	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM",
+>&input,
+> 				   &output);
+>-	if (ret) {
+>+	if (ACPI_FAILURE(status)) {
+> 		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+> 		goto out;
+> 	}
+>diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+>b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+>index 1291204..3920943 100644
+>--- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+>+++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+>@@ -114,14 +114,14 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8
+>version)
+> 	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
+> 	union acpi_object *obj;
+> 	acpi_handle handle;
+>-	int ret;
+>+	acpi_status status;
+> 
+> 	handle = ACPI_HANDLE(&device->pdev->dev);
+> 	if (!handle)
+> 		return false;
+> 
+>-	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
+>-	if (ret) {
+>+	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
+>+	if (ACPI_FAILURE(status)) {
+> 		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
+> 		return false;
+> 	}
+>diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+>b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+>index ba0183f..6f810f2 100644
+>--- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
+>+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+>@@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle,
+>int func, int arg, uint32_t *
+> 	struct acpi_object_list input;
+> 	union acpi_object params[4];
+> 	union acpi_object *obj;
+>-	int i, err;
+>+	acpi_status status;
+>+	int i;
+> 	char args_buff[4];
+> 
+> 	input.count = 4;
+>@@ -101,8 +102,8 @@ static int nouveau_optimus_dsm(acpi_handle handle,
+>int func, int arg, uint32_t *
+> 		args_buff[i] = (arg >> i * 8) & 0xFF;
+> 	params[3].buffer.pointer = args_buff;
+> 
+>-	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>-	if (err) {
+>+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>+	if (ACPI_FAILURE(status)) {
+> 		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+> 		return err;
+> 	}
+>@@ -134,7 +135,7 @@ static int nouveau_dsm(acpi_handle handle, int
+>func, int arg, uint32_t *result)
+> 	struct acpi_object_list input;
+> 	union acpi_object params[4];
+> 	union acpi_object *obj;
+>-	int err;
+>+	acpi_status status;
+> 
+> 	input.count = 4;
+> 	input.pointer = params;
+>@@ -148,8 +149,8 @@ static int nouveau_dsm(acpi_handle handle, int
+>func, int arg, uint32_t *result)
+> 	params[3].type = ACPI_TYPE_INTEGER;
+> 	params[3].integer.value = arg;
+> 
+>-	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>-	if (err) {
+>+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>+	if (ACPI_FAILURE(status)) {
+> 		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+> 		return err;
+> 	}
+>diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+>index d51f45a..3c21f1b 100644
+>--- a/drivers/pci/pci-label.c
+>+++ b/drivers/pci/pci-label.c
+>@@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
+> 	union acpi_object *obj;
+> 	int len = 0;
+> 
+>-	int err;
+>+	acpi_status status;
+> 
+> 	input.count = 4;
+> 	input.pointer = params;
+>@@ -228,8 +228,8 @@ dsm_get_label(acpi_handle handle, int func,
+> 	params[3].package.count = 0;
+> 	params[3].package.elements = NULL;
+> 
+>-	err = acpi_evaluate_object(handle, "_DSM", &input, output);
+>-	if (err)
+>+	status = acpi_evaluate_object(handle, "_DSM", &input, output);
+>+	if (ACPI_FAILURE(status))
+> 		return -1;
+> 
+> 	obj = (union acpi_object *)output->pointer;
+
 
