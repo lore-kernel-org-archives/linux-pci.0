@@ -1,56 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62853 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751248AbaAQQU7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jan 2014 11:20:59 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:58821 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752942AbaAROfY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 18 Jan 2014 09:35:24 -0500
+Received: by mail-ie0-f175.google.com with SMTP id ar20so1951402iec.34
+        for <linux-pci@vger.kernel.org>; Sat, 18 Jan 2014 06:35:24 -0800 (PST)
+Subject: [PATCH 2/2] Revert "EISA: Initialize device before its resources"
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 5/9] nvme: Fix invalid call to irq_set_affinity_hint()
-Date: Fri, 17 Jan 2014 17:02:19 +0100
-Message-Id: <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
-In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Joseph Salisbury <joseph.salisbury@canonical.com>
+Date: Sat, 18 Jan 2014 07:35:23 -0700
+Message-ID: <20140118143523.32751.41079.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140118143308.32751.27410.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140118143308.32751.27410.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In case MSI-X and MSI initialization failed the function
-irq_set_affinity_hint() is called with uninitialized value
-in dev->entry[0].vector. This update fixes the issue.
+This reverts commit 26abfeed4341872364386c6a52b9acef8c81a81a.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+In the eisa_probe() force_probe path, if we were unable to request slot
+resources (e.g., [io 0x800-0x8ff]), we skipped the slot with "Cannot
+allocate resource for EISA slot %d" before reading the EISA signature in
+eisa_init_device().
+
+Commit 26abfeed4341 moved eisa_init_device() earlier, so we tried to read
+the EISA signature before requesting the slot resources, and this caused
+hangs during boot.
+
+Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1251816
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: stable@vger.kernel.org	# v3.10+ a2080d0c561c: Revert "EISA: Log device resources in dmesg"
 ---
- drivers/block/nvme-core.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/eisa/eisa-bus.c |   26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index 26d03fa..e292450 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -1790,15 +1790,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 			vecs = 32;
- 		for (;;) {
- 			result = pci_enable_msi_block(pdev, vecs);
--			if (result == 0) {
--				for (i = 0; i < vecs; i++)
--					dev->entry[i].vector = i + pdev->irq;
--				break;
-+			if (result > 0) {
-+				vecs = result;
-+				continue;
- 			} else if (result < 0) {
- 				vecs = 1;
--				break;
- 			}
--			vecs = result;
-+			for (i = 0; i < vecs; i++)
-+				dev->entry[i].vector = i + pdev->irq;
-+			break;
+diff --git a/drivers/eisa/eisa-bus.c b/drivers/eisa/eisa-bus.c
+index 1b86fe0c2e80..612afeaec3cb 100644
+--- a/drivers/eisa/eisa-bus.c
++++ b/drivers/eisa/eisa-bus.c
+@@ -277,11 +277,13 @@ static int __init eisa_request_resources(struct eisa_root_device *root,
  		}
+ 		
+ 		if (slot) {
++			edev->res[i].name  = NULL;
+ 			edev->res[i].start = SLOT_ADDRESS(root, slot)
+ 					     + (i * 0x400);
+ 			edev->res[i].end   = edev->res[i].start + 0xff;
+ 			edev->res[i].flags = IORESOURCE_IO;
+ 		} else {
++			edev->res[i].name  = NULL;
+ 			edev->res[i].start = SLOT_ADDRESS(root, slot)
+ 					     + EISA_VENDOR_ID_OFFSET;
+ 			edev->res[i].end   = edev->res[i].start + 3;
+@@ -327,19 +329,20 @@ static int __init eisa_probe(struct eisa_root_device *root)
+ 		return -ENOMEM;
+ 	}
+ 		
+-	if (eisa_init_device(root, edev, 0)) {
++	if (eisa_request_resources(root, edev, 0)) {
++		dev_warn(root->dev,
++		         "EISA: Cannot allocate resource for mainboard\n");
+ 		kfree(edev);
+ 		if (!root->force_probe)
+-			return -ENODEV;
++			return -EBUSY;
+ 		goto force_probe;
  	}
  
--- 
-1.7.7.6
+-	if (eisa_request_resources(root, edev, 0)) {
+-		dev_warn(root->dev,
+-		         "EISA: Cannot allocate resource for mainboard\n");
++	if (eisa_init_device(root, edev, 0)) {
++		eisa_release_resources(edev);
+ 		kfree(edev);
+ 		if (!root->force_probe)
+-			return -EBUSY;
++			return -ENODEV;
+ 		goto force_probe;
+ 	}
+ 
+@@ -362,11 +365,6 @@ static int __init eisa_probe(struct eisa_root_device *root)
+ 			continue;
+ 		}
+ 
+-		if (eisa_init_device(root, edev, i)) {
+-			kfree(edev);
+-			continue;
+-		}
+-
+ 		if (eisa_request_resources(root, edev, i)) {
+ 			dev_warn(root->dev,
+ 			         "Cannot allocate resource for EISA slot %d\n",
+@@ -375,6 +373,12 @@ static int __init eisa_probe(struct eisa_root_device *root)
+ 			continue;
+ 		}
+ 
++		if (eisa_init_device(root, edev, i)) {
++			eisa_release_resources(edev);
++			kfree(edev);
++			continue;
++		}
++
+ 		if (edev->state == (EISA_CONFIG_ENABLED | EISA_CONFIG_FORCED))
+ 			enabled_str = " (forced enabled)";
+ 		else if (edev->state == EISA_CONFIG_FORCED)
 
