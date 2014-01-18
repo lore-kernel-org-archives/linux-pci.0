@@ -1,78 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 2/5][RFT] ACPI / hotplug: Introduce acpi_install_hotplug_notify_handler()
-Date: Tue, 28 Jan 2014 23:13:26 +0100
-Message-ID: <695484386.FD09CqapYM@vostro.rjw.lan>
-In-Reply-To: <1508034.JFmpIOzjVZ@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:61189 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753460AbaARHTI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 18 Jan 2014 02:19:08 -0500
+Date: Sat, 18 Jan 2014 08:15:38 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-nvme@lists.infradead.org,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Message-ID: <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > As the release is supposedly this weekend, do you prefer
+> > the patches to go to your tree or to individual trees after
+> > the release?
+> 
+> I'd be happy to merge them, except for the fact that they probably
+> wouldn't have any time in -next before I ask Linus to pull them.  So
+> how about if we wait until after the release, ask the area maintainers
+> to take them, and if they don't take them, I'll put them in my tree
+> for v3.15?
 
-Introduce a helper routine for installing acpi_hotplug_notify_cb()
-as an ACPI notify handler for the given ACPI namespace node and make
-acpi_scan_init_hotplug() use it.
+Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
+Whatever works for you ;)
 
-This is to make subsequent changes easier to follow.
+I am only concerned with a regression fix "ahci: Fix broken fallback to
+single MSI mode" which would be nice to have in 3.14. But it seems pretty
+much too late.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c     |   15 +++++++++++++--
- include/acpi/acpi_bus.h |    2 ++
- 2 files changed, 15 insertions(+), 2 deletions(-)
+> Bjorn
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -523,6 +523,18 @@ static void acpi_hotplug_notify_cb(acpi_
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
-+void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
-+{
-+	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+				    acpi_hotplug_notify_cb, data);
-+}
-+
-+void acpi_remove_hotplug_notify_handler(acpi_handle handle)
-+{
-+	acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+				   acpi_hotplug_notify_cb);
-+}
-+
- static ssize_t real_power_state_show(struct device *dev,
- 				     struct device_attribute *attr, char *buf)
- {
-@@ -1961,8 +1973,7 @@ static void acpi_scan_init_hotplug(acpi_
- 	list_for_each_entry(hwid, &pnp.ids, list) {
- 		handler = acpi_scan_match_handler(hwid->id, NULL);
- 		if (handler) {
--			acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--					acpi_hotplug_notify_cb, handler);
-+			acpi_install_hotplug_notify_handler(handle, handler);
- 			break;
- 		}
- 	}
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -434,6 +434,8 @@ static inline bool acpi_device_enumerate
- typedef void (*acpi_hp_callback)(void *data, u32 src);
- 
- acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
-+void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
-+void acpi_remove_hotplug_notify_handler(acpi_handle handle);
- 
- /**
-  * module_acpi_driver(acpi_driver) - Helper macro for registering an ACPI driver
+Thanks!
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
