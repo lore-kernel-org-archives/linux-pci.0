@@ -1,125 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:43742 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758152AbaAJWHt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 17:07:49 -0500
-From: Bill Sumner <bill.sumner@hp.com>
-To: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org
-Cc: iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	bill.sumner@hp.com, doug.hatch@hp.com, zhenhua@hp.com
-Subject: [PATCHv3 5/6] Crashdump-Accepting-Active-IOMMU-Debug-Print-IOMMU
-Date: Fri, 10 Jan 2014 15:07:31 -0700
-Message-Id: <1389391652-52422-6-git-send-email-bill.sumner@hp.com>
-In-Reply-To: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
-References: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
+Received: from mx1.redhat.com ([209.132.183.28]:9436 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752087AbaASOEl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Jan 2014 09:04:41 -0500
+Message-ID: <1390140269.8705.95.camel@bling.home>
+Subject: Re: In "pci_fixup_video" check if this is or should be
+ theprimaryvideo d
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: eiichiro.oiwa.nm@hitachi.com, bhelgaas@google.com,
+	linux@eikelenboom.it, airlied@redhat.com,
+	gregkh@linuxfoundation.org, konrad.wilk@oracle.com,
+	linux-pci@vger.kernel.org, jbarnes@virtuousgeek.org,
+	airlied@linux.ie
+Date: Sun, 19 Jan 2014 07:04:29 -0700
+In-Reply-To: <20140119104410.GB4195@redhat.com>
+References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com>
+	 <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c>
+	 <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com>
+	 <20140119104410.GB4195@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch contains a function to print the hardware registers of each
-IOMMU onto the system console during crashdump kernel initialization.
+On Sun, 2014-01-19 at 12:44 +0200, Michael S. Tsirkin wrote:
+> On Fri, Jan 17, 2014 at 07:43:30PM +0900, eiichiro.oiwa.nm@hitachi.com wrote:
+> > Because legacy VGA is only one device on x86 System, I think qemu has to emulate a bridge
+> > for legacy VGA. The VGA Enable bit on its bridge control register has to set to 1. The VGA
+> > Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards 
+> > on the same system, I think its system needs two bridges for each device. These bridges
+> > need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
+> > to 1. Another VGA Enable bit for second VGA has to set to 0.
+> > 
+> > 
+> > >On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> > >> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
+> > >> June 9, 2003 Chapter 12. VGA Support".
+> > >
+> > >And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
+> > >pages long.  Is there something there that prohibits two VGA devices
+> > >on the same bus?  I'm not a qemu developer, but if I were, I would
+> > >need a better hint about what is wrong before I could fix it.
+> > >
+> > >Again, sorry if you said this already and I missed it.
+> > >
+> > >>>[+cc Michael, Jesse, David, qemu-devel]
+> > >>>
+> > >>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> > >>>> I suggest you should not break the PCI specification, as a developer of proprietary
+> > >>>> hypervisor, but I think your patch is no problem.
+> > >>>> Your PCI structure is specialized structure for your virtual machine.
+> > >>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
+> > >>>> because of breaking the PCI specification.
+> > >>>
+> > >>>I assume you think qemu is breaking the PCI spec.  What exactly do you
+> > >>>think is broken?  Please give specific references to the spec.  This
+> > >>>conversation is pretty fragmented, and I came in late, so I apologize
+> > >>>if I missed this.
+> > >>>
+> > >>>Bjorn
+> > >>>
+> > >
+> 
+> None of the bridges included in QEMU implements VGA support.
+> The spec explicitly says its optional, so that's ok.
+> 
+> As a result, you need to put device which has to work in
+> VGA mode on the root bus, any device behind a bridge
+> won't work in VGA mode (but might work in non VGA mode).
 
-This function seemed far too useful to leave out.
-
-v1->v2:
-Updated patch description
-Fixed: "Advanced Fault Log register"
-
-v2->v3:
-No change
-
-Signed-off-by: Bill Sumner <bill.sumner@hp.com>
----
- drivers/iommu/intel-iommu.c | 76 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 76 insertions(+)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 6737550..457ac80b 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -5325,3 +5325,79 @@ static int copy_intel_iommu_translation_tables(struct dmar_drhd_unit *drhd,
- 	return 0;
- }
- #endif /* CONFIG_CRASH_DUMP */
-+#ifdef CONFIG_CRASH_DUMP
-+
-+
-+/* =========================================================================
-+ * Diagnostic print
-+ * ------------------------------------------------------------------------
-+ */
-+
-+static struct intel_iommu_register_print {
-+	int	len;		/* Length of register */
-+	int	idx;		/* Index to read register */
-+	char	reg[20];	/* Linux name of register */
-+	char	txt[40];	/* Description */
-+} intel_iommu_register_print_v[] = {
-+	{1, DMAR_VER_REG,	"DMAR_VER_REG",		"Arch version supported by this IOMMU"},
-+	{2, DMAR_CAP_REG,	"DMAR_CAP_REG",		"Hardware supported capabilities"},
-+	{2, DMAR_ECAP_REG,	"DMAR_ECAP_REG",	"Extended capabilities supported"},
-+	{1, DMAR_GCMD_REG,	"DMAR_GCMD_REG",	"Global command register"},
-+	{1, DMAR_GSTS_REG,	"DMAR_GSTS_REG",	"Global status register "},
-+	{2, DMAR_RTADDR_REG,	"DMAR_RTADDR_REG",	"Root entry table"},
-+	{2, DMAR_CCMD_REG,	"DMAR_CCMD_REG",	"Context command reg"},
-+	{1, DMAR_FSTS_REG,	"DMAR_FSTS_REG",	"Fault Status register"},
-+	{1, DMAR_FECTL_REG,	"DMAR_FECTL_REG",	"Fault control register"},
-+	{1, DMAR_FEDATA_REG,	"DMAR_FEDATA_REG",	"Fault event interrupt data register"},
-+	{1, DMAR_FEADDR_REG,	"DMAR_FEADDR_REG",	"Fault event interrupt addr register"},
-+	{1, DMAR_FEUADDR_REG,	"DMAR_FEUADDR_REG",	"Upper address register"},
-+	{2, DMAR_AFLOG_REG,	"DMAR_AFLOG_REG",	"Advanced Fault Log register"},
-+	{1, DMAR_PMEN_REG,	"DMAR_PMEN_REG",	"Enable Protected Memory Region"},
-+	{1, DMAR_PLMBASE_REG,	"DMAR_PLMBASE_REG",	"PMRR Low addr"},
-+	{1, DMAR_PLMLIMIT_REG,	"DMAR_PLMLIMIT_REG",	"PMRR low limit"},
-+	{2, DMAR_PHMBASE_REG,	"DMAR_PHMBASE_REG",	"pmrr high base addr"},
-+	{2, DMAR_PHMLIMIT_REG,	"DMAR_PHMLIMIT_REG",	"pmrr high limit"},
-+	{2, DMAR_IQH_REG,	"DMAR_IQH_REG",		"Invalidation queue head register"},
-+	{2, DMAR_IQT_REG,	"DMAR_IQT_REG",		"Invalidation queue tail register"},
-+	{2, DMAR_IQA_REG,	"DMAR_IQA_REG",		"Invalidation queue addr register"},
-+	{1, DMAR_ICS_REG,	"DMAR_ICS_REG",		"Invalidation complete status register"},
-+	{2, DMAR_IRTA_REG,	"DMAR_IRTA_REG",	"Interrupt remapping table addr register"},
-+};
-+
-+static void print_intel_iommu_registers(struct dmar_drhd_unit *drhd)
-+{
-+	struct intel_iommu *iommu;	/* Virt adr(iommu hardware registers) */
-+	unsigned long long q;		/* quadword scratch */
-+	u32 ver;			/* DMAR_VER_REG */
-+
-+	int m = sizeof(intel_iommu_register_print_v) /
-+		sizeof(intel_iommu_register_print_v[0]);
-+	struct intel_iommu_register_print *p = &intel_iommu_register_print_v[0];
-+
-+	iommu = drhd->iommu;
-+
-+	pr_debug("ENTER %s\n", __func__);
-+	ver = readl(iommu->reg + DMAR_VER_REG);
-+	pr_debug("IOMMU %d: reg_base_addr %llx ver %d:%d cap %llx ecap %llx\n",
-+		iommu->seq_id,
-+		(unsigned long long)drhd->reg_base_addr,
-+		DMAR_VER_MAJOR(ver), DMAR_VER_MINOR(ver),
-+		(unsigned long long)iommu->cap,
-+		(unsigned long long)iommu->ecap);
-+
-+	q = readq(iommu->reg + DMAR_RTADDR_REG);
-+	pr_debug("IOMMU %d: DMAR_RTADDR_REG:0x%16.16llx\n", iommu->seq_id, q);
-+
-+	for (; p < &intel_iommu_register_print_v[m]; p++)
-+		if (p->len == 2)
-+			pr_debug("0x%16.16llx %-20s %-40s\n",
-+				(u64)readq(iommu->reg + p->idx), p->reg,
-+						p->txt);
-+		else
-+			pr_debug("        0x%8.8x %-20s %-40s\n",
-+				(u32)readl(iommu->reg + p->idx), p->reg,
-+						p->txt);
-+
-+	pr_debug("LEAVE %s\n", __func__);
-+}
-+#endif /* CONFIG_CRASH_DUMP */
--- 
-Bill Sumner <bill.sumner@hp.com>
+The ioh3420 root ports support VGA, so a q35 model is an option for
+multiple VGA devices.
 
