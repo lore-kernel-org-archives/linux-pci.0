@@ -1,59 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:55725 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753654AbaAKNHA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jan 2014 08:07:00 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [RFC PATCH 3/3] dt-bindings: pci: xgene pcie device tree bindings
-Date: Sat, 11 Jan 2014 14:06:52 +0100
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	patches <patches@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jon Masters <jcm@redhat.com>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com> <201401071635.02006.arnd@arndb.de> <CACoXjckkovQdB5Pk3Tn4uGkm5+HuEfWYb6E1MiUOPpuZ2b7qNA@mail.gmail.com>
-In-Reply-To: <CACoXjckkovQdB5Pk3Tn4uGkm5+HuEfWYb6E1MiUOPpuZ2b7qNA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:16592 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751664AbaASKla (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Jan 2014 05:41:30 -0500
+Date: Sun, 19 Jan 2014 12:44:10 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: eiichiro.oiwa.nm@hitachi.com
+Cc: bhelgaas@google.com, linux@eikelenboom.it, airlied@redhat.com,
+	gregkh@linuxfoundation.org, konrad.wilk@oracle.com,
+	linux-pci@vger.kernel.org, jbarnes@virtuousgeek.org,
+	airlied@linux.ie
+Subject: Re: In "pci_fixup_video" check if this is or should be
+ theprimaryvideo d
+Message-ID: <20140119104410.GB4195@redhat.com>
+References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com>
+ <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c>
+ <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201401111406.52935.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday 11 January 2014, Tanmay Inamdar wrote:
-> On Tue, Jan 7, 2014 at 7:35 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Tuesday 07 January 2014, Tanmay Inamdar wrote:
-> >> On Fri, Jan 3, 2014 at 1:49 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-
-> >> >
-> >> > Better use an anonymous clock?
-> >>
-> >> Sorry. Can you please elaborate?
+On Fri, Jan 17, 2014 at 07:43:30PM +0900, eiichiro.oiwa.nm@hitachi.com wrote:
+> Because legacy VGA is only one device on x86 System, I think qemu has to emulate a bridge
+> for legacy VGA. The VGA Enable bit on its bridge control register has to set to 1. The VGA
+> Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards 
+> on the same system, I think its system needs two bridges for each device. These bridges
+> need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
+> to 1. Another VGA Enable bit for second VGA has to set to 0.
+> 
+> 
+> >On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> >> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
+> >> June 9, 2003 Chapter 12. VGA Support".
 > >
-> > I mean drop the "clock-names" property.
+> >And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
+> >pages long.  Is there something there that prohibits two VGA devices
+> >on the same bus?  I'm not a qemu developer, but if I were, I would
+> >need a better hint about what is wrong before I could fix it.
 > >
-> Did you mean clock-names in pcie-clock node or pcie node? I can drop
-> clock-names from pcie clock node. However if I drop clock-names from
-> pcie node, then clk_get call from pcie host driver would result in
-> failure. Right?
+> >Again, sorry if you said this already and I missed it.
+> >
+> >>>[+cc Michael, Jesse, David, qemu-devel]
+> >>>
+> >>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> >>>> I suggest you should not break the PCI specification, as a developer of proprietary
+> >>>> hypervisor, but I think your patch is no problem.
+> >>>> Your PCI structure is specialized structure for your virtual machine.
+> >>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
+> >>>> because of breaking the PCI specification.
+> >>>
+> >>>I assume you think qemu is breaking the PCI spec.  What exactly do you
+> >>>think is broken?  Please give specific references to the spec.  This
+> >>>conversation is pretty fragmented, and I came in late, so I apologize
+> >>>if I missed this.
+> >>>
+> >>>Bjorn
+> >>>
+> >
 
-I meant drop it from the pcie node, and change the clk_get call
-to pass NULL instead of the name, which will get the handle for
-the only clock provided. You only need clock-names if you have
-more than one clock in the device node and want to identify them.
+None of the bridges included in QEMU implements VGA support.
+The spec explicitly says its optional, so that's ok.
 
-The pcie-clock node should not have a "clock-names" property at
-all, unless it has a "clocks" property as well and refers to
-its clock parent with it.
+As a result, you need to put device which has to work in
+VGA mode on the root bus, any device behind a bridge
+won't work in VGA mode (but might work in non VGA mode).
 
-I already noticed in another review that the xgene clocks get this
-part wrong and that should be fixed for all those clock provides,
-but it's unrelated to what I was talking about here.
-
-	Arnd
+-- 
+MST
