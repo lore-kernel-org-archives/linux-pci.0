@@ -1,87 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:49165 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaAKB13 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:27:29 -0500
-Received: by mail-pd0-f179.google.com with SMTP id y13so2751972pdi.10
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:27:29 -0800 (PST)
-Subject: [PATCH v2 06/12] PCI: Remove unused pci_vpd_truncate()
-To: Stephen Hemminger <stephen@networkplumber.org>,
-	linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yu Zhao <yu.zhao@intel.com>
-Date: Fri, 10 Jan 2014 18:27:26 -0700
-Message-ID: <20140111012726.14505.74201.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from vserver.eikelenboom.it ([84.200.39.61]:60728 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbaASPOq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Jan 2014 10:14:46 -0500
+Date: Sun, 19 Jan 2014 16:14:38 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <252084946.20140119161438@eikelenboom.it>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	eiichiro.oiwa.nm@hitachi.com, <bhelgaas@google.com>,
+	<airlied@redhat.com>, <gregkh@linuxfoundation.org>,
+	<konrad.wilk@oracle.com>, <linux-pci@vger.kernel.org>,
+	<jbarnes@virtuousgeek.org>, <airlied@linux.ie>
+Subject: Re: In "pci_fixup_video" check if this is or should be theprimaryvideo d
+In-Reply-To: <20140119150926.GB5463@redhat.com>
+References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com> <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c> <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com> <20140119104410.GB4195@redhat.com> <1390140269.8705.95.camel@bling.home> <20140119150926.GB5463@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
 
-My philosophy is unused code is dead code.  And dead code is subject to bit
-rot and is a likely source of bugs.  Use it or lose it.
+Sunday, January 19, 2014, 4:09:26 PM, you wrote:
 
-This reverts db5679437a2b ("PCI: add interface to set visible size of
-VPD"), removing this interface:
+> On Sun, Jan 19, 2014 at 07:04:29AM -0700, Alex Williamson wrote:
+>> On Sun, 2014-01-19 at 12:44 +0200, Michael S. Tsirkin wrote:
+>> > On Fri, Jan 17, 2014 at 07:43:30PM +0900, eiichiro.oiwa.nm@hitachi.com wrote:
+>> > > Because legacy VGA is only one device on x86 System, I think qemu has to emulate a bridge
+>> > > for legacy VGA. The VGA Enable bit on its bridge control register has to set to 1. The VGA
+>> > > Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards 
+>> > > on the same system, I think its system needs two bridges for each device. These bridges
+>> > > need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
+>> > > to 1. Another VGA Enable bit for second VGA has to set to 0.
+>> > > 
+>> > > 
+>> > > >On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+>> > > >> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
+>> > > >> June 9, 2003 Chapter 12. VGA Support".
+>> > > >
+>> > > >And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
+>> > > >pages long.  Is there something there that prohibits two VGA devices
+>> > > >on the same bus?  I'm not a qemu developer, but if I were, I would
+>> > > >need a better hint about what is wrong before I could fix it.
+>> > > >
+>> > > >Again, sorry if you said this already and I missed it.
+>> > > >
+>> > > >>>[+cc Michael, Jesse, David, qemu-devel]
+>> > > >>>
+>> > > >>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+>> > > >>>> I suggest you should not break the PCI specification, as a developer of proprietary
+>> > > >>>> hypervisor, but I think your patch is no problem.
+>> > > >>>> Your PCI structure is specialized structure for your virtual machine.
+>> > > >>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
+>> > > >>>> because of breaking the PCI specification.
+>> > > >>>
+>> > > >>>I assume you think qemu is breaking the PCI spec.  What exactly do you
+>> > > >>>think is broken?  Please give specific references to the spec.  This
+>> > > >>>conversation is pretty fragmented, and I came in late, so I apologize
+>> > > >>>if I missed this.
+>> > > >>>
+>> > > >>>Bjorn
+>> > > >>>
+>> > > >
+>> > 
+>> > None of the bridges included in QEMU implements VGA support.
+>> > The spec explicitly says its optional, so that's ok.
+>> > 
+>> > As a result, you need to put device which has to work in
+>> > VGA mode on the root bus, any device behind a bridge
+>> > won't work in VGA mode (but might work in non VGA mode).
+>> 
+>> The ioh3420 root ports support VGA, so a q35 model is an option for
+>> multiple VGA devices.
 
-    pci_vpd_truncate()
+> Hmm, you are right, I forgot you implemented this in March.
+> In fact, I see that you updated bridges to support VGA
+> so if user wants to put both devices behind bridges,
+> that's also possible.
 
-[bhelgaas: split to separate patch, also remove prototype from pci.h]
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/access.c |   24 ------------------------
- include/linux/pci.h  |    1 -
- 2 files changed, 25 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 0857ca981fae..7f8b78c08879 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -381,30 +381,6 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- }
- 
- /**
-- * pci_vpd_truncate - Set available Vital Product Data size
-- * @dev:	pci device struct
-- * @size:	available memory in bytes
-- *
-- * Adjust size of available VPD area.
-- */
--int pci_vpd_truncate(struct pci_dev *dev, size_t size)
--{
--	if (!dev->vpd)
--		return -EINVAL;
--
--	/* limited by the access method */
--	if (size > dev->vpd->len)
--		return -EINVAL;
--
--	dev->vpd->len = size;
--	if (dev->vpd->attr)
--		dev->vpd->attr->size = size;
--
--	return 0;
--}
--EXPORT_SYMBOL(pci_vpd_truncate);
--
--/**
-  * pci_cfg_access_lock - Lock PCI config reads/writes
-  * @dev:	pci device struct
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index efd0b8b67705..bf1f385bf14d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1009,7 +1009,6 @@ unsigned int pci_rescan_bus(struct pci_bus *bus);
- /* Vital product data routines */
- ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
--int pci_vpd_truncate(struct pci_dev *dev, size_t size);
- 
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+Unfortunately Xen seems to be old "pc" for the moment and the passthrough
+implementation doesn't seem to have the support for defining and using bridges either.
+With my limited c coding skills i also can't find how in hw/xen_pt.c it actually inits a
+pci device in Qemu.
+
+Although I still find it strange that the pci_video_fixup is ignoring the decisions that the
+vga arbitration code has already made .. (make the device with the vgacon be the
+primary card unless arch code overrides), for the moment i will keep my patch in my private patch queue then :-)
 
