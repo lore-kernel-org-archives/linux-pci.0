@@ -1,117 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:44407 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755917AbaAIUSC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jan 2014 15:18:02 -0500
-Received: by mail-ie0-f181.google.com with SMTP id e14so4205700iej.12
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jan 2014 12:18:01 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:33294 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751604AbaASKgI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Jan 2014 05:36:08 -0500
+Date: Sun, 19 Jan 2014 12:39:13 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: eiichiro.oiwa.nm@hitachi.com,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	Dave Airlie <airlied@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	David Airlie <airlied@linux.ie>
+Subject: Re: Re[2]: In "pci_fixup_video" check if this is or should be
+ theprimaryvideo d
+Message-ID: <20140119103913.GA4195@redhat.com>
+References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com>
+ <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c>
+ <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com>
+ <CAErSpo5oi1cMyXiLAOd5j5Gi0GwKZ7-LD-TkD6r8HM5TBEq3Dg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <52CE301E.60108@gmail.com>
-References: <52CBC4D1.5080706@gmail.com>
-	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>
-	<52CD2387.2030403@gmail.com>
-	<CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>
-	<52CE301E.60108@gmail.com>
-Date: Thu, 9 Jan 2014 12:17:59 -0800
-Message-ID: <CAE9FiQWxpRMX-0vyd5hML-Hnto8H+C83dcne9FBZcN9qsmGCEw@mail.gmail.com>
-Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port range.
-From: Yinghai Lu <yinghai@kernel.org>
-To: "`VL" <vl.homutov@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5oi1cMyXiLAOd5j5Gi0GwKZ7-LD-TkD6r8HM5TBEq3Dg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 8, 2014 at 9:14 PM, `VL <vl.homutov@gmail.com> wrote:
-> I've put all logs here: http://inspert.ru/pci/
->>
->> CONFIG_PCI_DEBUG=y
->>
->> and boot with "debug ignore_loglevel initcall_debug"?
->
+On Fri, Jan 17, 2014 at 08:39:45AM -0700, Bjorn Helgaas wrote:
+> On Fri, Jan 17, 2014 at 3:43 AM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> 
+> To make progress here, I think you'll have to be even more detailed.
 
-Jan  9 08:51:49 10 pci 0000:04:00.0: BAR 7: assigned [io  0x2000-0x4fff]
-Jan  9 08:51:49 10 pci 0000:05:01.0: BAR 7: assigned [io  0x2000-0x2fff]
-Jan  9 08:51:49 10 pci 0000:06:00.0: BAR 7: assigned [io  0x2000-0x2fff]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: assigned [io  0x2000-0x203f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: error updating (0x002001
-!= 0xffffffff)
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: set to [io  0x2000-0x203f]
-(PCI address [0x2000-0x203f])
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: assigned [io  0x2040-0x205f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: error updating (0x002041
-!= 0xffffffff)
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: set to [io  0x2040-0x205f]
-(PCI address [0x2040-0x205f])
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: assigned [io  0x2060-0x206f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: error updating (0x002061
-!= 0xffffffff)
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: set to [io  0x2060-0x206f]
-(PCI address [0x2060-0x206f])
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: assigned [io  0x2070-0x207f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: error updating (0x002071
-!= 0xffffffff)
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: set to [io  0x2070-0x207f]
-(PCI address [0x2070-0x207f])
-Jan  9 08:51:49 10 pci 0000:06:00.0: PCI bridge to [bus 07]
-Jan  9 08:51:49 10 pci 0000:06:00.0:   bridge window [io  0x2000-0x2fff]
-Jan  9 08:51:49 10 pci 0000:05:01.0: PCI bridge to [bus 06-07]
-Jan  9 08:51:49 10 pci 0000:05:01.0:   bridge window [io  0x2000-0x2fff]
-Jan  9 08:51:49 10 pci 0000:0d:00.0: BAR 0: set to [io  0x4020-0x4027]
-(PCI address [0x4020-0x4027])
-Jan  9 08:51:49 10 pci 0000:0d:00.0: BAR 2: assigned [io  0x4028-0x402f]
-Jan  9 08:51:49 10 pci 0000:0d:00.0: BAR 3: assigned [io  0x4034-0x4037]
-Jan  9 08:51:49 10 pci 0000:0d:00.0: BAR 3: set to [io  0x4034-0x4037]
-(PCI address [0x4034-0x4037])
-Jan  9 08:51:49 10 pci 0000:05:09.0: PCI bridge to [bus 0d]
-Jan  9 08:51:49 10 pci 0000:05:09.0:   bridge window [io  0x4000-0x4fff]
-Jan  9 08:51:49 10 pci 0000:05:09.0:   bridge window [mem 0xf7600000-0xf76fffff]
-Jan  9 08:51:49 10 pci 0000:04:00.0: PCI bridge to [bus 05-0d]
-Jan  9 08:51:49 10 pci 0000:04:00.0:   bridge window [io  0x2000-0x4fff]
-Jan  9 08:51:49 10 pci 0000:04:00.0:   bridge window [mem 0xf7200000-0xf77fffff]
-Jan  9 08:51:49 10 pci 0000:04:00.0:   bridge window [mem
-0xf0000000-0xf00fffff 64bit pref]
-Jan  9 08:51:49 10 pci 0000:00:1c.3: PCI bridge to [bus 04-0d]
-Jan  9 08:51:49 10 pci 0000:00:1c.3:   bridge window [io  0x2000-0x4fff]
-Jan  9 08:51:49 10 pci 0000:00:1c.3:   bridge window [mem 0xf7200000-0xf78fffff]
-Jan  9 08:51:49 10 pci 0000:00:1c.3:   bridge window [mem
-0xf0000000-0xf00fffff 64bit pref]
+sorry, could you restate what the problem is please?
 
-The realloc code does reassign big range to the devices.
+It all started with Sander trying to have two
+video cards on his VM.
+I suggested several solutions.
+See 20140115190315.GA6661@redhat.com
 
-but one device refuse to change bar to new assigned vaule, or it is read-only?
+Is there any other problematic configuration that's
+not addressed by any of the suggested solutions?
 
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: assigned [io  0x2000-0x203f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: error updating (0x002001
-!= 0xffffffff)
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 3: set to [io  0x2000-0x203f]
-(PCI address [0x2000-0x203f])
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: assigned [io  0x2040-0x205f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: error updating (0x002041
-!= 0xffffffff)
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 0: set to [io  0x2040-0x205f]
-(PCI address [0x2040-0x205f])
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: assigned [io  0x2060-0x206f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: error updating (0x002061
-!= 0xffffffff)
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 1: set to [io  0x2060-0x206f]
-(PCI address [0x2060-0x206f])
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: assigned [io  0x2070-0x207f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: error updating (0x002071
-!= 0xffffffff)
-Jan  9 08:51:49 10 pci 0000:07:00.0: BAR 2: set to [io  0x2070-0x207f]
-(PCI address [0x2070-0x207f])
+> > Because legacy VGA is only one device on x86 System,
+> 
+> Where is it documented that there can be only one legacy VGA device in
+> an x86 system?  I assume there exists a system with two slots on bus
+> 0.  What happens if a user installs two VGA cards in those slots?
+> Does that prevent the system from working at all because it's an
+> illegal configuration?
+> 
+> I think such a system could work correctly if the I/O Space and Memory
+> Space bits in the command registers were only set on one of the VGA
+> devices.
+
+Yes.
+If you like, this is a bios bug - it enabled both devices.
+But the disabled device would be completely non functional -
+one wonders why have it in the first place.
+So the cure's worse than the illness - at the moment
+things actually kind of work because only one of
+the devices actually claims the VGA addresses.
+
+> > I think qemu has to emulate a bridge
+> > for legacy VGA.
+> 
+> My Lenovo T410 has "00:02.0 VGA compatible controller," which I assume
+> would qualify as a "legacy VGA device," and there's no bridge related
+> to it.
+
+If it says (prog-if 00 [VGA controller]) then it is.
 
 
-also BIOS does not assign any vaule to it:
+> > The VGA Enable bit on its bridge control register has to set to 1. The VGA
+> > Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards
+> > on the same system, I think its system needs two bridges for each device.
+> 
+> I think you meant to say that if there are two VGA cards, we need
+> *one* bridge for each device, e.g., two bridges and two VGA cards.
 
-Jan  9 08:51:49 10 pci 0000:07:00.0: reg 0x10: [io  0x0000-0x001f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: reg 0x18: [io  0x0000-0x000f]
-Jan  9 08:51:49 10 pci 0000:07:00.0: reg 0x1c: [io  0x0000-0x003f]
+No, it's enough to have one device behind a bridge
+with disabled VGA forwarding.
 
-It is strange 05:01.0/07:00.0 does not work, but 05:09.0/0d:00.0 does work.
+> But where does the requirement for the bridges come from?
 
-Can you boot with "pci=earlydump"?
+The bridge is just a way to filter out VGA addresses
+without disabling memory and IO on the device.
+PCI spec could include a device independent flag to
+disable VGA on the device, but it does not have that.
 
-Yinghai
+> > These bridges
+> > need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
+> > to 1. Another VGA Enable bit for second VGA has to set to 0.
+> 
+> If you have a set of peer bridges, i.e., bridges on the same primary
+> bus, I agree that at most one of them should have VGA Enable set.  If
+> more than one had VGA Enable set, a read on the primary bus could
+> receive multiple responses, which would be a PCI protocol violation.
+> 
+> Similarly, if there are multiple VGA devices on the same bus, I
+> believe that at most one could have I/O Space and Memory Space enabled
+> in their command registers.
+> 
+> But I don't see the requirement for a bridge for every VGA device.
+
+No, as long as you don't need all of them to work.
+
+> >>On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> >>> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
+> >>> June 9, 2003 Chapter 12. VGA Support".
+> >>
+> >>And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
+> >>pages long.  Is there something there that prohibits two VGA devices
+> >>on the same bus?  I'm not a qemu developer, but if I were, I would
+> >>need a better hint about what is wrong before I could fix it.
+> >>
+> >>Again, sorry if you said this already and I missed it.
+> >>
+> >>>>[+cc Michael, Jesse, David, qemu-devel]
+> >>>>
+> >>>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> >>>>> I suggest you should not break the PCI specification, as a developer of proprietary
+> >>>>> hypervisor, but I think your patch is no problem.
+> >>>>> Your PCI structure is specialized structure for your virtual machine.
+> >>>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
+> >>>>> because of breaking the PCI specification.
+> >>>>
+> >>>>I assume you think qemu is breaking the PCI spec.  What exactly do you
+> >>>>think is broken?  Please give specific references to the spec.  This
+> >>>>conversation is pretty fragmented, and I came in late, so I apologize
+> >>>>if I missed this.
+> >>>>
+> >>>>Bjorn
+> >>>>
+> >>
