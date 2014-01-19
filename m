@@ -1,200 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [RFC PATCH V2 2/4] arm64:dts: APM X-Gene PCIe device tree nodes
-Date: Tue, 14 Jan 2014 15:34:16 -0800
-Message-Id: <1389742458-7693-3-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
-References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from vserver.eikelenboom.it ([84.200.39.61]:33893 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260AbaASTGF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Jan 2014 14:06:05 -0500
+Date: Sun, 19 Jan 2014 20:05:58 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <896873311.20140119200558@eikelenboom.it>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	eiichiro.oiwa.nm@hitachi.com, <bhelgaas@google.com>,
+	<airlied@redhat.com>, <gregkh@linuxfoundation.org>,
+	<konrad.wilk@oracle.com>, <linux-pci@vger.kernel.org>,
+	<jbarnes@virtuousgeek.org>, <airlied@linux.ie>
+Subject: Re: In "pci_fixup_video" check if this is or should be theprimaryvideo d
+In-Reply-To: <20140119182730.GA5867@redhat.com>
+References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com> <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c> <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com> <20140119104410.GB4195@redhat.com> <1390140269.8705.95.camel@bling.home> <20140119150926.GB5463@redhat.com> <252084946.20140119161438@eikelenboom.it> <20140119182730.GA5867@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree nodes for APM X-Gene PCIe controller and
-PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
-nodes are added.
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/boot/dts/apm-mustang.dts |    4 +
- arch/arm64/boot/dts/apm-storm.dtsi  |  144 +++++++++++++++++++++++++++++++++++
- 2 files changed, 148 insertions(+)
+Sunday, January 19, 2014, 7:27:30 PM, you wrote:
 
-diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
-index 1247ca1..ab2b95f 100644
---- a/arch/arm64/boot/dts/apm-mustang.dts
-+++ b/arch/arm64/boot/dts/apm-mustang.dts
-@@ -24,3 +24,7 @@
- 		reg = < 0x1 0x00000000 0x0 0x80000000 >; /* Updated by bootloader */
- 	};
- };
-+
-+&pcie0 {
-+	status = "ok";
-+};
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index d37d736..6b8b995 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,150 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			pcie0clk: pcie0clk@1f2bc000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2bc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie0clk";
-+			};
-+
-+			pcie1clk: pcie1clk@1f2cc000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2cc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie1clk";
-+			};
-+
-+			pcie2clk: pcie2clk@1f2dc000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2dc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie2clk";
-+			};
-+
-+			pcie3clk: pcie3clk@1f50c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f50c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie3clk";
-+			};
-+
-+			pcie4clk: pcie4clk@1f51c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f51c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie4clk";
-+			};
-+		};
-+
-+		pcie0: pcie@1f2b0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f2b0000 0x0 0x00010000
-+				0xe0 0xd0000000 0x0 0x00200000>;
-+			ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
-+				  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+			clocks = <&pcie0clk 0>;
-+		};
-+
-+		pcie1: pcie@1f2c0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f2c0000 0x0 0x00010000
-+				0xd0 0xd0000000 0x0 0x00200000>;
-+			ranges = <0x01000000 0x0 0x00000000 0xd0 0x00000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x0 0x10000000 0xd0 0x10000000 0x00 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xc9 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xca 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
-+			clocks = <&pcie1clk 0>;
-+		};
-+
-+		pcie2: pcie@1f2d0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg =  < 0x00 0x1f2d0000 0x0 0x00010000
-+				 0x90 0xd0000000 0x0 0x00200000>;
-+			ranges = <0x01000000 0x0 0x00000000 0x90 0x00000000 0x0 0x00010000   /* io  */
-+				  0x02000000 0x0 0x10000000 0x90 0x10000000 0x0 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xcf 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xd0 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
-+			clocks = <&pcie2clk 0>;
-+		};
-+
-+		pcie3: pcie@1f500000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f500000 0x0 0x00010000
-+				0xa0 0xd0000000 0x0 0x00200000>;
-+			ranges = <0x01000000 0x0 0x00000000 0xa0 0x00000000 0x0 0x00010000  /* mem */
-+				  0x02000000 0x0 0x10000000 0xa0 0x10000000 0x0 0x80000000>; /* io  */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xd5 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xd6 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
-+			clocks = <&pcie3clk 0>;
-+		};
-+
-+		pcie4: pcie@1f510000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = <0x00 0x1f510000 0x0 0x00010000>;
-+			ranges = <0x01000000 0x0 0x00000000 0xc0 0x00000000 0x0 0x00010000   /* io  */
-+				  0x02000000 0x0 0x10000000 0xc0 0x10000000 0x0 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xdb 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xdc 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
-+			clocks = <&pcie4clk 0>;
- 		};
- 
- 		serial0: serial@1c020000 {
--- 
-1.7.9.5
+> On Sun, Jan 19, 2014 at 04:14:38PM +0100, Sander Eikelenboom wrote:
+>> 
+>> Sunday, January 19, 2014, 4:09:26 PM, you wrote:
+>> 
+>> > On Sun, Jan 19, 2014 at 07:04:29AM -0700, Alex Williamson wrote:
+>> >> On Sun, 2014-01-19 at 12:44 +0200, Michael S. Tsirkin wrote:
+>> >> > On Fri, Jan 17, 2014 at 07:43:30PM +0900, eiichiro.oiwa.nm@hitachi.com wrote:
+>> >> > > Because legacy VGA is only one device on x86 System, I think qemu has to emulate a bridge
+>> >> > > for legacy VGA. The VGA Enable bit on its bridge control register has to set to 1. The VGA
+>> >> > > Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards 
+>> >> > > on the same system, I think its system needs two bridges for each device. These bridges
+>> >> > > need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
+>> >> > > to 1. Another VGA Enable bit for second VGA has to set to 0.
+>> >> > > 
+>> >> > > 
+>> >> > > >On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+>> >> > > >> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
+>> >> > > >> June 9, 2003 Chapter 12. VGA Support".
+>> >> > > >
+>> >> > > >And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
+>> >> > > >pages long.  Is there something there that prohibits two VGA devices
+>> >> > > >on the same bus?  I'm not a qemu developer, but if I were, I would
+>> >> > > >need a better hint about what is wrong before I could fix it.
+>> >> > > >
+>> >> > > >Again, sorry if you said this already and I missed it.
+>> >> > > >
+>> >> > > >>>[+cc Michael, Jesse, David, qemu-devel]
+>> >> > > >>>
+>> >> > > >>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+>> >> > > >>>> I suggest you should not break the PCI specification, as a developer of proprietary
+>> >> > > >>>> hypervisor, but I think your patch is no problem.
+>> >> > > >>>> Your PCI structure is specialized structure for your virtual machine.
+>> >> > > >>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
+>> >> > > >>>> because of breaking the PCI specification.
+>> >> > > >>>
+>> >> > > >>>I assume you think qemu is breaking the PCI spec.  What exactly do you
+>> >> > > >>>think is broken?  Please give specific references to the spec.  This
+>> >> > > >>>conversation is pretty fragmented, and I came in late, so I apologize
+>> >> > > >>>if I missed this.
+>> >> > > >>>
+>> >> > > >>>Bjorn
+>> >> > > >>>
+>> >> > > >
+>> >> > 
+>> >> > None of the bridges included in QEMU implements VGA support.
+>> >> > The spec explicitly says its optional, so that's ok.
+>> >> > 
+>> >> > As a result, you need to put device which has to work in
+>> >> > VGA mode on the root bus, any device behind a bridge
+>> >> > won't work in VGA mode (but might work in non VGA mode).
+>> >> 
+>> >> The ioh3420 root ports support VGA, so a q35 model is an option for
+>> >> multiple VGA devices.
+>> 
+>> > Hmm, you are right, I forgot you implemented this in March.
+>> > In fact, I see that you updated bridges to support VGA
+>> > so if user wants to put both devices behind bridges,
+>> > that's also possible.
+>> 
+>> 
+>> Unfortunately Xen seems to be old "pc" for the moment and the passthrough
+>> implementation doesn't seem to have the support for defining and using bridges either.
+
+> What do you base this claim on?
+> Did you actually try?
+> Bridges work fine for pc too.
+> See this for how to create a bridge and put a device behind it:
+> http://lists.gnu.org/archive/html/qemu-devel/2012-02/msg02765.html
+> this should work for all pci devices.
+
+I was saying Xen (and it's toolstack incombination with it's specific xen pci passthrough implementation), not Qemu ..
+Creating a bridge is not that difficult as you can easily let xen add things to the commandline that's being
+generated to start Qemu. Changing things is more difficult and the pci passthrough stuff is going with QMP anyway.
+
+
+>> With my limited c coding skills i also can't find how in hw/xen_pt.c it actually inits a
+>> pci device in Qemu.
+
+> hw/xen_pt.c means you use an old Qemu.
+> It's now in hw/xen/xen_pt.c
+> This is the relevant code:
+>     type_register_static(&xen_pci_passthrough_info);
+> As you can see parent is TYPE_PCI_DEVICE
+> which will make xen-pci-passthrough a pci device.
+
+A sorry no i'm using Qemu pulled from the Qemu git tree .. just typed that path from memory ..
+
+Ok thx for the pointer, hope i can find how to add it to a specific bridge instead of the root bus.
+
+>> Although I still find it strange that the pci_video_fixup is ignoring the decisions that the
+>> vga arbitration code has already made .. (make the device with the vgacon be the
+>> primary card unless arch code overrides), for the moment i will keep my patch in my private patch queue then :-)
+
 
