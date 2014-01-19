@@ -1,86 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:44768 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753294AbaAaBYh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 20:24:37 -0500
-Received: by mail-wg0-f52.google.com with SMTP id b13so7826146wgh.7
-        for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 17:24:36 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:4469 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752230AbaASPEz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 19 Jan 2014 10:04:55 -0500
+Date: Sun, 19 Jan 2014 17:09:26 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: eiichiro.oiwa.nm@hitachi.com, bhelgaas@google.com,
+	linux@eikelenboom.it, airlied@redhat.com,
+	gregkh@linuxfoundation.org, konrad.wilk@oracle.com,
+	linux-pci@vger.kernel.org, jbarnes@virtuousgeek.org,
+	airlied@linux.ie
+Subject: Re: In "pci_fixup_video" check if this is or should be
+ theprimaryvideo d
+Message-ID: <20140119150926.GB5463@redhat.com>
+References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com>
+ <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c>
+ <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com>
+ <20140119104410.GB4195@redhat.com>
+ <1390140269.8705.95.camel@bling.home>
 MIME-Version: 1.0
-From: Peter Chang <dpf@google.com>
-Date: Thu, 30 Jan 2014 17:24:16 -0800
-Message-ID: <CAF2xp_HgT+2zmxHTYpxRFiK-pfQKQJhJ74SJhQVER4s2ZZX0PQ@mail.gmail.com>
-Subject: PATCH: platforms: avoid queuing work if possible
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	tj@kernel.org
-Content-Type: multipart/mixed; boundary=bcaec53f2e2d80ac1504f13a099f
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1390140269.8705.95.camel@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---bcaec53f2e2d80ac1504f13a099f
-Content-Type: text/plain; charset=UTF-8
+On Sun, Jan 19, 2014 at 07:04:29AM -0700, Alex Williamson wrote:
+> On Sun, 2014-01-19 at 12:44 +0200, Michael S. Tsirkin wrote:
+> > On Fri, Jan 17, 2014 at 07:43:30PM +0900, eiichiro.oiwa.nm@hitachi.com wrote:
+> > > Because legacy VGA is only one device on x86 System, I think qemu has to emulate a bridge
+> > > for legacy VGA. The VGA Enable bit on its bridge control register has to set to 1. The VGA
+> > > Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards 
+> > > on the same system, I think its system needs two bridges for each device. These bridges
+> > > need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
+> > > to 1. Another VGA Enable bit for second VGA has to set to 0.
+> > > 
+> > > 
+> > > >On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> > > >> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
+> > > >> June 9, 2003 Chapter 12. VGA Support".
+> > > >
+> > > >And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
+> > > >pages long.  Is there something there that prohibits two VGA devices
+> > > >on the same bus?  I'm not a qemu developer, but if I were, I would
+> > > >need a better hint about what is wrong before I could fix it.
+> > > >
+> > > >Again, sorry if you said this already and I missed it.
+> > > >
+> > > >>>[+cc Michael, Jesse, David, qemu-devel]
+> > > >>>
+> > > >>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
+> > > >>>> I suggest you should not break the PCI specification, as a developer of proprietary
+> > > >>>> hypervisor, but I think your patch is no problem.
+> > > >>>> Your PCI structure is specialized structure for your virtual machine.
+> > > >>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
+> > > >>>> because of breaking the PCI specification.
+> > > >>>
+> > > >>>I assume you think qemu is breaking the PCI spec.  What exactly do you
+> > > >>>think is broken?  Please give specific references to the spec.  This
+> > > >>>conversation is pretty fragmented, and I came in late, so I apologize
+> > > >>>if I missed this.
+> > > >>>
+> > > >>>Bjorn
+> > > >>>
+> > > >
+> > 
+> > None of the bridges included in QEMU implements VGA support.
+> > The spec explicitly says its optional, so that's ok.
+> > 
+> > As a result, you need to put device which has to work in
+> > VGA mode on the root bus, any device behind a bridge
+> > won't work in VGA mode (but might work in non VGA mode).
+> 
+> The ioh3420 root ports support VGA, so a q35 model is an option for
+> multiple VGA devices.
 
-we noticed a change in module loading behavior and tracked it
-backwards to a small change in behavior due to
-774a1221e862b343388347bac9b318767336b20b. this tries to avoid queuing
-if possible, but if we do queue then copy the relevant task flag on
-the target cpu.
+Hmm, you are right, I forgot you implemented this in March.
+In fact, I see that you updated bridges to support VGA
+so if user wants to put both devices behind bridges,
+that's also possible.
 
-\p
-
---bcaec53f2e2d80ac1504f13a099f
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="0001-platforms-avoid-queuing-work-if-possible.patch"
-Content-Disposition: attachment;
-	filename="0001-platforms-avoid-queuing-work-if-possible.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hr2rqji00
-
-RnJvbSA5ZTc3MTg4ZDhhOGU3NGI3YjRlM2YzZTdjNmJiMGRlYjhmZGY3ZWI0IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBwZXRlciBjaGFuZyA8ZHBmQGdvb2dsZS5jb20+CkRhdGU6IE1v
-biwgMjcgSmFuIDIwMTQgMTY6MjQ6NTMgLTA4MDAKU3ViamVjdDogW1BBVENIXSBwbGF0Zm9ybXM6
-IGF2b2lkIHF1ZXVpbmcgd29yayBpZiBwb3NzaWJsZQoKNzc0YTEyMjFlODYyYjM0MzM4ODM0N2Jh
-YzliMzE4NzY3MzM2YjIwYiB0cmllcyB0byBhdm9pZCBhbiBleHBlbnNpdmUgc3luYwpieSBtYXJr
-aW5nIHRoZSBjdXJyZW50IHRhc2sgaWZmIGl0IHVzZXMgdGhlIGFzeW5jX3NjaGVkdWxlKCkgbWFj
-aGluZXJ5Lgpob3dldmVyLCBpZiB0aGUgcGFydCBvZiB0aGUgZHJpdmVyJ3MgcHJvYmUgaXMgY2Fs
-bGVkIHRocm91Z2ggYSB3b3JrZXIKdGhyZWFkIHRoZSBib29rZWVwaW5nIGZhaWxzIHRvIG1hcmsg
-dGhlIGNvcnJlY3QgdGFzayBhcyBoYXZpbmcgdXNlZCB0aGUKYXN5bmMgbWFjaGluZXJ5LgoKdGhp
-cyBpcyBhIHdvcmthcm91bmQgZm9yIHRoZSBjb21tb24gY2FzZSB0aGF0IHdlJ3JlIGFscmVhZHkg
-cnVubmluZwpvbiB0aGUgY29ycmVjdCBjcHUuIGhvd2V2ZXIsIGl0IHNlZW1zIHNvcnQgb2YgcmVh
-c29uYWJsZSB0byBub3QgdXNlCnRoZSB3b3JrZXIgdGhyZWFkIGlmIHdlIGRvbid0IGhhdmUgdG8u
-CgpUZXN0ZWQ6Ci0gY2hlY2tlZCBvbiB2ZWJteTIgKGliaXMgKyBzYXRhc3F1YXRjaCkgd2hpY2gg
-aXMgd2hlcmUgdGhlIG9yaWdpbmFsIGlzc3VlCiAgd2FzIGRpc2NvdmVyZWQuCi0gY2hlY2tlZCBv
-biBmZGhhMzQ3IChpa2FyaWEgKyBsb2dnZXJoZWFkICsgc2F0YXNxdWF0Y2gpIHRvIHNob3cgdGhh
-dAogIG5vdGhpbmcgY2hhbmdlZC4KCkNoYW5nZS1JZDogSWJlODk5NmNmNjUyNzM1Yzc0YTllMDZi
-YTlmZDAzMTE4MDc4Mzk1YmQKR29vZ2xlLUJ1Zy1JZDogMTI2MzI4NjcKU2lnbmVkLW9mZi1ieTog
-cGV0ZXIgY2hhbmcgPGRwZkBnb29nbGUuY29tPgotLS0KIGRyaXZlcnMvcGNpL3BjaS1kcml2ZXIu
-YyB8IDE3ICsrKysrKysrKysrKystLS0tCiAxIGZpbGUgY2hhbmdlZCwgMTMgaW5zZXJ0aW9ucygr
-KSwgNCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMg
-Yi9kcml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMKaW5kZXggZTY1MTVlMi4uOWY3ZTFlOSAxMDA2NDQK
-LS0tIGEvZHJpdmVycy9wY2kvcGNpLWRyaXZlci5jCisrKyBiL2RyaXZlcnMvcGNpL3BjaS1kcml2
-ZXIuYwpAQCAtMjQzLDYgKzI0Myw3IEBAIHN0cnVjdCBkcnZfZGV2X2FuZF9pZCB7CiAJc3RydWN0
-IHBjaV9kcml2ZXIgKmRydjsKIAlzdHJ1Y3QgcGNpX2RldiAqZGV2OwogCWNvbnN0IHN0cnVjdCBw
-Y2lfZGV2aWNlX2lkICppZDsKKwl1bnNpZ25lZCBpbnQgdGFza19mbGFnczsKIH07CiAKIHN0YXRp
-YyBsb25nIGxvY2FsX3BjaV9wcm9iZSh2b2lkICpfZGRpKQpAQCAtMjY3LDcgKzI2OCw4IEBAIHN0
-YXRpYyBsb25nIGxvY2FsX3BjaV9wcm9iZSh2b2lkICpfZGRpKQogCWlmIChyYykgewogCQlwY2lf
-ZGV2LT5kcml2ZXIgPSBOVUxMOwogCQlwbV9ydW50aW1lX3B1dF9zeW5jKGRldik7Ci0JfQorCX0g
-ZWxzZSBpZiAoY3VycmVudCkKKwkJZGRpLT50YXNrX2ZsYWdzID0gY3VycmVudC0+ZmxhZ3M7CiAJ
-cmV0dXJuIHJjOwogfQogCkBAIC0yNzUsNyArMjc3LDcgQEAgc3RhdGljIGludCBwY2lfY2FsbF9w
-cm9iZShzdHJ1Y3QgcGNpX2RyaXZlciAqZHJ2LCBzdHJ1Y3QgcGNpX2RldiAqZGV2LAogCQkJICBj
-b25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpCiB7CiAJaW50IGVycm9yLCBub2RlOwotCXN0
-cnVjdCBkcnZfZGV2X2FuZF9pZCBkZGkgPSB7IGRydiwgZGV2LCBpZCB9OworCXN0cnVjdCBkcnZf
-ZGV2X2FuZF9pZCBkZGkgPSB7IGRydiwgZGV2LCBpZCwgMCB9OwogCiAJLyogRXhlY3V0ZSBkcml2
-ZXIgaW5pdGlhbGl6YXRpb24gb24gbm9kZSB3aGVyZSB0aGUgZGV2aWNlJ3MKIAkgICBidXMgaXMg
-YXR0YWNoZWQgdG8uICBUaGlzIHdheSB0aGUgZHJpdmVyIGxpa2VseSBhbGxvY2F0ZXMKQEAgLTI4
-Nyw5ICsyODksMTYgQEAgc3RhdGljIGludCBwY2lfY2FsbF9wcm9iZShzdHJ1Y3QgcGNpX2RyaXZl
-ciAqZHJ2LCBzdHJ1Y3QgcGNpX2RldiAqZGV2LAogCiAJCWdldF9vbmxpbmVfY3B1cygpOwogCQlj
-cHUgPSBjcHVtYXNrX2FueV9hbmQoY3B1bWFza19vZl9ub2RlKG5vZGUpLCBjcHVfb25saW5lX21h
-c2spOwotCQlpZiAoY3B1IDwgbnJfY3B1X2lkcykKKwkJLyogdHJ5IG5vdCB0byBxdWV1ZSB3b3Jr
-IGlmIHdlJ3JlIGFscmVhZHkgb24gdGhlIHRhcmdldCBjcHUgKi8KKwkJaWYgKGNwdSA8IG5yX2Nw
-dV9pZHMgJiYgY3B1ICE9IGdldF9jcHUoKSkgewogCQkJZXJyb3IgPSB3b3JrX29uX2NwdShjcHUs
-IGxvY2FsX3BjaV9wcm9iZSwgJmRkaSk7Ci0JCWVsc2UKKwkJCS8qIGNvcHkgb3V0IHNvbWUgdGFz
-ayBmbGFncyBmb3IgdGhlIG1vZHVsZSBsb2FkaW5nCisJCQkgKiBjYXNlLgorCQkJICovCisJCQlp
-ZiAoIWVycm9yICYmIGN1cnJlbnQpCisJCQkJY3VycmVudC0+ZmxhZ3MgfD0gKGRkaS50YXNrX2Zs
-YWdzICYKKwkJCQkJCSAgIFBGX1VTRURfQVNZTkMpOworCQl9IGVsc2UKIAkJCWVycm9yID0gbG9j
-YWxfcGNpX3Byb2JlKCZkZGkpOwogCQlwdXRfb25saW5lX2NwdXMoKTsKIAl9IGVsc2UKLS0gCjEu
-OC41LjMKCg==
---bcaec53f2e2d80ac1504f13a099f--
+-- 
+MST
