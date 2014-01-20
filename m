@@ -1,88 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52902 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753423AbaA0AcX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jan 2014 19:32:23 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 4/11] ACPI / hotplug / PCI: Rework acpiphp_no_hotplug()
-Date: Mon, 27 Jan 2014 01:40:32 +0100
-Message-ID: <4037947.8Z1PhnlAZj@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/2] pci: Add device specific PCI ACS enable
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Mon, 20 Jan 2014 15:01:46 -0700
+Message-ID: <20140120220146.29567.64686.stgit@bling.home>
+In-Reply-To: <20140120215502.29567.11291.stgit@bling.home>
+References: <20140120215502.29567.11291.stgit@bling.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Some devices support PCI ACS-like features, but don't report it using
+the standard PCIe capabilities.  We already provide hooks for device
+specific testing of ACS, but not for device specific enabling of ACS.
+This provides that setup hook.
 
-If a struct acpi_device pointer is passed to acpiphp_no_hotplug()
-instead of an ACPI handle, the function won't need to call
-acpi_bus_get_device(), which may be costly, any more.  Then,
-trim_stale_devices() can call acpiphp_no_hotplug() passing
-the struct acpi_device object it already has directly to that
-function.
-
-Make those changes and update slot_no_hotplug() accordingly.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+ drivers/pci/pci.c    |   26 ++++++++++++++++++++------
+ drivers/pci/quirks.c |   25 +++++++++++++++++++++++++
+ include/linux/pci.h  |    2 ++
+ 3 files changed, 47 insertions(+), 6 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -635,11 +635,8 @@ static void disable_slot(struct acpiphp_
- 	slot->flags &= (~SLOT_ENABLED);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 07369f3..a57ff7f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2357,21 +2357,18 @@ void pci_request_acs(void)
  }
  
--static bool acpiphp_no_hotplug(acpi_handle handle)
-+static bool acpiphp_no_hotplug(struct acpi_device *adev)
+ /**
+- * pci_enable_acs - enable ACS if hardware support it
++ * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
+  * @dev: the PCI device
+  */
+-void pci_enable_acs(struct pci_dev *dev)
++static int pci_std_enable_acs(struct pci_dev *dev)
  {
--	struct acpi_device *adev = NULL;
+ 	int pos;
+ 	u16 cap;
+ 	u16 ctrl;
+ 
+-	if (!pci_acs_enable)
+-		return;
 -
--	acpi_bus_get_device(handle, &adev);
- 	return adev && adev->flags.no_hotplug;
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+ 	if (!pos)
+-		return;
++		return -ENODEV;
+ 
+ 	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
+ 	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
+@@ -2389,6 +2386,23 @@ void pci_enable_acs(struct pci_dev *dev)
+ 	ctrl |= (cap & PCI_ACS_UF);
+ 
+ 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	return 0;
++}
++
++/**
++ * pci_enable_acs - enable ACS if hardware support it
++ * @dev: the PCI device
++ */
++void pci_enable_acs(struct pci_dev *dev)
++{
++	if (!pci_acs_enable)
++		return;
++
++	if (!pci_std_enable_acs(dev))
++		return;
++
++	pci_dev_specific_enable_acs(dev);
  }
  
-@@ -647,10 +644,13 @@ static bool slot_no_hotplug(struct acpip
- {
- 	struct acpiphp_func *func;
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 3a02717..4be1cd5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3461,3 +3461,28 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
  
--	list_for_each_entry(func, &slot->funcs, sibling)
--		if (acpiphp_no_hotplug(func_to_handle(func)))
--			return true;
-+	list_for_each_entry(func, &slot->funcs, sibling) {
-+		struct acpi_device *adev = NULL;
- 
-+		acpi_bus_get_device(func_to_handle(func), &adev);
-+		if (acpiphp_no_hotplug(adev))
-+			return true;
+ 	return -ENOTTY;
+ }
++
++static const struct pci_dev_enable_acs {
++	u16 vendor;
++	u16 device;
++	int (*enable_acs)(struct pci_dev *dev);
++} pci_dev_enable_acs[] = {
++	{ 0 }
++};
++
++void pci_dev_specific_enable_acs(struct pci_dev *dev)
++{
++	const struct pci_dev_enable_acs *i;
++	int ret;
++
++	for (i = pci_dev_enable_acs; i->enable_acs; i++) {
++		if ((i->vendor == dev->vendor ||
++		     i->vendor == (u16)PCI_ANY_ID) &&
++		    (i->device == dev->device ||
++		     i->device == (u16)PCI_ANY_ID)) {
++			ret = i->enable_acs(dev);
++			if (ret >= 0)
++				return;
++		}
 +	}
- 	return false;
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a13d682..7905fd8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1633,6 +1633,7 @@ enum pci_fixup_pass {
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ struct pci_dev *pci_get_dma_source(struct pci_dev *dev);
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
++void pci_dev_specific_enable_acs(struct pci_dev *dev);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) {}
+@@ -1645,6 +1646,7 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+ {
+ 	return -ENOTTY;
  }
++static inline void pci_dev_specific_enable_acs(struct pci_dev *dev) {}
+ #endif
  
-@@ -707,13 +707,12 @@ static void trim_stale_devices(struct pc
- 	bool alive = false;
- 
- 	if (adev) {
--		acpi_handle handle = adev->handle;
- 		acpi_status status;
- 		unsigned long long sta;
- 
--		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-+		status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
- 		alive = (ACPI_SUCCESS(status) && sta == ACPI_STA_ALL)
--			|| acpiphp_no_hotplug(handle);
-+			|| acpiphp_no_hotplug(adev);
- 	}
- 	if (!alive) {
- 		u32 v;
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
 
