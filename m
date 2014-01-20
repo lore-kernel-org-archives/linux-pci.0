@@ -1,79 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:38377 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753870AbaACWrR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 17:47:17 -0500
-Received: by mail-ie0-f181.google.com with SMTP id e14so16587657iej.40
-        for <linux-pci@vger.kernel.org>; Fri, 03 Jan 2014 14:47:16 -0800 (PST)
-Date: Fri, 3 Jan 2014 15:47:13 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v5 25/33] PCI, x86: Make ioapic hotplug support built-in
-Message-ID: <20140103224713.GC18987@google.com>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
- <1388707565-16535-26-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 20 Jan 2014 09:43:14 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-nvme@lists.infradead.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [PATCH] nvme: Cleanup nvme_dev_start()
+Message-ID: <20140120084314.GD19068@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
+ <CAErSpo4g_xm4vZWZDgyjtJu+z5ARSerQLrtJ6W_peXv4bKwcgg@mail.gmail.com>
+ <alpine.LRH.2.03.1401171419370.25844@AMR>
+ <20140120083835.GA19068@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1388707565-16535-26-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140120083835.GA19068@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[fixed Rafael's email address; I imagine you got a few bounces :)]
+This update fixes an oddity when a device is first added
+and then removed from dev_list in case of initialization
+failure, instead of just being added in case of success.
 
-On Thu, Jan 02, 2014 at 04:05:57PM -0800, Yinghai Lu wrote:
-> ioapic hotplug should be built-in like pci root bus hotplug.
-> 
-> Also need to make it depends on X86_IO_APIC.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/block/nvme-core.c |   19 ++++++++-----------
+ 1 files changed, 8 insertions(+), 11 deletions(-)
 
-Most of this series is x86-specific and outside the scope of PCI, so I
-assume somebody else will deal with it.
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index e1e4ad4..e4e12be 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -2105,29 +2105,26 @@ static int nvme_dev_start(struct nvme_dev *dev)
+ 	if (result)
+ 		goto unmap;
+ 
+-	spin_lock(&dev_list_lock);
+-	list_add(&dev->node, &dev_list);
+-	spin_unlock(&dev_list_lock);
+-
+ 	result = set_queue_count(dev, num_online_cpus());
+ 	if (result == -EBUSY)
+-		return -EBUSY;
++		goto adddev;
+ 
+ 	nvme_teardown_admin_queue(dev);
+ 
+ 	if (result)
+-		goto disable;
++		goto unmap;
+ 
+ 	result = nvme_setup_io_queues(dev, result);
+ 	if (result)
+-		goto disable;
+-
+-	return 0;
++		goto unmap;
+ 
+- disable:
++ adddev:
+ 	spin_lock(&dev_list_lock);
+-	list_del_init(&dev->node);
++	list_add(&dev->node, &dev_list);
+ 	spin_unlock(&dev_list_lock);
++
++	return result;
++
+  unmap:
+ 	nvme_dev_unmap(dev);
+ 	return result;
+-- 
+1.7.7.6
 
-This particular patch doesn't seem to depend on anything else, so I'll
-merge it.
-
-> ---
->  drivers/pci/Kconfig  | 3 ++-
->  drivers/pci/ioapic.c | 6 +++++-
->  2 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index b6a99f7..893503f 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -105,9 +105,10 @@ config PCI_PASID
->  	  If unsure, say N.
->  
->  config PCI_IOAPIC
-> -	tristate "PCI IO-APIC hotplug support" if X86
-> +	bool "PCI IO-APIC hotplug support" if X86
->  	depends on PCI
->  	depends on ACPI
-> +	depends on X86_IO_APIC
->  	default !X86
->  
->  config PCI_LABEL
-> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-> index 50ce680..2c2930e 100644
-> --- a/drivers/pci/ioapic.c
-> +++ b/drivers/pci/ioapic.c
-> @@ -113,6 +113,10 @@ static struct pci_driver ioapic_driver = {
->  	.remove		= ioapic_remove,
->  };
->  
-> -module_pci_driver(ioapic_driver);
-> +static int __init ioapic_init(void)
-> +{
-> +	return pci_register_driver(&ioapic_driver);
-> +}
-> +module_init(ioapic_init);
->  
->  MODULE_LICENSE("GPL");
-> -- 
-> 1.8.4
-> 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
