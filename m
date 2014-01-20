@@ -1,80 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:59563 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109AbaAJRNi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 12:13:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <52D01D82.5070202@canonical.com>
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>
-	<1386546869-31900-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>
-	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>
-	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>
-	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>
-	<52A8BAC5.70006@canonical.com>
-	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>
-	<52D01D82.5070202@canonical.com>
-Date: Fri, 10 Jan 2014 09:13:37 -0800
-Message-ID: <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit mmio
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mga02.intel.com ([134.134.136.20]:1131 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868AbaATQlN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jan 2014 11:41:13 -0500
+Date: Mon, 20 Jan 2014 09:41:09 -0700 (MST)
+From: Keith Busch <keith.busch@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+cc: Keith Busch <keith.busch@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-nvme@lists.infradead.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] nvme: Cleanup nvme_dev_start()
+In-Reply-To: <20140120084314.GD19068@dhcp-26-207.brq.redhat.com>
+Message-ID: <alpine.LRH.2.03.1401200856580.25844@AMR>
+References: <cover.1389904166.git.agordeev@redhat.com> <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com> <CAErSpo4g_xm4vZWZDgyjtJu+z5ARSerQLrtJ6W_peXv4bKwcgg@mail.gmail.com> <alpine.LRH.2.03.1401171419370.25844@AMR>
+ <20140120083835.GA19068@dhcp-26-207.brq.redhat.com> <20140120084314.GD19068@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 10, 2014 at 8:19 AM, Joseph Salisbury
-<joseph.salisbury@canonical.com> wrote:
-> On 12/11/2013 02:55 PM, Yinghai Lu wrote:
->> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
->> <joseph.salisbury@canonical.com> wrote:
->>> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
->>>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>> That doesn't answer my question at all.
->>>>>
->>>>> I understand that this change makes it so Joseph doesn't have to use
->>>>> "pci=realloc=off".  But why should auto-reallocation be limited to
->>>>> buses that have resources above 4GB?  That doesn't make any sense.
->>>>>
->>>>> We should fix the reallocation code so it can deal with this case.  If
->>>>> there's not enough space for everything, obviously we have to leave
->>>>> something unassigned.  A ROM BAR is a good candidate for leaving
->>>>> unassigned, because most of the time we can get along without it.
->>>> Yes, that is ideal and not that simple.
->>>> but that would be hard to backport to old kernels.
->>>>
->>>> BTW, Joseph, can you try
->>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>>> for-pci-3.14
->>>> with pci=realloc=on
->>>>
->>>> on that system?
->>>>
->>>> Thanks
->>>>
->>>> Yinghai
->>> I noticed there was some back and forth on this thread.  Do you still
->>> want me to test this version, Yinghai?
->> Yes, if that works, we would not need to put the patch in upstream for limiting
->> realloc auto scope.
->>
+On Mon, 20 Jan 2014, Alexander Gordeev wrote:
+> This update fixes an oddity when a device is first added
+> and then removed from dev_list in case of initialization
+> failure, instead of just being added in case of success.
 >
-> Another user has confirmed that at test kernel from your branch[0] does
-> resolve the bug.
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+> drivers/block/nvme-core.c |   19 ++++++++-----------
+> 1 files changed, 8 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+> index e1e4ad4..e4e12be 100644
+> --- a/drivers/block/nvme-core.c
+> +++ b/drivers/block/nvme-core.c
+> @@ -2105,29 +2105,26 @@ static int nvme_dev_start(struct nvme_dev *dev)
+> 	if (result)
+> 		goto unmap;
+>
+> -	spin_lock(&dev_list_lock);
+> -	list_add(&dev->node, &dev_list);
+> -	spin_unlock(&dev_list_lock);
+> -
+> 	result = set_queue_count(dev, num_online_cpus());
+> 	if (result == -EBUSY)
 
-Hi, Joe,
-
-Bjorn does not want to limit auto realloc, so this patch can not make
-to upstream at this point.
-
-so we may have to ask user to append "pci=realloc=off" before we find
-more smart way to realloc
-resource.
-
-Thanks
-
-Yinghai
+For whatever reason, some of these devices unfortunetly don't support
+legacy interrupts. We expect an interrupt when the completion is posted
+for setting the queue count, but failing that, we rely on the polling
+thread to invoke the completion, so the device needs to be in the dev_list
+before calling set_queue_count.
