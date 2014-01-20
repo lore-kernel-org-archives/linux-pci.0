@@ -1,50 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:2448 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752803AbaAFGSX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:18:23 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiri Kosina <trivial@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 10/20] iommu/vt-d, trivial: use defined macro instead of hardcoding
-Date: Mon,  6 Jan 2014 14:18:17 +0800
-Message-Id: <1388989107-4795-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from science.horizon.com ([71.41.210.146]:35505 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753223AbaATXfq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 18:35:46 -0500
+Date: 20 Jan 2014 18:35:43 -0500
+Message-ID: <20140120233543.15159.qmail@science.horizon.com>
+From: "George Spelvin" <linux@horizon.com>
+To: acooks@gmail.com, linux@horizon.com
+Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
+Cc: iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org,
+	linux-pci@vger.kernel.org
+In-Reply-To: <CAJtEV7ZsM2YHHETRGNwXnGi7uq0mJen73i-Yp3EXoDrnni=o=g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use defined macro instead of hardcoding in function set_ioapic_sid()
-for readability.
+I'm looking over the bug reports, and I'm trying to understand why you
+need two mechanisms.  You have one table (pci_dev_dma_source_map)
+that maps one devfn to a secondary one, and a second table
+(pci_dev_dma_multi_source_map) that gives a 2-bit bitmap of function
+numbers.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel_irq_remapping.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But as I understand it, all the Marvell devices listed there always have
+a devfn of 00.0, so you could just move them to the first table with a
+mapping to 00.1.
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 6712f1e..451c7f1 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -324,7 +324,7 @@ static int set_ioapic_sid(struct irte *irte, int apic)
- 		return -1;
- 	}
- 
--	set_irte_sid(irte, 1, 0, sid);
-+	set_irte_sid(irte, SVT_VERIFY_SID_SQ, SQ_ALL_16, sid);
- 
- 	return 0;
- }
--- 
-1.7.10.4
+If they also have device/function 00.1 using a requester ID of 00.0
+you could add a second entry.
 
+The only time you'd need a bitmap would be if the device ended up on
+function 2 or higher and still used functions 0 and 1 in request IDs.
+
+
+Now, unfortunately this does not cover the phantom functions case, but
+that could be done with separate code.
+
+
+The other question is when to do the lookup.  I don't know how often
+IOMMU mapping is done, and if linear search through a list of PCI devices
+would be a performance problem.  It would be nicer to have a standard
+PCI fixup done once which sets a flag in the pci_dev to either note the
+actual secondary devfn, or set a flag to trigger the secondary lookup
+only on the devices that need it.
+
+There's certainly room in the pci_dev for a second 8-bit devfn field,
+Let me work up a patch based on that...
