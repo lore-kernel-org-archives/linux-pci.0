@@ -1,509 +1,376 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og113.obsmtp.com ([64.18.0.26]:45403 "HELO
-	exprod5og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756654AbaAGClg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 21:41:36 -0500
-Received: by mail-vc0-f169.google.com with SMTP id hu19so9625709vcb.0
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 18:41:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201401031307.50312.arnd@arndb.de>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
-	<1387785725-24262-2-git-send-email-tinamdar@apm.com>
-	<201401031307.50312.arnd@arndb.de>
-Date: Mon, 6 Jan 2014 18:41:34 -0800
-Message-ID: <CACoXjck9KvQjB-8t3GYa95pZ6AwAyhyRKVg=5CYog_nFAfCiAQ@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/3] pci: APM X-Gene PCIe controller driver
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	patches <patches@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from science.horizon.com ([71.41.210.146]:22281 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753579AbaATNOB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 08:14:01 -0500
+Date: 20 Jan 2014 08:13:59 -0500
+Message-ID: <20140120131359.26728.qmail@science.horizon.com>
+From: "George Spelvin" <linux@horizon.com>
+To: acooks@gmail.com, linux-ide@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
+Cc: linux@horizon.com
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for your comments. Please see some inline replies.
+This is requried for me to get a Marvell 9172 SATA controller working
+with VT-d.
 
-On Fri, Jan 3, 2014 at 4:07 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 23 December 2013, Tanmay Inamdar wrote:
->> This patch adds the AppliedMicro X-gene SOC PCIe controller driver.
->> APM X-Gene PCIe controller supports maximum upto 8 lanes and
->> GEN3 speed. X-Gene has maximum 5 PCIe ports supported.
->>
->> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
->> ---
->>  drivers/pci/host/Kconfig      |    5 +
->>  drivers/pci/host/Makefile     |    1 +
->>  drivers/pci/host/pcie-xgene.c | 1017 +++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 1023 insertions(+)
->>  create mode 100644 drivers/pci/host/pcie-xgene.c
->>
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index 47d46c6..6d8fcbc 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -33,4 +33,9 @@ config PCI_RCAR_GEN2
->>         There are 3 internal PCI controllers available with a single
->>         built-in EHCI/OHCI host controller present on each one.
->>
->> +config PCI_XGENE
->> +     bool "X-Gene PCIe controller"
->> +     depends on ARCH_XGENE
->> +     depends on OF
->
-> Please add a help text here.
+Andrew Cooks wrote the original; see
+https://bugzilla.kernel.org/show_bug.cgi?id=42679#c22
 
-ok
+Without it, I see the same symptoms as in that bug report:
+the device is recognized, but probing the attached disk fails.
 
->
->> +#ifdef CONFIG_ARM64
->> +#include <asm/pcibios.h>
->> +#else
->> +#include <asm/mach/pci.h>
->> +#endif
->
-> What is !ARM64 case? Is this for PowerPC or ARM? Since you depend on
-> ARCH_XGENE in Kconfig I guess neither case can actually happen,
-> so you can remove the #ifdef.
+I massaged it a bit to fit my personal idea of "cleaner".
+The biggest logic change is the elimination of the fn_mapped
+variable from quirk_map_multi_requester_ids.
 
-ok
+I also got rid of the "fn_map << fn" logic (which is never false).
 
->
->> +#define CFG_CONSTANTS_31_00          0x2000
->> +#define CFG_CONSTANTS_63_32          0x2004
->> +#define CFG_CONSTANTS_159_128                0x2010
->> +#define CFG_CONSTANTS_415_384           0x2030
->
-> These macros do not seem helpful. If you don't have meaningful register
-> names, just don't provide any and address the registers by index.
+I can vouch for quirk_map_multi_requester_ids working in my case;
+I can't speak for quirk_map_requester_id.
 
-ok
+Who do I nudge about actually getting some variant of this merged?
 
->
->> +#define ENABLE_L1S_POWER_MGMT_SET(dst, src)     (((dst) & ~0x02000000) | \
->> +                                             (((u32)(src) << 0x19) & \
->> +                                             0x02000000))
->
-> Makes this an inline function, or open-code it in the caller if there
-> is only one.
->
-
-ok
-
->> +#ifdef CONFIG_64BIT
->> +#define pci_io_offset(s)             (s & 0xff00000000)
->> +#else
->> +#define pci_io_offset(s)             (s & 0x00000000)
->> +#endif /* CONFIG_64BIT */
->
-> Why is this needed? The I/O space can never be over 0xffffffff,
-> or in practice 0xffff. My best guess is that you have a bug in the
-> function parsing your ranges property, or in the property value.
-
-I will recheck the logic.
-
->
->> +static inline struct xgene_pcie_port *
->> +xgene_pcie_sys_to_port(struct pci_sys_data *sys)
->> +{
->> +     return (struct xgene_pcie_port *)sys->private_data;
->> +}
->
-> You shouldn't need the cast, or the accessor function, since private_data
-> is already a void pointer.
-
-got it.
-
->
->> +/* IO ports are memory mapped */
->> +void __iomem *__pci_ioport_map(struct pci_dev *dev, unsigned long port,
->> +                            unsigned int nr)
->> +{
->> +     return devm_ioremap_nocache(&dev->dev, port, nr);
->> +}
->
-> This can't be in the host driver, since you can have only one instance
-> of the function in the system, but you probably want multiple host
-> drivers in a multiplatform kernel on ARM64.
-
-You are right. It will fail multiplatform kernel.
-
->
-> Also, the implementation is wrong since the I/O port range already needs
-> to be ioremapped in order for inb/outb to work. There is already a
-> generic implementation of this in include/asm-generic/iomap.h, which
-> correctly calls ioport_map. Make sure that arm64 uses this implementation
-> and provides an ioport_map() function like
->
-> static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
-> {
->         return PCI_IOBASE + port;
-> }
-
-For X-Gene, IO regions are memory mapped IO regions. So I am not sure
-if 'ioport_map'
-would work.
-
->
->> +/* PCIE Out/In to CSR */
->> +static inline void xgene_pcie_out32(void *addr, u32 val)
->> +{
->> +     pr_debug("pcie csr wr: 0x%llx 0x%08x\n", (phys_addr_t)addr, val);
->> +     writel(val, addr);
->> +}
->> +
->> +static inline void xgene_pcie_in32(void *addr, u32 *val)
->> +{
->> +     *val = readl(addr);
->> +     pr_debug("pcie csr rd: 0x%llx 0x%08x\n", (phys_addr_t)addr, *val);
->> +}
->
-> These add no value, just remove them. If your code is so buggy that
-> you need to print every register access to the debug log, we don't
-> want it ;-)
-
-Yep. I will remove it.
-
->
->> +static inline void xgene_pcie_cfg_out16(void *addr, u16 val)
->> +{
->> +     phys_addr_t temp_addr = (phys_addr_t) addr & ~0x3;
->> +     u32 val32 = readl((void *)temp_addr);
->> +
->> +     switch ((phys_addr_t) addr & 0x3) {
->> +     case 2:
->> +             val32 &= ~0xFFFF0000;
->> +             val32 |= (u32) val << 16;
->> +             break;
->> +     case 0:
->> +     default:
->> +             val32 &= ~0xFFFF;
->> +             val32 |= val;
->> +             break;
->> +     }
->> +     writel(val32, (void *)temp_addr);
->> +}
->
-> Isn't there a generic version of this? If not, should there be one?
-> Maybe Bjorn can comment.
->
-> Also, all the typecasts are wrong. Please think about what types
-> you really want and fix them.
-
-ok
-
->
->> +static void xgene_pcie_set_rtdid_reg(struct pci_bus *bus, uint devfn)
->> +{
->> +     struct xgene_pcie_port *port = xgene_pcie_bus_to_port(bus);
->> +     unsigned int b, d, f;
->> +     u32 rtdid_val = 0;
->> +
->> +     b = bus->number;
->> +     d = PCI_SLOT(devfn);
->> +     f = PCI_FUNC(devfn);
->> +
->> +     if (bus->number == port->first_busno)
->> +             rtdid_val = (b << 24) | (d << 19) | (f << 16);
->> +     else if (bus->number >= (port->first_busno + 1))
->> +             rtdid_val = (port->first_busno << 24) |
->> +             (b << 8) | (d << 3) | f;
->> +
->> +     xgene_pcie_out32(port->csr_base + RTDID, rtdid_val);
->> +     /* read the register back to ensure flush */
->> +     xgene_pcie_in32(port->csr_base + RTDID, &rtdid_val);
->> +}
->
-> What is an 'rtdid'? Maybe add some comments
-
-RTDID should be set with correct bdf to access the EP config space. I
-will add comments.
-
->
->> +static void xgene_pcie_setup_lanes(struct xgene_pcie_port *port)
->> +{
->> +     void *csr_base = port->csr_base;
->> +     u32 val;
->> +
-> ...
->> +static void xgene_pcie_setup_link(struct xgene_pcie_port *port)
->> +{
->> +     void *csr_base = port->csr_base;
->> +     u32 val;
->> +
->
-> Don't these belong into the PHY driver? Can the setup be done in the
-> firmware instead so we don't have to bother with it in Linux?
-> Presumably you already need PCI support at boot time already if
-> you want to boot from a PCI device.
-
-They do look like phy setup functions but they are part of PCIe core
-register space.
-
->
->> +static void xgene_pcie_config_pims(void *csr_base, u32 addr,
->> +                                u64 pim, resource_size_t size)
->> +{
->> +     u32 val;
->> +
->> +     xgene_pcie_out32(csr_base + addr, lower_32_bits(pim));
->> +     val = upper_32_bits(pim) | EN_COHERENCY;
->> +     xgene_pcie_out32(csr_base + addr + 0x04, val);
->> +     xgene_pcie_out32(csr_base + addr + 0x08, 0x0);
->> +     xgene_pcie_out32(csr_base + addr + 0x0c, 0x0);
->> +     val = lower_32_bits(size);
->> +     xgene_pcie_out32(csr_base + addr + 0x10, val);
->> +     val = upper_32_bits(size);
->> +     xgene_pcie_out32(csr_base + addr + 0x14, val);
->> +}
->
-> I suspect this is for programming the inbound translation window for
-> DMA transactions (maybe add a comment?), and the second 64-bit word is
-> for the bus-side address. Are you sure you want a translation starting
-> at zero, rather than an identity-mapping like this?
-
-Actually it is an unused sub-region. I will remove setting to 0. It
-defaults to 0 anyways.
-
->
->         xgene_pcie_out32(csr_base + addr, lower_32_bits(pim));
->         val = upper_32_bits(pim) | EN_COHERENCY;
->         xgene_pcie_out32(csr_base + addr + 0x04, val);
->         xgene_pcie_out32(csr_base + addr + 0x08, pim & 0xffffffff);
->         xgene_pcie_out32(csr_base + addr + 0x0c, pim >> 32);
->
->> +static void xgene_pcie_setup_port(struct xgene_pcie_port *port)
->> +{
->> +     int type = port->type;
->> +
->> +     xgene_pcie_program_core(port->csr_base);
->> +     if (type == PTYPE_ROOT_PORT)
->> +             xgene_pcie_setup_root_complex(port);
->> +     else
->> +             xgene_pcie_setup_endpoint(port);
->> +}
->
-> We don't really have infrastructure for PCIe endpoint devices in Linux,
-> or in the generic DT binding for PCI hosts. We probably really want to
-> add that in the future, but until we have decided on how to do this,
-> please remove all code related to endpoint mode.
-
-ok.
-
->
->> +struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
->> +{
->> +     struct xgene_pcie_port *port = xgene_pcie_bus_to_port(bus);
->> +
->> +     return of_node_get(port->node);
->> +}
->
-> Another pointless wrapper to remove.
-
-If I remove this, then we get a failure while parsing irqs
-"pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-22"
-
->
->> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
->> +{
->> +     int i;
->> +
->> +     for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
->> +             dev->resource[i].start = dev->resource[i].end = 0;
->> +             dev->resource[i].flags = 0;
->> +     }
->> +}
->> +DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_BRIDGE_DEVICEID,
->> +                      xgene_pcie_fixup_bridge);
->
-> Please add a comment to describe exactly what bug you are working around,
-> and what devices are affected.
-
-ok
-
->
->> +/*
->> + * read configuration values from DTS
->> + */
->> +static int xgene_pcie_read_dts_config(struct xgene_pcie_port *port)
->> +{
->> +     struct device_node *np = port->node;
->> +     struct resource csr_res;
->> +     u32 val32;
->> +     int ret;
->> +     const u8 *val;
->> +
->> +     val = of_get_property(np, "device_type", NULL);
->> +     if ((val != NULL) && !strcmp(val, "ep"))
->> +             port->type = PTYPE_ENDPOINT;
->> +     else
->> +             port->type = PTYPE_ROOT_PORT;
->
-> "ep" is not a valid device_type for all I know.
-
-Will remove all EP stuff.
-
->
->> +     ret = of_property_read_u32(np, "link_speed", &val32);
->> +     if (ret == 0)
->> +             port->link_speed = val32;
->> +     else
->> +             port->link_speed = PCIE_GEN3;
->
-> I guess this should be an argument to the phy node. Isn't it the phy
-> that needs to know the link speed rather than the host?
-
-yes. some part of it still resides in the core. However I will make it
-to GEN3 by default.
-
->
->> +static int xgene_pcie_alloc_ep_mem(struct xgene_pcie_port *port)
->> +{
->> +     struct xgene_pcie_ep_info *ep = &port->ep_info;
->> +
->> +     ep->reg_virt = dma_alloc_coherent(port->dev, XGENE_PCIE_EP_MEM_SIZE,
->> +                                       &ep->reg_phys, GFP_KERNEL);
->> +     if (ep->reg_virt == NULL)
->> +             return -ENOMEM;
->> +
->> +     dev_info(port->dev, "EP: Virt - %p Phys - 0x%llx Size - 0x%x\n",
->> +              ep->reg_virt, (u64) ep->reg_phys, XGENE_PCIE_EP_MEM_SIZE);
->> +     return 0;
->> +}
->
-> remove endpoint stuff for now.
-
-ok
-
->
->> +static int xgene_pcie_populate_inbound_regions(struct xgene_pcie_port *port)
->> +{
->> +     struct resource *msi_res = &port->res[XGENE_MSI];
->> +     phys_addr_t ddr_size = memblock_phys_mem_size();
->> +     phys_addr_t ddr_base = memblock_start_of_DRAM();
->
-> This looks fragile. What about discontiguous memory? It's probably better to
-> leave this setup to the firmware, which already has to do it.
-
-Idea is to map whole RAM. The memory controller in X-Gene does not
-allow holes or
-discontinuity in RAM.
-
->
->> +static int xgene_pcie_parse_map_ranges(struct xgene_pcie_port *port)
->> +{
->> +     struct device_node *np = port->node;
->> +     struct of_pci_range range;
->> +     struct of_pci_range_parser parser;
->> +     struct device *dev = port->dev;
->> +     u32 cfg_map_done = 0;
->> +     int ret;
->> +
->> +     if (of_pci_range_parser_init(&parser, np)) {
->> +             dev_err(dev, "missing ranges property\n");
->> +             return -EINVAL;
->> +     }
->> +
->> +     /* Get the I/O, memory, config ranges from DT */
->> +     for_each_of_pci_range(&parser, &range) {
->> +             struct resource *res = NULL;
->> +             u64 restype = range.flags & IORESOURCE_TYPE_BITS;
->> +             u64 end = range.cpu_addr + range.size - 1;
->> +             dev_dbg(port->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
->> +                     range.flags, range.cpu_addr, end, range.pci_addr);
->> +
->> +             switch (restype) {
->> +             case IORESOURCE_IO:
->> +                     res = &port->res[XGENE_IO];
->> +                     of_pci_range_to_resource(&range, np, res);
->> +                     xgene_pcie_setup_ob_reg(port->csr_base, OMR1BARL,
->> +                                             XGENE_IO, res);
->> +                     break;
->> +             case IORESOURCE_MEM:
->> +                     res = &port->res[XGENE_MEM];
->> +                     of_pci_range_to_resource(&range, np, res);
->> +                     xgene_pcie_setup_ob_reg(port->csr_base, OMR2BARL,
->> +                                             XGENE_MEM, res);
->> +                     break;
->
-> You also need to read out the pci_addr field from the range struct in order
-> to set up the io_offset and mem_offset and the translation windows.
-> Don't assume that they start at zero.
-
-ok.
-
->
->> +             case 0:
->> +                     if (!cfg_map_done) {
->> +                             /* config region */
->> +                             if (port->type == PTYPE_ROOT_PORT) {
->> +                                     ret = xgene_pcie_map_cfg(port, &range);
->> +                                     if (ret)
->> +                                             return ret;
->> +                             }
->> +                             cfg_map_done = 1;
->> +                     } else {
->> +                             /* msi region */
->> +                             res = &port->res[XGENE_MSI];
->> +                             of_pci_range_to_resource(&range, np, res);
->> +                     }
->> +                     break;
->
-> Don't make assumptions about the order of the ranges property. Also, neither
-> the MSI register nor the config space should be in the ranges.
-
-ok.
->
->> +static int xgene_pcie_setup(int nr, struct pci_sys_data *sys)
->> +{
->> +     struct xgene_pcie_port *pp = xgene_pcie_sys_to_port(sys);
->> +
->> +     if (pp == NULL)
->> +             return 0;
->> +
->> +     if (pp->type == PTYPE_ENDPOINT)
->> +             return 0;
->> +
->> +     sys->io_offset = pci_io_offset(pp->res[XGENE_IO].start);
->
-> Normally we want io_offset to be zero, i.e. have every Bus I/O space
-> window get translated to the same Linux I/O space address, i.e.
-> the number you pass into pci_ioremap_io(). The code here assumes
-> that the Bus I/O address is zero instead and the io_offset adjusts
-> for that, which is a bit confusing. Please change it to read
-> the actual values from the ranges property.
-
-I will recheck the logic.
-
->
->> +     sys->mem_offset = pci_io_offset(pp->res[XGENE_MEM].start);
->> +
->> +     BUG_ON(request_resource(&iomem_resource, &pp->res[XGENE_IO]) ||
->> +            request_resource(&iomem_resource, &pp->res[XGENE_MEM]));
->> +
->> +     pci_add_resource_offset(&sys->resources, &pp->res[XGENE_MEM],
->> +                             sys->mem_offset);
->> +     pci_add_resource_offset(&sys->resources, &pp->res[XGENE_IO],
->> +                             sys->io_offset);
->
-> &pp->res[XGENE_IO] is in memory space, while the argument you want here
-> is in I/O space.
->
->> +static int xgene_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->> +{
->> +     return of_irq_parse_and_map_pci(dev, slot, pin);
->> +}
->
-> Just use the function directly and remove the wrapper.
-
-got it.
-
->
->         Arnd
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 43b9bfea48..4695865051 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1677,6 +1677,111 @@ static int domain_context_mapping_one(struct dmar_domain *domain, int segment,
+ 	return 0;
+ }
+ 
++static void iommu_detach_dev(struct intel_iommu *iommu, u8 bus, u8 devfn);
++
++static void quirk_unmap_multi_requesters(struct pci_dev *pdev, u8 fn_map)
++{
++	int fn;
++	struct intel_iommu *iommu = device_to_iommu(pci_domain_nr(pdev->bus),
++						pdev->bus->number, pdev->devfn);
++
++	/* something must be seriously wrong if we can't lookup the iommu. */
++	BUG_ON(!iommu);
++
++	fn_map &= ~(1<<PCI_FUNC(pdev->devfn));	/* Skip the normal case */
++
++	for (fn = 0; fn_map >> fn; fn++) {
++		if (fn_map & (1<<fn)) {
++			iommu_detach_dev(iommu,
++					pdev->bus->number,
++					PCI_DEVFN(PCI_SLOT(pdev->devfn), fn));
++			dev_dbg(&pdev->dev,
++				"requester id quirk; ghost func %d unmapped",
++				fn);
++		}
++	}
++}
++
++/* For quirky devices that use multiple requester ids. */
++static int quirk_map_multi_requester_ids(struct dmar_domain *domain,
++		struct pci_dev *pdev,
++		int translation)
++{
++	int fn, err = 0;
++	u8 fn_map = pci_multi_requesters(pdev);
++
++	/* this is the common, non-quirky case. */
++	if (!fn_map)
++		return 0;
++
++	fn_map &= ~(1<<PCI_FUNC(pdev->devfn));	/* Skip the normal case */
++
++	for (fn = 0; fn_map >> fn; fn++) {
++		if (fn_map & (1<<fn)) {
++			err = domain_context_mapping_one(domain,
++					pci_domain_nr(pdev->bus),
++					pdev->bus->number,
++					PCI_DEVFN(PCI_SLOT(pdev->devfn), fn),
++					translation);
++			if (err) {
++				dev_err(&pdev->dev,
++					"mapping ghost func %d failed", fn);
++				quirk_unmap_multi_requesters(pdev,
++					fn_map & ((1<<fn)-1));
++				return err;
++			}
++			dev_dbg(&pdev->dev,
++				"requester id quirk; ghost func %d mapped", fn);
++		}
++	}
++	return 0;
++}
++
++
++static void quirk_unmap_requester_id(struct pci_dev *pdev)
++{
++	u8 devfn = pci_requester(pdev);
++	struct intel_iommu *iommu = device_to_iommu(pci_domain_nr(pdev->bus),
++						pdev->bus->number, pdev->devfn);
++
++	/* something must be seriously wrong if we can't lookup the iommu. */
++	BUG_ON(!iommu);
++
++
++	if (pdev->devfn == devfn)
++		return;
++
++	iommu_detach_dev(iommu,	pdev->bus->number, devfn);
++	dev_dbg(&pdev->dev, "requester id quirk; bugged device unmapped");
++}
++
++static int quirk_map_requester_id(struct dmar_domain *domain,
++		struct pci_dev *pdev,
++		int translation)
++{
++	u8 devfn = pci_requester(pdev);
++	int err;
++
++	dev_dbg(&pdev->dev,
++		"checking for incorrect pci requester id quirk...");
++
++	if (pdev->devfn == devfn)
++		return 0;
++
++	err = domain_context_mapping_one(domain, pci_domain_nr(pdev->bus),
++			pdev->bus->number, devfn, translation);
++	if (err) {
++		dev_err(&pdev->dev,
++			"requester id quirk: mapping dev %02x:%02x.%d failed",
++			pdev->bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn));
++		return err;
++	}
++	dev_dbg(&pdev->dev,
++		"requester id quirk; dmar context entry added: %02x:%02x.%d",
++		pdev->bus->number, PCI_SLOT(devfn), PCI_FUNC(devfn));
++	return 0;
++}
++
+ static int
+ domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
+ 			int translation)
+@@ -1690,6 +1795,16 @@ domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
+ 	if (ret)
+ 		return ret;
+ 
++	/* quirk for devices using multiple pci requester ids */
++	ret = quirk_map_multi_requester_ids(domain, pdev, translation);
++	if (ret)
++		return ret;
++
++	/* quirk for devices single incorrect pci requester id */
++	ret = quirk_map_requester_id(domain, pdev, translation);
++	if (ret)
++		return ret;
++
+ 	/* dependent device mapping */
+ 	tmp = pci_find_upstream_pcie_bridge(pdev);
+ 	if (!tmp)
+@@ -3802,6 +3917,9 @@ static void domain_remove_one_dev_info(struct dmar_domain *domain,
+ 			iommu_disable_dev_iotlb(info);
+ 			iommu_detach_dev(iommu, info->bus, info->devfn);
+ 			iommu_detach_dependent_devices(iommu, pdev);
++			quirk_unmap_multi_requesters(pdev,
++						pci_multi_requesters(pdev));
++			quirk_unmap_requester_id(pdev);
+ 			free_devinfo_mem(info);
+ 
+ 			spin_lock_irqsave(&device_domain_lock, flags);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 3a02717473..500edde3d3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3336,6 +3336,10 @@ static struct pci_dev *pci_func_0_dma_source(struct pci_dev *dev)
+ 	return pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+ }
+ 
++/* Table of source functions for real devices. The DMA requests for the
++ * device are tagged with a different real function as source. This is
++ * relevant to multifunction devices.
++ */
+ static const struct pci_dev_dma_source {
+ 	u16 vendor;
+ 	u16 device;
+@@ -3362,7 +3366,8 @@ static const struct pci_dev_dma_source {
+  * the device doing the DMA, but sometimes hardware is broken and will
+  * tag the DMA as being sourced from a different device.  This function
+  * allows that translation.  Note that the reference count of the
+- * returned device is incremented on all paths.
++ * returned device is incremented on all paths. Translation is done when
++ * the device is added to an IOMMU group.
+  */
+ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+ {
+@@ -3423,6 +3428,144 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
+ }
+ 
++/* Table of multiple (ghost) source functions. Devices that may need this quirk
++ * show the following behaviour:
++ * 1. the device may use multiple PCI requester IDs during operation,
++ *     (eg. one pci transaction uses xx:yy.0, the next uses xx:yy.1)
++ * 2. the requester ID may not match a known device.
++ *     (eg. lspci does not show xx:yy.1 to be present)
++ *
++ * The bitmap contains all of the functions "in use" by the device.
++ * See  https://bugzilla.redhat.com/show_bug.cgi?id=757166,
++ * https://bugzilla.kernel.org/show_bug.cgi?id=42679
++ * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1089768
++ */
++static const struct pci_dev_dma_multi_source_map {
++	u16 vendor;
++	u16 device;
++	u8 func_map;	/* bit map. lsb is fn 0. */
++} pci_dev_dma_multi_source_map[] = {
++	 /* Reported by Patrick Bregman
++	  * https://bugzilla.redhat.com/show_bug.cgi?id=863653 */
++	{ PCI_VENDOR_ID_MARVELL_EXT, 0x9120, (1<<0)|(1<<1)},
++
++	/* Reported by  Paweł Żak, Korneliusz Jarzębski, Daniel Mayer
++	 * https://bugzilla.kernel.org/show_bug.cgi?id=42679 and by
++	 * Justin Piszcz  https://lkml.org/lkml/2012/11/24/94 */
++	{ PCI_VENDOR_ID_MARVELL_EXT, 0x9123, (1<<0)|(1<<1)},
++
++	/* Used in a patch by Ying Chu
++	 * https://bugzilla.redhat.com/show_bug.cgi?id=757166 */
++	{ PCI_VENDOR_ID_MARVELL_EXT, 0x9125, (1<<0)|(1<<1)},
++
++	/* Reported by Robert Cicconetti
++	 * https://bugzilla.kernel.org/show_bug.cgi?id=42679 and by
++	 * Fernando https://bugzilla.redhat.com/show_bug.cgi?id=757166 */
++	{ PCI_VENDOR_ID_MARVELL_EXT, 0x9128, (1<<0)|(1<<1)},
++
++	/* Reported by Stijn Tintel
++	 * https://bugzilla.kernel.org/show_bug.cgi?id=42679 */
++	{ PCI_VENDOR_ID_MARVELL_EXT, 0x9130, (1<<0)|(1<<1)},
++
++	/* Reported by Gaudenz Steinlin
++	 * https://lkml.org/lkml/2013/3/5/288 */
++	{ PCI_VENDOR_ID_MARVELL_EXT, 0x9143, (1<<0)|(1<<1)},
++
++	/* Reported by Andrew Cooks
++	 * https://bugzilla.kernel.org/show_bug.cgi?id=42679 */
++	{ PCI_VENDOR_ID_MARVELL_EXT, 0x9172, (1<<0)|(1<<1)},
++
++	{ 0 }
++};
++
++/*
++ * The mapping of quirky requester ids is used when the device driver sets up
++ * dma, if iommu is enabled.
++ */
++u8 pci_multi_requesters(struct pci_dev *dev)
++{
++	const struct pci_dev_dma_multi_source_map *i;
++
++	for (i = pci_dev_dma_multi_source_map; i->func_map; i++) {
++		if ((i->vendor == dev->vendor ||
++		     i->vendor == (u16)PCI_ANY_ID) &&
++		    (i->device == dev->device ||
++		     i->device == (u16)PCI_ANY_ID)) {
++			return i->func_map;
++		}
++	}
++	return 0;
++}
++
++/* These are one-to-one translations for devices that use a single incorrect
++ * requester ID. The requester id may not be the BDF of a real device.
++ */
++static const struct pci_dev_dma_source_map {
++	u16 vendor;
++	u16 device;
++	u8  devfn;
++	u8  dma_devfn;
++} pci_dev_dma_source_map[] = {
++
++	/* Ricoh IEEE 1394 Controller */
++	{
++		PCI_VENDOR_ID_RICOH,
++		0xe832,
++		PCI_DEVFN(0x00, 3),
++		PCI_DEVFN(0x00, 0)
++	},
++
++	/* Nils Caspar - Adaptec 3405
++	 * http://www.mail-archive.com/centos@centos.org/msg90986.html
++	 * Jonathan McCune
++	 * http://old-list-archives.xen.org/archives/html/xen-users/2010-04/msg00535.html */
++	{
++		PCI_VENDOR_ID_ADAPTEC2,
++		0x028b,
++		PCI_DEVFN(0x0e, 0),
++		PCI_DEVFN(0x01, 0)
++	},
++
++	/* Mateusz Murawski - LSI SAS based MegaRAID
++	 * https://lkml.org/lkml/2011/9/12/104
++	 * M. Nunberg - Dell PERC 5/i Integrated RAID Controller
++	 * http://lists.xen.org/archives/html/xen-devel/2010-05/msg01563.html */
++	{
++		PCI_VENDOR_ID_LSI_LOGIC,
++		0x0411,
++		PCI_DEVFN(0x0e, 0),
++		PCI_DEVFN(0x08, 0)
++	},
++
++	/* Steven Dake, Markus Stockhausen - Mellanox 26428
++	 * https://bugzilla.redhat.com/show_bug.cgi?id=713774
++	 * Note: mellanox uses decimal product numbers, convert to hex for PCI
++	 * device ID. ie. 26428 == 0x673c */
++	{
++		PCI_VENDOR_ID_MELLANOX,
++		0x673c,
++		PCI_DEVFN(0x00, 0),
++		PCI_DEVFN(0x00, 6)
++	},
++
++	{ 0 }
++};
++
++u8 pci_requester(struct pci_dev *dev)
++{
++	const struct pci_dev_dma_source_map *i;
++
++	for (i = pci_dev_dma_source_map; i->devfn; i++) {
++		if ((i->vendor == dev->vendor) &&
++		    (i->device == dev->device) &&
++		    (i->devfn == dev->devfn)) {
++			return i->dma_devfn;
++		}
++	}
++	return dev->devfn;
++}
++
++
+ static const struct pci_dev_acs_enabled {
+ 	u16 vendor;
+ 	u16 device;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a13d6825e5..3214fd2514 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1632,6 +1632,8 @@ enum pci_fixup_pass {
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ struct pci_dev *pci_get_dma_source(struct pci_dev *dev);
++u8 pci_multi_requesters(struct pci_dev *dev);
++u8 pci_requester(struct pci_dev *dev);
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+@@ -1640,6 +1642,14 @@ static inline struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
+ {
+ 	return pci_dev_get(dev);
+ }
++u8 pci_multi_requesters(struct pci_dev *dev)
++{
++	return 0;
++}
++u8 pci_requester(struct pci_dev *dev)
++{
++	return dev->devfn;
++}
+ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+ 					       u16 acs_flags)
+ {
