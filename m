@@ -1,40 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1815 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41757 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932722AbaAaPHx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 10:07:53 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Shahed Shaikh <shahed.shaikh@qlogic.com>,
-	Jitendra Kalsaria <jitendra.kalsaria@qlogic.com>,
-	Ron Mercer <ron.mercer@qlogic.com>, linux-driver@qlogic.com,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 29/34] qlge: Get rid of an redundant assignment
-Date: Fri, 31 Jan 2014 16:08:48 +0100
-Message-Id: <2df50eba05a3f7cb0532d2ebd151de24a4853d68.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+	id S1750942AbaATWBm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jan 2014 17:01:42 -0500
+Subject: [PATCH 0/2] Quirk Intel PCH root ports for ACS-like features
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Mon, 20 Jan 2014 15:01:40 -0700
+Message-ID: <20140120215502.29567.11291.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+As described in 2/2 many Intel root ports lack PCIe ACS capabilities
+which results in excessively large IOMMU groups.  Many of these root
+ports do provide isolation capabilities, we just need to use device
+specific mechanisms to enable and verify.  Long term, I hope we can
+round out this list (particularly to include X79 root ports) and
+more importantly, encourage proper PCIe ACS support in future
+products.  I'm really hoping we can get this in during the 3.14 cycle.
+Thanks,
+
+Alex
+
 ---
- drivers/net/ethernet/qlogic/qlge/qlge_main.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/ethernet/qlogic/qlge/qlge_main.c b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-index ce2cfdd..82bace5 100644
---- a/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-+++ b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-@@ -3346,7 +3346,6 @@ static void ql_enable_msix(struct ql_adapter *qdev)
- 			qdev->msi_x_entry = NULL;
- 			netif_warn(qdev, ifup, qdev->ndev,
- 				   "MSI-X Enable failed, trying MSI.\n");
--			qdev->intr_count = 1;
- 			qlge_irq_type = MSI_IRQ;
- 		} else if (err == 0) {
- 			set_bit(QL_MSIX_ENABLED, &qdev->flags);
--- 
-1.7.7.6
+Alex Williamson (2):
+      pci: Add device specific PCI ACS enable
+      pci/quirks: Enable quirks for PCIe ACS on Intel PCH root ports
 
+
+ drivers/pci/pci.c    |   26 +++++-
+ drivers/pci/quirks.c |  201 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    2 
+ 3 files changed, 223 insertions(+), 6 deletions(-)
