@@ -1,57 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:59064 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753392AbaA3TUd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 14:20:33 -0500
-Received: by mail-ie0-f175.google.com with SMTP id ar20so3686687iec.20
-        for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 11:20:33 -0800 (PST)
-Subject: [PATCH 0/2] Remove dead code
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: e1000-devel@lists.sourceforge.net,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	linux-kernel@vger.kernel.org
-Date: Thu, 30 Jan 2014 12:20:31 -0700
-Message-ID: <20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from science.horizon.com ([71.41.210.146]:31884 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753456AbaATTBE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 14:01:04 -0500
+Date: 20 Jan 2014 14:01:02 -0500
+Message-ID: <20140120190102.13636.qmail@science.horizon.com>
+From: "George Spelvin" <linux@horizon.com>
+To: acooks@gmail.com, linux@horizon.com
+Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
+Cc: iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org,
+	linux-pci@vger.kernel.org
+In-Reply-To: <CAJtEV7ZsM2YHHETRGNwXnGi7uq0mJen73i-Yp3EXoDrnni=o=g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a rework of part of Stephen's patch [1].
+>> I massaged it a bit to fit my personal idea of "cleaner".
+>> The biggest logic change is the elimination of the fn_mapped
+>> variable from quirk_map_multi_requester_ids.
 
-This removes the MMIO exclusivity support that was added as part of an
-e1000e bug hunt.
+> Thanks, that was detritus left over from debugging.
 
-The e1000e driver still uses pci_request_selected_regions_exclusive(), but
-there are no callers of pci_request_region_exclusive() and
-pci_request_regions_exclusive().  I thought it was cleaner to remove the
-whole thing than to leave parts of it in place.  But I could easily be
-convinced to leave part or all of this in place if people think it's still
-useful.
+The code still does the exact same thing; I just derive the value from
+(fn_map & ((1<<fn)-1)) if it's required.
 
-It also removes SR-IOV migration support, which is completely unused, as
-far as I can tell.
+>> I also got rid of the "fn_map << fn" logic (which is never false).
 
-[1] http://lkml.kernel.org/r/20131227132710.7190647c@nehalam.linuxnetplumber.net
+> What if function 0 is not present? There were cases where the Marvell
+> 9172 only used function 1 (when only one port is in use). I don't
+> think it's safe to assume that function 0 is present when you're
+> trying to compensate for broken devices.
 
----
+Er... can you explain?  I did not change what the code *does* in the
+slightest, only the was it figures out what to do.
 
-Bjorn Helgaas (2):
-      PCI: Remove unused MMIO exclusivity support
-      PCI: Remove unused SR-IOV VF Migration support
+I took this it out because it does nothing; it can be statically proved
+that the expression is always non-zero.
 
+Because "fn_map" is a non-zero 8-bit value and "fn" is an integer in
+the range 0-7, the value "fn_map << fn" is a non-zero 15-bit value.
+15 bits can't overflow (even on a PDP-11 with 16-bit ints), so this is
+a non-zero value, and the loop will never terminate because of it.
 
- Documentation/PCI/pci-iov-howto.txt        |    4 -
- Documentation/kernel-parameters.txt        |    4 -
- arch/x86/mm/init.c                         |    2 
- drivers/net/ethernet/intel/e1000e/netdev.c |    3 -
- drivers/pci/iov.c                          |  119 ----------------------------
- drivers/pci/pci-sysfs.c                    |    3 -
- drivers/pci/pci.c                          |  112 +++-----------------------
- drivers/pci/pci.h                          |    4 -
- include/linux/ioport.h                     |    5 -
- include/linux/pci.h                        |    7 --
- kernel/resource.c                          |   54 -------------
- 11 files changed, 14 insertions(+), 303 deletions(-)
+It sure looked like a bug to me, but I couldn't figure out what it
+was supposed to do.  Can you enlighten me?  "fn_map >> fn" (shifting
+right rather than left) achieves early termination of the loop, but
+isn't essential.
+
+>> +       fn_map &= ~(1<<PCI_FUNC(pdev->devfn));  /* Skip the normal case */
+
+> Do you really find this "cleaner", as in more readable?
+
+I find it easier to think about fn_map as the bitmap of functions to
+be operated on.  Rather than have two conditions in the following loop.
+
+The confusing thing is "why are we skipping that function?"  (Because this
+is a quirk and the "normal case" has already been handled.)  It would be
+nicer if all the domain_context_mapping_one calls were grouped together.
+
+I would like to see if there's a clean way to combine this with phantom
+function support (which I haven't find the code for yet).
+
+>> +       for (i = pci_dev_dma_source_map; i->devfn; i++) {
+
+> The bug that Martin Oehrling pointed out in the ticket is still there.
+
+Ah, thank you; I had missed that that.  Yes, it should be testing
+i->vendor.  You really get devices using the wrong slot as well as
+function?  Wow!
+
+Using multiple functions is at least anticipated in the PCI spec,
+even if they do it wrong.
