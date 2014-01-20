@@ -1,167 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:50190 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753767AbaAaAuh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 19:50:37 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
-Date: Fri, 31 Jan 2014 02:04:58 +0100
-Message-ID: <6710733.Fy4CsjXWaz@vostro.rjw.lan>
-In-Reply-To: <7120202.A2h3LvJsyn@vostro.rjw.lan>
-References: <20140130131236.GW18029@intel.com> <CAE9FiQUmuaarJEhOQogusyv3EpBPDjRTtRvbh4U4QCJqfs0Vvw@mail.gmail.com> <7120202.A2h3LvJsyn@vostro.rjw.lan>
+Received: from mx1.redhat.com ([209.132.183.28]:20590 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752226AbaATIki (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jan 2014 03:40:38 -0500
+Date: Mon, 20 Jan 2014 09:42:12 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-nvme@lists.infradead.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [PATCH] nvme: Cleanup nvme_dev_start() and fix IRQ leak
+Message-ID: <20140120084212.GC19068@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
+ <CAErSpo4g_xm4vZWZDgyjtJu+z5ARSerQLrtJ6W_peXv4bKwcgg@mail.gmail.com>
+ <alpine.LRH.2.03.1401171419370.25844@AMR>
+ <20140120083835.GA19068@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140120083835.GA19068@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 31, 2014 01:39:38 AM Rafael J. Wysocki wrote:
-> On Thursday, January 30, 2014 03:39:02 PM Yinghai Lu wrote:
-> > On Thu, Jan 30, 2014 at 3:39 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
-> > >>
-> > >> --047d7b5d2ea4eb937804f132eedf
-> > >> Content-Type: text/plain; charset=ISO-8859-1
-> > >>
-> > >> >> The latest mainline kernel "hangs" when Thunderbolt devices are
-> > >> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
-> > >> >> getting huge amounts of messages like:
-> > >> >>
-> > >> >> [  352.717001] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717011] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717021] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717032] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717041] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717051] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717061] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717070] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717083] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717094] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717104] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717113] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717124] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717133] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717143] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717153] pci 0000:02:00.0: PME# disabled
-> > >> >> [  352.717162] pci 0000:02:00.0: PME# disabled
-> > >> >
-> > >> > that mean pci_stop_dev() get called again and again ?
-> > >>
-> > >> please check if attached patch could help.
-> > >
-> > > Well, it looks like what happens is an endless loop in
-> > > acpiphp_glue.c:disable_slot().
-> > >
-> > > dev_in_slot() returns the first device in the list, so
-> > > pci_stop_and_remove_bus_device() is called for it, but it
-> > > doesn't remove the device from bus->devices any more, so
-> > > dev_in_slot() will return the same device next time and
-> > > so on forever.
-> > >
-> > ...
-> > >
-> > > So the above won't help in my opinion.
-> > >
-> > > I wonder, however, if this patch helps instead:
-> > >
-> > > https://patchwork.kernel.org/patch/3540701/
-> > >
-> > > I thought it would be 3.15 material, but it very well can go in earlier if
-> > > it happens to address this particular problem.
-> > 
-> > Agree, that should fix the problem.
-> > 
-> > but please use list_for_each_entry_safe_reverse
-> > instead.
-> > 
-> > please refer to pciehp changelog in
-> > 
-> > commit 29ed1f29b68a8395d5679b3c4e38352b617b3236
-> > Author: Yinghai Lu <yinghai@kernel.org>
-> > Date:   Fri Jul 19 12:14:16 2013 -0700
-> > 
-> >     PCI: pciehp: Fix null pointer deref when hot-removing SR-IOV device
-> > 
-> >     Hot-removing a device with SR-IOV enabled causes a null pointer dereference
-> >     in v3.9 and v3.10.
-> > 
-> >     This is a regression caused by ba518e3c17 ("PCI: pciehp: Iterate over all
-> >     devices in slot, not functions 0-7").  When we iterate over the
-> >     bus->devices list, we first remove the PF, which also removes all the VFs
-> >     from the list.  Then the list iterator blows up because more than just the
-> >     current entry was removed from the list.
-> > 
-> >     ac205b7bb7 ("PCI: make sriov work with hotplug remove") works around a
-> >     similar problem in pci_stop_bus_devices() by iterating over the list in
-> >     reverse, so the VFs are stopped and removed from the list first, before the
-> >     PF.
-> > 
-> >     This patch changes pciehp_unconfigure_device() to iterate over the list in
-> >     reverse, too.
-> > 
-> >     [bhelgaas: bugzilla, changelog]
-> >     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=60604
-> 
-> So I gather all of bus->devices list walks during which devices may be removed
-> should be done in the reverse order, right?
+This is an attempt to make handling of admin queue in a
+single scope. This update also fixes a IRQ leak in case
+nvme_setup_io_queues() failed to allocate enough iomem
+and bailed out with -ENOMEM errno.
 
-So it looks like we need the patch below (on top of https://patchwork.kernel.org/patch/3559831/),
-right?
-
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / hotplug / PCI: Remove entries from bus->devices in reverse order
+ drivers/block/nvme-core.c |   44 +++++++++++++++++++++++---------------------
+ 1 files changed, 23 insertions(+), 21 deletions(-)
 
-According to the changelog of commit 29ed1f29b68a (PCI: pciehp: Fix null
-pointer deref when hot-removing SR-IOV device) it is unsafe to walk the
-bus->devices list of a PCI bus and remove devices from it in direct order,
-because that may lead to NULL pointer dereferences related to virtual
-functions.
-
-For this reason, change all of the bus->devices list walks in
-acpiphp_glue.c during which devices may be removed to be carried out in
-reverse order.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -724,7 +724,7 @@ static void trim_stale_devices(struct pc
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index 3e1ae55..e1e4ad4 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -1287,6 +1287,7 @@ static int nvme_configure_admin_queue(struct nvme_dev *dev)
+ 	if (result)
+ 		return result;
  
- 		/* The device is a bridge. so check the bus below it. */
- 		pm_runtime_get_sync(&dev->dev);
--		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-+		list_for_each_entry_safe_reverse(child, tmp, &bus->devices, bus_list)
- 			trim_stale_devices(child);
++	dev->entry[0].vector = pdev->pci_dev->irq;
+ 	result = queue_request_irq(dev, nvmeq, "nvme admin");
+ 	if (result)
+ 		return result;
+@@ -1297,6 +1298,11 @@ static int nvme_configure_admin_queue(struct nvme_dev *dev)
+ 	return result;
+ }
  
- 		pm_runtime_put(&dev->dev);
-@@ -755,8 +755,8 @@ static void acpiphp_check_bridge(struct
- 			; /* do nothing */
- 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
- 			/* remove stale devices if any */
--			list_for_each_entry_safe(dev, tmp, &bus->devices,
--						 bus_list)
-+			list_for_each_entry_safe_reverse(dev, tmp,
-+							 &bus->devices, bus_list)
- 				if (PCI_SLOT(dev->devfn) == slot->device)
- 					trim_stale_devices(dev);
++static int nvme_teardown_admin_queue(struct nvme_dev *dev)
++{
++	free_irq(dev->entry[0].vector, dev->queues[0]);
++}
++
+ struct nvme_iod *nvme_map_user_pages(struct nvme_dev *dev, int write,
+ 				unsigned long addr, unsigned length)
+ {
+@@ -1744,17 +1750,10 @@ static size_t db_bar_size(struct nvme_dev *dev, unsigned nr_io_queues)
+ 	return 4096 + ((nr_io_queues + 1) << (dev->db_stride + 3));
+ }
  
-@@ -787,7 +787,7 @@ static void acpiphp_sanitize_bus(struct
- 	int i;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+-static int nvme_setup_io_queues(struct nvme_dev *dev)
++static int nvme_setup_io_queues(struct nvme_dev *dev, int nr_io_queues)
+ {
+ 	struct pci_dev *pdev = dev->pci_dev;
+-	int result, cpu, i, vecs, nr_io_queues, size, q_depth;
+-
+-	nr_io_queues = num_online_cpus();
+-	result = set_queue_count(dev, nr_io_queues);
+-	if (result < 0)
+-		return result;
+-	if (result < nr_io_queues)
+-		nr_io_queues = result;
++	int result, cpu, i, vecs, size, q_depth;
  
--	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
- 		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
- 			struct resource *res = &dev->resource[i];
- 			if ((res->flags & type_mask) && !res->start &&
+ 	size = db_bar_size(dev, nr_io_queues);
+ 	if (size > 8192) {
+@@ -1771,20 +1770,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 		dev->queues[0]->q_db = dev->dbs;
+ 	}
+ 
+-	/* Deregister the admin queue's interrupt */
+-	free_irq(dev->entry[0].vector, dev->queues[0]);
+-
+ 	for (i = 0; i < nr_io_queues; i++)
+ 		dev->entry[i].entry = i;
+ 	vecs = pci_enable_msix_range(pdev, dev->entry, 1, nr_io_queues);
+ 	if (vecs < 0) {
+ 		vecs = pci_enable_msi_range(pdev, 1, min(nr_io_queues, 32));
+-		if (vecs < 0) {
++		if (vecs < 0)
+ 			vecs = 1;
+-		} else {
+-			for (i = 0; i < vecs; i++)
+-				dev->entry[i].vector = i + pdev->irq;
+-		}
++		for (i = 0; i < vecs; i++)
++			dev->entry[i].vector = i + pdev->irq;
+ 	}
+ 
+ 	/*
+@@ -1928,7 +1922,6 @@ static int nvme_dev_map(struct nvme_dev *dev)
+ 	if (pci_enable_device_mem(pdev))
+ 		return result;
+ 
+-	dev->entry[0].vector = pdev->irq;
+ 	pci_set_master(pdev);
+ 	bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 	if (pci_request_selected_regions(pdev, bars, "nvme"))
+@@ -2116,11 +2109,20 @@ static int nvme_dev_start(struct nvme_dev *dev)
+ 	list_add(&dev->node, &dev_list);
+ 	spin_unlock(&dev_list_lock);
+ 
+-	result = nvme_setup_io_queues(dev);
+-	if (result && result != -EBUSY)
++	result = set_queue_count(dev, num_online_cpus());
++	if (result == -EBUSY)
++		return -EBUSY;
++
++	nvme_teardown_admin_queue(dev);
++
++	if (result)
+ 		goto disable;
+ 
+-	return result;
++	result = nvme_setup_io_queues(dev, result);
++	if (result)
++		goto disable;
++
++	return 0;
+ 
+  disable:
+ 	spin_lock(&dev_list_lock);
+-- 
+1.7.7.6
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
