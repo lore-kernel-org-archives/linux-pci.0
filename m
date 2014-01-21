@@ -1,97 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:55353 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754321AbaA1SlS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 13:41:18 -0500
-Received: by mail-ie0-f172.google.com with SMTP id e14so930033iej.17
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jan 2014 10:41:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140128013013.GA31626@psi-dev26.jf.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
- <1387224459-25746-4-git-send-email-david.a.cohen@linux.intel.com>
- <CAErSpo4ymfSdZ5an4zt+C=5asUW=vz000d32mPZkF-S5N_uynA@mail.gmail.com> <20140128013013.GA31626@psi-dev26.jf.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 28 Jan 2014 11:40:57 -0700
-Message-ID: <CAErSpo52sXXKkJZ=bMMZw4G0Z0AJ=-u+Ov14+qp=S+y9LCP=Rg@mail.gmail.com>
-Subject: Re: [PATCH v2 3/4] x86: intel-mid: add Merrifield platform support
-To: David Cohen <david.a.cohen@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fei Yang <fei.yang@intel.com>,
-	"Mark F. Brown" <mark.f.brown@intel.com>,
-	Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:10085 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751408AbaAUVVF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jan 2014 16:21:05 -0500
+Message-ID: <1390338897.1792.467.camel@misato.fc.hp.com>
+Subject: Re: [Patch v1 1/3] ACPI: add callback prepare() into
+ acpi_hotplug_handler
+From: Toshi Kani <toshi.kani@hp.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devel@acpica.org
+Date: Tue, 21 Jan 2014 14:14:57 -0700
+In-Reply-To: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 27, 2014 at 6:30 PM, David Cohen
-<david.a.cohen@linux.intel.com> wrote:
-> Hi Bjorn,
->
-> On Mon, Jan 27, 2014 at 05:52:30PM -0700, Bjorn Helgaas wrote:
->> On Mon, Dec 16, 2013 at 1:07 PM, David Cohen
->> <david.a.cohen@linux.intel.com> wrote:
->> > This code was partially based on Mark Brown's previous work.
->> >
->> > Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
->> > Signed-off-by: Fei Yang <fei.yang@intel.com>
->> > Cc: Mark F. Brown <mark.f.brown@intel.com>
->> > Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
->>
->> I know this has already been merged to Linus' tree, but it looks funny to me.
->>
->> > --- a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
->> > +++ b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
->> > @@ -16,3 +16,4 @@
->> >   */
->> >  extern void * __cpuinit get_penwell_ops(void) __attribute__((weak));
->> >  extern void * __cpuinit get_cloverview_ops(void) __attribute__((weak));
->> > +extern void * __init get_tangier_ops(void) __attribute__((weak));
->>
->> We should use "__weak" instead of the gcc-specific "__attribute__((weak))".
->>
->> I don't think it's a good idea to use __weak on a declaration in a
->> header file.  If there are ever multiple definitions of the symbol,
->> they are *all* made weak symbols, and one is chosen based on link
->> order, which is error-prone.  I only see one definition now, but the
->> whole point of weak is to allow multiple definitions, so this looks
->> like a problem waiting to happen.  See 10629d711ed, for example.
->>
->> It look me a bit to figure out that these get_*_ops() functions are
->> used by INTEL_MID_OPS_INIT, which constructs the name using a macro,
->> so grep/cscope/etc. don't see any users.  A comment pointing to
->> INTEL_MID_OPS_INIT would be helpful.
->>
->> What's the reason for making these symbols weak?  Normally we use weak
->> to make a generic default version of a function, while allowing
->> architectures to replace the default with their own version if
->> necessary.  But I don't see that happening here.  Maybe I'm just
->> missing it, like I missed the uses of get_tangier_ops(), et al.
->
-> Intel mid was implemented in such way that we should select which soc to
-> be used in compilation time. Depending on the selection, mfld.c or
-> mrfl.c could not be compiled then some symbols wouldn't be available.
->
-> But IMHO this is a bad legacy design that exists in there, so I started
-> to rework it as you can see in this commit:
->
-> commit 4cb9b00f42e07830310319a07e6c91413ee8153e
-> Author: David Cohen <david.a.cohen@linux.intel.com>
-> Date:   Mon Dec 16 17:37:26 2013 -0800
->
->     x86, intel-mid: Remove deprecated X86_MDFLD and X86_WANT_INTEL_MID
->     configs
->
-> I'm sending more patches soon and getting rid of intel_mid_weak_decls.h
-> file is in my TODO list.
+On Sat, 2014-01-18 at 10:48 +0800, Jiang Liu wrote:
+> Add callback prepare() into acpi_hotplug_handler, which will get called
+> at the very beginning of ACPI hotplug event handler. The ACPI core will
+> ignore the event if prepare() returns NOTIFY_STOP.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/acpi/scan.c     |    4 ++++
+>  include/acpi/acpi_bus.h |    1 +
+>  2 files changed, 5 insertions(+)
+> 
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index fd39459..6b0f419 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -392,6 +392,10 @@ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+>  	struct acpi_device *adev;
+>  	acpi_status status;
+>  
+> +	if (handler->prepare &&
+> +	    handler->prepare(handle, type, data) == NOTIFY_STOP)
+> +		return;
 
-Sounds good.  While you're looking at it, I have similar questions
-about ipc_device_handler() and msic_generic_platform_data().  It's not
-clear to me why they should be weak.
+The OS is responsible for calling _OST when it is implemented.  So you
+cannot just return here.  See acpi_hotplug_unsupported(handle, type)
+next line.  Also, please describe why prepare() needs to be added.
 
-Bjorn
+Thanks,
+-Toshi
+
+
+
+> +
+>  	if (!handler->hotplug.enabled)
+>  		return acpi_hotplug_unsupported(handle, type);
+>  
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index ddabed1..09a73bd 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -113,6 +113,7 @@ static inline struct acpi_hotplug_profile *to_acpi_hotplug_profile(
+>  struct acpi_scan_handler {
+>  	const struct acpi_device_id *ids;
+>  	struct list_head list_node;
+> +	int (*prepare)(acpi_handle handle, u32 type, void *context);
+>  	int (*attach)(struct acpi_device *dev, const struct acpi_device_id *id);
+>  	void (*detach)(struct acpi_device *dev);
+>  	struct acpi_hotplug_profile hotplug;
+
+
