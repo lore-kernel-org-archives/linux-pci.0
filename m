@@ -1,138 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 7/11] ACPI / hotplug / PCI: Drop crit_sect locking
-Date: Mon, 27 Jan 2014 01:42:47 +0100
-Message-ID: <3111119.pNdaxh8h5x@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f173.google.com ([209.85.220.173]:56812 "EHLO
+	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543AbaAUByj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 20:54:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140120233543.15159.qmail@science.horizon.com>
+References: <CAJtEV7ZsM2YHHETRGNwXnGi7uq0mJen73i-Yp3EXoDrnni=o=g@mail.gmail.com>
+	<20140120233543.15159.qmail@science.horizon.com>
+Date: Tue, 21 Jan 2014 09:54:38 +0800
+Message-ID: <CAJtEV7b5MKn7JshUjhVH-fmiQcD-AZR6-YSCrdUhb+8-KMM0JA@mail.gmail.com>
+Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
+From: Andrew Cooks <acooks@gmail.com>
+To: George Spelvin <linux@horizon.com>
+Cc: "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	linux-ide@vger.kernel.org,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jan 21, 2014 at 7:35 AM, George Spelvin <linux@horizon.com> wrote:
+> I'm looking over the bug reports, and I'm trying to understand why you
+> need two mechanisms.  You have one table (pci_dev_dma_source_map)
+> that maps one devfn to a secondary one, and a second table
+> (pci_dev_dma_multi_source_map) that gives a 2-bit bitmap of function
+> numbers.
+I haven't found a simple way to combine the two maps that still makes
+the two distinct problems apparent.
+pci_dev_dma_multi_source_map deals with devices that use multiple
+functions, but the correct device number.
+pci_dev_dma_source_map deals with devices that use a single incorrect
+devfn that's mangled in both device and function numbers.
 
-After recent PCI core changes related to the rescan/remove locking,
-the code sections under crit_sect mutexes from ACPIPHP slot objects
-are always executed under the general PCI rescan/remove lock.
-For this reason, the crit_sect mutexes are simply redundant, so drop
-them.
+> But as I understand it, all the Marvell devices listed there always have
+> a devfn of 00.0, so you could just move them to the first table with a
+> mapping to 00.1.
+>
+> If they also have device/function 00.1 using a requester ID of 00.0
+> you could add a second entry.
+>
+> The only time you'd need a bitmap would be if the device ended up on
+> function 2 or higher and still used functions 0 and 1 in request IDs.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_glue.c |   23 +++--------------------
- 2 files changed, 3 insertions(+), 21 deletions(-)
+Sure, that sounds reasonable and certainly needs to be considered, but
+since there's no complete record of what devices get this wrong and
+how they get this wrong, I wanted to
+* show all requester ids are used for each device in a concise entry,
+* build up as much of a record of this problem as possible (hence the
+comments and bug references),
+* make it easy to see the general problem and have this discussion,
+* not make assumptions about which functions would be visible and
+which requester ids are actually used (like a device showing up at
+00.0 that uses 00.1 and 00.2 only).
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -328,7 +328,6 @@ static acpi_status register_slot(acpi_ha
- 	slot->bus = bridge->pci_bus;
- 	slot->device = device;
- 	INIT_LIST_HEAD(&slot->funcs);
--	mutex_init(&slot->crit_sect);
- 
- 	list_add_tail(&slot->node, &bridge->slots);
- 
-@@ -741,7 +740,6 @@ static void acpiphp_check_bridge(struct
- 		struct pci_bus *bus = slot->bus;
- 		struct pci_dev *dev, *tmp;
- 
--		mutex_lock(&slot->crit_sect);
- 		if (slot_no_hotplug(slot)) {
- 			; /* do nothing */
- 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
-@@ -756,7 +754,6 @@ static void acpiphp_check_bridge(struct
- 		} else {
- 			disable_slot(slot);
- 		}
--		mutex_unlock(&slot->crit_sect);
- 	}
- }
- 
-@@ -838,12 +835,8 @@ static void hotplug_event(acpi_handle ha
- 		} else {
- 			struct acpiphp_slot *slot = func->slot;
- 
--			if (slot->flags & SLOT_IS_GOING_AWAY)
--				break;
--
--			mutex_lock(&slot->crit_sect);
--			enable_slot(slot);
--			mutex_unlock(&slot->crit_sect);
-+			if (!(slot->flags & SLOT_IS_GOING_AWAY))
-+				enable_slot(slot);
- 		}
- 		break;
- 
-@@ -854,7 +847,6 @@ static void hotplug_event(acpi_handle ha
- 			acpiphp_check_bridge(bridge);
- 		} else {
- 			struct acpiphp_slot *slot = func->slot;
--			int ret;
- 
- 			if (slot->flags & SLOT_IS_GOING_AWAY)
- 				break;
-@@ -863,10 +855,7 @@ static void hotplug_event(acpi_handle ha
- 			 * Check if anything has changed in the slot and rescan
- 			 * from the parent if that's the case.
- 			 */
--			mutex_lock(&slot->crit_sect);
--			ret = acpiphp_rescan_slot(slot);
--			mutex_unlock(&slot->crit_sect);
--			if (ret)
-+			if (acpiphp_rescan_slot(slot))
- 				acpiphp_check_bridge(func->parent);
- 		}
- 		break;
-@@ -1073,13 +1062,10 @@ int acpiphp_enable_slot(struct acpiphp_s
- 	if (slot->flags & SLOT_IS_GOING_AWAY)
- 		return -ENODEV;
- 
--	mutex_lock(&slot->crit_sect);
- 	/* configure all functions */
- 	if (!(slot->flags & SLOT_ENABLED))
- 		enable_slot(slot);
- 
--	mutex_unlock(&slot->crit_sect);
--
- 	pci_unlock_rescan_remove();
- 	return 0;
- }
-@@ -1095,8 +1081,6 @@ static int acpiphp_disable_and_eject_slo
- 	if (slot->flags & SLOT_IS_GOING_AWAY)
- 		return -ENODEV;
- 
--	mutex_lock(&slot->crit_sect);
--
- 	/* unconfigure all functions */
- 	disable_slot(slot);
- 
-@@ -1110,7 +1094,6 @@ static int acpiphp_disable_and_eject_slo
- 			break;
- 		}
- 
--	mutex_unlock(&slot->crit_sect);
- 	return 0;
- }
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -93,7 +93,6 @@ struct acpiphp_slot {
- 	struct list_head funcs;		/* one slot may have different
- 					   objects (i.e. for each function) */
- 	struct slot *slot;
--	struct mutex crit_sect;
- 
- 	u8		device;		/* pci device# */
- 	u32		flags;		/* see below */
+Who knows what will show up when iommu is turned on by default again.
 
+> Now, unfortunately this does not cover the phantom functions case, but
+> that could be done with separate code.
+>
+>
+> The other question is when to do the lookup.  I don't know how often
+> IOMMU mapping is done, and if linear search through a list of PCI devices
+> would be a performance problem.  It would be nicer to have a standard
+> PCI fixup done once which sets a flag in the pci_dev to either note the
+> actual secondary devfn, or set a flag to trigger the secondary lookup
+> only on the devices that need it.
+
+Yes, I'd also like to hear what the gatekeepers think about this.
+
+Thanks,
+
+a.
