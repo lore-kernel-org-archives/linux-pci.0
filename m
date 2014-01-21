@@ -1,94 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:25766 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756485AbaAIAlc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Jan 2014 19:41:32 -0500
-Message-ID: <52CDF037.2070806@linux.intel.com>
-Date: Thu, 09 Jan 2014 08:41:27 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dmaengine@vger.kernel.org
-Subject: Re: [Patch Part2 V1 00/14] Enhance DMAR drivers to handle PCI/memory
- hotplug events
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com> <CAE9FiQUgfuQ9nXNOOCcYAKVeN05o+TX6e35qe5nSkyxB-DpyGg@mail.gmail.com>
-In-Reply-To: <CAE9FiQUgfuQ9nXNOOCcYAKVeN05o+TX6e35qe5nSkyxB-DpyGg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from science.horizon.com ([71.41.210.146]:37284 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752328AbaAUDxu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 22:53:50 -0500
+Date: 20 Jan 2014 22:53:49 -0500
+Message-ID: <20140121035349.14201.qmail@science.horizon.com>
+From: "George Spelvin" <linux@horizon.com>
+To: acooks@gmail.com, linux@horizon.com
+Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
+Cc: alex.williamson@redhat.com, iommu@lists.linux-foundation.org,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <CAJtEV7YBr69iHHFZ7PNzZH_Hhu5HuM0ifOnzhr+GyzGqgErT4g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+>> It only works on Intel IOMMUs, and sort of duplicates the functionality
+>> of your quirk.
+>>
+>> Obviously, I hate the duplication and would like to fold them together,
+>> but there are a few fundamental differences.
 
+> Hang on! The existing quirk only worked for vfio groups last time I
+> checked and didn't actually solve the problem for using the device on
+> the host.
 
-On 2014/1/9 4:43, Yinghai Lu wrote:
-> On Tue, Jan 7, 2014 at 1:00 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->> Intel DMA/interrupt remapping drivers scan available PCI/memory devices
->> at startup and cache discovered hardware topologies. They don't update
->> cached information if PCI/memory hotplug event happens at runtime, then
->> the stale information may break DMA/interrupt remapping logic.
->>
->> This patchset first (Patch 1-8) tries to introduces some helper
->> functions and fixes several bugs, then (Patch 9,10) uses a global
->> rwsem and RCU to protect global DMA/interrupt remapping data
->> structures, and finally (Patch 11-14) hook PCI/memory hotplug events
->> to update cached information.
->>
->> It's also a preparation for supporting of DMA/interrupt remapping
->> hotplug.
->>
->> Jiang Liu (14):
->>   iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
->>   iommu/vt-d: move private structures and variables into intel-iommu.c
->>   iommu/vt-d: simplify function get_domain_for_dev()
->>   iommu/vt-d: free resources if failed to create domain for PCIe
->>     endpoint
->>   iommu/vt-d: create device_domain_info structure for intermediate P2P
->>     bridges
->>   iommu/vt-d: fix incorrect iommu_count for si_domain
->>   iommu/vt-d: fix error in detect ATS capability
->>   iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
->>     entries
->>   iommu/vt-d: introduce a rwsem to protect global data structures
->>   iommu/vt-d: use RCU to protect global resources in interrupt context
->>   iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
->>     hotplug happens
->>   iommu/vt-d, PCI: unify the way to process DMAR device scope array
->>   iommu/vt-d: update device to static identity domain mapping for PCI
->>     hotplug
->>   iommu/vt-d: update IOMMU state when memory hotplug happens
->>
->>  drivers/iommu/dmar.c                |  412 +++++++++++++++++--------
->>  drivers/iommu/intel-iommu.c         |  583 +++++++++++++++++++++--------------
->>  drivers/iommu/intel_irq_remapping.c |  108 ++++---
->>  include/linux/dmar.h                |   75 +++--
->>  4 files changed, 753 insertions(+), 425 deletions(-)
-> 
-> 
-> Hi, Jiang,
-> 
-> What is relationship between your two patchset with my iommu hotplug patchset?
-> 
-> https://lkml.org/lkml/2014/1/2/527
-> 
-> or yours will just replace mine?
-Hi Yinghai,
-	I have reviewed your v2 patch set, I think we are doing the
-same task. If you agree, I will try to combine our two versions.
+I'd believe there are additional differences I haven't figured out,
+but it sure seems similar enough to be potentially mergeable.
 
-Thanks!
-Gerry
-> 
-> Thanks
-> 
-> Yinghai
-> 
+I want to either do that, or understand the differences well enough
+to explain them in a comment and tell future coders which should
+be used in whatr circumstances.
+
+> Alex had done a bunch of work to support requester id quirks (see
+> http://marc.info/?l=linux-pci&m=137357663626523&w=3), but that seems
+> blocked.
+
+Thank you for this pointer.  If only I understood it better, :-(
+
+>> - Marvell SATA controllers which exist only as devid 00.0, but generate
+>>   request devids of 00.1.  (The latter function might be PATA support
+>>   on chips which support that.)
+
+> No, I can prove that both .0 and .1 are used on the 9172 controller,
+> depending on which of the two SATA port(s) is(are) in use. If you have
+> the same hardware, I suggest you verify this.
+
+Thank you for the confirmation (that's a second thing that makes Alex's
+current solution incompatible), but I wasn't trying to imply that they
+didn't also generate DMA as .0; I was just saying that the only function
+which shows up in PCI config space and thus has a struct pci_dev allocated
+for it is .0.
+
+I was trying to draw attention to the fact that there is no struct pci_dev
+for .1 which can be used for Alex's interface.
+
+>> But I'm not quite sure what the locking rules are on the whole swap_pci_ref
+>> business.  Or if the Ricoh devices have to be handled more carefully
+>> because multiple functions need to arbitrate over the IOMMU tables
+>> for function 0.
+
+> The Ricoh firewire function simply uses the wrong requester ID. The
+> other functions work correctly. Remapping only the firewire specific
+> function of the multifunction device (as in my patch) fixes the
+> problem.
+
+Good to know, but can function 0 generate DMA that we need to worry about?
+(I believe it's an SD host controller, 1180:e822.)
+
+That's what I was worried about.  Both devices trying to do IOMMU mapping
+at the same time and stepping on each other.
