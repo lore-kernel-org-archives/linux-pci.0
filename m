@@ -1,61 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:44488 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306AbaANIww (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 03:52:52 -0500
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 14 Jan 2014 18:52:50 +1000
-Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 2381F2CE8051
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 19:52:48 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0E8qYpd9437600
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 19:52:35 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0E8qkVr007974
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 19:52:47 +1100
-Date: Tue, 14 Jan 2014 16:52:44 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Or Gerlitz <ogerlitz@mellanox.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	yinghai@kernel.org, bhelgaas@google.com, amirv@mellanox.com,
-	jackm@dev.mellanox.co.il, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-Message-ID: <20140114085244.GA27684@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20140114062215.GA19345@richard>
- <52D4ED5D.80105@mellanox.com>
- <20140114082749.GA21105@richard>
- <52D4F7C8.50706@mellanox.com>
+Received: from mail-bn1blp0182.outbound.protection.outlook.com ([207.46.163.182]:19465
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750740AbaAUFkW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jan 2014 00:40:22 -0500
+From: "Dongsheng.Wang@freescale.com" <Dongsheng.Wang@freescale.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Scott Wood <scottwood@freescale.com>
+Subject: RE: [PATCH 2/2] fsl/pci: The new pci suspend/resume implementation
+Date: Tue, 21 Jan 2014 05:40:17 +0000
+Message-ID: <fac9007cecb54cad99d371ac08698467@BN1PR03MB188.namprd03.prod.outlook.com>
+References: <1389081848-26506-1-git-send-email-dongsheng.wang@freescale.com>
+ <1389081848-26506-2-git-send-email-dongsheng.wang@freescale.com>
+ <4984978.bktZCpdLkC@vostro.rjw.lan>
+ <5ca123d4b32b49719cd9e8506916a9cf@BN1PR03MB188.namprd03.prod.outlook.com>
+In-Reply-To: <5ca123d4b32b49719cd9e8506916a9cf@BN1PR03MB188.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52D4F7C8.50706@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 10:39:36AM +0200, Or Gerlitz wrote:
->On 14/01/2014 10:27, Wei Yang wrote:
->>You can find the first three patches here:
->>https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/  pci/resource
->>
->>And the last one is here:
->>https://lkml.org/lkml/2013/12/19/701
+Any more comments? :)
 
-This one introduced the "problem" at my side.
+Thanks,
+-Dongsheng
 
->can you be more specific which is  the patch that introduced the
->regression, e.g if you apply them one by one, when things break?
->--
->To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Richard Yang
-Help you, Help me
+> -----Original Message-----
+> From: Linuxppc-dev [mailto:linuxppc-dev-
+> bounces+b40534=freescale.com@lists.ozlabs.org] On Behalf Of
+> Dongsheng.Wang@freescale.com
+> Sent: Wednesday, January 08, 2014 3:13 PM
+> To: Rafael J. Wysocki
+> Cc: linuxppc-dev@lists.ozlabs.org; galak@codeaurora.org; Wood Scott-B07421;
+> linux-pci@vger.kernel.org; bhelgaas@google.com
+> Subject: RE: [PATCH 2/2] fsl/pci: The new pci suspend/resume implementation
+> 
+> 
+> 
+> > -----Original Message-----
+> > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > Sent: Wednesday, January 08, 2014 4:42 AM
+> > To: Wang Dongsheng-B40534
+> > Cc: bhelgaas@google.com; Wood Scott-B07421; galak@codeaurora.org; Zang Roy-
+> > R61911; linux-pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org
+> > Subject: Re: [PATCH 2/2] fsl/pci: The new pci suspend/resume implementation
+> >
+> > On Tuesday, January 07, 2014 04:04:08 PM Dongsheng Wang wrote:
+> > > From: Wang Dongsheng <dongsheng.wang@freescale.com>
+> > >
+> > > The new suspend/resume implementation, send pme turnoff message
+> > > in suspend, and send pme exit message in resume.
+> > >
+> > > Add a PME handler, to response PME & message interrupt.
+> > >
+> > > Change platform_driver->suspend/resume to syscore->suspend/resume.
+> >
+> > Can you please first describe the problem you're trying to address?
+> >
+> If we do nothing in suspend/resume, some platform PCIe ip-block can't guarantee
+> the link back to L0 state from sleep, then, when we read the EP device will hang.
+> Only we send pme turnoff message in pci controller suspend, and send pme exit
+> message in resume, the link state will be normal.
+> 
+> When we send pme turnoff message in pci controller suspend, the links will into
+> l2/l3
+> ready, then, host cannot communicate with ep device, but pci-driver will call
+> back EP
+> device to save them state. So we need to change platform_driver->suspend/resume
+> to
+> syscore->suspend/resume.
+> 
+> Thanks,
+> -Dongsheng
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
+> 
 
