@@ -1,90 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33135 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751929AbaATIjJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jan 2014 03:39:09 -0500
-Date: Mon, 20 Jan 2014 09:40:47 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-nvme@lists.infradead.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: [PATCH v3 6/9] nvme: Use pci_enable_msi_range() and
- pci_enable_msix_range()
-Message-ID: <20140120084046.GB19068@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <1c441f670f33375b6c41e074baf6e84e6c7bb0c2.1389904166.git.agordeev@redhat.com>
- <CAErSpo4g_xm4vZWZDgyjtJu+z5ARSerQLrtJ6W_peXv4bKwcgg@mail.gmail.com>
- <alpine.LRH.2.03.1401171419370.25844@AMR>
- <20140120083835.GA19068@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140120083835.GA19068@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1390345596.1792.468.camel@misato.fc.hp.com>
+Subject: Re: [Patch v1 1/3] ACPI: add callback prepare() into
+ acpi_hotplug_handler
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devel@acpica.org
+Date: Tue, 21 Jan 2014 16:06:36 -0700
+In-Reply-To: <2201697.uqWgsYrLat@vostro.rjw.lan>
+References: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com>
+	 <1390338897.1792.467.camel@misato.fc.hp.com>
+	 <2201697.uqWgsYrLat@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Wed, 2014-01-22 at 00:17 +0100, Rafael J. Wysocki wrote:
+> On Tuesday, January 21, 2014 02:14:57 PM Toshi Kani wrote:
+> > On Sat, 2014-01-18 at 10:48 +0800, Jiang Liu wrote:
+> > > Add callback prepare() into acpi_hotplug_handler, which will get called
+> > > at the very beginning of ACPI hotplug event handler. The ACPI core will
+> > > ignore the event if prepare() returns NOTIFY_STOP.
+> > > 
+> > > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> > > ---
+> > >  drivers/acpi/scan.c     |    4 ++++
+> > >  include/acpi/acpi_bus.h |    1 +
+> > >  2 files changed, 5 insertions(+)
+> > > 
+> > > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> > > index fd39459..6b0f419 100644
+> > > --- a/drivers/acpi/scan.c
+> > > +++ b/drivers/acpi/scan.c
+> > > @@ -392,6 +392,10 @@ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+> > >  	struct acpi_device *adev;
+> > >  	acpi_status status;
+> > >  
+> > > +	if (handler->prepare &&
+> > > +	    handler->prepare(handle, type, data) == NOTIFY_STOP)
+> > > +		return;
+> > 
+> > The OS is responsible for calling _OST when it is implemented.  So you
+> > cannot just return here.  See acpi_hotplug_unsupported(handle, type)
+> > next line.  Also, please describe why prepare() needs to be added.
+> 
+> I don't think it's needed any more, please see:
+> 
+> http://marc.info/?l=linux-acpi&m=139001691317575&w=2
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/block/nvme-core.c |   33 +++++++++------------------------
- 1 files changed, 9 insertions(+), 24 deletions(-)
+Oh, I see.  Thanks!
+-Toshi
 
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index 26d03fa..3e1ae55 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -1774,31 +1774,16 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	/* Deregister the admin queue's interrupt */
- 	free_irq(dev->entry[0].vector, dev->queues[0]);
- 
--	vecs = nr_io_queues;
--	for (i = 0; i < vecs; i++)
-+	for (i = 0; i < nr_io_queues; i++)
- 		dev->entry[i].entry = i;
--	for (;;) {
--		result = pci_enable_msix(pdev, dev->entry, vecs);
--		if (result <= 0)
--			break;
--		vecs = result;
--	}
--
--	if (result < 0) {
--		vecs = nr_io_queues;
--		if (vecs > 32)
--			vecs = 32;
--		for (;;) {
--			result = pci_enable_msi_block(pdev, vecs);
--			if (result == 0) {
--				for (i = 0; i < vecs; i++)
--					dev->entry[i].vector = i + pdev->irq;
--				break;
--			} else if (result < 0) {
--				vecs = 1;
--				break;
--			}
--			vecs = result;
-+	vecs = pci_enable_msix_range(pdev, dev->entry, 1, nr_io_queues);
-+	if (vecs < 0) {
-+		vecs = pci_enable_msi_range(pdev, 1, min(nr_io_queues, 32));
-+		if (vecs < 0) {
-+			vecs = 1;
-+		} else {
-+			for (i = 0; i < vecs; i++)
-+				dev->entry[i].vector = i + pdev->irq;
- 		}
- 	}
- 
--- 
-1.7.7.6
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
