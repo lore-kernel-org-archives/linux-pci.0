@@ -1,87 +1,207 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:59042 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751369AbaANJPm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 04:15:42 -0500
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 14 Jan 2014 14:45:32 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 090BEE0056
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:48:22 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay03.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0E9FOmW41025602
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:45:24 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0E9FRCu010782
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:45:28 +0530
-Date: Tue, 14 Jan 2014 17:15:25 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Jack Morgenstein <jackm@dev.mellanox.co.il>
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org, bhelgaas@google.com,
-	amirv@mellanox.com, ogerlitz@mellanox.com, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-Message-ID: <20140114091525.GB27684@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20140114062215.GA19345@richard>
- <20140114105031.71882944@jpm-OptiPlex-GX620>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+CC: <linux-acpi@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	David Airlie <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<intel-gfx@lists.freedesktop.org>,
+	<dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH v4] ACPI: Fix acpi_evaluate_object() return value check
+Date: Tue, 21 Jan 2014 10:46:15 +0800
+Message-ID: <1390272375-28728-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140114105031.71882944@jpm-OptiPlex-GX620>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 10:50:31AM +0200, Jack Morgenstein wrote:
->On Tue, 14 Jan 2014 14:22:15 +0800
->Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->
->> Error log:
->>   mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping
->> PF. mlx4_core: probe of 0003:05:00.0 failed with error -22
->
->1. Please include the full error log starting from host bootup and
->driver start
+Since acpi_evaluate_object() returns acpi_status and not plain int,
+ACPI_FAILURE() should be used for checking its return value.
 
-Will provide one later. 
+Reviewed-by: Jani Nikula <jani.nikula@intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+v3->v4: Fix spell error, add Jani Nikula reviewed-by.
+v2->v3: Fix compile error pointed out by Hanjun.
+v1->v2: Add CC to related subsystem MAINTAINERS
+---
+ drivers/gpu/drm/i915/intel_acpi.c              |   24 ++++++++++++++----------
+ drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    9 +++++----
+ drivers/gpu/drm/nouveau/nouveau_acpi.c         |   23 +++++++++++++----------
+ drivers/pci/pci-label.c                        |    9 ++++++---
+ 4 files changed, 38 insertions(+), 27 deletions(-)
 
->
->2. What FW is loaded on the card?
-
-$ mst status
-MST modules:
-------------
-    MST PCI module loaded
-    MST PCI configuration module loaded
-
-MST devices:
-------------
-/dev/mst/mt4099_pciconf0         - PCI configuration cycles access.
-                                   domain:bus:dev.fn=0003:05:00.0 addr.reg=88 data.reg=92
-                                   Chip revision is: 01
-/dev/mst/mt4099_pci_cr0          - PCI direct access.
-                                   domain:bus:dev.fn=0003:05:00.0 bar=0x3d0508d300000 size=0x100000
-                                   Chip revision is: 01
-
-
-# mlxburn -d  /dev/mst/mt4099_pci_cr0 -fwver
--I- FW Version: 2.30.3200
-
-
->
->3. Please provide output of "lspci -vv -nn" for the Mellanox device(s)
-
-$lspci | grep Mel
-0003:05:00.0 Network controller: Mellanox Technologies MT27500 Family [ConnectX-3]
-$lspci -s 0003:05:00.0 -n
-0003:05:00.0 0280: 15b3:1003
-
-The output with -vvv is attached in the first mail.
-
+diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
+index dfff090..87e8f74 100644
+--- a/drivers/gpu/drm/i915/intel_acpi.c
++++ b/drivers/gpu/drm/i915/intel_acpi.c
+@@ -35,7 +35,8 @@ static int intel_dsm(acpi_handle handle, int func)
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+ 	u32 result;
+-	int ret = 0;
++	acpi_status status;
++	int ret;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -50,10 +51,11 @@ static int intel_dsm(acpi_handle handle, int func)
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
+ 
+-	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (ret) {
+-		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+-		return ret;
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
++		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
++				acpi_format_exception(status));
++		return -EINVAL;
+ 	}
+ 
+ 	obj = (union acpi_object *)output.pointer;
+@@ -141,7 +143,8 @@ static void intel_dsm_platform_mux_info(void)
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *pkg;
+-	int i, ret;
++	acpi_status status;
++	int i;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -156,10 +159,11 @@ static void intel_dsm_platform_mux_info(void)
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
+ 
+-	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
+-				   &output);
+-	if (ret) {
+-		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
++	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle,
++			"_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
++		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
++				acpi_format_exception(status));
+ 		goto out;
+ 	}
+ 
+diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+index 1291204..c5e7a2b 100644
+--- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
++++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+@@ -114,15 +114,16 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
+ 	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
+ 	union acpi_object *obj;
+ 	acpi_handle handle;
+-	int ret;
++	acpi_status status;
+ 
+ 	handle = ACPI_HANDLE(&device->pdev->dev);
+ 	if (!handle)
+ 		return false;
+ 
+-	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
+-	if (ret) {
+-		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
++	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
++	if (ACPI_FAILURE(status)) {
++		nv_debug(mxm, "DSM MXMS failed: %s\n",
++				acpi_format_exception(status));
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+index ba0183f..de3068b 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
++++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+@@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+-	int i, err;
++	acpi_status status;
++	int i;
+ 	char args_buff[4];
+ 
+ 	input.count = 4;
+@@ -101,10 +102,11 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+ 		args_buff[i] = (arg >> i * 8) & 0xFF;
+ 	params[3].buffer.pointer = args_buff;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (err) {
+-		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+-		return err;
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
++		pr_info("failed to evaluate _DSM: %s\n",
++				acpi_format_exception(status));
++		return -EINVAL;
+ 	}
+ 
+ 	obj = (union acpi_object *)output.pointer;
+@@ -134,7 +136,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+-	int err;
++	acpi_status status;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -148,10 +150,11 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+ 	params[3].type = ACPI_TYPE_INTEGER;
+ 	params[3].integer.value = arg;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (err) {
+-		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+-		return err;
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
++		pr_info("failed to evaluate _DSM: %s\n",
++				acpi_format_exception(status));
++		return -EINVAL;
+ 	}
+ 
+ 	obj = (union acpi_object *)output.pointer;
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index d51f45a..7ba4de6 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
+ 	union acpi_object *obj;
+ 	int len = 0;
+ 
+-	int err;
++	acpi_status status;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -228,9 +228,12 @@ dsm_get_label(acpi_handle handle, int func,
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, output);
+-	if (err)
++	status = acpi_evaluate_object(handle, "_DSM", &input, output);
++	if (ACPI_FAILURE(status)) {
++		pr_info("failed to evaluate _DSM: %s\n",
++				acpi_format_exception(status));
+ 		return -1;
++	}
+ 
+ 	obj = (union acpi_object *)output->pointer;
+ 
 -- 
-Richard Yang
-Help you, Help me
+1.7.1
+
 
