@@ -1,88 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:55839 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbaAMTMY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jan 2014 14:12:24 -0500
-Received: by mail-ie0-f179.google.com with SMTP id tp5so2544222ieb.24
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jan 2014 11:12:23 -0800 (PST)
-Date: Mon, 13 Jan 2014 12:12:20 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
-	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
-Message-ID: <20140113191220.GA6525@google.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
- <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1390272375-28728-1-git-send-email-wangyijing@huawei.com>
+References: <1390272375-28728-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 22 Jan 2014 14:37:45 -0700
+Message-ID: <CAErSpo4_VCVHcq2cs_HP-_0kFSnUWsxsr6Y1iiR==3XLNaVc2w@mail.gmail.com>
+Subject: Re: [PATCH v4] ACPI: Fix acpi_evaluate_object() return value check
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	David Airlie <airlied@linux.ie>,
+	intel-gfx@lists.freedesktop.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 07, 2014 at 07:05:38PM +0100, Alexander Gordeev wrote:
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+On Mon, Jan 20, 2014 at 7:46 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Since acpi_evaluate_object() returns acpi_status and not plain int,
+> ACPI_FAILURE() should be used for checking its return value.
+>
+> Reviewed-by: Jani Nikula <jani.nikula@intel.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 > ---
->  drivers/ata/ahci.c |   15 ++++++---------
->  1 files changed, 6 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 8516f4d..cfdb079 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1098,13 +1098,13 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
->  int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
->  			 struct ahci_host_priv *hpriv)
->  {
-> -	int rc, nvec;
-> +	int nvec;
->  
->  	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
->  		goto intx;
->  
-> -	rc = pci_msi_vec_count(pdev);
-> -	if (rc < 0)
-> +	nvec = pci_msi_vec_count(pdev);
-> +	if (nvec < 0)
->  		goto intx;
->  
->  	/*
-> @@ -1112,19 +1112,16 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
->  	 * Message mode could be enforced. In this case assume that advantage
->  	 * of multipe MSIs is negated and use single MSI mode instead.
->  	 */
-> -	if (rc < n_ports)
-> +	if (nvec < n_ports)
->  		goto single_msi;
->  
-> -	nvec = rc;
-> -	rc = pci_enable_msi_block(pdev, nvec);
-> -	if (rc)
-> +	if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
->  		goto intx;
->  
->  	return nvec;
->  
->  single_msi:
-> -	rc = pci_enable_msi(pdev);
-> -	if (rc)
-> +	if (pci_enable_msi_range(pdev, 1, 1) < 0)
+> v3->v4: Fix spell error, add Jani Nikula reviewed-by.
+> v2->v3: Fix compile error pointed out by Hanjun.
+> v1->v2: Add CC to related subsystem MAINTAINERS
+> ---
+>  drivers/gpu/drm/i915/intel_acpi.c              |   24 ++++++++++++++----------
+>  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    9 +++++----
+>  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   23 +++++++++++++----------
+>  drivers/pci/pci-label.c                        |    9 ++++++---
 
-This part doesn't seem like an improvement.  There are a hundred or so
-callers of pci_enable_msi() that only want a single MSI.  Is there any
-benefit in changing them to use pci_enable_msi_range()?
+For the drivers/pci/pci-label.c part,
 
-I guess I agreed (maybe even suggested) to deprecate pci_enable_msi(),
-but it doesn't suffer from the tri-state return value problem, and I'm
-having second thoughts.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
->  		goto intx;
->  	return 1;
->  
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +       status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> +       if (ACPI_FAILURE(status)) {
+> +               DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
+> +                               acpi_format_exception(status));
+
+It's too bad there isn't an easy way to produce more informative error
+messages, e.g., by including a namespace path or something.  A message
+like:
+
+    failed to evaluate _DSM: A requested entity is not found
+
+is only useful if there's enough context to figure out what's going on.
+
+Bjorn
