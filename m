@@ -1,146 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <52D8A8DB.4080809@huawei.com>
-Date: Fri, 17 Jan 2014 11:51:55 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35605 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbaAWUAX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 15:00:23 -0500
+Date: Thu, 23 Jan 2014 12:01:12 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Dave Jones <davej@redhat.com>
+Subject: [PATCH] PCI: msi: properly free memory on an error path
+Message-ID: <20140123200112.GA15503@kroah.com>
+References: <20140123184246.GA7461@google.com>
+ <20140123193037.GA2605@kroah.com>
 MIME-Version: 1.0
-To: Hanjun Guo <hanjun.guo@linaro.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-CC: <linux-acpi@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<intel-gfx@lists.freedesktop.org>,
-	<dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH v2] ACPI: Fix acpi_evaluate_object() return value check
-References: <1389922191-28664-1-git-send-email-wangyijing@huawei.com> <52D8A672.8070808@linaro.org>
-In-Reply-To: <52D8A672.8070808@linaro.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140123193037.GA2605@kroah.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
->> index dfff090..7ea00e5 100644
->> --- a/drivers/gpu/drm/i915/intel_acpi.c
->> +++ b/drivers/gpu/drm/i915/intel_acpi.c
->> @@ -35,7 +35,7 @@ static int intel_dsm(acpi_handle handle, int func)
->>  	union acpi_object params[4];
->>  	union acpi_object *obj;
->>  	u32 result;
->> -	int ret = 0;
-> 
-> The 'ret' is removed, but
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Ah, it's my mistake, will updata it right now, thanks!
+Coverity reported that I forgot to clean up some allocated memory on the
+error path in populate_msi_sysfs(), so this patch fixes that.
 
-> 
->> +	acpi_status status;
->>  
->>  	input.count = 4;
->>  	input.pointer = params;
->> @@ -50,8 +50,8 @@ static int intel_dsm(acpi_handle handle, int func)
->>  	params[3].package.count = 0;
->>  	params[3].package.elements = NULL;
->>  
->> -	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
->> -	if (ret) {
->> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
->> +	if (ACPI_FAILURE(status)) {
->>  		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
->>  		return ret;
-> 
-> you still use it here, so you should -EINVAL or something else here.
+Thanks to Dave Jones for pointing out where the error was, I obviously
+can't read code this morning...
 
-OK
+Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
+Cc: Dave Jones <davej@redhat.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/pci/msi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> 
->>  	}
->> @@ -141,7 +141,8 @@ static void intel_dsm_platform_mux_info(void)
->>  	struct acpi_object_list input;
->>  	union acpi_object params[4];
->>  	union acpi_object *pkg;
->> -	int i, ret;
->> +	acpi_status status;
->>  
->> -	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
->> -	if (err) {
->> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
->> +	if (ACPI_FAILURE(status)) {
->>  		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
->>  		return err;
-> 
-> here too.
-
-OK, thanks.
-
-> 
->>  	}
->> @@ -134,7 +135,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
->>  	struct acpi_object_list input;
->>  	union acpi_object params[4];
->>  	union acpi_object *obj;
->> -	int err;
->> +	acpi_status status;
->>  
->>  	input.count = 4;
->>  	input.pointer = params;
->> @@ -148,8 +149,8 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
->>  	params[3].type = ACPI_TYPE_INTEGER;
->>  	params[3].integer.value = arg;
->>  
->> -	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
->> -	if (err) {
->> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
->> +	if (ACPI_FAILURE(status)) {
->>  		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
->>  		return err;
-> 
-> and here.
-
-thanks.
-
-> 
->>  	}
->> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
->> index d51f45a..3c21f1b 100644
->> --- a/drivers/pci/pci-label.c
->> +++ b/drivers/pci/pci-label.c
->> @@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
->>  	union acpi_object *obj;
->>  	int len = 0;
->>  
->> -	int err;
->> +	acpi_status status;
->>  
->>  	input.count = 4;
->>  	input.pointer = params;
->> @@ -228,8 +228,8 @@ dsm_get_label(acpi_handle handle, int func,
->>  	params[3].package.count = 0;
->>  	params[3].package.elements = NULL;
->>  
->> -	err = acpi_evaluate_object(handle, "_DSM", &input, output);
->> -	if (err)
->> +	status = acpi_evaluate_object(handle, "_DSM", &input, output);
->> +	if (ACPI_FAILURE(status))
->>  		return -1;
-> 
-> can we return specific error such as -EINVAL instead of hard code?
-
-I will try to add some more useful debug info here. thanks!
-
-> 
-> Thanks
-> Hanjun
-> 
-> .
-> 
-
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 39dff3fe57af..6f0474ebe420 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -595,6 +595,7 @@ error_attrs:
+ 		++count;
+ 		msi_attr = msi_attrs[count];
+ 	}
++	kfree(msi_attrs);
+ 	return ret;
+ }
+ 
 -- 
-Thanks!
-Yijing
+1.8.5.1.163.gd7aced9
 
