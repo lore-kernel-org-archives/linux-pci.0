@@ -1,54 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:42770 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbaAQR1A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jan 2014 12:27:00 -0500
-Received: by mail-ig0-f171.google.com with SMTP id uy17so2154803igb.4
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jan 2014 09:26:59 -0800 (PST)
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35142 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753235AbaAWTOb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 14:14:31 -0500
+Date: Thu, 23 Jan 2014 11:15:21 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [scan-admin@coverity.com: New Defects reported by Coverity Scan
+ for Linux]
+Message-ID: <20140123191521.GA11865@kroah.com>
+References: <20140123184246.GA7461@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1389899441.8705.60.camel@bling.home>
-References: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
- <CAErSpo6W9-Gg55T_dO_F6KJ+RK9mWhDtZUHdW-Ke4NP-da7-uA@mail.gmail.com> <1389899441.8705.60.camel@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 17 Jan 2014 10:26:39 -0700
-Message-ID: <CAErSpo5BsWz02DotrnKSXWJ_z6vQk+BWz-Rof+0S8V=hASFskg@mail.gmail.com>
-Subject: Re: [PATCHv2 0/2] PCI: driver function reset notification
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140123184246.GA7461@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 16, 2014 at 12:10 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Thu, 2014-01-16 at 11:49 -0700, Bjorn Helgaas wrote:
+On Thu, Jan 23, 2014 at 11:42:46AM -0700, Bjorn Helgaas wrote:
+> FYI.  I think the first two (related to "name") are valid.  I haven't
+> figured out the "msi_attrs" one yet.
 
->> In the general case, we don't know what the device *is* after a reset
->> because it could have loaded new firmware.  It could require more
->> resources or even a different driver.
->>
->> I know it would cause Alex heartburn to make reset look like hotplug.
->
-> Yes it would.  I agree that it's theoretically possible for a device to
-> undergo a metamorphosis to something new at reset, but in practice it
-> just doesn't happen.
+Ah, missed the name kmalloc() call, I'll send you a patch now to fix
+that up, and try to figure out the msi_attrs one as well.
 
-Maybe not in your world, but this definitely happens, and it
-definitely causes hassles for people.  Some resort to hacks like
-rebooting the whole system because we don't support this well.
+thanks for the note, this blew by me in the results, I should have seen
+it as I do get these emails as well.
 
-I mentioned these before, so you may have seen them already:
-
-    http://forums.xilinx.com/t5/PCI-Express/PC-is-hung-if-run-the-second-program-FPGA-by-JTAG/td-p/20871
-    http://www.alteraforum.com/forum/archive/index.php/t-28477.html
-    http://www.alteraforum.com/forum/showthread.php?t=35091
-    https://github.com/NetFPGA/NetFPGA-public/wiki/Restore-PCIE-Configuration
-    http://lkml.indiana.edu/hypermail/linux/kernel/1104.3/02544.html
-
-My fear is that we're building a lot of stuff based on assumptions
-about how things typically operate.  That works most of the time, but
-it does fail on important corner cases that are spec-compliant but
-atypical.  From the PCI subsystem point of view, that makes me uneasy.
-
-Bjorn
+greg k-h
