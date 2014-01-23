@@ -1,121 +1,234 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:62481 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752185AbaAJOQS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 09:16:18 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH 8/9] powerpc / eeh_driver: Use global PCI rescan-remove locking
-Date: Fri, 10 Jan 2014 15:28:38 +0100
-Message-ID: <4447911.Q1f9tEzrXs@vostro.rjw.lan>
-In-Reply-To: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+CC: <linux-acpi@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	<konrad.wilk@oracle.com>, "David Airlie" <airlied@linux.ie>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<intel-gfx@lists.freedesktop.org>,
+	<dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Dave Airlie <airlied@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH v5] ACPI: Fix acpi_evaluate_object() return value check
+Date: Thu, 23 Jan 2014 11:42:39 +0800
+Message-ID: <1390448559-33896-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Since acpi_evaluate_object() returns acpi_status and not plain int,
+ACPI_FAILURE() should be used for checking its return value. Also
+add some detailed debug info when acpi_evaluate_object() failed.
 
-Race conditions are theoretically possible between the PCI device
-addition and removal in the PPC64 PCI error recovery driver and
-the generic PCI bus rescan and device removal that can be triggered
-via sysfs.
-
-To avoid those race conditions make PPC64 PCI error recovery driver
-use global PCI rescan-remove locking around PCI device addition and
-removal.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Jani Nikula <jani.nikula@intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/powerpc/kernel/eeh_driver.c |   19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
+v4->v5: Add some detailed debug info for acpi_evaluate_object() 
+        failure suggested by Bjorn.
+v3->v4: Fix spell error, add Jani Nikula reviewed-by.
+v2->v3: Fix compile error pointed out by Hanjun.
+v1->v2: Add CC to related subsystem MAINTAINERS
+---
+ drivers/gpu/drm/i915/intel_acpi.c              |   33 ++++++++++++++++-------
+ drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |   13 ++++++---
+ drivers/gpu/drm/nouveau/nouveau_acpi.c         |   25 +++++++++++-------
+ drivers/pci/pci-label.c                        |   10 +++++--
+ 4 files changed, 54 insertions(+), 27 deletions(-)
 
-Index: linux-pm/arch/powerpc/kernel/eeh_driver.c
-===================================================================
---- linux-pm.orig/arch/powerpc/kernel/eeh_driver.c
-+++ linux-pm/arch/powerpc/kernel/eeh_driver.c
-@@ -369,7 +369,9 @@ static void *eeh_rmv_device(void *data,
- 	edev->mode |= EEH_DEV_DISCONNECTED;
- 	(*removed)++;
+diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
+index dfff090..e7b526b 100644
+--- a/drivers/gpu/drm/i915/intel_acpi.c
++++ b/drivers/gpu/drm/i915/intel_acpi.c
+@@ -31,11 +31,13 @@ static const u8 intel_dsm_guid[] = {
+ static int intel_dsm(acpi_handle handle, int func)
+ {
+ 	struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
++	struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+ 	u32 result;
+-	int ret = 0;
++	acpi_status status;
++	int ret;
  
-+	pci_lock_rescan_remove();
- 	pci_stop_and_remove_bus_device(dev);
-+	pci_unlock_rescan_remove();
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -50,10 +52,14 @@ static int intel_dsm(acpi_handle handle, int func)
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
  
- 	return NULL;
- }
-@@ -416,10 +418,13 @@ static int eeh_reset_device(struct eeh_p
- 	 * into pcibios_add_pci_devices().
- 	 */
- 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
--	if (bus)
-+	if (bus) {
-+		pci_lock_rescan_remove();
- 		pcibios_remove_pci_devices(bus);
--	else if (frozen_bus)
-+		pci_unlock_rescan_remove();
-+	} else if (frozen_bus) {
- 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
-+	}
- 
- 	/* Reset the pci controller. (Asserts RST#; resets config space).
- 	 * Reconfigure bridges and devices. Don't try to bring the system
-@@ -429,6 +434,8 @@ static int eeh_reset_device(struct eeh_p
- 	if (rc)
- 		return rc;
- 
-+	pci_lock_rescan_remove();
-+
- 	/* Restore PE */
- 	eeh_ops->configure_bridge(pe);
- 	eeh_pe_restore_bars(pe);
-@@ -462,6 +469,7 @@ static int eeh_reset_device(struct eeh_p
- 	pe->tstamp = tstamp;
- 	pe->freeze_count = cnt;
- 
-+	pci_unlock_rescan_remove();
- 	return 0;
- }
- 
-@@ -618,8 +626,11 @@ perm_error:
- 	eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
- 
- 	/* Shut down the device drivers for good. */
--	if (frozen_bus)
-+	if (frozen_bus) {
-+		pci_lock_rescan_remove();
- 		pcibios_remove_pci_devices(frozen_bus);
-+		pci_unlock_rescan_remove();
-+	}
- }
- 
- static void eeh_handle_special_event(void)
-@@ -692,6 +703,7 @@ static void eeh_handle_special_event(voi
- 	if (rc == 2 || rc == 1)
- 		eeh_handle_normal_event(pe);
- 	else {
-+		lock_pci_remove_rescan();
- 		list_for_each_entry_safe(hose, tmp,
- 			&hose_list, list_node) {
- 			phb_pe = eeh_phb_pe_get(hose);
-@@ -703,6 +715,7 @@ static void eeh_handle_special_event(voi
- 			eeh_pe_dev_traverse(pe, eeh_report_failure, NULL);
- 			pcibios_remove_pci_devices(bus);
- 		}
-+		unlock_pci_remove_rescan();
+-	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (ret) {
+-		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+-		return ret;
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
++		acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
++		DRM_DEBUG_DRIVER(
++			"failed to evaluate _DSM for %s, exit status %u\n",
++			(char *)string.pointer,	(unsigned int)status);
++		kfree(string.pointer);
++		return -EINVAL;
  	}
- }
  
+ 	obj = (union acpi_object *)output.pointer;
+@@ -138,10 +144,12 @@ static char *intel_dsm_mux_type(u8 type)
+ static void intel_dsm_platform_mux_info(void)
+ {
+ 	struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
++	struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *pkg;
+-	int i, ret;
++	acpi_status status;
++	int i;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -156,10 +164,15 @@ static void intel_dsm_platform_mux_info(void)
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
+ 
+-	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
+-				   &output);
+-	if (ret) {
+-		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
++	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle,
++			"_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
++		acpi_get_name(intel_dsm_priv.dhandle,
++				ACPI_FULL_PATHNAME, &string);
++		DRM_DEBUG_DRIVER(
++			"failed to evaluate _DSM for %s, exit status %u\n",
++			(char *)string.pointer,	(unsigned int)status);
++		kfree(string.pointer);
+ 		goto out;
+ 	}
+ 
+diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+index 1291204..c30ee88 100644
+--- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
++++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
+@@ -112,17 +112,22 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
+ 	};
+ 	struct acpi_object_list list = { ARRAY_SIZE(args), args };
+ 	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
++	struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
+ 	union acpi_object *obj;
+ 	acpi_handle handle;
+-	int ret;
++	acpi_status status;
+ 
+ 	handle = ACPI_HANDLE(&device->pdev->dev);
+ 	if (!handle)
+ 		return false;
+ 
+-	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
+-	if (ret) {
+-		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
++	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
++	if (ACPI_FAILURE(status)) {
++		acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
++		nv_debug(mxm, "DSM MXMS failed for %s: exit status %u\n",
++				(char *)string.pointer,
++				(unsigned int)status);
++		kfree(string.pointer);
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+index ba0183f..53d24a7 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
++++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+@@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+-	int i, err;
++	acpi_status status;
++	int i;
+ 	char args_buff[4];
+ 
+ 	input.count = 4;
+@@ -101,10 +102,12 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+ 		args_buff[i] = (arg >> i * 8) & 0xFF;
+ 	params[3].buffer.pointer = args_buff;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (err) {
+-		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+-		return err;
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_info(handle,
++				"failed to evaluate _DSM, exit status %u\n",
++				(unsigned int)status);
++		return -EINVAL;
+ 	}
+ 
+ 	obj = (union acpi_object *)output.pointer;
+@@ -134,7 +137,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+ 	struct acpi_object_list input;
+ 	union acpi_object params[4];
+ 	union acpi_object *obj;
+-	int err;
++	acpi_status status;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -148,10 +151,12 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+ 	params[3].type = ACPI_TYPE_INTEGER;
+ 	params[3].integer.value = arg;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
+-	if (err) {
+-		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
+-		return err;
++	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_info(handle,
++				"failed to evaluate _DSM, exit status %u\n",
++				(unsigned int)status);
++		return -EINVAL;
+ 	}
+ 
+ 	obj = (union acpi_object *)output.pointer;
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index d51f45a..0216094 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
+ 	union acpi_object *obj;
+ 	int len = 0;
+ 
+-	int err;
++	acpi_status status;
+ 
+ 	input.count = 4;
+ 	input.pointer = params;
+@@ -228,9 +228,13 @@ dsm_get_label(acpi_handle handle, int func,
+ 	params[3].package.count = 0;
+ 	params[3].package.elements = NULL;
+ 
+-	err = acpi_evaluate_object(handle, "_DSM", &input, output);
+-	if (err)
++	status = acpi_evaluate_object(handle, "_DSM", &input, output);
++	if (ACPI_FAILURE(status)) {
++		acpi_handle_info(handle,
++				"failed to evaluate _DSM, exit status %u\n",
++				 (unsigned int)status);
+ 		return -1;
++	}
+ 
+ 	obj = (union acpi_object *)output->pointer;
+ 
+-- 
+1.7.1
+
 
