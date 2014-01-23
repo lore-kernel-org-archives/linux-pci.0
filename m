@@ -1,37 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:26506 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752631AbaAFHqK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 02:46:10 -0500
-Message-ID: <52CA5F02.4090301@huawei.com>
-Date: Mon, 6 Jan 2014 15:45:06 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:18906 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754896AbaAWUH5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jan 2014 15:07:57 -0500
+Date: Thu, 23 Jan 2014 15:07:38 -0500
+From: Dave Jones <davej@redhat.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: msi: properly free memory on an error path
+Message-ID: <20140123200738.GB9269@redhat.com>
+References: <20140123184246.GA7461@google.com>
+ <20140123193037.GA2605@kroah.com>
+ <20140123200112.GA15503@kroah.com>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<sparclinux@vger.kernel.org>, <guohanjun@huawei.com>
-Subject: Re: [PATCH v3] sparc/PCI: Use dev_is_pci() to identify PCI devices
-References: <1386741626-35744-1-git-send-email-wangyijing@huawei.com>	<20140104.210533.653844636617320862.davem@davemloft.net>	<52CA020C.60206@huawei.com> <20140105.203535.32658751976534055.davem@davemloft.net>
-In-Reply-To: <20140105.203535.32658751976534055.davem@davemloft.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140123200112.GA15503@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/1/6 9:35, David Miller wrote:
-> From: Yijing Wang <wangyijing@huawei.com>
-> Date: Mon, 6 Jan 2014 09:08:28 +0800
-> 
->>    This patch has been merged in Bjorn's pci tree, so will have some conflict between yours and Bjorn's tree?
-> 
-> GIT will figure it out just fine.
+On Thu, Jan 23, 2014 at 12:01:12PM -0800, Greg Kroah-Hartman wrote:
+ > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ > 
+ > Coverity reported that I forgot to clean up some allocated memory on the
+ > error path in populate_msi_sysfs(), so this patch fixes that.
+ > 
+ > Thanks to Dave Jones for pointing out where the error was, I obviously
+ > can't read code this morning...
+ 
+I think it doesn't help that you have 'msi_attr' and 'msi_attrs'.
+My eyes kinda glazed over a few times reading those.
 
-OK, thanks very much!
-
-> 
-> 
-
-
--- 
-Thanks!
-Yijing
+	Dave
 
