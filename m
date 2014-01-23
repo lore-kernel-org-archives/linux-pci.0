@@ -1,77 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:38563 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755293AbaAJN5w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 08:57:52 -0500
-From: Tejun Heo <tj@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
-	heiko.carstens@de.ibm.com, stern@rowland.harvard.edu,
-	JBottomley@parallels.com, bhelgaas@google.com,
-	Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH 11/14] pci: use device_remove_file_self() instead of device_schedule_callback()
-Date: Fri, 10 Jan 2014 08:57:28 -0500
-Message-Id: <1389362251-8128-12-git-send-email-tj@kernel.org>
-In-Reply-To: <1389362251-8128-1-git-send-email-tj@kernel.org>
-References: <1389362251-8128-1-git-send-email-tj@kernel.org>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:34971 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674AbaAWRcy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 12:32:54 -0500
+Received: by mail-oa0-f43.google.com with SMTP id h16so2492354oag.16
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jan 2014 09:32:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52e1335a.8917980a.31fa.ffffd7a8SMTPIN_ADDED_MISSING@mx.google.com>
+References: <25.15.01844.D5C20E25@epmailin6.samsung.com>
+	<000201cf17ff$47025bf0$d50713d0$%han@samsung.com>
+	<20140123065104.GA26318@pratyush-vbox>
+	<52e1335a.8917980a.31fa.ffffd7a8SMTPIN_ADDED_MISSING@mx.google.com>
+Date: Thu, 23 Jan 2014 18:32:54 +0100
+Message-ID: <CAB5oZtDohVmZjvtfVgVJPhAGbd=qcT=kw21n2ebQhKzhF70QXQ@mail.gmail.com>
+Subject: Re: designware/imx6: question regarding MSI
+From: Harro Haan <hrhaan@gmail.com>
+To: =?UTF-8?Q?Bj=C3=B8rn_Erik_Nilsen?= <ben@datarespons.no>,
+	Richard Zhu <richard.zhuhongxing@gmail.com>,
+	Richard Zhu <Hong-Xing.Zhu@freescale.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Marek Vasut <marex@denx.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-driver-core now supports synchrnous self-deletion of attributes and
-the asynchrnous removal mechanism is scheduled for removal.  Use it
-instead of device_schedule_callback().  This makes "remove" behave
-synchronously.
+On 23 January 2014 16:20, Bjørn Erik Nilsen <ben@datarespons.no> wrote:
+> Hi Pratyush,
+>
+> On Thu, 2014-01-23 at 07:51 +0100, Pratyush Anand wrote:
+>> On Thu, Jan 23, 2014 at 01:52:19PM +0800, Jingoo Han wrote:
+>> > On Thursday, January 23, 2014 5:39 AM, Jingoo Han wrote:
+>> > >
+>> > > I’m currently playing with MSI support in pci-imx6.c using Harro Haan’s patch [*].
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/pci-sysfs.c | 24 ++++++------------------
- 1 file changed, 6 insertions(+), 18 deletions(-)
+The above patch mentioned will not become part of mainline Linux, but
+I expect/hope a reworked version of "[PATCH] pci: imx: enable pcie msi
+support" from Richard Zhu will become part of mainline, because this
+patch supports MSIX as well. Reference to the patch with review
+remarks:
+http://www.spinics.net/lists/linux-ide/msg47074.html
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index c91e6c1..94d1cb8 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -352,32 +352,20 @@ static struct device_attribute dev_rescan_attr = __ATTR(rescan,
- 							(S_IWUSR|S_IWGRP),
- 							NULL, dev_rescan_store);
- 
--static void remove_callback(struct device *dev)
--{
--	struct pci_dev *pdev = to_pci_dev(dev);
--
--	mutex_lock(&pci_remove_rescan_mutex);
--	pci_stop_and_remove_bus_device(pdev);
--	mutex_unlock(&pci_remove_rescan_mutex);
--}
--
- static ssize_t
--remove_store(struct device *dev, struct device_attribute *dummy,
-+remove_store(struct device *dev, struct device_attribute *attr,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
- 	unsigned long val;
- 
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
--	/* An attribute cannot be unregistered by one of its own methods,
--	 * so we have to use this roundabout approach.
--	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
-+	if (val && device_remove_file_self(dev, attr)) {
-+		mutex_lock(&pci_remove_rescan_mutex);
-+		pci_stop_and_remove_bus_device(to_pci_dev(dev));
-+		mutex_unlock(&pci_remove_rescan_mutex);
-+	}
- 	return count;
- }
- static struct device_attribute dev_remove_attr = __ATTR(remove,
--- 
-1.8.4.2
+@Richard Zhu: Is this a correct assumption?
 
+>> > >
+>> > > Are there any technical reasons why dw_pcie_msi_init cannot be called from dw_msi_setup_irq? Or rather,
+>> > > why it should not?
+>> >
+>> > No, there is no special reason.
+>> > The patch (call dw_pcie_msi_init from dw_msi_setup_irq) would be
+>> > good. Thank you for your effort.
+>> >
+>> > Mohit, Pratyush,
+>> > If you have different opinions, please let us know. :-)
+>>
+>> dw_msi_setup_irq will be called for each function which needs msi
+>> assignment. However, dw_pcie_msi_init should be called only once. So,
+>> in my opinion calling dw_pcie_msi_init from dw_msi_setup_irq would not
+>> be the best option.
+>>
+>> @Bjørn, can you help us with tracing calling sequence of
+>> dw_pcie_setup & dw_pcie_scan_bus. I think when you do "reset bridge",
+>> it will call dw_pcie_setup and when you do "rescan bus", it will call
+>> dw_pcie_scan_bus. If yes, then you can move dw_pcie_msi_init to
+>> dw_pcie_setup.
+>
+>
+> It looks like dw_pcie_setup and dw_pcie_scan_bus is only called when
+> booting. Resetting the bridge or scanning the bus will not trigger any
+> of these functions, unfortunately.
+>
+> I have looked for other hooks too, without luck.
+
+@Bjørn: have you applied the following patch?
+"[PATCH] pci: designware: fix missing msi irqs"
+Reference to the patch:
+http://lists.infradead.org/pipermail/linux-arm-kernel/2013-December/218629.html
+
+Best regards,
+
+Harro
+
+>
+>>
+>> Regards
+>> Pratyush
+>>
+>> >
+>> > Best regards,
+>> > Jingoo Han
+>> >
+>> > >
+>> > > I’m asking because I have a hotplug scenario where this little hack (call dw_pcie_msi_init from
+>> > > dw_msi_setup_irq) fixes a problem with MSI. I therefore need to understand whether it is a sensible
+>> > > hack or just crap, and more importantly; how it can be fixed properly.
+>> > >
+>> > > Scenario:
+>> > >
+>> > > (remove endpoints)
+>> > > # echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove
+>> > > # echo 1 > /sys/bus/pci/devices/0000:01:00.1/remove
+>> > >
+>> > > # take fpga in and out of reset (this will mess up the configuration space of the bridge)
+>> > >
+>> > > (reset bridge)
+>> > > # echo 1 > /sys/bus/pci/devices/0000:00:00.0/reset
+>> > >
+>> > > (rescan bus)
+>> > > # echo 1 > /sys/bus/pci/rescan
+>> > >
+>> > > At this point everything works fine except MSI. With above mention hack it works like a charm.
+>> > >
+>> > > I would be grateful if someone could shed light on this. I might have missed some important details.
+>> > >
+>> > >
+>> > > Best regards,
+>> > > Bjørn Erik Nilsen
+>> > >
+>> > > [*]
+>> > >
+>> > > From: Harro Haan <hrhaan@gmail.com>
+>> > > Date: Thu, 5 Dec 2013 14:06:37 +0100
+>> > > Subject: [PATCH 2/2] PCI: imx6: add support for MSI
+>
