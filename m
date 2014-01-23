@@ -1,41 +1,38 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, x86 <x86@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Subject: [PATCH v2 03/10] IOMMU: Don't clean handler data before free_irq()
-Date: Thu,  2 Jan 2014 16:08:10 -0800
-Message-Id: <1388707697-16800-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
-References: <1388707697-16800-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH 3/8] PCI: Assign CardBus bus number only during the second pass.
+Date: Thu, 23 Jan 2014 21:59:23 +0100
+Message-Id: <1390510768-5652-4-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
+References: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-need that in __free_irq.
+Right now the CardBus code in pci_scan_bridge is executed during both
+passes. Since we always allocate the bus number ourselves it makes sense
+to put it into the second pass.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Woodhouse <dwmw2@infradead.org>
-Cc: iommu@lists.linux-foundation.org
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/iommu/intel-iommu.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/pci/probe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 865a65c..9751ee7 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1315,7 +1315,6 @@ void free_dmar_iommu(struct intel_iommu *iommu)
- 		iommu_disable_translation(iommu);
- 
- 	if (iommu->irq) {
--		irq_set_handler_data(iommu->irq, NULL);
- 		/* This will mask the irq */
- 		free_irq(iommu->irq, iommu);
- 		destroy_irq(iommu->irq);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cf05b3e..bed1934 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -831,7 +831,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 		 * do in the second pass.
+ 		 */
+ 		if (!pass) {
+-			if (pcibios_assign_all_busses() || broken)
++			if (pcibios_assign_all_busses() || broken || is_cardbus)
+ 				/* Temporarily disable forwarding of the
+ 				   configuration cycles on all bridges in
+ 				   this bus segment to avoid possible
 -- 
-1.8.4
+1.8.5.3
 
