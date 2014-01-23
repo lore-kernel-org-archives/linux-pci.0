@@ -1,205 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-CC: <linux-acpi@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<intel-gfx@lists.freedesktop.org>,
-	<dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH v3] ACPI: Fix acpi_evaluate_object() return value check
-Date: Fri, 17 Jan 2014 12:21:53 +0800
-Message-ID: <1389932513-27684-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:62386 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805AbaAWU7k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 15:59:40 -0500
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH 0/8] PCI: cleanup pci_scan_bridge
+Date: Thu, 23 Jan 2014 21:59:20 +0100
+Message-Id: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix acpi_evaluate_object() return value check,
-shoud acpi_status not int.
+I have been reading the code around pci_scan_bridge and noticed a few oddities.
+These patches try to cleanup some of the these things.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
-v2->v3: Fix compile error pointed out by Hanjun.
-v1->v2: Add CC to related subsystem MAINTAINERS
----
- drivers/gpu/drm/i915/intel_acpi.c              |   24 ++++++++++++++----------
- drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    9 +++++----
- drivers/gpu/drm/nouveau/nouveau_acpi.c         |   23 +++++++++++++----------
- drivers/pci/pci-label.c                        |    9 ++++++---
- 4 files changed, 38 insertions(+), 27 deletions(-)
+Most of the patches make also sense in isolation, but some make more sense with
+the previous ones applied as well. None of the patches fix any observed bugs.
+Patch 5 fixes a (probably harmless) dmesg.
 
-diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
-index dfff090..87e8f74 100644
---- a/drivers/gpu/drm/i915/intel_acpi.c
-+++ b/drivers/gpu/drm/i915/intel_acpi.c
-@@ -35,7 +35,8 @@ static int intel_dsm(acpi_handle handle, int func)
- 	union acpi_object params[4];
- 	union acpi_object *obj;
- 	u32 result;
--	int ret = 0;
-+	acpi_status status;
-+	int ret;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -50,10 +51,11 @@ static int intel_dsm(acpi_handle handle, int func)
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (ret) {
--		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
--		return ret;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-@@ -141,7 +143,8 @@ static void intel_dsm_platform_mux_info(void)
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *pkg;
--	int i, ret;
-+	acpi_status status;
-+	int i;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -156,10 +159,11 @@ static void intel_dsm_platform_mux_info(void)
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
--				   &output);
--	if (ret) {
--		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
-+	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle,
-+			"_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
- 		goto out;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-index 1291204..c5e7a2b 100644
---- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-+++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-@@ -114,15 +114,16 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
- 	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
- 	union acpi_object *obj;
- 	acpi_handle handle;
--	int ret;
-+	acpi_status status;
- 
- 	handle = ACPI_HANDLE(&device->pdev->dev);
- 	if (!handle)
- 		return false;
- 
--	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
--	if (ret) {
--		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
-+	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
-+	if (ACPI_FAILURE(status)) {
-+		nv_debug(mxm, "DSM MXMS failed: %s\n",
-+				acpi_format_exception(status));
- 		return false;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index ba0183f..de3068b 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
--	int i, err;
-+	acpi_status status;
-+	int i;
- 	char args_buff[4];
- 
- 	input.count = 4;
-@@ -101,10 +102,11 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
- 		args_buff[i] = (arg >> i * 8) & 0xFF;
- 	params[3].buffer.pointer = args_buff;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (err) {
--		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
--		return err;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		pr_info("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-@@ -134,7 +136,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
--	int err;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -148,10 +150,11 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
- 	params[3].type = ACPI_TYPE_INTEGER;
- 	params[3].integer.value = arg;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (err) {
--		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
--		return err;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		pr_info("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index d51f45a..7ba4de6 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
- 	union acpi_object *obj;
- 	int len = 0;
- 
--	int err;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -228,9 +228,12 @@ dsm_get_label(acpi_handle handle, int func,
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, output);
--	if (err)
-+	status = acpi_evaluate_object(handle, "_DSM", &input, output);
-+	if (ACPI_FAILURE(status)) {
-+		pr_info("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
- 		return -1;
-+	}
- 
- 	obj = (union acpi_object *)output->pointer;
- 
+The changes related to CardBus probing are completely untested.
+
+Andreas
+
+Andreas Noever (8):
+  PCI: Increment max correctly in pci_scan_bridge.
+  PCI: Clarify the "scan anyway" comment in pci_scan_bridge.
+  PCI: Assign CardBus bus number only during the second pass.
+  PCI: Use request_resource_conflict instead of insert_ for bus numbers.
+  PCI: Make sure bus number resources stay within their parents bounds.
+  PCI: Remove pci_fixup_parent_subordinate_busnr.
+  PCI: Check for child busses which use more bus numbers than allocated.
+  PCI: Don't scan random busses in pci_scan_bridge.
+
+ drivers/pci/probe.c | 78 +++++++++++++++++++++--------------------------------
+ 1 file changed, 31 insertions(+), 47 deletions(-)
+
 -- 
-1.7.1
-
+1.8.5.3
 
