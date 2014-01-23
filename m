@@ -1,77 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:65314 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830AbaAGSAS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 13:00:18 -0500
-From: Tejun Heo <tj@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
-	heiko.carstens@de.ibm.com, stern@rowland.harvard.edu,
-	JBottomley@parallels.com, bhelgaas@google.com,
-	Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH 09/12] pci: use device_remove_file_self() instead of device_schedule_callback()
-Date: Tue,  7 Jan 2014 12:59:47 -0500
-Message-Id: <1389117590-25705-10-git-send-email-tj@kernel.org>
-In-Reply-To: <1389117590-25705-1-git-send-email-tj@kernel.org>
-References: <1389117590-25705-1-git-send-email-tj@kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:59583 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbaAWADp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jan 2014 19:03:45 -0500
+Date: Thu, 23 Jan 2014 01:03:37 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH v5 02/33] genirq: Add irq_alloc_reserved_desc()
+In-Reply-To: <1388707565-16535-3-git-send-email-yinghai@kernel.org>
+Message-ID: <alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org> <1388707565-16535-3-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-driver-core now supports synchrnous self-deletion of attributes and
-the asynchrnous removal mechanism is scheduled for removal.  Use it
-instead of device_schedule_callback().  This makes "remove" behave
-synchronously.
+Yinghai,
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/pci-sysfs.c | 24 ++++++------------------
- 1 file changed, 6 insertions(+), 18 deletions(-)
+On Thu, 2 Jan 2014, Yinghai Lu wrote:
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index c91e6c1..94d1cb8 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -352,32 +352,20 @@ static struct device_attribute dev_rescan_attr = __ATTR(rescan,
- 							(S_IWUSR|S_IWGRP),
- 							NULL, dev_rescan_store);
- 
--static void remove_callback(struct device *dev)
--{
--	struct pci_dev *pdev = to_pci_dev(dev);
--
--	mutex_lock(&pci_remove_rescan_mutex);
--	pci_stop_and_remove_bus_device(pdev);
--	mutex_unlock(&pci_remove_rescan_mutex);
--}
--
- static ssize_t
--remove_store(struct device *dev, struct device_attribute *dummy,
-+remove_store(struct device *dev, struct device_attribute *attr,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
- 	unsigned long val;
- 
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
--	/* An attribute cannot be unregistered by one of its own methods,
--	 * so we have to use this roundabout approach.
--	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
-+	if (val && device_remove_file_self(dev, attr)) {
-+		mutex_lock(&pci_remove_rescan_mutex);
-+		pci_stop_and_remove_bus_device(to_pci_dev(dev));
-+		mutex_unlock(&pci_remove_rescan_mutex);
-+	}
- 	return count;
- }
- static struct device_attribute dev_remove_attr = __ATTR(remove,
--- 
-1.8.4.2
+> For ioapic hot-add support, it would be easy if we have continuous
+> irq numbers for hot added ioapic controller.
 
+I really don't care about easy. Easy to solve problems are for
+wimps.
+
+What you really want to say is, that ioapic hot-add support requires a
+contiguous irq number space for a hotplugged ioapic to avoid expensive
+translations in the ioapic hotplug code.
+
+That's a proper reason for making that change to the core code.
+ 
+> We can reserve irq range at first, and later allocate desc for those
+> pre-reserved irqs when they are needed.
+> 
+> The reasons for not allocating them during reserving:
+> 1. only several pins of one ioapic are used, allocate for all pins, will
+>    waste memory for not used pins.
+> 2. allocate later when is needed could make sure irq_desc is allocated
+>    on local node ram, as dev->node is set at that point.
+> 
+> -v2: update changelog by adding reasons, requested by Konrad.
+> -v3: according to tglx:
+>        separate core code change with arch code change.
+
+Thanks for splitting the patches!
+
+Now the scope of this change becomes more obvious and what I already
+suspected before becomes crystal clear.
+
+The initial intention of irq_reserve_irqs() was to cope with the
+legacy interrupts to prevent the dynamic allocator from giving them
+out, but it was at least a misnomer if not even a misconception.
+
+Did you notice that? No!
+
+Did you even think why irq_reserve_irqs() exists? No!
+
+You just hacked it into submission for your purpose. As usual, sigh!
+
+What prevents a user of __irq_alloc_reserved_desc() to request
+something completely out of its range? Nothing as you happily return
+an existing interrupt via:
+
++       if (irq_to_desc(irq))
++               return irq;
+
+which is true for all already existing interrupts. So some random off
+by one is going to cause a spurious and extremly hard to debug
+issue. Brilliant.
+
+No, we are not going to play the "it works for Yinghai" game again. I
+wasted enough time with that already.
+
+There is a clear step by step approach to get this done proper:
+
+ 1) Get rid of the existing misconception/misnomer of
+    irq_reserve_irqs().
+    
+    Make it explicit that this is dealing with legacy irq spaces. It's
+    not that hard as there are only two users in tree which are both
+    trivial to fix. 
+
+ 2) Provide a proper reservation mechanism which does not piggypack
+    blindly on the allocation bitmap.
+
+    So what you want is a reservation which:
+
+    A) Marks the irq range in the allocation bitmap
+
+       This prevents other code pathes to stomp on that range.
+
+    B) Stores a unique generated ID in a separate radix tree for that
+       particular irq range.
+
+       The generated ID is returned to the caller as it is required
+       for actually allocating an interrupt from that range.
+
+       We don't have to bother with making this conditional as the
+       initial memory consumption of the radix tree is minimal and we
+       only expand it when we actually use that hotplug feature.
+
+  3) Provide a proper alloc_reserved_irqdesc() function
+
+     This function verifies against the reservation ID which was
+     handed out by the reservation function.
+
+     It's questionable whether we want to allow the reuse of already
+     allocated irq descriptors. I'm leaning to avoid that. See #4
+
+  4) Provide a proper mechanism to free the registered irq descriptors
+     and the reservation range when the physical device is removed
+     from the system. So you don't have to preserve state in the
+     ioapic code. Physical hotplug is not a high frequency hotpath
+     operation.
+
+  5) Modify the x86 ioapic code to always use the reserve first and
+     allocate later mechanism to avoid ifdeffery and pointless
+     conditional code pathes. That also ensures proper test coverage.
+
+     TBH, I could not be bothered to look at your x86 related changes,
+     but I expect they are from the "make it work for Yinghai"
+     departement as well. I'll review them once the core code changes
+     are in an acceptable shape.
+
+Thanks,
+
+	tglx
