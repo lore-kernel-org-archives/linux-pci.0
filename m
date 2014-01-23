@@ -1,45 +1,26 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jon Mason <jdmason@kudzu.us>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 21/34] s2io: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:40 +0100
-Message-Id: <d1a9bf16ad8e822bb8fc7d42819f13d08dc8e430.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+MIME-Version: 1.0
+In-Reply-To: <3348502.BsxiUoEkHO@vostro.rjw.lan>
+References: <3348502.BsxiUoEkHO@vostro.rjw.lan>
+Date: Thu, 23 Jan 2014 09:47:44 -0800
+Message-ID: <CAADWXX8Vy6-RWeLoW8kbU2a6yri2Tv5Le3qXhRe30oNDnbQxtw@mail.gmail.com>
+Subject: Re: [GIT PULL] ACPI and power management updates for v3.14-rc1
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Mon, Jan 20, 2014 at 3:23 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> Please pull from the git repository at
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/neterion/s2io.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+gmail still hates you rjwysocki.net address, even if it now says "spf pass".
 
-diff --git a/drivers/net/ethernet/neterion/s2io.c b/drivers/net/ethernet/neterion/s2io.c
-index 9eeddbd..56e3a9d 100644
---- a/drivers/net/ethernet/neterion/s2io.c
-+++ b/drivers/net/ethernet/neterion/s2io.c
-@@ -3792,9 +3792,10 @@ static int s2io_enable_msi_x(struct s2io_nic *nic)
- 	writeq(rx_mat, &bar0->rx_mat);
- 	readq(&bar0->rx_mat);
- 
--	ret = pci_enable_msix(nic->pdev, nic->entries, nic->num_entries);
-+	ret = pci_enable_msix_range(nic->pdev, nic->entries,
-+				    nic->num_entries, nic->num_entries);
- 	/* We fail init if error or we get less vectors than min required */
--	if (ret) {
-+	if (ret < 0) {
- 		DBG_PRINT(ERR_DBG, "Enabling MSI-X failed\n");
- 		kfree(nic->entries);
- 		swstats->mem_freed += nic->num_entries *
--- 
-1.7.7.6
+So it's something else that makes gmail hate you. Spammy ISP?
 
+                   Linus
