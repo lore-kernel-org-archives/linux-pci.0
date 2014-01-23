@@ -1,164 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 11/11] ACPI / hotplug: Do not pass ACPI handles to ACPI dock operations
-Date: Mon, 27 Jan 2014 01:46:21 +0100
-Message-ID: <2348078.1nGWUoSCvJ@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:11779 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753359AbaAWCVB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jan 2014 21:21:01 -0500
+Message-ID: <52E07C49.9070509@huawei.com>
+Date: Thu, 23 Jan 2014 10:19:53 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	"David Airlie" <airlied@linux.ie>,
+	<intel-gfx@lists.freedesktop.org>,
+	"DRI mailing list" <dri-devel@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH v4] ACPI: Fix acpi_evaluate_object() return value check
+References: <1390272375-28728-1-git-send-email-wangyijing@huawei.com> <CAErSpo4_VCVHcq2cs_HP-_0kFSnUWsxsr6Y1iiR==3XLNaVc2w@mail.gmail.com>
+In-Reply-To: <CAErSpo4_VCVHcq2cs_HP-_0kFSnUWsxsr6Y1iiR==3XLNaVc2w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 2014/1/23 5:37, Bjorn Helgaas wrote:
+> On Mon, Jan 20, 2014 at 7:46 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Since acpi_evaluate_object() returns acpi_status and not plain int,
+>> ACPI_FAILURE() should be used for checking its return value.
+>>
+>> Reviewed-by: Jani Nikula <jani.nikula@intel.com>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>> v3->v4: Fix spell error, add Jani Nikula reviewed-by.
+>> v2->v3: Fix compile error pointed out by Hanjun.
+>> v1->v2: Add CC to related subsystem MAINTAINERS
+>> ---
+>>  drivers/gpu/drm/i915/intel_acpi.c              |   24 ++++++++++++++----------
+>>  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    9 +++++----
+>>  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   23 +++++++++++++----------
+>>  drivers/pci/pci-label.c                        |    9 ++++++---
+> 
+> For the drivers/pci/pci-label.c part,
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-None of the existing users of struct acpi_dock_ops actually needs the
-first argument of its member functions, so redefine those functions
-to take only two arguments, the event type and data pointer, and
-update the users of struct acpi_dock_ops accordingly.
+Thanks.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/dock.c                |    4 ++--
- drivers/ata/libata-acpi.c          |    8 ++++----
- drivers/pci/hotplug/acpiphp_glue.c |   13 +++++++------
- include/acpi/acpi_drivers.h        |    6 +++---
- 4 files changed, 16 insertions(+), 15 deletions(-)
+> 
+>> +       status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>> +       if (ACPI_FAILURE(status)) {
+>> +               DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
+>> +                               acpi_format_exception(status));
+> 
+> It's too bad there isn't an easy way to produce more informative error
+> messages, e.g., by including a namespace path or something.  A message
+> like:
+> 
+>     failed to evaluate _DSM: A requested entity is not found
+> 
+> is only useful if there's enough context to figure out what's going on.
 
-Index: linux-pm/include/acpi/acpi_drivers.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_drivers.h
-+++ linux-pm/include/acpi/acpi_drivers.h
-@@ -110,9 +110,9 @@ void pci_acpi_crs_quirks(void);
-                                   Dock Station
-   -------------------------------------------------------------------------- */
- struct acpi_dock_ops {
--	acpi_notify_handler fixup;
--	acpi_notify_handler handler;
--	acpi_notify_handler uevent;
-+	void (*handler)(u32 event_type, void *data);
-+	void (*fixup)(u32 event_type, void *data);
-+	void (*uevent)(u32 event_type, void *data);
- };
- 
- #ifdef CONFIG_ACPI_DOCK
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -63,7 +63,7 @@ static DEFINE_MUTEX(acpiphp_context_lock
- static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
--static void hotplug_event(acpi_handle handle, u32 type, void *data);
-+static void hotplug_event(u32 type, void *data);
- static void free_bridge(struct kref *kref);
- 
- static void acpiphp_context_handler(acpi_handle handle, void *context)
-@@ -185,7 +185,7 @@ static void free_bridge(struct kref *kre
-  * TBD - figure out a way to only call fixups for
-  * systems that require them.
-  */
--static void post_dock_fixups(acpi_handle not_used, u32 event, void *data)
-+static void post_dock_fixups(u32 event, void *data)
- {
- 	struct acpiphp_context *context = data;
- 	struct pci_bus *bus = context->func.slot->bus;
-@@ -788,11 +788,12 @@ void acpiphp_check_host_bridge(acpi_hand
- 
- static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot);
- 
--static void hotplug_event(acpi_handle handle, u32 type, void *data)
-+static void hotplug_event(u32 type, void *data)
- {
- 	struct acpiphp_context *context = data;
- 	struct acpiphp_func *func = &context->func;
- 	struct acpiphp_slot *slot = func->slot;
-+	acpi_handle handle = context->adev->handle;
- 	struct acpiphp_bridge *bridge;
- 
- 	mutex_lock(&acpiphp_context_lock);
-@@ -842,16 +843,16 @@ static void hotplug_event(acpi_handle ha
- static void hotplug_event_work(void *data, u32 type)
- {
- 	struct acpiphp_context *context = data;
--	acpi_handle handle = context->adev->handle;
- 
- 	acpi_scan_lock_acquire();
- 	pci_lock_rescan_remove();
- 
--	hotplug_event(handle, type, context);
-+	hotplug_event(type, context);
- 
- 	pci_unlock_rescan_remove();
- 	acpi_scan_lock_release();
--	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
-+	acpi_evaluate_hotplug_ost(context->adev->handle, type,
-+				  ACPI_OST_SC_SUCCESS, NULL);
- 	put_bridge(context->func.parent);
- }
- 
-Index: linux-pm/drivers/acpi/dock.c
-===================================================================
---- linux-pm.orig/drivers/acpi/dock.c
-+++ linux-pm/drivers/acpi/dock.c
-@@ -185,7 +185,7 @@ static void dock_release_hotplug(struct
- static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
- 			       enum dock_callback_type cb_type)
- {
--	acpi_notify_handler cb = NULL;
-+	void (*cb)(u32, void *) = NULL;
- 	bool run = false;
- 
- 	mutex_lock(&hotplug_lock);
-@@ -213,7 +213,7 @@ static void dock_hotplug_event(struct do
- 		return;
- 
- 	if (cb)
--		cb(dd->handle, event, dd->hp_context);
-+		cb(event, dd->hp_context);
- 
- 	dock_release_hotplug(dd);
- }
-Index: linux-pm/drivers/ata/libata-acpi.c
-===================================================================
---- linux-pm.orig/drivers/ata/libata-acpi.c
-+++ linux-pm/drivers/ata/libata-acpi.c
-@@ -121,14 +121,14 @@ static void ata_acpi_handle_hotplug(stru
- 		ata_port_wait_eh(ap);
- }
- 
--static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
-+static void ata_acpi_dev_notify_dock(u32 event, void *data)
- {
- 	struct ata_device *dev = data;
- 
- 	ata_acpi_handle_hotplug(dev->link->ap, dev, event);
- }
- 
--static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
-+static void ata_acpi_ap_notify_dock(u32 event, void *data)
- {
- 	struct ata_port *ap = data;
- 
-@@ -154,12 +154,12 @@ static void ata_acpi_uevent(struct ata_p
- 	}
- }
- 
--static void ata_acpi_ap_uevent(acpi_handle handle, u32 event, void *data)
-+static void ata_acpi_ap_uevent(u32 event, void *data)
- {
- 	ata_acpi_uevent(data, NULL, event);
- }
- 
--static void ata_acpi_dev_uevent(acpi_handle handle, u32 event, void *data)
-+static void ata_acpi_dev_uevent(u32 event, void *data)
- {
- 	struct ata_device *dev = data;
- 	ata_acpi_uevent(dev->link->ap, dev, event);
+Yes, I will add the namespace path into the debug info, thanks!
+
+> 
+> Bjorn
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
