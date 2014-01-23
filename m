@@ -1,73 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
-	heiko.carstens@de.ibm.com, stern@rowland.harvard.edu,
-	JBottomley@parallels.com, bhelgaas@google.com,
-	Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH 11/14] pci: use device_remove_file_self() instead of device_schedule_callback()
-Date: Fri, 10 Jan 2014 08:46:57 -0500
-Message-Id: <1389361620-5086-12-git-send-email-tj@kernel.org>
-In-Reply-To: <1389361620-5086-1-git-send-email-tj@kernel.org>
-References: <1389361620-5086-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:47413 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979AbaAWVAF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 16:00:05 -0500
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH 7/8] PCI: Check for child busses which use more bus numbers than allocated.
+Date: Thu, 23 Jan 2014 21:59:27 +0100
+Message-Id: <1390510768-5652-8-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
+References: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-driver-core now supports synchrnous self-deletion of attributes and
-the asynchrnous removal mechanism is scheduled for removal.  Use it
-instead of device_schedule_callback().  This makes "remove" behave
-synchronously.
+pci_scan_child_bus can (potentially) return a bus number higher than the subordinate
+value of the child bus. Possible reasons are that bus numbers are reserved for
+SR-IOV or for CardBus (SR-IOV is done without checks and the CardBus
+checks are sketchy at best).
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+We clamp the returned value to the actual subordinate value and print a
+warning if too many bus numbers are reserved.
+
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/pci/pci-sysfs.c | 24 ++++++------------------
- 1 file changed, 6 insertions(+), 18 deletions(-)
+ drivers/pci/probe.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index c91e6c1..94d1cb8 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -352,32 +352,20 @@ static struct device_attribute dev_rescan_attr = __ATTR(rescan,
- 							(S_IWUSR|S_IWGRP),
- 							NULL, dev_rescan_store);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 90d5c48..74bc644 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -805,10 +805,13 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 		}
  
--static void remove_callback(struct device *dev)
--{
--	struct pci_dev *pdev = to_pci_dev(dev);
--
--	mutex_lock(&pci_remove_rescan_mutex);
--	pci_stop_and_remove_bus_device(pdev);
--	mutex_unlock(&pci_remove_rescan_mutex);
--}
--
- static ssize_t
--remove_store(struct device *dev, struct device_attribute *dummy,
-+remove_store(struct device *dev, struct device_attribute *attr,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
- 	unsigned long val;
- 
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
--	/* An attribute cannot be unregistered by one of its own methods,
--	 * so we have to use this roundabout approach.
--	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
-+	if (val && device_remove_file_self(dev, attr)) {
-+		mutex_lock(&pci_remove_rescan_mutex);
-+		pci_stop_and_remove_bus_device(to_pci_dev(dev));
-+		mutex_unlock(&pci_remove_rescan_mutex);
-+	}
- 	return count;
- }
- static struct device_attribute dev_remove_attr = __ATTR(remove,
+ 		cmax = pci_scan_child_bus(child);
+-		if (cmax > max)
+-			max = cmax;
+-		if (child->busn_res.end > max)
+-			max = child->busn_res.end;
++		if (cmax > subordinate)
++			dev_warn(&dev->dev,
++				"bridge has subordinate %02x but max busn %02x\n",
++				subordinate, cmax);
++		 /* subordinate should equal child->busn_res.end */
++		if (subordinate > max)
++			max = subordinate;
+ 	} else {
+ 		/*
+ 		 * We need to assign a number to this bus which we always
 -- 
-1.8.4.2
+1.8.5.3
 
