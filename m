@@ -1,110 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:58821 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752942AbaAROfY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 18 Jan 2014 09:35:24 -0500
-Received: by mail-ie0-f175.google.com with SMTP id ar20so1951402iec.34
-        for <linux-pci@vger.kernel.org>; Sat, 18 Jan 2014 06:35:24 -0800 (PST)
-Subject: [PATCH 2/2] Revert "EISA: Initialize device before its resources"
-To: linux-kernel@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Joseph Salisbury <joseph.salisbury@canonical.com>
-Date: Sat, 18 Jan 2014 07:35:23 -0700
-Message-ID: <20140118143523.32751.41079.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140118143308.32751.27410.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140118143308.32751.27410.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-we0-f175.google.com ([74.125.82.175]:49799 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979AbaAWVAA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 16:00:00 -0500
+From: Andreas Noever <andreas.noever@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Subject: [PATCH 1/8] PCI: Increment max correctly in pci_scan_bridge.
+Date: Thu, 23 Jan 2014 21:59:21 +0100
+Message-Id: <1390510768-5652-2-git-send-email-andreas.noever@gmail.com>
+In-Reply-To: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
+References: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 26abfeed4341872364386c6a52b9acef8c81a81a.
+This patch fixes two small issues:
+ - If pci_add_new_bus fails then max must not be incremented. Otherwise
+   an incorrect value is returned from pci_scan_bridge().
+ - If the bus is already present, then max must be incremented. I think
+   that this case should only be hit if we trigger a manual rescan of a
+   CardBus bridge.
 
-In the eisa_probe() force_probe path, if we were unable to request slot
-resources (e.g., [io 0x800-0x8ff]), we skipped the slot with "Cannot
-allocate resource for EISA slot %d" before reading the EISA signature in
-eisa_init_device().
-
-Commit 26abfeed4341 moved eisa_init_device() earlier, so we tried to read
-the EISA signature before requesting the slot resources, and this caused
-hangs during boot.
-
-Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1251816
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: stable@vger.kernel.org	# v3.10+ a2080d0c561c: Revert "EISA: Log device resources in dmesg"
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
 ---
- drivers/eisa/eisa-bus.c |   26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+ drivers/pci/probe.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/eisa/eisa-bus.c b/drivers/eisa/eisa-bus.c
-index 1b86fe0c2e80..612afeaec3cb 100644
---- a/drivers/eisa/eisa-bus.c
-+++ b/drivers/eisa/eisa-bus.c
-@@ -277,11 +277,13 @@ static int __init eisa_request_resources(struct eisa_root_device *root,
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 04796c0..78caade 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -852,11 +852,12 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 		 * this case we only re-scan this bus. */
+ 		child = pci_find_bus(pci_domain_nr(bus), max+1);
+ 		if (!child) {
+-			child = pci_add_new_bus(bus, dev, ++max);
++			child = pci_add_new_bus(bus, dev, max+1);
+ 			if (!child)
+ 				goto out;
+-			pci_bus_insert_busn_res(child, max, 0xff);
++			pci_bus_insert_busn_res(child, max+1, 0xff);
  		}
- 		
- 		if (slot) {
-+			edev->res[i].name  = NULL;
- 			edev->res[i].start = SLOT_ADDRESS(root, slot)
- 					     + (i * 0x400);
- 			edev->res[i].end   = edev->res[i].start + 0xff;
- 			edev->res[i].flags = IORESOURCE_IO;
- 		} else {
-+			edev->res[i].name  = NULL;
- 			edev->res[i].start = SLOT_ADDRESS(root, slot)
- 					     + EISA_VENDOR_ID_OFFSET;
- 			edev->res[i].end   = edev->res[i].start + 3;
-@@ -327,19 +329,20 @@ static int __init eisa_probe(struct eisa_root_device *root)
- 		return -ENOMEM;
- 	}
- 		
--	if (eisa_init_device(root, edev, 0)) {
-+	if (eisa_request_resources(root, edev, 0)) {
-+		dev_warn(root->dev,
-+		         "EISA: Cannot allocate resource for mainboard\n");
- 		kfree(edev);
- 		if (!root->force_probe)
--			return -ENODEV;
-+			return -EBUSY;
- 		goto force_probe;
- 	}
- 
--	if (eisa_request_resources(root, edev, 0)) {
--		dev_warn(root->dev,
--		         "EISA: Cannot allocate resource for mainboard\n");
-+	if (eisa_init_device(root, edev, 0)) {
-+		eisa_release_resources(edev);
- 		kfree(edev);
- 		if (!root->force_probe)
--			return -EBUSY;
-+			return -ENODEV;
- 		goto force_probe;
- 	}
- 
-@@ -362,11 +365,6 @@ static int __init eisa_probe(struct eisa_root_device *root)
- 			continue;
- 		}
- 
--		if (eisa_init_device(root, edev, i)) {
--			kfree(edev);
--			continue;
--		}
--
- 		if (eisa_request_resources(root, edev, i)) {
- 			dev_warn(root->dev,
- 			         "Cannot allocate resource for EISA slot %d\n",
-@@ -375,6 +373,12 @@ static int __init eisa_probe(struct eisa_root_device *root)
- 			continue;
- 		}
- 
-+		if (eisa_init_device(root, edev, i)) {
-+			eisa_release_resources(edev);
-+			kfree(edev);
-+			continue;
-+		}
-+
- 		if (edev->state == (EISA_CONFIG_ENABLED | EISA_CONFIG_FORCED))
- 			enabled_str = " (forced enabled)";
- 		else if (edev->state == EISA_CONFIG_FORCED)
++		max++;
+ 		buses = (buses & 0xff000000)
+ 		      | ((unsigned int)(child->primary)     <<  0)
+ 		      | ((unsigned int)(child->busn_res.start)   <<  8)
+-- 
+1.8.5.3
 
