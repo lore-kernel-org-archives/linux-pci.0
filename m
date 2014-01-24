@@ -1,119 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:49530 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbaABVmQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 16:42:16 -0500
-Received: by mail-ie0-f172.google.com with SMTP id qd12so15422498ieb.31
-        for <linux-pci@vger.kernel.org>; Thu, 02 Jan 2014 13:42:16 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20131226165241.2c50b244@skate>
-References: <20131226160534.36cc4203@skate> <20131226165241.2c50b244@skate>
+In-Reply-To: <11909895.7rJ1jejxPI@vostro.rjw.lan>
+References: <1390448559-33896-1-git-send-email-wangyijing@huawei.com>
+ <38648196.Uh7omNjHIu@vostro.rjw.lan> <CAErSpo5VGy9nCnrOAZtU9OjMsXxz5q_x2rVn596mqg1TWTT64g@mail.gmail.com>
+ <11909895.7rJ1jejxPI@vostro.rjw.lan>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 2 Jan 2014 14:41:55 -0700
-Message-ID: <CAErSpo7scTcM-KSjfQCAeL=bRpJK5XrdD_O3d0CEm6MikXjMNw@mail.gmail.com>
-Subject: Re: Issue with the emulated PCI bridge implementation
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	=?UTF-8?Q?Gregory_Cl=C3=A9ment?=
-	<gregory.clement@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Fri, 24 Jan 2014 08:25:23 -0700
+Message-ID: <CAErSpo6T28Dh=xkgx=Ki6nZOZN1c8QGhB6KWhiZ46ZwHAmirbg@mail.gmail.com>
+Subject: Re: [PATCH v5] ACPI: Fix acpi_evaluate_object() return value check
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Airlie <airlied@linux.ie>,
+	intel-gfx@lists.freedesktop.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Hanjun Guo <guohanjun@huawei.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 26, 2013 at 8:52 AM, Thomas Petazzoni
-<thomas.petazzoni@free-electrons.com> wrote:
-> Jason,
+On Fri, Jan 24, 2014 at 8:36 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Friday, January 24, 2014 07:54:29 AM Bjorn Helgaas wrote:
+>> On Thu, Jan 23, 2014 at 5:33 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> > On Thursday, January 23, 2014 11:21:01 AM Bjorn Helgaas wrote:
+>> >> On Wed, Jan 22, 2014 at 8:42 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> >> > Since acpi_evaluate_object() returns acpi_status and not plain int,
+>> >> > ACPI_FAILURE() should be used for checking its return value. Also
+>> >> > add some detailed debug info when acpi_evaluate_object() failed.
+>> >> >
+>> >> > Reviewed-by: Jani Nikula <jani.nikula@intel.com>
+>> >> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>> >> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> >> > ---
+>> >> > v4->v5: Add some detailed debug info for acpi_evaluate_object()
+>> >> >         failure suggested by Bjorn.
+>> >> > v3->v4: Fix spell error, add Jani Nikula reviewed-by.
+>> >> > v2->v3: Fix compile error pointed out by Hanjun.
+>> >> > v1->v2: Add CC to related subsystem MAINTAINERS
+>> >> > ---
+>> >> >  drivers/gpu/drm/i915/intel_acpi.c              |   33 ++++++++++++++++-------
+>> >> >  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |   13 ++++++---
+>> >> >  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   25 +++++++++++-------
+>> >> >  drivers/pci/pci-label.c                        |   10 +++++--
+>> >> >  4 files changed, 54 insertions(+), 27 deletions(-)
+>> >> >
+>> >> > diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
+>> >> > index dfff090..e7b526b 100644
+>> >> > --- a/drivers/gpu/drm/i915/intel_acpi.c
+>> >> > +++ b/drivers/gpu/drm/i915/intel_acpi.c
+>> >> > @@ -31,11 +31,13 @@ static const u8 intel_dsm_guid[] = {
+>> >> >  static int intel_dsm(acpi_handle handle, int func)
+>> >> >  {
+>> >> >         struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
+>> >> > +       struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
+>> >> >         struct acpi_object_list input;
+>> >> >         union acpi_object params[4];
+>> >> >         union acpi_object *obj;
+>> >> >         u32 result;
+>> >> > -       int ret = 0;
+>> >> > +       acpi_status status;
+>> >> > +       int ret;
+>> >> >
+>> >> >         input.count = 4;
+>> >> >         input.pointer = params;
+>> >> > @@ -50,10 +52,14 @@ static int intel_dsm(acpi_handle handle, int func)
+>> >> >         params[3].package.count = 0;
+>> >> >         params[3].package.elements = NULL;
+>> >> >
+>> >> > -       ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>> >> > -       if (ret) {
+>> >> > -               DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+>> >> > -               return ret;
+>> >> > +       status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+>> >> > +       if (ACPI_FAILURE(status)) {
+>> >> > +               acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
+>> >> > +               DRM_DEBUG_DRIVER(
+>> >> > +                       "failed to evaluate _DSM for %s, exit status %u\n",
+>> >> > +                       (char *)string.pointer, (unsigned int)status);
+>> >> > +               kfree(string.pointer);
+>> >> > +               return -EINVAL;
+>> >>
+>> >> I said "too bad there isn't an *easy* way" to include more
+>> >> information.  IMHO this is too ugly and error-prone to use
+>> >> consistently.  And if you are going to add more information, why did
+>> >> you only do it for some of the calls and not others?
+>> >>
+>> >> I considered adding a %p extension to print the pathname; I don't know
+>> >> if that's worthwhile or not.  I think it would be ideal if we had a
+>> >> struct device and could use dev_info(), and then a way to connect the
+>> >> struct device with an ACPI path, like maybe a dmesg note when we
+>> >> create the struct device corresponding to an ACPI Device node.
+>> >
+>> > Well, we can generally print something like that from pci_acpi_setup().
+>> >
+>> > What about the below?  Wouldn't it generate too much output on some systems?
+>>
+>> Yeah, that probably would generate an awful lot of output.  I was just
+>> hoping to avoid treating ACPI pathnames as first-class objects.  What
+>> do you think about a %p extension?  I played with that once, but I
+>> seem to have lost the patch.
 >
-> On Thu, 26 Dec 2013 16:05:34 +0100, Thomas Petazzoni wrote:
+> Well, it may be worth doing.  However, that information is readily available from
+> sysfs anyway, you only need to follow the firmware_node link in the PCI device's
+> sysfs directory and read the path attribute from there.  For example, on my
+> system:
 >
->> For now, my only idea would be to do the pci_ioremap_io()
->> unconditionally for all PCIe interfaces when the PCIe host controller
->> driver is initialized. We know the maximum size of the I/O region for
->> each PCIe interface, and this size is small (64 KB). We can keep the
->> creation of the corresponding MBus window as something dynamic done by
->> the bridge.
->
-> Here is an implementation of this idea, tested to work with an e1000e
-> card, with the driver modified to do a few read/write to the I/O
-> region. What do you think about it?
->
-> Thanks!
->
-> Thomas
->
-> From c062af329fa07ddc6d0ca305b4c9633f7e1dca00 Mon Sep 17 00:00:00 2001
-> From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Date: Thu, 26 Dec 2013 16:46:24 +0100
-> Subject: [PATCH] pci: mvebu: call pci_ioremap_io() at startup instead of
->  dynamically
->
-> The mvebu PCI host controller driver uses an emulated PCI-to-PCI
-> bridge to leverage the core PCI kernel enumeration logic to
-> dynamically create and remove the MBus windows needed to access the
-> memory and I/O regions of each PCI interface.
->
-> In the context of this PCI-to-PCI bridge emulation, the driver
-> emulates all reads and writes to the PCI bridge registers. Upon a
-> write to the registers conguring the I/O base and limit, the driver
-> was creating the MBus window, and calling pci_ioremap_io() to setup
-> the mapping.
->
-> However, it turns out that accesses to these registers are made in an
-> IRQ disabled context, while pci_ioremap_io() is a potentially sleeping
-> function. Not only this is wrong, but it is causing so fairly loud
-> warnings at boot time when the appropriate kernel hacking options are
-> enabled.
->
-> This patch solves this by moving the pci_ioremap_io() call at the
-> startup of the driver. At this point, we don't know how many PCI
-> interfaces will be enabled, so we are simply remapping the entire PCI
-> I/O space to virtual addresses. This is reasonable since this I/O
-> space is limited to 1 MB in size, and also because the MBus windows
-> continue to be created in a dynamic fashion only when devices need
-> them.
->
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> $ cat /sys/devices/pci0000:00/0000:00:1c.4/0000:0b:00.0/firmware_node/path
+> \_SB_.PCI0.RP05.PXSX
 
-Applied to my pci/host-mvebu branch for v3.14, thanks!
+That's perfect.  If we had a struct device, we could just use
+dev_info() for these messages.  But I have no idea how hard it would
+be to get at the struct device.
 
 Bjorn
-
-> ---
->  drivers/pci/host/pci-mvebu.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 2aa7b77c..476dd72 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -330,8 +330,6 @@ static void mvebu_pcie_handle_iobase_change(struct mvebu_pcie_port *port)
->         mvebu_mbus_add_window_remap_by_id(port->io_target, port->io_attr,
->                                           port->iowin_base, port->iowin_size,
->                                           iobase);
-> -
-> -       pci_ioremap_io(iobase, port->iowin_base);
->  }
->
->  static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
-> @@ -969,6 +967,10 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
->         }
->
->         pcie->nports = i;
-> +
-> +       for (i = 0; i < (IO_SPACE_LIMIT - SZ_64K); i += SZ_64K)
-> +               pci_ioremap_io(i, pcie->io.start + i);
-> +
->         mvebu_pcie_msi_enable(pcie);
->         mvebu_pcie_enable(pcie);
->
-> --
-> 1.8.3.2
->
-> --
-> Thomas Petazzoni, CTO, Free Electrons
-> Embedded Linux, Kernel and Android engineering
-> http://free-electrons.com
