@@ -1,151 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:13062 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752786AbaAFGSX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:18:23 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 09/20] iommu/vt-d: mark internal functions as static
-Date: Mon,  6 Jan 2014 14:18:16 +0800
-Message-Id: <1388989107-4795-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:49986
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751558AbaAXTwu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jan 2014 14:52:50 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: RE: User initiated hotplug and kernel initiated hotplug - where is
+ the synchronization?
+Date: Fri, 24 Jan 2014 19:52:44 +0000
+Message-ID: <08970482ac384501b5ef561c7af5620b@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <635a0ddff97142e2a06f9bd9c3428d01@DM2PR05MB671.namprd05.prod.outlook.com>
+ <18064064.UldA0zYdyf@vostro.rjw.lan>
+In-Reply-To: <18064064.UldA0zYdyf@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function detect_intel_iommu()/alloc_iommu()/parse_ioapics_under_ir()
-are only used internally, so mark them as static.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c                |    9 ++++++---
- drivers/iommu/intel_irq_remapping.c |    4 +++-
- include/linux/dmar.h                |   12 +-----------
- include/linux/intel-iommu.h         |    1 -
- 4 files changed, 10 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index f5f7b7d..f02a4fd 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -52,6 +52,8 @@ LIST_HEAD(dmar_drhd_units);
- struct acpi_table_header * __initdata dmar_tbl;
- static acpi_size dmar_tbl_size;
- 
-+static int alloc_iommu(struct dmar_drhd_unit *drhd);
-+
- static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
- {
- 	/*
-@@ -498,7 +500,7 @@ static void warn_invalid_dmar(u64 addr, const char *message)
- 		dmi_get_system_info(DMI_PRODUCT_VERSION));
- }
- 
--int __init check_zero_address(void)
-+static int __init check_zero_address(void)
- {
- 	struct acpi_table_dmar *dmar;
- 	struct acpi_dmar_header *entry_header;
-@@ -548,7 +550,7 @@ failed:
- 	return 0;
- }
- 
--int __init detect_intel_iommu(void)
-+static int __init detect_intel_iommu(void)
- {
- 	int ret;
- 
-@@ -649,7 +651,7 @@ out:
- 	return err;
- }
- 
--int alloc_iommu(struct dmar_drhd_unit *drhd)
-+static int alloc_iommu(struct dmar_drhd_unit *drhd)
- {
- 	struct intel_iommu *iommu;
- 	u32 ver, sts;
-@@ -1366,4 +1368,5 @@ int __init dmar_ir_support(void)
- 		return 0;
- 	return dmar->flags & 0x1;
- }
-+
- IOMMU_INIT_POST(detect_intel_iommu);
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 2616e8a..6712f1e 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -40,6 +40,8 @@ static int ir_ioapic_num, ir_hpet_num;
- 
- static DEFINE_RAW_SPINLOCK(irq_2_ir_lock);
- 
-+static int __init parse_ioapics_under_ir(void);
-+
- static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
- {
- 	struct irq_cfg *cfg = irq_get_chip_data(irq);
-@@ -773,7 +775,7 @@ static int ir_parse_ioapic_hpet_scope(struct acpi_dmar_header *header,
-  * Finds the assocaition between IOAPIC's and its Interrupt-remapping
-  * hardware unit.
-  */
--int __init parse_ioapics_under_ir(void)
-+static int __init parse_ioapics_under_ir(void)
- {
- 	struct dmar_drhd_unit *drhd;
- 	int ir_supported = 0;
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 8adfce0..f614357 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -33,6 +33,7 @@ struct acpi_dmar_header;
- #define DMAR_X2APIC_OPT_OUT	0x2
- 
- struct intel_iommu;
-+
- #ifdef CONFIG_DMAR_TABLE
- extern struct acpi_table_header *dmar_tbl;
- struct dmar_drhd_unit {
-@@ -62,19 +63,8 @@ extern struct list_head dmar_drhd_units;
- 
- extern int dmar_table_init(void);
- extern int dmar_dev_scope_init(void);
--
--/* Intel IOMMU detection */
--extern int detect_intel_iommu(void);
- extern int enable_drhd_fault_handling(void);
--
--extern int parse_ioapics_under_ir(void);
--extern int alloc_iommu(struct dmar_drhd_unit *);
- #else
--static inline int detect_intel_iommu(void)
--{
--	return -ENODEV;
--}
--
- static inline int dmar_table_init(void)
- {
- 	return -ENODEV;
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index de1e5e9..f2c4114 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -348,7 +348,6 @@ static inline void __iommu_flush_cache(
- extern struct dmar_drhd_unit * dmar_find_matched_drhd_unit(struct pci_dev *dev);
- extern int dmar_find_matched_atsr_unit(struct pci_dev *dev);
- 
--extern int alloc_iommu(struct dmar_drhd_unit *drhd);
- extern void free_iommu(struct intel_iommu *iommu);
- extern int dmar_enable_qi(struct intel_iommu *iommu);
- extern void dmar_disable_qi(struct intel_iommu *iommu);
--- 
-1.7.10.4
+SGVsbG8gUmFmYWVsIC8gQmpvcm4sDQoNCj4gDQo+ID4gSSBoYXZlIHRoaXMgZG91YnQgbGluZ2Vy
+aW5nIG9uLCBhbmQgSSdkIGFwcHJlY2lhdGUgaWYgc29tZSBvbmUgY291bGQNCj4gdGhyb3cgbGln
+aHQgb24gdGhpczoNCj4gPg0KPiA+IFRoZSBrZXJuZWwgaG90cGx1ZyBkcml2ZXIgcGNpZWhwIGNh
+biBpbml0aWF0ZSBob3RwbHVnIGJhc2VkIG9uIHdoYXQgaXQNCj4gc2Vuc2VzIGZyb20gdGhlIEhX
+IChidXR0b24gcHJlc3MgZXRjKS4NCj4gPg0KPiA+IFRoZSB1c2VyIHNwYWNlIGNhbiBhbHNvIGlu
+aXRpYXRlIHRoZSBzYW1lIG9wZXJhdGlvbnMgYnkgdXNpbmcgInJlc2NhbiINCj4gb3IgInJlbW92
+ZSIgYXR0cmlidXRlcyBpbiBzeXNmcy4NCj4gPg0KPiA+IE15IHF1ZXN0aW9uczoNCj4gPg0KPiA+
+IDEpIElzIGl0IHNhZmUgdG8gbWl4IHRoZSBhYm92ZSB0d28/DQo+IA0KPiBOb3QgcmlnaHQgbm93
+LCBidXQgd2l0aCB0aGVzZSBwYXRjaGVzIGFwcGxpZWQ6DQo+IA0KPiBodHRwczovL3BhdGNod29y
+ay5rZXJuZWwub3JnL3BhdGNoLzM0NjY1NTEvDQo+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5v
+cmcvcGF0Y2gvMzQ2NjU4MS8NCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8z
+NDY2NjAxLw0KPiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzM0NjY1OTEvDQo+
+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvMzQ2NjYzMS8NCj4gaHR0cHM6Ly9w
+YXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8zNDY2NjQxLw0KPiBodHRwczovL3BhdGNod29yay5r
+ZXJuZWwub3JnL3BhdGNoLzM0NjY2NTEvDQo+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcv
+cGF0Y2gvMzQ5MTgxMS8NCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC8zNDY2
+NDkxLw0KPiBodHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzM0NzMzNDEvDQo+IA0K
+PiBpdCBzaG91bGQgYmUuDQo+IA0KDQpUaGFua3MgZm9yIHRoZSBwb2ludGVyLg0KDQpJIGFzc3Vt
+ZSB0aGUgYWJvdmUgcGF0Y2ggc2V0IGFsc28gdGFrZXMgY2FyZSBvZiB0aGUgc2l0dWF0aW9uLCB3
+aGVyZSBhIGhvdHBsdWcgZHJpdmVyIGF0dGVtcHRzIHRvIGluaXRpYXRlIGEgbmV3IGhvdHBsdWcg
+ZXZlbnQsIGJlZm9yZSB0aGUgcHJldmlvdXMgb3BlcmF0aW9uIHdhcyBjb21wbGV0ZSBvbiB0aGF0
+IGhvdC1wbHVnZ2FibGUgc2xvdD8NCg0KRS5nLjogSWYgYSBjYXJkIHdhcyB2ZXJ5IHF1aWNrbHkg
+YWRkZWQgYW5kIGltbWVkaWF0ZWx5IHJlbW92ZWQgYmVmb3JlIHRoZSBQQ0kgY29yZSBjb3VsZCBw
+cm9jZXNzICJBREQiIGV2ZW50IChvciB2aWNlIHZlcnNhKS4gSW4gb3RoZXIgd29yZHMsIGlmIHBj
+aWVocF9lbmFibGVfc2xvdCgpIHdhcyBjYWxsZWQgYmVmb3JlIHRoZSBwY2llaHBfZGlzYWJsZV9z
+bG90KCkgcmV0dXJucy4gSXMgdGhpcyBzaXR1YXRpb24gY292ZXJlZCBieSB0aGUgbG9ja3MgaW50
+cm9kdWNlZCBieSB0aGUgcGF0Y2hzZXQgYWJvdmU/DQoNCklmIHllcywgdGhlbiBJIGFzc3VtZSB0
+aGUgZm9sbG93aW5nIHBhdGNoIGlzIG5vdCBuZWVkZWQ/DQoNCmh0dHA6Ly9saXN0cy5vcGVud2Fs
+bC5uZXQvbGludXgta2VybmVsLzIwMTMvMTIvMTcvNzI0DQoNClRoYW5rcywNCg0KUmFqYXQNCg==
 
