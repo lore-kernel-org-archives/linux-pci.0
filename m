@@ -1,88 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57667 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932680AbaAaPHo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 10:07:44 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 23/34] forcedeth: Fix invalid errno reporting in nv_request_irq()
-Date: Fri, 31 Jan 2014 16:08:42 +0100
-Message-Id: <d47456e3944250e98e01c2686caa3a836986250b.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+Received: from exprod5og116.obsmtp.com ([64.18.0.147]:48943 "HELO
+	exprod5og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752859AbaAXVdj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jan 2014 16:33:39 -0500
+Received: by mail-pb0-f44.google.com with SMTP id rq2so3712951pbb.3
+        for <linux-pci@vger.kernel.org>; Fri, 24 Jan 2014 13:33:38 -0800 (PST)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH V3 0/4] APM X-Gene PCIe controller
+Date: Fri, 24 Jan 2014 13:32:44 -0800
+Message-Id: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/net/ethernet/nvidia/forcedeth.c |   22 ++++++++++++++--------
- 1 files changed, 14 insertions(+), 8 deletions(-)
+This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+cards.
 
-diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
-index 70cf97f..f4270b8 100644
---- a/drivers/net/ethernet/nvidia/forcedeth.c
-+++ b/drivers/net/ethernet/nvidia/forcedeth.c
-@@ -3952,8 +3952,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 			if (optimization_mode == NV_OPTIMIZATION_MODE_THROUGHPUT && !intr_test) {
- 				/* Request irq for rx handling */
- 				sprintf(np->name_rx, "%s-rx", dev->name);
--				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_RX].vector,
--						nv_nic_irq_rx, IRQF_SHARED, np->name_rx, dev) != 0) {
-+				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_RX].vector,
-+						  nv_nic_irq_rx, IRQF_SHARED, np->name_rx, dev);
-+				if (ret) {
- 					netdev_info(dev,
- 						    "request_irq failed for rx %d\n",
- 						    ret);
-@@ -3963,8 +3964,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 				}
- 				/* Request irq for tx handling */
- 				sprintf(np->name_tx, "%s-tx", dev->name);
--				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_TX].vector,
--						nv_nic_irq_tx, IRQF_SHARED, np->name_tx, dev) != 0) {
-+				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_TX].vector,
-+						  nv_nic_irq_tx, IRQF_SHARED, np->name_tx, dev);
-+				if (ret) {
- 					netdev_info(dev,
- 						    "request_irq failed for tx %d\n",
- 						    ret);
-@@ -3974,8 +3976,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 				}
- 				/* Request irq for link and timer handling */
- 				sprintf(np->name_other, "%s-other", dev->name);
--				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_OTHER].vector,
--						nv_nic_irq_other, IRQF_SHARED, np->name_other, dev) != 0) {
-+				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_OTHER].vector,
-+						  nv_nic_irq_other, IRQF_SHARED, np->name_other, dev);
-+				if (ret) {
- 					netdev_info(dev,
- 						    "request_irq failed for link %d\n",
- 						    ret);
-@@ -3991,7 +3994,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 				set_msix_vector_map(dev, NV_MSI_X_VECTOR_OTHER, NVREG_IRQ_OTHER);
- 			} else {
- 				/* Request irq for all interrupts */
--				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_ALL].vector, handler, IRQF_SHARED, dev->name, dev) != 0) {
-+				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_ALL].vector,
-+						  handler, IRQF_SHARED, dev->name, dev);
-+				if (ret) {
- 					netdev_info(dev,
- 						    "request_irq failed %d\n",
- 						    ret);
-@@ -4011,7 +4016,8 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 		ret = pci_enable_msi(np->pci_dev);
- 		if (ret == 0) {
- 			np->msi_flags |= NV_MSI_ENABLED;
--			if (request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev) != 0) {
-+			ret = request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev);
-+			if (ret) {
- 				netdev_info(dev, "request_irq failed %d\n",
- 					    ret);
- 				pci_disable_msi(np->pci_dev);
+X-Gene PCIe controller driver has depedency on the pcie arch support for
+arm64. The arm64 pcie arch support is not yet part of mainline Linux kernel
+and approach for arch support is under discussion with arm64 maintainers.
+The reference patch can be found here --> https://lkml.org/lkml/2013/10/23/244
+
+If someone wishes to test PCIe on X-Gene, arch support patch must be applied
+before the patches in this patch set.
+
+changes since V2:
+1. redefined each PCI port in different PCI domain correctly.
+2. removed setup_lane and setup_link functions from driver.
+3. removed scan_bus wrapper and set_primary_bus hack.
+4. added pci_ioremap_io for io resources.
+
+changes since V1:
+1. added PCI domain support
+2. reading cpu and pci addresses from device tree to configure regions.
+3. got rid of unnecessary wrappers for readl and writel.
+4. got rid of endpoint configuration code.
+5. added 'dma-ranges' property support to read inbound region configuration.
+6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
+7. dropped 'clock-names' property from bindings
+8. added comments whereever requested.
+
+Tanmay Inamdar (4):
+  pci: APM X-Gene PCIe controller driver
+  arm64: dts: APM X-Gene PCIe device tree nodes
+  dt-bindings: pci: xgene pcie device tree bindings
+  MAINTAINERS: entry for APM X-Gene PCIe host driver
+
+ .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++
+ MAINTAINERS                                        |    7 +
+ arch/arm64/boot/dts/apm-mustang.dts                |    8 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |  155 ++++
+ drivers/pci/host/Kconfig                           |   10 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pci-xgene.c                       |  784 ++++++++++++++++++++
+ 7 files changed, 1017 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
+ create mode 100644 drivers/pci/host/pci-xgene.c
+
 -- 
-1.7.7.6
+1.7.9.5
 
