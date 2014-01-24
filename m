@@ -1,99 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:53099 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750880AbaAODru (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jan 2014 22:47:50 -0500
-Message-ID: <1389757657.6933.54.camel@pasglop>
-Subject: Re: [PATCH] powerpc: dma-mapping: Return dma_direct_ops variable
- when dev == NULL
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Chunhe Lan <b25806@freescale.com>
-Cc: Chunhe Lan <Chunhe.Lan@freescale.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Date: Wed, 15 Jan 2014 14:47:37 +1100
-In-Reply-To: <52D60238.2040204@freescale.com>
-References: <1389692656-27758-1-git-send-email-Chunhe.Lan@freescale.com>
-	 <1389694446.6933.14.camel@pasglop> <52D60238.2040204@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bl2lp0205.outbound.protection.outlook.com ([207.46.163.205]:24403
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750914AbaAXIJP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Jan 2014 03:09:15 -0500
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: =?utf-8?B?QmrDuHJuIEVyaWsgTmlsc2Vu?= <ben@datarespons.no>,
+	Harro Haan <hrhaan@gmail.com>
+CC: Richard Zhu <richard.zhuhongxing@gmail.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Marek Vasut <marex@denx.de>
+Subject: RE: designware/imx6: question regarding MSI
+Date: Fri, 24 Jan 2014 08:09:00 +0000
+Message-ID: <13bee045952e420f88b454d81a401439@BLUPR03MB136.namprd03.prod.outlook.com>
+References: <25.15.01844.D5C20E25@epmailin6.samsung.com>
+	 <000201cf17ff$47025bf0$d50713d0$%han@samsung.com>
+	 <20140123065104.GA26318@pratyush-vbox>
+	 <52e1335a.8917980a.31fa.ffffd7a8SMTPIN_ADDED_MISSING@mx.google.com>
+	 <CAB5oZtDohVmZjvtfVgVJPhAGbd=qcT=kw21n2ebQhKzhF70QXQ@mail.gmail.com>
+ <6b747b65-ef6c-4f39-b61d-f534c981c98f@CH1EHSMHS003.ehs.local>
+In-Reply-To: <6b747b65-ef6c-4f39-b61d-f534c981c98f@CH1EHSMHS003.ehs.local>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-01-15 at 11:36 +0800, Chunhe Lan wrote:
-
-> >
-> >> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
-> >> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> >> Tested-by: Chunhe Lan <Chunhe.Lan@freescale.com>
-> >> ---
-> >>   arch/powerpc/include/asm/dma-mapping.h |   13 +++++++++----
-> >>   1 files changed, 9 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/arch/powerpc/include/asm/dma-mapping.h b/arch/powerpc/include/asm/dma-mapping.h
-> >> index e27e9ad..b8c10de 100644
-> >> --- a/arch/powerpc/include/asm/dma-mapping.h
-> >> +++ b/arch/powerpc/include/asm/dma-mapping.h
-> >> @@ -84,10 +84,15 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
->          I see the get_dma_ops function in 
-> arch/*x86*/include/asm/dma-mapping.h as the following:
-> 
->   32 static inline struct dma_map_ops *get_dma_ops(struct device *dev)
->   33 {
->   34 #ifndef CONFIG_X86_DEV_DMA_OPS
->   35         return dma_ops;
->   36 #else
->   37         if (unlikely(!dev) || !dev->archdata.dma_ops)
->   38                 return dma_ops;
->   39         else
->   40                 return dev->archdata.dma_ops;
->   41 #endif
->   42 }
-> 
->          And also  see the get_dma_ops function in  
-> arch/*arm*/include/asm/dma-mapping.h as the following:
-> 
->   18 static inline struct dma_map_ops *get_dma_ops(struct device *dev)
->   19 {
->   20         if (dev && dev->archdata.dma_ops)
->   21                 return dev->archdata.dma_ops;
->   22         return &arm_dma_ops;
->   23 }
-> 
->        Why not powerpc use this method to process dev == NULL ?
-
-Because we don't :-) We used to and removed this. Due to how our HW
-works it might not be correct. When an iommu is enabled for example
-you simply cannot use the direct ops.
-
-So the right fix is to properly establish the iommu for the VFs like
-we do for the PFs.
-
-> Thanks,
-> -Chunhe
-> 
-> >>   	 * only ISA DMA device we support is the floppy and we have a hack
-> >>   	 * in the floppy driver directly to get a device for us.
-> >>   	 */
-> >> -	if (unlikely(dev == NULL))
-> >> -		return NULL;
-> >> -
-> >> -	return dev->archdata.dma_ops;
-> >> +	if (dev && dev->archdata.dma_ops)
-> >> +		return dev->archdata.dma_ops;
-> >> +	/*
-> >> +	 * In some cases (for example, use the Intel(R) 10 Gigabit PCI
-> >> +	 * expression Virtual Function Network Driver -- ixgbevf.ko),
-> >> +	 * their value of dev is the NULL. If return NULL, the driver is
-> >> +	 * aborting. So return dma_direct_ops variable when dev == NULL.
-> >> +	 */
-> >> +	return &dma_direct_ops;
-> >>   }
-> >>   
-> >>   static inline void set_dma_ops(struct device *dev, struct dma_map_ops *ops)
-> >
-> >
-> >
-> 
-> 
-
-
+SGk6DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmrDuHJuIEVyaWsg
+Tmlsc2VuIFttYWlsdG86YmVuQGRhdGFyZXNwb25zLm5vXQ0KPiBTZW50OiBGcmlkYXksIEphbnVh
+cnkgMjQsIDIwMTQgMzo0NyBQTQ0KPiBUbzogSGFycm8gSGFhbg0KPiBDYzogUmljaGFyZCBaaHU7
+IFpodSBSaWNoYXJkLVI2NTAzNzsgUHJhdHl1c2ggQW5hbmQ7IEppbmdvbyBIYW47IGxpbnV4LQ0K
+PiBwY2lAdmdlci5rZXJuZWwub3JnOyBNb2hpdCBLVU1BUiBEQ0c7IE1hcmVrIFZhc3V0DQo+IFN1
+YmplY3Q6IFJlOiBkZXNpZ253YXJlL2lteDY6IHF1ZXN0aW9uIHJlZ2FyZGluZyBNU0kNCj4gDQo+
+IE9uIFRodSwgMjAxNC0wMS0yMyBhdCAxODozMiArMDEwMCwgSGFycm8gSGFhbiB3cm90ZToNCj4g
+PiBPbiAyMyBKYW51YXJ5IDIwMTQgMTY6MjAsIEJqw7hybiBFcmlrIE5pbHNlbiA8YmVuQGRhdGFy
+ZXNwb25zLm5vPiB3cm90ZToNCj4gPiA+IEhpIFByYXR5dXNoLA0KPiA+ID4NCj4gPiA+IE9uIFRo
+dSwgMjAxNC0wMS0yMyBhdCAwNzo1MSArMDEwMCwgUHJhdHl1c2ggQW5hbmQgd3JvdGU6DQo+ID4g
+Pj4gT24gVGh1LCBKYW4gMjMsIDIwMTQgYXQgMDE6NTI6MTlQTSArMDgwMCwgSmluZ29vIEhhbiB3
+cm90ZToNCj4gPiA+PiA+IE9uIFRodXJzZGF5LCBKYW51YXJ5IDIzLCAyMDE0IDU6MzkgQU0sIEpp
+bmdvbyBIYW4gd3JvdGU6DQo+ID4gPj4gPiA+DQo+ID4gPj4gPiA+IEnigJltIGN1cnJlbnRseSBw
+bGF5aW5nIHdpdGggTVNJIHN1cHBvcnQgaW4gcGNpLWlteDYuYyB1c2luZyBIYXJybw0KPiBIYWFu
+4oCZcyBwYXRjaCBbKl0uDQo+ID4NCj4gPiBUaGUgYWJvdmUgcGF0Y2ggbWVudGlvbmVkIHdpbGwg
+bm90IGJlY29tZSBwYXJ0IG9mIG1haW5saW5lIExpbnV4LCBidXQNCj4gPiBJIGV4cGVjdC9ob3Bl
+IGEgcmV3b3JrZWQgdmVyc2lvbiBvZiAiW1BBVENIXSBwY2k6IGlteDogZW5hYmxlIHBjaWUgbXNp
+DQo+ID4gc3VwcG9ydCIgZnJvbSBSaWNoYXJkIFpodSB3aWxsIGJlY29tZSBwYXJ0IG9mIG1haW5s
+aW5lLCBiZWNhdXNlIHRoaXMNCj4gPiBwYXRjaCBzdXBwb3J0cyBNU0lYIGFzIHdlbGwuIFJlZmVy
+ZW5jZSB0byB0aGUgcGF0Y2ggd2l0aCByZXZpZXcNCj4gPiByZW1hcmtzOg0KPiA+IGh0dHA6Ly93
+d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtaWRlL21zZzQ3MDc0Lmh0bWwNCj4gDQo+IE9LLCBj
+b29sISBUaGFuayB5b3UgZ3V5cyBmb3IgdGhlIGdvb2Qgd29yay4gSSB3aWxsIGdpdmUgaXQgYSBz
+aG90IGxhdGVyLg0KPiANCj4gPiBAUmljaGFyZCBaaHU6IElzIHRoaXMgYSBjb3JyZWN0IGFzc3Vt
+cHRpb24/DQo+ID4NCltSaWNoYXJkXSBZZXMsIGl0IGlzLiBJIHVzZSB0aGlzIHBhdGNoIHRvIGVu
+YWJsZSBpbXg2IHBjaWUgbXNpIG5vdy4NClRoaXMgcGF0Y2ggc2hvdWxkIGJlIHJlLWNvbnNpZGVy
+ZWQsIHJlLXN0cnVjdHVyZSB0b28uDQoNCj4gPiA+PiA+ID4NCj4gPiA+PiA+ID4gQXJlIHRoZXJl
+IGFueSB0ZWNobmljYWwgcmVhc29ucyB3aHkgZHdfcGNpZV9tc2lfaW5pdCBjYW5ub3QgYmUNCj4g
+PiA+PiA+ID4gY2FsbGVkIGZyb20gZHdfbXNpX3NldHVwX2lycT8gT3IgcmF0aGVyLCB3aHkgaXQg
+c2hvdWxkIG5vdD8NCj4gPiA+PiA+DQo+ID4gPj4gPiBObywgdGhlcmUgaXMgbm8gc3BlY2lhbCBy
+ZWFzb24uDQo+ID4gPj4gPiBUaGUgcGF0Y2ggKGNhbGwgZHdfcGNpZV9tc2lfaW5pdCBmcm9tIGR3
+X21zaV9zZXR1cF9pcnEpIHdvdWxkIGJlDQo+ID4gPj4gPiBnb29kLiBUaGFuayB5b3UgZm9yIHlv
+dXIgZWZmb3J0Lg0KPiA+ID4+ID4NCj4gPiA+PiA+IE1vaGl0LCBQcmF0eXVzaCwNCj4gPiA+PiA+
+IElmIHlvdSBoYXZlIGRpZmZlcmVudCBvcGluaW9ucywgcGxlYXNlIGxldCB1cyBrbm93LiA6LSkN
+Cj4gPiA+Pg0KPiA+ID4+IGR3X21zaV9zZXR1cF9pcnEgd2lsbCBiZSBjYWxsZWQgZm9yIGVhY2gg
+ZnVuY3Rpb24gd2hpY2ggbmVlZHMgbXNpDQo+ID4gPj4gYXNzaWdubWVudC4gSG93ZXZlciwgZHdf
+cGNpZV9tc2lfaW5pdCBzaG91bGQgYmUgY2FsbGVkIG9ubHkgb25jZS4NCj4gPiA+PiBTbywgaW4g
+bXkgb3BpbmlvbiBjYWxsaW5nIGR3X3BjaWVfbXNpX2luaXQgZnJvbSBkd19tc2lfc2V0dXBfaXJx
+DQo+ID4gPj4gd291bGQgbm90IGJlIHRoZSBiZXN0IG9wdGlvbi4NCj4gPiA+Pg0KPiA+ID4+IEBC
+asO4cm4sIGNhbiB5b3UgaGVscCB1cyB3aXRoIHRyYWNpbmcgY2FsbGluZyBzZXF1ZW5jZSBvZg0K
+PiA+ID4+IGR3X3BjaWVfc2V0dXAgJiBkd19wY2llX3NjYW5fYnVzLiBJIHRoaW5rIHdoZW4geW91
+IGRvICJyZXNldA0KPiA+ID4+IGJyaWRnZSIsIGl0IHdpbGwgY2FsbCBkd19wY2llX3NldHVwIGFu
+ZCB3aGVuIHlvdSBkbyAicmVzY2FuIGJ1cyIsDQo+ID4gPj4gaXQgd2lsbCBjYWxsIGR3X3BjaWVf
+c2Nhbl9idXMuIElmIHllcywgdGhlbiB5b3UgY2FuIG1vdmUNCj4gPiA+PiBkd19wY2llX21zaV9p
+bml0IHRvIGR3X3BjaWVfc2V0dXAuDQo+ID4gPg0KPiA+ID4NCj4gPiA+IEl0IGxvb2tzIGxpa2Ug
+ZHdfcGNpZV9zZXR1cCBhbmQgZHdfcGNpZV9zY2FuX2J1cyBpcyBvbmx5IGNhbGxlZCB3aGVuDQo+
+ID4gPiBib290aW5nLiBSZXNldHRpbmcgdGhlIGJyaWRnZSBvciBzY2FubmluZyB0aGUgYnVzIHdp
+bGwgbm90IHRyaWdnZXINCj4gPiA+IGFueSBvZiB0aGVzZSBmdW5jdGlvbnMsIHVuZm9ydHVuYXRl
+bHkuDQo+ID4gPg0KPiA+ID4gSSBoYXZlIGxvb2tlZCBmb3Igb3RoZXIgaG9va3MgdG9vLCB3aXRo
+b3V0IGx1Y2suDQo+ID4NCj4gPiBAQmrDuHJuOiBoYXZlIHlvdSBhcHBsaWVkIHRoZSBmb2xsb3dp
+bmcgcGF0Y2g/DQo+ID4gIltQQVRDSF0gcGNpOiBkZXNpZ253YXJlOiBmaXggbWlzc2luZyBtc2kg
+aXJxcyINCj4gPiBSZWZlcmVuY2UgdG8gdGhlIHBhdGNoOg0KPiA+IGh0dHA6Ly9saXN0cy5pbmZy
+YWRlYWQub3JnL3BpcGVybWFpbC9saW51eC1hcm0ta2VybmVsLzIwMTMtRGVjZW1iZXIvMjENCj4g
+PiA4NjI5Lmh0bWwNCj4gDQo+IFllcywgSSBoYXZlIHRoYXQgb25lIGFwcGxpZWQgYXMgd2VsbC4g
+DQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg==
