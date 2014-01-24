@@ -1,144 +1,221 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiri Kosina <trivial@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 19/20] iommu/vt-d, trivial: clean sparse warnings
-Date: Mon,  6 Jan 2014 14:18:26 +0800
-Message-Id: <1388989107-4795-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og117.obsmtp.com ([64.18.0.149]:36502 "HELO
+	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753206AbaAXVdn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jan 2014 16:33:43 -0500
+Received: by mail-pd0-f177.google.com with SMTP id x10so3551425pdj.22
+        for <linux-pci@vger.kernel.org>; Fri, 24 Jan 2014 13:33:42 -0800 (PST)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH V3 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
+Date: Fri, 24 Jan 2014 13:32:46 -0800
+Message-Id: <1390599168-13150-3-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clean up most sparse warnings in Intel DMA and interrupt remapping
-drivers.
+This patch adds the device tree nodes for APM X-Gene PCIe controller and
+PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
+nodes are added.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- drivers/iommu/dmar.c                |    8 ++++----
- drivers/iommu/intel-iommu.c         |    4 ++--
- drivers/iommu/intel_irq_remapping.c |    4 ++--
- drivers/iommu/irq_remapping.c       |    6 +++---
- 4 files changed, 11 insertions(+), 11 deletions(-)
+ arch/arm64/boot/dts/apm-mustang.dts |    8 ++
+ arch/arm64/boot/dts/apm-storm.dtsi  |  155 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 163 insertions(+)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index c4b271d..248332e 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -572,7 +572,7 @@ static int __init detect_intel_iommu(void)
- 			x86_init.iommu.iommu_init = intel_iommu_init;
- #endif
- 	}
--	early_acpi_os_unmap_memory(dmar_tbl, dmar_tbl_size);
-+	early_acpi_os_unmap_memory((void __iomem *)dmar_tbl, dmar_tbl_size);
- 	dmar_tbl = NULL;
- 
- 	return ret ? 1 : -ENODEV;
-@@ -1064,7 +1064,7 @@ int dmar_enable_qi(struct intel_iommu *iommu)
- 	desc_page = alloc_pages_node(iommu->node, GFP_ATOMIC | __GFP_ZERO, 0);
- 	if (!desc_page) {
- 		kfree(qi);
--		iommu->qi = 0;
-+		iommu->qi = NULL;
- 		return -ENOMEM;
- 	}
- 
-@@ -1074,7 +1074,7 @@ int dmar_enable_qi(struct intel_iommu *iommu)
- 	if (!qi->desc_status) {
- 		free_page((unsigned long) qi->desc);
- 		kfree(qi);
--		iommu->qi = 0;
-+		iommu->qi = NULL;
- 		return -ENOMEM;
- 	}
- 
-@@ -1125,7 +1125,7 @@ static const char *irq_remap_fault_reasons[] =
- 	"Blocked an interrupt request due to source-id verification failure",
+diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
+index 1247ca1..507b6c9 100644
+--- a/arch/arm64/boot/dts/apm-mustang.dts
++++ b/arch/arm64/boot/dts/apm-mustang.dts
+@@ -24,3 +24,11 @@
+ 		reg = < 0x1 0x00000000 0x0 0x80000000 >; /* Updated by bootloader */
+ 	};
  };
++
++&pcie0clk {
++	status = "ok";
++};
++
++&pcie0 {
++	status = "ok";
++};
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index d37d736..e579a6f 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -176,6 +176,161 @@
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "eth8clk";
+ 			};
++
++			pcie0clk: pcie0clk@1f2bc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2bc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie0clk";
++			};
++
++			pcie1clk: pcie1clk@1f2cc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2cc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie1clk";
++			};
++
++			pcie2clk: pcie2clk@1f2dc000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f2dc000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie2clk";
++			};
++
++			pcie3clk: pcie3clk@1f50c000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f50c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie3clk";
++			};
++
++			pcie4clk: pcie4clk@1f51c000 {
++				status = "disabled";
++				compatible = "apm,xgene-device-clock";
++				#clock-cells = <1>;
++				clocks = <&socplldiv2 0>;
++				reg = <0x0 0x1f51c000 0x0 0x1000>;
++				reg-names = "csr-reg";
++				clock-output-names = "pcie4clk";
++			};
++		};
++
++		pcie0: pcie@1f2b0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++				0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
++				  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++			clocks = <&pcie0clk 0>;
++		};
++
++		pcie1: pcie@1f2c0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
++				0xd0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xd0 0x00000000 0x00 0x00010000   /* io  */
++				  0x02000000 0x0 0x10000000 0xd0 0x10000000 0x00 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xc9 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xca 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
++			clocks = <&pcie1clk 0>;
++		};
++
++		pcie2: pcie@1f2d0000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
++				 0x90 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0x90 0x00000000 0x0 0x00010000   /* io  */
++				  0x02000000 0x0 0x10000000 0x90 0x10000000 0x0 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xcf 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xd0 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
++			clocks = <&pcie2clk 0>;
++		};
++
++		pcie3: pcie@1f500000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
++				0xa0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xa0 0x00000000 0x0 0x00010000  /* mem */
++				  0x02000000 0x0 0x10000000 0xa0 0x10000000 0x0 0x80000000>; /* io  */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xd5 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xd6 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
++			clocks = <&pcie3clk 0>;
++		};
++
++		pcie4: pcie@1f510000 {
++			status = "disabled";
++			device_type = "pci";
++			compatible = "apm,xgene-pcie";
++			#interrupt-cells = <1>;
++			#size-cells = <2>;
++			#address-cells = <3>;
++			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
++				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++			reg-names = "csr", "cfg";
++			ranges = <0x01000000 0x0 0x00000000 0xc0 0x00000000 0x0 0x00010000   /* io  */
++				  0x02000000 0x0 0x10000000 0xc0 0x10000000 0x0 0x80000000>; /* mem */
++			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1
++					 0x0 0x0 0x0 0x2 &gic 0x0 0xdb 0x1
++					 0x0 0x0 0x0 0x3 &gic 0x0 0xdc 0x1
++					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
++			clocks = <&pcie4clk 0>;
+ 		};
  
--const char *dmar_get_fault_reason(u8 fault_reason, int *fault_type)
-+static const char *dmar_get_fault_reason(u8 fault_reason, int *fault_type)
- {
- 	if (fault_reason >= 0x20 && (fault_reason - 0x20 <
- 					ARRAY_SIZE(irq_remap_fault_reasons))) {
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 6fce741..c28e9fe 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -382,7 +382,7 @@ struct device_domain_info {
- 
- static void flush_unmaps_timeout(unsigned long data);
- 
--DEFINE_TIMER(unmap_timer,  flush_unmaps_timeout, 0, 0);
-+static DEFINE_TIMER(unmap_timer,  flush_unmaps_timeout, 0, 0);
- 
- #define HIGH_WATER_MARK 250
- struct deferred_flush_tables {
-@@ -3127,7 +3127,7 @@ static int intel_mapping_error(struct device *dev, dma_addr_t dma_addr)
- 	return !dma_addr;
- }
- 
--struct dma_map_ops intel_dma_ops = {
-+static struct dma_map_ops intel_dma_ops = {
- 	.alloc = intel_alloc_coherent,
- 	.free = intel_free_coherent,
- 	.map_sg = intel_map_sg,
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index ea425de..f307a3f 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -48,7 +48,7 @@ static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
- 	return cfg ? &cfg->irq_2_iommu : NULL;
- }
- 
--int get_irte(int irq, struct irte *entry)
-+static int get_irte(int irq, struct irte *entry)
- {
- 	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
- 	unsigned long flags;
-@@ -797,7 +797,7 @@ static int __init parse_ioapics_under_ir(void)
- 	return 1;
- }
- 
--int __init ir_dev_scope_init(void)
-+static int __init ir_dev_scope_init(void)
- {
- 	if (!irq_remapping_enabled)
- 		return 0;
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 39f81ae..228632c9 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -150,7 +150,7 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
- 		return do_setup_msix_irqs(dev, nvec);
- }
- 
--void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
-+static void eoi_ioapic_pin_remapped(int apic, int pin, int vector)
- {
- 	/*
- 	 * Intr-remapping uses pin number as the virtual vector
-@@ -295,8 +295,8 @@ int setup_ioapic_remapped_entry(int irq,
- 					     vector, attr);
- }
- 
--int set_remapped_irq_affinity(struct irq_data *data, const struct cpumask *mask,
--			      bool force)
-+static int set_remapped_irq_affinity(struct irq_data *data,
-+				     const struct cpumask *mask, bool force)
- {
- 	if (!config_enabled(CONFIG_SMP) || !remap_ops ||
- 	    !remap_ops->set_affinity)
+ 		serial0: serial@1c020000 {
 -- 
-1.7.10.4
+1.7.9.5
 
