@@ -1,56 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:58856 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851AbaAGSqb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 13:46:31 -0500
-Received: by mail-ie0-f176.google.com with SMTP id at1so852669iec.21
-        for <linux-pci@vger.kernel.org>; Tue, 07 Jan 2014 10:46:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140107104611.GI4770@phenom.ffwll.local>
-References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140107104611.GI4770@phenom.ffwll.local>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 7 Jan 2014 11:46:11 -0700
-Message-ID: <CAErSpo4E8T18NLtgJ3A9ge_bLEsShrxC7pvZfMH4wP5fObPoLA@mail.gmail.com>
-Subject: Re: [PATCH v7 00/15] PCI: Allocate 64-bit BARs above 4G when possible
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	David Airlie <airlied@linux.ie>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	intel-gfx@lists.freedesktop.org,
+	DRI mailing list <dri-devel@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH v5] ACPI: Fix acpi_evaluate_object() return value check
+Date: Fri, 24 Jan 2014 18:19:55 +0100
+Message-ID: <4891976.lTa9ZQzyVA@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6T28Dh=xkgx=Ki6nZOZN1c8QGhB6KWhiZ46ZwHAmirbg@mail.gmail.com>
+References: <1390448559-33896-1-git-send-email-wangyijing@huawei.com> <11909895.7rJ1jejxPI@vostro.rjw.lan> <CAErSpo6T28Dh=xkgx=Ki6nZOZN1c8QGhB6KWhiZ46ZwHAmirbg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 7, 2014 at 3:46 AM, Daniel Vetter <daniel@ffwll.ch> wrote:
-> On Mon, Jan 06, 2014 at 05:55:12PM -0700, Bjorn Helgaas wrote:
->> This is basically v7 of Yinghai's patch series:
->> http://lkml.kernel.org/r/1387485843-17403-1-git-send-email-yinghai@kernel.org
->>
->> The goal is to try to put 64-bit BARs above 4G so we can preserve the
->> 32-bit bus address space for 32-bit BARs.
->>
->> There are a whole bunch of AGP updates at the beginning because some AGP
->> devices have 64-bit BARs, but most of the AGP drivers read the aperture
->> bus address directly from the BAR, and they only handle 32-bit BARs.
->> Putting BARs above 4G would break those drivers, so we tried to fix them
->> up first.  Yinghai fixed intel-gtt.c, and I made similar fixes to all
->> the other AGP drivers I could find.
->>
->> Some of the AGP updates are related to the fact that most of the drivers
->> assume the PCI bus address is the same as the CPU physical address.  For
->> example, they read the bus address from the BAR, then call ioremap() on
->> it.  This is wrong, because ioremap() expects a CPU physical address,
->> not a bus address.  In most cases, I think AGP devices are in simple
->> systems where (bus_address == CPU_physical_address), so these updates
->> probably don't fix any broken systems.  I'm pretty sure there are more
->> things like this that should be fixed.
->> ...
+On Friday, January 24, 2014 08:25:23 AM Bjorn Helgaas wrote:
+> On Fri, Jan 24, 2014 at 8:36 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Friday, January 24, 2014 07:54:29 AM Bjorn Helgaas wrote:
+> >> On Thu, Jan 23, 2014 at 5:33 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> > On Thursday, January 23, 2014 11:21:01 AM Bjorn Helgaas wrote:
+> >> >> On Wed, Jan 22, 2014 at 8:42 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> >> >> > Since acpi_evaluate_object() returns acpi_status and not plain int,
+> >> >> > ACPI_FAILURE() should be used for checking its return value. Also
+> >> >> > add some detailed debug info when acpi_evaluate_object() failed.
+> >> >> >
+> >> >> > Reviewed-by: Jani Nikula <jani.nikula@intel.com>
+> >> >> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> >> > Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> >> >> > ---
+> >> >> > v4->v5: Add some detailed debug info for acpi_evaluate_object()
+> >> >> >         failure suggested by Bjorn.
+> >> >> > v3->v4: Fix spell error, add Jani Nikula reviewed-by.
+> >> >> > v2->v3: Fix compile error pointed out by Hanjun.
+> >> >> > v1->v2: Add CC to related subsystem MAINTAINERS
+> >> >> > ---
+> >> >> >  drivers/gpu/drm/i915/intel_acpi.c              |   33 ++++++++++++++++-------
+> >> >> >  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |   13 ++++++---
+> >> >> >  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   25 +++++++++++-------
+> >> >> >  drivers/pci/pci-label.c                        |   10 +++++--
+> >> >> >  4 files changed, 54 insertions(+), 27 deletions(-)
+> >> >> >
+> >> >> > diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
+> >> >> > index dfff090..e7b526b 100644
+> >> >> > --- a/drivers/gpu/drm/i915/intel_acpi.c
+> >> >> > +++ b/drivers/gpu/drm/i915/intel_acpi.c
+> >> >> > @@ -31,11 +31,13 @@ static const u8 intel_dsm_guid[] = {
+> >> >> >  static int intel_dsm(acpi_handle handle, int func)
+> >> >> >  {
+> >> >> >         struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
+> >> >> > +       struct acpi_buffer string = { ACPI_ALLOCATE_BUFFER, NULL };
+> >> >> >         struct acpi_object_list input;
+> >> >> >         union acpi_object params[4];
+> >> >> >         union acpi_object *obj;
+> >> >> >         u32 result;
+> >> >> > -       int ret = 0;
+> >> >> > +       acpi_status status;
+> >> >> > +       int ret;
+> >> >> >
+> >> >> >         input.count = 4;
+> >> >> >         input.pointer = params;
+> >> >> > @@ -50,10 +52,14 @@ static int intel_dsm(acpi_handle handle, int func)
+> >> >> >         params[3].package.count = 0;
+> >> >> >         params[3].package.elements = NULL;
+> >> >> >
+> >> >> > -       ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> >> >> > -       if (ret) {
+> >> >> > -               DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
+> >> >> > -               return ret;
+> >> >> > +       status = acpi_evaluate_object(handle, "_DSM", &input, &output);
+> >> >> > +       if (ACPI_FAILURE(status)) {
+> >> >> > +               acpi_get_name(handle, ACPI_FULL_PATHNAME, &string);
+> >> >> > +               DRM_DEBUG_DRIVER(
+> >> >> > +                       "failed to evaluate _DSM for %s, exit status %u\n",
+> >> >> > +                       (char *)string.pointer, (unsigned int)status);
+> >> >> > +               kfree(string.pointer);
+> >> >> > +               return -EINVAL;
+> >> >>
+> >> >> I said "too bad there isn't an *easy* way" to include more
+> >> >> information.  IMHO this is too ugly and error-prone to use
+> >> >> consistently.  And if you are going to add more information, why did
+> >> >> you only do it for some of the calls and not others?
+> >> >>
+> >> >> I considered adding a %p extension to print the pathname; I don't know
+> >> >> if that's worthwhile or not.  I think it would be ideal if we had a
+> >> >> struct device and could use dev_info(), and then a way to connect the
+> >> >> struct device with an ACPI path, like maybe a dmesg note when we
+> >> >> create the struct device corresponding to an ACPI Device node.
+> >> >
+> >> > Well, we can generally print something like that from pci_acpi_setup().
+> >> >
+> >> > What about the below?  Wouldn't it generate too much output on some systems?
+> >>
+> >> Yeah, that probably would generate an awful lot of output.  I was just
+> >> hoping to avoid treating ACPI pathnames as first-class objects.  What
+> >> do you think about a %p extension?  I played with that once, but I
+> >> seem to have lost the patch.
+> >
+> > Well, it may be worth doing.  However, that information is readily available from
+> > sysfs anyway, you only need to follow the firmware_node link in the PCI device's
+> > sysfs directory and read the path attribute from there.  For example, on my
+> > system:
+> >
+> > $ cat /sys/devices/pci0000:00/0000:00:1c.4/0000:0b:00.0/firmware_node/path
+> > \_SB_.PCI0.RP05.PXSX
+> 
+> That's perfect.  If we had a struct device, we could just use
+> dev_info() for these messages.  But I have no idea how hard it would
+> be to get at the struct device.
 
-> Patches 4-11 are Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+>From the pci_dev side that is trivial: use ACPI_COMPANION().  The other way
+around is rather more difficult as browsing a list would be involved.
 
-Thanks a lot!  I added your Reviewed-by to those patches.
+Rafael
 
-Bjorn
