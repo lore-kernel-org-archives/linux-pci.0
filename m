@@ -1,69 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiri Kosina <trivial@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 07/20] iommu/vt-d, trivial: check suitable flag in function detect_intel_iommu()
-Date: Mon,  6 Jan 2014 14:18:14 +0800
-Message-Id: <1388989107-4795-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og102.obsmtp.com ([64.18.0.143]:60901 "HELO
+	exprod5og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753221AbaAXVds (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jan 2014 16:33:48 -0500
+Received: by mail-pd0-f181.google.com with SMTP id y10so3537228pdj.26
+        for <linux-pci@vger.kernel.org>; Fri, 24 Jan 2014 13:33:46 -0800 (PST)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH V3 4/4] MAINTAINERS: entry for APM X-Gene PCIe host driver
+Date: Fri, 24 Jan 2014 13:32:48 -0800
+Message-Id: <1390599168-13150-5-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Flag irq_remapping_enabled is only set by intel_enable_irq_remapping(),
-which is called after detect_intel_iommu(). So moving pr_info() from
-detect_intel_iommu() to intel_enable_irq_remapping(), which also
-slightly simplifies implementation.
+Add entry for AppliedMicro X-Gene PCIe host driver.
 
-Reviewed-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- drivers/iommu/dmar.c                |    8 --------
- drivers/iommu/intel_irq_remapping.c |    2 ++
- 2 files changed, 2 insertions(+), 8 deletions(-)
+ MAINTAINERS |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index c17dbf7..5e7ba3b 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -556,14 +556,6 @@ int __init detect_intel_iommu(void)
- 	if (ret)
- 		ret = check_zero_address();
- 	{
--		struct acpi_table_dmar *dmar;
--
--		dmar = (struct acpi_table_dmar *) dmar_tbl;
--
--		if (ret && irq_remapping_enabled && cpu_has_x2apic &&
--		    dmar->flags & 0x1)
--			pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
--
- 		if (ret && !no_iommu && !iommu_detected && !dmar_disabled) {
- 			iommu_detected = 1;
- 			/* Make sure ACS will be enabled */
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index deef3d4..2616e8a 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -561,6 +561,8 @@ static int __init intel_enable_irq_remapping(void)
- 	}
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 5c21402..721fec7 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6539,6 +6539,13 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*designware*
  
- 	if (x2apic_present) {
-+		pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
++PCI DRIVER FOR APPLIEDMICRO XGENE
++M:	Tanmay Inamdar <tinamdar@apm.com>
++L:	linux-pci@vger.kernel.org
++L:	linux-arm-kernel@lists.infradead.org
++S:	Maintained
++F:	drivers/pci/host/pci-xgene.c
 +
- 		eim = !dmar_x2apic_optout();
- 		if (!eim)
- 			printk(KERN_WARNING
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-1.7.10.4
+1.7.9.5
 
