@@ -1,52 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:58230 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbaA2U4o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 15:56:44 -0500
-Received: by mail-ig0-f179.google.com with SMTP id c10so5589499igq.0
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 12:56:44 -0800 (PST)
-Date: Wed, 29 Jan 2014 13:56:40 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: msi: properly check return value of kmalloc
-Message-ID: <20140129205640.GA16825@google.com>
-References: <20140123184246.GA7461@google.com>
- <20140123193037.GA2605@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140123193037.GA2605@kroah.com>
+Received: from exprod5og118.obsmtp.com ([64.18.0.160]:53096 "HELO
+	exprod5og118.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753213AbaAXVdp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jan 2014 16:33:45 -0500
+Received: by mail-pa0-f53.google.com with SMTP id lj1so3703797pab.12
+        for <linux-pci@vger.kernel.org>; Fri, 24 Jan 2014 13:33:43 -0800 (PST)
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [RFC PATCH V3 3/4] dt-bindings: pci: xgene pcie device tree bindings
+Date: Fri, 24 Jan 2014 13:32:47 -0800
+Message-Id: <1390599168-13150-4-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 11:30:37AM -0800, Greg Kroah-Hartman wrote:
-> Coverity reported that I forgot to check the return value of kmalloc
-> when creating the MSI attribute name, so fix that up and properly free
-> it if there is an error when allocating the msi_dev_attr variable.
-> 
-> Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+This patch adds the bindings for X-Gene PCIe driver. The driver resides
+under 'drivers/pci/host/pci-xgene.c' file.
 
-Applied to my pci/msi branch, thanks!
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 7a0fec6ce571..39dff3fe57af 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -545,9 +545,15 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
->  		return -ENOMEM;
->  	list_for_each_entry(entry, &pdev->msi_list, list) {
->  		char *name = kmalloc(20, GFP_KERNEL);
-> +		if (!name)
-> +			goto error_attrs;
-> +
->  		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-> -		if (!msi_dev_attr)
-> +		if (!msi_dev_attr) {
-> +			kfree(name);
->  			goto error_attrs;
-> +		}
-> +
->  		sprintf(name, "%d", entry->irq);
->  		sysfs_attr_init(&msi_dev_attr->attr);
->  		msi_dev_attr->attr.name = name;
+diff --git a/Documentation/devicetree/bindings/pci/xgene-pci.txt b/Documentation/devicetree/bindings/pci/xgene-pci.txt
+new file mode 100644
+index 0000000..60e4a54
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xgene-pci.txt
+@@ -0,0 +1,52 @@
++* AppliedMicro X-Gene PCIe interface
++
++Required properties:
++- device_type: set to "pci"
++- compatible: should contain "xgene,pcie" to identify the core.
++- reg: A list of physical base address and length for each set of controller
++       registers. Must contain an entry for each entry in the reg-names
++       property.
++- reg-names: Must include the following entries:
++  "csr": controller configuration registers.
++  "cfg": pcie configuration space registers.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- ranges: ranges for the outbound memory, I/O regions.
++- dma-ranges: ranges for the inbound memory regions.
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++- clocks: from common clock binding: handle to pci clock.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++
++Example:
++
++SoC specific DT Entry:
++	pcie0: pcie@1f2b0000 {
++		status = "disabled";
++		device_type = "pci";
++		compatible = "apm,xgene-pcie";
++		#interrupt-cells = <1>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
++			0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
++		reg-names = "csr", "cfg";
++		ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
++			  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
++		dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
++		interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++		interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
++				 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
++				 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
++				 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
++		clocks = <&pcie0clk 0>;
++	};
++
++Board specific DT Entry:
++	&pcie0 {
++		status = "ok";
++	};
+-- 
+1.7.9.5
+
