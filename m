@@ -1,50 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:50635 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717AbaAHU2m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 15:28:42 -0500
-Received: by mail-ie0-f178.google.com with SMTP id lx4so2592422iec.37
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jan 2014 12:28:41 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.17.9]:63890 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753574AbaAYULz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Jan 2014 15:11:55 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Tanmay Inamdar <tinamdar@apm.com>, devicetree@vger.kernel.org,
+	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
+Date: Sat, 25 Jan 2014 21:11:34 +0100
+Message-ID: <5086198.ZOWZ5xuyna@wuerfel>
+In-Reply-To: <CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com>
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com> <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com> <CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <52CD2387.2030403@gmail.com>
-References: <52CBC4D1.5080706@gmail.com>
-	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>
-	<52CD2387.2030403@gmail.com>
-Date: Wed, 8 Jan 2014 12:28:41 -0800
-Message-ID: <CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>
-Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port range.
-From: Yinghai Lu <yinghai@kernel.org>
-To: "`VL" <vl.homutov@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 8, 2014 at 2:08 AM, `VL <vl.homutov@gmail.com> wrote:
->
-> I've enabled netconsole and got some output.
-> Here it is: http://dpaste.com/1542030/
+On Friday 24 January 2014 13:28:22 Tanmay Inamdar wrote:
+> On Thu, Jan 16, 2014 at 5:10 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+> > On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
 
-It does include any realloc message.
+> >>
+> >>> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port, u32 *lanes)
+> >>> +{
+> >>> +     void *csr_base = port->csr_base;
+> >>> +     u32 val32;
+> >>> +     u64 start_time, time;
+> >>> +
+> >>> +     /*
+> >>> +      * A component enters the LTSSM Detect state within
+> >>> +      * 20ms of the end of fundamental core reset.
+> >>> +      */
+> >>> +     msleep(XGENE_LTSSM_DETECT_WAIT);
+> >>> +     port->link_up = 0;
+> >>> +     start_time = jiffies;
+> >>> +     do {
+> >>> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
+> >>> +             if (val32 & LINK_UP_MASK) {
+> >>> +                     port->link_up = 1;
+> >>> +                     port->link_speed = PIPE_PHY_RATE_RD(val32);
+> >>> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
+> >>> +                     *lanes = val32 >> 26;
+> >>> +             }
+> >>> +             time = jiffies_to_msecs(jiffies - start_time);
+> >>> +     } while ((!port->link_up) || (time <= XGENE_LTSSM_L0_WAIT));
+> >>> +}
+> >>
+> >> Maybe another msleep() in the loop? It seems weird to first do an
+> >> unconditional sleep but then busy-wait for the result.
+> >
+> > ok.
+> 
+> This loop can execute for maximum 4 msec. So putting msleep(1) won't
+> get us much.
+ 
+4 msec is still quite a long time for a busy loop that can be spent doing
+useful work in another thread.
 
-> Note that since the hang occurs on the module load, netconsole was unable
-> to send latest messages and the log looks clear
->
-> I've rebuilt kernel with sound driver compiled in, and the hang occured
-> during
-> kernel load, userspace was not reached (but in this case, netconsole was
-> useless at
-> all) and I've made a photo of screen (attached). Note there is ACPI warning
-> about
-> system IO conflict.
+> >>
+> >> Another general note: Your "compatible" strings are rather unspecific.
+> >> Do you have a version number for this IP block? I suppose that it's related
+> >> to one that has been used in other chips before, or will be used in future
+> >> chips, if it's not actually licensed from some other company.
+> >
+> > I will have to check this.
+> >
+> 
+> We have decided to stick with current compatible string for now.
 
-Can you enable
+Can you elaborate on your reasoning? Does this mean X-Gene is a one-off
+product and you won't be doing any new chips based on the same hardware
+components?
 
-CONFIG_PCI_DEBUG=y
-
-and boot with "debug ignore_loglevel initcall_debug"?
-
-Thanks
-
-Yinghai
+	Arnd
