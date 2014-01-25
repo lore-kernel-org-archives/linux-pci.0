@@ -1,85 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21898 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753845AbaACAHf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 19:07:35 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH v5 07/33] x86, irq: Show MSI-X in /proc/interrupt
-Date: Thu,  2 Jan 2014 16:05:39 -0800
-Message-Id: <1388707565-16535-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+Date: Sat, 25 Jan 2014 09:09:39 -0700
+Message-ID: <CALdTtnsEo74UeYgoQ0DF7=LN074b_0bL0vg6Bxs02B9nDkRTNA@mail.gmail.com>
+Subject: Re: [RFC PATCH V3 0/4] APM X-Gene PCIe controller
+From: Dann Frazier <dann.frazier@canonical.com>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	patches@apm.com, jcm@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now MSI-X is shown as MSI in /proc/interrupt.
+On Fri, Jan 24, 2014 at 2:32 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+> cards.
+>
+> X-Gene PCIe controller driver has depedency on the pcie arch support for
+> arm64. The arm64 pcie arch support is not yet part of mainline Linux kernel
+> and approach for arch support is under discussion with arm64 maintainers.
+> The reference patch can be found here --> https://lkml.org/lkml/2013/10/23/244
 
-We could use new added irq_print_chip() interface to append -X for MSI-X.
+The reference patch looks corrupted (pcibios.c has no includes, etc),
+would you mind reposting?
 
-After this patch, we will have PCI-MSI-X-edge IR-PCI-MSI-X-edge for MSI-X
-instead of PCI-MSI-edge IR-PCI-MSI-edge in the /proc/interrupt.
+  -dann
 
--v2: do not need to check if msi_desc is null in msi_irq_print_chip().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- arch/x86/kernel/apic/io_apic.c | 7 +++++++
- drivers/iommu/irq_remapping.c  | 5 ++++-
- 2 files changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 8616517..c52085c 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3092,6 +3092,12 @@ msi_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force)
- 	return IRQ_SET_MASK_OK_NOCOPY;
- }
- 
-+static void msi_irq_print_chip(struct irq_data *data, struct seq_file *p)
-+{
-+	seq_printf(p, " %s%s", data->chip->name,
-+			data->msi_desc->msi_attrib.is_msix ? "-X" : "");
-+}
-+
- /*
-  * IRQ Chip for MSI PCI/PCI-X/PCI-Express Devices,
-  * which implement the MSI or MSI-X Capability Structure.
-@@ -3103,6 +3109,7 @@ struct irq_chip msi_chip = {
- 	.irq_ack		= ack_apic_edge,
- 	.irq_set_affinity	= msi_set_affinity,
- 	.irq_retrigger		= ioapic_retrigger_irq,
-+	.irq_print_chip		= msi_irq_print_chip,
- };
- 
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 8e4e3af..6893d75 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -372,7 +372,10 @@ static void ir_ack_apic_level(struct irq_data *data)
- 
- static void ir_print_prefix(struct irq_data *data, struct seq_file *p)
- {
--	seq_printf(p, " IR-%s", data->chip->name);
-+	seq_printf(p, " IR-%s%s", data->chip->name,
-+			data->msi_desc ?
-+			 (data->msi_desc->msi_attrib.is_msix ? "-X" : "")
-+			 : "");
- }
- 
- static void __init irq_remap_modify_chip_defaults(struct irq_chip *chip)
--- 
-1.8.4
-
+> If someone wishes to test PCIe on X-Gene, arch support patch must be applied
+> before the patches in this patch set.
+>
+> changes since V2:
+> 1. redefined each PCI port in different PCI domain correctly.
+> 2. removed setup_lane and setup_link functions from driver.
+> 3. removed scan_bus wrapper and set_primary_bus hack.
+> 4. added pci_ioremap_io for io resources.
+>
+> changes since V1:
+> 1. added PCI domain support
+> 2. reading cpu and pci addresses from device tree to configure regions.
+> 3. got rid of unnecessary wrappers for readl and writel.
+> 4. got rid of endpoint configuration code.
+> 5. added 'dma-ranges' property support to read inbound region configuration.
+> 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
+> 7. dropped 'clock-names' property from bindings
+> 8. added comments whereever requested.
+>
+> Tanmay Inamdar (4):
+>   pci: APM X-Gene PCIe controller driver
+>   arm64: dts: APM X-Gene PCIe device tree nodes
+>   dt-bindings: pci: xgene pcie device tree bindings
+>   MAINTAINERS: entry for APM X-Gene PCIe host driver
+>
+>  .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++
+>  MAINTAINERS                                        |    7 +
+>  arch/arm64/boot/dts/apm-mustang.dts                |    8 +
+>  arch/arm64/boot/dts/apm-storm.dtsi                 |  155 ++++
+>  drivers/pci/host/Kconfig                           |   10 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-xgene.c                       |  784 ++++++++++++++++++++
+>  7 files changed, 1017 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
+>  create mode 100644 drivers/pci/host/pci-xgene.c
+>
+> --
+> 1.7.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
