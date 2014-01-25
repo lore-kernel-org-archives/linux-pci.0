@@ -1,120 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:65048 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932409AbaAaXTx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 18:19:53 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH] Revert "PCI: Remove from bus_list and release resources in pci_release_dev()"
-Date: Sat, 01 Feb 2014 00:34:15 +0100
-Message-ID: <1676758.QjUXk2223P@vostro.rjw.lan>
-In-Reply-To: <20140130131236.GW18029@intel.com>
-References: <20140130131236.GW18029@intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46739 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750788AbaAYCo6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Jan 2014 21:44:58 -0500
+Date: Sat, 25 Jan 2014 10:44:18 +0800
+From: Baoquan He <bhe@redhat.com>
+To: Bill Sumner <bill.sumner@hp.com>
+Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, zhenhua@hp.com
+Subject: Re: [PATCHv3 0/6] Crashdump Accepting Active IOMMU
+Message-ID: <20140125024418.GA1549@dhcp-17-102.nay.redhat.com>
+References: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1389391652-52422-1-git-send-email-bill.sumner@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-    
-Revert commit ef83b0781a73 "PCI: Remove from bus_list and release
-resources in pci_release_dev()" that made some nasty race conditions
-become possible.  For example, if a Thunderbolt link is unplugged
-and then replugged immediately, the pci_release_dev() resulting from
-the hot-remove code path may be racing with the hot-add code path
-which after that commit causes various kinds of breakage to happen
-(up to and including a hard crash of the whole system).
+Tested this patchset on my local HP Z420 workstation, and it works very
+well.
 
-Moreover, the problem that commit ef83b0781a73 attempted to address
-cannot happen any more after commit 8a4c5c329de7 "PCI: Check parent
-kobject in pci_destroy_dev()", because pci_destroy_dev() will now
-return immediately if it has already been executed for the given
-device.
+Hi Bill,
 
-Fixes: ef83b0781a73 (PCI: Remove from bus_list and release resources in pci_release_dev())
-Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Thanks for your effort.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 04796c056d12..6e34498ec9f0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1208,18 +1208,6 @@ static void pci_release_capabilities(struct pci_dev *dev)
- 	pci_free_cap_save_buffers(dev);
- }
- 
--static void pci_free_resources(struct pci_dev *dev)
--{
--	int i;
--
--	pci_cleanup_rom(dev);
--	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
--		struct resource *res = dev->resource + i;
--		if (res->parent)
--			release_resource(res);
--	}
--}
--
- /**
-  * pci_release_dev - free a pci device structure when all users of it are finished.
-  * @dev: device that's been disconnected
-@@ -1229,14 +1217,9 @@ static void pci_free_resources(struct pci_dev *dev)
-  */
- static void pci_release_dev(struct device *dev)
- {
--	struct pci_dev *pci_dev = to_pci_dev(dev);
--
--	down_write(&pci_bus_sem);
--	list_del(&pci_dev->bus_list);
--	up_write(&pci_bus_sem);
--
--	pci_free_resources(pci_dev);
-+	struct pci_dev *pci_dev;
- 
-+	pci_dev = to_pci_dev(dev);
- 	pci_release_capabilities(pci_dev);
- 	pci_release_of_node(pci_dev);
- 	pcibios_release_device(pci_dev);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 4ff36bfa785e..b8c93c90daf5 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -3,6 +3,20 @@
- #include <linux/pci-aspm.h>
- #include "pci.h"
- 
-+static void pci_free_resources(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	msi_remove_pci_irq_vectors(dev);
-+
-+	pci_cleanup_rom(dev);
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *res = dev->resource + i;
-+		if (res->parent)
-+			release_resource(res);
-+	}
-+}
-+
- static void pci_stop_dev(struct pci_dev *dev)
- {
- 	pci_pme_active(dev, false);
-@@ -25,6 +39,11 @@ static void pci_destroy_dev(struct pci_dev *dev)
- 
- 	device_del(&dev->dev);
- 
-+	down_write(&pci_bus_sem);
-+	list_del(&dev->bus_list);
-+	up_write(&pci_bus_sem);
-+
-+	pci_free_resources(dev);
- 	put_device(&dev->dev);
- }
- 
+There are several concerns from me.
 
+Firstly, I think the patch log need be rearanged. Patchset cover letter
+can contain information to express why, how briefly. If you think this
+is very useful, it can be split and put into patch log.
+
+Then for each patch, patch log should be accurate and summary to
+describe why and how this patch really does. If you feel several patches
+have the corelation, they may need to be merged.
+
+Secondly, each patch could get a seperate subject which tells what this
+patch really does. Even they are merged to kernel git tree, each of them
+is a independent commit. People can take to use or depend only one of
+them. Actually, I don't like current patch subject.
+
+Thirdly, this patchset will be part of intel-iommu, though they only
+works for kdump kernel. As a subsystem, the style need be consistent. I
+like the debug method which introduces a struct pr_debug, however
+maintainers may not like it. Because a debug utility may bloat code and
+affect people's review. Personally I like refined code, the less the
+easier to review. Or put it as a independent patch at the end of the
+patchset, let maintainer decide whether it's OK to pull in.
+
+Sorry to say so much, I think this solution is truly the right way. As
+you know, it's a big problem for kdump when intel-iommu is active in 1st
+kernel. Because of this bug, many machines with intel-iommu have to be
+set intel-iommu=off, the performance is affected very much.
+
+Baoquan
+Thanks
+
+On 01/10/14 at 03:07pm, Bill Sumner wrote:
+> v2->v3:
+> 1. Commented-out "#define DEBUG 1" to eliminate debug messages
+> 2. Updated the comments about changes in each version in all patches in the set.
+> 3. Fixed: one-line added to Copy-Translations" patch to initialize the iovad
+>           struct as recommended by Baoquan He [bhe@redhat.com]
+>           init_iova_domain(&domain->iovad, DMA_32BIT_PFN);
+> 
+> v1->v2:
+> The following series implements a fix for:
+> A kdump problem about DMA that has been discussed for a long time. That is,
+> when a kernel panics and boots into the kdump kernel, DMA started by the 
+> panicked kernel is not stopped before the kdump kernel is booted and the 
+> kdump kernel disables the IOMMU while this DMA continues.  This causes the
+> IOMMU to stop translating the DMA addresses as IOVAs and begin to treat them 
+> as physical memory addresses -- which causes the DMA to either:
+> (1) generate DMAR errors or (2) generate PCI SERR errors or (3) transfer  
+> data to or from incorrect areas of memory. Often this causes the dump to fail.
+> 
+ 
