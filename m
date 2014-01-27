@@ -1,50 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:59165 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752216AbaANXw1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jan 2014 18:52:27 -0500
-Message-ID: <52D5CDA1.3050306@zytor.com>
-Date: Tue, 14 Jan 2014 15:52:01 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:39691 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572AbaA0N1S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jan 2014 08:27:18 -0500
+Message-ID: <52E65EAD.9000909@codethink.co.uk>
+Date: Mon, 27 Jan 2014 13:27:09 +0000
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 MIME-Version: 1.0
-To: David Cohen <david.a.cohen@linux.intel.com>, tglx@linutronix.de,
-	mingo@redhat.com, x86@kernel.org
-CC: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] Add Clovertrail and Merrifeld support to Intel
- MID
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com> <20140114224419.GB9834@psi-dev26.jf.intel.com>
-In-Reply-To: <20140114224419.GB9834@psi-dev26.jf.intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+CC: linux-kernel@lists.codethink.co.uk,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/8] pci-rcar-gen2: add of match table
+References: <1390754945-28142-1-git-send-email-ben.dooks@codethink.co.uk> <1390754945-28142-2-git-send-email-ben.dooks@codethink.co.uk> <52E6559D.6090708@cogentembedded.com>
+In-Reply-To: <52E6559D.6090708@cogentembedded.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/14/2014 02:44 PM, David Cohen wrote:
-> On Mon, Dec 16, 2013 at 12:07:35PM -0800, David Cohen wrote:
->> Hi,
+On 27/01/14 12:48, Sergei Shtylyov wrote:
+> Hello.
+>
+> On 26-01-2014 20:48, Ben Dooks wrote:
+>
+>> Add OF match table for pci-rcar-gen2 driver for device tree support.
+>
+>> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+>> ---
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Simon Horman <horms@verge.net.au>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: linux-sh@vger.kernel.org
+>> Cc: devicetree@vger.kernel.org
+>> ---
+>>   drivers/pci/host/pci-rcar-gen2.c | 8 ++++++++
+>>   1 file changed, 8 insertions(+)
+>
+>> diff --git a/drivers/pci/host/pci-rcar-gen2.c
+>> b/drivers/pci/host/pci-rcar-gen2.c
+>> index ceec147..ea65bac 100644
+>> --- a/drivers/pci/host/pci-rcar-gen2.c
+>> +++ b/drivers/pci/host/pci-rcar-gen2.c
+>> @@ -311,9 +311,17 @@ static int __init rcar_pci_probe(struct
+>> platform_device *pdev)
+>>       return rcar_pci_add_controller(priv);
+>>   }
 >>
->> I've a bunch of Intel MID patches under review but it seems they are becoming
->> old and start to need changes.
->> I gathered an up-to-date version of all of them in this single patch set.
->>
->> This series implements support of Clovertrail and Merrifield to Intel MID.
->> It also removes the unwanted X86_MDFLD option since *all* Intel MID platforms
->> should be supported through CONFIG_X86_INTEL_MID option.
->>
->> This makes obsolete the following patches:
->> https://lkml.org/lkml/2013/10/18/480
->> https://lkml.org/lkml/2013/10/22/533
->> http://lkml.indiana.edu/hypermail/linux/kernel/1311.1/02937.html
-> 
-> Ping :)
-> Any comments on this whole patch set?
-> 
+>> +static struct of_device_id rcar_pci_of_match[] = {
+>> +    { .compatible = "renesas,pci-r8a7790", },
+>
+>     Why only H2 SoC, if the driver is for both Gen2 SoCs?
 
-You got some feedback from Bjorn and Ingo... mostly description-related,
-but that is important enough.
+I can add a "renesas,pci-rcar-gen2" as a fallback match however
+I've not got anything other than an r8a7790 to test on. Also the
+compatible properties are preferably named after the soc.
 
-Other than that we should queue it up ASAP.
-
-	-hpa
-
-
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
