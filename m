@@ -1,93 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog114.obsmtp.com ([207.126.144.137]:40385 "EHLO
-	eu1sys200aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751456AbaAHGzw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 01:55:52 -0500
-Date: Wed, 8 Jan 2014 12:25:35 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Subject: Re: pcie designware question
-Message-ID: <20140108065535.GC2689@pratyush-vbox>
-References: <3E54258959B69E4282D79E01AB1F32B70465DDAD@DFLE11.ent.ti.com>
- <CAErSpo67jb3MhvoiWKtgymjoz-E3xreRuec8NsO_Mfo7QTiHFw@mail.gmail.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189F96BAC51@EAPEX1MAIL1.st.com>
- <52B46E4D.6020805@ti.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:57940 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753473AbaA0AcZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jan 2014 19:32:25 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 0/11] ACPI / hotplug / PCI: Updates on top of changes merged recently
+Date: Mon, 27 Jan 2014 01:37:17 +0100
+Message-ID: <2217793.001RY6hKlo@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <52B46E4D.6020805@ti.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 21, 2013 at 12:20:29AM +0800, Murali Karicheri wrote:
-> On 12/19/2013 11:21 PM, Mohit KUMAR DCG wrote:
-> >>> I have reviewed the designware.c code and the glue logic driver
-> >>> pci-exynos.c and couldn't understand few things.
-> >>>
-> >>> 1. Our pcie ss is based on designware core and following addresses are
-> >>> not listed in our IP's  data manual. Where is defined? It does show
-> >>> the rest of the offsets defined in  drivers/pci/host/designware.c and
-> >>>
-> >>> #define PCIE_ATU_VIEWPORT               0x900
-> >>> #define PCIE_ATU_REGION_INBOUND         (0x1 << 31)
-> >>> #define PCIE_ATU_REGION_OUTBOUND        (0x0 << 31)
-> >>> #define PCIE_ATU_REGION_INDEX1          (0x1 << 0)
-> >>> #define PCIE_ATU_REGION_INDEX0          (0x0 << 0)
-> >>> #define PCIE_ATU_CR1                    0x904
-> >>> #define PCIE_ATU_TYPE_MEM               (0x0 << 0)
-> >>> #define PCIE_ATU_TYPE_IO                (0x2 << 0)
-> >>> #define PCIE_ATU_TYPE_CFG0              (0x4 << 0)
-> >>> #define PCIE_ATU_TYPE_CFG1              (0x5 << 0)
-> >>> #define PCIE_ATU_CR2                    0x908
-> >>> #define PCIE_ATU_ENABLE                 (0x1 << 31)
-> >>> #define PCIE_ATU_BAR_MODE_ENABLE        (0x1 << 30)
-> >>> #define PCIE_ATU_LOWER_BASE             0x90C
-> >>> #define PCIE_ATU_UPPER_BASE             0x910
-> >>> #define PCIE_ATU_LIMIT                  0x914
-> >>> #define PCIE_ATU_LOWER_TARGET           0x918
-> >>> #define PCIE_ATU_BUS(x)                 (((x) & 0xff) << 24)
-> >>> #define PCIE_ATU_DEV(x)                 (((x) & 0x1f) << 19)
-> >>> #define PCIE_ATU_FUNC(x)                (((x) & 0x7) << 16)
-> >>> #define PCIE_ATU_UPPER_TARGET           0x91C
-> > - These are Synopsys specific port logic registers. You can find these registers at offset 0x200
-> >   under port logic registers section in Synpsys PCIe DM.  There can be minor difference in the name
-> > convention as it is called 'iATU Viewport Register' in controller version3.70 and 'iATU Index Register'
-> >   in version 4.11.
-> > By the way which version of IP manual you are referring?
-> >
-> >
-> Mohit,
-> 
-> I have checked with our hardware team and they confirmed that ATU 
-> registers are not implemented in our PCIE
+Hi All,
 
-Which PCIe designware IP version you are using? At least since version 3.71
-support of viewport is available in IP. Older version was handling
-address translation using side band signals implemented through
-vendor specific application registers. May be your case is also
-similar.
+ACPIPHP can be simplified a bit on top of some PCI and ACPI changes merged
+recently and the following series of patches implements those simplifications:
 
-> SS. So we need to have  a way to disable this in the core driver so 
-> that  we can handle it in our glue layer driver.
-> But this will be a regression on the existing driver. How do we handle this?
+[1/11] Fix up two kerneldoc comments in acpiphp_glue.c.
+[2/11] Get rid of an unnecessary label in register_slot().
+[3/11] Drop acpiphp_bus_trim() and use acpi_bus_trim() instead of it directly.
+[4/11] Move the acpi_bus_get_device() call out of acpiphp_no_hotplug().
+[5/11] Store struct acpi_device pointers instead of ACPI handles in struct acpiphp_context.
+[6/11] Drop acpiphp_bus_add() (which has only one user).
+[7/11] Drop crit_sect mutexes (that are redundant).
+[8/11] Clean up the usage of the slot variable in hotplug_event().
+[9/11] Drop dev_in_slot() and rework disable_slot() to walk bus->devices directly.
+[10/11] Use acpi_handle_debug() in hotplug_event() instead of open-coded stuff.
+[11/11] Drop handle argument from the member functions of struct acpi_dock_ops.
 
-May be you can add rd/wr_other_conf in struct pcie_host_ops. 
-Change designware driver to handle vendor specific rd/wr_other_conf,
-if it exists, else use generic rd/wr_other_conf.
+All of that is relateively straightforward, but I have some more intrusive changes
+on top of it in the works.  They will be posted separately later this week.
 
-In your vendor specific rd/wr_other_conf handler you can implement
-translation using your application registers.
+Thanks!
 
-Regards
-Pratyush
-> 
-> Murali
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
