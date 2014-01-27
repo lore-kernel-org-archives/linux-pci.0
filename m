@@ -1,40 +1,164 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:42499 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751922AbaASUaw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Jan 2014 15:30:52 -0500
-Received: by mail-oa0-f41.google.com with SMTP id j17so835377oag.0
-        for <linux-pci@vger.kernel.org>; Sun, 19 Jan 2014 12:30:52 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 11/11] ACPI / hotplug: Do not pass ACPI handles to ACPI dock operations
+Date: Mon, 27 Jan 2014 01:46:21 +0100
+Message-ID: <2348078.1nGWUoSCvJ@vostro.rjw.lan>
+In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAAO_jA0C1mCS1oEOwmCffh6E6YB-Wj9pDtiYgwGj=_-6-a57VA@mail.gmail.com>
-References: <CAAO_jA0qv5sx34OwULq-bHsgruRBmmYkWp90Hh+586AEkmJ41Q@mail.gmail.com>
-	<CAAO_jA0C1mCS1oEOwmCffh6E6YB-Wj9pDtiYgwGj=_-6-a57VA@mail.gmail.com>
-Date: Sun, 19 Jan 2014 12:30:51 -0800
-Message-ID: <CAP6odjhLd4onStRtnG_x77eX5NvvCsV1jy9b=iTwtCtSo=5OKQ@mail.gmail.com>
-Subject: Re: Regarding API's
-From: Grant Grundler <grantgrundler@gmail.com>
-To: Tarun Bharani <tarun374374@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 10:24 PM, Tarun Bharani <tarun374374@gmail.com> wrote:
-> Respected Sir,
->
-> Please help us suggesting API or Macro that will scan all the
->     struct pci_driver { } objects and provide detail of the
->     struct pci_dev { } objects managed by the struct pci_driver { }
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Hi Tarun,
-Look for pci.txt in Documentation/ directory - that should answer your
-question. If not, someone from pci mailing list (cc) can.
+None of the existing users of struct acpi_dock_ops actually needs the
+first argument of its member functions, so redefine those functions
+to take only two arguments, the event type and data pointer, and
+update the users of struct acpi_dock_ops accordingly.
 
-cheers,
-grant
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/dock.c                |    4 ++--
+ drivers/ata/libata-acpi.c          |    8 ++++----
+ drivers/pci/hotplug/acpiphp_glue.c |   13 +++++++------
+ include/acpi/acpi_drivers.h        |    6 +++---
+ 4 files changed, 16 insertions(+), 15 deletions(-)
 
->
->
-> --
-> **Best Regards**
-> **Tarun Bharani**
+Index: linux-pm/include/acpi/acpi_drivers.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_drivers.h
++++ linux-pm/include/acpi/acpi_drivers.h
+@@ -110,9 +110,9 @@ void pci_acpi_crs_quirks(void);
+                                   Dock Station
+   -------------------------------------------------------------------------- */
+ struct acpi_dock_ops {
+-	acpi_notify_handler fixup;
+-	acpi_notify_handler handler;
+-	acpi_notify_handler uevent;
++	void (*handler)(u32 event_type, void *data);
++	void (*fixup)(u32 event_type, void *data);
++	void (*uevent)(u32 event_type, void *data);
+ };
+ 
+ #ifdef CONFIG_ACPI_DOCK
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -63,7 +63,7 @@ static DEFINE_MUTEX(acpiphp_context_lock
+ static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+-static void hotplug_event(acpi_handle handle, u32 type, void *data);
++static void hotplug_event(u32 type, void *data);
+ static void free_bridge(struct kref *kref);
+ 
+ static void acpiphp_context_handler(acpi_handle handle, void *context)
+@@ -185,7 +185,7 @@ static void free_bridge(struct kref *kre
+  * TBD - figure out a way to only call fixups for
+  * systems that require them.
+  */
+-static void post_dock_fixups(acpi_handle not_used, u32 event, void *data)
++static void post_dock_fixups(u32 event, void *data)
+ {
+ 	struct acpiphp_context *context = data;
+ 	struct pci_bus *bus = context->func.slot->bus;
+@@ -788,11 +788,12 @@ void acpiphp_check_host_bridge(acpi_hand
+ 
+ static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot);
+ 
+-static void hotplug_event(acpi_handle handle, u32 type, void *data)
++static void hotplug_event(u32 type, void *data)
+ {
+ 	struct acpiphp_context *context = data;
+ 	struct acpiphp_func *func = &context->func;
+ 	struct acpiphp_slot *slot = func->slot;
++	acpi_handle handle = context->adev->handle;
+ 	struct acpiphp_bridge *bridge;
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+@@ -842,16 +843,16 @@ static void hotplug_event(acpi_handle ha
+ static void hotplug_event_work(void *data, u32 type)
+ {
+ 	struct acpiphp_context *context = data;
+-	acpi_handle handle = context->adev->handle;
+ 
+ 	acpi_scan_lock_acquire();
+ 	pci_lock_rescan_remove();
+ 
+-	hotplug_event(handle, type, context);
++	hotplug_event(type, context);
+ 
+ 	pci_unlock_rescan_remove();
+ 	acpi_scan_lock_release();
+-	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
++	acpi_evaluate_hotplug_ost(context->adev->handle, type,
++				  ACPI_OST_SC_SUCCESS, NULL);
+ 	put_bridge(context->func.parent);
+ }
+ 
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -185,7 +185,7 @@ static void dock_release_hotplug(struct
+ static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
+ 			       enum dock_callback_type cb_type)
+ {
+-	acpi_notify_handler cb = NULL;
++	void (*cb)(u32, void *) = NULL;
+ 	bool run = false;
+ 
+ 	mutex_lock(&hotplug_lock);
+@@ -213,7 +213,7 @@ static void dock_hotplug_event(struct do
+ 		return;
+ 
+ 	if (cb)
+-		cb(dd->handle, event, dd->hp_context);
++		cb(event, dd->hp_context);
+ 
+ 	dock_release_hotplug(dd);
+ }
+Index: linux-pm/drivers/ata/libata-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/ata/libata-acpi.c
++++ linux-pm/drivers/ata/libata-acpi.c
+@@ -121,14 +121,14 @@ static void ata_acpi_handle_hotplug(stru
+ 		ata_port_wait_eh(ap);
+ }
+ 
+-static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
++static void ata_acpi_dev_notify_dock(u32 event, void *data)
+ {
+ 	struct ata_device *dev = data;
+ 
+ 	ata_acpi_handle_hotplug(dev->link->ap, dev, event);
+ }
+ 
+-static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
++static void ata_acpi_ap_notify_dock(u32 event, void *data)
+ {
+ 	struct ata_port *ap = data;
+ 
+@@ -154,12 +154,12 @@ static void ata_acpi_uevent(struct ata_p
+ 	}
+ }
+ 
+-static void ata_acpi_ap_uevent(acpi_handle handle, u32 event, void *data)
++static void ata_acpi_ap_uevent(u32 event, void *data)
+ {
+ 	ata_acpi_uevent(data, NULL, event);
+ }
+ 
+-static void ata_acpi_dev_uevent(acpi_handle handle, u32 event, void *data)
++static void ata_acpi_dev_uevent(u32 event, void *data)
+ {
+ 	struct ata_device *dev = data;
+ 	ata_acpi_uevent(dev->link->ap, dev, event);
+
