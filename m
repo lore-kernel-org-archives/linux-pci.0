@@ -1,66 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:45900 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754631AbaA1PfA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 10:35:00 -0500
-Message-ID: <52E7CE1B.9080906@codethink.co.uk>
-Date: Tue, 28 Jan 2014 15:34:51 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Received: from v094114.home.net.pl ([79.96.170.134]:52902 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753423AbaA0AcX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jan 2014 19:32:23 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 4/11] ACPI / hotplug / PCI: Rework acpiphp_no_hotplug()
+Date: Mon, 27 Jan 2014 01:40:32 +0100
+Message-ID: <4037947.8Z1PhnlAZj@vostro.rjw.lan>
+In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-CC: linux-kernel@lists.codethink.co.uk,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: rcar: check platform_get_irq() return code
-References: <1390902468-7753-1-git-send-email-ben.dooks@codethink.co.uk> <1390902468-7753-2-git-send-email-ben.dooks@codethink.co.uk> <52E7D6B5.6000003@cogentembedded.com>
-In-Reply-To: <52E7D6B5.6000003@cogentembedded.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28/01/14 16:11, Sergei Shtylyov wrote:
-> Hello.
->
-> On 01/28/2014 12:47 PM, Ben Dooks wrote:
->
->> The current code does not check the return from platform_get_irq()
->> so add an error check and return if this call does fail.
->
->> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
->> ---
->> Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
->> Cc: Simon Horman <horms@verge.net.au>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-sh@vger.kernel.org
->> ---
->>   drivers/pci/host/pci-rcar-gen2.c | 5 +++++
->>   1 file changed, 5 insertions(+)
->
->> diff --git a/drivers/pci/host/pci-rcar-gen2.c
->> b/drivers/pci/host/pci-rcar-gen2.c
->> index ea65bac..674f7fe 100644
->> --- a/drivers/pci/host/pci-rcar-gen2.c
->> +++ b/drivers/pci/host/pci-rcar-gen2.c
->> @@ -308,6 +308,11 @@ static int __init rcar_pci_probe(struct
->> platform_device *pdev)
->>       priv->reg = reg;
->>       priv->dev = &pdev->dev;
->>
->> +    if (priv->irq < 0) {
->
->     <= actually, as IRQ0 has been declared invalid by Linus.
->
->> +        dev_err(&pdev->dev, "no valid irq found\n");
->> +        return priv->irq;
->> +    }
->> +
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-IIRC, 0 is /no irq/ not an error.
+If a struct acpi_device pointer is passed to acpiphp_no_hotplug()
+instead of an ACPI handle, the function won't need to call
+acpi_bus_get_device(), which may be costly, any more.  Then,
+trim_stale_devices() can call acpiphp_no_hotplug() passing
+the struct acpi_device object it already has directly to that
+function.
 
+Make those changes and update slot_no_hotplug() accordingly.
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -635,11 +635,8 @@ static void disable_slot(struct acpiphp_
+ 	slot->flags &= (~SLOT_ENABLED);
+ }
+ 
+-static bool acpiphp_no_hotplug(acpi_handle handle)
++static bool acpiphp_no_hotplug(struct acpi_device *adev)
+ {
+-	struct acpi_device *adev = NULL;
+-
+-	acpi_bus_get_device(handle, &adev);
+ 	return adev && adev->flags.no_hotplug;
+ }
+ 
+@@ -647,10 +644,13 @@ static bool slot_no_hotplug(struct acpip
+ {
+ 	struct acpiphp_func *func;
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling)
+-		if (acpiphp_no_hotplug(func_to_handle(func)))
+-			return true;
++	list_for_each_entry(func, &slot->funcs, sibling) {
++		struct acpi_device *adev = NULL;
+ 
++		acpi_bus_get_device(func_to_handle(func), &adev);
++		if (acpiphp_no_hotplug(adev))
++			return true;
++	}
+ 	return false;
+ }
+ 
+@@ -707,13 +707,12 @@ static void trim_stale_devices(struct pc
+ 	bool alive = false;
+ 
+ 	if (adev) {
+-		acpi_handle handle = adev->handle;
+ 		acpi_status status;
+ 		unsigned long long sta;
+ 
+-		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++		status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
+ 		alive = (ACPI_SUCCESS(status) && sta == ACPI_STA_ALL)
+-			|| acpiphp_no_hotplug(handle);
++			|| acpiphp_no_hotplug(adev);
+ 	}
+ 	if (!alive) {
+ 		u32 v;
+
