@@ -1,57 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:33616 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbaAKBFw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:05:52 -0500
-Received: by mail-ig0-f172.google.com with SMTP id hl1so763599igb.5
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:05:51 -0800 (PST)
+Received: from mail-la0-f47.google.com ([209.85.215.47]:54608 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753811AbaA0Msb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jan 2014 07:48:31 -0500
+Received: by mail-la0-f47.google.com with SMTP id hr17so4453758lab.34
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jan 2014 04:48:30 -0800 (PST)
+Message-ID: <52E6559D.6090708@cogentembedded.com>
+Date: Mon, 27 Jan 2014 16:48:29 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <20140106084716.068edc9f@jbarnes-desktop>
-References: <20131227132530.5c02d9d8@nehalam.linuxnetplumber.net>
- <20131227132710.7190647c@nehalam.linuxnetplumber.net> <CAErSpo49y7q_E4kHtFsZ-hOkbeWaAgEAt38YdP1TJ6Dk0XwOWw@mail.gmail.com>
- <20140106084716.068edc9f@jbarnes-desktop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 10 Jan 2014 18:05:31 -0700
-Message-ID: <CAErSpo5HQ2y8jhkMKu0u1TsRBZco6QjmZysvmqOgdZqnO3Rv+Q@mail.gmail.com>
-Subject: Re: [PATCH pci-next 2/2] pci: remove dead code
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Stephen Hemminger <stephen@networkplumber.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+To: Ben Dooks <ben.dooks@codethink.co.uk>,
+	linux-kernel@lists.codethink.co.uk
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/8] pci-rcar-gen2: add of match table
+References: <1390754945-28142-1-git-send-email-ben.dooks@codethink.co.uk> <1390754945-28142-2-git-send-email-ben.dooks@codethink.co.uk>
+In-Reply-To: <1390754945-28142-2-git-send-email-ben.dooks@codethink.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 6, 2014 at 9:47 AM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
-> On Thu, 2 Jan 2014 16:12:52 -0700
-> Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> [+cc Jesse, Myron]
->>
->> On Fri, Dec 27, 2013 at 2:27 PM, Stephen Hemminger
->> <stephen@networkplumber.org> wrote:
->> >
->> > My philosophy is unused code is dead code.
->> > And dead code is subject to bit rot and is likely source of bugs.
->> > Use it or lose it.
->> >
->> > Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
->>
->> This removes pci_enable_ido(), pci_enable_obff(), pci_enable_ltr(),
->> etc., which I think you added, Jesse.  In principle I like the idea of
->> removing code that isn't being used.  Of course, these might be used
->> by out-of-tree drivers, but I don't think we should go *too* far out
->> of our way to support them.
->>
->> Anybody have any objections to removing them?  Obviously they'll still
->> be in the git history, so it would be trivial to resurrect them.
->
-> No objections.  If driver folks haven't yet found a use for them (and/or
-> hw is scarce) there's no reason to keep these.
+Hello.
 
-I split this up into separate patches because some of the code removed
-is PCIe 3.0 support that people might have isses with, and so we can
-CC: interested people and they can make sense out of it.  I'll post
-the series as a v2 in a minute.
+On 26-01-2014 20:48, Ben Dooks wrote:
 
-Bjorn
+> Add OF match table for pci-rcar-gen2 driver for device tree support.
+
+> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+> ---
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Simon Horman <horms@verge.net.au>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-sh@vger.kernel.org
+> Cc: devicetree@vger.kernel.org
+> ---
+>   drivers/pci/host/pci-rcar-gen2.c | 8 ++++++++
+>   1 file changed, 8 insertions(+)
+
+> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+> index ceec147..ea65bac 100644
+> --- a/drivers/pci/host/pci-rcar-gen2.c
+> +++ b/drivers/pci/host/pci-rcar-gen2.c
+> @@ -311,9 +311,17 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
+>   	return rcar_pci_add_controller(priv);
+>   }
+>
+> +static struct of_device_id rcar_pci_of_match[] = {
+> +	{ .compatible = "renesas,pci-r8a7790", },
+
+    Why only H2 SoC, if the driver is for both Gen2 SoCs?
+
+WBR, Sergei
+
