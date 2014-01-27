@@ -1,131 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:50181 "HELO
+Received: from v094114.home.net.pl ([79.96.170.134]:59615 "HELO
 	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753963AbaAaLiW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 06:38:22 -0500
+	with SMTP id S1753257AbaA0AcW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jan 2014 19:32:22 -0500
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
-Date: Fri, 31 Jan 2014 12:52:43 +0100
-Message-ID: <1418039.AWHqDGWMFa@vostro.rjw.lan>
-In-Reply-To: <20140131105301.GD18029@intel.com>
-References: <20140130131236.GW18029@intel.com> <2622847.3aWjiMW5oK@vostro.rjw.lan> <20140131105301.GD18029@intel.com>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 5/11] ACPI / hotplug / PCI: Store acpi_device pointer in acpiphp_context
+Date: Mon, 27 Jan 2014 01:41:17 +0100
+Message-ID: <2392255.TACRzd2AD0@vostro.rjw.lan>
+In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 31, 2014 12:53:01 PM Mika Westerberg wrote:
-> On Fri, Jan 31, 2014 at 01:38:42AM +0100, Rafael J. Wysocki wrote:
-> > On Friday, January 31, 2014 12:59:06 AM Rafael J. Wysocki wrote:
-> > > On Thursday, January 30, 2014 03:39:02 PM Yinghai Lu wrote:
-> > > > On Thu, Jan 30, 2014 at 3:39 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > > > On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
-> > > > >>
-> > > > >> --047d7b5d2ea4eb937804f132eedf
-> > > > >> Content-Type: text/plain; charset=ISO-8859-1
-> > > > >>
-> > > > >> >> The latest mainline kernel "hangs" when Thunderbolt devices are
-> > > > >> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
-> > > > >> >> getting huge amounts of messages like:
-> > > > >> >>
-> > > > >> >> [  352.717001] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717011] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717021] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717032] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717041] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717051] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717061] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717070] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717083] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717094] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717104] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717113] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717124] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717133] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717143] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717153] pci 0000:02:00.0: PME# disabled
-> > > > >> >> [  352.717162] pci 0000:02:00.0: PME# disabled
-> > > > >> >
-> > > > >> > that mean pci_stop_dev() get called again and again ?
-> > > > >>
-> > > > >> please check if attached patch could help.
-> > > > >
-> > > > > Well, it looks like what happens is an endless loop in
-> > > > > acpiphp_glue.c:disable_slot().
-> > > > >
-> > > > > dev_in_slot() returns the first device in the list, so
-> > > > > pci_stop_and_remove_bus_device() is called for it, but it
-> > > > > doesn't remove the device from bus->devices any more, so
-> > > > > dev_in_slot() will return the same device next time and
-> > > > > so on forever.
-> > > > >
-> > > > ...
-> > > > >
-> > > > > So the above won't help in my opinion.
-> > > > >
-> > > > > I wonder, however, if this patch helps instead:
-> > > > >
-> > > > > https://patchwork.kernel.org/patch/3540701/
-> > > > >
-> > > > > I thought it would be 3.15 material, but it very well can go in earlier if
-> > > > > it happens to address this particular problem.
-> > > > 
-> > > > Agree, that should fix the problem.
-> > > > 
-> > > > but please use list_for_each_entry_safe_reverse
-> > > > instead.
-> > > 
-> > > OK, I will.
-> > 
-> > Mika, below is an updated patch to try.
-> > 
-> > ---
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Subject: ACPI / hotplug / PCI: Simplify disable_slot()
-> > 
-> > After recent PCI core changes related to the rescan/remove locking,
-> > the ACPIPHP's disable_slot() function is only called under the
-> > general PCI rescan/remove lock, so it doesn't have to use
-> > dev_in_slot() any more to avoid race conditions.  Make it simply
-> > walk the devices on the bus and drop the ones in the slot being
-> > disabled and drop dev_in_slot() which has no more users.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Thanks for the fix.
-> 
-> Unfortunately, it now crashes here after I re-plug the TBT chain (I have
-> both of your patches applied):
-> 
-> int sysfs_create_bin_file(struct kobject *kobj,
->                           const struct bin_attribute *attr)
-> {
-> 	BUG_ON(!kobj || !kobj->sd || !attr); <--
-> 
-> Since I don't have proper serial console to that machine, all I see is the
-> end of the backtrace :-(
-> 
-> Here is a hand copied backtrace from the screen:
-> 
-> pci_create_sysfs_dev_files()
-> pci_bus_add_device()
-> pci_bus_add_devices()
-> enable_slot()
-> acpiphp_check_bridge()
-> hotplug_event()
-> ...
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-So I think what happens is that we leak the struct pci_dev during removal and
-the proper cleanup is never done.
+After recent modifications of the ACPI core making it create a struct
+acpi_device object for every namespace node representing a device
+regardless of the current status of that device the ACPIPHP code
+can store a struct acpi_device pointer instead of an ACPI handle
+in struct acpiphp_context.  This immediately makes it possible to
+avoid making potentially costly calls to acpi_bus_get_device() in
+two places and allows some more simplifications to be made going
+forward.
 
-Can you please add a debug printk into pci_release_dev() and see if that's
-ever called after TBT unplug?
+The reason why that is correct is because ACPIPHP only installs
+hotify handlers for namespace nodes that exist when
+acpiphp_enumerate_slots() is called for their parent bridge.
+That only happens if the parent bridge has an ACPI companion
+associated with it, which means that the ACPI namespace scope
+in question has been scanned already at that point.  That, in
+turn, means that struct acpi_device objects have been created
+for all namespace nodes in that scope and pointers to those
+objects can be stored directly instead of their ACPI handles.
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    9 +++++--
+ drivers/pci/hotplug/acpiphp_glue.c |   44 +++++++++++++++++--------------------
+ 2 files changed, 28 insertions(+), 25 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -117,8 +117,8 @@ struct acpiphp_func {
+ };
+ 
+ struct acpiphp_context {
+-	acpi_handle handle;
+ 	struct acpiphp_func func;
++	struct acpi_device *adev;
+ 	struct acpiphp_bridge *bridge;
+ 	unsigned int refcount;
+ };
+@@ -128,9 +128,14 @@ static inline struct acpiphp_context *fu
+ 	return container_of(func, struct acpiphp_context, func);
+ }
+ 
++static inline struct acpi_device *func_to_acpi_device(struct acpiphp_func *func)
++{
++	return func_to_context(func)->adev;
++}
++
+ static inline acpi_handle func_to_handle(struct acpiphp_func *func)
+ {
+-	return func_to_context(func)->handle;
++	return func_to_acpi_device(func)->handle;
+ }
+ 
+ /*
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -73,11 +73,11 @@ static void acpiphp_context_handler(acpi
+ 
+ /**
+  * acpiphp_init_context - Create hotplug context and grab a reference to it.
+- * @handle: ACPI object handle to create the context for.
++ * @adev: ACPI device object to create the context for.
+  *
+  * Call under acpiphp_context_lock.
+  */
+-static struct acpiphp_context *acpiphp_init_context(acpi_handle handle)
++static struct acpiphp_context *acpiphp_init_context(struct acpi_device *adev)
+ {
+ 	struct acpiphp_context *context;
+ 	acpi_status status;
+@@ -86,9 +86,9 @@ static struct acpiphp_context *acpiphp_i
+ 	if (!context)
+ 		return NULL;
+ 
+-	context->handle = handle;
++	context->adev = adev;
+ 	context->refcount = 1;
+-	status = acpi_attach_data(handle, acpiphp_context_handler, context);
++	status = acpi_attach_data(adev->handle, acpiphp_context_handler, context);
+ 	if (ACPI_FAILURE(status)) {
+ 		kfree(context);
+ 		return NULL;
+@@ -118,7 +118,7 @@ static struct acpiphp_context *acpiphp_g
+ 
+ /**
+  * acpiphp_put_context - Drop a reference to ACPI hotplug context.
+- * @handle: ACPI object handle to put the context for.
++ * @context: ACPI hotplug context to drop a reference to.
+  *
+  * The context object is removed if there are no more references to it.
+  *
+@@ -130,7 +130,7 @@ static void acpiphp_put_context(struct a
+ 		return;
+ 
+ 	WARN_ON(context->bridge);
+-	acpi_detach_data(context->handle, acpiphp_context_handler);
++	acpi_detach_data(context->adev->handle, acpiphp_context_handler);
+ 	kfree(context);
+ }
+ 
+@@ -265,6 +265,7 @@ static acpi_status register_slot(acpi_ha
+ {
+ 	struct acpiphp_bridge *bridge = data;
+ 	struct acpiphp_context *context;
++	struct acpi_device *adev;
+ 	struct acpiphp_slot *slot;
+ 	struct acpiphp_func *newfunc;
+ 	acpi_status status = AE_OK;
+@@ -284,12 +285,14 @@ static acpi_status register_slot(acpi_ha
+ 				"can't evaluate _ADR (%#x)\n", status);
+ 		return AE_OK;
+ 	}
++	if (acpi_bus_get_device(handle, &adev))
++		return AE_OK;
+ 
+ 	device = (adr >> 16) & 0xffff;
+ 	function = adr & 0xffff;
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+-	context = acpiphp_init_context(handle);
++	context = acpiphp_init_context(adev);
+ 	if (!context) {
+ 		mutex_unlock(&acpiphp_context_lock);
+ 		acpi_handle_err(handle, "No hotplug context\n");
+@@ -625,12 +628,8 @@ static void disable_slot(struct acpiphp_
+ 		pci_dev_put(pdev);
+ 	}
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		struct acpi_device *adev;
+-
+-		if (!acpi_bus_get_device(func_to_handle(func), &adev))
+-			acpi_bus_trim(adev);
+-	}
++	list_for_each_entry(func, &slot->funcs, sibling)
++		acpi_bus_trim(func_to_acpi_device(func));
+ 
+ 	slot->flags &= (~SLOT_ENABLED);
+ }
+@@ -644,13 +643,10 @@ static bool slot_no_hotplug(struct acpip
+ {
+ 	struct acpiphp_func *func;
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		struct acpi_device *adev = NULL;
+-
+-		acpi_bus_get_device(func_to_handle(func), &adev);
+-		if (acpiphp_no_hotplug(adev))
++	list_for_each_entry(func, &slot->funcs, sibling)
++		if (acpiphp_no_hotplug(func_to_acpi_device(func)))
+ 			return true;
+-	}
++
+ 	return false;
+ }
+ 
+@@ -899,7 +895,7 @@ static void hotplug_event(acpi_handle ha
+ static void hotplug_event_work(void *data, u32 type)
+ {
+ 	struct acpiphp_context *context = data;
+-	acpi_handle handle = context->handle;
++	acpi_handle handle = context->adev->handle;
+ 
+ 	acpi_scan_lock_acquire();
+ 	pci_lock_rescan_remove();
+@@ -959,7 +955,7 @@ static void handle_hotplug_event(acpi_ha
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(handle);
+-	if (context && !WARN_ON(context->handle != handle)) {
++	if (context && !WARN_ON(context->adev->handle != handle)) {
+ 		get_bridge(context->func.parent);
+ 		acpiphp_put_context(context);
+ 		acpi_hotplug_execute(hotplug_event_work, context, type);
+@@ -983,16 +979,18 @@ static void handle_hotplug_event(acpi_ha
+ void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
+ 	struct acpiphp_bridge *bridge;
++	struct acpi_device *adev;
+ 	acpi_handle handle;
+ 	acpi_status status;
+ 
+ 	if (acpiphp_disabled)
+ 		return;
+ 
+-	handle = ACPI_HANDLE(bus->bridge);
+-	if (!handle)
++	adev = ACPI_COMPANION(bus->bridge);
++	if (!adev)
+ 		return;
+ 
++	handle = adev->handle;
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+ 	if (!bridge) {
+ 		acpi_handle_err(handle, "No memory for bridge object\n");
+
