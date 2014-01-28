@@ -1,107 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:52268 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679AbaAMT3o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jan 2014 14:29:44 -0500
-Received: by mail-ie0-f177.google.com with SMTP id ar20so4290957iec.22
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jan 2014 11:29:43 -0800 (PST)
+Received: from exprod5og111.obsmtp.com ([64.18.0.22]:39282 "HELO
+	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753428AbaA1CCW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jan 2014 21:02:22 -0500
+Received: by mail-vb0-f43.google.com with SMTP id p5so3986792vbn.30
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jan 2014 18:02:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1386256104-20624-1-git-send-email-betty.dall@hp.com>
-References: <1386256104-20624-1-git-send-email-betty.dall@hp.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 13 Jan 2014 12:29:23 -0700
-Message-ID: <CAErSpo6VeD=TbrtCkXPkUwMT8Edz7bdBQHAimvW1v8bMrmdR9g@mail.gmail.com>
-Subject: Re: [PATCH] PCI/ACPI: Use PCIe segment in the ACPI HEST AER error sources
-To: Betty Dall <betty.dall@hp.com>
-Cc: Len Brown <lenb@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"Moore, Robert" <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devel@acpica.org" <devel@acpica.org>
+In-Reply-To: <CAErSpo5zMd_k407tvzPS85Nub9p2KMQnHJLTqd3eyvjdgfVtLg@mail.gmail.com>
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
+	<CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
+	<CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com>
+	<5086198.ZOWZ5xuyna@wuerfel>
+	<CAErSpo5zMd_k407tvzPS85Nub9p2KMQnHJLTqd3eyvjdgfVtLg@mail.gmail.com>
+Date: Mon, 27 Jan 2014 18:02:20 -0800
+Message-ID: <CACoXjcn46u4QSoCZsd+FVBc2=EsGs3af8JzSw7uLw2ZNauX-Bg@mail.gmail.com>
+Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	patches <patches@apm.com>, linux-kernel@vger.kernel.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 5, 2013 at 8:08 AM, Betty Dall <betty.dall@hp.com> wrote:
-> In the discussion for this set of patches: https://lkml.org/lkml/2013/6/6/517,
-> Bjorn Helgaas pointed out that the ACPI HEST AER error sources do not have the
-> PCIe segment number associated with the bus. I worked with the ACPI spec and
-> got this change to definition of the "Bus" field into the recently released
-> ACPI Spec 5.0a section 18.3.2.3-5:
+On Mon, Jan 27, 2014 at 4:55 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> We're only seeing Arnd's side of the conversation on linux-pci.
+> Tanmay, are your messages being rejected because they're too "fancy",
+> per the definition here: http://vger.kernel.org/majordomo-info.html ?
 >
-> "Identifies the PCI Bus and Segment of the device. The Bus is
-> encoded in bits 0-7. For systems that expose multiple PCI
-> segment groups, the segment number is encoded in bits 8-23
-> and bits 24-31 must be zero. For systems that do not expose
-> multiple PCI segment groups, bits 8-31 must be zero. If the
-> GLOBAL flag is specified, this field is ignored."
->
-> This patch makes use of the new definition in the only place in the kernel
-> that uses the acpi_hest_aer_common's bus field.
->
-> Signed-off-by: Betty Dall <betty.dall@hp.com>
 
-I cherry picked 36f3615152c1 ("ACPICA: Add helper macros to extract
-bus/segment numbers from HEST table.") and applied the aerdrv_acpi.c
-change to pci/aer for v3.14, thanks!
+Thanks for pointing out. I am not sure though what's being detected as
+fancy. I checked that my emails are received as plaintext on
+majordomo. They are also displayed fine on LKML.
 
-Bjorn
+In this email, I have tried to keep the format of to: and cc: same as
+first email in the thread. Not sure if this fixes the problem.
 
-> ---
->
->  drivers/pci/pcie/aer/aerdrv_acpi.c |    8 ++++----
->  include/acpi/actbl1.h              |   11 ++++++++++-
->  2 files changed, 14 insertions(+), 5 deletions(-)
->
->
-> diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> index cf611ab..93f852b 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_acpi.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
-> @@ -23,10 +23,10 @@
->  static inline int hest_match_pci(struct acpi_hest_aer_common *p,
->                                  struct pci_dev *pci)
->  {
-> -       return  (0           == pci_domain_nr(pci->bus) &&
-> -                p->bus      == pci->bus->number &&
-> -                p->device   == PCI_SLOT(pci->devfn) &&
-> -                p->function == PCI_FUNC(pci->devfn));
-> +       return   ACPI_HEST_SEGMENT(p->bus) == pci_domain_nr(pci->bus) &&
-> +                ACPI_HEST_BUS(p->bus)     == pci->bus->number &&
-> +                p->device                 == PCI_SLOT(pci->devfn) &&
-> +                p->function               == PCI_FUNC(pci->devfn);
->  }
->
->  static inline bool hest_match_type(struct acpi_hest_header *hest_hdr,
-> diff --git a/include/acpi/actbl1.h b/include/acpi/actbl1.h
-> index 556c83ee..0c7428b 100644
-> --- a/include/acpi/actbl1.h
-> +++ b/include/acpi/actbl1.h
-> @@ -457,7 +457,7 @@ struct acpi_hest_aer_common {
->         u8 enabled;
->         u32 records_to_preallocate;
->         u32 max_sections_per_record;
-> -       u32 bus;
-> +       u32 bus;                /* bus: bits 0-7; segment: bits 8-23 */
->         u16 device;
->         u16 function;
->         u16 device_control;
-> @@ -473,6 +473,15 @@ struct acpi_hest_aer_common {
->  #define ACPI_HEST_FIRMWARE_FIRST        (1)
->  #define ACPI_HEST_GLOBAL                (1<<1)
->
-> +/*
-> + * The segment/bus of the PCIe device is encoded in the bus field
-> + * of the acpi_hest_aer_common structure as follows:
-> + *      23:8 = segment
-> + *      7:0 = bus
-> + */
-> +#define ACPI_HEST_SEGMENT(bus)         (((bus) >> 8) & 0xFFFF)
-> +#define ACPI_HEST_BUS(bus)             ((bus) & 0xFF)
-> +
->  /* Hardware Error Notification */
->
->  struct acpi_hest_notify {
+Again.. sorry for spamming.
+
+> On Sat, Jan 25, 2014 at 1:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> On Friday 24 January 2014 13:28:22 Tanmay Inamdar wrote:
+>>> On Thu, Jan 16, 2014 at 5:10 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+>>> > On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>>> >> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
+>>
+>>> >>
+>>> >>> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port, u32 *lanes)
+>>> >>> +{
+>>> >>> +     void *csr_base = port->csr_base;
+>>> >>> +     u32 val32;
+>>> >>> +     u64 start_time, time;
+>>> >>> +
+>>> >>> +     /*
+>>> >>> +      * A component enters the LTSSM Detect state within
+>>> >>> +      * 20ms of the end of fundamental core reset.
+>>> >>> +      */
+>>> >>> +     msleep(XGENE_LTSSM_DETECT_WAIT);
+>>> >>> +     port->link_up = 0;
+>>> >>> +     start_time = jiffies;
+>>> >>> +     do {
+>>> >>> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
+>>> >>> +             if (val32 & LINK_UP_MASK) {
+>>> >>> +                     port->link_up = 1;
+>>> >>> +                     port->link_speed = PIPE_PHY_RATE_RD(val32);
+>>> >>> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
+>>> >>> +                     *lanes = val32 >> 26;
+>>> >>> +             }
+>>> >>> +             time = jiffies_to_msecs(jiffies - start_time);
+>>> >>> +     } while ((!port->link_up) || (time <= XGENE_LTSSM_L0_WAIT));
+>>> >>> +}
+>>> >>
+>>> >> Maybe another msleep() in the loop? It seems weird to first do an
+>>> >> unconditional sleep but then busy-wait for the result.
+>>> >
+>>> > ok.
+>>>
+>>> This loop can execute for maximum 4 msec. So putting msleep(1) won't
+>>> get us much.
+>>
+>> 4 msec is still quite a long time for a busy loop that can be spent doing
+>> useful work in another thread.
+>>
+>>> >>
+>>> >> Another general note: Your "compatible" strings are rather unspecific.
+>>> >> Do you have a version number for this IP block? I suppose that it's related
+>>> >> to one that has been used in other chips before, or will be used in future
+>>> >> chips, if it's not actually licensed from some other company.
+>>> >
+>>> > I will have to check this.
+>>> >
+>>>
+>>> We have decided to stick with current compatible string for now.
+>>
+>> Can you elaborate on your reasoning? Does this mean X-Gene is a one-off
+>> product and you won't be doing any new chips based on the same hardware
+>> components?
+>>
+>>         Arnd
