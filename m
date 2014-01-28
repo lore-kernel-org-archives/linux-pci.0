@@ -1,77 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:61674 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277AbaA2SSv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 13:18:51 -0500
-Received: by mail-ig0-f172.google.com with SMTP id k19so15679649igc.5
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 10:18:50 -0800 (PST)
-Subject: [PATCH 11/17] x86/PCI: Remove acpi_get_pxm() usage
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
-	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 29 Jan 2014 11:18:48 -0700
-Message-ID: <20140129181848.15476.265.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from 82-68-191-81.dsl.posilan.com ([82.68.191.81]:51291 "EHLO
+	rainbowdash.ducie.codethink.co.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753671AbaA1KHD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 05:07:03 -0500
+From: Ben Dooks <ben.dooks@codethink.co.uk>
+To: linux-kernel@lists.codethink.co.uk
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	linux-pci@vger.kernel.org, Ben Dooks <ben.dooks@codethink.co.uk>
+Subject: [PATCH 3/3] PCI: rcar: fix bridge logic configuration accesses
+Date: Tue, 28 Jan 2014 10:06:56 +0000
+Message-Id: <1390903616-8073-4-git-send-email-ben.dooks@codethink.co.uk>
+In-Reply-To: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk>
+References: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI host bridge code doesn't care about _PXM values directly; it only
-needs to know what NUMA node the hardware is on.
+The bridge logic at slot 0 only supports reads up to 0x40 and the
+rest of the PCI configuration space for this slot is marked as
+reserved in the manual.
 
-This uses acpi_get_node() directly and removes the _PXM stuff.
+Trying a read from offset 0x100 is producing an error from the
+bridge. With error interrupts enabled, the following is printed:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+pci-rcar-gen2 ee0d0000.pci: error irq: status 00000014
+
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
 ---
- arch/x86/pci/acpi.c |   19 ++-----------------
- 1 file changed, 2 insertions(+), 17 deletions(-)
+Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+---
+ drivers/pci/host/pci-rcar-gen2.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 6304ea0f426d..f44a64c74e37 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -480,9 +480,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
- 	int node;
--#ifdef CONFIG_ACPI_NUMA
--	int pxm;
--#endif
- 
- 	if (pci_ignore_seg)
- 		domain = 0;
-@@ -494,12 +491,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index 01ba069..42f0105 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -119,6 +119,10 @@ static void __iomem *rcar_pci_cfg_base(struct pci_bus *bus, unsigned int devfn,
+ 	if (slot > 2)
  		return NULL;
- 	}
  
--	node = NUMA_NO_NODE;
--#ifdef CONFIG_ACPI_NUMA
--	pxm = acpi_get_pxm(device->handle);
--	if (pxm >= 0)
--		node = pxm_to_node(pxm);
--#endif
-+	node = acpi_get_node(device->handle);
- 	if (node == NUMA_NO_NODE)
- 		node = x86_pci_root_bus_node(busnum);
++	/* bridge logic only has registers to 0x40 */
++	if (slot == 0x0 && where >= 0x40)
++		return NULL;
++
+ 	val = slot ? RCAR_AHBPCI_WIN1_DEVICE | RCAR_AHBPCI_WIN_CTR_CFG :
+ 		     RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG;
  
-@@ -570,15 +562,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 			pcie_bus_configure_settings(child);
- 	}
- 
--	if (bus && node != NUMA_NO_NODE) {
--#ifdef CONFIG_ACPI_NUMA
--		if (pxm >= 0)
--			dev_printk(KERN_DEBUG, &bus->dev,
--				   "on NUMA node %d (pxm %d)\n", node, pxm);
--#else
-+	if (bus && node != NUMA_NO_NODE)
- 		dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n", node);
--#endif
--	}
- 
- 	return bus;
- }
+-- 
+1.8.5.2
 
