@@ -1,81 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:41909 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbaAVBlm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jan 2014 20:41:42 -0500
-Received: by mail-qa0-f50.google.com with SMTP id cm18so7394642qab.23
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jan 2014 17:41:41 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 2/5][RFT] ACPI / hotplug: Introduce acpi_install_hotplug_notify_handler()
+Date: Tue, 28 Jan 2014 23:13:26 +0100
+Message-ID: <695484386.FD09CqapYM@vostro.rjw.lan>
+In-Reply-To: <1508034.JFmpIOzjVZ@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20140121191514.GD9905@xanatos>
-References: <CAAzarHXkEZNKbWzbMAwHYWNm_=m1uiyGGWHSWv6T7-ARAELaHg@mail.gmail.com>
-	<20140117182231.GA18421@google.com>
-	<20140121191514.GD9905@xanatos>
-Date: Wed, 22 Jan 2014 09:41:39 +0800
-Message-ID: <CAAzarHXk_0Y+xCqrFGhZ0Y=UYvEu0-JQrsPpunKrLeVUL5k1uw@mail.gmail.com>
-Subject: Re: USB EHCI broken on Celeron N2920 (Bay Trail)
-From: Chris Cheng <chris.cheng@atrustcorp.com>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	USB list <linux-usb@vger.kernel.org>,
-	"Chen, Jamie" <jamie.chen@intel.com>,
-	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=Big5
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sarah,
-    The patch is useful, thanks for your help.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thanks.
---
-Chris Cheng  鄭宇廷
-Atrust Computer Corp.  冠信電腦股份有限公司
-http://www.atrustcorp.com
-Tel: +886-3-3288837 ext.1074
-3F., No.361, Fusing 1st Rd., Gueishan Township, Taoyuan County 333, Taiwan
-333 桃園縣龜山鄉復興一路361號3F
+Introduce a helper routine for installing acpi_hotplug_notify_cb()
+as an ACPI notify handler for the given ACPI namespace node and make
+acpi_scan_init_hotplug() use it.
 
+This is to make subsequent changes easier to follow.
 
-2014/1/22 Sarah Sharp <sarah.a.sharp@linux.intel.com>:
-> Hi Chris,
->
-> We think the Baytrail BIOS has an issue where it doesn't set the EHCI
-> PCI interrupt enable bit when the computer is in "EHCI only mode".
-> Please try this patch:
->
-> http://marc.info/?l=linux-usb&m=138998295909608&w=2
->
-> Sarah Sharp
->
-> On Tue, Jan 21, 2014 at 10:04:41PM +0800, Chris Cheng wrote:
->> I'm sorry forgot kernel version: 3.13.0 .
->> --
->> Chris Cheng  鄭宇廷
->> Atrust Computer Corp.  冠信電腦股份有限公司
->> http://www.atrustcorp.com
->> Tel: +886-3-3288837 ext.1074
->> 3F., No.361, Fusing 1st Rd., Gueishan Township, Taoyuan County 333, Taiwan
->> 333 桃園縣龜山鄉復興一路361號3F
->>
->>
->> 2014/1/21 Chris Cheng <chris.cheng@atrustcorp.com>:
->> > Here is kernel message:
->> >
->> > [    2.939251] usb 1-1: new high-speed USB device number 2 using ehci-pci
->> > [   18.490987] usb 1-1: device not accepting address 2, error -110
->> > [   18.595095] usb 1-1: new high-speed USB device number 3 using ehci-pci
->> > [   34.182233] usb 1-1: device not accepting address 3, error -110
->> > [   34.286352] usb 1-1: new high-speed USB device number 4 using ehci-pci
->> > [   44.744589] usb 1-1: device not accepting address 4, error -110
->> > [   44.849590] usb 1-1: new high-speed USB device number 5 using ehci-pci
->> > [   55.307858] usb 1-1: device not accepting address 5, error -110
->> > [   55.310239] hub 1-0:1.0: unable to enumerate USB device on port 1
->> >
->> > Thanks.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c     |   15 +++++++++++++--
+ include/acpi/acpi_bus.h |    2 ++
+ 2 files changed, 15 insertions(+), 2 deletions(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -523,6 +523,18 @@ static void acpi_hotplug_notify_cb(acpi_
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ }
+ 
++void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
++{
++	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
++				    acpi_hotplug_notify_cb, data);
++}
++
++void acpi_remove_hotplug_notify_handler(acpi_handle handle)
++{
++	acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
++				   acpi_hotplug_notify_cb);
++}
++
+ static ssize_t real_power_state_show(struct device *dev,
+ 				     struct device_attribute *attr, char *buf)
+ {
+@@ -1961,8 +1973,7 @@ static void acpi_scan_init_hotplug(acpi_
+ 	list_for_each_entry(hwid, &pnp.ids, list) {
+ 		handler = acpi_scan_match_handler(hwid->id, NULL);
+ 		if (handler) {
+-			acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-					acpi_hotplug_notify_cb, handler);
++			acpi_install_hotplug_notify_handler(handle, handler);
+ 			break;
+ 		}
+ 	}
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -434,6 +434,8 @@ static inline bool acpi_device_enumerate
+ typedef void (*acpi_hp_callback)(void *data, u32 src);
+ 
+ acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
++void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
++void acpi_remove_hotplug_notify_handler(acpi_handle handle);
+ 
+ /**
+  * module_acpi_driver(acpi_driver) - Helper macro for registering an ACPI driver
+
