@@ -1,75 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:36685 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751543AbaAUCAq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 21:00:46 -0500
-Date: 20 Jan 2014 21:00:42 -0500
-Message-ID: <20140121020042.29941.qmail@science.horizon.com>
-From: "George Spelvin" <linux@horizon.com>
-To: acooks@gmail.com, alex.williamson@redhat.com, linux@horizon.com
-Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
-Cc: iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org,
-	linux-pci@vger.kernel.org
-In-Reply-To: <CAJtEV7bkfB=REaJkf+jb33_2h=_5YoZogQNw4SKmmWwZcF8NZA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [Resend][PATCH 2/5][RFT] ACPI / hotplug: Introduce acpi_install_hotplug_notify_handler()
+Date: Wed, 29 Jan 2014 00:59:04 +0100
+Message-ID: <4728352.8ucNUQddoh@vostro.rjw.lan>
+In-Reply-To: <1693151.2qrLZHyp0o@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan> <1693151.2qrLZHyp0o@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-New recipient: Alex Williamson, who added the pci_get_dma_source()
-quirk that resembles this one.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Alex, Andrew is working on a patch to fix some more buggy
-PCIe devices like the Ricoh ones that you added a quirk for.
+Introduce a helper routine for installing acpi_hotplug_notify_cb()
+as an ACPI notify handler for the given ACPI namespace node and make
+acpi_scan_init_hotplug() use it.
 
-His current patch can be found at
+This is to make subsequent changes easier to follow.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42679#c22
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c     |   15 +++++++++++++--
+ include/acpi/acpi_bus.h |    2 ++
+ 2 files changed, 15 insertions(+), 2 deletions(-)
 
-Ir only works on Intel IOMMUs, and sort of duplicates the functionality
-of your quirk.
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -523,6 +523,18 @@ static void acpi_hotplug_notify_cb(acpi_
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ }
+ 
++void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
++{
++	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
++				    acpi_hotplug_notify_cb, data);
++}
++
++void acpi_remove_hotplug_notify_handler(acpi_handle handle)
++{
++	acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
++				   acpi_hotplug_notify_cb);
++}
++
+ static ssize_t real_power_state_show(struct device *dev,
+ 				     struct device_attribute *attr, char *buf)
+ {
+@@ -1961,8 +1973,7 @@ static void acpi_scan_init_hotplug(acpi_
+ 	list_for_each_entry(hwid, &pnp.ids, list) {
+ 		handler = acpi_scan_match_handler(hwid->id, NULL);
+ 		if (handler) {
+-			acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-					acpi_hotplug_notify_cb, handler);
++			acpi_install_hotplug_notify_handler(handle, handler);
+ 			break;
+ 		}
+ 	}
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -434,6 +434,8 @@ static inline bool acpi_device_enumerate
+ typedef void (*acpi_hp_callback)(void *data, u32 src);
+ 
+ acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
++void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
++void acpi_remove_hotplug_notify_handler(acpi_handle handle);
+ 
+ /**
+  * module_acpi_driver(acpi_driver) - Helper macro for registering an ACPI driver
 
-Obviously, I hate the duplication and would like to fold them together,
-but there are a few fundamental differences.
-
-Most notably, Andrew's patch enables the incorrect requester ID
-*in addition to* the correct one.  I'm not sure if this is necessary,
-but it seems like a nice defensive feature in case the vendor fixes
-the problem in a minor rev, and the ability is also needed by PCIe
-phantom function support,
-
-The other thing is that pci_get_dma_source returns a pci_dev, but
-Andrew's patch deals with devices which use requester IDs which
-don't correspond to existing PCI devices at all:
-
-- Marvell SATA controllers which exist only as devid 00.0, but generate
-  request devids of 00.1.  (The latter function might be PATA support
-  on chips which support that.)
-- Mellanox 26428 Infiniband controllers which also only provide one
-  function, but use a source devid of 00.6
-- An LSI MegaRAID SAS 2078 PCI-X controller that is device 0e.0, but
-  generates request devids of 08.0
-- An Adaptec RAID controller ie 0e.0 that makes requests as 01.0.
-
-My thought for implementing Andrew's version was to add an 8-bit devfn_quirk
-field to struct pci_dev that contains the delta to the devfn that will
-appear in the source requester ID.
-
-(By using a delta rather than the target value, the default value of 0
-means "no quirk".)
-
-This would be initialized at boot time using a standard PCI quirk,
-avoiding the need for linearly searching potentially long device lists
-every time an IOMMU mapping is set up.
-
-(Even if I only use a single-bit flag, that would avoid the list
-searching for all the non-buggy devices.)
-
-
-But I'm not quite sure what the locking rules are on the whole swap_pci_ref
-business.  Or if the Ricoh devices have to be handled more carefully
-because multiple functions need to arbitrate over the IOMMU tables
-for function 0.
-
-Can I request some sage guidance from someone with more experience in the
-area?
-
-Thank you!
