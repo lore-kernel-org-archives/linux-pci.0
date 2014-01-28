@@ -1,255 +1,371 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe005.messaging.microsoft.com ([216.32.180.188]:50210
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751104AbaAHFCA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 00:02:00 -0500
-From: Minghuan Lian <Minghuan.Lian@freescale.com>
-To: <linuxppc-dev@lists.ozlabs.org>
-CC: Zang Roy-R61911 <r61911@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-Subject: [PATCH 08/12][v4] pci: fsl: add PowerPC PCI driver
-Date: Wed, 8 Jan 2014 13:01:59 +0800
-Message-ID: <1389157323-3088-8-git-send-email-Minghuan.Lian@freescale.com>
-In-Reply-To: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
-References: <1389157323-3088-1-git-send-email-Minghuan.Lian@freescale.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:53265 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755955AbaA1Xu2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 18:50:28 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [Update][PATCH 3/5][RFT] ACPI / hotplug / PCI: Consolidate ACPIPHP with ACPI core hotplug
+Date: Wed, 29 Jan 2014 00:59:47 +0100
+Message-ID: <5262137.O0BEci9QVi@vostro.rjw.lan>
+In-Reply-To: <1693151.2qrLZHyp0o@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan> <1693151.2qrLZHyp0o@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-1. Implement fsl_arch_pci64_dma_offset() to return PowerPC PCI64
-DMA offset
-2. Implement fsl_arch_sys_to_pci() to convert pci_controller
-to fsl_pci
-3. Implement fsl_arch_fake_pci_bus() to fake pci_controller
-and PCI bus.
-4. Implement fsl_arch_pci_exclude_device() to call
-ppc_md.pci_exclude_device()
-5. Implement fsl_arch_pci_sys_register() to initialize pci_controller
-according to fsl_pci, add register PCI controller to PowerPC PCI
-subsystem.
-6. Implement fsl_arch_pci_sys_remove() to remove PCI controller from
-PowerPC PCI subsystem.
-7. Add mpc83xx_pcie_check_link() because pci-fsl-common dose not
-support mpc83xx.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+Use the same ACPI notify handler, acpi_hotplug_notify_cb() for both
+ACPI-based PCI hotplug (ACPIPHP) and the generic ACPI-based hotplug
+of devices.  For PCI devices use the  .hp.event() callback from
+their ACPI companions that points to acpiphp_hotplug_event().
+For other devices (CPU, memory, containers, PCI host bridges) the
+generic ACPI-based device hotplug code is used.
+
+This allows code duplication between ACPIPHP and the ACPI core to be
+reduced significantly and makes further ACPI-based device hotplug
+consolidation possible.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
-change log:
-v4:
-no change
-v1-v3:
-Derived from http://patchwork.ozlabs.org/patch/278965/
+ drivers/acpi/scan.c                |   79 +++++++++++++++++---------
+ drivers/pci/hotplug/acpiphp_glue.c |  110 +++----------------------------------
+ include/acpi/acpi_bus.h            |    1 
+ 3 files changed, 63 insertions(+), 127 deletions(-)
 
-Based on upstream master.
-Based on the discussion of RFC version here
-http://patchwork.ozlabs.org/patch/274487/
-
- arch/powerpc/sysdev/fsl_pci.c | 142 +++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 135 insertions(+), 7 deletions(-)
-
-diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
-index 0764385..38e8dca 100644
---- a/arch/powerpc/sysdev/fsl_pci.c
-+++ b/arch/powerpc/sysdev/fsl_pci.c
-@@ -62,7 +62,11 @@ static void quirk_fsl_pcie_early(struct pci_dev *dev)
- #if defined(CONFIG_FSL_SOC_BOOKE) || defined(CONFIG_PPC_86xx)
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -145,6 +145,7 @@ struct acpi_scan_handler {
  
- #define MAX_PHYS_ADDR_BITS	40
--static u64 pci64_dma_offset = 1ull << MAX_PHYS_ADDR_BITS;
-+
-+u64 fsl_arch_pci64_dma_offset(void)
-+{
-+	return 1ull << MAX_PHYS_ADDR_BITS;
-+}
- 
- static int fsl_pci_dma_set_mask(struct device *dev, u64 dma_mask)
- {
-@@ -77,17 +81,44 @@ static int fsl_pci_dma_set_mask(struct device *dev, u64 dma_mask)
- 	if ((dev->bus == &pci_bus_type) &&
- 	    dma_mask >= DMA_BIT_MASK(MAX_PHYS_ADDR_BITS)) {
- 		set_dma_ops(dev, &dma_direct_ops);
--		set_dma_offset(dev, pci64_dma_offset);
-+		set_dma_offset(dev, fsl_arch_pci64_dma_offset());
- 	}
- 
- 	*dev->dma_mask = dma_mask;
- 	return 0;
- }
- 
-+struct fsl_pci *fsl_arch_sys_to_pci(void *sys)
-+{
-+	struct pci_controller *hose = sys;
-+	struct fsl_pci *pci = hose->private_data;
-+
-+	/* Update the first bus number */
-+	if (pci->first_busno != hose->first_busno)
-+		pci->first_busno = hose->first_busno;
-+
-+	return pci;
-+}
-+
-+struct pci_bus *fsl_arch_fake_pci_bus(struct fsl_pci *pci, int busnr)
-+{
-+	static struct pci_bus bus;
-+	static struct pci_controller hose;
-+
-+	bus.number = busnr;
-+	bus.sysdata = &hose;
-+	hose.private_data = pci;
-+	bus.ops = pci->ops;
-+
-+	return &bus;
-+}
-+
- void fsl_pcibios_fixup_bus(struct pci_bus *bus)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
--	int i, is_pcie = 0, no_link;
-+	bool is_pcie, no_link;
-+	int i;
-+	struct fsl_pci *pci = fsl_arch_sys_to_pci(hose);
- 
- 	/* The root complex bridge comes up with bogus resources,
- 	 * we copy the PHB ones in.
-@@ -97,9 +128,8 @@ void fsl_pcibios_fixup_bus(struct pci_bus *bus)
- 	 * tricky.
- 	 */
- 
--	if (fsl_pcie_bus_fixup)
--		is_pcie = early_find_capability(hose, 0, 0, PCI_CAP_ID_EXP);
--	no_link = !!(hose->indirect_type & PPC_INDIRECT_TYPE_NO_PCIE_LINK);
-+	is_pcie = pci->is_pcie;
-+	no_link = !fsl_pci_check_link(pci);
- 
- 	if (bus->parent == hose->bus && (is_pcie || no_link)) {
- 		for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; ++i) {
-@@ -121,6 +151,94 @@ void fsl_pcibios_fixup_bus(struct pci_bus *bus)
- 	}
- }
- 
-+int fsl_arch_pci_exclude_device(struct fsl_pci *pci, u8 bus, u8 devfn)
-+{
-+	struct pci_controller *hose = pci->sys;
-+
-+	if (!hose)
-+		return PCIBIOS_SUCCESSFUL;
-+
-+	if (ppc_md.pci_exclude_device)
-+		if (ppc_md.pci_exclude_device(hose, bus, devfn))
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+int fsl_arch_pci_sys_register(struct fsl_pci *pci)
-+{
-+	struct pci_controller *hose;
-+
-+	pci_add_flags(PCI_REASSIGN_ALL_BUS);
-+	hose = pcibios_alloc_controller(pci->dn);
-+	if (!hose)
-+		return -ENOMEM;
-+
-+	/* set platform device as the parent */
-+	hose->private_data = pci;
-+	hose->parent = pci->dev;
-+	hose->first_busno = pci->first_busno;
-+	hose->last_busno = pci->last_busno;
-+	hose->ops = pci->ops;
-+
-+#ifdef CONFIG_PPC32
-+	/* On 32 bits, limit I/O space to 16MB */
-+	if (pci->pci_io_size > 0x01000000)
-+		pci->pci_io_size = 0x01000000;
-+
-+	/* 32 bits needs to map IOs here */
-+	hose->io_base_virt = ioremap(pci->io_base_phys + pci->io_resource.start,
-+				     pci->pci_io_size);
-+
-+	/* Expect trouble if pci_addr is not 0 */
-+	if (fsl_pci_primary == pci->dn)
-+		isa_io_base = (unsigned long)hose->io_base_virt;
-+#endif /* CONFIG_PPC32 */
-+
-+	hose->pci_io_size = pci->io_resource.start + pci->pci_io_size;
-+	hose->io_base_phys = pci->io_base_phys;
-+	hose->io_resource = pci->io_resource;
-+
-+	memcpy(hose->mem_offset, pci->mem_offset, sizeof(hose->mem_offset));
-+	memcpy(hose->mem_resources, pci->mem_resources,
-+		sizeof(hose->mem_resources));
-+	hose->dma_window_base_cur = pci->dma_window_base_cur;
-+	hose->dma_window_size = pci->dma_window_size;
-+
-+	pci->sys = hose;
-+
-+	/*
-+	 * Install our own dma_set_mask handler to fixup dma_ops
-+	 * and dma_offset when memory is more than dma window size
-+	 */
-+	if (pci->is_pcie && memblock_end_of_DRAM() > hose->dma_window_size)
-+		ppc_md.dma_set_mask = fsl_pci_dma_set_mask;
-+
-+#ifdef CONFIG_SWIOTLB
-+	/*
-+	 * if we couldn't map all of DRAM via the dma windows
-+	 * we need SWIOTLB to handle buffers located outside of
-+	 * dma capable memory region
-+	 */
-+	if (memblock_end_of_DRAM() - 1 > hose->dma_window_base_cur +
-+			hose->dma_window_size)
-+		ppc_swiotlb_enable = 1;
-+#endif
-+
-+	mpc85xx_pci_err_probe(to_platform_device(pci->dev));
-+	return 0;
-+}
-+
-+void fsl_arch_pci_sys_remove(struct fsl_pci *pci)
-+{
-+	struct pci_controller *hose = pci->sys;
-+
-+	if (!hose)
-+		return;
-+
-+	pcibios_free_controller(hose);
-+}
-+
- #endif /* CONFIG_FSL_SOC_BOOKE || CONFIG_PPC_86xx */
- 
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
-@@ -261,6 +379,16 @@ static struct pci_ops mpc83xx_pcie_ops = {
- 	.write = mpc83xx_pcie_write_config,
+ struct acpi_hotplug_context {
+ 	struct acpi_device *self;
++	int (*event)(struct acpi_device *, u32);
+ 	void (*release)(struct acpi_hotplug_context *);
  };
  
-+static int mpc83xx_pcie_check_link(struct pci_controller *hose)
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -439,38 +439,42 @@ static int acpi_scan_bus_check(struct ac
+ 	return 0;
+ }
+ 
++static int acpi_generic_hotplug_event(struct acpi_device *adev, u32 type)
 +{
-+	u32 val = 0;
-+
-+	early_read_config_dword(hose, 0, 0, PCIE_LTSSM, &val);
-+	if (val < PCIE_LTSSM_L0)
-+		return 1;
-+	return 0;
++	switch (type) {
++	case ACPI_NOTIFY_BUS_CHECK:
++		return acpi_scan_bus_check(adev);
++	case ACPI_NOTIFY_DEVICE_CHECK:
++		return acpi_scan_device_check(adev);
++	case ACPI_NOTIFY_EJECT_REQUEST:
++	case ACPI_OST_EC_OSPM_EJECT:
++		return acpi_scan_hot_remove(adev);
++	}
++	return -EINVAL;
 +}
 +
- static int __init mpc83xx_pcie_setup(struct pci_controller *hose,
- 				     struct resource *reg)
+ static void acpi_device_hotplug(void *data, u32 src)
  {
-@@ -295,7 +423,7 @@ static int __init mpc83xx_pcie_setup(struct pci_controller *hose,
- 	out_le32(pcie->cfg_type0 + PEX_OUTWIN0_TAH, 0);
- 	out_le32(pcie->cfg_type0 + PEX_OUTWIN0_TAL, 0);
+ 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+ 	struct acpi_device *adev = data;
+-	int error;
++	int error = -ENODEV;
  
--	if (fsl_pcie_check_link(hose))
-+	if (mpc83xx_pcie_check_link(hose))
- 		hose->indirect_type |= PPC_INDIRECT_TYPE_NO_PCIE_LINK;
+ 	lock_device_hotplug();
+ 	mutex_lock(&acpi_scan_lock);
  
- 	return 0;
--- 
-1.8.1.2
-
+ 	/*
+ 	 * The device object's ACPI handle cannot become invalid as long as we
+-	 * are holding acpi_scan_lock, but it may have become invalid before
++	 * are holding acpi_scan_lock, but it might have become invalid before
+ 	 * that lock was acquired.
+ 	 */
+ 	if (adev->handle == INVALID_ACPI_HANDLE)
+ 		goto out;
+ 
+-	switch (src) {
+-	case ACPI_NOTIFY_BUS_CHECK:
+-		error = acpi_scan_bus_check(adev);
+-		break;
+-	case ACPI_NOTIFY_DEVICE_CHECK:
+-		error = acpi_scan_device_check(adev);
+-		break;
+-	case ACPI_NOTIFY_EJECT_REQUEST:
+-	case ACPI_OST_EC_OSPM_EJECT:
+-		error = acpi_scan_hot_remove(adev);
+-		break;
+-	default:
+-		error = -EINVAL;
+-		break;
+-	}
++	if (adev->handler)
++		error = acpi_generic_hotplug_event(adev, src);
++	else if (adev->hp && adev->hp->event)
++		error = adev->hp->event(adev, src);
++
+ 	if (!error)
+ 		ost_code = ACPI_OST_SC_SUCCESS;
+ 
+@@ -483,35 +487,58 @@ static void acpi_device_hotplug(void *da
+ 
+ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+ {
+-	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+ 	struct acpi_scan_handler *handler = data;
++	u32 ost_code = ACPI_OST_SC_SUCCESS;
+ 	struct acpi_device *adev;
+ 	acpi_status status;
+ 
+-	if (acpi_bus_get_device(handle, &adev))
+-		goto err_out;
+-
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_BUS_CHECK event\n");
+ 		break;
++
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_DEVICE_CHECK event\n");
+ 		break;
++
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
+-		if (!handler->hotplug.enabled) {
++		if (handler && !handler->hotplug.enabled) {
+ 			acpi_handle_err(handle, "Eject disabled\n");
+ 			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+-			goto err_out;
++			goto out;
+ 		}
+ 		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+ 					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 		break;
+-	default:
+-		/* non-hotplug event; possibly handled by other handler */
++
++	case ACPI_NOTIFY_DEVICE_WAKE:
+ 		return;
++
++	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
++		acpi_handle_err(handle, "Device cannot be configured due "
++				"to a frequency mismatch\n");
++		goto out;
++
++	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
++		acpi_handle_err(handle, "Device cannot be configured due "
++				"to a bus mode mismatch\n");
++		goto out;
++
++	case ACPI_NOTIFY_POWER_FAULT:
++		acpi_handle_err(handle, "Device has suffered a power fault\n");
++		goto out;
++
++	default:
++		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
++		ost_code = ACPI_OST_SC_UNRECOGNIZED_NOTIFY;
++		goto out;
+ 	}
++
++	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
++	if (acpi_bus_get_device(handle, &adev))
++		goto out;
++
+ 	get_device(&adev->dev);
+ 	status = acpi_hotplug_execute(acpi_device_hotplug, adev, type);
+ 	if (ACPI_SUCCESS(status))
+@@ -519,7 +546,7 @@ static void acpi_hotplug_notify_cb(acpi_
+ 
+ 	put_device(&adev->dev);
+ 
+- err_out:
++ out:
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ }
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -53,18 +53,14 @@
+ #include <linux/slab.h>
+ #include <linux/acpi.h>
+ 
+-#include <asm/pgtable.h>
+-
+ #include "../pci.h"
+ #include "acpiphp.h"
+ 
+-#define INVALID_ACPI_HANDLE	((acpi_handle)empty_zero_page)
+-
+ static LIST_HEAD(bridge_list);
+ static DEFINE_MUTEX(bridge_mutex);
+ static DEFINE_MUTEX(acpiphp_context_lock);
+ 
+-static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
++static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+ static void hotplug_event(u32 type, void *data);
+@@ -91,6 +87,7 @@ static struct acpiphp_context *acpiphp_i
+ 
+ 	context->hp.self = adev;
+ 	context->hp.release = acpiphp_free_context;
++	context->hp.event = acpiphp_hotplug_event;
+ 	context->refcount = 1;
+ 	adev->hp = &context->hp;
+ 	return context;
+@@ -373,14 +370,8 @@ static acpi_status register_slot(acpi_ha
+ 	}
+ 
+ 	/* install notify handler */
+-	if (!(newfunc->flags & FUNC_HAS_DCK)) {
+-		status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-						     handle_hotplug_event,
+-						     context);
+-		if (ACPI_FAILURE(status))
+-			acpi_handle_err(handle,
+-					"failed to install notify handler\n");
+-	}
++	if (!(newfunc->flags & FUNC_HAS_DCK))
++		acpi_install_hotplug_notify_handler(handle, NULL);
+ 
+ 	return AE_OK;
+ }
+@@ -411,7 +402,6 @@ static void cleanup_bridge(struct acpiph
+ {
+ 	struct acpiphp_slot *slot;
+ 	struct acpiphp_func *func;
+-	acpi_status status;
+ 
+ 	list_for_each_entry(slot, &bridge->slots, node) {
+ 		list_for_each_entry(func, &slot->funcs, sibling) {
+@@ -420,13 +410,8 @@ static void cleanup_bridge(struct acpiph
+ 			if (is_dock_device(handle))
+ 				unregister_hotplug_dock_device(handle);
+ 
+-			if (!(func->flags & FUNC_HAS_DCK)) {
+-				status = acpi_remove_notify_handler(handle,
+-							ACPI_SYSTEM_NOTIFY,
+-							handle_hotplug_event);
+-				if (ACPI_FAILURE(status))
+-					pr_err("failed to remove notify handler\n");
+-			}
++			if (!(func->flags & FUNC_HAS_DCK))
++				acpi_remove_hotplug_notify_handler(handle);
+ 		}
+ 		slot->flags |= SLOT_IS_GOING_AWAY;
+ 		if (slot->slot)
+@@ -838,26 +823,15 @@ static void hotplug_event(u32 type, void
+ 		put_bridge(bridge);
+ }
+ 
+-static void hotplug_event_work(void *data, u32 type)
++static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type)
+ {
+-	struct acpi_device *adev = data;
+ 	struct acpiphp_context *context;
+-	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+-
+-	acpi_scan_lock_acquire();
+-	/*
+-	 * The device object's ACPI handle cannot become invalid as long as we
+-	 * are holding acpi_scan_lock, but it might have become invalid before
+-	 * that lock was acquired.
+-	 */
+-	if (adev->handle == INVALID_ACPI_HANDLE)
+-		goto out;
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(adev);
+ 	if (!context) {
+ 		mutex_unlock(&acpiphp_context_lock);
+-		goto out;
++		return -ENODATA;
+ 	}
+ 	get_bridge(context->func.parent);
+ 	acpiphp_put_context(context);
+@@ -867,73 +841,7 @@ static void hotplug_event_work(void *dat
+ 	hotplug_event(type, context);
+ 	pci_unlock_rescan_remove();
+ 	put_bridge(context->func.parent);
+-	ost_code = ACPI_OST_SC_SUCCESS;
+-
+- out:
+-	acpi_evaluate_hotplug_ost(adev->handle, type, ost_code, NULL);
+-	put_device(&adev->dev);
+-	acpi_scan_lock_release();
+-}
+-
+-/**
+- * handle_hotplug_event - handle ACPI hotplug event
+- * @handle: Notify()'ed acpi_handle
+- * @type: Notify code
+- * @data: pointer to acpiphp_context structure
+- *
+- * Handles ACPI event notification on slots.
+- */
+-static void handle_hotplug_event(acpi_handle handle, u32 type, void *data)
+-{
+-	struct acpi_device *adev;
+-	acpi_status status;
+-	u32 ost_code = ACPI_OST_SC_SUCCESS;
+-
+-	switch (type) {
+-	case ACPI_NOTIFY_BUS_CHECK:
+-	case ACPI_NOTIFY_DEVICE_CHECK:
+-		break;
+-	case ACPI_NOTIFY_EJECT_REQUEST:
+-		ost_code = ACPI_OST_SC_EJECT_IN_PROGRESS;
+-		acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+-		break;
+-
+-	case ACPI_NOTIFY_DEVICE_WAKE:
+-		return;
+-
+-	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
+-		acpi_handle_err(handle, "Device cannot be configured due "
+-				"to a frequency mismatch\n");
+-		goto out;
+-
+-	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
+-		acpi_handle_err(handle, "Device cannot be configured due "
+-				"to a bus mode mismatch\n");
+-		goto out;
+-
+-	case ACPI_NOTIFY_POWER_FAULT:
+-		acpi_handle_err(handle, "Device has suffered a power fault\n");
+-		goto out;
+-
+-	default:
+-		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
+-		ost_code = ACPI_OST_SC_UNRECOGNIZED_NOTIFY;
+-		goto out;
+-	}
+-
+-	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+-	if (acpi_bus_get_device(handle, &adev))
+-		goto out;
+-
+-	get_device(&adev->dev);
+-	status = acpi_hotplug_execute(hotplug_event_work, adev, type);
+-	if (ACPI_SUCCESS(status))
+-		return;
+-
+-	put_device(&adev->dev);
+-
+- out:
+-	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
++	return 0;
+ }
+ 
+ /**
 
