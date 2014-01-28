@@ -1,61 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:56378 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752617AbaAPLeD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 06:34:03 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH 02/12] SPEAr13xx: Move SPEAr1340 definitions to header file
-Date: Thu, 16 Jan 2014 12:33:40 +0100
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"spear-devel" <spear-devel@list.st.com>,
-	Viresh Kumar <viresh.linux@gmail.com>
-References: <cover.1386752447.git.mohit.kumar@st.com> <2CC2A0A4A178534D93D5159BF3BCB66189FBE8D5D6@EAPEX1MAIL1.st.com> <20140116091908.GC2290@pratyush-vbox>
-In-Reply-To: <20140116091908.GC2290@pratyush-vbox>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201401161233.40811.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1387224459-25746-4-git-send-email-david.a.cohen@linux.intel.com>
+References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com> <1387224459-25746-4-git-send-email-david.a.cohen@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 Jan 2014 17:52:30 -0700
+Message-ID: <CAErSpo4ymfSdZ5an4zt+C=5asUW=vz000d32mPZkF-S5N_uynA@mail.gmail.com>
+Subject: Re: [PATCH v2 3/4] x86: intel-mid: add Merrifield platform support
+To: David Cohen <david.a.cohen@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fei Yang <fei.yang@intel.com>,
+	"Mark F. Brown" <mark.f.brown@intel.com>,
+	Kuppuswamy Sathyanarayanan
+	<sathyanarayanan.kuppuswamy@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 16 January 2014, Pratyush Anand wrote:
-> > Though we are almost ready with v2. But few concerns:
-> > 
-> > There are Spear soc common register used for misc configurations of clock, reset etc  for all ips.  Few of 
-> > registers from the same area are also used for pcie/sata muxing and auxiliary clock configurations.
-> > For example: sata_miphy_init in arch/arm/mach-spear/spear1340.c also uses these registers.
-> > 
-> > We have moved all these sata specific spear1340 configurations in a separate driver.  On the basis of spear-ahci dt 
-> > Node this driver's probe is called, which further adds ahci platform driver.
-> > We plan to put all spear1340/1310_pcie_miphy_init/exit functions of patch 9/12 of this series in
-> > The same driver.
-> > 
-> > Now our concern is, what could be the best place to keep that driver, phy, reset or any other framework?
-> > Or we keep this new driver in arch/arm/mach-spear only.
-> 
-> I think this misc configuration register block resource should be
-> passed to syscon (drivers/mfd/syscon.c) driver.
-> 
-> regmap_update_bits should be used to update these registers and hence
-> to configure pcie/sata settings.
-> 
-> As far as place is concerned, that can be kept into mfd and can be
-> named as spear13xx-syscon.c
-> 
-> Whats your opinion arnd?
+On Mon, Dec 16, 2013 at 1:07 PM, David Cohen
+<david.a.cohen@linux.intel.com> wrote:
+> This code was partially based on Mark Brown's previous work.
+>
+> Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
+> Signed-off-by: Fei Yang <fei.yang@intel.com>
+> Cc: Mark F. Brown <mark.f.brown@intel.com>
+> Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-That sounds exactly like what I would have suggested, thanks!
+I know this has already been merged to Linus' tree, but it looks funny to me.
 
-One question remains, which is what driver should directly use 
-syscon_regmap_lookup_by_phandle() to get the syscon registers themselves,
-and which ones should use a higher-level abstraction from spear13xx-syscon.c.
+> --- a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
+> +++ b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
+> @@ -16,3 +16,4 @@
+>   */
+>  extern void * __cpuinit get_penwell_ops(void) __attribute__((weak));
+>  extern void * __cpuinit get_cloverview_ops(void) __attribute__((weak));
+> +extern void * __init get_tangier_ops(void) __attribute__((weak));
 
-We can decide this on a case-by-case basis, but in general I would suggest
-to have drivers use syscon_regmap_lookup_by_phandle directly as long as
-it doesn't cause significant code duplication between drivers.
+We should use "__weak" instead of the gcc-specific "__attribute__((weak))".
 
-	Arnd
+I don't think it's a good idea to use __weak on a declaration in a
+header file.  If there are ever multiple definitions of the symbol,
+they are *all* made weak symbols, and one is chosen based on link
+order, which is error-prone.  I only see one definition now, but the
+whole point of weak is to allow multiple definitions, so this looks
+like a problem waiting to happen.  See 10629d711ed, for example.
+
+It look me a bit to figure out that these get_*_ops() functions are
+used by INTEL_MID_OPS_INIT, which constructs the name using a macro,
+so grep/cscope/etc. don't see any users.  A comment pointing to
+INTEL_MID_OPS_INIT would be helpful.
+
+What's the reason for making these symbols weak?  Normally we use weak
+to make a generic default version of a function, while allowing
+architectures to replace the default with their own version if
+necessary.  But I don't see that happening here.  Maybe I'm just
+missing it, like I missed the uses of get_tangier_ops(), et al.
+
+Bjorn
