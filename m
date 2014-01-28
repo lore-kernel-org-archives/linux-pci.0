@@ -1,96 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:55056 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775AbaAPRc7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 12:32:59 -0500
-Received: by mail-ie0-f177.google.com with SMTP id at1so1073241iec.8
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jan 2014 09:32:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1401141336020.1310-100000@iolanthe.rowland.org>
-References: <20140114181721.GC12126@xanatos> <Pine.LNX.4.44L0.1401141336020.1310-100000@iolanthe.rowland.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Jan 2014 10:32:37 -0700
-Message-ID: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
-Subject: Re: EHCI host broken -- interrupts disabled
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	"Chen, Jamie" <jamie.chen@intel.com>,
-	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from cantor2.suse.de ([195.135.220.15]:52251 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752092AbaA1HvT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jan 2014 02:51:19 -0500
+From: Thomas Renninger <trenn@suse.de>
+To: mj@ucw.cz
+Cc: trenn@suse.de, linux-pci@vger.kernel.org
+Subject: [PATCH] lspci: Show device name as exported by BIOS (sysfs label attribute) (V2)
+Date: Tue, 28 Jan 2014 08:51:02 +0100
+Message-Id: <1390895462-60699-1-git-send-email-trenn@suse.de>
+In-Reply-To: <1390856419-35985-1-git-send-email-trenn@suse.de>
+References: <1390856419-35985-1-git-send-email-trenn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+The Device name of a PCI or PCI Express device under OS may be exported via
+ACPI _DSM function with function index 7.
+This allows to connect a described PCI device in the platform documentation
+or as labeled on the chassis with PCI devices shown via lspci.
+The kernel already exports this string through sysfs under a PCI device through
+the "label" sysfs attribute.
 
-On Tue, Jan 14, 2014 at 11:47 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Tue, 14 Jan 2014, Sarah Sharp wrote:
->
->> Hi Alan,
->
-> I'm not a good person to ask about this.  Maybe Bjorn can help.
->
->> All this info is second- or third-hand, so please excuse the extremely
->> vague bug report.
->>
->> A new Intel Atom system (Baytrail) comes with both an xHCI host and an
->> EHCI host, but the BIOS has an "EHCI only" option that hides the xHCI
->> host PCI device from the operating system.  It appears that when the
->> BIOS is in this mode, the EHCI PCI interrupt is disabled, and the host
->> simply doesn't work.
->>
->> Jamie and Gaggery have more details about the system and the exact
->> failure mode.  They can provide dmesg as well as a PCI register space
->> dump, if necessary.  (Jamie and Gaggery, please note, a publicly
->> archived mailing list is Cc'ed.)
->>
->> A customer reports that the following patch fixes the issue:
->>
->> diff --git a/drivers/usb/host/ehci-pci.c b/drivers/usb/host/ehci-pci.c
->> index 3e86bf4371b3..e77566a021ec 100644
->> --- a/drivers/usb/host/ehci-pci.c
->> +++ b/drivers/usb/host/ehci-pci.c
->> @@ -112,6 +112,9 @@ static int ehci_pci_setup(struct usb_hcd *hcd)
->>       case PCI_VENDOR_ID_INTEL:
->>               if (pdev->device == PCI_DEVICE_ID_INTEL_CE4100_USB)
->>                       hcd->has_tt = 1;
->> +             /* Baytrail BIOS in EHCI only mode fails to enable interrupts */
->> +             if (pdev->device == 0x0f34)
->> +                     pci_intx(pdev, 1);
->>               break;
->>       case PCI_VENDOR_ID_TDI:
->>               if (pdev->device == PCI_DEVICE_ID_TDI_EHCI)
->>
->> I looked through the USB PCI initialization code, and I can't find any
->> place where interrupts are enabled, so I assume the PCI core is supposed
->> to enable interrupts?  Or is it assumed that the system boots with all
->> PCI device interrupts enabled?  In that case, is it a BIOS issue?
->
-> As I recall, the original PCI spec did not include any way to enable or
-> disable interrupts -- a rather surprising omission.  It was added
-> later on.
->
-> Anyhow, this is all handled in the PCI core.  The device driver
-> shouldn't need to do much more than pci_enable_device() (which handles
-> power plus I/O and memory resources) and pci_set_master() (which
-> handles DMA).  Nothing about enabling interrupt generation.
->
-> A quick search did not show any place where the PCI core explicitly
-> enables interrupts on new devices, so maybe it does assume that the
-> firmware always enables them.  I don't know what guarantees (if any) a
-> BIOS is supposed to fulfill.
->
-> It seems like the best place to fix this is probably in the PCI core.
+This patch reads the device name if available and shows it to the user.
+Real world examples:
+  Device Name: "USB HS EHCI Controller #2 #3"
+  Device Name: "USB HS EHCI Controller #1"
+  Device Name: "SATA Controller #1"
+  Device Name: "Onboard LAN #1"
+  Device Name: "Onboard LAN #2"
+  Device Name: "Onboard Video (PILOT-3)"
 
-I think dev->irq is supposed to be valid after pci_enable_device(), so
-it seems like it would make sense to clear PCI_COMMAND_INTX_DISABLE
-there.
+Compare with PCI Firmware Spec v3.1 chapter 4.6.7 and
+ACPI spec v5.0 chapter 9.14.1
 
-I don't know why a BIOS would leave PCI_COMMAND_INTX_DISABLE set for
-the EHCI device.  Does it support MSI, and the BIOS assumes the OS
-should use that?  I don't see any MSI support in the EHCI code.  In
-any case, this doesn't seem like something we need to depend on the
-BIOS to do for us.
+The DeviceName is not shown by default, but starting from first verbose
+parameter (-v).
 
-Bjorn
+V2: - Free label string if allocated
+    - Enhance changelog
+
+Signed-off-by: Thomas Renninger <trenn@suse.de>
+CC: linux-pci@vger.kernel.org
+---
+ lib/access.c |    1 +
+ lib/pci.h    |    1 +
+ lib/sysfs.c  |    4 ++++
+ lspci.c      |    2 ++
+ 4 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/lib/access.c b/lib/access.c
+index 5112504..c23a2fd 100644
+--- a/lib/access.c
++++ b/lib/access.c
+@@ -60,6 +60,7 @@ void pci_free_dev(struct pci_dev *d)
+     d->methods->cleanup_dev(d);
+   pci_free_caps(d);
+   pci_mfree(d->module_alias);
++  pci_mfree(d->label);
+   pci_mfree(d->phy_slot);
+   pci_mfree(d);
+ }
+diff --git a/lib/pci.h b/lib/pci.h
+index 38e2e99..f31419d 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -131,6 +131,7 @@ struct pci_dev {
+   struct pci_cap *first_cap;		/* List of capabilities */
+   char *phy_slot;			/* Physical slot */
+   char *module_alias;			/* Linux kernel module alias */
++  char *label;				/* Device name as exported by BIOS */
+ 
+   /* Fields used internally: */
+   struct pci_access *access;
+diff --git a/lib/sysfs.c b/lib/sysfs.c
+index 5a48c0d..3a8a34f 100644
+--- a/lib/sysfs.c
++++ b/lib/sysfs.c
+@@ -199,6 +199,10 @@ static void sysfs_scan(struct pci_access *a)
+ 	  d->vendor_id = sysfs_get_value(d, "vendor");
+ 	  d->device_id = sysfs_get_value(d, "device");
+ 	  d->device_class = sysfs_get_value(d, "class") >> 8;
++	  char buf[1024];
++	  if (sysfs_get_string(d, "label", buf, 0))
++	    d->label = pci_strdup(d->access, buf);
++
+ 	  d->known_fields = PCI_FILL_IDENT | PCI_FILL_CLASS | PCI_FILL_IRQ | PCI_FILL_BASES | PCI_FILL_ROM_BASE | PCI_FILL_SIZES;
+ 	}
+       pci_link_dev(a, d);
+diff --git a/lspci.c b/lspci.c
+index dbba678..eb17af5 100644
+--- a/lspci.c
++++ b/lspci.c
+@@ -315,6 +315,8 @@ show_terse(struct device *d)
+       word subsys_v, subsys_d;
+       char ssnamebuf[256];
+ 
++      if (p->label)
++        printf("\tDeviceName: %s", p->label);
+       get_subid(d, &subsys_v, &subsys_d);
+       if (subsys_v && subsys_v != 0xffff)
+ 	printf("\tSubsystem: %s\n",
+-- 
+1.7.6.1
+
