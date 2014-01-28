@@ -1,96 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:57324 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447AbaA1Azr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jan 2014 19:55:47 -0500
-Received: by mail-ie0-f171.google.com with SMTP id as1so6881176iec.2
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jan 2014 16:55:47 -0800 (PST)
+Received: from mail-la0-f41.google.com ([209.85.215.41]:53781 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932146AbaA1UTV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 15:19:21 -0500
+Received: by mail-la0-f41.google.com with SMTP id mc6so797038lab.14
+        for <linux-pci@vger.kernel.org>; Tue, 28 Jan 2014 12:19:19 -0800 (PST)
+Message-ID: <52E810C4.102@cogentembedded.com>
+Date: Wed, 29 Jan 2014 00:19:16 +0400
+From: Valentine <valentine.barshak@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <5086198.ZOWZ5xuyna@wuerfel>
-References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
- <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
- <CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com> <5086198.ZOWZ5xuyna@wuerfel>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 Jan 2014 17:55:25 -0700
-Message-ID: <CAErSpo5zMd_k407tvzPS85Nub9p2KMQnHJLTqd3eyvjdgfVtLg@mail.gmail.com>
-Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	patches <patches@apm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Landley <rob@landley.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Ben Dooks <ben.dooks@codethink.co.uk>,
+	linux-kernel@lists.codethink.co.uk
+CC: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: rcar: check platform_get_irq() return code
+References: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk> <1390903616-8073-2-git-send-email-ben.dooks@codethink.co.uk>
+In-Reply-To: <1390903616-8073-2-git-send-email-ben.dooks@codethink.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We're only seeing Arnd's side of the conversation on linux-pci.
-Tanmay, are your messages being rejected because they're too "fancy",
-per the definition here: http://vger.kernel.org/majordomo-info.html ?
+On 01/28/2014 02:06 PM, Ben Dooks wrote:
+> The current code does not check the return from platform_get_irq()
+> so add an error check and return if this call does fail.
+>
 
-On Sat, Jan 25, 2014 at 1:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Friday 24 January 2014 13:28:22 Tanmay Inamdar wrote:
->> On Thu, Jan 16, 2014 at 5:10 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
->> > On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> >> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
+If you have really experienced this error your platform data is incorrect.
+
+> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+
+Acked-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+
+> ---
+> Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> Cc: Simon Horman <horms@verge.net.au>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-sh@vger.kernel.org
+> ---
+>   drivers/pci/host/pci-rcar-gen2.c | 5 +++++
+>   1 file changed, 5 insertions(+)
 >
->> >>
->> >>> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port, u32 *lanes)
->> >>> +{
->> >>> +     void *csr_base = port->csr_base;
->> >>> +     u32 val32;
->> >>> +     u64 start_time, time;
->> >>> +
->> >>> +     /*
->> >>> +      * A component enters the LTSSM Detect state within
->> >>> +      * 20ms of the end of fundamental core reset.
->> >>> +      */
->> >>> +     msleep(XGENE_LTSSM_DETECT_WAIT);
->> >>> +     port->link_up = 0;
->> >>> +     start_time = jiffies;
->> >>> +     do {
->> >>> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
->> >>> +             if (val32 & LINK_UP_MASK) {
->> >>> +                     port->link_up = 1;
->> >>> +                     port->link_speed = PIPE_PHY_RATE_RD(val32);
->> >>> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
->> >>> +                     *lanes = val32 >> 26;
->> >>> +             }
->> >>> +             time = jiffies_to_msecs(jiffies - start_time);
->> >>> +     } while ((!port->link_up) || (time <= XGENE_LTSSM_L0_WAIT));
->> >>> +}
->> >>
->> >> Maybe another msleep() in the loop? It seems weird to first do an
->> >> unconditional sleep but then busy-wait for the result.
->> >
->> > ok.
->>
->> This loop can execute for maximum 4 msec. So putting msleep(1) won't
->> get us much.
+> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+> index ea65bac..674f7fe 100644
+> --- a/drivers/pci/host/pci-rcar-gen2.c
+> +++ b/drivers/pci/host/pci-rcar-gen2.c
+> @@ -308,6 +308,11 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
+>   	priv->reg = reg;
+>   	priv->dev = &pdev->dev;
 >
-> 4 msec is still quite a long time for a busy loop that can be spent doing
-> useful work in another thread.
+> +	if (priv->irq < 0) {
+> +		dev_err(&pdev->dev, "no valid irq found\n");
+> +		return priv->irq;
+> +	}
+> +
+>   	return rcar_pci_add_controller(priv);
+>   }
 >
->> >>
->> >> Another general note: Your "compatible" strings are rather unspecific.
->> >> Do you have a version number for this IP block? I suppose that it's related
->> >> to one that has been used in other chips before, or will be used in future
->> >> chips, if it's not actually licensed from some other company.
->> >
->> > I will have to check this.
->> >
->>
->> We have decided to stick with current compatible string for now.
 >
-> Can you elaborate on your reasoning? Does this mean X-Gene is a one-off
-> product and you won't be doing any new chips based on the same hardware
-> components?
->
->         Arnd
+
