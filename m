@@ -1,97 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:13062 "EHLO mga14.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:61523 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752722AbaAFGSV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jan 2014 01:18:21 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Jiri Kosina <trivial@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part1 V3 05/20] iommu/vt-d, trivial: refine support of 64bit guest address
-Date: Mon,  6 Jan 2014 14:18:12 +0800
-Message-Id: <1388989107-4795-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1388989107-4795-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1752812AbaA1BZC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Jan 2014 20:25:02 -0500
+Date: Mon, 27 Jan 2014 17:30:13 -0800
+From: David Cohen <david.a.cohen@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fei Yang <fei.yang@intel.com>,
+	"Mark F. Brown" <mark.f.brown@intel.com>,
+	Kuppuswamy Sathyanarayanan
+	<sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: Re: [PATCH v2 3/4] x86: intel-mid: add Merrifield platform support
+Message-ID: <20140128013013.GA31626@psi-dev26.jf.intel.com>
+References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com>
+ <1387224459-25746-4-git-send-email-david.a.cohen@linux.intel.com>
+ <CAErSpo4ymfSdZ5an4zt+C=5asUW=vz000d32mPZkF-S5N_uynA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4ymfSdZ5an4zt+C=5asUW=vz000d32mPZkF-S5N_uynA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In Intel IOMMU driver, it calculate page table level from adjusted guest
-address width as 'level = (agaw - 30) / 9', which assumes (agaw -30)
-could be divided by 9. On the other hand, 64bit is a valid agaw and
-(64 - 30) can't be divided by 9, so it needs special handling.
+Hi Bjorn,
 
-This patch enhances Intel IOMMU driver to correctly handle 64bit agaw.
-It's mainly for code readability because there's no hardware supporting
-64bit agaw yet.
+On Mon, Jan 27, 2014 at 05:52:30PM -0700, Bjorn Helgaas wrote:
+> On Mon, Dec 16, 2013 at 1:07 PM, David Cohen
+> <david.a.cohen@linux.intel.com> wrote:
+> > This code was partially based on Mark Brown's previous work.
+> >
+> > Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
+> > Signed-off-by: Fei Yang <fei.yang@intel.com>
+> > Cc: Mark F. Brown <mark.f.brown@intel.com>
+> > Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> 
+> I know this has already been merged to Linus' tree, but it looks funny to me.
+> 
+> > --- a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
+> > +++ b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
+> > @@ -16,3 +16,4 @@
+> >   */
+> >  extern void * __cpuinit get_penwell_ops(void) __attribute__((weak));
+> >  extern void * __cpuinit get_cloverview_ops(void) __attribute__((weak));
+> > +extern void * __init get_tangier_ops(void) __attribute__((weak));
+> 
+> We should use "__weak" instead of the gcc-specific "__attribute__((weak))".
+> 
+> I don't think it's a good idea to use __weak on a declaration in a
+> header file.  If there are ever multiple definitions of the symbol,
+> they are *all* made weak symbols, and one is chosen based on link
+> order, which is error-prone.  I only see one definition now, but the
+> whole point of weak is to allow multiple definitions, so this looks
+> like a problem waiting to happen.  See 10629d711ed, for example.
+> 
+> It look me a bit to figure out that these get_*_ops() functions are
+> used by INTEL_MID_OPS_INIT, which constructs the name using a macro,
+> so grep/cscope/etc. don't see any users.  A comment pointing to
+> INTEL_MID_OPS_INIT would be helpful.
+> 
+> What's the reason for making these symbols weak?  Normally we use weak
+> to make a generic default version of a function, while allowing
+> architectures to replace the default with their own version if
+> necessary.  But I don't see that happening here.  Maybe I'm just
+> missing it, like I missed the uses of get_tangier_ops(), et al.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+Intel mid was implemented in such way that we should select which soc to
+be used in compilation time. Depending on the selection, mfld.c or
+mrfl.c could not be compiled then some symbols wouldn't be available.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index e32d815..b2e73c2 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -63,6 +63,7 @@
- #define DEFAULT_DOMAIN_ADDRESS_WIDTH 48
- 
- #define MAX_AGAW_WIDTH 64
-+#define MAX_AGAW_PFN_WIDTH	(MAX_AGAW_WIDTH - VTD_PAGE_SHIFT)
- 
- #define __DOMAIN_MAX_PFN(gaw)  ((((uint64_t)1) << (gaw-VTD_PAGE_SHIFT)) - 1)
- #define __DOMAIN_MAX_ADDR(gaw) ((((uint64_t)1) << gaw) - 1)
-@@ -106,12 +107,12 @@ static inline int agaw_to_level(int agaw)
- 
- static inline int agaw_to_width(int agaw)
- {
--	return 30 + agaw * LEVEL_STRIDE;
-+	return min_t(int, 30 + agaw * LEVEL_STRIDE, MAX_AGAW_WIDTH);
- }
- 
- static inline int width_to_agaw(int width)
- {
--	return (width - 30) / LEVEL_STRIDE;
-+	return DIV_ROUND_UP(width - 30, LEVEL_STRIDE);
- }
- 
- static inline unsigned int level_to_offset_bits(int level)
-@@ -141,7 +142,7 @@ static inline unsigned long align_to_level(unsigned long pfn, int level)
- 
- static inline unsigned long lvl_to_nr_pages(unsigned int lvl)
- {
--	return  1 << ((lvl - 1) * LEVEL_STRIDE);
-+	return  1 << min_t(int, (lvl - 1) * LEVEL_STRIDE, MAX_AGAW_PFN_WIDTH);
- }
- 
- /* VT-d pages must always be _smaller_ than MM pages. Otherwise things
-@@ -865,7 +866,6 @@ static int dma_pte_clear_range(struct dmar_domain *domain,
- 	int addr_width = agaw_to_width(domain->agaw) - VTD_PAGE_SHIFT;
- 	unsigned int large_page = 1;
- 	struct dma_pte *first_pte, *pte;
--	int order;
- 
- 	BUG_ON(addr_width < BITS_PER_LONG && start_pfn >> addr_width);
- 	BUG_ON(addr_width < BITS_PER_LONG && last_pfn >> addr_width);
-@@ -890,8 +890,7 @@ static int dma_pte_clear_range(struct dmar_domain *domain,
- 
- 	} while (start_pfn && start_pfn <= last_pfn);
- 
--	order = (large_page - 1) * 9;
--	return order;
-+	return min_t(int, (large_page - 1) * 9, MAX_AGAW_PFN_WIDTH);
- }
- 
- static void dma_pte_free_level(struct dmar_domain *domain, int level,
--- 
-1.7.10.4
+But IMHO this is a bad legacy design that exists in there, so I started
+to rework it as you can see in this commit:
 
+commit 4cb9b00f42e07830310319a07e6c91413ee8153e
+Author: David Cohen <david.a.cohen@linux.intel.com>
+Date:   Mon Dec 16 17:37:26 2013 -0800
+
+    x86, intel-mid: Remove deprecated X86_MDFLD and X86_WANT_INTEL_MID
+    configs
+
+I'm sending more patches soon and getting rid of intel_mid_weak_decls.h
+file is in my TODO list.
+
+Br, David
