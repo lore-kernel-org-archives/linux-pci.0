@@ -1,207 +1,41 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-CC: <linux-acpi@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	David Airlie <airlied@linux.ie>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<intel-gfx@lists.freedesktop.org>,
-	<dri-devel@lists.freedesktop.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH v4] ACPI: Fix acpi_evaluate_object() return value check
-Date: Tue, 21 Jan 2014 10:46:15 +0800
-Message-ID: <1390272375-28728-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:27614 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751711AbaA1Jws (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jan 2014 04:52:48 -0500
+Date: Tue, 28 Jan 2014 10:54:42 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Brian King <brking@us.ibm.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and
+ pci_enable_msix_range()
+Message-ID: <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since acpi_evaluate_object() returns acpi_status and not plain int,
-ACPI_FAILURE() should be used for checking its return value.
+On Fri, Jan 17, 2014 at 05:02:18PM +0100, Alexander Gordeev wrote:
+> As result deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-Reviewed-by: Jani Nikula <jani.nikula@intel.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
-v3->v4: Fix spell error, add Jani Nikula reviewed-by.
-v2->v3: Fix compile error pointed out by Hanjun.
-v1->v2: Add CC to related subsystem MAINTAINERS
----
- drivers/gpu/drm/i915/intel_acpi.c              |   24 ++++++++++++++----------
- drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    9 +++++----
- drivers/gpu/drm/nouveau/nouveau_acpi.c         |   23 +++++++++++++----------
- drivers/pci/pci-label.c                        |    9 ++++++---
- 4 files changed, 38 insertions(+), 27 deletions(-)
+Brian, James,
 
-diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
-index dfff090..87e8f74 100644
---- a/drivers/gpu/drm/i915/intel_acpi.c
-+++ b/drivers/gpu/drm/i915/intel_acpi.c
-@@ -35,7 +35,8 @@ static int intel_dsm(acpi_handle handle, int func)
- 	union acpi_object params[4];
- 	union acpi_object *obj;
- 	u32 result;
--	int ret = 0;
-+	acpi_status status;
-+	int ret;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -50,10 +51,11 @@ static int intel_dsm(acpi_handle handle, int func)
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (ret) {
--		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
--		return ret;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-@@ -141,7 +143,8 @@ static void intel_dsm_platform_mux_info(void)
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *pkg;
--	int i, ret;
-+	acpi_status status;
-+	int i;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -156,10 +159,11 @@ static void intel_dsm_platform_mux_info(void)
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
--				   &output);
--	if (ret) {
--		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
-+	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle,
-+			"_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
- 		goto out;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-index 1291204..c5e7a2b 100644
---- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-+++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-@@ -114,15 +114,16 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
- 	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
- 	union acpi_object *obj;
- 	acpi_handle handle;
--	int ret;
-+	acpi_status status;
- 
- 	handle = ACPI_HANDLE(&device->pdev->dev);
- 	if (!handle)
- 		return false;
- 
--	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
--	if (ret) {
--		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
-+	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
-+	if (ACPI_FAILURE(status)) {
-+		nv_debug(mxm, "DSM MXMS failed: %s\n",
-+				acpi_format_exception(status));
- 		return false;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index ba0183f..de3068b 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
--	int i, err;
-+	acpi_status status;
-+	int i;
- 	char args_buff[4];
- 
- 	input.count = 4;
-@@ -101,10 +102,11 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
- 		args_buff[i] = (arg >> i * 8) & 0xFF;
- 	params[3].buffer.pointer = args_buff;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (err) {
--		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
--		return err;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		pr_info("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-@@ -134,7 +136,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
- 	struct acpi_object_list input;
- 	union acpi_object params[4];
- 	union acpi_object *obj;
--	int err;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -148,10 +150,11 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
- 	params[3].type = ACPI_TYPE_INTEGER;
- 	params[3].integer.value = arg;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
--	if (err) {
--		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
--		return err;
-+	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-+	if (ACPI_FAILURE(status)) {
-+		pr_info("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
-+		return -EINVAL;
- 	}
- 
- 	obj = (union acpi_object *)output.pointer;
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index d51f45a..7ba4de6 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
- 	union acpi_object *obj;
- 	int len = 0;
- 
--	int err;
-+	acpi_status status;
- 
- 	input.count = 4;
- 	input.pointer = params;
-@@ -228,9 +228,12 @@ dsm_get_label(acpi_handle handle, int func,
- 	params[3].package.count = 0;
- 	params[3].package.elements = NULL;
- 
--	err = acpi_evaluate_object(handle, "_DSM", &input, output);
--	if (err)
-+	status = acpi_evaluate_object(handle, "_DSM", &input, output);
-+	if (ACPI_FAILURE(status)) {
-+		pr_info("failed to evaluate _DSM: %s\n",
-+				acpi_format_exception(status));
- 		return -1;
-+	}
- 
- 	obj = (union acpi_object *)output->pointer;
- 
+Could you please review patches 3 and 4?
+
+Thanks!
+
 -- 
-1.7.1
-
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
