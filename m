@@ -1,103 +1,125 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 8/9] ath10k: Use pci_enable_msi_range()
-Date: Fri, 17 Jan 2014 17:02:22 +0100
-Message-Id: <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
-In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 4/5][RFT] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
+Date: Tue, 28 Jan 2014 23:14:50 +0100
+Message-ID: <1615105.hL4lLzeMMQ@vostro.rjw.lan>
+In-Reply-To: <1508034.JFmpIOzjVZ@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This update also fixes a stylistic (naming and messaging only)
-confusion of MSI-X vs multiple MSIs which are not the same.
+Use the observation that the ACPI scan handler of the device object
+in acpi_hotplug_notify_cb() can be obtained from that device object's
+handler pointer and do not pass it as data to
+acpi_install_hotplug_notify_handler() in acpi_scan_init_hotplug().
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+That allows the second argument of acpi_install_hotplug_notify_handler()
+to be dropped, so do it and update its callers accordingly.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/acpi/scan.c                |   23 ++++++++++++-----------
+ drivers/pci/hotplug/acpiphp_glue.c |    2 +-
+ include/acpi/acpi_bus.h            |    2 +-
+ 3 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 9e86a81..873f50c 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2073,14 +2073,14 @@ static void ath10k_pci_tasklet(unsigned long data)
- 	}
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -487,7 +487,6 @@ static void acpi_device_hotplug(void *da
+ 
+ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+ {
+-	struct acpi_scan_handler *handler = data;
+ 	u32 ost_code = ACPI_OST_SC_SUCCESS;
+ 	struct acpi_device *adev;
+ 	acpi_status status;
+@@ -503,13 +502,6 @@ static void acpi_hotplug_notify_cb(acpi_
+ 
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
+-		if (handler && !handler->hotplug.enabled) {
+-			acpi_handle_err(handle, "Eject disabled\n");
+-			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+-			goto out;
+-		}
+-		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+-					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 		break;
+ 
+ 	case ACPI_NOTIFY_DEVICE_WAKE:
+@@ -539,6 +531,15 @@ static void acpi_hotplug_notify_cb(acpi_
+ 	if (acpi_bus_get_device(handle, &adev))
+ 		goto out;
+ 
++	if (type == ACPI_NOTIFY_EJECT_REQUEST) {
++		if (adev->handler && !adev->handler->hotplug.enabled) {
++			acpi_handle_err(handle, "Eject disabled\n");
++			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
++			goto out;
++		}
++		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
++					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
++	}
+ 	get_device(&adev->dev);
+ 	status = acpi_hotplug_execute(acpi_device_hotplug, adev, type);
+ 	if (ACPI_SUCCESS(status))
+@@ -550,10 +551,10 @@ static void acpi_hotplug_notify_cb(acpi_
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
  }
  
--static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
-+static int ath10k_pci_start_intr_multi_msi(struct ath10k *ar, int num)
+-void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
++void acpi_install_hotplug_notify_handler(acpi_handle handle)
  {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
- 	int i;
+ 	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-				    acpi_hotplug_notify_cb, data);
++				    acpi_hotplug_notify_cb, NULL);
+ }
  
--	ret = pci_enable_msi_block(ar_pci->pdev, num);
--	if (ret)
-+	ret = pci_enable_msi_range(ar_pci->pdev, num, num);
-+	if (ret < 0)
- 		return ret;
- 
- 	ret = request_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW,
-@@ -2111,11 +2111,11 @@ static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
+ void acpi_remove_hotplug_notify_handler(acpi_handle handle)
+@@ -2000,7 +2001,7 @@ static void acpi_scan_init_hotplug(acpi_
+ 	list_for_each_entry(hwid, &pnp.ids, list) {
+ 		handler = acpi_scan_match_handler(hwid->id, NULL);
+ 		if (handler) {
+-			acpi_install_hotplug_notify_handler(handle, handler);
++			acpi_install_hotplug_notify_handler(handle);
+ 			break;
  		}
  	}
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -371,7 +371,7 @@ static acpi_status register_slot(acpi_ha
  
--	ath10k_info("MSI-X interrupt handling (%d intrs)\n", num);
-+	ath10k_info("Multi MSI interrupt handling (%d intrs)\n", num);
- 	return 0;
+ 	/* install notify handler */
+ 	if (!(newfunc->flags & FUNC_HAS_DCK))
+-		acpi_install_hotplug_notify_handler(handle, NULL);
++		acpi_install_hotplug_notify_handler(handle);
+ 
+ 	return AE_OK;
  }
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -435,7 +435,7 @@ static inline bool acpi_device_enumerate
+ typedef void (*acpi_hp_callback)(void *data, u32 src);
  
--static int ath10k_pci_start_intr_msi(struct ath10k *ar)
-+static int ath10k_pci_start_intr_single_msi(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
-@@ -2132,7 +2132,7 @@ static int ath10k_pci_start_intr_msi(struct ath10k *ar)
- 		return ret;
- 	}
+ acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
+-void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
++void acpi_install_hotplug_notify_handler(acpi_handle handle);
+ void acpi_remove_hotplug_notify_handler(acpi_handle handle);
  
--	ath10k_info("MSI interrupt handling\n");
-+	ath10k_info("Single MSI interrupt handling\n");
- 	return 0;
- }
- 
-@@ -2199,20 +2199,20 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
- 		num = 1;
- 
- 	if (num > 1) {
--		ret = ath10k_pci_start_intr_msix(ar, num);
-+		ret = ath10k_pci_start_intr_multi_msi(ar, num);
- 		if (ret == 0)
- 			goto exit;
- 
--		ath10k_warn("MSI-X didn't succeed (%d), trying MSI\n", ret);
-+		ath10k_warn("Multi MSI failed (%d), trying single MSI\n", ret);
- 		num = 1;
- 	}
- 
- 	if (num == 1) {
--		ret = ath10k_pci_start_intr_msi(ar);
-+		ret = ath10k_pci_start_intr_single_msi(ar);
- 		if (ret == 0)
- 			goto exit;
- 
--		ath10k_warn("MSI didn't succeed (%d), trying legacy INTR\n",
-+		ath10k_warn("Single MSI failed (%d), trying legacy INTR\n",
- 			    ret);
- 		num = 0;
- 	}
--- 
-1.7.7.6
+ /**
 
