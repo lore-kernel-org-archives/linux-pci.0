@@ -1,87 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:51047 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbaA3Q4G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 11:56:06 -0500
-Received: by mail-ob0-f171.google.com with SMTP id wp4so3774995obc.16
-        for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 08:56:06 -0800 (PST)
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:46856 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754631AbaA1P2w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jan 2014 10:28:52 -0500
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Tue, 28 Jan 2014 10:28:51 -0500
+Message-ID: <52E7CCAD.5070008@linux.vnet.ibm.com>
+Date: Tue, 28 Jan 2014 09:28:45 -0600
+From: Brian King <brking@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWDqXNF5Cn5X_muBERMWdZsZFbzmoqWvuPARREz+XO9Gw@mail.gmail.com>
-References: <20140130131236.GW18029@intel.com>
-	<CAE9FiQWDqXNF5Cn5X_muBERMWdZsZFbzmoqWvuPARREz+XO9Gw@mail.gmail.com>
-Date: Thu, 30 Jan 2014 08:56:05 -0800
-Message-ID: <CAE9FiQUaof1tk151Wbu2OtpTYb+pvP16ZhLsmbn6LDdBqoVEgA@mail.gmail.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release
- resources in pci_release_dev()) broke TBT hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Content-Type: multipart/mixed; boundary=047d7b5d2ea4eb937804f132eedf
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: Brian King <brking@us.ibm.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	linux-scsi@vger.kernel.org, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
+References: <cover.1389904166.git.agordeev@redhat.com> <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com> <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b5d2ea4eb937804f132eedf
-Content-Type: text/plain; charset=ISO-8859-1
-
->> The latest mainline kernel "hangs" when Thunderbolt devices are
->> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
->> getting huge amounts of messages like:
+On 01/28/2014 03:54 AM, Alexander Gordeev wrote:
+> On Fri, Jan 17, 2014 at 05:02:18PM +0100, Alexander Gordeev wrote:
+>> As result deprecation of MSI-X/MSI enablement functions
+>> pci_enable_msix() and pci_enable_msi_block() all drivers
+>> using these two interfaces need to be updated to use the
+>> new pci_enable_msi_range() and pci_enable_msix_range()
+>> interfaces.
 >>
->> [  352.717001] pci 0000:02:00.0: PME# disabled
->> [  352.717011] pci 0000:02:00.0: PME# disabled
->> [  352.717021] pci 0000:02:00.0: PME# disabled
->> [  352.717032] pci 0000:02:00.0: PME# disabled
->> [  352.717041] pci 0000:02:00.0: PME# disabled
->> [  352.717051] pci 0000:02:00.0: PME# disabled
->> [  352.717061] pci 0000:02:00.0: PME# disabled
->> [  352.717070] pci 0000:02:00.0: PME# disabled
->> [  352.717083] pci 0000:02:00.0: PME# disabled
->> [  352.717094] pci 0000:02:00.0: PME# disabled
->> [  352.717104] pci 0000:02:00.0: PME# disabled
->> [  352.717113] pci 0000:02:00.0: PME# disabled
->> [  352.717124] pci 0000:02:00.0: PME# disabled
->> [  352.717133] pci 0000:02:00.0: PME# disabled
->> [  352.717143] pci 0000:02:00.0: PME# disabled
->> [  352.717153] pci 0000:02:00.0: PME# disabled
->> [  352.717162] pci 0000:02:00.0: PME# disabled
->
-> that mean pci_stop_dev() get called again and again ?
+>> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> 
+> Brian, James,
+> 
+> Could you please review patches 3 and 4?
 
-please check if attached patch could help.
+These look like they will conflict with a recent patch to
+the ipr driver:
 
-it should prevent possible reattaching driver.
+http://www.spinics.net/lists/linux-scsi/msg71644.html
 
----
- drivers/pci/remove.c |    1 +
- 1 file changed, 1 insertion(+)
+Do you want me to rediff your patches on top of this one,
+or do you want to keep the entire MSI series together
+and do the rediff? Otherwise the patches seem fine.
 
-Index: linux-2.6/drivers/pci/remove.c
-===================================================================
---- linux-2.6.orig/drivers/pci/remove.c
-+++ linux-2.6/drivers/pci/remove.c
-@@ -11,6 +11,7 @@ static void pci_stop_dev(struct pci_dev
-         pci_proc_detach_device(dev);
-         pci_remove_sysfs_dev_files(dev);
-         device_release_driver(&dev->dev);
-+        dev->match_driver = false;
-         dev->is_added = 0;
-     }
+Thanks,
 
---047d7b5d2ea4eb937804f132eedf
-Content-Type: text/x-patch; charset=US-ASCII; name="not_allow_attach_driver.patch"
-Content-Disposition: attachment; filename="not_allow_attach_driver.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hr29ldel0
+Brian
 
-LS0tCiBkcml2ZXJzL3BjaS9yZW1vdmUuYyB8ICAgIDEgKwogMSBmaWxlIGNoYW5nZWQsIDEgaW5z
-ZXJ0aW9uKCspCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3JlbW92ZS5jCj09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3JlbW92ZS5jCisrKyBsaW51eC0yLjYv
-ZHJpdmVycy9wY2kvcmVtb3ZlLmMKQEAgLTExLDYgKzExLDcgQEAgc3RhdGljIHZvaWQgcGNpX3N0
-b3BfZGV2KHN0cnVjdCBwY2lfZGV2CiAJCXBjaV9wcm9jX2RldGFjaF9kZXZpY2UoZGV2KTsKIAkJ
-cGNpX3JlbW92ZV9zeXNmc19kZXZfZmlsZXMoZGV2KTsKIAkJZGV2aWNlX3JlbGVhc2VfZHJpdmVy
-KCZkZXYtPmRldik7CisJCWRldi0+bWF0Y2hfZHJpdmVyID0gZmFsc2U7CiAJCWRldi0+aXNfYWRk
-ZWQgPSAwOwogCX0KIAo=
---047d7b5d2ea4eb937804f132eedf--
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
+
