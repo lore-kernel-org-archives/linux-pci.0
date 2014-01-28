@@ -1,127 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6564 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751503AbaAODTj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jan 2014 22:19:39 -0500
-Message-ID: <1389755971.8705.5.camel@bling.home>
-Subject: Re: [PATCH] vfio-pci: Use pci "try" reset interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:57324 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447AbaA1Azr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jan 2014 19:55:47 -0500
+Received: by mail-ie0-f171.google.com with SMTP id as1so6881176iec.2
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jan 2014 16:55:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5086198.ZOWZ5xuyna@wuerfel>
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com>
+ <CACoXjc=ZT9fEm_KdY4WFSoS8n5FmO+hn9LjsR4m8YZG2iBbt5A@mail.gmail.com>
+ <CACoXjc=-JtpiM3m4DSA_DeOxYr3sihGGf4FSaJ2yC08rpm6ANQ@mail.gmail.com> <5086198.ZOWZ5xuyna@wuerfel>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 Jan 2014 17:55:25 -0700
+Message-ID: <CAErSpo5zMd_k407tvzPS85Nub9p2KMQnHJLTqd3eyvjdgfVtLg@mail.gmail.com>
+Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	patches <patches@apm.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>
-Date: Tue, 14 Jan 2014 20:19:31 -0700
-In-Reply-To: <CAErSpo74iO-cD71+q-Bz52r4Eg1p9KpGQQXLnQ3zUxzs54YSuw@mail.gmail.com>
-References: <20131216221615.3539.78656.stgit@bling.home>
-	 <CAErSpo74iO-cD71+q-Bz52r4Eg1p9KpGQQXLnQ3zUxzs54YSuw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Landley <rob@landley.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-01-14 at 16:48 -0700, Bjorn Helgaas wrote:
-> On Mon, Dec 16, 2013 at 3:16 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > PCI resets will attempt to take the device_lock for any device to be
-> > reset.  This is a problem if that lock is already held, for instance
-> > in the device remove path.  It's not sufficient to simply kill the
-> > user process or skip the reset if called after .remove as a race could
-> > result in the same deadlock.  Instead, we handle all resets as "best
-> > effort" using the PCI "try" reset interfaces.  This prevents the user
-> > from being able to induce a deadlock by triggering a reset.
-> >
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> >
-> > This depends on the proposed pci "try" function/slot/bus reset patch.
-> >
-> >  drivers/vfio/pci/vfio_pci.c |   29 +++++++++--------------------
-> >  1 file changed, 9 insertions(+), 20 deletions(-)
-> >
-> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> > index 6ab71b9..576e34e 100644
-> > --- a/drivers/vfio/pci/vfio_pci.c
-> > +++ b/drivers/vfio/pci/vfio_pci.c
-> > @@ -139,25 +139,14 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
-> >         pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
-> >
-> >         /*
-> > -        * Careful, device_lock may already be held.  This is the case if
-> > -        * a driver unbind is blocked.  Try to get the locks ourselves to
-> > -        * prevent a deadlock.
-> > +        * Try to reset the device.  The success of this is dependent on
-> > +        * being able to lock the device, which is not always possible.
-> >          */
-> >         if (vdev->reset_works) {
-> > -               bool reset_done = false;
-> > -
-> > -               if (pci_cfg_access_trylock(pdev)) {
-> > -                       if (device_trylock(&pdev->dev)) {
-> > -                               __pci_reset_function_locked(pdev);
-> > -                               reset_done = true;
-> > -                               device_unlock(&pdev->dev);
-> > -                       }
-> > -                       pci_cfg_access_unlock(pdev);
-> > -               }
-> > -
-> > -               if (!reset_done)
-> > -                       pr_warn("%s: Unable to acquire locks for reset of %s\n",
-> > -                               __func__, dev_name(&pdev->dev));
-> > +               int ret = pci_try_reset_function(pdev);
-> > +               if (ret)
-> > +                       pr_debug("%s: reset of device %s = %d\n",
-> > +                               __func__, dev_name(&pdev->dev), ret);
-> 
-> Why is this a pr_debug() instead of dev_dbg()?  I see vfio_pci.c seems
-> to always use pr_*() instead of dev_*(), so you probably have a
-> reason.
+We're only seeing Arnd's side of the conversation on linux-pci.
+Tanmay, are your messages being rejected because they're too "fancy",
+per the definition here: http://vger.kernel.org/majordomo-info.html ?
 
-Inertia and lack of anyone suggesting it are probably the biggest
-reasons.  As you note, I've been using pr_foo throughout the file, so
-I'd probably prefer consistency and fix them in a separate patch.
-
-> The text of the message ("vfio_pci_disable: reset of device
-> 0000:00:00.1 = -35") doesn't seem terribly clear; as a user, I'd have
-> to go look up the code to know whether I should be concerned about it.
->  Maybe it should be explicit that the device was not reset?
-
-Sure, I'll tweak the message to make it more clear that it failed and
-include the return value as extra info.  Thanks,
-
-Alex
-
-> >         }
-> >
-> >         pci_restore_state(pdev);
-> > @@ -514,7 +503,7 @@ static long vfio_pci_ioctl(void *device_data,
-> >
-> >         } else if (cmd == VFIO_DEVICE_RESET) {
-> >                 return vdev->reset_works ?
-> > -                       pci_reset_function(vdev->pdev) : -EINVAL;
-> > +                       pci_try_reset_function(vdev->pdev) : -EINVAL;
-> >
-> >         } else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
-> >                 struct vfio_pci_hot_reset_info hdr;
-> > @@ -684,8 +673,8 @@ reset_info_exit:
-> >                                                     &info, slot);
-> >                 if (!ret)
-> >                         /* User has access, do the reset */
-> > -                       ret = slot ? pci_reset_slot(vdev->pdev->slot) :
-> > -                                    pci_reset_bus(vdev->pdev->bus);
-> > +                       ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
-> > +                                    pci_try_reset_bus(vdev->pdev->bus);
-> >
-> >  hot_reset_release:
-> >                 for (i--; i >= 0; i--)
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+On Sat, Jan 25, 2014 at 1:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 24 January 2014 13:28:22 Tanmay Inamdar wrote:
+>> On Thu, Jan 16, 2014 at 5:10 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+>> > On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> >> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
+>
+>> >>
+>> >>> +static void xgene_pcie_poll_linkup(struct xgene_pcie_port *port, u32 *lanes)
+>> >>> +{
+>> >>> +     void *csr_base = port->csr_base;
+>> >>> +     u32 val32;
+>> >>> +     u64 start_time, time;
+>> >>> +
+>> >>> +     /*
+>> >>> +      * A component enters the LTSSM Detect state within
+>> >>> +      * 20ms of the end of fundamental core reset.
+>> >>> +      */
+>> >>> +     msleep(XGENE_LTSSM_DETECT_WAIT);
+>> >>> +     port->link_up = 0;
+>> >>> +     start_time = jiffies;
+>> >>> +     do {
+>> >>> +             val32 = readl(csr_base + PCIECORE_CTLANDSTATUS);
+>> >>> +             if (val32 & LINK_UP_MASK) {
+>> >>> +                     port->link_up = 1;
+>> >>> +                     port->link_speed = PIPE_PHY_RATE_RD(val32);
+>> >>> +                     val32 = readl(csr_base + BRIDGE_STATUS_0);
+>> >>> +                     *lanes = val32 >> 26;
+>> >>> +             }
+>> >>> +             time = jiffies_to_msecs(jiffies - start_time);
+>> >>> +     } while ((!port->link_up) || (time <= XGENE_LTSSM_L0_WAIT));
+>> >>> +}
+>> >>
+>> >> Maybe another msleep() in the loop? It seems weird to first do an
+>> >> unconditional sleep but then busy-wait for the result.
+>> >
+>> > ok.
+>>
+>> This loop can execute for maximum 4 msec. So putting msleep(1) won't
+>> get us much.
+>
+> 4 msec is still quite a long time for a busy loop that can be spent doing
+> useful work in another thread.
+>
+>> >>
+>> >> Another general note: Your "compatible" strings are rather unspecific.
+>> >> Do you have a version number for this IP block? I suppose that it's related
+>> >> to one that has been used in other chips before, or will be used in future
+>> >> chips, if it's not actually licensed from some other company.
+>> >
+>> > I will have to check this.
+>> >
+>>
+>> We have decided to stick with current compatible string for now.
+>
+> Can you elaborate on your reasoning? Does this mean X-Gene is a one-off
+> product and you won't be doing any new chips based on the same hardware
+> components?
+>
+>         Arnd
