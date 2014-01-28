@@ -1,50 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([85.214.48.195]:39731 "EHLO mail.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751411AbaAIMBi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jan 2014 07:01:38 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail.8bytes.org (Postfix) with SMTP id 5934E12B14F
-	for <linux-pci@vger.kernel.org>; Thu,  9 Jan 2014 13:01:37 +0100 (CET)
-Date: Thu, 9 Jan 2014 13:01:35 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: ethan zhao <ethan.zhao@oracle.com>
-Cc: dwmw2@infradead.org, yinghai@kernel.org, bhelgaas@google.com,
-	jiang.liu@linux.intel.com, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH Trivial] intel-iommu: check return value of
- device_to_iommu() before using it
-Message-ID: <20140109120135.GJ29041@8bytes.org>
-References: <52CE0252.4090106@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52CE0252.4090106@oracle.com>
+Received: from 82-68-191-81.dsl.posilan.com ([82.68.191.81]:51290 "EHLO
+	rainbowdash.ducie.codethink.co.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753821AbaA1KHD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 05:07:03 -0500
+From: Ben Dooks <ben.dooks@codethink.co.uk>
+To: linux-kernel@lists.codethink.co.uk
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	linux-pci@vger.kernel.org, Ben Dooks <ben.dooks@codethink.co.uk>
+Subject: [PATCH 1/3] PCI: rcar: check platform_get_irq() return code
+Date: Tue, 28 Jan 2014 10:06:54 +0000
+Message-Id: <1390903616-8073-2-git-send-email-ben.dooks@codethink.co.uk>
+In-Reply-To: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk>
+References: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 09, 2014 at 09:58:42AM +0800, ethan zhao wrote:
->  drivers/iommu/intel-iommu.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index 40203ad..5b4531a 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -1105,6 +1105,8 @@ static struct device_domain_info
-> *iommu_support_dev_iotlb(
->      struct device_domain_info *info;
->      struct intel_iommu *iommu = device_to_iommu(segment, bus, devfn);
-> 
-> +    if (!iommu)
-> +        return NULL;
->      if (!ecap_dev_iotlb_support(iommu->ecap))
->          return NULL;
+The current code does not check the return from platform_get_irq()
+so add an error check and return if this call does fail.
 
-This call can not fail, iommu_support_dev_iotlb() is only called from
-domain_context_mapping_one() which does the iommu==NULL check on its
-own before the call.
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+---
+Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+---
+ drivers/pci/host/pci-rcar-gen2.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-
-	Joerg
-
+diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
+index ea65bac..674f7fe 100644
+--- a/drivers/pci/host/pci-rcar-gen2.c
++++ b/drivers/pci/host/pci-rcar-gen2.c
+@@ -308,6 +308,11 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
+ 	priv->reg = reg;
+ 	priv->dev = &pdev->dev;
+ 
++	if (priv->irq < 0) {
++		dev_err(&pdev->dev, "no valid irq found\n");
++		return priv->irq;
++	}
++
+ 	return rcar_pci_add_controller(priv);
+ }
+ 
+-- 
+1.8.5.2
 
