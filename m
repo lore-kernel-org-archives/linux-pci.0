@@ -1,59 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:61117 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbaABVo6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jan 2014 16:44:58 -0500
-Received: by mail-ig0-f180.google.com with SMTP id m12so3652658iga.1
-        for <linux-pci@vger.kernel.org>; Thu, 02 Jan 2014 13:44:58 -0800 (PST)
-Date: Thu, 2 Jan 2014 14:44:54 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-pci@vger.kernel.org,
-	'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
-	'Jason Cooper' <jason@lakedaemon.net>
-Subject: Re: [PATCH] PCI: mvebu: Use max_t() instead of max(resource_size_t,)
-Message-ID: <20140102214454.GA7228@google.com>
-References: <000601cf029b$6bb27e40$43177ac0$%han@samsung.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:50629 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932260AbaA1WFg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 17:05:36 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 0/5][RFT] ACPI / hotplug / PCI: Consolidation of ACPIPHP with ACPI core device hotplug
+Date: Tue, 28 Jan 2014 23:10:30 +0100
+Message-ID: <1508034.JFmpIOzjVZ@vostro.rjw.lan>
+In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <000601cf029b$6bb27e40$43177ac0$%han@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 27, 2013 at 09:34:36AM +0900, Jingoo Han wrote:
-> Use max_t() instead of max(resource_size_t,) in order to fix
-> the following checkpatch warning.
-> 
->   WARNING: max() should probably be max_t(resource_size_t, SZ_64K, size)
->   WARNING: max() should probably be max_t(resource_size_t, SZ_1M, size)
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Hi All,
 
-Applied with Jason's ack to pci/host-mvebu for v3.14, thanks!
+It looks like there's time for more adventurous stuff. :-)
 
-Bjorn
+The following series is on top of the one I sent on Sunday:
 
-> ---
->  drivers/pci/host/pci-mvebu.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index bedc0b1..fa140e1 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -735,9 +735,9 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
->  	 * aligned on their size
->  	 */
->  	if (res->flags & IORESOURCE_IO)
-> -		return round_up(start, max((resource_size_t)SZ_64K, size));
-> +		return round_up(start, max_t(resource_size_t, SZ_64K, size));
->  	else if (res->flags & IORESOURCE_MEM)
-> -		return round_up(start, max((resource_size_t)SZ_1M, size));
-> +		return round_up(start, max_t(resource_size_t, SZ_1M, size));
->  	else
->  		return start;
->  }
-> -- 
-> 1.7.10.4
-> 
-> 
+https://lkml.org/lkml/2014/1/26/191
+
+The final outcome of the patches below is that all ACPI hotplug notifications
+for PCI devices and for core system things like CPU, memory, PCI roots etc.,
+will be dispatched from acpi_bus_notify() and it is not necessary to install a
+separate hotplug notify handler for each device any more.
+
+[1/5] Attach ACPIPHP hotplug contexts to struct acpi_device objects.
+[2/5] Introduce wrappers for installing and removing hotplug notify handlers
+      (those wrappers go away later on, but they are useful for separating
+       changes).
+[3/5] Consolidate ACPI hotplug signaling for PCI and ACPI core.
+[4/5] Simplify notify handle registration wrapper.
+[5/5] Dispatch ACPI hotplug notifications for "core" devices and PCI from acpi_bus_notify().
+
+The ACPIPHP part of this has been tested on Acer Aspire S5 with Thunderbolt
+hotplug, but if you have access to systems with hot-removable CPUs, PCI host
+bridges and such things, please check if the above changes don't break them.
+
+Thanks!
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
