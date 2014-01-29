@@ -1,82 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:7456 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932236AbaAaRWE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 12:22:04 -0500
-Message-ID: <52EBDBB7.9010503@solarflare.com>
-Date: Fri, 31 Jan 2014 17:21:59 +0000
-From: Shradha Shah <sshah@solarflare.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH 17/17] ACPI / numa: Use __weak, not the gcc-specific version
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
+	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 29 Jan 2014 11:19:32 -0700
+Message-ID: <20140129181932.15476.8351.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <linux-kernel@vger.kernel.org>,
-	Solarflare maintainers <linux-net-drivers@solarflare.com>,
-	<netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 31/34] efx: Use pci_enable_msix_range()
-References: <cover.1391172839.git.agordeev@redhat.com> <433fe68f834c10679986274f4bb605aa4ed5eaf3.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <433fe68f834c10679986274f4bb605aa4ed5eaf3.1391172839.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/31/2014 03:08 PM, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Use "__weak" instead of the gcc-specific "__attribute__ ((weak))".
 
-Acked-by: Shradha Shah <sshah@solarflare.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/acpi/numa.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
->  drivers/net/ethernet/sfc/efx.c |   20 +++++++++-----------
->  1 files changed, 9 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/sfc/efx.c b/drivers/net/ethernet/sfc/efx.c
-> index 83d4643..297b97a 100644
-> --- a/drivers/net/ethernet/sfc/efx.c
-> +++ b/drivers/net/ethernet/sfc/efx.c
-> @@ -1346,20 +1346,23 @@ static int efx_probe_interrupts(struct efx_nic *efx)
->  
->  		for (i = 0; i < n_channels; i++)
->  			xentries[i].entry = i;
-> -		rc = pci_enable_msix(efx->pci_dev, xentries, n_channels);
-> -		if (rc > 0) {
-> +		rc = pci_enable_msix_range(efx->pci_dev,
-> +					   xentries, 1, n_channels);
-> +		if (rc < 0) {
-> +			/* Fall back to single channel MSI */
-> +			efx->interrupt_mode = EFX_INT_MODE_MSI;
-> +			netif_err(efx, drv, efx->net_dev,
-> +				  "could not enable MSI-X\n");
-> +		} else if (rc < n_channels) {
->  			netif_err(efx, drv, efx->net_dev,
->  				  "WARNING: Insufficient MSI-X vectors"
->  				  " available (%d < %u).\n", rc, n_channels);
->  			netif_err(efx, drv, efx->net_dev,
->  				  "WARNING: Performance may be reduced.\n");
-> -			EFX_BUG_ON_PARANOID(rc >= n_channels);
->  			n_channels = rc;
-> -			rc = pci_enable_msix(efx->pci_dev, xentries,
-> -					     n_channels);
->  		}
->  
-> -		if (rc == 0) {
-> +		if (rc > 0) {
->  			efx->n_channels = n_channels;
->  			if (n_channels > extra_channels)
->  				n_channels -= extra_channels;
-> @@ -1375,11 +1378,6 @@ static int efx_probe_interrupts(struct efx_nic *efx)
->  			for (i = 0; i < efx->n_channels; i++)
->  				efx_get_channel(efx, i)->irq =
->  					xentries[i].vector;
-> -		} else {
-> -			/* Fall back to single channel MSI */
-> -			efx->interrupt_mode = EFX_INT_MODE_MSI;
-> -			netif_err(efx, drv, efx->net_dev,
-> -				  "could not enable MSI-X\n");
->  		}
->  	}
->  
-> 
+diff --git a/drivers/acpi/numa.c b/drivers/acpi/numa.c
+index 359a43bdd948..24b5476449a1 100644
+--- a/drivers/acpi/numa.c
++++ b/drivers/acpi/numa.c
+@@ -193,7 +193,7 @@ static int __init acpi_parse_slit(struct acpi_table_header *table)
+ 	return 0;
+ }
+ 
+-void __init __attribute__ ((weak))
++void __init __weak
+ acpi_numa_x2apic_affinity_init(struct acpi_srat_x2apic_cpu_affinity *pa)
+ {
+ 	printk(KERN_WARNING PREFIX
+
