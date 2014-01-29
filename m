@@ -1,133 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 1/2] pci: Add device specific PCI ACS enable
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Mon, 20 Jan 2014 15:01:46 -0700
-Message-ID: <20140120220146.29567.64686.stgit@bling.home>
-In-Reply-To: <20140120215502.29567.11291.stgit@bling.home>
-References: <20140120215502.29567.11291.stgit@bling.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:41248 "EHLO
+	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750926AbaA2Ivo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 03:51:44 -0500
+Message-ID: <52E8C0D6.3030105@mellanox.com>
+Date: Wed, 29 Jan 2014 10:50:30 +0200
+From: Or Gerlitz <ogerlitz@mellanox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>
+CC: Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>,
+	<yinghai@kernel.org>, <bhelgaas@google.com>, <amirv@mellanox.com>,
+	Guo Chao <yan@linux.vnet.ibm.com>, <linux-pci@vger.kernel.org>
+Subject: Re: mlx4_core probe error after applying Yinghai's patch
+References: <20140114062215.GA19345@richard> <20140114105031.71882944@jpm-OptiPlex-GX620> <20140114103712.GD27684@richard> <20140114132340.50df7d6f@jpm-OptiPlex-GX620> <52d52032.4981e00a.3dcc.ffff81fdSMTPIN_ADDED_BROKEN@mx.google.com> <20140115094113.64ca756e@jpm-OptiPlex-GX620> <1389772791.6933.84.camel@pasglop> <52d653d3.8425e00a.76d0.1e60SMTPIN_ADDED_BROKEN@mx.google.com> <20140115160204.24a44af0@jpm-OptiPlex-GX620> <20140116020946.GA8702@richard> <20140116021429.GB8702@richard>
+In-Reply-To: <20140116021429.GB8702@richard>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices support PCI ACS-like features, but don't report it using
-the standard PCIe capabilities.  We already provide hooks for device
-specific testing of ACS, but not for device specific enabling of ACS.
-This provides that setup hook.
+On 16/01/2014 04:14, Wei Yang wrote:
+> >>>+static void mlx4_shutdown(struct pci_dev *pdev)
+> >>>+{
+> >>>+       mlx4_remove_one(pdev);
+> >>>+}
+> >>>+
+> >>>  int mlx4_restart_one(struct pci_dev *pdev)
+> >>>  {
+> >>>         struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
+> >>>@@ -2582,6 +2590,7 @@ static struct pci_driver mlx4_driver = {
+> >>>         .id_table       = mlx4_pci_table,
+> >>>         .probe          = mlx4_init_one,
+> >>>         .remove         = mlx4_remove_one,
+> >>>+       .shutdown       = mlx4_shutdown,
+> >>>         .err_handler    = &mlx4_err_handler,
+> >>>  };
+> >>>
+> >>>Thanks,
+> >>>Gavin
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c    |   26 ++++++++++++++++++++------
- drivers/pci/quirks.c |   25 +++++++++++++++++++++++++
- include/linux/pci.h  |    2 ++
- 3 files changed, 47 insertions(+), 6 deletions(-)
+Guys,
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 07369f3..a57ff7f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2357,21 +2357,18 @@ void pci_request_acs(void)
- }
- 
- /**
-- * pci_enable_acs - enable ACS if hardware support it
-+ * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
-  * @dev: the PCI device
-  */
--void pci_enable_acs(struct pci_dev *dev)
-+static int pci_std_enable_acs(struct pci_dev *dev)
- {
- 	int pos;
- 	u16 cap;
- 	u16 ctrl;
- 
--	if (!pci_acs_enable)
--		return;
--
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
- 	if (!pos)
--		return;
-+		return -ENODEV;
- 
- 	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
- 	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-@@ -2389,6 +2386,23 @@ void pci_enable_acs(struct pci_dev *dev)
- 	ctrl |= (cap & PCI_ACS_UF);
- 
- 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	return 0;
-+}
-+
-+/**
-+ * pci_enable_acs - enable ACS if hardware support it
-+ * @dev: the PCI device
-+ */
-+void pci_enable_acs(struct pci_dev *dev)
-+{
-+	if (!pci_acs_enable)
-+		return;
-+
-+	if (!pci_std_enable_acs(dev))
-+		return;
-+
-+	pci_dev_specific_enable_acs(dev);
- }
- 
- static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 3a02717..4be1cd5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3461,3 +3461,28 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
- 
- 	return -ENOTTY;
- }
-+
-+static const struct pci_dev_enable_acs {
-+	u16 vendor;
-+	u16 device;
-+	int (*enable_acs)(struct pci_dev *dev);
-+} pci_dev_enable_acs[] = {
-+	{ 0 }
-+};
-+
-+void pci_dev_specific_enable_acs(struct pci_dev *dev)
-+{
-+	const struct pci_dev_enable_acs *i;
-+	int ret;
-+
-+	for (i = pci_dev_enable_acs; i->enable_acs; i++) {
-+		if ((i->vendor == dev->vendor ||
-+		     i->vendor == (u16)PCI_ANY_ID) &&
-+		    (i->device == dev->device ||
-+		     i->device == (u16)PCI_ANY_ID)) {
-+			ret = i->enable_acs(dev);
-+			if (ret >= 0)
-+				return;
-+		}
-+	}
-+}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a13d682..7905fd8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1633,6 +1633,7 @@ enum pci_fixup_pass {
- void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
- struct pci_dev *pci_get_dma_source(struct pci_dev *dev);
- int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
-+void pci_dev_specific_enable_acs(struct pci_dev *dev);
- #else
- static inline void pci_fixup_device(enum pci_fixup_pass pass,
- 				    struct pci_dev *dev) {}
-@@ -1645,6 +1646,7 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
- {
- 	return -ENOTTY;
- }
-+static inline void pci_dev_specific_enable_acs(struct pci_dev *dev) {}
- #endif
- 
- void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+Did you converge here?  I don't see this patch in Linus tree, so wasn't 
+sure where the discussion went eventually.
 
+Or.
+
+Or.
