@@ -1,94 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2lp0207.outbound.protection.outlook.com ([207.46.163.207]:23359
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753385AbaACWet (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Jan 2014 17:34:49 -0500
-Date: Fri, 3 Jan 2014 16:19:23 -0600
-From: Scott Wood <scottwood@freescale.com>
-To: Minghuan Lian <Minghuan.Lian@freescale.com>
-CC: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [02/12,v3] pci: fsl: add structure fsl_pci
-Message-ID: <20140103221923.GB22546@home.buserror.net>
-References: <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:45923 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbaA2U5H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 15:57:07 -0500
+Received: by mail-ie0-f175.google.com with SMTP id ar20so2543350iec.6
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 12:57:06 -0800 (PST)
+Date: Wed, 29 Jan 2014 13:56:58 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-pci@vger.kernel.org, Dave Jones <davej@redhat.com>
+Subject: Re: [PATCH] PCI: msi: properly free memory on an error path
+Message-ID: <20140129205658.GB16825@google.com>
+References: <20140123184246.GA7461@google.com>
+ <20140123193037.GA2605@kroah.com>
+ <20140123200112.GA15503@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140123200112.GA15503@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 23, 2013 at 06:41:24PM +0800, Minghuan Lian wrote:
-> PowerPC uses structure pci_controller to describe PCI controller,
-> but ARM uses structure pci_sys_data. In order to support PowerPC
-> and ARM simultaneously, the patch adds a structure fsl_pci that
-> contains most of the members of the pci_controller and pci_sys_data.
-> Meanwhile, it defines a interface fsl_arch_sys_to_pci() which should
-> be implemented in architecture-specific PCI controller driver to
-> convert pci_controller or pci_sys_data to fsl_pci.
+On Thu, Jan 23, 2014 at 12:01:12PM -0800, Greg Kroah-Hartman wrote:
+> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > 
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
+> Coverity reported that I forgot to clean up some allocated memory on the
+> error path in populate_msi_sysfs(), so this patch fixes that.
 > 
+> Thanks to Dave Jones for pointing out where the error was, I obviously
+> can't read code this morning...
+> 
+> Fixes: 1c51b50c2995 ("PCI/MSI: Export MSI mode using attributes, not kobjects")
+> Cc: Dave Jones <davej@redhat.com>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+Applied to my pci/msi branch, thanks!
+
 > ---
-> change log:
-> v1-v3:
-> Derived from http://patchwork.ozlabs.org/patch/278965/
+>  drivers/pci/msi.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Based on upstream master.
-> Based on the discussion of RFC version here
-> http://patchwork.ozlabs.org/patch/274487/
-> 
->  include/linux/fsl/pci-common.h | 41 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 41 insertions(+)
-> 
-> diff --git a/include/linux/fsl/pci-common.h b/include/linux/fsl/pci-common.h
-> index 5e4f683..e56a040 100644
-> --- a/include/linux/fsl/pci-common.h
-> +++ b/include/linux/fsl/pci-common.h
-> @@ -102,5 +102,46 @@ struct ccsr_pci {
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 39dff3fe57af..6f0474ebe420 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -595,6 +595,7 @@ error_attrs:
+>  		++count;
+>  		msi_attr = msi_attrs[count];
+>  	}
+> +	kfree(msi_attrs);
+>  	return ret;
+>  }
 >  
->  };
->  
-> +/*
-> + * Structure of a PCI controller (host bridge)
-> + */
-> +struct fsl_pci {
-> +	struct list_head node;
-> +	bool is_pcie;
-> +	struct device_node *dn;
-> +	struct device *dev;
-> +
-> +	int first_busno;
-> +	int last_busno;
-> +	int self_busno;
-> +	struct resource busn;
-> +
-> +	struct pci_ops *ops;
-> +	struct ccsr_pci __iomem *regs;
-> +
-> +	u32 indirect_type;
-> +
-> +	struct resource io_resource;
-> +	resource_size_t io_base_phys;
-> +	resource_size_t pci_io_size;
-> +
-> +	struct resource mem_resources[3];
-> +	resource_size_t mem_offset[3];
-> +
-> +	int global_number;	/* PCI domain number */
-> +
-> +	resource_size_t dma_window_base_cur;
-> +	resource_size_t dma_window_size;
-> +
-> +	void *sys;
-> +};
-
-I don't like the extent to which this duplicates (not moves) PPC's struct
-pci_controller.  Also this leaves some fields like "indirect_type"
-unexplained (PPC_INDIRECT_TYPE_xxx is only in the PPC header).
-
-Does the arch-independent part of the driver really need all this?  Given
-how closely this tracks the PPC code, how would this work on ARM?
-
--Scott
+> -- 
+> 1.8.5.1.163.gd7aced9
+> 
