@@ -1,119 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sander Eikelenboom <linux@eikelenboom.it>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Sander Eikelenboom <linux@eikelenboom.it>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
-	linux-ia64@vger.kernel.org
-Subject: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary prevents it from reading it's own rom. It will get the content of the shadowrom at C000 instead, which is of the primary VGA card and the driver of the secondary card will bail out.
-Date: Fri, 31 Jan 2014 10:28:23 +0100
-Message-Id: <1391160503-11122-2-git-send-email-linux@eikelenboom.it>
-In-Reply-To: <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
-References: <20140130000831.GJ16825@google.com>
- <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:39151 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942AbaA2Vg7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 16:36:59 -0500
+Received: by mail-ie0-f174.google.com with SMTP id tp5so2595019ieb.5
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 13:36:59 -0800 (PST)
+Date: Wed, 29 Jan 2014 14:36:55 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 7/9] vfio: Use pci_enable_msi_range() and
+ pci_enable_msix_range()
+Message-ID: <20140129213655.GC16825@google.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <c6523b6507c3aa0ab911e111f501699dce99c3f4.1389904167.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c6523b6507c3aa0ab911e111f501699dce99c3f4.1389904167.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix this by checking if the arch code or vga-arbitration has already
-determined the vga_default_device, if so only apply the fix to this
-primary video device and let the comment reflect this.
+On Fri, Jan 17, 2014 at 05:02:21PM +0100, Alexander Gordeev wrote:
+> As result deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
-Signed-off-by: Sander Eikelenboom <linux@eikelenboom.it>
----
- arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
- arch/x86/pci/fixup.c  |   18 ++++++++++--------
- 2 files changed, 23 insertions(+), 19 deletions(-)
+Applied to my pci/msi branch, thanks!
 
-diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-index 5dc969d..7762255 100644
---- a/arch/ia64/pci/fixup.c
-+++ b/arch/ia64/pci/fixup.c
-@@ -19,9 +19,10 @@
-  * IORESOURCE_ROM_SHADOW is used to associate the boot video
-  * card with this copy. On laptops this copy has to be used since
-  * the main ROM may be compressed or combined with another image.
-- * See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
-- * is marked here since the boot video device will be the only enabled
-- * video device at this point.
-+ * See pci_map_rom() for use of this flag. Before marking the device
-+ * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
-+ * by either arch cde or vga-arbitration, if so only apply the fixup to this
-+ * already determined primary video card.
-  */
- 
- static void pci_fixup_video(struct pci_dev *pdev)
-@@ -35,9 +36,6 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 		return;
- 	/* Maybe, this machine supports legacy memory map. */
- 
--	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--		return;
--
- 	/* Is VGA routed to us? */
- 	bus = pdev->bus;
- 	while (bus) {
-@@ -60,10 +58,14 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 		}
- 		bus = bus->parent;
- 	}
--	pci_read_config_word(pdev, PCI_COMMAND, &config);
--	if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--		pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
--		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
-+	if (!vga_default_device() || pdev == vga_default_device()) {
-+		pci_read_config_word(pdev, PCI_COMMAND, &config);
-+		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-+			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-+			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
-+			vga_set_default_device(pdev);
-+		}
- 	}
- }
--DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pci_fixup_video);
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-+				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index b046e07..34528a7 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -314,9 +314,10 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_r
-  * IORESOURCE_ROM_SHADOW is used to associate the boot video
-  * card with this copy. On laptops this copy has to be used since
-  * the main ROM may be compressed or combined with another image.
-- * See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
-- * is marked here since the boot video device will be the only enabled
-- * video device at this point.
-+ * See pci_map_rom() for use of this flag. Before marking the device
-+ * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
-+ * by either arch cde or vga-arbitration, if so only apply the fixup to this
-+ * already determined primary video card.
-  */
- 
- static void pci_fixup_video(struct pci_dev *pdev)
-@@ -347,12 +348,13 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 		}
- 		bus = bus->parent;
- 	}
--	pci_read_config_word(pdev, PCI_COMMAND, &config);
--	if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--		pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
--		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
--		if (!vga_default_device())
-+	if (!vga_default_device() || pdev == vga_default_device()) {
-+		pci_read_config_word(pdev, PCI_COMMAND, &config);
-+		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-+			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-+			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
- 			vga_set_default_device(pdev);
-+		}
- 	}
- }
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
--- 
-1.7.10.4
-
+> ---
+>  drivers/vfio/pci/vfio_pci_intrs.c |   12 ++++++++----
+>  1 files changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+> index 641bc87..4a9db1d 100644
+> --- a/drivers/vfio/pci/vfio_pci_intrs.c
+> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
+> @@ -482,15 +482,19 @@ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
+>  		for (i = 0; i < nvec; i++)
+>  			vdev->msix[i].entry = i;
+>  
+> -		ret = pci_enable_msix(pdev, vdev->msix, nvec);
+> -		if (ret) {
+> +		ret = pci_enable_msix_range(pdev, vdev->msix, 1, nvec);
+> +		if (ret < nvec) {
+> +			if (ret > 0)
+> +				pci_disable_msix(pdev);
+>  			kfree(vdev->msix);
+>  			kfree(vdev->ctx);
+>  			return ret;
+>  		}
+>  	} else {
+> -		ret = pci_enable_msi_block(pdev, nvec);
+> -		if (ret) {
+> +		ret = pci_enable_msi_range(pdev, 1, nvec);
+> +		if (ret < nvec) {
+> +			if (ret > 0)
+> +				pci_disable_msi(pdev);
+>  			kfree(vdev->ctx);
+>  			return ret;
+>  		}
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
