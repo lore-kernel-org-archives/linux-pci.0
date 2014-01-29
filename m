@@ -1,54 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:43720 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756732AbaAGAz5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:55:57 -0500
-Received: by mail-ie0-f170.google.com with SMTP id qd12so19831217ieb.29
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:55:57 -0800 (PST)
-Subject: [PATCH v7 06/15] drm/i915: Rename gtt_bus_addr to gtt_phys_addr
-To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:46144 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753394AbaA2ST2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 13:19:28 -0500
+Received: by mail-ie0-f176.google.com with SMTP id tp5so2362704ieb.7
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 10:19:28 -0800 (PST)
+Subject: [PATCH 16/17] ACPI / numa: Make __acpi_map_pxm_to_node(),
+ acpi_get_pxm() static
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:55:55 -0700
-Message-ID: <20140107005555.10786.46881.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
+	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 29 Jan 2014 11:19:25 -0700
+Message-ID: <20140129181925.15476.24730.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We're dealing with CPU physical addresses here, which may be different from
-bus addresses, so rename gtt_bus_addr to gtt_phys_addr to avoid confusion.
-
-No functional change.
+__acpi_map_pxm_to_node() and acpi_get_pxm() are only used within
+drivers/acpi/numa.c.  This makes them static and removes their
+declarations.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/gpu/drm/i915/i915_gem_gtt.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/acpi/numa.c      |    4 ++--
+ include/acpi/acpi_numa.h |    1 -
+ include/linux/acpi.h     |    5 -----
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/gpu/drm/i915/i915_gem_gtt.c b/drivers/gpu/drm/i915/i915_gem_gtt.c
-index 3620a1b0a73c..15604b3dda3e 100644
---- a/drivers/gpu/drm/i915/i915_gem_gtt.c
-+++ b/drivers/gpu/drm/i915/i915_gem_gtt.c
-@@ -1260,14 +1260,14 @@ static int ggtt_probe_common(struct drm_device *dev,
- 			     size_t gtt_size)
+diff --git a/drivers/acpi/numa.c b/drivers/acpi/numa.c
+index a7e779bfa2f6..359a43bdd948 100644
+--- a/drivers/acpi/numa.c
++++ b/drivers/acpi/numa.c
+@@ -60,7 +60,7 @@ int node_to_pxm(int node)
+ 	return node_to_pxm_map[node];
+ }
+ 
+-void __acpi_map_pxm_to_node(int pxm, int node)
++static void __acpi_map_pxm_to_node(int pxm, int node)
  {
- 	struct drm_i915_private *dev_priv = dev->dev_private;
--	phys_addr_t gtt_bus_addr;
-+	phys_addr_t gtt_phys_addr;
- 	int ret;
+ 	if (pxm_to_node_map[pxm] == NUMA_NO_NODE || node < pxm_to_node_map[pxm])
+ 		pxm_to_node_map[pxm] = node;
+@@ -314,7 +314,7 @@ int __init acpi_numa_init(void)
+ 	return 0;
+ }
  
- 	/* For Modern GENs the PTEs and register space are split in the BAR */
--	gtt_bus_addr = pci_resource_start(dev->pdev, 0) +
-+	gtt_phys_addr = pci_resource_start(dev->pdev, 0) +
- 		(pci_resource_len(dev->pdev, 0) / 2);
+-int acpi_get_pxm(acpi_handle h)
++static int acpi_get_pxm(acpi_handle h)
+ {
+ 	unsigned long long pxm;
+ 	acpi_status status;
+diff --git a/include/acpi/acpi_numa.h b/include/acpi/acpi_numa.h
+index 451823cb8837..94a37cd7fbda 100644
+--- a/include/acpi/acpi_numa.h
++++ b/include/acpi/acpi_numa.h
+@@ -13,7 +13,6 @@
  
--	dev_priv->gtt.gsm = ioremap_wc(gtt_bus_addr, gtt_size);
-+	dev_priv->gtt.gsm = ioremap_wc(gtt_phys_addr, gtt_size);
- 	if (!dev_priv->gtt.gsm) {
- 		DRM_ERROR("Failed to map the gtt page table\n");
- 		return -ENOMEM;
+ extern int pxm_to_node(int);
+ extern int node_to_pxm(int);
+-extern void __acpi_map_pxm_to_node(int, int);
+ extern int acpi_map_pxm_to_node(int);
+ extern unsigned char acpi_srat_revision;
+ 
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 17bee650a0cb..6c29abbefd41 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -259,13 +259,8 @@ extern void acpi_dmi_osi_linux(int enable, const struct dmi_system_id *d);
+ extern void acpi_osi_setup(char *str);
+ 
+ #ifdef CONFIG_ACPI_NUMA
+-int acpi_get_pxm(acpi_handle handle);
+ int acpi_get_node(acpi_handle handle);
+ #else
+-static inline int acpi_get_pxm(acpi_handle handle)
+-{
+-	return 0;
+-}
+ static inline int acpi_get_node(acpi_handle handle)
+ {
+ 	return 0;
 
