@@ -1,37 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:44431 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752025AbaAROfO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 18 Jan 2014 09:35:14 -0500
-Received: by mail-ie0-f179.google.com with SMTP id ar20so1950509iec.10
-        for <linux-pci@vger.kernel.org>; Sat, 18 Jan 2014 06:35:12 -0800 (PST)
-Subject: [PATCH 0/2] Revert EISA init changes
-To: linux-kernel@vger.kernel.org
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:38331 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753326AbaA2STG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 13:19:06 -0500
+Received: by mail-ie0-f177.google.com with SMTP id at1so2437501iec.36
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 10:19:06 -0800 (PST)
+Subject: [PATCH 13/17] ia64: Remove acpi_get_pxm() usage
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Joseph Salisbury <joseph.salisbury@canonical.com>
-Date: Sat, 18 Jan 2014 07:35:09 -0700
-Message-ID: <20140118143308.32751.27410.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
+	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 29 Jan 2014 11:19:02 -0700
+Message-ID: <20140129181902.15476.86815.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I tried to make EISA device enumeration messages a bit nicer, but I
-screwed up and caused some machines to hang during boot.
+The IOMMU, LSAPIC, IOSAPIC, and PCI host bridge code doesn't care about
+_PXM values directly; it only needs to know what NUMA node the hardware is
+on.
 
-This was reported at
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1251816
+This uses acpi_get_node() directly and removes the _PXM stuff.
 
-This reverts those changes.  I plan to include these in the PCI tree
-for v3.14.
-
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
+ arch/ia64/hp/common/sba_iommu.c |   22 +++++-----------------
+ arch/ia64/include/asm/pci.h     |    2 +-
+ arch/ia64/kernel/acpi.c         |   28 +++++++---------------------
+ arch/ia64/pci/pci.c             |   10 ++--------
+ 4 files changed, 15 insertions(+), 47 deletions(-)
 
-Bjorn Helgaas (2):
-      Revert "EISA: Log device resources in dmesg"
-      Revert "EISA: Initialize device before its resources"
+diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+index a52d6b49b7ce..007361d59aa6 100644
+--- a/arch/ia64/hp/common/sba_iommu.c
++++ b/arch/ia64/hp/common/sba_iommu.c
+@@ -2017,31 +2017,19 @@ sba_connect_bus(struct pci_bus *bus)
+ 	printk(KERN_WARNING "No IOC for PCI Bus %04x:%02x in ACPI\n", pci_domain_nr(bus), bus->number);
+ }
+ 
+-#ifdef CONFIG_NUMA
+ static void __init
+ sba_map_ioc_to_node(struct ioc *ioc, acpi_handle handle)
+ {
++#ifdef CONFIG_NUMA
+ 	unsigned int node;
+-	int pxm;
+-
+-	ioc->node = NUMA_NO_NODE;
+-
+-	pxm = acpi_get_pxm(handle);
+-
+-	if (pxm < 0)
+-		return;
+ 
+-	node = pxm_to_node(pxm);
+-
+-	if (node == NUMA_NO_NODE || !node_online(node))
+-		return;
++	node = acpi_get_node(handle);
++	if (node != NUMA_NO_NODE && !node_online(node))
++		node = NUMA_NO_NODE;
+ 
+ 	ioc->node = node;
+-	return;
+-}
+-#else
+-#define sba_map_ioc_to_node(ioc, handle)
+ #endif
++}
+ 
+ static int __init
+ acpi_sba_ioc_add(struct acpi_device *device,
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 71fbaaa495cc..7d41cc089822 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -98,7 +98,7 @@ struct pci_controller {
+ 	struct acpi_device *companion;
+ 	void *iommu;
+ 	int segment;
+-	int node;		/* nearest node with memory or -1 for global allocation */
++	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+ 
+ 	void *platform_data;
+ };
+diff --git a/arch/ia64/kernel/acpi.c b/arch/ia64/kernel/acpi.c
+index 07d209c9507f..5a585ebe9df3 100644
+--- a/arch/ia64/kernel/acpi.c
++++ b/arch/ia64/kernel/acpi.c
+@@ -803,14 +803,9 @@ int acpi_isa_irq_to_gsi(unsigned isa_irq, u32 *gsi)
+  *  ACPI based hotplug CPU support
+  */
+ #ifdef CONFIG_ACPI_HOTPLUG_CPU
+-static
+-int acpi_map_cpu2node(acpi_handle handle, int cpu, int physid)
++static int acpi_map_cpu2node(acpi_handle handle, int cpu, int physid)
+ {
+ #ifdef CONFIG_ACPI_NUMA
+-	int pxm_id;
+-	int nid;
+-
+-	pxm_id = acpi_get_pxm(handle);
+ 	/*
+ 	 * We don't have cpu-only-node hotadd. But if the system equips
+ 	 * SRAT table, pxm is already found and node is ready.
+@@ -818,11 +813,10 @@ int acpi_map_cpu2node(acpi_handle handle, int cpu, int physid)
+ 	 * This code here is for the system which doesn't have full SRAT
+   	 * table for possible cpus.
+ 	 */
+-	nid = acpi_map_pxm_to_node(pxm_id);
+ 	node_cpuid[cpu].phys_id = physid;
+-	node_cpuid[cpu].nid = nid;
++	node_cpuid[cpu].nid = acpi_get_node(handle);
+ #endif
+-	return (0);
++	return 0;
+ }
+ 
+ int additional_cpus __initdata = -1;
+@@ -929,7 +923,7 @@ static acpi_status acpi_map_iosapic(acpi_handle handle, u32 depth,
+ 	union acpi_object *obj;
+ 	struct acpi_madt_io_sapic *iosapic;
+ 	unsigned int gsi_base;
+-	int pxm, node;
++	int node;
+ 
+ 	/* Only care about objects w/ a method that returns the MADT */
+ 	if (ACPI_FAILURE(acpi_evaluate_object(handle, "_MAT", NULL, &buffer)))
+@@ -956,17 +950,9 @@ static acpi_status acpi_map_iosapic(acpi_handle handle, u32 depth,
+ 
+ 	kfree(buffer.pointer);
+ 
+-	/*
+-	 * OK, it's an IOSAPIC MADT entry, look for a _PXM value to tell
+-	 * us which node to associate this with.
+-	 */
+-	pxm = acpi_get_pxm(handle);
+-	if (pxm < 0)
+-		return AE_OK;
+-
+-	node = pxm_to_node(pxm);
+-
+-	if (node >= MAX_NUMNODES || !node_online(node) ||
++	/* OK, it's an IOSAPIC MADT entry; associate it with a node */
++	node = acpi_get_node(handle);
++	if (node == NUMA_NO_NODE || !node_online(node) ||
+ 	    cpumask_empty(cpumask_of_node(node)))
+ 		return AE_OK;
+ 
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 9e4938d8ca4d..291a582777cf 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -126,7 +126,6 @@ static struct pci_controller *alloc_pci_controller(int seg)
+ 		return NULL;
+ 
+ 	controller->segment = seg;
+-	controller->node = -1;
+ 	return controller;
+ }
+ 
+@@ -430,19 +429,14 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct pci_root_info *info = NULL;
+ 	int busnum = root->secondary.start;
+ 	struct pci_bus *pbus;
+-	int pxm, ret;
++	int ret;
+ 
+ 	controller = alloc_pci_controller(domain);
+ 	if (!controller)
+ 		return NULL;
+ 
+ 	controller->companion = device;
+-
+-	pxm = acpi_get_pxm(device->handle);
+-#ifdef CONFIG_NUMA
+-	if (pxm >= 0)
+-		controller->node = pxm_to_node(pxm);
+-#endif
++	controller->node = acpi_get_node(device->handle);
+ 
+ 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info) {
 
-
- drivers/eisa/eisa-bus.c |   27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
