@@ -1,12 +1,12 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH 08/17] x86/PCI: Remove mp_bus_to_node[], set_mp_bus_to_node(),
- get_mp_bus_to_node()
+Subject: [PATCH 02/17] x86/PCI: Use pcibios_scan_root() instead of
+ pci_scan_bus_with_sysdata()
 To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
 	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 29 Jan 2014 11:18:26 -0700
-Message-ID: <20140129181826.15476.85192.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Date: Wed, 29 Jan 2014 11:17:41 -0700
+Message-ID: <20140129181741.15476.52860.stgit@bhelgaas-glaptop.roam.corp.google.com>
 In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
 References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
@@ -14,159 +14,120 @@ Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are no callers of get_mp_bus_to_node(), so we no longer need
-mp_bus_to_node[], get_mp_bus_to_node(), or set_mp_bus_to_node().
-This removes them.
+pci_scan_bus_with_sysdata() and pcibios_scan_root() are quite similar:
+
+  pci_scan_bus_with_sysdata
+    pci_scan_bus_on_node(..., &pci_root_ops, -1)
+
+  pcibios_scan_root
+    pci_scan_bus_on_node(..., &pci_root_ops, get_mp_bus_to_node(busnum))
+
+get_mp_bus_to_node() returns -1 if it couldn't find the node number, so
+this removes pci_scan_bus_with_sysdata() and uses pcibios_scan_root()
+instead.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/include/asm/topology.h |   13 -------
- arch/x86/pci/acpi.c             |    4 +-
- arch/x86/pci/amd_bus.c          |   10 ------
- arch/x86/pci/common.c           |   69 ---------------------------------------
- 4 files changed, 1 insertion(+), 95 deletions(-)
+ arch/x86/include/asm/pci.h |    1 -
+ arch/x86/pci/common.c      |    5 -----
+ arch/x86/pci/fixup.c       |    6 +++---
+ arch/x86/pci/numaq_32.c    |    6 +++---
+ arch/x86/pci/visws.c       |    4 ++--
+ 5 files changed, 8 insertions(+), 14 deletions(-)
 
-diff --git a/arch/x86/include/asm/topology.h b/arch/x86/include/asm/topology.h
-index 09046a1a6c35..c840571afa4e 100644
---- a/arch/x86/include/asm/topology.h
-+++ b/arch/x86/include/asm/topology.h
-@@ -140,17 +140,4 @@ void x86_pci_root_bus_resources(int bus, struct list_head *resources);
- #define smt_capable()			(smp_num_siblings > 1)
- #endif
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 1ac6114c9ea5..4e891abf8b48 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -29,7 +29,6 @@ extern int noioapicreroute;
+ /* scan a bus after allocating a pci_sysdata for it */
+ extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+ 					    int node);
+-extern struct pci_bus *pci_scan_bus_with_sysdata(int busno);
  
--#ifdef CONFIG_NUMA
--extern int get_mp_bus_to_node(int busnum);
--extern void set_mp_bus_to_node(int busnum, int node);
--#else
--static inline int get_mp_bus_to_node(int busnum)
--{
--	return 0;
--}
--static inline void set_mp_bus_to_node(int busnum, int node)
--{
--}
--#endif
--
- #endif /* _ASM_X86_TOPOLOGY_H */
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 3f42c5c05bf6..78f27efa11e1 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -499,10 +499,8 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	pxm = acpi_get_pxm(device->handle);
- 	if (pxm >= 0)
- 		node = pxm_to_node(pxm);
--	if (node != -1)
--		set_mp_bus_to_node(busnum, node);
--	else
- #endif
-+	if (node == -1)
- 		node = x86_pci_root_bus_node(busnum);
+ #ifdef CONFIG_PCI
  
- 	if (node != -1 && !node_online(node))
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index a48be98e9ded..a313a7fb6b86 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -44,15 +44,6 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
- 	return NULL;
- }
- 
--static void __init set_mp_bus_range_to_node(int min_bus, int max_bus, int node)
--{
--#ifdef CONFIG_NUMA
--	int j;
--
--	for (j = min_bus; j <= max_bus; j++)
--		set_mp_bus_to_node(j, node);
--#endif
--}
- /**
-  * early_fill_mp_bus_to_node()
-  * called before pcibios_scan_root and pci_scan_bus
-@@ -117,7 +108,6 @@ static int __init early_fill_mp_bus_info(void)
- 		min_bus = (reg >> 16) & 0xff;
- 		max_bus = (reg >> 24) & 0xff;
- 		node = (reg >> 4) & 0x07;
--		set_mp_bus_range_to_node(min_bus, max_bus, node);
- 		link = (reg >> 8) & 0x03;
- 
- 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
 diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index f7d6800f10d1..d491deddebae 100644
+index c47bb2288bb9..f530c7e93250 100644
 --- a/arch/x86/pci/common.c
 +++ b/arch/x86/pci/common.c
-@@ -683,72 +683,3 @@ int pci_ext_cfg_avail(void)
- 	else
- 		return 0;
+@@ -697,11 +697,6 @@ struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
+ 	return bus;
  }
--
--/*
-- * NUMA info for PCI busses
-- *
-- * Early arch code is responsible for filling in reasonable values here.
-- * A node id of "-1" means "use current node".  In other words, if a bus
-- * has a -1 node id, it's not tightly coupled to any particular chunk
-- * of memory (as is the case on some Nehalem systems).
-- */
--#ifdef CONFIG_NUMA
--
--#define BUS_NR 256
--
--#ifdef CONFIG_X86_64
--
--static int mp_bus_to_node[BUS_NR] = {
--	[0 ... BUS_NR - 1] = -1
--};
--
--void set_mp_bus_to_node(int busnum, int node)
+ 
+-struct pci_bus *pci_scan_bus_with_sysdata(int busno)
 -{
--	if (busnum >= 0 &&  busnum < BUS_NR)
--		mp_bus_to_node[busnum] = node;
+-	return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
 -}
 -
--int get_mp_bus_to_node(int busnum)
--{
--	int node = -1;
--
--	if (busnum < 0 || busnum > (BUS_NR - 1))
--		return node;
--
--	node = mp_bus_to_node[busnum];
--
--	/*
--	 * let numa_node_id to decide it later in dma_alloc_pages
--	 * if there is no ram on that node
--	 */
--	if (node != -1 && !node_online(node))
--		node = -1;
--
--	return node;
--}
--
--#else /* CONFIG_X86_32 */
--
--static int mp_bus_to_node[BUS_NR] = {
--	[0 ... BUS_NR - 1] = -1
--};
--
--void set_mp_bus_to_node(int busnum, int node)
--{
--	if (busnum >= 0 &&  busnum < BUS_NR)
--	mp_bus_to_node[busnum] = (unsigned char) node;
--}
--
--int get_mp_bus_to_node(int busnum)
--{
--	int node;
--
--	if (busnum < 0 || busnum > (BUS_NR - 1))
--		return 0;
--	node = mp_bus_to_node[busnum];
--	return node;
--}
--
--#endif /* CONFIG_X86_32 */
--
--#endif /* CONFIG_NUMA */
+ /*
+  * NUMA info for PCI busses
+  *
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index bca9e85daaa5..201833f5f1bc 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -25,9 +25,9 @@ static void pci_fixup_i450nx(struct pci_dev *d)
+ 		dev_dbg(&d->dev, "i450NX PXB %d: %02x/%02x/%02x\n", pxb, busno,
+ 			suba, subb);
+ 		if (busno)
+-			pci_scan_bus_with_sysdata(busno);	/* Bus A */
++			pcibios_scan_root(busno);	/* Bus A */
+ 		if (suba < subb)
+-			pci_scan_bus_with_sysdata(suba+1);	/* Bus B */
++			pcibios_scan_root(suba+1);	/* Bus B */
+ 	}
+ 	pcibios_last_bus = -1;
+ }
+@@ -42,7 +42,7 @@ static void pci_fixup_i450gx(struct pci_dev *d)
+ 	u8 busno;
+ 	pci_read_config_byte(d, 0x4a, &busno);
+ 	dev_info(&d->dev, "i440KX/GX host bridge; secondary bus %02x\n", busno);
+-	pci_scan_bus_with_sysdata(busno);
++	pcibios_scan_root(busno);
+ 	pcibios_last_bus = -1;
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82454GX, pci_fixup_i450gx);
+diff --git a/arch/x86/pci/numaq_32.c b/arch/x86/pci/numaq_32.c
+index 72c229f9ebcf..080eb0374fff 100644
+--- a/arch/x86/pci/numaq_32.c
++++ b/arch/x86/pci/numaq_32.c
+@@ -135,11 +135,11 @@ static void pci_fixup_i450nx(struct pci_dev *d)
+ 			pxb, busno, suba, subb);
+ 		if (busno) {
+ 			/* Bus A */
+-			pci_scan_bus_with_sysdata(QUADLOCAL2BUS(quad, busno));
++			pcibios_scan_root(QUADLOCAL2BUS(quad, busno));
+ 		}
+ 		if (suba < subb) {
+ 			/* Bus B */
+-			pci_scan_bus_with_sysdata(QUADLOCAL2BUS(quad, suba+1));
++			pcibios_scan_root(QUADLOCAL2BUS(quad, suba+1));
+ 		}
+ 	}
+ 	pcibios_last_bus = -1;
+@@ -159,7 +159,7 @@ int __init pci_numaq_init(void)
+ 				continue;
+ 			printk("Scanning PCI bus %d for quad %d\n", 
+ 				QUADLOCAL2BUS(quad,0), quad);
+-			pci_scan_bus_with_sysdata(QUADLOCAL2BUS(quad, 0));
++			pcibios_scan_root(QUADLOCAL2BUS(quad, 0));
+ 		}
+ 	return 0;
+ }
+diff --git a/arch/x86/pci/visws.c b/arch/x86/pci/visws.c
+index 3e6d2a6db866..cd9d4d1681d2 100644
+--- a/arch/x86/pci/visws.c
++++ b/arch/x86/pci/visws.c
+@@ -78,8 +78,8 @@ int __init pci_visws_init(void)
+ 		"bridge B (PIIX4) bus: %u\n", pci_bus1, pci_bus0);
+ 
+ 	raw_pci_ops = &pci_direct_conf1;
+-	pci_scan_bus_with_sysdata(pci_bus0);
+-	pci_scan_bus_with_sysdata(pci_bus1);
++	pcibios_scan_root(pci_bus0);
++	pcibios_scan_root(pci_bus1);
+ 	pci_fixup_irqs(pci_common_swizzle, visws_map_irq);
+ 	pcibios_resource_survey();
+ 	/* Request bus scan */
 
