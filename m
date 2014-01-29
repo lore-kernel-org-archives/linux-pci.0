@@ -1,97 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51224 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751214AbaAODpR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jan 2014 22:45:17 -0500
-Subject: [PATCH v2] vfio-pci: Use pci "try" reset interface
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, alex.williamson@redhat.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org
-Date: Tue, 14 Jan 2014 20:45:09 -0700
-Message-ID: <20140115033854.18253.62934.stgit@bling.home>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:58404 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbaA2VsH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 16:48:07 -0500
+Received: by mail-ig0-f176.google.com with SMTP id j1so16112861iga.3
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 13:48:06 -0800 (PST)
+Date: Wed, 29 Jan 2014 14:48:01 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian King <brking@us.ibm.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-nvme@lists.infradead.org,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Message-ID: <20140129214801.GE16825@google.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+ <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
+ <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+ <20140118145940.GE3640@htj.dyndns.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140118145940.GE3640@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI resets will attempt to take the device_lock for any device to be
-reset.  This is a problem if that lock is already held, for instance
-in the device remove path.  It's not sufficient to simply kill the
-user process or skip the reset if called after .remove as a race could
-result in the same deadlock.  Instead, we handle all resets as "best
-effort" using the PCI "try" reset interfaces.  This prevents the user
-from being able to induce a deadlock by triggering a reset.
+On Sat, Jan 18, 2014 at 09:59:40AM -0500, Tejun Heo wrote:
+> On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
+> > On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> > > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > >> > As the release is supposedly this weekend, do you prefer
+> > >> > the patches to go to your tree or to individual trees after
+> > >> > the release?
+> > >>
+> > >> I'd be happy to merge them, except for the fact that they probably
+> > >> wouldn't have any time in -next before I ask Linus to pull them.  So
+> > >> how about if we wait until after the release, ask the area maintainers
+> > >> to take them, and if they don't take them, I'll put them in my tree
+> > >> for v3.15?
+> > >
+> > > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
+> > > Whatever works for you ;)
+> > >
+> > > I am only concerned with a regression fix "ahci: Fix broken fallback to
+> > > single MSI mode" which would be nice to have in 3.14. But it seems pretty
+> > > much too late.
+> > 
+> > Tejun, if you want to ack that one, I can put it in either the first
+> > 3.14 pull request or a subsequent one.  Either way, since it's a
+> > regression fix, we should be able to get it in 3.14.
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> Please feel free to route it any way you see fit.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+I applied the following to my pci/msi branch, since they had acks from
+maintainers (Tejun, I assumed your ack applies to both ahci patches):
 
-v2: Update error message to make it clear that device reset failed
-    and change back to pr_warn to make sure it's visible.  I'll
-    address whether dev_warn would be more appropriate in future
-    updates.
+    ahci: Fix broken fallback to single MSI mode
+    ahci: Use pci_enable_msi_range()
+    vfio: Use pci_enable_msi_range() and pci_enable_msix_range()
+    wil6210: Use pci_enable_msi_range()
 
-Bjorn, if this looks good and you don't mind, please take this in
-through your tree so that it syncs with the introduction of the
-pci_try_reset interfaces.  Thanks!
+I didn't do anything with these:
 
- drivers/vfio/pci/vfio_pci.c |   29 +++++++++--------------------
- 1 file changed, 9 insertions(+), 20 deletions(-)
+    ipr: Get rid of superfluous call to pci_disable_msi/msix()
+    ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 6ab71b9..2319d20 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -139,25 +139,14 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 	pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
- 
- 	/*
--	 * Careful, device_lock may already be held.  This is the case if
--	 * a driver unbind is blocked.  Try to get the locks ourselves to
--	 * prevent a deadlock.
-+	 * Try to reset the device.  The success of this is dependent on
-+	 * being able to lock the device, which is not always possible.
- 	 */
- 	if (vdev->reset_works) {
--		bool reset_done = false;
--
--		if (pci_cfg_access_trylock(pdev)) {
--			if (device_trylock(&pdev->dev)) {
--				__pci_reset_function_locked(pdev);
--				reset_done = true;
--				device_unlock(&pdev->dev);
--			}
--			pci_cfg_access_unlock(pdev);
--		}
--
--		if (!reset_done)
--			pr_warn("%s: Unable to acquire locks for reset of %s\n",
--				__func__, dev_name(&pdev->dev));
-+		int ret = pci_try_reset_function(pdev);
-+		if (ret)
-+			pr_warn("%s: Failed to reset device %s (%d)\n",
-+				__func__, dev_name(&pdev->dev), ret);
- 	}
- 
- 	pci_restore_state(pdev);
-@@ -514,7 +503,7 @@ static long vfio_pci_ioctl(void *device_data,
- 
- 	} else if (cmd == VFIO_DEVICE_RESET) {
- 		return vdev->reset_works ?
--			pci_reset_function(vdev->pdev) : -EINVAL;
-+			pci_try_reset_function(vdev->pdev) : -EINVAL;
- 
- 	} else if (cmd == VFIO_DEVICE_GET_PCI_HOT_RESET_INFO) {
- 		struct vfio_pci_hot_reset_info hdr;
-@@ -684,8 +673,8 @@ reset_info_exit:
- 						    &info, slot);
- 		if (!ret)
- 			/* User has access, do the reset */
--			ret = slot ? pci_reset_slot(vdev->pdev->slot) :
--				     pci_reset_bus(vdev->pdev->bus);
-+			ret = slot ? pci_try_reset_slot(vdev->pdev->slot) :
-+				     pci_try_reset_bus(vdev->pdev->bus);
- 
- hot_reset_release:
- 		for (i--; i >= 0; i--)
+	The conflict with "ipr: Handle early EEH" needs to get resolved
+	first.  Either Alexander's patches need to go via the same tree as
+	the EEH change, or the EEH change needs to be in some published
+	tree so I can cherry-pick it.
 
+    nvme: Fix invalid call to irq_set_affinity_hint()
+    nvme: Use pci_enable_msi_range() and pci_enable_msix_range()
+
+	These don't seem fully baked yet.  If/when Keith acks them, I (or
+	he) can merge them.
+
+    ath10k: Use pci_enable_msi_range()
+
+	This has been acked, but no longer applies to mainline (I'm
+	currently at 0e47c969c65e).
+
+Bjorn
