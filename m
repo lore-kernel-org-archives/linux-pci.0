@@ -1,58 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 3 Jan 2014 17:50:08 +0000
-From: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, <xen-devel@lists.xensource.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH v5 16/33] xen, irq: Call irq_alloc_reserved_desc_at()
- at first
-In-Reply-To: <1388707565-16535-17-git-send-email-yinghai@kernel.org>
-Message-ID: <alpine.DEB.2.02.1401031749340.8667@kaball.uk.xensource.com>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org> <1388707565-16535-17-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42598 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751086AbaA2N5n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jan 2014 08:57:43 -0500
+Date: Wed, 29 Jan 2014 14:59:06 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
+	linux-nvme@lists.infradead.org,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Message-ID: <20140129135906.GA3495@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2 Jan 2014, Yinghai Lu wrote:
-> To make x86 irq allocation to be same with booting path and ioapic
-> hot add path, We will pre-reserve irq for all gsi at first.
-> We have to use alloc_reserved here, otherwise irq_alloc_desc_at will fail
-> because bit is already get marked for pre-reserved in irq bitmaps.
+On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > Bjorn,
+> >
+> > As the release is supposedly this weekend, do you prefer
+> > the patches to go to your tree or to individual trees after
+> > the release?
 > 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: xen-devel@lists.xensource.com
-> ---
->  drivers/xen/events.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/xen/events.c b/drivers/xen/events.c
-> index 4035e83..020cd77 100644
-> --- a/drivers/xen/events.c
-> +++ b/drivers/xen/events.c
-> @@ -508,8 +508,12 @@ static int __must_check xen_allocate_irq_gsi(unsigned gsi)
->  	/* Legacy IRQ descriptors are already allocated by the arch. */
->  	if (gsi < NR_IRQS_LEGACY)
->  		irq = gsi;
-> -	else
-> -		irq = irq_alloc_desc_at(gsi, -1);
-> +	else {
-> +		/* for x86, irq already get reserved for gsi */
-> +		irq = irq_alloc_reserved_desc_at(gsi, -1);
-> +		if (irq < 0)
-> +			irq = irq_alloc_desc_at(gsi, -1);
-> +	}
+> I'd be happy to merge them, except for the fact that they probably
+> wouldn't have any time in -next before I ask Linus to pull them.  So
+> how about if we wait until after the release, ask the area maintainers
+> to take them, and if they don't take them, I'll put them in my tree
+> for v3.15?
 
-This is common code. On ARM I get:
+Hi Gentleman,
 
-drivers/xen/events.c: In function 'xen_allocate_irq_gsi':
-drivers/xen/events.c:513:3: error: implicit declaration of function 'irq_alloc_reserved_desc_at' [-Werror=implicit-function-declaration]
-   irq = irq_alloc_reserved_desc_at(gsi, -1);
-   ^
-cc1: some warnings being treated as errors
+As the prerequisite commit 302a252 ("PCI/MSI: Add pci_enable_msi_range()
+and pci_enable_msix_range()") is in mainline now, could you please take
+the ACKed patches to your trees?
 
+Thanks!
+
+> Bjorn
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
