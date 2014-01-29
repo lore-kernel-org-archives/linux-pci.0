@@ -1,118 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58033 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832AbaAMW0e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jan 2014 17:26:34 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, alex.williamson@redhat.com,
-	bhelgaas@google.com
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2 2/2] NVMe: Implement pci reset callback
-Date: Mon, 13 Jan 2014 15:26:28 -0700
-Message-Id: <1389651988-27392-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
-References: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH 05/17] x86/PCI: Drop return value of pcibios_scan_root()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
+	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 29 Jan 2014 11:18:03 -0700
+Message-ID: <20140129181803.15476.65726.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Initiates nvme controller reset sequence when pci layer notifies of slot
-reset. The driver's slot_reset handling is skipped if the nvme polling
-kthread happened to try accessing a device register while the reset was in
-progress, which would have scheduled the nvme device to be reset anyway.
+Nobody really uses the return value of pcibios_scan_root() (one place uses
+it to control a printk, but the printk is not very useful).  This converts
+pcibios_scan_root() to a void function.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/block/nvme-core.c |   36 ++++++++++++++++++++++++++++++++++--
- include/linux/nvme.h      |    1 +
- 2 files changed, 35 insertions(+), 2 deletions(-)
+ arch/x86/include/asm/pci.h |    2 +-
+ arch/x86/pci/common.c      |    6 ++----
+ arch/x86/pci/irq.c         |    4 +---
+ 3 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index b59a93a..1f5c18a 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -1750,6 +1750,7 @@ static int nvme_kthread(void *data)
- 							dev->initialized) {
- 				if (work_busy(&dev->reset_work))
- 					continue;
-+				dev->reset = 1;
- 				list_del_init(&dev->node);
- 				dev_warn(&dev->pci_dev->dev,
- 					"Failed status, reset controller\n");
-@@ -2088,6 +2089,7 @@ static int nvme_dev_map(struct nvme_dev *dev)
- 	}
- 	dev->db_stride = 1 << NVME_CAP_STRIDE(readq(&dev->bar->cap));
- 	dev->dbs = ((void __iomem *)dev->bar) + 4096;
-+	dev->reset = 0;
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index b52f9c0ec5fb..96ae4f4040bb 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -65,7 +65,7 @@ extern unsigned long pci_mem_start;
  
- 	return 0;
+ extern int pcibios_enabled;
+ void pcibios_config_init(void);
+-struct pci_bus *pcibios_scan_root(int bus);
++void pcibios_scan_root(int bus);
  
-@@ -2265,7 +2267,10 @@ static void nvme_dev_shutdown(struct nvme_dev *dev)
- 	list_del_init(&dev->node);
- 	spin_unlock(&dev_list_lock);
- 
--	if (!dev->bar || (dev->bar && readl(&dev->bar->csts) == -1)) {
-+	if (!dev->bar || (dev->bar && readl(&dev->bar->csts) == -1) ||
-+							dev->reset) {
-+		if (dev->bar)
-+			nvme_shutdown_ctrl(dev);
- 		for (i = dev->queue_count - 1; i >= 0; i--) {
- 			struct nvme_queue *nvmeq = dev->queues[i];
- 			nvme_suspend_queue(nvmeq);
-@@ -2575,7 +2580,6 @@ static void nvme_remove(struct pci_dev *pdev)
- #define nvme_error_detected NULL
- #define nvme_dump_registers NULL
- #define nvme_link_reset NULL
--#define nvme_slot_reset NULL
- #define nvme_error_resume NULL
- 
- static int nvme_suspend(struct device *dev)
-@@ -2599,6 +2603,34 @@ static int nvme_resume(struct device *dev)
- 	return 0;
+ void pcibios_set_master(struct pci_dev *dev);
+ void pcibios_penalize_isa_irq(int irq, int active);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 52ad00c2e198..600e5925f1a4 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -456,7 +456,7 @@ void __init dmi_check_pciprobe(void)
+ 	dmi_check_system(pciprobe_dmi_table);
  }
  
-+
-+/**
-+ * nvme_slot_reset - handle nvme device that has been reset
-+ * @pdev: pci device that has been through a pci slot or function reset
-+ *
-+ * Called by pci error recovery. We assume the device is in a state requiring
-+ * initialization, so set the device reset flag first to prevent wasting time
-+ * taking the controller offline with admin commands that we expect to timeout.
-+ */
-+static pci_ers_result_t nvme_slot_reset(struct pci_dev *pdev)
-+{
-+	struct nvme_dev *dev = pci_get_drvdata(pdev);
-+
-+	spin_lock(&dev_list_lock);
-+	if (!work_busy(&dev->reset_work)) {
-+		list_del_init(&dev->node);
-+		dev->reset = 1;
-+	} else {
-+		spin_unlock(&dev_list_lock);
-+		return PCI_ERS_RESULT_RECOVERED;
-+	}
-+	spin_unlock(&dev_list_lock);
-+
-+	nvme_dev_reset(dev);
-+	return dev->initialized ? PCI_ERS_RESULT_RECOVERED :
-+				PCI_ERS_RESULT_DISCONNECT;
-+}
-+
- static SIMPLE_DEV_PM_OPS(nvme_dev_pm_ops, nvme_suspend, nvme_resume);
+-struct pci_bus *pcibios_scan_root(int busnum)
++void pcibios_scan_root(int busnum)
+ {
+ 	struct pci_bus *bus;
+ 	struct pci_sysdata *sd;
+@@ -465,7 +465,7 @@ struct pci_bus *pcibios_scan_root(int busnum)
+ 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+ 	if (!sd) {
+ 		printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busnum);
+-		return NULL;
++		return;
+ 	}
+ 	sd->node = get_mp_bus_to_node(busnum);
+ 	x86_pci_root_bus_resources(busnum, &resources);
+@@ -475,8 +475,6 @@ struct pci_bus *pcibios_scan_root(int busnum)
+ 		pci_free_resource_list(&resources);
+ 		kfree(sd);
+ 	}
+-
+-	return bus;
+ }
  
- static const struct pci_error_handlers nvme_err_handler = {
-diff --git a/include/linux/nvme.h b/include/linux/nvme.h
-index 69ae03f..febce6f 100644
---- a/include/linux/nvme.h
-+++ b/include/linux/nvme.h
-@@ -97,6 +97,7 @@ struct nvme_dev {
- 	u16 oncs;
- 	u16 abort_limit;
- 	u8 initialized;
-+	u8 reset;
- };
- 
- /*
--- 
-1.7.10.4
+ void __init pcibios_set_cache_line_size(void)
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 8658874165c2..84112f55dd7a 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -138,9 +138,7 @@ static void __init pirq_peer_trick(void)
+ 	for (i = 1; i < 256; i++) {
+ 		if (!busmap[i] || pci_find_bus(0, i))
+ 			continue;
+-		if (pcibios_scan_root(i))
+-			printk(KERN_INFO "PCI: Discovered primary peer "
+-			       "bus %02x [IRQ]\n", i);
++		pcibios_scan_root(i);
+ 	}
+ 	pcibios_last_bus = -1;
+ }
 
