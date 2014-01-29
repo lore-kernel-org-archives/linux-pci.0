@@ -1,421 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3277 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756594AbaAGJAo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 04:00:44 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V1 11/14] iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI hotplug happens
-Date: Tue,  7 Jan 2014 17:00:31 +0800
-Message-Id: <1389085234-22296-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:36061 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbaA2MUm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 07:20:42 -0500
+Date: Wed, 29 Jan 2014 21:20:38 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	linux-kernel@lists.codethink.co.uk,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH 1/8] pci-rcar-gen2: add of match table
+Message-ID: <20140129122038.GA26253@verge.net.au>
+References: <1390754945-28142-1-git-send-email-ben.dooks@codethink.co.uk>
+ <1390754945-28142-2-git-send-email-ben.dooks@codethink.co.uk>
+ <52E6559D.6090708@cogentembedded.com>
+ <52E65EAD.9000909@codethink.co.uk>
+ <20140129061722.GB23833@verge.net.au>
+ <CAMuHMdVSWM5wYeA1OarFEv_yYCJR1FSm5Ercjyc5qtcVameSsw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMuHMdVSWM5wYeA1OarFEv_yYCJR1FSm5Ercjyc5qtcVameSsw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current Intel DMAR/IOMMU driver assumes that all PCI devices associated
-with DMAR/RMRR/ATSR device scope arrays are created at boot time and
-won't change at runtime, so it caches pointers of associated PCI device
-object. That assumption may be wrong now due to:
-1) introduction of PCI host bridge hotplug
-2) PCI device hotplug through sysfs interfaces.
+On Wed, Jan 29, 2014 at 11:06:42AM +0100, Geert Uytterhoeven wrote:
+> On Wed, Jan 29, 2014 at 7:17 AM, Simon Horman <horms@verge.net.au> wrote:
+> >> >>+static struct of_device_id rcar_pci_of_match[] = {
+> >> >>+    { .compatible = "renesas,pci-r8a7790", },
+> >> >
+> >> >    Why only H2 SoC, if the driver is for both Gen2 SoCs?
+> >>
+> >> I can add a "renesas,pci-rcar-gen2" as a fallback match however
+> >> I've not got anything other than an r8a7790 to test on. Also the
+> >> compatible properties are preferably named after the soc.
+> >
+> > I'm not sure what the "best practice" is here but I propose that
+> > you add both "renesas,pci-rcar-gen2" and "renesas,pci-r8a7790" now.
+> 
+> To the driver or to the '90 DTS?
+> 
+> If the DTS says
+> 
+>     compatible = "renesas,pci-r8a7790", "renesas,pci-rcar-gen2"
+> 
+> then the driver can just live with "renesas,pci-rcar-gen2" for now.
+> 
+> > And that "renesas,pci-r8a7791" can be added once the code has been
+> > integrated and tested on that platform.
+> 
+> And later we can add
+> 
+>     compatible = "renesas,pci-r8a7791", "renesas,pci-rcar-gen2"
+> 
+> to the '91 DTS if it turns out to be compatible.
+> 
+> If the '91 turns out to be incompatible, or partially compatible, the driver
+> can be updated later to handle both "renesas,pci-r8a7790" and
+> "renesas,pci-r8a7791" and differentiate between them.
+> 
+> (That's what I was instructed to do with SPI ;-)
 
-Wang Yijing has tried to solve this issue by caching <bus, dev, func>
-tupple instead of the PCI device object pointer, but that's still
-unreliable because PCI bus number may change in case of hotplug.
-Please refer to http://lkml.org/lkml/2013/11/5/64
-Message from Yingjing's mail:
-after remove and rescan a pci device
-[  611.857095] dmar: DRHD: handling fault status reg 2
-[  611.857109] dmar: DMAR:[DMA Read] Request device [86:00.3] fault addr ffff7000
-[  611.857109] DMAR:[fault reason 02] Present bit in context entry is clear
-[  611.857524] dmar: DRHD: handling fault status reg 102
-[  611.857534] dmar: DMAR:[DMA Read] Request device [86:00.3] fault addr ffff6000
-[  611.857534] DMAR:[fault reason 02] Present bit in context entry is clear
-[  611.857936] dmar: DRHD: handling fault status reg 202
-[  611.857947] dmar: DMAR:[DMA Read] Request device [86:00.3] fault addr ffff5000
-[  611.857947] DMAR:[fault reason 02] Present bit in context entry is clear
-[  611.858351] dmar: DRHD: handling fault status reg 302
-[  611.858362] dmar: DMAR:[DMA Read] Request device [86:00.3] fault addr ffff4000
-[  611.858362] DMAR:[fault reason 02] Present bit in context entry is clear
-[  611.860819] IPv6: ADDRCONF(NETDEV_UP): eth3: link is not ready
-[  611.860983] dmar: DRHD: handling fault status reg 402
-[  611.860995] dmar: INTR-REMAP: Request device [[86:00.3] fault index a4
-[  611.860995] INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
-
-This patch introduces a new mechanism to update the DRHD/RMRR/ATSR device scope
-caches by hooking PCI bus notification.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c        |  207 +++++++++++++++++++++++++++++++++++++++++++
- drivers/iommu/intel-iommu.c |   54 +++++++++++
- include/linux/dmar.h        |   22 +++++
- 3 files changed, 283 insertions(+)
-
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 31c72d5..15c9ce0 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -194,6 +194,209 @@ void dmar_free_dev_scope(struct pci_dev __rcu ***devices, int *cnt)
- 	*cnt = 0;
- }
- 
-+/* Optimize out kzalloc()/kfree() for normal cases */
-+static char dmar_pci_notify_info_buf[64];
-+
-+static struct dmar_pci_notify_info *
-+dmar_alloc_pci_notify_info(struct pci_dev *dev, unsigned long event)
-+{
-+	int level = 0;
-+	size_t size;
-+	struct pci_dev *tmp;
-+	struct dmar_pci_notify_info *info;
-+
-+	BUG_ON(dev->is_virtfn);
-+
-+	/* Only generate path[] for device addition event */
-+	if (event == BUS_NOTIFY_ADD_DEVICE)
-+		for (tmp = dev; tmp; tmp = tmp->bus->self)
-+			level++;
-+
-+	size = sizeof(*info) + level * sizeof(struct acpi_dmar_pci_path);
-+	if (size <= sizeof(dmar_pci_notify_info_buf)) {
-+		info = (struct dmar_pci_notify_info *)dmar_pci_notify_info_buf;
-+	} else {
-+		info = kzalloc(size, GFP_KERNEL);
-+		if (!info) {
-+			pr_warn("Out of memory when allocating notify_info "
-+				"for %s.\n", pci_name(dev));
-+			return NULL;
-+		}
-+	}
-+
-+	info->event = event;
-+	info->dev = dev;
-+	info->seg = pci_domain_nr(dev->bus);
-+	info->level = level;
-+	if (event == BUS_NOTIFY_ADD_DEVICE) {
-+		for (tmp = dev, level--; tmp; tmp = tmp->bus->self) {
-+			info->path[level].device = PCI_SLOT(tmp->devfn);
-+			info->path[level].function = PCI_FUNC(tmp->devfn);
-+			if (pci_is_root_bus(tmp->bus))
-+				info->bus = tmp->bus->number;
-+		}
-+	}
-+
-+	return info;
-+}
-+
-+static inline void dmar_free_pci_notify_info(struct dmar_pci_notify_info *info)
-+{
-+	if ((void *)info != dmar_pci_notify_info_buf)
-+		kfree(info);
-+}
-+
-+static bool dmar_match_pci_path(struct dmar_pci_notify_info *info, int bus,
-+				struct acpi_dmar_pci_path *path, int count)
-+{
-+	int i;
-+
-+	if (info->bus != bus)
-+		return false;
-+	if (info->level != count)
-+		return false;
-+
-+	for (i = 0; i < count; i++) {
-+		if (path[i].device != info->path[i].device ||
-+		    path[i].function != info->path[i].function)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
-+/* Return: > 0 if match found, 0 if no match found, < 0 if error happens */
-+int dmar_insert_dev_scope(struct dmar_pci_notify_info *info,
-+			  void *start, void*end, u16 segment,
-+			  struct pci_dev __rcu **devices, int devices_cnt)
-+{
-+	int i, level;
-+	struct pci_dev *tmp, *dev = info->dev;
-+	struct acpi_dmar_device_scope *scope;
-+	struct acpi_dmar_pci_path *path;
-+
-+	if (segment != info->seg)
-+		return 0;
-+
-+	for (; start < end; start += scope->length) {
-+		scope = start;
-+		if (scope->entry_type != ACPI_DMAR_SCOPE_TYPE_ENDPOINT &&
-+		    scope->entry_type != ACPI_DMAR_SCOPE_TYPE_BRIDGE)
-+			continue;
-+
-+		path = (struct acpi_dmar_pci_path *)(scope + 1);
-+		level = (scope->length - sizeof(*scope)) / sizeof(*path);
-+		if (!dmar_match_pci_path(info, scope->bus, path, level))
-+			continue;
-+
-+		if ((scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT) ^
-+		    (dev->hdr_type == PCI_HEADER_TYPE_NORMAL)) {
-+			pr_warn("Device scope type does not match for %s\n",
-+				pci_name(dev));
-+			return -EINVAL;
-+		}
-+
-+		for_each_dev_scope(devices, devices_cnt, i, tmp)
-+			if (tmp == NULL) {
-+				rcu_assign_pointer(devices[i],
-+						   pci_dev_get(dev));
-+				return 1;
-+			}
-+		BUG_ON(i >= devices_cnt);
-+	}
-+
-+	return 0;
-+}
-+
-+int dmar_remove_dev_scope(struct dmar_pci_notify_info *info, u16 segment,
-+			  struct pci_dev __rcu **devices, int count)
-+{
-+	int index;
-+	struct pci_dev *tmp;
-+
-+	if (info->seg != segment)
-+		return 0;
-+
-+	for_each_active_dev_scope(devices, count, index, tmp)
-+		if (tmp == info->dev) {
-+			rcu_assign_pointer(devices[index], NULL);
-+			synchronize_rcu();
-+			pci_dev_put(tmp);
-+			return 1;
-+		}
-+
-+	return 0;
-+}
-+
-+static int dmar_pci_bus_add_dev(struct dmar_pci_notify_info *info)
-+{
-+	int ret = 0;
-+	struct dmar_drhd_unit *dmaru;
-+	struct acpi_dmar_hardware_unit *drhd;
-+
-+	for_each_drhd_unit(dmaru) {
-+		if (dmaru->include_all)
-+			continue;
-+
-+		drhd = container_of(dmaru->hdr,
-+				    struct acpi_dmar_hardware_unit, header);
-+		ret = dmar_insert_dev_scope(info, (void *)(drhd + 1),
-+				((void *)drhd) + drhd->header.length,
-+				dmaru->segment,
-+				dmaru->devices, dmaru->devices_cnt);
-+		if (ret != 0)
-+			break;
-+	}
-+	if (ret >= 0)
-+		ret = dmar_iommu_notify_scope_dev(info);
-+
-+	return ret;
-+}
-+
-+static void  dmar_pci_bus_del_dev(struct dmar_pci_notify_info *info)
-+{
-+	struct dmar_drhd_unit *dmaru;
-+
-+	for_each_drhd_unit(dmaru)
-+		if (dmar_remove_dev_scope(info, dmaru->segment,
-+			dmaru->devices, dmaru->devices_cnt))
-+			break;
-+	dmar_iommu_notify_scope_dev(info);
-+}
-+
-+static int dmar_pci_bus_notifier(struct notifier_block *nb,
-+				 unsigned long action, void *data)
-+{
-+	struct pci_dev *pdev = to_pci_dev(data);
-+	struct dmar_pci_notify_info *info;
-+
-+	/* Only care about add/remove events for physical functions */
-+	if (pdev->is_virtfn)
-+		return NOTIFY_DONE;
-+	if (action != BUS_NOTIFY_ADD_DEVICE && action != BUS_NOTIFY_DEL_DEVICE)
-+		return NOTIFY_DONE;
-+
-+	info = dmar_alloc_pci_notify_info(pdev, action);
-+	if (!info)
-+		return NOTIFY_DONE;
-+
-+	down_write(&dmar_global_lock);
-+	if (action == BUS_NOTIFY_ADD_DEVICE)
-+		dmar_pci_bus_add_dev(info);
-+	else if (action == BUS_NOTIFY_DEL_DEVICE)
-+		dmar_pci_bus_del_dev(info);
-+	up_write(&dmar_global_lock);
-+
-+	dmar_free_pci_notify_info(info);
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block dmar_pci_bus_nb = {
-+	.notifier_call = dmar_pci_bus_notifier,
-+	.priority = INT_MIN,
-+};
-+
- /**
-  * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
-  * structure which uniquely represent one DMA remapping hardware unit
-@@ -482,6 +685,8 @@ int __init dmar_dev_scope_init(void)
- 	if (ret)
- 		goto fail;
- 
-+	bus_register_notifier(&pci_bus_type, &dmar_pci_bus_nb);
-+
- 	dmar_dev_scope_initialized = 1;
- 	return 0;
- 
-@@ -1412,6 +1617,8 @@ static int __init dmar_free_unused_resources(void)
- 	if (irq_remapping_enabled || intel_iommu_enabled)
- 		return 0;
- 
-+	bus_unregister_notifier(&pci_bus_type, &dmar_pci_bus_nb);
-+
- 	down_write(&dmar_global_lock);
- 	list_for_each_entry_safe(dmaru, dmaru_n, &dmar_drhd_units, list) {
- 		list_del(&dmaru->list);
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 91ecb95..010491f 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3619,6 +3619,60 @@ int __init dmar_parse_rmrr_atsr_dev(void)
- 	return 0;
- }
- 
-+int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
-+{
-+	int ret = 0;
-+	struct dmar_rmrr_unit *rmrru;
-+	struct dmar_atsr_unit *atsru;
-+	struct acpi_dmar_atsr *atsr;
-+	struct acpi_dmar_reserved_memory *rmrr;
-+
-+	if (!intel_iommu_enabled && system_state != SYSTEM_BOOTING)
-+		return 0;
-+
-+	list_for_each_entry(rmrru, &dmar_rmrr_units, list) {
-+		rmrr = container_of(rmrru->hdr,
-+				    struct acpi_dmar_reserved_memory, header);
-+		if (info->event == BUS_NOTIFY_ADD_DEVICE) {
-+			ret = dmar_insert_dev_scope(info, (void *)(rmrr + 1),
-+				((void *)rmrr) + rmrr->header.length,
-+				rmrr->segment, rmrru->devices,
-+				rmrru->devices_cnt);
-+			if (ret > 0)
-+				break;
-+			else if(ret < 0)
-+				return ret;
-+		} else if (info->event == BUS_NOTIFY_DEL_DEVICE) {
-+			if (dmar_remove_dev_scope(info, rmrr->segment,
-+				rmrru->devices, rmrru->devices_cnt))
-+				break;
-+		}
-+	}
-+
-+	list_for_each_entry(atsru, &dmar_atsr_units, list) {
-+		if (atsru->include_all)
-+			continue;
-+
-+		atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
-+		if (info->event == BUS_NOTIFY_ADD_DEVICE) {
-+			ret = dmar_insert_dev_scope(info, (void *)(atsr + 1),
-+					(void *)atsr + atsr->header.length,
-+					atsr->segment, atsru->devices,
-+					atsru->devices_cnt);
-+			if (ret > 0)
-+				break;
-+			else if(ret < 0)
-+				return ret;
-+		} else if (info->event == BUS_NOTIFY_DEL_DEVICE) {
-+			if (dmar_remove_dev_scope(info, atsr->segment,
-+					atsru->devices, atsru->devices_cnt))
-+				break;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Here we only respond to action of unbound device from driver.
-  *
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 3e42960..78c15a45 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -50,6 +50,15 @@ struct dmar_drhd_unit {
- 	struct intel_iommu *iommu;
- };
- 
-+struct dmar_pci_notify_info {
-+	struct pci_dev			*dev;
-+	unsigned long			event;
-+	int				bus;
-+	u16				seg;
-+	u16				level;
-+	struct acpi_dmar_pci_path	path[];
-+}  __attribute__((packed));
-+
- extern struct rw_semaphore dmar_global_lock;
- extern struct list_head dmar_drhd_units;
- 
-@@ -90,7 +99,15 @@ extern void *dmar_alloc_dev_scope(void *start, void *end, int *cnt);
- extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 				struct pci_dev __rcu ***devices, u16 segment);
- extern void dmar_free_dev_scope(struct pci_dev __rcu ***devices, int *cnt);
-+extern int dmar_insert_dev_scope(struct dmar_pci_notify_info *info,
-+				 void *start, void*end, u16 segment,
-+				 struct pci_dev __rcu **devices,
-+				 int devices_cnt);
-+extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
-+				 u16 segment, struct pci_dev __rcu **devices,
-+				 int count);
- #else
-+struct dmar_pci_notify_info;
- static inline int dmar_table_init(void)
- {
- 	return -ENODEV;
-@@ -152,6 +169,7 @@ extern int iommu_detected, no_iommu;
- extern int dmar_parse_rmrr_atsr_dev(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
-+extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
- extern int intel_iommu_init(void);
- #else /* !CONFIG_INTEL_IOMMU: */
- static inline int intel_iommu_init(void) { return -ENODEV; }
-@@ -167,6 +185,10 @@ static inline int dmar_parse_rmrr_atsr_dev(void)
- {
- 	return 0;
- }
-+static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_INTEL_IOMMU */
- 
- #endif /* __DMAR_H__ */
--- 
-1.7.10.4
-
+Thanks, that is more or less how I thought things work :)
