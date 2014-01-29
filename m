@@ -1,39 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f51.google.com ([209.85.219.51]:60024 "EHLO
-	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbaA3AEe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 19:04:34 -0500
-Received: by mail-oa0-f51.google.com with SMTP id h16so2863428oag.24
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 16:04:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
-References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
- <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
- <20140117182231.GA18421@google.com> <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:38499 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751335AbaA2XM0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 18:12:26 -0500
+Received: by mail-ie0-f174.google.com with SMTP id tp5so2764398ieb.33
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 15:12:25 -0800 (PST)
+Date: Wed, 29 Jan 2014 16:12:22 -0700
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 29 Jan 2014 17:04:13 -0700
-Message-ID: <CAErSpo4fGBhb+pj6pTpKFTTj9rzLYzB2w-EX2ghWRYR3Cjyd9g@mail.gmail.com>
-Subject: Re: EHCI host broken -- interrupts disabled
-To: "Chen, Jamie" <jamie.chen@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Djalal Harouni <tixxdz@opendz.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: fix a memory leak of pci_host_bridge on error path
+Message-ID: <20140129231222.GI16825@google.com>
+References: <1389741079-12976-1-git-send-email-tixxdz@opendz.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1389741079-12976-1-git-send-email-tixxdz@opendz.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 20, 2014 at 5:15 AM, Chen, Jamie <jamie.chen@intel.com> wrote:
-> Try to apply this patch to kernel 3.8.0.
->
-> Make sure the ehci can work fine and lspci show that PCI_COMMAND_INTX_DISABLE is 0.
->
-> The patch can resolved this issue.
+On Wed, Jan 15, 2014 at 12:11:19AM +0100, Djalal Harouni wrote:
+> On error paths make sure that the pci_host_bridge struct is freed.
+> 
+> Signed-off-by: Djalal Harouni <tixxdz@opendz.org>
 
-Thanks for testing it.  Can you collect the complete dmesg output or
-dmidecode output?  (Remove secret details from it, of course.)
+Applied to pci/misc, thanks!
 
-I'm going to put this info into a bugzilla report for future reference.
-
-Bjorn
+> ---
+> On top of linux-next.
+> 
+>  drivers/pci/probe.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 23cdfac..483566c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1771,15 +1771,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	bridge->dev.release = pci_release_host_bridge_dev;
+>  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+>  	error = pcibios_root_bridge_prepare(bridge);
+> -	if (error) {
+> -		kfree(bridge);
+> -		goto err_out;
+> -	}
+> +	if (error)
+> +		goto host_bridge_err;
+>  
+>  	error = device_register(&bridge->dev);
+>  	if (error) {
+>  		put_device(&bridge->dev);
+> -		goto err_out;
+> +		goto host_bridge_err;
+>  	}
+>  	b->bridge = get_device(&bridge->dev);
+>  	device_enable_async_suspend(b->bridge);
+> @@ -1836,6 +1834,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  class_dev_reg_err:
+>  	put_device(&bridge->dev);
+>  	device_unregister(&bridge->dev);
+> +host_bridge_err:
+> +	kfree(bridge);
+>  err_out:
+>  	kfree(b);
+>  	return NULL;
+> -- 
+> 1.7.11.7
+> 
