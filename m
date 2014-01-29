@@ -1,137 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:58707 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755503AbaAHPwX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jan 2014 10:52:23 -0500
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: pcie-designware: query on MSI IRQ handling
-Date: Wed, 8 Jan 2014 15:52:15 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B704663882@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704662F8F@DFLE11.ent.ti.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189FBAF2CCF@EAPEX1MAIL1.st.com>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189FBAF2CCF@EAPEX1MAIL1.st.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [RFC PATCH V2 1/4] pci: APM X-Gene PCIe controller driver
+Date: Wed, 29 Jan 2014 20:36:34 +0100
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, devicetree@vger.kernel.org,
+	Jon Masters <jcm@redhat.com>, linux-doc@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	patches <patches@apm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1389742458-7693-1-git-send-email-tinamdar@apm.com> <5086198.ZOWZ5xuyna@wuerfel> <CACoXjcnTnhWS-5yOgiHA5yVaBjdH1DVzmSsknEBJLB+CFR0EyA@mail.gmail.com>
+In-Reply-To: <CACoXjcnTnhWS-5yOgiHA5yVaBjdH1DVzmSsknEBJLB+CFR0EyA@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201401292036.34501.arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: Mohit KUMAR DCG [mailto:Mohit.KUMAR@st.com]
->Sent: Wednesday, January 08, 2014 4:04 AM
->To: Karicheri, Muralidharan; Jingoo Han; linux-pci@vger.kernel.org
->Subject: RE: pcie-designware: query on MSI IRQ handling
->
->Hello Murali,
->
->> -----Original Message-----
->> From: Karicheri, Muralidharan [mailto:m-karicheri2@ti.com]
->> Sent: Wednesday, January 08, 2014 12:30 AM
->> To: Jingoo Han; Mohit KUMAR DCG; linux-pci@vger.kernel.org
->> Subject: pcie-designware: query on MSI IRQ handling
->>
->> Hi,
->>
->> I am porting my current PCI Linux driver (based on v3.8) to designware
->> core driver (pcie-designware.c) to submit the patches to the mailing
->> list and got following question. Could someone clarify this please?
->>
->> I see the following code in pcie-designware.c
->>
->> void dw_pcie_msi_init(struct pcie_port *pp) {
->> 	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
->
->I think we can implement dw_pcie_get_msi_addr() to get the MSI address as  below. It
->checks if any specific ops is implemented then it will get the address  from there otherwise
->default as in present case  will be used. You should  implement get_msi_addr() specific to
->your platform.
->
->void dw_pcie_get_msi_addr(struct pcie port *pp) {
->   	if (pp->ops->get_msi_addr)
->		pp->msi_data = pp->ops->get_msi_addr;
->	else
->		pp->msi_data = __get_free_pages(GFP_KERNEL, 0); }
->
->And then call this from dw_pcie_msi_init() as:
->
->void dw_pcie_msi_init(..)
->{
->	dw_pcie_get_msi_addr(..);
->
->	/* program the msi_data */
-> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
->			virt_to_phys((void *)pp->msi_data));
->	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0); } }
->
->>
->> 	/* program the msi_data */
->> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
->> 			virt_to_phys((void *)pp->msi_data));
->> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0); }
->>
->> and then in
->>
->> static int dw_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
->> 			struct msi_desc *desc)
->> {
->>
->>          <---Cut--->
->>
->> 	msg.address_lo = virt_to_phys((void *)pp->msi_data);
->> 	msg.address_hi = 0x0;
->> 	msg.data = pos;
->> 	printk("dw_msi_setup_irq address_lo = %x\n", msg.address_lo);
->> 	write_msi_msg(irq, &msg);
->> }
->>
->> In our designware IP, in the Application space, there is a MSI_IRQ
->> register that the EP needs to write with msi vector value to generate
->> msi irq. So in our case, pp->msi_data should be updated with address RC's MSI_IRQ
->register.
->> So I plan to update the msi_data in port's data structure with MSI_IRQ
->> virtual address and not call dw_msi_setup_irq().
->> I am trying to understand how MSI IRQ works on currently supported
->> designware PCIE hardwares (Samsung, Freescale etc). I am assuming
->> dw_pcie_wr_own_conf () write into RC's config space. But in the above
->> code, I see the code is updating the PCIE_MSI_ADDR_LO/HI of the RC's
->> config with a DDR address and in  write_msi_msg() this address along
->> with vector gets written to EP's MSI config space registers. In this
->> case how is the MSI IRQ gets generated from the EP?
->>
->> EP writes to DDR address with the vector value. Does the PCIE hardware
->> match the address in the MSI irq message from EP with that in
->> PCIE_MSI_ADDR_LO/HI and then raise an IRQ?
->
->Yes.
->
->> Is this part of the Per Vector
->> Masking (PVM) option support as discussed in the PCI spec? Anyone can
->> explain this?
->>
->> Also as part of my development, I plan to enhance this driver to
->> override the dw_msi_irq_chip with our platform specific chip data
->> since MSI interrupt controller is using application specific registers
->> instead of the one at offset 0x828. I will sending an patch for review once my driver is
->tested.
->
->So in you controller you do not have regiter offset 0x820-0x830, right?
->Then probably, its not generic MSI controller as implemented in newer verion of IP.
->
->Hmm....if the same registers are in your application space then maybe you can handle
->Similar to to get_msi_addr() as suggested above.
->
+On Monday 27 January 2014, Tanmay Inamdar wrote:
+> On Sat, Jan 25, 2014 at 12:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Friday 24 January 2014 13:28:22 Tanmay Inamdar wrote:
+> >> On Thu, Jan 16, 2014 at 5:10 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+> >> > On Wed, Jan 15, 2014 at 4:39 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >> >> On Wednesday 15 January 2014, Tanmay Inamdar wrote:
+> >> >>
+> >> >> Maybe another msleep() in the loop? It seems weird to first do an
+> >> >> unconditional sleep but then busy-wait for the result.
+> >> >
+> >> > ok.
+> >>
+> >> This loop can execute for maximum 4 msec. So putting msleep(1) won't
+> >> get us much.
+> >
+> > 4 msec is still quite a long time for a busy loop that can be spent doing
+> > useful work in another thread.
+> >
+> 
+> Right. If 'msleep(1)' is used, then 'checkpatch' throws a warning
+> saying that it can actually sleep for 20ms in some cases. I will check
+> if 'usleep_range' is useful here.
 
-That is right. Agree with both of your suggestions. Will send a patch along with
-my driver patches.
+Sound good. This is really a false positive from checkpatch though,
+with the timeout handling in place, everything's fine even with
+msleep(1).
 
->Regards
->Mohit
->>
->> Thanks
->>
->> Murali Karicheri
->> Linux Kernel, Software Development
->>
+> >> >>
+> >> >> Another general note: Your "compatible" strings are rather unspecific.
+> >> >> Do you have a version number for this IP block? I suppose that it's related
+> >> >> to one that has been used in other chips before, or will be used in future
+> >> >> chips, if it's not actually licensed from some other company.
+> >> >
+> >> > I will have to check this.
+> >> >
+> >>
+> >> We have decided to stick with current compatible string for now.
+> >
+> > Can you elaborate on your reasoning? Does this mean X-Gene is a one-off
+> > product and you won't be doing any new chips based on the same hardware
+> > components?
+> 
+> The current convention is to key upon the family name - X-Gene. Future
+> chips will also be a part of X-Gene family. Right now it is unclear if
+> there are any obvious feature additions to be done in Linux PCIe
+> driver. Until then same driver is expected to work as is in future
+> chips.
 
+This is not enough for me. Of course you hope that things keep working,
+but experience shows that sometimes hardware has slight differences that
+you need to work around later. It's better to always be specific and
+at least as a secondary identifier list the exact model of the component,
+or if that is not know, the model of the SoC. The driver can bind to
+the most generic string, but in DT you should have a specific one as
+well.
+
+You could for instance have something like
+
+	compatible = "apm,xgene-1234w78-pcie", "thirdparty,pcie-1.23", "apm,xgene-pcie", "thirdparty,pcie";
+
+as an example where you licensed the pcie block version 1.23 from a company
+named thirdparty and integrated it into the xgene variant with product
+code 1234w78.
+
+	Arnd
