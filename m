@@ -1,87 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:51935 "EHLO
-	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750969AbaAWHSL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jan 2014 02:18:11 -0500
-Date: Thu, 23 Jan 2014 12:21:04 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-To: Jingoo Han <jg1.han@samsung.com>,
-	=?iso-8859-1?Q?'Bj=F8rn?= Erik Nilsen' <ben@datarespons.no>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	'Harro Haan' <hrhaan@gmail.com>, 'Marek Vasut' <marex@denx.de>
-Subject: Re: designware/imx6: question regarding MSI
-Message-ID: <20140123065104.GA26318@pratyush-vbox>
-References: <25.15.01844.D5C20E25@epmailin6.samsung.com>
- <000201cf17ff$47025bf0$d50713d0$%han@samsung.com>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:53717 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750942AbaA2WKs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 17:10:48 -0500
+Received: by mail-ie0-f173.google.com with SMTP id e14so2731562iej.32
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 14:10:48 -0800 (PST)
+Date: Wed, 29 Jan 2014 15:10:44 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 10/9] PCI/MSI: Undeprecate pci_enable_msi()
+Message-ID: <20140129221044.GF16825@google.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <20140117092620.GA29340@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <000201cf17ff$47025bf0$d50713d0$%han@samsung.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140117092620.GA29340@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 01:52:19PM +0800, Jingoo Han wrote:
-> On Thursday, January 23, 2014 5:39 AM, Jingoo Han wrote:
-> > 
-> > I’m currently playing with MSI support in pci-imx6.c using Harro Haan’s patch [*].
-> > 
-> > Are there any technical reasons why dw_pcie_msi_init cannot be called from dw_msi_setup_irq? Or rather,
-> > why it should not?
-> 
-> No, there is no special reason.
-> The patch (call dw_pcie_msi_init from dw_msi_setup_irq) would be
-> good. Thank you for your effort.
-> 
-> Mohit, Pratyush,
-> If you have different opinions, please let us know. :-)
+On Fri, Jan 17, 2014 at 10:26:20AM +0100, Alexander Gordeev wrote:
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-dw_msi_setup_irq will be called for each function which needs msi
-assignment. However, dw_pcie_msi_init should be called only once. So,
-in my opinion calling dw_pcie_msi_init from dw_msi_setup_irq would not
-be the best option.
+I applied this to pci/msi, thanks!
 
-@Bjørn, can you help us with tracing calling sequence of
-dw_pcie_setup & dw_pcie_scan_bus. I think when you do "reset bridge",
-it will call dw_pcie_setup and when you do "rescan bus", it will call
-dw_pcie_scan_bus. If yes, then you can move dw_pcie_msi_init to
-dw_pcie_setup.
-
-Regards
-Pratyush
-
+> ---
+>  Documentation/PCI/MSI-HOWTO.txt |   23 ++++++++++++++++++++---
+>  1 files changed, 20 insertions(+), 3 deletions(-)
 > 
-> Best regards,
-> Jingoo Han
+> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+> index a8d0100..3c3080e 100644
+> --- a/Documentation/PCI/MSI-HOWTO.txt
+> +++ b/Documentation/PCI/MSI-HOWTO.txt
+> @@ -82,7 +82,19 @@ Most of the hard work is done for the driver in the PCI layer.  It simply
+>  has to request that the PCI layer set up the MSI capability for this
+>  device.
+>  
+> -4.2.1 pci_enable_msi_range
+> +4.2.1 pci_enable_msi
+> +
+> +int pci_enable_msi(struct pci_dev *dev)
+> +
+> +A successful call allocates ONE interrupt to the device, regardless
+> +of how many MSIs the device supports.  The device is switched from
+> +pin-based interrupt mode to MSI mode.  The dev->irq number is changed
+> +to a new number which represents the message signaled interrupt;
+> +consequently, this function should be called before the driver calls
+> +request_irq(), because an MSI is delivered via a vector that is
+> +different from the vector of a pin-based interrupt.
+> +
+> +4.2.2 pci_enable_msi_range
+>  
+>  int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+>  
+> @@ -158,7 +170,12 @@ static int foo_driver_enable_single_msi(struct pci_dev *pdev)
+>  	return pci_enable_msi_range(pdev, 1, 1);
+>  }
+>  
+> -4.2.2 pci_disable_msi
+> +Note, unlike pci_enable_msi() function, which could be also used to
+> +enable the single MSI mode, pci_enable_msi_range() returns either a
+> +negative errno or 1 (not negative errno or 0 - as pci_enable_msi()
+> +does).
+> +
+> +4.2.3 pci_disable_msi
+>  
+>  void pci_disable_msi(struct pci_dev *dev)
+>  
+> @@ -172,7 +189,7 @@ on any interrupt for which it previously called request_irq().
+>  Failure to do so results in a BUG_ON(), leaving the device with
+>  MSI enabled and thus leaking its vector.
+>  
+> -4.2.3 pci_msi_vec_count
+> +4.2.4 pci_msi_vec_count
+>  
+>  int pci_msi_vec_count(struct pci_dev *dev)
+>  
+> -- 
+> 1.7.7.6
 > 
-> > 
-> > I’m asking because I have a hotplug scenario where this little hack (call dw_pcie_msi_init from
-> > dw_msi_setup_irq) fixes a problem with MSI. I therefore need to understand whether it is a sensible
-> > hack or just crap, and more importantly; how it can be fixed properly.
-> > 
-> > Scenario:
-> > 
-> > (remove endpoints)
-> > # echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove
-> > # echo 1 > /sys/bus/pci/devices/0000:01:00.1/remove
-> > 
-> > # take fpga in and out of reset (this will mess up the configuration space of the bridge)
-> > 
-> > (reset bridge)
-> > # echo 1 > /sys/bus/pci/devices/0000:00:00.0/reset
-> > 
-> > (rescan bus)
-> > # echo 1 > /sys/bus/pci/rescan
-> > 
-> > At this point everything works fine except MSI. With above mention hack it works like a charm.
-> > 
-> > I would be grateful if someone could shed light on this. I might have missed some important details.
-> > 
-> > 
-> > Best regards,
-> > Bjørn Erik Nilsen
-> > 
-> > [*]
-> > 
-> > From: Harro Haan <hrhaan@gmail.com>
-> > Date: Thu, 5 Dec 2013 14:06:37 +0100
-> > Subject: [PATCH 2/2] PCI: imx6: add support for MSI
+> -- 
+> Regards,
+> Alexander Gordeev
+> agordeev@redhat.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
