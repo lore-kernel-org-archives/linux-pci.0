@@ -1,62 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:39807 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751666AbaAMS5F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jan 2014 13:57:05 -0500
-Received: by mail-ie0-f173.google.com with SMTP id u16so6065029iet.32
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jan 2014 10:57:04 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	x86@kernel.org, linux-ia64@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 00/17] x86, ia64 NUMA cleanup
+Date: Wed, 29 Jan 2014 22:23:42 +0100
+Message-ID: <2252437.OFEY1u4TK8@vostro.rjw.lan>
+In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20140109153513.21446.31778.stgit@bling.home>
-References: <20140109153513.21446.31778.stgit@bling.home>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 13 Jan 2014 11:56:43 -0700
-Message-ID: <CAErSpo4Ku-189dV-fw6-7dSCvQZf22yw8w=-P6HDyFBpVQ160g@mail.gmail.com>
-Subject: Re: [PATCH] pci/iov: VFs are never multifunction
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	sathya.perla@emulex.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ajit.khaparde@emulex.com, Don Dutile <ddutile@redhat.com>,
-	subbu.seetharaman@emulex.com, Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 9, 2014 at 8:36 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> Per the SR-IOV spec rev 1.1:
->
-> 3.4.1.9 Header Type (Offset 0Eh)
->
-> "... For VFs, this register must be RO Zero."
->
-> Unfortunately some devices get this wrong, ex. Emulex OneConnect 10Gb
-> NIC.  When they do it makes us handle ACS testing and therefore IOMMU
-> groups as if they were actual multifunction devices and require ACS
-> capabilities to make sure there's no peer-to-peer between functions.
-> VFs are never traditional multifunction devices, so simply clear this
-> bit before we get any further into setup.
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-
-Applied to pci/misc for v3.14, thanks!
-
-Bjorn
-
+On Wednesday, January 29, 2014 11:17:25 AM Bjorn Helgaas wrote:
+> This is all cleanup: it adds no new functionality and should make no
+> functional difference at all except a printk change or two.
+> 
+> The main ideas are:
+> 
+>   - Clean up the x86 PCI bus scanning interfaces.  We had:
+>       struct pci_bus *pci_scan_bus_on_node(int bus, struct pci_ops *, int node)
+>       struct pci_bus *pcibios_scan_root(int bus)
+>       struct pci_bus *pci_scan_bus_with_sysdata(int bus)
+>       void pcibios_scan_specific_bus(int bus)
+>     These were all basically the same, so I kept only pcibios_scan_root().
+> 
+>   - Get rid of mp_bus_to_node[].  This was basically a way of passing node
+>     info from the AMD "native host bridg driver" (amd_bus.c) into the PCI
+>     core.  It was clunky and inconsistent between x86-64 and i386.  I
+>     replaced it with x86_pci_root_bus_node(), analogous to the existing
+>     x86_pci_root_bus_resources().
+> 
+>   - Remove _PXM knowledge from the PCI host bridge, IOMMU, and APIC code.
+>     They really only care about the NUMA node number, not the raw _PXM
+>     value.
+> 
 > ---
->  drivers/pci/iov.c |    1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 1fe2d6f..e2fbb67 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -84,6 +84,7 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->         virtfn->dev.parent = dev->dev.parent;
->         virtfn->physfn = pci_dev_get(dev);
->         virtfn->is_virtfn = 1;
-> +       virtfn->multifunction = 0;
->
->         for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->                 res = dev->resource + PCI_IOV_RESOURCES + i;
->
+> 
+> Bjorn Helgaas (17):
+>       x86/PCI: Drop pcibios_scan_root() check for bus already scanned
+>       x86/PCI: Use pcibios_scan_root() instead of pci_scan_bus_with_sysdata()
+>       x86/PCI: Use pcibios_scan_root() instead of pci_scan_bus_on_node()
+>       x86/PCI: Merge pci_scan_bus_on_node() into pcibios_scan_root()
+>       x86/PCI: Drop return value of pcibios_scan_root()
+>       x86/PCI: Add x86_pci_root_bus_node() to look up NUMA node from PCI bus
+>       x86/PCI: Use x86_pci_root_bus_node() instead of get_mp_bus_to_node()
+>       x86/PCI: Remove mp_bus_to_node[], set_mp_bus_to_node(), get_mp_bus_to_node()
+>       x86/PCI: Remove unnecessary list_empty(&pci_root_infos) check
+>       x86/PCI: Use NUMA_NO_NODE, not -1, for unknown node
+>       x86/PCI: Remove acpi_get_pxm() usage
+>       ia64 / sba_iommu: Use NUMA_NO_NODE, not MAX_NUMNODES, for unknown node
+>       ia64: Remove acpi_get_pxm() usage
+>       ACPI / numa: Fix acpi_get_node() prototype
+>       ACPI / numa: Simplify acpi_get_node() style
+>       ACPI / numa: Make __acpi_map_pxm_to_node(), acpi_get_pxm() static
+>       ACPI / numa: Use __weak, not the gcc-specific version
+> 
+> 
+>  arch/ia64/hp/common/sba_iommu.c |   32 +++-------
+>  arch/ia64/include/asm/pci.h     |    2 -
+>  arch/ia64/kernel/acpi.c         |   28 ++-------
+>  arch/ia64/pci/pci.c             |   10 +--
+>  arch/x86/include/asm/pci.h      |    7 --
+>  arch/x86/include/asm/topology.h |   14 ----
+>  arch/x86/pci/acpi.c             |   29 ++-------
+>  arch/x86/pci/amd_bus.c          |   10 ---
+>  arch/x86/pci/bus_numa.c         |   13 +++-
+>  arch/x86/pci/common.c           |  128 +++++----------------------------------
+>  arch/x86/pci/fixup.c            |    6 +-
+>  arch/x86/pci/irq.c              |    6 --
+>  arch/x86/pci/legacy.c           |    4 -
+>  arch/x86/pci/numaq_32.c         |    6 +-
+>  arch/x86/pci/visws.c            |    4 +
+>  drivers/acpi/numa.c             |   16 ++---
+>  include/acpi/acpi_numa.h        |    1 
+>  include/linux/acpi.h            |    9 +--
+>  18 files changed, 75 insertions(+), 250 deletions(-)
+
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+for the whole series.
+
+Thanks!
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
