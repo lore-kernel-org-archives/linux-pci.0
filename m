@@ -1,84 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0182.outbound.protection.outlook.com ([207.46.163.182]:19465
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750740AbaAUFkW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jan 2014 00:40:22 -0500
-From: "Dongsheng.Wang@freescale.com" <Dongsheng.Wang@freescale.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-CC: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Scott Wood <scottwood@freescale.com>
-Subject: RE: [PATCH 2/2] fsl/pci: The new pci suspend/resume implementation
-Date: Tue, 21 Jan 2014 05:40:17 +0000
-Message-ID: <fac9007cecb54cad99d371ac08698467@BN1PR03MB188.namprd03.prod.outlook.com>
-References: <1389081848-26506-1-git-send-email-dongsheng.wang@freescale.com>
- <1389081848-26506-2-git-send-email-dongsheng.wang@freescale.com>
- <4984978.bktZCpdLkC@vostro.rjw.lan>
- <5ca123d4b32b49719cd9e8506916a9cf@BN1PR03MB188.namprd03.prod.outlook.com>
-In-Reply-To: <5ca123d4b32b49719cd9e8506916a9cf@BN1PR03MB188.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:60668 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbaA2WWE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 17:22:04 -0500
+Received: by mail-ig0-f170.google.com with SMTP id m12so18442271iga.1
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 14:22:03 -0800 (PST)
+Date: Wed, 29 Jan 2014 15:22:00 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 11/9] PCI/MSI: Phase out pci_enable_msi_block()
+Message-ID: <20140129222200.GG16825@google.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <20140117092737.GB29340@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140117092737.GB29340@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Any more comments? :)
+On Fri, Jan 17, 2014 at 10:27:38AM +0100, Alexander Gordeev wrote:
+> This update obsoletes pci_enable_msi_block() function
+> in favor of pci_enable_msi_range().
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/pci/msi.c   |   17 +++++++++++++++--
+>  include/linux/pci.h |    7 ++-----
+>  2 files changed, 17 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 7a0fec6..49088d0 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -889,7 +889,7 @@ EXPORT_SYMBOL(pci_msi_vec_count);
+>   * updates the @dev's irq member to the lowest new interrupt number; the
+>   * other interrupt numbers allocated to this device are consecutive.
+>   */
+> -int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+> +static int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+>  {
+>  	int status, maxvec;
+>  
+> @@ -918,7 +918,6 @@ int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+>  	status = msi_capability_init(dev, nvec);
+>  	return status;
+>  }
+> -EXPORT_SYMBOL(pci_enable_msi_block);
+>  
+>  void pci_msi_shutdown(struct pci_dev *dev)
+>  {
+> @@ -1148,6 +1147,20 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+>  EXPORT_SYMBOL(pci_enable_msi_range);
+>  
+>  /**
+> + * pci_enable_msi - configure device's MSI capability structure
+> + * @dev: device to configure
+> + *
+> + * This function initializes the single MSI mode. It returns a negative errno
+> + * if an error occurs. If it succeeds, it returns 0 and updates the @dev's
+> + * irq member to the new interrupt number;
+> + **/
+> +int pci_enable_msi(struct pci_dev *dev)
+> +{
+> +	return pci_enable_msi_block(dev, 1);
 
-Thanks,
--Dongsheng
+I like un-exporting pci_enable_msi_block(), but I don't like the fact that
+we keep it internally.  I'd rather fold it into pci_enable_msi_range()
+directly, and then make pci_enable_msi() a wrapper around *that*.
 
-> -----Original Message-----
-> From: Linuxppc-dev [mailto:linuxppc-dev-
-> bounces+b40534=freescale.com@lists.ozlabs.org] On Behalf Of
-> Dongsheng.Wang@freescale.com
-> Sent: Wednesday, January 08, 2014 3:13 PM
-> To: Rafael J. Wysocki
-> Cc: linuxppc-dev@lists.ozlabs.org; galak@codeaurora.org; Wood Scott-B07421;
-> linux-pci@vger.kernel.org; bhelgaas@google.com
-> Subject: RE: [PATCH 2/2] fsl/pci: The new pci suspend/resume implementation
-> 
-> 
-> 
-> > -----Original Message-----
-> > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > Sent: Wednesday, January 08, 2014 4:42 AM
-> > To: Wang Dongsheng-B40534
-> > Cc: bhelgaas@google.com; Wood Scott-B07421; galak@codeaurora.org; Zang Roy-
-> > R61911; linux-pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org
-> > Subject: Re: [PATCH 2/2] fsl/pci: The new pci suspend/resume implementation
-> >
-> > On Tuesday, January 07, 2014 04:04:08 PM Dongsheng Wang wrote:
-> > > From: Wang Dongsheng <dongsheng.wang@freescale.com>
-> > >
-> > > The new suspend/resume implementation, send pme turnoff message
-> > > in suspend, and send pme exit message in resume.
-> > >
-> > > Add a PME handler, to response PME & message interrupt.
-> > >
-> > > Change platform_driver->suspend/resume to syscore->suspend/resume.
-> >
-> > Can you please first describe the problem you're trying to address?
-> >
-> If we do nothing in suspend/resume, some platform PCIe ip-block can't guarantee
-> the link back to L0 state from sleep, then, when we read the EP device will hang.
-> Only we send pme turnoff message in pci controller suspend, and send pme exit
-> message in resume, the link state will be normal.
-> 
-> When we send pme turnoff message in pci controller suspend, the links will into
-> l2/l3
-> ready, then, host cannot communicate with ep device, but pci-driver will call
-> back EP
-> device to save them state. So we need to change platform_driver->suspend/resume
-> to
-> syscore->suspend/resume.
-> 
-> Thanks,
-> -Dongsheng
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
-> 
+pci_enable_msi_block() has some one-time checks (vector count, already
+enabled) that should not be inside the loop in pci_enable_msi_range().
+So I think some rearrangement could lead to cleaner code here.
 
+> +}
+> +EXPORT_SYMBOL(pci_enable_msi);
+> +
+> +/**
+>   * pci_enable_msix_range - configure device's MSI-X capability structure
+>   * @dev: pointer to the pci_dev data structure of MSI-X device function
+>   * @entries: pointer to an array of MSI-X entries
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index fa959aa..5b58078 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1157,7 +1157,7 @@ struct msix_entry {
+>  
+>  #ifdef CONFIG_PCI_MSI
+>  int pci_msi_vec_count(struct pci_dev *dev);
+> -int pci_enable_msi_block(struct pci_dev *dev, int nvec);
+> +int pci_enable_msi(struct pci_dev *dev);
+>  void pci_msi_shutdown(struct pci_dev *dev);
+>  void pci_disable_msi(struct pci_dev *dev);
+>  int pci_msix_vec_count(struct pci_dev *dev);
+> @@ -1172,8 +1172,7 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+>  			  int minvec, int maxvec);
+>  #else
+>  static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+> -static inline int pci_enable_msi_block(struct pci_dev *dev, int nvec)
+> -{ return -ENOSYS; }
+> +static inline int pci_enable_msi(struct pci_dev *dev) { return -ENOSYS; }
+>  static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+>  static inline void pci_disable_msi(struct pci_dev *dev) { }
+>  static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+> @@ -1223,8 +1222,6 @@ static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
+>  static inline void pcie_ecrc_get_policy(char *str) { }
+>  #endif
+>  
+> -#define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
+> -
+>  #ifdef CONFIG_HT_IRQ
+>  /* The functions a driver should call */
+>  int  ht_create_irq(struct pci_dev *dev, int idx);
+> -- 
+> 1.7.7.6
+> 
+> -- 
+> Regards,
+> Alexander Gordeev
+> agordeev@redhat.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
