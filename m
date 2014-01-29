@@ -1,108 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:40167 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752204AbaAGJAJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 04:00:09 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V1 01/14] iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
-Date: Tue,  7 Jan 2014 17:00:21 +0800
-Message-Id: <1389085234-22296-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:36415 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052AbaA2SR7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 13:17:59 -0500
+Received: by mail-ie0-f181.google.com with SMTP id to1so2436380ieb.40
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 10:17:58 -0800 (PST)
+Subject: [PATCH 04/17] x86/PCI: Merge pci_scan_bus_on_node() into
+ pcibios_scan_root()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
+	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 29 Jan 2014 11:17:56 -0700
+Message-ID: <20140129181756.15476.8169.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Factor out function dmar_alloc_dev_scope() from dmar_parse_dev_scope()
-for later reuse.
+pci_scan_bus_on_node() is only called by pcibios_scan_root().
+This merges pci_scan_bus_on_node() into pcibios_scan_root() and removes
+pci_scan_bus_on_node().
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/iommu/dmar.c |   28 ++++++++++++++++------------
- include/linux/dmar.h |    1 +
- 2 files changed, 17 insertions(+), 12 deletions(-)
+ arch/x86/include/asm/pci.h |    4 ----
+ arch/x86/pci/common.c      |   49 +++++++++++++++++---------------------------
+ 2 files changed, 19 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 248332e..4a4c9a1 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -117,13 +117,9 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
- 	return 0;
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e891abf8b48..b52f9c0ec5fb 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -26,10 +26,6 @@ extern int pci_routeirq;
+ extern int noioapicquirk;
+ extern int noioapicreroute;
+ 
+-/* scan a bus after allocating a pci_sysdata for it */
+-extern struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops,
+-					    int node);
+-
+ #ifdef CONFIG_PCI
+ 
+ #ifdef CONFIG_PCI_DOMAINS
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index f530c7e93250..52ad00c2e198 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -458,8 +458,25 @@ void __init dmi_check_pciprobe(void)
+ 
+ struct pci_bus *pcibios_scan_root(int busnum)
+ {
+-	return pci_scan_bus_on_node(busnum, &pci_root_ops,
+-					get_mp_bus_to_node(busnum));
++	struct pci_bus *bus;
++	struct pci_sysdata *sd;
++	LIST_HEAD(resources);
++
++	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
++	if (!sd) {
++		printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busnum);
++		return NULL;
++	}
++	sd->node = get_mp_bus_to_node(busnum);
++	x86_pci_root_bus_resources(busnum, &resources);
++	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busnum);
++	bus = pci_scan_root_bus(NULL, busnum, &pci_root_ops, sd, &resources);
++	if (!bus) {
++		pci_free_resource_list(&resources);
++		kfree(sd);
++	}
++
++	return bus;
  }
  
--int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
--				struct pci_dev ***devices, u16 segment)
-+void *dmar_alloc_dev_scope(void *start, void *end, int *cnt)
- {
- 	struct acpi_dmar_device_scope *scope;
--	void * tmp = start;
--	int index;
--	int ret;
+ void __init pcibios_set_cache_line_size(void)
+@@ -669,34 +686,6 @@ int pci_ext_cfg_avail(void)
+ 		return 0;
+ }
  
- 	*cnt = 0;
- 	while (start < end) {
-@@ -138,15 +134,24 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 		start += scope->length;
- 	}
- 	if (*cnt == 0)
--		return 0;
-+		return NULL;
-+
-+	return kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
-+}
-+
-+int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
-+				struct pci_dev ***devices, u16 segment)
-+{
-+	struct acpi_dmar_device_scope *scope;
-+	int index, ret;
- 
--	*devices = kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
--	if (!*devices)
-+	*devices = dmar_alloc_dev_scope(start, end, cnt);
-+	if (*cnt == 0)
-+		return 0;
-+	else if (!*devices)
- 		return -ENOMEM;
- 
--	start = tmp;
--	index = 0;
--	while (start < end) {
-+	for (index = 0; start < end; start += scope->length) {
- 		scope = start;
- 		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT ||
- 		    scope->entry_type == ACPI_DMAR_SCOPE_TYPE_BRIDGE) {
-@@ -158,7 +163,6 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 			}
- 			index ++;
- 		}
--		start += scope->length;
- 	}
- 
- 	return 0;
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index bd5026b..198eb09 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -151,6 +151,7 @@ struct dmar_atsr_unit {
- int dmar_parse_rmrr_atsr_dev(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
-+extern void *dmar_alloc_dev_scope(void *start, void *end, int *cnt);
- extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 				struct pci_dev ***devices, u16 segment);
- extern void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt);
--- 
-1.7.10.4
+-struct pci_bus *pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
+-{
+-	LIST_HEAD(resources);
+-	struct pci_bus *bus = NULL;
+-	struct pci_sysdata *sd;
+-
+-	/*
+-	 * Allocate per-root-bus (not per bus) arch-specific data.
+-	 * TODO: leak; this memory is never freed.
+-	 * It's arguable whether it's worth the trouble to care.
+-	 */
+-	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
+-	if (!sd) {
+-		printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busno);
+-		return NULL;
+-	}
+-	sd->node = node;
+-	x86_pci_root_bus_resources(busno, &resources);
+-	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
+-	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
+-	if (!bus) {
+-		pci_free_resource_list(&resources);
+-		kfree(sd);
+-	}
+-
+-	return bus;
+-}
+-
+ /*
+  * NUMA info for PCI busses
+  *
 
