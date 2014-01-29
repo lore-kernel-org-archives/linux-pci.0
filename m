@@ -1,90 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:53717 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbaA2WKs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 17:10:48 -0500
-Received: by mail-ie0-f173.google.com with SMTP id e14so2731562iej.32
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 14:10:48 -0800 (PST)
-Date: Wed, 29 Jan 2014 15:10:44 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 10/9] PCI/MSI: Undeprecate pci_enable_msi()
-Message-ID: <20140129221044.GF16825@google.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <20140117092620.GA29340@dhcp-26-207.brq.redhat.com>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:61196 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986AbaA2KGm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 05:06:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140117092620.GA29340@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140129061722.GB23833@verge.net.au>
+References: <1390754945-28142-1-git-send-email-ben.dooks@codethink.co.uk>
+	<1390754945-28142-2-git-send-email-ben.dooks@codethink.co.uk>
+	<52E6559D.6090708@cogentembedded.com>
+	<52E65EAD.9000909@codethink.co.uk>
+	<20140129061722.GB23833@verge.net.au>
+Date: Wed, 29 Jan 2014 11:06:42 +0100
+Message-ID: <CAMuHMdVSWM5wYeA1OarFEv_yYCJR1FSm5Ercjyc5qtcVameSsw@mail.gmail.com>
+Subject: Re: [PATCH 1/8] pci-rcar-gen2: add of match table
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Simon Horman <horms@verge.net.au>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	linux-kernel@lists.codethink.co.uk,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 10:26:20AM +0100, Alexander Gordeev wrote:
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+On Wed, Jan 29, 2014 at 7:17 AM, Simon Horman <horms@verge.net.au> wrote:
+>> >>+static struct of_device_id rcar_pci_of_match[] = {
+>> >>+    { .compatible = "renesas,pci-r8a7790", },
+>> >
+>> >    Why only H2 SoC, if the driver is for both Gen2 SoCs?
+>>
+>> I can add a "renesas,pci-rcar-gen2" as a fallback match however
+>> I've not got anything other than an r8a7790 to test on. Also the
+>> compatible properties are preferably named after the soc.
+>
+> I'm not sure what the "best practice" is here but I propose that
+> you add both "renesas,pci-rcar-gen2" and "renesas,pci-r8a7790" now.
 
-I applied this to pci/msi, thanks!
+To the driver or to the '90 DTS?
 
-> ---
->  Documentation/PCI/MSI-HOWTO.txt |   23 ++++++++++++++++++++---
->  1 files changed, 20 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> index a8d0100..3c3080e 100644
-> --- a/Documentation/PCI/MSI-HOWTO.txt
-> +++ b/Documentation/PCI/MSI-HOWTO.txt
-> @@ -82,7 +82,19 @@ Most of the hard work is done for the driver in the PCI layer.  It simply
->  has to request that the PCI layer set up the MSI capability for this
->  device.
->  
-> -4.2.1 pci_enable_msi_range
-> +4.2.1 pci_enable_msi
-> +
-> +int pci_enable_msi(struct pci_dev *dev)
-> +
-> +A successful call allocates ONE interrupt to the device, regardless
-> +of how many MSIs the device supports.  The device is switched from
-> +pin-based interrupt mode to MSI mode.  The dev->irq number is changed
-> +to a new number which represents the message signaled interrupt;
-> +consequently, this function should be called before the driver calls
-> +request_irq(), because an MSI is delivered via a vector that is
-> +different from the vector of a pin-based interrupt.
-> +
-> +4.2.2 pci_enable_msi_range
->  
->  int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
->  
-> @@ -158,7 +170,12 @@ static int foo_driver_enable_single_msi(struct pci_dev *pdev)
->  	return pci_enable_msi_range(pdev, 1, 1);
->  }
->  
-> -4.2.2 pci_disable_msi
-> +Note, unlike pci_enable_msi() function, which could be also used to
-> +enable the single MSI mode, pci_enable_msi_range() returns either a
-> +negative errno or 1 (not negative errno or 0 - as pci_enable_msi()
-> +does).
-> +
-> +4.2.3 pci_disable_msi
->  
->  void pci_disable_msi(struct pci_dev *dev)
->  
-> @@ -172,7 +189,7 @@ on any interrupt for which it previously called request_irq().
->  Failure to do so results in a BUG_ON(), leaving the device with
->  MSI enabled and thus leaking its vector.
->  
-> -4.2.3 pci_msi_vec_count
-> +4.2.4 pci_msi_vec_count
->  
->  int pci_msi_vec_count(struct pci_dev *dev)
->  
-> -- 
-> 1.7.7.6
-> 
-> -- 
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If the DTS says
+
+    compatible = "renesas,pci-r8a7790", "renesas,pci-rcar-gen2"
+
+then the driver can just live with "renesas,pci-rcar-gen2" for now.
+
+> And that "renesas,pci-r8a7791" can be added once the code has been
+> integrated and tested on that platform.
+
+And later we can add
+
+    compatible = "renesas,pci-r8a7791", "renesas,pci-rcar-gen2"
+
+to the '91 DTS if it turns out to be compatible.
+
+If the '91 turns out to be incompatible, or partially compatible, the driver
+can be updated later to handle both "renesas,pci-r8a7790" and
+"renesas,pci-r8a7791" and differentiate between them.
+
+(That's what I was instructed to do with SPI ;-)
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
