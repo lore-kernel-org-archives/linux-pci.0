@@ -1,56 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2lp0210.outbound.protection.outlook.com ([207.46.163.210]:3737
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751405AbaAGJvY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 04:51:24 -0500
-From: "Dongsheng.Wang@freescale.com" <Dongsheng.Wang@freescale.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Roy Zang <tie-fei.zang@freescale.com>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	"Linux PM list" <linux-pm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [RFC] linux/pci: move pci_platform_pm_ops to linux/pci.h
-Date: Tue, 7 Jan 2014 09:35:16 +0000
-Message-ID: <121c487959fe4d73897b7003ad8554a4@BN1PR03MB188.namprd03.prod.outlook.com>
-References: <1387533832-34554-1-git-send-email-dongsheng.wang@freescale.com>
- <CAErSpo7+8sLZVi24fi+xxTEW2_DTJ2_zUrW+vobMGsvCEFwY_Q@mail.gmail.com>
- <2276888.ovWFBgDtau@vostro.rjw.lan>
-In-Reply-To: <2276888.ovWFBgDtau@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:60024 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879AbaA3AEe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 19:04:34 -0500
+Received: by mail-oa0-f51.google.com with SMTP id h16so2863428oag.24
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 16:04:33 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
+References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
+ <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
+ <20140117182231.GA18421@google.com> <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 29 Jan 2014 17:04:13 -0700
+Message-ID: <CAErSpo4fGBhb+pj6pTpKFTTj9rzLYzB2w-EX2ghWRYR3Cjyd9g@mail.gmail.com>
+Subject: Re: EHCI host broken -- interrupts disabled
+To: "Chen, Jamie" <jamie.chen@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	USB list <linux-usb@vger.kernel.org>,
+	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUmFmYWVsIEouIFd5c29j
-a2kgW21haWx0bzpyandAcmp3eXNvY2tpLm5ldF0NCj4gU2VudDogTW9uZGF5LCBKYW51YXJ5IDA2
-LCAyMDE0IDg6MTMgUE0NCj4gVG86IEJqb3JuIEhlbGdhYXMNCj4gQ2M6IFdhbmcgRG9uZ3NoZW5n
-LUI0MDUzNDsgWmFuZyBSb3ktUjYxOTExOyBXb29kIFNjb3R0LUIwNzQyMTsgS3VtYXIgR2FsYTsg
-TGludXgNCj4gUE0gbGlzdDsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXhwcGMtZGV2
-DQo+IFN1YmplY3Q6IFJlOiBbUkZDXSBsaW51eC9wY2k6IG1vdmUgcGNpX3BsYXRmb3JtX3BtX29w
-cyB0byBsaW51eC9wY2kuaA0KPiANCj4gT24gRnJpZGF5LCBEZWNlbWJlciAyMCwgMjAxMyAwOTo0
-Mjo1OSBBTSBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPiA+IE9uIEZyaSwgRGVjIDIwLCAyMDEzIGF0
-IDM6MDMgQU0sIERvbmdzaGVuZyBXYW5nDQo+ID4gPGRvbmdzaGVuZy53YW5nQGZyZWVzY2FsZS5j
-b20+IHdyb3RlOg0KPiA+ID4gRnJvbTogV2FuZyBEb25nc2hlbmcgPGRvbmdzaGVuZy53YW5nQGZy
-ZWVzY2FsZS5jb20+DQo+ID4gPg0KPiA+ID4gbWFrZSBGcmVlc2NhbGUgcGxhdGZvcm0gdXNlIHBj
-aV9wbGF0Zm9ybV9wbV9vcHMgc3RydWN0Lg0KPiA+DQo+ID4gVGhpcyBjaGFuZ2Vsb2cgZG9lc24n
-dCBzYXkgYW55dGhpbmcgYWJvdXQgd2hhdCB0aGUgcGF0Y2ggZG9lcy4NCj4gPg0KPiA+IEkgaW5m
-ZXIgdGhhdCB5b3Ugd2FudCB0byB1c2UgcGNpX3BsYXRmb3JtX3BtX29wcyBmcm9tIHNvbWUgRnJl
-ZXNjYWxlDQo+ID4gY29kZS4gIFRoaXMgcGF0Y2ggc2hvdWxkIGJlIHBvc3RlZCBhbG9uZyB3aXRo
-IHRoZSBwYXRjaGVzIHRoYXQgYWRkDQo+ID4gdGhhdCBGcmVlc2NhbGUgY29kZSwgc28gd2UgY2Fu
-IHNlZSBob3cgeW91IGludGVuZCB0byB1c2UgaXQuDQo+ID4NCj4gPiBUaGUgZXhpc3RpbmcgdXNl
-IGlzIGluIGRyaXZlcnMvcGNpL3BjaS1hY3BpLmMsIHNvIGl0J3MgcG9zc2libGUgdGhhdA0KPiA+
-IHlvdXIgbmV3IHVzZSBzaG91bGQgYmUgYWRkZWQgaW4gdGhlIHNhbWUgd2F5LCBpbiBkcml2ZXJz
-L3BjaSwgc28gd2UNCj4gPiBkb24ndCBoYXZlIHRvIG1ha2UgcGNpX3BsYXRmb3JtX3BtX29wcyBw
-YXJ0IG9mIHRoZSBwdWJsaWMgUENJDQo+ID4gaW50ZXJmYWNlIGluIGluY2x1ZGUvbGludXgvcGNp
-LmguDQo+ID4NCj4gPiBUaGF0IHNhaWQsIGlmIFJhcGhhZWwgdGhpbmtzIHRoaXMgbWFrZXMgc2Vu
-c2UsIGl0J3MgT0sgd2l0aCBtZS4NCj4gDQo+IFdlbGwsIEknZCBsaWtlIHRvIGtub3cgd2h5IGV4
-YWN0bHkgdGhlIGNoYW5nZSBpcyBuZWVkZWQgaW4gdGhlIGZpcnN0IHBsYWNlLg0KPiANClRoYW5r
-cyBmb3IgcmV2aWV3LCBJIHRoaW5rIHRoZSBpZGVhIGlzIG5vdCBzdWl0YWJsZSBmb3IgZnJlZXNj
-YWxlIHBsYXRmb3JtDQppbXBsZW1lbnRhdGlvbiBvZiB0aGUgcmlnaHQgbm93Lg0KDQpJIHdpbGwg
-ZHJvcCB0aGlzIFJGQyBwYXRjaC4NCg0KLURvbmdzaGVuZw0KDQo+IFRoYW5rcyENCj4gDQo+IC0t
-DQo+IEkgc3BlYWsgb25seSBmb3IgbXlzZWxmLg0KPiBSYWZhZWwgSi4gV3lzb2NraSwgSW50ZWwg
-T3BlbiBTb3VyY2UgVGVjaG5vbG9neSBDZW50ZXIuDQo+IA0KDQo=
+On Mon, Jan 20, 2014 at 5:15 AM, Chen, Jamie <jamie.chen@intel.com> wrote:
+> Try to apply this patch to kernel 3.8.0.
+>
+> Make sure the ehci can work fine and lspci show that PCI_COMMAND_INTX_DISABLE is 0.
+>
+> The patch can resolved this issue.
+
+Thanks for testing it.  Can you collect the complete dmesg output or
+dmidecode output?  (Remove secret details from it, of course.)
+
+I'm going to put this info into a bugzilla report for future reference.
+
+Bjorn
