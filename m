@@ -1,52 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1blp0189.outbound.protection.outlook.com ([207.46.163.189]:25846
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753362AbaACWh1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Jan 2014 17:37:27 -0500
-Message-ID: <1388788641.11795.76.camel@snotra.buserror.net>
-Subject: Re: [PATCH 01/12][v3] pci: fsl: derive the common PCI driver to
- drivers/pci/host
-From: Scott Wood <scottwood@freescale.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Minghuan Lian <Minghuan.Lian@freescale.com>,
-	<linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	Zang Roy-R61911 <r61911@freescale.com>
-Date: Fri, 3 Jan 2014 16:37:21 -0600
-In-Reply-To: <20131125230116.GA3819@google.com>
-References: <1382524894-15164-1-git-send-email-Minghuan.Lian@freescale.com>
-	 <20131125230116.GA3819@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mga02.intel.com ([134.134.136.20]:39651 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753150AbaA3NFd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jan 2014 08:05:33 -0500
+Date: Thu, 30 Jan 2014 15:12:36 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: linux-pci@vger.kernel.org
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Commit ef83b0781a73f (PCI: Remove from bus_list and release
+ resources in pci_release_dev()) broke TBT hotplug
+Message-ID: <20140130131236.GW18029@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2013-11-25 at 16:01 -0700, Bjorn Helgaas wrote:
-> On Wed, Oct 23, 2013 at 06:41:23PM +0800, Minghuan Lian wrote:
-> > The Freescale's Layerscape series processors will use ARM cores.
-> > The LS1's PCIe controllers is the same as T4240's. So it's better
-> > the PCIe controller driver can support PowerPC and ARM
-> > simultaneously. This patch is for this purpose. It derives
-> > the common functions from arch/powerpc/sysdev/fsl_pci.c to
-> > drivers/pci/host/pci-fsl-common.c and leaves the architecture
-> > specific functions which should be implemented in arch related files.
-> > 
-> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> 
-> It doesn't look like we have a consensus on how to proceed here, so I'm
-> ignoring this series for now.  Let me know if there really *is* agreement,
-> or if there's some subset of this work that everybody can agree on.  It'd
-> be good to make forward progress, even if it's not completely perfect yet.
+Hi,
 
-I'd like to see what this would look like with actual ARM support,
-rather than just some theoretical attempts to make it less PPC-dependent
-that involve copying PPC stuff that may or may not work well with what
-ARM code will expect.
+The latest mainline kernel "hangs" when Thunderbolt devices are
+hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
+getting huge amounts of messages like:
 
-When I replied to Kumar's comment saying that this seemed like a
-reasonable interim approach, that was before I saw how much was copied
-from places other than fsl_pci files.
+[  352.717001] pci 0000:02:00.0: PME# disabled
+[  352.717011] pci 0000:02:00.0: PME# disabled
+[  352.717021] pci 0000:02:00.0: PME# disabled
+[  352.717032] pci 0000:02:00.0: PME# disabled
+[  352.717041] pci 0000:02:00.0: PME# disabled
+[  352.717051] pci 0000:02:00.0: PME# disabled
+[  352.717061] pci 0000:02:00.0: PME# disabled
+[  352.717070] pci 0000:02:00.0: PME# disabled
+[  352.717083] pci 0000:02:00.0: PME# disabled
+[  352.717094] pci 0000:02:00.0: PME# disabled
+[  352.717104] pci 0000:02:00.0: PME# disabled
+[  352.717113] pci 0000:02:00.0: PME# disabled
+[  352.717124] pci 0000:02:00.0: PME# disabled
+[  352.717133] pci 0000:02:00.0: PME# disabled
+[  352.717143] pci 0000:02:00.0: PME# disabled
+[  352.717153] pci 0000:02:00.0: PME# disabled
+[  352.717162] pci 0000:02:00.0: PME# disabled
 
--Scott
+and then the system becomes really unresponsive.
 
+Reverting the commit in $subject makes TBT work again.
 
+Please let me know if you need any additional information. The system I'm
+testing on is Intel NUC.
+
+Thanks.
