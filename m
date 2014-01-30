@@ -1,110 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co1ehsobe003.messaging.microsoft.com ([216.32.180.186]:30045
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751063AbaAFFfz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 00:35:55 -0500
-Message-ID: <52CA40D8.1090805@freescale.com>
-Date: Mon, 6 Jan 2014 13:36:24 +0800
-From: Lian Minghuan-b31939 <b31939@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 30 Jan 2014 15:10:32 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+Subject: [PATCH v2 2/2] ipr: Use pci_enable_msi_range() and
+ pci_enable_msix_range()
+Message-ID: <20140130141031.GC32349@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
+ <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+ <52E7CCAD.5070008@linux.vnet.ibm.com>
+ <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
+ <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-To: Scott Wood <scottwood@freescale.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>
-CC: <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>,
-	Zang Roy-R61911 <r61911@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [03/12,v3] pci: fsl: add PCI indirect access support
-References: <1382524894-15164-3-git-send-email-Minghuan.Lian@freescale.com> <20140103223306.GC22546@home.buserror.net>
-In-Reply-To: <20140103223306.GC22546@home.buserror.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-HI Scott,
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-please see my comments inline.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/scsi/ipr.c |   47 ++++++++++++++++++-----------------------------
+ 1 files changed, 18 insertions(+), 29 deletions(-)
 
-On 01/04/2014 06:33 AM, Scott Wood wrote:
-> On Wed, Oct 23, 2013 at 06:41:25PM +0800, Minghuan Lian wrote:
->> The patch adds PCI indirect read/write functions. The main code
->> is ported from arch/powerpc/sysdev/indirect_pci.c. We use general
->> IO API iowrite32be/ioread32be instead of out_be32/in_be32, and
->> use structure fsl_Pci instead of PowerPC's pci_controller.
->> The patch also provides fsl_pcie_check_link() to check PCI link.
->> The weak function fsl_arch_pci_exclude_device() is provided to
->> call ppc_md.pci_exclude_device() for PowerPC architecture.
->>
->> Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
->>
->> ---
->> change log:
->> v1-v3:
->> Derived from http://patchwork.ozlabs.org/patch/278965/
->>
->> Based on upstream master.
->> Based on the discussion of RFC version here
->> http://patchwork.ozlabs.org/patch/274487/
->>
->>   drivers/pci/host/pci-fsl-common.c | 169 ++++++++++++++++++++++++++++++++------
->>   include/linux/fsl/pci-common.h    |   6 ++
->>   2 files changed, 151 insertions(+), 24 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-fsl-common.c b/drivers/pci/host/pci-fsl-common.c
->> index 69d338b..8bc9a64 100644
->> --- a/drivers/pci/host/pci-fsl-common.c
->> +++ b/drivers/pci/host/pci-fsl-common.c
->> @@ -35,52 +35,173 @@
->>   #include <sysdev/fsl_soc.h>
->>   #include <sysdev/fsl_pci.h>
->>   
->> -static int fsl_pcie_check_link(struct pci_controller *hose)
->> +/* Indirect type */
->> +#define INDIRECT_TYPE_EXT_REG			0x00000002
->> +#define INDIRECT_TYPE_SURPRESS_PRIMARY_BUS	0x00000004
->> +#define INDIRECT_TYPE_NO_PCIE_LINK		0x00000008
->> +#define INDIRECT_TYPE_BIG_ENDIAN		0x00000010
->> +#define INDIRECT_TYPE_FSL_CFG_REG_LINK		0x00000040
-> Why are these here rather than in the header, given that you have
-> indirect_type in the struct in the header?
-[Minghuan] It's better to define the type in the header file. I will fix it.
->
->> +int __weak fsl_arch_pci_exclude_device(struct fsl_pci *pci, u8 bus, u8 devfn)
->> +{
->> +	return PCIBIOS_SUCCESSFUL;
->> +}
->> +
->> +static int fsl_pci_read_config(struct fsl_pci *pci, int bus, int devfn,
->> +				int offset, int len, u32 *val)
->> +{
->> +	u32 bus_no, reg, data;
->> +
->> +	if (pci->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK) {
->> +		if (bus != pci->first_busno)
->> +			return PCIBIOS_DEVICE_NOT_FOUND;
->> +		if (devfn != 0)
->> +			return PCIBIOS_DEVICE_NOT_FOUND;
->> +	}
-> A lot of this seems duplicated from arch/powerpc/sysdev/indirect_pci.c.
->
-> How generally applicable is that file to non-PPC implementations?  At a
-> minimum I see a similar file in arch/microblaze.  It should probably
-> eventually be moved to common code, rather than duplicated again.  A
-> prerequisite for that would be making common the dependencies it has on
-> the rest of what is currently arch PCI infrastructure; until then, it's
-> probably better to just have the common fsl-pci code know how to
-> interface with the appropriate PPC/ARM code rather than trying to copy
-> the infrastructure as well.
-[Minghuan] Yes, This is a duplicate except it uses struct fsl_pci. But 
-it is hard to be move to common code.
-because every indirect read/write functions use different PCI controller 
-structure which is very basic structure and ARM has no this structure.
-If we can not establish a unified pci controller structure, we can only 
-abstract out a simple structure which includes indirect access related 
-fields,
-and need a callback function to get the pointer like this: 
-((powerpc/microblaze/mips/ pci_controller 
-*)(pci_bus->sysdata))->indirect_struct.
-Should we provide the common code for indirect access API or wait for 
-the common PCI controller structure?
-> -Scott
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 48d0cfc..70f40ca 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -9317,51 +9317,40 @@ static void ipr_wait_for_pci_err_recovery(struct ipr_ioa_cfg *ioa_cfg)
+ static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
+ {
+ 	struct msix_entry entries[IPR_MAX_MSIX_VECTORS];
+-	int i, err, vectors;
++	int i, vectors;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(entries); ++i)
+ 		entries[i].entry = i;
+ 
+-	vectors = ipr_number_of_msix;
+-
+-	while ((err = pci_enable_msix(ioa_cfg->pdev, entries, vectors)) > 0)
+-			vectors = err;
+-
+-	if (err < 0) {
++	vectors = pci_enable_msix_range(ioa_cfg->pdev,
++					entries, 1, ipr_number_of_msix);
++	if (vectors < 0) {
+ 		ipr_wait_for_pci_err_recovery(ioa_cfg);
+-		return err;
++		return vectors;
+ 	}
+ 
+-	if (!err) {
+-		for (i = 0; i < vectors; i++)
+-			ioa_cfg->vectors_info[i].vec = entries[i].vector;
+-		ioa_cfg->nvectors = vectors;
+-	}
++	for (i = 0; i < vectors; i++)
++		ioa_cfg->vectors_info[i].vec = entries[i].vector;
++	ioa_cfg->nvectors = vectors;
+ 
+-	return err;
++	return 0;
+ }
+ 
+ static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
+ {
+-	int i, err, vectors;
++	int i, vectors;
+ 
+-	vectors = ipr_number_of_msix;
+-
+-	while ((err = pci_enable_msi_block(ioa_cfg->pdev, vectors)) > 0)
+-			vectors = err;
+-
+-	if (err < 0) {
++	vectors = pci_enable_msi_range(ioa_cfg->pdev, 1, ipr_number_of_msix);
++	if (vectors < 0) {
+ 		ipr_wait_for_pci_err_recovery(ioa_cfg);
+-		return err;
++		return vectors;
+ 	}
+ 
+-	if (!err) {
+-		for (i = 0; i < vectors; i++)
+-			ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
+-		ioa_cfg->nvectors = vectors;
+-	}
++	for (i = 0; i < vectors; i++)
++		ioa_cfg->vectors_info[i].vec = ioa_cfg->pdev->irq + i;
++	ioa_cfg->nvectors = vectors;
+ 
+-	return err;
++	return 0;
+ }
+ 
+ static void name_msi_vectors(struct ipr_ioa_cfg *ioa_cfg)
+@@ -9426,7 +9415,7 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
+  * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
+  * @pdev:		PCI device struct
+  *
+- * Description: The return value from pci_enable_msi() can not always be
++ * Description: The return value from pci_enable_msi_range() can not always be
+  * trusted.  This routine sets up and initiates a test interrupt to determine
+  * if the interrupt is received via the ipr_test_intr() service routine.
+  * If the tests fails, the driver will fall back to LSI.
+-- 
+1.7.7.6
 
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
