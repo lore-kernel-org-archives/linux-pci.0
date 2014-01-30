@@ -1,114 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v7 05/15] agp: Use pci_resource_start() to get CPU physical
- address for BAR
-To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:55:47 -0700
-Message-ID: <20140107005547.10786.23438.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:63447 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752135AbaA3Xno (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 18:43:44 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
+Date: Fri, 31 Jan 2014 00:58:06 +0100
+Message-ID: <2237006.EB9OpF1oyt@vostro.rjw.lan>
+In-Reply-To: <3365345.z6P9Wo4Pau@vostro.rjw.lan>
+References: <20140130131236.GW18029@intel.com> <CAE9FiQUaof1tk151Wbu2OtpTYb+pvP16ZhLsmbn6LDdBqoVEgA@mail.gmail.com> <3365345.z6P9Wo4Pau@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-amd_irongate_configure(), ati_configure(), and nvidia_configure() call
-ioremap() on an address read directly from a BAR.  But a BAR contains a
-bus address, and ioremap() expects a CPU physical address.  Use
-pci_resource_start() to obtain the physical address.
+On Friday, January 31, 2014 12:39:07 AM Rafael J. Wysocki wrote:
+> On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
+> > 
+> > --047d7b5d2ea4eb937804f132eedf
+> > Content-Type: text/plain; charset=ISO-8859-1
+> > 
+> > >> The latest mainline kernel "hangs" when Thunderbolt devices are
+> > >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
+> > >> getting huge amounts of messages like:
+> > >>
+> > >> [  352.717001] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717011] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717021] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717032] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717041] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717051] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717061] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717070] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717083] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717094] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717104] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717113] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717124] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717133] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717143] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717153] pci 0000:02:00.0: PME# disabled
+> > >> [  352.717162] pci 0000:02:00.0: PME# disabled
+> > >
+> > > that mean pci_stop_dev() get called again and again ?
+> > 
+> > please check if attached patch could help.
+> 
+> Well, it looks like what happens is an endless loop in
+> acpiphp_glue.c:disable_slot().
+> 
+> dev_in_slot() returns the first device in the list, so
+> pci_stop_and_remove_bus_device() is called for it, but it
+> doesn't remove the device from bus->devices any more, so
+> dev_in_slot() will return the same device next time and
+> so on forever.
+> 
+> > it should prevent possible reattaching driver.
+> 
+> If my analysis above is correct, this isn't related to attaching drivers
+> and rather to the way dev_in_slot() is designed.
+> 
+> > ---
+> >  drivers/pci/remove.c |    1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > Index: linux-2.6/drivers/pci/remove.c
+> > ===================================================================
+> > --- linux-2.6.orig/drivers/pci/remove.c
+> > +++ linux-2.6/drivers/pci/remove.c
+> > @@ -11,6 +11,7 @@ static void pci_stop_dev(struct pci_dev
+> >          pci_proc_detach_device(dev);
+> >          pci_remove_sysfs_dev_files(dev);
+> >          device_release_driver(&dev->dev);
+> > +        dev->match_driver = false;
+> >          dev->is_added = 0;
+> >      }
+> 
+> So the above won't help in my opinion.
+> 
+> I wonder, however, if this patch helps instead:
+> 
+> https://patchwork.kernel.org/patch/3540701/
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/char/agp/amd-k7-agp.c |    8 ++++----
- drivers/char/agp/ati-agp.c    |    8 ++++----
- drivers/char/agp/nvidia-agp.c |    4 +++-
- 3 files changed, 11 insertions(+), 9 deletions(-)
+And even if it does, I wonder what happens if someone walks bus->devices of
+that bus after we've run pci_stop_and_remove_bus_device() for one of its
+devices and before that device is released?  The device is pretty much dead
+at this point, so won't stepping on it during the walk cause any problems to
+happen?
 
-diff --git a/drivers/char/agp/amd-k7-agp.c b/drivers/char/agp/amd-k7-agp.c
-index 9898ed6d5b9a..e8c2e9167e89 100644
---- a/drivers/char/agp/amd-k7-agp.c
-+++ b/drivers/char/agp/amd-k7-agp.c
-@@ -11,7 +11,7 @@
- #include <linux/slab.h>
- #include "agp.h"
- 
--#define AMD_MMBASE	0x14
-+#define AMD_MMBASE_BAR	1
- #define AMD_APSIZE	0xac
- #define AMD_MODECNTL	0xb0
- #define AMD_MODECNTL2	0xb2
-@@ -205,6 +205,7 @@ static int amd_irongate_fetch_size(void)
- static int amd_irongate_configure(void)
- {
- 	struct aper_size_info_lvl2 *current_size;
-+	phys_addr_t reg;
- 	u32 temp;
- 	u16 enable_reg;
- 
-@@ -212,9 +213,8 @@ static int amd_irongate_configure(void)
- 
- 	if (!amd_irongate_private.registers) {
- 		/* Get the memory mapped registers */
--		pci_read_config_dword(agp_bridge->dev, AMD_MMBASE, &temp);
--		temp = (temp & PCI_BASE_ADDRESS_MEM_MASK);
--		amd_irongate_private.registers = (volatile u8 __iomem *) ioremap(temp, 4096);
-+		reg = pci_resource_start(agp_bridge->dev, AMD_MMBASE_BAR);
-+		amd_irongate_private.registers = (volatile u8 __iomem *) ioremap(reg, 4096);
- 		if (!amd_irongate_private.registers)
- 			return -ENOMEM;
- 	}
-diff --git a/drivers/char/agp/ati-agp.c b/drivers/char/agp/ati-agp.c
-index 53cb310d433e..ba83c11186ce 100644
---- a/drivers/char/agp/ati-agp.c
-+++ b/drivers/char/agp/ati-agp.c
-@@ -12,7 +12,7 @@
- #include <asm/agp.h>
- #include "agp.h"
- 
--#define ATI_GART_MMBASE_ADDR	0x14
-+#define ATI_GART_MMBASE_BAR	1
- #define ATI_RS100_APSIZE	0xac
- #define ATI_RS100_IG_AGPMODE	0xb0
- #define ATI_RS300_APSIZE	0xf8
-@@ -196,12 +196,12 @@ static void ati_cleanup(void)
- 
- static int ati_configure(void)
- {
-+	phys_addr_t reg;
- 	u32 temp;
- 
- 	/* Get the memory mapped registers */
--	pci_read_config_dword(agp_bridge->dev, ATI_GART_MMBASE_ADDR, &temp);
--	temp = (temp & 0xfffff000);
--	ati_generic_private.registers = (volatile u8 __iomem *) ioremap(temp, 4096);
-+	reg = pci_resource_start(agp_bridge->dev, ATI_GART_MMBASE_BAR);
-+	ati_generic_private.registers = (volatile u8 __iomem *) ioremap(reg, 4096);
- 
- 	if (!ati_generic_private.registers)
- 		return -ENOMEM;
-diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
-index ab65d55272c4..a1861b75eb31 100644
---- a/drivers/char/agp/nvidia-agp.c
-+++ b/drivers/char/agp/nvidia-agp.c
-@@ -106,6 +106,7 @@ static int nvidia_configure(void)
- {
- 	int i, rc, num_dirs;
- 	u32 apbase, aplimit;
-+	phys_addr_t apbase_phys;
- 	struct aper_size_info_8 *current_size;
- 	u32 temp;
- 
-@@ -152,8 +153,9 @@ static int nvidia_configure(void)
- 	pci_write_config_dword(agp_bridge->dev, NVIDIA_0_APSIZE, temp | 0x100);
- 
- 	/* map aperture */
-+	apbase_phys = pci_resource_start(agp_bridge->dev, AGP_APERTURE_BAR);
- 	nvidia_private.aperture =
--		(volatile u32 __iomem *) ioremap(apbase, 33 * PAGE_SIZE);
-+		(volatile u32 __iomem *) ioremap(apbase_phys, 33 * PAGE_SIZE);
- 
- 	if (!nvidia_private.aperture)
- 		return -ENOMEM;
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
