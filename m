@@ -1,99 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db9lp0249.outbound.messaging.microsoft.com ([213.199.154.249]:16191
-	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752049AbaAGSUq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 13:20:46 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatxjain@gmail.com>
-CC: Rajat Jain <rajatjain.linux@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yhlu.kernel@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: RE: [PATCH v3 4/8] pciehp: Don't disable the link permanently,
- during removal
-Date: Tue, 7 Jan 2014 18:20:36 +0000
-Message-ID: <4b24688d857e432eb7ecf9095c95b742@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com>
- <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
- <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
-In-Reply-To: <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:46029 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312AbaA3ATU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 19:19:20 -0500
+Received: by mail-ob0-f179.google.com with SMTP id wo20so2769658obc.24
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 16:19:19 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CALdTtnsEo74UeYgoQ0DF7=LN074b_0bL0vg6Bxs02B9nDkRTNA@mail.gmail.com>
+References: <1390599168-13150-1-git-send-email-tinamdar@apm.com> <CALdTtnsEo74UeYgoQ0DF7=LN074b_0bL0vg6Bxs02B9nDkRTNA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 29 Jan 2014 17:18:58 -0700
+Message-ID: <CAErSpo7Dfd4NJBEDuVe1VCvZObFq1YvV2x77S60Z4-CZq89QJw@mail.gmail.com>
+Subject: Re: [RFC PATCH V3 0/4] APM X-Gene PCIe controller
+To: Dann Frazier <dann.frazier@canonical.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gQmpvcm4gLyBZaW5naGFpLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+
-IEZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiBTZW50
-OiBNb25kYXksIEphbnVhcnkgMDYsIDIwMTQgNDowNCBQTQ0KPiBUbzogUmFqYXQgSmFpbg0KPiBD
-YzogUmFqYXQgSmFpbjsgS2VuamkgS2FuZXNoaWdlOyBBbGV4IFdpbGxpYW1zb247IFlpamluZyBX
-YW5nOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
-bmVsLm9yZzsgWWluZ2hhaSBMdTsgR3VlbnRlcg0KPiBSb2VjazsgUmFqYXQgSmFpbjsgWWluZ2hh
-aSBMdQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYzIDQvOF0gcGNpZWhwOiBEb24ndCBkaXNhYmxl
-IHRoZSBsaW5rIHBlcm1hbmVudGx5LA0KPiBkdXJpbmcgcmVtb3ZhbA0KPiANCj4gT24gU3VuLCBK
-YW4gNSwgMjAxNCBhdCAxMDo1MyBBTSwgUmFqYXQgSmFpbiA8cmFqYXR4amFpbkBnbWFpbC5jb20+
-DQo+IHdyb3RlOg0KPiA+IEhlbGxvIEJqb3JuLA0KPiA+DQo+ID4gSnVzdCBjaGVja2luZyBvbiB0
-aGUgZmF0ZSBvZiB0aGlzIHBhdGNoIHNldC4uLg0KPiA+DQo+ID4gT24gVHVlLCBEZWMgMTcsIDIw
-MTMgYXQgNTowMiBQTSwgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gd3Jv
-dGU6DQo+ID4+IFsrY2MgeWluZ2hhaUBrZXJuZWwub3JnIChzZWVtcyB0byBiZSBZaW5naGFpJ3Mg
-cHJlZmVycmVkIGVtYWlsXQ0KPiA+Pg0KPiA+PiBPbiBUdWUsIERlYyAxNywgMjAxMyBhdCAxMjow
-NjowNVBNIC0wODAwLCBSYWphdCBKYWluIHdyb3RlOg0KPiA+Pj4gV2UgbmVlZCBmdXR1cmUgbGlu
-ayB1cCBldmVudHMgZm9yIGhvdC1hZGQsIHRodXMgZG9uJ3QgZGlzYWJsZSB0aGUNCj4gPj4+IGxp
-bmsgcGVybWFuZW50bHkgZHVyaW5nIGRldmljZSByZW1vdmFsLiBBbHNvLCByZW1vdmUgdGhlIHN0
-YXRpYw0KPiA+Pj4gZnVuY3Rpb25zIHRoYXQgYXJlIG5vdyBsZWZ0IHVudXNlZC4NCj4gPj4NCj4g
-Pj4gVGhlIGNoYW5nZWxvZyBzaG91bGQgbWVudGlvbiB0aGF0IHRoaXMgcmV2ZXJ0cyBwYXJ0IG9m
-IDJkZWJkOTI4OTk5Nw0KPiAoIlBDSToNCj4gPj4gcGNpZWhwOiBEaXNhYmxlL2VuYWJsZSBsaW5r
-IGR1cmluZyBzbG90IHBvd2VyIG9mZi9vbiIpLg0KPiA+DQo+ID4gU3VyZS4gRG8geW91IHdhbnQg
-bWUgdG8gc3VibWl0IGFub3RoZXIgcGF0Y2ggc2V0IChidW1waW5nIHVwIHRoZQ0KPiA+IHZlcnNp
-b24pIHdpdGggdGhpcyBjaGFuZ2UgbG9nLCBvciB5b3UnZCB3YW50IHRvIGFkZCB0aGlzIGNoYW5n
-ZSBsb2cNCj4gPiB3aGlsZSBtZXJnaW5nPw0KPiA+DQo+ID4+DQo+ID4+IFlpbmdoYWksIGNhbiB5
-b3UgdGVsbCB1cyB3aGV0aGVyIHRoaXMgaXMgYW4gaXNzdWUgb24geW91ciBzeXN0ZW1zPw0KPiA+
-DQo+ID4gQXMgWWluZ2hhaSBjb25maXJtcyBmdXJ0aGVyIGRvd24gdGhpcyB0aHJlYWQsIGhpcyBp
-c3N1ZSB3YXMgY29uZmlybWVkDQo+ID4gYnkgSW50ZWwgdG8gYmUgYSBidWcgaW4gdGhlIHJlcGVh
-dGVyIGNoaXAuDQo+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+IFlp
-bmdoYWkgd3JpdGVzOg0KPiA+PiBBY2NvcmRpbmcgdG8gSFcgZ3V5cyBhbmQgSW50ZWwsIHRoYXQg
-c2hvdWxkIGJlIGJ1ZyBvZiByZXBlYXRlci4NCj4gPj4NCj4gPiAtLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0NCj4gPiAgSSBkb24ndCBrbm93IGFib3V0IHRoZSBkZXRhaWxzIG9mIGhp
-cyBzY2VuYXJpbywgZXhjZXB0IHRoYXQgd2hlbiB0aGUNCj4gPiBhZGFwdGVyIHdhcyBkaXNhYmxl
-ZCB0aGUgcmVwZWF0ZXIga2VwdCBvbiBmbGFwcGluZyB0aGUgbGluayB1cCAmIGRvd24NCj4gPiAo
-YW5kIGhlbmNlIGRpc2FibGluZyB0aGUgbGluayBzb2x2ZWQgdGhlIHByb2JsZW0gdGhlbikuIFlp
-bmdoYWkNCj4gPiBjb3VsZG4ndCB0ZXN0LCBidXQgSSBiZWxpZXZlIHdpdGggdGhpcyBwYXRjaCBl
-dmVuIGlmIHdlIGRpc2FibGUNCj4gPiBwcmVzZW5jZSBkZXRlY3QgaW50ZXJydXB0LCB0aGUgImFk
-YXB0ZXIgcHJlc2VudCAvIG5vIHByZXNlbnQiIG1lc3NhZ2VzDQo+ID4gd291bGQgKHJpZ2h0bHkp
-IGNvbnZlcnQgdG8gIkxpbmsgVXAgLyBMaW5rIERvd24iIG1lc3NhZ2VzIChzaW5jZSB0aGUNCj4g
-PiByZXBlYXRlciBrZWVwcyBvbiBmbGFwcGluZyB0aGUgbGluaykuDQo+ID4NCj4gPiBTaW5jZSBp
-dCBpcyBhIHBsYXRmb3JtIHNwZWNpZmljIGJ1ZywgSSdtIG5vdCBzdXJlIHdoYXQgY2FuIGJlIGRv
-bmUgdG8NCj4gPiByZW1vdmUgdGhvc2UgbWVzc2FnZXMgZXhjZXB0IG1heSBiZSByZWR1Y2UgdGhl
-IHZlcmJvc2l0eT8gSWYgeW91J2QNCj4gPiBsaWtlIEkgY291bGQgY2hhbmdlIGFsbCB0aGUgSU5G
-TyBtZXNzYWdlcyB0byBEQkcgbWVzc2FnZXMuDQo+IA0KPiBFdmVuIGlmIGl0J3MgYSBkZWZlY3Qg
-aW4gYSBwYXJ0aWN1bGFyIHBpZWNlIG9mIGhhcmR3YXJlLCBJIGRvbid0IHdhbnQgdG8NCj4gcmVn
-cmVzcyBvbiB0aGF0IGhhcmR3YXJlLCBldmVuIGlmIHRoZSByZWdyZXNzaW9uIGlzIGp1c3QgZXh0
-cmEgbWVzc2FnZXMNCj4gdGhhdCB3ZSBkaWRuJ3Qgc2VlIGJlZm9yZS4NCj4gDQo+IEkgdGhpbmsg
-aWRlYWxseSB3ZSB3b3VsZCBhZGQgc29tZSBzb3J0IG9mIHF1aXJrIGZvciB0aGF0IGhhcmR3YXJl
-IHNvIGl0DQo+IHdvcmtzIGp1c3QgYXMgd2VsbCBhcyBpdCBkb2VzIHRvZGF5LiAgSSB0aGluayBl
-eHRyYSBtZXNzYWdlcyB3aWxsIGxlYWQNCj4gdG8gYSBidWcgcmVwb3J0cyBmcm9tIHVzZXJzLg0K
-DQpTdXJlLCBJIGNhbiBkbyB0aGF0LiBJIHRoaW5rIHdoYXQgdGhlIHF1aXJrIHdvdWxkIGhhdmUg
-dG8gZG8gaXMgdGhhdCBmb3IgdGhhdCBwYXJ0aWN1bGFyIHBsYXRmb3JtLCBkb24ndCBlbmFibGUg
-dGhlIGxpbmstc3RhdGUgYmFzZWQgaG90cGx1Zy4gKFNpbmNlIGxpbmstc3RhdGUgaG90cGx1ZyB3
-aWxsIG5vdCB3b3JrIGlmIHdlIGRpc2FibGUgdGhlIGxpbmsgcGVybWFuZW50bHkgYXMgd2UgZG8g
-dG9kYXkgb24gY2FyZCByZW1vdmFsKS4NCg0KQnV0IHRoZSBxdWVzdGlvbiBpcyBob3cgdG8gZGV0
-ZXJtaW5lIHRoYXQgdGhlIHF1aXJrIGhhcyB0byBiZSBhcHBsaWVkPyBJIHRoaW5rIHRoZSBvYmpl
-Y3RpdmUgaXMgdG8gYXBwbHkgdGhlIHF1aXJrIHRvIHRoZSBwbGF0Zm9ybXMgdGhhdCBoYXZlIGEg
-IlBDSWUgcmVwZWF0ZXIiLiBTaW5jZSB0aGlzIGRvZXMgbm90IGRlcGVuZCBvbiBhIFBDSSBkZXZp
-Y2UgLyB2ZW5kb3IgSUQsIGFuZCBJIHRoaW5rIHRoZSBQQ0llIHJlcGVhdGVyIGlzIHByb2JhYmx5
-IG5vdCBldmVuIHZpc2libGUgdG8gdGhlIHBjaWVocCBvciB0aGUgUENJIHN1YnN5c3RlbSwgaG93
-IGRvIEkgZGV0ZXJtaW5lIHRoYXQgdGhlIHF1aXJrIGhhcyB0byBiZSBhcHBsaWVkPw0KDQpJZiAo
-aHdfaGFzX3BjaWVfcmVwZWF0ZXIpDQoJRG9uJ3QgdXNlIGxpbmstc3RhdGUgaG90cGx1ZyAoYW5k
-IGRpc2FibGUgbGluayBwZXJtYW5lbnRseSBkdXJpbmcgY2FyZCByZW1vdmFsKQ0KRWxzZQ0KCVVz
-ZSBsaW5rLXN0YXRlIGhvdHBsdWcgKGFuZCBkb24ndCBkaXNhYmxlIHRoZSBsaW5rIHBlcm1hbmVu
-dGx5KQ0KCQ0KDQpZaW5naGFpOiBTaW5jZSBJIGRvIG5vdCBoYXZlIHRoYXQgaGFyZHdhcmUsIEkg
-d2lsbCBuZWVkIHNvbWUgaGVscCBpbiB0ZXN0aW5nIHRoZSBwYXRjaCB3aXRoIHRoZSBxdWlyay4g
-SSB3YXMgd29uZGVyaW5nIGlmIHlvdSdkIHN0aWxsIGhhdmUgdGhhdCBoYXJkd2FyZSBhcm91bmQg
-YW5kIHdvdWxkIGJlIGFibGUgdG8gaGVscCBtZSB3aXRoIHRlc3Rpbmc/DQoNClRoYW5rcywNCg0K
-UmFqYXQNCg==
+On Sat, Jan 25, 2014 at 9:09 AM, Dann Frazier
+<dann.frazier@canonical.com> wrote:
+> On Fri, Jan 24, 2014 at 2:32 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
+>> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
+>> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
+>> cards.
+>>
+>> X-Gene PCIe controller driver has depedency on the pcie arch support for
+>> arm64. The arm64 pcie arch support is not yet part of mainline Linux kernel
+>> and approach for arch support is under discussion with arm64 maintainers.
+>> The reference patch can be found here --> https://lkml.org/lkml/2013/10/23/244
+>
+> The reference patch looks corrupted (pcibios.c has no includes, etc),
+> would you mind reposting?
 
+When you repost, please make sure you fix whatever problem is
+preventing your email from appearing on the vger mailing lists.  I
+won't apply things that haven't appeared on the linux-pci list,
+because that list is the opportunity for other people to review them.
+
+Bjorn
