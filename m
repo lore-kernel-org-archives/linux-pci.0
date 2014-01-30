@@ -1,326 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:58011 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755962AbaA1Xu3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 18:50:29 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [Resend][PATCH 1/5][RFT] ACPI / hotplug / PCI: Attach hotplug contexts to struct acpi_device
-Date: Wed, 29 Jan 2014 00:58:13 +0100
-Message-ID: <3118062.PocSVbDGEq@vostro.rjw.lan>
-In-Reply-To: <1693151.2qrLZHyp0o@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan> <1693151.2qrLZHyp0o@vostro.rjw.lan>
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:58246 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753492AbaA3SGV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 13:06:21 -0500
+Received: by mail-ob0-f182.google.com with SMTP id wm4so3934957obc.27
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 10:06:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <201401301521.11665.arnd@arndb.de>
+References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+ <CAErSpo7Dfd4NJBEDuVe1VCvZObFq1YvV2x77S60Z4-CZq89QJw@mail.gmail.com>
+ <CACoXjc=LSrLK=kd9GJoHWJovVDC+TfH2bZO-2Ht9jMoBrL9eag@mail.gmail.com> <201401301521.11665.arnd@arndb.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 30 Jan 2014 11:06:00 -0700
+Message-ID: <CAErSpo79zaf_92KCVkUSCrZLHML0B365K6Q6-0p1LEVVQJ=cVA@mail.gmail.com>
+Subject: Re: [RFC PATCH V3 0/4] APM X-Gene PCIe controller
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	Dann Frazier <dann.frazier@canonical.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Jan 30, 2014 at 7:21 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Thursday 30 January 2014, Tanmay Inamdar wrote:
+>> >
+>> > When you repost, please make sure you fix whatever problem is
+>> > preventing your email from appearing on the vger mailing lists.  I
+>> > won't apply things that haven't appeared on the linux-pci list,
+>> > because that list is the opportunity for other people to review them.
+>> >
+>> You are absolutely right. If the patches are not reaching mailing
+>> list, they should not appear on archive list as well. However I am
+>> seeing my patches recorded on archives. So I am not sure if they are
+>> actually getting dropped on linux-pci or any other mailing list.
+>>
+>> http://www.spinics.net/lists/linux-pci/msg28198.html
+>> http://article.gmane.org/gmane.linux.kernel.pci/28442/match=tanmay+inamdar
+>
+> Very strange. I can also confirm that I received the patches through
+> the linux-arm-kernel and devicetree mailing lists without problems.
 
-The ACPI-based PCI hotplug (ACPIPHP) code currently attaches its
-hotplug context objects directly to ACPI namespace nodes representing
-hotplug devices.  However, after recent changes causing struct
-acpi_device to be created for every namespace node representing a
-device (regardless of its status), that is not necessary any more.
-Moreover, it's vulnerable to a theoretical issue that the ACPI
-handle passed in the context between handle_hotplug_event() and
-hotplug_event_work() may become invalid in the meantime (as a
-result of a concurrent table unload).
+Sorry, the problem was on my end.  I must have mistakenly marked one
+of those messages as spam, and gmail thought all the rest were spam,
+too.  Sorry about that.
 
-For this reason, modify the code to attach the ACPIPHP's device
-hotplug contexts to struct device objects representing hotplug
-devices.
-
-This also allows further consolidation of the ACPI hotplug code
-to be carried out in subsequent changesets.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c                |    3 +
- drivers/pci/hotplug/acpiphp.h      |    9 ++-
- drivers/pci/hotplug/acpiphp_glue.c |   99 ++++++++++++++++++++++---------------
- include/acpi/acpi_bus.h            |   11 ++++
- 4 files changed, 80 insertions(+), 42 deletions(-)
-
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -139,6 +139,16 @@ struct acpi_scan_handler {
- };
- 
- /*
-+ * ACPI Hotplug Context
-+ * --------------------
-+ */
-+
-+struct acpi_hotplug_context {
-+	struct acpi_device *self;
-+	void (*release)(struct acpi_hotplug_context *);
-+};
-+
-+/*
-  * ACPI Driver
-  * -----------
-  */
-@@ -331,6 +341,7 @@ struct acpi_device {
- 	struct acpi_device_perf performance;
- 	struct acpi_device_dir dir;
- 	struct acpi_scan_handler *handler;
-+	struct acpi_hotplug_context *hp;
- 	struct acpi_driver *driver;
- 	void *driver_data;
- 	struct device dev;
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -1063,6 +1063,9 @@ static void acpi_device_del_work_fn(stru
- 		mutex_unlock(&acpi_device_del_lock);
- 
- 		acpi_device_del(adev);
-+		if (adev->hp && adev->hp->release)
-+			adev->hp->release(adev->hp);
-+
- 		/*
- 		 * Drop references to all power resources that might have been
- 		 * used by the device.
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -116,12 +116,17 @@ struct acpiphp_func {
- };
- 
- struct acpiphp_context {
-+	struct acpi_hotplug_context hp;
- 	struct acpiphp_func func;
--	struct acpi_device *adev;
- 	struct acpiphp_bridge *bridge;
- 	unsigned int refcount;
- };
- 
-+static inline struct acpiphp_context *to_acpiphp_context(struct acpi_hotplug_context *hp)
-+{
-+	return container_of(hp, struct acpiphp_context, hp);
-+}
-+
- static inline struct acpiphp_context *func_to_context(struct acpiphp_func *func)
- {
- 	return container_of(func, struct acpiphp_context, func);
-@@ -129,7 +134,7 @@ static inline struct acpiphp_context *fu
- 
- static inline struct acpi_device *func_to_acpi_device(struct acpiphp_func *func)
- {
--	return func_to_context(func)->adev;
-+	return func_to_context(func)->hp.self;
- }
- 
- static inline acpi_handle func_to_handle(struct acpiphp_func *func)
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -53,9 +53,13 @@
- #include <linux/slab.h>
- #include <linux/acpi.h>
- 
-+#include <asm/pgtable.h>
-+
- #include "../pci.h"
- #include "acpiphp.h"
- 
-+#define INVALID_ACPI_HANDLE	((acpi_handle)empty_zero_page)
-+
- static LIST_HEAD(bridge_list);
- static DEFINE_MUTEX(bridge_mutex);
- static DEFINE_MUTEX(acpiphp_context_lock);
-@@ -66,9 +70,9 @@ static void acpiphp_set_hpp_values(struc
- static void hotplug_event(u32 type, void *data);
- static void free_bridge(struct kref *kref);
- 
--static void acpiphp_context_handler(acpi_handle handle, void *context)
-+static void acpiphp_free_context(struct acpi_hotplug_context *hp)
- {
--	/* Intentionally empty. */
-+	kfree(to_acpiphp_context(hp));
- }
- 
- /**
-@@ -80,39 +84,29 @@ static void acpiphp_context_handler(acpi
- static struct acpiphp_context *acpiphp_init_context(struct acpi_device *adev)
- {
- 	struct acpiphp_context *context;
--	acpi_status status;
- 
- 	context = kzalloc(sizeof(*context), GFP_KERNEL);
- 	if (!context)
- 		return NULL;
- 
--	context->adev = adev;
-+	context->hp.self = adev;
-+	context->hp.release = acpiphp_free_context;
- 	context->refcount = 1;
--	status = acpi_attach_data(adev->handle, acpiphp_context_handler, context);
--	if (ACPI_FAILURE(status)) {
--		kfree(context);
--		return NULL;
--	}
-+	adev->hp = &context->hp;
- 	return context;
- }
- 
- /**
-  * acpiphp_get_context - Get hotplug context and grab a reference to it.
-- * @handle: ACPI object handle to get the context for.
-+ * @adev: ACPI device object to get the context for.
-  *
-  * Call under acpiphp_context_lock.
-  */
--static struct acpiphp_context *acpiphp_get_context(acpi_handle handle)
-+static struct acpiphp_context *acpiphp_get_context(struct acpi_device *adev)
- {
--	struct acpiphp_context *context = NULL;
--	acpi_status status;
--	void *data;
-+	struct acpiphp_context *context = to_acpiphp_context(adev->hp);
- 
--	status = acpi_get_data(handle, acpiphp_context_handler, &data);
--	if (ACPI_SUCCESS(status)) {
--		context = data;
--		context->refcount++;
--	}
-+	context->refcount++;
- 	return context;
- }
- 
-@@ -130,7 +124,7 @@ static void acpiphp_put_context(struct a
- 		return;
- 
- 	WARN_ON(context->bridge);
--	acpi_detach_data(context->adev->handle, acpiphp_context_handler);
-+	context->hp.self->hp = NULL;
- 	kfree(context);
- }
- 
-@@ -395,9 +389,13 @@ static struct acpiphp_bridge *acpiphp_ha
- {
- 	struct acpiphp_context *context;
- 	struct acpiphp_bridge *bridge = NULL;
-+	struct acpi_device *adev;
-+
-+	if (acpi_bus_get_device(handle, &adev))
-+		return NULL;
- 
- 	mutex_lock(&acpiphp_context_lock);
--	context = acpiphp_get_context(handle);
-+	context = acpiphp_get_context(adev);
- 	if (context) {
- 		bridge = context->bridge;
- 		if (bridge)
-@@ -793,7 +791,7 @@ static void hotplug_event(u32 type, void
- 	struct acpiphp_context *context = data;
- 	struct acpiphp_func *func = &context->func;
- 	struct acpiphp_slot *slot = func->slot;
--	acpi_handle handle = context->adev->handle;
-+	acpi_handle handle = context->hp.self->handle;
- 	struct acpiphp_bridge *bridge;
- 
- 	mutex_lock(&acpiphp_context_lock);
-@@ -842,18 +840,39 @@ static void hotplug_event(u32 type, void
- 
- static void hotplug_event_work(void *data, u32 type)
- {
--	struct acpiphp_context *context = data;
-+	struct acpi_device *adev = data;
-+	struct acpiphp_context *context;
-+	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
- 
- 	acpi_scan_lock_acquire();
--	pci_lock_rescan_remove();
-+	/*
-+	 * The device object's ACPI handle cannot become invalid as long as we
-+	 * are holding acpi_scan_lock, but it might have become invalid before
-+	 * that lock was acquired.
-+	 */
-+	if (adev->handle == INVALID_ACPI_HANDLE)
-+		goto out;
- 
--	hotplug_event(type, context);
-+	mutex_lock(&acpiphp_context_lock);
-+	context = acpiphp_get_context(adev);
-+	if (!context) {
-+		mutex_unlock(&acpiphp_context_lock);
-+		goto out;
-+	}
-+	get_bridge(context->func.parent);
-+	acpiphp_put_context(context);
-+	mutex_unlock(&acpiphp_context_lock);
- 
-+	pci_lock_rescan_remove();
-+	hotplug_event(type, context);
- 	pci_unlock_rescan_remove();
--	acpi_scan_lock_release();
--	acpi_evaluate_hotplug_ost(context->adev->handle, type,
--				  ACPI_OST_SC_SUCCESS, NULL);
- 	put_bridge(context->func.parent);
-+	ost_code = ACPI_OST_SC_SUCCESS;
-+
-+ out:
-+	acpi_evaluate_hotplug_ost(adev->handle, type, ost_code, NULL);
-+	put_device(&adev->dev);
-+	acpi_scan_lock_release();
- }
- 
- /**
-@@ -866,7 +885,8 @@ static void hotplug_event_work(void *dat
-  */
- static void handle_hotplug_event(acpi_handle handle, u32 type, void *data)
- {
--	struct acpiphp_context *context;
-+	struct acpi_device *adev;
-+	acpi_status status;
- 	u32 ost_code = ACPI_OST_SC_SUCCESS;
- 
- 	switch (type) {
-@@ -901,17 +921,16 @@ static void handle_hotplug_event(acpi_ha
- 		goto out;
- 	}
- 
--	mutex_lock(&acpiphp_context_lock);
--	context = acpiphp_get_context(handle);
--	if (context && !WARN_ON(context->adev->handle != handle)) {
--		get_bridge(context->func.parent);
--		acpiphp_put_context(context);
--		acpi_hotplug_execute(hotplug_event_work, context, type);
--		mutex_unlock(&acpiphp_context_lock);
--		return;
--	}
--	mutex_unlock(&acpiphp_context_lock);
- 	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
-+	if (acpi_bus_get_device(handle, &adev))
-+		goto out;
-+
-+	get_device(&adev->dev);
-+	status = acpi_hotplug_execute(hotplug_event_work, adev, type);
-+	if (ACPI_SUCCESS(status))
-+		return;
-+
-+	put_device(&adev->dev);
- 
-  out:
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
-@@ -967,7 +986,7 @@ void acpiphp_enumerate_slots(struct pci_
- 		 * bridge is not interesting to us either.
- 		 */
- 		mutex_lock(&acpiphp_context_lock);
--		context = acpiphp_get_context(handle);
-+		context = acpiphp_get_context(adev);
- 		if (!context) {
- 			mutex_unlock(&acpiphp_context_lock);
- 			put_device(&bus->dev);
-
+Bjorn
