@@ -1,101 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:58535 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbaANKZh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 05:25:37 -0500
-Received: by mail-ee0-f43.google.com with SMTP id c41so112228eek.2
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 02:25:35 -0800 (PST)
-Date: Tue, 14 Jan 2014 12:25:32 +0200
-From: Jack Morgenstein <jackm@dev.mellanox.co.il>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org, bhelgaas@google.com,
-	amirv@mellanox.com, ogerlitz@mellanox.com, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-Message-ID: <20140114122532.0e2b6a64@jpm-OptiPlex-GX620>
-In-Reply-To: <20140114091525.GB27684@richard>
-References: <20140114062215.GA19345@richard>
-	<20140114105031.71882944@jpm-OptiPlex-GX620>
-	<20140114091525.GB27684@richard>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:60504 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbaA3Fb0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 00:31:26 -0500
+Received: by mail-lb0-f181.google.com with SMTP id z5so2128827lbh.26
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 21:31:25 -0800 (PST)
+Message-ID: <52E9E3AB.1040805@gmail.com>
+Date: Thu, 30 Jan 2014 09:31:23 +0400
+From: `VL <vl.homutov@gmail.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port
+ range.
+References: <52CBC4D1.5080706@gmail.com>	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>	<52CD2387.2030403@gmail.com>	<CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>	<52CE301E.60108@gmail.com>	<CAE9FiQWxpRMX-0vyd5hML-Hnto8H+C83dcne9FBZcN9qsmGCEw@mail.gmail.com>	<52CF7A17.60703@gmail.com>	<CAE9FiQVPtNk2LN4TVMzXX72TN8bjDTyD74y_BH05rfw=NArD3Q@mail.gmail.com>	<52D102EF.5070303@gmail.com>	<CAE9FiQU=4qABcZLJzF13aYSmzryB1=WkO+NYvs0LTj9Kt_1ajA@mail.gmail.com> <CAA__XvTqOtfqzFAdSuUBdr-YAe5SxhUg_FPXr3xvibio_CqbXg@mail.gmail.com> <52D6CEC6.2000901@gmail.com>
+In-Reply-To: <52D6CEC6.2000901@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 14 Jan 2014 17:15:25 +0800
-Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-
-> >> Error log:
-> >>   mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping
-> >> PF. mlx4_core: probe of 0003:05:00.0 failed with error -22  
-> >
-> >1. Please include the full error log starting from host bootup and
-> >driver start  
-> 
-> Will provide one later. 
-
->From procedure __mlx4_init_one() in file
-drivers/net/ethernet/mellanox/mlx4_main.c:
-
-	        /* We reset the device and enable SRIOV only for physical
-                 * devices.  Try to claim ownership on the device;
-                 * if already taken, skip -- do not allow multiple PFs
-                 */
-==>		err = mlx4_get_ownership(dev);
-                if (err) {
-                        if (err < 0)
-                                goto err_free_dev;
-                        else {
-                                mlx4_warn(dev, "Multiple PFs not yet
-                supported." " Skipping PF.\n");
-                                err = -EINVAL;
-                                goto err_free_dev;
-                        }
-                }
-===================
-#define MLX4_OWNER_BASE 0x8069c
-#define MLX4_OWNER_SIZE 4
-
-static int mlx4_get_ownership(struct mlx4_dev *dev)
-{
-        void __iomem *owner;
-        u32 ret;
-
-        if (pci_channel_offline(dev->pdev))
-                return -EIO;
-
-==>     owner = ioremap(pci_resource_start(dev->pdev, 0) + MLX4_OWNER_BASE,
-                        MLX4_OWNER_SIZE);
-        if (!owner) {
-                mlx4_err(dev, "Failed to obtain ownership bit\n");
-                return -ENOMEM;
-        }
-
-        ret = readl(owner);
-        iounmap(owner);
-==>     return (int) !!ret;
-}
-
-
-I suspect one of the following scenarios:
-
-1. BAR 0 contains a "PPF Selection" (i.e., ownership) semaphore:  The first PF probe which
-reads the semaphore "acquires" it (i.e., the first read grabs the semaphore (the read returns zero).
-Subsequent reads return non-zero.  When the PF driver is unloaded, it calls "mlx4_free_ownership()",
-which writes a zero into the semaphore dword, so that the next read will return zero.
-
-In this scenario, initialization of the "PPF selection" semaphore to zero has been compromised somehow, so that
-even the first read attempt returns a non-zero value.  In this scenario, note that the ioremap DID succeed, or
-we would see the "Failed to obtain ownership bit" message in the error log.  Maybe pre-fetching has something
-to do with this? (i.e., maybe if the BAR is not prefetched, the initial value of the semaphore is compromised).
-
-2. For some reason the same PF is being probed twice by the
-kernel.  In this case the second probe attempt fails because the PF has
-already been probed once.
-
-This is the reason that I want to see the entire log -- to see if
-indeed the device is being "double-probed"
-
--Jack
+On 15.01.2014 22:09, `VL wrote:
+> On 15.01.2014 13:10, `VL wrote:
+>>> looks like the your adapter need more time to settle down?
+>>> Can you check if you can enable slow boot mode in BIOS setup?
+>> yes, probably. I'll try to repeat steps with disabled fast boot.
+> no, this is not the case. I've disabled all fast boot in BIOS and nothing
+> changed in logs.
+>
+> so this is the best of what we have:
+> http://inspert.ru/pci/dmesg-earlydump.txt
+>
+> I was also able to reproduce the issue without pci=realloc. I have 
+> disabled
+> all builtin devices on motherboard (unused controllers, NICs and audio).
+> Looks like in this conditions kernel was able to allocate some resource
+> and hang during snd_ice1712 driver load.
+>
+> Attached is the photo of boot with this situation.
+> Unfortunately, since NICs are disabled and there is no serial onboard,
+> I cannot provide full log.
+>
+up: any concluision/suggestions?
