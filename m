@@ -1,103 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46521 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932307AbaAaPVc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 10:21:32 -0500
-Date: Fri, 31 Jan 2014 17:28:36 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [Update][PATCH 4/5][RFT] ACPI / hotplug / PCI: Simplify
- acpi_install_hotplug_notify_handler()
-Message-ID: <20140131152836.GJ18029@intel.com>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
- <1508034.JFmpIOzjVZ@vostro.rjw.lan>
- <1693151.2qrLZHyp0o@vostro.rjw.lan>
- <18315277.jcVt0SJ67s@vostro.rjw.lan>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:36537 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056AbaA3Aqw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 19:46:52 -0500
+Received: by mail-ob0-f169.google.com with SMTP id wo20so2802087obc.14
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 16:46:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <18315277.jcVt0SJ67s@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQW1yybW1Zr=gwHiZ9k_r9zddyBzR25cTB9YZgEiwghYcw@mail.gmail.com>
+References: <1389741079-12976-1-git-send-email-tixxdz@opendz.org>
+ <20140129231222.GI16825@google.com> <CAE9FiQW1yybW1Zr=gwHiZ9k_r9zddyBzR25cTB9YZgEiwghYcw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 29 Jan 2014 17:46:31 -0700
+Message-ID: <CAErSpo7S=KVT_06YeQssefJ90QfLETECvKLW7Xk73_O5SbY+=g@mail.gmail.com>
+Subject: Re: [PATCH] PCI: fix a memory leak of pci_host_bridge on error path
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Djalal Harouni <tixxdz@opendz.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 29, 2014 at 01:00:57AM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Use the observation that the ACPI scan handler of the device object
-> in acpi_hotplug_notify_cb() can be obtained from that device object's
-> handler pointer and do not pass it as data to
-> acpi_install_hotplug_notify_handler() in acpi_scan_init_hotplug().
-> 
-> That allows the second argument of acpi_install_hotplug_notify_handler()
-> to be dropped, so do it and update its callers accordingly.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/acpi/scan.c                |   31 ++++++++++++++++++-------------
->  drivers/pci/hotplug/acpiphp_glue.c |    2 +-
->  include/acpi/acpi_bus.h            |    2 +-
->  3 files changed, 20 insertions(+), 15 deletions(-)
-> 
-> Index: linux-pm/drivers/acpi/scan.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/scan.c
-> +++ linux-pm/drivers/acpi/scan.c
-> @@ -487,7 +487,6 @@ static void acpi_device_hotplug(void *da
->  
->  static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
->  {
-> -	struct acpi_scan_handler *handler = data;
->  	u32 ost_code = ACPI_OST_SC_SUCCESS;
->  	struct acpi_device *adev;
->  	acpi_status status;
-> @@ -503,13 +502,6 @@ static void acpi_hotplug_notify_cb(acpi_
->  
->  	case ACPI_NOTIFY_EJECT_REQUEST:
->  		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
-> -		if (handler && !handler->hotplug.enabled) {
-> -			acpi_handle_err(handle, "Eject disabled\n");
-> -			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
-> -			goto out;
-> -		}
-> -		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
-> -					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
->  		break;
->  
->  	case ACPI_NOTIFY_DEVICE_WAKE:
-> @@ -535,11 +527,24 @@ static void acpi_hotplug_notify_cb(acpi_
->  		goto out;
->  	}
->  
-> +	mutex_lock(&acpi_scan_lock);
+On Wed, Jan 29, 2014 at 5:23 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jan 29, 2014 at 3:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Wed, Jan 15, 2014 at 12:11:19AM +0100, Djalal Harouni wrote:
+>>> On error paths make sure that the pci_host_bridge struct is freed.
+>>>
+>>> Signed-off-by: Djalal Harouni <tixxdz@opendz.org>
+>>
+>> Applied to pci/misc, thanks!
+>>
+>>> ---
+>>> On top of linux-next.
+>>>
+>>>  drivers/pci/probe.c | 10 +++++-----
+>>>  1 file changed, 5 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index 23cdfac..483566c 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -1771,15 +1771,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>>       bridge->dev.release = pci_release_host_bridge_dev;
+>>>       dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+>>>       error = pcibios_root_bridge_prepare(bridge);
+>>> -     if (error) {
+>>> -             kfree(bridge);
+>>> -             goto err_out;
+>>> -     }
+>>> +     if (error)
+>>> +             goto host_bridge_err;
+>>>
+>>>       error = device_register(&bridge->dev);
+>>>       if (error) {
+>>>               put_device(&bridge->dev);
+>>> -             goto err_out;
+>>> +             goto host_bridge_err;
+>>>       }
+>>>       b->bridge = get_device(&bridge->dev);
+>>>       device_enable_async_suspend(b->bridge);
+>>> @@ -1836,6 +1834,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>>  class_dev_reg_err:
+>>>       put_device(&bridge->dev);
+>>>       device_unregister(&bridge->dev);
+>>> +host_bridge_err:
+>>> +     kfree(bridge);
+>>>  err_out:
+>>>       kfree(b);
+>>>       return NULL;
+>>> --
+>
+> Are you joking?
+>
+> NAK.
+>
+> even device_register fail,it will have one ref hold, and
+> put_device(&bridge->dev)
+> it will trigger bridge->dev.release aka pci_release_host_bridge_dev;
+> that function will free the bridge.
+> You will have double free.
 
-This is weird. I'm testing against your test-next branch which has this
-patch included. If I remove locking here, TBT hotplug works fine. Otherwise
-I can see the first hotplug/unplug works but after that I cannot get any
-events anymore.
+OK, dropped, thanks.  I wasn't joking, I just made a mistake.
 
->  	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
-> -	if (acpi_bus_get_device(handle, &adev))
-> +	if (acpi_bus_get_device(handle, &adev)) {
-> +		mutex_unlock(&acpi_scan_lock);
->  		goto out;
-> -
-> +	}
-> +	if (type == ACPI_NOTIFY_EJECT_REQUEST) {
-> +		if (adev->handler && !adev->handler->hotplug.enabled) {
-> +			acpi_handle_err(handle, "Eject disabled\n");
-> +			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
-> +			mutex_unlock(&acpi_scan_lock);
-> +			goto out;
-> +		}
-> +		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
-> +					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
-> +	}
->  	get_device(&adev->dev);
-> +	mutex_unlock(&acpi_scan_lock);
->  	status = acpi_hotplug_execute(acpi_device_hotplug, adev, type);
->  	if (ACPI_SUCCESS(status))
->  		return;
+> commit 343df771e671d821478dd3ef525a0610b808dbf8
+> Author: Jiang Liu <liuj97@gmail.com>
+> Date:   Fri Jun 7 01:10:08 2013 +0800
+>
+>     PCI: Fix refcount issue in pci_create_root_bus() error recovery path
+>
+>     After calling device_register(&bridge->dev), the bridge is reference-
+>     counted, and it is illegal to call kfree() on it except in the release
+>     function.
+>
+>     [bhelgaas: changelog, use put_device() after device_register() failure]
+>     Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Cc: stable@vger.kernel.org
