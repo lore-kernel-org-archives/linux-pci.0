@@ -1,70 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:64093 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753166AbaACVxK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 16:53:10 -0500
+Received: from moutng.kundenserver.de ([212.227.126.186]:54421 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752398AbaA3Neg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 08:34:36 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [PATCH V3 7/8] pcie: SPEAr13xx: Add designware pcie support
+Date: Thu, 30 Jan 2014 14:34:19 +0100
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Viresh Kumar <viresh.linux@gmail.com>, spear-devel@list.st.com,
+	linux-pci@vger.kernel.org
+References: <cover.1391077731.git.mohit.kumar@st.com> <1c7f0dd04e9af55886dc74789bfcf92ce900e131.1391077731.git.mohit.kumar@st.com>
+In-Reply-To: <1c7f0dd04e9af55886dc74789bfcf92ce900e131.1391077731.git.mohit.kumar@st.com>
 MIME-Version: 1.0
-In-Reply-To: <20140102.192133.1585340046080167370.davem@davemloft.net>
-References: <1388234173-31654-1-git-send-email-jeffrey.t.kirsher@intel.com>
-	<20140102.192133.1585340046080167370.davem@davemloft.net>
-Date: Fri, 3 Jan 2014 13:53:08 -0800
-Message-ID: <CAEuXFEw=A0mppxtgzpmnh3feLiKYb+LJQvFRMrW3C4h+jHpO2Q@mail.gmail.com>
-Subject: Re: [net-next] pci_regs.h: Add PCI bus link speed and width defines
-From: Jesse Brandeburg <jesse.brandeburg@gmail.com>
-To: David Miller <davem@davemloft.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	NetDEV list <netdev@vger.kernel.org>, gospo@redhat.com,
-	sassmann@redhat.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bjorn.helgaas@hp.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201401301434.20188.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+linux-pci
+On Thursday 30 January 2014, Mohit Kumar wrote:
 
-<and see note below>
+> @@ -80,6 +80,57 @@
+>  			status = "disabled";
+>  		};
+>  
+> +		pcie0: pcie@b1000000 {
+> +			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> +			reg = <0xb1000000 0x4000>;
+> +			interrupts = <0 68 0x4>;
+> +			pcie_is_gen1 = <0>;
+> +			num-lanes = <1>;
+> +			phys = <&miphy0 1 0>;
+> +			phy-names = "pcie-phy";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
+> +				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
+> +				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
+> +			status = "disabled";
+> +		};
 
-On Thu, Jan 2, 2014 at 4:21 PM, David Miller <davem@davemloft.net> wrote:
-> From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> Date: Sat, 28 Dec 2013 04:36:13 -0800
->
->> Add missing PCI bus link speed 8.0 GT/s and bus link widths of
->> x1, x2, x4 and x8.
->>
->> CC: <linux-kernel@vger.kernel.org>
->> Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->
-> Can a PCI person please ACK this?  This is a prerequisite for some
-> networking driver changes Jeff would like to push to me.
->
-> Thanks.
->
->> ---
->>  include/uapi/linux/pci_regs.h | 5 +++++
->>  1 file changed, 5 insertions(+)
->>
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index 4a98e85..c870c2a 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -489,7 +489,12 @@
->>  #define  PCI_EXP_LNKSTA_CLS  0x000f  /* Current Link Speed */
->>  #define  PCI_EXP_LNKSTA_CLS_2_5GB 0x0001 /* Current Link Speed 2.5GT/s */
->>  #define  PCI_EXP_LNKSTA_CLS_5_0GB 0x0002 /* Current Link Speed 5.0GT/s */
->> +#define  PCI_EXP_LNKSTA_CLS_8_0GB 0x0003 /* Current Link Speed 8.0GT/s */
->>  #define  PCI_EXP_LNKSTA_NLW  0x03f0  /* Negotiated Link Width */
->> +#define  PCI_EXP_LNKSTA_NLW_X1       0x0010  /* Current Link Width x1 */
->> +#define  PCI_EXP_LNKSTA_NLW_X2       0x0020  /* Current Link Width x2 */
->> +#define  PCI_EXP_LNKSTA_NLW_X4       0x0040  /* Current Link Width x4 */
->> +#define  PCI_EXP_LNKSTA_NLW_X8       0x0080  /* Current Link Width x8 */
->>  #define  PCI_EXP_LNKSTA_NLW_SHIFT 4  /* start of NLW mask in link status */
->>  #define  PCI_EXP_LNKSTA_LT   0x0800  /* Link Training */
->>  #define  PCI_EXP_LNKSTA_SLC  0x1000  /* Slot Clock Configuration */
+Shouldn't there be more than one interrupt? Normally each root port has
+four legacy IRQs, in order to support bridge devices.
 
-also note that these defines from this patch are already partially
-defined in drivers/pci/probe.c but likely need to move into a header
-file and be consolidated throughout the kernel.  That said I don't see
-any issue with adding these as a separate set of defines in
-uapi/linux/pci_regs.h
+> +	spear13xx_pcie->phy = devm_phy_get(dev, "pcie-phy");
+> +	if (IS_ERR(spear13xx_pcie->phy)) {
+> +		dev_err(dev, "Could not get PHY\n");
+> +		return -EPROBE_DEFER;
+> +	}
+
+I think you should only return -EPROBE_DEFER if you got that
+error from the PHY layer. If there is some other problem
+with getting the PHY, you want that returned as a fatal
+error here and not retry the PCIe probe function.
+
+> diff --git a/drivers/phy/phy-spear13xx-sata-pcie.c b/drivers/phy/phy-spear13xx-sata-pcie.c
+> index 6adfa64..5eabf51 100644
+> --- a/drivers/phy/phy-spear13xx-sata-pcie.c
+> +++ b/drivers/phy/phy-spear13xx-sata-pcie.c
+> @@ -71,6 +71,80 @@
+>  	#define SPEAR1340_PCIE_SATA_MIPHY_CFG_PCIE \
+>  			(SPEAR1340_MIPHY_OSC_BYPASS_EXT | \
+>  			SPEAR1340_MIPHY_PLL_RATIO_TOP(25))
+
+Please split this out into a separate patch.
+
+> +static int spear1310_pcie_miphy_init(struct spear13xx_phy_priv *phypriv)
+> +{
+> +	u32 mask, val;
+> +
+> +	regmap_update_bits(phypriv->misc, SPEAR1310_PCIE_MIPHY_CFG_1,
+> +			SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK,
+> +			SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE);
+> +
+> +	switch (phypriv->id) {
+> +	case 0:
+> +		mask = SPEAR1310_PCIE_CFG_MASK(0);
+> +		val = SPEAR1310_PCIE_CFG_VAL(0);
+> +		break;
+> +	case 1:
+> +		mask = SPEAR1310_PCIE_CFG_MASK(1);
+> +		val = SPEAR1310_PCIE_CFG_VAL(1);
+> +		break;
+> +	case 2:
+> +		mask = SPEAR1310_PCIE_CFG_MASK(2);
+> +		val = SPEAR1310_PCIE_CFG_VAL(2);
+> +		break;
+
+Ah, so this is what the ID gets used for. I would indeed encode this in the
+phy node, unlike the configuration of whether it's used for PCIe or SATA.
+
+> +static int pcie_miphy_init(struct spear13xx_phy_priv *phypriv)
+> +{
+> +	if (of_machine_is_compatible("st,spear1340"))
+> +		return spear1340_pcie_miphy_init(phypriv);
+> +	else if (of_machine_is_compatible("st,spear1310"))
+> +		return spear1310_pcie_miphy_init(phypriv);
+> +	else
+> +		return -EINVAL;
+> +}
+
+You should never check global properties such as the machine compatible
+value to make local decisions. You have two options here: Either use
+two different compatible strings for the phy node, or encode the
+difference in another property. If the only difference between spear1310
+and spear1340 is the location of the register within the "misc" syscon
+space, a good represenation would be to put the register offset next
+to the syscon phandle in the same property. That way it could transparently
+work for future SoCs.
+
+	Arnd
