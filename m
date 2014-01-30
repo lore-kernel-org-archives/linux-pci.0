@@ -1,90 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:60728 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174AbaASPOq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Jan 2014 10:14:46 -0500
-Date: Sun, 19 Jan 2014 16:14:38 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <252084946.20140119161438@eikelenboom.it>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	eiichiro.oiwa.nm@hitachi.com, <bhelgaas@google.com>,
-	<airlied@redhat.com>, <gregkh@linuxfoundation.org>,
-	<konrad.wilk@oracle.com>, <linux-pci@vger.kernel.org>,
-	<jbarnes@virtuousgeek.org>, <airlied@linux.ie>
-Subject: Re: In "pci_fixup_video" check if this is or should be theprimaryvideo d
-In-Reply-To: <20140119150926.GB5463@redhat.com>
-References: <XNM1$9$0$4$$3$3$7$A$9006870U52d8928d@hitachi.com> <CAErSpo678TwmMu7tB5u2uWogLCvQPyoZeXz3Do52XUTSGjYAwg@mail.gmail.c> <XNM1$9$0$4$$3$3$7$A$9006873U52d90952@hitachi.com> <20140119104410.GB4195@redhat.com> <1390140269.8705.95.camel@bling.home> <20140119150926.GB5463@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:57434 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752968AbaA3XYq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 18:24:46 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
+Date: Fri, 31 Jan 2014 00:39:07 +0100
+Message-ID: <3365345.z6P9Wo4Pau@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQUaof1tk151Wbu2OtpTYb+pvP16ZhLsmbn6LDdBqoVEgA@mail.gmail.com>
+References: <20140130131236.GW18029@intel.com> <CAE9FiQWDqXNF5Cn5X_muBERMWdZsZFbzmoqWvuPARREz+XO9Gw@mail.gmail.com> <CAE9FiQUaof1tk151Wbu2OtpTYb+pvP16ZhLsmbn6LDdBqoVEgA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
+> 
+> --047d7b5d2ea4eb937804f132eedf
+> Content-Type: text/plain; charset=ISO-8859-1
+> 
+> >> The latest mainline kernel "hangs" when Thunderbolt devices are
+> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
+> >> getting huge amounts of messages like:
+> >>
+> >> [  352.717001] pci 0000:02:00.0: PME# disabled
+> >> [  352.717011] pci 0000:02:00.0: PME# disabled
+> >> [  352.717021] pci 0000:02:00.0: PME# disabled
+> >> [  352.717032] pci 0000:02:00.0: PME# disabled
+> >> [  352.717041] pci 0000:02:00.0: PME# disabled
+> >> [  352.717051] pci 0000:02:00.0: PME# disabled
+> >> [  352.717061] pci 0000:02:00.0: PME# disabled
+> >> [  352.717070] pci 0000:02:00.0: PME# disabled
+> >> [  352.717083] pci 0000:02:00.0: PME# disabled
+> >> [  352.717094] pci 0000:02:00.0: PME# disabled
+> >> [  352.717104] pci 0000:02:00.0: PME# disabled
+> >> [  352.717113] pci 0000:02:00.0: PME# disabled
+> >> [  352.717124] pci 0000:02:00.0: PME# disabled
+> >> [  352.717133] pci 0000:02:00.0: PME# disabled
+> >> [  352.717143] pci 0000:02:00.0: PME# disabled
+> >> [  352.717153] pci 0000:02:00.0: PME# disabled
+> >> [  352.717162] pci 0000:02:00.0: PME# disabled
+> >
+> > that mean pci_stop_dev() get called again and again ?
+> 
+> please check if attached patch could help.
 
-Sunday, January 19, 2014, 4:09:26 PM, you wrote:
+Well, it looks like what happens is an endless loop in
+acpiphp_glue.c:disable_slot().
 
-> On Sun, Jan 19, 2014 at 07:04:29AM -0700, Alex Williamson wrote:
->> On Sun, 2014-01-19 at 12:44 +0200, Michael S. Tsirkin wrote:
->> > On Fri, Jan 17, 2014 at 07:43:30PM +0900, eiichiro.oiwa.nm@hitachi.com wrote:
->> > > Because legacy VGA is only one device on x86 System, I think qemu has to emulate a bridge
->> > > for legacy VGA. The VGA Enable bit on its bridge control register has to set to 1. The VGA
->> > > Enable bit describes in Table 3-10 Bridge Control register. When there are two VGA cards 
->> > > on the same system, I think its system needs two bridges for each device. These bridges
->> > > need bridge control registers. One VGA Enable bit on its bridge for legacy VGA has to set
->> > > to 1. Another VGA Enable bit for second VGA has to set to 0.
->> > > 
->> > > 
->> > > >On Thu, Jan 16, 2014 at 7:16 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
->> > > >> I think qemu is breaking "PCI-to-PCI Bridge Architecture Specification Revison 1.2
->> > > >> June 9, 2003 Chapter 12. VGA Support".
->> > > >
->> > > >And what exactly do you think qemu is doing wrong?  Chapter 12 is ten
->> > > >pages long.  Is there something there that prohibits two VGA devices
->> > > >on the same bus?  I'm not a qemu developer, but if I were, I would
->> > > >need a better hint about what is wrong before I could fix it.
->> > > >
->> > > >Again, sorry if you said this already and I missed it.
->> > > >
->> > > >>>[+cc Michael, Jesse, David, qemu-devel]
->> > > >>>
->> > > >>>On Wed, Jan 15, 2014 at 8:58 PM,  <eiichiro.oiwa.nm@hitachi.com> wrote:
->> > > >>>> I suggest you should not break the PCI specification, as a developer of proprietary
->> > > >>>> hypervisor, but I think your patch is no problem.
->> > > >>>> Your PCI structure is specialized structure for your virtual machine.
->> > > >>>> Maybe, your virtual machine will be causing another problem on Linux or other kernels
->> > > >>>> because of breaking the PCI specification.
->> > > >>>
->> > > >>>I assume you think qemu is breaking the PCI spec.  What exactly do you
->> > > >>>think is broken?  Please give specific references to the spec.  This
->> > > >>>conversation is pretty fragmented, and I came in late, so I apologize
->> > > >>>if I missed this.
->> > > >>>
->> > > >>>Bjorn
->> > > >>>
->> > > >
->> > 
->> > None of the bridges included in QEMU implements VGA support.
->> > The spec explicitly says its optional, so that's ok.
->> > 
->> > As a result, you need to put device which has to work in
->> > VGA mode on the root bus, any device behind a bridge
->> > won't work in VGA mode (but might work in non VGA mode).
->> 
->> The ioh3420 root ports support VGA, so a q35 model is an option for
->> multiple VGA devices.
+dev_in_slot() returns the first device in the list, so
+pci_stop_and_remove_bus_device() is called for it, but it
+doesn't remove the device from bus->devices any more, so
+dev_in_slot() will return the same device next time and
+so on forever.
 
-> Hmm, you are right, I forgot you implemented this in March.
-> In fact, I see that you updated bridges to support VGA
-> so if user wants to put both devices behind bridges,
-> that's also possible.
+> it should prevent possible reattaching driver.
 
+If my analysis above is correct, this isn't related to attaching drivers
+and rather to the way dev_in_slot() is designed.
 
-Unfortunately Xen seems to be old "pc" for the moment and the passthrough
-implementation doesn't seem to have the support for defining and using bridges either.
-With my limited c coding skills i also can't find how in hw/xen_pt.c it actually inits a
-pci device in Qemu.
+> ---
+>  drivers/pci/remove.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> Index: linux-2.6/drivers/pci/remove.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/remove.c
+> +++ linux-2.6/drivers/pci/remove.c
+> @@ -11,6 +11,7 @@ static void pci_stop_dev(struct pci_dev
+>          pci_proc_detach_device(dev);
+>          pci_remove_sysfs_dev_files(dev);
+>          device_release_driver(&dev->dev);
+> +        dev->match_driver = false;
+>          dev->is_added = 0;
+>      }
 
-Although I still find it strange that the pci_video_fixup is ignoring the decisions that the
-vga arbitration code has already made .. (make the device with the vgacon be the
-primary card unless arch code overrides), for the moment i will keep my patch in my private patch queue then :-)
+So the above won't help in my opinion.
 
+I wonder, however, if this patch helps instead:
+
+https://patchwork.kernel.org/patch/3540701/
+
+I thought it would be 3.15 material, but it very well can go in earlier if
+it happens to address this particular problem.
+
+Mika, can you please try that?
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
