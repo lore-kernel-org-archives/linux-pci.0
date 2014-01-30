@@ -1,84 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2lp0205.outbound.protection.outlook.com ([207.46.163.205]:24403
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750914AbaAXIJP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Jan 2014 03:09:15 -0500
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-To: =?utf-8?B?QmrDuHJuIEVyaWsgTmlsc2Vu?= <ben@datarespons.no>,
-	Harro Haan <hrhaan@gmail.com>
-CC: Richard Zhu <richard.zhuhongxing@gmail.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Marek Vasut <marex@denx.de>
-Subject: RE: designware/imx6: question regarding MSI
-Date: Fri, 24 Jan 2014 08:09:00 +0000
-Message-ID: <13bee045952e420f88b454d81a401439@BLUPR03MB136.namprd03.prod.outlook.com>
-References: <25.15.01844.D5C20E25@epmailin6.samsung.com>
-	 <000201cf17ff$47025bf0$d50713d0$%han@samsung.com>
-	 <20140123065104.GA26318@pratyush-vbox>
-	 <52e1335a.8917980a.31fa.ffffd7a8SMTPIN_ADDED_MISSING@mx.google.com>
-	 <CAB5oZtDohVmZjvtfVgVJPhAGbd=qcT=kw21n2ebQhKzhF70QXQ@mail.gmail.com>
- <6b747b65-ef6c-4f39-b61d-f534c981c98f@CH1EHSMHS003.ehs.local>
-In-Reply-To: <6b747b65-ef6c-4f39-b61d-f534c981c98f@CH1EHSMHS003.ehs.local>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:56249 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbaA3AIe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 19:08:34 -0500
+Received: by mail-ig0-f174.google.com with SMTP id hl1so16368779igb.1
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 16:08:34 -0800 (PST)
+Date: Wed, 29 Jan 2014 17:08:31 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: eiichiro.oiwa.nm@hitachi.com, Dave Airlie <airlied@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: In "pci_fixup_video" check if this is or should be the primary
+ video devi
+Message-ID: <20140130000831.GJ16825@google.com>
+References: <1389499841-6097-1-git-send-email-linux@eikelenboom.it>
+ <XNM1$9$0$4$$3$3$7$A$9006858U52d4d109@hitachi.com>
+ <6310129377.20140114162641@eikelenboom.it>
+ <XNM1$9$0$4$$3$3$7$A$9006860U52d614ca@hitachi.com>
+ <126550032.20140115203605@eikelenboom.it>
+ <CAErSpo7Bjo3rVCnuf9fkKc=T33Z5ZBzS+nHOBqDDKt1j4u0yWg@mail.gmail.com>
+ <1524137311.20140115232528@eikelenboom.it>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1524137311.20140115232528@eikelenboom.it>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGk6DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmrDuHJuIEVyaWsg
-Tmlsc2VuIFttYWlsdG86YmVuQGRhdGFyZXNwb25zLm5vXQ0KPiBTZW50OiBGcmlkYXksIEphbnVh
-cnkgMjQsIDIwMTQgMzo0NyBQTQ0KPiBUbzogSGFycm8gSGFhbg0KPiBDYzogUmljaGFyZCBaaHU7
-IFpodSBSaWNoYXJkLVI2NTAzNzsgUHJhdHl1c2ggQW5hbmQ7IEppbmdvbyBIYW47IGxpbnV4LQ0K
-PiBwY2lAdmdlci5rZXJuZWwub3JnOyBNb2hpdCBLVU1BUiBEQ0c7IE1hcmVrIFZhc3V0DQo+IFN1
-YmplY3Q6IFJlOiBkZXNpZ253YXJlL2lteDY6IHF1ZXN0aW9uIHJlZ2FyZGluZyBNU0kNCj4gDQo+
-IE9uIFRodSwgMjAxNC0wMS0yMyBhdCAxODozMiArMDEwMCwgSGFycm8gSGFhbiB3cm90ZToNCj4g
-PiBPbiAyMyBKYW51YXJ5IDIwMTQgMTY6MjAsIEJqw7hybiBFcmlrIE5pbHNlbiA8YmVuQGRhdGFy
-ZXNwb25zLm5vPiB3cm90ZToNCj4gPiA+IEhpIFByYXR5dXNoLA0KPiA+ID4NCj4gPiA+IE9uIFRo
-dSwgMjAxNC0wMS0yMyBhdCAwNzo1MSArMDEwMCwgUHJhdHl1c2ggQW5hbmQgd3JvdGU6DQo+ID4g
-Pj4gT24gVGh1LCBKYW4gMjMsIDIwMTQgYXQgMDE6NTI6MTlQTSArMDgwMCwgSmluZ29vIEhhbiB3
-cm90ZToNCj4gPiA+PiA+IE9uIFRodXJzZGF5LCBKYW51YXJ5IDIzLCAyMDE0IDU6MzkgQU0sIEpp
-bmdvbyBIYW4gd3JvdGU6DQo+ID4gPj4gPiA+DQo+ID4gPj4gPiA+IEnigJltIGN1cnJlbnRseSBw
-bGF5aW5nIHdpdGggTVNJIHN1cHBvcnQgaW4gcGNpLWlteDYuYyB1c2luZyBIYXJybw0KPiBIYWFu
-4oCZcyBwYXRjaCBbKl0uDQo+ID4NCj4gPiBUaGUgYWJvdmUgcGF0Y2ggbWVudGlvbmVkIHdpbGwg
-bm90IGJlY29tZSBwYXJ0IG9mIG1haW5saW5lIExpbnV4LCBidXQNCj4gPiBJIGV4cGVjdC9ob3Bl
-IGEgcmV3b3JrZWQgdmVyc2lvbiBvZiAiW1BBVENIXSBwY2k6IGlteDogZW5hYmxlIHBjaWUgbXNp
-DQo+ID4gc3VwcG9ydCIgZnJvbSBSaWNoYXJkIFpodSB3aWxsIGJlY29tZSBwYXJ0IG9mIG1haW5s
-aW5lLCBiZWNhdXNlIHRoaXMNCj4gPiBwYXRjaCBzdXBwb3J0cyBNU0lYIGFzIHdlbGwuIFJlZmVy
-ZW5jZSB0byB0aGUgcGF0Y2ggd2l0aCByZXZpZXcNCj4gPiByZW1hcmtzOg0KPiA+IGh0dHA6Ly93
-d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtaWRlL21zZzQ3MDc0Lmh0bWwNCj4gDQo+IE9LLCBj
-b29sISBUaGFuayB5b3UgZ3V5cyBmb3IgdGhlIGdvb2Qgd29yay4gSSB3aWxsIGdpdmUgaXQgYSBz
-aG90IGxhdGVyLg0KPiANCj4gPiBAUmljaGFyZCBaaHU6IElzIHRoaXMgYSBjb3JyZWN0IGFzc3Vt
-cHRpb24/DQo+ID4NCltSaWNoYXJkXSBZZXMsIGl0IGlzLiBJIHVzZSB0aGlzIHBhdGNoIHRvIGVu
-YWJsZSBpbXg2IHBjaWUgbXNpIG5vdy4NClRoaXMgcGF0Y2ggc2hvdWxkIGJlIHJlLWNvbnNpZGVy
-ZWQsIHJlLXN0cnVjdHVyZSB0b28uDQoNCj4gPiA+PiA+ID4NCj4gPiA+PiA+ID4gQXJlIHRoZXJl
-IGFueSB0ZWNobmljYWwgcmVhc29ucyB3aHkgZHdfcGNpZV9tc2lfaW5pdCBjYW5ub3QgYmUNCj4g
-PiA+PiA+ID4gY2FsbGVkIGZyb20gZHdfbXNpX3NldHVwX2lycT8gT3IgcmF0aGVyLCB3aHkgaXQg
-c2hvdWxkIG5vdD8NCj4gPiA+PiA+DQo+ID4gPj4gPiBObywgdGhlcmUgaXMgbm8gc3BlY2lhbCBy
-ZWFzb24uDQo+ID4gPj4gPiBUaGUgcGF0Y2ggKGNhbGwgZHdfcGNpZV9tc2lfaW5pdCBmcm9tIGR3
-X21zaV9zZXR1cF9pcnEpIHdvdWxkIGJlDQo+ID4gPj4gPiBnb29kLiBUaGFuayB5b3UgZm9yIHlv
-dXIgZWZmb3J0Lg0KPiA+ID4+ID4NCj4gPiA+PiA+IE1vaGl0LCBQcmF0eXVzaCwNCj4gPiA+PiA+
-IElmIHlvdSBoYXZlIGRpZmZlcmVudCBvcGluaW9ucywgcGxlYXNlIGxldCB1cyBrbm93LiA6LSkN
-Cj4gPiA+Pg0KPiA+ID4+IGR3X21zaV9zZXR1cF9pcnEgd2lsbCBiZSBjYWxsZWQgZm9yIGVhY2gg
-ZnVuY3Rpb24gd2hpY2ggbmVlZHMgbXNpDQo+ID4gPj4gYXNzaWdubWVudC4gSG93ZXZlciwgZHdf
-cGNpZV9tc2lfaW5pdCBzaG91bGQgYmUgY2FsbGVkIG9ubHkgb25jZS4NCj4gPiA+PiBTbywgaW4g
-bXkgb3BpbmlvbiBjYWxsaW5nIGR3X3BjaWVfbXNpX2luaXQgZnJvbSBkd19tc2lfc2V0dXBfaXJx
-DQo+ID4gPj4gd291bGQgbm90IGJlIHRoZSBiZXN0IG9wdGlvbi4NCj4gPiA+Pg0KPiA+ID4+IEBC
-asO4cm4sIGNhbiB5b3UgaGVscCB1cyB3aXRoIHRyYWNpbmcgY2FsbGluZyBzZXF1ZW5jZSBvZg0K
-PiA+ID4+IGR3X3BjaWVfc2V0dXAgJiBkd19wY2llX3NjYW5fYnVzLiBJIHRoaW5rIHdoZW4geW91
-IGRvICJyZXNldA0KPiA+ID4+IGJyaWRnZSIsIGl0IHdpbGwgY2FsbCBkd19wY2llX3NldHVwIGFu
-ZCB3aGVuIHlvdSBkbyAicmVzY2FuIGJ1cyIsDQo+ID4gPj4gaXQgd2lsbCBjYWxsIGR3X3BjaWVf
-c2Nhbl9idXMuIElmIHllcywgdGhlbiB5b3UgY2FuIG1vdmUNCj4gPiA+PiBkd19wY2llX21zaV9p
-bml0IHRvIGR3X3BjaWVfc2V0dXAuDQo+ID4gPg0KPiA+ID4NCj4gPiA+IEl0IGxvb2tzIGxpa2Ug
-ZHdfcGNpZV9zZXR1cCBhbmQgZHdfcGNpZV9zY2FuX2J1cyBpcyBvbmx5IGNhbGxlZCB3aGVuDQo+
-ID4gPiBib290aW5nLiBSZXNldHRpbmcgdGhlIGJyaWRnZSBvciBzY2FubmluZyB0aGUgYnVzIHdp
-bGwgbm90IHRyaWdnZXINCj4gPiA+IGFueSBvZiB0aGVzZSBmdW5jdGlvbnMsIHVuZm9ydHVuYXRl
-bHkuDQo+ID4gPg0KPiA+ID4gSSBoYXZlIGxvb2tlZCBmb3Igb3RoZXIgaG9va3MgdG9vLCB3aXRo
-b3V0IGx1Y2suDQo+ID4NCj4gPiBAQmrDuHJuOiBoYXZlIHlvdSBhcHBsaWVkIHRoZSBmb2xsb3dp
-bmcgcGF0Y2g/DQo+ID4gIltQQVRDSF0gcGNpOiBkZXNpZ253YXJlOiBmaXggbWlzc2luZyBtc2kg
-aXJxcyINCj4gPiBSZWZlcmVuY2UgdG8gdGhlIHBhdGNoOg0KPiA+IGh0dHA6Ly9saXN0cy5pbmZy
-YWRlYWQub3JnL3BpcGVybWFpbC9saW51eC1hcm0ta2VybmVsLzIwMTMtRGVjZW1iZXIvMjENCj4g
-PiA4NjI5Lmh0bWwNCj4gDQo+IFllcywgSSBoYXZlIHRoYXQgb25lIGFwcGxpZWQgYXMgd2VsbC4g
-DQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg==
+On Wed, Jan 15, 2014 at 11:25:28PM +0100, Sander Eikelenboom wrote:
+> Date: Sun, 12 Jan 2014 04:49:44 +0100
+> Subject: [PATCH] In "pci_fixup_video" check if this is or should be the
+>  primary video device to prevent setting the
+>  IORESOURCE_ROM_SHADOW flag on a secondary VGA card
+> To: Dave Airlie <airlied@redhat.com>,
+>     Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
+>     Greg Kroah-Hartman <gregkh@suse.de>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+>     linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>
+> 
+> Setting the IORESOURCE_ROM_SHADOW flag on a secondary VGA card prevents if from
+> reading it's own rom. It will get the content of the shadowrom at C000 instead,
+> which is of the primary VGA card and the driver of the secondary card will bail
+> out.
+> 
+> Fix this by checking if this is or should be the primary video device before
+> applying the fix and let the comment reflect this.
+> 
+> Signed-off-by: Sander Eikelenboom <linux@eikelenboom.it>
+> ---
+>  arch/x86/pci/fixup.c |   17 +++++++++--------
+>  1 file changed, 9 insertions(+), 8 deletions(-)
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index b046e07..525e49a 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -314,9 +314,9 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,        PCI_DEVICE_ID_INTEL_MCH_PC1,    pcie_r
+>   * IORESOURCE_ROM_SHADOW is used to associate the boot video
+>   * card with this copy. On laptops this copy has to be used since
+>   * the main ROM may be compressed or combined with another image.
+> - * See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
+> - * is marked here since the boot video device will be the only enabled
+> - * video device at this point.
+> + * See pci_map_rom() for use of this flag. Before we mark the device
+> + * with IORESOURCE_ROM_SHADOW we have to check if this is or should become
+> + * the primary video card, since this quirk is ran for all video devices.
+>   */
+>  
+>  static void pci_fixup_video(struct pci_dev *pdev)
+> @@ -347,12 +347,13 @@ static void pci_fixup_video(struct pci_dev *pdev)
+>                 }
+>                 bus = bus->parent;
+>         }
+> -       pci_read_config_word(pdev, PCI_COMMAND, &config);
+> -       if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+> -               pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+> -               dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+> -               if (!vga_default_device())
+> +       if (!vga_default_device() || pdev == vga_default_device()) {
+> +               pci_read_config_word(pdev, PCI_COMMAND, &config);
+> +               if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+> +                       pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+> +                       dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+>                         vga_set_default_device(pdev);
+> +               }
+
+ia64 also has a pci_fixup_video() that is essentially the same.  Can you
+fix that one as well, unless there is a reason why the fix applies only to
+x86 and not to ia64?
+
+>         }
+>  }
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+> -- 
+> 1.7.10.4
+
+
