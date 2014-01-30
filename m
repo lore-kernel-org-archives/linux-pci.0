@@ -1,84 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:36095 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbaAJVyb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 16:54:31 -0500
-Message-ID: <52D06C0C.9020300@canonical.com>
-Date: Fri, 10 Jan 2014 16:54:20 -0500
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33975 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752917AbaA3Nrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jan 2014 08:47:35 -0500
+Date: Thu, 30 Jan 2014 14:49:09 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 3/3] ath10k: Use pci_enable_msi_range()
+Message-ID: <20140130134908.GC31909@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: Only enable realloc auto when root bus has 64bit
- mmio
-References: <1386546869-31900-1-git-send-email-yinghai@kernel.org>	<1386546869-31900-3-git-send-email-yinghai@kernel.org>	<CAErSpo6VvV21DyHuHLcsA+_KPQcYdAWXtaVbZGUA-M9+iji0fw@mail.gmail.com>	<CAE9FiQUWFoyg_7TPaBVftpojCocNu0=1yWtqKTBvkQkRhNOnhg@mail.gmail.com>	<CAErSpo5+jY-P-9iUj0RVqyZzXwQcq9m9PqWKzZDU0yjK=4gAeQ@mail.gmail.com>	<CAE9FiQXf6w0u+JLu-JHd45ofSTShaB0MoMNbck9EE-y3u6B98w@mail.gmail.com>	<52A8BAC5.70006@canonical.com>	<CAE9FiQV8mfF6SMTbZN5H+DmyuM0663wQyoKYJDa7MiBR4i7XQg@mail.gmail.com>	<52D01D82.5070202@canonical.com> <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQUD0XvPJNFNMoqX6J67TKuGcj+pSbj+iPUf=fvC-4UXOQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/10/2014 12:13 PM, Yinghai Lu wrote:
-> On Fri, Jan 10, 2014 at 8:19 AM, Joseph Salisbury
-> <joseph.salisbury@canonical.com> wrote:
->> On 12/11/2013 02:55 PM, Yinghai Lu wrote:
->>> On Wed, Dec 11, 2013 at 11:19 AM, Joseph Salisbury
->>> <joseph.salisbury@canonical.com> wrote:
->>>> On 12/09/2013 03:10 PM, Yinghai Lu wrote:
->>>>> On Mon, Dec 9, 2013 at 11:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>>> That doesn't answer my question at all.
->>>>>>
->>>>>> I understand that this change makes it so Joseph doesn't have to use
->>>>>> "pci=realloc=off".  But why should auto-reallocation be limited to
->>>>>> buses that have resources above 4GB?  That doesn't make any sense.
->>>>>>
->>>>>> We should fix the reallocation code so it can deal with this case.  If
->>>>>> there's not enough space for everything, obviously we have to leave
->>>>>> something unassigned.  A ROM BAR is a good candidate for leaving
->>>>>> unassigned, because most of the time we can get along without it.
->>>>> Yes, that is ideal and not that simple.
->>>>> but that would be hard to backport to old kernels.
->>>>>
->>>>> BTW, Joseph, can you try
->>>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->>>>> for-pci-3.14
->>>>> with pci=realloc=on
->>>>>
->>>>> on that system?
->>>>>
->>>>> Thanks
->>>>>
->>>>> Yinghai
->>>> I noticed there was some back and forth on this thread.  Do you still
->>>> want me to test this version, Yinghai?
->>> Yes, if that works, we would not need to put the patch in upstream for limiting
->>> realloc auto scope.
->>>
->> Another user has confirmed that at test kernel from your branch[0] does
->> resolve the bug.
-> Hi, Joe,
->
-> Bjorn does not want to limit auto realloc, so this patch can not make
-> to upstream at this point.
->
-> so we may have to ask user to append "pci=realloc=off" before we find
-> more smart way to realloc
-> resource.
->
-> Thanks
->
-> Yinghai
-Hi Yinghai,
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-In a prior email you mentioned: "Yes, if that works, we would not need
-to put the patch in upstream for limiting realloc auto scope."  Is the
-git tree at
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-somehow different now?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 563ce77..ad2a6cf 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2411,8 +2411,9 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
+ 	/* Try MSI-X */
+ 	if (ath10k_pci_irq_mode == ATH10K_PCI_IRQ_AUTO && msix_supported) {
+ 		ar_pci->num_msi_intrs = MSI_NUM_REQUEST;
+-		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
+-		if (ret == 0)
++		ret = pci_enable_msi_range(ar_pci->pdev, ar_pci->num_msi_intrs,
++							 ar_pci->num_msi_intrs);
++		if (ret > 0)
+ 			return 0;
+ 
+ 		/* fall-through */
+-- 
+1.7.7.6
 
-Joe
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
