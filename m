@@ -1,62 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1390345596.1792.468.camel@misato.fc.hp.com>
-Subject: Re: [Patch v1 1/3] ACPI: add callback prepare() into
- acpi_hotplug_handler
-From: Toshi Kani <toshi.kani@hp.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devel@acpica.org
-Date: Tue, 21 Jan 2014 16:06:36 -0700
-In-Reply-To: <2201697.uqWgsYrLat@vostro.rjw.lan>
-References: <1390013297-23462-1-git-send-email-jiang.liu@linux.intel.com>
-	 <1390338897.1792.467.camel@misato.fc.hp.com>
-	 <2201697.uqWgsYrLat@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:37701 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750958AbaA3HJC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 02:09:02 -0500
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 30 Jan 2014 12:38:57 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id DA9B81258054
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 12:40:39 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay01.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0U78lwh25755696
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 12:38:47 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0U78qmu024278
+	for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 12:38:53 +0530
+Date: Thu, 30 Jan 2014 15:08:50 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Or Gerlitz <ogerlitz@mellanox.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Jack Morgenstein <jackm@dev.mellanox.co.il>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@au1.ibm.com>, yinghai@kernel.org,
+	bhelgaas@google.com, amirv@mellanox.com,
+	Guo Chao <yan@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
+Subject: Re: mlx4_core probe error after applying Yinghai's patch
+Message-ID: <20140130070850.GA24083@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20140114103712.GD27684@richard>
+ <20140114132340.50df7d6f@jpm-OptiPlex-GX620>
+ <52d52032.4981e00a.3dcc.ffff81fdSMTPIN_ADDED_BROKEN@mx.google.com>
+ <20140115094113.64ca756e@jpm-OptiPlex-GX620>
+ <1389772791.6933.84.camel@pasglop>
+ <52d653d3.8425e00a.76d0.1e60SMTPIN_ADDED_BROKEN@mx.google.com>
+ <20140115160204.24a44af0@jpm-OptiPlex-GX620>
+ <20140116020946.GA8702@richard>
+ <20140116021429.GB8702@richard>
+ <52E8C0D6.3030105@mellanox.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52E8C0D6.3030105@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-01-22 at 00:17 +0100, Rafael J. Wysocki wrote:
-> On Tuesday, January 21, 2014 02:14:57 PM Toshi Kani wrote:
-> > On Sat, 2014-01-18 at 10:48 +0800, Jiang Liu wrote:
-> > > Add callback prepare() into acpi_hotplug_handler, which will get called
-> > > at the very beginning of ACPI hotplug event handler. The ACPI core will
-> > > ignore the event if prepare() returns NOTIFY_STOP.
-> > > 
-> > > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> > > ---
-> > >  drivers/acpi/scan.c     |    4 ++++
-> > >  include/acpi/acpi_bus.h |    1 +
-> > >  2 files changed, 5 insertions(+)
-> > > 
-> > > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> > > index fd39459..6b0f419 100644
-> > > --- a/drivers/acpi/scan.c
-> > > +++ b/drivers/acpi/scan.c
-> > > @@ -392,6 +392,10 @@ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
-> > >  	struct acpi_device *adev;
-> > >  	acpi_status status;
-> > >  
-> > > +	if (handler->prepare &&
-> > > +	    handler->prepare(handle, type, data) == NOTIFY_STOP)
-> > > +		return;
-> > 
-> > The OS is responsible for calling _OST when it is implemented.  So you
-> > cannot just return here.  See acpi_hotplug_unsupported(handle, type)
-> > next line.  Also, please describe why prepare() needs to be added.
-> 
-> I don't think it's needed any more, please see:
-> 
-> http://marc.info/?l=linux-acpi&m=139001691317575&w=2
+On Wed, Jan 29, 2014 at 10:50:30AM +0200, Or Gerlitz wrote:
+>On 16/01/2014 04:14, Wei Yang wrote:
+>>>>>+static void mlx4_shutdown(struct pci_dev *pdev)
+>>>>>+{
+>>>>>+       mlx4_remove_one(pdev);
+>>>>>+}
+>>>>>+
+>>>>>  int mlx4_restart_one(struct pci_dev *pdev)
+>>>>>  {
+>>>>>         struct mlx4_dev  *dev  = pci_get_drvdata(pdev);
+>>>>>@@ -2582,6 +2590,7 @@ static struct pci_driver mlx4_driver = {
+>>>>>         .id_table       = mlx4_pci_table,
+>>>>>         .probe          = mlx4_init_one,
+>>>>>         .remove         = mlx4_remove_one,
+>>>>>+       .shutdown       = mlx4_shutdown,
+>>>>>         .err_handler    = &mlx4_err_handler,
+>>>>>  };
+>>>>>
+>>>>>Thanks,
+>>>>>Gavin
+>
+>Guys,
+>
+>Did you converge here?  I don't see this patch in Linus tree, so
+>wasn't sure where the discussion went eventually.
 
-Oh, I see.  Thanks!
--Toshi
+Or,
+
+Even this patch really could make the machine boot up, we didn't find the root 
+cause of the failure as mentioned in the first mail. I will find some time to
+dig into it if I have more time and will send you update if I find it.
+
+For this patch, we(Gavin and I) don't think it is a formal patch. We send it
+here just let you know we find a work around and this one really helps. As I
+mentioned in the previous mail, we suggest you guys to create a formal patch
+with this function, since you are more familiar with this device and the
+driver.
+
+If you think it would be nice for a patch from us, I am very glad to do
+this.:-)
+
+>
+>Or.
+>
+>Or.
+
+-- 
+Richard Yang
+Help you, Help me
 
