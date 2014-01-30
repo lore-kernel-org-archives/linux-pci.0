@@ -1,78 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:16859 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752853AbaA3OHN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jan 2014 09:07:13 -0500
+Date: Thu, 30 Jan 2014 15:09:07 +0100
 From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 13/34] i40e: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:32 +0100
-Message-Id: <e372ccd454aaa80f494851943d2d58646556bcee.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+Subject: [PATCH v2 1/2] ipr: Get rid of superfluous call to
+ pci_disable_msi/msix()
+Message-ID: <20140130140906.GB32349@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
+ <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+ <52E7CCAD.5070008@linux.vnet.ibm.com>
+ <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
+ <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+There is no need to call pci_disable_msi() or pci_disable_msix()
+in case the call to pci_enable_msi() or pci_enable_msix() failed.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/net/ethernet/intel/i40e/i40e_main.c |   33 +++++----------------------
- 1 files changed, 6 insertions(+), 27 deletions(-)
+ drivers/scsi/ipr.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
-index a4b9408..89d7fce 100644
---- a/drivers/net/ethernet/intel/i40e/i40e_main.c
-+++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
-@@ -5849,37 +5849,16 @@ err_out:
-  **/
- static int i40e_reserve_msix_vectors(struct i40e_pf *pf, int vectors)
- {
--	int err = 0;
--
--	pf->num_msix_entries = 0;
--	while (vectors >= I40E_MIN_MSIX) {
--		err = pci_enable_msix(pf->pdev, pf->msix_entries, vectors);
--		if (err == 0) {
--			/* good to go */
--			pf->num_msix_entries = vectors;
--			break;
--		} else if (err < 0) {
--			/* total failure */
--			dev_info(&pf->pdev->dev,
--				 "MSI-X vector reservation failed: %d\n", err);
--			vectors = 0;
--			break;
--		} else {
--			/* err > 0 is the hint for retry */
--			dev_info(&pf->pdev->dev,
--				 "MSI-X vectors wanted %d, retrying with %d\n",
--				 vectors, err);
--			vectors = err;
--		}
--	}
--
--	if (vectors > 0 && vectors < I40E_MIN_MSIX) {
-+	vectors = pci_enable_msix_range(pf->pdev, pf->msix_entries,
-+					I40E_MIN_MSIX, vectors);
-+	if (vectors < 0) {
- 		dev_info(&pf->pdev->dev,
--			 "Couldn't get enough vectors, only %d available\n",
--			 vectors);
-+			 "MSI-X vector reservation failed: %d\n", vectors);
- 		vectors = 0;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 96c10ce..48d0cfc 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -9329,7 +9329,6 @@ static int ipr_enable_msix(struct ipr_ioa_cfg *ioa_cfg)
+ 
+ 	if (err < 0) {
+ 		ipr_wait_for_pci_err_recovery(ioa_cfg);
+-		pci_disable_msix(ioa_cfg->pdev);
+ 		return err;
  	}
  
-+	pf->num_msix_entries = vectors;
-+
- 	return vectors;
- }
+@@ -9353,7 +9352,6 @@ static int ipr_enable_msi(struct ipr_ioa_cfg *ioa_cfg)
+ 
+ 	if (err < 0) {
+ 		ipr_wait_for_pci_err_recovery(ioa_cfg);
+-		pci_disable_msi(ioa_cfg->pdev);
+ 		return err;
+ 	}
  
 -- 
 1.7.7.6
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
