@@ -1,47 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 8 Jan 2014 12:54:01 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:15409 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753224AbaA3OEi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jan 2014 09:04:38 -0500
+Date: Thu, 30 Jan 2014 15:06:31 +0100
 From: Alexander Gordeev <agordeev@redhat.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	wil6210@qca.qualcomm.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 7/7] wil6210: Use new interfaces for MSI enablement
-Message-ID: <20140108115400.GD20157@dhcp-26-207.brq.redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
- <a5774459cb8eebfc95156b8cd3b249d896e04400.1389103215.git.agordeev@redhat.com>
- <1649789.pNiBbZVqTd@lx-vladimir>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and
+ pci_enable_msix_range()
+Message-ID: <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
+ <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+ <52E7CCAD.5070008@linux.vnet.ibm.com>
+ <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1649789.pNiBbZVqTd@lx-vladimir>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 08, 2014 at 01:30:45PM +0200, Vladimir Kondratiev wrote:
-> On Tuesday, January 07, 2014 07:05:42 PM Alexander Gordeev wrote:
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > ---
-> >  drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++++++------------
-> >  1 files changed, 19 insertions(+), 17 deletions(-)
-> > 
+On Wed, Jan 29, 2014 at 02:26:52PM +0100, Alexander Gordeev wrote:
+> > Do you want me to rediff your patches on top of this one,
+> > or do you want to keep the entire MSI series together
+> > and do the rediff? Otherwise the patches seem fine.
 > 
-> Patch looks fine, but I can't validate it as I can't find patch introducing
-> pci_enable_msi_range(). Where this patch landed on?
+> I would prefer the former.
 
-Vladimir,
+Hi Brian,
 
-This series is against pci/msi branch in Bjorn Helgaas's repo:
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+I am sending the refreshed patches on top of "ipr: Handle early EEH".
 
-Commit 302a252 "PCI/MSI: Add pci_enable_msi_range() and pci_enable_msix_range()"
-
-> I am working with:
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-> 
-> I also checked
-> git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-> and, of course
-> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-> 
-> Thanks, Vladimir
 
 -- 
 Regards,
