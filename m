@@ -1,57 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 82-68-191-81.dsl.posilan.com ([82.68.191.81]:51291 "EHLO
-	rainbowdash.ducie.codethink.co.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753671AbaA1KHD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jan 2014 05:07:03 -0500
-From: Ben Dooks <ben.dooks@codethink.co.uk>
-To: linux-kernel@lists.codethink.co.uk
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	linux-pci@vger.kernel.org, Ben Dooks <ben.dooks@codethink.co.uk>
-Subject: [PATCH 3/3] PCI: rcar: fix bridge logic configuration accesses
-Date: Tue, 28 Jan 2014 10:06:56 +0000
-Message-Id: <1390903616-8073-4-git-send-email-ben.dooks@codethink.co.uk>
-In-Reply-To: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk>
-References: <1390903616-8073-1-git-send-email-ben.dooks@codethink.co.uk>
+Received: from moutng.kundenserver.de ([212.227.17.8]:61668 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572AbaA3OQg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 09:16:36 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [RFC PATCH V3 1/4] pci: APM X-Gene PCIe controller driver
+Date: Thu, 30 Jan 2014 15:16:26 +0100
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	patches@apm.com, jcm@redhat.com
+References: <1390599168-13150-1-git-send-email-tinamdar@apm.com> <1390599168-13150-2-git-send-email-tinamdar@apm.com>
+In-Reply-To: <1390599168-13150-2-git-send-email-tinamdar@apm.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201401301516.27091.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The bridge logic at slot 0 only supports reads up to 0x40 and the
-rest of the PCI configuration space for this slot is marked as
-reserved in the manual.
+On Friday 24 January 2014, Tanmay Inamdar wrote:
 
-Trying a read from offset 0x100 is producing an error from the
-bridge. With error interrupts enabled, the following is printed:
+> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+> +{
+> +	int i;
+> +
+> +	/* Hide the PCI host BARs from the kernel as their content doesn't
+> +	 * fit well in the resource management
+> +	 */
+> +	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> +		dev->resource[i].start = dev->resource[i].end = 0;
+> +		dev->resource[i].flags = 0;
+> +	}
+> +	dev_info(&dev->dev, "Hiding X-Gene pci host bridge resources %s\n",
+> +		 pci_name(dev));
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_DEVICEID,
+> +			 xgene_pcie_fixup_bridge);
 
-pci-rcar-gen2 ee0d0000.pci: error irq: status 00000014
+Shouldn't this be gone now that the host bridge is correctly shown
+at the domain root?
 
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
----
-Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
----
- drivers/pci/host/pci-rcar-gen2.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> +static int xgene_pcie_setup(int nr, struct pci_sys_data *sys)
+> +{
+> +	struct xgene_pcie_port *pp = sys->private_data;
+> +	struct resource *io = &pp->realio;
+> +
+> +	io->start = sys->domain * SZ_64K;
+> +	io->end = io->start + SZ_64K;
+> +	io->flags = pp->io.res.flags;
+> +	io->name = "PCI IO";
+> +	pci_ioremap_io(io->start, pp->io.res.start);
+> +
+> +	pci_add_resource_offset(&sys->resources, io, sys->io_offset);
+> +	sys->mem_offset = pp->mem.res.start - pp->mem.pci_addr;
+> +	pci_add_resource_offset(&sys->resources, &pp->mem.res,
+> +				sys->mem_offset);
+> +	return 1;
+> +}
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index 01ba069..42f0105 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -119,6 +119,10 @@ static void __iomem *rcar_pci_cfg_base(struct pci_bus *bus, unsigned int devfn,
- 	if (slot > 2)
- 		return NULL;
- 
-+	/* bridge logic only has registers to 0x40 */
-+	if (slot == 0x0 && where >= 0x40)
-+		return NULL;
-+
- 	val = slot ? RCAR_AHBPCI_WIN1_DEVICE | RCAR_AHBPCI_WIN_CTR_CFG :
- 		     RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG;
- 
--- 
-1.8.5.2
+Thanks for bringing back the I/O space handling.
 
+You don't seem to set sys->io_offset anywhere, but each of the
+ports listed in your DT starts a local bus I/O register range
+at port 0.
+
+AFAICT, you need to add (somewhere)
+
+	sys->io_offset = pp->realio.start - pp->io.pci_addr;
+
+but there could be something else missing. You clearly haven't
+tested if the I/O space actually works.
+
+If you want to try out the I/O space, I'd suggest using an Intel
+e1000 network card, which has both memory and i/o space. There
+is a patch at http://www.spinics.net/lists/linux-pci/msg27684.html
+that lets you check the I/O registers on it, or you can go
+through /dev/port from user space.
+
+I also haven't seen your patch that adds pci_ioremap_io() for
+arm64. It would be helpful to keep it in the same patch
+series, since it won't build without this patch.
+
+	Arnd
