@@ -1,72 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linux-scsi@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: [PATCH 2/9] ACPI / PCI: Use global PCI rescan-remove locking in PCI root hotplug
-Date: Fri, 10 Jan 2014 15:23:14 +0100
-Message-ID: <3089678.gd7W8nYHSz@vostro.rjw.lan>
-In-Reply-To: <20440867.YaQfKrcfsQ@vostro.rjw.lan>
-References: <1385429290-25397-1-git-send-email-yinghai@kernel.org> <1992931.Zv6xBcN8V4@vostro.rjw.lan> <20440867.YaQfKrcfsQ@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:4523 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932552AbaAaPHS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:18 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Subbu Seetharaman <subbu.seetharaman@emulex.com>,
+	Ajit Khaparde <ajit.khaparde@emulex.com>,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 11/34] benet: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:30 +0100
+Message-Id: <0ab74b1142006d2e7a8065ec8a2d3ba48fc3ec0c.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Multiple race conditions are possible between the addition and
-removal of PCI devices during ACPI PCI host bridge hotplug and the
-generic PCI bus rescan and device removal that can be triggered via
-sysfs.
-
-To avoid those race conditions make the ACPI PCI host bridge addition
-and removal code use global PCI rescan-remove locking.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/acpi/pci_root.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/ethernet/emulex/benet/be_main.c |   31 +++++++++++---------------
+ 1 files changed, 13 insertions(+), 18 deletions(-)
 
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -604,7 +604,9 @@ static int acpi_pci_root_add(struct acpi
- 		pci_assign_unassigned_root_bus_resources(root->bus);
- 	}
+diff --git a/drivers/net/ethernet/emulex/benet/be_main.c b/drivers/net/ethernet/emulex/benet/be_main.c
+index 04ac9c6..f55c09b 100644
+--- a/drivers/net/ethernet/emulex/benet/be_main.c
++++ b/drivers/net/ethernet/emulex/benet/be_main.c
+@@ -2505,7 +2505,7 @@ static void be_msix_disable(struct be_adapter *adapter)
  
-+	pci_lock_rescan_remove();
- 	pci_bus_add_devices(root->bus);
-+	pci_unlock_rescan_remove();
- 	return 1;
- 
- end:
-@@ -616,6 +618,8 @@ static void acpi_pci_root_remove(struct
+ static int be_msix_enable(struct be_adapter *adapter)
  {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
+-	int i, status, num_vec;
++	int i, num_vec;
+ 	struct device *dev = &adapter->pdev->dev;
  
-+	pci_lock_rescan_remove();
+ 	/* If RoCE is supported, program the max number of NIC vectors that
+@@ -2521,24 +2521,11 @@ static int be_msix_enable(struct be_adapter *adapter)
+ 	for (i = 0; i < num_vec; i++)
+ 		adapter->msix_entries[i].entry = i;
+ 
+-	status = pci_enable_msix(adapter->pdev, adapter->msix_entries, num_vec);
+-	if (status == 0) {
+-		goto done;
+-	} else if (status >= MIN_MSIX_VECTORS) {
+-		num_vec = status;
+-		status = pci_enable_msix(adapter->pdev, adapter->msix_entries,
+-					 num_vec);
+-		if (!status)
+-			goto done;
+-	}
++	num_vec = pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
++					MIN_MSIX_VECTORS, num_vec);
++	if (num_vec < 0)
++		goto fail;
+ 
+-	dev_warn(dev, "MSIx enable failed\n");
+-
+-	/* INTx is not supported in VFs, so fail probe if enable_msix fails */
+-	if (!be_physfn(adapter))
+-		return status;
+-	return 0;
+-done:
+ 	if (be_roce_supported(adapter) && num_vec > MIN_MSIX_VECTORS) {
+ 		adapter->num_msix_roce_vec = num_vec / 2;
+ 		dev_info(dev, "enabled %d MSI-x vector(s) for RoCE\n",
+@@ -2550,6 +2537,14 @@ done:
+ 	dev_info(dev, "enabled %d MSI-x vector(s) for NIC\n",
+ 		 adapter->num_msix_vec);
+ 	return 0;
 +
- 	pci_stop_root_bus(root->bus);
- 
- 	device_set_run_wake(root->bus->bridge, false);
-@@ -623,6 +627,8 @@ static void acpi_pci_root_remove(struct
- 
- 	pci_remove_root_bus(root->bus);
- 
-+	pci_unlock_rescan_remove();
++fail:
++	dev_warn(dev, "MSIx enable failed\n");
 +
- 	kfree(root);
++	/* INTx is not supported in VFs, so fail probe if enable_msix fails */
++	if (!be_physfn(adapter))
++		return num_vec;
++	return 0;
  }
  
+ static inline int be_msix_vec_get(struct be_adapter *adapter,
+-- 
+1.7.7.6
 
