@@ -1,253 +1,171 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5423 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752934AbaATWBy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jan 2014 17:01:54 -0500
-Subject: [PATCH 2/2] pci/quirks: Enable quirks for PCIe ACS on Intel PCH
- root ports
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Mon, 20 Jan 2014 15:01:52 -0700
-Message-ID: <20140120220152.29567.3645.stgit@bling.home>
-In-Reply-To: <20140120215502.29567.11291.stgit@bling.home>
-References: <20140120215502.29567.11291.stgit@bling.home>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [Update][PATCH 4/5][RFT] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
+Date: Fri, 31 Jan 2014 18:34:22 +0100
+Message-ID: <6782022.RtGDcVFnWK@vostro.rjw.lan>
+In-Reply-To: <20140131170951.GN18029@intel.com>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <6209942.qBRV2jHzWd@vostro.rjw.lan> <20140131170951.GN18029@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Many of the currently available Intel PCH-based root ports do not
-provide PCIe ACS capabilities.  Without this, we must assume that
-peer-to-peer traffic between multifunction root ports and between
-devices behind root ports is possible.  This lack of isolation is
-exposed by grouping the devices together in the same IOMMU group.
-If we want to expose these devices to userspace, vfio uses IOMMU
-groups as the unit of ownership, thus making it very difficult to
-assign individual devices to separate users.
+On Friday, January 31, 2014 07:09:51 PM Mika Westerberg wrote:
+> On Fri, Jan 31, 2014 at 05:16:03PM +0100, Rafael J. Wysocki wrote:
+> > On Friday, January 31, 2014 06:01:57 PM Mika Westerberg wrote:
+> > > On Fri, Jan 31, 2014 at 05:40:11PM +0200, Mika Westerberg wrote:
+> > > > On Fri, Jan 31, 2014 at 04:42:21PM +0100, Rafael J. Wysocki wrote:
+> > > > > On Friday, January 31, 2014 05:28:36 PM Mika Westerberg wrote:
+> > > > > > On Wed, Jan 29, 2014 at 01:00:57AM +0100, Rafael J. Wysocki wrote:
+> > > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > > 
+> > > > > > > Use the observation that the ACPI scan handler of the device object
+> > > > > > > in acpi_hotplug_notify_cb() can be obtained from that device object's
+> > > > > > > handler pointer and do not pass it as data to
+> > > > > > > acpi_install_hotplug_notify_handler() in acpi_scan_init_hotplug().
+> > > > > > > 
+> > > > > > > That allows the second argument of acpi_install_hotplug_notify_handler()
+> > > > > > > to be dropped, so do it and update its callers accordingly.
+> > > > > > > 
+> > > > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > > ---
+> > > > > > >  drivers/acpi/scan.c                |   31 ++++++++++++++++++-------------
+> > > > > > >  drivers/pci/hotplug/acpiphp_glue.c |    2 +-
+> > > > > > >  include/acpi/acpi_bus.h            |    2 +-
+> > > > > > >  3 files changed, 20 insertions(+), 15 deletions(-)
+> > > > > > > 
+> > > > > > > Index: linux-pm/drivers/acpi/scan.c
+> > > > > > > ===================================================================
+> > > > > > > --- linux-pm.orig/drivers/acpi/scan.c
+> > > > > > > +++ linux-pm/drivers/acpi/scan.c
+> > > > > > > @@ -487,7 +487,6 @@ static void acpi_device_hotplug(void *da
+> > > > > > >  
+> > > > > > >  static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+> > > > > > >  {
+> > > > > > > -	struct acpi_scan_handler *handler = data;
+> > > > > > >  	u32 ost_code = ACPI_OST_SC_SUCCESS;
+> > > > > > >  	struct acpi_device *adev;
+> > > > > > >  	acpi_status status;
+> > > > > > > @@ -503,13 +502,6 @@ static void acpi_hotplug_notify_cb(acpi_
+> > > > > > >  
+> > > > > > >  	case ACPI_NOTIFY_EJECT_REQUEST:
+> > > > > > >  		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
+> > > > > > > -		if (handler && !handler->hotplug.enabled) {
+> > > > > > > -			acpi_handle_err(handle, "Eject disabled\n");
+> > > > > > > -			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+> > > > > > > -			goto out;
+> > > > > > > -		}
+> > > > > > > -		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+> > > > > > > -					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+> > > > > > >  		break;
+> > > > > > >  
+> > > > > > >  	case ACPI_NOTIFY_DEVICE_WAKE:
+> > > > > > > @@ -535,11 +527,24 @@ static void acpi_hotplug_notify_cb(acpi_
+> > > > > > >  		goto out;
+> > > > > > >  	}
+> > > > > > >  
+> > > > > > > +	mutex_lock(&acpi_scan_lock);
+> > > > > > 
+> > > > > > This is weird. I'm testing against your test-next branch which has this
+> > > > > > patch included. If I remove locking here, TBT hotplug works fine. Otherwise
+> > > > > > I can see the first hotplug/unplug works but after that I cannot get any
+> > > > > > events anymore.
+> > > > > 
+> > > > > Weird indeed.  I don't seem to be able to reproduce that on my Aspire S5.
+> > > > > 
+> > > > > What system are you testing on?
+> > > > 
+> > > > This is Intel NUC. Let me see if I can reproduce this on S5 with longer
+> > > > chain of devices.
+> > > 
+> > > OK, so on S5 this works even with longer chain. However, exactly the same
+> > > kernel image on NUC fails after first hotplug/unplug cycle.
+> > 
+> > Well, we need to figure out what happens there.
+> > 
+> > Please add printks (1) before mutex_lock(), (2) before the if (type == ...)
+> > instruction, (3) before the acpi_evaluate_hotplug_ost() under the if () and (4)
+> > before the get_device() in acpi_notify_hotplug_cb() and check if they are all
+> > printed (on NUC).
+> 
+> Looks like something doesn't release that lock. I added printks what you
+> suggested and after first hotplug/unplug last messages I get are:
+> 
+> [   64.914639] ACPI: \_SB_.PCI0.RP05: ACPI_NOTIFY_BUS_CHECK event
+> [   64.914640] ACPI: \_SB_.PCI0.RP05: BEFORE mutex_lock()
+> 
+> Then running sysrq-w I get following task as blocked:
+> 
+> [  346.885950] SysRq : Show Blocked State
+> [  346.887733]   task                        PC stack   pid father
+> [  346.889535] kworker/0:0     D ffff880100241ae0  5280     4      2 0x00000000
+> [  346.891355] Workqueue: kacpi_notify acpi_os_execute_deferred
+> [  346.893171]  ffff8801003c7d30 0000000000000046 ffff880100241710 ffffffff81e10460
+> [  346.895011]  ffff8801003c7fd8 00000000000129c0 00000000000129c0 ffff880100241710
+> [  346.896849]  ffffffff81e5db70 ffffffff81e5db74 ffff880100241710 00000000ffffffff
+> [  346.898702] Call Trace:
+> [  346.900518]  [<ffffffff81815bc4>] schedule_preempt_disabled+0x24/0x70
+> [  346.902338]  [<ffffffff818175f2>] __mutex_lock_slowpath+0x132/0x1b0
+> [  346.904164]  [<ffffffff8181768a>] mutex_lock+0x1a/0x2a
+> [  346.905993]  [<ffffffff81324845>] acpi_hotplug_notify_cb+0x70/0x227
+> [  346.907820]  [<ffffffff813384f4>] acpi_ev_notify_dispatch+0x44/0x5c
+> [  346.909637]  [<ffffffff8131fa8d>] acpi_os_execute_deferred+0xf/0x1b
+> [  346.911455]  [<ffffffff8105e12a>] process_one_work+0x17a/0x440
+> [  346.913285]  [<ffffffff8105ed29>] worker_thread+0x119/0x390
+> [  346.915121]  [<ffffffff8105ec10>] ? manage_workers.isra.25+0x2a0/0x2a0
+> [  346.916970]  [<ffffffff81064dad>] kthread+0xcd/0xf0
+> [  346.918809]  [<ffffffff81064ce0>] ? kthread_create_on_node+0x180/0x180
+> [  346.920653]  [<ffffffff8181fefc>] ret_from_fork+0x7c/0xb0
+> [  346.922501]  [<ffffffff81064ce0>] ? kthread_create_on_node+0x180/0x180
+> [  346.924351] kworker/u8:5    D ffff88006ea55860  4696   945      2 0x00000000
+> [  346.926212] Workqueue: kacpi_hotplug acpi_hotplug_work_fn
+> [  346.928074]  ffff88006de49a40 0000000000000046 ffff88006ea55490 ffff880100245490
+> [  346.929978]  ffff88006de49fd8 00000000000129c0 00000000000129c0 ffff88006ea55490
+> [  346.931872]  ffff88006de49ba0 7fffffffffffffff ffff88006de49b98 ffff88006ea55490
+> [  346.933753] Call Trace:
+> [  346.935626]  [<ffffffff81815794>] schedule+0x24/0x70
+> [  346.937516]  [<ffffffff81814a89>] schedule_timeout+0x1a9/0x2a0
+> [  346.939415]  [<ffffffff8107dda8>] ? __wake_up_common+0x58/0x90
+> [  346.941312]  [<ffffffff81816968>] wait_for_completion+0x98/0x100
+> [  346.943222]  [<ffffffff81071b70>] ? wake_up_state+0x10/0x10
+> [  346.945133]  [<ffffffff8105ba25>] flush_workqueue+0x115/0x5a0
+> [  346.947054]  [<ffffffff81309b20>] ? acpi_pci_find_companion+0x40/0x40
+> [  346.948986]  [<ffffffff81309b20>] ? acpi_pci_find_companion+0x40/0x40
+> [  346.950904]  [<ffffffff81320340>] acpi_os_wait_events_complete+0x1c/0x1e
+> [  346.952829]  [<ffffffff8133a387>] acpi_remove_notify_handler+0x78/0x1ef
+> [  346.954748]  [<ffffffff81309b20>] ? acpi_pci_find_companion+0x40/0x40
+> [  346.956669]  [<ffffffff813226df>] acpi_remove_pm_notifier+0x39/0x5c
+> [  346.958592]  [<ffffffff81309ab5>] pci_acpi_cleanup+0x25/0x50
+> [  346.960508]  [<ffffffff8132368c>] acpi_platform_notify_remove+0x44/0x53
+> [  346.962427]  [<ffffffff814426f2>] device_del+0x142/0x1b0
+> [  346.964333]  [<ffffffff812edcfa>] pci_remove_bus_device+0x7a/0x100
+> [  346.966238]  [<ffffffff812edd95>] pci_stop_and_remove_bus_device+0x15/0x20
+> [  346.968140]  [<ffffffff8130639e>] disable_slot+0x4e/0xa0
+> [  346.970030]  [<ffffffff813067b8>] acpiphp_check_bridge.part.10+0xe8/0xf0
+> [  346.971911]  [<ffffffff81306f92>] hotplug_event+0xf2/0x1a0
+> [  346.973776]  [<ffffffff813070a1>] acpiphp_hotplug_event+0x61/0xe0
+> [  346.975630]  [<ffffffff8132634e>] acpi_device_hotplug+0x37c/0x3c2
+> [  346.977471]  [<ffffffff81320359>] acpi_hotplug_work_fn+0x17/0x22
+> [  346.979299]  [<ffffffff8105e12a>] process_one_work+0x17a/0x440
+> [  346.981122]  [<ffffffff8105ed29>] worker_thread+0x119/0x390
+> [  346.982956]  [<ffffffff8105ec10>] ? manage_workers.isra.25+0x2a0/0x2a0
+> [  346.984762]  [<ffffffff81064dad>] kthread+0xcd/0xf0
+> [  346.986581]  [<ffffffff81064ce0>] ? kthread_create_on_node+0x180/0x180
+> [  346.988419]  [<ffffffff8181fefc>] ret_from_fork+0x7c/0xb0
+> [  346.990221]  [<ffffffff81064ce0>] ? kthread_create_on_node+0x180/0x180
+> 
+> I have to leave now but I can continue debugging tomorrow if needed.
 
-The good news is that the chipset does provide ACS-like isolation
-capabilities, but we do need to verify and enable those capabilities
-if the BIOS has not done so.  This patch implements the device
-specific enabling and testing of equivalent ACS function for these
-devices.
+No need for now, I think I know what's happening.  I'll follow up later.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/quirks.c |  176 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 176 insertions(+)
+Thanks!
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4be1cd5..3439a02 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -24,6 +24,7 @@
- #include <linux/ioport.h>
- #include <linux/sched.h>
- #include <linux/ktime.h>
-+#include <linux/atomic.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
- 
-@@ -3423,6 +3424,74 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
- #endif
- }
- 
-+/*
-+ * Many Intel PCH root ports do provide ACS-like features to disable peer
-+ * transactions and validate bus numbers in requests, but do not provide an
-+ * actual PCIe ACS capability.  This is the list of device IDs known to fall
-+ * into that category as provided by Intel in Red Hat bugzilla 1037684.
-+ */
-+static const u16 pci_quirk_intel_pch_acs_ids[] = {
-+	/* Ibexpeak PCH */
-+	0x3b42, 0x3b43, 0x3b44, 0x3b45, 0x3b46, 0x3b47, 0x3b48, 0x3b49,
-+	0x3b4a, 0x3b4b, 0x3b4c, 0x3b4d, 0x3b4e, 0x3b4f, 0x3b50, 0x3b51,
-+	/* Cougarpoint PCH */
-+	0x1c10, 0x1c11, 0x1c12, 0x1c13, 0x1c14, 0x1c15, 0x1c16, 0x1c17,
-+	0x1c18, 0x1c19, 0x1c1a, 0x1c1b, 0x1c1c, 0x1c1d, 0x1c1e, 0x1c1f,
-+	/* Pantherpoint PCH */
-+	0x1e10, 0x1e11, 0x1e12, 0x1e13, 0x1e14, 0x1e15, 0x1e16, 0x1e17,
-+	0x1e18, 0x1e19, 0x1e1a, 0x1e1b, 0x1e1c, 0x1e1d, 0x1e1e, 0x1e1f,
-+	/* Lynxpoint-H PCH */
-+	0x8c10, 0x8c11, 0x8c12, 0x8c13, 0x8c14, 0x8c15, 0x8c16, 0x8c17,
-+	0x8c18, 0x8c19, 0x8c1a, 0x8c1b, 0x8c1c, 0x8c1d, 0x8c1e, 0x8c1f,
-+	/* Lynxpoint-LP PCH */
-+	0x9c10, 0x9c11, 0x9c12, 0x9c13, 0x9c14, 0x9c15, 0x9c16, 0x9c17,
-+	0x9c18, 0x9c19, 0x9c1a, 0x9c1b,
-+	/* Wildcat PCH */
-+	0x9c90, 0x9c91, 0x9c92, 0x9c93, 0x9c94, 0x9c95, 0x9c96, 0x9c97,
-+	0x9c98, 0x9c99, 0x9c9a, 0x9c9b,
-+};
-+
-+/*
-+ * We can have multiple PCHs in a system and it is possible that we can
-+ * fail to enable ACS support on some of them.  To keep it simple we
-+ * handle them as all or nothing with the following values:
-+ *  0: ACS is not enabled
-+ * -1: ACS enable failed
-+ * >0: ACS enabled
-+ */
-+static atomic_t intel_pch_acs_quirk_status = ATOMIC_INIT(0);
-+
-+#define INTEL_PCH_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_SV)
-+
-+static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	/* Filter out a few obvious non-matches first */
-+	if (!pci_is_pcie(dev) ||
-+	    pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT || dev->bus->number)
-+		return false;
-+
-+	for (i = 0; i < ARRAY_SIZE(pci_quirk_intel_pch_acs_ids); i++)
-+		if (pci_quirk_intel_pch_acs_ids[i] == dev->device)
-+			return true;
-+
-+	return false;
-+}
-+
-+static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
-+{
-+	u16 flags = 0;
-+
-+	if (!pci_quirk_intel_pch_acs_match(dev))
-+		return -ENOTTY;
-+
-+	if (atomic_read(&intel_pch_acs_quirk_status) > 0)
-+		flags = INTEL_PCH_ACS_FLAGS;
-+
-+	return acs_flags & ~flags ? 0 : 1;
-+}
-+
- static const struct pci_dev_acs_enabled {
- 	u16 vendor;
- 	u16 device;
-@@ -3434,6 +3503,7 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
- 	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
- 	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
-+	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
- 	{ 0 }
- };
- 
-@@ -3462,11 +3532,117 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
- 	return -ENOTTY;
- }
- 
-+/* Config space offset of Root Complex Base Address register */
-+#define INTEL_LPC_RCBA_REG 0xf0
-+/* 31:14 RCBA address */
-+#define INTEL_LPC_RCBA_MASK 0xffffc000
-+/* RCBA Enable */
-+#define INTEL_LPC_RCBA_ENABLE (1 << 0)
-+
-+/* Backbone Scratch Pad Register */
-+#define INTEL_BSPR_REG 0x1104
-+/* Backbone Peer Non-Posted Disable */
-+#define INTEL_BSPR_REG_BPNPD (1 << 8)
-+/* Backbone Peer Posted Disable */
-+#define INTEL_BSPR_REG_BPPD  (1 << 9)
-+
-+/* Upstream Peer Decode Configuration Register */
-+#define INTEL_UPDCR_REG 0x1114
-+/* 5:0 Peer Decode Enable bits */
-+#define INTEL_UPDCR_REG_MASK 0x3f
-+
-+static int pci_quirk_enable_intel_lpc_acs(struct pci_dev *dev)
-+{
-+	u32 rcba, bspr, updcr;
-+	void __iomem *rcba_mem;
-+
-+	/*
-+	 * Read the RCBA register from the LPC (D31:F0).  PCH root ports
-+	 * are D28:F* and therefore get probed before LPC, thus we can't
-+	 * use pci_get_slot/pci_read_config_dword here.
-+	 */
-+	pci_bus_read_config_dword(dev->bus, PCI_DEVFN(31, 0),
-+				  INTEL_LPC_RCBA_REG, &rcba);
-+	if (!(rcba & INTEL_LPC_RCBA_ENABLE))
-+		return -EINVAL;
-+
-+	rcba_mem = ioremap_nocache(rcba & INTEL_LPC_RCBA_MASK,
-+				   PAGE_ALIGN(INTEL_UPDCR_REG));
-+	if (!rcba_mem)
-+		return -ENOMEM;
-+
-+	/*
-+	 * The BSPR can disallow peer cycles, but it's set by soft strap and
-+	 * therefore read-only.  If both posted and non-posted peer cycles are
-+	 * disallowed, we're ok.  If either are allowed, then we need to use
-+	 * the UPDCR to disable peer decodes for each port.  This provides the
-+	 * PCIe ACS equivalent of PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF
-+	 */
-+	bspr = readl(rcba_mem + INTEL_BSPR_REG);
-+	bspr &= INTEL_BSPR_REG_BPNPD | INTEL_BSPR_REG_BPPD;
-+	if (bspr != (INTEL_BSPR_REG_BPNPD | INTEL_BSPR_REG_BPPD)) {
-+		updcr = readl(rcba_mem + INTEL_UPDCR_REG);
-+		if (updcr & INTEL_UPDCR_REG_MASK) {
-+			dev_info(&dev->dev, "Disabling UPDCR peer decodes\n");
-+			updcr &= ~INTEL_UPDCR_REG_MASK;
-+			writel(updcr, rcba_mem + INTEL_UPDCR_REG);
-+		}
-+	}
-+
-+	iounmap(rcba_mem);
-+	return 0;
-+}
-+
-+/* Miscellaneous Port Configuration register */
-+#define INTEL_MPC_REG 0xd8
-+/* MPC: Invalid Receive Bus Number Check Enable */
-+#define INTEL_MPC_REG_IRBNCE (1 << 26)
-+
-+static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
-+{
-+	u32 mpc;
-+
-+	/*
-+	 * When enabled, the IRBNCE bit of the MPC register enables the
-+	 * equivalent of PCI ACS Source Validation (PCI_ACS_SV), which
-+	 * ensures that requester IDs fall within the bus number range
-+	 * of the bridge.  Enable if not already.
-+	 */
-+	pci_read_config_dword(dev, INTEL_MPC_REG, &mpc);
-+	if (!(mpc & INTEL_MPC_REG_IRBNCE)) {
-+		dev_info(&dev->dev, "Enabling MPC IRBNCE\n");
-+		mpc |= INTEL_MPC_REG_IRBNCE;
-+		pci_write_config_word(dev, INTEL_MPC_REG, mpc);
-+	}
-+}
-+
-+static int pci_quirk_enable_intel_pch_acs(struct pci_dev *dev)
-+{
-+	if (!pci_quirk_intel_pch_acs_match(dev))
-+		return -ENOTTY;
-+
-+	if (atomic_read(&intel_pch_acs_quirk_status) < 0)
-+		return 0;
-+
-+	if (pci_quirk_enable_intel_lpc_acs(dev)) {
-+		dev_warn(&dev->dev, "Failed to enable Intel PCH ACS quirk\n");
-+		atomic_set(&intel_pch_acs_quirk_status, -1);
-+		return 0;
-+	}
-+
-+	pci_quirk_enable_intel_rp_mpc_acs(dev);
-+
-+	atomic_inc_unless_negative(&intel_pch_acs_quirk_status);
-+
-+	return 0;
-+}
-+
- static const struct pci_dev_enable_acs {
- 	u16 vendor;
- 	u16 device;
- 	int (*enable_acs)(struct pci_dev *dev);
- } pci_dev_enable_acs[] = {
-+	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_pch_acs },
- 	{ 0 }
- };
- 
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
