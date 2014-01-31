@@ -1,197 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:39844 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbaAQDl6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 22:41:58 -0500
-Received: by mail-pd0-f179.google.com with SMTP id q10so1409627pdj.10
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jan 2014 19:41:58 -0800 (PST)
-Message-ID: <52D8A672.8070808@linaro.org>
-Date: Fri, 17 Jan 2014 11:41:38 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-CC: linux-acpi@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	David Airlie <airlied@linux.ie>,
+Received: from v094114.home.net.pl ([79.96.170.134]:50181 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753963AbaAaLiW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 06:38:22 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH v2] ACPI: Fix acpi_evaluate_object() return value check
-References: <1389922191-28664-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1389922191-28664-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
+Date: Fri, 31 Jan 2014 12:52:43 +0100
+Message-ID: <1418039.AWHqDGWMFa@vostro.rjw.lan>
+In-Reply-To: <20140131105301.GD18029@intel.com>
+References: <20140130131236.GW18029@intel.com> <2622847.3aWjiMW5oK@vostro.rjw.lan> <20140131105301.GD18029@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014-1-17 9:29, Yijing Wang wrote:
-> Fix acpi_evaluate_object() return value check,
-> shoud acpi_status not int.
+On Friday, January 31, 2014 12:53:01 PM Mika Westerberg wrote:
+> On Fri, Jan 31, 2014 at 01:38:42AM +0100, Rafael J. Wysocki wrote:
+> > On Friday, January 31, 2014 12:59:06 AM Rafael J. Wysocki wrote:
+> > > On Thursday, January 30, 2014 03:39:02 PM Yinghai Lu wrote:
+> > > > On Thu, Jan 30, 2014 at 3:39 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > > > > On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
+> > > > >>
+> > > > >> --047d7b5d2ea4eb937804f132eedf
+> > > > >> Content-Type: text/plain; charset=ISO-8859-1
+> > > > >>
+> > > > >> >> The latest mainline kernel "hangs" when Thunderbolt devices are
+> > > > >> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
+> > > > >> >> getting huge amounts of messages like:
+> > > > >> >>
+> > > > >> >> [  352.717001] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717011] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717021] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717032] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717041] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717051] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717061] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717070] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717083] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717094] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717104] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717113] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717124] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717133] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717143] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717153] pci 0000:02:00.0: PME# disabled
+> > > > >> >> [  352.717162] pci 0000:02:00.0: PME# disabled
+> > > > >> >
+> > > > >> > that mean pci_stop_dev() get called again and again ?
+> > > > >>
+> > > > >> please check if attached patch could help.
+> > > > >
+> > > > > Well, it looks like what happens is an endless loop in
+> > > > > acpiphp_glue.c:disable_slot().
+> > > > >
+> > > > > dev_in_slot() returns the first device in the list, so
+> > > > > pci_stop_and_remove_bus_device() is called for it, but it
+> > > > > doesn't remove the device from bus->devices any more, so
+> > > > > dev_in_slot() will return the same device next time and
+> > > > > so on forever.
+> > > > >
+> > > > ...
+> > > > >
+> > > > > So the above won't help in my opinion.
+> > > > >
+> > > > > I wonder, however, if this patch helps instead:
+> > > > >
+> > > > > https://patchwork.kernel.org/patch/3540701/
+> > > > >
+> > > > > I thought it would be 3.15 material, but it very well can go in earlier if
+> > > > > it happens to address this particular problem.
+> > > > 
+> > > > Agree, that should fix the problem.
+> > > > 
+> > > > but please use list_for_each_entry_safe_reverse
+> > > > instead.
+> > > 
+> > > OK, I will.
+> > 
+> > Mika, below is an updated patch to try.
+> > 
+> > ---
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Subject: ACPI / hotplug / PCI: Simplify disable_slot()
+> > 
+> > After recent PCI core changes related to the rescan/remove locking,
+> > the ACPIPHP's disable_slot() function is only called under the
+> > general PCI rescan/remove lock, so it doesn't have to use
+> > dev_in_slot() any more to avoid race conditions.  Make it simply
+> > walk the devices on the bus and drop the ones in the slot being
+> > disabled and drop dev_in_slot() which has no more users.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
+> Thanks for the fix.
 > 
-> v1->v2: Add CC to the related subsystem MAINTAINERS.
+> Unfortunately, it now crashes here after I re-plug the TBT chain (I have
+> both of your patches applied):
 > 
-> ---
->  drivers/gpu/drm/i915/intel_acpi.c              |   13 +++++++------
->  drivers/gpu/drm/nouveau/core/subdev/mxm/base.c |    6 +++---
->  drivers/gpu/drm/nouveau/nouveau_acpi.c         |   13 +++++++------
->  drivers/pci/pci-label.c                        |    6 +++---
->  4 files changed, 20 insertions(+), 18 deletions(-)
+> int sysfs_create_bin_file(struct kobject *kobj,
+>                           const struct bin_attribute *attr)
+> {
+> 	BUG_ON(!kobj || !kobj->sd || !attr); <--
 > 
-> diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
-> index dfff090..7ea00e5 100644
-> --- a/drivers/gpu/drm/i915/intel_acpi.c
-> +++ b/drivers/gpu/drm/i915/intel_acpi.c
-> @@ -35,7 +35,7 @@ static int intel_dsm(acpi_handle handle, int func)
->  	union acpi_object params[4];
->  	union acpi_object *obj;
->  	u32 result;
-> -	int ret = 0;
+> Since I don't have proper serial console to that machine, all I see is the
+> end of the backtrace :-(
+> 
+> Here is a hand copied backtrace from the screen:
+> 
+> pci_create_sysfs_dev_files()
+> pci_bus_add_device()
+> pci_bus_add_devices()
+> enable_slot()
+> acpiphp_check_bridge()
+> hotplug_event()
+> ...
 
-The 'ret' is removed, but
+So I think what happens is that we leak the struct pci_dev during removal and
+the proper cleanup is never done.
 
-> +	acpi_status status;
->  
->  	input.count = 4;
->  	input.pointer = params;
-> @@ -50,8 +50,8 @@ static int intel_dsm(acpi_handle handle, int func)
->  	params[3].package.count = 0;
->  	params[3].package.elements = NULL;
->  
-> -	ret = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> -	if (ret) {
-> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> +	if (ACPI_FAILURE(status)) {
->  		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
->  		return ret;
+Can you please add a debug printk into pci_release_dev() and see if that's
+ever called after TBT unplug?
 
-you still use it here, so you should -EINVAL or something else here.
-
->  	}
-> @@ -141,7 +141,8 @@ static void intel_dsm_platform_mux_info(void)
->  	struct acpi_object_list input;
->  	union acpi_object params[4];
->  	union acpi_object *pkg;
-> -	int i, ret;
-> +	acpi_status status;
-> +	int i;
->  
->  	input.count = 4;
->  	input.pointer = params;
-> @@ -156,9 +157,9 @@ static void intel_dsm_platform_mux_info(void)
->  	params[3].package.count = 0;
->  	params[3].package.elements = NULL;
->  
-> -	ret = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
-> +	acpi_status = acpi_evaluate_object(intel_dsm_priv.dhandle, "_DSM", &input,
->  				   &output);
-> -	if (ret) {
-> +	if (ACPI_FAILURE(status)) {
->  		DRM_DEBUG_DRIVER("failed to evaluate _DSM: %d\n", ret);
->  		goto out;
->  	}
-> diff --git a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-> index 1291204..3920943 100644
-> --- a/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-> +++ b/drivers/gpu/drm/nouveau/core/subdev/mxm/base.c
-> @@ -114,14 +114,14 @@ mxm_shadow_dsm(struct nouveau_mxm *mxm, u8 version)
->  	struct acpi_buffer retn = { ACPI_ALLOCATE_BUFFER, NULL };
->  	union acpi_object *obj;
->  	acpi_handle handle;
-> -	int ret;
-> +	acpi_status status;
->  
->  	handle = ACPI_HANDLE(&device->pdev->dev);
->  	if (!handle)
->  		return false;
->  
-> -	ret = acpi_evaluate_object(handle, "_DSM", &list, &retn);
-> -	if (ret) {
-> +	status = acpi_evaluate_object(handle, "_DSM", &list, &retn);
-> +	if (ACPI_FAILURE(status)) {
->  		nv_debug(mxm, "DSM MXMS failed: %d\n", ret);
->  		return false;
->  	}
-> diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> index ba0183f..6f810f2 100644
-> --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> @@ -82,7 +82,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
->  	struct acpi_object_list input;
->  	union acpi_object params[4];
->  	union acpi_object *obj;
-> -	int i, err;
-> +	acpi_status status;
-> +	int i;
->  	char args_buff[4];
->  
->  	input.count = 4;
-> @@ -101,8 +102,8 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
->  		args_buff[i] = (arg >> i * 8) & 0xFF;
->  	params[3].buffer.pointer = args_buff;
->  
-> -	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> -	if (err) {
-> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> +	if (ACPI_FAILURE(status)) {
->  		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
->  		return err;
-
-here too.
-
->  	}
-> @@ -134,7 +135,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
->  	struct acpi_object_list input;
->  	union acpi_object params[4];
->  	union acpi_object *obj;
-> -	int err;
-> +	acpi_status status;
->  
->  	input.count = 4;
->  	input.pointer = params;
-> @@ -148,8 +149,8 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
->  	params[3].type = ACPI_TYPE_INTEGER;
->  	params[3].integer.value = arg;
->  
-> -	err = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> -	if (err) {
-> +	status = acpi_evaluate_object(handle, "_DSM", &input, &output);
-> +	if (ACPI_FAILURE(status)) {
->  		printk(KERN_INFO "failed to evaluate _DSM: %d\n", err);
->  		return err;
-
-and here.
-
->  	}
-> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-> index d51f45a..3c21f1b 100644
-> --- a/drivers/pci/pci-label.c
-> +++ b/drivers/pci/pci-label.c
-> @@ -213,7 +213,7 @@ dsm_get_label(acpi_handle handle, int func,
->  	union acpi_object *obj;
->  	int len = 0;
->  
-> -	int err;
-> +	acpi_status status;
->  
->  	input.count = 4;
->  	input.pointer = params;
-> @@ -228,8 +228,8 @@ dsm_get_label(acpi_handle handle, int func,
->  	params[3].package.count = 0;
->  	params[3].package.elements = NULL;
->  
-> -	err = acpi_evaluate_object(handle, "_DSM", &input, output);
-> -	if (err)
-> +	status = acpi_evaluate_object(handle, "_DSM", &input, output);
-> +	if (ACPI_FAILURE(status))
->  		return -1;
-
-can we return specific error such as -EINVAL instead of hard code?
-
-Thanks
-Hanjun
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
