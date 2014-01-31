@@ -1,113 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:53222 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751997AbaAaAZR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 19:25:17 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
-Date: Fri, 31 Jan 2014 01:39:38 +0100
-Message-ID: <7120202.A2h3LvJsyn@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQUmuaarJEhOQogusyv3EpBPDjRTtRvbh4U4QCJqfs0Vvw@mail.gmail.com>
-References: <20140130131236.GW18029@intel.com> <3365345.z6P9Wo4Pau@vostro.rjw.lan> <CAE9FiQUmuaarJEhOQogusyv3EpBPDjRTtRvbh4U4QCJqfs0Vvw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:13241 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932744AbaAaPHu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:50 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Himanshu Madhani <himanshu.madhani@qlogic.com>,
+	Rajesh Borundia <rajesh.borundia@qlogic.com>,
+	Shahed Shaikh <shahed.shaikh@qlogic.com>,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 28/34] qlcnic: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:47 +0100
+Message-Id: <7015fc7b0c4dda38cf2ecdc474d510984fcfbcab.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 30, 2014 03:39:02 PM Yinghai Lu wrote:
-> On Thu, Jan 30, 2014 at 3:39 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
-> >>
-> >> --047d7b5d2ea4eb937804f132eedf
-> >> Content-Type: text/plain; charset=ISO-8859-1
-> >>
-> >> >> The latest mainline kernel "hangs" when Thunderbolt devices are
-> >> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
-> >> >> getting huge amounts of messages like:
-> >> >>
-> >> >> [  352.717001] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717011] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717021] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717032] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717041] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717051] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717061] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717070] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717083] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717094] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717104] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717113] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717124] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717133] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717143] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717153] pci 0000:02:00.0: PME# disabled
-> >> >> [  352.717162] pci 0000:02:00.0: PME# disabled
-> >> >
-> >> > that mean pci_stop_dev() get called again and again ?
-> >>
-> >> please check if attached patch could help.
-> >
-> > Well, it looks like what happens is an endless loop in
-> > acpiphp_glue.c:disable_slot().
-> >
-> > dev_in_slot() returns the first device in the list, so
-> > pci_stop_and_remove_bus_device() is called for it, but it
-> > doesn't remove the device from bus->devices any more, so
-> > dev_in_slot() will return the same device next time and
-> > so on forever.
-> >
-> ...
-> >
-> > So the above won't help in my opinion.
-> >
-> > I wonder, however, if this patch helps instead:
-> >
-> > https://patchwork.kernel.org/patch/3540701/
-> >
-> > I thought it would be 3.15 material, but it very well can go in earlier if
-> > it happens to address this particular problem.
-> 
-> Agree, that should fix the problem.
-> 
-> but please use list_for_each_entry_safe_reverse
-> instead.
-> 
-> please refer to pciehp changelog in
-> 
-> commit 29ed1f29b68a8395d5679b3c4e38352b617b3236
-> Author: Yinghai Lu <yinghai@kernel.org>
-> Date:   Fri Jul 19 12:14:16 2013 -0700
-> 
->     PCI: pciehp: Fix null pointer deref when hot-removing SR-IOV device
-> 
->     Hot-removing a device with SR-IOV enabled causes a null pointer dereference
->     in v3.9 and v3.10.
-> 
->     This is a regression caused by ba518e3c17 ("PCI: pciehp: Iterate over all
->     devices in slot, not functions 0-7").  When we iterate over the
->     bus->devices list, we first remove the PF, which also removes all the VFs
->     from the list.  Then the list iterator blows up because more than just the
->     current entry was removed from the list.
-> 
->     ac205b7bb7 ("PCI: make sriov work with hotplug remove") works around a
->     similar problem in pci_stop_bus_devices() by iterating over the list in
->     reverse, so the VFs are stopped and removed from the list first, before the
->     PF.
-> 
->     This patch changes pciehp_unconfigure_device() to iterate over the list in
->     reverse, too.
-> 
->     [bhelgaas: bugzilla, changelog]
->     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=60604
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-So I gather all of bus->devices list walks during which devices may be removed
-should be done in the reverse order, right?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+index 3d2eb14..ea7a17c 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+@@ -701,13 +701,17 @@ enable_msix:
+ 		for (vector = 0; vector < num_msix; vector++)
+ 			adapter->msix_entries[vector].entry = vector;
+ 
+-		err = pci_enable_msix(pdev, adapter->msix_entries, num_msix);
+-		if (err == 0) {
++		err = pci_enable_msix_range(pdev,
++					    adapter->msix_entries, 1, num_msix);
++
++		if (err == num_msix) {
+ 			adapter->flags |= QLCNIC_MSIX_ENABLED;
+ 			adapter->ahw->num_msix = num_msix;
+ 			dev_info(&pdev->dev, "using msi-x interrupts\n");
+ 			return 0;
+ 		} else if (err > 0) {
++			pci_disable_msix(pdev);
++
+ 			dev_info(&pdev->dev,
+ 				 "Unable to allocate %d MSI-X vectors, Available vectors %d\n",
+ 				 num_msix, err);
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.7.6
+
