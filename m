@@ -1,58 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50137 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754415AbaAGVjx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 16:39:53 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:56755 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932584AbaAaPHc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:32 -0500
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	ath10k@lists.infradead.org, linux-nvme@lists.infradead.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 0/7] Phase out pci_enable_msi_block()
-Date: Tue,  7 Jan 2014 19:05:35 +0100
-Message-Id: <cover.1389103215.git.agordeev@redhat.com>
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 12/34] e1000e: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:31 +0100
+Message-Id: <0ec36309e17031a66d3a6ab489fc60702b6d76b3.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of recent deprecation of MSI-X/MSI enablement
-interfaces pci_enable_msi_block(), pci_enable_msi() and
-pci_enable_msix() all drivers need to be updated to use
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
 new pci_enable_msi_range() and pci_enable_msix_range()
 interfaces.
 
-This is the first in a series of updates, to phase out
-pci_enable_msi_block() function.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/intel/e1000e/netdev.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-This series is against pci/msi branch in Bjorn Helgaas's repo:
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-
-Thanks!
-
-Alexander Gordeev (7):
-  ipr: Do not call pci_disable_msi/msix() if pci_enable_msi/msix()
-    failed
-  ipr: Use new interfaces for MSI/MSI-X enablement
-  ahci: Use new interfaces for MSI/MSI-X enablement
-  nvme: Use new interfaces for MSI/MSI-X enablement
-  vfio: Use new interfaces for MSI/MSI-X enablement
-  ath10k: Use new interfaces for MSI enablement
-  wil6210: Use new interfaces for MSI enablement
-
- drivers/ata/ahci.c                          |   15 +++-----
- drivers/block/nvme-core.c                   |   33 ++++-------------
- drivers/net/wireless/ath/ath10k/pci.c       |   22 ++++++------
- drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++---------
- drivers/scsi/ipr.c                          |   51 +++++++++-----------------
- drivers/vfio/pci/vfio_pci_intrs.c           |    8 ++--
- 6 files changed, 66 insertions(+), 99 deletions(-)
-
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index 6d91933..7735d1a 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -2041,10 +2041,11 @@ void e1000e_set_interrupt_capability(struct e1000_adapter *adapter)
+ 				for (i = 0; i < adapter->num_vectors; i++)
+ 					adapter->msix_entries[i].entry = i;
+ 
+-				err = pci_enable_msix(adapter->pdev,
+-						      adapter->msix_entries,
+-						      adapter->num_vectors);
+-				if (err == 0)
++				err = pci_enable_msix_range(adapter->pdev,
++							adapter->msix_entries,
++							adapter->num_vectors,
++							adapter->num_vectors);
++				if (err > 0)
+ 					return;
+ 			}
+ 			/* MSI-X failed, so fall through and try MSI */
 -- 
 1.7.7.6
 
