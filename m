@@ -1,57 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 82-68-191-81.dsl.posilan.com ([82.68.191.81]:41219 "EHLO
-	rainbowdash.ducie.codethink.co.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752480AbaAZQtK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jan 2014 11:49:10 -0500
-From: Ben Dooks <ben.dooks@codethink.co.uk>
-To: linux-kernel@lists.codethink.co.uk
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, devicetree@vger.kernel.org
-Subject: [PATCH 1/8] pci-rcar-gen2: add of match table
-Date: Sun, 26 Jan 2014 16:48:58 +0000
-Message-Id: <1390754945-28142-2-git-send-email-ben.dooks@codethink.co.uk>
-In-Reply-To: <1390754945-28142-1-git-send-email-ben.dooks@codethink.co.uk>
-References: <1390754945-28142-1-git-send-email-ben.dooks@codethink.co.uk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 13/34] i40e: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:32 +0100
+Message-Id: <e372ccd454aaa80f494851943d2d58646556bcee.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add OF match table for pci-rcar-gen2 driver for device tree support.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-Cc: devicetree@vger.kernel.org
----
- drivers/pci/host/pci-rcar-gen2.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/ethernet/intel/i40e/i40e_main.c |   33 +++++----------------------
+ 1 files changed, 6 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index ceec147..ea65bac 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -311,9 +311,17 @@ static int __init rcar_pci_probe(struct platform_device *pdev)
- 	return rcar_pci_add_controller(priv);
+diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
+index a4b9408..89d7fce 100644
+--- a/drivers/net/ethernet/intel/i40e/i40e_main.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
+@@ -5849,37 +5849,16 @@ err_out:
+  **/
+ static int i40e_reserve_msix_vectors(struct i40e_pf *pf, int vectors)
+ {
+-	int err = 0;
+-
+-	pf->num_msix_entries = 0;
+-	while (vectors >= I40E_MIN_MSIX) {
+-		err = pci_enable_msix(pf->pdev, pf->msix_entries, vectors);
+-		if (err == 0) {
+-			/* good to go */
+-			pf->num_msix_entries = vectors;
+-			break;
+-		} else if (err < 0) {
+-			/* total failure */
+-			dev_info(&pf->pdev->dev,
+-				 "MSI-X vector reservation failed: %d\n", err);
+-			vectors = 0;
+-			break;
+-		} else {
+-			/* err > 0 is the hint for retry */
+-			dev_info(&pf->pdev->dev,
+-				 "MSI-X vectors wanted %d, retrying with %d\n",
+-				 vectors, err);
+-			vectors = err;
+-		}
+-	}
+-
+-	if (vectors > 0 && vectors < I40E_MIN_MSIX) {
++	vectors = pci_enable_msix_range(pf->pdev, pf->msix_entries,
++					I40E_MIN_MSIX, vectors);
++	if (vectors < 0) {
+ 		dev_info(&pf->pdev->dev,
+-			 "Couldn't get enough vectors, only %d available\n",
+-			 vectors);
++			 "MSI-X vector reservation failed: %d\n", vectors);
+ 		vectors = 0;
+ 	}
+ 
++	pf->num_msix_entries = vectors;
++
+ 	return vectors;
  }
  
-+static struct of_device_id rcar_pci_of_match[] = {
-+	{ .compatible = "renesas,pci-r8a7790", },
-+	{ },
-+};
-+
-+MODULE_DEVICE_TABLE(of, rcar_pci_of_match);
-+
- static struct platform_driver rcar_pci_driver = {
- 	.driver = {
- 		.name = "pci-rcar-gen2",
-+		.of_match_table = rcar_pci_of_match,
- 	},
- };
- 
 -- 
-1.8.5.2
+1.7.7.6
 
