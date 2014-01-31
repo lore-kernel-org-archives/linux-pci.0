@@ -1,41 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20140103224713.GC18987@google.com>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-	<1388707565-16535-26-git-send-email-yinghai@kernel.org>
-	<20140103224713.GC18987@google.com>
-Date: Mon, 6 Jan 2014 14:47:47 -0800
-Message-ID: <CAE9FiQXa0RK8ht=91dGFj0mC-KQqJjxHXfnh4Td5EUhxEf8M6g@mail.gmail.com>
-Subject: Re: [PATCH v5 25/33] PCI, x86: Make ioapic hotplug support built-in
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:33939 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932414AbaAaNmc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 08:42:32 -0500
+Date: Fri, 31 Jan 2014 15:49:25 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release
+ resources in pci_release_dev()) broke TBT hotplug
+Message-ID: <20140131134925.GI18029@intel.com>
+References: <20140130131236.GW18029@intel.com>
+ <1418039.AWHqDGWMFa@vostro.rjw.lan>
+ <20140131123606.GF18029@intel.com>
+ <1426729.BFFFkbZrqa@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426729.BFFFkbZrqa@vostro.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 3, 2014 at 2:47 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [fixed Rafael's email address; I imagine you got a few bounces :)]
->
-> On Thu, Jan 02, 2014 at 04:05:57PM -0800, Yinghai Lu wrote:
->> ioapic hotplug should be built-in like pci root bus hotplug.
->>
->> Also need to make it depends on X86_IO_APIC.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> Most of this series is x86-specific and outside the scope of PCI, so I
-> assume somebody else will deal with it.
+On Fri, Jan 31, 2014 at 02:49:21PM +0100, Rafael J. Wysocki wrote:
+> > Jan 31 20:05:57 buildroot kern.debug kernel: [  439.672933] pci_bus 0000:03: busn_res: [bus 03-3a] is released
+> 
+> OK, so my guess wasn't right.  We seem to call pci_release_dev for all of the
+> devices that go away after unplug.
+> 
+> Do I think correctly that the below doesn't happen with the Yinghai's commit
+> reverted?
 
-Yes.
+Yes, with that commit reverted everything works fine.
 
->
-> This particular patch doesn't seem to depend on anything else, so I'll
-> merge it.
+> Can you please check how the PCI sysfs directory structure changes after unplug
+> with the Yinghai's commit present and reverted and what the difference is?
 
-yes.
+OK, I'll check that and report back.
