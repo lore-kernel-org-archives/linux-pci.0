@@ -1,185 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:58186 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaAKB0v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jan 2014 20:26:51 -0500
-Received: by mail-pa0-f54.google.com with SMTP id kl14so5408596pab.41
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2014 17:26:51 -0800 (PST)
-Subject: [PATCH v2 01/12] PCI: Removed unused parts of Page Request
- Interface support
-To: Stephen Hemminger <stephen@networkplumber.org>,
-	linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yu Zhao <yu.zhao@intel.com>, Joerg Roedel <joro@8bytes.org>
-Date: Fri, 10 Jan 2014 18:26:47 -0700
-Message-ID: <20140111012647.14505.34032.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140111012339.14505.40203.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from vserver.eikelenboom.it ([84.200.39.61]:58546 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411AbaAaJ3G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 04:29:06 -0500
+From: Sander Eikelenboom <linux@eikelenboom.it>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Sander Eikelenboom <linux@eikelenboom.it>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
+	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
+	linux-ia64@vger.kernel.org
+Subject: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary prevents it from reading it's own rom. It will get the content of the shadowrom at C000 instead, which is of the primary VGA card and the driver of the secondary card will bail out.
+Date: Fri, 31 Jan 2014 10:28:22 +0100
+Message-Id: <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
+In-Reply-To: <20140130000831.GJ16825@google.com>
+References: <20140130000831.GJ16825@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Stephen Hemminger <stephen@networkplumber.org>
+Hi Bjorn / Tony,
 
-My philosophy is unused code is dead code.  And dead code is subject to bit
-rot and is a likely source of bugs.  Use it or lose it.
+I fixed up ia64 as well and brought it inline again with the x86 code,
+but i don't have a ia64 machine, so that part is untested.
+Perhaps Tony is able to review/test it ?
 
-This reverts parts of c320b976d783 ("PCI: Add implementation for PRI
-capability"), removing these interfaces:
+Sander
 
-    pci_pri_enabled()
-    pci_pri_stopped()
-    pci_pri_status()
 
-[bhelgaas: split to separate patch]
-Signed-off-by: Stephen Hemminger <stephen@networkplumber.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joerg Roedel <joro@8bytes.org>
----
- drivers/pci/ats.c       |   82 -----------------------------------------------
- include/linux/pci-ats.h |   17 ----------
- 2 files changed, 99 deletions(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index e52d7ffa38b9..a8099d4d0c9d 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -235,27 +235,6 @@ void pci_disable_pri(struct pci_dev *pdev)
- EXPORT_SYMBOL_GPL(pci_disable_pri);
- 
- /**
-- * pci_pri_enabled - Checks if PRI capability is enabled
-- * @pdev: PCI device structure
-- *
-- * Returns true if PRI is enabled on the device, false otherwise
-- */
--bool pci_pri_enabled(struct pci_dev *pdev)
--{
--	u16 control;
--	int pos;
--
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
--		return false;
--
--	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
--
--	return (control & PCI_PRI_CTRL_ENABLE) ? true : false;
--}
--EXPORT_SYMBOL_GPL(pci_pri_enabled);
--
--/**
-  * pci_reset_pri - Resets device's PRI state
-  * @pdev: PCI device structure
-  *
-@@ -282,67 +261,6 @@ int pci_reset_pri(struct pci_dev *pdev)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(pci_reset_pri);
--
--/**
-- * pci_pri_stopped - Checks whether the PRI capability is stopped
-- * @pdev: PCI device structure
-- *
-- * Returns true if the PRI capability on the device is disabled and the
-- * device has no outstanding PRI requests, false otherwise. The device
-- * indicates this via the STOPPED bit in the status register of the
-- * capability.
-- * The device internal state can be cleared by resetting the PRI state
-- * with pci_reset_pri(). This can force the capability into the STOPPED
-- * state.
-- */
--bool pci_pri_stopped(struct pci_dev *pdev)
--{
--	u16 control, status;
--	int pos;
--
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
--		return true;
--
--	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
--	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
--
--	if (control & PCI_PRI_CTRL_ENABLE)
--		return false;
--
--	return (status & PCI_PRI_STATUS_STOPPED) ? true : false;
--}
--EXPORT_SYMBOL_GPL(pci_pri_stopped);
--
--/**
-- * pci_pri_status - Request PRI status of a device
-- * @pdev: PCI device structure
-- *
-- * Returns negative value on failure, status on success. The status can
-- * be checked against status-bits. Supported bits are currently:
-- * PCI_PRI_STATUS_RF:      Response failure
-- * PCI_PRI_STATUS_UPRGI:   Unexpected Page Request Group Index
-- * PCI_PRI_STATUS_STOPPED: PRI has stopped
-- */
--int pci_pri_status(struct pci_dev *pdev)
--{
--	u16 status, control;
--	int pos;
--
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
--		return -EINVAL;
--
--	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
--	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
--
--	/* Stopped bit is undefined when enable == 1, so clear it */
--	if (control & PCI_PRI_CTRL_ENABLE)
--		status &= ~PCI_PRI_STATUS_STOPPED;
--
--	return status;
--}
--EXPORT_SYMBOL_GPL(pci_pri_status);
- #endif /* CONFIG_PCI_PRI */
- 
- #ifdef CONFIG_PCI_PASID
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 68bcefd7fca0..72031785fe1d 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -56,10 +56,7 @@ static inline int pci_ats_enabled(struct pci_dev *dev)
- 
- int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
- void pci_disable_pri(struct pci_dev *pdev);
--bool pci_pri_enabled(struct pci_dev *pdev);
- int pci_reset_pri(struct pci_dev *pdev);
--bool pci_pri_stopped(struct pci_dev *pdev);
--int pci_pri_status(struct pci_dev *pdev);
- 
- #else /* CONFIG_PCI_PRI */
- 
-@@ -72,25 +69,11 @@ static inline void pci_disable_pri(struct pci_dev *pdev)
- {
- }
- 
--static inline bool pci_pri_enabled(struct pci_dev *pdev)
--{
--	return false;
--}
--
- static inline int pci_reset_pri(struct pci_dev *pdev)
- {
- 	return -ENODEV;
- }
- 
--static inline bool pci_pri_stopped(struct pci_dev *pdev)
--{
--	return true;
--}
--
--static inline int pci_pri_status(struct pci_dev *pdev)
--{
--	return -ENODEV;
--}
- #endif /* CONFIG_PCI_PRI */
- 
- #ifdef CONFIG_PCI_PASID
+Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary
+prevents it from reading it's own rom. It will get the content of the shadowrom
+at C000 instead, which is of the primary VGA card and the driver of the
+secondary card will bail out.
+
+Fix this by checking if the arch code or vga-arbitration has already
+determined the vga_default_device, if so only apply the fix to this
+primary video device and let the comment reflect this.
+
+v2:
+    - Fix pci_fixup_video both in x86 and ia64
+
+
+Sander Eikelenboom (1):
+  Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the
+    primary     prevents it from reading it's own rom. It will get the
+    content of the shadowrom     at C000 instead, which is of the
+    primary VGA card and the driver of the     secondary card will bail
+    out.
+
+ arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
+ arch/x86/pci/fixup.c  |   18 ++++++++++--------
+ 2 files changed, 23 insertions(+), 19 deletions(-)
+
+-- 
+1.7.10.4
 
