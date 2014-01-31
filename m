@@ -1,32 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:35174 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753834AbaACX4M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Jan 2014 18:56:12 -0500
-Date: Fri, 03 Jan 2014 18:56:07 -0500 (EST)
-Message-Id: <20140103.185607.1380379872647540168.davem@davemloft.net>
-To: bhelgaas@google.com
-Cc: jesse.brandeburg@gmail.com, linux-pci@vger.kernel.org,
-	jeffrey.t.kirsher@intel.com, netdev@vger.kernel.org,
-	gospo@redhat.com, sassmann@redhat.com,
-	linux-kernel@vger.kernel.org, bjorn.helgaas@hp.com
-Subject: Re: [net-next] pci_regs.h: Add PCI bus link speed and width defines
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAErSpo7K3OBuTEZrXmhQ3iXtLf3M5JNnEqmAvaceroJ46VAOKg@mail.gmail.com>
-References: <20140102.192133.1585340046080167370.davem@davemloft.net>
-	<CAEuXFEw=A0mppxtgzpmnh3feLiKYb+LJQvFRMrW3C4h+jHpO2Q@mail.gmail.com>
-	<CAErSpo7K3OBuTEZrXmhQ3iXtLf3M5JNnEqmAvaceroJ46VAOKg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Santosh Raspatur <santosh@chelsio.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 06/34] cxgb3: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:25 +0100
+Message-Id: <d64d3732650c539b611a786cbb9e25ba23b1317c.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 3 Jan 2014 15:15:57 -0700
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-> However, I do raise my eyebrows a bit at drivers that poke around in
-> the PCIe capability.  I would prefer to have PCI core interfaces that
-> handle that instead.  But I haven't seen Jeff's changes yet.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c |   23 +++++++++--------------
+ 1 files changed, 9 insertions(+), 14 deletions(-)
 
-The changes just read the link status to interpret the speed at which
-the PCI-E link is running at.
+diff --git a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+index b72d2ed..07bbb71 100644
+--- a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+@@ -3088,27 +3088,22 @@ static int cxgb_enable_msix(struct adapter *adap)
+ {
+ 	struct msix_entry entries[SGE_QSETS + 1];
+ 	int vectors;
+-	int i, err;
++	int i;
+ 
+ 	vectors = ARRAY_SIZE(entries);
+ 	for (i = 0; i < vectors; ++i)
+ 		entries[i].entry = i;
+ 
+-	while ((err = pci_enable_msix(adap->pdev, entries, vectors)) > 0)
+-		vectors = err;
+-
+-	if (!err && vectors < (adap->params.nports + 1)) {
+-		pci_disable_msix(adap->pdev);
+-		err = -1;
+-	}
++	vectors = pci_enable_msix_range(adap->pdev, entries,
++					adap->params.nports + 1, vectors);
++	if (vectors < 0)
++		return vectors;
+ 
+-	if (!err) {
+-		for (i = 0; i < vectors; ++i)
+-			adap->msix_info[i].vec = entries[i].vector;
+-		adap->msix_nvectors = vectors;
+-	}
++	for (i = 0; i < vectors; ++i)
++		adap->msix_info[i].vec = entries[i].vector;
++	adap->msix_nvectors = vectors;
+ 
+-	return err;
++	return 0;
+ }
+ 
+ static void print_port_info(struct adapter *adap, const struct adapter_info *ai)
+-- 
+1.7.7.6
+
