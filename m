@@ -1,55 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:39500 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757189AbaAGAzg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:55:36 -0500
-Received: by mail-ie0-f170.google.com with SMTP id qd12so19635719ieb.1
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:55:35 -0800 (PST)
-Subject: [PATCH v7 03/15] PCI: Add pci_bus_address() to get bus address of a
- BAR
-To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:55:33 -0700
-Message-ID: <20140107005533.10786.78922.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Manish Chopra <manish.chopra@qlogic.com>,
+	Sony Chacko <sony.chacko@qlogic.com>,
+	Rajesh Borundia <rajesh.borundia@qlogic.com>,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 26/34] netxen: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:45 +0100
+Message-Id: <af9ae216bb0f0453ceca1a5986be9a1a5cee93f4.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We store BAR information as a struct resource, which contains the CPU
-address, not the bus address.  Drivers often need the bus address, and
-there's currently no convenient way to get it, so they often read the
-BAR directly, or use the resource address (which doesn't work if there's
-any translation between CPU and bus addresses).
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Add pci_bus_address() to make this convenient.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- include/linux/pci.h |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index bf32412704a7..966b286b5d53 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1077,6 +1077,14 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 						  resource_size_t),
- 			void *alignf_data);
+diff --git a/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c b/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
+index 70849de..f09c35d 100644
+--- a/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
++++ b/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
+@@ -643,8 +643,9 @@ static int netxen_setup_msi_interrupts(struct netxen_adapter *adapter,
  
-+static inline dma_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
-+{
-+	struct pci_bus_region region;
-+
-+	pcibios_resource_to_bus(pdev->bus, &region, &pdev->resource[bar]);
-+	return region.start;
-+}
-+
- /* Proper probing supporting hot-pluggable devices */
- int __must_check __pci_register_driver(struct pci_driver *, struct module *,
- 				       const char *mod_name);
+ 	if (adapter->msix_supported) {
+ 		netxen_init_msix_entries(adapter, num_msix);
+-		err = pci_enable_msix(pdev, adapter->msix_entries, num_msix);
+-		if (err == 0) {
++		err = pci_enable_msix_range(pdev, adapter->msix_entries,
++					    num_msix, num_msix);
++		if (err > 0) {
+ 			adapter->flags |= NETXEN_NIC_MSIX_ENABLED;
+ 			netxen_set_msix_bit(pdev, 1);
+ 
+-- 
+1.7.7.6
 
