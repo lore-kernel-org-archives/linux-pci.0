@@ -1,49 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:47593 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038AbaANWyY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 17:54:24 -0500
-Received: by mail-ig0-f172.google.com with SMTP id k19so7950618igc.5
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:54:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUGpBTijNGX6T=mLgoVa7wVegOMye8uGOqhKq93-1hyqQ@mail.gmail.com>
-References: <CAE9FiQUGpBTijNGX6T=mLgoVa7wVegOMye8uGOqhKq93-1hyqQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 14 Jan 2014 15:54:01 -0700
-Message-ID: <CAErSpo6cYZL5q7R1ccEZW9GAGcmHsYrAeGr3r_z-A4S1SunfqA@mail.gmail.com>
-Subject: Re: about mpss with pcie_bus_perf
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Myron Stowe <mstowe@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jon Mason <jon.mason@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:57667 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932680AbaAaPHo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:44 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 23/34] forcedeth: Fix invalid errno reporting in nv_request_irq()
+Date: Fri, 31 Jan 2014 16:08:42 +0100
+Message-Id: <d47456e3944250e98e01c2686caa3a836986250b.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jon, Yijing]
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/nvidia/forcedeth.c |   22 ++++++++++++++--------
+ 1 files changed, 14 insertions(+), 8 deletions(-)
 
-On Thu, Jan 9, 2014 at 5:46 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> looks like we have some problem with MPSS.
->
-> +-02.2-[10-1f]----00.0-[11-13]--+-02.0-[12]--+-00.0
->                            |                      |                   \-00.1
->                            |                      \-03.0-[13]----00.0
->
-> kernel boot with pce_bus_perf:
-> 00:02.2: cap/ctl: 256/256
-> 10:00.0: cap/ctl: 256/256
-> 11:02.0: cap/ctl: 256/256
-> 12:00.0: cap/ctl: 128/128
-> 12:00.1: cap/ctl: 128/128
->
-> 11:03.0: cap/ctl: 256/256
-> 13:00.0: cap/ctl: 256/256
->
-> Should we set MPSS to 128?
+diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
+index 70cf97f..f4270b8 100644
+--- a/drivers/net/ethernet/nvidia/forcedeth.c
++++ b/drivers/net/ethernet/nvidia/forcedeth.c
+@@ -3952,8 +3952,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+ 			if (optimization_mode == NV_OPTIMIZATION_MODE_THROUGHPUT && !intr_test) {
+ 				/* Request irq for rx handling */
+ 				sprintf(np->name_rx, "%s-rx", dev->name);
+-				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_RX].vector,
+-						nv_nic_irq_rx, IRQF_SHARED, np->name_rx, dev) != 0) {
++				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_RX].vector,
++						  nv_nic_irq_rx, IRQF_SHARED, np->name_rx, dev);
++				if (ret) {
+ 					netdev_info(dev,
+ 						    "request_irq failed for rx %d\n",
+ 						    ret);
+@@ -3963,8 +3964,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+ 				}
+ 				/* Request irq for tx handling */
+ 				sprintf(np->name_tx, "%s-tx", dev->name);
+-				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_TX].vector,
+-						nv_nic_irq_tx, IRQF_SHARED, np->name_tx, dev) != 0) {
++				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_TX].vector,
++						  nv_nic_irq_tx, IRQF_SHARED, np->name_tx, dev);
++				if (ret) {
+ 					netdev_info(dev,
+ 						    "request_irq failed for tx %d\n",
+ 						    ret);
+@@ -3974,8 +3976,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+ 				}
+ 				/* Request irq for link and timer handling */
+ 				sprintf(np->name_other, "%s-other", dev->name);
+-				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_OTHER].vector,
+-						nv_nic_irq_other, IRQF_SHARED, np->name_other, dev) != 0) {
++				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_OTHER].vector,
++						  nv_nic_irq_other, IRQF_SHARED, np->name_other, dev);
++				if (ret) {
+ 					netdev_info(dev,
+ 						    "request_irq failed for link %d\n",
+ 						    ret);
+@@ -3991,7 +3994,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+ 				set_msix_vector_map(dev, NV_MSI_X_VECTOR_OTHER, NVREG_IRQ_OTHER);
+ 			} else {
+ 				/* Request irq for all interrupts */
+-				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_ALL].vector, handler, IRQF_SHARED, dev->name, dev) != 0) {
++				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_ALL].vector,
++						  handler, IRQF_SHARED, dev->name, dev);
++				if (ret) {
+ 					netdev_info(dev,
+ 						    "request_irq failed %d\n",
+ 						    ret);
+@@ -4011,7 +4016,8 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+ 		ret = pci_enable_msi(np->pci_dev);
+ 		if (ret == 0) {
+ 			np->msi_flags |= NV_MSI_ENABLED;
+-			if (request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev) != 0) {
++			ret = request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev);
++			if (ret) {
+ 				netdev_info(dev, "request_irq failed %d\n",
+ 					    ret);
+ 				pci_disable_msi(np->pci_dev);
+-- 
+1.7.7.6
 
-Please propose a patch and/or open a bug report.  I don't do enough
-with MPS to make the problem and its solution immediately obvious to
-me.
-
-Bjorn
