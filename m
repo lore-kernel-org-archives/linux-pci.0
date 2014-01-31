@@ -1,63 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from webmail.solarflare.com ([12.187.104.25]:7456 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932236AbaAaRWE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 12:22:04 -0500
+Message-ID: <52EBDBB7.9010503@solarflare.com>
+Date: Fri, 31 Jan 2014 17:21:59 +0000
+From: Shradha Shah <sshah@solarflare.com>
 MIME-Version: 1.0
-In-Reply-To: <1387224459-25746-4-git-send-email-david.a.cohen@linux.intel.com>
-References: <1387224459-25746-1-git-send-email-david.a.cohen@linux.intel.com> <1387224459-25746-4-git-send-email-david.a.cohen@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 27 Jan 2014 17:52:30 -0700
-Message-ID: <CAErSpo4ymfSdZ5an4zt+C=5asUW=vz000d32mPZkF-S5N_uynA@mail.gmail.com>
-Subject: Re: [PATCH v2 3/4] x86: intel-mid: add Merrifield platform support
-To: David Cohen <david.a.cohen@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fei Yang <fei.yang@intel.com>,
-	"Mark F. Brown" <mark.f.brown@intel.com>,
-	Kuppuswamy Sathyanarayanan
-	<sathyanarayanan.kuppuswamy@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>,
+	Solarflare maintainers <linux-net-drivers@solarflare.com>,
+	<netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 31/34] efx: Use pci_enable_msix_range()
+References: <cover.1391172839.git.agordeev@redhat.com> <433fe68f834c10679986274f4bb605aa4ed5eaf3.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <433fe68f834c10679986274f4bb605aa4ed5eaf3.1391172839.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 1:07 PM, David Cohen
-<david.a.cohen@linux.intel.com> wrote:
-> This code was partially based on Mark Brown's previous work.
->
-> Signed-off-by: David Cohen <david.a.cohen@linux.intel.com>
-> Signed-off-by: Fei Yang <fei.yang@intel.com>
-> Cc: Mark F. Brown <mark.f.brown@intel.com>
-> Cc: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+On 01/31/2014 03:08 PM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-I know this has already been merged to Linus' tree, but it looks funny to me.
+Acked-by: Shradha Shah <sshah@solarflare.com>
 
-> --- a/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
-> +++ b/arch/x86/platform/intel-mid/intel_mid_weak_decls.h
-> @@ -16,3 +16,4 @@
->   */
->  extern void * __cpuinit get_penwell_ops(void) __attribute__((weak));
->  extern void * __cpuinit get_cloverview_ops(void) __attribute__((weak));
-> +extern void * __init get_tangier_ops(void) __attribute__((weak));
-
-We should use "__weak" instead of the gcc-specific "__attribute__((weak))".
-
-I don't think it's a good idea to use __weak on a declaration in a
-header file.  If there are ever multiple definitions of the symbol,
-they are *all* made weak symbols, and one is chosen based on link
-order, which is error-prone.  I only see one definition now, but the
-whole point of weak is to allow multiple definitions, so this looks
-like a problem waiting to happen.  See 10629d711ed, for example.
-
-It look me a bit to figure out that these get_*_ops() functions are
-used by INTEL_MID_OPS_INIT, which constructs the name using a macro,
-so grep/cscope/etc. don't see any users.  A comment pointing to
-INTEL_MID_OPS_INIT would be helpful.
-
-What's the reason for making these symbols weak?  Normally we use weak
-to make a generic default version of a function, while allowing
-architectures to replace the default with their own version if
-necessary.  But I don't see that happening here.  Maybe I'm just
-missing it, like I missed the uses of get_tangier_ops(), et al.
-
-Bjorn
+> ---
+>  drivers/net/ethernet/sfc/efx.c |   20 +++++++++-----------
+>  1 files changed, 9 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/ethernet/sfc/efx.c b/drivers/net/ethernet/sfc/efx.c
+> index 83d4643..297b97a 100644
+> --- a/drivers/net/ethernet/sfc/efx.c
+> +++ b/drivers/net/ethernet/sfc/efx.c
+> @@ -1346,20 +1346,23 @@ static int efx_probe_interrupts(struct efx_nic *efx)
+>  
+>  		for (i = 0; i < n_channels; i++)
+>  			xentries[i].entry = i;
+> -		rc = pci_enable_msix(efx->pci_dev, xentries, n_channels);
+> -		if (rc > 0) {
+> +		rc = pci_enable_msix_range(efx->pci_dev,
+> +					   xentries, 1, n_channels);
+> +		if (rc < 0) {
+> +			/* Fall back to single channel MSI */
+> +			efx->interrupt_mode = EFX_INT_MODE_MSI;
+> +			netif_err(efx, drv, efx->net_dev,
+> +				  "could not enable MSI-X\n");
+> +		} else if (rc < n_channels) {
+>  			netif_err(efx, drv, efx->net_dev,
+>  				  "WARNING: Insufficient MSI-X vectors"
+>  				  " available (%d < %u).\n", rc, n_channels);
+>  			netif_err(efx, drv, efx->net_dev,
+>  				  "WARNING: Performance may be reduced.\n");
+> -			EFX_BUG_ON_PARANOID(rc >= n_channels);
+>  			n_channels = rc;
+> -			rc = pci_enable_msix(efx->pci_dev, xentries,
+> -					     n_channels);
+>  		}
+>  
+> -		if (rc == 0) {
+> +		if (rc > 0) {
+>  			efx->n_channels = n_channels;
+>  			if (n_channels > extra_channels)
+>  				n_channels -= extra_channels;
+> @@ -1375,11 +1378,6 @@ static int efx_probe_interrupts(struct efx_nic *efx)
+>  			for (i = 0; i < efx->n_channels; i++)
+>  				efx_get_channel(efx, i)->irq =
+>  					xentries[i].vector;
+> -		} else {
+> -			/* Fall back to single channel MSI */
+> -			efx->interrupt_mode = EFX_INT_MODE_MSI;
+> -			netif_err(efx, drv, efx->net_dev,
+> -				  "could not enable MSI-X\n");
+>  		}
+>  	}
+>  
+> 
