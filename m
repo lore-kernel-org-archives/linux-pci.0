@@ -1,102 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:49728 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962AbaANI16 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 03:27:58 -0500
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 14 Jan 2014 13:57:56 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 7E168E0057
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 14:00:44 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay04.in.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id s0E8RoYk51708126
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 13:57:50 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id s0E8RphZ027386
-	for <linux-pci@vger.kernel.org>; Tue, 14 Jan 2014 13:57:52 +0530
-Date: Tue, 14 Jan 2014 16:27:49 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Or Gerlitz <ogerlitz@mellanox.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	yinghai@kernel.org, bhelgaas@google.com, amirv@mellanox.com,
-	jackm@dev.mellanox.co.il, eugenia@mellanox.com,
-	Guo Chao <yan@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-Message-ID: <20140114082749.GA21105@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20140114062215.GA19345@richard>
- <52D4ED5D.80105@mellanox.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52D4ED5D.80105@mellanox.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sander Eikelenboom <linux@eikelenboom.it>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Sander Eikelenboom <linux@eikelenboom.it>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
+	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
+	linux-ia64@vger.kernel.org
+Subject: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary prevents it from reading it's own rom. It will get the content of the shadowrom at C000 instead, which is of the primary VGA card and the driver of the secondary card will bail out.
+Date: Fri, 31 Jan 2014 10:28:23 +0100
+Message-Id: <1391160503-11122-2-git-send-email-linux@eikelenboom.it>
+In-Reply-To: <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
+References: <20140130000831.GJ16825@google.com>
+ <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 09:55:09AM +0200, Or Gerlitz wrote:
->On 14/01/2014 08:22, Wei Yang wrote:
->>All,
->>
->>I am testing Yinghai's patch based on 3.13-rc1, after applying these four
->>patches, there is an error during probe for mlx4_core.
->>
->>Code base we did the test:
->>   $ git oneline -5
->>   298a335 PCI: Try best to allocate pref mmio 64bit above 4g
->>   b730e81 PCI: Try to allocate mem64 above 4G at first
->>   4e27325 PCI: Don't use 4G bus address directly in resource allocation
->>   ab6c20f PCI: pcibus address to resource converting take bus instead of dev
->>   6ce4eac Linux 3.13-rc1
->>Error log:
->>   mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping PF.
->>   mlx4_core: probe of 0003:05:00.0 failed with error -22
->>
->>My analysis:
->>   After careful investigation, I guess this error is not introduced by
->>   Yinghai's patch. This looks more like an error from device itself. Since
->>   this error really happens after applying Yinghai's patch(especially the last
->>   one 298a335), I would like to include Yinghai in this loop.
->
->Sorry, can you provide pointers please? I don't see 298a335 on Linus
->3.13-rc8+ tree nor in net-next,
->
->$ git log --oneline --author=Yinghai v3.12..
->e7cc5cf PCI: Remove duplicate pci_disable_device() from
->pcie_portdrv_remove()
->cf3e1fe PCI: Workaround missing pci_set_master in pci drivers
->bee7f9c ACPI / x86: Increase override tables number limit
->6979287 x86/mm: Add 'step_size' comments to init_mem_mapping()
->
+Fix this by checking if the arch code or vga-arbitration has already
+determined the vga_default_device, if so only apply the fix to this
+primary video device and let the comment reflect this.
 
-Or
+Signed-off-by: Sander Eikelenboom <linux@eikelenboom.it>
+---
+ arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
+ arch/x86/pci/fixup.c  |   18 ++++++++++--------
+ 2 files changed, 23 insertions(+), 19 deletions(-)
 
-Thanks for your reply. The SHA index in only on my system, since as I know the
-last patch is not in upstream yet.
-
-You can find the first three patches here:
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/ pci/resource
-
-And the last one is here:
-https://lkml.org/lkml/2013/12/19/701
-
-BTW, this card is flushed with FW built in IBM.
-
-Yinghai,
-
-If these are not the latest one, please let us know.
-
-And 
-
->So  are you referring to patches on the PCI development tree
->git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git "next"
->branch? which
->
->Or.
-
+diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+index 5dc969d..7762255 100644
+--- a/arch/ia64/pci/fixup.c
++++ b/arch/ia64/pci/fixup.c
+@@ -19,9 +19,10 @@
+  * IORESOURCE_ROM_SHADOW is used to associate the boot video
+  * card with this copy. On laptops this copy has to be used since
+  * the main ROM may be compressed or combined with another image.
+- * See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
+- * is marked here since the boot video device will be the only enabled
+- * video device at this point.
++ * See pci_map_rom() for use of this flag. Before marking the device
++ * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
++ * by either arch cde or vga-arbitration, if so only apply the fixup to this
++ * already determined primary video card.
+  */
+ 
+ static void pci_fixup_video(struct pci_dev *pdev)
+@@ -35,9 +36,6 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 		return;
+ 	/* Maybe, this machine supports legacy memory map. */
+ 
+-	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+-		return;
+-
+ 	/* Is VGA routed to us? */
+ 	bus = pdev->bus;
+ 	while (bus) {
+@@ -60,10 +58,14 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 		}
+ 		bus = bus->parent;
+ 	}
+-	pci_read_config_word(pdev, PCI_COMMAND, &config);
+-	if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+-		pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+-		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
++	if (!vga_default_device() || pdev == vga_default_device()) {
++		pci_read_config_word(pdev, PCI_COMMAND, &config);
++		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
++			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
++			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
++			vga_set_default_device(pdev);
++		}
+ 	}
+ }
+-DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pci_fixup_video);
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
++				PCI_CLASS_DISPLAY_VGA, 8, pci_fixup_video);
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index b046e07..34528a7 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -314,9 +314,10 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_r
+  * IORESOURCE_ROM_SHADOW is used to associate the boot video
+  * card with this copy. On laptops this copy has to be used since
+  * the main ROM may be compressed or combined with another image.
+- * See pci_map_rom() for use of this flag. IORESOURCE_ROM_SHADOW
+- * is marked here since the boot video device will be the only enabled
+- * video device at this point.
++ * See pci_map_rom() for use of this flag. Before marking the device
++ * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
++ * by either arch cde or vga-arbitration, if so only apply the fixup to this
++ * already determined primary video card.
+  */
+ 
+ static void pci_fixup_video(struct pci_dev *pdev)
+@@ -347,12 +348,13 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 		}
+ 		bus = bus->parent;
+ 	}
+-	pci_read_config_word(pdev, PCI_COMMAND, &config);
+-	if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+-		pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
+-		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+-		if (!vga_default_device())
++	if (!vga_default_device() || pdev == vga_default_device()) {
++		pci_read_config_word(pdev, PCI_COMMAND, &config);
++		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
++			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
++			dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
+ 			vga_set_default_device(pdev);
++		}
+ 	}
+ }
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
 -- 
-Richard Yang
-Help you, Help me
+1.7.10.4
 
