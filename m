@@ -1,103 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1lp0152.outbound.protection.outlook.com ([207.46.163.152]:36561
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752960AbaAVX4H convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jan 2014 18:56:07 -0500
-From: Roy Zang <tie-fei.zang@freescale.com>
-To: Scott Wood <scottwood@freescale.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-CC: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: [02/12,v3] pci: fsl: add structure fsl_pci
-Date: Wed, 22 Jan 2014 23:38:44 +0000
-Message-ID: <8e74276365a14c8dae10d12cf57edc7e@BLUPR03MB165.namprd03.prod.outlook.com>
-References: <1382524894-15164-2-git-send-email-Minghuan.Lian@freescale.com>
- <20140103221923.GB22546@home.buserror.net>
-In-Reply-To: <20140103221923.GB22546@home.buserror.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:44768 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753294AbaAaBYh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 20:24:37 -0500
+Received: by mail-wg0-f52.google.com with SMTP id b13so7826146wgh.7
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jan 2014 17:24:36 -0800 (PST)
 MIME-Version: 1.0
+From: Peter Chang <dpf@google.com>
+Date: Thu, 30 Jan 2014 17:24:16 -0800
+Message-ID: <CAF2xp_HgT+2zmxHTYpxRFiK-pfQKQJhJ74SJhQVER4s2ZZX0PQ@mail.gmail.com>
+Subject: PATCH: platforms: avoid queuing work if possible
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	tj@kernel.org
+Content-Type: multipart/mixed; boundary=bcaec53f2e2d80ac1504f13a099f
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+--bcaec53f2e2d80ac1504f13a099f
+Content-Type: text/plain; charset=UTF-8
 
+we noticed a change in module loading behavior and tracked it
+backwards to a small change in behavior due to
+774a1221e862b343388347bac9b318767336b20b. this tries to avoid queuing
+if possible, but if we do queue then copy the relevant task flag on
+the target cpu.
 
-> -----Original Message-----
-> From: Wood Scott-B07421
-> Sent: Friday, January 03, 2014 4:19 PM
-> To: Lian Minghuan-B31939
-> Cc: linuxppc-dev@lists.ozlabs.org; linux-pci@vger.kernel.org; Zang Roy-
-> R61911; Bjorn Helgaas
-> Subject: Re: [02/12,v3] pci: fsl: add structure fsl_pci
-> 
-> On Wed, Oct 23, 2013 at 06:41:24PM +0800, Minghuan Lian wrote:
-> > PowerPC uses structure pci_controller to describe PCI controller, but
-> > ARM uses structure pci_sys_data. In order to support PowerPC and ARM
-> > simultaneously, the patch adds a structure fsl_pci that contains most
-> > of the members of the pci_controller and pci_sys_data.
-> > Meanwhile, it defines a interface fsl_arch_sys_to_pci() which should
-> > be implemented in architecture-specific PCI controller driver to
-> > convert pci_controller or pci_sys_data to fsl_pci.
-> >
-> > Signed-off-by: Minghuan Lian <Minghuan.Lian@freescale.com>
-> >
-> > ---
-> > change log:
-> > v1-v3:
-> > Derived from http://patchwork.ozlabs.org/patch/278965/
-> >
-> > Based on upstream master.
-> > Based on the discussion of RFC version here
-> > http://patchwork.ozlabs.org/patch/274487/
-> >
-> >  include/linux/fsl/pci-common.h | 41
-> > +++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 41 insertions(+)
-> >
-> > diff --git a/include/linux/fsl/pci-common.h
-> > b/include/linux/fsl/pci-common.h index 5e4f683..e56a040 100644
-> > --- a/include/linux/fsl/pci-common.h
-> > +++ b/include/linux/fsl/pci-common.h
-> > @@ -102,5 +102,46 @@ struct ccsr_pci {
-> >
-> >  };
-> >
-> > +/*
-> > + * Structure of a PCI controller (host bridge)  */ struct fsl_pci {
-> > +	struct list_head node;
-> > +	bool is_pcie;
-> > +	struct device_node *dn;
-> > +	struct device *dev;
-> > +
-> > +	int first_busno;
-> > +	int last_busno;
-> > +	int self_busno;
-> > +	struct resource busn;
-> > +
-> > +	struct pci_ops *ops;
-> > +	struct ccsr_pci __iomem *regs;
-> > +
-> > +	u32 indirect_type;
-> > +
-> > +	struct resource io_resource;
-> > +	resource_size_t io_base_phys;
-> > +	resource_size_t pci_io_size;
-> > +
-> > +	struct resource mem_resources[3];
-> > +	resource_size_t mem_offset[3];
-> > +
-> > +	int global_number;	/* PCI domain number */
-> > +
-> > +	resource_size_t dma_window_base_cur;
-> > +	resource_size_t dma_window_size;
-> > +
-> > +	void *sys;
-> > +};
-> 
-> I don't like the extent to which this duplicates (not moves) PPC's struct
-> pci_controller.  Also this leaves some fields like "indirect_type"
-> unexplained (PPC_INDIRECT_TYPE_xxx is only in the PPC header).
-INDIRECT type is for configuration space access, I do not think it is ppc header specific.
-It is good to put it to freescale pci common code.
-Roy
+\p
+
+--bcaec53f2e2d80ac1504f13a099f
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0001-platforms-avoid-queuing-work-if-possible.patch"
+Content-Disposition: attachment;
+	filename="0001-platforms-avoid-queuing-work-if-possible.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hr2rqji00
+
+RnJvbSA5ZTc3MTg4ZDhhOGU3NGI3YjRlM2YzZTdjNmJiMGRlYjhmZGY3ZWI0IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBwZXRlciBjaGFuZyA8ZHBmQGdvb2dsZS5jb20+CkRhdGU6IE1v
+biwgMjcgSmFuIDIwMTQgMTY6MjQ6NTMgLTA4MDAKU3ViamVjdDogW1BBVENIXSBwbGF0Zm9ybXM6
+IGF2b2lkIHF1ZXVpbmcgd29yayBpZiBwb3NzaWJsZQoKNzc0YTEyMjFlODYyYjM0MzM4ODM0N2Jh
+YzliMzE4NzY3MzM2YjIwYiB0cmllcyB0byBhdm9pZCBhbiBleHBlbnNpdmUgc3luYwpieSBtYXJr
+aW5nIHRoZSBjdXJyZW50IHRhc2sgaWZmIGl0IHVzZXMgdGhlIGFzeW5jX3NjaGVkdWxlKCkgbWFj
+aGluZXJ5Lgpob3dldmVyLCBpZiB0aGUgcGFydCBvZiB0aGUgZHJpdmVyJ3MgcHJvYmUgaXMgY2Fs
+bGVkIHRocm91Z2ggYSB3b3JrZXIKdGhyZWFkIHRoZSBib29rZWVwaW5nIGZhaWxzIHRvIG1hcmsg
+dGhlIGNvcnJlY3QgdGFzayBhcyBoYXZpbmcgdXNlZCB0aGUKYXN5bmMgbWFjaGluZXJ5LgoKdGhp
+cyBpcyBhIHdvcmthcm91bmQgZm9yIHRoZSBjb21tb24gY2FzZSB0aGF0IHdlJ3JlIGFscmVhZHkg
+cnVubmluZwpvbiB0aGUgY29ycmVjdCBjcHUuIGhvd2V2ZXIsIGl0IHNlZW1zIHNvcnQgb2YgcmVh
+c29uYWJsZSB0byBub3QgdXNlCnRoZSB3b3JrZXIgdGhyZWFkIGlmIHdlIGRvbid0IGhhdmUgdG8u
+CgpUZXN0ZWQ6Ci0gY2hlY2tlZCBvbiB2ZWJteTIgKGliaXMgKyBzYXRhc3F1YXRjaCkgd2hpY2gg
+aXMgd2hlcmUgdGhlIG9yaWdpbmFsIGlzc3VlCiAgd2FzIGRpc2NvdmVyZWQuCi0gY2hlY2tlZCBv
+biBmZGhhMzQ3IChpa2FyaWEgKyBsb2dnZXJoZWFkICsgc2F0YXNxdWF0Y2gpIHRvIHNob3cgdGhh
+dAogIG5vdGhpbmcgY2hhbmdlZC4KCkNoYW5nZS1JZDogSWJlODk5NmNmNjUyNzM1Yzc0YTllMDZi
+YTlmZDAzMTE4MDc4Mzk1YmQKR29vZ2xlLUJ1Zy1JZDogMTI2MzI4NjcKU2lnbmVkLW9mZi1ieTog
+cGV0ZXIgY2hhbmcgPGRwZkBnb29nbGUuY29tPgotLS0KIGRyaXZlcnMvcGNpL3BjaS1kcml2ZXIu
+YyB8IDE3ICsrKysrKysrKysrKystLS0tCiAxIGZpbGUgY2hhbmdlZCwgMTMgaW5zZXJ0aW9ucygr
+KSwgNCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMg
+Yi9kcml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMKaW5kZXggZTY1MTVlMi4uOWY3ZTFlOSAxMDA2NDQK
+LS0tIGEvZHJpdmVycy9wY2kvcGNpLWRyaXZlci5jCisrKyBiL2RyaXZlcnMvcGNpL3BjaS1kcml2
+ZXIuYwpAQCAtMjQzLDYgKzI0Myw3IEBAIHN0cnVjdCBkcnZfZGV2X2FuZF9pZCB7CiAJc3RydWN0
+IHBjaV9kcml2ZXIgKmRydjsKIAlzdHJ1Y3QgcGNpX2RldiAqZGV2OwogCWNvbnN0IHN0cnVjdCBw
+Y2lfZGV2aWNlX2lkICppZDsKKwl1bnNpZ25lZCBpbnQgdGFza19mbGFnczsKIH07CiAKIHN0YXRp
+YyBsb25nIGxvY2FsX3BjaV9wcm9iZSh2b2lkICpfZGRpKQpAQCAtMjY3LDcgKzI2OCw4IEBAIHN0
+YXRpYyBsb25nIGxvY2FsX3BjaV9wcm9iZSh2b2lkICpfZGRpKQogCWlmIChyYykgewogCQlwY2lf
+ZGV2LT5kcml2ZXIgPSBOVUxMOwogCQlwbV9ydW50aW1lX3B1dF9zeW5jKGRldik7Ci0JfQorCX0g
+ZWxzZSBpZiAoY3VycmVudCkKKwkJZGRpLT50YXNrX2ZsYWdzID0gY3VycmVudC0+ZmxhZ3M7CiAJ
+cmV0dXJuIHJjOwogfQogCkBAIC0yNzUsNyArMjc3LDcgQEAgc3RhdGljIGludCBwY2lfY2FsbF9w
+cm9iZShzdHJ1Y3QgcGNpX2RyaXZlciAqZHJ2LCBzdHJ1Y3QgcGNpX2RldiAqZGV2LAogCQkJICBj
+b25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpCiB7CiAJaW50IGVycm9yLCBub2RlOwotCXN0
+cnVjdCBkcnZfZGV2X2FuZF9pZCBkZGkgPSB7IGRydiwgZGV2LCBpZCB9OworCXN0cnVjdCBkcnZf
+ZGV2X2FuZF9pZCBkZGkgPSB7IGRydiwgZGV2LCBpZCwgMCB9OwogCiAJLyogRXhlY3V0ZSBkcml2
+ZXIgaW5pdGlhbGl6YXRpb24gb24gbm9kZSB3aGVyZSB0aGUgZGV2aWNlJ3MKIAkgICBidXMgaXMg
+YXR0YWNoZWQgdG8uICBUaGlzIHdheSB0aGUgZHJpdmVyIGxpa2VseSBhbGxvY2F0ZXMKQEAgLTI4
+Nyw5ICsyODksMTYgQEAgc3RhdGljIGludCBwY2lfY2FsbF9wcm9iZShzdHJ1Y3QgcGNpX2RyaXZl
+ciAqZHJ2LCBzdHJ1Y3QgcGNpX2RldiAqZGV2LAogCiAJCWdldF9vbmxpbmVfY3B1cygpOwogCQlj
+cHUgPSBjcHVtYXNrX2FueV9hbmQoY3B1bWFza19vZl9ub2RlKG5vZGUpLCBjcHVfb25saW5lX21h
+c2spOwotCQlpZiAoY3B1IDwgbnJfY3B1X2lkcykKKwkJLyogdHJ5IG5vdCB0byBxdWV1ZSB3b3Jr
+IGlmIHdlJ3JlIGFscmVhZHkgb24gdGhlIHRhcmdldCBjcHUgKi8KKwkJaWYgKGNwdSA8IG5yX2Nw
+dV9pZHMgJiYgY3B1ICE9IGdldF9jcHUoKSkgewogCQkJZXJyb3IgPSB3b3JrX29uX2NwdShjcHUs
+IGxvY2FsX3BjaV9wcm9iZSwgJmRkaSk7Ci0JCWVsc2UKKwkJCS8qIGNvcHkgb3V0IHNvbWUgdGFz
+ayBmbGFncyBmb3IgdGhlIG1vZHVsZSBsb2FkaW5nCisJCQkgKiBjYXNlLgorCQkJICovCisJCQlp
+ZiAoIWVycm9yICYmIGN1cnJlbnQpCisJCQkJY3VycmVudC0+ZmxhZ3MgfD0gKGRkaS50YXNrX2Zs
+YWdzICYKKwkJCQkJCSAgIFBGX1VTRURfQVNZTkMpOworCQl9IGVsc2UKIAkJCWVycm9yID0gbG9j
+YWxfcGNpX3Byb2JlKCZkZGkpOwogCQlwdXRfb25saW5lX2NwdXMoKTsKIAl9IGVsc2UKLS0gCjEu
+OC41LjMKCg==
+--bcaec53f2e2d80ac1504f13a099f--
