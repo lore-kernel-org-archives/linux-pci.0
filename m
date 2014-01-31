@@ -1,130 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:54347 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751782AbaAFBr6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jan 2014 20:47:58 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Tanmay Inamdar' <tinamdar@apm.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Grant Likely' <grant.likely@linaro.org>,
-	'Catalin Marinas' <catalin.marinas@arm.com>,
-	'Rob Landley' <rob@landley.net>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	patches@apm.com, 'Jon Masters' <jcm@redhat.com>,
-	'Jason Gunthorpe' <jgunthorpe@obsidianresearch.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
- <1387785725-24262-2-git-send-email-tinamdar@apm.com>
-In-reply-to: <1387785725-24262-2-git-send-email-tinamdar@apm.com>
-Subject: Re: [RFC PATCH 1/3] pci: APM X-Gene PCIe controller driver
-Date: Mon, 06 Jan 2014 10:47:54 +0900
-Message-id: <007401cf0a81$51429250$f3c7b6f0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:47699 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751410AbaAaJKJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 04:10:09 -0500
+From: "Brown, Aaron F" <aaron.f.brown@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [E1000-devel] [PATCH 0/2] Remove dead code
+Date: Fri, 31 Jan 2014 09:10:06 +0000
+Message-ID: <309B89C4C689E141A5FF6A0C5FB2118B7314C430@ORSMSX101.amr.corp.intel.com>
+References: <20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, December 23, 2013 5:02 PM, Tanmay Inamdar wrote:
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Thursday, January 30, 2014 11:21 AM
+> To: linux-pci@vger.kernel.org
+> Cc: e1000-devel@lists.sourceforge.net; Arjan van de Ven; linux-
+> kernel@vger.kernel.org
+> Subject: [E1000-devel] [PATCH 0/2] Remove dead code
 > 
-> This patch adds the AppliedMicro X-gene SOC PCIe controller driver.
-> APM X-Gene PCIe controller supports maximum upto 8 lanes and
-> GEN3 speed. X-Gene has maximum 5 PCIe ports supported.
+> This is a rework of part of Stephen's patch [1].
+> 
+> This removes the MMIO exclusivity support that was added as part of an
+> e1000e bug hunt.
+> 
+> The e1000e driver still uses pci_request_selected_regions_exclusive(), but
+> there are no callers of pci_request_region_exclusive() and
+> pci_request_regions_exclusive().  I thought it was cleaner to remove the
+> whole thing than to leave parts of it in place.  But I could easily be
+> convinced to leave part or all of this in place if people think it's still
+> useful.
 
-(+cc Jason Gunthorpe, Arnd Bergmann)
-
-Hi Tanmay Inamdar,
-
-I added some minor comments. :-)
+Thanks Bjorn, I have added these to Jeff's queue.
 
 > 
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> It also removes SR-IOV migration support, which is completely unused, as
+> far as I can tell.
+> 
+> [1]
+> http://lkml.kernel.org/r/20131227132710.7190647c@nehalam.linuxnetplumber.n
+> et
+> 
 > ---
->  drivers/pci/host/Kconfig      |    5 +
->  drivers/pci/host/Makefile     |    1 +
->  drivers/pci/host/pcie-xgene.c | 1017 +++++++++++++++++++++++++++++++++++++++++
-
-Would you change the file name to 'pci-xgene.c'?
-Now, all PCI host drivers are using the prefix 'pci-', not 'pcie-'.
-
-[.....]
-
-> +#include <linux/module.h>
-> +#include <linux/delay.h>
-> +#include <linux/pci.h>
-> +#include <linux/slab.h>
-> +#include <linux/memblock.h>
-> +#include <linux/io.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/of.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/jiffies.h>
-> +#include <linux/clk-private.h>
-
-Would you re-order these headers alphabetically?
-It enhances the readability.
-
-[.....]
-
-> +static int xgene_pcie_parse_map_ranges(struct xgene_pcie_port *port)
-> +{
-> +	struct device_node *np = port->node;
-> +	struct of_pci_range range;
-> +	struct of_pci_range_parser parser;
-> +	struct device *dev = port->dev;
-> +	u32 cfg_map_done = 0;
-> +	int ret;
-> +
-> +	if (of_pci_range_parser_init(&parser, np)) {
-> +		dev_err(dev, "missing ranges property\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* Get the I/O, memory, config ranges from DT */
-> +	for_each_of_pci_range(&parser, &range) {
-> +		struct resource *res = NULL;
-> +		u64 restype = range.flags & IORESOURCE_TYPE_BITS;
-> +		u64 end = range.cpu_addr + range.size - 1;
-> +		dev_dbg(port->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
-> +			range.flags, range.cpu_addr, end, range.pci_addr);
-> +
-> +		switch (restype) {
-> +		case IORESOURCE_IO:
-> +			res = &port->res[XGENE_IO];
-> +			of_pci_range_to_resource(&range, np, res);
-> +			xgene_pcie_setup_ob_reg(port->csr_base, OMR1BARL,
-> +						XGENE_IO, res);
-> +			break;
-> +		case IORESOURCE_MEM:
-> +			res = &port->res[XGENE_MEM];
-> +			of_pci_range_to_resource(&range, np, res);
-> +			xgene_pcie_setup_ob_reg(port->csr_base, OMR2BARL,
-> +						XGENE_MEM, res);
-> +			break;
-> +		case 0:
-> +			if (!cfg_map_done) {
-> +				/* config region */
-> +				if (port->type == PTYPE_ROOT_PORT) {
-> +					ret = xgene_pcie_map_cfg(port, &range);
-> +					if (ret)
-> +						return ret;
-> +				}
-> +				cfg_map_done = 1;
-> +			} else {
-> +				/* msi region */
-> +				res = &port->res[XGENE_MSI];
-> +				of_pci_range_to_resource(&range, np, res);
-
-As Jason Gunthorpe said, the DT 'range' property should not
-handle MSI. Please refer to other PCI host drivers such as
-pci-mvebu.c, pci-tegra.c and pcie-designware.c.
-
-Currently, 'struct msi_chip', ' struct irq_domain' are used 
-for implementing MSI feature.
-
-Best regards,
-Jingoo Han
-
+> 
+> Bjorn Helgaas (2):
+>       PCI: Remove unused MMIO exclusivity support
+>       PCI: Remove unused SR-IOV VF Migration support
+> 
+> 
+>  Documentation/PCI/pci-iov-howto.txt        |    4 -
+>  Documentation/kernel-parameters.txt        |    4 -
+>  arch/x86/mm/init.c                         |    2
+>  drivers/net/ethernet/intel/e1000e/netdev.c |    3 -
+>  drivers/pci/iov.c                          |  119 -----------------------
+> -----
+>  drivers/pci/pci-sysfs.c                    |    3 -
+>  drivers/pci/pci.c                          |  112 +++--------------------
+> ---
+>  drivers/pci/pci.h                          |    4 -
+>  include/linux/ioport.h                     |    5 -
+>  include/linux/pci.h                        |    7 --
+>  kernel/resource.c                          |   54 -------------
+>  11 files changed, 14 insertions(+), 303 deletions(-)
+> 
+> --------------------------------------------------------------------------
+> ----
+> WatchGuard Dimension instantly turns raw network data into actionable
+> security intelligence. It gives you real-time visual feedback on key
+> security issues and trends.  Skip the complicated setup - simply import a
+> virtual appliance and go from zero to informed in seconds.
+> http://pubads.g.doubleclick.net/gampad/clk?id=123612991&iu=/4140/ostg.clkt
+> rk
+> _______________________________________________
+> E1000-devel mailing list
+> E1000-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/e1000-devel
+> To learn more about Intel&#174; Ethernet, visit
+> http://communities.intel.com/community/wired
