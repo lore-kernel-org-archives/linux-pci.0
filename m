@@ -1,63 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:61150 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082AbaAaP34 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 10:29:56 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH V3 7/8] pcie: SPEAr13xx: Add designware pcie support
-Date: Fri, 31 Jan 2014 16:29:53 +0100
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	"spear-devel" <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <cover.1391077731.git.mohit.kumar@st.com> <201401301434.20188.arnd@arndb.de> <20140131042446.GD2618@pratyush-vbox>
-In-Reply-To: <20140131042446.GD2618@pratyush-vbox>
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:35511 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbaAaMAT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 07:00:19 -0500
+Received: by mail-qc0-f170.google.com with SMTP id e9so6894843qcy.15
+        for <linux-pci@vger.kernel.org>; Fri, 31 Jan 2014 04:00:18 -0800 (PST)
+Date: Fri, 31 Jan 2014 07:00:15 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Peter Chang <dpf@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PATCH: platforms: avoid queuing work if possible
+Message-ID: <20140131120015.GE26148@htj.dyndns.org>
+References: <CAF2xp_HgT+2zmxHTYpxRFiK-pfQKQJhJ74SJhQVER4s2ZZX0PQ@mail.gmail.com>
+ <20140131115340.GD26148@htj.dyndns.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201401311629.53734.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140131115340.GD26148@htj.dyndns.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 31 January 2014, Pratyush Anand wrote:
-> On Thu, Jan 30, 2014 at 09:34:19PM +0800, Arnd Bergmann wrote:
-> > On Thursday 30 January 2014, Mohit Kumar wrote:
-> > 
-> > Ah, so this is what the ID gets used for. I would indeed encode this in the
-> > phy node, unlike the configuration of whether it's used for PCIe or SATA.
-> 
-> ok.. ll use "phy_id = <n>;" in phy node.
+On Fri, Jan 31, 2014 at 06:53:40AM -0500, Tejun Heo wrote:
+> The patch description doesn't describe the reasons for the change at
+> all.  What issues have you encountered?  What are you trying to
+> achieve?
 
-Ok. Minor comment: the preferred style would be 'phy-id' rather than 'phy_id'
-in DT,
+Okay, is it that on NUMA configurations the probing ends up being
+bounced through work_on_cpu(), so tracking whether "async" was used
+doesn't work making module probing finish before async probing is
+complete?  If that's the case, wouldn't a more generic workaround be
+handling that in work_on_cpu()?  You can change work_for_cpu_fn() to
+clear ASYNC_USED before invoking the function and transfer the bit to
+struct work_for_cpu so that work_on_cpu() can again transfer it to the
+calling task.
 
-> > > +static int pcie_miphy_init(struct spear13xx_phy_priv *phypriv)
-> > > +{
-> > > +	if (of_machine_is_compatible("st,spear1340"))
-> > > +		return spear1340_pcie_miphy_init(phypriv);
-> > > +	else if (of_machine_is_compatible("st,spear1310"))
-> > > +		return spear1310_pcie_miphy_init(phypriv);
-> > > +	else
-> > > +		return -EINVAL;
-> > > +}
-> > 
-> > You should never check global properties such as the machine compatible
-> > value to make local decisions. You have two options here: Either use
-> > two different compatible strings for the phy node, or encode the
-> > difference in another property. If the only difference between spear1310
-> > and spear1340 is the location of the register within the "misc" syscon
-> > space, a good represenation would be to put the register offset next
-> > to the syscon phandle in the same property. That way it could transparently
-> > work for future SoCs.
-> 
-> Currently, there is only difference in misc syscon space. But, as I
-> said few phy register definition might also change in different soc.
-> 
-> Ok.. I ll go with first option, ie different compatible string for
-> different socs. It seems most logical also.
+Thanks.
 
-Ok.
-
-	Arnd
+-- 
+tejun
