@@ -1,144 +1,85 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+Date: Fri, 31 Jan 2014 17:40:11 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v5 01/33] genirq: Split __irq_reserve_irqs from irq_alloc_descs
-Date: Thu,  2 Jan 2014 16:05:33 -0800
-Message-Id: <1388707565-16535-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [Update][PATCH 4/5][RFT] ACPI / hotplug / PCI: Simplify
+ acpi_install_hotplug_notify_handler()
+Message-ID: <20140131154011.GK18029@intel.com>
+References: <2217793.001RY6hKlo@vostro.rjw.lan>
+ <18315277.jcVt0SJ67s@vostro.rjw.lan>
+ <20140131152836.GJ18029@intel.com>
+ <4082824.GsiGP0lQhc@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4082824.GsiGP0lQhc@vostro.rjw.lan>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-irq_alloc_descs and irq_reserve_irqs are almost the same.
-Separate code out to __irq_reserved_irqs, and other two reuse
-__irq_reserve_irqs.
+On Fri, Jan 31, 2014 at 04:42:21PM +0100, Rafael J. Wysocki wrote:
+> On Friday, January 31, 2014 05:28:36 PM Mika Westerberg wrote:
+> > On Wed, Jan 29, 2014 at 01:00:57AM +0100, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > 
+> > > Use the observation that the ACPI scan handler of the device object
+> > > in acpi_hotplug_notify_cb() can be obtained from that device object's
+> > > handler pointer and do not pass it as data to
+> > > acpi_install_hotplug_notify_handler() in acpi_scan_init_hotplug().
+> > > 
+> > > That allows the second argument of acpi_install_hotplug_notify_handler()
+> > > to be dropped, so do it and update its callers accordingly.
+> > > 
+> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > ---
+> > >  drivers/acpi/scan.c                |   31 ++++++++++++++++++-------------
+> > >  drivers/pci/hotplug/acpiphp_glue.c |    2 +-
+> > >  include/acpi/acpi_bus.h            |    2 +-
+> > >  3 files changed, 20 insertions(+), 15 deletions(-)
+> > > 
+> > > Index: linux-pm/drivers/acpi/scan.c
+> > > ===================================================================
+> > > --- linux-pm.orig/drivers/acpi/scan.c
+> > > +++ linux-pm/drivers/acpi/scan.c
+> > > @@ -487,7 +487,6 @@ static void acpi_device_hotplug(void *da
+> > >  
+> > >  static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+> > >  {
+> > > -	struct acpi_scan_handler *handler = data;
+> > >  	u32 ost_code = ACPI_OST_SC_SUCCESS;
+> > >  	struct acpi_device *adev;
+> > >  	acpi_status status;
+> > > @@ -503,13 +502,6 @@ static void acpi_hotplug_notify_cb(acpi_
+> > >  
+> > >  	case ACPI_NOTIFY_EJECT_REQUEST:
+> > >  		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
+> > > -		if (handler && !handler->hotplug.enabled) {
+> > > -			acpi_handle_err(handle, "Eject disabled\n");
+> > > -			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+> > > -			goto out;
+> > > -		}
+> > > -		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+> > > -					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+> > >  		break;
+> > >  
+> > >  	case ACPI_NOTIFY_DEVICE_WAKE:
+> > > @@ -535,11 +527,24 @@ static void acpi_hotplug_notify_cb(acpi_
+> > >  		goto out;
+> > >  	}
+> > >  
+> > > +	mutex_lock(&acpi_scan_lock);
+> > 
+> > This is weird. I'm testing against your test-next branch which has this
+> > patch included. If I remove locking here, TBT hotplug works fine. Otherwise
+> > I can see the first hotplug/unplug works but after that I cannot get any
+> > events anymore.
+> 
+> Weird indeed.  I don't seem to be able to reproduce that on my Aspire S5.
+> 
+> What system are you testing on?
 
-We will use __irq_reserve_irqs for coming ioapic hotplug support.
-
--v2: fix func docbook related comments, pointed out by tglx.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>
-Reviewed-by: Alexander Gordeev <agordeev@redhat.com>
----
- include/linux/irq.h  |  1 +
- kernel/irq/irqdesc.c | 54 ++++++++++++++++++++++++++++++----------------------
- 2 files changed, 32 insertions(+), 23 deletions(-)
-
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 7dc1003..0229caf 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -614,6 +614,7 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- 
- void irq_free_descs(unsigned int irq, unsigned int cnt);
- int irq_reserve_irqs(unsigned int from, unsigned int cnt);
-+int __irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt);
- 
- static inline void irq_free_desc(unsigned int irq)
- {
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 192a302..a151db6 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -340,18 +340,15 @@ void irq_free_descs(unsigned int from, unsigned int cnt)
- EXPORT_SYMBOL_GPL(irq_free_descs);
- 
- /**
-- * irq_alloc_descs - allocate and initialize a range of irq descriptors
-- * @irq:	Allocate for specific irq number if irq >= 0
-+ * __irq_reserve_irqs - reserve a range of irqs
-+ * @irq:	Reserve for specific irq number if irq >= 0
-  * @from:	Start the search from this irq number
-- * @cnt:	Number of consecutive irqs to allocate.
-- * @node:	Preferred node on which the irq descriptor should be allocated
-- * @owner:	Owning module (can be NULL)
-+ * @cnt:	Number of consecutive irqs to reserve.
-  *
-  * Returns the first irq number or error code
-  */
- int __ref
--__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
--		  struct module *owner)
-+__irq_reserve_irqs(int irq, unsigned int from, unsigned int cnt)
- {
- 	int start, ret;
- 
-@@ -369,7 +366,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- 	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
- 					   from, cnt, 0);
- 	ret = -EEXIST;
--	if (irq >=0 && start != irq)
-+	if (irq >= 0 && start != irq)
- 		goto err;
- 
- 	if (start + cnt > nr_irqs) {
-@@ -380,12 +377,36 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- 
- 	bitmap_set(allocated_irqs, start, cnt);
- 	mutex_unlock(&sparse_irq_lock);
--	return alloc_descs(start, cnt, node, owner);
-+	return start;
- 
- err:
- 	mutex_unlock(&sparse_irq_lock);
- 	return ret;
- }
-+
-+/**
-+ * __irq_alloc_descs - allocate and initialize a range of irq descriptors
-+ * @irq:	Allocate for specific irq number if irq >= 0
-+ * @from:	Start the search from this irq number
-+ * @cnt:	Number of consecutive irqs to allocate.
-+ * @node:	Preferred node on which the irq descriptor should be allocated
-+ * @owner:	Owning module (can be NULL)
-+ *
-+ * Returns the first irq number or error code
-+ */
-+int __ref
-+__irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-+		  struct module *owner)
-+{
-+	int start;
-+
-+	start = __irq_reserve_irqs(irq, from, cnt);
-+
-+	if (start < 0)
-+		return start;
-+
-+	return alloc_descs(start, cnt, node, owner);
-+}
- EXPORT_SYMBOL_GPL(__irq_alloc_descs);
- 
- /**
-@@ -397,20 +418,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
-  */
- int irq_reserve_irqs(unsigned int from, unsigned int cnt)
- {
--	unsigned int start;
--	int ret = 0;
--
--	if (!cnt || (from + cnt) > nr_irqs)
--		return -EINVAL;
--
--	mutex_lock(&sparse_irq_lock);
--	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
--	if (start == from)
--		bitmap_set(allocated_irqs, start, cnt);
--	else
--		ret = -EEXIST;
--	mutex_unlock(&sparse_irq_lock);
--	return ret;
-+	return __irq_reserve_irqs(from, from, cnt);
- }
- 
- /**
--- 
-1.8.4
-
+This is Intel NUC. Let me see if I can reproduce this on S5 with longer
+chain of devices.
