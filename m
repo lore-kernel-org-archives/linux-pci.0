@@ -1,70 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4420 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932503AbaAaPH7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jan 2014 10:07:59 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jingoo Han <jg1.han@samsung.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 32/34] niu: Use pci_enable_msix_range()
-Date: Fri, 31 Jan 2014 16:08:51 +0100
-Message-Id: <b00085e1236e43e7a7531ce136064062ed88ea74.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:50190 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753767AbaAaAuh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 19:50:37 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
+Date: Fri, 31 Jan 2014 02:04:58 +0100
+Message-ID: <6710733.Fy4CsjXWaz@vostro.rjw.lan>
+In-Reply-To: <7120202.A2h3LvJsyn@vostro.rjw.lan>
+References: <20140130131236.GW18029@intel.com> <CAE9FiQUmuaarJEhOQogusyv3EpBPDjRTtRvbh4U4QCJqfs0Vvw@mail.gmail.com> <7120202.A2h3LvJsyn@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Friday, January 31, 2014 01:39:38 AM Rafael J. Wysocki wrote:
+> On Thursday, January 30, 2014 03:39:02 PM Yinghai Lu wrote:
+> > On Thu, Jan 30, 2014 at 3:39 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > > On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
+> > >>
+> > >> --047d7b5d2ea4eb937804f132eedf
+> > >> Content-Type: text/plain; charset=ISO-8859-1
+> > >>
+> > >> >> The latest mainline kernel "hangs" when Thunderbolt devices are
+> > >> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
+> > >> >> getting huge amounts of messages like:
+> > >> >>
+> > >> >> [  352.717001] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717011] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717021] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717032] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717041] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717051] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717061] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717070] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717083] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717094] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717104] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717113] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717124] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717133] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717143] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717153] pci 0000:02:00.0: PME# disabled
+> > >> >> [  352.717162] pci 0000:02:00.0: PME# disabled
+> > >> >
+> > >> > that mean pci_stop_dev() get called again and again ?
+> > >>
+> > >> please check if attached patch could help.
+> > >
+> > > Well, it looks like what happens is an endless loop in
+> > > acpiphp_glue.c:disable_slot().
+> > >
+> > > dev_in_slot() returns the first device in the list, so
+> > > pci_stop_and_remove_bus_device() is called for it, but it
+> > > doesn't remove the device from bus->devices any more, so
+> > > dev_in_slot() will return the same device next time and
+> > > so on forever.
+> > >
+> > ...
+> > >
+> > > So the above won't help in my opinion.
+> > >
+> > > I wonder, however, if this patch helps instead:
+> > >
+> > > https://patchwork.kernel.org/patch/3540701/
+> > >
+> > > I thought it would be 3.15 material, but it very well can go in earlier if
+> > > it happens to address this particular problem.
+> > 
+> > Agree, that should fix the problem.
+> > 
+> > but please use list_for_each_entry_safe_reverse
+> > instead.
+> > 
+> > please refer to pciehp changelog in
+> > 
+> > commit 29ed1f29b68a8395d5679b3c4e38352b617b3236
+> > Author: Yinghai Lu <yinghai@kernel.org>
+> > Date:   Fri Jul 19 12:14:16 2013 -0700
+> > 
+> >     PCI: pciehp: Fix null pointer deref when hot-removing SR-IOV device
+> > 
+> >     Hot-removing a device with SR-IOV enabled causes a null pointer dereference
+> >     in v3.9 and v3.10.
+> > 
+> >     This is a regression caused by ba518e3c17 ("PCI: pciehp: Iterate over all
+> >     devices in slot, not functions 0-7").  When we iterate over the
+> >     bus->devices list, we first remove the PF, which also removes all the VFs
+> >     from the list.  Then the list iterator blows up because more than just the
+> >     current entry was removed from the list.
+> > 
+> >     ac205b7bb7 ("PCI: make sriov work with hotplug remove") works around a
+> >     similar problem in pci_stop_bus_devices() by iterating over the list in
+> >     reverse, so the VFs are stopped and removed from the list first, before the
+> >     PF.
+> > 
+> >     This patch changes pciehp_unconfigure_device() to iterate over the list in
+> >     reverse, too.
+> > 
+> >     [bhelgaas: bugzilla, changelog]
+> >     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=60604
+> 
+> So I gather all of bus->devices list walks during which devices may be removed
+> should be done in the reverse order, right?
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+So it looks like we need the patch below (on top of https://patchwork.kernel.org/patch/3559831/),
+right?
+
 ---
- drivers/net/ethernet/sun/niu.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / hotplug / PCI: Remove entries from bus->devices in reverse order
 
-diff --git a/drivers/net/ethernet/sun/niu.c b/drivers/net/ethernet/sun/niu.c
-index 8e2266e..79606f4 100644
---- a/drivers/net/ethernet/sun/niu.c
-+++ b/drivers/net/ethernet/sun/niu.c
-@@ -9041,7 +9041,7 @@ static void niu_try_msix(struct niu *np, u8 *ldg_num_map)
- 	struct msix_entry msi_vec[NIU_NUM_LDG];
- 	struct niu_parent *parent = np->parent;
- 	struct pci_dev *pdev = np->pdev;
--	int i, num_irqs, err;
-+	int i, num_irqs;
- 	u8 first_ldg;
+According to the changelog of commit 29ed1f29b68a (PCI: pciehp: Fix null
+pointer deref when hot-removing SR-IOV device) it is unsafe to walk the
+bus->devices list of a PCI bus and remove devices from it in direct order,
+because that may lead to NULL pointer dereferences related to virtual
+functions.
+
+For this reason, change all of the bus->devices list walks in
+acpiphp_glue.c during which devices may be removed to be carried out in
+reverse order.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -724,7 +724,7 @@ static void trim_stale_devices(struct pc
  
- 	first_ldg = (NIU_NUM_LDG / parent->num_ports) * np->port;
-@@ -9053,21 +9053,16 @@ static void niu_try_msix(struct niu *np, u8 *ldg_num_map)
- 		    (np->port == 0 ? 3 : 1));
- 	BUG_ON(num_irqs > (NIU_NUM_LDG / parent->num_ports));
+ 		/* The device is a bridge. so check the bus below it. */
+ 		pm_runtime_get_sync(&dev->dev);
+-		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
++		list_for_each_entry_safe_reverse(child, tmp, &bus->devices, bus_list)
+ 			trim_stale_devices(child);
  
--retry:
- 	for (i = 0; i < num_irqs; i++) {
- 		msi_vec[i].vector = 0;
- 		msi_vec[i].entry = i;
- 	}
+ 		pm_runtime_put(&dev->dev);
+@@ -755,8 +755,8 @@ static void acpiphp_check_bridge(struct
+ 			; /* do nothing */
+ 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
+ 			/* remove stale devices if any */
+-			list_for_each_entry_safe(dev, tmp, &bus->devices,
+-						 bus_list)
++			list_for_each_entry_safe_reverse(dev, tmp,
++							 &bus->devices, bus_list)
+ 				if (PCI_SLOT(dev->devfn) == slot->device)
+ 					trim_stale_devices(dev);
  
--	err = pci_enable_msix(pdev, msi_vec, num_irqs);
--	if (err < 0) {
-+	num_irqs = pci_enable_msix_range(pdev, msi_vec, 1, num_irqs);
-+	if (num_irqs < 0) {
- 		np->flags &= ~NIU_FLAGS_MSIX;
- 		return;
- 	}
--	if (err > 0) {
--		num_irqs = err;
--		goto retry;
--	}
+@@ -787,7 +787,7 @@ static void acpiphp_sanitize_bus(struct
+ 	int i;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
  
- 	np->flags |= NIU_FLAGS_MSIX;
- 	for (i = 0; i < num_irqs; i++)
--- 
-1.7.7.6
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
+ 			struct resource *res = &dev->resource[i];
+ 			if ((res->flags & type_mask) && !res->start &&
 
