@@ -1,144 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og112.obsmtp.com ([64.18.0.24]:36682 "HELO
-	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756588AbaAGCpM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 21:45:12 -0500
-Received: by mail-ve0-f181.google.com with SMTP id oy12so9588926veb.26
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 18:45:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <007401cf0a81$51429250$f3c7b6f0$%han@samsung.com>
-References: <1387785725-24262-1-git-send-email-tinamdar@apm.com>
-	<1387785725-24262-2-git-send-email-tinamdar@apm.com>
-	<007401cf0a81$51429250$f3c7b6f0$%han@samsung.com>
-Date: Mon, 6 Jan 2014 18:45:11 -0800
-Message-ID: <CACoXjcmqUixctokJ9COLWAsaDTUyVKk9vTAbW1hUhUdcgaj-kg@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/3] pci: APM X-Gene PCIe controller driver
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	patches <patches@apm.com>, Jon Masters <jcm@redhat.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 17/34] ixgbevf: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:36 +0100
+Message-Id: <3d63d58082b8cb80de7f2cb434ca5d83781e8c9f.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 5, 2014 at 5:47 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Monday, December 23, 2013 5:02 PM, Tanmay Inamdar wrote:
->>
->> This patch adds the AppliedMicro X-gene SOC PCIe controller driver.
->> APM X-Gene PCIe controller supports maximum upto 8 lanes and
->> GEN3 speed. X-Gene has maximum 5 PCIe ports supported.
->
-> (+cc Jason Gunthorpe, Arnd Bergmann)
->
-> Hi Tanmay Inamdar,
->
-> I added some minor comments. :-)
->
->>
->> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
->> ---
->>  drivers/pci/host/Kconfig      |    5 +
->>  drivers/pci/host/Makefile     |    1 +
->>  drivers/pci/host/pcie-xgene.c | 1017 +++++++++++++++++++++++++++++++++++++++++
->
-> Would you change the file name to 'pci-xgene.c'?
-> Now, all PCI host drivers are using the prefix 'pci-', not 'pcie-'.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-I guess designware is an exception. There is
-"drivers/pci/host/pcie-designware.c"
->
-> [.....]
->
->> +#include <linux/module.h>
->> +#include <linux/delay.h>
->> +#include <linux/pci.h>
->> +#include <linux/slab.h>
->> +#include <linux/memblock.h>
->> +#include <linux/io.h>
->> +#include <linux/platform_device.h>
->> +#include <linux/of.h>
->> +#include <linux/of_address.h>
->> +#include <linux/of_irq.h>
->> +#include <linux/of_pci.h>
->> +#include <linux/jiffies.h>
->> +#include <linux/clk-private.h>
->
-> Would you re-order these headers alphabetically?
-> It enhances the readability.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c |   33 +++++++-------------
+ 1 files changed, 12 insertions(+), 21 deletions(-)
 
-ok.
+diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+index 9df2898..521a9d7 100644
+--- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
++++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
+@@ -1817,7 +1817,6 @@ void ixgbevf_reset(struct ixgbevf_adapter *adapter)
+ static int ixgbevf_acquire_msix_vectors(struct ixgbevf_adapter *adapter,
+ 					int vectors)
+ {
+-	int err = 0;
+ 	int vector_threshold;
+ 
+ 	/* We'll want at least 2 (vector_threshold):
+@@ -1831,33 +1830,25 @@ static int ixgbevf_acquire_msix_vectors(struct ixgbevf_adapter *adapter,
+ 	 * Right now, we simply care about how many we'll get; we'll
+ 	 * set them up later while requesting irq's.
+ 	 */
+-	while (vectors >= vector_threshold) {
+-		err = pci_enable_msix(adapter->pdev, adapter->msix_entries,
+-				      vectors);
+-		if (!err || err < 0) /* Success or a nasty failure. */
+-			break;
+-		else /* err == number of vectors we should try again with */
+-			vectors = err;
+-	}
++	vectors = pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
++					vector_threshold, vectors);
+ 
+-	if (vectors < vector_threshold)
+-		err = -ENOMEM;
+-
+-	if (err) {
++	if (vectors < 0) {
+ 		dev_err(&adapter->pdev->dev,
+ 			"Unable to allocate MSI-X interrupts\n");
+ 		kfree(adapter->msix_entries);
+ 		adapter->msix_entries = NULL;
+-	} else {
+-		/*
+-		 * Adjust for only the vectors we'll use, which is minimum
+-		 * of max_msix_q_vectors + NON_Q_VECTORS, or the number of
+-		 * vectors we were allocated.
+-		 */
+-		adapter->num_msix_vectors = vectors;
++		return vectors;
+ 	}
+ 
+-	return err;
++	/*
++	 * Adjust for only the vectors we'll use, which is minimum
++	 * of max_msix_q_vectors + NON_Q_VECTORS, or the number of
++	 * vectors we were allocated.
++	 */
++	adapter->num_msix_vectors = vectors;
++
++	return 0;
+ }
+ 
+ /**
+-- 
+1.7.7.6
 
->
-> [.....]
->
->> +static int xgene_pcie_parse_map_ranges(struct xgene_pcie_port *port)
->> +{
->> +     struct device_node *np = port->node;
->> +     struct of_pci_range range;
->> +     struct of_pci_range_parser parser;
->> +     struct device *dev = port->dev;
->> +     u32 cfg_map_done = 0;
->> +     int ret;
->> +
->> +     if (of_pci_range_parser_init(&parser, np)) {
->> +             dev_err(dev, "missing ranges property\n");
->> +             return -EINVAL;
->> +     }
->> +
->> +     /* Get the I/O, memory, config ranges from DT */
->> +     for_each_of_pci_range(&parser, &range) {
->> +             struct resource *res = NULL;
->> +             u64 restype = range.flags & IORESOURCE_TYPE_BITS;
->> +             u64 end = range.cpu_addr + range.size - 1;
->> +             dev_dbg(port->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
->> +                     range.flags, range.cpu_addr, end, range.pci_addr);
->> +
->> +             switch (restype) {
->> +             case IORESOURCE_IO:
->> +                     res = &port->res[XGENE_IO];
->> +                     of_pci_range_to_resource(&range, np, res);
->> +                     xgene_pcie_setup_ob_reg(port->csr_base, OMR1BARL,
->> +                                             XGENE_IO, res);
->> +                     break;
->> +             case IORESOURCE_MEM:
->> +                     res = &port->res[XGENE_MEM];
->> +                     of_pci_range_to_resource(&range, np, res);
->> +                     xgene_pcie_setup_ob_reg(port->csr_base, OMR2BARL,
->> +                                             XGENE_MEM, res);
->> +                     break;
->> +             case 0:
->> +                     if (!cfg_map_done) {
->> +                             /* config region */
->> +                             if (port->type == PTYPE_ROOT_PORT) {
->> +                                     ret = xgene_pcie_map_cfg(port, &range);
->> +                                     if (ret)
->> +                                             return ret;
->> +                             }
->> +                             cfg_map_done = 1;
->> +                     } else {
->> +                             /* msi region */
->> +                             res = &port->res[XGENE_MSI];
->> +                             of_pci_range_to_resource(&range, np, res);
->
-> As Jason Gunthorpe said, the DT 'range' property should not
-> handle MSI. Please refer to other PCI host drivers such as
-> pci-mvebu.c, pci-tegra.c and pcie-designware.c.
-
-Right. I will remove MSI from ranges.
-
->
-> Currently, 'struct msi_chip', ' struct irq_domain' are used
-> for implementing MSI feature.
->
-> Best regards,
-> Jingoo Han
->
