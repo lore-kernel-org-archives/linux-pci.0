@@ -1,96 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:58404 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851AbaA2VsH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 16:48:07 -0500
-Received: by mail-ig0-f176.google.com with SMTP id j1so16112861iga.3
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 13:48:06 -0800 (PST)
-Date: Wed, 29 Jan 2014 14:48:01 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brian King <brking@us.ibm.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wil6210@qca.qualcomm.com, ath10k@lists.infradead.org,
-	linux-nvme@lists.infradead.org,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+Received: from eu1sys200aog122.obsmtp.com ([207.126.144.153]:34271 "EHLO
+	eu1sys200aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753836AbaAaEY7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 23:24:59 -0500
+Date: Fri, 31 Jan 2014 09:54:46 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Viresh Kumar <viresh.linux@gmail.com>,
+	spear-devel <spear-devel@list.st.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Message-ID: <20140129214801.GE16825@google.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
- <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
- <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
- <20140118145940.GE3640@htj.dyndns.org>
+Subject: Re: [PATCH V3 7/8] pcie: SPEAr13xx: Add designware pcie support
+Message-ID: <20140131042446.GD2618@pratyush-vbox>
+References: <cover.1391077731.git.mohit.kumar@st.com>
+ <1c7f0dd04e9af55886dc74789bfcf92ce900e131.1391077731.git.mohit.kumar@st.com>
+ <201401301434.20188.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140118145940.GE3640@htj.dyndns.org>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201401301434.20188.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 18, 2014 at 09:59:40AM -0500, Tejun Heo wrote:
-> On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
-> > On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> > > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
-> > >> > As the release is supposedly this weekend, do you prefer
-> > >> > the patches to go to your tree or to individual trees after
-> > >> > the release?
-> > >>
-> > >> I'd be happy to merge them, except for the fact that they probably
-> > >> wouldn't have any time in -next before I ask Linus to pull them.  So
-> > >> how about if we wait until after the release, ask the area maintainers
-> > >> to take them, and if they don't take them, I'll put them in my tree
-> > >> for v3.15?
-> > >
-> > > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-> > > Whatever works for you ;)
-> > >
-> > > I am only concerned with a regression fix "ahci: Fix broken fallback to
-> > > single MSI mode" which would be nice to have in 3.14. But it seems pretty
-> > > much too late.
-> > 
-> > Tejun, if you want to ack that one, I can put it in either the first
-> > 3.14 pull request or a subsequent one.  Either way, since it's a
-> > regression fix, we should be able to get it in 3.14.
+On Thu, Jan 30, 2014 at 09:34:19PM +0800, Arnd Bergmann wrote:
+> On Thursday 30 January 2014, Mohit Kumar wrote:
 > 
-> Acked-by: Tejun Heo <tj@kernel.org>
+> > @@ -80,6 +80,57 @@
+> >  			status = "disabled";
+> >  		};
+> >  
+> > +		pcie0: pcie@b1000000 {
+> > +			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> > +			reg = <0xb1000000 0x4000>;
+> > +			interrupts = <0 68 0x4>;
+> > +			pcie_is_gen1 = <0>;
+> > +			num-lanes = <1>;
+> > +			phys = <&miphy0 1 0>;
+> > +			phy-names = "pcie-phy";
+> > +			#address-cells = <3>;
+> > +			#size-cells = <2>;
+> > +			device_type = "pci";
+> > +			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
+> > +				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
+> > +				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
+> > +			status = "disabled";
+> > +		};
 > 
-> Please feel free to route it any way you see fit.
+> Shouldn't there be more than one interrupt? Normally each root port has
+> four legacy IRQs, in order to support bridge devices.
 
-I applied the following to my pci/msi branch, since they had acks from
-maintainers (Tejun, I assumed your ack applies to both ahci patches):
+> 
+> > +	spear13xx_pcie->phy = devm_phy_get(dev, "pcie-phy");
+> > +	if (IS_ERR(spear13xx_pcie->phy)) {
+> > +		dev_err(dev, "Could not get PHY\n");
+> > +		return -EPROBE_DEFER;
+> > +	}
+> 
+> I think you should only return -EPROBE_DEFER if you got that
+> error from the PHY layer. If there is some other problem
+> with getting the PHY, you want that returned as a fatal
+> error here and not retry the PCIe probe function.
 
-    ahci: Fix broken fallback to single MSI mode
-    ahci: Use pci_enable_msi_range()
-    vfio: Use pci_enable_msi_range() and pci_enable_msix_range()
-    wil6210: Use pci_enable_msi_range()
+OK.
 
-I didn't do anything with these:
+> 
+> > diff --git a/drivers/phy/phy-spear13xx-sata-pcie.c b/drivers/phy/phy-spear13xx-sata-pcie.c
+> > index 6adfa64..5eabf51 100644
+> > --- a/drivers/phy/phy-spear13xx-sata-pcie.c
+> > +++ b/drivers/phy/phy-spear13xx-sata-pcie.c
+> > @@ -71,6 +71,80 @@
+> >  	#define SPEAR1340_PCIE_SATA_MIPHY_CFG_PCIE \
+> >  			(SPEAR1340_MIPHY_OSC_BYPASS_EXT | \
+> >  			SPEAR1340_MIPHY_PLL_RATIO_TOP(25))
+> 
+> Please split this out into a separate patch.
 
-    ipr: Get rid of superfluous call to pci_disable_msi/msix()
-    ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
+ok.
 
-	The conflict with "ipr: Handle early EEH" needs to get resolved
-	first.  Either Alexander's patches need to go via the same tree as
-	the EEH change, or the EEH change needs to be in some published
-	tree so I can cherry-pick it.
+> 
+> > +static int spear1310_pcie_miphy_init(struct spear13xx_phy_priv *phypriv)
+> > +{
+> > +	u32 mask, val;
+> > +
+> > +	regmap_update_bits(phypriv->misc, SPEAR1310_PCIE_MIPHY_CFG_1,
+> > +			SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK,
+> > +			SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE);
+> > +
+> > +	switch (phypriv->id) {
+> > +	case 0:
+> > +		mask = SPEAR1310_PCIE_CFG_MASK(0);
+> > +		val = SPEAR1310_PCIE_CFG_VAL(0);
+> > +		break;
+> > +	case 1:
+> > +		mask = SPEAR1310_PCIE_CFG_MASK(1);
+> > +		val = SPEAR1310_PCIE_CFG_VAL(1);
+> > +		break;
+> > +	case 2:
+> > +		mask = SPEAR1310_PCIE_CFG_MASK(2);
+> > +		val = SPEAR1310_PCIE_CFG_VAL(2);
+> > +		break;
+> 
+> Ah, so this is what the ID gets used for. I would indeed encode this in the
+> phy node, unlike the configuration of whether it's used for PCIe or SATA.
 
-    nvme: Fix invalid call to irq_set_affinity_hint()
-    nvme: Use pci_enable_msi_range() and pci_enable_msix_range()
+ok.. ll use "phy_id = <n>;" in phy node.
 
-	These don't seem fully baked yet.  If/when Keith acks them, I (or
-	he) can merge them.
+> 
+> > +static int pcie_miphy_init(struct spear13xx_phy_priv *phypriv)
+> > +{
+> > +	if (of_machine_is_compatible("st,spear1340"))
+> > +		return spear1340_pcie_miphy_init(phypriv);
+> > +	else if (of_machine_is_compatible("st,spear1310"))
+> > +		return spear1310_pcie_miphy_init(phypriv);
+> > +	else
+> > +		return -EINVAL;
+> > +}
+> 
+> You should never check global properties such as the machine compatible
+> value to make local decisions. You have two options here: Either use
+> two different compatible strings for the phy node, or encode the
+> difference in another property. If the only difference between spear1310
+> and spear1340 is the location of the register within the "misc" syscon
+> space, a good represenation would be to put the register offset next
+> to the syscon phandle in the same property. That way it could transparently
+> work for future SoCs.
 
-    ath10k: Use pci_enable_msi_range()
+Currently, there is only difference in misc syscon space. But, as I
+said few phy register definition might also change in different soc.
 
-	This has been acked, but no longer applies to mainline (I'm
-	currently at 0e47c969c65e).
+Ok.. I ll go with first option, ie different compatible string for
+different socs. It seems most logical also.
 
-Bjorn
+Regards
+Pratyush
+
+> 
+> 	Arnd
