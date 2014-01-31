@@ -1,101 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:39918 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752261AbaA2VhU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 16:37:20 -0500
-Received: by mail-ie0-f173.google.com with SMTP id e14so2695183iej.32
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 13:37:19 -0800 (PST)
-Date: Wed, 29 Jan 2014 14:37:16 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Casey Leedom <leedom@chelsio.com>, netdev@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 9/9] wil6210: Use pci_enable_msi_range()
-Message-ID: <20140129213716.GD16825@google.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH 09/34] cxgb4vf: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:28 +0100
+Message-Id: <bcf76e68c08022d968ef52241e94bbf1c3f65fc3.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 17, 2014 at 05:02:23PM +0100, Alexander Gordeev wrote:
-> As result deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Applied to my pci/msi branch, thanks!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |   34 +++++++++----------
+ 1 files changed, 16 insertions(+), 18 deletions(-)
 
-> ---
->  drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++++++------------
->  1 files changed, 19 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> index eeceab3..4e1bf54 100644
-> --- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> +++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> @@ -41,30 +41,32 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
->  	switch (use_msi) {
->  	case 3:
->  	case 1:
-> +		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
-> +		break;
->  	case 0:
-> +		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
->  		break;
->  	default:
-> -		wil_err(wil, "Invalid use_msi=%d, default to 1\n",
-> -			use_msi);
-> +		wil_err(wil, "Invalid use_msi=%d, default to 1\n", use_msi);
->  		use_msi = 1;
->  	}
-> -	wil->n_msi = use_msi;
-> -	if (wil->n_msi) {
-> -		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
-> -		rc = pci_enable_msi_block(pdev, wil->n_msi);
-> -		if (rc && (wil->n_msi == 3)) {
-> -			wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-> -			wil->n_msi = 1;
-> -			rc = pci_enable_msi_block(pdev, wil->n_msi);
-> -		}
-> -		if (rc) {
-> -			wil_err(wil, "pci_enable_msi failed, use INTx\n");
-> -			wil->n_msi = 0;
-> -		}
-> -	} else {
-> -		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
-> +
-> +	switch (use_msi) {
-> +	case 3:
-> +		if (pci_enable_msi_range(pdev, 3, 3) > 0)
-> +			break;
-> +		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-> +		use_msi = 1;
-> +		/* fallthrough */
-> +	case 1:
-> +		if (!pci_enable_msi(pdev))
-> +			break;
-> +		wil_err(wil, "pci_enable_msi failed, use INTx\n");
-> +		use_msi = 0;
->  	}
->  
-> +	wil->n_msi = use_msi;
-> +
->  	rc = wil6210_init_irq(wil, pdev->irq);
->  	if (rc)
->  		goto stop_master;
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
+index 509fed9..1d0fe9b 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
+@@ -2444,7 +2444,7 @@ static void reduce_ethqs(struct adapter *adapter, int n)
+  */
+ static int enable_msix(struct adapter *adapter)
+ {
+-	int i, err, want, need;
++	int i, want, need, nqsets;
+ 	struct msix_entry entries[MSIX_ENTRIES];
+ 	struct sge *s = &adapter->sge;
+ 
+@@ -2460,25 +2460,23 @@ static int enable_msix(struct adapter *adapter)
+ 	 */
+ 	want = s->max_ethqsets + MSIX_EXTRAS;
+ 	need = adapter->params.nports + MSIX_EXTRAS;
+-	while ((err = pci_enable_msix(adapter->pdev, entries, want)) >= need)
+-		want = err;
+ 
+-	if (err == 0) {
+-		int nqsets = want - MSIX_EXTRAS;
+-		if (nqsets < s->max_ethqsets) {
+-			dev_warn(adapter->pdev_dev, "only enough MSI-X vectors"
+-				 " for %d Queue Sets\n", nqsets);
+-			s->max_ethqsets = nqsets;
+-			if (nqsets < s->ethqsets)
+-				reduce_ethqs(adapter, nqsets);
+-		}
+-		for (i = 0; i < want; ++i)
+-			adapter->msix_info[i].vec = entries[i].vector;
+-	} else if (err > 0) {
+-		dev_info(adapter->pdev_dev, "only %d MSI-X vectors left,"
+-			 " not using MSI-X\n", err);
++	want = pci_enable_msix_range(adapter->pdev, entries, need, want);
++	if (want < 0)
++		return want;
++
++	nqsets = want - MSIX_EXTRAS;
++	if (nqsets < s->max_ethqsets) {
++		dev_warn(adapter->pdev_dev, "only enough MSI-X vectors"
++			 " for %d Queue Sets\n", nqsets);
++		s->max_ethqsets = nqsets;
++		if (nqsets < s->ethqsets)
++			reduce_ethqs(adapter, nqsets);
+ 	}
+-	return err;
++	for (i = 0; i < want; ++i)
++		adapter->msix_info[i].vec = entries[i].vector;
++
++	return 0;
+ }
+ 
+ static const struct net_device_ops cxgb4vf_netdev_ops	= {
+-- 
+1.7.7.6
+
