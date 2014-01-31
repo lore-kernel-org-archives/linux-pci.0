@@ -1,43 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:55541 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751432AbaACSof (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Jan 2014 13:44:35 -0500
-Date: Fri, 3 Jan 2014 11:44:24 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, linux-pci@vger.kernel.org,
-	Gregory Cl??ment <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: Issue with the emulated PCI bridge implementation
-Message-ID: <20140103184424.GC12098@obsidianresearch.com>
-References: <20131226160534.36cc4203@skate>
- <20131226165241.2c50b244@skate>
- <20140103002656.GA12098@obsidianresearch.com>
- <201401031322.31433.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201401031322.31433.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jon Mason <jdmason@kudzu.us>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 22/34] vxge: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:41 +0100
+Message-Id: <8eb335d8fbd229124db20e89d81a391faee2567d.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 03, 2014 at 01:22:31PM +0100, Arnd Bergmann wrote:
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-> However the part that made me wonder is that an e1000e with a PCI bridge
-> actually /should/not/ need to allocate an I/O space window with a precious
-> mbus resource, since AFAIK this adapter does not have an I/O space BARs.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/neterion/vxge/vxge-main.c |   15 +++++++++------
+ 1 files changed, 9 insertions(+), 6 deletions(-)
 
-IIRC the e1000 still has a legacy IO port BAR.. (guessing it is used
-for PXE boot on x86?)
+diff --git a/drivers/net/ethernet/neterion/vxge/vxge-main.c b/drivers/net/ethernet/neterion/vxge/vxge-main.c
+index 1ded50ca..d6682ed 100644
+--- a/drivers/net/ethernet/neterion/vxge/vxge-main.c
++++ b/drivers/net/ethernet/neterion/vxge/vxge-main.c
+@@ -2352,12 +2352,18 @@ start:
+ 	vdev->vxge_entries[j].entry = VXGE_ALARM_MSIX_ID;
+ 	vdev->vxge_entries[j].in_use = 0;
+ 
+-	ret = pci_enable_msix(vdev->pdev, vdev->entries, vdev->intr_cnt);
+-	if (ret > 0) {
++	ret = pci_enable_msix_range(vdev->pdev,
++				    vdev->entries, 3, vdev->intr_cnt);
++	if (ret < 0) {
++		ret = -ENODEV;
++		goto enable_msix_failed;
++	} else if (ret < vdev->intr_cnt) {
++		pci_disable_msix(vdev->pdev);
++
+ 		vxge_debug_init(VXGE_ERR,
+ 			"%s: MSI-X enable failed for %d vectors, ret: %d",
+ 			VXGE_DRIVER_NAME, vdev->intr_cnt, ret);
+-		if ((max_config_vpath != VXGE_USE_DEFAULT) || (ret < 3)) {
++		if (max_config_vpath != VXGE_USE_DEFAULT) {
+ 			ret = -ENODEV;
+ 			goto enable_msix_failed;
+ 		}
+@@ -2371,9 +2377,6 @@ start:
+ 		vxge_close_vpaths(vdev, temp);
+ 		vdev->no_of_vpath = temp;
+ 		goto start;
+-	} else if (ret < 0) {
+-		ret = -ENODEV;
+-		goto enable_msix_failed;
+ 	}
+ 	return 0;
+ 
+-- 
+1.7.7.6
 
-My patch set to allow the DT to turn off IO port allocation is already
-in mainline - drop the IO ranges from the DT and no IO resources are
-consumed at all.
-
-Though, that is an interesting point, a small refinement would be to
-not allocate the pci io map if IO is turned off as well..
-
-Jason
