@@ -1,69 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 6.77.broadband6.iol.cz ([88.101.77.6]:50137 "EHLO
-	dhcp-26-207.brq.redhat.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754346AbaAGVjk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jan 2014 16:39:40 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:45666 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932307AbaAaPHE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:04 -0500
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>,
-	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
-Date: Tue,  7 Jan 2014 19:05:38 +0100
-Message-Id: <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
-In-Reply-To: <cover.1389103215.git.agordeev@redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Nithin Nayak Sujir <nsujir@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 03/34] tg3: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:22 +0100
+Message-Id: <21689343cc3c785d2bae8d1187741f404b03c84d.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
+
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/ata/ahci.c |   15 ++++++---------
- 1 files changed, 6 insertions(+), 9 deletions(-)
+ drivers/net/ethernet/broadcom/tg3.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 8516f4d..cfdb079 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1098,13 +1098,13 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 			 struct ahci_host_priv *hpriv)
- {
--	int rc, nvec;
-+	int nvec;
+diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
+index e2ca03e..fca9996 100644
+--- a/drivers/net/ethernet/broadcom/tg3.c
++++ b/drivers/net/ethernet/broadcom/tg3.c
+@@ -11361,12 +11361,10 @@ static bool tg3_enable_msix(struct tg3 *tp)
+ 		msix_ent[i].vector = 0;
+ 	}
  
- 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
- 		goto intx;
- 
--	rc = pci_msi_vec_count(pdev);
--	if (rc < 0)
-+	nvec = pci_msi_vec_count(pdev);
-+	if (nvec < 0)
- 		goto intx;
- 
- 	/*
-@@ -1112,19 +1112,16 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 	 * Message mode could be enforced. In this case assume that advantage
- 	 * of multipe MSIs is negated and use single MSI mode instead.
- 	 */
--	if (rc < n_ports)
-+	if (nvec < n_ports)
- 		goto single_msi;
- 
--	nvec = rc;
--	rc = pci_enable_msi_block(pdev, nvec);
--	if (rc)
-+	if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
- 		goto intx;
- 
- 	return nvec;
- 
- single_msi:
--	rc = pci_enable_msi(pdev);
--	if (rc)
-+	if (pci_enable_msi_range(pdev, 1, 1) < 0)
- 		goto intx;
- 	return 1;
- 
+-	rc = pci_enable_msix(tp->pdev, msix_ent, tp->irq_cnt);
++	rc = pci_enable_msix_range(tp->pdev, msix_ent, 1, tp->irq_cnt);
+ 	if (rc < 0) {
+ 		return false;
+-	} else if (rc != 0) {
+-		if (pci_enable_msix(tp->pdev, msix_ent, rc))
+-			return false;
++	} else if (rc < tp->irq_cnt) {
+ 		netdev_notice(tp->dev, "Requested %d MSI-X vectors, received %d\n",
+ 			      tp->irq_cnt, rc);
+ 		tp->irq_cnt = rc;
 -- 
 1.7.7.6
 
