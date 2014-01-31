@@ -1,80 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:12826 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932481AbaAaTUX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 14:20:23 -0500
+From: "Brown, Aaron F" <aaron.f.brown@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [E1000-devel] [PATCH 0/2] Remove dead code
+Date: Fri, 31 Jan 2014 19:20:20 +0000
+Message-ID: <309B89C4C689E141A5FF6A0C5FB2118B7314C6DB@ORSMSX101.amr.corp.intel.com>
+References: <20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <309B89C4C689E141A5FF6A0C5FB2118B7314C430@ORSMSX101.amr.corp.intel.com>
+ <CAErSpo627wEtBypSrX8QGLW=QAnpa0q-g2z+kSM9hBdRcFNv-Q@mail.gmail.com>
+In-Reply-To: <CAErSpo627wEtBypSrX8QGLW=QAnpa0q-g2z+kSM9hBdRcFNv-Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
-References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
-Date: Sat, 25 Jan 2014 09:09:39 -0700
-Message-ID: <CALdTtnsEo74UeYgoQ0DF7=LN074b_0bL0vg6Bxs02B9nDkRTNA@mail.gmail.com>
-Subject: Re: [RFC PATCH V3 0/4] APM X-Gene PCIe controller
-From: Dann Frazier <dann.frazier@canonical.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	patches@apm.com, jcm@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 24, 2014 at 2:32 PM, Tanmay Inamdar <tinamdar@apm.com> wrote:
-> This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-> driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-> cards.
->
-> X-Gene PCIe controller driver has depedency on the pcie arch support for
-> arm64. The arm64 pcie arch support is not yet part of mainline Linux kernel
-> and approach for arch support is under discussion with arm64 maintainers.
-> The reference patch can be found here --> https://lkml.org/lkml/2013/10/23/244
-
-The reference patch looks corrupted (pcibios.c has no includes, etc),
-would you mind reposting?
-
-  -dann
-
-> If someone wishes to test PCIe on X-Gene, arch support patch must be applied
-> before the patches in this patch set.
->
-> changes since V2:
-> 1. redefined each PCI port in different PCI domain correctly.
-> 2. removed setup_lane and setup_link functions from driver.
-> 3. removed scan_bus wrapper and set_primary_bus hack.
-> 4. added pci_ioremap_io for io resources.
->
-> changes since V1:
-> 1. added PCI domain support
-> 2. reading cpu and pci addresses from device tree to configure regions.
-> 3. got rid of unnecessary wrappers for readl and writel.
-> 4. got rid of endpoint configuration code.
-> 5. added 'dma-ranges' property support to read inbound region configuration.
-> 6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-> 7. dropped 'clock-names' property from bindings
-> 8. added comments whereever requested.
->
-> Tanmay Inamdar (4):
->   pci: APM X-Gene PCIe controller driver
->   arm64: dts: APM X-Gene PCIe device tree nodes
->   dt-bindings: pci: xgene pcie device tree bindings
->   MAINTAINERS: entry for APM X-Gene PCIe host driver
->
->  .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++
->  MAINTAINERS                                        |    7 +
->  arch/arm64/boot/dts/apm-mustang.dts                |    8 +
->  arch/arm64/boot/dts/apm-storm.dtsi                 |  155 ++++
->  drivers/pci/host/Kconfig                           |   10 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-xgene.c                       |  784 ++++++++++++++++++++
->  7 files changed, 1017 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
->  create mode 100644 drivers/pci/host/pci-xgene.c
->
-> --
-> 1.7.9.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gU2Vu
+dDogRnJpZGF5LCBKYW51YXJ5IDMxLCAyMDE0IDk6NTkgQU0NCj4gVG86IEJyb3duLCBBYXJvbiBG
+DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBlMTAwMC1kZXZlbEBsaXN0cy5zb3Vy
+Y2Vmb3JnZS5uZXQ7IEFyamFuDQo+IHZhbiBkZSBWZW47IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
+bC5vcmcNCj4gU3ViamVjdDogUmU6IFtFMTAwMC1kZXZlbF0gW1BBVENIIDAvMl0gUmVtb3ZlIGRl
+YWQgY29kZQ0KPiANCj4gT24gRnJpLCBKYW4gMzEsIDIwMTQgYXQgMjoxMCBBTSwgQnJvd24sIEFh
+cm9uIEYgPGFhcm9uLmYuYnJvd25AaW50ZWwuY29tPg0KPiB3cm90ZToNCj4gPj4gRnJvbTogQmpv
+cm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4+IFNlbnQ6IFRodXJz
+ZGF5LCBKYW51YXJ5IDMwLCAyMDE0IDExOjIxIEFNDQo+ID4+IFRvOiBsaW51eC1wY2lAdmdlci5r
+ZXJuZWwub3JnDQo+ID4+IENjOiBlMTAwMC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQ7IEFy
+amFuIHZhbiBkZSBWZW47IGxpbnV4LQ0KPiA+PiBrZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+ID4+
+IFN1YmplY3Q6IFtFMTAwMC1kZXZlbF0gW1BBVENIIDAvMl0gUmVtb3ZlIGRlYWQgY29kZQ0KPiA+
+Pg0KPiA+PiBUaGlzIGlzIGEgcmV3b3JrIG9mIHBhcnQgb2YgU3RlcGhlbidzIHBhdGNoIFsxXS4N
+Cj4gPj4NCj4gPj4gVGhpcyByZW1vdmVzIHRoZSBNTUlPIGV4Y2x1c2l2aXR5IHN1cHBvcnQgdGhh
+dCB3YXMgYWRkZWQgYXMgcGFydCBvZg0KPiA+PiBhbiBlMTAwMGUgYnVnIGh1bnQuDQo+ID4+DQo+
+ID4+IFRoZSBlMTAwMGUgZHJpdmVyIHN0aWxsIHVzZXMNCj4gPj4gcGNpX3JlcXVlc3Rfc2VsZWN0
+ZWRfcmVnaW9uc19leGNsdXNpdmUoKSwgYnV0IHRoZXJlIGFyZSBubyBjYWxsZXJzIG9mDQo+ID4+
+IHBjaV9yZXF1ZXN0X3JlZ2lvbl9leGNsdXNpdmUoKSBhbmQgcGNpX3JlcXVlc3RfcmVnaW9uc19l
+eGNsdXNpdmUoKS4NCj4gPj4gSSB0aG91Z2h0IGl0IHdhcyBjbGVhbmVyIHRvIHJlbW92ZSB0aGUg
+d2hvbGUgdGhpbmcgdGhhbiB0byBsZWF2ZQ0KPiA+PiBwYXJ0cyBvZiBpdCBpbiBwbGFjZS4gIEJ1
+dCBJIGNvdWxkIGVhc2lseSBiZSBjb252aW5jZWQgdG8gbGVhdmUgcGFydA0KPiA+PiBvciBhbGwg
+b2YgdGhpcyBpbiBwbGFjZSBpZiBwZW9wbGUgdGhpbmsgaXQncyBzdGlsbCB1c2VmdWwuDQo+ID4N
+Cj4gPiBUaGFua3MgQmpvcm4sIEkgaGF2ZSBhZGRlZCB0aGVzZSB0byBKZWZmJ3MgcXVldWUuDQo+
+IA0KPiBMZXQncyB3YWl0IGZvciBhIGJpdCBtb3JlIGRpc2N1c3Npb24gb24gdGhpcy4NCj4gDQo+
+IEZvciBvbmUgdGhpbmcsIEZlbmdndWFuZydzIGF1dG9idWlsZGVyIGZvdW5kIGEgaGFuZGZ1bCBv
+ZiBpc3N1ZXMsDQo+IGluY2x1ZGluZyBhIGNvdXBsZSBtb3JlIHVzZXJzIG9mIHRoZSBleGNsdXNp
+dmUgbWFwcGluZ3MuICBGb3IgYW5vdGhlciwNCj4gQXJqYW4gcmVtaW5kZWQgbWUgdGhhdCB0aGUg
+ZTEwMDBlIGJ1ZyBodW5nIHdhcyBmb3IgYSBwcm9ibGVtIHRoYXQgYnJpY2tlZA0KPiB0aGUgZGV2
+aWNlLCByZXF1aXJpbmcgcmVwbGFjZW1lbnQgb2YgdGhlIHBhcnQgb3Igc2lnbmlmaWNhbnQgZWZm
+b3J0IHRvIGZpeA0KPiB0aGUgRUVQUk9NLiAgSSAqc3VzcGVjdCogdGhpcyBpcyBhIHBvdGVudGlh
+bCBpc3N1ZSBmb3IgbWFueSBkZXZpY2VzLCBidXQNCj4gaWYgdGhlIGUxMDAwZSBpcyBwYXJ0aWN1
+bGFybHkgc3VzY2VwdGlibGUgZm9yIHNvbWUgcmVhc29uLCB3ZSBtaWdodCB3YW50DQo+IHRvIGtl
+ZXAgdGhlIGV4Y2x1c2l2ZSBtYXBwaW5ncyBmb3IgaXQuDQo+IA0KPiBJZiB5b3Ugd2FudCB0byBh
+cHBseSBqdXN0IHRoZSBlMTAwMGUgcGFydCB0aGF0IHJlbW92ZXMgaXRzIHVzZSBvZg0KPiBwY2lf
+cmVxdWVzdF9zZWxlY3RlZF9yZWdpb25zX2V4Y2x1c2l2ZSgpLCBJIHdvdWxkIGhhdmUgbm8gY29t
+cGxhaW50cyBhYm91dA0KPiB0aGF0LCBvZiBjb3Vyc2UuDQoNClllcywgdGhhdCB3YXMgbXkgbWFp
+biBpbnRlbnQuICBJIGRpZCBwdWxsIHRoZW0gYm90aCBpbiBidXQgdGhlIHNlY29uZCB3YXMgbW9y
+ZSBhcyBhIGhlYWRzIHVwIHRvIG91ciB2aXJ0dWFsaXphdGlvbiBndXlzIHRoZW4gYXMgYSByZXF1
+ZXN0IHRvIHRlc3QuDQoNCj4gIEJ1dCB3ZSBjYW4ndCBhcHBseSB0aGUgd2hvbGUgdGhpbmcgYXMt
+aXMgd2l0aG91dCBhdA0KPiBsZWFzdCBmaXhpbmcgdGhlIGJ1aWxkIGlzc3Vlcy4NCg0KVGhhbmtz
+IGZvciB0aGUgaGVhZHMgdXAgb24gdGhhdC4gIEknbGwgc29ydCBvdXQgc29tZXRoaW5nIHRoYXQg
+YnVpbGRzIHdpdGggdGhlIGUxMDAwZSBwYXJ0cyByZW1vdmVkIG9uIG15IGVuZC4NCg0KPiANCj4g
+Pj4gSXQgYWxzbyByZW1vdmVzIFNSLUlPViBtaWdyYXRpb24gc3VwcG9ydCwgd2hpY2ggaXMgY29t
+cGxldGVseSB1bnVzZWQsDQo+ID4+IGFzIGZhciBhcyBJIGNhbiB0ZWxsLg0KPiA+Pg0KPiA+PiBb
+MV0NCj4gPj4gaHR0cDovL2xrbWwua2VybmVsLm9yZy9yLzIwMTMxMjI3MTMyNzEwLjcxOTA2NDdj
+QG5laGFsYW0ubGludXhuZXRwbHVtDQo+ID4+IGJlci5uDQo+ID4+IGV0DQo+ID4+DQo+ID4+IC0t
+LQ0KPiA+Pg0KPiA+PiBCam9ybiBIZWxnYWFzICgyKToNCj4gPj4gICAgICAgUENJOiBSZW1vdmUg
+dW51c2VkIE1NSU8gZXhjbHVzaXZpdHkgc3VwcG9ydA0KPiA+PiAgICAgICBQQ0k6IFJlbW92ZSB1
+bnVzZWQgU1ItSU9WIFZGIE1pZ3JhdGlvbiBzdXBwb3J0DQo+ID4+DQo+ID4+DQo+ID4+ICBEb2N1
+bWVudGF0aW9uL1BDSS9wY2ktaW92LWhvd3RvLnR4dCAgICAgICAgfCAgICA0IC0NCj4gPj4gIERv
+Y3VtZW50YXRpb24va2VybmVsLXBhcmFtZXRlcnMudHh0ICAgICAgICB8ICAgIDQgLQ0KPiA+PiAg
+YXJjaC94ODYvbW0vaW5pdC5jICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgMg0KPiA+PiAg
+ZHJpdmVycy9uZXQvZXRoZXJuZXQvaW50ZWwvZTEwMDBlL25ldGRldi5jIHwgICAgMyAtDQo+ID4+
+ICBkcml2ZXJzL3BjaS9pb3YuYyAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTE5IC0tLS0t
+LS0tLS0tLS0tLS0tLS0tDQo+IC0tLQ0KPiA+PiAtLS0tLQ0KPiA+PiAgZHJpdmVycy9wY2kvcGNp
+LXN5c2ZzLmMgICAgICAgICAgICAgICAgICAgIHwgICAgMyAtDQo+ID4+ICBkcml2ZXJzL3BjaS9w
+Y2kuYyAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTEyICsrKy0tLS0tLS0tLS0tLS0tLS0t
+DQo+IC0tLQ0KPiA+PiAtLS0NCj4gPj4gIGRyaXZlcnMvcGNpL3BjaS5oICAgICAgICAgICAgICAg
+ICAgICAgICAgICB8ICAgIDQgLQ0KPiA+PiAgaW5jbHVkZS9saW51eC9pb3BvcnQuaCAgICAgICAg
+ICAgICAgICAgICAgIHwgICAgNSAtDQo+ID4+ICBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgICAg
+ICAgICAgICAgICAgICAgfCAgICA3IC0tDQo+ID4+ICBrZXJuZWwvcmVzb3VyY2UuYyAgICAgICAg
+ICAgICAgICAgICAgICAgICAgfCAgIDU0IC0tLS0tLS0tLS0tLS0NCj4gPj4gIDExIGZpbGVzIGNo
+YW5nZWQsIDE0IGluc2VydGlvbnMoKyksIDMwMyBkZWxldGlvbnMoLSkNCj4gPj4NCj4gPj4gLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tDQo+ID4+IC0tLS0tDQo+ID4+IC0tLS0NCj4gPj4gV2F0Y2hHdWFyZCBEaW1lbnNp
+b24gaW5zdGFudGx5IHR1cm5zIHJhdyBuZXR3b3JrIGRhdGEgaW50byBhY3Rpb25hYmxlDQo+ID4+
+IHNlY3VyaXR5IGludGVsbGlnZW5jZS4gSXQgZ2l2ZXMgeW91IHJlYWwtdGltZSB2aXN1YWwgZmVl
+ZGJhY2sgb24ga2V5DQo+ID4+IHNlY3VyaXR5IGlzc3VlcyBhbmQgdHJlbmRzLiAgU2tpcCB0aGUg
+Y29tcGxpY2F0ZWQgc2V0dXAgLSBzaW1wbHkNCj4gPj4gaW1wb3J0IGEgdmlydHVhbCBhcHBsaWFu
+Y2UgYW5kIGdvIGZyb20gemVybyB0byBpbmZvcm1lZCBpbiBzZWNvbmRzLg0KPiA+PiBodHRwOi8v
+cHViYWRzLmcuZG91YmxlY2xpY2submV0L2dhbXBhZC9jbGs/aWQ9MTIzNjEyOTkxJml1PS80MTQw
+L29zdGcNCj4gPj4gLmNsa3QNCj4gPj4gcmsNCj4gPj4gX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX18NCj4gPj4gRTEwMDAtZGV2ZWwgbWFpbGluZyBsaXN0DQo+
+ID4+IEUxMDAwLWRldmVsQGxpc3RzLnNvdXJjZWZvcmdlLm5ldA0KPiA+PiBodHRwczovL2xpc3Rz
+LnNvdXJjZWZvcmdlLm5ldC9saXN0cy9saXN0aW5mby9lMTAwMC1kZXZlbA0KPiA+PiBUbyBsZWFy
+biBtb3JlIGFib3V0IEludGVsJiMxNzQ7IEV0aGVybmV0LCB2aXNpdA0KPiA+PiBodHRwOi8vY29t
+bXVuaXRpZXMuaW50ZWwuY29tL2NvbW11bml0eS93aXJlZA0K
