@@ -1,116 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3277 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751262AbaAGJAz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jan 2014 04:00:55 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [RFC Patch Part2 V1 14/14] iommu/vt-d: update IOMMU state when memory hotplug happens
-Date: Tue,  7 Jan 2014 17:00:34 +0800
-Message-Id: <1389085234-22296-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1389085234-22296-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 16/34] ixgbe: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:35 +0100
+Message-Id: <d9020bc4e4e2188cedf32be7b6c609797afa1279.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If static identity domain is created, IOMMU driver needs to update
-si_domain page table when memory hotplug event happens. Otherwise
-PCI device DMA operations can't access the hot-added memory regions.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/iommu/intel-iommu.c |   52 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 51 insertions(+), 1 deletion(-)
+ drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c |   16 ++++------------
+ 1 files changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 83e3ed4..35a987d 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -33,6 +33,7 @@
- #include <linux/dmar.h>
- #include <linux/dma-mapping.h>
- #include <linux/mempool.h>
-+#include <linux/memory.h>
- #include <linux/timer.h>
- #include <linux/iova.h>
- #include <linux/iommu.h>
-@@ -3689,6 +3690,54 @@ static struct notifier_block device_nb = {
- 	.notifier_call = device_notifier,
- };
- 
-+static int intel_iommu_memory_notifier(struct notifier_block *nb,
-+				       unsigned long val, void *v)
-+{
-+	struct memory_notify *mhp = v;
-+	unsigned long long start, end;
-+	struct iova *iova;
-+
-+	switch (val) {
-+	case MEM_GOING_ONLINE:
-+		start = mhp->start_pfn << PAGE_SHIFT;
-+		end = ((mhp->start_pfn + mhp->nr_pages) << PAGE_SHIFT) - 1;
-+		if (iommu_domain_identity_map(si_domain, start, end)) {
-+			pr_warn("dmar: failed to build identity map for [%llx-%llx]\n",
-+				start, end);
-+			return NOTIFY_BAD;
-+		}
-+		break;
-+	case MEM_OFFLINE:
-+	case MEM_CANCEL_ONLINE:
-+		/* TODO: enhance RB-tree and IOVA code to support of splitting iova */
-+		iova = find_iova(&si_domain->iovad, mhp->start_pfn);
-+		if (iova) {
-+			unsigned long start_pfn, last_pfn;
-+			struct dmar_drhd_unit *drhd;
-+			struct intel_iommu *iommu;
-+
-+			start_pfn = mm_to_dma_pfn(iova->pfn_lo);
-+			last_pfn = mm_to_dma_pfn(iova->pfn_hi + 1) - 1;
-+			dma_pte_clear_range(si_domain, start_pfn, last_pfn);
-+			dma_pte_free_pagetable(si_domain, start_pfn, last_pfn);
-+			rcu_read_lock();
-+			for_each_active_iommu(iommu, drhd)
-+				iommu_flush_iotlb_psi(iommu, si_domain->id,
-+					start_pfn, last_pfn - start_pfn + 1, 0);
-+			rcu_read_unlock();
-+			__free_iova(&si_domain->iovad, iova);
-+		}
-+		break;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block intel_iommu_memory_nb = {
-+	.notifier_call = intel_iommu_memory_notifier,
-+	.priority = 0
-+};
-+
- int __init intel_iommu_init(void)
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
+index 32e3eaa..0834e1e 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_lib.c
+@@ -698,7 +698,7 @@ static void ixgbe_set_num_queues(struct ixgbe_adapter *adapter)
+ static void ixgbe_acquire_msix_vectors(struct ixgbe_adapter *adapter,
+ 				       int vectors)
  {
- 	int ret = -ENODEV;
-@@ -3761,8 +3810,9 @@ int __init intel_iommu_init(void)
- 	init_iommu_pm_ops();
+-	int err, vector_threshold;
++	int vector_threshold;
  
- 	bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
--
- 	bus_register_notifier(&pci_bus_type, &device_nb);
-+	if (si_domain)
-+		register_memory_notifier(&intel_iommu_memory_nb);
+ 	/* We'll want at least 2 (vector_threshold):
+ 	 * 1) TxQ[0] + RxQ[0] handler
+@@ -712,18 +712,10 @@ static void ixgbe_acquire_msix_vectors(struct ixgbe_adapter *adapter,
+ 	 * Right now, we simply care about how many we'll get; we'll
+ 	 * set them up later while requesting irq's.
+ 	 */
+-	while (vectors >= vector_threshold) {
+-		err = pci_enable_msix(adapter->pdev, adapter->msix_entries,
+-				      vectors);
+-		if (!err) /* Success in acquiring all requested vectors. */
+-			break;
+-		else if (err < 0)
+-			vectors = 0; /* Nasty failure, quit now */
+-		else /* err == number of vectors we should try again with */
+-			vectors = err;
+-	}
++	vectors = pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
++					vector_threshold, vectors);
  
- 	intel_iommu_enabled = 1;
- 
+-	if (vectors < vector_threshold) {
++	if (vectors < 0) {
+ 		/* Can't allocate enough MSI-X interrupts?  Oh well.
+ 		 * This just means we'll go with either a single MSI
+ 		 * vector or fall back to legacy interrupts.
 -- 
-1.7.10.4
+1.7.7.6
 
