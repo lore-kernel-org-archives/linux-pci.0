@@ -1,96 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57434 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752968AbaA3XYq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 18:24:46 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
-Date: Fri, 31 Jan 2014 00:39:07 +0100
-Message-ID: <3365345.z6P9Wo4Pau@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQUaof1tk151Wbu2OtpTYb+pvP16ZhLsmbn6LDdBqoVEgA@mail.gmail.com>
-References: <20140130131236.GW18029@intel.com> <CAE9FiQWDqXNF5Cn5X_muBERMWdZsZFbzmoqWvuPARREz+XO9Gw@mail.gmail.com> <CAE9FiQUaof1tk151Wbu2OtpTYb+pvP16ZhLsmbn6LDdBqoVEgA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:44717 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932722AbaAaPIC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:08:02 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Shreyas Bhatewara <sbhatewara@vmware.com>,
+	"VMware, Inc." <pv-drivers@vmware.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 34/34] vmxnet3: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:53 +0100
+Message-Id: <3407b374f3926408fde736674b5dce4841c50fa6.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 30, 2014 08:56:05 AM Yinghai Lu wrote:
-> 
-> --047d7b5d2ea4eb937804f132eedf
-> Content-Type: text/plain; charset=ISO-8859-1
-> 
-> >> The latest mainline kernel "hangs" when Thunderbolt devices are
-> >> hot-unplugged to the system. I can't see any oops but after hot-unplug I'm
-> >> getting huge amounts of messages like:
-> >>
-> >> [  352.717001] pci 0000:02:00.0: PME# disabled
-> >> [  352.717011] pci 0000:02:00.0: PME# disabled
-> >> [  352.717021] pci 0000:02:00.0: PME# disabled
-> >> [  352.717032] pci 0000:02:00.0: PME# disabled
-> >> [  352.717041] pci 0000:02:00.0: PME# disabled
-> >> [  352.717051] pci 0000:02:00.0: PME# disabled
-> >> [  352.717061] pci 0000:02:00.0: PME# disabled
-> >> [  352.717070] pci 0000:02:00.0: PME# disabled
-> >> [  352.717083] pci 0000:02:00.0: PME# disabled
-> >> [  352.717094] pci 0000:02:00.0: PME# disabled
-> >> [  352.717104] pci 0000:02:00.0: PME# disabled
-> >> [  352.717113] pci 0000:02:00.0: PME# disabled
-> >> [  352.717124] pci 0000:02:00.0: PME# disabled
-> >> [  352.717133] pci 0000:02:00.0: PME# disabled
-> >> [  352.717143] pci 0000:02:00.0: PME# disabled
-> >> [  352.717153] pci 0000:02:00.0: PME# disabled
-> >> [  352.717162] pci 0000:02:00.0: PME# disabled
-> >
-> > that mean pci_stop_dev() get called again and again ?
-> 
-> please check if attached patch could help.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Well, it looks like what happens is an endless loop in
-acpiphp_glue.c:disable_slot().
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/vmxnet3/vmxnet3_drv.c |   47 +++++++++++++++----------------------
+ 1 files changed, 19 insertions(+), 28 deletions(-)
 
-dev_in_slot() returns the first device in the list, so
-pci_stop_and_remove_bus_device() is called for it, but it
-doesn't remove the device from bus->devices any more, so
-dev_in_slot() will return the same device next time and
-so on forever.
-
-> it should prevent possible reattaching driver.
-
-If my analysis above is correct, this isn't related to attaching drivers
-and rather to the way dev_in_slot() is designed.
-
-> ---
->  drivers/pci/remove.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> Index: linux-2.6/drivers/pci/remove.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/remove.c
-> +++ linux-2.6/drivers/pci/remove.c
-> @@ -11,6 +11,7 @@ static void pci_stop_dev(struct pci_dev
->          pci_proc_detach_device(dev);
->          pci_remove_sysfs_dev_files(dev);
->          device_release_driver(&dev->dev);
-> +        dev->match_driver = false;
->          dev->is_added = 0;
->      }
-
-So the above won't help in my opinion.
-
-I wonder, however, if this patch helps instead:
-
-https://patchwork.kernel.org/patch/3540701/
-
-I thought it would be 3.15 material, but it very well can go in earlier if
-it happens to address this particular problem.
-
-Mika, can you please try that?
-
+diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+index 3a17797..9275c8c 100644
+--- a/drivers/net/vmxnet3/vmxnet3_drv.c
++++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+@@ -2738,35 +2738,26 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
+ static int
+ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter, int nvec)
+ {
+-	do {
+-		int err = pci_enable_msix(adapter->pdev,
+-					  adapter->intr.msix_entries, nvec);
+-		if (!err) {
+-			return nvec;
+-		} else if (err < 0) {
+-			dev_err(&adapter->netdev->dev,
+-				"Failed to enable MSI-X, error: %d\n", err);
+-			return err;
+-		} else if (err < VMXNET3_LINUX_MIN_MSIX_VECT) {
+-			dev_info(&adapter->pdev->dev,
+-				 "Number of MSI-X which can be allocated "
+-				 "is lower than min threshold required.\n");
+-			return -ENOSPC;
+-		} else {
+-			/* If fails to enable required number of MSI-x vectors
+-			 * try enabling minimum number of vectors required.
+-			 */
+-			dev_err(&adapter->netdev->dev,
+-				"Failed to enable %d MSI-X, trying %d\n",
+-				nvec, VMXNET3_LINUX_MIN_MSIX_VECT);
+-			nvec = VMXNET3_LINUX_MIN_MSIX_VECT;
+-		}
+-	} while (nvec >= VMXNET3_LINUX_MIN_MSIX_VECT);
++	int ret = pci_enable_msix_range(adapter->pdev,
++					adapter->intr.msix_entries, nvec, nvec);
+ 
+-	/*
+-	 * Should never get here
+-	 */
+-	return -ENOSPC;
++	if (ret == -ENOSPC && nvec > VMXNET3_LINUX_MIN_MSIX_VECT) {
++		dev_err(&adapter->netdev->dev,
++			"Failed to enable %d MSI-X, trying %d\n",
++			nvec, VMXNET3_LINUX_MIN_MSIX_VECT);
++
++		ret = pci_enable_msix_range(adapter->pdev,
++					    adapter->intr.msix_entries,
++					    VMXNET3_LINUX_MIN_MSIX_VECT,
++					    VMXNET3_LINUX_MIN_MSIX_VECT);
++	}
++
++	if (ret < 0) {
++		dev_err(&adapter->netdev->dev,
++			"Failed to enable MSI-X, error: %d\n", ret);
++	}
++
++	return ret;
+ }
+ 
+ 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.7.6
+
