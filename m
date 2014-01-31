@@ -1,78 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:34740 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751744AbaAPStx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jan 2014 13:49:53 -0500
-Received: by mail-ie0-f171.google.com with SMTP id to1so4336025ieb.2
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jan 2014 10:49:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
-References: <1389651988-27392-1-git-send-email-keith.busch@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Jan 2014 11:49:32 -0700
-Message-ID: <CAErSpo6W9-Gg55T_dO_F6KJ+RK9mWhDtZUHdW-Ke4NP-da7-uA@mail.gmail.com>
-Subject: Re: [PATCHv2 0/2] PCI: driver function reset notification
-To: Keith Busch <keith.busch@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Eli Cohen <eli@mellanox.com>, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 19/34] mlx5: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:38 +0100
+Message-Id: <bf395f4c5a111f0f3766ce4be08e72177e227412.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 13, 2014 at 3:26 PM, Keith Busch <keith.busch@intel.com> wrote:
-> Here's version 2 of this patch with a driver implementing the intended
-> use as an example.
->
-> The NVMe stuff requires using the maintainer's tree to get the newly
-> added nvme reset handling code. Willy's repo is located here:
->
-> git.infradead.org/users/willy/linux-nvme.git
->
-> v1->v2:
->
-> As suggested, I'm reusing the slot_reset error handler instead of defining
-> a new one for function_reset.
->
-> I moved invoking the callback further up the this call stack. The test
-> case I use resets the device via sysfs, and the pci device's command
-> register is cleared at the previous point, so the callback couldn't
-> actually do anything useful other than schedule something to handle
-> it after pci_dev_restore is called. The previous location would break
-> other driver slot_reset implementations and make my nvme implementation
-> a little more complicated.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-There's now a pci_try_reset_function(), and something like this
-callback would have to be done in that path, too.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/mellanox/mlx5/core/main.c |   16 +++++-----------
+ 1 files changed, 5 insertions(+), 11 deletions(-)
 
-> Actually ... I'm a little concered to be using slot_reset instead of
-> defining a new callback for FLR. From looking at other device drivers,
-> I'm not sure they would expect to have their slot_reset invoked in
-> this situation.
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index a064f06..81df046 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -116,7 +116,6 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
+ 	struct mlx5_eq_table *table = &dev->priv.eq_table;
+ 	int num_eqs = 1 << dev->caps.log_max_eq;
+ 	int nvec;
+-	int err;
+ 	int i;
+ 
+ 	nvec = dev->caps.num_ports * num_online_cpus() + MLX5_EQ_VEC_COMP_BASE;
+@@ -131,17 +130,12 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
+ 	for (i = 0; i < nvec; i++)
+ 		table->msix_arr[i].entry = i;
+ 
+-retry:
+-	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
+-	err = pci_enable_msix(dev->pdev, table->msix_arr, nvec);
+-	if (err <= 0) {
+-		return err;
+-	} else if (err > 2) {
+-		nvec = err;
+-		goto retry;
+-	}
++	nvec = pci_enable_msix_range(dev->pdev, table->msix_arr,
++				     MLX5_EQ_VEC_COMP_BASE, nvec);
++	if (nvec < 0)
++		return nvec;
+ 
+-	mlx5_core_dbg(dev, "received %d MSI vectors out of %d requested\n", err, nvec);
++	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
+ 
+ 	return 0;
+ }
+-- 
+1.7.7.6
 
-I haven't looked at other slot_reset callbacks.  Do you have an
-example we can look at and talk about?
-
-The existing model (even without your changes) allows a user to start
-a reset via sysfs while the driver is still active.  What happens when
-the reset occurs while the driver is programming the device?  For
-example, if the driver sets up a DMA transfer address, the reset
-occurs (destroying the address), and the driver initiates the DMA, the
-DMA will go to the wrong place.
-
-I'm not sure how to fix this model of resets happening asynchronous to
-the driver.  Maybe we need to tell the driver *before* the reset.
-Maybe we need to ask the driver to do the reset itself, and only do it
-in the core if no driver is attached.  Maybe we need to make the reset
-look like a hotplug remove/add to the driver, so we detach the driver,
-do the reset, and reattach a driver.
-
-In the general case, we don't know what the device *is* after a reset
-because it could have loaded new firmware.  It could require more
-resources or even a different driver.
-
-I know it would cause Alex heartburn to make reset look like hotplug.
-What sort of NVMe problems would that cause?  I assume most drivers
-will have to treat a device coming out of reset basically the same way
-as a brand new hot-added device.
-
-Bjorn
