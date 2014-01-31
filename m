@@ -1,37 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog108.obsmtp.com ([207.126.144.125]:41610 "EHLO
-	eu1sys200aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752479AbaA3IJs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 03:09:48 -0500
-Message-ID: <52EA089E.4010802@mellanox.com>
-Date: Thu, 30 Jan 2014 10:09:02 +0200
-From: Or Gerlitz <ogerlitz@mellanox.com>
+Received: from moutng.kundenserver.de ([212.227.126.171]:61150 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932082AbaAaP34 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 10:29:56 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [PATCH V3 7/8] pcie: SPEAr13xx: Add designware pcie support
+Date: Fri, 31 Jan 2014 16:29:53 +0100
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Viresh Kumar <viresh.linux@gmail.com>,
+	"spear-devel" <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <cover.1391077731.git.mohit.kumar@st.com> <201401301434.20188.arnd@arndb.de> <20140131042446.GD2618@pratyush-vbox>
+In-Reply-To: <20140131042446.GD2618@pratyush-vbox>
 MIME-Version: 1.0
-To: Jack Morgenstein <jackm@dev.mellanox.co.il>
-CC: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	<yinghai@kernel.org>, <bhelgaas@google.com>, <amirv@mellanox.com>,
-	Guo Chao <yan@linux.vnet.ibm.com>, <linux-pci@vger.kernel.org>
-Subject: Re: mlx4_core probe error after applying Yinghai's patch
-References: <20140114103712.GD27684@richard> <20140114132340.50df7d6f@jpm-OptiPlex-GX620> <52d52032.4981e00a.3dcc.ffff81fdSMTPIN_ADDED_BROKEN@mx.google.com> <20140115094113.64ca756e@jpm-OptiPlex-GX620> <1389772791.6933.84.camel@pasglop> <52d653d3.8425e00a.76d0.1e60SMTPIN_ADDED_BROKEN@mx.google.com> <20140115160204.24a44af0@jpm-OptiPlex-GX620> <20140116020946.GA8702@richard> <20140116021429.GB8702@richard> <52E8C0D6.3030105@mellanox.com> <20140130070850.GA24083@richard>
-In-Reply-To: <20140130070850.GA24083@richard>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201401311629.53734.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/01/2014 09:08, Wei Yang wrote:
-> Or,
->
-> Even this patch really could make the machine boot up, we didn't find the root
-> cause of the failure as mentioned in the first mail. I will find some time to
-> dig into it if I have more time and will send you update if I find it.
->
-> For this patch, we(Gavin and I) don't think it is a formal patch. We send it
-> here just let you know we find a work around and this one really helps. As I
-> mentioned in the previous mail, we suggest you guys to create a formal patch
-> with this function, since you are more familiar with this device and the
-> driver.
->
-> If you think it would be nice for a patch from us, I am very glad to do this.:-)
-Jack?
+On Friday 31 January 2014, Pratyush Anand wrote:
+> On Thu, Jan 30, 2014 at 09:34:19PM +0800, Arnd Bergmann wrote:
+> > On Thursday 30 January 2014, Mohit Kumar wrote:
+> > 
+> > Ah, so this is what the ID gets used for. I would indeed encode this in the
+> > phy node, unlike the configuration of whether it's used for PCIe or SATA.
+> 
+> ok.. ll use "phy_id = <n>;" in phy node.
+
+Ok. Minor comment: the preferred style would be 'phy-id' rather than 'phy_id'
+in DT,
+
+> > > +static int pcie_miphy_init(struct spear13xx_phy_priv *phypriv)
+> > > +{
+> > > +	if (of_machine_is_compatible("st,spear1340"))
+> > > +		return spear1340_pcie_miphy_init(phypriv);
+> > > +	else if (of_machine_is_compatible("st,spear1310"))
+> > > +		return spear1310_pcie_miphy_init(phypriv);
+> > > +	else
+> > > +		return -EINVAL;
+> > > +}
+> > 
+> > You should never check global properties such as the machine compatible
+> > value to make local decisions. You have two options here: Either use
+> > two different compatible strings for the phy node, or encode the
+> > difference in another property. If the only difference between spear1310
+> > and spear1340 is the location of the register within the "misc" syscon
+> > space, a good represenation would be to put the register offset next
+> > to the syscon phandle in the same property. That way it could transparently
+> > work for future SoCs.
+> 
+> Currently, there is only difference in misc syscon space. But, as I
+> said few phy register definition might also change in different soc.
+> 
+> Ok.. I ll go with first option, ie different compatible string for
+> different socs. It seems most logical also.
+
+Ok.
+
+	Arnd
