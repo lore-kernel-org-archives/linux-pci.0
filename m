@@ -1,95 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f172.google.com ([209.85.220.172]:39472 "EHLO
-	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbaATXpV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 18:45:21 -0500
+Received: from v094114.home.net.pl ([79.96.170.134]:65048 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932409AbaAaXTx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jan 2014 18:19:53 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: [PATCH] Revert "PCI: Remove from bus_list and release resources in pci_release_dev()"
+Date: Sat, 01 Feb 2014 00:34:15 +0100
+Message-ID: <1676758.QjUXk2223P@vostro.rjw.lan>
+In-Reply-To: <20140130131236.GW18029@intel.com>
+References: <20140130131236.GW18029@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20140120190102.13636.qmail@science.horizon.com>
-References: <CAJtEV7ZsM2YHHETRGNwXnGi7uq0mJen73i-Yp3EXoDrnni=o=g@mail.gmail.com>
-	<20140120190102.13636.qmail@science.horizon.com>
-Date: Tue, 21 Jan 2014 07:45:20 +0800
-Message-ID: <CAJtEV7bkfB=REaJkf+jb33_2h=_5YoZogQNw4SKmmWwZcF8NZA@mail.gmail.com>
-Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
-From: Andrew Cooks <acooks@gmail.com>
-To: George Spelvin <linux@horizon.com>
-Cc: "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	linux-ide@vger.kernel.org,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 21, 2014 at 3:01 AM, George Spelvin <linux@horizon.com> wrote:
->>> I massaged it a bit to fit my personal idea of "cleaner".
->>> The biggest logic change is the elimination of the fn_mapped
->>> variable from quirk_map_multi_requester_ids.
->
->> Thanks, that was detritus left over from debugging.
->
-> The code still does the exact same thing; I just derive the value from
-> (fn_map & ((1<<fn)-1)) if it's required.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+    
+Revert commit ef83b0781a73 "PCI: Remove from bus_list and release
+resources in pci_release_dev()" that made some nasty race conditions
+become possible.  For example, if a Thunderbolt link is unplugged
+and then replugged immediately, the pci_release_dev() resulting from
+the hot-remove code path may be racing with the hot-add code path
+which after that commit causes various kinds of breakage to happen
+(up to and including a hard crash of the whole system).
 
-I see that now - was over excited and tired last night.
+Moreover, the problem that commit ef83b0781a73 attempted to address
+cannot happen any more after commit 8a4c5c329de7 "PCI: Check parent
+kobject in pci_destroy_dev()", because pci_destroy_dev() will now
+return immediately if it has already been executed for the given
+device.
 
->>> I also got rid of the "fn_map << fn" logic (which is never false).
->
->> What if function 0 is not present? There were cases where the Marvell
->> 9172 only used function 1 (when only one port is in use). I don't
->> think it's safe to assume that function 0 is present when you're
->> trying to compensate for broken devices.
->
-> Er... can you explain?  I did not change what the code *does* in the
-> slightest, only the was it figures out what to do.
->
-> I took this it out because it does nothing; it can be statically proved
-> that the expression is always non-zero.
->
-> Because "fn_map" is a non-zero 8-bit value and "fn" is an integer in
-> the range 0-7, the value "fn_map << fn" is a non-zero 15-bit value.
-> 15 bits can't overflow (even on a PDP-11 with 16-bit ints), so this is
-> a non-zero value, and the loop will never terminate because of it.
->
-> It sure looked like a bug to me, but I couldn't figure out what it
-> was supposed to do.  Can you enlighten me?  "fn_map >> fn" (shifting
-> right rather than left) achieves early termination of the loop, but
-> isn't essential.
+Fixes: ef83b0781a73 (PCI: Remove from bus_list and release resources in pci_release_dev())
+Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-OK, I understand the problem now. Early exit was the intended effect
-and for some reason I thought the new version could exit too early,
-but it seems fine.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 04796c056d12..6e34498ec9f0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1208,18 +1208,6 @@ static void pci_release_capabilities(struct pci_dev *dev)
+ 	pci_free_cap_save_buffers(dev);
+ }
+ 
+-static void pci_free_resources(struct pci_dev *dev)
+-{
+-	int i;
+-
+-	pci_cleanup_rom(dev);
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		struct resource *res = dev->resource + i;
+-		if (res->parent)
+-			release_resource(res);
+-	}
+-}
+-
+ /**
+  * pci_release_dev - free a pci device structure when all users of it are finished.
+  * @dev: device that's been disconnected
+@@ -1229,14 +1217,9 @@ static void pci_free_resources(struct pci_dev *dev)
+  */
+ static void pci_release_dev(struct device *dev)
+ {
+-	struct pci_dev *pci_dev = to_pci_dev(dev);
+-
+-	down_write(&pci_bus_sem);
+-	list_del(&pci_dev->bus_list);
+-	up_write(&pci_bus_sem);
+-
+-	pci_free_resources(pci_dev);
++	struct pci_dev *pci_dev;
+ 
++	pci_dev = to_pci_dev(dev);
+ 	pci_release_capabilities(pci_dev);
+ 	pci_release_of_node(pci_dev);
+ 	pcibios_release_device(pci_dev);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 4ff36bfa785e..b8c93c90daf5 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -3,6 +3,20 @@
+ #include <linux/pci-aspm.h>
+ #include "pci.h"
+ 
++static void pci_free_resources(struct pci_dev *dev)
++{
++	int i;
++
++	msi_remove_pci_irq_vectors(dev);
++
++	pci_cleanup_rom(dev);
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *res = dev->resource + i;
++		if (res->parent)
++			release_resource(res);
++	}
++}
++
+ static void pci_stop_dev(struct pci_dev *dev)
+ {
+ 	pci_pme_active(dev, false);
+@@ -25,6 +39,11 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 
+ 	device_del(&dev->dev);
+ 
++	down_write(&pci_bus_sem);
++	list_del(&dev->bus_list);
++	up_write(&pci_bus_sem);
++
++	pci_free_resources(dev);
+ 	put_device(&dev->dev);
+ }
+ 
 
->>> +       fn_map &= ~(1<<PCI_FUNC(pdev->devfn));  /* Skip the normal case */
->
->> Do you really find this "cleaner", as in more readable?
->
-> I find it easier to think about fn_map as the bitmap of functions to
-> be operated on.  Rather than have two conditions in the following loop.
-
-I see that now.
-
-> The confusing thing is "why are we skipping that function?"  (Because this
-> is a quirk and the "normal case" has already been handled.)  It would be
-> nicer if all the domain_context_mapping_one calls were grouped together.
-
-Sure, but since this was the first non-trivial patch I submitted, I
-tried to keep it non-intrusive and simple.
-
-> I would like to see if there's a clean way to combine this with phantom
-> function support (which I haven't find the code for yet).
-
-I'm willing to believe that if phantom functions haven't shown up and
-caused problems yet, it probably doesn't need fixing in a hurry.
-SR-IOV seems like a better and more common way for devices to use
-multiple lightweight functions.
-
->
->>> +       for (i = pci_dev_dma_source_map; i->devfn; i++) {
->
->> The bug that Martin Oehrling pointed out in the ticket is still there.
->
-> Ah, thank you; I had missed that that.  Yes, it should be testing
-> i->vendor.  You really get devices using the wrong slot as well as
-> function?  Wow!
->
-> Using multiple functions is at least anticipated in the PCI spec,
-> even if they do it wrong.
