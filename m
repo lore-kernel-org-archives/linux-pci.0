@@ -1,80 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:39494 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756262AbaAGAEB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jan 2014 19:04:01 -0500
-Received: by mail-ie0-f179.google.com with SMTP id x13so19577897ief.10
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jan 2014 16:03:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
-References: <52B0AEAD.6050604@gmail.com> <20131218010207.GC15119@google.com> <CAA93t1qh2Wn2uPKUGvbqrOJxDfqAqTNFSqOryC36Wm=gnygUog@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 6 Jan 2014 17:03:39 -0700
-Message-ID: <CAErSpo6A0=0Ph22vMZ1_eC1L7ndoi5S6162zRDYkMoPf53Fhcg@mail.gmail.com>
-Subject: Re: [PATCH v3 4/8] pciehp: Don't disable the link permanently, during removal
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: Rajat Jain <rajatjain.linux@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yhlu.kernel@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Ariel Elior <ariele@broadcom.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 02/34] bnx2x: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:21 +0100
+Message-Id: <911884c4e906af8acfa4c06ee3206387449f1d84.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 5, 2014 at 10:53 AM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> Hello Bjorn,
->
-> Just checking on the fate of this patch set...
->
-> On Tue, Dec 17, 2013 at 5:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc yinghai@kernel.org (seems to be Yinghai's preferred email]
->>
->> On Tue, Dec 17, 2013 at 12:06:05PM -0800, Rajat Jain wrote:
->>> We need future link up events for hot-add, thus don't disable
->>> the link permanently during device removal. Also, remove the static
->>> functions that are now left unused.
->>
->> The changelog should mention that this reverts part of 2debd9289997 ("PCI:
->> pciehp: Disable/enable link during slot power off/on").
->
-> Sure. Do you want me to submit another patch set (bumping up the
-> version) with this change log, or you'd want to add this change log
-> while merging?
->
->>
->> Yinghai, can you tell us whether this is an issue on your systems?
->
-> As Yinghai confirms further down this thread, his issue was confirmed
-> by Intel to be a bug in the repeater chip.
-> ----------------------------------
-> Yinghai writes:
->> According to HW guys and Intel, that should be bug of repeater.
->>
-> ---------------------------------
->  I don't know about the details of his scenario, except that when the
-> adapter was disabled the repeater kept on flapping the link up & down
-> (and hence disabling the link solved the problem then). Yinghai
-> couldn't test, but I believe with this patch even if we disable
-> presence detect interrupt, the "adapter present / no present" messages
-> would (rightly) convert to "Link Up / Link Down" messages (since the
-> repeater keeps on flapping the link).
->
-> Since it is a platform specific bug, I'm not sure what can be done to
-> remove those messages except may be reduce the verbosity? If you'd
-> like I could change all the INFO messages to DBG messages.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Even if it's a defect in a particular piece of hardware, I don't want
-to regress on that hardware, even if the regression is just extra
-messages that we didn't see before.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c |   48 ++++++++++-------------
+ 1 files changed, 21 insertions(+), 27 deletions(-)
 
-I think ideally we would add some sort of quirk for that hardware so
-it works just as well as it does today.  I think extra messages will
-lead to a bug reports from users.
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
+index 9d7419e..b396d74 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
+@@ -1638,24 +1638,36 @@ int bnx2x_enable_msix(struct bnx2x *bp)
+ 	DP(BNX2X_MSG_SP, "about to request enable msix with %d vectors\n",
+ 	   msix_vec);
+ 
+-	rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], msix_vec);
+-
++	rc = pci_enable_msix_range(bp->pdev, &bp->msix_table[0],
++				   BNX2X_MIN_MSIX_VEC_CNT(bp), msix_vec);
+ 	/*
+ 	 * reconfigure number of tx/rx queues according to available
+ 	 * MSI-X vectors
+ 	 */
+-	if (rc >= BNX2X_MIN_MSIX_VEC_CNT(bp)) {
++	if (rc < 0) {
++		BNX2X_DEV_INFO("MSI-X is not attainable rc %d\n", rc);
++		goto no_msix;
++	} else if (rc == -ENOSPC) {
++		/* Get by with single vector */
++		rc = pci_enable_msix_range(bp->pdev, &bp->msix_table[0], 1, 1);
++		if (rc < 0) {
++			BNX2X_DEV_INFO("Single MSI-X is not attainable rc %d\n",
++				       rc);
++			goto no_msix;
++		}
++
++		BNX2X_DEV_INFO("Using single MSI-X vector\n");
++		bp->flags |= USING_SINGLE_MSIX_FLAG;
++
++		BNX2X_DEV_INFO("set number of queues to 1\n");
++		bp->num_ethernet_queues = 1;
++		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
++	} else if (rc < msix_vec) {
+ 		/* how less vectors we will have? */
+ 		int diff = msix_vec - rc;
+ 
+ 		BNX2X_DEV_INFO("Trying to use less MSI-X vectors: %d\n", rc);
+ 
+-		rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], rc);
+-
+-		if (rc) {
+-			BNX2X_DEV_INFO("MSI-X is not attainable rc %d\n", rc);
+-			goto no_msix;
+-		}
+ 		/*
+ 		 * decrease number of queues by number of unallocated entries
+ 		 */
+@@ -1664,24 +1676,6 @@ int bnx2x_enable_msix(struct bnx2x *bp)
+ 
+ 		BNX2X_DEV_INFO("New queue configuration set: %d\n",
+ 			       bp->num_queues);
+-	} else if (rc > 0) {
+-		/* Get by with single vector */
+-		rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], 1);
+-		if (rc) {
+-			BNX2X_DEV_INFO("Single MSI-X is not attainable rc %d\n",
+-				       rc);
+-			goto no_msix;
+-		}
+-
+-		BNX2X_DEV_INFO("Using single MSI-X vector\n");
+-		bp->flags |= USING_SINGLE_MSIX_FLAG;
+-
+-		BNX2X_DEV_INFO("set number of queues to 1\n");
+-		bp->num_ethernet_queues = 1;
+-		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
+-	} else if (rc < 0) {
+-		BNX2X_DEV_INFO("MSI-X is not attainable  rc %d\n", rc);
+-		goto no_msix;
+ 	}
+ 
+ 	bp->flags |= USING_MSIX_FLAG;
+-- 
+1.7.7.6
 
-Bjorn
