@@ -1,73 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f173.google.com ([209.85.220.173]:56812 "EHLO
-	mail-vc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543AbaAUByj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jan 2014 20:54:39 -0500
-MIME-Version: 1.0
-In-Reply-To: <20140120233543.15159.qmail@science.horizon.com>
-References: <CAJtEV7ZsM2YHHETRGNwXnGi7uq0mJen73i-Yp3EXoDrnni=o=g@mail.gmail.com>
-	<20140120233543.15159.qmail@science.horizon.com>
-Date: Tue, 21 Jan 2014 09:54:38 +0800
-Message-ID: <CAJtEV7b5MKn7JshUjhVH-fmiQcD-AZR6-YSCrdUhb+8-KMM0JA@mail.gmail.com>
-Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
-From: Andrew Cooks <acooks@gmail.com>
-To: George Spelvin <linux@horizon.com>
-Cc: "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	linux-ide@vger.kernel.org,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:32418 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932478AbaAaPHK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:10 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Dimitris Michailidis <dm@chelsio.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 07/34] cxgb4: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:26 +0100
+Message-Id: <f84d46c7894241fc9d164cde3474cb55c710835c.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 21, 2014 at 7:35 AM, George Spelvin <linux@horizon.com> wrote:
-> I'm looking over the bug reports, and I'm trying to understand why you
-> need two mechanisms.  You have one table (pci_dev_dma_source_map)
-> that maps one devfn to a secondary one, and a second table
-> (pci_dev_dma_multi_source_map) that gives a 2-bit bitmap of function
-> numbers.
-I haven't found a simple way to combine the two maps that still makes
-the two distinct problems apparent.
-pci_dev_dma_multi_source_map deals with devices that use multiple
-functions, but the correct device number.
-pci_dev_dma_source_map deals with devices that use a single incorrect
-devfn that's mangled in both device and function numbers.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-> But as I understand it, all the Marvell devices listed there always have
-> a devfn of 00.0, so you could just move them to the first table with a
-> mapping to 00.1.
->
-> If they also have device/function 00.1 using a requester ID of 00.0
-> you could add a second entry.
->
-> The only time you'd need a bitmap would be if the device ended up on
-> function 2 or higher and still used functions 0 and 1 in request IDs.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   50 +++++++++++------------
+ 1 files changed, 24 insertions(+), 26 deletions(-)
 
-Sure, that sounds reasonable and certainly needs to be considered, but
-since there's no complete record of what devices get this wrong and
-how they get this wrong, I wanted to
-* show all requester ids are used for each device in a concise entry,
-* build up as much of a record of this problem as possible (hence the
-comments and bug references),
-* make it easy to see the general problem and have this discussion,
-* not make assumptions about which functions would be visible and
-which requester ids are actually used (like a device showing up at
-00.0 that uses 00.1 and 00.2 only).
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index 43ab35f..bd0321d 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -5737,7 +5737,7 @@ static void reduce_ethqs(struct adapter *adap, int n)
+ static int enable_msix(struct adapter *adap)
+ {
+ 	int ofld_need = 0;
+-	int i, err, want, need;
++	int i, want, need;
+ 	struct sge *s = &adap->sge;
+ 	unsigned int nchan = adap->params.nports;
+ 	struct msix_entry entries[MAX_INGQ + 1];
+@@ -5753,32 +5753,30 @@ static int enable_msix(struct adapter *adap)
+ 	}
+ 	need = adap->params.nports + EXTRA_VECS + ofld_need;
+ 
+-	while ((err = pci_enable_msix(adap->pdev, entries, want)) >= need)
+-		want = err;
++	want = pci_enable_msix_range(adap->pdev, entries, need, want);
++	if (want < 0)
++		return want;
+ 
+-	if (!err) {
+-		/*
+-		 * Distribute available vectors to the various queue groups.
+-		 * Every group gets its minimum requirement and NIC gets top
+-		 * priority for leftovers.
+-		 */
+-		i = want - EXTRA_VECS - ofld_need;
+-		if (i < s->max_ethqsets) {
+-			s->max_ethqsets = i;
+-			if (i < s->ethqsets)
+-				reduce_ethqs(adap, i);
+-		}
+-		if (is_offload(adap)) {
+-			i = want - EXTRA_VECS - s->max_ethqsets;
+-			i -= ofld_need - nchan;
+-			s->ofldqsets = (i / nchan) * nchan;  /* round down */
+-		}
+-		for (i = 0; i < want; ++i)
+-			adap->msix_info[i].vec = entries[i].vector;
+-	} else if (err > 0)
+-		dev_info(adap->pdev_dev,
+-			 "only %d MSI-X vectors left, not using MSI-X\n", err);
+-	return err;
++	/*
++	 * Distribute available vectors to the various queue groups.
++	 * Every group gets its minimum requirement and NIC gets top
++	 * priority for leftovers.
++	 */
++	i = want - EXTRA_VECS - ofld_need;
++	if (i < s->max_ethqsets) {
++		s->max_ethqsets = i;
++		if (i < s->ethqsets)
++			reduce_ethqs(adap, i);
++	}
++	if (is_offload(adap)) {
++		i = want - EXTRA_VECS - s->max_ethqsets;
++		i -= ofld_need - nchan;
++		s->ofldqsets = (i / nchan) * nchan;  /* round down */
++	}
++	for (i = 0; i < want; ++i)
++		adap->msix_info[i].vec = entries[i].vector;
++
++	return 0;
+ }
+ 
+ #undef EXTRA_VECS
+-- 
+1.7.7.6
 
-Who knows what will show up when iommu is turned on by default again.
-
-> Now, unfortunately this does not cover the phantom functions case, but
-> that could be done with separate code.
->
->
-> The other question is when to do the lookup.  I don't know how often
-> IOMMU mapping is done, and if linear search through a list of PCI devices
-> would be a performance problem.  It would be nicer to have a standard
-> PCI fixup done once which sets a flag in the pci_dev to either note the
-> actual secondary devfn, or set a flag to trigger the secondary lookup
-> only on the devices that need it.
-
-Yes, I'd also like to hear what the gatekeepers think about this.
-
-Thanks,
-
-a.
