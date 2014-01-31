@@ -1,82 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:64913 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664AbaA2SR2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jan 2014 13:17:28 -0500
-Received: by mail-ie0-f179.google.com with SMTP id ar20so2439308iec.10
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2014 10:17:28 -0800 (PST)
-Subject: [PATCH 00/17] x86, ia64 NUMA cleanup
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org, x86@kernel.org,
-	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 29 Jan 2014 11:17:25 -0700
-Message-ID: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:4420 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932503AbaAaPH7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:59 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jingoo Han <jg1.han@samsung.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 32/34] niu: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:51 +0100
+Message-Id: <b00085e1236e43e7a7531ce136064062ed88ea74.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is all cleanup: it adds no new functionality and should make no
-functional difference at all except a printk change or two.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-The main ideas are:
-
-  - Clean up the x86 PCI bus scanning interfaces.  We had:
-      struct pci_bus *pci_scan_bus_on_node(int bus, struct pci_ops *, int node)
-      struct pci_bus *pcibios_scan_root(int bus)
-      struct pci_bus *pci_scan_bus_with_sysdata(int bus)
-      void pcibios_scan_specific_bus(int bus)
-    These were all basically the same, so I kept only pcibios_scan_root().
-
-  - Get rid of mp_bus_to_node[].  This was basically a way of passing node
-    info from the AMD "native host bridg driver" (amd_bus.c) into the PCI
-    core.  It was clunky and inconsistent between x86-64 and i386.  I
-    replaced it with x86_pci_root_bus_node(), analogous to the existing
-    x86_pci_root_bus_resources().
-
-  - Remove _PXM knowledge from the PCI host bridge, IOMMU, and APIC code.
-    They really only care about the NUMA node number, not the raw _PXM
-    value.
-
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
+ drivers/net/ethernet/sun/niu.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
 
-Bjorn Helgaas (17):
-      x86/PCI: Drop pcibios_scan_root() check for bus already scanned
-      x86/PCI: Use pcibios_scan_root() instead of pci_scan_bus_with_sysdata()
-      x86/PCI: Use pcibios_scan_root() instead of pci_scan_bus_on_node()
-      x86/PCI: Merge pci_scan_bus_on_node() into pcibios_scan_root()
-      x86/PCI: Drop return value of pcibios_scan_root()
-      x86/PCI: Add x86_pci_root_bus_node() to look up NUMA node from PCI bus
-      x86/PCI: Use x86_pci_root_bus_node() instead of get_mp_bus_to_node()
-      x86/PCI: Remove mp_bus_to_node[], set_mp_bus_to_node(), get_mp_bus_to_node()
-      x86/PCI: Remove unnecessary list_empty(&pci_root_infos) check
-      x86/PCI: Use NUMA_NO_NODE, not -1, for unknown node
-      x86/PCI: Remove acpi_get_pxm() usage
-      ia64 / sba_iommu: Use NUMA_NO_NODE, not MAX_NUMNODES, for unknown node
-      ia64: Remove acpi_get_pxm() usage
-      ACPI / numa: Fix acpi_get_node() prototype
-      ACPI / numa: Simplify acpi_get_node() style
-      ACPI / numa: Make __acpi_map_pxm_to_node(), acpi_get_pxm() static
-      ACPI / numa: Use __weak, not the gcc-specific version
+diff --git a/drivers/net/ethernet/sun/niu.c b/drivers/net/ethernet/sun/niu.c
+index 8e2266e..79606f4 100644
+--- a/drivers/net/ethernet/sun/niu.c
++++ b/drivers/net/ethernet/sun/niu.c
+@@ -9041,7 +9041,7 @@ static void niu_try_msix(struct niu *np, u8 *ldg_num_map)
+ 	struct msix_entry msi_vec[NIU_NUM_LDG];
+ 	struct niu_parent *parent = np->parent;
+ 	struct pci_dev *pdev = np->pdev;
+-	int i, num_irqs, err;
++	int i, num_irqs;
+ 	u8 first_ldg;
+ 
+ 	first_ldg = (NIU_NUM_LDG / parent->num_ports) * np->port;
+@@ -9053,21 +9053,16 @@ static void niu_try_msix(struct niu *np, u8 *ldg_num_map)
+ 		    (np->port == 0 ? 3 : 1));
+ 	BUG_ON(num_irqs > (NIU_NUM_LDG / parent->num_ports));
+ 
+-retry:
+ 	for (i = 0; i < num_irqs; i++) {
+ 		msi_vec[i].vector = 0;
+ 		msi_vec[i].entry = i;
+ 	}
+ 
+-	err = pci_enable_msix(pdev, msi_vec, num_irqs);
+-	if (err < 0) {
++	num_irqs = pci_enable_msix_range(pdev, msi_vec, 1, num_irqs);
++	if (num_irqs < 0) {
+ 		np->flags &= ~NIU_FLAGS_MSIX;
+ 		return;
+ 	}
+-	if (err > 0) {
+-		num_irqs = err;
+-		goto retry;
+-	}
+ 
+ 	np->flags |= NIU_FLAGS_MSIX;
+ 	for (i = 0; i < num_irqs; i++)
+-- 
+1.7.7.6
 
-
- arch/ia64/hp/common/sba_iommu.c |   32 +++-------
- arch/ia64/include/asm/pci.h     |    2 -
- arch/ia64/kernel/acpi.c         |   28 ++-------
- arch/ia64/pci/pci.c             |   10 +--
- arch/x86/include/asm/pci.h      |    7 --
- arch/x86/include/asm/topology.h |   14 ----
- arch/x86/pci/acpi.c             |   29 ++-------
- arch/x86/pci/amd_bus.c          |   10 ---
- arch/x86/pci/bus_numa.c         |   13 +++-
- arch/x86/pci/common.c           |  128 +++++----------------------------------
- arch/x86/pci/fixup.c            |    6 +-
- arch/x86/pci/irq.c              |    6 --
- arch/x86/pci/legacy.c           |    4 -
- arch/x86/pci/numaq_32.c         |    6 +-
- arch/x86/pci/visws.c            |    4 +
- drivers/acpi/numa.c             |   16 ++---
- include/acpi/acpi_numa.h        |    1 
- include/linux/acpi.h            |    9 +--
- 18 files changed, 75 insertions(+), 250 deletions(-)
