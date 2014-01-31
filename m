@@ -1,112 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v7 00/15] PCI: Allocate 64-bit BARs above 4G when possible
-To: linux-pci@vger.kernel.org, Daniel Vetter <daniel.vetter@ffwll.ch>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, Yinghai Lu <yinghai@kernel.org>,
-	Guo Chao <yan@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
-Date: Mon, 06 Jan 2014 17:55:12 -0700
-Message-ID: <20140107005003.10786.85164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44335 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932654AbaAaPHs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:48 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Himanshu Madhani <himanshu.madhani@qlogic.com>,
+	Rajesh Borundia <rajesh.borundia@qlogic.com>,
+	Shahed Shaikh <shahed.shaikh@qlogic.com>,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 27/34] qlcnic: Cleanup qlcnic_enable_msix() return values
+Date: Fri, 31 Jan 2014 16:08:46 +0100
+Message-Id: <55f301267b3b9c1fa409dad293067e58c467cb6c.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is basically v7 of Yinghai's patch series:
-http://lkml.kernel.org/r/1387485843-17403-1-git-send-email-yinghai@kernel.org
-
-The goal is to try to put 64-bit BARs above 4G so we can preserve the
-32-bit bus address space for 32-bit BARs.
-
-There are a whole bunch of AGP updates at the beginning because some AGP
-devices have 64-bit BARs, but most of the AGP drivers read the aperture
-bus address directly from the BAR, and they only handle 32-bit BARs.
-Putting BARs above 4G would break those drivers, so we tried to fix them
-up first.  Yinghai fixed intel-gtt.c, and I made similar fixes to all
-the other AGP drivers I could find.
-
-Some of the AGP updates are related to the fact that most of the drivers
-assume the PCI bus address is the same as the CPU physical address.  For
-example, they read the bus address from the BAR, then call ioremap() on
-it.  This is wrong, because ioremap() expects a CPU physical address,
-not a bus address.  In most cases, I think AGP devices are in simple
-systems where (bus_address == CPU_physical_address), so these updates
-probably don't fix any broken systems.  I'm pretty sure there are more
-things like this that should be fixed.
-
-The important PCI changes are the last two:
-
-      PCI: Enforce bus address limits in resource allocation
-      PCI: Allocate 64-bit BARs above 4G when possible
-
-The first fixes a long-standing bug: we would never assign space to a
-32-bit BAR if the *CPU* address didn't fit in 32 bits.  But the important
-thing is the *bus* address, and that may fit in 32 bits even if the CPU
-address doesn't.
-
-The second is the one that tries to allocate space above 4G for 64-bit
-BARs.  If that fails, we fall back to allocating space anywhere.  It's
-possible this will expose other broken drivers that can't deal with
-64-bit BARs being above 4G.
-
-I kept Yinghai as the author of the patches that originated with him,
-but I reworked them substantially to try to simplify the series, so any
-bugs here are most likely my fault.  If my rework made things worse, or
-if it makes your life difficult, I will consider doing something
-different; just let me know.
-
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-Bjorn Helgaas (11):
-      PCI: Change pci_bus_region addresses to dma_addr_t
-      PCI: Add pci_bus_address() to get bus address of a BAR
-      agp: Support 64-bit APBASE
-      agp: Use pci_resource_start() to get CPU physical address for BAR
-      drm/i915: Rename gtt_bus_addr to gtt_phys_addr
-      agp/intel: Rename gtt_bus_addr to gtt_phys_addr
-      agp/intel: Use pci_bus_address() to get MMADR bus address
-      agp/intel: Use pci_bus_address() to get GTTADR bus address
-      agp/intel: Use CPU physical address, not bus address, for ioremap()
-      agp/ati: Use PCI_COMMAND instead of hard-coded 4
-      PCI: Split out bridge window override of minimum allocation address
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+index 1f79d47..3d2eb14 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+@@ -684,7 +684,7 @@ restore:
+ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
+ {
+ 	struct pci_dev *pdev = adapter->pdev;
+-	int err = -1, vector;
++	int err, vector;
+ 
+ 	if (!adapter->msix_entries) {
+ 		adapter->msix_entries = kcalloc(num_msix,
+@@ -706,7 +706,7 @@ enable_msix:
+ 			adapter->flags |= QLCNIC_MSIX_ENABLED;
+ 			adapter->ahw->num_msix = num_msix;
+ 			dev_info(&pdev->dev, "using msi-x interrupts\n");
+-			return err;
++			return 0;
+ 		} else if (err > 0) {
+ 			dev_info(&pdev->dev,
+ 				 "Unable to allocate %d MSI-X vectors, Available vectors %d\n",
+@@ -715,12 +715,12 @@ enable_msix:
+ 			if (qlcnic_82xx_check(adapter)) {
+ 				num_msix = rounddown_pow_of_two(err);
+ 				if (err < QLCNIC_82XX_MINIMUM_VECTOR)
+-					return -EIO;
++					return -ENOSPC;
+ 			} else {
+ 				num_msix = rounddown_pow_of_two(err - 1);
+ 				num_msix += 1;
+ 				if (err < QLCNIC_83XX_MINIMUM_VECTOR)
+-					return -EIO;
++					return -ENOSPC;
+ 			}
+ 
+ 			if (qlcnic_82xx_check(adapter) &&
+@@ -747,7 +747,7 @@ enable_msix:
+ 		}
+ 	}
+ 
+-	return err;
++	return -EIO;
+ }
+ 
+ static int qlcnic_82xx_calculate_msix_vector(struct qlcnic_adapter *adapter)
+-- 
+1.7.7.6
 
-Yinghai Lu (4):
-      PCI: Convert pcibios_resource_to_bus() to take a pci_bus, not a pci_dev
-      agp/intel: Support 64-bit GMADR
-      PCI: Enforce bus address limits in resource allocation
-      PCI: Allocate 64-bit BARs above 4G when possible
-
-
- arch/alpha/kernel/pci-sysfs.c       |    4 +
- arch/powerpc/kernel/pci-common.c    |    4 +
- arch/powerpc/kernel/pci_of_scan.c   |    4 +
- arch/sparc/kernel/pci.c             |    6 +-
- arch/x86/include/asm/pci.h          |    1 
- drivers/char/agp/agp.h              |    1 
- drivers/char/agp/ali-agp.c          |    4 +
- drivers/char/agp/amd-k7-agp.c       |   14 ++--
- drivers/char/agp/amd64-agp.c        |    5 -
- drivers/char/agp/ati-agp.c          |   21 +++---
- drivers/char/agp/efficeon-agp.c     |    5 +
- drivers/char/agp/generic.c          |    4 +
- drivers/char/agp/intel-agp.c        |   48 +++++--------
- drivers/char/agp/intel-agp.h        |   10 +--
- drivers/char/agp/intel-gtt.c        |   47 +++++--------
- drivers/char/agp/nvidia-agp.c       |    9 +-
- drivers/char/agp/sis-agp.c          |    5 +
- drivers/char/agp/via-agp.c          |   13 ++--
- drivers/gpu/drm/i915/i915_gem_gtt.c |    6 +-
- drivers/pci/bus.c                   |  128 +++++++++++++++++++++++++++--------
- drivers/pci/host-bridge.c           |   19 ++---
- drivers/pci/probe.c                 |   18 ++---
- drivers/pci/quirks.c                |    2 -
- drivers/pci/rom.c                   |    2 -
- drivers/pci/setup-bus.c             |   16 ++--
- drivers/pci/setup-res.c             |    2 -
- drivers/pcmcia/i82092.c             |    2 -
- drivers/pcmcia/yenta_socket.c       |    6 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c |    5 +
- drivers/video/arkfb.c               |    2 -
- drivers/video/s3fb.c                |    2 -
- drivers/video/vt8623fb.c            |    2 -
- include/linux/pci.h                 |   20 +++--
- 33 files changed, 241 insertions(+), 196 deletions(-)
