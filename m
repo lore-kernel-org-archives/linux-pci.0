@@ -1,108 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from co9ehsobe001.messaging.microsoft.com ([207.46.163.24]:43571
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751637AbaAODg1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jan 2014 22:36:27 -0500
-Message-ID: <52D60238.2040204@freescale.com>
-Date: Wed, 15 Jan 2014 11:36:24 +0800
-From: Chunhe Lan <b25806@freescale.com>
-MIME-Version: 1.0
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: Chunhe Lan <Chunhe.Lan@freescale.com>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] powerpc: dma-mapping: Return dma_direct_ops variable
- when dev == NULL
-References: <1389692656-27758-1-git-send-email-Chunhe.Lan@freescale.com> <1389694446.6933.14.camel@pasglop>
-In-Reply-To: <1389694446.6933.14.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:23897 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932617AbaAaPHe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jan 2014 10:07:34 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Amir Vadai <amirv@mellanox.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 18/34] mlx4: Use pci_enable_msix_range()
+Date: Fri, 31 Jan 2014 16:08:37 +0100
+Message-Id: <2f6674dabb90d4cbca3ef4039c3b893f2e5e9ec4.1391172839.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391172839.git.agordeev@redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/14/2014 06:14 PM, Benjamin Herrenschmidt wrote:
-> On Tue, 2014-01-14 at 17:44 +0800, Chunhe Lan wrote:
->> Without this patch, kind of below error will be dumped if
->> 'insmod ixgbevf.ko' is executed:
->>
->>      ixgbevf: Intel(R) 10 Gigabit PCI Express Virtual Function
->>               Network Driver - version 2.7.12-k
->>      ixgbevf: Copyright (c) 2009 - 2012 Intel Corporation.
->>      ixgbevf 0000:01:10.0: enabling device (0000 -> 0002)
->>      ixgbevf 0000:01:10.0: No usable DMA configuration, aborting
->>      ixgbevf: probe of 0000:01:10.0 failed with error -5
->>      ......
->>      ......
-> That's not right. The DMA ops must be set properly for the VF somewhere
-> in the arch code instead. When creating VFs, is there a hook allowing
-> the arch to fix things up ?
->
-> (Also adding linux-pci on CC)
->
-> Ben.
->
->> Signed-off-by: Chunhe Lan <Chunhe.Lan@freescale.com>
->> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> Tested-by: Chunhe Lan <Chunhe.Lan@freescale.com>
->> ---
->>   arch/powerpc/include/asm/dma-mapping.h |   13 +++++++++----
->>   1 files changed, 9 insertions(+), 4 deletions(-)
->>
->> diff --git a/arch/powerpc/include/asm/dma-mapping.h b/arch/powerpc/include/asm/dma-mapping.h
->> index e27e9ad..b8c10de 100644
->> --- a/arch/powerpc/include/asm/dma-mapping.h
->> +++ b/arch/powerpc/include/asm/dma-mapping.h
->> @@ -84,10 +84,15 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
-         I see the get_dma_ops function in 
-arch/*x86*/include/asm/dma-mapping.h as the following:
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-  32 static inline struct dma_map_ops *get_dma_ops(struct device *dev)
-  33 {
-  34 #ifndef CONFIG_X86_DEV_DMA_OPS
-  35         return dma_ops;
-  36 #else
-  37         if (unlikely(!dev) || !dev->archdata.dma_ops)
-  38                 return dma_ops;
-  39         else
-  40                 return dev->archdata.dma_ops;
-  41 #endif
-  42 }
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/net/ethernet/mellanox/mlx4/main.c |   19 ++++---------------
+ 1 files changed, 4 insertions(+), 15 deletions(-)
 
-         And also  see the get_dma_ops function in 
-arch/*arm*/include/asm/dma-mapping.h as the following:
-
-  18 static inline struct dma_map_ops *get_dma_ops(struct device *dev)
-  19 {
-  20         if (dev && dev->archdata.dma_ops)
-  21                 return dev->archdata.dma_ops;
-  22         return &arm_dma_ops;
-  23 }
-
-       Why not powerpc use this method to process dev == NULL ?
-
-Thanks,
--Chunhe
-
->>   	 * only ISA DMA device we support is the floppy and we have a hack
->>   	 * in the floppy driver directly to get a device for us.
->>   	 */
->> -	if (unlikely(dev == NULL))
->> -		return NULL;
->> -
->> -	return dev->archdata.dma_ops;
->> +	if (dev && dev->archdata.dma_ops)
->> +		return dev->archdata.dma_ops;
->> +	/*
->> +	 * In some cases (for example, use the Intel(R) 10 Gigabit PCI
->> +	 * expression Virtual Function Network Driver -- ixgbevf.ko),
->> +	 * their value of dev is the NULL. If return NULL, the driver is
->> +	 * aborting. So return dma_direct_ops variable when dev == NULL.
->> +	 */
->> +	return &dma_direct_ops;
->>   }
->>   
->>   static inline void set_dma_ops(struct device *dev, struct dma_map_ops *ops)
->
->
->
-
-
+diff --git a/drivers/net/ethernet/mellanox/mlx4/main.c b/drivers/net/ethernet/mellanox/mlx4/main.c
+index d711158..a9d1249 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/main.c
++++ b/drivers/net/ethernet/mellanox/mlx4/main.c
+@@ -1976,7 +1976,6 @@ static void mlx4_enable_msi_x(struct mlx4_dev *dev)
+ 	int nreq = min_t(int, dev->caps.num_ports *
+ 			 min_t(int, netif_get_num_default_rss_queues() + 1,
+ 			       MAX_MSIX_P_PORT) + MSIX_LEGACY_SZ, MAX_MSIX);
+-	int err;
+ 	int i;
+ 
+ 	if (msi_x) {
+@@ -1990,22 +1989,12 @@ static void mlx4_enable_msi_x(struct mlx4_dev *dev)
+ 		for (i = 0; i < nreq; ++i)
+ 			entries[i].entry = i;
+ 
+-	retry:
+-		err = pci_enable_msix(dev->pdev, entries, nreq);
+-		if (err) {
+-			/* Try again if at least 2 vectors are available */
+-			if (err > 1) {
+-				mlx4_info(dev, "Requested %d vectors, "
+-					  "but only %d MSI-X vectors available, "
+-					  "trying again\n", nreq, err);
+-				nreq = err;
+-				goto retry;
+-			}
++		nreq = pci_enable_msix_range(dev->pdev, entries, 2, nreq);
++
++		if (nreq < 0) {
+ 			kfree(entries);
+ 			goto no_msi;
+-		}
+-
+-		if (nreq <
++		} else if (nreq <
+ 		    MSIX_LEGACY_SZ + dev->caps.num_ports * MIN_MSIX_P_PORT) {
+ 			/*Working in legacy mode , all EQ's shared*/
+ 			dev->caps.comp_pool           = 0;
+-- 
+1.7.7.6
 
