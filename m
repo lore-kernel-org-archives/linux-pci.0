@@ -1,125 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 4/5][RFT] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
-Date: Tue, 28 Jan 2014 23:14:50 +0100
-Message-ID: <1615105.hL4lLzeMMQ@vostro.rjw.lan>
-In-Reply-To: <1508034.JFmpIOzjVZ@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1508034.JFmpIOzjVZ@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog125.obsmtp.com ([207.126.144.159]:41722 "EHLO
+	eu1sys200aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753837AbaAaEo7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jan 2014 23:44:59 -0500
+Date: Fri, 31 Jan 2014 10:14:46 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Viresh Kumar <viresh.linux@gmail.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH V3 7/8] pcie: SPEAr13xx: Add designware pcie support
+Message-ID: <20140131044446.GE2618@pratyush-vbox>
+References: <cover.1391077731.git.mohit.kumar@st.com>
+ <1c7f0dd04e9af55886dc74789bfcf92ce900e131.1391077731.git.mohit.kumar@st.com>
+ <201401301434.20188.arnd@arndb.de>
+ <201401301444.57541.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201401301444.57541.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Jan 30, 2014 at 09:44:57PM +0800, Arnd Bergmann wrote:
+> On Thursday 30 January 2014, Arnd Bergmann wrote:
+> > > +             pcie0: pcie@b1000000 {
+> > > +                     compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> > > +                     reg = <0xb1000000 0x4000>;
+> > > +                     interrupts = <0 68 0x4>;
+> > > +                     pcie_is_gen1 = <0>;
+> > > +                     num-lanes = <1>;
+> > > +                     phys = <&miphy0 1 0>;
+> > > +                     phy-names = "pcie-phy";
+> > > +                     #address-cells = <3>;
+> > > +                     #size-cells = <2>;
+> > > +                     device_type = "pci";
+> > > +                     ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
+> > > +                             0x81000000 0 0   0x80020000 0 0x00010000   /* downstream I/O */
+> > > +                             0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
+> > > +                     status = "disabled";
+> > > +             };
+> > 
+> > Shouldn't there be more than one interrupt? Normally each root port has
+> > four legacy IRQs, in order to support bridge devices.
+> > 
+> 
+> Sorry, my mistake: I was thinking of the interrupt map for legacy IRQs.
+> The interrupt here is used only for the integrated MSI controller, right?
 
-Use the observation that the ACPI scan handler of the device object
-in acpi_hotplug_notify_cb() can be obtained from that device object's
-handler pointer and do not pass it as data to
-acpi_install_hotplug_notify_handler() in acpi_scan_init_hotplug().
+yes.
 
-That allows the second argument of acpi_install_hotplug_notify_handler()
-to be dropped, so do it and update its callers accordingly.
+> That seems fine from the DT bindings perspective but raises two other
+> questions:
+> 
+> 1. Are you not lacking an interrupt-map property to enable legacy IntA
+>    IRQs?
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c                |   23 ++++++++++++-----------
- drivers/pci/hotplug/acpiphp_glue.c |    2 +-
- include/acpi/acpi_bus.h            |    2 +-
- 3 files changed, 14 insertions(+), 13 deletions(-)
+As current pcie-designeware driver is not supporting legacy IntA IRQs,
+so we left it.
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -487,7 +487,6 @@ static void acpi_device_hotplug(void *da
- 
- static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
- {
--	struct acpi_scan_handler *handler = data;
- 	u32 ost_code = ACPI_OST_SC_SUCCESS;
- 	struct acpi_device *adev;
- 	acpi_status status;
-@@ -503,13 +502,6 @@ static void acpi_hotplug_notify_cb(acpi_
- 
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
--		if (handler && !handler->hotplug.enabled) {
--			acpi_handle_err(handle, "Eject disabled\n");
--			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
--			goto out;
--		}
--		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
--					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
- 		break;
- 
- 	case ACPI_NOTIFY_DEVICE_WAKE:
-@@ -539,6 +531,15 @@ static void acpi_hotplug_notify_cb(acpi_
- 	if (acpi_bus_get_device(handle, &adev))
- 		goto out;
- 
-+	if (type == ACPI_NOTIFY_EJECT_REQUEST) {
-+		if (adev->handler && !adev->handler->hotplug.enabled) {
-+			acpi_handle_err(handle, "Eject disabled\n");
-+			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
-+			goto out;
-+		}
-+		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
-+					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
-+	}
- 	get_device(&adev->dev);
- 	status = acpi_hotplug_execute(acpi_device_hotplug, adev, type);
- 	if (ACPI_SUCCESS(status))
-@@ -550,10 +551,10 @@ static void acpi_hotplug_notify_cb(acpi_
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
-+void acpi_install_hotplug_notify_handler(acpi_handle handle)
- {
- 	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				    acpi_hotplug_notify_cb, data);
-+				    acpi_hotplug_notify_cb, NULL);
- }
- 
- void acpi_remove_hotplug_notify_handler(acpi_handle handle)
-@@ -2000,7 +2001,7 @@ static void acpi_scan_init_hotplug(acpi_
- 	list_for_each_entry(hwid, &pnp.ids, list) {
- 		handler = acpi_scan_match_handler(hwid->id, NULL);
- 		if (handler) {
--			acpi_install_hotplug_notify_handler(handle, handler);
-+			acpi_install_hotplug_notify_handler(handle);
- 			break;
- 		}
- 	}
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -371,7 +371,7 @@ static acpi_status register_slot(acpi_ha
- 
- 	/* install notify handler */
- 	if (!(newfunc->flags & FUNC_HAS_DCK))
--		acpi_install_hotplug_notify_handler(handle, NULL);
-+		acpi_install_hotplug_notify_handler(handle);
- 
- 	return AE_OK;
- }
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -435,7 +435,7 @@ static inline bool acpi_device_enumerate
- typedef void (*acpi_hp_callback)(void *data, u32 src);
- 
- acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
-+void acpi_install_hotplug_notify_handler(acpi_handle handle);
- void acpi_remove_hotplug_notify_handler(acpi_handle handle);
- 
- /**
+> 
+> 2. If the MSI controller is integrated in the pcie host controller,
+>    does that maintain the PCIe ordering guarantees between inbound
+>    DMA and MSI, or is it possible that the <0 68 0x4> IRQ gets
+>    raised at the CPU before the the DMA transfer becomes visible to
+>    the CPU in main memory?
 
+If the system does not guarantee it, then won't be it a bug in the
+hardware?
+In our case, there is no separate interrupt for DMA completion. (I do
+not know if other system does have DMA interrupt). We have only one
+interrupt and when it is received SW will look into main memory (MSI
+address) for MSI data. If DMA transfer is yet not complete, then SW ll
+read junk data and which will be  a bug.
+
+We have never seen any erroneous behaviour with MSI interrupt.
+
+Regards
+Pratyush
+> 
+> 	Arnd
