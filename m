@@ -1,110 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:41413 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbaBEEOV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 23:14:21 -0500
-Received: by mail-wg0-f53.google.com with SMTP id y10so13767524wgg.20
-        for <linux-pci@vger.kernel.org>; Tue, 04 Feb 2014 20:14:18 -0800 (PST)
+Received: from v094114.home.net.pl ([79.96.170.134]:57417 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932797AbaBAOYG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 09:24:06 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] Revert "PCI: Remove from bus_list and release resources in pci_release_dev()"
+Date: Sat, 01 Feb 2014 15:38:29 +0100
+Message-ID: <14676899.LOmsodapl3@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQX_AuSPq159AwDHP+n0k6FK3pS2CNttPFAJP2K-84ho1w@mail.gmail.com>
+References: <20140130131236.GW18029@intel.com> <1676758.QjUXk2223P@vostro.rjw.lan> <CAE9FiQX_AuSPq159AwDHP+n0k6FK3pS2CNttPFAJP2K-84ho1w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140131115340.GD26148@htj.dyndns.org>
-References: <CAF2xp_HgT+2zmxHTYpxRFiK-pfQKQJhJ74SJhQVER4s2ZZX0PQ@mail.gmail.com>
- <20140131115340.GD26148@htj.dyndns.org>
-From: Peter Chang <dpf@google.com>
-Date: Tue, 4 Feb 2014 20:13:58 -0800
-Message-ID: <CAF2xp_F_WeMOhffLv+tA2O8L6+8Vn=VZtNh3S4WXmEAMEQC-jw@mail.gmail.com>
-Subject: Re: PATCH: platforms: avoid queuing work if possible
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=f46d0444eb679aa20804f1a0fdfc
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---f46d0444eb679aa20804f1a0fdfc
-Content-Type: text/plain; charset=UTF-8
+On Friday, January 31, 2014 05:56:30 PM Yinghai Lu wrote:
+> On Fri, Jan 31, 2014 at 3:34 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-sorry for the delay, this got filtered into the
-check-every-once-in-while bucket.
+[...]
 
-2014-01-31 Tejun Heo <tj@kernel.org>:
-> Hello,
->
-> On Thu, Jan 30, 2014 at 05:24:16PM -0800, Peter Chang wrote:
->> 774a1221e862b343388347bac9b318767336b20b tries to avoid an expensive sync
->> by marking the current task iff it uses the async_schedule() machinery.
->
-> That wasn't an optimization.  It was a workaround for deadlock.
+> > diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> > index 4ff36bfa785e..b8c93c90daf5 100644
+> > --- a/drivers/pci/remove.c
+> > +++ b/drivers/pci/remove.c
+> > @@ -3,6 +3,20 @@
+> >  #include <linux/pci-aspm.h>
+> >  #include "pci.h"
+> >
+> > +static void pci_free_resources(struct pci_dev *dev)
+> > +{
+> > +       int i;
+> > +
+> > +       msi_remove_pci_irq_vectors(dev);
+> 
+> looks like you are in a rush. Why do you put back msi_remove_pci_irq_vectors?
 
-sorry for the mis-characterization.
+I simply did "git revert" and that's the result.
 
-> The patch description doesn't describe the reasons for the change at
-> all.  What issues have you encountered?  What are you trying to
-> achieve?
+Sorry about overlooking that, but your commit's changelog didn't mention
+removing it either.
 
-the problem is that our current user-space environment expects block
-devices to be in /sys/block after the module load completes. if the
-cross cpu worker task is marked w/ ASYNC_USED (rather than the module
-loading task), module loading completes and the async tasks are
-'racing' w/ user space.
+Updated revert follows.
 
-i fixed up the patch to just do the ASYNC_USED copying in the worker
-function (since there was some bogus-ness in the original w/
-get_cpu()). does this patch make more sense?
+Thanks,
+Rafael
 
-\p
 
---f46d0444eb679aa20804f1a0fdfc
-Content-Type: application/octet-stream;
-	name="0001-pci-copy-PF_USED_ASYNC-in-the-cross-cpu-probe-case.patch"
-Content-Disposition: attachment;
-	filename="0001-pci-copy-PF_USED_ASYNC-in-the-cross-cpu-probe-case.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hra2zn950
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: Revert "PCI: Remove from bus_list and release resources in pci_release_dev()"
 
-RnJvbSBjMTc4MzQwOGI2NDc5NTA0MDQwMzM0NWNkYmQ4NTJkOWNmZDBmNTUyIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBwZXRlciBjaGFuZyA8ZHBmQGdvb2dsZS5jb20+CkRhdGU6IFR1
-ZSwgNCBGZWIgMjAxNCAxOTo1MTowMyAtMDgwMApTdWJqZWN0OiBbUEFUQ0hdIHBjaTogY29weSBQ
-Rl9VU0VEX0FTWU5DIGluIHRoZSBjcm9zcyBjcHUgcHJvYmUgY2FzZQoKNzc0YTEyMjFlODYyYjM0
-MzM4ODM0N2JhYzliMzE4NzY3MzM2YjIwYiBhdm9pZHMgYSBkZWFkbG9jayBjb25kaXRpb24KYnkg
-bWFya2luZyB0aGUgY3VycmVudCB0YXNrIGlmZiBpdCB1c2VzIHRoZSBhc3luY19zY2hlZHVsZSgp
-IG1hY2hpbmVyeS4KaG93ZXZlciwgaWYgdGhlIHBhcnQgb2YgdGhlIGRyaXZlcidzIHByb2JlIGlz
-IGNhbGxlZCB0aHJvdWdoIGEgd29ya2VyCnRocmVhZCB0aGUgYm9va2VlcGluZyBmYWlscyB0byBt
-YXJrIHRoZSBjb3JyZWN0IHRhc2sgYXMgaGF2aW5nIHVzZWQgdGhlCmFzeW5jIG1hY2hpbmVyeS4g
-c2luY2UgdGhlIG1vZHVsZSBsb2FkaW5nIHRhc2sgaXNuJ3QgbWFya2VkIGl0IG5vIGxvbmdlcgpk
-b2VzIGFuIGFzeW5jX3N5bmNocm9uaXplX2Z1bGwoKSB3aGljaCBtZWFucyB0aGF0IHRoZXJlJ3Mg
-cmFjZSB3Lwp1c2VyLXNwYWNlIHdoaWNoIHdhcyBleHBlY3RpbmcgYmxvY2sgZGV2aWNlcyBpbiAv
-c3lzL2Jsb2NrIGFuZCB0aGUKYXN5bmMgdGFza3MuCgpUZXN0ZWQ6Ci0gY2hlY2tlZCBvbiB2ZWJt
-eTIgKGludGVsIHNhbmR5YnJpZGdlICsgZGlza3RyYXkpIHdoaWNoIGlzIHdoZXJlIHRoZQogIG9y
-aWdpbmFsIGlzc3VlIHdhcyBkaXNjb3ZlcmVkLgotIGNoZWNrZWQgb24gZmRoYTM0NyAoaW50ZWwg
-d2VzdG1lcmUgKyBtdWx0aXBsZSBkaXNrdHJheXMpIHRvIHNob3cgdGhhdAogIG5vdGhpbmcgY2hh
-bmdlZCB3aGVuIG5vdCBtYWtpbmcgYSBjcm9zcyBjcHUgY2FsbC4KClNpZ25lZC1vZmYtYnk6IHBl
-dGVyIGNoYW5nIDxkcGZAZ29vZ2xlLmNvbT4KLS0tCiBkcml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMg
-fCAxOCArKysrKysrKysrKysrKy0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCsp
-LCA0IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3BjaS1kcml2ZXIuYyBi
-L2RyaXZlcnMvcGNpL3BjaS1kcml2ZXIuYwppbmRleCAyNWYwYmM2Li45ZDdmMjk0IDEwMDY0NAot
-LS0gYS9kcml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMKKysrIGIvZHJpdmVycy9wY2kvcGNpLWRyaXZl
-ci5jCkBAIC0yNDcsNiArMjQ3LDcgQEAgc3RydWN0IGRydl9kZXZfYW5kX2lkIHsKIAlzdHJ1Y3Qg
-cGNpX2RyaXZlciAqZHJ2OwogCXN0cnVjdCBwY2lfZGV2ICpkZXY7CiAJY29uc3Qgc3RydWN0IHBj
-aV9kZXZpY2VfaWQgKmlkOworCXVuc2lnbmVkIGludCB0YXNrX2ZsYWdzOwogfTsKIAogc3RhdGlj
-IGxvbmcgbG9jYWxfcGNpX3Byb2JlKHZvaWQgKl9kZGkpCkBAIC0yNjgsOCArMjY5LDExIEBAIHN0
-YXRpYyBsb25nIGxvY2FsX3BjaV9wcm9iZSh2b2lkICpfZGRpKQogCXBtX3J1bnRpbWVfZ2V0X3N5
-bmMoZGV2KTsKIAlwY2lfZGV2LT5kcml2ZXIgPSBwY2lfZHJ2OwogCXJjID0gcGNpX2Rydi0+cHJv
-YmUocGNpX2RldiwgZGRpLT5pZCk7Ci0JaWYgKCFyYykKKwlpZiAoIXJjKSB7CisJCWlmIChjdXJy
-ZW50KQorCQkJZGRpLT50YXNrX2ZsYWdzID0gY3VycmVudC0+ZmxhZ3M7CiAJCXJldHVybiByYzsK
-Kwl9CiAJaWYgKHJjIDwgMCkgewogCQlwY2lfZGV2LT5kcml2ZXIgPSBOVUxMOwogCQlwbV9ydW50
-aW1lX3B1dF9zeW5jKGRldik7CkBAIC0yODcsNyArMjkxLDcgQEAgc3RhdGljIGludCBwY2lfY2Fs
-bF9wcm9iZShzdHJ1Y3QgcGNpX2RyaXZlciAqZHJ2LCBzdHJ1Y3QgcGNpX2RldiAqZGV2LAogCQkJ
-ICBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQpCiB7CiAJaW50IGVycm9yLCBub2RlOwot
-CXN0cnVjdCBkcnZfZGV2X2FuZF9pZCBkZGkgPSB7IGRydiwgZGV2LCBpZCB9OworCXN0cnVjdCBk
-cnZfZGV2X2FuZF9pZCBkZGkgPSB7IGRydiwgZGV2LCBpZCwgMCB9OwogCiAJLyoKIAkgKiBFeGVj
-dXRlIGRyaXZlciBpbml0aWFsaXphdGlvbiBvbiBub2RlIHdoZXJlIHRoZSBkZXZpY2UgaXMKQEAg
-LTMxNCw5ICszMTgsMTUgQEAgc3RhdGljIGludCBwY2lfY2FsbF9wcm9iZShzdHJ1Y3QgcGNpX2Ry
-aXZlciAqZHJ2LCBzdHJ1Y3QgcGNpX2RldiAqZGV2LAogCiAJCWdldF9vbmxpbmVfY3B1cygpOwog
-CQljcHUgPSBjcHVtYXNrX2FueV9hbmQoY3B1bWFza19vZl9ub2RlKG5vZGUpLCBjcHVfb25saW5l
-X21hc2spOwotCQlpZiAoY3B1IDwgbnJfY3B1X2lkcykKKwkJaWYgKGNwdSA8IG5yX2NwdV9pZHMp
-IHsKIAkJCWVycm9yID0gd29ya19vbl9jcHUoY3B1LCBsb2NhbF9wY2lfcHJvYmUsICZkZGkpOwot
-CQllbHNlCisJCQkvKiBjb3B5IG91dCBzb21lIHRhc2sgZmxhZ3MgZm9yIHRoZSBtb2R1bGUgbG9h
-ZGluZworCQkJICogY2FzZS4KKwkJCSAqLworCQkJaWYgKCFlcnJvciAmJiBjdXJyZW50KQorCQkJ
-CWN1cnJlbnQtPmZsYWdzIHw9IChkZGkudGFza19mbGFncyAmCisJCQkJCQkgICBQRl9VU0VEX0FT
-WU5DKTsKKwkJfSBlbHNlCiAJCQllcnJvciA9IGxvY2FsX3BjaV9wcm9iZSgmZGRpKTsKIAkJcHV0
-X29ubGluZV9jcHVzKCk7CiAJfSBlbHNlCi0tIAoxLjkuMC5yYzEuMTc1LmcwYjFkY2I1Cgo=
---f46d0444eb679aa20804f1a0fdfc--
+Revert commit ef83b0781a73 "PCI: Remove from bus_list and release
+resources in pci_release_dev()" that made some nasty race conditions
+become possible.  For example, if a Thunderbolt link is unplugged
+and then replugged immediately, the pci_release_dev() resulting from
+the hot-remove code path may be racing with the hot-add code path
+which after that commit causes various kinds of breakage to happen
+(up to and including a hard crash of the whole system).
+
+Moreover, the problem that commit ef83b0781a73 attempted to address
+cannot happen any more after commit 8a4c5c329de7 "PCI: Check parent
+kobject in pci_destroy_dev()", because pci_destroy_dev() will now
+return immediately if it has already been executed for the given
+device.
+
+Note, however, that the invocation of msi_remove_pci_irq_vectors()
+removed by commit ef83b0781a73 from pci_free_resources() along with
+the other changes made by it is not added back because of subsequent
+code changes depending on that modification.
+
+Fixes: ef83b0781a73 (PCI: Remove from bus_list and release resources in pci_release_dev())
+Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+---
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+---
+ drivers/pci/probe.c  |   21 ++-------------------
+ drivers/pci/remove.c |   17 +++++++++++++++++
+ 2 files changed, 19 insertions(+), 19 deletions(-)
+
+Index: linux-pm/drivers/pci/probe.c
+===================================================================
+--- linux-pm.orig/drivers/pci/probe.c
++++ linux-pm/drivers/pci/probe.c
+@@ -1208,18 +1208,6 @@ static void pci_release_capabilities(str
+ 	pci_free_cap_save_buffers(dev);
+ }
+ 
+-static void pci_free_resources(struct pci_dev *dev)
+-{
+-	int i;
+-
+-	pci_cleanup_rom(dev);
+-	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+-		struct resource *res = dev->resource + i;
+-		if (res->parent)
+-			release_resource(res);
+-	}
+-}
+-
+ /**
+  * pci_release_dev - free a pci device structure when all users of it are finished.
+  * @dev: device that's been disconnected
+@@ -1229,14 +1217,9 @@ static void pci_free_resources(struct pc
+  */
+ static void pci_release_dev(struct device *dev)
+ {
+-	struct pci_dev *pci_dev = to_pci_dev(dev);
+-
+-	down_write(&pci_bus_sem);
+-	list_del(&pci_dev->bus_list);
+-	up_write(&pci_bus_sem);
+-
+-	pci_free_resources(pci_dev);
++	struct pci_dev *pci_dev;
+ 
++	pci_dev = to_pci_dev(dev);
+ 	pci_release_capabilities(pci_dev);
+ 	pci_release_of_node(pci_dev);
+ 	pcibios_release_device(pci_dev);
+Index: linux-pm/drivers/pci/remove.c
+===================================================================
+--- linux-pm.orig/drivers/pci/remove.c
++++ linux-pm/drivers/pci/remove.c
+@@ -3,6 +3,18 @@
+ #include <linux/pci-aspm.h>
+ #include "pci.h"
+ 
++static void pci_free_resources(struct pci_dev *dev)
++{
++	int i;
++
++	pci_cleanup_rom(dev);
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *res = dev->resource + i;
++		if (res->parent)
++			release_resource(res);
++	}
++}
++
+ static void pci_stop_dev(struct pci_dev *dev)
+ {
+ 	pci_pme_active(dev, false);
+@@ -25,6 +37,11 @@ static void pci_destroy_dev(struct pci_d
+ 
+ 	device_del(&dev->dev);
+ 
++	down_write(&pci_bus_sem);
++	list_del(&dev->bus_list);
++	up_write(&pci_bus_sem);
++
++	pci_free_resources(dev);
+ 	put_device(&dev->dev);
+ }
+ 
+
