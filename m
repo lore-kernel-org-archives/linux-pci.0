@@ -1,200 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:57180 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752460AbaBYN0H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Feb 2014 08:26:07 -0500
-Message-ID: <1393334743.1282.8.camel@pasglop>
-Subject: Re: [PATCH] powerpc/pci: Use of_pci_range_parser helper in
- pci_process_bridge_OF_ranges
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Andrew Murray <amurray@embedded-bits.co.uk>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgass@google.com
-Date: Wed, 26 Feb 2014 00:25:43 +1100
-In-Reply-To: <1393309931-20405-1-git-send-email-amurray@embedded-bits.co.uk>
-References: <1393309931-20405-1-git-send-email-amurray@embedded-bits.co.uk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from v094114.home.net.pl ([79.96.170.134]:56848 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932797AbaBAOUu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 09:20:50 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: Commit ef83b0781a73f (PCI: Remove from bus_list and release resources in pci_release_dev()) broke TBT hotplug
+Date: Sat, 01 Feb 2014 15:35:14 +0100
+Message-ID: <5223287.Whp4qv3MBf@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQVm2mbZnJTJ=wJ6yQqpByZHD2+gaUvhJSZ6P13sa2Z6vg@mail.gmail.com>
+References: <20140130131236.GW18029@intel.com> <CAE9FiQU8+RRiTdsCm0v8Z46UyQ5xLSGWResVzEyHNCoWvWZjEw@mail.gmail.com> <CAE9FiQVm2mbZnJTJ=wJ6yQqpByZHD2+gaUvhJSZ6P13sa2Z6vg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-02-25 at 06:32 +0000, Andrew Murray wrote:
-> This patch updates the implementation of pci_process_bridge_OF_ranges to use
-> the of_pci_range_parser helpers.
+On Friday, January 31, 2014 07:51:49 PM Yinghai Lu wrote:
 > 
-> Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
-> ---
-> I've verified that this builds, however I have no hardware to test this.
-> ---
-
-Thanks. A cursory review looks good but I need to spend a bit more time
-making sure our various special cases are handled properly.
-
-It's tracked on patchwork so unless you have an update to the patch,
-it won't be lost, but it might take a little while before I get to
-actually merge it.
-
-Cheers,
-Ben.
-
->  arch/powerpc/kernel/pci-common.c | 88 +++++++++++++---------------------------
->  1 file changed, 29 insertions(+), 59 deletions(-)
+> --001a11c2019ad93b5d04f1503567
+> Content-Type: text/plain; charset=ISO-8859-1
 > 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index d9476c1..a05fe18 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -666,60 +666,36 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
->  void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->  				  struct device_node *dev, int primary)
+> On Fri, Jan 31, 2014 at 7:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Fri, Jan 31, 2014 at 5:49 AM, Mika Westerberg
+> > <mika.westerberg@linux.intel.com> wrote:
+> >> On Fri, Jan 31, 2014 at 02:49:21PM +0100, Rafael J. Wysocki wrote:
+> >>> > Jan 31 20:05:57 buildroot kern.debug kernel: [  439.672933] pci_bus 0000:03: busn_res: [bus 03-3a] is released
+> >>>
+> >>> OK, so my guess wasn't right.  We seem to call pci_release_dev for all of the
+> >>> devices that go away after unplug.
+> >>>
+> >>> Do I think correctly that the below doesn't happen with the Yinghai's commit
+> >>> reverted?
+> >>
+> >> Yes, with that commit reverted everything works fine.
+> >
+> > can you make it clear ?
+> >
+> > after my commit is reverted, the warning does not happen any more?
+> >
+> > Jan 31 20:06:11 buildroot kern.warn kernel: [  453.616434]
+> > ------------[ cut here ]------------
+> > Jan 31 20:06:11 buildroot kern.warn kernel: [  453.618102] WARNING:
+> > CPU: 1 PID: 956 at lib/kobject.c:244 kobject_add_internal+0x12d/
+> > 0x400()
+> 
+> Hi, Mika,
+> 
+> Can you try attached partial reverting?
+
+My mailer has mangled the patch, so the below has been copied by hand
+from patchwork:
+
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 04796c0..dd91116 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1231,10 +1231,6 @@  static void pci_release_dev(struct device *dev)
+> 
 >  {
-> -	const __be32 *ranges;
-> -	int rlen;
-> -	int pna = of_n_addr_cells(dev);
-> -	int np = pna + 5;
->  	int memno = 0;
-> -	u32 pci_space;
-> -	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
->  	struct resource *res;
-> +	struct of_pci_range range;
-> +	struct of_pci_range_parser parser;
 >  
->  	printk(KERN_INFO "PCI host bridge %s %s ranges:\n",
->  	       dev->full_name, primary ? "(primary)" : "");
->  
-> -	/* Get ranges property */
-> -	ranges = of_get_property(dev, "ranges", &rlen);
-> -	if (ranges == NULL)
-> +	/* Check for ranges property */
-> +	if (of_pci_range_parser_init(&parser, dev))
->  		return;
->  
->  	/* Parse it */
-> -	while ((rlen -= np * 4) >= 0) {
-> -		/* Read next ranges element */
-> -		pci_space = of_read_number(ranges, 1);
-> -		pci_addr = of_read_number(ranges + 1, 2);
-> -		cpu_addr = of_translate_address(dev, ranges + 3);
-> -		size = of_read_number(ranges + pna + 3, 2);
-> -		ranges += np;
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> 
+> -	down_write(&pci_bus_sem);
+> -	list_del(&pci_dev->bus_list);
+> -	up_write(&pci_bus_sem);
 > -
-> +	for_each_of_pci_range(&parser, &range) {
->  		/* If we failed translation or got a zero-sized region
->  		 * (some FW try to feed us with non sensical zero sized regions
->  		 * such as power3 which look like some kind of attempt at exposing
->  		 * the VGA memory hole)
->  		 */
-> -		if (cpu_addr == OF_BAD_ADDR || size == 0)
-> +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->  			continue;
+> 
+>  	pci_free_resources(pci_dev);
+>  	
+>  	pci_release_capabilities(pci_dev);
+> 
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 4ff36bf..c8264c4 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -25,6 +25,10 @@  static void pci_destroy_dev(struct pci_dev *dev)
+> 
+>  	device_del(&dev->dev);
+> 
+> +	down_write(&pci_bus_sem);
+> +	list_del(&dev->bus_list);
+> +	up_write(&pci_bus_sem);
+> +
+> 
+>  	put_device(&dev->dev);
 >  
-> -		/* Now consume following elements while they are contiguous */
-> -		for (; rlen >= np * sizeof(u32);
-> -		     ranges += np, rlen -= np * 4) {
-> -			if (of_read_number(ranges, 1) != pci_space)
-> -				break;
-> -			pci_next = of_read_number(ranges + 1, 2);
-> -			cpu_next = of_translate_address(dev, ranges + 3);
-> -			if (pci_next != pci_addr + size ||
-> -			    cpu_next != cpu_addr + size)
-> -				break;
-> -			size += of_read_number(ranges + pna + 3, 2);
-> -		}
-> -
->  		/* Act based on address space type */
->  		res = NULL;
-> -		switch ((pci_space >> 24) & 0x3) {
-> -		case 1:		/* PCI IO space */
-> +		switch (range.flags & IORESOURCE_TYPE_BITS) {
-> +		case IORESOURCE_IO:
->  			printk(KERN_INFO
->  			       "  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
-> -			       cpu_addr, cpu_addr + size - 1, pci_addr);
-> +			       range.cpu_addr, range.cpu_addr + range.size - 1,
-> +			       range.pci_addr);
->  
->  			/* We support only one IO range */
->  			if (hose->pci_io_size) {
-> @@ -729,11 +705,12 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->  			}
->  #ifdef CONFIG_PPC32
->  			/* On 32 bits, limit I/O space to 16MB */
-> -			if (size > 0x01000000)
-> -				size = 0x01000000;
-> +			if (range.size > 0x01000000)
-> +				range.size = 0x01000000;
->  
->  			/* 32 bits needs to map IOs here */
-> -			hose->io_base_virt = ioremap(cpu_addr, size);
-> +			hose->io_base_virt = ioremap(range.cpu_addr,
-> +						range.size);
->  
->  			/* Expect trouble if pci_addr is not 0 */
->  			if (primary)
-> @@ -743,20 +720,20 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->  			/* pci_io_size and io_base_phys always represent IO
->  			 * space starting at 0 so we factor in pci_addr
->  			 */
-> -			hose->pci_io_size = pci_addr + size;
-> -			hose->io_base_phys = cpu_addr - pci_addr;
-> +			hose->pci_io_size = range.pci_addr + range.size;
-> +			hose->io_base_phys = range.cpu_addr - range.pci_addr;
->  
->  			/* Build resource */
->  			res = &hose->io_resource;
-> -			res->flags = IORESOURCE_IO;
-> -			res->start = pci_addr;
-> +			range.cpu_addr = range.pci_addr;
->  			break;
-> -		case 2:		/* PCI Memory space */
-> -		case 3:		/* PCI 64 bits Memory space */
-> +		case IORESOURCE_MEM:
->  			printk(KERN_INFO
->  			       " MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
-> -			       cpu_addr, cpu_addr + size - 1, pci_addr,
-> -			       (pci_space & 0x40000000) ? "Prefetch" : "");
-> +			       range.cpu_addr, range.cpu_addr + range.size - 1,
-> +			       range.pci_addr,
-> +			       (range.pci_space & 0x40000000) ?
-> +			       "Prefetch" : "");
->  
->  			/* We support only 3 memory ranges */
->  			if (memno >= 3) {
-> @@ -765,28 +742,21 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->  				continue;
->  			}
->  			/* Handles ISA memory hole space here */
-> -			if (pci_addr == 0) {
-> +			if (range.pci_addr == 0) {
->  				if (primary || isa_mem_base == 0)
-> -					isa_mem_base = cpu_addr;
-> -				hose->isa_mem_phys = cpu_addr;
-> -				hose->isa_mem_size = size;
-> +					isa_mem_base = range.cpu_addr;
-> +				hose->isa_mem_phys = range.cpu_addr;
-> +				hose->isa_mem_size = range.size;
->  			}
->  
->  			/* Build resource */
-> -			hose->mem_offset[memno] = cpu_addr - pci_addr;
-> +			hose->mem_offset[memno] = range.cpu_addr -
-> +							range.pci_addr;
->  			res = &hose->mem_resources[memno++];
-> -			res->flags = IORESOURCE_MEM;
-> -			if (pci_space & 0x40000000)
-> -				res->flags |= IORESOURCE_PREFETCH;
-> -			res->start = cpu_addr;
->  			break;
->  		}
->  		if (res != NULL) {
-> -			res->name = dev->full_name;
-> -			res->end = res->start + size - 1;
-> -			res->parent = NULL;
-> -			res->sibling = NULL;
-> -			res->child = NULL;
-> +			of_pci_range_to_resource(&range, dev, res);
->  		}
->  	}
 >  }
 
+I've tried that, but it only helps partly.  The box doesn't crash any more,
+but we get resource conflicts on replug (if that happens sufficiently quickly
+after the preceding unplug).
 
+That's why I sent a full revert.
+
+Thanks!
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
