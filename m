@@ -1,74 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:44360 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753261AbaBUVME (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 16:12:04 -0500
-Received: by mail-ie0-f180.google.com with SMTP id ar20so1764651iec.39
-        for <linux-pci@vger.kernel.org>; Fri, 21 Feb 2014 13:12:03 -0800 (PST)
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:36712 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472AbaBAKaU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 05:30:20 -0500
+Received: by mail-lb0-f177.google.com with SMTP id z5so4044720lbh.8
+        for <linux-pci@vger.kernel.org>; Sat, 01 Feb 2014 02:30:17 -0800 (PST)
+Message-ID: <52ECCCB6.8010202@gmail.com>
+Date: Sat, 01 Feb 2014 14:30:14 +0400
+From: `VL <vl.homutov@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
-References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 21 Feb 2014 14:11:43 -0700
-Message-ID: <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
-Subject: Re: Architectural question regarding IOV support in Linux 3.13.4
-To: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yu Zhao <yuzhao@google.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: pci->pcie bridge issue: kernel unable to find a free I/O port
+ range.
+References: <52CBC4D1.5080706@gmail.com>	<CAErSpo7bUchKT5WN+BBq6oKn+O62gWbH+gfaruePBAYrvP7Lmw@mail.gmail.com>	<52CD2387.2030403@gmail.com>	<CAE9FiQV5r-c4ufd2SqLJk-KcoJhucmr6RszUb0LyUFtgq_a5sg@mail.gmail.com>	<52CE301E.60108@gmail.com>	<CAE9FiQWxpRMX-0vyd5hML-Hnto8H+C83dcne9FBZcN9qsmGCEw@mail.gmail.com>	<52CF7A17.60703@gmail.com>	<CAE9FiQVPtNk2LN4TVMzXX72TN8bjDTyD74y_BH05rfw=NArD3Q@mail.gmail.com>	<52D102EF.5070303@gmail.com>	<CAE9FiQU=4qABcZLJzF13aYSmzryB1=WkO+NYvs0LTj9Kt_1ajA@mail.gmail.com>	<CAA__XvTqOtfqzFAdSuUBdr-YAe5SxhUg_FPXr3xvibio_CqbXg@mail.gmail.com>	<52D6CEC6.2000901@gmail.com>	<52E9E3AB.1040805@gmail.com> <CAE9FiQVD-qx-12G3j89SRqt3hUyLaUw8XKngjkFUsLwOrKSNrA@mail.gmail.com>
+In-Reply-To: <CAE9FiQVD-qx-12G3j89SRqt3hUyLaUw8XKngjkFUsLwOrKSNrA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex, Yu]
-
-On Fri, Feb 21, 2014 at 10:45 AM, Zytaruk, Kelly <Kelly.Zytaruk@amd.com> wrote:
+On 30.01.2014 22:56, Yinghai Lu wrote:
+> On Wed, Jan 29, 2014 at 9:31 PM, `VL <vl.homutov@gmail.com> wrote:
+>> On 15.01.2014 22:09, `VL wrote:
+>>> On 15.01.2014 13:10, `VL wrote:
+>>>>> looks like the your adapter need more time to settle down?
+>>>>> Can you check if you can enable slow boot mode in BIOS setup?
+>>>> yes, probably. I'll try to repeat steps with disabled fast boot.
+>>> no, this is not the case. I've disabled all fast boot in BIOS and nothing
+>>> changed in logs.
+>>>
+>>> so this is the best of what we have:
+>>> http://inspert.ru/pci/dmesg-earlydump.txt
+>>>
+>>> I was also able to reproduce the issue without pci=realloc. I have
+>>> disabled
+>>> all builtin devices on motherboard (unused controllers, NICs and audio).
+>>> Looks like in this conditions kernel was able to allocate some resource
+>>> and hang during snd_ice1712 driver load.
+>>>
+>>> Attached is the photo of boot with this situation.
+>>> Unfortunately, since NICs are disabled and there is no serial onboard,
+>>> I cannot provide full log.
+>>>
+>> up: any concluision/suggestions?
+> I don't know why the io bar of 07:00.0 can not be updated.
+> also it's weird that 07:0.0 is not showing up in earlydump.
 >
-> I am working with SR-IOV and I have a question regarding the function
-> sriov_init() in ../drivers/pci/iov.c (linux versions 3.4.9 and 3.13.4)
+> anyway please try attached patch to see if it could make any difference.
 >
-> In sriov_init() the code first checks whether the PF is a Root complex
->  endpoint (0x9) or an Express Endpoint (0x0) as shown in the code
->  snippet below.  If it is neither it returns the No device error.
+> Thanks
 >
-> static int sriov_init(struct pci_dev *dev, int pos)
-> {
->          int i;
->          int rc;
->          int nres;
->          u32 pgsz;
->          u16 ctrl, total, offset, stride;
->          struct pci_sriov *iov;
->          struct resource *res;
->          struct pci_dev *pdev;
->
->        if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
->              pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
->                  return -ENODEV;
->
-> My question is why PCI_EXP_TYPE_LEG_END (0x1) is omitted as being a
->  valid endpoint.  By excluding Legacy endpoints it fails enabling
->  SR-IOV on a VGA PF.
->
-> Is there a design/specification reason why legacy was excluded or was
->  it just an assumption that VGA would never support SR-IOV?
->
-> If there is no valid reason to exclude PCI_EXP_TYPE_LEG_END, I would
->  like to discuss having it included as a valid endpoint for SR-IOV.
-
-Good question.  It looks like it's been that way since the beginning
-[1], but I don't know why.  I don't see any restriction in the spec
-about SR-IOV and legacy endpoints.
-
-I also don't know whether VGA is an issue.  There are some legacy
-addressing issues for [mem 0xa0000-0xbffff] and [io 0x3b0-0x3bb] and
-[io 0x3c0-0x3df].  For example, when a bridge has its VGA Enable bit
-set, it positively decodes [mem 0xa0000-0xbffff] even if that range
-isn't included in one of the bridge windows.  I don't know whether a
-VGA device is similarly allowed to decode that range even if it's not
-in a BAR.  If it is, I could imagine issues if enabling SR-IOV created
-several VGA VFs.
-
-Bjorn
-
-[1] http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=d1b054da8f599905f3c18a218961dcf17f9d5f13
+> Yinghai
+thank you, I'll try the patch and report results.
