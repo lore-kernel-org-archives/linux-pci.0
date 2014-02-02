@@ -1,410 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V2 16/17] iommu/vt-d, PCI: unify the way to process DMAR device scope array
-Date: Wed, 19 Feb 2014 14:07:36 +0800
-Message-Id: <1392790057-32434-17-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Robert Moore <robert.moore@intel.com>
+Subject: [PATCH v3 0/7] ACPI / hotplug / PCI: Consolidation of ACPIPHP with ACPI core device hotplug
+Date: Sun, 02 Feb 2014 18:11:19 +0100
+Message-ID: <5157096.hCmU2aoKCT@vostro.rjw.lan>
+In-Reply-To: <1519631.YS65c9Af2C@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1693151.2qrLZHyp0o@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we have a PCI bus notification based mechanism to update DMAR
-device scope array, we could extend the mechanism to support boot
-time initialization too, which will help to unify and simplify
-the implementation.
+On Sunday, February 02, 2014 01:52:26 AM Rafael J. Wysocki wrote:
+> On Wednesday, January 29, 2014 12:57:06 AM Rafael J. Wysocki wrote:
+> > On Tuesday, January 28, 2014 11:10:30 PM Rafael J. Wysocki wrote:
+> > > Hi All,
+> > > 
+> > > It looks like there's time for more adventurous stuff. :-)
+> > > 
+> > > The following series is on top of the one I sent on Sunday:
+> > > 
+> > > https://lkml.org/lkml/2014/1/26/191
+> > > 
+> > > The final outcome of the patches below is that all ACPI hotplug notifications
+> > > for PCI devices and for core system things like CPU, memory, PCI roots etc.,
+> > > will be dispatched from acpi_bus_notify() and it is not necessary to install a
+> > > separate hotplug notify handler for each device any more.
+> > > 
+> > > [1/5] Attach ACPIPHP hotplug contexts to struct acpi_device objects.
+> > > [2/5] Introduce wrappers for installing and removing hotplug notify handlers
+> > >       (those wrappers go away later on, but they are useful for separating
+> > >        changes).
+> > > [3/5] Consolidate ACPI hotplug signaling for PCI and ACPI core.
+> > > [4/5] Simplify notify handle registration wrapper.
+> > > [5/5] Dispatch ACPI hotplug notifications for "core" devices and PCI from acpi_bus_notify().
+> > 
+> > Unfortunately, I realized that patches [3-5/5] were buggy.  The bugs were
+> > kind of subtle and might not be easy to reproduce, but they were bugs anyway. :-)
+> > 
+> > A respin of the whole series follows.
+> 
+> After the Mika's testing it turned out that they were more buggy than I had
+> though.  Oh well.
+> 
+> The following patchset is a reworked version of the previous one.  Functionality-wise
+> the final result should be very similar, but not exactly the same.
+> 
+> [1/6] Fix a theoretical race condition in acpi_hotplug_notify_cb().
+> [2/6] Move the hotplug context lock definition to the ACPI core (from ACPIPHP).
+> [3/6] Consolidate ACPI hotplug signaling for PCI and ACPI core (this is a combination
+>       of patches [1-3/5] from the previous series).
+> [4/6] Rework the handling of eject requests in the ACPI core.
+> [5/6] Simplify a routine for installing hotplug notify handlers.
+> [6/6] Dispatch ACPI hotplug notifications for "core" devices and PCI from acpi_bus_notify().
+> 
+> This is on top of https://lkml.org/lkml/2014/2/1/123 which in turn is on top of
+> the current mainline.
+> 
+> For the adventurous all this stuff is on the test-next branch of linux-pm.git.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c        |  163 ++++++++++++-------------------------------
- drivers/iommu/intel-iommu.c |   71 +++++--------------
- include/linux/dmar.h        |    5 --
- 3 files changed, 61 insertions(+), 178 deletions(-)
+As stated in the message at http://marc.info/?l=linux-acpi&m=139135963030012&w=4 ,
+patch [1/6] was actaully wrong and the whole patchset had to be reworked for that
+reason.  What follows is an entirely new version:
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index bf6bfd1..b19f9f4 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -60,6 +60,7 @@ LIST_HEAD(dmar_drhd_units);
- 
- struct acpi_table_header * __initdata dmar_tbl;
- static acpi_size dmar_tbl_size;
-+static int dmar_dev_scope_status = 1;
- 
- static int alloc_iommu(struct dmar_drhd_unit *drhd);
- static void free_iommu(struct intel_iommu *iommu);
-@@ -76,58 +77,6 @@ static void __init dmar_register_drhd_unit(struct dmar_drhd_unit *drhd)
- 		list_add_rcu(&drhd->list, &dmar_drhd_units);
- }
- 
--static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
--					   struct pci_dev __rcu **dev, u16 segment)
--{
--	struct pci_bus *bus;
--	struct pci_dev *pdev = NULL;
--	struct acpi_dmar_pci_path *path;
--	int count;
--
--	bus = pci_find_bus(segment, scope->bus);
--	path = (struct acpi_dmar_pci_path *)(scope + 1);
--	count = (scope->length - sizeof(struct acpi_dmar_device_scope))
--		/ sizeof(struct acpi_dmar_pci_path);
--
--	while (count) {
--		if (pdev)
--			pci_dev_put(pdev);
--		/*
--		 * Some BIOSes list non-exist devices in DMAR table, just
--		 * ignore it
--		 */
--		if (!bus) {
--			pr_warn("Device scope bus [%d] not found\n", scope->bus);
--			break;
--		}
--		pdev = pci_get_slot(bus, PCI_DEVFN(path->device, path->function));
--		if (!pdev) {
--			/* warning will be printed below */
--			break;
--		}
--		path ++;
--		count --;
--		bus = pdev->subordinate;
--	}
--	if (!pdev) {
--		pr_warn("Device scope device [%04x:%02x:%02x.%02x] not found\n",
--			segment, scope->bus, path->device, path->function);
--		return 0;
--	}
--	if ((scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT && \
--			pdev->subordinate) || (scope->entry_type == \
--			ACPI_DMAR_SCOPE_TYPE_BRIDGE && !pdev->subordinate)) {
--		pci_dev_put(pdev);
--		pr_warn("Device scope type does not match for %s\n",
--			pci_name(pdev));
--		return -EINVAL;
--	}
--
--	rcu_assign_pointer(*dev, pdev);
--
--	return 0;
--}
--
- void *dmar_alloc_dev_scope(void *start, void *end, int *cnt)
- {
- 	struct acpi_dmar_device_scope *scope;
-@@ -150,35 +99,6 @@ void *dmar_alloc_dev_scope(void *start, void *end, int *cnt)
- 	return kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
- }
- 
--int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
--				struct pci_dev __rcu ***devices, u16 segment)
--{
--	struct acpi_dmar_device_scope *scope;
--	int index, ret;
--
--	*devices = dmar_alloc_dev_scope(start, end, cnt);
--	if (*cnt == 0)
--		return 0;
--	else if (!*devices)
--		return -ENOMEM;
--
--	for (index = 0; start < end; start += scope->length) {
--		scope = start;
--		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT ||
--		    scope->entry_type == ACPI_DMAR_SCOPE_TYPE_BRIDGE) {
--			ret = dmar_parse_one_dev_scope(scope,
--				&(*devices)[index], segment);
--			if (ret) {
--				dmar_free_dev_scope(devices, cnt);
--				return ret;
--			}
--			index ++;
--		}
--	}
--
--	return 0;
--}
--
- void dmar_free_dev_scope(struct pci_dev __rcu ***devices, int *cnt)
- {
- 	int i;
-@@ -220,6 +140,8 @@ dmar_alloc_pci_notify_info(struct pci_dev *dev, unsigned long event)
- 		if (!info) {
- 			pr_warn("Out of memory when allocating notify_info "
- 				"for %s.\n", pci_name(dev));
-+			if (dmar_dev_scope_status == 0)
-+				dmar_dev_scope_status = -ENOMEM;
- 			return NULL;
- 		}
- 	}
-@@ -349,6 +271,8 @@ static int dmar_pci_bus_add_dev(struct dmar_pci_notify_info *info)
- 	}
- 	if (ret >= 0)
- 		ret = dmar_iommu_notify_scope_dev(info);
-+	if (ret < 0 && dmar_dev_scope_status == 0)
-+		dmar_dev_scope_status = ret;
- 
- 	return ret;
- }
-@@ -418,9 +342,21 @@ dmar_parse_one_drhd(struct acpi_dmar_header *header)
- 	dmaru->reg_base_addr = drhd->address;
- 	dmaru->segment = drhd->segment;
- 	dmaru->include_all = drhd->flags & 0x1; /* BIT0: INCLUDE_ALL */
-+	if (!dmaru->include_all) {
-+		dmaru->devices = dmar_alloc_dev_scope((void *)(drhd + 1),
-+					((void *)drhd) + drhd->header.length,
-+					&dmaru->devices_cnt);
-+		if (dmaru->devices_cnt && dmaru->devices == NULL) {
-+			kfree(dmaru);
-+			return -ENOMEM;
-+		}
-+	}
- 
- 	ret = alloc_iommu(dmaru);
- 	if (ret) {
-+		if (!dmaru->include_all)
-+			dmar_free_dev_scope(&dmaru->devices,
-+					    &dmaru->devices_cnt);
- 		kfree(dmaru);
- 		return ret;
- 	}
-@@ -437,21 +373,6 @@ static void dmar_free_drhd(struct dmar_drhd_unit *dmaru)
- 	kfree(dmaru);
- }
- 
--static int __init dmar_parse_dev(struct dmar_drhd_unit *dmaru)
--{
--	struct acpi_dmar_hardware_unit *drhd;
--
--	drhd = (struct acpi_dmar_hardware_unit *) dmaru->hdr;
--
--	if (dmaru->include_all)
--		return 0;
--
--	return dmar_parse_dev_scope((void *)(drhd + 1),
--				    ((void *)drhd) + drhd->header.length,
--				    &dmaru->devices_cnt, &dmaru->devices,
--				    drhd->segment);
--}
--
- #ifdef CONFIG_ACPI_NUMA
- static int __init
- dmar_parse_one_rhsa(struct acpi_dmar_header *header)
-@@ -665,34 +586,35 @@ out:
- 
- int __init dmar_dev_scope_init(void)
- {
--	static int dmar_dev_scope_initialized;
--	struct dmar_drhd_unit *drhd;
--	int ret = -ENODEV;
-+	struct pci_dev *dev = NULL;
-+	struct dmar_pci_notify_info *info;
- 
--	if (dmar_dev_scope_initialized)
--		return dmar_dev_scope_initialized;
-+	if (dmar_dev_scope_status != 1)
-+		return dmar_dev_scope_status;
- 
--	if (list_empty(&dmar_drhd_units))
--		goto fail;
-+	if (list_empty(&dmar_drhd_units)) {
-+		dmar_dev_scope_status = -ENODEV;
-+	} else {
-+		dmar_dev_scope_status = 0;
-+
-+		for_each_pci_dev(dev) {
-+			if (dev->is_virtfn)
-+				continue;
-+
-+			info = dmar_alloc_pci_notify_info(dev,
-+					BUS_NOTIFY_ADD_DEVICE);
-+			if (!info) {
-+				return dmar_dev_scope_status;
-+			} else {
-+				dmar_pci_bus_add_dev(info);
-+				dmar_free_pci_notify_info(info);
-+			}
-+		}
- 
--	for_each_drhd_unit(drhd) {
--		ret = dmar_parse_dev(drhd);
--		if (ret)
--			goto fail;
-+		bus_register_notifier(&pci_bus_type, &dmar_pci_bus_nb);
- 	}
- 
--	ret = dmar_parse_rmrr_atsr_dev();
--	if (ret)
--		goto fail;
--
--	bus_register_notifier(&pci_bus_type, &dmar_pci_bus_nb);
--
--	dmar_dev_scope_initialized = 1;
--	return 0;
--
--fail:
--	dmar_dev_scope_initialized = ret;
--	return ret;
-+	return dmar_dev_scope_status;
- }
- 
- 
-@@ -1617,7 +1539,8 @@ static int __init dmar_free_unused_resources(void)
- 	if (irq_remapping_enabled || intel_iommu_enabled)
- 		return 0;
- 
--	bus_unregister_notifier(&pci_bus_type, &dmar_pci_bus_nb);
-+	if (dmar_dev_scope_status != 1 && !list_empty(&dmar_drhd_units))
-+		bus_unregister_notifier(&pci_bus_type, &dmar_pci_bus_nb);
- 
- 	down_write(&dmar_global_lock);
- 	list_for_each_entry_safe(dmaru, dmaru_n, &dmar_drhd_units, list) {
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index d9c0dc5..dd576c0 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3473,11 +3473,6 @@ static void __init init_iommu_pm_ops(void)
- static inline void init_iommu_pm_ops(void) {}
- #endif	/* CONFIG_PM */
- 
--static void __init dmar_register_rmrr_unit(struct dmar_rmrr_unit *rmrr)
--{
--	list_add(&rmrr->list, &dmar_rmrr_units);
--}
--
- 
- int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header)
- {
-@@ -3492,21 +3487,17 @@ int __init dmar_parse_one_rmrr(struct acpi_dmar_header *header)
- 	rmrr = (struct acpi_dmar_reserved_memory *)header;
- 	rmrru->base_address = rmrr->base_address;
- 	rmrru->end_address = rmrr->end_address;
-+	rmrru->devices = dmar_alloc_dev_scope((void *)(rmrr + 1),
-+				((void *)rmrr) + rmrr->header.length,
-+				&rmrru->devices_cnt);
-+	if (rmrru->devices_cnt && rmrru->devices == NULL) {
-+		kfree(rmrru);
-+		return -ENOMEM;
-+	}
- 
--	dmar_register_rmrr_unit(rmrru);
--	return 0;
--}
-+	list_add(&rmrru->list, &dmar_rmrr_units);
- 
--static int __init
--rmrr_parse_dev(struct dmar_rmrr_unit *rmrru)
--{
--	struct acpi_dmar_reserved_memory *rmrr;
--
--	rmrr = (struct acpi_dmar_reserved_memory *) rmrru->hdr;
--	return dmar_parse_dev_scope((void *)(rmrr + 1),
--				    ((void *)rmrr) + rmrr->header.length,
--				    &rmrru->devices_cnt, &rmrru->devices,
--				    rmrr->segment);
-+	return 0;
- }
- 
- int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr)
-@@ -3521,26 +3512,21 @@ int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr)
- 
- 	atsru->hdr = hdr;
- 	atsru->include_all = atsr->flags & 0x1;
-+	if (!atsru->include_all) {
-+		atsru->devices = dmar_alloc_dev_scope((void *)(atsr + 1),
-+				(void *)atsr + atsr->header.length,
-+				&atsru->devices_cnt);
-+		if (atsru->devices_cnt && atsru->devices == NULL) {
-+			kfree(atsru);
-+			return -ENOMEM;
-+		}
-+	}
- 
- 	list_add_rcu(&atsru->list, &dmar_atsr_units);
- 
- 	return 0;
- }
- 
--static int __init atsr_parse_dev(struct dmar_atsr_unit *atsru)
--{
--	struct acpi_dmar_atsr *atsr;
--
--	if (atsru->include_all)
--		return 0;
--
--	atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
--	return dmar_parse_dev_scope((void *)(atsr + 1),
--				    (void *)atsr + atsr->header.length,
--				    &atsru->devices_cnt, &atsru->devices,
--				    atsr->segment);
--}
--
- static void intel_iommu_free_atsr(struct dmar_atsr_unit *atsru)
- {
- 	dmar_free_dev_scope(&atsru->devices, &atsru->devices_cnt);
-@@ -3604,27 +3590,6 @@ out:
- 	return ret;
- }
- 
--int __init dmar_parse_rmrr_atsr_dev(void)
--{
--	struct dmar_rmrr_unit *rmrr;
--	struct dmar_atsr_unit *atsr;
--	int ret;
--
--	list_for_each_entry(rmrr, &dmar_rmrr_units, list) {
--		ret = rmrr_parse_dev(rmrr);
--		if (ret)
--			return ret;
--	}
--
--	list_for_each_entry_rcu(atsr, &dmar_atsr_units, list) {
--		ret = atsr_parse_dev(atsr);
--		if (ret)
--			return ret;
--	}
--
--	return 0;
--}
--
- int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
- 	int ret = 0;
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 4e19643..0a92e4d 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -173,7 +173,6 @@ extern int arch_setup_dmar_msi(unsigned int irq);
- 
- #ifdef CONFIG_INTEL_IOMMU
- extern int iommu_detected, no_iommu;
--extern int dmar_parse_rmrr_atsr_dev(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
- extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
-@@ -188,10 +187,6 @@ static inline int dmar_parse_one_atsr(struct acpi_dmar_header *header)
- {
- 	return 0;
- }
--static inline int dmar_parse_rmrr_atsr_dev(void)
--{
--	return 0;
--}
- static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
- {
- 	return 0;
+[1/7] Add a new function to ACPICA allowing a callback to be executed under the
+      namespace mutex after calling acpi_ns_get_attached_data().
+
+[2/7] Use the new ACPICA's function to fix a couple of potential races related
+      to ACPI notifies.
+
+[3/7] Same as [2/6] above.
+[4/7] Same as [3/6] above, rebased.
+[5/7] Same as [4/6] above.
+[6/7] Same as [5/6] above.
+[7/7] Dispatch ACPI hotplug notifications for "core" devices and PCI from
+      acpi_bus_notify().  This actually is different from [6/6] above, although
+      it serves the same purpose.
+
+Thanks!
+
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
