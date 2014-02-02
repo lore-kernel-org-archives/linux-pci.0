@@ -1,78 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:21265 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471AbaBOA5i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 19:57:38 -0500
-Message-ID: <52FEBA62.1080702@huawei.com>
-Date: Sat, 15 Feb 2014 08:52:50 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 3/13] ACPI / hotplug / PCI: Simplify disable_slot()
+Date: Sun, 02 Feb 2014 01:23:30 +0100
+Message-ID: <1662988.VQzBl3dffR@vostro.rjw.lan>
+In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Russell King <linux@arm.linux.org.uk>,
-	David Airlie <airlied@linux.ie>,
-	<dri-devel@lists.freedesktop.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	<linux-pcmcia@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH 1/6] PCI,acpiphp: Use list_for_each_entry() for bus traversal
-References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com> <20140214182316.GB31093@google.com>
-In-Reply-To: <20140214182316.GB31093@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/2/15 2:23, Bjorn Helgaas wrote:
-> On Thu, Feb 13, 2014 at 09:13:58PM +0800, Yijing Wang wrote:
->> Replace list_for_each() + pci_bus_b() with the simpler
->> list_for_each_entry().
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> 
-> I applied all six of these (please include a 0/6 cover letter in the
-> future; that's a nice place to note that I applied things) to
-> pci/list-for-each-entry for v3.15, thanks!
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thanks, I will add cover letter in the next time, sorry.
+After recent PCI core changes related to the rescan/remove locking,
+the ACPIPHP's disable_slot() function is only called under the
+general PCI rescan/remove lock, so it doesn't have to use
+dev_in_slot() any more to avoid race conditions.  Make it simply
+walk the devices on the bus and drop the ones in the slot being
+disabled and drop dev_in_slot() which has no more users.
 
-> 
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c |    6 +++---
->>  1 files changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index cd929ae..aee6a0a 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -450,7 +450,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->>   */
->>  static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
->>  {
->> -	struct list_head *tmp;
->> +	struct pci_bus *tmp;
->>  	unsigned char max, n;
->>  
->>  	/*
->> @@ -463,8 +463,8 @@ static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
->>  	 */
->>  	max = bus->busn_res.start;
->>  
->> -	list_for_each(tmp, &bus->children) {
->> -		n = pci_bus_max_busnr(pci_bus_b(tmp));
->> +	list_for_each_entry(tmp, &bus->children, node) {
->> +		n = pci_bus_max_busnr(tmp);
->>  		if (n > max)
->>  			max = n;
->>  	}
->> -- 
->> 1.7.1
->>
->>
-> 
-> 
+Moreover, to avoid problems described in the changelog of commit
+29ed1f29b68a (PCI: pciehp: Fix null pointer deref when hot-removing
+SR-IOV device), make disable_slot() carry out the list walk in
+reverse order.
 
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   28 +++++-----------------------
+ 1 file changed, 5 insertions(+), 23 deletions(-)
 
--- 
-Thanks!
-Yijing
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -604,32 +604,15 @@ static void __ref enable_slot(struct acp
+ 	}
+ }
+ 
+-/* return first device in slot, acquiring a reference on it */
+-static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
+-{
+-	struct pci_bus *bus = slot->bus;
+-	struct pci_dev *dev;
+-	struct pci_dev *ret = NULL;
+-
+-	down_read(&pci_bus_sem);
+-	list_for_each_entry(dev, &bus->devices, bus_list)
+-		if (PCI_SLOT(dev->devfn) == slot->device) {
+-			ret = pci_dev_get(dev);
+-			break;
+-		}
+-	up_read(&pci_bus_sem);
+-
+-	return ret;
+-}
+-
+ /**
+  * disable_slot - disable a slot
+  * @slot: ACPI PHP slot
+  */
+ static void disable_slot(struct acpiphp_slot *slot)
+ {
++	struct pci_bus *bus = slot->bus;
++	struct pci_dev *dev, *prev;
+ 	struct acpiphp_func *func;
+-	struct pci_dev *pdev;
+ 
+ 	/*
+ 	 * enable_slot() enumerates all functions in this device via
+@@ -637,10 +620,9 @@ static void disable_slot(struct acpiphp_
+ 	 * methods (_EJ0, etc.) or not.  Therefore, we remove all functions
+ 	 * here.
+ 	 */
+-	while ((pdev = dev_in_slot(slot))) {
+-		pci_stop_and_remove_bus_device(pdev);
+-		pci_dev_put(pdev);
+-	}
++	list_for_each_entry_safe_reverse(dev, prev, &bus->devices, bus_list)
++		if (PCI_SLOT(dev->devfn) == slot->device)
++			pci_stop_and_remove_bus_device(dev);
+ 
+ 	list_for_each_entry(func, &slot->funcs, sibling)
+ 		acpiphp_bus_trim(func_to_handle(func));
 
