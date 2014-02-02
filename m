@@ -1,100 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:51447 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753690AbaBNU0w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 15:26:52 -0500
-Received: by mail-oa0-f54.google.com with SMTP id i4so15324590oah.27
-        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 12:26:52 -0800 (PST)
-Date: Fri, 14 Feb 2014 13:26:43 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
-	linux-ia64@vger.kernel.org
-Subject: Re: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card
- other than the primary prevents it from reading it's own rom. It will get
- the content of the shadowrom at C000 instead, which is of the primary VGA
- card and the driver of the secondary card will bail out.
-Message-ID: <20140214202643.GF31093@google.com>
-References: <20140130000831.GJ16825@google.com>
- <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
- <20140203145205.GB2992@phenom.dumpdata.com>
- <939539486.20140213104824@eikelenboom.it>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 12/13] ACPI / hotplug / PCI: Use acpi_handle_debug() in hotplug_event()
+Date: Sun, 02 Feb 2014 01:31:04 +0100
+Message-ID: <6471909.WrxDdSLtfn@vostro.rjw.lan>
+In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <939539486.20140213104824@eikelenboom.it>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 10:48:24AM +0100, Sander Eikelenboom wrote:
-> Hi Bjorn,
-> 
-> I have given it another email and another week, but without gaining any reviewed or acked-by's.
-> It seems the only way forward is to shovel it in linux-next earlier, give it a good soak and see if
-> anyone starts to squeal .. or that everything seems to be ok :-)
-> 
-> Would you need a v3 with the acked and reviewed-by from Konrad for x86 in it ?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-No need, I applied this to my pci/misc branch for v3.15.
+Make hotplug_event() use acpi_handle_debug() instead of an open-coded
+debug message printing and clean up the messages printed by it.
 
-Tony, let me know if you have any issues with this.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-Bjorn
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -794,9 +794,6 @@ static void hotplug_event(acpi_handle ha
+ 	struct acpiphp_func *func = &context->func;
+ 	struct acpiphp_slot *slot = func->slot;
+ 	struct acpiphp_bridge *bridge;
+-	char objname[64];
+-	struct acpi_buffer buffer = { .length = sizeof(objname),
+-				      .pointer = objname };
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+ 	bridge = context->bridge;
+@@ -806,14 +803,11 @@ static void hotplug_event(acpi_handle ha
+ 	mutex_unlock(&acpiphp_context_lock);
+ 
+ 	pci_lock_rescan_remove();
+-	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		/* bus re-enumerate */
+-		pr_debug("%s: Bus check notify on %s\n", __func__, objname);
+-		pr_debug("%s: re-enumerating slots under %s\n",
+-			 __func__, objname);
++		acpi_handle_debug(handle, "Bus check in %s()\n", __func__);
+ 		if (bridge)
+ 			acpiphp_check_bridge(bridge);
+ 		else if (!(slot->flags & SLOT_IS_GOING_AWAY))
+@@ -823,7 +817,7 @@ static void hotplug_event(acpi_handle ha
+ 
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+ 		/* device check */
+-		pr_debug("%s: Device check notify on %s\n", __func__, objname);
++		acpi_handle_debug(handle, "Device check in %s()\n", __func__);
+ 		if (bridge) {
+ 			acpiphp_check_bridge(bridge);
+ 		} else if (!(slot->flags & SLOT_IS_GOING_AWAY)) {
+@@ -838,7 +832,7 @@ static void hotplug_event(acpi_handle ha
+ 
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		/* request device eject */
+-		pr_debug("%s: Device eject notify on %s\n", __func__, objname);
++		acpi_handle_debug(handle, "Eject request in %s()\n", __func__);
+ 		acpiphp_disable_and_eject_slot(slot);
+ 		break;
+ 	}
 
-> Monday, February 3, 2014, 3:52:05 PM, you wrote:
-> 
-> > On Fri, Jan 31, 2014 at 10:28:22AM +0100, Sander Eikelenboom wrote:
-> >> Hi Bjorn / Tony,
-> >> 
-> >> I fixed up ia64 as well and brought it inline again with the x86 code,
-> >> but i don't have a ia64 machine, so that part is untested.
-> >> Perhaps Tony is able to review/test it ?
-> >> 
-> >> Sander
-> >> 
-> >> 
-> >> 
-> >> Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary
-> >> prevents it from reading it's own rom. It will get the content of the shadowrom
-> >> at C000 instead, which is of the primary VGA card and the driver of the
-> >> secondary card will bail out.
-> >> 
-> >> Fix this by checking if the arch code or vga-arbitration has already
-> >> determined the vga_default_device, if so only apply the fix to this
-> >> primary video device and let the comment reflect this.
-> >> 
-> >> v2:
-> >>     - Fix pci_fixup_video both in x86 and ia64
-> >> 
-> >> 
-> >> Sander Eikelenboom (1):
-> >>   Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the
-> >>     primary     prevents it from reading it's own rom. It will get the
-> >>     content of the shadowrom     at C000 instead, which is of the
-> >>     primary VGA card and the driver of the     secondary card will bail
-> >>     out.
-> 
-> > Your editor mutilated your subject line. It ought to have been just
-> > one line.
-> 
-> > Anyhow, you can also add 'Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com'
-> > on the patch for the x86 part.
-> 
-> > The ia64 "looks" OK to me, but my ia64 box won't boot v3.11 or later
-> > so I can't give it a 'Tested-by' yet.
-> 
-> >> 
-> >>  arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
-> >>  arch/x86/pci/fixup.c  |   18 ++++++++++--------
-> >>  2 files changed, 23 insertions(+), 19 deletions(-)
-> >> 
-> >> -- 
-> >> 1.7.10.4
-> >> 
-> 
-> 
