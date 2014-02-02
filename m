@@ -1,52 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2lp0241.outbound.protection.outlook.com ([207.46.163.241]:35316
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933102AbaBAO2S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 1 Feb 2014 09:28:18 -0500
-Message-ID: <52ED010E.80500@myricom.com>
-Date: Sat, 1 Feb 2014 23:13:34 +0900
-From: Hyong-Youb Kim <hyong-youb.kim@myricom.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:59233 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754331AbaBBASQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 19:18:16 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 13/13] ACPI / hotplug: Do not pass ACPI handles to ACPI dock operations
+Date: Sun, 02 Feb 2014 01:31:48 +0100
+Message-ID: <5610827.AznebXRq6q@vostro.rjw.lan>
+In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	<linux-kernel@vger.kernel.org>
-CC: Hyong-Youb Kim <hykim@myri.com>, <netdev@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 20/34] myri10ge: Use pci_enable_msix_range()
-References: <cover.1391172839.git.agordeev@redhat.com> <1253b3c920637ab6bb987defb88d1698ac1e4851.1391172839.git.agordeev@redhat.com> <52EBF885.30309@cogentembedded.com>
-In-Reply-To: <52EBF885.30309@cogentembedded.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On 2/1/2014 4:24 AM, Sergei Shtylyov wrote:
-> Hello.
->
-> On 01/31/2014 06:08 PM, Alexander Gordeev wrote:
->
-[...]
->> +        if (status < 0)
->> +            goto disable_msix;
->
->     Hm, if enabling MSI failed, we don't need to disable it, right? So,
-> perhaps the label should be renamed?
->
+None of the existing users of struct acpi_dock_ops actually needs the
+first argument of its member functions, so redefine those functions
+to take only two arguments, the event type and data pointer, and
+update the users of struct acpi_dock_ops accordingly.
 
-The code following disable_msix does not call pci_disable_msix().  It 
-frees the allocated vector buffer and loads the firmware that uses a 
-single interrupt vector.  So, it is "disable" in the sense that the 
-driver is not going to use MSI-X vectors.  I agree that naming could be 
-better.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/dock.c                |    4 ++--
+ drivers/ata/libata-acpi.c          |    8 ++++----
+ drivers/pci/hotplug/acpiphp_glue.c |   13 +++++++------
+ include/acpi/acpi_drivers.h        |    6 +++---
+ 4 files changed, 16 insertions(+), 15 deletions(-)
 
-disable_msix:
-         if (mgp->msix_vectors != NULL) {
-                 kfree(mgp->msix_vectors);
-                 mgp->msix_vectors = NULL;
-         }
+Index: linux-pm/include/acpi/acpi_drivers.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_drivers.h
++++ linux-pm/include/acpi/acpi_drivers.h
+@@ -110,9 +110,9 @@ void pci_acpi_crs_quirks(void);
+                                   Dock Station
+   -------------------------------------------------------------------------- */
+ struct acpi_dock_ops {
+-	acpi_notify_handler fixup;
+-	acpi_notify_handler handler;
+-	acpi_notify_handler uevent;
++	void (*handler)(u32 event_type, void *data);
++	void (*fixup)(u32 event_type, void *data);
++	void (*uevent)(u32 event_type, void *data);
+ };
+ 
+ #ifdef CONFIG_ACPI_DOCK
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -63,7 +63,7 @@ static DEFINE_MUTEX(acpiphp_context_lock
+ static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+-static void hotplug_event(acpi_handle handle, u32 type, void *data);
++static void hotplug_event(u32 type, void *data);
+ static void free_bridge(struct kref *kref);
+ 
+ static void acpiphp_context_handler(acpi_handle handle, void *context)
+@@ -185,7 +185,7 @@ static void free_bridge(struct kref *kre
+  * TBD - figure out a way to only call fixups for
+  * systems that require them.
+  */
+-static void post_dock_fixups(acpi_handle not_used, u32 event, void *data)
++static void post_dock_fixups(u32 event, void *data)
+ {
+ 	struct acpiphp_context *context = data;
+ 	struct pci_bus *bus = context->func.slot->bus;
+@@ -788,11 +788,12 @@ void acpiphp_check_host_bridge(acpi_hand
+ 
+ static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot);
+ 
+-static void hotplug_event(acpi_handle handle, u32 type, void *data)
++static void hotplug_event(u32 type, void *data)
+ {
+ 	struct acpiphp_context *context = data;
+ 	struct acpiphp_func *func = &context->func;
+ 	struct acpiphp_slot *slot = func->slot;
++	acpi_handle handle = context->adev->handle;
+ 	struct acpiphp_bridge *bridge;
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+@@ -845,14 +846,14 @@ static void hotplug_event(acpi_handle ha
+ static void hotplug_event_work(void *data, u32 type)
+ {
+ 	struct acpiphp_context *context = data;
+-	acpi_handle handle = context->adev->handle;
+ 
+ 	acpi_scan_lock_acquire();
+ 
+-	hotplug_event(handle, type, context);
++	hotplug_event(type, context);
+ 
+ 	acpi_scan_lock_release();
+-	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
++	acpi_evaluate_hotplug_ost(context->adev->handle, type,
++				  ACPI_OST_SC_SUCCESS, NULL);
+ 	put_bridge(context->func.parent);
+ }
+ 
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -185,7 +185,7 @@ static void dock_release_hotplug(struct
+ static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
+ 			       enum dock_callback_type cb_type)
+ {
+-	acpi_notify_handler cb = NULL;
++	void (*cb)(u32, void *) = NULL;
+ 	bool run = false;
+ 
+ 	mutex_lock(&hotplug_lock);
+@@ -213,7 +213,7 @@ static void dock_hotplug_event(struct do
+ 		return;
+ 
+ 	if (cb)
+-		cb(dd->handle, event, dd->hp_context);
++		cb(event, dd->hp_context);
+ 
+ 	dock_release_hotplug(dd);
+ }
+Index: linux-pm/drivers/ata/libata-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/ata/libata-acpi.c
++++ linux-pm/drivers/ata/libata-acpi.c
+@@ -121,14 +121,14 @@ static void ata_acpi_handle_hotplug(stru
+ 		ata_port_wait_eh(ap);
+ }
+ 
+-static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
++static void ata_acpi_dev_notify_dock(u32 event, void *data)
+ {
+ 	struct ata_device *dev = data;
+ 
+ 	ata_acpi_handle_hotplug(dev->link->ap, dev, event);
+ }
+ 
+-static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
++static void ata_acpi_ap_notify_dock(u32 event, void *data)
+ {
+ 	struct ata_port *ap = data;
+ 
+@@ -154,12 +154,12 @@ static void ata_acpi_uevent(struct ata_p
+ 	}
+ }
+ 
+-static void ata_acpi_ap_uevent(acpi_handle handle, u32 event, void *data)
++static void ata_acpi_ap_uevent(u32 event, void *data)
+ {
+ 	ata_acpi_uevent(data, NULL, event);
+ }
+ 
+-static void ata_acpi_dev_uevent(acpi_handle handle, u32 event, void *data)
++static void ata_acpi_dev_uevent(u32 event, void *data)
+ {
+ 	struct ata_device *dev = data;
+ 	ata_acpi_uevent(dev->link->ap, dev, event);
 
-abort_with_fw:
-         mgp->num_slices = 1;
-         set_fw_name(mgp, old_fw, old_allocated);
-         myri10ge_load_firmware(mgp, 0);
