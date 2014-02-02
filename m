@@ -1,122 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:33223
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751870AbaBMR4x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 12:56:53 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Takashi Iwai <tiwai@suse.de>
-CC: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
-	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: [PATCH] PCI: pciehp: Fix the problem that the present bit is
- not cleared though slot is empty
-Date: Thu, 13 Feb 2014 17:56:45 +0000
-Message-ID: <1c8a2d4a4c834f1c86a8f880f91d136b@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
-	<20140212004927.GH21057@google.com>
-	<E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
-	<CAErSpo5ycKF4Xm26z80wNrms7G5onn1ASzcU2AHy7XN1YNAYuA@mail.gmail.com>
-	<CAA93t1psHnnVSbaaaJ1LsqeNzRYmNiiO9RiTggVovDVJpk4cqw@mail.gmail.com>
-	<E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01>
-	<11994c276661475080d900fa8b5942a5@DM2PR05MB671.namprd05.prod.outlook.com>
- <s5hr4772clo.wl%tiwai@suse.de>
-In-Reply-To: <s5hr4772clo.wl%tiwai@suse.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from v094114.home.net.pl ([79.96.170.134]:60498 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752049AbaBBRGZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Feb 2014 12:06:25 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Robert Moore <robert.moore@intel.com>
+Subject: [PATCH v3 2/7] ACPI / hotplug: Fix potential races in notify handlers
+Date: Sun, 02 Feb 2014 18:15:02 +0100
+Message-ID: <1499994.Za93jVWRjt@vostro.rjw.lan>
+In-Reply-To: <5157096.hCmU2aoKCT@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan> <5157096.hCmU2aoKCT@vostro.rjw.lan>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogVGFrYXNoaSBJ
-d2FpIFttYWlsdG86dGl3YWlAc3VzZS5kZV0NCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDEz
-LCAyMDE0IDg6MzcgQU0NCj4gVG86IFJhamF0IEphaW4NCj4gQ2M6IEl6dW1pLCBUYWt1OyByYWph
-dHhqYWluQGdtYWlsLmNvbTsgQmpvcm4gSGVsZ2FhczsgbGludXgtDQo+IHBjaUB2Z2VyLmtlcm5l
-bC5vcmc7IHlpbmdoYWlAa2VybmVsLm9yZzsgR3VlbnRlciBSb2Vjaw0KPiBTdWJqZWN0OiBSZTog
-W1BBVENIXSBQQ0k6IHBjaWVocDogRml4IHRoZSBwcm9ibGVtIHRoYXQgdGhlIHByZXNlbnQgYml0
-DQo+IGlzIG5vdCBjbGVhcmVkIHRob3VnaCBzbG90IGlzIGVtcHR5DQo+IA0KPiBBdCBUaHUsIDEz
-IEZlYiAyMDE0IDE2OjAzOjMwICswMDAwLA0KPiBSYWphdCBKYWluIHdyb3RlOg0KPiA+DQo+ID4g
-WytUYWthc2hpXQ0KPiA+DQo+ID4gSGVsbG8sDQo+ID4gPg0KPiA+ID4gPiA+IEh1aCwgdGhhdCBk
-b2Vzbid0IHNvdW5kIGdvb2QuICBEb2VzIHlvdXIgc2xvdCBoYXZlIGFuIGF0dGVudGlvbg0KPiA+
-ID4gPiA+IGJ1dHRvbj8gIENhbiB5b3UgY29sbGVjdCB0aGUgImxzcGNpIC12dnYiIG91dHB1dCBm
-b3IgdGhlDQo+ID4gPiA+ID4gRG93bnN0cmVhbSBQb3J0IGxlYWRpbmcgdG8gdGhpcyBzbG90Pw0K
-PiA+ID4NCj4gPiA+ICAgIFRoZSBzbG90cyBoYXZlIG5vIEF0dGVudGlvbiBidXR0b24gYW5kIGFy
-ZSBub3QgZm9yIEV4cHJlc3NDYXJkLg0KPiA+ID4gICAgbHNwY2kgLXZ2diBvdXRwdXQgaXM6DQo+
-ID4gPg0KPiA+ID4gICAgICAgICBDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3lj
-bGUtIE1lbVdJTlYtIFZHQVNub29wLQ0KPiA+ID4gUGFyRXJyKyBTdGVwcGluZy0gU0VSUisgRmFz
-dEIyQi0gRGlzSU5UeCsNCj4gPiA+ICAgICAgICAgU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZh
-c3RCMkItIFBhckVyci0gREVWU0VMPWZhc3QNCj4gPiA+ID5UQWJvcnQtDQo+ID4gPiA8VEFib3J0
-LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItIElOVHgtDQo+ID4gPiAgICAgICAgIExhdGVuY3k6IDAN
-Cj4gPiA+ICAgICAgICAgQnVzOiBwcmltYXJ5PTJjLCBzZWNvbmRhcnk9MmQsIHN1Ym9yZGluYXRl
-PTJmLCBzZWMtbGF0ZW5jeT0wDQo+ID4gPiAgICAgICAgIEkvTyBiZWhpbmQgYnJpZGdlOiAwMDAw
-ZjAwMC0wMDAwMGZmZg0KPiA+ID4gICAgICAgICBNZW1vcnkgYmVoaW5kIGJyaWRnZTogYjE4MDAw
-MDAtYjFmZmZmZmYNCj4gPiA+ICAgICAgICAgUHJlZmV0Y2hhYmxlIG1lbW9yeSBiZWhpbmQgYnJp
-ZGdlOiAwMDAwMDAwMGFlODAwMDAwLQ0KPiA+ID4gMDAwMDAwMDBhZWZmZmZmZg0KPiA+ID4gICAg
-ICAgICBTZWNvbmRhcnkgc3RhdHVzOiA2Nk1Iei0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFz
-dA0KPiA+ID4gPlRBYm9ydC0NCj4gPiA+IDxUQWJvcnQtIDxNQWJvcnQtIDxTRVJSLSA8UEVSUi0N
-Cj4gPiA+ICAgICAgICAgQnJpZGdlQ3RsOiBQYXJpdHktIFNFUlIrIE5vSVNBLSBWR0EtIE1BYm9y
-dC0gPlJlc2V0LQ0KPiBGYXN0QjJCLQ0KPiA+ID4gICAgICAgICAgICAgICAgIFByaURpc2NUbXIt
-IFNlY0Rpc2NUbXItIERpc2NUbXJTdGF0LSBEaXNjVG1yU0VSUkVuLQ0KPiA+ID4gICAgICAgICBD
-YXBhYmlsaXRpZXM6IFs0MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDMNCj4gPiA+ICAgICAg
-ICAgICAgICAgICBGbGFnczogUE1FQ2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVudD0wbUENCj4g
-PiA+IFBNRShEMCssRDEtDQo+ID4gPiAsRDItLEQzaG90KyxEM2NvbGQrKQ0KPiA+ID4gICAgICAg
-ICAgICAgICAgIFN0YXR1czogRDAgTm9Tb2Z0UnN0KyBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxl
-PTANCj4gUE1FLQ0KPiA+ID4gICAgICAgICBDYXBhYmlsaXRpZXM6IFs0OF0gTVNJOiBFbmFibGUr
-IENvdW50PTEvOCBNYXNrYWJsZSsgNjRiaXQrDQo+ID4gPiAgICAgICAgICAgICAgICAgQWRkcmVz
-czogMDAwMDAwMDBmZWUwMDUxOCAgRGF0YTogMDAwMA0KPiA+ID4gICAgICAgICAgICAgICAgIE1h
-c2tpbmc6IDAwMDAwMGZlICBQZW5kaW5nOiAwMDAwMDAwMA0KPiA+ID4gICAgICAgICBDYXBhYmls
-aXRpZXM6IFs2OF0gRXhwcmVzcyAodjIpIERvd25zdHJlYW0gUG9ydCAoU2xvdCspLCBNU0kNCj4g
-MDANCj4gPiA+ICAgICAgICAgICAgICAgICBEZXZDYXA6IE1heFBheWxvYWQgMjA0OCBieXRlcywg
-UGhhbnRGdW5jIDAsIExhdGVuY3kNCj4gPiA+IEwwcyA8NjRucywgTDEgPDF1cw0KPiA+ID4gICAg
-ICAgICAgICAgICAgICAgICAgICAgRXh0VGFnLSBSQkUrIEZMUmVzZXQtDQo+ID4gPiAgICAgICAg
-ICAgICAgICAgRGV2Q3RsOiBSZXBvcnQgZXJyb3JzOiBDb3JyZWN0YWJsZSsgTm9uLUZhdGFsKw0K
-PiA+ID4gRmF0YWwrDQo+ID4gPiBVbnN1cHBvcnRlZC0NCj4gPiA+ICAgICAgICAgICAgICAgICAg
-ICAgICAgIFJseGRPcmQrIEV4dFRhZy0gUGhhbnRGdW5jLSBBdXhQd3ItIE5vU25vb3ArDQo+ID4g
-PiAgICAgICAgICAgICAgICAgICAgICAgICBNYXhQYXlsb2FkIDEyOCBieXRlcywgTWF4UmVhZFJl
-cSAxMjggYnl0ZXMNCj4gPiA+ICAgICAgICAgICAgICAgICBEZXZTdGE6IENvcnJFcnIrIFVuY29y
-ckVyci0gRmF0YWxFcnItIFVuc3VwcFJlcSsNCj4gPiA+IEF1eFB3ci0NCj4gPiA+IFRyYW5zUGVu
-ZC0NCj4gPiA+ICAgICAgICAgICAgICAgICBMbmtDYXA6IFBvcnQgIzEsIFNwZWVkIDhHVC9zLCBX
-aWR0aCB4OCwgQVNQTSBMMSwNCj4gPiA+IExhdGVuY3kNCj4gPiA+IEwwIDw0dXMsIEwxIDw0dXMN
-Cj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIENsb2NrUE0tIFN1cnByaXNlKyBMTEFjdFJl
-cCsgQndOb3QrDQo+ID4gPiAgICAgICAgICAgICAgICAgTG5rQ3RsOiBBU1BNIERpc2FibGVkOyBE
-aXNhYmxlZC0gUmV0cmFpbi0gQ29tbUNsay0NCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAg
-IEV4dFN5bmNoLSBDbG9ja1BNLSBBdXRXaWREaXMtIEJXSW50LQ0KPiBBdXRCV0ludC0NCj4gPiA+
-ICAgICAgICAgICAgICAgICBMbmtTdGE6IFNwZWVkIDIuNUdUL3MsIFdpZHRoIHgwLCBUckVyci0g
-VHJhaW4tDQo+ID4gPiBTbG90Q2xrKw0KPiA+ID4gRExBY3RpdmUtIEJXTWdtdC0gQUJXTWdtdC0N
-Cj4gPiA+ICAgICAgICAgICAgICAgICBTbHRDYXA6IEF0dG5CdG4tIFB3ckN0cmwrIE1STCsgQXR0
-bkluZCsgUHdySW5kKw0KPiA+ID4gSG90UGx1ZysNCj4gPiA+IFN1cnByaXNlLQ0KPiA+ID4gICAg
-ICAgICAgICAgICAgICAgICAgICAgU2xvdCAjNjcsIFBvd2VyTGltaXQgMjUuMDAwVzsgSW50ZXJs
-b2NrLQ0KPiA+ID4gTm9Db21wbC0NCj4gPg0KPiA+IEhtbS4uLiBJIHNlZSB0aGF0IHRoZSBTbG90
-IGhhcyBhIHBvd2VyIGNvbnRyb2xsZXIuIFdoaWNoIG1lYW5zIHRoYXQNCj4gdGhlIHBvd2VyIHRv
-IHRoZSBzbG90IHNoYWxsIG5vdCBiZSB0dXJuZWQgb24gYXV0b21hdGljYWxseSAoYnkgSFcpIHdo
-ZW4NCj4gdGhlIGNhcmQgaXMgcGx1Z2dlZCBpbi4gQWxzbyBtZWFuaW5nIHRoYXQgdGhlIGxpbmsg
-d2lsbCBub3QgY29tZSB1cA0KPiBhdXRvbWF0aWNhbGx5IC0gc28gdGhpcyBkb2VzIG5vdCBzZWVt
-IGxpa2UgdGhlIExpbmsgc3RhdGUgYmFzZWQgaG90cGx1Zw0KPiBraWNraW5nIGluLg0KPiA+DQo+
-ID4gV2hhdCBJIHN1c3BlY3QgaXMgdGhpcyBvbmU6DQo+ID4NCj4gPiBmMDJkMTg0M2Q4M2IgIlBD
-STogcGNpZWhwOiBSZW1vdmUgc3VycHJpc2UgYml0IGNoZWNrcyINCj4gPg0KPiA+IFNpbmNlIHRo
-aXMgcGF0Y2ggcmVtb3ZlcyAqYWxsKiB0aGUgc3VycHJpc2UgYml0IGNoZWNrcyBjYXVzaW5nIGFs
-bCB0aGUNCj4gcHJlc2VuY2UgZGV0ZWN0IGNoYW5nZXMgKGluY2x1ZGluZyAwLT4xKSB0byBiZSBp
-bml0aWF0ZSBob3RwbHVnLiBJIHRoaW5rDQo+IGl0IG1heSBiZSB3b3J0aHdoaWxlIHRvIHRyeSBp
-dCBvdXQgd2hpbGUgcmVtb3ZpbmcgdGhpcyBwYXJ0aWN1bGFyIGh1bms6DQo+ID4NCj4gPiBAQCAt
-NTM1LDggKzUzNSw2IEBAIHN0YXRpYyB2b2lkIGludGVycnVwdF9ldmVudF9oYW5kbGVyKHN0cnVj
-dA0KPiB3b3JrX3N0cnVjdCAqd29yaykNCj4gPiAgCQlicmVhazsNCj4gPiAgCWNhc2UgSU5UX1BS
-RVNFTkNFX09OOg0KPiA+ICAJY2FzZSBJTlRfUFJFU0VOQ0VfT0ZGOg0KPiA+IC0JCWlmICghSFBf
-U1VQUl9STShjdHJsKSkNCj4gPiAtCQkJYnJlYWs7DQo+ID4gIAkJY3RybF9kYmcoY3RybCwgIlN1
-cnByaXNlIFJlbW92YWxcbiIpOw0KPiA+ICAJCWhhbmRsZV9zdXJwcmlzZV9ldmVudChwX3Nsb3Qp
-Ow0KPiA+ICAJCWJyZWFrOw0KPiA+DQo+ID4gTWF5IGJlIHdlIHNob3VsZCByZW1vdmUgdGhlIHN1
-cnByaXNlIGNoZWNrIGZvciBJTlRfUFJFU0VOQ0VfT0ZGIG9ubHkNCj4gKGFuZCBsZXQgaXQgc3Rh
-eSBmb3IgSU5UX1BSRVNFV05DRV9PTik/DQo+IA0KPiBJIGNoZWNrZWQgbXkgdGVzdCBkZXZpY2Vz
-LCBhbmQgdGhleSBzZWVtIHRvIGhhdmUgbm8gcG93ZXIgY29udHJvbGxlciBiaXQNCj4gaW52b2x2
-ZWQuICBTbyBJIGRvdWJsZS1jaGVja2VkIHRoZSByZWNlbnQgY29tbWl0cywgYW5kIGluZGVlZCBS
-YWphdCdzDQo+IHJlY2VudCB3b3JrIGFscmVhZHkgZml4ZWQgdGhlIGRldGVjdGlvbiAocHJlc3Vt
-ZWQgdGhhdCB0aGUgY29tbWl0DQo+IFtlNDhmMWI2NzogUENJOiBwY2llaHA6IFVzZSBsaW5rIGNo
-YW5nZSBub3RpZmljYXRpb25zIGZvciBob3QtcGx1ZyBhbmQNCj4gcmVtb3ZhbF0gZG9lcyBpdCkg
-d2l0aG91dCBmaWRkbGluZyB3aXRoIHRoZSBzdXJwcmlzZSBiaXQuDQoNClRoYW5rcyBhIGxvdCBm
-b3IgdGVzdGluZyENCg0KPiANCj4gVGhhdCBzYWlkLCBteSBwYXRjaCBjYW4gYmUgcmV2ZXJ0ZWQg
-Y29tcGxldGVseS4gIENhbiBhbnlvbmUgY2hlY2sNCj4gd2hldGhlciBpdCBjdXJlcz8NCg0KSSBz
-dGlsbCB0aGluayB0aGF0IHBhcnQgb2YgeW91ciBwYXRjaCBpcyBuZWVkZWQuIEF0IGxlYXN0IHRo
-ZSBvbmUgdGhhdCByZW1vdmVzIHRoZSBzdXJwcmlzZSBiaXQgY2hlY2sgaWYgdGhlIGNhcmQgaXMg
-c3VkZGVubHkgeWFua2VkIG91dC4NCg0KVGhhbmtzLA0KDQpSYWphdA0KDQo+IA0KPiANCj4gdGhh
-bmtzLA0KPiANCj4gVGFrYXNoaQ0KPiANCg0K
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+There is a slight possibility for the ACPI device object pointed to
+by adev in acpi_hotplug_notify_cb() to become invalid between the
+acpi_bus_get_device() that it comes from and the subsequent dereference
+of that pointer under get_device().  Namely, if acpi_scan_drop_device()
+runs in parallel with acpi_hotplug_notify_cb(), acpi_device_del_work_fn()
+queued up by it may delete the device object in question right after
+a successful execution of acpi_bus_get_device() in acpi_bus_notify().
+
+An analogous problem is present in acpi_bus_notify() where the device
+pointer coming from acpi_bus_get_device() may become invalid before
+it subsequent dereference in the "if" block.
+
+To prevent that from happening, introduce a new function,
+acpi_bus_get_acpi_device(), working analogously to acpi_bus_get_device()
+except that it will grab a reference to the ACPI device object returned
+by it and it will do that under the ACPICA's namespace mutex.  Then,
+make both acpi_hotplug_notify_cb() and acpi_bus_notify() use
+acpi_bus_get_acpi_device() instead of acpi_bus_get_device() so as to
+ensure that the pointers used by them will not become stale at one
+point.
+
+In addition to that, introduce acpi_bus_put_acpi_device() as a wrapper
+around put_device() to be used along with acpi_bus_get_acpi_device()
+and make the (new) users of the latter use acpi_bus_put_acpi_device()
+too.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/bus.c      |    4 +++-
+ drivers/acpi/internal.h |    2 ++
+ drivers/acpi/scan.c     |   38 ++++++++++++++++++++++++++++++--------
+ 3 files changed, 35 insertions(+), 9 deletions(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -476,7 +476,7 @@ static void acpi_device_hotplug(void *da
+ 
+  out:
+ 	acpi_evaluate_hotplug_ost(adev->handle, src, ost_code, NULL);
+-	put_device(&adev->dev);
++	acpi_bus_put_acpi_device(adev);
+ 	mutex_unlock(&acpi_scan_lock);
+ 	unlock_device_hotplug();
+ }
+@@ -488,9 +488,6 @@ static void acpi_hotplug_notify_cb(acpi_
+ 	struct acpi_device *adev;
+ 	acpi_status status;
+ 
+-	if (acpi_bus_get_device(handle, &adev))
+-		goto err_out;
+-
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_BUS_CHECK event\n");
+@@ -512,12 +509,14 @@ static void acpi_hotplug_notify_cb(acpi_
+ 		/* non-hotplug event; possibly handled by other handler */
+ 		return;
+ 	}
+-	get_device(&adev->dev);
++	if (acpi_bus_get_acpi_device(handle, &adev))
++		goto err_out;
++
+ 	status = acpi_hotplug_execute(acpi_device_hotplug, adev, type);
+ 	if (ACPI_SUCCESS(status))
+ 		return;
+ 
+-	put_device(&adev->dev);
++	acpi_bus_put_acpi_device(adev);
+ 
+  err_out:
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+@@ -1112,14 +1111,16 @@ static void acpi_scan_drop_device(acpi_h
+ 	mutex_unlock(&acpi_device_del_lock);
+ }
+ 
+-int acpi_bus_get_device(acpi_handle handle, struct acpi_device **device)
++static int acpi_get_device_data(acpi_handle handle, struct acpi_device **device,
++				void (*callback)(void *))
+ {
+ 	acpi_status status;
+ 
+ 	if (!device)
+ 		return -EINVAL;
+ 
+-	status = acpi_get_data(handle, acpi_scan_drop_device, (void **)device);
++	status = acpi_get_data_full(handle, acpi_scan_drop_device,
++				    (void **)device, callback);
+ 	if (ACPI_FAILURE(status) || !*device) {
+ 		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "No context for object [%p]\n",
+ 				  handle));
+@@ -1127,8 +1128,29 @@ int acpi_bus_get_device(acpi_handle hand
+ 	}
+ 	return 0;
+ }
++
++int acpi_bus_get_device(acpi_handle handle, struct acpi_device **device)
++{
++	return acpi_get_device_data(handle, device, NULL);
++}
+ EXPORT_SYMBOL(acpi_bus_get_device);
+ 
++static void get_acpi_device(void *dev)
++{
++	if (dev)
++		get_device(&((struct acpi_device *)dev)->dev);
++}
++
++int acpi_bus_get_acpi_device(acpi_handle handle, struct acpi_device **adev_p)
++{
++	return acpi_get_device_data(handle, adev_p, get_acpi_device);
++}
++
++void acpi_bus_put_acpi_device(struct acpi_device *adev)
++{
++	put_device(&adev->dev);
++}
++
+ int acpi_device_add(struct acpi_device *device,
+ 		    void (*release)(struct device *))
+ {
+Index: linux-pm/drivers/acpi/internal.h
+===================================================================
+--- linux-pm.orig/drivers/acpi/internal.h
++++ linux-pm/drivers/acpi/internal.h
+@@ -81,6 +81,8 @@ bool acpi_scan_is_offline(struct acpi_de
+ #define ACPI_STA_DEFAULT (ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED | \
+ 			  ACPI_STA_DEVICE_UI | ACPI_STA_DEVICE_FUNCTIONING)
+ 
++int acpi_bus_get_acpi_device(acpi_handle handle, struct acpi_device **adev_p);
++void acpi_bus_put_acpi_device(struct acpi_device *adev);
+ int acpi_device_add(struct acpi_device *device,
+ 		    void (*release)(struct device *));
+ void acpi_init_device_object(struct acpi_device *device, acpi_handle handle,
+Index: linux-pm/drivers/acpi/bus.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/bus.c
++++ linux-pm/drivers/acpi/bus.c
+@@ -387,12 +387,14 @@ static void acpi_bus_notify(acpi_handle
+ 		break;
+ 	}
+ 
+-	acpi_bus_get_device(handle, &device);
++	acpi_bus_get_acpi_device(handle, &device);
+ 	if (device) {
+ 		driver = device->driver;
+ 		if (driver && driver->ops.notify &&
+ 		    (driver->flags & ACPI_DRIVER_ALL_NOTIFY_EVENTS))
+ 			driver->ops.notify(device, type);
++
++		acpi_bus_put_acpi_device(device);
+ 	}
+ }
+ 
 
