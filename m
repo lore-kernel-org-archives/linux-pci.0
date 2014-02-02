@@ -1,67 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:34299 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753023AbaBRXCn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 18:02:43 -0500
-Received: by mail-ig0-f179.google.com with SMTP id c10so8202571igq.0
-        for <linux-pci@vger.kernel.org>; Tue, 18 Feb 2014 15:02:42 -0800 (PST)
+Received: from v094114.home.net.pl ([79.96.170.134]:51000 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754909AbaBBAS0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 19:18:26 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 2/13] ACPI / hotplug / PCI: Move PCI rescan-remove locking to hotplug_event()
+Date: Sun, 02 Feb 2014 01:22:06 +0100
+Message-ID: <3266705.b26GDtjItd@vostro.rjw.lan>
+In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAA93t1pApi2zDk81JKiW8WK+foOdKL=tDiCJSpc9WCwSO64NdA@mail.gmail.com>
-References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
- <20140212004927.GH21057@google.com> <E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
- <CAErSpo5ycKF4Xm26z80wNrms7G5onn1ASzcU2AHy7XN1YNAYuA@mail.gmail.com>
- <CAA93t1psHnnVSbaaaJ1LsqeNzRYmNiiO9RiTggVovDVJpk4cqw@mail.gmail.com>
- <E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01> <11994c276661475080d900fa8b5942a5@DM2PR05MB671.namprd05.prod.outlook.com>
- <E86EADE93E2D054CBCD4E708C38D364A53C3D4C5@G01JPEXMBYT01> <CAErSpo6ku31cXTPNw-Ri6=DBSpCOk25yYs4peqkKA08eWxm5dQ@mail.gmail.com>
- <CAA93t1pApi2zDk81JKiW8WK+foOdKL=tDiCJSpc9WCwSO64NdA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Feb 2014 16:02:22 -0700
-Message-ID: <CAErSpo5uxJLoX9bouNh_+J70KErqs_Y=NWuXr4s_vefJuW71yQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: Fix the problem that the present bit is not
- cleared though slot is empty
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
-	Rajat Jain <rajatjain@juniper.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	Takashi Iwai <tiwai@suse.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 12:39 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> Hi Bjorn,
->
-> On Fri, Feb 14, 2014 at 9:31 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Feb 14, 2014 at 12:21 AM, Izumi, Taku <izumi.taku@jp.fujitsu.com> wrote:
->>>> Hmm... I see that the Slot has a power controller. Which means that the power to the slot shall not be turned on automatically
->>>> (by HW) when the card is plugged in. Also meaning that the link will not come up automatically - so this does not seem
->>>> like the Link state based hotplug kicking in.
->>>>
->>>> What I suspect is this one:
->>>>
->>>> f02d1843d83b "PCI: pciehp: Remove surprise bit checks"
->>>
->>>   You are right.
->>>   In case of omitting comit-f02d1843, it worked as expected.
->>>   Slot power doesn't become ON automatically when PCIe card is inserted.
->>
->> OK, I dropped f02d1843d83b ("PCI: pciehp: Remove surprise bit
->> checks").
->
-> I think part of this commit was still good (The part that drops the
-> surprise check when a card is yanked out). That is because when a card
-> is yanked out, it shouldn't matter whether the  surprise bit is set or
-> not - its gotta go.
->
-> Functionally, that scenario is already covered by my patches (because
-> yanking out a card will make the link go down, hence kicking off link
-> state based unplug) - thus no functional change. But just thought I'll
-> mention since you were already at this cleanup phase. (If you agree, I
-> can send a separate clean patch or you can use Takashi's one).
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-That sounds reasonable.  Send me a patch, if you don't mind, so it's
-clear what to do here.
+Commit 9217a984671e (ACPI / hotplug / PCI: Use global PCI rescan-remove
+locking) modified ACPIPHP to protect its PCI device removal and addition
+code paths from races against sysfs-driven rescan and remove operations
+with the help of PCI rescan-remove locking.  However, it overlooked the
+fact that hotplug_event_work() is not the only caller of hotplug_event()
+which may also be called by dock_hotplug_event() and that code path
+is missing the PCI rescan-remove locking.  This means that, although
+the PCI rescan-remove lock is held as appropriate during the handling
+of events originating from handle_hotplug_event(), the ACPIPHP's
+operations resulting from dock events may still suffer the race
+conditions that commit 9217a984671e was supposed to eliminate.
 
-Bjorn
+To address that problem, move the PCI rescan-remove locking from
+hotplug_event_work() to hotplug_event() so that it is used regardless
+of the way that function is invoked.
+
+Revamps: 9217a984671e (ACPI / hotplug / PCI: Use global PCI rescan-remove locking)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -852,6 +852,7 @@ static void hotplug_event(acpi_handle ha
+ 
+ 	mutex_unlock(&acpiphp_context_lock);
+ 
++	pci_lock_rescan_remove();
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+ 	switch (type) {
+@@ -905,6 +906,7 @@ static void hotplug_event(acpi_handle ha
+ 		break;
+ 	}
+ 
++	pci_unlock_rescan_remove();
+ 	if (bridge)
+ 		put_bridge(bridge);
+ }
+@@ -915,11 +917,9 @@ static void hotplug_event_work(void *dat
+ 	acpi_handle handle = context->handle;
+ 
+ 	acpi_scan_lock_acquire();
+-	pci_lock_rescan_remove();
+ 
+ 	hotplug_event(handle, type, context);
+ 
+-	pci_unlock_rescan_remove();
+ 	acpi_scan_lock_release();
+ 	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
+ 	put_bridge(context->func.parent);
+
