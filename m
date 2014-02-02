@@ -1,170 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:54800 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752431AbaBZSE1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 26 Feb 2014 13:04:27 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id 3AD00FF6E6
-	for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 18:04:26 +0000 (GMT)
-Date: Wed, 26 Feb 2014 18:01:54 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v4] PCI: ARM: add support for generic PCI host controller
-Message-ID: <20140226180154.GA29057@bart.dudau.co.uk>
-References: <1393268359-17224-1-git-send-email-will.deacon@arm.com>
- <1721648.K4nYY7eS55@wuerfel>
- <20140225180111.GF23136@mudshark.cambridge.arm.com>
- <201402252330.34236.arnd@arndb.de>
- <20140226174659.GF12882@mudshark.cambridge.arm.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:62597 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754860AbaBBASX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 19:18:23 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 1/13] ACPI / hotplug / PCI: Remove entries from bus->devices in reverse order
+Date: Sun, 02 Feb 2014 01:21:17 +0100
+Message-ID: <2191766.e0OEb5Pek7@vostro.rjw.lan>
+In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140226174659.GF12882@mudshark.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 05:46:59PM +0000, Will Deacon wrote:
-> Hi Arnd,
-> 
-> On Tue, Feb 25, 2014 at 10:30:33PM +0000, Arnd Bergmann wrote:
-> > On Tuesday 25 February 2014, Will Deacon wrote:
-> > > I need the alignment code so I can handle being passed a CPU physical
-> > > address which isn't 64K aligned. In this case, pci_ioremap_io needs a 64K
-> > > aligned address so that the __io macro does the right thing.
-> > 
-> > I still don't see why pci_ioremap_io needs 64K alignment. For all I can tell,
-> > it just needs a page-aligned address.
-> 
-> I misread __io as an '|' rather than a '+'. You're right, we just need page
-> alignment for the mapping.
-> 
-> > > For example, I can tell kvmtool to place I/O space at CPU physical 0x16000,
-> > > bus address 0x6000 (so ports 0x0-0x5fff are unavailable). In that case, I
-> > > still need to map those lower ports for the __io macro to offset into the
-> > > window correctly.
-> >  
-> > I don't think so. pci_ioremap_io will still try to map 64K of address space,
-> > but you can map 0x16000-0x25fff to PCI_IO_VIRT_BASE. The io_offset in
-> > that case will be negative (-0x6000).
-> 
-> Yes, and that means that all this rounding is unnecessary; I can just fail
-> addresses that aren't page-aligned (which is much more reasonable).
-> 
-> > > 	of_pci_range_to_resource(range, dev->of_node, res);
-> > > 	res->start = window + range->pci_addr;
-> > > 	res->end = res->start + range->size - 1;
-> > > 	*offset = window - range->pci_addr;
-> > > 	return 0;
-> > > }
-> > 
-> > The offset is good now, but the start is not: res->start refers to
-> > the linux I/O space and should just be 'window' here. Adding up
-> > window and pci_addr makes no sense. Think of the case where you
-> > have two host bridges, one using bus address 0x0-0xffff and the other
-> > one using 0x10000-0x1ffff. You really want the first one to
-> > have res->start=0 and the second one res->start=0x10000, and
-> > using offset=0. Instead the second one get start=0x20000,
-> > which is wrong in both CPU and bus space.
-> 
-> Aha, so res->start is the offset into our virtual I/O space at which the
-> window starts? That's what I've been getting wrong -- I thought res->start
-> was a PCI bus address for some reason.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-No, res->start should be start of logical I/O space. I will send today the
-patch that fixes the of_pci_range_to_resource() call and then you should
-no longer have to worry about offsets (other than keeping a logical io_offset
-in the bridge to account for multiple host bridges being active).
+According to the changelog of commit 29ed1f29b68a (PCI: pciehp: Fix null
+pointer deref when hot-removing SR-IOV device) it is unsafe to walk the
+bus->devices list of a PCI bus and remove devices from it in direct order,
+because that may lead to NULL pointer dereferences related to virtual
+functions.
 
-> 
-> > The round_down() also still gets you into trouble here, because you
-> > don't adjust the start or the size.
-> 
-> I'll just get rid of the rounding.
-> 
-> > > If I do:
-> > > 
-> > > 	*offset = window;
-> > > 
-> > > then things work as expected (this is all referring back to the kvmtool example
-> > > I mentioned earlier in this mail).
-> > 
-> > Yes, but only only because you have two bugs that cancel each other out
-> > to some degree. It only works for the first bus though, as explained
-> > above: if offset is >0, the Linux I/O port number that gets assigned
-> > in the resource is no longer the one that maps to the one in your
-> > virtual address space pointing to the right physical address.
-> 
-> Ok, so taking all this on board I end up with the diff below (against v4).
-> It seems to work well with my kvmtool setup:
-> 
->   pci_bus 0000:00: root bus resource [io  0x0000-0x9fff] (bus address [0x6000-0xffff])
-> 
-> Will
-> 
-> --->8
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 71b0960772ec..b761f3e64a6a 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -133,30 +133,25 @@ static int gen_pci_calc_io_offset(struct device *dev,
->  {
->         static atomic_t wins = ATOMIC_INIT(0);
->         int err, idx, max_win;
-> -       unsigned int io_offset;
-> +       unsigned int window;
->  
-> -       /* Ensure the CPU physical address is aligned to a 64K boundary */
-> -       range->size += range->cpu_addr & (SZ_64K - 1);
-> -       range->cpu_addr = round_down(range->cpu_addr, SZ_64K);
-> -       range->pci_addr = round_down(range->pci_addr, SZ_64K);
-> -
-> -       if (range->size > SZ_64K)
-> -               return -E2BIG;
-> +       if (!PAGE_ALIGNED(range->cpu_addr))
-> +               return -EINVAL;
->  
-> -       max_win = IO_SPACE_LIMIT + 1 / SZ_64K;
-> +       max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
->         idx = atomic_inc_return(&wins);
->         if (idx >= max_win)
->                 return -ENOSPC;
->  
-> -       io_offset = (idx - 1) * SZ_64K;
-> -       err = pci_ioremap_io(io_offset, range->cpu_addr);
-> +       window = (idx - 1) * SZ_64K;
-> +       err = pci_ioremap_io(window, range->cpu_addr);
->         if (err)
->                 return err;
->  
->         of_pci_range_to_resource(range, dev->of_node, res);
-> -       res->start = io_offset + range->pci_addr;
-> +       res->start = window;
->         res->end = res->start + range->size - 1;
-> -       *offset = io_offset;
-> +       *offset = window - range->pci_addr;
->         return 0;
->  }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+For this reason, change all of the bus->devices list walks in
+acpiphp_glue.c during which devices may be removed to be carried out in
+reverse order.
 
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
- One small step
-   for me ...
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -742,7 +742,7 @@ static void trim_stale_devices(struct pc
+ 
+ 		/* The device is a bridge. so check the bus below it. */
+ 		pm_runtime_get_sync(&dev->dev);
+-		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
++		list_for_each_entry_safe_reverse(child, tmp, &bus->devices, bus_list)
+ 			trim_stale_devices(child);
+ 
+ 		pm_runtime_put(&dev->dev);
+@@ -773,8 +773,8 @@ static void acpiphp_check_bridge(struct
+ 			; /* do nothing */
+ 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
+ 			/* remove stale devices if any */
+-			list_for_each_entry_safe(dev, tmp, &bus->devices,
+-						 bus_list)
++			list_for_each_entry_safe_reverse(dev, tmp,
++							 &bus->devices, bus_list)
+ 				if (PCI_SLOT(dev->devfn) == slot->device)
+ 					trim_stale_devices(dev);
+ 
+@@ -805,7 +805,7 @@ static void acpiphp_sanitize_bus(struct
+ 	int i;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+ 
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
+ 			struct resource *res = &dev->resource[i];
+ 			if ((res->flags & type_mask) && !res->start &&
 
