@@ -1,168 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:65490 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751770AbaBJPnj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 10:43:39 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Mohit Kumar <mohit.kumar@st.com>
-Subject: Re: [PATCH V5 7/8] pcie: SPEAr13xx: Add designware pcie support
-Date: Mon, 10 Feb 2014 16:43:22 +0100
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Viresh Kumar <viresh.linux@gmail.com>, spear-devel@list.st.com,
-	linux-pci@vger.kernel.org
-References: <cover.1391871170.git.pratyush.anand@st.com> <5c82e0b022ce6ce9c42afdc9e59081a95a9394ac.1391871170.git.pratyush.anand@st.com>
-In-Reply-To: <5c82e0b022ce6ce9c42afdc9e59081a95a9394ac.1391871170.git.pratyush.anand@st.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 0/13] ACPI / hotplug / PCI: Updates on top of changes merged recently
+Date: Sun, 02 Feb 2014 01:19:33 +0100
+Message-ID: <1935791.liE9ZlzmO9@vostro.rjw.lan>
+In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201402101643.23186.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 10 February 2014, Mohit Kumar wrote:
-> diff --git a/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt b/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
-> new file mode 100644
-> index 0000000..dc8ae44
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
-> @@ -0,0 +1,7 @@
-> +Required properties:
-> +- compatible : should be "st,spear1340-pcie", "snps,dw-pcie".
-> +- pcie_is_gen1: pass <1> if forced gen1 initialization is needed to work with
-> +  some buggy cards else pass <0>.
+On Monday, January 27, 2014 01:37:17 AM Rafael J. Wysocki wrote:
+> Hi All,
+> 
+> ACPIPHP can be simplified a bit on top of some PCI and ACPI changes merged
+> recently and the following series of patches implements those simplifications:
+> 
+> [1/11] Fix up two kerneldoc comments in acpiphp_glue.c.
+> [2/11] Get rid of an unnecessary label in register_slot().
+> [3/11] Drop acpiphp_bus_trim() and use acpi_bus_trim() instead of it directly.
+> [4/11] Move the acpi_bus_get_device() call out of acpiphp_no_hotplug().
+> [5/11] Store struct acpi_device pointers instead of ACPI handles in struct acpiphp_context.
+> [6/11] Drop acpiphp_bus_add() (which has only one user).
+> [7/11] Drop crit_sect mutexes (that are redundant).
+> [8/11] Clean up the usage of the slot variable in hotplug_event().
+> [9/11] Drop dev_in_slot() and rework disable_slot() to walk bus->devices directly.
+> [10/11] Use acpi_handle_debug() in hotplug_event() instead of open-coded stuff.
+> [11/11] Drop handle argument from the member functions of struct acpi_dock_ops.
+> 
+> All of that is relateively straightforward, but I have some more intrusive changes
+> on top of it in the works.  They will be posted separately later this week.
 
-Better make this an optional property that is only present if gen1 is forced,
-and then use of_property_read_bool to check it.
+I've learned a couple of things since I sent this patchset.  First, all
+bus->devices list walks that may remove PCI devices should be done in reverse
+order or they can crash if virtual functions are involved.  Second, hotplug_event()
+(in acpiphp_glue.c) has to acquire pci_rescan_remove_lock by itself, because it
+may be called from multiple places and all of them need that lock to be held.
+That is done by patches [1-2/13] which I'm planning to push as fixes for 3.14-rc2.
 
-Also, use the common naming convention: "-" instead of "_", and you may want to
-prefix it with 'st,'.
+The rest is pretty much the same as last time except that the old patch [9/11]
+became [3/13] in this series and it has been changed so that the list is walked in
+reverse order.
 
-> +- phys		    : phandle to phy node associated with pcie controller
-> +- phy-names	    : must be "pcie-phy"
-> +- All other definitions as per generic PCI bindings
+Thanks!
 
-Please send the binding to the devicetree mailing list, ideally as a separate patch.
-
-> diff --git a/arch/arm/boot/dts/spear1310.dtsi b/arch/arm/boot/dts/spear1310.dtsi
-> index 64e7dd5..8d7aefe 100644
-> --- a/arch/arm/boot/dts/spear1310.dtsi
-> +++ b/arch/arm/boot/dts/spear1310.dtsi
-
-Best split out the DT changes as well, since we may want to apply them through
-the arm-soc tree.
-
-> @@ -83,6 +83,63 @@
->  			status = "disabled";
->  		};
->  
-> +		pcie0: pcie@b1000000 {
-> +			compatible = "st,spear1340-pcie", "snps,dw-pcie";
-> +			reg = <0xb1000000 0x4000>;
-> +			interrupts = <0 68 0x4>;
-> +			interrupt-map-mask = <0 0 0 0>;
-> +			interrupt-map = <0x0 0 &gic 68>;
-> +			pcie_is_gen1 = <0>;
-> +			num-lanes = <1>;
-> +			phys = <&miphy0 1>;
-> +			phy-names = "pcie-phy";
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			device_type = "pci";
-> +			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
-> +				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
-> +				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
-> +			status = "disabled";
-> +		};
-
-But keep the changes for the phy together with the pci changes.
-
-> @@ -338,6 +338,7 @@
->  				reg = <0xe07008c4 0x4>;
->  				thermal_flags = <0x7000>;
->  			};
-> +
->  		};
->  	};
->  };
-
-I assume this change was not intentional.
-
-> diff --git a/arch/arm/configs/spear13xx_defconfig b/arch/arm/configs/spear13xx_defconfig
-> index 1e0bb6f..96ede50 100644
-> --- a/arch/arm/configs/spear13xx_defconfig
-> +++ b/arch/arm/configs/spear13xx_defconfig
-> @@ -11,6 +11,8 @@ CONFIG_ARCH_SPEAR13XX=y
->  CONFIG_MACH_SPEAR1310=y
->  CONFIG_MACH_SPEAR1340=y
->  # CONFIG_SWP_EMULATE is not set
-> +CONFIG_PCI_MSI=y
-> +CONFIG_PCIE_SPEAR13XX=y
->  CONFIG_SMP=y
->  # CONFIG_SMP_ON_UP is not set
->  # CONFIG_ARM_CPU_TOPOLOGY is not set
-
-This change can also get folded into patch 3. 
-
-> diff --git a/arch/arm/mach-spear/Kconfig b/arch/arm/mach-spear/Kconfig
-> index 7e7f1b0..701b6c3 100644
-> --- a/arch/arm/mach-spear/Kconfig
-> +++ b/arch/arm/mach-spear/Kconfig
-> @@ -28,6 +28,7 @@ config ARCH_SPEAR13XX
->  	select USE_OF
->  	select MFD_SYSCON
->  	select PHY_ST_MIPHY40LP
-> +	select PCI
->  	help
->  	  Supports for ARM's SPEAR13XX family
->  
-
-This doesn't seem right: You are making it impossible to turn off PCI
-here. Better use MIGHT_HAVE_PCI instead to make CONFIG_PCI a user-selectable
-option.
-
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 47d46c6..df52fad 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -33,4 +33,9 @@ config PCI_RCAR_GEN2
->  	  There are 3 internal PCI controllers available with a single
->  	  built-in EHCI/OHCI host controller present on each one.
->  
-> +config PCIE_SPEAR13XX
-> +	bool "STMicroelectronics SPEAr PCIe controller"
-> +	depends on ARCH_SPEAR13XX
-> +	select PCIEPORTBUS
-> +	select PCIE_DW
->  endmenu
-
-This can probably be "tristate" instead of "bool. You need to add
-a help text.
-
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 13fb333..42a491d 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
->  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
->  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
->  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
-> +obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-
-I'd use the "pci" naming instead of "pcie" here for consistency.
-
-> +
-> +/* SPEAr13xx PCIe driver does not allow module unload */
-> +
-> +static int __init pcie_init(void)
-> +{
-> +
-> +	return platform_driver_probe(&spear13xx_pcie_driver,
-> +				spear13xx_pcie_probe);
-> +}
-
-This should be platform_driver_register() so you can support
-deferred probing, e.g. if the phy driver gets loaded after the
-PCI driver.
-
-	Arnd
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
