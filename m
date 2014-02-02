@@ -1,44 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:63396 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754876AbaBRMOj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 07:14:39 -0500
-Date: Tue, 18 Feb 2014 14:14:35 +0200
-From: Amir Vadai <amirv@mellanox.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: ixgbevf: Use pci_enable_msix_range() instead of pci_enable_msix()
-Message-ID: <20140218121433.GB8770@mtl-eit-vdi-22.mtl.labs.mlnx>
-References: <cover.1392717502.git.agordeev@redhat.com>
- <9ee830cfd4b417f230f77dd37256ca8e4396ecbe.1392717503.git.agordeev@redhat.com>
- <20140218120136.GA8770@mtl-eit-vdi-22.mtl.labs.mlnx>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Robert Moore <robert.moore@intel.com>
+Subject: [PATCH v3 6/7] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
+Date: Sun, 02 Feb 2014 18:19:30 +0100
+Message-ID: <1565480.8q752YNKSl@vostro.rjw.lan>
+In-Reply-To: <5157096.hCmU2aoKCT@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan> <5157096.hCmU2aoKCT@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140218120136.GA8770@mtl-eit-vdi-22.mtl.labs.mlnx>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18/02/14 14:01 +0200, Amir Vadai wrote:
-> On 18/02/14 11:11 +0100, Alexander Gordeev wrote:
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers
-> > using these two interfaces need to be updated to use the
-> > new pci_enable_msi_range() and pci_enable_msix_range()
-> > interfaces.
-> > 
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> > Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-> > Cc: Bruce Allan <bruce.w.allan@intel.com>
-> > Cc: e1000-devel@lists.sourceforge.net
-> > Cc: netdev@vger.kernel.org
-> > Cc: linux-pci@vger.kernel.org
-> > ---
-> 
-> Acked-By: Amir Vadai <amirv@mellanox.com>
-Oh, I'm still working for Mellanox - just replied to the wrong mail :)
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+Since acpi_hotplug_notify_cb() does not use its data argument any
+more, the second argument of acpi_install_hotplug_notify_handler()
+can be dropped, so do that and update its callers accordingly.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c                |    6 +++---
+ drivers/pci/hotplug/acpiphp_glue.c |    2 +-
+ include/acpi/acpi_bus.h            |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -576,10 +576,10 @@ static void acpi_hotplug_notify_cb(acpi_
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ }
+ 
+-void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
++void acpi_install_hotplug_notify_handler(acpi_handle handle)
+ {
+ 	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-				    acpi_hotplug_notify_cb, data);
++				    acpi_hotplug_notify_cb, NULL);
+ }
+ 
+ void acpi_remove_hotplug_notify_handler(acpi_handle handle)
+@@ -2044,7 +2044,7 @@ static void acpi_scan_init_hotplug(acpi_
+ 	list_for_each_entry(hwid, &pnp.ids, list) {
+ 		handler = acpi_scan_match_handler(hwid->id, NULL);
+ 		if (handler) {
+-			acpi_install_hotplug_notify_handler(handle, handler);
++			acpi_install_hotplug_notify_handler(handle);
+ 			break;
+ 		}
+ 	}
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -362,7 +362,7 @@ static acpi_status register_slot(acpi_ha
+ 
+ 	/* install notify handler */
+ 	if (!(newfunc->flags & FUNC_HAS_DCK))
+-		acpi_install_hotplug_notify_handler(handle, NULL);
++		acpi_install_hotplug_notify_handler(handle);
+ 
+ 	return AE_OK;
+ }
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -443,7 +443,7 @@ static inline bool acpi_device_enumerate
+ typedef void (*acpi_hp_callback)(void *data, u32 src);
+ 
+ acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
+-void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
++void acpi_install_hotplug_notify_handler(acpi_handle handle);
+ void acpi_remove_hotplug_notify_handler(acpi_handle handle);
+ 
+ /**
+
