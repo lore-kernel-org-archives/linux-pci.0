@@ -1,65 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:62285 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754104AbaBZThx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:53 -0500
-Received: by mail-ie0-f179.google.com with SMTP id to1so1118976ieb.38
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:53 -0800 (PST)
-Subject: [PATCH 7/9] PCI: Don't try to claim IORESOURCE_UNSET resources
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:37:51 -0700
-Message-ID: <20140226193751.10125.5434.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:64770 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754756AbaBBASU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 19:18:20 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 8/13] ACPI / hotplug / PCI: Store acpi_device pointer in acpiphp_context
+Date: Sun, 02 Feb 2014 01:27:42 +0100
+Message-ID: <5896084.GRnf5R2ttZ@vostro.rjw.lan>
+In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the IORESOURCE_UNSET bit is set, it means we haven't assigned an address
-yet, so don't try to claim the region.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Also, make the error messages more uniform and add info about which BAR is
-involved.
+After recent modifications of the ACPI core making it create a struct
+acpi_device object for every namespace node representing a device
+regardless of the current status of that device the ACPIPHP code
+can store a struct acpi_device pointer instead of an ACPI handle
+in struct acpiphp_context.  This immediately makes it possible to
+avoid making potentially costly calls to acpi_bus_get_device() in
+two places and allows some more simplifications to be made going
+forward.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+The reason why that is correct is because ACPIPHP only installs
+hotify handlers for namespace nodes that exist when
+acpiphp_enumerate_slots() is called for their parent bridge.
+That only happens if the parent bridge has an ACPI companion
+associated with it, which means that the ACPI namespace scope
+in question has been scanned already at that point.  That, in
+turn, means that struct acpi_device objects have been created
+for all namespace nodes in that scope and pointers to those
+objects can be stored directly instead of their ACPI handles.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/setup-res.c |   15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/pci/hotplug/acpiphp.h      |    9 +++++--
+ drivers/pci/hotplug/acpiphp_glue.c |   44 +++++++++++++++++--------------------
+ 2 files changed, 28 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 7f7652176fc5..6e443135ba24 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -111,18 +111,23 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
- 	struct resource *res = &dev->resource[resource];
- 	struct resource *root, *conflict;
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -117,8 +117,8 @@ struct acpiphp_func {
+ };
  
-+	if (res->flags & IORESOURCE_UNSET) {
-+		dev_info(&dev->dev, "can't claim BAR %d %pR: no address assigned\n",
-+			 resource, res);
-+		return -EINVAL;
-+	}
+ struct acpiphp_context {
+-	acpi_handle handle;
+ 	struct acpiphp_func func;
++	struct acpi_device *adev;
+ 	struct acpiphp_bridge *bridge;
+ 	unsigned int refcount;
+ };
+@@ -128,9 +128,14 @@ static inline struct acpiphp_context *fu
+ 	return container_of(func, struct acpiphp_context, func);
+ }
+ 
++static inline struct acpi_device *func_to_acpi_device(struct acpiphp_func *func)
++{
++	return func_to_context(func)->adev;
++}
 +
- 	root = pci_find_parent_resource(dev, res);
- 	if (!root) {
--		dev_info(&dev->dev, "no compatible bridge window for %pR\n",
--			 res);
-+		dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible bridge window\n",
-+			 resource, res);
- 		return -EINVAL;
- 	}
+ static inline acpi_handle func_to_handle(struct acpiphp_func *func)
+ {
+-	return func_to_context(func)->handle;
++	return func_to_acpi_device(func)->handle;
+ }
  
- 	conflict = request_resource_conflict(root, res);
- 	if (conflict) {
--		dev_info(&dev->dev,
--			 "address space collision: %pR conflicts with %s %pR\n",
--			 res, conflict->name, conflict);
-+		dev_info(&dev->dev, "can't claim BAR %d %pR: address conflict with %s %pR\n",
-+			 resource, res, conflict->name, conflict);
- 		return -EBUSY;
- 	}
+ /*
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -73,11 +73,11 @@ static void acpiphp_context_handler(acpi
  
+ /**
+  * acpiphp_init_context - Create hotplug context and grab a reference to it.
+- * @handle: ACPI object handle to create the context for.
++ * @adev: ACPI device object to create the context for.
+  *
+  * Call under acpiphp_context_lock.
+  */
+-static struct acpiphp_context *acpiphp_init_context(acpi_handle handle)
++static struct acpiphp_context *acpiphp_init_context(struct acpi_device *adev)
+ {
+ 	struct acpiphp_context *context;
+ 	acpi_status status;
+@@ -86,9 +86,9 @@ static struct acpiphp_context *acpiphp_i
+ 	if (!context)
+ 		return NULL;
+ 
+-	context->handle = handle;
++	context->adev = adev;
+ 	context->refcount = 1;
+-	status = acpi_attach_data(handle, acpiphp_context_handler, context);
++	status = acpi_attach_data(adev->handle, acpiphp_context_handler, context);
+ 	if (ACPI_FAILURE(status)) {
+ 		kfree(context);
+ 		return NULL;
+@@ -118,7 +118,7 @@ static struct acpiphp_context *acpiphp_g
+ 
+ /**
+  * acpiphp_put_context - Drop a reference to ACPI hotplug context.
+- * @handle: ACPI object handle to put the context for.
++ * @context: ACPI hotplug context to drop a reference to.
+  *
+  * The context object is removed if there are no more references to it.
+  *
+@@ -130,7 +130,7 @@ static void acpiphp_put_context(struct a
+ 		return;
+ 
+ 	WARN_ON(context->bridge);
+-	acpi_detach_data(context->handle, acpiphp_context_handler);
++	acpi_detach_data(context->adev->handle, acpiphp_context_handler);
+ 	kfree(context);
+ }
+ 
+@@ -265,6 +265,7 @@ static acpi_status register_slot(acpi_ha
+ {
+ 	struct acpiphp_bridge *bridge = data;
+ 	struct acpiphp_context *context;
++	struct acpi_device *adev;
+ 	struct acpiphp_slot *slot;
+ 	struct acpiphp_func *newfunc;
+ 	acpi_status status = AE_OK;
+@@ -284,12 +285,14 @@ static acpi_status register_slot(acpi_ha
+ 				"can't evaluate _ADR (%#x)\n", status);
+ 		return AE_OK;
+ 	}
++	if (acpi_bus_get_device(handle, &adev))
++		return AE_OK;
+ 
+ 	device = (adr >> 16) & 0xffff;
+ 	function = adr & 0xffff;
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+-	context = acpiphp_init_context(handle);
++	context = acpiphp_init_context(adev);
+ 	if (!context) {
+ 		mutex_unlock(&acpiphp_context_lock);
+ 		acpi_handle_err(handle, "No hotplug context\n");
+@@ -607,12 +610,8 @@ static void disable_slot(struct acpiphp_
+ 		if (PCI_SLOT(dev->devfn) == slot->device)
+ 			pci_stop_and_remove_bus_device(dev);
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		struct acpi_device *adev;
+-
+-		if (!acpi_bus_get_device(func_to_handle(func), &adev))
+-			acpi_bus_trim(adev);
+-	}
++	list_for_each_entry(func, &slot->funcs, sibling)
++		acpi_bus_trim(func_to_acpi_device(func));
+ 
+ 	slot->flags &= (~SLOT_ENABLED);
+ }
+@@ -626,13 +625,10 @@ static bool slot_no_hotplug(struct acpip
+ {
+ 	struct acpiphp_func *func;
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		struct acpi_device *adev = NULL;
+-
+-		acpi_bus_get_device(func_to_handle(func), &adev);
+-		if (acpiphp_no_hotplug(adev))
++	list_for_each_entry(func, &slot->funcs, sibling)
++		if (acpiphp_no_hotplug(func_to_acpi_device(func)))
+ 			return true;
+-	}
++
+ 	return false;
+ }
+ 
+@@ -883,7 +879,7 @@ static void hotplug_event(acpi_handle ha
+ static void hotplug_event_work(void *data, u32 type)
+ {
+ 	struct acpiphp_context *context = data;
+-	acpi_handle handle = context->handle;
++	acpi_handle handle = context->adev->handle;
+ 
+ 	acpi_scan_lock_acquire();
+ 
+@@ -941,7 +937,7 @@ static void handle_hotplug_event(acpi_ha
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(handle);
+-	if (context && !WARN_ON(context->handle != handle)) {
++	if (context && !WARN_ON(context->adev->handle != handle)) {
+ 		get_bridge(context->func.parent);
+ 		acpiphp_put_context(context);
+ 		acpi_hotplug_execute(hotplug_event_work, context, type);
+@@ -965,16 +961,18 @@ static void handle_hotplug_event(acpi_ha
+ void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
+ 	struct acpiphp_bridge *bridge;
++	struct acpi_device *adev;
+ 	acpi_handle handle;
+ 	acpi_status status;
+ 
+ 	if (acpiphp_disabled)
+ 		return;
+ 
+-	handle = ACPI_HANDLE(bus->bridge);
+-	if (!handle)
++	adev = ACPI_COMPANION(bus->bridge);
++	if (!adev)
+ 		return;
+ 
++	handle = adev->handle;
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+ 	if (!bridge) {
+ 		acpi_handle_err(handle, "No memory for bridge object\n");
 
