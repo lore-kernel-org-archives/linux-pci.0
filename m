@@ -1,134 +1,239 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:48207 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751492AbaBLQTi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 11:19:38 -0500
-Date: Wed, 12 Feb 2014 16:18:56 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"arnd@arndb.de" <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>, linux@arm.linux.org.uk
-Subject: Re: [PATCH 1/3] ARM: bios32: use pci_enable_resource to enable PCI
- resources
-Message-ID: <20140212161855.GG29132@mudshark.cambridge.arm.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <1391532784-1953-2-git-send-email-will.deacon@arm.com>
- <20140212010650.GI21057@google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Robert Moore <robert.moore@intel.com>
+Subject: [PATCH v3 3/7] ACPI / hotplug / PCI: Define hotplug context lock in the core
+Date: Sun, 02 Feb 2014 18:16:47 +0100
+Message-ID: <2157717.5XCedcge0O@vostro.rjw.lan>
+In-Reply-To: <5157096.hCmU2aoKCT@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan> <5157096.hCmU2aoKCT@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140212010650.GI21057@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-[Adding rmk]
+Subsequent changes will require the ACPI core to acquire the lock
+protecting the ACPIPHP hotplug contexts, so move the definition of
+the lock to the core and change its name to be more generic.
 
-On Wed, Feb 12, 2014 at 01:06:50AM +0000, Bjorn Helgaas wrote:
-> On Tue, Feb 04, 2014 at 04:53:02PM +0000, Will Deacon wrote:
-> > This patch moves bios32 over to using the generic code for enabling PCI
-> > resources. All that's left to take care of is the case of PCI bridges,
-> > which need to be enabled for both IO and MEMORY, regardless of the
-> > resource types.
-> > 
-> > A side-effect of this change is that we no longer explicitly enable
-> > devices when running in PCI_PROBE_ONLY mode. This stays closer to the
-> > meaning of the option and prevents us from trying to enable devices
-> > without any assigned resources (the core code refuses to enable
-> > resources without parents).
-> 
-> Heh, I've been looking at this, too :)  I have a similar patch for ARM and
-> other architectures with their own versions of pcibios_enable_device().
-> 
-> Several of them (arm m68k tile tegra unicore32) have this special code that
-> enables IO and MEMORY for bridges unconditionally.  But from a PCI
-> perspective, I don't know why we should do this unconditionally.  If a
-> bridge doesn't have an enabled MEM window or MEM BAR, I don't think we
-> should have to enable PCI_COMMAND_MEMORY for it.
-> 
-> The architectures that do this only check for valid MEM BARs, i.e., they
-> only look at resources 0-5, and they don't look at the window resources.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c                |   11 +++++++++
+ drivers/pci/hotplug/acpiphp_glue.c |   41 ++++++++++++++++++-------------------
+ include/acpi/acpi_bus.h            |    2 +
+ 3 files changed, 33 insertions(+), 21 deletions(-)
 
-Ok, so they would miss the bridge resources, which would explain the
-additional step to enable both IO and MEM unconditionally.
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -41,6 +41,7 @@ static DEFINE_MUTEX(acpi_scan_lock);
+ static LIST_HEAD(acpi_scan_handlers_list);
+ DEFINE_MUTEX(acpi_device_lock);
+ LIST_HEAD(acpi_wakeup_device_list);
++static DEFINE_MUTEX(acpi_hp_context_lock);
+ 
+ struct acpi_device_bus_id{
+ 	char bus_id[15];
+@@ -60,6 +61,16 @@ void acpi_scan_lock_release(void)
+ }
+ EXPORT_SYMBOL_GPL(acpi_scan_lock_release);
+ 
++void acpi_lock_hp_context(void)
++{
++	mutex_lock(&acpi_hp_context_lock);
++}
++
++void acpi_unlock_hp_context(void)
++{
++	mutex_unlock(&acpi_hp_context_lock);
++}
++
+ int acpi_scan_add_handler(struct acpi_scan_handler *handler)
+ {
+ 	if (!handler || !handler->attach)
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -58,7 +58,6 @@
+ 
+ static LIST_HEAD(bridge_list);
+ static DEFINE_MUTEX(bridge_mutex);
+-static DEFINE_MUTEX(acpiphp_context_lock);
+ 
+ static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+@@ -75,7 +74,7 @@ static void acpiphp_context_handler(acpi
+  * acpiphp_init_context - Create hotplug context and grab a reference to it.
+  * @adev: ACPI device object to create the context for.
+  *
+- * Call under acpiphp_context_lock.
++ * Call under acpi_hp_context_lock.
+  */
+ static struct acpiphp_context *acpiphp_init_context(struct acpi_device *adev)
+ {
+@@ -100,7 +99,7 @@ static struct acpiphp_context *acpiphp_i
+  * acpiphp_get_context - Get hotplug context and grab a reference to it.
+  * @handle: ACPI object handle to get the context for.
+  *
+- * Call under acpiphp_context_lock.
++ * Call under acpi_hp_context_lock.
+  */
+ static struct acpiphp_context *acpiphp_get_context(acpi_handle handle)
+ {
+@@ -122,7 +121,7 @@ static struct acpiphp_context *acpiphp_g
+  *
+  * The context object is removed if there are no more references to it.
+  *
+- * Call under acpiphp_context_lock.
++ * Call under acpi_hp_context_lock.
+  */
+ static void acpiphp_put_context(struct acpiphp_context *context)
+ {
+@@ -151,7 +150,7 @@ static void free_bridge(struct kref *kre
+ 	struct acpiphp_slot *slot, *next;
+ 	struct acpiphp_func *func, *tmp;
+ 
+-	mutex_lock(&acpiphp_context_lock);
++	acpi_lock_hp_context();
+ 
+ 	bridge = container_of(kref, struct acpiphp_bridge, ref);
+ 
+@@ -175,7 +174,7 @@ static void free_bridge(struct kref *kre
+ 	pci_dev_put(bridge->pci_dev);
+ 	kfree(bridge);
+ 
+-	mutex_unlock(&acpiphp_context_lock);
++	acpi_unlock_hp_context();
+ }
+ 
+ /*
+@@ -291,17 +290,17 @@ static acpi_status register_slot(acpi_ha
+ 	device = (adr >> 16) & 0xffff;
+ 	function = adr & 0xffff;
+ 
+-	mutex_lock(&acpiphp_context_lock);
++	acpi_lock_hp_context();
+ 	context = acpiphp_init_context(adev);
+ 	if (!context) {
+-		mutex_unlock(&acpiphp_context_lock);
++		acpi_unlock_hp_context();
+ 		acpi_handle_err(handle, "No hotplug context\n");
+ 		return AE_NOT_EXIST;
+ 	}
+ 	newfunc = &context->func;
+ 	newfunc->function = function;
+ 	newfunc->parent = bridge;
+-	mutex_unlock(&acpiphp_context_lock);
++	acpi_unlock_hp_context();
+ 
+ 	if (acpi_has_method(handle, "_EJ0"))
+ 		newfunc->flags = FUNC_HAS_EJ0;
+@@ -319,9 +318,9 @@ static acpi_status register_slot(acpi_ha
+ 
+ 	slot = kzalloc(sizeof(struct acpiphp_slot), GFP_KERNEL);
+ 	if (!slot) {
+-		mutex_lock(&acpiphp_context_lock);
++		acpi_lock_hp_context();
+ 		acpiphp_put_context(context);
+-		mutex_unlock(&acpiphp_context_lock);
++		acpi_unlock_hp_context();
+ 		return AE_NO_MEMORY;
+ 	}
+ 
+@@ -396,7 +395,7 @@ static struct acpiphp_bridge *acpiphp_ha
+ 	struct acpiphp_context *context;
+ 	struct acpiphp_bridge *bridge = NULL;
+ 
+-	mutex_lock(&acpiphp_context_lock);
++	acpi_lock_hp_context();
+ 	context = acpiphp_get_context(handle);
+ 	if (context) {
+ 		bridge = context->bridge;
+@@ -405,7 +404,7 @@ static struct acpiphp_bridge *acpiphp_ha
+ 
+ 		acpiphp_put_context(context);
+ 	}
+-	mutex_unlock(&acpiphp_context_lock);
++	acpi_unlock_hp_context();
+ 	return bridge;
+ }
+ 
+@@ -796,12 +795,12 @@ static void hotplug_event(u32 type, void
+ 	acpi_handle handle = context->adev->handle;
+ 	struct acpiphp_bridge *bridge;
+ 
+-	mutex_lock(&acpiphp_context_lock);
++	acpi_lock_hp_context();
+ 	bridge = context->bridge;
+ 	if (bridge)
+ 		get_bridge(bridge);
+ 
+-	mutex_unlock(&acpiphp_context_lock);
++	acpi_unlock_hp_context();
+ 
+ 	pci_lock_rescan_remove();
+ 
+@@ -902,16 +901,16 @@ static void handle_hotplug_event(acpi_ha
+ 		goto out;
+ 	}
+ 
+-	mutex_lock(&acpiphp_context_lock);
++	acpi_lock_hp_context();
+ 	context = acpiphp_get_context(handle);
+ 	if (context && !WARN_ON(context->adev->handle != handle)) {
+ 		get_bridge(context->func.parent);
+ 		acpiphp_put_context(context);
+ 		acpi_hotplug_execute(hotplug_event_work, context, type);
+-		mutex_unlock(&acpiphp_context_lock);
++		acpi_unlock_hp_context();
+ 		return;
+ 	}
+-	mutex_unlock(&acpiphp_context_lock);
++	acpi_unlock_hp_context();
+ 	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
+ 
+  out:
+@@ -967,10 +966,10 @@ void acpiphp_enumerate_slots(struct pci_
+ 		 * parent is going to be handled by pciehp, in which case this
+ 		 * bridge is not interesting to us either.
+ 		 */
+-		mutex_lock(&acpiphp_context_lock);
++		acpi_lock_hp_context();
+ 		context = acpiphp_get_context(handle);
+ 		if (!context) {
+-			mutex_unlock(&acpiphp_context_lock);
++			acpi_unlock_hp_context();
+ 			put_device(&bus->dev);
+ 			pci_dev_put(bridge->pci_dev);
+ 			kfree(bridge);
+@@ -980,7 +979,7 @@ void acpiphp_enumerate_slots(struct pci_
+ 		context->bridge = bridge;
+ 		/* Get a reference to the parent bridge. */
+ 		get_bridge(context->func.parent);
+-		mutex_unlock(&acpiphp_context_lock);
++		acpi_unlock_hp_context();
+ 	}
+ 
+ 	/* must be added to the list prior to calling register_slot */
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -402,6 +402,8 @@ static inline bool acpi_bus_can_wakeup(a
+ 
+ void acpi_scan_lock_acquire(void);
+ void acpi_scan_lock_release(void);
++void acpi_lock_hp_context(void);
++void acpi_unlock_hp_context(void);
+ int acpi_scan_add_handler(struct acpi_scan_handler *handler);
+ int acpi_bus_register_driver(struct acpi_driver *driver);
+ void acpi_bus_unregister_driver(struct acpi_driver *driver);
 
-> The architectures that don't enable IO and MEMORY for bridges
-> unconditionally check *all* the resources up to PCI_NUM_RESOURCES, which
-> includes the BARs, bridge windows, and any IOV resources.
-> 
-> The generic pci_enable_resources() does check all the resources, so I
-> *think* it should be safe for all architectures to use that and just drop
-> the check for bridges.  What do you think?
-
-Right, your explanation certainly makes sense to me: if
-pci_enable_resources() enables bridge resources, then there's no reason for
-the extra logic in the caller.
-
-The problem is, I don't have a platform to test our theory. I've added
-Russell, since he might have a relevant ARM platform where we could test our
-change.
-
-Will
-
-> > diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> > index 317da88ae65b..9f3c76638689 100644
-> > --- a/arch/arm/kernel/bios32.c
-> > +++ b/arch/arm/kernel/bios32.c
-> > @@ -608,40 +608,25 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> >   */
-> >  int pcibios_enable_device(struct pci_dev *dev, int mask)
-> >  {
-> > -	u16 cmd, old_cmd;
-> > -	int idx;
-> > -	struct resource *r;
-> > +	int err;
-> > +	u16 cmd;
-> >  
-> > -	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> > -	old_cmd = cmd;
-> > -	for (idx = 0; idx < 6; idx++) {
-> > -		/* Only set up the requested stuff */
-> > -		if (!(mask & (1 << idx)))
-> > -			continue;
-> > +	if (pci_has_flag(PCI_PROBE_ONLY))
-> > +		return 0;
-> >  
-> > -		r = dev->resource + idx;
-> > -		if (!r->start && r->end) {
-> > -			printk(KERN_ERR "PCI: Device %s not available because"
-> > -			       " of resource collisions\n", pci_name(dev));
-> > -			return -EINVAL;
-> > -		}
-> > -		if (r->flags & IORESOURCE_IO)
-> > -			cmd |= PCI_COMMAND_IO;
-> > -		if (r->flags & IORESOURCE_MEM)
-> > -			cmd |= PCI_COMMAND_MEMORY;
-> > -	}
-> > +	err = pci_enable_resources(dev, mask);
-> > +	if (err)
-> > +		return err;
-> >  
-> >  	/*
-> >  	 * Bridges (eg, cardbus bridges) need to be fully enabled
-> >  	 */
-> > -	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
-> > +	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE) {
-> > +		pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> >  		cmd |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
-> > -
-> > -	if (cmd != old_cmd) {
-> > -		printk("PCI: enabling device %s (%04x -> %04x)\n",
-> > -		       pci_name(dev), old_cmd, cmd);
-> >  		pci_write_config_word(dev, PCI_COMMAND, cmd);
-> >  	}
-> > +
-> >  	return 0;
-> >  }
-> >  
-> > -- 
-> > 1.8.2.2
-> > 
-> 
