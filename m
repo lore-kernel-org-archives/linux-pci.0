@@ -1,104 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:41482 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752100AbaBLBI4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 20:08:56 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rajat Jain <rajatjain.linux@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Tom Nguyen <tom.l.nguyen@intel.com>,
-	Kristen Accardi <kristen.c.accardi@intel.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: RE: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
-Date: Wed, 12 Feb 2014 01:08:50 +0000
-Message-ID: <8a021ad12c5548fe8e79e0208725c14f@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
- <CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
- <20131108012352.GE2955@google.com>
- <CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
- <CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
- <CADTPrLRJD0er1kijjm2SEE6wUA9eQaz+OOd67E3MpHLu6k-R6Q@mail.gmail.com>
- <20131123005102.GA14690@google.com>
- <a3dc3d613f274e4d993d6a7612f1dde6@BLUPR05MB118.namprd05.prod.outlook.com>
- <CAErSpo7J8UZpYSaAPavJrR8iOt368expOuF-s_M7x+jW7drnWw@mail.gmail.com>
- <18997e8c20fb4bdd8a72e4c01b3fd308@BLUPR05MB118.namprd05.prod.outlook.com>
- <20140212003458.GE21057@google.com>
-In-Reply-To: <20140212003458.GE21057@google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Robert Moore <robert.moore@intel.com>
+Subject: [PATCH v3 5/7] ACPI / hotplug / PCI: Rework the handling of eject requests
+Date: Sun, 02 Feb 2014 18:18:44 +0100
+Message-ID: <15293594.kU6VSMnHoa@vostro.rjw.lan>
+In-Reply-To: <5157096.hCmU2aoKCT@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan> <5157096.hCmU2aoKCT@vostro.rjw.lan>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gQmpvcm4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
-dXgtaG90cGx1Zy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1ob3RwbHVnLQ0K
-PiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBCam9ybiBIZWxnYWFzDQo+IFNl
-bnQ6IFR1ZXNkYXksIEZlYnJ1YXJ5IDExLCAyMDE0IDQ6MzUgUE0NCj4gVG86IFJhamF0IEphaW4N
-Cj4gQ2M6IFJhamF0IEphaW47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4IGhvdHBs
-dWcgbWFpbGluZzsgS2VuamkNCj4gS2FuZXNoaWdlOyBZaWppbmcgV2FuZzsgR3JlZyBLSDsgVG9t
-IE5ndXllbjsgS3Jpc3RlbiBBY2NhcmRpOyBSYWphdA0KPiBKYWluOyBHdWVudGVyIFJvZWNrDQo+
-IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIHBjaWVocDogQWNrbm93bGVkZ2UgdGhlIHNwdXJpb3VzICJj
-bWQgY29tcGxldGVkIg0KPiBldmVudC4NCj4gDQo+IE9uIE1vbiwgTm92IDI1LCAyMDEzIGF0IDA3
-OjAzOjExUE0gKzAwMDAsIFJhamF0IEphaW4gd3JvdGU6DQo+ID4gSGVsbG8sDQo+ID4NCj4gPiA+
-ID4gT24gYSBkaWZmZXJlbnQgbm90ZSwgSSBmZWVsIHRoZXJlIGlzIHN0aWxsIGEgbmVlZCB0byBh
-cHBseSBteQ0KPiA+ID4gPiBvcmlnaW5hbA0KPiA+ID4gcGF0Y2guIFRoZXJlIGlzIHN0aWxsIGFu
-IG9wZW4gcHJvYmxlbSBpbiBjYXNlIG9mIHNwdXJpb3VzIGludGVycnVwdHMNCj4gPiA+IChvciBp
-biBhbnkgY2FzZSB3aGVyZSB0aGUgY29uZGl0aW9uICJpZiAoc2xvdF9zdGF0dXMgJg0KPiBQQ0lf
-RVhQX1NMVFNUQV9DQykiDQo+ID4gPiBiZWNvbWVzIHRydWUgaW4gcGNpZV93cml0ZV9jbWQoKSku
-IFRoYXQgaXMgYmVjYXVzZSBvbmNlIHRoYXQNCj4gPiA+IGhhcHBlbnMsIHdlIG5ldmVyIGNsZWFy
-IHRoYXQgaW50ZXJydXB0LCBhbmQgbm8gZnVydGhlciBob3RwbHVnDQo+ID4gPiBpbnRlcnJ1cHRz
-IHNoYWxsIGJlIHJlY2VpdmVkIHVubGVzcyB3ZSBkbyB0aGF0Lg0KPiA+ID4NCj4gPiA+IEkgYWdy
-ZWUgdGhpcyBpcyBhbiBpc3N1ZSBhbmQgd2Ugc2hvdWxkIGFkZHJlc3MgaXQgc29tZWhvdy4gIE15
-DQo+ID4gPiBoZXNpdGF0aW9uIGlzIGp1c3QgdGhhdCBJJ2QgcHJlZmVyIHRvIGRvIHNvbWUgbW9y
-ZSBhZ2dyZXNzaXZlDQo+ID4gPiByZXN0cnVjdHVyaW5nIHJhdGhlciB0aGFuIGFwcGx5IGEgcG9p
-bnQgZml4LiAgRm9yIGV4YW1wbGU6DQo+ID4NCj4gPiBPSywgSSdsbCBhdHRlbXB0IHRvIGZpeCBp
-dCB0aGF0IHdheSB3aGVuIEkgZ2V0IHRpbWUuDQo+ID4NCj4gPiA+DQo+ID4gPiAtIFdlIGN1cnJl
-bnRseSBsb29rIGF0IFBDSV9FWFBfU0xUU1RBX0NDIGluIHBjaWVfaXNyKCksDQo+ID4gPiBwY2ll
-X3BvbGxfY21kKCksIGFuZCBwY2llX3dyaXRlX2NtZCgpLiAgSSB0aGluayBpdCB3b3VsZCBiZSBi
-ZXR0ZXINCj4gPiA+IHRvIGxvb2sgYXQgaXQgb25seSBpbiBwY2llX2lzcigpLg0KPiA+ID4NCj4g
-PiA+IC0gSSBkb24ndCB0aGluayBwY2llX3BvbGxfY21kKCkgc2hvdWxkIGV4aXN0IGF0IGFsbDsg
-d2Ugc2hvdWxkIHBvbGwNCj4gPiA+IGJ5IGNhbGxpbmcgcGNpZV9pc3IoKSBpbnN0ZWFkLg0KPiA+
-ID4NCj4gPiA+IC0gV2UgbmVlZCBwY2llX3dyaXRlX2NtZCgpLCBidXQgSSB0aGluayB0aGUgd2F5
-IGl0IHdhaXRzIGlzDQo+IGJhY2t3YXJkcy4NCj4gPiA+ICBDdXJyZW50bHkgd2UgaXNzdWUgdGhl
-IGNvbW1hbmQsIHRoZW4gd2FpdCBmb3IgaXQgdG8gY29tcGxldGUuICBJDQo+ID4gPiB0aGluayB3
-ZSBzaG91bGQgaXNzdWUgdGhlIGNvbW1hbmQsIG5vdGUgdGhlIGN1cnJlbnQgdGltZSwgYW5kIHJl
-dHVybg0KPiA+ID4gd2l0aG91dCB3YWl0aW5nLiAgVGhlICpuZXh0KiB0aW1lIHdlIG5lZWQgdG8g
-aXNzdWUgYSBjb21tYW5kLCB3ZSBjYW4NCj4gPiA+IHdhaXQgZm9yIGNvbXBsZXRpb24gb2YgdGhl
-IHByZXZpb3VzIG9uZSAob3IgdGltZW91dCkgaWYgbmVjZXNzYXJ5Lg0KPiA+ID4NCj4gPiA+IEJ1
-dCBtYXliZSB3ZSBuZWVkIHRoZSBwb2ludCBmaXggaW4gdGhlIGludGVyaW0sIGVzcGVjaWFsbHkg
-aWYNCj4gPiA+IGFueWJvZHkgY2FuIGFjdHVhbGx5IHByb2R1Y2UgdGhlIHNjZW5hcmlvIHlvdSBt
-ZW50aW9uLg0KPiA+DQo+ID4gT2suDQo+IA0KPiBUaGlzIHBhdGNoIGlzIHN0aWxsIGluIHBhdGNo
-d29yaywgYnV0IEkndmUgbG9zdCB0cmFjayBvZiB3aGVyZSB3ZSBhcmUuDQo+IERpZCB5b3UgcmVz
-b2x2ZSB0aGlzIGluIHRoZSBzZXJpZXMgdGhhdCBJIGp1c3QgYXBwbGllZCwgb3IgaXMgaXQgc3Rp
-bGwNCj4gYW4gb3V0c3RhbmRpbmcgaXNzdWU/DQoNCk5vLCBJIGRpZCBub3Qgc29sdmUgaXQuIEl0
-IGlzIHN0aWxsIGFuIG91dHN0YW5kaW5nIGlzc3VlLiBTbyBmYXIgSSBhbSB1c2luZyB5b3VyIHBh
-dGNoIHRvIG92ZXJjb21lIHRoaXM6DQoNCmh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvaG90
-cGx1Zy9tc2cwNTgzMC5odG1sDQoNCkknbGwganVzdCBhdHRlbXB0IHRvIGNvbmNsdWRlIHRoZSBz
-dGF0dXMgb24gdGhpcyBpc3N1ZSBzbyB0aGF0IHlvdSBjYW4gbWFrZSB0aGUgZGVjaXNpb24gb24g
-dGhlIGNvdXJzZSBvZiBhY3Rpb24uIElNSE8gdGhlcmUgYXJlIDIgaW5kZXBlbmRlbnQgaXNzdWVz
-IHRoYXQgd2UgZGlzY3Vzc2VkIGluIHRoaXMgdGhyZWFkOg0KCQ0KMSkgUENJZSBjb21wbGlhbnQg
-SFcgKHRoYXQgZ2VuZXJhdGVzIGNtZCBjb21wbGV0ZWQgaW50ZXJydXB0cyBhdCBldmVyeSB3cml0
-ZSBvZiBTbG90X2N0cmwgcmVnaXN0ZXIpIGJlaW5nIHBlbmFsaXplZCB3aXRoIDEgc2Vjb25kIGRl
-bGF5IGR1cmluZyB0aGUgYm9vdCB1cC4gWW91ciBwYXRjaCBzb2x2ZXMgdGhpcy4NCg0KMikgSWYg
-dGhlcmUgaXMgYSBnZW51aW5lIHNwdXJpb3VzIGludGVycnVwdCwgaXQgZG9lcyBub3QgZ2V0IGFj
-a25vd2xlZGdlZC4gSSBoYWQgb3JpZ2luYWxseSBwb3N0ZWQgYSBwYXRjaCBmb3IgVEhJUyBwcm9i
-bGVtLg0KaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9ob3RwbHVnL21zZzA1ODE1Lmh0bWwN
-Cg0KWW91IGhhZCBpbmRpY2F0ZWQgdGhhdCB5b3Ugd291bGQgcmF0aGVyIHdhbnQgYSBiaWdnZXIg
-cmVzdHJ1Y3R1cmluZyBvZiB0aGUgZHJpdmVyIHRvIHNvbHZlICgyKS4NCg0KTXkgb2JzZXJ2YXRp
-b246IE1ZIHByb2JsZW0gKGluIG15IHNldHVwKSBpcyBub3Qgc2VlbiBpZiBJIHVzZSBlaXRoZXIg
-b2YgdGhlIHBhdGNoZXMgKHlvdXJzIG9yIG1pbmUpLg0KDQpNeSBvcGluaW9uOiBJIHRoaW5rIG15
-IHBhdGNoIHNvbHZlcyAoMikgYnV0IG1pZ2h0IG5vdCBzb2x2ZSAoMSkgZm9yIGFsbCBjb3JuZXIg
-Y2FzZXMuIEFsc28geW91ciBwYXRjaCBzb2x2ZXMgKDEpIGJ1dCBtYXkgbm90IHNvbHZlICgyKSBm
-b3IgYWxsIGNvcm5lciBjYXNlcyAtVGh1cyB3ZSBzaG91bGQgcHJvYmFibHkgc29sdmUgYm90aCBv
-ZiB0aGVzZSBwcm9ibGVtcyBpbmRpdmlkdWFsbHkuDQoNClRoYW5rcywNCg0KUmFqYXQNCg0KDQoN
-CiANCg0KDQo+IA0KPiBCam9ybg0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlz
-dDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtaG90cGx1ZyINCj4gaW4gdGhlIGJv
-ZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRv
-bW8NCj4gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
-DQo+IA0KDQo=
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+To avoid the need to install a hotplug notify handler for each ACPI
+namespace node representing a device and having a matching scan
+handler, move the check whether or not the ejection of the given
+device is enabled through its scan handler from acpi_hotplug_notify_cb()
+to acpi_generic_hotplug_event().  Also, move the execution of
+ACPI_OST_SC_EJECT_IN_PROGRESS _OST to acpi_generic_hotplug_event(),
+because in acpi_hotplug_notify_cb() or in acpi_eject_store() we really
+don't know whether or not the eject is going to be in progress (for
+example, acpi_hotplug_execute() may still fail without queuing up the
+work item).
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -459,6 +459,12 @@ static int acpi_generic_hotplug_event(st
+ 		return acpi_scan_device_check(adev);
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 	case ACPI_OST_EC_OSPM_EJECT:
++		if (adev->handler && !adev->handler->hotplug.enabled) {
++			dev_info(&adev->dev, "Eject disabled\n");
++			return -EPERM;
++		}
++		acpi_evaluate_hotplug_ost(adev->handle, ACPI_NOTIFY_EJECT_REQUEST,
++					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 		return acpi_scan_hot_remove(adev);
+ 	}
+ 	return -EINVAL;
+@@ -483,6 +489,10 @@ static void acpi_device_hotplug(void *da
+ 
+ 	if (adev->handler) {
+ 		error = acpi_generic_hotplug_event(adev, src);
++		if (error == -EPERM) {
++			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
++			goto err_out;
++		}
+ 	} else {
+ 		int (*event)(struct acpi_device *, u32);
+ 
+@@ -512,7 +522,6 @@ static void acpi_device_hotplug(void *da
+ 
+ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+ {
+-	struct acpi_scan_handler *handler = data;
+ 	u32 ost_code = ACPI_OST_SC_SUCCESS;
+ 	struct acpi_device *adev;
+ 	acpi_status status;
+@@ -528,13 +537,6 @@ static void acpi_hotplug_notify_cb(acpi_
+ 
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
+-		if (handler && !handler->hotplug.enabled) {
+-			acpi_handle_err(handle, "Eject disabled\n");
+-			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+-			goto out;
+-		}
+-		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+-					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 		break;
+ 
+ 	case ACPI_NOTIFY_DEVICE_WAKE:
+@@ -631,8 +633,6 @@ acpi_eject_store(struct device *d, struc
+ 	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
+ 		return -ENODEV;
+ 
+-	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
+-				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 	get_device(&acpi_device->dev);
+ 	status = acpi_hotplug_execute(acpi_device_hotplug, acpi_device,
+ 				      ACPI_OST_EC_OSPM_EJECT);
 
