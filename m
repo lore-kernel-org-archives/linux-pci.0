@@ -1,42 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:50516 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619AbaBNTLg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 14:11:36 -0500
+Received: from v094114.home.net.pl ([79.96.170.134]:53336 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754767AbaBBASU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 19:18:20 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 7/13] ACPI / hotplug / PCI: Rework acpiphp_no_hotplug()
+Date: Sun, 02 Feb 2014 01:27:01 +0100
+Message-ID: <2034807.s7QjzIy0FK@vostro.rjw.lan>
+In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <1392392764.3520.11.camel@devel-n900>
-References: <1390773698.3450.12.camel@artifact>
-	<CAE9FiQVD=oVHM5WJgSJ5cNpXZ1NYy9E_pcGWfjKnmD9OZoHHsw@mail.gmail.com>
-	<1391643656.1067.1.camel@artifact>
-	<CAE9FiQV8jutRhaBicL4kjqVYd07FzHmNoSN3NxdA2TYvOc_KUg@mail.gmail.com>
-	<z9zi9m.n0zpxd.1hgeaud-qmf@mail.snewbury.org.uk>
-	<i9nn22.n0zs79.1hgeaud-qmf@mail.snewbury.org.uk>
-	<1392392764.3520.11.camel@devel-n900>
-Date: Fri, 14 Feb 2014 11:11:35 -0800
-Message-ID: <CAE9FiQV3H_nxH0gxcM0kW4uLm6b_qmHT9hRQUVY_4xPqjpvMtA@mail.gmail.com>
-Subject: Re: pci-3.14 resource alloc
-From: Yinghai Lu <yinghai@kernel.org>
-To: Steven Newbury <steve@snewbury.org.uk>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 7:46 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
->>
->> Oh, never mind! I didn't notice pref_bar has been renamed to
->> assign_pref_bars. It's working now! :)
->
-> There's no pci bridge/bus hotplug though. Docking doesn't reveal the
-> pci-e->pci bridge or the (radeon) devices on the other side.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-oh, no. could be other regression in linus tree or pci/next.
+If a struct acpi_device pointer is passed to acpiphp_no_hotplug()
+instead of an ACPI handle, the function won't need to call
+acpi_bus_get_device(), which may be costly, any more.  Then,
+trim_stale_devices() can call acpiphp_no_hotplug() passing
+the struct acpi_device object it already has directly to that
+function.
 
-Can you check if linus tree could reveal pci-e->pci bridge?
+Make those changes and update slot_no_hotplug() accordingly.
 
-or do you use iommu/dmar with the system?
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-Thanks
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -617,11 +617,8 @@ static void disable_slot(struct acpiphp_
+ 	slot->flags &= (~SLOT_ENABLED);
+ }
+ 
+-static bool acpiphp_no_hotplug(acpi_handle handle)
++static bool acpiphp_no_hotplug(struct acpi_device *adev)
+ {
+-	struct acpi_device *adev = NULL;
+-
+-	acpi_bus_get_device(handle, &adev);
+ 	return adev && adev->flags.no_hotplug;
+ }
+ 
+@@ -629,10 +626,13 @@ static bool slot_no_hotplug(struct acpip
+ {
+ 	struct acpiphp_func *func;
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling)
+-		if (acpiphp_no_hotplug(func_to_handle(func)))
+-			return true;
++	list_for_each_entry(func, &slot->funcs, sibling) {
++		struct acpi_device *adev = NULL;
+ 
++		acpi_bus_get_device(func_to_handle(func), &adev);
++		if (acpiphp_no_hotplug(adev))
++			return true;
++	}
+ 	return false;
+ }
+ 
+@@ -689,13 +689,12 @@ static void trim_stale_devices(struct pc
+ 	bool alive = false;
+ 
+ 	if (adev) {
+-		acpi_handle handle = adev->handle;
+ 		acpi_status status;
+ 		unsigned long long sta;
+ 
+-		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++		status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
+ 		alive = (ACPI_SUCCESS(status) && sta == ACPI_STA_ALL)
+-			|| acpiphp_no_hotplug(handle);
++			|| acpiphp_no_hotplug(adev);
+ 	}
+ 	if (!alive) {
+ 		u32 v;
 
-Yinghai
