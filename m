@@ -1,57 +1,24 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32612 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751380AbaBYVba (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Feb 2014 16:31:30 -0500
-Date: Tue, 25 Feb 2014 22:33:18 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 3 Feb 2014 12:02:50 +0100
 From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>,
-	Asai Thambi S P <asamymuthupa@micron.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 11/9] mtip32xx: Use pci_enable_msi() instead of
- pci_enable_msi_range()
-Message-ID: <20140225213317.GB20652@dhcp-26-207.brq.redhat.com>
-References: <cover.1392799751.git.agordeev@redhat.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 8/9] ath10k: Use pci_enable_msi_range()
+Message-ID: <20140203110249.GB12294@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit "mtip32xx: Use pci_enable_msix_range() instead of
-pci_enable_msix()" was unnecessary, since pci_enable_msi()
-function is not deprecated and is still preferable for
-enabling the single MSI mode. This update reverts usage of
-pci_enable_msi() function.
+Hi Kalle,
 
-Besides, the changelog for that commit was bogus, since
-mtip32xx driver uses MSI interrupt, not MSI-X.
+Could you please review the three updated patches?
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Asai Thambi S P <asamymuthupa@micron.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/block/mtip32xx/mtip32xx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
-index 60e86e8..5299a65 100644
---- a/drivers/block/mtip32xx/mtip32xx.c
-+++ b/drivers/block/mtip32xx/mtip32xx.c
-@@ -4611,8 +4611,8 @@ static int mtip_pci_probe(struct pci_dev *pdev,
- 	INIT_WORK(&dd->work[7].work, mtip_workq_sdbf7);
- 
- 	pci_set_master(pdev);
--	rv = pci_enable_msi_range(pdev, 1, 1);
--	if (rv < 0) {
-+	rv = pci_enable_msi(pdev);
-+	if (rv) {
- 		dev_warn(&pdev->dev,
- 			"Unable to enable MSI interrupt.\n");
- 		goto msi_initialize_err;
--- 
-1.7.7.6
+Thanks!
 
 -- 
 Regards,
