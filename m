@@ -1,56 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f172.google.com ([209.85.128.172]:50615 "EHLO
-	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195AbaBCXHt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:07:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <3808209.DeG1VobanZ@wuerfel>
-References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
-	<21596846.kVTqp7roW4@wuerfel>
-	<20140203191837.GC4889@e106497-lin.cambridge.arm.com>
-	<3808209.DeG1VobanZ@wuerfel>
-Date: Mon, 3 Feb 2014 17:07:48 -0600
-Message-ID: <CAL_JsqL+3S8w=_Fb-t0rVcq0sDiPSDM6nqn3mR2DHKw=VTffsg@mail.gmail.com>
-Subject: Re: [PATCH] arm64: Add architecture support for PCI
-From: Rob Herring <robherring2@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 14/24][Update] ACPI / hotplug / PCI: Simplify hotplug_event()
+Date: Tue, 04 Feb 2014 00:33:46 +0100
+Message-ID: <2410580.0hC0rE6lqd@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 3, 2014 at 2:05 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 03 February 2014 19:18:38 Liviu Dudau wrote:
->> On Mon, Feb 03, 2014 at 06:58:56PM +0000, Arnd Bergmann wrote:
->> > On Monday 03 February 2014 18:43:48 Liviu Dudau wrote:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-[snip]
+A few lines of code can be cut from hotplug_event() by defining
+and initializing the slot variable at the top of the function,
+so do that.
 
->> Agree. This is the RFC version. I didn't dare to post a patch with fixes
->> for all architectures. :)
->
-> No need to change the other architectures. You can make it opt-in for
-> now and just put the code into a common location.
->
-> An interesting question however is what the transition plan is to
-> have the code shared between arm32 and arm64: We will certainly need
-> to share at least the dw-pcie and the generic SBSA compliant pci
-> implementation.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   19 ++++++-------------
+ 1 file changed, 6 insertions(+), 13 deletions(-)
 
-You might want to re-read the SBSA. Unless ARM provides an IP block or
-there is some other standard such as EHCI or AHCI, there is no generic
-implementation. You only have to go look at the Linux EHCI or AHCI
-drivers and see how meaningless and inadequate "use EHCI" is. For PCI,
-the text is so brief in the SBSA there will be no way PCI is going to
-just work given all the variations of root complexes, bridges, address
-windows, etc. we typically see on ARM platforms. I could be wrong and
-some AML magic will solve all the problems. :)
-
-Rob
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -817,6 +817,7 @@ static void hotplug_event(acpi_handle ha
+ {
+ 	struct acpiphp_context *context = data;
+ 	struct acpiphp_func *func = &context->func;
++	struct acpiphp_slot *slot = func->slot;
+ 	struct acpiphp_bridge *bridge;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+@@ -838,14 +839,11 @@ static void hotplug_event(acpi_handle ha
+ 		pr_debug("%s: Bus check notify on %s\n", __func__, objname);
+ 		pr_debug("%s: re-enumerating slots under %s\n",
+ 			 __func__, objname);
+-		if (bridge) {
++		if (bridge)
+ 			acpiphp_check_bridge(bridge);
+-		} else {
+-			struct acpiphp_slot *slot = func->slot;
++		else if (!(slot->flags & SLOT_IS_GOING_AWAY))
++			enable_slot(slot);
+ 
+-			if (!(slot->flags & SLOT_IS_GOING_AWAY))
+-				enable_slot(slot);
+-		}
+ 		break;
+ 
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+@@ -853,12 +851,7 @@ static void hotplug_event(acpi_handle ha
+ 		pr_debug("%s: Device check notify on %s\n", __func__, objname);
+ 		if (bridge) {
+ 			acpiphp_check_bridge(bridge);
+-		} else {
+-			struct acpiphp_slot *slot = func->slot;
+-
+-			if (slot->flags & SLOT_IS_GOING_AWAY)
+-				break;
+-
++		} else if (!(slot->flags & SLOT_IS_GOING_AWAY)) {
+ 			/*
+ 			 * Check if anything has changed in the slot and rescan
+ 			 * from the parent if that's the case.
+@@ -871,7 +864,7 @@ static void hotplug_event(acpi_handle ha
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		/* request device eject */
+ 		pr_debug("%s: Device eject notify on %s\n", __func__, objname);
+-		acpiphp_disable_and_eject_slot(func->slot);
++		acpiphp_disable_and_eject_slot(slot);
+ 		break;
+ 	}
+ 
