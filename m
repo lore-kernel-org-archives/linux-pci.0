@@ -1,68 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/2] ACPI / hotplug / PCI: Rename register_slot() to acpiphp_add_context()
-Date: Tue, 11 Feb 2014 01:17:54 +0100
-Message-ID: <8514198.o2DR6kBoT0@vostro.rjw.lan>
-In-Reply-To: <1461050.jQppMgDSvA@vostro.rjw.lan>
-References: <1461050.jQppMgDSvA@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <201401301516.27091.arnd@arndb.de>
+References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
+	<1390599168-13150-2-git-send-email-tinamdar@apm.com>
+	<201401301516.27091.arnd@arndb.de>
+Date: Mon, 3 Feb 2014 11:42:22 -0800
+Message-ID: <CACoXjcnXoysMeBsGuOb3t5b10zdeJ8pOnuOOzR8AaZhsOOYVEw@mail.gmail.com>
+Subject: Re: [RFC PATCH V3 1/4] pci: APM X-Gene PCIe controller driver
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Rob Landley <rob@landley.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
+	Jon Masters <jcm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Jan 30, 2014 at 6:16 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 24 January 2014, Tanmay Inamdar wrote:
+>
+>> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
+>> +{
+>> +     int i;
+>> +
+>> +     /* Hide the PCI host BARs from the kernel as their content doesn't
+>> +      * fit well in the resource management
+>> +      */
+>> +     for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+>> +             dev->resource[i].start = dev->resource[i].end = 0;
+>> +             dev->resource[i].flags = 0;
+>> +     }
+>> +     dev_info(&dev->dev, "Hiding X-Gene pci host bridge resources %s\n",
+>> +              pci_name(dev));
+>> +}
+>> +DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_DEVICEID,
+>> +                      xgene_pcie_fixup_bridge);
+>
+> Shouldn't this be gone now that the host bridge is correctly shown
+> at the domain root?
 
-The name of register_slot() doesn't really reflect what the function
-is does, so rename it to acpiphp_add_context() and add a proper
-kerneldoc comment to it.
+In inbound region configuration, whole DDR space is mapped into the
+BAR of RC. When Linux PCI mid-layer starts enumerating, it reads the
+size of BAR of RC and tries to fit it into the memory resource. First
+thing is that the outbound memory is not enough to map the inbound BAR
+space. This creates problem with the resource management logic and
+second thing is that, it is not required to map inbound BAR space RC
+bar as no one will be accessing it further.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+As Jason suggested, Bridge BAR's should be 0 size unless the bridge
+itself has registers. However this is not the case with XGene PCIe
+controller. It may have been inherited from the legacy design.
+'arch/powerpc/sysdev/ppc4xx_pci.c' has similar fixup function.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -255,9 +255,15 @@ static void acpiphp_dock_release(void *d
- 	put_bridge(context->func.parent);
- }
- 
--/* callback routine to register each ACPI PCI slot object */
--static acpi_status register_slot(acpi_handle handle, u32 lvl, void *data,
--				 void **rv)
-+/**
-+ * acpiphp_add_context - Add ACPIPHP context to an ACPI device object.
-+ * @handle: ACPI handle of the object to add a context to.
-+ * @lvl: Not used.
-+ * @data: The object's parent ACPIPHP bridge.
-+ * @rv: Not used.
-+ */
-+static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
-+				       void **rv)
- {
- 	struct acpiphp_bridge *bridge = data;
- 	struct acpiphp_context *context;
-@@ -919,14 +925,14 @@ void acpiphp_enumerate_slots(struct pci_
- 		acpi_unlock_hp_context();
- 	}
- 
--	/* must be added to the list prior to calling register_slot */
-+	/* Must be added to the list prior to calling acpiphp_add_context(). */
- 	mutex_lock(&bridge_mutex);
- 	list_add(&bridge->list, &bridge_list);
- 	mutex_unlock(&bridge_mutex);
- 
- 	/* register all slot objects under this bridge */
- 	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
--				     register_slot, NULL, bridge, NULL);
-+				     acpiphp_add_context, NULL, bridge, NULL);
- 	if (ACPI_FAILURE(status)) {
- 		acpi_handle_err(handle, "failed to register slots\n");
- 		cleanup_bridge(bridge);
+>
+>> +static int xgene_pcie_setup(int nr, struct pci_sys_data *sys)
+>> +{
+>> +     struct xgene_pcie_port *pp = sys->private_data;
+>> +     struct resource *io = &pp->realio;
+>> +
+>> +     io->start = sys->domain * SZ_64K;
+>> +     io->end = io->start + SZ_64K;
+>> +     io->flags = pp->io.res.flags;
+>> +     io->name = "PCI IO";
+>> +     pci_ioremap_io(io->start, pp->io.res.start);
+>> +
+>> +     pci_add_resource_offset(&sys->resources, io, sys->io_offset);
+>> +     sys->mem_offset = pp->mem.res.start - pp->mem.pci_addr;
+>> +     pci_add_resource_offset(&sys->resources, &pp->mem.res,
+>> +                             sys->mem_offset);
+>> +     return 1;
+>> +}
+>
+> Thanks for bringing back the I/O space handling.
+>
+> You don't seem to set sys->io_offset anywhere, but each of the
+> ports listed in your DT starts a local bus I/O register range
+> at port 0.
+>
+> AFAICT, you need to add (somewhere)
+>
+>         sys->io_offset = pp->realio.start - pp->io.pci_addr;
+>
+> but there could be something else missing. You clearly haven't
+> tested if the I/O space actually works.
 
+That is correct :-). Could not find the card. Thanks for the patch below.
+>
+> If you want to try out the I/O space, I'd suggest using an Intel
+> e1000 network card, which has both memory and i/o space. There
+> is a patch at http://www.spinics.net/lists/linux-pci/msg27684.html
+> that lets you check the I/O registers on it, or you can go
+> through /dev/port from user space.
+>
+> I also haven't seen your patch that adds pci_ioremap_io() for
+> arm64. It would be helpful to keep it in the same patch
+> series, since it won't build without this patch.
+
+I will post the arm64 pci patch along with next revision of this
+driver. That will cover the 'pci_ioremap_io' as well.
+
+>
+>         Arnd
