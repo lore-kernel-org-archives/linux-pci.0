@@ -1,138 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:46683 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752463AbaBSPcd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 10:32:33 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id 44E7BFF11B
-	for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 15:32:31 +0000 (GMT)
-Date: Wed, 19 Feb 2014 15:30:44 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140219153044.GE5394@bart.dudau.co.uk>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <1948942.cIbLaKDEOa@wuerfel>
- <20140219113755.GD5394@bart.dudau.co.uk>
- <2734695.F6QKszum67@wuerfel>
+Received: from v094114.home.net.pl ([79.96.170.134]:51409 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753412AbaBCX2X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:23 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 18/24][Update] ACPI / hotplug: Fix potential race in acpi_bus_notify()
+Date: Tue, 04 Feb 2014 00:36:10 +0100
+Message-ID: <1957606.iEkqlTBjjf@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <2734695.F6QKszum67@wuerfel>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 02:26:10PM +0100, Arnd Bergmann wrote:
-> On Wednesday 19 February 2014 11:37:55 Liviu Dudau wrote:
-> > 
-> > > Right, this needs to be changed when moving the domain into pci_host_bridge.
-> > 
-> > Yes, if only I understood what the intent was here. Unfortunately, the history
-> > of the file stops (for my git tree) at Linus' first commit from v2.6.0, so
-> > I need to dig deeper. What I am looking to understand is the answer to this
-> > question: "When you want to create a new bus and you want to make sure it
-> > is not duplicated, do you go across all domains or pick the current domain
-> > and allow for same bus number in different domains?"
-> 
-> I suspect this is for some large IA64 machines where you can see the same
-> domain at different addresses, depending on which CPU you are on, or
-> something similarly fancy.
-> 
-> Another explanation would be that you can have different ways to describe
-> the same hardware: On a PC you can assume that the PCI bus is discoverable
-> on I/O port 0x0cf8. At the same time, you may see it in ACPI with an
-> mmconfig method.
-> 
-> In any case, you definitely need to allow the same bus numbers on each domain,
-> since the most important use case of domains is to get around the 256 bus
-> limit.
-> 
-> > To give some context: I'm looking at drivers/pci/probe.c, pci_create_root_bus().
-> > Specifically, this code:
-> > 
-> >         b = pci_alloc_bus();
-> >         if (!b)
-> >                 return NULL;
-> > 
-> >         b->sysdata = sysdata;
-> >         b->ops = ops;
-> >         b->number = b->busn_res.start = bus;
-> >         b2 = pci_find_bus(pci_domain_nr(b), bus);
-> >         if (b2) {
-> >                 /* If we already got to this bus through a different bridge, ignore it */
-> >                 dev_dbg(&b2->dev, "bus already known\n");
-> >                 goto err_out;
-> >         }
-> > 
-> >         bridge = pci_alloc_host_bridge(b);
-> >         if (!bridge)
-> >                 goto err_out;
-> > 
-> > 
-> > If you look at the comment after pci_find_bus, you can see that the intent was
-> > to try to find duplicate busses covered by different bridges (but in the same
-> > domain? maybe, because there used to be only one domain at the beginning, but
-> > then why use pci_domain_nr() here?). Problems I see here:
-> 
-> Definitely duplicate buses in the same domain, as mentioned above.
-> 
-> >   - code is trying to get the domain number of a bus that it just created but not
-> >     plugged yet in the hierarchy
-> 
-> The sysdata is already assigned, and all architectures either assume there is
-> only one domain, or they get the domain number out of the sysdata that is
-> filled out prior to calling pci_create_root_bus.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Arnd, the question is not how it does it, the question is what is the correct answer?
-It's a new bus, does that mean that all new busses get created in the current domain?
-If that is the case, then fine, things start to make more sense, with the caveat
-that the domain # depends heavily on what the architecture uses for counting.
+There is a slight possibility for the ACPI device object pointed to
+by adev in acpi_hotplug_notify_cb() to become invalid between the
+acpi_bus_get_device() that it comes from and the subsequent dereference
+of that pointer under get_device().  Namely, if acpi_scan_drop_device()
+runs in parallel with acpi_hotplug_notify_cb(), acpi_device_del_work_fn()
+queued up by it may delete the device object in question right after
+a successful execution of acpi_bus_get_device() in acpi_bus_notify().
 
-> 
-> >   - pci_find_bus tries to find a bus in the global list of busses that has the
-> >     same domain number and bus number as the parameters of the function. But
-> >     the domain number was plucked out of thin air and all architectures seem to
-> >     actually give you the current active domain number, not the one that actually
-> >     covers the bus (and host_bridge) that you are trying to create.
-> 
-> Not sure what you mean with 'current active domain number': They clearly look at
-> b->sysdata here, which is a local structure describing what we are currently
-> probing.
+An analogous problem is present in acpi_bus_notify() where the device
+pointer coming from acpi_bus_get_device() may become invalid before
+it subsequent dereference in the "if" block.
 
-Yes, but that definition of locality is not common to all architectures. arm for
-example stores it in the domain member of pci_sys_data, but that gets initialised
-every time someone calls pcibios_init_hw (or pci_common_init_dev) with the domain
-value held in struct hw_pci. But the host controllers don't talk to each other,
-so if you want to instantiate two different drivers that use hw_pci they likely
-use an individual count that starts at zero.
+To prevent that from happening, introduce a new function,
+acpi_bus_get_acpi_device(), working analogously to acpi_bus_get_device()
+except that it will grab a reference to the ACPI device object returned
+by it and it will do that under the ACPICA's namespace mutex.  Then,
+make both acpi_hotplug_notify_cb() and acpi_bus_notify() use
+acpi_bus_get_acpi_device() instead of acpi_bus_get_device() so as to
+ensure that the pointers used by them will not become stale at one
+point.
 
-Anyway, I don't think that using your suggestion is going to be a problem, so once
-I get out of this god forsaken task of bringing up a board I will post an updated
-patch.
+In addition to that, introduce acpi_bus_put_acpi_device() as a wrapper
+around put_device() to be used along with acpi_bus_get_acpi_device()
+and make the (new) users of the latter use acpi_bus_put_acpi_device()
+too.
 
-Best regards,
-Liviu
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/bus.c      |    6 ++++--
+ drivers/acpi/scan.c     |   42 ++++++++++++++++++++++++++++++++++--------
+ include/acpi/acpi_bus.h |    2 ++
+ 3 files changed, 40 insertions(+), 10 deletions(-)
 
-> 
-> 	Arnd
-> 
-
--- 
--------------------
-   .oooO
-   (   )
-    \ (  Oooo.
-     \_) (   )
-          ) /
-         (_/
-
- One small step
-   for me ...
-
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -476,7 +476,7 @@ static void acpi_device_hotplug(void *da
+ 
+  out:
+ 	acpi_evaluate_hotplug_ost(adev->handle, src, ost_code, NULL);
+-	put_device(&adev->dev);
++	acpi_bus_put_acpi_device(adev);
+ 	mutex_unlock(&acpi_scan_lock);
+ 	unlock_device_hotplug();
+ }
+@@ -488,9 +488,6 @@ static void acpi_hotplug_notify_cb(acpi_
+ 	struct acpi_device *adev;
+ 	acpi_status status;
+ 
+-	if (acpi_bus_get_device(handle, &adev))
+-		goto err_out;
+-
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_BUS_CHECK event\n");
+@@ -512,12 +509,15 @@ static void acpi_hotplug_notify_cb(acpi_
+ 		/* non-hotplug event; possibly handled by other handler */
+ 		return;
+ 	}
+-	get_device(&adev->dev);
++	adev = acpi_bus_get_acpi_device(handle);
++	if (!adev)
++		goto err_out;
++
+ 	status = acpi_hotplug_execute(acpi_device_hotplug, adev, type);
+ 	if (ACPI_SUCCESS(status))
+ 		return;
+ 
+-	put_device(&adev->dev);
++	acpi_bus_put_acpi_device(adev);
+ 
+  err_out:
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+@@ -1112,14 +1112,16 @@ static void acpi_scan_drop_device(acpi_h
+ 	mutex_unlock(&acpi_device_del_lock);
+ }
+ 
+-int acpi_bus_get_device(acpi_handle handle, struct acpi_device **device)
++static int acpi_get_device_data(acpi_handle handle, struct acpi_device **device,
++				void (*callback)(void *))
+ {
+ 	acpi_status status;
+ 
+ 	if (!device)
+ 		return -EINVAL;
+ 
+-	status = acpi_get_data(handle, acpi_scan_drop_device, (void **)device);
++	status = acpi_get_data_full(handle, acpi_scan_drop_device,
++				    (void **)device, callback);
+ 	if (ACPI_FAILURE(status) || !*device) {
+ 		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "No context for object [%p]\n",
+ 				  handle));
+@@ -1127,8 +1129,32 @@ int acpi_bus_get_device(acpi_handle hand
+ 	}
+ 	return 0;
+ }
++
++int acpi_bus_get_device(acpi_handle handle, struct acpi_device **device)
++{
++	return acpi_get_device_data(handle, device, NULL);
++}
+ EXPORT_SYMBOL(acpi_bus_get_device);
+ 
++static void get_acpi_device(void *dev)
++{
++	if (dev)
++		get_device(&((struct acpi_device *)dev)->dev);
++}
++
++struct acpi_device *acpi_bus_get_acpi_device(acpi_handle handle)
++{
++	struct acpi_device *adev = NULL;
++
++	acpi_get_device_data(handle, &adev, get_acpi_device);
++	return adev;
++}
++
++void acpi_bus_put_acpi_device(struct acpi_device *adev)
++{
++	put_device(&adev->dev);
++}
++
+ int acpi_device_add(struct acpi_device *device,
+ 		    void (*release)(struct device *))
+ {
+Index: linux-pm/drivers/acpi/bus.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/bus.c
++++ linux-pm/drivers/acpi/bus.c
+@@ -340,7 +340,7 @@ static void acpi_bus_osc_support(void)
+  */
+ static void acpi_bus_notify(acpi_handle handle, u32 type, void *data)
+ {
+-	struct acpi_device *device = NULL;
++	struct acpi_device *device;
+ 	struct acpi_driver *driver;
+ 
+ 	ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Notification %#02x to handle %p\n",
+@@ -387,12 +387,14 @@ static void acpi_bus_notify(acpi_handle
+ 		break;
+ 	}
+ 
+-	acpi_bus_get_device(handle, &device);
++	device = acpi_bus_get_acpi_device(handle);
+ 	if (device) {
+ 		driver = device->driver;
+ 		if (driver && driver->ops.notify &&
+ 		    (driver->flags & ACPI_DRIVER_ALL_NOTIFY_EVENTS))
+ 			driver->ops.notify(device, type);
++
++		acpi_bus_put_acpi_device(device);
+ 	}
+ }
+ 
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -381,6 +381,8 @@ extern int unregister_acpi_notifier(stru
+  */
+ 
+ int acpi_bus_get_device(acpi_handle handle, struct acpi_device **device);
++struct acpi_device *acpi_bus_get_acpi_device(acpi_handle handle);
++void acpi_bus_put_acpi_device(struct acpi_device *adev);
+ acpi_status acpi_bus_get_status_handle(acpi_handle handle,
+ 				       unsigned long long *sta);
+ int acpi_bus_get_status(struct acpi_device *device);
