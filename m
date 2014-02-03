@@ -1,54 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:59339 "EHLO
-	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751245AbaBSMFI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 07:05:08 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <jg1.han@samsung.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	Arnd Bergmann <arnd@arndb.de>, <spear-devel@list.st.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 1/1] Designware:RC BARs setup related fix
-Date: Wed, 19 Feb 2014 17:34:35 +0530
-Message-ID: <1392811475-17744-1-git-send-email-mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mailout1.samsung.com ([203.254.224.24]:59008 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894AbaBCJzZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 04:55:25 -0500
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N0E00330ZKB2C90@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 03 Feb 2014 18:55:23 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: =?utf-8?Q?'Bj=C3=B8rn_Erik_Nilsen'?= <ben@datarespons.no>
+Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
+	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
+	linux-pci@vger.kernel.org, 'Harro Haan' <hrhaan@gmail.com>,
+	'Marek Vasut' <marex@denx.de>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <25.15.01844.D5C20E25@epmailin6.samsung.com>
+ <000201cf17ff$47025bf0$d50713d0$%han@samsung.com>
+ <20140123065104.GA26318@pratyush-vbox>
+ <56523137843406465091127182657491@psmtp.com>
+ <20140124064822.GF2369@pratyush-vbox>
+ <8E.DE.30335.83C29E25@epmailin2.samsung.com>
+ <000601cf20c2$58b25460$0a16fd20$%han@samsung.com>
+In-reply-to: <000601cf20c2$58b25460$0a16fd20$%han@samsung.com>
+Subject: Re: designware/imx6: question regarding MSI
+Date: Mon, 03 Feb 2014 18:55:23 +0900
+Message-id: <000801cf20c6$0e34f9c0$2a9eed40$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Synopsys  PCIe core provides one pair of 32-bit BARs (BAR 0 and BAR 1).
-The BARs can  be configured as follows:
+On Monday, February 03, 2014 6:29 PM, Jingoo Han wrote:
+> On Thursday, January 30, 2014 1:29 AM, Bjørn Erik Nilsen wrote:
+> > On Fri, 2014-01-24 at 07:48 +0100, Pratyush Anand wrote:
+> > > On Thu, Jan 23, 2014 at 11:20:55PM +0800, Bjørn Erik Nilsen wrote:
+> > > > On Thu, 2014-01-23 at 07:51 +0100, Pratyush Anand wrote:
+> > > > > On Thu, Jan 23, 2014 at 01:52:19PM +0800, Jingoo Han wrote:
+> > > > > > On Thursday, January 23, 2014 5:39 AM, Jingoo Han wrote:
+> > > > > > >
+> > > > > > > I’m currently playing with MSI support in pci-imx6.c using Harro Haan’s patch [*].
+> > > > > > >
+> > > > > > > Are there any technical reasons why dw_pcie_msi_init cannot be called
+> > > > > > > from dw_msi_setup_irq?
+> > Or rather,
+> > > > > > > why it should not?
+> > > > > >
+> > > > > > No, there is no special reason.
+> > > > > > The patch (call dw_pcie_msi_init from dw_msi_setup_irq) would be
+> > > > > > good. Thank you for your effort.
+> > > > > >
+> > > > > > Mohit, Pratyush,
+> > > > > > If you have different opinions, please let us know. :-)
+> > > > >
+> > > > > dw_msi_setup_irq will be called for each function which needs msi
+> > > > > assignment. However, dw_pcie_msi_init should be called only once. So,
+> > > > > in my opinion calling dw_pcie_msi_init from dw_msi_setup_irq would not
+> > > > > be the best option.
+> > > > >
+> > > > > @Bjørn, can you help us with tracing calling sequence of
+> > > > > dw_pcie_setup & dw_pcie_scan_bus. I think when you do "reset bridge",
+> > > > > it will call dw_pcie_setup and when you do "rescan bus", it will call
+> > > > > dw_pcie_scan_bus. If yes, then you can move dw_pcie_msi_init to
+> > > > > dw_pcie_setup.
+> > > >
+> > > >
+> > > > It looks like dw_pcie_setup and dw_pcie_scan_bus is only called when
+> > > > booting. Resetting the bridge or scanning the bus will not trigger any
+> > > > of these functions, unfortunately.
+> > >
+> > > Yes, I browsed pcie sysfs rescan and reset code and it does not go
+> > > into that path. Sorry for the wrong pointers. I should have looked
+> > > into code earlier :(
+> > >
+> > > Coming to the issue, I am still not convinced that msi_init part should
+> > > go to msi_setup_irq. May be something is missing.
+> > > @Mohit, Jingoo: How does remove, reset and rescan behave with your
+> > > platform.
+> >
+> > Any comments?
+> 
+> Sorry for late response.
+> I tested 'remove, reset and rescan' on Exynos platform
+> as you did.
+> 
+> (remove endpoints)
+> # echo 1 > /sys/bus/pci/devices/0000:01:00.0/remove
+> # echo 1 > /sys/bus/pci/devices/0000:01:00.1/remove
+> 
+> (reset bridge)
+> # echo 1 > /sys/bus/pci/devices/0000:00:00.0/reset
+> 
+> (rescan bus)
+> # echo 1 > /sys/bus/pci/rescan
+> 
+> Without MSI (legacy INTx mode), it works properly. However,
+> with MSI, it makes the problem.
 
-- One 64-bit BAR: BARs 0 and 1 are combined to form a single 64-bit BAR.
-- Two 32-bit BARs: BARs 0 and 1 are two independent 32-bit BARs
+Oh, there was my mistake. There is no problem on Exynos platform.
+I tested two different LAN cards. With MSI, 'remove, reset and
+rescan' works properly on Exynos platform using the current
+pci/next tree. Sorry for the confusion.
+Thank you.
 
-This patch corrects 64-bit, non-prefetchable memory BAR configuration
-implemented in dw driver.
+Best regards,
+Jingoo Han
 
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: spear-devel@list.st.com
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/host/pcie-designware.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 17ce88f..6d23d8c 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -800,7 +800,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	/* setup RC BARs */
- 	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
--	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_1);
-+	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
- 
- 	/* setup interrupt pins */
- 	dw_pcie_readl_rc(pp, PCI_INTERRUPT_LINE, &val);
--- 
-1.7.0.1
+> 
+> >
+> > I can prepare a patch (which calls dw_pcie_msi_init from
+> > dw_msi_setup_irq), however if this is not the right solution then we
+> > need to figure out what a proper solution should look like.
+> 
+> If you send the patch, I will test it on Exynos platform.
+> Thank you for your effort. :-)
+> 
+> Best regards,
+> Jingoo Han
 
