@@ -1,49 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:2387 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752752AbaBNW2G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Feb 2014 17:28:06 -0500
-Date: Fri, 14 Feb 2014 14:27:58 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Chen, Jamie" <jamie.chen@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	USB list <linux-usb@vger.kernel.org>,
-	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: EHCI host broken -- interrupts disabled
-Message-ID: <20140214222758.GA7395@xanatos>
-References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
- <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
- <20140117182231.GA18421@google.com>
- <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
- <CAErSpo4fGBhb+pj6pTpKFTTj9rzLYzB2w-EX2ghWRYR3Cjyd9g@mail.gmail.com>
- <CAErSpo4rTHFOgUDjmrGxxFAuE-+i9y7hW+T7+xTzB7x4_72_pg@mail.gmail.com>
- <F01C6967BCFFB14E8DF7F5D2FD1053EB1ECC22@PGSMSX103.gar.corp.intel.com>
- <CAErSpo4_ecD6Gom=WnH2MMSLsO=SEBnWHKhx3BiXz3Fgs8d2uQ@mail.gmail.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:58219 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753686AbaBCX21 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:27 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 9/24][Resend] ACPI / hotplug / PCI: Drop acpiphp_bus_trim()
+Date: Tue, 04 Feb 2014 00:23:27 +0100
+Message-ID: <1689985.1LxlJr9Vc9@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4_ecD6Gom=WnH2MMSLsO=SEBnWHKhx3BiXz3Fgs8d2uQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 01:47:48PM -0700, Bjorn Helgaas wrote:
-> On Fri, Feb 14, 2014 at 9:36 AM, Chen, Jamie <jamie.chen@intel.com> wrote:
-> > Sorry for late response.
-> >
-> > The dmesg attach in the mail.
-> 
-> Thanks, I put this info in
-> https://bugzilla.kernel.org/show_bug.cgi?id=70601 and applied the
-> patch to pci/misc.
-> 
-> This seems like a potentially important fix, so I think I'll
-> cherry-pick it into for-linus for v3.14.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thanks, Bjorn!
+If trim_stale_devices() calls acpi_bus_trim() directly, we can
+save a potentially costly acpi_bus_get_device() invocation.  After
+making that change acpiphp_bus_trim() would only be called from one
+place, so move the code from it to that place and drop it.
 
-Do you think this patch is a candidate for stable as well?  Anyone with
-an EHCI-only Baytrail system won't have working USB without this patch,
-and the patch itself seems relatively small.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   30 +++++++++++-------------------
+ 1 file changed, 11 insertions(+), 19 deletions(-)
 
-Sarah Sharp
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -489,19 +489,6 @@ static unsigned char acpiphp_max_busnr(s
+ }
+ 
+ /**
+- * acpiphp_bus_trim - Trim device objects in an ACPI namespace subtree.
+- * @handle: ACPI device object handle to start from.
+- */
+-static void acpiphp_bus_trim(acpi_handle handle)
+-{
+-	struct acpi_device *adev = NULL;
+-
+-	acpi_bus_get_device(handle, &adev);
+-	if (adev)
+-		acpi_bus_trim(adev);
+-}
+-
+-/**
+  * acpiphp_bus_add - Scan ACPI namespace subtree.
+  * @handle: ACPI object handle to start the scan from.
+  */
+@@ -641,8 +628,12 @@ static void disable_slot(struct acpiphp_
+ 		if (PCI_SLOT(dev->devfn) == slot->device)
+ 			pci_stop_and_remove_bus_device(dev);
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling)
+-		acpiphp_bus_trim(func_to_handle(func));
++	list_for_each_entry(func, &slot->funcs, sibling) {
++		struct acpi_device *adev;
++
++		if (!acpi_bus_get_device(func_to_handle(func), &adev))
++			acpi_bus_trim(adev);
++	}
+ 
+ 	slot->flags &= (~SLOT_ENABLED);
+ }
+@@ -714,11 +705,12 @@ static unsigned int get_slot_status(stru
+  */
+ static void trim_stale_devices(struct pci_dev *dev)
+ {
+-	acpi_handle handle = ACPI_HANDLE(&dev->dev);
++	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+ 	struct pci_bus *bus = dev->subordinate;
+ 	bool alive = false;
+ 
+-	if (handle) {
++	if (adev) {
++		acpi_handle handle = adev->handle;
+ 		acpi_status status;
+ 		unsigned long long sta;
+ 
+@@ -734,8 +726,8 @@ static void trim_stale_devices(struct pc
+ 	}
+ 	if (!alive) {
+ 		pci_stop_and_remove_bus_device(dev);
+-		if (handle)
+-			acpiphp_bus_trim(handle);
++		if (adev)
++			acpi_bus_trim(adev);
+ 	} else if (bus) {
+ 		struct pci_dev *child, *tmp;
+ 
+
