@@ -1,50 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:41877 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754516AbaBZXmF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 18:42:05 -0500
-Received: by mail-ie0-f177.google.com with SMTP id rl12so1328966iec.8
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 15:42:05 -0800 (PST)
-Subject: [PATCH 5/7] sparc/PCI: Use default pcibios_enable_device() (Leon
- only)
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel Hellstrom <daniel@gaisler.com>, linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 16:42:02 -0700
-Message-ID: <20140226234202.18970.64592.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:63143 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753834AbaBCX2c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:32 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 1/24][Resend] ACPI / hotplug / PCI: Remove entries from bus->devices in reverse order
+Date: Tue, 04 Feb 2014 00:14:48 +0100
+Message-ID: <1839968.W3QXGMsfBF@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We don't need anything arch-specific in pcibios_enable_device() so drop
-the arch implementation and use the default generic one.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Note that sparc has two pcibios_enable_device() implementations other than
-the one removed here.
+According to the changelog of commit 29ed1f29b68a (PCI: pciehp: Fix null
+pointer deref when hot-removing SR-IOV device) it is unsafe to walk the
+bus->devices list of a PCI bus and remove devices from it in direct order,
+because that may lead to NULL pointer dereferences related to virtual
+functions.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Daniel Hellstrom <daniel@gaisler.com
+For this reason, change all of the bus->devices list walks in
+acpiphp_glue.c during which devices may be removed to be carried out in
+reverse order.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- arch/sparc/kernel/leon_pci.c |    5 -----
- 1 file changed, 5 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-index 88aaaa57bb64..e16c4157e1ae 100644
---- a/arch/sparc/kernel/leon_pci.c
-+++ b/arch/sparc/kernel/leon_pci.c
-@@ -99,11 +99,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return res->start;
- }
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -742,7 +742,7 @@ static void trim_stale_devices(struct pc
  
--int pcibios_enable_device(struct pci_dev *dev, int mask)
--{
--	return pci_enable_resources(dev, mask);
--}
--
- /* in/out routines taken from pcic.c
-  *
-  * This probably belongs here rather than ioport.c because
-
+ 		/* The device is a bridge. so check the bus below it. */
+ 		pm_runtime_get_sync(&dev->dev);
+-		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
++		list_for_each_entry_safe_reverse(child, tmp, &bus->devices, bus_list)
+ 			trim_stale_devices(child);
+ 
+ 		pm_runtime_put(&dev->dev);
+@@ -773,8 +773,8 @@ static void acpiphp_check_bridge(struct
+ 			; /* do nothing */
+ 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
+ 			/* remove stale devices if any */
+-			list_for_each_entry_safe(dev, tmp, &bus->devices,
+-						 bus_list)
++			list_for_each_entry_safe_reverse(dev, tmp,
++							 &bus->devices, bus_list)
+ 				if (PCI_SLOT(dev->devfn) == slot->device)
+ 					trim_stale_devices(dev);
+ 
+@@ -805,7 +805,7 @@ static void acpiphp_sanitize_bus(struct
+ 	int i;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+ 
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
+ 			struct resource *res = &dev->resource[i];
+ 			if ((res->flags & type_mask) && !res->start &&
