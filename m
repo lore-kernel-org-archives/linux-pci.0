@@ -1,78 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:21463 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752694AbaBLCxZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 21:53:25 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH part1 v6 7/7] PCI: pciehp: Don't enable/disable slot on resume unless status changed
-Date: Wed, 12 Feb 2014 10:52:53 +0800
-Message-ID: <1392173573-59844-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
-References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ve0-f172.google.com ([209.85.128.172]:50615 "EHLO
+	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195AbaBCXHt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:07:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <3808209.DeG1VobanZ@wuerfel>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
+	<21596846.kVTqp7roW4@wuerfel>
+	<20140203191837.GC4889@e106497-lin.cambridge.arm.com>
+	<3808209.DeG1VobanZ@wuerfel>
+Date: Mon, 3 Feb 2014 17:07:48 -0600
+Message-ID: <CAL_JsqL+3S8w=_Fb-t0rVcq0sDiPSDM6nqn3mR2DHKw=VTffsg@mail.gmail.com>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+From: Rob Herring <robherring2@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently pciehp_resume() always enables the slot if it is occupied.  But
-often the slot was already occupied before the suspend, so we complain like
-this:
+On Mon, Feb 3, 2014 at 2:05 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 03 February 2014 19:18:38 Liviu Dudau wrote:
+>> On Mon, Feb 03, 2014 at 06:58:56PM +0000, Arnd Bergmann wrote:
+>> > On Monday 03 February 2014 18:43:48 Liviu Dudau wrote:
 
-    pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
-    pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
+[snip]
 
-This patch only enables the slot if it was empty before the suspend and is
-now occupied, i.e., a card was inserted while suspended.
+>> Agree. This is the RFC version. I didn't dare to post a patch with fixes
+>> for all architectures. :)
+>
+> No need to change the other architectures. You can make it opt-in for
+> now and just put the code into a common location.
+>
+> An interesting question however is what the transition plan is to
+> have the code shared between arm32 and arm64: We will certainly need
+> to share at least the dw-pcie and the generic SBSA compliant pci
+> implementation.
 
-Similarly, we only disable the slot if a card was removed while suspended.
-If it was already empty before the suspend, we don't need to do anything.
+You might want to re-read the SBSA. Unless ARM provides an IP block or
+there is some other standard such as EHCI or AHCI, there is no generic
+implementation. You only have to go look at the Linux EHCI or AHCI
+drivers and see how meaningless and inadequate "use EHCI" is. For PCI,
+the text is so brief in the SBSA there will be no way PCI is going to
+just work given all the variations of root complexes, bridges, address
+windows, etc. we typically see on ARM platforms. I could be wrong and
+some AML magic will solve all the problems. :)
 
-[bhelgaas: changelog]
-Tested-by: Paul Bolle <pebolle@tiscali.nl>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
----
- drivers/pci/hotplug/pciehp_core.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 53b58de..551137f 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -317,6 +317,7 @@ static int pciehp_resume (struct pcie_device *dev)
- {
- 	struct controller *ctrl;
- 	struct slot *slot;
-+	struct pci_bus *pbus = dev->port->subordinate;
- 	u8 status;
- 
- 	ctrl = get_service_data(dev);
-@@ -328,10 +329,13 @@ static int pciehp_resume (struct pcie_device *dev)
- 
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
--	if (status)
--		pciehp_enable_slot(slot);
--	else
-+	if (status) {
-+		if (list_empty(&pbus->devices))
-+			pciehp_enable_slot(slot);
-+	} else if (!list_empty(&pbus->devices)) {
- 		pciehp_disable_slot(slot);
-+	}
-+
- 	return 0;
- }
- #endif /* PM */
--- 
-1.7.1
-
-
+Rob
