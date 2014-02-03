@@ -1,86 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:50678 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751350AbaBTVcf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 16:32:35 -0500
-Received: by mail-wg0-f50.google.com with SMTP id z12so1887296wgg.17
-        for <linux-pci@vger.kernel.org>; Thu, 20 Feb 2014 13:32:34 -0800 (PST)
-From: Andrew Murray <amurray@embedded-bits.co.uk>
-To: linux-pci@vger.kernel.org
-Cc: thomas.petazzoni@free-electrons.com, jason@lakedaemon.net,
-	Andrew Murray <amurray@embedded-bits.co.uk>
-Subject: [PATCH] PCI: mvebu: Remove unnecessary use of 'conf_lock' spinlock
-Date: Thu, 20 Feb 2014 21:32:15 +0000
-Message-Id: <1392931935-21313-1-git-send-email-amurray@embedded-bits.co.uk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 21/24][Resend] ACPI / hotplug / PCI: Rework the handling of eject requests
+Date: Tue, 04 Feb 2014 00:38:29 +0100
+Message-ID: <2266713.TFhenapTbS@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Serialization of configuration accesses is provided by 'pci_lock' in
-drivers/pci/access.c thus making the driver's 'conf_lock' superfluous.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
+To avoid the need to install a hotplug notify handler for each ACPI
+namespace node representing a device and having a matching scan
+handler, move the check whether or not the ejection of the given
+device is enabled through its scan handler from acpi_hotplug_notify_cb()
+to acpi_generic_hotplug_event().  Also, move the execution of
+ACPI_OST_SC_EJECT_IN_PROGRESS _OST to acpi_generic_hotplug_event(),
+because in acpi_hotplug_notify_cb() or in acpi_eject_store() we really
+don't know whether or not the eject is going to be in progress (for
+example, acpi_hotplug_execute() may still fail without queuing up the
+work item).
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/host/pci-mvebu.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/acpi/scan.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 13478ec..1d61182 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -119,7 +119,6 @@ struct mvebu_pcie {
- struct mvebu_pcie_port {
- 	char *name;
- 	void __iomem *base;
--	spinlock_t conf_lock;
- 	u32 port;
- 	u32 lane;
- 	int devfn;
-@@ -590,7 +589,6 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- {
- 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
- 	struct mvebu_pcie_port *port;
--	unsigned long flags;
- 	int ret;
- 
- 	port = mvebu_pcie_find_port(pcie, bus, devfn);
-@@ -616,10 +614,8 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	/* Access the real PCIe interface */
--	spin_lock_irqsave(&port->conf_lock, flags);
- 	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
- 				    where, size, val);
--	spin_unlock_irqrestore(&port->conf_lock, flags);
- 
- 	return ret;
- }
-@@ -630,7 +626,6 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- {
- 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
- 	struct mvebu_pcie_port *port;
--	unsigned long flags;
- 	int ret;
- 
- 	port = mvebu_pcie_find_port(pcie, bus, devfn);
-@@ -662,10 +657,8 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -459,6 +459,12 @@ static int acpi_generic_hotplug_event(st
+ 		return acpi_scan_device_check(adev);
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 	case ACPI_OST_EC_OSPM_EJECT:
++		if (adev->handler && !adev->handler->hotplug.enabled) {
++			dev_info(&adev->dev, "Eject disabled\n");
++			return -EPERM;
++		}
++		acpi_evaluate_hotplug_ost(adev->handle, ACPI_NOTIFY_EJECT_REQUEST,
++					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 		return acpi_scan_hot_remove(adev);
  	}
+ 	return -EINVAL;
+@@ -483,6 +489,10 @@ static void acpi_device_hotplug(void *da
  
- 	/* Access the real PCIe interface */
--	spin_lock_irqsave(&port->conf_lock, flags);
- 	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
- 				    where, size, val);
--	spin_unlock_irqrestore(&port->conf_lock, flags);
+ 	if (adev->handler) {
+ 		error = acpi_generic_hotplug_event(adev, src);
++		if (error == -EPERM) {
++			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
++			goto err_out;
++		}
+ 	} else {
+ 		int (*event)(struct acpi_device *, u32);
  
- 	return ret;
- }
-@@ -985,7 +978,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		mvebu_pcie_set_local_dev_nr(port, 1);
+@@ -512,7 +522,6 @@ static void acpi_device_hotplug(void *da
  
- 		port->dn = child;
--		spin_lock_init(&port->conf_lock);
- 		mvebu_sw_pci_bridge_init(port);
- 		i++;
- 	}
--- 
-1.8.3.2
+ static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
+ {
+-	struct acpi_scan_handler *handler = data;
+ 	u32 ost_code = ACPI_OST_SC_SUCCESS;
+ 	struct acpi_device *adev;
+ 	acpi_status status;
+@@ -528,13 +537,6 @@ static void acpi_hotplug_notify_cb(acpi_
+ 
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
+-		if (handler && !handler->hotplug.enabled) {
+-			acpi_handle_err(handle, "Eject disabled\n");
+-			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
+-			goto out;
+-		}
+-		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
+-					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 		break;
+ 
+ 	case ACPI_NOTIFY_DEVICE_WAKE:
+@@ -632,8 +634,6 @@ acpi_eject_store(struct device *d, struc
+ 	if (ACPI_FAILURE(status) || !acpi_device->flags.ejectable)
+ 		return -ENODEV;
+ 
+-	acpi_evaluate_hotplug_ost(acpi_device->handle, ACPI_OST_EC_OSPM_EJECT,
+-				  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+ 	get_device(&acpi_device->dev);
+ 	status = acpi_hotplug_execute(acpi_device_hotplug, acpi_device,
+ 				      ACPI_OST_EC_OSPM_EJECT);
 
