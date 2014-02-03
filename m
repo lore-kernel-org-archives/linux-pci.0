@@ -1,82 +1,170 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sun, 23 Feb 2014 00:38:55 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 3 Feb 2014 19:06:49 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH v5 02/33] genirq: Add irq_alloc_reserved_desc()
-In-Reply-To: <CAE9FiQVf7u62S4puc2iMqiFO2YU-Kf35XVB9mC+SEP6Z73x7Zw@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1402222338420.21251@ionos.tec.linutronix.de>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org> <1388707565-16535-3-git-send-email-yinghai@kernel.org> <alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de> <CAE9FiQUo9NGbjiZbMsf2yBFbn=iLJ-jc3QtZ8K6qwVuhmqzq=Q@mail.gmail.com>
- <alpine.DEB.2.02.1402221104440.21251@ionos.tec.linutronix.de> <CAE9FiQVf2L-FjkXR3WC=0iHNY73D2G4jyMeko4f4DPuxAXTK+Q@mail.gmail.com> <CAE9FiQVf7u62S4puc2iMqiFO2YU-Kf35XVB9mC+SEP6Z73x7Zw@mail.gmail.com>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
+ device tree
+Message-ID: <20140203190649.GB4889@e106497-lin.cambridge.arm.com>
+References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
+ <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
+ <7398333.9L5KlyFggU@wuerfel>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <7398333.9L5KlyFggU@wuerfel>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 22 Feb 2014, Yinghai Lu wrote:
-> On Sat, Feb 22, 2014 at 9:28 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Sat, Feb 22, 2014 at 2:08 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> >>
-> >> As I said before irq_reserve_irq() is a misnomer and a
-> >> misconception. Of course this needs to be fixed as well.
-> >>
-> >> And you cannot just blindly change it because !SPARSE can use the
-> >> allocation. We are not creating stupid corner cases just to support
-> >> your sloppyness. Its not rocket science to do it the right way.
-> >>
-> >> That said, it might be worthwhile to get rid of the !SPARSE case
-> >> completely. That would probably make quite some stuff simpler.
-> >
-> > So we need to make all arches support SPARSE_IRQ at first?
-> >
-> > Now we have arm, arm64, c6x, metag, powerpc, sh, x86 support SPARSE_IRQ.
-> >
-> > The following  are not with SPARSE_IRQ yet:
-> > alpha, arc, avr32, blackfin, cris, frv, hexagon, m32r, m68k, microblaze,
-> > mips, mn10300, openrisc, parisc, s390, score, sparc, tile, um,
-> > unicore32, xtensa.
+Hi Arnd,
+
+First of all, thanks for reviewing this!
+
+On Mon, Feb 03, 2014 at 06:46:10PM +0000, Arnd Bergmann wrote:
+> On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
+> > +/**
+> > + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
+> > + * @dev: device node of the host bridge having the range property
+> > + * @resources: list where the range of resources will be added after DT parsing
+> > + *
+> > + * This function will parse the "ranges" property of a PCI host bridge device
+> > + * node and setup the resource mapping based on its content. It is expected
+> > + * that the property conforms with the Power ePAPR document.
+> > + *
+> > + * Each architecture will then apply their filtering based on the limitations
+> > + * of each platform. One general restriction seems to be the number of IO space
+> > + * ranges, the PCI framework makes intensive use of struct resource management,
+> > + * and for IORESOURCE_IO types they can only be requested if they are contained
+> > + * within the global ioport_resource, so that should be limited to one IO space
+> > + * range.
 > 
-> or add calling irq_alloc_desc_at() before irq_set_chip... for !SPARSE_IRQ.
+> Actually we have quite a different set of restrictions around I/O space on ARM32
+> at the moment: Each host bridge can have its own 64KB range in an arbitrary
+> location on MMIO space, and the total must not exceed 2MB of I/O space.
+
+And that is why the filtering is not (yet) imposed in the generic code. But once
+you use pci_request_region, that will call request_region which will check
+against ioport_resource as parent for the requested resource. That should fail
+if is is not in the correct range, so I don't know how arm arch code manages
+multiple IO ranges.
+
 > 
-> Please check attached partial patch if you like it.
+> > + */
+> > +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
+> > +					struct list_head *resources)
+> > +{
+> > +	struct resource *res;
+> > +	struct of_pci_range range;
+> > +	struct of_pci_range_parser parser;
+> > +	int err;
+> > +
+> > +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
+> > +
+> > +	/* Check for ranges property */
+> > +	err = of_pci_range_parser_init(&parser, dev);
+> > +	if (err)
+> > +		return err;
+> > +
+> > +	pr_debug("Parsing ranges property...\n");
+> > +	for_each_of_pci_range(&parser, &range) {
+> > +		/* Read next ranges element */
+> > +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+> > +				range.pci_space, range.pci_addr);
+> > +		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+> > +					range.cpu_addr, range.size);
+> > +
+> > +		/* If we failed translation or got a zero-sized region
+> > +		 * (some FW try to feed us with non sensical zero sized regions
+> > +		 * such as power3 which look like some kind of attempt
+> > +		 * at exposing the VGA memory hole) then skip this range
+> > +		 */
+> > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> > +			continue;
+> > +
+> > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> > +		if (!res) {
+> > +			err = -ENOMEM;
+> > +			goto bridge_ranges_nomem;
+> > +		}
+> > +
+> > +		of_pci_range_to_resource(&range, dev, res);
+> > +
+> > +		pci_add_resource_offset(resources, res,
+> > +				range.cpu_addr - range.pci_addr);
+> > +	}
+> 
+> I believe of_pci_range_to_resource() will return the MMIO aperture for the
+> I/O space window here, which is not what you are supposed to pass into
+> pci_add_resource_offset.
 
-OMG, you really mean that:
+And that is why the code in probe.c has been added to deal with that. It is
+too early to do the adjustments here as all we have is the list of resources
+and that might get culled by the architecture fixup code. Remembering the
+io_offset will happen once the pci_host_bridge gets created, and the resources
+are then adjusted.
 
-+++ b/arch/alpha/kernel/irq_i8259.c
-@@ -92,6 +92,7 @@ init_i8259a_irqs(void)
- 	outb(0xff, 0xA1);	/* mask all of 8259A-2 */
- 
- 	for (i = 0; i < 16; i++) {
-+		irq_alloc_desc_at(i, 0);
- 		irq_set_chip_and_handler(i, &i8259a_irq_type, handle_level_irq);
- 	}
+> 
+> > +EXPORT_SYMBOL(pci_host_bridge_of_init);
+> 
+> EXPORT_SYMBOL_GPL
 
-You can't be serious about that. There are tons of ways to call into
-the core and access an irq descriptor aside of irq_set_chip* before it
-is potentially allocated.
+Will change for v2, thanks!
 
-Are you going to analyze all of them and add an irq_alloc_desc_at()
-before that call?
+> 
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 6e34498..16febae 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >  	list_for_each_entry_safe(window, n, resources, list) {
+> >  		list_move_tail(&window->list, &bridge->windows);
+> >  		res = window->res;
+> > +		/*
+> > +		 * IO resources are stored in the kernel with a CPU start
+> > +		 * address of zero. Adjust the data accordingly and remember
+> > +		 * the offset
+> > +		 */
+> > +		if (resource_type(res) == IORESOURCE_IO) {
+> > +			bridge->io_offset = res->start;
+> > +			res->end -= res->start;
+> > +			window->offset -= res->start;
+> > +			res->start = 0;
+> > +		}
+> >  		offset = window->offset;
+> >  		if (res->flags & IORESOURCE_BUS)
+> 
+> Won't this break all existing host bridges?
 
-HELL, NO!
+I am not sure. I believe not, due to what I've explained earlier, but you might be right.
 
-I'm really tired of that.
+The adjustment happens before the resource is added to the host bridge windows and translates
+it from MMIO range into IO range.
 
-Stay away from kernel/irq/* and wait for people who are competent
-enough and willing to spend the extra thoughts to come up with
-solutions which are not completely ass backwards.
+Best regards,
+Liviu
 
-Thanks,
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-	tglx
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
