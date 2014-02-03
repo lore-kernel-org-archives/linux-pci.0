@@ -1,41 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:64212 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751921AbaBRTRK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 14:17:10 -0500
-Date: Tue, 18 Feb 2014 19:16:38 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140218191637.GI2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
- <10244486.cKXs90tdz5@wuerfel>
- <20140218185150.GE2010@mudshark.cambridge.arm.com>
- <16012311.obgTYIWsOC@wuerfel>
+Received: from v094114.home.net.pl ([79.96.170.134]:61130 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752854AbaBCX21 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:27 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 10/24][Resend] ACPI / hotplug / PCI: Rework acpiphp_no_hotplug()
+Date: Tue, 04 Feb 2014 00:24:21 +0100
+Message-ID: <2910389.HdF4mpSM6b@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <16012311.obgTYIWsOC@wuerfel>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 07:11:25PM +0000, Arnd Bergmann wrote:
-> On Tuesday 18 February 2014 18:51:50 Will Deacon wrote:
-> > 
-> > kvmtool provides an i8042, pci-shmem, an rtc, 8250 and vesa at the usual PC
-> > offsets. On ARM, I regularly use the 8250 (there are even DT bindings for
-> > it) and MarcZ got the rtc working for fun. Not tried the others though.
-> 
-> Ah, interesting. But which ones are between 0x1000-0x6200? The ones
-> you list should all be in the ISA range between 0x0-0xfff as far
-> as I can tell, which we keep clear of by setting PCIBIOS_MIN_IO
-> to 0x1000.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I think there's just a hole between 0x1000 - 0x6200.
+If a struct acpi_device pointer is passed to acpiphp_no_hotplug()
+instead of an ACPI handle, the function won't need to call
+acpi_bus_get_device(), which may be costly, any more.  Then,
+trim_stale_devices() can call acpiphp_no_hotplug() passing
+the struct acpi_device object it already has directly to that
+function.
 
-Will
+Make those changes and update slot_no_hotplug() accordingly.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -638,11 +638,8 @@ static void disable_slot(struct acpiphp_
+ 	slot->flags &= (~SLOT_ENABLED);
+ }
+ 
+-static bool acpiphp_no_hotplug(acpi_handle handle)
++static bool acpiphp_no_hotplug(struct acpi_device *adev)
+ {
+-	struct acpi_device *adev = NULL;
+-
+-	acpi_bus_get_device(handle, &adev);
+ 	return adev && adev->flags.no_hotplug;
+ }
+ 
+@@ -650,10 +647,13 @@ static bool slot_no_hotplug(struct acpip
+ {
+ 	struct acpiphp_func *func;
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling)
+-		if (acpiphp_no_hotplug(func_to_handle(func)))
+-			return true;
++	list_for_each_entry(func, &slot->funcs, sibling) {
++		struct acpi_device *adev = NULL;
+ 
++		acpi_bus_get_device(func_to_handle(func), &adev);
++		if (acpiphp_no_hotplug(adev))
++			return true;
++	}
+ 	return false;
+ }
+ 
+@@ -710,13 +710,12 @@ static void trim_stale_devices(struct pc
+ 	bool alive = false;
+ 
+ 	if (adev) {
+-		acpi_handle handle = adev->handle;
+ 		acpi_status status;
+ 		unsigned long long sta;
+ 
+-		status = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++		status = acpi_evaluate_integer(adev->handle, "_STA", NULL, &sta);
+ 		alive = (ACPI_SUCCESS(status) && sta == ACPI_STA_ALL)
+-			|| acpiphp_no_hotplug(handle);
++			|| acpiphp_no_hotplug(adev);
+ 	}
+ 	if (!alive) {
+ 		u32 v;
+
