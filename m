@@ -1,68 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:56261 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800AbaBNS3P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 13:29:15 -0500
-Received: by mail-ig0-f171.google.com with SMTP id uy17so1338305igb.4
-        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 10:29:13 -0800 (PST)
-Date: Fri, 14 Feb 2014 11:29:10 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] bus: mvebu-mbus: Fix incorrect size for PCI aperture
- resources
-Message-ID: <20140214182910.GC31093@google.com>
-References: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] [RFC] Add AArch64 support for PCI
+Date: Mon,  3 Feb 2014 18:43:47 +0000
+Message-Id: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 03:57:07PM -0700, Jason Gunthorpe wrote:
-> reg[0] is the DT base, reg[1] is the DT length in bytes,
-> struct resource.end is the inclusive end address, so a -1 is
-> required.
-> 
-> Tested on kirkwood.
-> 
-> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Hi,
 
-Do these two patches need to go together?  I don't maintain
-drivers/bus/mvebu-mbus.c, but if these should be kept together, I'd be
-happy to merge them both, given the appropriate ack from Jason C or Thomas.
+This patch adds support for PCI to AArch64. It is based on the patch posted
+here [1] that adds support for creating generic host bridge structure from
+device tree. With that in place, I was able to boot an FPGA platform that
+has PCIe host bridge support and use a PCIe network card.
 
-> ---
->  drivers/bus/mvebu-mbus.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
-> index 2394e97..7fd54e9 100644
-> --- a/drivers/bus/mvebu-mbus.c
-> +++ b/drivers/bus/mvebu-mbus.c
-> @@ -876,14 +876,14 @@ static void __init mvebu_mbus_get_pcie_resources(struct device_node *np,
->  	ret = of_property_read_u32_array(np, "pcie-mem-aperture", reg, ARRAY_SIZE(reg));
->  	if (!ret) {
->  		mem->start = reg[0];
-> -		mem->end = mem->start + reg[1];
-> +		mem->end = mem->start + reg[1] - 1;
->  		mem->flags = IORESOURCE_MEM;
->  	}
->  
->  	ret = of_property_read_u32_array(np, "pcie-io-aperture", reg, ARRAY_SIZE(reg));
->  	if (!ret) {
->  		io->start = reg[0];
-> -		io->end = io->start + reg[1];
-> +		io->end = io->start + reg[1] - 1;
->  		io->flags = IORESOURCE_IO;
->  	}
->  }
-> -- 
-> 1.8.1.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The API used is different from the one used by ARM architecture. There is
+no pci_common_init_dev() function and no hw_pci structure, as that is no
+longer needed. Once the last signature is added to the legal agreement, I
+will post the host bridge driver code that I am using. Meanwhile, here
+is an example of what the probe function looks like, posted as an example:
+
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct resource bus_range;
+	struct myhostbridge_port *pp;
+	LIST_HEAD(resources);
+
+	dev = pdev->dev.of_node;
+
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
+
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
+
+	err = of_pci_parse_bus_range(dev, &bus_range);
+	if (err) {
+		bus_range.start = 0;
+		bus_range.end = 255;
+		bus_range.flags = IORESOURCE_BUS;
+	}
+	pci_add_resource(&resources, &bus_range);
+
+	bridge = pci_host_bridge_of_init(&pdev->dev, 0, &myhostbridge_ops, pp, &resources);
+	if (!bridge) {
+		err = -EINVAL;
+		goto bridge_init_fail;
+	}
+
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_init_fail;
+
+	/*
+	 * Add flags here, this is just an example
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+
+	bus_range.end = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, bus_range.end);
+
+	pci_assign_unassigned_bus_resources(bridge->bus);
+
+	pci_bus_add_devices(bridge->bus);
+
+	return 0;
+
+bridge_init_fail:
+	kfree(pp);
+	pci_free_resource_list(&resources);
+	return err;
+}
+
+Best regards,
+Liviu
+
+[1] http://marc.info/?l=linux-pci&m=139145254821334&w=2
+
+Liviu Dudau (1):
+  arm64: Add support for PCI
+
+ arch/arm64/Kconfig            |  17 +++++++
+ arch/arm64/include/asm/Kbuild |   1 +
+ arch/arm64/include/asm/io.h   |   4 ++
+ arch/arm64/include/asm/pci.h  |  35 +++++++++++++
+ arch/arm64/kernel/Makefile    |   1 +
+ arch/arm64/kernel/pci.c       | 112 ++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 170 insertions(+)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
+-- 
+1.8.5.3
+
