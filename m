@@ -1,107 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:60247 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751834AbaBTU3V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 15:29:21 -0500
-Date: Thu, 20 Feb 2014 21:29:14 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: pci-mvebu driver on km_kirkwood
-Message-ID: <20140220212914.29ddc031@skate>
-In-Reply-To: <20140220173518.GA19893@obsidianresearch.com>
-References: <51DD9A8C.10608@keymile.com>
-	<20130711163220.2b3adf38@skate>
-	<53039894.10905@keymile.com>
-	<20140218212751.07c2aeb5@skate>
-	<53046D98.6020801@keymile.com>
-	<20140219102658.76eec91e@skate>
-	<53047BBB.6040108@keymile.com>
-	<20140219143749.65ff3155@skate>
-	<CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
-	<20140220095518.7ca36f0a@skate>
-	<20140220173518.GA19893@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from v094114.home.net.pl ([79.96.170.134]:58014 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753701AbaBCX22 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:28 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 15/24][Resend] ACPI / hotplug / PCI: Use acpi_handle_debug() in hotplug_event()
+Date: Tue, 04 Feb 2014 00:33:56 +0100
+Message-ID: <5322449.ygVERcl5IX@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Thu, 20 Feb 2014 10:35:18 -0700, Jason Gunthorpe wrote:
-> On Thu, Feb 20, 2014 at 09:55:18AM +0100, Thomas Petazzoni wrote:
-> 
-> > Does that make sense? Keep in mind that I'm still not completely
-> > familiar with the PCI terminology, so maybe the above explanation does
-> > not use the right terms.
-> 
-> Stated another way, the Marvel PCI-E to PCI-E bridge config space has
-> a quirk that requires the window BARs to be aligned on their size and
-> sized to a power of 2.
+Make hotplug_event() use acpi_handle_debug() instead of an open-coded
+debug message printing and clean up the messages printed by it.
 
-Correct.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-> The first requirement is already being handled by hooking through
-> ARM's 'align_resource' callback.
-
-Absolutely.
-
-> One avenue would be to have mvebu_pcie_align_resource return a struct
-> resource and manipulate the size as well. Assuming the PCI core will
-> accommodate that.
-
-That would effectively be the easiest solution from the point of view
-of the PCIe driver.
-
-In practice, the story is a little bit more subtle than that: the PCIe
-driver may want to decide to either tell the PCI core to enlarge the
-window BAR up to the next power of two size, or to dedicate two windows
-to it.
-
-For example:
-
- * If the PCI core allocates a 96 KB BAR, we clearly want it to be
-   enlarged to 128 KB, so that we have to create a single window for it.
-
- * However, if the PCI core allocates a 192 MB BAR, we may want to
-   instead create two windows: a first one of 128 MB and a second one
-   of 64 MB. This consumes two windows, but saves 64 MB of physical
-   address space.
-
-(Note that I haven't tested myself the creation of two windows for the
-same target device, but I was told by Lior that it should work).
-
-As you can see from the two examples above, we may not necessarily want
-to enforce this power-of-two constraint in all cases. We may want to
-accept a non-power-of-2 size in the case of the 192 MB BAR, and let the
-mvebu-mbus driver figure out that it should allocate several
-consecutive windows to cover these 192 MB.
-
-But to begin with, rounding up all window BARs up to the next power of
-two size would be perfectly OK.
-
-Jason, would you mind maybe replying to Bjorn Helgaas email (Thu, 20
-Feb 2014 12:18:42 -0700) ? I believe that a lot of the misunderstanding
-between Bjorn and me is due to the fact that I don't use the correct
-PCI terminology to describe how the Marvell hardware works, and how the
-Marvell PCIe driver copes with it. I'm sure you would explain it in a
-way that would be more easily understood by someone very familiar with
-the PCI terminology such as Bjorn. Thanks a lot!
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -819,9 +819,6 @@ static void hotplug_event(acpi_handle ha
+ 	struct acpiphp_func *func = &context->func;
+ 	struct acpiphp_slot *slot = func->slot;
+ 	struct acpiphp_bridge *bridge;
+-	char objname[64];
+-	struct acpi_buffer buffer = { .length = sizeof(objname),
+-				      .pointer = objname };
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+ 	bridge = context->bridge;
+@@ -831,14 +828,11 @@ static void hotplug_event(acpi_handle ha
+ 	mutex_unlock(&acpiphp_context_lock);
+ 
+ 	pci_lock_rescan_remove();
+-	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		/* bus re-enumerate */
+-		pr_debug("%s: Bus check notify on %s\n", __func__, objname);
+-		pr_debug("%s: re-enumerating slots under %s\n",
+-			 __func__, objname);
++		acpi_handle_debug(handle, "Bus check in %s()\n", __func__);
+ 		if (bridge)
+ 			acpiphp_check_bridge(bridge);
+ 		else if (!(slot->flags & SLOT_IS_GOING_AWAY))
+@@ -848,7 +842,7 @@ static void hotplug_event(acpi_handle ha
+ 
+ 	case ACPI_NOTIFY_DEVICE_CHECK:
+ 		/* device check */
+-		pr_debug("%s: Device check notify on %s\n", __func__, objname);
++		acpi_handle_debug(handle, "Device check in %s()\n", __func__);
+ 		if (bridge) {
+ 			acpiphp_check_bridge(bridge);
+ 		} else if (!(slot->flags & SLOT_IS_GOING_AWAY)) {
+@@ -863,7 +857,7 @@ static void hotplug_event(acpi_handle ha
+ 
+ 	case ACPI_NOTIFY_EJECT_REQUEST:
+ 		/* request device eject */
+-		pr_debug("%s: Device eject notify on %s\n", __func__, objname);
++		acpi_handle_debug(handle, "Eject request in %s()\n", __func__);
+ 		acpiphp_disable_and_eject_slot(slot);
+ 		break;
+ 	}
