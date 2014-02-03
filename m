@@ -1,68 +1,228 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:42955 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753646AbaBYBzK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 20:55:10 -0500
-Received: by mail-ob0-f181.google.com with SMTP id wp4so6159390obc.40
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 17:55:10 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 11/24][Update] ACPI / hotplug / PCI: Store acpi_device pointer in acpiphp_context
+Date: Tue, 04 Feb 2014 00:25:14 +0100
+Message-ID: <1852062.LYyYA0uj6D@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
-References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
-Date: Mon, 24 Feb 2014 17:55:09 -0800
-Message-ID: <CAE9FiQUvU=BqPXDHC+B=zC7ZGarimLDdvHsDbVL8t8qnZLJpzw@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 24, 2014 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc Rajat]
->
-> On Mon, Feb 24, 2014 at 4:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On system with 16 PCI express hotplug slots, customer complain every slot
->> will report "Command not completed in 1000 msec" during initialization.
->>
->> Intel says that we should only wait command complete only for
->>            Electromechanical Interlock Control
->>            Power Controller Control
->>            Power Indicator Control
->>            Attention Indicator Control
->
-> Is there something in the spec that says this?  I'm looking at section
-> 6.7.3.2.  It says "If command completed events are supported, then
-> software must wait for a command to complete before issuing the next
-> command."  It's obvious that this is conditional on the "No Command
-> Completed Support" bit, but I don't see anything about a connection
-> with the other bits you mentioned.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-others told me that other os does not check command complete
-when enabling notification.
+After recent modifications of the ACPI core making it create a struct
+acpi_device object for every namespace node representing a device
+regardless of the current status of that device the ACPIPHP code
+can store a struct acpi_device pointer instead of an ACPI handle
+in struct acpiphp_context.  This immediately makes it possible to
+avoid making potentially costly calls to acpi_bus_get_device() in
+two places and allows some more simplifications to be made going
+forward.
 
->
-> Is this related to an erratum in the Intel/AMD/Nvidia chipsets?  If
-> so, we need at least a comment about that in the source, and
-> preferably, some sort of quirk for these chipsets.
+The reason why that is correct is because ACPIPHP only installs
+hotify handlers for namespace nodes that exist when
+acpiphp_enumerate_slots() is called for their parent bridge.
+That only happens if the parent bridge has an ACPI companion
+associated with it, which means that the ACPI namespace scope
+in question has been scanned already at that point.  That, in
+turn, means that struct acpi_device objects have been created
+for all namespace nodes in that scope and pointers to those
+objects can be stored directly instead of their ACPI handles.
 
-Vendor does not agree that is silicon problem.
-But will update EDS to state that CC will be only set when those four
-control bits are handled.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    9 +++++--
+ drivers/pci/hotplug/acpiphp_glue.c |   46 +++++++++++++++++--------------------
+ 2 files changed, 29 insertions(+), 26 deletions(-)
 
->
-> This is similar to the issue Rajat is working on with
-> http://patchwork.ozlabs.org/patch/322387/ .  I haven't merged that
-> yet, but I probably will.  Is there any connection between that patch
-> and this issue?  Does this issue still happen even with Rajat's patch
-> applied?
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -117,8 +117,8 @@ struct acpiphp_func {
+ };
+ 
+ struct acpiphp_context {
+-	acpi_handle handle;
+ 	struct acpiphp_func func;
++	struct acpi_device *adev;
+ 	struct acpiphp_bridge *bridge;
+ 	unsigned int refcount;
+ };
+@@ -128,9 +128,14 @@ static inline struct acpiphp_context *fu
+ 	return container_of(func, struct acpiphp_context, func);
+ }
+ 
++static inline struct acpi_device *func_to_acpi_device(struct acpiphp_func *func)
++{
++	return func_to_context(func)->adev;
++}
++
+ static inline acpi_handle func_to_handle(struct acpiphp_func *func)
+ {
+-	return func_to_context(func)->handle;
++	return func_to_acpi_device(func)->handle;
+ }
+ 
+ /*
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -73,11 +73,11 @@ static void acpiphp_context_handler(acpi
+ 
+ /**
+  * acpiphp_init_context - Create hotplug context and grab a reference to it.
+- * @handle: ACPI object handle to create the context for.
++ * @adev: ACPI device object to create the context for.
+  *
+  * Call under acpiphp_context_lock.
+  */
+-static struct acpiphp_context *acpiphp_init_context(acpi_handle handle)
++static struct acpiphp_context *acpiphp_init_context(struct acpi_device *adev)
+ {
+ 	struct acpiphp_context *context;
+ 	acpi_status status;
+@@ -86,9 +86,9 @@ static struct acpiphp_context *acpiphp_i
+ 	if (!context)
+ 		return NULL;
+ 
+-	context->handle = handle;
++	context->adev = adev;
+ 	context->refcount = 1;
+-	status = acpi_attach_data(handle, acpiphp_context_handler, context);
++	status = acpi_attach_data(adev->handle, acpiphp_context_handler, context);
+ 	if (ACPI_FAILURE(status)) {
+ 		kfree(context);
+ 		return NULL;
+@@ -118,7 +118,7 @@ static struct acpiphp_context *acpiphp_g
+ 
+ /**
+  * acpiphp_put_context - Drop a reference to ACPI hotplug context.
+- * @handle: ACPI object handle to put the context for.
++ * @context: ACPI hotplug context to drop a reference to.
+  *
+  * The context object is removed if there are no more references to it.
+  *
+@@ -130,7 +130,7 @@ static void acpiphp_put_context(struct a
+ 		return;
+ 
+ 	WARN_ON(context->bridge);
+-	acpi_detach_data(context->handle, acpiphp_context_handler);
++	acpi_detach_data(context->adev->handle, acpiphp_context_handler);
+ 	kfree(context);
+ }
+ 
+@@ -216,7 +216,7 @@ static void dock_event(acpi_handle handl
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(handle);
+-	if (!context || WARN_ON(context->handle != handle)
++	if (!context || WARN_ON(context->adev->handle != handle)
+ 	    || context->func.parent->is_going_away) {
+ 		mutex_unlock(&acpiphp_context_lock);
+ 		return;
+@@ -284,6 +284,7 @@ static acpi_status register_slot(acpi_ha
+ {
+ 	struct acpiphp_bridge *bridge = data;
+ 	struct acpiphp_context *context;
++	struct acpi_device *adev;
+ 	struct acpiphp_slot *slot;
+ 	struct acpiphp_func *newfunc;
+ 	acpi_status status = AE_OK;
+@@ -303,12 +304,14 @@ static acpi_status register_slot(acpi_ha
+ 				"can't evaluate _ADR (%#x)\n", status);
+ 		return AE_OK;
+ 	}
++	if (acpi_bus_get_device(handle, &adev))
++		return AE_OK;
+ 
+ 	device = (adr >> 16) & 0xffff;
+ 	function = adr & 0xffff;
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+-	context = acpiphp_init_context(handle);
++	context = acpiphp_init_context(adev);
+ 	if (!context) {
+ 		mutex_unlock(&acpiphp_context_lock);
+ 		acpi_handle_err(handle, "No hotplug context\n");
+@@ -628,12 +631,8 @@ static void disable_slot(struct acpiphp_
+ 		if (PCI_SLOT(dev->devfn) == slot->device)
+ 			pci_stop_and_remove_bus_device(dev);
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		struct acpi_device *adev;
+-
+-		if (!acpi_bus_get_device(func_to_handle(func), &adev))
+-			acpi_bus_trim(adev);
+-	}
++	list_for_each_entry(func, &slot->funcs, sibling)
++		acpi_bus_trim(func_to_acpi_device(func));
+ 
+ 	slot->flags &= (~SLOT_ENABLED);
+ }
+@@ -647,13 +646,10 @@ static bool slot_no_hotplug(struct acpip
+ {
+ 	struct acpiphp_func *func;
+ 
+-	list_for_each_entry(func, &slot->funcs, sibling) {
+-		struct acpi_device *adev = NULL;
+-
+-		acpi_bus_get_device(func_to_handle(func), &adev);
+-		if (acpiphp_no_hotplug(adev))
++	list_for_each_entry(func, &slot->funcs, sibling)
++		if (acpiphp_no_hotplug(func_to_acpi_device(func)))
+ 			return true;
+-	}
++
+ 	return false;
+ }
+ 
+@@ -908,7 +904,7 @@ static void hotplug_event(acpi_handle ha
+ static void hotplug_event_work(void *data, u32 type)
+ {
+ 	struct acpiphp_context *context = data;
+-	acpi_handle handle = context->handle;
++	acpi_handle handle = context->adev->handle;
+ 
+ 	acpi_scan_lock_acquire();
+ 
+@@ -967,7 +963,7 @@ static void handle_hotplug_event(acpi_ha
+ 
+ 	mutex_lock(&acpiphp_context_lock);
+ 	context = acpiphp_get_context(handle);
+-	if (!context || WARN_ON(context->handle != handle)
++	if (!context || WARN_ON(context->adev->handle != handle)
+ 	    || context->func.parent->is_going_away)
+ 		goto err_out;
+ 
+@@ -998,16 +994,18 @@ static void handle_hotplug_event(acpi_ha
+ void acpiphp_enumerate_slots(struct pci_bus *bus)
+ {
+ 	struct acpiphp_bridge *bridge;
++	struct acpi_device *adev;
+ 	acpi_handle handle;
+ 	acpi_status status;
+ 
+ 	if (acpiphp_disabled)
+ 		return;
+ 
+-	handle = ACPI_HANDLE(bus->bridge);
+-	if (!handle)
++	adev = ACPI_COMPANION(bus->bridge);
++	if (!adev)
+ 		return;
+ 
++	handle = adev->handle;
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+ 	if (!bridge) {
+ 		acpi_handle_err(handle, "No memory for bridge object\n");
 
-looks like other way.
-
-The issue still happen with Rajat's patch.
-
-Thanks
-
-Yinghai
