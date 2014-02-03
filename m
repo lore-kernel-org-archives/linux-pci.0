@@ -1,49 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 08/23] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
-Date: Mon, 24 Feb 2014 09:02:08 +0100
-Message-Id: <86ea36942166dad4c641425c1e9508a7b5d76836.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 8/24][Resend] ACPI / hotplug / PCI: Simplify register_slot()
+Date: Tue, 04 Feb 2014 00:22:32 +0100
+Message-ID: <1761770.yZzRr5SFh0@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the driver falls back to INTx mode when MSI-X
-initialization failed. This is a suboptimal behaviour
-for chips that also support MSI. This update changes that
-behaviour and falls back to MSI mode in case MSI-X mode
-initialization failed.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+The err label in register_slot() is only jumped to from one place,
+so move the code under the label to that place and drop the label.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/scsi/hpsa.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 868318a..52cfd19 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4180,11 +4180,9 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 		if (err > 0) {
- 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
- 			       "available\n", err);
--			goto default_int_mode;
- 		} else {
- 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
- 			       err);
--			goto default_int_mode;
- 		}
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -335,8 +335,10 @@ static acpi_status register_slot(acpi_ha
+ 
+ 	slot = kzalloc(sizeof(struct acpiphp_slot), GFP_KERNEL);
+ 	if (!slot) {
+-		status = AE_NO_MEMORY;
+-		goto err;
++		mutex_lock(&acpiphp_context_lock);
++		acpiphp_put_context(context);
++		mutex_unlock(&acpiphp_context_lock);
++		return AE_NO_MEMORY;
  	}
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
--- 
-1.7.7.6
+ 
+ 	slot->bus = bridge->pci_bus;
+@@ -404,12 +406,6 @@ static acpi_status register_slot(acpi_ha
+ 	}
+ 
+ 	return AE_OK;
+-
+- err:
+-	mutex_lock(&acpiphp_context_lock);
+-	acpiphp_put_context(context);
+-	mutex_unlock(&acpiphp_context_lock);
+-	return status;
+ }
+ 
+ static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
 
