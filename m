@@ -1,92 +1,169 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Subject: [PATCH v2 27/52] x86, pci,
- amd-bus: Fix CPU hotplug callback registration
-To: paulus@samba.org, oleg@redhat.com, mingo@kernel.org,
-	rusty@rustcorp.com.au, peterz@infradead.org, tglx@linutronix.de,
-	akpm@linux-foundation.org
-Cc: paulmck@linux.vnet.ibm.com, tj@kernel.org, walken@google.com,
-	ego@linux.vnet.ibm.com, linux@arm.linux.org.uk, rjw@rjwysocki.net,
-	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-	srivatsa.bhat@linux.vnet.ibm.com,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:45927 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752760AbaBCTSl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 14:18:41 -0500
+Date: Mon, 3 Feb 2014 19:18:38 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Date: Fri, 14 Feb 2014 13:25:11 +0530
-Message-ID: <20140214075511.22701.15084.stgit@srivatsabhat.in.ibm.com>
-In-Reply-To: <20140214074750.22701.47330.stgit@srivatsabhat.in.ibm.com>
-References: <20140214074750.22701.47330.stgit@srivatsabhat.in.ibm.com>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Message-ID: <20140203191837.GC4889@e106497-lin.cambridge.arm.com>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
+ <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
+ <21596846.kVTqp7roW4@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <21596846.kVTqp7roW4@wuerfel>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Subsystems that want to register CPU hotplug callbacks, as well as perform
-initialization for the CPUs that are already online, often do it as shown
-below:
+On Mon, Feb 03, 2014 at 06:58:56PM +0000, Arnd Bergmann wrote:
+> On Monday 03 February 2014 18:43:48 Liviu Dudau wrote:
+> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+> > index 4cc813e..ce5bad2 100644
+> > --- a/arch/arm64/include/asm/io.h
+> > +++ b/arch/arm64/include/asm/io.h
+> > @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+> >  /*
+> >   *  I/O port access primitives.
+> >   */
+> > +#define arch_has_dev_port()	(0)
+> 
+> Why not?
 
-	get_online_cpus();
+Maybe I got it the wrong way around, but the comment in include/linux/io.h says:
 
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
+/*
+ * Some systems do not have legacy ISA devices.
+ * /dev/port is not a valid interface on these systems.
+ * So for those archs, <asm/io.h> should define the following symbol.
+ */
 
-	register_cpu_notifier(&foobar_cpu_notifier);
+So ... defining it should mean no legacy ISA devices, right?
 
-	put_online_cpus();
+> 
+> >  #define IO_SPACE_LIMIT		0xffff
+> 
+> You probably want to increase this a bit, to allow multiple host bridges
+> to have their own I/O space.
 
-This is wrong, since it is prone to ABBA deadlocks involving the
-cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
-with CPU hotplug operations).
+OK, but to what size?
 
-Instead, the correct and race-free way of performing the callback
-registration is:
+> 
+> >  #define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
+> 
+> And modify this location: There is no particular reason to have the I/O space
+> mapped exactly 2MB below the loadable modules, as virtual address space is
+> essentially free.
 
-	cpu_notifier_register_begin();
+Will talk with Catalin about where to place this.
 
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
+> 
+> > +#define ioport_map(port, nr)	(PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
+> > +#define ioport_unmap(addr)
+> 
+> inline functions?
 
-	/* Note the use of the double underscored version of the API */
-	__register_cpu_notifier(&foobar_cpu_notifier);
+Will do, thanks!
 
-	cpu_notifier_register_done();
+> 
+> >  static inline u8 inb(unsigned long addr)
+> >  {
+> >  	return readb(addr + PCI_IOBASE);
+> > diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> > new file mode 100644
+> > index 0000000..dd084a3
+> > --- /dev/null
+> > +++ b/arch/arm64/include/asm/pci.h
+> > @@ -0,0 +1,35 @@
+> > +#ifndef __ASM_PCI_H
+> > +#define __ASM_PCI_H
+> > +#ifdef __KERNEL__
+> > +
+> > +#include <linux/types.h>
+> > +#include <linux/slab.h>
+> > +#include <linux/dma-mapping.h>
+> > +
+> > +#include <asm/io.h>
+> > +#include <asm-generic/pci-bridge.h>
+> > +#include <asm-generic/pci-dma-compat.h>
+> > +
+> > +#define PCIBIOS_MIN_IO		0
+> > +#define PCIBIOS_MIN_MEM		0
+> 
+> PCIBIOS_MIN_IO is normally set to 0x1000, to stay out of the ISA range.
 
+:) No ISA support! (Die ISA, die!!) 
 
-Fix the amd-bus code in x86 by using this latter form of callback
-registration.
+> 
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > new file mode 100644
+> > index 0000000..7b652cf
+> > --- /dev/null
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -0,0 +1,112 @@
+> 
+> None of this looks really arm64 specific, nor should it be. I think
+> we should try a little harder to move this as a default implementation
+> into common code, even if we start out by having all architectures
+> override it.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
----
+Agree. This is the RFC version. I didn't dare to post a patch with fixes
+for all architectures. :)
 
- arch/x86/pci/amd_bus.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> > +int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
+> > +{
+> > +	BUG_ON(offset + SZ_64K - 1 > IO_SPACE_LIMIT);
+> > +
+> > +	return ioremap_page_range((unsigned long)PCI_IOBASE + offset,
+> > +				(unsigned long)PCI_IOBASE + offset + SZ_64K,
+> > +				phys_addr,
+> > +				__pgprot(PROT_DEVICE_nGnRE));
+> > +}
+> 
+> Not sure if we want to treat this one as architecture specific though.
+> It certainly won't be portable to x86, but it could be shared with
+> a couple of others. We may also want to redesign the interface.
+> I've been thinking we could make this function allocate space in the
+> Linux virtual I/O space aperture, and pass two resources into it
+> (physical I/O aperture and bus I/O range), and get the actual
+> io_offset as the return value, or a negative error number.
 
-diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-index a48be98..f05cbf0 100644
---- a/arch/x86/pci/amd_bus.c
-+++ b/arch/x86/pci/amd_bus.c
-@@ -380,10 +380,13 @@ static int __init pci_io_ecs_init(void)
- 	if (early_pci_allowed())
- 		pci_enable_pci_io_ecs();
- 
--	register_cpu_notifier(&amd_cpu_notifier);
-+	cpu_notifier_register_begin();
- 	for_each_online_cpu(cpu)
- 		amd_cpu_notify(&amd_cpu_notifier, (unsigned long)CPU_ONLINE,
- 			       (void *)(long)cpu);
-+	__register_cpu_notifier(&amd_cpu_notifier);
-+	cpu_notifier_register_done();
-+
- 	pci_probe |= PCI_HAS_IO_ECS;
- 
- 	return 0;
+Not sure I completely follow your idea.
+
+> 
+> That way, you could have an arbitrary number of host bridges in the
+> system and each one gets a share of the virtual aperture until
+> it's full.
+
+One still needs to fix the pci_request_region use that checks against
+ioport_resource. But it is an interesting idea.
+
+> 
+> 	Arnd
+> 
+> 
+
+Thanks for reviewing this patch!
+
+Liviu
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
