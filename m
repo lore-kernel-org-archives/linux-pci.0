@@ -1,182 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:63148 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060AbaBQT2H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 14:28:07 -0500
-Received: by mail-oa0-f52.google.com with SMTP id i4so18316047oah.11
-        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2014 11:28:06 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.186]:60607 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752608AbaBCTbg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 14:31:36 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from device tree
+Date: Mon, 03 Feb 2014 20:31:31 +0100
+Message-ID: <3523674.i9iUPinOAk@wuerfel>
+In-Reply-To: <20140203190649.GB4889@e106497-lin.cambridge.arm.com>
+References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com> <7398333.9L5KlyFggU@wuerfel> <20140203190649.GB4889@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20140217045004.GB3230@yanx>
-References: <20140217045004.GB3230@yanx>
-Date: Mon, 17 Feb 2014 11:28:06 -0800
-Message-ID: <CAE9FiQXmWG2RNP-t=U06JUsqkmDm2My5762za8QuwUMZsG+yNg@mail.gmail.com>
-Subject: Re: Support huge alignment in pbus_size_mem()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Guo Chao <yan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=e89a8ff25042acfaab04f29f2746
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---e89a8ff25042acfaab04f29f2746
-Content-Type: text/plain; charset=ISO-8859-1
+On Monday 03 February 2014 19:06:49 Liviu Dudau wrote:
+> On Mon, Feb 03, 2014 at 06:46:10PM +0000, Arnd Bergmann wrote:
+> > On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
+> > > +/**
+> > > + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
+> > > + * @dev: device node of the host bridge having the range property
+> > > + * @resources: list where the range of resources will be added after DT parsing
+> > > + *
+> > > + * This function will parse the "ranges" property of a PCI host bridge device
+> > > + * node and setup the resource mapping based on its content. It is expected
+> > > + * that the property conforms with the Power ePAPR document.
+> > > + *
+> > > + * Each architecture will then apply their filtering based on the limitations
+> > > + * of each platform. One general restriction seems to be the number of IO space
+> > > + * ranges, the PCI framework makes intensive use of struct resource management,
+> > > + * and for IORESOURCE_IO types they can only be requested if they are contained
+> > > + * within the global ioport_resource, so that should be limited to one IO space
+> > > + * range.
+> >
+> > Actually we have quite a different set of restrictions around I/O space on ARM32
+> > at the moment: Each host bridge can have its own 64KB range in an arbitrary
+> > location on MMIO space, and the total must not exceed 2MB of I/O space.
+> 
+> And that is why the filtering is not (yet) imposed in the generic code. But once
+> you use pci_request_region, that will call request_region which will check
+> against ioport_resource as parent for the requested resource. That should fail
+> if is is not in the correct range, so I don't know how arm arch code manages
+> multiple IO ranges.
 
-On Sun, Feb 16, 2014 at 8:50 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
-> pbus_size_mem() limits resource alignment within 2G. We want to extend
-> this limit to support a 16G BAR. I found similar effort was tried before:
->
->         https://lkml.org/lkml/2012/6/21/411
->
-> What's the result? Does anyone come up with an adaptive algorithm?
+Let's try to come up with nomenclature so we can talk about this better
 
-I suggest following changes:
+The ioport_resource is in "logical I/O space", which is a Linux fiction,
+it goes from 0 to IO_SPACE_LIMIT (2MB on ARM) and is mapped into "virtual
+I/O space", which start at (void __iomem *)PCI_IO_VIRT_BASE.
 
-From: Nikhil P Rao <nikhil.rao@intel.com>
-Subject: [PATCH] PCI: Fix bus align checking to support more than 2G
+Each PCI domain can have its own "bus I/O aperture", which is typically
+between 0x1000 and 0xffff and reflects the address that is used in PCI
+transactions and in BARs. The aperture here reflects the subset of the
+4GB bus I/O space that is actually mapped into a CPU visible "physical
+I/O aperture" using an inbound mapping of the host bridge. The physical
+I/O aperture in turn gets mapped to the virtual I/O space using 
+pci_ioremap_io. The difference between a bus I/O address and a logical
+I/O address is stored in the io_offset.
 
-current 2G is out of date.
+So much for basic definitions. When a device driver calls pci_request_region,
+the port number it sees is the bus I/O port number adjusted using the
+io_offset to turn it into a logical I/O port number, which should
+always be within the host bridge window, which in turn is a subset
+of the ioport_resource.
 
--v3: We only need to extend that when 64bit mmio is supported.
-     So extract mmio64 mask checking, and still keep old 2G checking
-     for other path.  --- Yinghai
+> > > +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
+> > > +                                   struct list_head *resources)
+> > > +{
+> > > +   struct resource *res;
+> > > +   struct of_pci_range range;
+> > > +   struct of_pci_range_parser parser;
+> > > +   int err;
+> > > +
+> > > +   pr_info("PCI host bridge %s ranges:\n", dev->full_name);
+> > > +
+> > > +   /* Check for ranges property */
+> > > +   err = of_pci_range_parser_init(&parser, dev);
+> > > +   if (err)
+> > > +           return err;
+> > > +
+> > > +   pr_debug("Parsing ranges property...\n");
+> > > +   for_each_of_pci_range(&parser, &range) {
+> > > +           /* Read next ranges element */
+> > > +           pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+> > > +                           range.pci_space, range.pci_addr);
+> > > +           pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+> > > +                                   range.cpu_addr, range.size);
+> > > +
+> > > +           /* If we failed translation or got a zero-sized region
+> > > +            * (some FW try to feed us with non sensical zero sized regions
+> > > +            * such as power3 which look like some kind of attempt
+> > > +            * at exposing the VGA memory hole) then skip this range
+> > > +            */
+> > > +           if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> > > +                   continue;
+> > > +
+> > > +           res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> > > +           if (!res) {
+> > > +                   err = -ENOMEM;
+> > > +                   goto bridge_ranges_nomem;
+> > > +           }
+> > > +
+> > > +           of_pci_range_to_resource(&range, dev, res);
+> > > +
+> > > +           pci_add_resource_offset(resources, res,
+> > > +                           range.cpu_addr - range.pci_addr);
+> > > +   }
+> >
+> > I believe of_pci_range_to_resource() will return the MMIO aperture for the
+> > I/O space window here, which is not what you are supposed to pass into
+> > pci_add_resource_offset.
+> 
+> And that is why the code in probe.c has been added to deal with that. It is
+> too early to do the adjustments here as all we have is the list of resources
+> and that might get culled by the architecture fixup code. Remembering the
+> io_offset will happen once the pci_host_bridge gets created, and the resources
+> are then adjusted.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+So you want to register an incorrect I/O resource first and then
+have it fixed up later, rather than registering the correct
+one from the start as everyone else?
 
----
- drivers/pci/setup-bus.c |   42 ++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 38 insertions(+), 4 deletions(-)
+> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > index 6e34498..16febae 100644
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> > >     list_for_each_entry_safe(window, n, resources, list) {
+> > >             list_move_tail(&window->list, &bridge->windows);
+> > >             res = window->res;
+> > > +           /*
+> > > +            * IO resources are stored in the kernel with a CPU start
+> > > +            * address of zero. Adjust the data accordingly and remember
+> > > +            * the offset
+> > > +            */
+> > > +           if (resource_type(res) == IORESOURCE_IO) {
+> > > +                   bridge->io_offset = res->start;
+> > > +                   res->end -= res->start;
+> > > +                   window->offset -= res->start;
+> > > +                   res->start = 0;
+> > > +           }
+> > >             offset = window->offset;
+> > >             if (res->flags & IORESOURCE_BUS)
+> >
+> > Won't this break all existing host bridges?
+> 
+> I am not sure. I believe not, due to what I've explained earlier, but you might be right.
+> 
+> The adjustment happens before the resource is added to the host bridge windows and translates
+> it from MMIO range into IO range.
 
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -921,7 +921,7 @@ static int pbus_size_mem(struct pci_bus
- {
-     struct pci_dev *dev;
-     resource_size_t min_align, align, size, size0, size1;
--    resource_size_t aligns[12];    /* Alignments from 1Mb to 2Gb */
-+    resource_size_t aligns[44];    /* Alignments from 1Mb to 2^63 */
-     int order, max_order;
-     struct resource *b_res = find_free_bus_resource(bus, type);
-     unsigned int mem64_mask = 0;
-@@ -937,6 +937,40 @@ static int pbus_size_mem(struct pci_bus
-     mem64_mask = b_res->flags & IORESOURCE_MEM_64;
-     b_res->flags &= ~IORESOURCE_MEM_64;
+AFAICT, the resource_type of the resource you register above should be
+IORESOURCE_MEM, so you are not actually matching it here.
 
-+    /* kernel does not support 64bit */
-+    if (sizeof(resource_size_t) == 4)
-+        mem64_mask &=  ~IORESOURCE_MEM_64;
-+
-+    if (!(mem64_mask & IORESOURCE_MEM_64))
-+        goto mem64_mask_check_done;
-+
-+    /* check if mem64 support is supported and needed at first */
-+    list_for_each_entry(dev, &bus->devices, bus_list) {
-+        int i;
-+
-+        for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+            struct resource *r = &dev->resource[i];
-+            resource_size_t r_size;
-+
-+            if (r->parent || (r->flags & mask) != type)
-+                continue;
-+            r_size = resource_size(r);
-+#ifdef CONFIG_PCI_IOV
-+            /* put SRIOV requested res to the optional list */
-+            if (realloc_head && i >= PCI_IOV_RESOURCES &&
-+                    i <= PCI_IOV_RESOURCE_END)
-+                continue;
-+#endif
-+            mem64_mask &= r->flags & IORESOURCE_MEM_64;
-+
-+            if (!(mem64_mask & IORESOURCE_MEM_64))
-+                goto mem64_mask_check_done;
-+
-+        }
-+    }
-+
-+mem64_mask_check_done:
-+
-     list_for_each_entry(dev, &bus->devices, bus_list) {
-         int i;
-
-@@ -959,8 +993,9 @@ static int pbus_size_mem(struct pci_bus
- #endif
-             /* For bridges size != alignment */
-             align = pci_resource_alignment(dev, r);
--            order = __ffs(align) - 20;
--            if (order > 11) {
-+            order = __ffs64(align) - 20;
-+            if (order > ARRAY_SIZE(aligns) ||
-+                (!(mem64_mask & IORESOURCE_MEM_64) && order > 11) ) {
-                 dev_warn(&dev->dev, "disabling BAR %d: %pR "
-                      "(bad alignment %#llx)\n", i, r,
-                      (unsigned long long) align);
-@@ -976,7 +1011,6 @@ static int pbus_size_mem(struct pci_bus
-                 aligns[order] += align;
-             if (order > max_order)
-                 max_order = order;
--            mem64_mask &= r->flags & IORESOURCE_MEM_64;
-
-             if (realloc_head)
-                 children_add_size += get_res_add_size(realloc_head, r);
-
---e89a8ff25042acfaab04f29f2746
-Content-Type: text/x-patch; charset=US-ASCII; name="bus_mmio_align.patch"
-Content-Disposition: attachment; filename="bus_mmio_align.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hrs5088i0
-
-RnJvbTogTmlraGlsIFAgUmFvIDxuaWtoaWwucmFvQGludGVsLmNvbT4KU3ViamVjdDogW1BBVENI
-XSBQQ0k6IEZpeCBidXMgYWxpZ24gY2hlY2tpbmcgdG8gc3VwcG9ydCBtb3JlIHRoYW4gMkcKCmN1
-cnJlbnQgMkcgaXMgb3V0IG9mIGRhdGUuCgotdjM6IFdlIG9ubHkgbmVlZCB0byBleHRlbmQgdGhh
-dCB3aGVuIDY0Yml0IG1taW8gaXMgc3VwcG9ydGVkLgogICAgIFNvIGV4dHJhY3QgbW1pbzY0IG1h
-c2sgY2hlY2tpbmcsIGFuZCBzdGlsbCBrZWVwIG9sZCAyRyBjaGVja2luZwogICAgIGZvciBvdGhl
-ciBwYXRoLiAgLS0tIFlpbmdoYWkKClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlA
-a2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgfCAgIDQyICsrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLQogMSBmaWxlIGNoYW5nZWQsIDM4IGlu
-c2VydGlvbnMoKyksIDQgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNp
-L3NldHVwLWJ1cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3Nl
-dHVwLWJ1cy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTkyMSw3
-ICs5MjEsNyBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9idXMKIHsKIAlz
-dHJ1Y3QgcGNpX2RldiAqZGV2OwogCXJlc291cmNlX3NpemVfdCBtaW5fYWxpZ24sIGFsaWduLCBz
-aXplLCBzaXplMCwgc2l6ZTE7Ci0JcmVzb3VyY2Vfc2l6ZV90IGFsaWduc1sxMl07CS8qIEFsaWdu
-bWVudHMgZnJvbSAxTWIgdG8gMkdiICovCisJcmVzb3VyY2Vfc2l6ZV90IGFsaWduc1s0NF07CS8q
-IEFsaWdubWVudHMgZnJvbSAxTWIgdG8gMl42MyAqLwogCWludCBvcmRlciwgbWF4X29yZGVyOwog
-CXN0cnVjdCByZXNvdXJjZSAqYl9yZXMgPSBmaW5kX2ZyZWVfYnVzX3Jlc291cmNlKGJ1cywgdHlw
-ZSk7CiAJdW5zaWduZWQgaW50IG1lbTY0X21hc2sgPSAwOwpAQCAtOTM3LDYgKzkzNyw0MCBAQCBz
-dGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9idXMKIAltZW02NF9tYXNrID0gYl9y
-ZXMtPmZsYWdzICYgSU9SRVNPVVJDRV9NRU1fNjQ7CiAJYl9yZXMtPmZsYWdzICY9IH5JT1JFU09V
-UkNFX01FTV82NDsKIAorCS8qIGtlcm5lbCBkb2VzIG5vdCBzdXBwb3J0IDY0Yml0ICovCisJaWYg
-KHNpemVvZihyZXNvdXJjZV9zaXplX3QpID09IDQpCisJCW1lbTY0X21hc2sgJj0gIH5JT1JFU09V
-UkNFX01FTV82NDsKKworCWlmICghKG1lbTY0X21hc2sgJiBJT1JFU09VUkNFX01FTV82NCkpCisJ
-CWdvdG8gbWVtNjRfbWFza19jaGVja19kb25lOworCisJLyogY2hlY2sgaWYgbWVtNjQgc3VwcG9y
-dCBpcyBzdXBwb3J0ZWQgYW5kIG5lZWRlZCBhdCBmaXJzdCAqLworCWxpc3RfZm9yX2VhY2hfZW50
-cnkoZGV2LCAmYnVzLT5kZXZpY2VzLCBidXNfbGlzdCkgeworCQlpbnQgaTsKKworCQlmb3IgKGkg
-PSAwOyBpIDwgUENJX05VTV9SRVNPVVJDRVM7IGkrKykgeworCQkJc3RydWN0IHJlc291cmNlICpy
-ID0gJmRldi0+cmVzb3VyY2VbaV07CisJCQlyZXNvdXJjZV9zaXplX3Qgcl9zaXplOworCisJCQlp
-ZiAoci0+cGFyZW50IHx8IChyLT5mbGFncyAmIG1hc2spICE9IHR5cGUpCisJCQkJY29udGludWU7
-CisJCQlyX3NpemUgPSByZXNvdXJjZV9zaXplKHIpOworI2lmZGVmIENPTkZJR19QQ0lfSU9WCisJ
-CQkvKiBwdXQgU1JJT1YgcmVxdWVzdGVkIHJlcyB0byB0aGUgb3B0aW9uYWwgbGlzdCAqLworCQkJ
-aWYgKHJlYWxsb2NfaGVhZCAmJiBpID49IFBDSV9JT1ZfUkVTT1VSQ0VTICYmCisJCQkJCWkgPD0g
-UENJX0lPVl9SRVNPVVJDRV9FTkQpCisJCQkJY29udGludWU7CisjZW5kaWYKKwkJCW1lbTY0X21h
-c2sgJj0gci0+ZmxhZ3MgJiBJT1JFU09VUkNFX01FTV82NDsKKworCQkJaWYgKCEobWVtNjRfbWFz
-ayAmIElPUkVTT1VSQ0VfTUVNXzY0KSkKKwkJCQlnb3RvIG1lbTY0X21hc2tfY2hlY2tfZG9uZTsK
-KworCQl9CisJfQorCittZW02NF9tYXNrX2NoZWNrX2RvbmU6CisKIAlsaXN0X2Zvcl9lYWNoX2Vu
-dHJ5KGRldiwgJmJ1cy0+ZGV2aWNlcywgYnVzX2xpc3QpIHsKIAkJaW50IGk7CiAKQEAgLTk1OSw4
-ICs5OTMsOSBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9idXMKICNlbmRp
-ZgogCQkJLyogRm9yIGJyaWRnZXMgc2l6ZSAhPSBhbGlnbm1lbnQgKi8KIAkJCWFsaWduID0gcGNp
-X3Jlc291cmNlX2FsaWdubWVudChkZXYsIHIpOwotCQkJb3JkZXIgPSBfX2ZmcyhhbGlnbikgLSAy
-MDsKLQkJCWlmIChvcmRlciA+IDExKSB7CisJCQlvcmRlciA9IF9fZmZzNjQoYWxpZ24pIC0gMjA7
-CisJCQlpZiAob3JkZXIgPiBBUlJBWV9TSVpFKGFsaWducykgfHwKKwkJCSAgICAoIShtZW02NF9t
-YXNrICYgSU9SRVNPVVJDRV9NRU1fNjQpICYmIG9yZGVyID4gMTEpICkgewogCQkJCWRldl93YXJu
-KCZkZXYtPmRldiwgImRpc2FibGluZyBCQVIgJWQ6ICVwUiAiCiAJCQkJCSAiKGJhZCBhbGlnbm1l
-bnQgJSNsbHgpXG4iLCBpLCByLAogCQkJCQkgKHVuc2lnbmVkIGxvbmcgbG9uZykgYWxpZ24pOwpA
-QCAtOTc2LDcgKzEwMTEsNiBAQCBzdGF0aWMgaW50IHBidXNfc2l6ZV9tZW0oc3RydWN0IHBjaV9i
-dXMKIAkJCQlhbGlnbnNbb3JkZXJdICs9IGFsaWduOwogCQkJaWYgKG9yZGVyID4gbWF4X29yZGVy
-KQogCQkJCW1heF9vcmRlciA9IG9yZGVyOwotCQkJbWVtNjRfbWFzayAmPSByLT5mbGFncyAmIElP
-UkVTT1VSQ0VfTUVNXzY0OwogCiAJCQlpZiAocmVhbGxvY19oZWFkKQogCQkJCWNoaWxkcmVuX2Fk
-ZF9zaXplICs9IGdldF9yZXNfYWRkX3NpemUocmVhbGxvY19oZWFkLCByKTsK
---e89a8ff25042acfaab04f29f2746--
+	Arnd
