@@ -1,89 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:58001 "EHLO
-	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751198AbaB0GCA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 01:02:00 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <bhelgaas@google.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Ajay Khandelwal <ajay.khandelwal@st.com>,
-	<spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
-	<stable@vger.kernel.org>
-Subject: [PATCH V2 2/2] PCI: designware: Fix iATU programming for cfg1, io and mem viewport
-Date: Thu, 27 Feb 2014 11:31:28 +0530
-Message-ID: <c7dac8780d569a521a9eb06c4a7d79efecaa6f40.1392904207.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1392904207.git.mohit.kumar@st.com>
-References: <cover.1392904207.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from quartz.orcorp.ca ([184.70.90.242]:56397 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754172AbaBCXbn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Feb 2014 18:31:43 -0500
+Date: Mon, 3 Feb 2014 16:31:37 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Message-ID: <20140203233137.GH2519@obsidianresearch.com>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
+ <21596846.kVTqp7roW4@wuerfel>
+ <20140203191837.GC4889@e106497-lin.cambridge.arm.com>
+ <3808209.DeG1VobanZ@wuerfel>
+ <CAL_JsqL+3S8w=_Fb-t0rVcq0sDiPSDM6nqn3mR2DHKw=VTffsg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqL+3S8w=_Fb-t0rVcq0sDiPSDM6nqn3mR2DHKw=VTffsg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch correct iATU programming for cfg1, io and mem viewport.
-Enable ATU only after configuring it.
+On Mon, Feb 03, 2014 at 05:07:48PM -0600, Rob Herring wrote:
 
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Signed-off-by: Ajay Khandelwal <ajay.khandelwal@st.com>
-Acked-by: Jingoo Han <jg1.han@samsung.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: spear-devel@list.st.com
-Cc: linux-pci@vger.kernel.org
-Cc: stable@vger.kernel.org
----
- drivers/pci/host/pcie-designware.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+> > An interesting question however is what the transition plan is to
+> > have the code shared between arm32 and arm64: We will certainly need
+> > to share at least the dw-pcie and the generic SBSA compliant pci
+> > implementation.
+> 
+> You might want to re-read the SBSA. Unless ARM provides an IP block or
+> there is some other standard such as EHCI or AHCI, there is no generic
+> implementation. You only have to go look at the Linux EHCI or AHCI
+> drivers and see how meaningless and inadequate "use EHCI" is. For PCI,
+> the text is so brief in the SBSA there will be no way PCI is going to
+> just work given all the variations of root complexes, bridges, address
+> windows, etc. we typically see on ARM platforms. I could be wrong and
+> some AML magic will solve all the problems. :)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 391966f..46f4a19 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -522,13 +522,13 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- 	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
- 	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
- 	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- }
- 
- static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
-@@ -537,7 +537,6 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- 	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
- 	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
- 	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
-@@ -545,6 +544,7 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
- 			  PCIE_ATU_UPPER_TARGET);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- }
- 
- static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
-@@ -553,7 +553,6 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- 	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
- 	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
- 	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
-@@ -561,6 +560,7 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
- 			  PCIE_ATU_UPPER_TARGET);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- }
- 
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
--- 
-1.7.3.4
+The biggest hinderance I've seen while looking at ARM PCI drivers is
+quite simply - they don't follow the PCI-E spec. There is a spec, and
+it is not followed.
 
+This fixup in the X-Gene is a solid example, the purpose of the BAR in
+a PCI-PCI bridge is very clear: using it to specify the system
+DRAM aperature is completely wrong.
+
+Not having working aperture windows in the root complex's bridges is
+completely wrong.
+
+Lacking any ability to generate 8 and 16 bit config write TLP's is
+wrong.
+
+Starting with an end-port PCI-E core and re-tasking it to be a root
+port bridge and ignoring all the requirements with the bridge's config
+space is utterly and completely WRONG.
+
+Specifying 'use EHCI, AHCI, etc' - which are all PCI based standards
+without clearly specifying exactly how PCI is suppose to work is
+completely bonkers.
+
+What is needed is a spec that says:
+ 1) Here is how you generate config TLPs. A MMIO region that
+    conforms to the already specified x86 ECAM would
+    be perfect
+ 2) Here is a dword by dword break down of the entire config space in
+    a SOC. Here is where a on-board AHCI controller must show up in
+    config space. Here is how an external PCI-E port must show
+    up. Etc. Most of this is already specified, but it clearly needs
+    to be layed out explicitly for ARM SOCs to actually follow it.
+ 3) Here is how you specify the aperture(s) associated with PCI BAR's
+    and bridge windows in config space. And yes: The CONFIG SPACE
+    BARS MUST WORK.
+ 4) Here is how MSI works, these are the values you put in the
+    address/data and here is how you collect the interrupt.
+ 5) Here is how Legacy INTx must be mapped into the GIC.
+
+This is what x86 does, and they have been doing it well for 10
+years. If you want to play in the server game you have to properly
+implement PCI.
+
+Jason
