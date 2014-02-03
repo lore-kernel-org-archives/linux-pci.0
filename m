@@ -1,122 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:51717 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbaBQVPQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 16:15:16 -0500
-Received: by mail-ob0-f171.google.com with SMTP id wp4so17598358obc.2
-        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2014 13:15:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXmWG2RNP-t=U06JUsqkmDm2My5762za8QuwUMZsG+yNg@mail.gmail.com>
-References: <20140217045004.GB3230@yanx>
-	<CAE9FiQXmWG2RNP-t=U06JUsqkmDm2My5762za8QuwUMZsG+yNg@mail.gmail.com>
-Date: Mon, 17 Feb 2014 13:15:15 -0800
-Message-ID: <CAE9FiQWxcBCy+dp-0D2erB83uyyTNKFo5y0sKwiiFxo1xM0Z=g@mail.gmail.com>
-Subject: Re: Support huge alignment in pbus_size_mem()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Guo Chao <yan@linux.vnet.ibm.com>,
-	Nikhil P Rao <nikhil.rao@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:55343 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009AbaBCHHd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 02:07:33 -0500
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 7B9753EE181
+	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:32 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 6D1F745DEB5
+	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:32 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.nic.fujitsu.com [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 5588445DD77
+	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:32 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 44BDC1DB803B
+	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:32 +0900 (JST)
+Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id ED5881DB8038
+	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:31 +0900 (JST)
+Date: Mon, 3 Feb 2014 16:07:24 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com, yinghai@kernel.org
+Subject: [PATCH] PCI: pciehp: Fix the problem that the present bit is not
+ cleared though slot is empty
+Message-Id: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 17, 2014 at 11:28 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sun, Feb 16, 2014 at 8:50 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
->> pbus_size_mem() limits resource alignment within 2G. We want to extend
->> this limit to support a 16G BAR. I found similar effort was tried before:
->>
->>         https://lkml.org/lkml/2012/6/21/411
->>
->> What's the result? Does anyone come up with an adaptive algorithm?
->
-> I suggest following changes:
->
-> From: Nikhil P Rao <nikhil.rao@intel.com>
-> Subject: [PATCH] PCI: Fix bus align checking to support more than 2G
->
-> current 2G is out of date.
->
-> -v3: We only need to extend that when 64bit mmio is supported.
->      So extract mmio64 mask checking, and still keep old 2G checking
->      for other path.  --- Yinghai
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> ---
->  drivers/pci/setup-bus.c |   42 ++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 38 insertions(+), 4 deletions(-)
->
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -921,7 +921,7 @@ static int pbus_size_mem(struct pci_bus
->  {
->      struct pci_dev *dev;
->      resource_size_t min_align, align, size, size0, size1;
-> -    resource_size_t aligns[12];    /* Alignments from 1Mb to 2Gb */
-> +    resource_size_t aligns[44];    /* Alignments from 1Mb to 2^63 */
->      int order, max_order;
->      struct resource *b_res = find_free_bus_resource(bus, type);
->      unsigned int mem64_mask = 0;
-> @@ -937,6 +937,40 @@ static int pbus_size_mem(struct pci_bus
->      mem64_mask = b_res->flags & IORESOURCE_MEM_64;
->      b_res->flags &= ~IORESOURCE_MEM_64;
->
-> +    /* kernel does not support 64bit */
-> +    if (sizeof(resource_size_t) == 4)
-> +        mem64_mask &=  ~IORESOURCE_MEM_64;
-> +
-> +    if (!(mem64_mask & IORESOURCE_MEM_64))
-> +        goto mem64_mask_check_done;
-> +
-> +    /* check if mem64 support is supported and needed at first */
-> +    list_for_each_entry(dev, &bus->devices, bus_list) {
-> +        int i;
-> +
-> +        for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> +            struct resource *r = &dev->resource[i];
-> +            resource_size_t r_size;
-> +
-> +            if (r->parent || (r->flags & mask) != type)
-> +                continue;
-> +            r_size = resource_size(r);
-> +#ifdef CONFIG_PCI_IOV
-> +            /* put SRIOV requested res to the optional list */
-> +            if (realloc_head && i >= PCI_IOV_RESOURCES &&
-> +                    i <= PCI_IOV_RESOURCE_END)
-> +                continue;
-> +#endif
-> +            mem64_mask &= r->flags & IORESOURCE_MEM_64;
-> +
-> +            if (!(mem64_mask & IORESOURCE_MEM_64))
-> +                goto mem64_mask_check_done;
-> +
-> +        }
-> +    }
-> +
-> +mem64_mask_check_done:
-> +
->      list_for_each_entry(dev, &bus->devices, bus_list) {
->          int i;
->
-> @@ -959,8 +993,9 @@ static int pbus_size_mem(struct pci_bus
->  #endif
->              /* For bridges size != alignment */
->              align = pci_resource_alignment(dev, r);
-> -            order = __ffs(align) - 20;
-> -            if (order > 11) {
-> +            order = __ffs64(align) - 20;
-> +            if (order > ARRAY_SIZE(aligns) ||
-> +                (!(mem64_mask & IORESOURCE_MEM_64) && order > 11) ) {
 
-...
-> For 64bit systems, we want to ensure that the align < 1^63, so shouldn't
-> order be checked against 43, instead of ARRAY_SIZE(aligns) ?
+I found the problem that the present bit does not be cleared
+though the slot is empty.
 
-yes, should change to 43.
+ Step to reproduce:
 
-Thanks
+  # cd /sys/bus/pci/slots/66
+  # cat adapter
+  0
+  --- (insert PCIe card on slot#66) ---
+  # cat adapter
+  1
+  # echo 1 > power
+  # echo 0 > power
+  --- (eject PCIe card on slot#66) ---
+  # cat adapter
+  1
+    ==> should be 0.
 
-Yinghai
+According to git-bisect this is caused by:
+    2debd9289997fc5d1c0043b41201a8b40d5e11d0
+       PCI: pciehp: Disable/enable link during slot power off/on
+    is the first bad commit
+
+By reverting the above patch, this bug can be solved.
+And I also found this can be fixed by changing the timing of link-disable
+during power off the slot.
+So, this patch changes the timing of link-disable during power off.
+
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 14acfcc..163f0b4 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -508,7 +508,12 @@ void pciehp_power_off_slot(struct slot * slot)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+ 
+-	/* Disable the link at first */
++	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
++	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
++		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
++		 PCI_EXP_SLTCTL_PWR_OFF);
++
++	/* Disable the link */
+ 	pciehp_link_disable(ctrl);
+ 	/* wait the link is down */
+ 	if (ctrl->link_active_reporting)
+@@ -516,10 +521,6 @@ void pciehp_power_off_slot(struct slot * slot)
+ 	else
+ 		msleep(1000);
+ 
+-	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
+-	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+-		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+-		 PCI_EXP_SLTCTL_PWR_OFF);
+ }
+ 
+ static irqreturn_t pcie_isr(int irq, void *dev_id)
+-- 
+1.8.3.1
+
