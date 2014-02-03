@@ -1,65 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-de.keymile.com ([195.8.104.250]:44188 "EHLO
-	mail-de.keymile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754858AbaBUS30 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 13:29:26 -0500
-Message-ID: <53079B00.2050604@keymile.com>
-Date: Fri, 21 Feb 2014 19:29:20 +0100
-From: Gerlando Falauto <gerlando.falauto@keymile.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Gregory Cl??ment <gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: pci-mvebu driver on km_kirkwood
-References: <20140221003227.GF19893@obsidianresearch.com> <20140221180508.7ed6cfaf@skate> <20140221173105.GA17611@obsidianresearch.com> <2321496.TUNdngb8sx@wuerfel>
-In-Reply-To: <2321496.TUNdngb8sx@wuerfel>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mailout1.samsung.com ([203.254.224.24]:22849 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752514AbaBCAJA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Feb 2014 19:09:00 -0500
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N0E00J6D8EYSN90@mailout1.samsung.com> for
+ linux-pci@vger.kernel.org; Mon, 03 Feb 2014 09:08:58 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Mohit Kumar' <mohit.kumar@st.com>, arnd@arndb.de
+Cc: 'Pratyush Anand' <pratyush.anand@st.com>,
+	linux-pci@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <cover.1391077731.git.mohit.kumar@st.com>
+ <839dacd5c1f0ea125d2f243968783a4c7a66c881.1391077731.git.mohit.kumar@st.com>
+In-reply-to: <839dacd5c1f0ea125d2f243968783a4c7a66c881.1391077731.git.mohit.kumar@st.com>
+Subject: Re: [PATCH V3 8/8] MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
+Date: Mon, 03 Feb 2014 09:08:58 +0900
+Message-id: <000401cf2074$226f2c00$674d8400$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/21/2014 07:05 PM, Arnd Bergmann wrote:
-> On Friday 21 February 2014 10:31:05 Jason Gunthorpe wrote:
->> On Fri, Feb 21, 2014 at 06:05:08PM +0100, Thomas Petazzoni wrote:
->>
->>> Now I have another question: our mvebu_pcie_align_resource() function
->>> makes sure that the base address of the BAR is aligned on its size,
->>> because it is a requirement of MBus windows. However, if you later
->>> split the BAR into multiple windows, will this continue to work out?
->>
->> No, you must align to (1 << log2_round_down(size)) - that will always
->> be the largest mbus window created and thus the highest starting
->> alignment requirement.
->
-> Unless you allow reordering the two windows. If you want a 96MB
-> window, you only need 32MB alignment because you can either put
-> the actual 64MB window first if you have 64MB alignment, or you
-> put the 32MB window first if you don't and then the following
-> 64MB will be aligned.
->
-> It gets more complicated if you want to allow a 72MB window
-> (16MB+64MB), as that could either be 64MB aligned or start 16MB
-> before the next multiple of 64MB.
->
-> I don't think there is any reason why code anywhere should align
-> the window to a multiple of the size though if the size is not
-> power-of-two, such as aligning to multiples of 96MB. That wouldn't
-> help anyone.
+On Thursday, January 30, 2014 7:49 PM, Mohit Kumar wrote:
+> 
+> Add Mohit Kumar as maintainer for ST SPEAr13xx PCIe driver.
+> 
+> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
 
-I also don't see why in the world there would be a requirement of having 
-a given "oddly-sized" range (e.g. 96MB) aligned to a multiple of its 
-size. In the end, AFAIK aligment requirements' only purpose is to make 
-hardware simpler. Cant'see how aligning to an "odd" number would help 
-achieving this purpose. But that's just me, of course.
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-Thanks guys!
-Gerlando
+Best regards,
+Jingoo Han
+
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  MAINTAINERS |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 8285ed4..fd03da6 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6462,6 +6462,12 @@ L:	linux-pci@vger.kernel.org
+>  S:	Maintained
+>  F:	drivers/pci/host/pci-exynos.c
+> 
+> +PCIE DRIVER FOR ST SPEAR13XX
+> +M:	Mohit Kumar <mohit.kumar@st.com>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	drivers/pci/host/pcie-spear13xx.c
+> +
+>  PCMCIA SUBSYSTEM
+>  P:	Linux PCMCIA Team
+>  L:	linux-pcmcia@lists.infradead.org
+> --
+> 1.7.0.1
+
