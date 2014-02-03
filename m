@@ -1,87 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:35224 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753756AbaBUIew (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 03:34:52 -0500
-Date: Fri, 21 Feb 2014 09:34:44 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: pci-mvebu driver on km_kirkwood
-Message-ID: <20140221093444.35870a73@skate>
-In-Reply-To: <20140221003227.GF19893@obsidianresearch.com>
-References: <53039894.10905@keymile.com>
-	<20140218212751.07c2aeb5@skate>
-	<53046D98.6020801@keymile.com>
-	<20140219102658.76eec91e@skate>
-	<53047BBB.6040108@keymile.com>
-	<20140219143749.65ff3155@skate>
-	<CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
-	<20140220095518.7ca36f0a@skate>
-	<20140220173518.GA19893@obsidianresearch.com>
-	<20140220212914.29ddc031@skate>
-	<20140221003227.GF19893@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from v094114.home.net.pl ([79.96.170.134]:52351 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753541AbaBCX2Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:25 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 13/24][Resend] ACPI / hotplug / PCI: Drop crit_sect locking
+Date: Tue, 04 Feb 2014 00:27:01 +0100
+Message-ID: <5034851.lQfU1PoFxK@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Thu, 20 Feb 2014 17:32:27 -0700, Jason Gunthorpe wrote:
+After recent PCI core changes related to the rescan/remove locking,
+the code sections under crit_sect mutexes from ACPIPHP slot objects
+are always executed under the general PCI rescan/remove lock.
+For this reason, the crit_sect mutexes are simply redundant, so drop
+them.
 
-> > In practice, the story is a little bit more subtle than that: the PCIe
-> > driver may want to decide to either tell the PCI core to enlarge the
-> > window BAR up to the next power of two size, or to dedicate two windows
-> > to it.
-> 
-> That is a smart, easy solution! Maybe that is the least invasive way
-> to proceed for now?
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp.h      |    1 -
+ drivers/pci/hotplug/acpiphp_glue.c |   23 +++--------------------
+ 2 files changed, 3 insertions(+), 21 deletions(-)
 
-So you suggest that the mvebu-mbus driver should accept a
-non power-of-two window size, and do internally the job of cutting that
-into several power-of-two sized areas and creating the corresponding
-windows?
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -347,7 +347,6 @@ static acpi_status register_slot(acpi_ha
+ 	slot->bus = bridge->pci_bus;
+ 	slot->device = device;
+ 	INIT_LIST_HEAD(&slot->funcs);
+-	mutex_init(&slot->crit_sect);
+ 
+ 	list_add_tail(&slot->node, &bridge->slots);
+ 
+@@ -744,7 +743,6 @@ static void acpiphp_check_bridge(struct
+ 		struct pci_bus *bus = slot->bus;
+ 		struct pci_dev *dev, *tmp;
+ 
+-		mutex_lock(&slot->crit_sect);
+ 		if (slot_no_hotplug(slot)) {
+ 			; /* do nothing */
+ 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
+@@ -759,7 +757,6 @@ static void acpiphp_check_bridge(struct
+ 		} else {
+ 			disable_slot(slot);
+ 		}
+-		mutex_unlock(&slot->crit_sect);
+ 	}
+ }
+ 
+@@ -846,12 +843,8 @@ static void hotplug_event(acpi_handle ha
+ 		} else {
+ 			struct acpiphp_slot *slot = func->slot;
+ 
+-			if (slot->flags & SLOT_IS_GOING_AWAY)
+-				break;
+-
+-			mutex_lock(&slot->crit_sect);
+-			enable_slot(slot);
+-			mutex_unlock(&slot->crit_sect);
++			if (!(slot->flags & SLOT_IS_GOING_AWAY))
++				enable_slot(slot);
+ 		}
+ 		break;
+ 
+@@ -862,7 +855,6 @@ static void hotplug_event(acpi_handle ha
+ 			acpiphp_check_bridge(bridge);
+ 		} else {
+ 			struct acpiphp_slot *slot = func->slot;
+-			int ret;
+ 
+ 			if (slot->flags & SLOT_IS_GOING_AWAY)
+ 				break;
+@@ -871,10 +863,7 @@ static void hotplug_event(acpi_handle ha
+ 			 * Check if anything has changed in the slot and rescan
+ 			 * from the parent if that's the case.
+ 			 */
+-			mutex_lock(&slot->crit_sect);
+-			ret = acpiphp_rescan_slot(slot);
+-			mutex_unlock(&slot->crit_sect);
+-			if (ret)
++			if (acpiphp_rescan_slot(slot))
+ 				acpiphp_check_bridge(func->parent);
+ 		}
+ 		break;
+@@ -1088,13 +1077,10 @@ int acpiphp_enable_slot(struct acpiphp_s
+ 	if (slot->flags & SLOT_IS_GOING_AWAY)
+ 		return -ENODEV;
+ 
+-	mutex_lock(&slot->crit_sect);
+ 	/* configure all functions */
+ 	if (!(slot->flags & SLOT_ENABLED))
+ 		enable_slot(slot);
+ 
+-	mutex_unlock(&slot->crit_sect);
+-
+ 	pci_unlock_rescan_remove();
+ 	return 0;
+ }
+@@ -1110,8 +1096,6 @@ static int acpiphp_disable_and_eject_slo
+ 	if (slot->flags & SLOT_IS_GOING_AWAY)
+ 		return -ENODEV;
+ 
+-	mutex_lock(&slot->crit_sect);
+-
+ 	/* unconfigure all functions */
+ 	disable_slot(slot);
+ 
+@@ -1125,7 +1109,6 @@ static int acpiphp_disable_and_eject_slo
+ 			break;
+ 		}
+ 
+-	mutex_unlock(&slot->crit_sect);
+ 	return 0;
+ }
+ 
+Index: linux-pm/drivers/pci/hotplug/acpiphp.h
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
++++ linux-pm/drivers/pci/hotplug/acpiphp.h
+@@ -93,7 +93,6 @@ struct acpiphp_slot {
+ 	struct list_head funcs;		/* one slot may have different
+ 					   objects (i.e. for each function) */
+ 	struct slot *slot;
+-	struct mutex crit_sect;
+ 
+ 	u8		device;		/* pci device# */
+ 	u32		flags;		/* see below */
 
-> I have no idea how you decide when to round up and when to allocate
-> more windows, that feels like a fairly complex optimization problem!
-
-Yes, it is a fairly complex problem. I was thinking of a threshold of
-"lost space". Below this threshold, it's better to enlarge the window,
-above the threshold it's better to create two windows. But not easy.
-
-> Alternatively, I suspect you can use the PCI quirk mechanism to alter
-> the resource sizing on a bridge?
-
-Can you give more details about this mechanism, and how it could be
-used to alter the size of resources on a bridge?
-
-> > Jason, would you mind maybe replying to Bjorn Helgaas email (Thu, 20
-> > Feb 2014 12:18:42 -0700) ? I believe that a lot of the misunderstanding
-> > between Bjorn and me is due to the fact that I don't use the correct
-> > PCI terminology to describe how the Marvell hardware works, and how the
-> > Marvell PCIe driver copes with it. I'm sure you would explain it in a
-> > way that would be more easily understood by someone very familiar with
-> > the PCI terminology such as Bjorn. Thanks a lot!
-> 
-> Done!
-
-Thanks a lot! Really appreciated.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
