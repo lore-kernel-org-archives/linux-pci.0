@@ -1,169 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:45927 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752760AbaBCTSl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 14:18:41 -0500
-Date: Mon, 3 Feb 2014 19:18:38 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Subject: Re: [PATCH] arm64: Add architecture support for PCI
-Message-ID: <20140203191837.GC4889@e106497-lin.cambridge.arm.com>
-References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
- <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
- <21596846.kVTqp7roW4@wuerfel>
+Received: from mx1.redhat.com ([209.132.183.28]:45591 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753701AbaBCV1u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Feb 2014 16:27:50 -0500
+Subject: [PATCH v2 3/3] pci/quirks: Enable quirks for PCIe ACS on Intel PCH
+ root ports
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Don Dugger <donald.d.dugger@intel.com>
+Date: Mon, 03 Feb 2014 14:27:46 -0700
+Message-ID: <20140203212745.8607.36762.stgit@bling.home>
+In-Reply-To: <20140203212216.8607.68273.stgit@bling.home>
+References: <20140203212216.8607.68273.stgit@bling.home>
 MIME-Version: 1.0
-In-Reply-To: <21596846.kVTqp7roW4@wuerfel>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 03, 2014 at 06:58:56PM +0000, Arnd Bergmann wrote:
-> On Monday 03 February 2014 18:43:48 Liviu Dudau wrote:
-> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-> > index 4cc813e..ce5bad2 100644
-> > --- a/arch/arm64/include/asm/io.h
-> > +++ b/arch/arm64/include/asm/io.h
-> > @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
-> >  /*
-> >   *  I/O port access primitives.
-> >   */
-> > +#define arch_has_dev_port()	(0)
-> 
-> Why not?
+Many of the currently available Intel PCH-based root ports do not
+provide PCIe ACS capabilities.  Without this, we must assume that
+peer-to-peer traffic between multifunction root ports and between
+devices behind root ports is possible.  This lack of isolation is
+exposed by grouping the devices together in the same IOMMU group.
+If we want to expose these devices to userspace, vfio uses IOMMU
+groups as the unit of ownership, thus making it very difficult to
+assign individual devices to separate users.
 
-Maybe I got it the wrong way around, but the comment in include/linux/io.h says:
+The good news is that the chipset does provide ACS-like isolation
+capabilities, but we do need to verify and enable those capabilities
+if the BIOS has not done so.  This patch implements the device
+specific enabling and testing of equivalent ACS function for these
+devices.
 
-/*
- * Some systems do not have legacy ISA devices.
- * /dev/port is not a valid interface on these systems.
- * So for those archs, <asm/io.h> should define the following symbol.
- */
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Don Dugger <donald.d.dugger@intel.com>
+---
+ drivers/pci/quirks.c |  160 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 160 insertions(+)
 
-So ... defining it should mean no legacy ISA devices, right?
-
-> 
-> >  #define IO_SPACE_LIMIT		0xffff
-> 
-> You probably want to increase this a bit, to allow multiple host bridges
-> to have their own I/O space.
-
-OK, but to what size?
-
-> 
-> >  #define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
-> 
-> And modify this location: There is no particular reason to have the I/O space
-> mapped exactly 2MB below the loadable modules, as virtual address space is
-> essentially free.
-
-Will talk with Catalin about where to place this.
-
-> 
-> > +#define ioport_map(port, nr)	(PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
-> > +#define ioport_unmap(addr)
-> 
-> inline functions?
-
-Will do, thanks!
-
-> 
-> >  static inline u8 inb(unsigned long addr)
-> >  {
-> >  	return readb(addr + PCI_IOBASE);
-> > diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-> > new file mode 100644
-> > index 0000000..dd084a3
-> > --- /dev/null
-> > +++ b/arch/arm64/include/asm/pci.h
-> > @@ -0,0 +1,35 @@
-> > +#ifndef __ASM_PCI_H
-> > +#define __ASM_PCI_H
-> > +#ifdef __KERNEL__
-> > +
-> > +#include <linux/types.h>
-> > +#include <linux/slab.h>
-> > +#include <linux/dma-mapping.h>
-> > +
-> > +#include <asm/io.h>
-> > +#include <asm-generic/pci-bridge.h>
-> > +#include <asm-generic/pci-dma-compat.h>
-> > +
-> > +#define PCIBIOS_MIN_IO		0
-> > +#define PCIBIOS_MIN_MEM		0
-> 
-> PCIBIOS_MIN_IO is normally set to 0x1000, to stay out of the ISA range.
-
-:) No ISA support! (Die ISA, die!!) 
-
-> 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > new file mode 100644
-> > index 0000000..7b652cf
-> > --- /dev/null
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -0,0 +1,112 @@
-> 
-> None of this looks really arm64 specific, nor should it be. I think
-> we should try a little harder to move this as a default implementation
-> into common code, even if we start out by having all architectures
-> override it.
-
-Agree. This is the RFC version. I didn't dare to post a patch with fixes
-for all architectures. :)
-
-> 
-> > +int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
-> > +{
-> > +	BUG_ON(offset + SZ_64K - 1 > IO_SPACE_LIMIT);
-> > +
-> > +	return ioremap_page_range((unsigned long)PCI_IOBASE + offset,
-> > +				(unsigned long)PCI_IOBASE + offset + SZ_64K,
-> > +				phys_addr,
-> > +				__pgprot(PROT_DEVICE_nGnRE));
-> > +}
-> 
-> Not sure if we want to treat this one as architecture specific though.
-> It certainly won't be portable to x86, but it could be shared with
-> a couple of others. We may also want to redesign the interface.
-> I've been thinking we could make this function allocate space in the
-> Linux virtual I/O space aperture, and pass two resources into it
-> (physical I/O aperture and bus I/O range), and get the actual
-> io_offset as the return value, or a negative error number.
-
-Not sure I completely follow your idea.
-
-> 
-> That way, you could have an arbitrary number of host bridges in the
-> system and each one gets a share of the virtual aperture until
-> it's full.
-
-One still needs to fix the pci_request_region use that checks against
-ioport_resource. But it is an interesting idea.
-
-> 
-> 	Arnd
-> 
-> 
-
-Thanks for reviewing this patch!
-
-Liviu
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f681fb0..ed2ed86 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3423,6 +3423,61 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
+ }
+ 
++/*
++ * Many Intel PCH root ports do provide ACS-like features to disable peer
++ * transactions and validate bus numbers in requests, but do not provide an
++ * actual PCIe ACS capability.  This is the list of device IDs known to fall
++ * into that category as provided by Intel in Red Hat bugzilla 1037684.
++ */
++static const u16 pci_quirk_intel_pch_acs_ids[] = {
++	/* Ibexpeak PCH */
++	0x3b42, 0x3b43, 0x3b44, 0x3b45, 0x3b46, 0x3b47, 0x3b48, 0x3b49,
++	0x3b4a, 0x3b4b, 0x3b4c, 0x3b4d, 0x3b4e, 0x3b4f, 0x3b50, 0x3b51,
++	/* Cougarpoint PCH */
++	0x1c10, 0x1c11, 0x1c12, 0x1c13, 0x1c14, 0x1c15, 0x1c16, 0x1c17,
++	0x1c18, 0x1c19, 0x1c1a, 0x1c1b, 0x1c1c, 0x1c1d, 0x1c1e, 0x1c1f,
++	/* Pantherpoint PCH */
++	0x1e10, 0x1e11, 0x1e12, 0x1e13, 0x1e14, 0x1e15, 0x1e16, 0x1e17,
++	0x1e18, 0x1e19, 0x1e1a, 0x1e1b, 0x1e1c, 0x1e1d, 0x1e1e, 0x1e1f,
++	/* Lynxpoint-H PCH */
++	0x8c10, 0x8c11, 0x8c12, 0x8c13, 0x8c14, 0x8c15, 0x8c16, 0x8c17,
++	0x8c18, 0x8c19, 0x8c1a, 0x8c1b, 0x8c1c, 0x8c1d, 0x8c1e, 0x8c1f,
++	/* Lynxpoint-LP PCH */
++	0x9c10, 0x9c11, 0x9c12, 0x9c13, 0x9c14, 0x9c15, 0x9c16, 0x9c17,
++	0x9c18, 0x9c19, 0x9c1a, 0x9c1b,
++	/* Wildcat PCH */
++	0x9c90, 0x9c91, 0x9c92, 0x9c93, 0x9c94, 0x9c95, 0x9c96, 0x9c97,
++	0x9c98, 0x9c99, 0x9c9a, 0x9c9b,
++};
++
++static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
++{
++	int i;
++
++	/* Filter out a few obvious non-matches first */
++	if (!pci_is_pcie(dev) || pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
++		return false;
++
++	for (i = 0; i < ARRAY_SIZE(pci_quirk_intel_pch_acs_ids); i++)
++		if (pci_quirk_intel_pch_acs_ids[i] == dev->device)
++			return true;
++
++	return false;
++}
++
++#define INTEL_PCH_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_SV)
++
++static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
++{
++	u16 flags = dev->dev_flags & PCI_DEV_FLAGS_ACS_ENABLED_QUIRK ?
++		    INTEL_PCH_ACS_FLAGS : 0;
++
++	if (!pci_quirk_intel_pch_acs_match(dev))
++		return -ENOTTY;
++
++	return acs_flags & ~flags ? 0 : 1;
++}
++
+ static const struct pci_dev_acs_enabled {
+ 	u16 vendor;
+ 	u16 device;
+@@ -3434,6 +3489,7 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_ATI, 0x439d, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_ATI, 0x4384, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_ATI, 0x4399, pci_quirk_amd_sb_acs },
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+ 	{ 0 }
+ };
+ 
+@@ -3462,11 +3518,115 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
+ 	return -ENOTTY;
+ }
+ 
++/* Config space offset of Root Complex Base Address register */
++#define INTEL_LPC_RCBA_REG 0xf0
++/* 31:14 RCBA address */
++#define INTEL_LPC_RCBA_MASK 0xffffc000
++/* RCBA Enable */
++#define INTEL_LPC_RCBA_ENABLE (1 << 0)
++
++/* Backbone Scratch Pad Register */
++#define INTEL_BSPR_REG 0x1104
++/* Backbone Peer Non-Posted Disable */
++#define INTEL_BSPR_REG_BPNPD (1 << 8)
++/* Backbone Peer Posted Disable */
++#define INTEL_BSPR_REG_BPPD  (1 << 9)
++
++/* Upstream Peer Decode Configuration Register */
++#define INTEL_UPDCR_REG 0x1114
++/* 5:0 Peer Decode Enable bits */
++#define INTEL_UPDCR_REG_MASK 0x3f
++
++static int pci_quirk_enable_intel_lpc_acs(struct pci_dev *dev)
++{
++	u32 rcba, bspr, updcr;
++	void __iomem *rcba_mem;
++
++	/*
++	 * Read the RCBA register from the LPC (D31:F0).  PCH root ports
++	 * are D28:F* and therefore get probed before LPC, thus we can't
++	 * use pci_get_slot/pci_read_config_dword here.
++	 */
++	pci_bus_read_config_dword(dev->bus, PCI_DEVFN(31, 0),
++				  INTEL_LPC_RCBA_REG, &rcba);
++	if (!(rcba & INTEL_LPC_RCBA_ENABLE))
++		return -EINVAL;
++
++	rcba_mem = ioremap_nocache(rcba & INTEL_LPC_RCBA_MASK,
++				   PAGE_ALIGN(INTEL_UPDCR_REG));
++	if (!rcba_mem)
++		return -ENOMEM;
++
++	/*
++	 * The BSPR can disallow peer cycles, but it's set by soft strap and
++	 * therefore read-only.  If both posted and non-posted peer cycles are
++	 * disallowed, we're ok.  If either are allowed, then we need to use
++	 * the UPDCR to disable peer decodes for each port.  This provides the
++	 * PCIe ACS equivalent of PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF
++	 */
++	bspr = readl(rcba_mem + INTEL_BSPR_REG);
++	bspr &= INTEL_BSPR_REG_BPNPD | INTEL_BSPR_REG_BPPD;
++	if (bspr != (INTEL_BSPR_REG_BPNPD | INTEL_BSPR_REG_BPPD)) {
++		updcr = readl(rcba_mem + INTEL_UPDCR_REG);
++		if (updcr & INTEL_UPDCR_REG_MASK) {
++			dev_info(&dev->dev, "Disabling UPDCR peer decodes\n");
++			updcr &= ~INTEL_UPDCR_REG_MASK;
++			writel(updcr, rcba_mem + INTEL_UPDCR_REG);
++		}
++	}
++
++	iounmap(rcba_mem);
++	return 0;
++}
++
++/* Miscellaneous Port Configuration register */
++#define INTEL_MPC_REG 0xd8
++/* MPC: Invalid Receive Bus Number Check Enable */
++#define INTEL_MPC_REG_IRBNCE (1 << 26)
++
++static void pci_quirk_enable_intel_rp_mpc_acs(struct pci_dev *dev)
++{
++	u32 mpc;
++
++	/*
++	 * When enabled, the IRBNCE bit of the MPC register enables the
++	 * equivalent of PCI ACS Source Validation (PCI_ACS_SV), which
++	 * ensures that requester IDs fall within the bus number range
++	 * of the bridge.  Enable if not already.
++	 */
++	pci_read_config_dword(dev, INTEL_MPC_REG, &mpc);
++	if (!(mpc & INTEL_MPC_REG_IRBNCE)) {
++		dev_info(&dev->dev, "Enabling MPC IRBNCE\n");
++		mpc |= INTEL_MPC_REG_IRBNCE;
++		pci_write_config_word(dev, INTEL_MPC_REG, mpc);
++	}
++}
++
++static int pci_quirk_enable_intel_pch_acs(struct pci_dev *dev)
++{
++	if (!pci_quirk_intel_pch_acs_match(dev))
++		return -ENOTTY;
++
++	if (pci_quirk_enable_intel_lpc_acs(dev)) {
++		dev_warn(&dev->dev, "Failed to enable Intel PCH ACS quirk\n");
++		return 0;
++	}
++
++	pci_quirk_enable_intel_rp_mpc_acs(dev);
++
++	dev->dev_flags |= PCI_DEV_FLAGS_ACS_ENABLED_QUIRK;
++
++	dev_info(&dev->dev, "Intel PCH root port ACS workaround enabled\n");
++
++	return 0;
++}
++
+ static const struct pci_dev_enable_acs {
+ 	u16 vendor;
+ 	u16 device;
+ 	int (*enable_acs)(struct pci_dev *dev);
+ } pci_dev_enable_acs[] = {
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_pch_acs },
+ 	{ 0 }
+ };
+ 
 
