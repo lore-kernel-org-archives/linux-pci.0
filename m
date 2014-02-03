@@ -1,125 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:60770 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357AbaBDTNw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 14:13:52 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, Liviu.Dudau@arm.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, mohit.kumar@st.com
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Date: Tue, 04 Feb 2014 20:13:49 +0100
-Message-ID: <3460536.Sh23gjDa6X@wuerfel>
-In-Reply-To: <1391532784-1953-3-git-send-email-will.deacon@arm.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <1391532784-1953-3-git-send-email-will.deacon@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Subject: [PATCH] [RFC] Support for creating generic host_bridge from device tree
+Date: Mon,  3 Feb 2014 18:33:47 +0000
+Message-Id: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 04 February 2014 16:53:03 Will Deacon wrote:
-> +
-> +- ranges         : As described in IEEE Std 1275-1994, but must provide
-> +                   at least a definition of the Configuration Space plus
-> +                   one or both of IO and Memory Space.
-> +
+Following the discussion started here [1], I now have a proposal for tackling
+generic support for host bridges described via device tree. It is an initial
+stab at it, to try to get feedback and suggestions, but it is functional enough
+that I have PCI Express for arm64 working on an FPGA using the patch that I am
+also publishing that adds support for PCI for that platform.
 
-I might need to reread the spec, but I think the config space is not
-actually supposed to be in the 'ranges' of the host bridge at all,
-and it should just be listed in the 'reg'.
+Looking at the existing architectures that fit the requirements (use of device
+tree and PCI) yields the powerpc and microblaze as generic enough to make them
+candidates for conversion. I have a tentative patch for microblaze that I can
+only compile test it, unfortunately using qemu-microblaze leads to an early
+crash in the kernel.
 
-IIRC the reason why the config space is part of the three-cell address
-is so that you can have funky ways to say "memory space of the device
-with bus/dev/fn is actually translated to address X rather then Y".
+As Bjorn has mentioned in the previous discussion, the idea is to add to
+struct pci_host_bridge enough data to be able to reduce the size or remove the
+architecture specific pci_controller structure. arm64 support actually manages
+to get rid of all the architecture static data and has no pci_controller structure
+defined. For host bridge drivers that means a change of API unless architectures
+decide to provide a compatibility layer (comments here please).
 
-It's too late to change that for the other drivers now, after the
-binding is established.
+In order to initialise a host bridge with the new API, the following example
+code is sufficient for a _probe() function:
 
-> +Configuration Space is assumed to be memory-mapped (as opposed to being
-> +accessed via an ioport) and laid out with a direct correspondence to the
-> +geography of a PCI bus address, by concatenating the various components
-> +to form a 24-bit offset:
-> +
-> +        cfg_offset(bus, device, function, register) =
-> +                bus << 16 | device << 11 | function << 8 | register
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct resource bus_range;
+	struct myhostbridge_port *pp;
+	LIST_HEAD(resources);
 
-This won't allow extended config space. Why not just do the
-regular mmconfig layout and make this:
+	dev = pdev->dev.of_node;
 
-	cfg_offset(bus, device, function, register) =
-		bus << 20 | device << 15 | function << 12 | register;
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
 
-> +static int virt_pci_setup(int nr, struct pci_sys_data *sys)
-> +{
-> +	struct virt_pci *pci = sys->private_data;
-> +
-> +	if (resource_type(&pci->io)) {
-> +		pci_add_resource(&sys->resources, &pci->io);
-> +		pci_ioremap_io(nr * resource_size(&pci->io), pci->io.start);
-> +	}
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
 
-This should really compute an io_offset.
+	err = of_pci_parse_bus_range(dev, &bus_range);
+	if (err) {
+		bus_range.start = 0;
+		bus_range.end = 255;
+		bus_range.flags = IORESOURCE_BUS;
+	}
+	pci_add_resource(&resources, &bus_range);
 
-> +	if (resource_type(&pci->mem))
-> +		pci_add_resource(&sys->resources, &pci->mem);
+	bridge = pci_host_bridge_of_init(&pdev->dev, 0, &myhostbridge_ops, pp, &resources);
+	if (!bridge) {
+		err = -EINVAL;
+		goto bridge_init_fail;
+	}
 
-and also a mem_offset, which is something different.
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_init_fail;
 
-> +	pci->cfg_base = devm_ioremap_resource(pci->dev, &pci->cfg);
-> +	return !IS_ERR(pci->cfg_base);
-> +}
-> +
-> +static const struct of_device_id virt_pci_of_match[] = {
-> +	{ .compatible = "linux,pci-virt" },
-> +	{ },
-> +};
-> +MODULE_DEVICE_TABLE(of, virt_pci_of_match);
+	/*
+	 * Add flags here, this is just an example
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
 
-I don't think we even want "virt" in the compatible string. The
-binding should be generic enough that it can actually work with
-real hardware.
+	bus_range.end = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, bus_range.end);
 
-> +	for_each_of_pci_range(&parser, &range) {
-> +		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
-> +
-> +		switch (restype) {
-> +		case IORESOURCE_IO:
-> +			if (resource_type(&pci->io))
-> +				dev_warn(dev,
-> +					 "ignoring additional io resource\n");
-> +			else
-> +				of_pci_range_to_resource(&range, np, &pci->io);
-> +			break;
-> +		case IORESOURCE_MEM:
-> +			if (resource_type(&pci->mem))
-> +				dev_warn(dev,
-> +					 "ignoring additional mem resource\n");
-> +			else
-> +				of_pci_range_to_resource(&range, np, &pci->mem);
-> +			break;
+	pci_assign_unassigned_bus_resources(bridge->bus);
 
-This shows once more that the range parser code is suboptimal. So far
-every single driver got the I/O space wrong here, because the obvious
-way to write this function is also completely wrong.
+	pci_bus_add_devices(bridge->bus);
 
-What you get out of "of_pci_range_to_resource(&range, np, &pci->io)"
-is not the resource you want to pass into pci_add_resource()
-later.
+	return 0;
 
-> +	memset(&hw, 0, sizeof(hw));
-> +	hw.nr_controllers	= 1;
-> +	hw.private_data		= (void **)&pci;
-> +	hw.setup		= virt_pci_setup;
-> +	hw.map_irq		= of_irq_parse_and_map_pci;
-> +	hw.ops			= &virt_pci_ops;
-> +	pci_common_init_dev(dev, &hw);
+bridge_init_fail:
+	kfree(pp);
+	pci_free_resource_list(&resources);
+	return err;
+}
 
-Since most fields here are constant, I'd just write this as
+Best regards,
+Liviu Dudau
 
-	struct hw_pci hw = {
-		.nr_controllers = 1,
-		.setup = virt_pci_setup,
-		...
-	};
+[1] http://thread.gmane.org/gmane.linux.kernel.pci/25946
 
-	Arnd
+Liviu Dudau (1):
+  pci: Add support for creating a generic host_bridge from device tree
+
+ drivers/pci/host-bridge.c | 92 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c       | 11 ++++++
+ include/linux/pci.h       | 14 ++++++++
+ 3 files changed, 117 insertions(+)
+
+-- 
+1.8.5.3
+
