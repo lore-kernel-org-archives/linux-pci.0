@@ -1,44 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:63730 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751918AbaBRSpA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 13:45:00 -0500
-Date: Tue, 18 Feb 2014 18:44:20 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140218184420.GD2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
- <1392726043-31088-4-git-send-email-will.deacon@arm.com>
- <20140218182142.GF29304@obsidianresearch.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:50804 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753584AbaBCX20 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:26 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [PATCH 17/24][Resend] ACPICA: Introduce acpi_get_data_full() and rework acpi_get_data()
+Date: Tue, 04 Feb 2014 00:34:19 +0100
+Message-ID: <2346175.LEPCgcSjCH@vostro.rjw.lan>
+In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140218182142.GF29304@obsidianresearch.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 06:21:42PM +0000, Jason Gunthorpe wrote:
-> On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
-> > +
-> > +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
-> > +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
->                                            ^^^^^^^^^^^^^^
-> 
-> This probably shouldn't be 0 in the example, nor in your kvm tool
-> output. For example purposes any value will do.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Hmm, so kvmtool actually provides a PC ioport at 0x0, which is handy since
-there's an 8250 down there. That means we have:
+Introduce a new function, acpi_get_data_full(), working in analogy
+with acpi_get_data() except that it can execute a callback provided
+as its 4th argument right after acpi_ns_get_attached_data() has
+returned a success.
 
-0x0    - 0x6200  : Weird PC stuff
-0x6200 - 0x10000 : PCI IO space
+That will allow Linux to reference count the object pointed to by
+*data before the namespace mutex is released so as to ensure that it
+will not be freed going forward until the reference to it acquired
+by acpi_get_data_full() is dropped.
 
-Should I just change everything to be offset by 0x6200?
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/acpi/acpica/nsxfeval.c |   33 ++++++++++++++++++++++++++++++---
+ include/acpi/acpixf.h          |    4 ++++
+ 2 files changed, 34 insertions(+), 3 deletions(-)
 
-Will
+Index: linux-pm/drivers/acpi/acpica/nsxfeval.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/acpica/nsxfeval.c
++++ linux-pm/drivers/acpi/acpica/nsxfeval.c
+@@ -923,19 +923,22 @@ ACPI_EXPORT_SYMBOL(acpi_detach_data)
+ 
+ /*******************************************************************************
+  *
+- * FUNCTION:    acpi_get_data
++ * FUNCTION:    acpi_get_data_full
+  *
+  * PARAMETERS:  obj_handle          - Namespace node
+  *              handler             - Handler used in call to attach_data
+  *              data                - Where the data is returned
++ *              callback            - function to execute before returning
+  *
+  * RETURN:      Status
+  *
+- * DESCRIPTION: Retrieve data that was previously attached to a namespace node.
++ * DESCRIPTION: Retrieve data that was previously attached to a namespace node
++ *              and execute a callback before returning.
+  *
+  ******************************************************************************/
+ acpi_status
+-acpi_get_data(acpi_handle obj_handle, acpi_object_handler handler, void **data)
++acpi_get_data_full(acpi_handle obj_handle, acpi_object_handler handler,
++		   void **data, void (*callback)(void *))
+ {
+ 	struct acpi_namespace_node *node;
+ 	acpi_status status;
+@@ -960,10 +963,34 @@ acpi_get_data(acpi_handle obj_handle, ac
+ 	}
+ 
+ 	status = acpi_ns_get_attached_data(node, handler, data);
++	if (ACPI_SUCCESS(status) && callback) {
++		callback(*data);
++	}
+ 
+ unlock_and_exit:
+ 	(void)acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
+ 	return (status);
+ }
+ 
++ACPI_EXPORT_SYMBOL(acpi_get_data_full)
++
++/*******************************************************************************
++ *
++ * FUNCTION:    acpi_get_data
++ *
++ * PARAMETERS:  obj_handle          - Namespace node
++ *              handler             - Handler used in call to attach_data
++ *              data                - Where the data is returned
++ *
++ * RETURN:      Status
++ *
++ * DESCRIPTION: Retrieve data that was previously attached to a namespace node.
++ *
++ ******************************************************************************/
++acpi_status
++acpi_get_data(acpi_handle obj_handle, acpi_object_handler handler, void **data)
++{
++	return acpi_get_data_full(obj_handle, handler, data, NULL);
++}
++
+ ACPI_EXPORT_SYMBOL(acpi_get_data)
+Index: linux-pm/include/acpi/acpixf.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpixf.h
++++ linux-pm/include/acpi/acpixf.h
+@@ -230,6 +230,10 @@ acpi_attach_data(acpi_handle object, acp
+ acpi_status acpi_detach_data(acpi_handle object, acpi_object_handler handler);
+ 
+ acpi_status
++acpi_get_data_full(acpi_handle object, acpi_object_handler handler, void **data,
++		   void (*callback)(void *));
++
++acpi_status
+ acpi_get_data(acpi_handle object, acpi_object_handler handler, void **data);
+ 
+ acpi_status
