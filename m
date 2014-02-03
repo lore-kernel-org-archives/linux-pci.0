@@ -1,196 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63456 "EHLO
-	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750735AbaBYJwG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 04:52:06 -0500
-Content-Type: multipart/mixed;
-	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_"
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 20/22] qla2xxx: Use pci_enable_msix_range()
-Date: Tue, 25 Feb 2014 09:52:02 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D89867332@AVMB1.qlogic.org>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <36da37b8ca3a13e24a3363ed19d6a08061c85970.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <36da37b8ca3a13e24a3363ed19d6a08061c85970.1391512266.git.agordeev@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:18847 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753008AbaBCV1g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Feb 2014 16:27:36 -0500
+Subject: [PATCH v2 1/3] pci: Add device specific PCI ACS enable
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Mon, 03 Feb 2014 14:27:33 -0700
+Message-ID: <20140203212733.8607.27633.stgit@bling.home>
+In-Reply-To: <20140203212216.8607.68273.stgit@bling.home>
+References: <20140203212216.8607.68273.stgit@bling.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <B0CACDB358679F4DADA7A77C27A9DB10@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
+Some devices support PCI ACS-like features, but don't report it using
+the standard PCIe capabilities.  We already provide hooks for device
+specific testing of ACS, but not for device specific enabling of ACS.
+This provides that setup hook.
 
-Looks good to me.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c    |   26 ++++++++++++++++++++------
+ drivers/pci/quirks.c |   25 +++++++++++++++++++++++++
+ include/linux/pci.h  |    2 ++
+ 3 files changed, 47 insertions(+), 6 deletions(-)
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1febe90..b89502f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2180,21 +2180,18 @@ void pci_request_acs(void)
+ }
+ 
+ /**
+- * pci_enable_acs - enable ACS if hardware support it
++ * pci_std_enable_acs - enable ACS on devices using standard ACS capabilites
+  * @dev: the PCI device
+  */
+-void pci_enable_acs(struct pci_dev *dev)
++static int pci_std_enable_acs(struct pci_dev *dev)
+ {
+ 	int pos;
+ 	u16 cap;
+ 	u16 ctrl;
+ 
+-	if (!pci_acs_enable)
+-		return;
+-
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+ 	if (!pos)
+-		return;
++		return -ENODEV;
+ 
+ 	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
+ 	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
+@@ -2212,6 +2209,23 @@ void pci_enable_acs(struct pci_dev *dev)
+ 	ctrl |= (cap & PCI_ACS_UF);
+ 
+ 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	return 0;
++}
++
++/**
++ * pci_enable_acs - enable ACS if hardware support it
++ * @dev: the PCI device
++ */
++void pci_enable_acs(struct pci_dev *dev)
++{
++	if (!pci_acs_enable)
++		return;
++
++	if (!pci_std_enable_acs(dev))
++		return;
++
++	pci_dev_specific_enable_acs(dev);
+ }
+ 
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 5cb726c..f681fb0 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3461,3 +3461,28 @@ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags)
+ 
+ 	return -ENOTTY;
+ }
++
++static const struct pci_dev_enable_acs {
++	u16 vendor;
++	u16 device;
++	int (*enable_acs)(struct pci_dev *dev);
++} pci_dev_enable_acs[] = {
++	{ 0 }
++};
++
++void pci_dev_specific_enable_acs(struct pci_dev *dev)
++{
++	const struct pci_dev_enable_acs *i;
++	int ret;
++
++	for (i = pci_dev_enable_acs; i->enable_acs; i++) {
++		if ((i->vendor == dev->vendor ||
++		     i->vendor == (u16)PCI_ANY_ID) &&
++		    (i->device == dev->device ||
++		     i->device == (u16)PCI_ANY_ID)) {
++			ret = i->enable_acs(dev);
++			if (ret >= 0)
++				return;
++		}
++	}
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fb57c89..f9a47dd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1510,6 +1510,7 @@ enum pci_fixup_pass {
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+ struct pci_dev *pci_get_dma_source(struct pci_dev *dev);
+ int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
++void pci_dev_specific_enable_acs(struct pci_dev *dev);
+ #else
+ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) { }
+@@ -1522,6 +1523,7 @@ static inline int pci_dev_specific_acs_enabled(struct pci_dev *dev,
+ {
+ 	return -ENOTTY;
+ }
++static inline void pci_dev_specific_enable_acs(struct pci_dev *dev) {}
+ #endif
+ 
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
 
->As result of deprecation of MSI-X/MSI enablement functions
->pci_enable_msix() and pci_enable_msi_block() all drivers
->using these two interfaces need to be updated to use the
->new pci_enable_msi_range() and pci_enable_msix_range()
->interfaces.
->
->Log message code 0x00c6 preserved, although it is reported
->after successful call to pci_enable_msix_range(), not before
->possibly unsuccessful call to pci_enable_msix(). Consumers
->of the error code should not notice the difference.
->
->Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->Cc: qla2xxx-upstream@qlogic.com
->Cc: linux-scsi@vger.kernel.org
->Cc: linux-pci@vger.kernel.org
->---
-> drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
-> 1 files changed, 11 insertions(+), 16 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_isr.c
->b/drivers/scsi/qla2xxx/qla_isr.c
->index 9bc86b9..b2dcfa4 100644
->--- a/drivers/scsi/qla2xxx/qla_isr.c
->+++ b/drivers/scsi/qla2xxx/qla_isr.c
->@@ -2896,27 +2896,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha,
->struct rsp_que *rsp)
-> 	for (i =3D 0; i < ha->msix_count; i++)
-> 		entries[i].entry =3D i;
->=20
->-	ret =3D pci_enable_msix(ha->pdev, entries, ha->msix_count);
->-	if (ret) {
->-		if (ret < MIN_MSIX_COUNT)
->-			goto msix_failed;
->-
->+	ret =3D pci_enable_msix_range(ha->pdev,
->+				    entries, MIN_MSIX_COUNT, ha->msix_count);
->+	if (ret < 0) {
->+		ql_log(ql_log_fatal, vha, 0x00c7,
->+		    "MSI-X: Failed to enable support, "
->+		    "giving   up -- %d/%d.\n",
->+		    ha->msix_count, ret);
->+		goto msix_out;
->+	} else if (ret < ha->msix_count) {
-> 		ql_log(ql_log_warn, vha, 0x00c6,
-> 		    "MSI-X: Failed to enable support "
-> 		    "-- %d/%d\n Retry with %d vectors.\n",
-> 		    ha->msix_count, ret, ret);
->-		ha->msix_count =3D ret;
->-		ret =3D pci_enable_msix(ha->pdev, entries, ha->msix_count);
->-		if (ret) {
->-msix_failed:
->-			ql_log(ql_log_fatal, vha, 0x00c7,
->-			    "MSI-X: Failed to enable support, "
->-			    "giving   up -- %d/%d.\n",
->-			    ha->msix_count, ret);
->-			goto msix_out;
->-		}
->-		ha->max_rsp_queues =3D ha->msix_count - 1;
-> 	}
->+	ha->msix_count =3D ret;
->+	ha->max_rsp_queues =3D ha->msix_count - 1;
-> 	ha->msix_entries =3D kzalloc(sizeof(struct qla_msix_entry) *
-> 				ha->msix_count, GFP_KERNEL);
-> 	if (!ha->msix_entries) {
->--=20
->1.7.7.6
->
-
-
---_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-Pnk1cBgQqY6tD8NmR0YAUF9LRVJORUz3fIhylLSyIdLOfftmwCdG6DEuN91xNjh9IrUVQgHfcAAA
-HwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABz
-AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEA
-AAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBh
-AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMA
-aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAu
-AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAA
-OgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAa
-DAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEA
-dQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAK
-AAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUA
-cgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5
-AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsA
-YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBh
-AHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgA
-eQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5
-PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
-YQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
-AC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
-bwBnAGkAYwAuAGMAbwBtAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAA
-AB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAA
-AgELMAEAAAAQAAAArfCOXAZneUGCozxVO1LqOAMAFwABAAAAQAA5AAANbjsPMs8BQAAIME8M0jsP
-Ms8BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEA
-AAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAA
-AAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAABuAAAAUgBlADoAIABbAFAA
-QQBUAEMASAAgADIAMAAvADIAMgBdACAAcQBsAGEAMgB4AHgAeAA6ACAAVQBzAGUAIABwAGMAaQBf
-AGUAbgBhAGIAbABlAF8AbQBzAGkAeABfAHIAYQBuAGcAZQAoACkAAAAAAB8APQABAAAACgAAAFIA
-ZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAACcAAAAPAAzADYAZABhADMANwBiADgAYwBhADMAYQAx
-ADMAZQAyADQAYQAzADMANgAzAGUAZAAxADkAZAA2AGEAMAA4ADAANgAxAGMAOAA1ADkANwAwAC4A
-MQAzADkAMQA1ADEAMgAyADYANgAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABh
-AHQALgBjAG8AbQA+AAAAAgFxAAEAAAAWAAAAAQHPMg87iD1LWGzPO067X063mCiHIgAAHwBwAAEA
-AABmAAAAWwBQAEEAVABDAEgAIAAyADAALwAyADIAXQAgAHEAbABhADIAeAB4AHgAOgAgAFUAcwBl
-ACAAcABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwByAGEAbgBnAGUAKAApAAAAAAAfADUQ
-AQAAAHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcAOQBDADMANAA1ADkAOQBC
-AEIAMABBADAAMwBFADQARAA4ADkAOAA2ADcAMwAzADIAQABBAFYATQBCADEALgBxAGwAbwBnAGkA
-YwAuAG8AcgBnAD4AAAAfADkQAQAAAPIAAAA8AGMAbwB2AGUAcgAuADEAMwA5ADEANQAxADIAMgA2
-ADYALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAgADwA
-MwA2AGQAYQAzADcAYgA4AGMAYQAzAGEAMQAzAGUAMgA0AGEAMwAzADYAMwBlAGQAMQA5AGQANgBh
-ADAAOAAwADYAMQBjADgANQA5ADcAMAAuADEAMwA5ADEANQAxADIAMgA2ADYALgBnAGkAdAAuAGEA
-ZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAAAAAAAwDeP59OAABAAAcwNejK
-Ow8yzwEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTQwMjI1
-MDk1MjAyWi0xMDAwNjUAAB8AFRABAAAAWAAAAEIAMABDAEEAQwBEAEIAMwA1ADgANgA3ADkARgA0
-AEQAQQBEAEEANwBBADcANwBDADIANwBBADkARABCADEAMABAAHEAbABvAGcAaQBjAC4AYwBvAG0A
-AAACARQwAQAAAAwAAADBAAAAvMaH7UwAAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBz
-AGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUA
-bgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAv
-ADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgA
-AABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAA
-AAEAAADwAAAASQBJAD0AMAAxADAAMQBDAEYAMwAyADAARgAzAEIAOAA4ADMARAA0AEIANQA4ADYA
-QwBDAEYAMwBCADQARQBCAEIANQBGADQARQBCADcAOQA4ADIAOAA4ADcAMgAyADsAUwBCAE0ASQBE
-AD0ANAA7AFMAQgBUAD0AMwA7AFQASABBAD0AMwA0ADUANAAxADAAMQA2ADsAVgBlAHIAcwBpAG8A
-bgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAs
-ACAAUwB0AGEAZwBlAD0ASAA3AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAA
-eAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADA
-AAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoA
-AABbADEAMAAuADMANQAuADcALgA2ADQAXQAAAAAAkwc=
-
---_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_--
