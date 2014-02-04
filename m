@@ -1,49 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60180 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751241AbaBWTnz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 23 Feb 2014 14:43:55 -0500
-Date: Sun, 23 Feb 2014 20:45:49 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: James Smart <james.smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 12/22] lpfc: Use pci_enable_msix_range()
-Message-ID: <20140223194548.GA16635@dhcp-26-207.brq.redhat.com>
-References: <a34533b1-77d9-45bc-ad66-aab336972b95@CMEXHTCAS2.ad.emulex.com>
+Received: from mail-yk0-f170.google.com ([209.85.160.170]:58271 "EHLO
+	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677AbaBDNXS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 08:23:18 -0500
+Received: by mail-yk0-f170.google.com with SMTP id 9so47007659ykp.1
+        for <linux-pci@vger.kernel.org>; Tue, 04 Feb 2014 05:23:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a34533b1-77d9-45bc-ad66-aab336972b95@CMEXHTCAS2.ad.emulex.com>
+In-Reply-To: <20140204122951.GC27975@e106497-lin.cambridge.arm.com>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
+	<1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
+	<CAPcvp5EF_=G=VwWLfbw6mwczErTHeq4AbVALYpuAzb3c5eb2rA@mail.gmail.com>
+	<20140204122951.GC27975@e106497-lin.cambridge.arm.com>
+Date: Tue, 4 Feb 2014 13:23:17 +0000
+Message-ID: <CAPcvp5HN4pBysOdS5_ep_3Lp7GDDKw4YrgmKjYzBet7PtaOLUg@mail.gmail.com>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: Andrew Murray <amurray@embedded-bits.co.uk>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 11:47:02AM -0500, James Smart wrote:
-> Alexander,
-> 
-> I've reworked this patch to layer on top of our rev 8.3.45 patches
-> that were just posted to linux-scsi. There were some conflicts due to
-> new additions.  Additionally, there were two other uses of pci_enable_msiXXX
-> that needed to be addressed.  The changes in this patch also address the
-> change requested by:
-> "[PATCH 11/22] lpfc: Remove superfluous call to pci_disable_msix()"
-> 
-> To avoid creating merge conflicts - either by your patches going in then
-> scsi git tree trying to merge or by scsi git tree going in and your patches
-> trying to merge - I recommend that you eliminate your lpfc patches from the
-> kernel and apply the patch below once scsi git with the updated lpfc driver
-> has actually merged.
+On 4 February 2014 12:29, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Mon, Feb 03, 2014 at 10:34:40PM +0000, Andrew Murray wrote:
+>> On 3 February 2014 18:43, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+>> > index 4cc813e..ce5bad2 100644
+>> > --- a/arch/arm64/include/asm/io.h
+>> > +++ b/arch/arm64/include/asm/io.h
+>> > @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+>> >  /*
+>> >   *  I/O port access primitives.
+>> >   */
+>> > +#define arch_has_dev_port()    (0)
+>> >  #define IO_SPACE_LIMIT         0xffff
+>> >  #define PCI_IOBASE             ((void __iomem *)(MODULES_VADDR - SZ_2M))
+>> >
+>> > +#define ioport_map(port, nr)   (PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
+>> > +#define ioport_unmap(addr)
+>>
+>> I'm not sure that this will work. The in[bwl], out[bwl] macros in
+>> arch/arm64/include/asm/io.h already add the PCI_IOBASE offset.
+>>
+>> Instead of these two #defines, why not just enforce that
+>> GENERIC_PCI_IOMAP is enabled? Or at least wrap these defines with 'if
+>> (!config_enabled(CONFIG_GENERIC_PCI_IOMAP))' or similar.
+>
+> GENERIC_PCI_IOMAP *is* enabled for AArch64. We have select GENERIC_IOMAP in
+> arch/arm64/Kconfig which in turn selects GENERIC_PCI_IOMAP in lib/Kconfig.
 
-Hi James,
+Sorry, it was intent to suggest using the ioport_[map|unmap] functions
+in lib/iomap.c instead of defining something similar here. I guess you
+will also need to also define CONFIG_HAS_IOPORT for this to happen.
 
-Thank you for the review and for the updated patch - it is embarrassing 
-I have not addressed all pci_enable_msix()'s.
+Andrew Murray
 
-I will keep the two patches separate to ease bisecting -
-I am going to repost the patches on top of scsi tree.
-
-Cheers!
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+>
+> Best regards,
+> Liviu
+>
+>>
+>> > +
+>> >  static inline u8 inb(unsigned long addr)
+>> >  {
+>> >         return readb(addr + PCI_IOBASE);
+>>
+>>
+>> Andrew Murray
+>>
+>
+> --
+> ====================
+> | I would like to |
+> | fix the world,  |
+> | but they're not |
+> | giving me the   |
+>  \ source code!  /
+>   ---------------
+>     ¯\_(ツ)_/¯
+>
+> -- IMPORTANT NOTICE: The contents of this email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and do not disclose the contents to any other person, use it for any purpose, or store or copy the information in any medium.  Thank you.
+>
+> ARM Limited, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2557590
+> ARM Holdings plc, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2548782
+>
