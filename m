@@ -1,79 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:8490 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbaBJEFF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Feb 2014 23:05:05 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH part1 v5 7/7] PCI: pciehp: Don't enable/disable slot on resume unless status changed
-Date: Mon, 10 Feb 2014 12:04:11 +0800
-Message-ID: <1392005051-54508-8-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
-References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:11127 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937AbaBDLPj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:15:39 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 06/22] csiostor: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:16:52 +0100
+Message-Id: <69eff1cf2298be42528554f6169c038dd3707349.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently pciehp_resume() always enables the slot if it is occupied.  But
-often the slot was already occupied before the suspend, so we complain like
-this:
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-    pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
-    pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
-
-This patch only enables the slot if it was empty before the suspend and is
-now occupied, i.e., a card was inserted while suspended.
-
-Similarly, we only disable the slot if a card was removed while suspended.
-If it was already empty before the suspend, we don't need to do anything.
-
-[bhelgaas: changelog]
-Tested-by: Paul Bolle <pebolle@tiscali.nl>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/pciehp_core.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/scsi/csiostor/csio_hw.h  |    2 +-
+ drivers/scsi/csiostor/csio_isr.c |   24 ++++++++++--------------
+ 2 files changed, 11 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 53b58de..551137f 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -317,6 +317,7 @@ static int pciehp_resume (struct pcie_device *dev)
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 49b1daa..5db2d85 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -94,7 +94,7 @@ enum {
+ };
+ 
+ struct csio_msix_entries {
+-	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
++	unsigned short	vector;		/* Assigned MSI-X vector */
+ 	void		*dev_id;	/* Priv object associated w/ this msix*/
+ 	char		desc[24];	/* Description of this vector */
+ };
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 91ba91d..06f283f 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
+ static int
+ csio_enable_msix(struct csio_hw *hw)
  {
- 	struct controller *ctrl;
- 	struct slot *slot;
-+	struct pci_bus *pbus = dev->port->subordinate;
- 	u8 status;
+-	int rv, i, j, k, n, min, cnt;
++	int i, j, k, n, min, cnt;
+ 	struct csio_msix_entries *entryp;
+ 	struct msix_entry *entries;
+ 	int extra = CSIO_EXTRA_VECS;
+@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
  
- 	ctrl = get_service_data(dev);
-@@ -328,10 +329,13 @@ static int pciehp_resume (struct pcie_device *dev)
+ 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
  
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
--	if (status)
--		pciehp_enable_slot(slot);
--	else
-+	if (status) {
-+		if (list_empty(&pbus->devices))
-+			pciehp_enable_slot(slot);
-+	} else if (!list_empty(&pbus->devices)) {
- 		pciehp_disable_slot(slot);
+-	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
+-		cnt = rv;
+-	if (!rv) {
+-		if (cnt < (hw->num_sqsets + extra)) {
+-			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
+-			csio_reduce_sqsets(hw, cnt - extra);
+-		}
+-	} else {
+-		if (rv > 0)
+-			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+-
++	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
++	if (cnt < 0) {
+ 		kfree(entries);
+-		return -ENOMEM;
++		return cnt;
 +	}
 +
- 	return 0;
- }
- #endif /* PM */
++	if (cnt < (hw->num_sqsets + extra)) {
++		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
++		csio_reduce_sqsets(hw, cnt - extra);
+ 	}
+ 
+ 	/* Save off vectors */
+@@ -585,7 +581,7 @@ csio_intr_enable(struct csio_hw *hw)
+ 			}
+ 		}
+ 
+-		if ((csio_msi == 1) && !pci_enable_msi(hw->pdev))
++		if ((csio_msi == 1) && pci_enable_msi_range(hw->pdev, 1, 1) > 0)
+ 			hw->intr_mode = CSIO_IM_MSI;
+ 		else
+ 			hw->intr_mode = CSIO_IM_INTX;
 -- 
-1.7.1
-
+1.7.7.6
 
