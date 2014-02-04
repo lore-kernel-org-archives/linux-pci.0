@@ -1,70 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:36116 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409AbaBCTD0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 14:03:26 -0500
-From: Tejun Heo <tj@kernel.org>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
-	heiko.carstens@de.ibm.com, stern@rowland.harvard.edu,
-	JBottomley@parallels.com, bhelgaas@google.com,
-	Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH 09/12] pci: use device_remove_file_self() instead of device_schedule_callback()
-Date: Mon,  3 Feb 2014 14:03:02 -0500
-Message-Id: <1391454185-32143-10-git-send-email-tj@kernel.org>
-In-Reply-To: <1391454185-32143-1-git-send-email-tj@kernel.org>
-References: <1391454185-32143-1-git-send-email-tj@kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:39955 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753542AbaBDM3z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 07:29:55 -0500
+Date: Tue, 4 Feb 2014 12:29:51 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Message-ID: <20140204122951.GC27975@e106497-lin.cambridge.arm.com>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
+ <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
+ <CAPcvp5EF_=G=VwWLfbw6mwczErTHeq4AbVALYpuAzb3c5eb2rA@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAPcvp5EF_=G=VwWLfbw6mwczErTHeq4AbVALYpuAzb3c5eb2rA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-driver-core now supports synchrnous self-deletion of attributes and
-the asynchrnous removal mechanism is scheduled for removal.  Use it
-instead of device_schedule_callback().  This makes "remove" behave
-synchronously.
+On Mon, Feb 03, 2014 at 10:34:40PM +0000, Andrew Murray wrote:
+> On 3 February 2014 18:43, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+> > index 4cc813e..ce5bad2 100644
+> > --- a/arch/arm64/include/asm/io.h
+> > +++ b/arch/arm64/include/asm/io.h
+> > @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+> >  /*
+> >   *  I/O port access primitives.
+> >   */
+> > +#define arch_has_dev_port()    (0)
+> >  #define IO_SPACE_LIMIT         0xffff
+> >  #define PCI_IOBASE             ((void __iomem *)(MODULES_VADDR - SZ_2M))
+> >
+> > +#define ioport_map(port, nr)   (PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
+> > +#define ioport_unmap(addr)
+> 
+> I'm not sure that this will work. The in[bwl], out[bwl] macros in
+> arch/arm64/include/asm/io.h already add the PCI_IOBASE offset.
+> 
+> Instead of these two #defines, why not just enforce that
+> GENERIC_PCI_IOMAP is enabled? Or at least wrap these defines with 'if
+> (!config_enabled(CONFIG_GENERIC_PCI_IOMAP))' or similar.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/pci-sysfs.c | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+GENERIC_PCI_IOMAP *is* enabled for AArch64. We have select GENERIC_IOMAP in
+arch/arm64/Kconfig which in turn selects GENERIC_PCI_IOMAP in lib/Kconfig.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 276ef9c..4e0acef 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -351,28 +351,17 @@ static struct device_attribute dev_rescan_attr = __ATTR(rescan,
- 							(S_IWUSR|S_IWGRP),
- 							NULL, dev_rescan_store);
- 
--static void remove_callback(struct device *dev)
--{
--	pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
--}
--
- static ssize_t
--remove_store(struct device *dev, struct device_attribute *dummy,
-+remove_store(struct device *dev, struct device_attribute *attr,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
- 	unsigned long val;
- 
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
--	/* An attribute cannot be unregistered by one of its own methods,
--	 * so we have to use this roundabout approach.
--	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
-+	if (val && device_remove_file_self(dev, attr))
-+		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
- 	return count;
- }
- static struct device_attribute dev_remove_attr = __ATTR(remove,
+Best regards,
+Liviu
+
+> 
+> > +
+> >  static inline u8 inb(unsigned long addr)
+> >  {
+> >         return readb(addr + PCI_IOBASE);
+> 
+> 
+> Andrew Murray
+> 
+
 -- 
-1.8.5.3
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
