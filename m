@@ -1,50 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:49083 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751631AbaBCKiH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Feb 2014 05:38:07 -0500
-Date: Mon, 3 Feb 2014 12:45:11 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Received: from moutng.kundenserver.de ([212.227.126.186]:50110 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069AbaBDTVu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 14:21:50 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Robert Moore <robert.moore@intel.com>
-Subject: Re: [PATCH v3 0/7] ACPI / hotplug / PCI: Consolidation of ACPIPHP
- with ACPI core device hotplug
-Message-ID: <20140203104511.GR18029@intel.com>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
- <1693151.2qrLZHyp0o@vostro.rjw.lan>
- <1519631.YS65c9Af2C@vostro.rjw.lan>
- <5157096.hCmU2aoKCT@vostro.rjw.lan>
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Date: Tue, 04 Feb 2014 20:21:38 +0100
+Message-ID: <4118142.2mQ5BlBdTZ@wuerfel>
+In-Reply-To: <20140204191055.GC25695@obsidianresearch.com>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <8676627.b6SYsazoah@wuerfel> <20140204191055.GC25695@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5157096.hCmU2aoKCT@vostro.rjw.lan>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 02, 2014 at 06:11:19PM +0100, Rafael J. Wysocki wrote:
-> As stated in the message at http://marc.info/?l=linux-acpi&m=139135963030012&w=4 ,
-> patch [1/6] was actaully wrong and the whole patchset had to be reworked for that
-> reason.  What follows is an entirely new version:
+On Tuesday 04 February 2014 12:10:55 Jason Gunthorpe wrote:
 > 
-> [1/7] Add a new function to ACPICA allowing a callback to be executed under the
->       namespace mutex after calling acpi_ns_get_attached_data().
-> 
-> [2/7] Use the new ACPICA's function to fix a couple of potential races related
->       to ACPI notifies.
-> 
-> [3/7] Same as [2/6] above.
-> [4/7] Same as [3/6] above, rebased.
-> [5/7] Same as [4/6] above.
-> [6/7] Same as [5/6] above.
-> [7/7] Dispatch ACPI hotplug notifications for "core" devices and PCI from
->       acpi_bus_notify().  This actually is different from [6/6] above, although
->       it serves the same purpose.
-> 
+> For instance to support peer-to-peer IO you need to have a consisent,
+> non-overlapping set of bus/device/function/tag to uniquely route TLPs
+> within the chip. Cross domain TLP routing in HW is non-trivial.
 
-On Intel NUC and DZ77RE-75K,
+Yes, that is a good reason.
 
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> IOMMUs (and SR-IOv) rely on the BDF to identify the originating device
+> for each TLP. Multiple domains means a much more complex IOMMU
+> environment.
+
+I fear we already have to support complex IOMMU setups on ARM,
+whether there are multiple PCI domains or not. But it would be
+nice in theory not to require it.
+
+> Failure to integrate on-chip devices into the PCI world also means
+> thing like SR-IOv won't work sanely with on-chip devices.
+
+I'd consider this a feature ;)
+
+But you are probably right: people will do SR-IOV whether we like
+it or not, and they will try to do it on non-PCI devices too,
+and great suffering will be involved.
+
+	Arnd
