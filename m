@@ -1,91 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:42724 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751218AbaBMWhj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 17:37:39 -0500
-Received: by mail-oa0-f52.google.com with SMTP id i4so13523274oah.39
-        for <linux-pci@vger.kernel.org>; Thu, 13 Feb 2014 14:37:39 -0800 (PST)
-Date: Thu, 13 Feb 2014 15:37:36 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [Bug 68591] Regression: Asrock M3A UCC does not boot without
- acpi=off or pci=noacpi
-Message-ID: <20140213223736.GA13837@google.com>
-References: <bug-68591-41252@https.bugzilla.kernel.org/>
- <bug-68591-41252-XeC6UtTUD6@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="YiEDa0DAkWCtVeE4"
-In-Reply-To: <bug-68591-41252-XeC6UtTUD6@https.bugzilla.kernel.org/>
+Received: from mx1.redhat.com ([209.132.183.28]:63151 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753733AbaBDLPe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:15:34 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, pv-drivers@vmware.com,
+	iscsi-driver@qlogic.com, qla2xxx-upstream@qlogic.com,
+	support@lsi.com, DL-MPTFusionLinux@lsi.com,
+	intel-linux-scu@intel.com, iss_storagedev@hp.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 00/22] scsi: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:16:46 +0100
+Message-Id: <cover.1391512266.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
---YiEDa0DAkWCtVeE4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Cc: pv-drivers@vmware.com
+Cc: iscsi-driver@qlogic.com
+Cc: qla2xxx-upstream@qlogic.com
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
+Cc: intel-linux-scu@intel.com
+Cc: iss_storagedev@hp.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 
-[+cc linux-pci to make this more discoverable]
+Alexander Gordeev (22):
+  be2iscsi: Use pci_enable_msix_range()
+  bfa: Do not call pci_enable_msix() once it failed
+  bfa: Cleanup bfad_setup_intr()
+  bfa: Use pci_enable_msix_range()
+  csiostor: Remove superfluous call to pci_disable_msix()
+  csiostor: Use pci_enable_msix_range()
+  fnic: Use pci_enable_msix_range()
+  hpsa: Fallback to MSI rather than to INTx if MSI-X failed
+  hpsa: Use pci_enable_msix_range()
+  isci: Use pci_enable_msix_range()
+  lpfc: Remove superfluous call to pci_disable_msix()
+  lpfc: Use pci_enable_msix_range()
+  megaraid: Use pci_enable_msix_range()
+  mpt2sas: Use pci_enable_msix_range()
+  mpt3sas: Use pci_enable_msix_range()
+  pm8001: Fix invalid success return when request_irq() failed
+  pm8001: Use pci_enable_msix_range()
+  pmcraid: Get rid of a redundant assignment
+  pmcraid: Use pci_enable_msix_range()
+  qla2xxx: Use pci_enable_msix_range()
+  qla4xxx: Use pci_enable_msix_range()
+  vmw_pvscsi: Use pci_enable_msix_range()
 
-> https://bugzilla.kernel.org/show_bug.cgi?id=68591
+ drivers/scsi/be2iscsi/be_main.c           |    6 +-
+ drivers/scsi/bfa/bfad.c                   |   62 ++++++++++++-----------------
+ drivers/scsi/csiostor/csio_hw.h           |    2 +-
+ drivers/scsi/csiostor/csio_isr.c          |   26 +++++-------
+ drivers/scsi/fnic/fnic_isr.c              |    4 +-
+ drivers/scsi/hpsa.c                       |   23 ++++------
+ drivers/scsi/isci/init.c                  |    5 +-
+ drivers/scsi/lpfc/lpfc_init.c             |   30 +++++++-------
+ drivers/scsi/megaraid/megaraid_sas_base.c |   25 +++++------
+ drivers/scsi/mpt2sas/mpt2sas_base.c       |   11 +++--
+ drivers/scsi/mpt3sas/mpt3sas_base.c       |    9 +++-
+ drivers/scsi/pm8001/pm8001_init.c         |   46 +++++++++++----------
+ drivers/scsi/pmcraid.c                    |   14 +------
+ drivers/scsi/qla2xxx/qla_isr.c            |   27 +++++-------
+ drivers/scsi/qla4xxx/ql4_nx.c             |    5 +-
+ drivers/scsi/vmw_pvscsi.c                 |    4 +-
+ 16 files changed, 134 insertions(+), 165 deletions(-)
 
-  ACPI: HPET id: 0x43538301 base: 0xfed00000
-  pci_root PNP0A03:00: host bridge window [mem 0xd0000000-0xdfffffff]
-  pci_root PNP0A03:00: host bridge window [mem 0xf0000000-0xfebfffff]
-  pci 0000:00:14.0: [1002:4385] type 0 class 0x000c05
-  pci 0000:00:14.0: reg 14: [mem 0xfed00000-0xfed003ff]
-  hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0, 0
-  pnp 00:06: Plug and Play ACPI device, IDs PNP0103 (active)
-  pnp 00:06: [mem 0xfed00000-0xfed003ff]
+-- 
+1.7.7.6
 
-The 00:14.0 MEM BAR is outside all the host bridge windows, so unless you
-boot with "pci=nocrs", Linux will try to move it.  Moving it is not a good
-idea because that's the HPET timer, and the rest of the kernel still
-thinks it lives at 0xfed00000 because we learned that from the ACPI HPET
-table.  It's also not a good thing that we have that resource reported for
-both the PCI 00:14.0 device and the ACPI/PNP 00:06 device.
-
-It looks like d7451fca18e2 ("x86, hpet: SB600 - remove HPET resources from
-PCI device") is intended to fix this very problem by hiding BAR 1 of the
-00:14.0 device, and I don't know why it isn't working on your system.  It
-is interesting that the description of the bit toggled by the quirk (the
-HideHpetBar bit in the SoftPciRst register at PM_Reg:55h, in the AMD SB600
-Register Reference Manual, P/N 46155_sb600_rrg_pub_3.03) says "can not
-write and always read 0".
-
-Any chance you can try the attached patch?  It won't fix anything, so
-you'll still have to boot with "pci=nocrs".
-
---YiEDa0DAkWCtVeE4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=sb600-patch
-
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index bca9e85daaa5..8e65dbdd61c6 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -512,14 +512,22 @@ static void sb600_disable_hpet_bar(struct pci_dev *dev)
- 	 */
- 
- 	pci_read_config_byte(dev, 0x08, &val);
-+	dev_info(&dev->dev, "cfg 0x08: %#02x\n", val);
- 
- 	if (val < 0x2F) {
-+		dev_info(&dev->dev, "disabling BAR 1 (HPET address)\n");
- 		outb(0x55, 0xCD6);
- 		val = inb(0xCD7);
-+		dev_info(&dev->dev, "PM  0x55: %#02x\n", val);
- 
- 		/* Set bit 7 in PM register 0x55 */
- 		outb(0x55, 0xCD6);
- 		outb(val | 0x80, 0xCD7);
-+		dev_info(&dev->dev, "PM  0x55: wrote %#02x\n", val | 0x80);
-+
-+		outb(0x55, 0xCD6);
-+		val = inb(0xCD7);
-+		dev_info(&dev->dev, "PM  0x55: %#02x\n", val);
- 	}
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_ATI, 0x4385, sb600_disable_hpet_bar);
-
---YiEDa0DAkWCtVeE4--
