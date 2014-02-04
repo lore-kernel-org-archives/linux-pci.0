@@ -1,84 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:37757 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752929AbaBYM1k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 07:27:40 -0500
-MIME-Version: 1.0
-In-Reply-To: <20140221162824.GA4706@obsidianresearch.com>
-References: <1392564830-5868-1-git-send-email-sthokal@xilinx.com>
-	<CAErSpo5FGPhgnp8Gfy-1_Lk7ckCi7U5+z5pLnPU+jScPxD5yUQ@mail.gmail.com>
-	<20140219003523.GJ29304@obsidianresearch.com>
-	<CA+mB=1KSxkN+mKce5k1n93pmAA_FnWYaqNweWzxd4GD3Mo4PZA@mail.gmail.com>
-	<20140220174503.GB19893@obsidianresearch.com>
-	<CA+mB=1L+QM2cKq==mwYesp=E7S2N-xTiN7AoBvbzAO2UMn0qVQ@mail.gmail.com>
-	<20140221162824.GA4706@obsidianresearch.com>
-Date: Tue, 25 Feb 2014 17:57:37 +0530
-Message-ID: <CA+mB=1Jner0G2cyKrGom8-mKrRpvwO6bj2Xob5BbtJMKbMLkuQ@mail.gmail.com>
-Subject: Re: [PATCH] pcie: Add Xilinx PCIe Host Bridge IP driver
-From: Srikanth Thokala <sthokal@xilinx.com>
+Received: from moutng.kundenserver.de ([212.227.17.9]:60822 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753553AbaBDJpf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 04:45:35 -0500
+From: Arnd Bergmann <arnd@arndb.de>
 To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Srikanth Thokala <sthokal@xilinx.com>,
+Cc: Rob Herring <robherring2@gmail.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Michal Simek <michal.simek@xilinx.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Date: Tue, 04 Feb 2014 10:44:52 +0100
+Message-ID: <13031998.NR888KZWhk@wuerfel>
+In-Reply-To: <20140203233137.GH2519@obsidianresearch.com>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <CAL_JsqL+3S8w=_Fb-t0rVcq0sDiPSDM6nqn3mR2DHKw=VTffsg@mail.gmail.com> <20140203233137.GH2519@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jason,
+On Monday 03 February 2014 16:31:37 Jason Gunthorpe wrote:
+> Specifying 'use EHCI, AHCI, etc' - which are all PCI based standards
+> without clearly specifying exactly how PCI is suppose to work is
+> completely bonkers.
+> 
+> What is needed is a spec that says:
+>  1) Here is how you generate config TLPs. A MMIO region that
+>     conforms to the already specified x86 ECAM would
+>     be perfect
+>  2) Here is a dword by dword break down of the entire config space in
+>     a SOC. Here is where a on-board AHCI controller must show up in
+>     config space. Here is how an external PCI-E port must show
+>     up. Etc. Most of this is already specified, but it clearly needs
+>     to be layed out explicitly for ARM SOCs to actually follow it.
+>  3) Here is how you specify the aperture(s) associated with PCI BAR's
+>     and bridge windows in config space. And yes: The CONFIG SPACE
+>     BARS MUST WORK.
+>  4) Here is how MSI works, these are the values you put in the
+>     address/data and here is how you collect the interrupt.
+>  5) Here is how Legacy INTx must be mapped into the GIC.
+> 
+> This is what x86 does, and they have been doing it well for 10
+> years. If you want to play in the server game you have to properly
+> implement PCI.
 
-On Fri, Feb 21, 2014 at 9:58 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Fri, Feb 21, 2014 at 08:18:00PM +0530, Srikanth Thokala wrote:
->
->> 00:00.0 Class 0604: Device 10ee:7081
->
-> So this is great, a root port bridge is exactly correct - I would
-> recommend using device 1 for this (device 0 is the host bridge in most
-> cases), but I don't think that has any functional impact.
->
->>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->> ParErr+ Stepping- SERR+ FastB2B- DisINTx-
->>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>         Latency: 0, Cache Line Size: 64 bytes
->>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->>         I/O behind bridge: 00000000-00000fff
->>         Memory behind bridge: 00000000-000fffff
->>         Prefetchable memory behind bridge: 00000000-000fffff
->
-> What is going on here?  These ranges should match the MMIO aperture and
-> critically must enclose the downstream bars:
->
->> 01:00.0 Class 0200: Device 14e4:1677 (rev 11)
->>         Region 0: Memory at 60000000 (64-bit, non-prefetchable) [size=64K]
->>         Expansion ROM at 60010000 [disabled] [size=64K]
->
-> So one of those two is not right..
+I'm pretty sure the authors of the SBSA actually thought that was
+what they wrote, by referring to external specifications (pci-3.0,
+ehci, ahci, ...).  However, it seems they were either foolish enough
+to believe that hardware designers would follow these specs, or
+they were intentionally misled and got talked into putting ambiguous
+terminology in because there were already hardware designs that
+are not exactly in line with the spirit of the SBSA but can be
+argued to be conforming to the text for a lax interpretation.
 
-Sorry for the delay in response.  Thanks for pointing this.
-I have series of conversations with my IP team and it is giving back
-zero's when Type1 Header
-Memory Base offset is read even the pcie stack writes the valid
-addresses.  HW team is working on
-this and they will take their own time to give a fix.  As there is no
-functional impact, I believe there
-is no issue with driver and should work on mainlining the driver.
-Please suggest me on how to
-proceed and accordingly I will send a v2 patch fixing the DT comments
-pointed by you and Bjorn.
+I think EHCI is a much better example than PCI here, because the
+spec has exactly one line to say about it, where it spends a whole
+chapter on PCI.
 
-Thanks
-Srikanth
+Here is how a sane person would read SBSA to create a compliant
+implementation:
 
->
-> Jason
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  I have to use EHCI version 1.1 to provide USB-2.0 support. EHCI
+  is a PCI device, so I'll put it behind a PCIe port that complies
+  to the PCIe section of the SBSA. Since EHCI by itself only provides
+  high-speed USB, and USB-2.0 mandates I provide low-speed and
+  full-speed as well, I have to add a USB hub device. It would have
+  been easier to just use OHCI for these, but SBSA says I can't.
+  Now I want to integrate the EHCI into my SoC and not waste one
+  of my precious PCIe root ports, so I have to create another PCI
+  domain with its own ECAM compliant config space to put it into.
+  Fortunately SBSA lets me add an arbitrary number of PCI domains,
+  as long as they are all strictly compliant. To software it will
+  look exactly as if it was on an external card, I just have to
+  ensure the boot loader correctly sets up the clocks and the phy
+  before an SBSA compliant OS gets loaded, all runtime power
+  management will get handled through the EHCI-1.1 energy-efficiency
+  extensions.
+
+Here is how a crazy person would read the same sentence in the SBSA:
+
+  I have an IP block that implements the EHCI register set, that
+  should be good enough. It's not a fast device, so I can put it
+  on a non-coherent bus. Since the SoC will be used for networking,
+  I'll put the registers into big-endian configuration to make it
+  easier for the OS to access. I'm not allowed to have USB-1.1
+  according to SBSA, so I can get away without a hub or an extra
+  OHCI. I can't support MSI because it's not a PCI device, and
+  the GIC is pretty full, so I'll just connect the IRQ line to
+  the GPIO controller. In order to do better power management,
+  I'll design a fancy PHY that the device driver will manage
+  for implementing autosuspend. I should also give the OS
+  fine-grained control over the clocks, but it will have to share
+  the clock domain with the other devices on the same edge of the
+  chip. The EHCI device is not part of PCI, which measn I don't
+  have to use the standard SMMU. However, my EHCI implementation
+  can only do 32-bit DMA, and I'll have to design my own IOMMU
+  to let it access the entire memory range. USB-OTG is a great
+  feature and we already paid for having this in our EHCI
+  implementation, better make sure it comes up in endpoint mode
+  after waking up from power saving.
+
+	Arnd
