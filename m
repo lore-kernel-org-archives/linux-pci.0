@@ -1,46 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1392718107.15829.12.camel@artifact>
-References: <1390773698.3450.12.camel@artifact>
-	<CAE9FiQVD=oVHM5WJgSJ5cNpXZ1NYy9E_pcGWfjKnmD9OZoHHsw@mail.gmail.com>
-	<1391643656.1067.1.camel@artifact>
-	<CAE9FiQV8jutRhaBicL4kjqVYd07FzHmNoSN3NxdA2TYvOc_KUg@mail.gmail.com>
-	<z9zi9m.n0zpxd.1hgeaud-qmf@mail.snewbury.org.uk>
-	<i9nn22.n0zs79.1hgeaud-qmf@mail.snewbury.org.uk>
-	<1392392764.3520.11.camel@devel-n900>
-	<CAE9FiQV3H_nxH0gxcM0kW4uLm6b_qmHT9hRQUVY_4xPqjpvMtA@mail.gmail.com>
-	<1392718107.15829.12.camel@artifact>
-Date: Tue, 18 Feb 2014 10:52:54 -0800
-Message-ID: <CAE9FiQXUhvG2Jub3sbBxyCERVbt-L22+O+mcZ_HWEVQ_QaRawA@mail.gmail.com>
-Subject: Re: pci-3.14 resource alloc
-From: Yinghai Lu <yinghai@kernel.org>
-To: Steven Newbury <steve@snewbury.org.uk>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:49512 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753796AbaBDQxi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 11:53:38 -0500
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, Liviu.Dudau@arm.com, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, mohit.kumar@st.com,
+	Will Deacon <will.deacon@arm.com>
+Subject: [PATCH 3/3] ARM: mach-virt: allow PCI support to be selected
+Date: Tue,  4 Feb 2014 16:53:04 +0000
+Message-Id: <1391532784-1953-4-git-send-email-will.deacon@arm.com>
+In-Reply-To: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 2:08 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
->> >
->> > There's no pci bridge/bus hotplug though. Docking doesn't reveal the
->> > pci-e->pci bridge or the (radeon) devices on the other side.
->>
->> oh, no. could be other regression in linus tree or pci/next.
->>
->
-> Previously I needed the busn work to get it working, this was included
-> in the resource-alloc branch.  It never worked on mainline, the bridge
-> used to show up but never get scanned.  Now it's not showing up at all
-> on hotplug.  It could be a dock driver regression.
+mach-virt can make use of virtio-pci devices, which requires the guest
+kernel to have PCI support selected.
 
-I had the busn_res_alloc patches in the branch.
+This patch selects CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_VIRT=y.
 
-There is some changes about acpi dock driver from Rafael in recent
-kernels. Maybe Rafael could suggest which commit could cause problem,
-then you could try revert them on top of branch.
+Signed-off-by: Will Deacon <will.deacon@arm.com>
+---
+ arch/arm/mach-virt/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks
+diff --git a/arch/arm/mach-virt/Kconfig b/arch/arm/mach-virt/Kconfig
+index 081d46929436..f40fb55574cb 100644
+--- a/arch/arm/mach-virt/Kconfig
++++ b/arch/arm/mach-virt/Kconfig
+@@ -8,3 +8,4 @@ config ARCH_VIRT
+ 	select CPU_V7
+ 	select SPARSE_IRQ
+ 	select USE_OF
++	select MIGHT_HAVE_PCI
+-- 
+1.8.2.2
 
-Yinghai
