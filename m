@@ -1,48 +1,63 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH part1 v6 0/7] Introduce PCIe Device Serial Number capability support
-Date: Wed, 12 Feb 2014 10:52:46 +0800
-Message-ID: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Date: Tue, 4 Feb 2014 17:18:41 +0100
+Cc: "linux-pci" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <20140204122951.GC27975@e106497-lin.cambridge.arm.com> <CAPcvp5HN4pBysOdS5_ep_3Lp7GDDKw4YrgmKjYzBet7PtaOLUg@mail.gmail.com>
+In-Reply-To: <CAPcvp5HN4pBysOdS5_ep_3Lp7GDDKw4YrgmKjYzBet7PtaOLUg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201402041718.41931.arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v5->v6: Add is_frozen flag to protect pci bus from double frozen.
+On Tuesday 04 February 2014, Andrew Murray wrote:
+> On 4 February 2014 12:29, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > On Mon, Feb 03, 2014 at 10:34:40PM +0000, Andrew Murray wrote:
+> >> On 3 February 2014 18:43, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> >> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+> >> > index 4cc813e..ce5bad2 100644
+> >> > --- a/arch/arm64/include/asm/io.h
+> >> > +++ b/arch/arm64/include/asm/io.h
+> >> > @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+> >> >  /*
+> >> >   *  I/O port access primitives.
+> >> >   */
+> >> > +#define arch_has_dev_port()    (0)
+> >> >  #define IO_SPACE_LIMIT         0xffff
+> >> >  #define PCI_IOBASE             ((void __iomem *)(MODULES_VADDR - SZ_2M))
+> >> >
+> >> > +#define ioport_map(port, nr)   (PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
+> >> > +#define ioport_unmap(addr)
+> >>
+> >> I'm not sure that this will work. The in[bwl], out[bwl] macros in
+> >> arch/arm64/include/asm/io.h already add the PCI_IOBASE offset.
+> >>
+> >> Instead of these two #defines, why not just enforce that
+> >> GENERIC_PCI_IOMAP is enabled? Or at least wrap these defines with 'if
+> >> (!config_enabled(CONFIG_GENERIC_PCI_IOMAP))' or similar.
+> >
+> > GENERIC_PCI_IOMAP is enabled for AArch64. We have select GENERIC_IOMAP in
+> > arch/arm64/Kconfig which in turn selects GENERIC_PCI_IOMAP in lib/Kconfig.
+> 
+> Sorry, it was intent to suggest using the ioport_[map|unmap] functions
+> in lib/iomap.c instead of defining something similar here. I guess you
+> will also need to also define CONFIG_HAS_IOPORT for this to happen.
 
-This series is based on Bjorn's pci-next branch.
-Currently, more and more PCIe devices support PCIe DSN(Device Serial Number)
-capability, we can use this cap to identify device. In some platform,
-when we hotplug PCIe device, no interrupts will be received in system.
-So we can not identify the device whether is changed during suspend.
-PCIe DSN can help to identify this. 
+We do want CONFIG_HAS_IOPORT, but I would say that we should not use
+CONFIG_GENERIC_IOMAP. As I explained in another reply, enabling this
+was probably a simple mistake, and we only need this if we want I/O
+spaces that are /not/ memory mapped. IMHO any ARM64 system that doesn't
+map its PCI I/O space into MMIO space can live without I/O port
+access.
 
-Legacy PCI device can achieve it by PCI Vital Product Data capability.
-We can use its SN keyword to report the unique number.
-But in my platform, PCI devices which support VPD SN cap report the
-meaningless same string "0123456789". 
-Rework PCI VPD code to support device identification is not an easy work.
-Plan to do it in part2.
-
-Yijing Wang (7):
-  PCI: rework pci_find_next_ext_capability()
-  PCI: introduce pci_bus_find_ext_capability()
-  PCI: Add support for Device Serial Number capability
-  PCI: Introduce pci_serial_number_changed()
-  PCI: Add pci_dummy_ops to isolate pci device temporarily
-  PCI: Check pci device serial number when scan device
-  PCI: pciehp: Don't enable/disable slot on resume unless status
-    changed
-
- drivers/pci/hotplug/pciehp_core.c |   10 ++-
- drivers/pci/pci.c                 |  169 +++++++++++++++++++++++++++++++++++--
- drivers/pci/pci.h                 |    2 +-
- drivers/pci/probe.c               |   15 +++-
- include/linux/pci.h               |   10 ++-
- 5 files changed, 192 insertions(+), 14 deletions(-)
-
-
+	Arnd
