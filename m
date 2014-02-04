@@ -1,95 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12094 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37123 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751175AbaBXIAr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:00:47 -0500
+	id S1754071AbaBDLPv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:15:51 -0500
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
 	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 02/23] bfa: Do not call pci_enable_msix() after it failed once
-Date: Mon, 24 Feb 2014 09:02:02 +0100
-Message-Id: <e19ade23db801b0b4310947ad2aeb3350bc1aab5.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+Subject: [PATCH 13/22] megaraid: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:16:59 +0100
+Message-Id: <ba26af069a9e8c1260b17210820be17f8eab0d63.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pci_enable_msix() should not be called in case
-it threw a negative errno from a previous call.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/bfa/bfad.c |   48 ++++++++++++++++++++++------------------------
- 1 files changed, 23 insertions(+), 25 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c |   25 +++++++++++--------------
+ 1 files changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index cc0fbcd..972ff8d 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1235,33 +1235,31 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
- 
- 		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
--		if (error) {
--			/* In CT1 & CT2, try to allocate just one vector */
--			if (bfa_asic_id_ctc(pdev->device)) {
--				printk(KERN_WARNING "bfa %s: trying one msix "
--				       "vector failed to allocate %d[%d]\n",
--				       bfad->pci_name, bfad->nvec, error);
--				bfad->nvec = 1;
--				error = pci_enable_msix(bfad->pcidev,
-+		/* In CT1 & CT2, try to allocate just one vector */
-+		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-+			printk(KERN_WARNING "bfa %s: trying one msix "
-+			       "vector failed to allocate %d[%d]\n",
-+			       bfad->pci_name, bfad->nvec, error);
-+			bfad->nvec = 1;
-+			error = pci_enable_msix(bfad->pcidev,
- 						msix_entries, bfad->nvec);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3b7ad10..90944f1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3731,18 +3731,12 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 					     (unsigned int)num_online_cpus());
+ 		for (i = 0; i < instance->msix_vectors; i++)
+ 			instance->msixentry[i].entry = i;
+-		i = pci_enable_msix(instance->pdev, instance->msixentry,
+-				    instance->msix_vectors);
+-		if (i >= 0) {
+-			if (i) {
+-				if (!pci_enable_msix(instance->pdev,
+-						     instance->msixentry, i))
+-					instance->msix_vectors = i;
+-				else
+-					instance->msix_vectors = 0;
 -			}
-+		}
+-		} else
++		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
++					  1, instance->msix_vectors);
++		if (i < 0)
+ 			instance->msix_vectors = 0;
++		else
++			instance->msix_vectors = i;
  
--			/*
--			 * Only error number of vector is available.
--			 * We don't have a mechanism to map multiple
--			 * interrupts into one vector, so even if we
--			 * can try to request less vectors, we don't
--			 * know how to associate interrupt events to
--			 *  vectors. Linux doesn't duplicate vectors
--			 * in the MSIX table for this case.
--			 */
--			if (error) {
--				printk(KERN_WARNING "bfad%d: "
--				       "pci_enable_msix failed (%d), "
--				       "use line based.\n",
--					bfad->inst_no, error);
--				goto line_based;
--			}
-+		/*
-+		 * Only error number of vector is available.
-+		 * We don't have a mechanism to map multiple
-+		 * interrupts into one vector, so even if we
-+		 * can try to request less vectors, we don't
-+		 * know how to associate interrupt events to
-+		 *  vectors. Linux doesn't duplicate vectors
-+		 * in the MSIX table for this case.
-+		 */
-+		if (error) {
-+			printk(KERN_WARNING "bfad%d: "
-+			       "pci_enable_msix failed (%d), "
-+			       "use line based.\n",
-+				bfad->inst_no, error);
-+			goto line_based;
- 		}
+ 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+ 			"<%d> MSIX vector,Online CPUs: <%d>,"
+@@ -4667,9 +4661,11 @@ megasas_resume(struct pci_dev *pdev)
+ 		goto fail_ready_state;
  
- 		/* Disable INTX in MSI-X mode */
+ 	/* Now re-enable MSI-X */
+-	if (instance->msix_vectors)
+-		pci_enable_msix(instance->pdev, instance->msixentry,
+-				instance->msix_vectors);
++	if (instance->msix_vectors &&
++	    pci_enable_msix_range(instance->pdev, instance->msixentry,
++				  instance->msix_vectors,
++				  instance->msix_vectors) < 0)
++		goto fail_reenable_msix;
+ 
+ 	switch (instance->pdev->device) {
+ 	case PCI_DEVICE_ID_LSI_FUSION:
+@@ -4756,6 +4752,7 @@ fail_init_mfi:
+ 
+ fail_set_dma_mask:
+ fail_ready_state:
++fail_reenable_msix:
+ 
+ 	pci_disable_device(pdev);
+ 
 -- 
 1.7.7.6
 
