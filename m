@@ -1,98 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
-	valentine.barshak@cogentembedded.com, horms@verge.net.au,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>,
-	ben.dooks@codethink.co.uk
-Date: Wed, 05 Feb 2014 15:53:15 +0900
-Message-Id: <20140205065315.29445.65734.sendpatchset@w520>
-In-Reply-To: <20140205065243.29445.76593.sendpatchset@w520>
-References: <20140205065243.29445.76593.sendpatchset@w520>
-Subject: [PATCH 02/04] PCI: rcar: Break out window size handling
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:27946 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754141AbaBDLPy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:15:54 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
+	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 14/22] mpt2sas: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:17:00 +0100
+Message-Id: <9502363c4325496286e36221acaff63da3af42b0.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Magnus Damm <damm@opensource.se>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Break out the hard coded window size code to allow
-dynamic setup. The window size is still left at 1GiB
-but with this patch changing window size is easy for
-testing.
-
-Signed-off-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
- drivers/pci/host/pci-rcar-gen2.c |   31 ++++++++++++++++++++++++++++---
- 1 file changed, 28 insertions(+), 3 deletions(-)
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 3901edc..a0662cb 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1432,10 +1432,13 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
+ 		a->entry = i;
+ 
+-	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
+-	if (r) {
+-		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
+-		    "failed (r=%d) !!!\n", ioc->name, r));
++	r = pci_enable_msix_range(ioc->pdev,
++				  entries,
++				  ioc->reply_queue_count,
++				  ioc->reply_queue_count);
++	if (r < 0) {
++		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
++		    "pci_enable_msix_range failed (r=%d) !!!\n", ioc->name, r));
+ 		kfree(entries);
+ 		goto try_ioapic;
+ 	}
+-- 
+1.7.7.6
 
---- 0005/drivers/pci/host/pci-rcar-gen2.c
-+++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-04 17:22:41.000000000 +0900
-@@ -18,6 +18,7 @@
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/sizes.h>
- #include <linux/slab.h>
- 
- /* AHB-PCI Bridge PCI communication registers */
-@@ -81,6 +82,7 @@ struct rcar_pci_priv {
- 	struct resource mem_res;
- 	struct resource *cfg_res;
- 	int irq;
-+	unsigned long window_size;
- };
- 
- /* PCI configuration space operations */
-@@ -180,10 +182,31 @@ static int __init rcar_pci_setup(int nr,
- 	iowrite32(val, reg + RCAR_USBCTR_REG);
- 	udelay(4);
- 
--	/* De-assert reset and set PCIAHB window1 size to 1GB */
-+	/* De-assert reset and reset PCIAHB window1 size */
- 	val &= ~(RCAR_USBCTR_PCIAHB_WIN1_MASK | RCAR_USBCTR_PCICLK_MASK |
- 		 RCAR_USBCTR_USBH_RST | RCAR_USBCTR_PLL_RST);
--	iowrite32(val | RCAR_USBCTR_PCIAHB_WIN1_1G, reg + RCAR_USBCTR_REG);
-+
-+	/* Setup PCIAHB window1 size */
-+	switch (priv->window_size) {
-+	case SZ_2G:
-+		val |= RCAR_USBCTR_PCIAHB_WIN1_2G;
-+		break;
-+	case SZ_1G:
-+		val |= RCAR_USBCTR_PCIAHB_WIN1_1G;
-+		break;
-+	case SZ_512M:
-+		val |= RCAR_USBCTR_PCIAHB_WIN1_512M;
-+		break;
-+	default:
-+		pr_warn("unknown window size %ld - defaulting to 256M\n",
-+			priv->window_size);
-+		priv->window_size = SZ_256M;
-+		/* fall-through */
-+	case SZ_256M:
-+		val |= RCAR_USBCTR_PCIAHB_WIN1_256M;
-+		break;
-+	}
-+	iowrite32(val, reg + RCAR_USBCTR_REG);
- 
- 	/* Configure AHB master and slave modes */
- 	iowrite32(RCAR_AHB_BUS_MODE, reg + RCAR_AHB_BUS_CTR_REG);
-@@ -194,7 +217,7 @@ static int __init rcar_pci_setup(int nr,
- 	       RCAR_PCI_ARBITER_PCIBP_MODE;
- 	iowrite32(val, reg + RCAR_PCI_ARBITER_CTR_REG);
- 
--	/* PCI-AHB mapping: 0x40000000-0x80000000 */
-+	/* PCI-AHB mapping: 0x40000000 base */
- 	iowrite32(0x40000000 | RCAR_PCIAHB_PREFETCH16,
- 		  reg + RCAR_PCIAHB_WIN1_CTR_REG);
- 
-@@ -271,6 +294,8 @@ static int rcar_pci_probe(struct platfor
- 	priv->reg = reg;
- 	priv->dev = &pdev->dev;
- 
-+	priv->window_size = SZ_1G;
-+
- 	memset(&hw, 0, sizeof(hw));
- 	hw.nr_controllers = 1;
- 	hw.private_data = (void **)&priv;
