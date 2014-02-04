@@ -1,43 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18218 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362AbaBJPXx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 10:23:53 -0500
-Date: Mon, 10 Feb 2014 18:23:50 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Marta Rybczynska <rybczynska@gmail.com>,
-	linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] PCI hotplug: cpqphp: hex vs decimal typo in cpqhpc_probe()
-Message-ID: <20140210152350.GA24189@elgon.mountain>
+Received: from moutng.kundenserver.de ([212.227.17.10]:53572 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754603AbaBDTvZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 14:51:25 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Rob Herring <robherring2@gmail.com>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Date: Tue, 4 Feb 2014 20:50:43 +0100
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	"linux-pci" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <13031998.NR888KZWhk@wuerfel> <CAL_JsqLN4RjVzNCfZ50K44RcP61Z8zFOVnpY1+CfVFz_QnSBEg@mail.gmail.com>
+In-Reply-To: <CAL_JsqLN4RjVzNCfZ50K44RcP61Z8zFOVnpY1+CfVFz_QnSBEg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201402042050.43837.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a static checker fix and I can't test it, but from the context
-it definitely looks like hexidecimal 0x20 was intended here instead of
-decimal 20.
+On Tuesday 04 February 2014, Rob Herring wrote:
+> > Here is how a sane person would read SBSA to create a compliant
+> > implementation:
+> 
+> s/sane/software/
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > Here is how a crazy person would read the same sentence in the SBSA:
+> 
+> s/crazy/hardware/
 
-diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
-index 31273e155e6c..037e2612c5bd 100644
---- a/drivers/pci/hotplug/cpqphp_core.c
-+++ b/drivers/pci/hotplug/cpqphp_core.c
-@@ -920,12 +920,12 @@ static int cpqhpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 				bus->max_bus_speed = PCI_SPEED_100MHz_PCIX;
- 				break;
- 			}
--			if (bus_cap & 20) {
-+			if (bus_cap & 0x20) {
- 				dbg("bus max supports 66MHz PCI-X\n");
- 				bus->max_bus_speed = PCI_SPEED_66MHz_PCIX;
- 				break;
- 			}
--			if (bus_cap & 10) {
-+			if (bus_cap & 0x10) {
- 				dbg("bus max supports 66MHz PCI\n");
- 				bus->max_bus_speed = PCI_SPEED_66MHz;
- 				break;
+Not much of a difference, apparently ...
+
+> My money is on the latter. I think non-PCI implementations of xHCI
+> interfaces will be common. This was certainly the case at Calxeda in
+> what was believed to be a SBSA compliant SOC.
+
+I just looked up the EHCI and xHCI specs and am shocked to see that
+the PCI config space access for both is an optional part of the
+spec, so that assertion may well have been correct.
+
+On the other hand, it does seem impossible to create a compliant
+AHCI implementation without making it show up as a PCI function,
+so any SBSA compliant SoC that contains AHCI already has to have
+all the bits for doing the same on USB.
+
+> However, I think PCI
+> device or not is the least of the issues and all the other examples
+> you list are the difficult ones to deal with.
+
+Agreed. But if they get the difficult problems right, it's
+trivial to also do the PCI config space either in the way
+that Jason described, or as a separate PCI domain. In the worst
+case, it could still be faked up by a secure-mode firmware
+catching all config space accesses.
+
+	Arnd
