@@ -1,49 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:55699 "EHLO
+Received: from moutng.kundenserver.de ([212.227.17.8]:49306 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969AbaBKMi3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 07:38:29 -0500
+	with ESMTP id S1750971AbaBDJBg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 04:01:36 -0500
 From: Arnd Bergmann <arnd@arndb.de>
-To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-Cc: Pratyush ANAND <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Viresh Kumar <viresh.linux@gmail.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V5 7/8] pcie: SPEAr13xx: Add designware pcie support
-Date: Tue, 11 Feb 2014 13:38:08 +0100
-Message-ID: <1923851.AhH781i5Mk@wuerfel>
-In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189FD2CAAA9@EAPEX1MAIL1.st.com>
-References: <cover.1391871170.git.pratyush.anand@st.com> <201402101643.23186.arnd@arndb.de> <2CC2A0A4A178534D93D5159BF3BCB66189FD2CAAA9@EAPEX1MAIL1.st.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Date: Tue, 04 Feb 2014 10:01:23 +0100
+Message-ID: <3586724.k5LBp6hZRL@wuerfel>
+In-Reply-To: <CAL_JsqL+3S8w=_Fb-t0rVcq0sDiPSDM6nqn3mR2DHKw=VTffsg@mail.gmail.com>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <3808209.DeG1VobanZ@wuerfel> <CAL_JsqL+3S8w=_Fb-t0rVcq0sDiPSDM6nqn3mR2DHKw=VTffsg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 11 February 2014 12:23:58 Mohit KUMAR DCG wrote:
+On Monday 03 February 2014 17:07:48 Rob Herring wrote:
+> On Mon, Feb 3, 2014 at 2:05 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> You might want to re-read the SBSA. Unless ARM provides an IP block or
+> there is some other standard such as EHCI or AHCI, there is no generic
+> implementation. You only have to go look at the Linux EHCI or AHCI
+> drivers and see how meaningless and inadequate "use EHCI" is. For PCI,
+> the text is so brief in the SBSA there will be no way PCI is going to
+> just work given all the variations of root complexes, bridges, address
+> windows, etc. we typically see on ARM platforms. I could be wrong and
+> some AML magic will solve all the problems. 
 
-> > > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> > > index 13fb333..42a491d 100644
-> > > --- a/drivers/pci/host/Makefile
-> > > +++ b/drivers/pci/host/Makefile
-> > > @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
-> > >  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-> > >  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
-> > >  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
-> > > +obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-> > 
-> > I'd use the "pci" naming instead of "pcie" here for consistency.
-> > 
-> 
-> - No, let it be pcie as SPEAr13xx soc has pci controller as well , though  PCI is
-> not used on current eval boards.
+I don't think you need any AML, and SBSA seems to cover the PCI case
+just fine, though I have to agree that the EHCI/AHCI/xHCI part is
+rather ambiguous. What the existing PCI host controller drivers do is
+essentially:
 
-Hmm, it's still inconsistent, but I can see your argument.
-Let's see if someone has a better idea, otherwise keep the
-pcie name.
+1. provide a config space access method
+2. set up the I/O and memory address windows
+3. set up clocks, PHYs etc
+4. work around any deviations from the PCI standard
+5. provide an MSI/MSI-X controller
 
-I'd prefer to avoid having to rename drivers in the long run,
-but if we start naming some pcie drivers pci and others pcie,
-it gets rather confusing.
+For all I can tell, any SBSA compliant system should handle
+those four like this:
+
+1. config space is ECAM compliant, we only need to pass the
+   location in DT. (SBSA 8.1)
+2. all address windows are set up by the boot loader, we only
+   need to know the location (IMHO this should be the
+   preferred way to do things regardless of SBSA).
+3. any external hardware dependencies are set up statically
+   by the boot loader and are operational as we enter the
+   kernel.
+4. deviations from PCI are not allowed (SBSA 8.8)
+5. MSI has to be handled by GICv3 (SBSA 8.3.2)
+
+So I definitely expect SBSA compliant systems to work fine with a
+very simple generic PCI host bridge driver (which is likely what
+Liviu has implemented and waiting for approval to submit).
+The more important question is what systems will actually be
+compliant with the above. X-Gene manages to get all five wrong,
+for instance, and so would any system that reuses the existing
+PCI hardware (alphabetically: exynos, imx6, mvebu, rcar-gen2,
+tegra, designware), although points 2 and 3 are a question of
+the boot loader, and it's possible that the designware based ones
+get point 4 right.
 
 	Arnd
