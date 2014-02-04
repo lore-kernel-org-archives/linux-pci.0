@@ -1,46 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41138 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750735AbaBYIao (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Feb 2014 03:30:44 -0500
-Date: Tue, 25 Feb 2014 09:32:30 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	linux-kernel@vger.kernel.org,
-	David Vrabel <david.vrabel@citrix.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] xen-pciback: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140225083230.GA2794@dhcp-26-207.brq.redhat.com>
-References: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
- <5304CC49.7020000@oracle.com>
- <5304D063.90000@oracle.com>
- <20140219160501.GA32067@dhcp-26-207.brq.redhat.com>
- <5304DABD.9000605@oracle.com>
- <20140221165235.GF17353@dhcp-26-207.brq.redhat.com>
- <20140221165340.GG17353@dhcp-26-207.brq.redhat.com>
- <20140224191831.GA7056@phenom.dumpdata.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26021 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357AbaBDScS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 13:32:18 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
+References: <cover.1389904166.git.agordeev@redhat.com>
+	<ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+	<20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
+Date: Tue, 4 Feb 2014 20:32:12 +0200
+In-Reply-To: <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> (Alexander
+	Gordeev's message of "Thu, 30 Jan 2014 14:48:20 +0100")
+Message-ID: <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140224191831.GA7056@phenom.dumpdata.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 24, 2014 at 02:18:31PM -0500, Konrad Rzeszutek Wilk wrote:
-> On Fri, Feb 21, 2014 at 05:53:40PM +0100, Alexander Gordeev wrote:
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers
-> > using these two interfaces need to be updated to use the
-> > new pci_enable_msi_range()  or pci_enable_msi_exact()
-> > and pci_enable_msix_range() or pci_enable_msix_exact()
-> > interfaces.
-> 
-> What is this based on? Thanks.
+Alexander Gordeev <agordeev@redhat.com> writes:
 
-3.14-rc4
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/pci.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+> index 29fd197..6525e1f 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -2414,8 +2414,6 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
+>  		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
+>  		if (ret == 0)
+>  			return 0;
+> -		if (ret > 0)
+> -			pci_disable_msi(ar_pci->pdev);
+
+I don't understand how this is superfluous. When I read the
+documentation for pci_enable_msi_block() it states that if it can't
+allocate all requests, it will return the number requests it could
+allocate. And in that case we want to fall back other modes.
+
+Am I missing something?
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Kalle Valo
