@@ -1,48 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:49719 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710AbaB0Qp1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 11:45:27 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linaro-kernel@lists.linaro.org
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic host_bridge from device tree
-Date: Thu, 27 Feb 2014 17:45:24 +0100
-Message-ID: <5679503.gWR3MVnuZs@wuerfel>
-In-Reply-To: <20140227162003.GP1692@e106497-lin.cambridge.arm.com>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com> <5722634.VerP6OyMlP@wuerfel> <20140227162003.GP1692@e106497-lin.cambridge.arm.com>
+Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:55932 "EHLO
+	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934414AbaBDVrF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 16:47:05 -0500
+Date: Tue, 4 Feb 2014 13:47:04 -0800 (PST)
+From: Arvind Kumar <arvindkumar@vmware.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, pv-drivers@vmware.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Message-ID: <1720135544.11645858.1391550424291.JavaMail.root@vmware.com>
+In-Reply-To: <9a6fa1d91c1f23ee0bbde7c854ce03f22054345a.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com> <9a6fa1d91c1f23ee0bbde7c854ce03f22054345a.1391512266.git.agordeev@redhat.com>
+Subject: Re: [PATCH 22/22] vmw_pvscsi: Use pci_enable_msix_range()
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 27 February 2014 16:20:03 Liviu Dudau wrote:
-> On Thu, Feb 27, 2014 at 03:58:41PM +0000, Arnd Bergmann wrote:
-> > On Thursday 27 February 2014 14:13:22 Liviu Dudau wrote:
-> > > 
-> > > It is useful for host bridge drivers as this is the only place where we store
-> > > the physical CPU address for the IO range. This is then needed when setting up the
-> > > translation registers. Also used when calling the pci_ioremap_io function that I'm
-> > > introducing in the AArch64 patches.
-> > 
-> > I don't understand what translation windows you are talking about. Is this
-> > about how the PCI spaces are mapped into the CPU address space? If so, I
-> > would strongly recommend to have this handled by the boot loader before
-> > calling into the kernel. For ARM32, we have a lot of embedded systems
-> > that require the PCI host driver to set up those windows, but actually
-> > it would be much better to just have the firmware tell us what the setup
-> > is and that use that.
-> 
-> The AXI to PCI bridge that I'm using has a set of registers for doing address translation.
-> When it sees an AXI translation that matches the programmed translation window will
-> convert it into a PCI write using the PCI address base written in that translation window.
-> In other words you basically program the DT range into those address translation registers
-> and the bridge does the AXI to PCI conversion for you.
+Looks fine to me.
 
-Right. That should definitely be done in the boot loader
-before Linux is started.
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
 
+Thanks!
+Arvind
 
-	Arnd
+----- Original Message -----
+From: "Alexander Gordeev" <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: "Alexander Gordeev" <agordeev@redhat.com>, "Arvind Kumar" <arvindkumar@vmware.com>, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Sent: Tuesday, February 4, 2014 3:17:08 AM
+Subject: [PATCH 22/22] vmw_pvscsi: Use pci_enable_msix_range()
+
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Arvind Kumar <arvindkumar@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/vmw_pvscsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index b9755ec..c521f8e 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1078,8 +1078,8 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
+ 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
+ 	int ret;
+ 
+-	ret = pci_enable_msix(adapter->dev, &entry, 1);
+-	if (ret)
++	ret = pci_enable_msix_range(adapter->dev, &entry, 1, 1);
++	if (ret < 0)
+ 		return ret;
+ 
+ 	*irq = entry.vector;
+-- 
+1.7.7.6
