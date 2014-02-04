@@ -1,95 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:21559 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752943AbaBLCxd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 21:53:33 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH part1 v6 4/7] PCI: Introduce pci_serial_number_changed()
-Date: Wed, 12 Feb 2014 10:52:50 +0800
-Message-ID: <1392173573-59844-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
-References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:35826 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753955AbaBDLPs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:15:48 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Lukasz Dorau <lukasz.dorau@intel.com>,
+	Maciej Patelczyk <maciej.patelczyk@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>, intel-linux-scu@intel.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 10/22] isci: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:16:56 +0100
+Message-Id: <ff99281291c3189da00a7d8150da326808a723ea.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sometimes OS do not know the physical device swap,
-for instance, some device hotplug during system suspend.
-Interrupt can not deliver to OS in some platform.
-So we can use pci serial number capability to detect this
-issue if device supports serial number.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: intel-linux-scu@intel.com
+Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/pci.c   |   28 ++++++++++++++++++++++++++++
- include/linux/pci.h |    2 ++
- 2 files changed, 30 insertions(+), 0 deletions(-)
+ drivers/scsi/isci/init.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a8c1c2d..af34057 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2199,6 +2199,34 @@ void pci_dsn_init(struct pci_dev *dev)
- }
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index d25d0d8..b99f307 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -356,8 +356,9 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
+ 	for (i = 0; i < num_msix; i++)
+ 		pci_info->msix_entries[i].entry = i;
  
- /**
-+ * pci_serial_number_changed - check the device SN is changed
-+ * @pdev: the PCI device
-+ *
-+ * check the device serial number is changed.
-+ * if device does not support device serial number,
-+ * return false.
-+ */
-+bool pci_serial_number_changed(struct pci_dev *pdev)
-+{
-+	u64 old, new;
-+	old = pdev->sn;
-+
-+	if (!pci_is_pcie(pdev))
-+		return false;
-+
-+	new = pci_device_serial_number(pdev->bus,
-+			pdev->devfn);
-+
-+	if (old != new) {
-+		pr_info("%s: Device Serial Number Changed!\n",
-+				pci_name(pdev));
-+		return true;
-+	} else
-+		return false;
-+}
-+EXPORT_SYMBOL(pci_serial_number_changed);
-+
-+/**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3631859..d60c0b6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1025,6 +1025,8 @@ void pci_unlock_rescan_remove(void);
- ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+-	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
+-	if (err)
++	err = pci_enable_msix_range(pdev,
++				    pci_info->msix_entries, num_msix, num_msix);
++	if (err < 0)
+ 		goto intx;
  
-+bool pci_serial_number_changed(struct pci_dev *pdev);
-+
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
- void pci_bus_assign_resources(const struct pci_bus *bus);
+ 	for (i = 0; i < num_msix; i++) {
 -- 
-1.7.1
-
+1.7.7.6
 
