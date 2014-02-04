@@ -1,88 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:48655 "EHLO
-	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750737AbaBTFX1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 00:23:27 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <jg1.han@samsung.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Ajay Khandelwal <ajay.khandelwal@st.com>,
-	Bjorn Helgaas <bhelgass@google.com>, <spear-devel@list.st.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io and mem viewport
-Date: Thu, 20 Feb 2014 10:52:54 +0530
-Message-ID: <1392873774-22249-2-git-send-email-mohit.kumar@st.com>
-In-Reply-To: <1392873774-22249-1-git-send-email-mohit.kumar@st.com>
-References: <1392873774-22249-1-git-send-email-mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:49518 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754733AbaBDQxi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 11:53:38 -0500
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, Liviu.Dudau@arm.com, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, mohit.kumar@st.com,
+	Will Deacon <will.deacon@arm.com>
+Subject: [PATCH 0/3] ARM: PCI: implement virtual PCI host controller
+Date: Tue,  4 Feb 2014 16:53:01 +0000
+Message-Id: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch correct iATU programming for cfg1, io and mem viewport.
-Enable ATU only after configuring it.
+Hello,
 
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Signed-off-by: Ajay Khandelwal <ajay.khandelwal@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Bjorn Helgaas <bhelgass@google.com>
-Cc: spear-devel@list.st.com
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/host/pcie-designware.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+This small set of patches brings PCI support to mach-virt based upon an
+idealised host controller (see patch 2 for more details).
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 391966f..46f4a19 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -522,13 +522,13 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- 	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
- 	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
- 	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
- 			  PCIE_ATU_LIMIT);
- 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- }
- 
- static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
-@@ -537,7 +537,6 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- 	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
- 	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
- 	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
-@@ -545,6 +544,7 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
- 			  PCIE_ATU_UPPER_TARGET);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- }
- 
- static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
-@@ -553,7 +553,6 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
- 			  PCIE_ATU_VIEWPORT);
- 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
--	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- 	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
- 	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
- 	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
-@@ -561,6 +560,7 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
- 	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
- 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
- 			  PCIE_ATU_UPPER_TARGET);
-+	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
- }
- 
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+This has been tested with kvmtool, for which I have a corresponding set
+of patches which you can find in my kvmtool/pci branch at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git
+
+Once the arm64 PCI patches from Liviu have stabilised, I plan to port
+this host controller to work there as well.
+
+The main issue I can see with this code is how to describe configuration
+space in the device-tree. I'm following the ePAPR PCI bindings (SS == 0)
+, but this adds an ugly 'case 0:' line in the pci range parser, which
+also exists in mainline for the pcie-designware.c driver.
+
+All feedback welcome,
+
+Will
+
+
+Will Deacon (3):
+  ARM: bios32: use pci_enable_resource to enable PCI resources
+  PCI: ARM: add support for virtual PCI host controller
+  ARM: mach-virt: allow PCI support to be selected
+
+ .../devicetree/bindings/pci/linux,pci-virt.txt     |  38 ++++
+ arch/arm/kernel/bios32.c                           |  35 ++--
+ arch/arm/mach-virt/Kconfig                         |   1 +
+ drivers/pci/host/Kconfig                           |   7 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-virt.c                        | 200 +++++++++++++++++++++
+ 6 files changed, 257 insertions(+), 25 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/linux,pci-virt.txt
+ create mode 100644 drivers/pci/host/pci-virt.c
+
 -- 
-1.7.0.1
+1.8.2.2
 
