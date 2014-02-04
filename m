@@ -1,42 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 10 Feb 2014 17:16:24 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/8] PCI: cleanup pci_scan_bridge
-Message-ID: <20140211001624.GA12851@google.com>
-References: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1390510768-5652-1-git-send-email-andreas.noever@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:4493 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754214AbaBDLQH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:16:07 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Arvind Kumar <arvindkumar@vmware.com>, pv-drivers@vmware.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 22/22] vmw_pvscsi: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:17:08 +0100
+Message-Id: <9a6fa1d91c1f23ee0bbde7c854ce03f22054345a.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 23, 2014 at 09:59:20PM +0100, Andreas Noever wrote:
-> I have been reading the code around pci_scan_bridge and noticed a few oddities.
-> These patches try to cleanup some of the these things.
-> 
-> Most of the patches make also sense in isolation, but some make more sense with
-> the previous ones applied as well. None of the patches fix any observed bugs.
-> Patch 5 fixes a (probably harmless) dmesg.
-> 
-> The changes related to CardBus probing are completely untested.
-> 
-> Andreas
-> 
-> Andreas Noever (8):
->   PCI: Increment max correctly in pci_scan_bridge.
->   PCI: Clarify the "scan anyway" comment in pci_scan_bridge.
->   PCI: Assign CardBus bus number only during the second pass.
->   PCI: Use request_resource_conflict instead of insert_ for bus numbers.
->   PCI: Make sure bus number resources stay within their parents bounds.
->   PCI: Remove pci_fixup_parent_subordinate_busnr.
->   PCI: Check for child busses which use more bus numbers than allocated.
->   PCI: Don't scan random busses in pci_scan_bridge.
-> 
->  drivers/pci/probe.c | 78 +++++++++++++++++++++--------------------------------
->  1 file changed, 31 insertions(+), 47 deletions(-)
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-I applied all these to pci/scan-bridge for v3.15, thanks!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Arvind Kumar <arvindkumar@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/vmw_pvscsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Bjorn
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index b9755ec..c521f8e 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1078,8 +1078,8 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
+ 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
+ 	int ret;
+ 
+-	ret = pci_enable_msix(adapter->dev, &entry, 1);
+-	if (ret)
++	ret = pci_enable_msix_range(adapter->dev, &entry, 1, 1);
++	if (ret < 0)
+ 		return ret;
+ 
+ 	*irq = entry.vector;
+-- 
+1.7.7.6
+
