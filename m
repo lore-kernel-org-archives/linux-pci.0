@@ -1,74 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24339 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:64663 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752142AbaBXIAt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:00:49 -0500
+	id S1754177AbaBDLQE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:16:04 -0500
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 04/23] bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:04 +0100
-Message-Id: <0b55d0b643b1fd831a32c17030b1fc11c011a802.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 20/22] qla2xxx: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:17:06 +0100
+Message-Id: <36da37b8ca3a13e24a3363ed19d6a08061c85970.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 As result of deprecation of MSI-X/MSI enablement functions
 pci_enable_msix() and pci_enable_msi_block() all drivers
 using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
+new pci_enable_msi_range() and pci_enable_msix_range()
 interfaces.
 
+Log message code 0x00c6 preserved, although it is reported
+after successful call to pci_enable_msix_range(), not before
+possibly unsuccessful call to pci_enable_msix(). Consumers
+of the error code should not notice the difference.
+
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: qla2xxx-upstream@qlogic.com
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/bfa/bfad.c |   18 +++++-------------
- 1 files changed, 5 insertions(+), 13 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
+ 1 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index e7e4774..b7b0733 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1234,26 +1234,18 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
- 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 9bc86b9..b2dcfa4 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2896,27 +2896,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	for (i = 0; i < ha->msix_count; i++)
+ 		entries[i].entry = i;
  
--		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
-+		error = pci_enable_msix_exact(bfad->pcidev,
-+					      msix_entries, bfad->nvec);
- 		/* In CT1 & CT2, try to allocate just one vector */
--		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-+		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
- 			printk(KERN_WARNING "bfa %s: trying one msix "
- 			       "vector failed to allocate %d[%d]\n",
- 			       bfad->pci_name, bfad->nvec, error);
- 			bfad->nvec = 1;
--			error = pci_enable_msix(bfad->pcidev,
--						msix_entries, bfad->nvec);
-+			error = pci_enable_msix_exact(bfad->pcidev,
-+						      msix_entries, 1);
- 		}
- 
--		/*
--		 * Only error number of vector is available.
--		 * We don't have a mechanism to map multiple
--		 * interrupts into one vector, so even if we
--		 * can try to request less vectors, we don't
--		 * know how to associate interrupt events to
--		 *  vectors. Linux doesn't duplicate vectors
--		 * in the MSIX table for this case.
--		 */
- 		if (error) {
- 			printk(KERN_WARNING "bfad%d: "
- 			       "pci_enable_msix failed (%d), "
+-	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-	if (ret) {
+-		if (ret < MIN_MSIX_COUNT)
+-			goto msix_failed;
+-
++	ret = pci_enable_msix_range(ha->pdev,
++				    entries, MIN_MSIX_COUNT, ha->msix_count);
++	if (ret < 0) {
++		ql_log(ql_log_fatal, vha, 0x00c7,
++		    "MSI-X: Failed to enable support, "
++		    "giving   up -- %d/%d.\n",
++		    ha->msix_count, ret);
++		goto msix_out;
++	} else if (ret < ha->msix_count) {
+ 		ql_log(ql_log_warn, vha, 0x00c6,
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
+-		ha->msix_count = ret;
+-		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-		if (ret) {
+-msix_failed:
+-			ql_log(ql_log_fatal, vha, 0x00c7,
+-			    "MSI-X: Failed to enable support, "
+-			    "giving   up -- %d/%d.\n",
+-			    ha->msix_count, ret);
+-			goto msix_out;
+-		}
+-		ha->max_rsp_queues = ha->msix_count - 1;
+ 	}
++	ha->msix_count = ret;
++	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
 -- 
 1.7.7.6
 
