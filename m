@@ -1,96 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:62638 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738AbaBHBui (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Feb 2014 20:50:38 -0500
-Message-ID: <52F58D5D.40503@huawei.com>
-Date: Sat, 8 Feb 2014 09:50:21 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH] PCI,pciehp: Don't set slot off when found device already
- exists.
-References: <1389600168-23228-1-git-send-email-wangyijing@huawei.com> <20140129223850.GH16825@google.com>
-In-Reply-To: <20140129223850.GH16825@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mx1.redhat.com ([209.132.183.28]:25517 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754478AbaBDLQv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:16:51 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
+	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 08/22] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
+Date: Tue,  4 Feb 2014 12:16:54 +0100
+Message-Id: <5e62a50e8b663ccca1f362734406f168b6cfdd53.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/1/30 6:38, Bjorn Helgaas wrote:
-> On Mon, Jan 13, 2014 at 04:02:48PM +0800, Yijing Wang wrote:
->> If we found device already exists during hot add device, we should
->> leave it, not to set slot off.
-> 
-> Does this fix a defect?  What's the scenario where this fixes a problem
-> in the current code?  I think this change makes sense, but I'd like to
-> have a better description of the problem that we're fixing.
-> 
-> I see the following path that looks like it might be a problem with the
-> current code if slot power is off when we resume after a suspend:
-> 
->     pciehp_resume
->       pciehp_enable_slot
->         board_added
->           pciehp_configure_device
-> 
-> Is this the scenario you're addressing?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: iss_storagedev@hp.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/hpsa.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Yes, it is.
-
-I found this case by reviewing the code. But I have no platform
-supports pciehp resume. So I can not test it in real.
-
-Thanks!
-Yijing.
-
-> 
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/hotplug/pciehp_ctrl.c |    3 ++-
->>  drivers/pci/hotplug/pciehp_pci.c  |    2 +-
->>  2 files changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
->> index 38f0186..f27b0ff 100644
->> --- a/drivers/pci/hotplug/pciehp_ctrl.c
->> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
->> @@ -224,7 +224,8 @@ static int board_added(struct slot *p_slot)
->>  	if (retval) {
->>  		ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
->>  			 pci_domain_nr(parent), parent->number);
->> -		goto err_exit;
->> +		if (retval != -EEXIST)
->> +			goto err_exit;
->>  	}
->>  
->>  	if (PWR_LED(ctrl))
->> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
->> index aac7a40..9b87b49 100644
->> --- a/drivers/pci/hotplug/pciehp_pci.c
->> +++ b/drivers/pci/hotplug/pciehp_pci.c
->> @@ -48,7 +48,7 @@ int pciehp_configure_device(struct slot *p_slot)
->>  			 "at %04x:%02x:00, cannot hot-add\n", pci_name(dev),
->>  			 pci_domain_nr(parent), parent->number);
->>  		pci_dev_put(dev);
->> -		return -EINVAL;
->> +		return -EEXIST;
->>  	}
->>  
->>  	num = pci_scan_slot(parent, PCI_DEVFN(0, 0));
->> -- 
->> 1.7.1
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
-
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 868318a..68eec7a 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4180,13 +4180,14 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 		if (err > 0) {
+ 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
+ 			       "available\n", err);
+-			goto default_int_mode;
++			goto single_msi_mode;
+ 		} else {
+ 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+ 			       err);
+-			goto default_int_mode;
++			goto single_msi_mode;
+ 		}
+ 	}
++single_msi_mode:
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+ 		dev_info(&h->pdev->dev, "MSI\n");
+ 		if (!pci_enable_msi(h->pdev))
 -- 
-Thanks!
-Yijing
+1.7.7.6
 
