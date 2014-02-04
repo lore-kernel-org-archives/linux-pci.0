@@ -1,231 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:41551 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439AbaBYOME (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 09:12:04 -0500
-Received: by mail-yk0-f176.google.com with SMTP id 19so18755815ykq.7
-        for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2014 06:12:03 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.17.9]:61936 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbaBDLys (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 06:54:48 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+Date: Tue, 04 Feb 2014 12:54:11 +0100
+Message-ID: <27019203.VEiCA8u8iI@wuerfel>
+In-Reply-To: <20140204110922.GA27975@e106497-lin.cambridge.arm.com>
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <3277167.UhkSU8Sf56@wuerfel> <20140204110922.GA27975@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1393334743.1282.8.camel@pasglop>
-References: <1393309931-20405-1-git-send-email-amurray@embedded-bits.co.uk>
-	<1393334743.1282.8.camel@pasglop>
-Date: Tue, 25 Feb 2014 14:12:03 +0000
-Message-ID: <CAPcvp5EomG243_8_bYoWRJH2EbwfhWSEkSjXOzABcmXhNMtvgQ@mail.gmail.com>
-Subject: Re: [PATCH] powerpc/pci: Use of_pci_range_parser helper in pci_process_bridge_OF_ranges
-From: Andrew Murray <amurray@embedded-bits.co.uk>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linuxppc-dev@lists.ozlabs.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	bhelgass@google.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25 February 2014 13:25, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Tue, 2014-02-25 at 06:32 +0000, Andrew Murray wrote:
->> This patch updates the implementation of pci_process_bridge_OF_ranges to use
->> the of_pci_range_parser helpers.
->>
->> Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
->> ---
->> I've verified that this builds, however I have no hardware to test this.
->> ---
+On Tuesday 04 February 2014 11:09:22 Liviu Dudau wrote:
+> On Tue, Feb 04, 2014 at 08:44:36AM +0000, Arnd Bergmann wrote:
+
+> > Well, I/O space never starts at physical zero in reality, so it is
+> > broken in practice. The CONFIG_GENERIC_IOMAP option tries to solve
+> > the problem of I/O spaces that are not memory mapped, which is
+> > actually quite rare (x86, ia64, some rare powerpc bridges, and possibly
+> > Alpha). The norm is that if you have I/O space, it is memory mapped
+> > and you don't need GENERIC_IOMAP. I think most of the architectures
+> > selecting GENERIC_IOMAP have incorrectly copied that from x86.
+> 
+> If you are talking about CPU addresses for I/O space, then you are (mostly?) right.
+> I've seen some code in powerpc that tries to handle the case where I/O starts at zero.
 >
-> Thanks. A cursory review looks good but I need to spend a bit more time
-> making sure our various special cases are handled properly.
->
-> It's tracked on patchwork so unless you have an update to the patch,
-> it won't be lost, but it might take a little while before I get to
-> actually merge it.
+> For MMIO, yes, it would be crazy to start at CPU address zero. But,
+> the ioport_map takes a port number, and those do start at zero, right?
 
-Thanks for the response - Yes it's easy to screw this stuff up.
+What I meant is that asm-generic/io.h assumes that the I/O ports are
+mapped at /virtual/ address zero, which is even more crazy, since that
+is normally in user space. Sorry for confusing it with physical address
+zero.
 
-Please note that some of the special cases are handled by the parser
-helper e.g. consumption of contiguous ranges, assignment to 'struct
-resource', etc.
+Now the GENERIC_IOMAP uses a similar fiction by defining that virtual
+address token 0x10000-0x1ffff are used to access I/O space when calling
+inb/outb, but that is something you only need to do when you have
+no memory mapped I/O port.
 
-It should also be pointed out that this is now once again very similar
-to the Microblaze implementation.
+Some older ARM platforms (PXA for instance) also defined the I/O space
+to start at virtual address zero, and use a per-bus io_offset that was
+equal to the ioremapped I/O window. This actually works, but it means
+that the logical port numbers are all high, and you have to set
+IO_SPACE_LIMIT to ULONG_MAX, and it breaks horribly for any driver that
+tries to store a port number in a type that is shorter than 'unsigned
+long'. We definitely don't want to do this for new code.
 
-Thanks,
+> > > My main concern with the existing API is the requirement to have a subsys_initcall
+> > > in your host bridge or mach code, due to the way the initialisation is done (you
+> > > need the DT code to probe your driver, but you cannot start the scanning of the
+> > > PCI bus until the arch code is initialised, so it gets deferred via
+> > > subsys_initcall when it calls pci_common_init). I bet that if one tries to
+> > > instantiate a Tegra PCI host bridge controller on a Marvell platform things will
+> > > break pretty quickly (random example here).
+> >
+> > I'm not following here. All the new host controller drivers should
+> > be platform drivers that only bind to the host devices in DT
+> > that are present. Both mvebu and tegra use a normal "module_platform_driver"
+> > for initialization, not a "subsys_initcall".
+> 
+> I was actually looking at mach-dove, I thought that was Marvell as well.
 
-Andrew Murray
+mach-dove is going away soon, it will get merged into mach-mvebu and
+then use drivers/pci/host/pci-mvebu.c
+ 
+> But both mvebu and tegra call pci_common_init_dev. The busnr gets assigned based on
+> the registration order. I wonder if any of the host bridge code copes with having
+> assigned a bus number other than zero for its "root bus".
 
->
-> Cheers,
-> Ben.
->
->>  arch/powerpc/kernel/pci-common.c | 88 +++++++++++++---------------------------
->>  1 file changed, 29 insertions(+), 59 deletions(-)
->>
->> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->> index d9476c1..a05fe18 100644
->> --- a/arch/powerpc/kernel/pci-common.c
->> +++ b/arch/powerpc/kernel/pci-common.c
->> @@ -666,60 +666,36 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
->>  void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->>                                 struct device_node *dev, int primary)
->>  {
->> -     const __be32 *ranges;
->> -     int rlen;
->> -     int pna = of_n_addr_cells(dev);
->> -     int np = pna + 5;
->>       int memno = 0;
->> -     u32 pci_space;
->> -     unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
->>       struct resource *res;
->> +     struct of_pci_range range;
->> +     struct of_pci_range_parser parser;
->>
->>       printk(KERN_INFO "PCI host bridge %s %s ranges:\n",
->>              dev->full_name, primary ? "(primary)" : "");
->>
->> -     /* Get ranges property */
->> -     ranges = of_get_property(dev, "ranges", &rlen);
->> -     if (ranges == NULL)
->> +     /* Check for ranges property */
->> +     if (of_pci_range_parser_init(&parser, dev))
->>               return;
->>
->>       /* Parse it */
->> -     while ((rlen -= np * 4) >= 0) {
->> -             /* Read next ranges element */
->> -             pci_space = of_read_number(ranges, 1);
->> -             pci_addr = of_read_number(ranges + 1, 2);
->> -             cpu_addr = of_translate_address(dev, ranges + 3);
->> -             size = of_read_number(ranges + pna + 3, 2);
->> -             ranges += np;
->> -
->> +     for_each_of_pci_range(&parser, &range) {
->>               /* If we failed translation or got a zero-sized region
->>                * (some FW try to feed us with non sensical zero sized regions
->>                * such as power3 which look like some kind of attempt at exposing
->>                * the VGA memory hole)
->>                */
->> -             if (cpu_addr == OF_BAD_ADDR || size == 0)
->> +             if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->>                       continue;
->>
->> -             /* Now consume following elements while they are contiguous */
->> -             for (; rlen >= np * sizeof(u32);
->> -                  ranges += np, rlen -= np * 4) {
->> -                     if (of_read_number(ranges, 1) != pci_space)
->> -                             break;
->> -                     pci_next = of_read_number(ranges + 1, 2);
->> -                     cpu_next = of_translate_address(dev, ranges + 3);
->> -                     if (pci_next != pci_addr + size ||
->> -                         cpu_next != cpu_addr + size)
->> -                             break;
->> -                     size += of_read_number(ranges + pna + 3, 2);
->> -             }
->> -
->>               /* Act based on address space type */
->>               res = NULL;
->> -             switch ((pci_space >> 24) & 0x3) {
->> -             case 1:         /* PCI IO space */
->> +             switch (range.flags & IORESOURCE_TYPE_BITS) {
->> +             case IORESOURCE_IO:
->>                       printk(KERN_INFO
->>                              "  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
->> -                            cpu_addr, cpu_addr + size - 1, pci_addr);
->> +                            range.cpu_addr, range.cpu_addr + range.size - 1,
->> +                            range.pci_addr);
->>
->>                       /* We support only one IO range */
->>                       if (hose->pci_io_size) {
->> @@ -729,11 +705,12 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->>                       }
->>  #ifdef CONFIG_PPC32
->>                       /* On 32 bits, limit I/O space to 16MB */
->> -                     if (size > 0x01000000)
->> -                             size = 0x01000000;
->> +                     if (range.size > 0x01000000)
->> +                             range.size = 0x01000000;
->>
->>                       /* 32 bits needs to map IOs here */
->> -                     hose->io_base_virt = ioremap(cpu_addr, size);
->> +                     hose->io_base_virt = ioremap(range.cpu_addr,
->> +                                             range.size);
->>
->>                       /* Expect trouble if pci_addr is not 0 */
->>                       if (primary)
->> @@ -743,20 +720,20 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->>                       /* pci_io_size and io_base_phys always represent IO
->>                        * space starting at 0 so we factor in pci_addr
->>                        */
->> -                     hose->pci_io_size = pci_addr + size;
->> -                     hose->io_base_phys = cpu_addr - pci_addr;
->> +                     hose->pci_io_size = range.pci_addr + range.size;
->> +                     hose->io_base_phys = range.cpu_addr - range.pci_addr;
->>
->>                       /* Build resource */
->>                       res = &hose->io_resource;
->> -                     res->flags = IORESOURCE_IO;
->> -                     res->start = pci_addr;
->> +                     range.cpu_addr = range.pci_addr;
->>                       break;
->> -             case 2:         /* PCI Memory space */
->> -             case 3:         /* PCI 64 bits Memory space */
->> +             case IORESOURCE_MEM:
->>                       printk(KERN_INFO
->>                              " MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
->> -                            cpu_addr, cpu_addr + size - 1, pci_addr,
->> -                            (pci_space & 0x40000000) ? "Prefetch" : "");
->> +                            range.cpu_addr, range.cpu_addr + range.size - 1,
->> +                            range.pci_addr,
->> +                            (range.pci_space & 0x40000000) ?
->> +                            "Prefetch" : "");
->>
->>                       /* We support only 3 memory ranges */
->>                       if (memno >= 3) {
->> @@ -765,28 +742,21 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
->>                               continue;
->>                       }
->>                       /* Handles ISA memory hole space here */
->> -                     if (pci_addr == 0) {
->> +                     if (range.pci_addr == 0) {
->>                               if (primary || isa_mem_base == 0)
->> -                                     isa_mem_base = cpu_addr;
->> -                             hose->isa_mem_phys = cpu_addr;
->> -                             hose->isa_mem_size = size;
->> +                                     isa_mem_base = range.cpu_addr;
->> +                             hose->isa_mem_phys = range.cpu_addr;
->> +                             hose->isa_mem_size = range.size;
->>                       }
->>
->>                       /* Build resource */
->> -                     hose->mem_offset[memno] = cpu_addr - pci_addr;
->> +                     hose->mem_offset[memno] = range.cpu_addr -
->> +                                                     range.pci_addr;
->>                       res = &hose->mem_resources[memno++];
->> -                     res->flags = IORESOURCE_MEM;
->> -                     if (pci_space & 0x40000000)
->> -                             res->flags |= IORESOURCE_PREFETCH;
->> -                     res->start = cpu_addr;
->>                       break;
->>               }
->>               if (res != NULL) {
->> -                     res->name = dev->full_name;
->> -                     res->end = res->start + size - 1;
->> -                     res->parent = NULL;
->> -                     res->sibling = NULL;
->> -                     res->child = NULL;
->> +                     of_pci_range_to_resource(&range, dev, res);
->>               }
->>       }
->>  }
->
->
+I think all "new" host bridges now use nr_controllers=1, which means
+that you always start at but number zero and use PCI domain if
+you have multiple independent root bridges.
 
+> >
+> > Right. I guess we can support both interfaces on ARM32 for the forseeable
+> > future (renaming the new one) and just change the existing implementation
+> > to update the bitmap. Any cross-platform host controller driver would
+> > have to use the new interface however.
+> 
+> OK, I can try to add the function to my patch. Call it pci_ioremap_iores?
 
+Sounds ok, I can't think of anything better at least.
 
--- 
-Andrew Murray, Director
-Embedded Bits Limited
-www.embedded-bits.co.uk
-
-Embedded Bits Limited is a company registered in England and Wales
-with company number 08178608 and VAT number 140658911. Registered
-office: Embedded Bits Limited c/o InTouch Accounting Ltd. Bristol and
-West House Post Office Road Bournemouth Dorset BH1 1BL
+	Arnd
