@@ -1,80 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52429 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753832AbaBCX2c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:32 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 2/24][Resend] ACPI / hotplug / PCI: Move PCI rescan-remove locking to hotplug_event()
-Date: Tue, 04 Feb 2014 00:15:50 +0100
-Message-ID: <3356372.HPHJPAeHZz@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, xjtuwjp@gmail.com,
+	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 16/22] pm8001: Fix invalid success return when request_irq() failed
+Date: Tue,  4 Feb 2014 12:17:02 +0100
+Message-Id: <f724cdc95b9e1eb578cf7297ad32b830885f681c.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+When enabling MSI-X if a call to request_irq() failed
+pm8001_setup_msix() still returns success. This udate
+fixes the described misbehaviour.
 
-Commit 9217a984671e (ACPI / hotplug / PCI: Use global PCI rescan-remove
-locking) modified ACPIPHP to protect its PCI device removal and addition
-code paths from races against sysfs-driven rescan and remove operations
-with the help of PCI rescan-remove locking.  However, it overlooked the
-fact that hotplug_event_work() is not the only caller of hotplug_event()
-which may also be called by dock_hotplug_event() and that code path
-is missing the PCI rescan-remove locking.  This means that, although
-the PCI rescan-remove lock is held as appropriate during the handling
-of events originating from handle_hotplug_event(), the ACPIPHP's
-operations resulting from dock events may still suffer the race
-conditions that commit 9217a984671e was supposed to eliminate.
-
-To address that problem, move the PCI rescan-remove locking from
-hotplug_event_work() to hotplug_event() so that it is used regardless
-of the way that function is invoked.
-
-Revamps: 9217a984671e (ACPI / hotplug / PCI: Use global PCI rescan-remove locking)
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: xjtuwjp@gmail.com
+Cc: lindar_liu@usish.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/pm8001/pm8001_init.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -852,6 +852,7 @@ static void hotplug_event(acpi_handle ha
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 73a120d..efffbb9 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -739,9 +739,10 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+ 			pm8001_ha->irq_vector[i].irq_id = i;
+ 			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
  
- 	mutex_unlock(&acpiphp_context_lock);
- 
-+	pci_lock_rescan_remove();
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
- 	switch (type) {
-@@ -905,6 +906,7 @@ static void hotplug_event(acpi_handle ha
- 		break;
- 	}
- 
-+	pci_unlock_rescan_remove();
- 	if (bridge)
- 		put_bridge(bridge);
- }
-@@ -915,11 +917,9 @@ static void hotplug_event_work(void *dat
- 	acpi_handle handle = context->handle;
- 
- 	acpi_scan_lock_acquire();
--	pci_lock_rescan_remove();
- 
- 	hotplug_event(handle, type, context);
- 
--	pci_unlock_rescan_remove();
- 	acpi_scan_lock_release();
- 	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
- 	put_bridge(context->func.parent);
+-			if (request_irq(pm8001_ha->msix_entries[i].vector,
++			rc = request_irq(pm8001_ha->msix_entries[i].vector,
+ 				pm8001_interrupt_handler_msix, flag,
+-				intr_drvname[i], &(pm8001_ha->irq_vector[i]))) {
++				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
++			if (rc) {
+ 				for (j = 0; j < i; j++)
+ 					free_irq(
+ 					pm8001_ha->msix_entries[j].vector,
+-- 
+1.7.7.6
 
