@@ -1,82 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 14/24][Update] ACPI / hotplug / PCI: Simplify hotplug_event()
-Date: Tue, 04 Feb 2014 00:33:46 +0100
-Message-ID: <2410580.0hC0rE6lqd@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:10998 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754174AbaBDLQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 06:16:03 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 19/22] pmcraid: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:17:05 +0100
+Message-Id: <1ccc0975fb2814cd49dba008632faa87839df103.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-A few lines of code can be cut from hotplug_event() by defining
-and initializing the slot variable at the top of the function,
-so do that.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+ drivers/scsi/pmcraid.c |   13 ++-----------
+ 1 files changed, 2 insertions(+), 11 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -817,6 +817,7 @@ static void hotplug_event(acpi_handle ha
- {
- 	struct acpiphp_context *context = data;
- 	struct acpiphp_func *func = &context->func;
-+	struct acpiphp_slot *slot = func->slot;
- 	struct acpiphp_bridge *bridge;
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
-@@ -838,14 +839,11 @@ static void hotplug_event(acpi_handle ha
- 		pr_debug("%s: Bus check notify on %s\n", __func__, objname);
- 		pr_debug("%s: re-enumerating slots under %s\n",
- 			 __func__, objname);
--		if (bridge) {
-+		if (bridge)
- 			acpiphp_check_bridge(bridge);
--		} else {
--			struct acpiphp_slot *slot = func->slot;
-+		else if (!(slot->flags & SLOT_IS_GOING_AWAY))
-+			enable_slot(slot);
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index c06af7f..6d0f208 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
+ 		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
+ 			entries[i].entry = i;
  
--			if (!(slot->flags & SLOT_IS_GOING_AWAY))
--				enable_slot(slot);
+-		rc = pci_enable_msix(pdev, entries, num_hrrq);
+-		if (rc < 0)
++		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
++		if (num_hrrq < 0)
+ 			goto pmcraid_isr_legacy;
+ 
+-		/* Check how many MSIX vectors are allocated and register
+-		 * msi-x handlers for each of them giving appropriate buffer
+-		 */
+-		if (rc > 0) {
+-			num_hrrq = rc;
+-			if (pci_enable_msix(pdev, entries, num_hrrq))
+-				goto pmcraid_isr_legacy;
 -		}
- 		break;
- 
- 	case ACPI_NOTIFY_DEVICE_CHECK:
-@@ -853,12 +851,7 @@ static void hotplug_event(acpi_handle ha
- 		pr_debug("%s: Device check notify on %s\n", __func__, objname);
- 		if (bridge) {
- 			acpiphp_check_bridge(bridge);
--		} else {
--			struct acpiphp_slot *slot = func->slot;
 -
--			if (slot->flags & SLOT_IS_GOING_AWAY)
--				break;
--
-+		} else if (!(slot->flags & SLOT_IS_GOING_AWAY)) {
- 			/*
- 			 * Check if anything has changed in the slot and rescan
- 			 * from the parent if that's the case.
-@@ -871,7 +864,7 @@ static void hotplug_event(acpi_handle ha
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
- 		pr_debug("%s: Device eject notify on %s\n", __func__, objname);
--		acpiphp_disable_and_eject_slot(func->slot);
-+		acpiphp_disable_and_eject_slot(slot);
- 		break;
- 	}
- 
+ 		for (i = 0; i < num_hrrq; i++) {
+ 			pinstance->hrrq_vector[i].hrrq_id = i;
+ 			pinstance->hrrq_vector[i].drv_inst = pinstance;
+-- 
+1.7.7.6
+
