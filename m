@@ -1,64 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53554 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751378AbaB1NI4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 08:08:56 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 1/5] pci: Introduce pci_register_io_range() helper function.
-Date: Fri, 28 Feb 2014 13:08:18 +0000
-Message-Id: <1393592902-24750-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, xjtuwjp@gmail.com,
+	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 17/22] pm8001: Use pci_enable_msix_range()
+Date: Tue,  4 Feb 2014 12:17:03 +0100
+Message-Id: <b6ab9b0f70327c1a394dd8923576dfcae571a5b3.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some architectures do not share x86 simple view of the I/O space and
-instead use a range of addresses that map to external devices. For PCI,
-these ranges can be expressed by OF bindings in a device tree file.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Introduce a pci_register_io_range() helper function that can be used
-by the architecture code to keep track of the io ranges described by the
-PCI bindings.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: xjtuwjp@gmail.com
+Cc: lindar_liu@usish.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/pm8001/pm8001_init.c |   47 +++++++++++++++++++------------------
+ 1 files changed, 24 insertions(+), 23 deletions(-)
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 1a54f1f..d1bb30f 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -619,6 +619,11 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
- }
- EXPORT_SYMBOL(of_get_address);
- 
-+int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+{
-+	return 0;
-+}
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index efffbb9..2d4b06e 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -724,34 +724,35 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+ 		sizeof(pm8001_ha->msix_entries[0]);
+ 	for (i = 0; i < max_entry ; i++)
+ 		pm8001_ha->msix_entries[i].entry = i;
+-	rc = pci_enable_msix(pm8001_ha->pdev, pm8001_ha->msix_entries,
+-		number_of_intr);
++	rc = pci_enable_msix_range(pm8001_ha->pdev, pm8001_ha->msix_entries,
++		number_of_intr, number_of_intr);
+ 	pm8001_ha->number_of_intr = number_of_intr;
+-	if (!rc) {
+-		PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
+-			"pci_enable_msix request ret:%d no of intr %d\n",
+-					rc, pm8001_ha->number_of_intr));
+-
+-
+-		for (i = 0; i < number_of_intr; i++) {
+-			snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
+-					DRV_NAME"%d", i);
+-			pm8001_ha->irq_vector[i].irq_id = i;
+-			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
+-
+-			rc = request_irq(pm8001_ha->msix_entries[i].vector,
+-				pm8001_interrupt_handler_msix, flag,
+-				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
+-			if (rc) {
+-				for (j = 0; j < i; j++)
+-					free_irq(
+-					pm8001_ha->msix_entries[j].vector,
++	if (rc < 0)
++		return rc;
 +
- unsigned long __weak pci_address_to_pio(phys_addr_t address)
- {
- 	if (address > IO_SPACE_LIMIT)
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 5f6ed6b..40c418d 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
- extern const __be32 *of_get_address(struct device_node *dev, int index,
- 			   u64 *size, unsigned int *flags);
- 
-+extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
- extern unsigned long pci_address_to_pio(phys_addr_t addr);
- 
- extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
++	PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
++		"pci_enable_msix request ret:%d no of intr %d\n",
++				rc, pm8001_ha->number_of_intr));
++
++	for (i = 0; i < number_of_intr; i++) {
++		snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
++				DRV_NAME"%d", i);
++		pm8001_ha->irq_vector[i].irq_id = i;
++		pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
++
++		rc = request_irq(pm8001_ha->msix_entries[i].vector,
++			pm8001_interrupt_handler_msix, flag,
++			intr_drvname[i], &(pm8001_ha->irq_vector[i]));
++		if (rc) {
++			for (j = 0; j < i; j++) {
++				free_irq(pm8001_ha->msix_entries[j].vector,
+ 					&(pm8001_ha->irq_vector[i]));
+-				pci_disable_msix(pm8001_ha->pdev);
+-				break;
+ 			}
++			pci_disable_msix(pm8001_ha->pdev);
++			break;
+ 		}
+ 	}
++
+ 	return rc;
+ }
+ #endif
 -- 
-1.9.0
+1.7.7.6
 
