@@ -1,100 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:55478 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753494AbaBVAsv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 19:48:51 -0500
-Message-ID: <1393030127.15717.72.camel@deadeye.wl.decadent.org.uk>
-Subject: Re: [PATCH net-next 28/35] qlcnic: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Himanshu Madhani <himanshu.madhani@qlogic.com>,
-	Rajesh Borundia <rajesh.borundia@qlogic.com>,
-	Shahed Shaikh <shahed.shaikh@qlogic.com>,
-	linux-driver@qlogic.com, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Date: Sat, 22 Feb 2014 00:48:47 +0000
-In-Reply-To: <1393029870.15717.71.camel@deadeye.wl.decadent.org.uk>
-References: <cover.1392717502.git.agordeev@redhat.com>
-	 <cb8eb41f672c62d1149c375bdaf97ca3328703f9.1392717503.git.agordeev@redhat.com>
-	 <1393029870.15717.71.camel@deadeye.wl.decadent.org.uk>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-ZDW2wPQKcKj24tyYwZ5l"
-Mime-Version: 1.0
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:54636 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753796AbaBEC3N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:29:13 -0500
+Message-ID: <52F1A1F6.2000800@gmail.com>
+Date: Tue, 04 Feb 2014 18:29:10 -0800
+From: Rajat Jain <rajatxjain@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
+CC: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH v4 2/8] pciehp: Use link change notifications for hot-plug
+ and removal
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+A lot of systems do not have the fancy buttons and LEDs, and instead
+want to rely only on the Link state change events to drive the hotplug
+and removal state machinery.
+(http://www.spinics.net/lists/hotplug/msg05802.html)
 
---=-ZDW2wPQKcKj24tyYwZ5l
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This patch adds support for that functionality. Here are the details
+about the patch itself:
 
-On Sat, 2014-02-22 at 00:44 +0000, Ben Hutchings wrote:
-> On Tue, 2014-02-18 at 11:11 +0100, Alexander Gordeev wrote:
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers
-> > using these two interfaces need to be updated to use the
-> > new pci_enable_msi_range() and pci_enable_msix_range()
-> > interfaces.
-[...]
-> > --- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> > +++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> > @@ -701,13 +701,17 @@ enable_msix:
-> >  		for (vector =3D 0; vector < num_msix; vector++)
-> >  			adapter->msix_entries[vector].entry =3D vector;
-> > =20
-> > -		err =3D pci_enable_msix(pdev, adapter->msix_entries, num_msix);
-> > -		if (err =3D=3D 0) {
-> > +		err =3D pci_enable_msix_range(pdev,
-> > +					    adapter->msix_entries, 1, num_msix);
-> > +
-> > +		if (err =3D=3D num_msix) {
-> >  			adapter->flags |=3D QLCNIC_MSIX_ENABLED;
-> >  			adapter->ahw->num_msix =3D num_msix;
-> >  			dev_info(&pdev->dev, "using msi-x interrupts\n");
-> >  			return 0;
-> >  		} else if (err > 0) {
-> > +			pci_disable_msix(pdev);
-> > +
-> >  			dev_info(&pdev->dev,
-> >  				 "Unable to allocate %d MSI-X vectors, Available vectors %d\n",
-> >  				 num_msix, err);
->=20
-> Well this log message is nonsense - we have no idea how many vectors are
-> available any more.
->=20
-> You should remove this and the retry loop that is no longer needed.
+* Define and use interrupt events for linkup / linkdown.
 
-Sorry, I'm confused and this does work.  But I wonder whether it is
-really an improvement over using the old API.
+* Make the pcie_isr() also look at link events, and direct control to
+  corresponding (new) link state change handler function.
 
-Ben.
+* Introduce the functions to handle link-up and link-down events and
+  queue the add / removal work in the slot->wq to be processed by
+  pciehp_power_thread()
 
---=20
-Ben Hutchings
-I haven't lost my mind; it's backed up on tape somewhere.
+As a side note, this patch also fixes the bug
+https://bugzilla.kernel.org/show_bug.cgi?id=65521
 
---=-ZDW2wPQKcKj24tyYwZ5l
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+ drivers/pci/hotplug/pciehp.h      |    3 ++
+ drivers/pci/hotplug/pciehp_ctrl.c |   88 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/hotplug/pciehp_hpc.c  |    6 ++-
+ 3 files changed, 96 insertions(+), 1 deletion(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index f952459..d8d0336 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -109,6 +109,8 @@ struct controller {
+ #define INT_BUTTON_PRESS		7
+ #define INT_BUTTON_RELEASE		8
+ #define INT_BUTTON_CANCEL		9
++#define INT_LINK_UP			10
++#define INT_LINK_DOWN			11
+ 
+ #define STATIC_STATE			0
+ #define BLINKINGON_STATE		1
+@@ -132,6 +134,7 @@ u8 pciehp_handle_attention_button(struct slot *p_slot);
+ u8 pciehp_handle_switch_change(struct slot *p_slot);
+ u8 pciehp_handle_presence_change(struct slot *p_slot);
+ u8 pciehp_handle_power_fault(struct slot *p_slot);
++void pciehp_handle_linkstate_change(struct slot *p_slot);
+ int pciehp_configure_device(struct slot *p_slot);
+ int pciehp_unconfigure_device(struct slot *p_slot);
+ void pciehp_queue_pushbutton_work(struct work_struct *work);
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 5062848..5608284 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -150,6 +150,27 @@ u8 pciehp_handle_power_fault(struct slot *p_slot)
+ 	return 1;
+ }
+ 
++void pciehp_handle_linkstate_change(struct slot *p_slot)
++{
++	u32 event_type;
++	struct controller *ctrl = p_slot->ctrl;
++
++	/* Link Status Change */
++	ctrl_dbg(ctrl, "Data Link Layer State change\n");
++
++	if (pciehp_check_link_active(ctrl)) {
++		ctrl_info(ctrl, "slot(%s): Link Up event\n",
++			  slot_name(p_slot));
++		event_type = INT_LINK_UP;
++	} else {
++		ctrl_info(ctrl, "slot(%s): Link Down event\n",
++			  slot_name(p_slot));
++		event_type = INT_LINK_DOWN;
++	}
++
++	queue_interrupt_event(p_slot, event_type);
++}
++
+ /* The following routines constitute the bulk of the
+    hotplug controller logic
+  */
+@@ -415,6 +436,69 @@ static void handle_surprise_event(struct slot *p_slot)
+ 	queue_work(p_slot->wq, &info->work);
+ }
+ 
++/*
++ * Note: This function must be called with slot->lock held
++ */
++static void handle_link_event(struct slot *p_slot, u32 event)
++{
++	struct controller *ctrl = p_slot->ctrl;
++	struct power_work_info *info;
++
++	info = kmalloc(sizeof(*info), GFP_KERNEL);
++	if (!info) {
++		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
++			 __func__);
++		return;
++	}
++	info->p_slot = p_slot;
++	INIT_WORK(&info->work, pciehp_power_thread);
++
++	switch (p_slot->state) {
++	case BLINKINGON_STATE:
++	case BLINKINGOFF_STATE:
++		cancel_delayed_work(&p_slot->work);
++		/* Fall through */
++	case STATIC_STATE:
++		p_slot->state = event == INT_LINK_UP ?
++		    POWERON_STATE : POWEROFF_STATE;
++		queue_work(p_slot->wq, &info->work);
++		break;
++	case POWERON_STATE:
++		if (event == INT_LINK_UP) {
++			ctrl_info(ctrl,
++				  "Link Up event ignored on slot(%s): already powering on\n",
++				  slot_name(p_slot));
++			kfree(info);
++		} else {
++			ctrl_info(ctrl,
++				  "Link Down event queued on slot(%s): currently getting powered on\n",
++				  slot_name(p_slot));
++			p_slot->state = POWEROFF_STATE;
++			queue_work(p_slot->wq, &info->work);
++		}
++		break;
++	case POWEROFF_STATE:
++		if (event == INT_LINK_UP) {
++			ctrl_info(ctrl,
++				  "Link Up event queued on slot(%s): currently getting powered off\n",
++				  slot_name(p_slot));
++			p_slot->state = POWERON_STATE;
++			queue_work(p_slot->wq, &info->work);
++		} else {
++			ctrl_info(ctrl,
++				  "Link Down event ignored on slot(%s): already powering off\n",
++				  slot_name(p_slot));
++			kfree(info);
++		}
++		break;
++	default:
++		ctrl_err(ctrl, "Not a valid state on slot(%s)\n",
++			 slot_name(p_slot));
++		kfree(info);
++		break;
++	}
++}
++
+ static void interrupt_event_handler(struct work_struct *work)
+ {
+ 	struct event_info *info = container_of(work, struct event_info, work);
+@@ -439,6 +523,10 @@ static void interrupt_event_handler(struct work_struct *work)
+ 		ctrl_dbg(ctrl, "Surprise Removal\n");
+ 		handle_surprise_event(p_slot);
+ 		break;
++	case INT_LINK_UP:
++	case INT_LINK_DOWN:
++		handle_link_event(p_slot, info->event_type);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index aed6ab4..b413dce 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -540,7 +540,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 
+ 		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+ 			     PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+-			     PCI_EXP_SLTSTA_CC);
++			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+ 		detected &= ~intr_loc;
+ 		intr_loc |= detected;
+ 		if (!intr_loc)
+@@ -579,6 +579,10 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 		ctrl->power_fault_detected = 1;
+ 		pciehp_handle_power_fault(slot);
+ 	}
++
++	if (intr_loc & PCI_EXP_SLTSTA_DLLSC)
++		pciehp_handle_linkstate_change(slot);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+1.7.9.5
 
-iQIVAwUAUwfz7+e/yOyVhhEJAQqschAAyOsO5JVlsbbyZ89+oPazQWdPskBs8EQW
-ClvlJPUHKwql/ng5kraTcX7IBXlHIiA3z4yG/4U9dkWNwQdbcbWZGpSvUJntecx5
-qf2brCMRzmG+mFGsl8nuv82eDQYsAEGisCi8zYo9bIGnBxxfqXYGz7bQ+OzXQEXj
-giFEwFbporQjRCtWvdfkaaalZ4aC6O4xWTacF1N6YBgfY2lHFzp1Gfxlpw61ZMgA
-s+MZ27zgV34cc57jvR3oEkDx0JO9LpC9rqrPGszm0H5BaVlBM6fRSQSbcu8g1/KY
-nmk3yBPECD/nn0r48WNg9YXl0vgpEVIUi98kpYwCI3UBvYTK+NYppz5lkNrIWyMW
-zHC5v8bmdduy2iauuH/kXJnyFDjcK4jJ0p6TbugYRpiffl7p7UHwBki97D36GsD5
-myygu7IEysHA9KDpb6tFdqlvhfIP98I3Pni5Z0wogV1uKbvePvSti27yEzi3c5KM
-L92C9yvWO8US5swybuv2tWqPntR3hhiXqm7YS/uhsKUgMDVBWovN3XEZYocwkp71
-3iIoid8rLKyuk0/XSNBNPESr+XQ88mxb9xVVfcecuHZe2dochPxUFDCTqhwHvdZj
-tLZyYXxtwXCRrWjvFBGI99VI3YZK3XV3Z5KujuAfkocz9zHCoJ1WB6ByFqHkGO+f
-CydlmtbEyK8=
-=sdKX
------END PGP SIGNATURE-----
-
---=-ZDW2wPQKcKj24tyYwZ5l--
