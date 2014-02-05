@@ -1,63 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:53572 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754603AbaBDTvZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 14:51:25 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Rob Herring <robherring2@gmail.com>
-Subject: Re: [PATCH] arm64: Add architecture support for PCI
-Date: Tue, 4 Feb 2014 20:50:43 +0100
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Rajat Jain <rajatjain@juniper.net>
+To: Rajat Jain <rajatxjain@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <13031998.NR888KZWhk@wuerfel> <CAL_JsqLN4RjVzNCfZ50K44RcP61Z8zFOVnpY1+CfVFz_QnSBEg@mail.gmail.com>
-In-Reply-To: <CAL_JsqLN4RjVzNCfZ50K44RcP61Z8zFOVnpY1+CfVFz_QnSBEg@mail.gmail.com>
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yhlu.kernel@gmail.com>
+CC: Guenter Roeck <groeck@juniper.net>
+Subject: RE: [PATCH v4 8/8] pciehp: Introduce hotplug_lock to serialize HP
+ events
+Date: Wed, 5 Feb 2014 20:06:45 +0000
+Message-ID: <053a538b03a74042adcae020c3067afb@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <52F1A26F.3020105@gmail.com>
+In-Reply-To: <52F1A26F.3020105@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201402042050.43837.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 04 February 2014, Rob Herring wrote:
-> > Here is how a sane person would read SBSA to create a compliant
-> > implementation:
-> 
-> s/sane/software/
+SGVsbG8sDQoNCkkgZm91bmQgdGhhdCB3aGlsZSBmaXhpbmcgdGhlIGNvbmZsaWN0cyBkdXJpbmcg
+cmViYXNpbmcsIGFuICJ1bnVzZWQgdmFyaWFibGUgJ3JldCcgIiB3YXJuaW5nIGhhcyBjcmVwdCB1
+cCBpbiB0aGlzIHBhcnRpY3VsYXIgcGF0Y2guDQoNCkFwb2xvZ2llcyBmb3IgdGhlIHNhbWUuIEkg
+d2lsbCB0YWtlIGNhcmUgb2YgdGhhdCwgaG93ZXZlciwgYW0gd2FpdGluZyBmb3IgYW55IGFkZGl0
+aW9uYWwgY29tbWVudHMgYmVmb3JlIHJlc2VuZGluZy4NCg0KVGhhbmtzICYgQmVzdCBSZWdhcmRz
+LA0KDQpSYWphdA0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUmFq
+YXQgSmFpbiBbbWFpbHRvOnJhamF0eGphaW5AZ21haWwuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBG
+ZWJydWFyeSAwNCwgMjAxNCA2OjMxIFBNDQo+IFRvOiBCam9ybiBIZWxnYWFzOyBSYWZhZWwgSi4g
+V3lzb2NraTsgS2VuamkgS2FuZXNoaWdlOyBBbGV4IFdpbGxpYW1zb247DQo+IFlpamluZyBXYW5n
+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3Jn
+Ow0KPiBZaW5naGFpIEx1DQo+IENjOiBHdWVudGVyIFJvZWNrOyBSYWphdCBKYWluOyBSYWphdCBK
+YWluDQo+IFN1YmplY3Q6IFtQQVRDSCB2NCA4LzhdIHBjaWVocDogSW50cm9kdWNlIGhvdHBsdWdf
+bG9jayB0byBzZXJpYWxpemUgSFANCj4gZXZlbnRzDQo+IA0KPiBUb2RheSBpdCBpcyB0aGVyZSBp
+cyBubyBwcm90ZWN0aW9uIGFyb3VuZCBwY2llaHBfZW5hYmxlX3Nsb3QoKSBhbmQNCj4gcGNpZWhw
+X2Rpc2FibGVfc2xvdCgpIHRvIGVuc3VyZSB0aGF0IHRoZXkgY29tcGxldGUgYmVmb3JlIGFub3Ro
+ZXIgaG90LQ0KPiBwbHVnIG9wZXJhdGlvbiBjYW4gYmUgZG9uZSBvbiB0aGF0IHBhcnRpY3VsYXIg
+c2xvdC4NCj4gDQo+IFRoaXMgcGF0Y2ggaW50cm9kdWNlcyB0aGUgc2xvdC0+aG90cGx1Z19sb2Nr
+IHRvIGVuc3VyZSB0aGF0IGFueSBob3RwbHVnDQo+IG9wZXJhdGlvbnMgKGFkZCAvIHJlbW92ZSkg
+Y29tcGxldGUgYmVmb3JlIGFub3RoZXIgSFAgZXZlbnQgY2FuIGJlZ2luDQo+IHByb2Nlc3Npbmcg
+b24gdGhhdCBwYXJ0aWN1bGFyIHNsb3QuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBSYWphdCBKYWlu
+IDxyYWphdHhqYWluQGdtYWlsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogUmFqYXQgSmFpbiA8cmFq
+YXRqYWluQGp1bmlwZXIubmV0Pg0KPiBTaWduZWQtb2ZmLWJ5OiBHdWVudGVyIFJvZWNrIDxncm9l
+Y2tAanVuaXBlci5uZXQ+DQo+IC0tLQ0KPiAgZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHAuaCAg
+ICAgIHwgICAgMSArDQo+ICBkcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9jb3JlLmMgfCAgICA3
+ICsrKysrKy0NCj4gIGRyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2N0cmwuYyB8ICAgMTQgKysr
+KysrKysrKysrKy0NCj4gIGRyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2hwYy5jICB8ICAgIDEg
+Kw0KPiAgNCBmaWxlcyBjaGFuZ2VkLCAyMSBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0K
+PiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwLmggYi9kcml2ZXJz
+L3BjaS9ob3RwbHVnL3BjaWVocC5oDQo+IGluZGV4IGQ4ZDAzMzYuLjhhNjY4NjYgMTAwNjQ0DQo+
+IC0tLSBhL2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwLmgNCj4gKysrIGIvZHJpdmVycy9wY2kv
+aG90cGx1Zy9wY2llaHAuaA0KPiBAQCAtNzYsNiArNzYsNyBAQCBzdHJ1Y3Qgc2xvdCB7DQo+ICAJ
+c3RydWN0IGhvdHBsdWdfc2xvdCAqaG90cGx1Z19zbG90Ow0KPiAgCXN0cnVjdCBkZWxheWVkX3dv
+cmsgd29yazsJLyogd29yayBmb3IgYnV0dG9uIGV2ZW50ICovDQo+ICAJc3RydWN0IG11dGV4IGxv
+Y2s7DQo+ICsJc3RydWN0IG11dGV4IGhvdHBsdWdfbG9jazsNCj4gIAlzdHJ1Y3Qgd29ya3F1ZXVl
+X3N0cnVjdCAqd3E7DQo+ICB9Ow0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvdHBs
+dWcvcGNpZWhwX2NvcmUuYw0KPiBiL2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2NvcmUuYw0K
+PiBpbmRleCA1M2I1OGRlLi4yM2I0YmRlIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3Rw
+bHVnL3BjaWVocF9jb3JlLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfY29y
+ZS5jDQo+IEBAIC0yODMsOCArMjgzLDExIEBAIHN0YXRpYyBpbnQgcGNpZWhwX3Byb2JlKHN0cnVj
+dCBwY2llX2RldmljZSAqZGV2KQ0KPiAgCXNsb3QgPSBjdHJsLT5zbG90Ow0KPiAgCXBjaWVocF9n
+ZXRfYWRhcHRlcl9zdGF0dXMoc2xvdCwgJm9jY3VwaWVkKTsNCj4gIAlwY2llaHBfZ2V0X3Bvd2Vy
+X3N0YXR1cyhzbG90LCAmcG93ZXJvbik7DQo+IC0JaWYgKG9jY3VwaWVkICYmIHBjaWVocF9mb3Jj
+ZSkNCj4gKwlpZiAob2NjdXBpZWQgJiYgcGNpZWhwX2ZvcmNlKSB7DQo+ICsJCW11dGV4X2xvY2so
+JnNsb3QtPmhvdHBsdWdfbG9jayk7DQo+ICAJCXBjaWVocF9lbmFibGVfc2xvdChzbG90KTsNCj4g
+KwkJbXV0ZXhfdW5sb2NrKCZzbG90LT5ob3RwbHVnX2xvY2spOw0KPiArCX0NCj4gIAkvKiBJZiBl
+bXB0eSBzbG90J3MgcG93ZXIgc3RhdHVzIGlzIG9uLCB0dXJuIHBvd2VyIG9mZiAqLw0KPiAgCWlm
+ICghb2NjdXBpZWQgJiYgcG93ZXJvbiAmJiBQT1dFUl9DVFJMKGN0cmwpKQ0KPiAgCQlwY2llaHBf
+cG93ZXJfb2ZmX3Nsb3Qoc2xvdCk7DQo+IEBAIC0zMjgsMTAgKzMzMSwxMiBAQCBzdGF0aWMgaW50
+IHBjaWVocF9yZXN1bWUgKHN0cnVjdCBwY2llX2RldmljZSAqZGV2KQ0KPiANCj4gIAkvKiBDaGVj
+ayBpZiBzbG90IGlzIG9jY3VwaWVkICovDQo+ICAJcGNpZWhwX2dldF9hZGFwdGVyX3N0YXR1cyhz
+bG90LCAmc3RhdHVzKTsNCj4gKwltdXRleF9sb2NrKCZzbG90LT5ob3RwbHVnX2xvY2spOw0KPiAg
+CWlmIChzdGF0dXMpDQo+ICAJCXBjaWVocF9lbmFibGVfc2xvdChzbG90KTsNCj4gIAllbHNlDQo+
+ICAJCXBjaWVocF9kaXNhYmxlX3Nsb3Qoc2xvdCk7DQo+ICsJbXV0ZXhfdW5sb2NrKCZzbG90LT5o
+b3RwbHVnX2xvY2spOw0KPiAgCXJldHVybiAwOw0KPiAgfQ0KPiAgI2VuZGlmIC8qIFBNICovDQo+
+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9jdHJsLmMNCj4gYi9kcml2
+ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9jdHJsLmMNCj4gaW5kZXggM2U0MGVjMC4uMWYyNzE2YyAx
+MDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfY3RybC5jDQo+ICsrKyBi
+L2RyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2N0cmwuYw0KPiBAQCAtMjkzLDYgKzI5Myw3IEBA
+IHN0YXRpYyB2b2lkIHBjaWVocF9wb3dlcl90aHJlYWQoc3RydWN0IHdvcmtfc3RydWN0DQo+ICp3
+b3JrKQ0KPiAgCXN0cnVjdCBwb3dlcl93b3JrX2luZm8gKmluZm8gPQ0KPiAgCQljb250YWluZXJf
+b2Yod29yaywgc3RydWN0IHBvd2VyX3dvcmtfaW5mbywgd29yayk7DQo+ICAJc3RydWN0IHNsb3Qg
+KnBfc2xvdCA9IGluZm8tPnBfc2xvdDsNCj4gKwlpbnQgcmV0Ow0KPiANCj4gIAlzd2l0Y2ggKGlu
+Zm8tPnJlcSkgew0KPiAgCWNhc2UgRElTQUJMRV9SRVE6DQo+IEBAIC0zMDAsNyArMzAxLDkgQEAg
+c3RhdGljIHZvaWQgcGNpZWhwX3Bvd2VyX3RocmVhZChzdHJ1Y3Qgd29ya19zdHJ1Y3QNCj4gKndv
+cmspDQo+ICAJCQkgIkRpc2FibGluZyBkb21haW46YnVzOmRldmljZT0lMDR4OiUwMng6MDBcbiIs
+DQo+ICAJCQkgcGNpX2RvbWFpbl9ucihwX3Nsb3QtPmN0cmwtPnBjaWUtPnBvcnQtPnN1Ym9yZGlu
+YXRlKSwNCj4gIAkJCSBwX3Nsb3QtPmN0cmwtPnBjaWUtPnBvcnQtPnN1Ym9yZGluYXRlLT5udW1i
+ZXIpOw0KPiArCQltdXRleF9sb2NrKCZwX3Nsb3QtPmhvdHBsdWdfbG9jayk7DQo+ICAJCXBjaWVo
+cF9kaXNhYmxlX3Nsb3QocF9zbG90KTsNCj4gKwkJbXV0ZXhfdW5sb2NrKCZwX3Nsb3QtPmhvdHBs
+dWdfbG9jayk7DQo+ICAJCW11dGV4X2xvY2soJnBfc2xvdC0+bG9jayk7DQo+ICAJCXBfc2xvdC0+
+c3RhdGUgPSBTVEFUSUNfU1RBVEU7DQo+ICAJCW11dGV4X3VubG9jaygmcF9zbG90LT5sb2NrKTsN
+Cj4gQEAgLTMxMCw4ICszMTMsMTAgQEAgc3RhdGljIHZvaWQgcGNpZWhwX3Bvd2VyX3RocmVhZChz
+dHJ1Y3Qgd29ya19zdHJ1Y3QNCj4gKndvcmspDQo+ICAJCQkgIkVuYWJsaW5nIGRvbWFpbjpidXM6
+ZGV2aWNlPSUwNHg6JTAyeDowMFxuIiwNCj4gIAkJCSBwY2lfZG9tYWluX25yKHBfc2xvdC0+Y3Ry
+bC0+cGNpZS0+cG9ydC0+c3Vib3JkaW5hdGUpLA0KPiAgCQkJIHBfc2xvdC0+Y3RybC0+cGNpZS0+
+cG9ydC0+c3Vib3JkaW5hdGUtPm51bWJlcik7DQo+ICsJCW11dGV4X2xvY2soJnBfc2xvdC0+aG90
+cGx1Z19sb2NrKTsNCj4gIAkJaWYgKHBjaWVocF9lbmFibGVfc2xvdChwX3Nsb3QpKQ0KPiAgCQkJ
+cGNpZWhwX2dyZWVuX2xlZF9vZmYocF9zbG90KTsNCj4gKwkJbXV0ZXhfdW5sb2NrKCZwX3Nsb3Qt
+PmhvdHBsdWdfbG9jayk7DQo+ICAJCW11dGV4X2xvY2soJnBfc2xvdC0+bG9jayk7DQo+ICAJCXBf
+c2xvdC0+c3RhdGUgPSBTVEFUSUNfU1RBVEU7DQo+ICAJCW11dGV4X3VubG9jaygmcF9zbG90LT5s
+b2NrKTsNCj4gQEAgLTU0Niw2ICs1NTEsOSBAQCBzdGF0aWMgdm9pZCBpbnRlcnJ1cHRfZXZlbnRf
+aGFuZGxlcihzdHJ1Y3QNCj4gd29ya19zdHJ1Y3QgKndvcmspDQo+ICAJa2ZyZWUoaW5mbyk7DQo+
+ICB9DQo+IA0KPiArLyoNCj4gKyAqIE5vdGU6IFRoaXMgZnVuY3Rpb24gbXVzdCBiZSBjYWxsZWQg
+d2l0aCBzbG90LT5ob3RwbHVnX2xvY2sgaGVsZCAgKi8NCj4gIGludCBwY2llaHBfZW5hYmxlX3Ns
+b3Qoc3RydWN0IHNsb3QgKnBfc2xvdCkgIHsNCj4gIAl1OCBnZXRzdGF0dXMgPSAwOw0KPiBAQCAt
+NTg0LDcgKzU5Miw5IEBAIGludCBwY2llaHBfZW5hYmxlX3Nsb3Qoc3RydWN0IHNsb3QgKnBfc2xv
+dCkNCj4gIAlyZXR1cm4gcmM7DQo+ICB9DQo+IA0KPiAtDQo+ICsvKg0KPiArICogTm90ZTogVGhp
+cyBmdW5jdGlvbiBtdXN0IGJlIGNhbGxlZCB3aXRoIHNsb3QtPmhvdHBsdWdfbG9jayBoZWxkICAq
+Lw0KPiAgaW50IHBjaWVocF9kaXNhYmxlX3Nsb3Qoc3RydWN0IHNsb3QgKnBfc2xvdCkgIHsNCj4g
+IAl1OCBnZXRzdGF0dXMgPSAwOw0KPiBAQCAtNjE3LDcgKzYyNyw5IEBAIGludCBwY2llaHBfc3lz
+ZnNfZW5hYmxlX3Nsb3Qoc3RydWN0IHNsb3QgKnBfc2xvdCkNCj4gIAljYXNlIFNUQVRJQ19TVEFU
+RToNCj4gIAkJcF9zbG90LT5zdGF0ZSA9IFBPV0VST05fU1RBVEU7DQo+ICAJCW11dGV4X3VubG9j
+aygmcF9zbG90LT5sb2NrKTsNCj4gKwkJbXV0ZXhfbG9jaygmcF9zbG90LT5ob3RwbHVnX2xvY2sp
+Ow0KPiAgCQlyZXR2YWwgPSBwY2llaHBfZW5hYmxlX3Nsb3QocF9zbG90KTsNCj4gKwkJbXV0ZXhf
+dW5sb2NrKCZwX3Nsb3QtPmhvdHBsdWdfbG9jayk7DQo+ICAJCW11dGV4X2xvY2soJnBfc2xvdC0+
+bG9jayk7DQo+ICAJCXBfc2xvdC0+c3RhdGUgPSBTVEFUSUNfU1RBVEU7DQo+ICAJCWJyZWFrOw0K
+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBjLmMNCj4gYi9kcml2
+ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiBpbmRleCA2NDMzZTczLi5kYTRiMDIwIDEw
+MDY0NA0KPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiArKysgYi9k
+cml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiBAQCAtNjg2LDYgKzY4Niw3IEBAIHN0
+YXRpYyBpbnQgcGNpZV9pbml0X3Nsb3Qoc3RydWN0IGNvbnRyb2xsZXIgKmN0cmwpDQo+IA0KPiAg
+CXNsb3QtPmN0cmwgPSBjdHJsOw0KPiAgCW11dGV4X2luaXQoJnNsb3QtPmxvY2spOw0KPiArCW11
+dGV4X2luaXQoJnNsb3QtPmhvdHBsdWdfbG9jayk7DQo+ICAJSU5JVF9ERUxBWUVEX1dPUksoJnNs
+b3QtPndvcmssIHBjaWVocF9xdWV1ZV9wdXNoYnV0dG9uX3dvcmspOw0KPiAgCWN0cmwtPnNsb3Qg
+PSBzbG90Ow0KPiAgCXJldHVybiAwOw0KPiAtLQ0KPiAxLjcuOS41DQo+IA0KPiANCg0K
 
-> > Here is how a crazy person would read the same sentence in the SBSA:
-> 
-> s/crazy/hardware/
-
-Not much of a difference, apparently ...
-
-> My money is on the latter. I think non-PCI implementations of xHCI
-> interfaces will be common. This was certainly the case at Calxeda in
-> what was believed to be a SBSA compliant SOC.
-
-I just looked up the EHCI and xHCI specs and am shocked to see that
-the PCI config space access for both is an optional part of the
-spec, so that assertion may well have been correct.
-
-On the other hand, it does seem impossible to create a compliant
-AHCI implementation without making it show up as a PCI function,
-so any SBSA compliant SoC that contains AHCI already has to have
-all the bits for doing the same on USB.
-
-> However, I think PCI
-> device or not is the least of the issues and all the other examples
-> you list are the difficult ones to deal with.
-
-Agreed. But if they get the difficult problems right, it's
-trivial to also do the PCI config space either in the way
-that Jason described, or as a separate PCI domain. In the worst
-case, it could still be faked up by a secure-mode firmware
-catching all config space accesses.
-
-	Arnd
