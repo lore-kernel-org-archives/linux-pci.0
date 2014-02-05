@@ -1,85 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:64941 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752204AbaBLTKz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 14:10:55 -0500
-Received: by mail-ob0-f181.google.com with SMTP id va2so10973105obc.40
-        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 11:10:55 -0800 (PST)
-Subject: [PATCH 1/4] PCI: Remove unnecessary list_empty(&pci_pme_list) check
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Date: Wed, 12 Feb 2014 12:10:53 -0700
-Message-ID: <20140212191053.5459.95323.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140212190949.5459.46330.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140212190949.5459.46330.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22808 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789AbaBEIyn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:54:43 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-pci@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
+References: <cover.1389904166.git.agordeev@redhat.com>
+	<ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+	<20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
+	<87y51qohjn.fsf@kamboji.qca.qualcomm.com>
+	<20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
+	<8761oum0l3.fsf@kamboji.qca.qualcomm.com>
+	<20140205085047.GA27820@dhcp-26-207.brq.redhat.com>
+Date: Wed, 5 Feb 2014 10:54:37 +0200
+In-Reply-To: <20140205085047.GA27820@dhcp-26-207.brq.redhat.com> (Alexander
+	Gordeev's message of "Wed, 5 Feb 2014 09:50:48 +0100")
+Message-ID: <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-list_for_each_entry() handles empty lists just fine, so there's no need to
-check whether the list is empty first.
+Alexander Gordeev <agordeev@redhat.com> writes:
 
-No functional change.
+> On Wed, Feb 05, 2014 at 10:21:28AM +0200, Kalle Valo wrote:
+>> Is it ok for me to take these patches to my ath.git tree or would you
+>> prefer to route them some other way?
+>
+> Yeah, Bjorn has indicated he would pull it to his tree.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
----
- drivers/pci/pci.c |   40 +++++++++++++++++++---------------------
- 1 file changed, 19 insertions(+), 21 deletions(-)
+Ok, I'll drop these from my pending branch then. I just think it would
+have been easier if I would take these, smaller chance of conflicts that
+way.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1febe90831b4..52e10e1181d0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1611,29 +1611,27 @@ static void pci_pme_list_scan(struct work_struct *work)
- 	struct pci_pme_device *pme_dev, *n;
- 
- 	mutex_lock(&pci_pme_list_mutex);
--	if (!list_empty(&pci_pme_list)) {
--		list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
--			if (pme_dev->dev->pme_poll) {
--				struct pci_dev *bridge;
--
--				bridge = pme_dev->dev->bus->self;
--				/*
--				 * If bridge is in low power state, the
--				 * configuration space of subordinate devices
--				 * may be not accessible
--				 */
--				if (bridge && bridge->current_state != PCI_D0)
--					continue;
--				pci_pme_wakeup(pme_dev->dev, NULL);
--			} else {
--				list_del(&pme_dev->list);
--				kfree(pme_dev);
--			}
-+	list_for_each_entry_safe(pme_dev, n, &pci_pme_list, list) {
-+		if (pme_dev->dev->pme_poll) {
-+			struct pci_dev *bridge;
-+
-+			bridge = pme_dev->dev->bus->self;
-+			/*
-+			 * If bridge is in low power state, the
-+			 * configuration space of subordinate devices
-+			 * may be not accessible
-+			 */
-+			if (bridge && bridge->current_state != PCI_D0)
-+				continue;
-+			pci_pme_wakeup(pme_dev->dev, NULL);
-+		} else {
-+			list_del(&pme_dev->list);
-+			kfree(pme_dev);
- 		}
--		if (!list_empty(&pci_pme_list))
--			schedule_delayed_work(&pci_pme_work,
--					      msecs_to_jiffies(PME_TIMEOUT));
- 	}
-+	if (!list_empty(&pci_pme_list))
-+		schedule_delayed_work(&pci_pme_work,
-+				      msecs_to_jiffies(PME_TIMEOUT));
- 	mutex_unlock(&pci_pme_list_mutex);
- }
- 
+> I get it you are fine with 2/3 and 3/3?
 
+Yes, with the addition of the commit log to 1/3 I'll give:
+
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+-- 
+Kalle Valo
