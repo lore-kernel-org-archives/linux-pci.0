@@ -1,69 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:33309 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754915AbaBFUbY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Feb 2014 15:31:24 -0500
-Date: Thu, 6 Feb 2014 20:31:14 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+Received: from moutng.kundenserver.de ([212.227.17.10]:51826 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109AbaBEU0Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 15:26:24 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Will Deacon <will.deacon@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
 	"mohit.kumar@st.com" <mohit.kumar@st.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host
-	controller
-Message-ID: <20140206203114.GW26684@n2100.arm.linux.org.uk>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <3724624.kd9jZNUiTF@wuerfel> <20140205205319.GH25695@obsidianresearch.com> <201402060928.53310.arnd@arndb.de>
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Date: Wed, 05 Feb 2014 21:26:17 +0100
+Message-ID: <3724624.kd9jZNUiTF@wuerfel>
+In-Reply-To: <20140205190947.GA22297@mudshark.cambridge.arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <3460536.Sh23gjDa6X@wuerfel> <20140205190947.GA22297@mudshark.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201402060928.53310.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 06, 2014 at 09:28:52AM +0100, Arnd Bergmann wrote:
-> It certainly seems workable. OTOH if we just manage to do a
-> helper that scans the OF ranges, allocates the I/O window,
-> remaps it and calls the existing pci_add_resource_offset()
-> helper, PCI host drivers don't need to worry about the
-> io_offsets computation either and just need to pull out the
-> correct window locations if they need to set up the hardware
-> translation windows (which I'd hope we can often let the boot
-> loader take care of).
+On Wednesday 05 February 2014 19:09:47 Will Deacon wrote:
 
-Wrong.  Think about it for a moment.
+> On Tue, Feb 04, 2014 at 07:13:49PM +0000, Arnd Bergmann wrote:
+> > On Tuesday 04 February 2014 16:53:03 Will Deacon wrote:
+> Now, if "reg" is definitely the correct thing to do, is it simply a matter
+> of putting the Configuration Space base address in there, or do we also need
+> to do the rest of what ePAPR says (expansion ROM details, ...)? I don't like
+> the idea of enumerating the entire bus in the DT when we don't need to.
 
-Let's say you have two host bridges.  One host bridge has an IO window
-which maps to bus I/O address 0 at 0x40000000.  The other host bridge
-has it's IO window which maps bus I/O address 0 to 0x48000000.
+You won't have to worry about the per-device stuff, aside from that,
+do what Jason says ;-)
+ 
+> > > +Configuration Space is assumed to be memory-mapped (as opposed to being
+> > > +accessed via an ioport) and laid out with a direct correspondence to the
+> > > +geography of a PCI bus address, by concatenating the various components
+> > > +to form a 24-bit offset:
+> > > +
+> > > +        cfg_offset(bus, device, function, register) =
+> > > +                bus << 16 | device << 11 | function << 8 | register
+> > 
+> > This won't allow extended config space. Why not just do the
+> > regular mmconfig layout and make this:
+> > 
+> > 	cfg_offset(bus, device, function, register) =
+> > 		bus << 20 | device << 15 | function << 12 | register;
+> 
+> Is it worth adding a DT property to support both, or is ECAM the only thing
+> to care about? I'm happy either way, although I'll need to hack kvmtool to
+> use the new scheme.
 
-So, the contents of the /hardware/ BARs is going to be in the range
-of 0x0000 to 0xffff.  That means the value found in them is meaningless
-without knowing which bus it's on.
+For any 64-bit system, ECAM is the only thing we need. On 32-bit
+systems, we can't just map the entire config space though, since
+that would require 256MB of vmalloc space. Ideally the driver is
+smart enough to map only the space for the present buses (1MB
+per bus), which I think is what x86 does, or one page per
+PCI function that is present, but that can be tricky for hotplugging.
 
-Now, remember we said that I/O was going to be in a fixed location of
-a fixed size, that being 0xfee00000 and 1MB in size.  So, we map the
-first IO window to 0xfee00000.  What about the other one?  Well,
-that could be mapped to 0xfee10000.
+> > > +static int virt_pci_setup(int nr, struct pci_sys_data *sys)
+> > > +{
+> > > +	struct virt_pci *pci = sys->private_data;
+> > > +
+> > > +	if (resource_type(&pci->io)) {
+> > > +		pci_add_resource(&sys->resources, &pci->io);
+> > > +		pci_ioremap_io(nr * resource_size(&pci->io), pci->io.start);
+> > > +	}
+> > 
+> > This should really compute an io_offset.
+> > 
+> > > +	if (resource_type(&pci->mem))
+> > > +		pci_add_resource(&sys->resources, &pci->mem);
+> > 
+> > and also a mem_offset, which is something different.
+> 
+> As somebody new to PCI, I'm afraid you've lost me here. Are you referring to
+> using pci_add_resource_offset instead, then removing my restriction on
+> having a single resource from the parsing code?
 
-However, we need the IO addresses visible to the Linux kernel to be
-offset by 0x10000 for the second bus - merely reading the BAR and
-storing that in a resource, for the driver to later pick up and pass
-into inb()/outb() won't work.  There needs to be offsetting.  This is
-the exact reason why we have the offsetting for IO windows.
+I mean pci_add_resource_offset, but I don't understand what the
+restriction is that you are talking about. To elaborate on the offsets,
+the common case is that the PCI memory space is the same as the
+host physical address space for both MMIO and DMA, while you have
+only one PCI host with a single I/O space range from port 0 to 65536.
 
-Exactly the same goes for memory windows as well.  It's no good working
-in the hosts physical address space when looking at BARs, because they're
-not in that address space.  They're in the bus address space which can
-be entirely different.
+If you mandate that, your code is actually correct and you do not
+require an io_offset or mem_offset.
 
-So, whenever you enumerate a PCI bus, and read the resource information
-out of the BARs, you /must/ know how that address region specified in
-the BAR as a /bus/ address maps to the /host/ address space.
+In practice, there can be various ways that a system requires something
+more complex:
 
--- 
-FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
-in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
-Estimate before purchase was "up to 13.2Mbit".
+* You can have a memory space range that puts PCI bus address zero
+  at the start of the pci->mem resource. In this case, you have
+  mem_offset = pci->mem.start. We should probably try not to do
+  this, but there is existing hardware doing it.
+
+* You might have multiple sections of the PCI bus space mapped
+  into CPU physical space. If you want to support legacy VGA
+  console, you probably want to map the first 16MB of the bus
+  space at an arbitrary location (with the mem_offset as above),
+  plus a second, larger section of the bus space with an identity
+  mapping (mem_offset_= 0) for all devices other than VGA.
+  You'd also need to copy some VGA specific code from arm32 to
+  arm64 to actually make this work.
+
+* If you have two PCI host bridges and each of them comes with
+  its own I/O space range starting between 0x0-0xffff, you have
+  to map one of them into logical I/O space address 0x10000-0x1ffff
+  and set io_offset = 0x10000 for that bus.
+
+* Alternatively, the second bus in that case can use *bus* I/O
+  port address 0x10000-0x1ffff and use io_offset=0, but that
+  prevents you from having legacy ISA I/O ports on the
+  second bus, since they are hardwired to a known port number
+  in the range 0x0-0x1000 (the first 4KB). This includes VGA
+  console.
+
+> > > +	for_each_of_pci_range(&parser, &range) {
+> > > +		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
+> > > +
+> > > +		switch (restype) {
+> > > +		case IORESOURCE_IO:
+> > > +			if (resource_type(&pci->io))
+> > > +				dev_warn(dev,
+> > > +					 "ignoring additional io resource\n");
+> > > +			else
+> > > +				of_pci_range_to_resource(&range, np, &pci->io);
+> > > +			break;
+> > > +		case IORESOURCE_MEM:
+> > > +			if (resource_type(&pci->mem))
+> > > +				dev_warn(dev,
+> > > +					 "ignoring additional mem resource\n");
+> > > +			else
+> > > +				of_pci_range_to_resource(&range, np, &pci->mem);
+> > > +			break;
+> > 
+> > This shows once more that the range parser code is suboptimal. So far
+> > every single driver got the I/O space wrong here, because the obvious
+> > way to write this function is also completely wrong.
+> 
+> I see you mentioned to Liviu that you should register a logical resource,
+> rather than physical resource returned from the parser. It seems odd that
+> I/O space appears to work with this code as-is (I've tested it on arm using
+> kvmtool by removing the memory bars).
+
+what do you see in /proc/ioports and /proc/iomem then?
+
+> > What you get out of "of_pci_range_to_resource(&range, np, &pci->io)"
+> > is not the resource you want to pass into pci_add_resource()
+> > later.
+> 
+> Do I need to open-code the resource translation from phys -> logical?
+
+I think we should have some common infrastructure that lets you
+get this right more easily.
+
+	Arnd
