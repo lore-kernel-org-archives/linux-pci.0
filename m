@@ -1,53 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8674 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751411AbaBSKNq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 05:13:46 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Harshavardhan R Kharche <harshavardhan.r.kharche@intel.com>,
-	Ashutosh Dixit <ashutosh.dixit@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] mic: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 19 Feb 2014 11:15:24 +0100
-Message-Id: <1392804931-30671-4-git-send-email-agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jayamohan Kallickal <Jayamohan.Kallickal@Emulex.Com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH 01/22] be2iscsi: Use pci_enable_msix_range()
+Date: Wed, 5 Feb 2014 04:58:19 +0000
+Message-ID: <37724B2049F71D4C9B086F99DDB2DE112A8A6E19@CMEXMB1.ad.emulex.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+ <34995adbde34985e99f01a04e34c03a4c9ad96dc.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <34995adbde34985e99f01a04e34c03a4c9ad96dc.1391512266.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+-----Original Message-----
+From: Alexander Gordeev [mailto:agordeev@redhat.com] 
+Sent: Tuesday, February 04, 2014 3:17 AM
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev; Jayamohan Kallickal; linux-scsi@vger.kernel.org; linux-pci@vger.kernel.org
+Subject: [PATCH 01/22] be2iscsi: Use pci_enable_msix_range()
+
 As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+pci_enable_msix() and pci_enable_msi_block() all drivers using these two interfaces need to be updated to use the new pci_enable_msi_range() and pci_enable_msix_range() interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Harshavardhan R Kharche <harshavardhan.r.kharche@intel.com>
-Cc: Ashutosh Dixit <ashutosh.dixit@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/misc/mic/host/mic_intr.c |    6 +++---
+ drivers/scsi/be2iscsi/be_main.c |    6 +++---
  1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/misc/mic/host/mic_intr.c b/drivers/misc/mic/host/mic_intr.c
-index f9c29bc..48f4426 100644
---- a/drivers/misc/mic/host/mic_intr.c
-+++ b/drivers/misc/mic/host/mic_intr.c
-@@ -194,9 +194,9 @@ static int mic_setup_msix(struct mic_device *mdev, struct pci_dev *pdev)
- 	for (i = 0; i < MIC_MIN_MSIX; i++)
- 		mdev->irq_info.msix_entries[i].entry = i;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c index 1f37505..5878f3e 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5284,9 +5284,9 @@ static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+ 	for (i = 0; i <= phba->num_cpus; i++)
+ 		phba->msix_entries[i].entry = i;
  
--	rc = pci_enable_msix(pdev, mdev->irq_info.msix_entries,
--		MIC_MIN_MSIX);
--	if (rc) {
-+	rc = pci_enable_msix_range(pdev, mdev->irq_info.msix_entries,
-+				   MIC_MIN_MSIX, MIC_MIN_MSIX);
-+	if (rc < 0) {
- 		dev_dbg(&pdev->dev, "Error enabling MSIx. rc = %d\n", rc);
- 		goto err_enable_msix;
- 	}
--- 
-1.7.7.6
+-	status = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				 (phba->num_cpus + 1));
+-	if (!status)
++	status = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
++				       phba->num_cpus + 1, phba->num_cpus + 1);
++	if (status > 0)
+ 		phba->msix_enabled = true;
+ 
+ 	return;
+
+
+
+Looks OK to me
+
+Acked-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+
+--
 
