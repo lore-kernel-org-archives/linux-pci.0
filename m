@@ -1,72 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	James Smart <james.smart@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 11/23] lpfc: Remove superfluous call to pci_disable_msix()
-Date: Mon, 24 Feb 2014 09:02:11 +0100
-Message-Id: <d6eb995129c133a2453f5c7bf5253e6a2ce51ed6.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:45079 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234AbaBECaI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:30:08 -0500
+Message-ID: <52F1A22C.3090202@gmail.com>
+Date: Tue, 04 Feb 2014 18:30:04 -0800
+From: Rajat Jain <rajatxjain@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
+CC: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH v4 4/8] pciehp: Don't disable the link permanently, during
+ removal
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to call pci_disable_msix() in case
-the previous call to pci_enable_msix() failed
+We need future link up events for hot-add, thus don't disable
+the link permanently during device removal. Also, remove the static
+functions that are now left unused.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: James Smart  <james.smart@emulex.com>
+This reverts part of 2debd9289997 ("PCI: pciehp: Disable/enable link
+during slot power off/on"). This was dicussed at
+http://marc.info/?l=linux-pci&m=138963477507425&w=2
+where it was revealed that it was done for a bug in a pcie repeater
+chip on that particular platform.
+
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
 ---
- drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c |   18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 68c94cc..a9df97a 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8078,7 +8078,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-@@ -8156,6 +8156,8 @@ irq_fail_out:
- msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 245a3cb..15ca3a1 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -242,11 +242,6 @@ static void pcie_wait_link_active(struct controller *ctrl)
+ 	__pcie_wait_link_active(ctrl, true);
  }
  
-@@ -8644,7 +8646,7 @@ enable_msix_vectors:
- 	} else if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 
- 	/* Log MSI-X vector assignment */
-@@ -8696,9 +8698,10 @@ cfg_fail_out:
- 			 &phba->sli4_hba.fcp_eq_hdl[index]);
- 	}
- 
--msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
+-static void pcie_wait_link_not_active(struct controller *ctrl)
+-{
+-	__pcie_wait_link_active(ctrl, false);
+-}
+-
+ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+ {
+ 	u32 l;
+@@ -332,11 +327,6 @@ static int pciehp_link_enable(struct controller *ctrl)
+ 	return __pciehp_link_set(ctrl, true);
  }
  
+-static int pciehp_link_disable(struct controller *ctrl)
+-{
+-	return __pciehp_link_set(ctrl, false);
+-}
+-
+ void pciehp_get_attention_status(struct slot *slot, u8 *status)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+@@ -508,14 +498,6 @@ void pciehp_power_off_slot(struct slot * slot)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+ 
+-	/* Disable the link at first */
+-	pciehp_link_disable(ctrl);
+-	/* wait the link is down */
+-	if (ctrl->link_active_reporting)
+-		pcie_wait_link_not_active(ctrl);
+-	else
+-		msleep(1000);
+-
+ 	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
 -- 
-1.7.7.6
+1.7.9.5
 
