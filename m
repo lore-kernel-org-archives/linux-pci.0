@@ -1,131 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62436 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752212AbaBXU7H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 15:59:07 -0500
-Message-ID: <1393275541.9111.219.camel@ul30vt.home>
-Subject: Re: Architectural question regarding IOV support in Linux 3.13.4
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Cc: Yu Zhao <yuzhao@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Mon, 24 Feb 2014 13:59:01 -0700
-In-Reply-To: <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
-References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
-	 <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
-	 <1393020186.9111.91.camel@ul30vt.home>
-	 <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
-	 <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <52F20388.9080109@codethink.co.uk>
+Date: Wed, 05 Feb 2014 09:25:28 +0000
+From: Ben Dooks <ben.dooks@codethink.co.uk>
+MIME-Version: 1.0
+To: Magnus Damm <magnus.damm@gmail.com>
+CC: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	"Simon Horman [Horms]" <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space
+ update
+References: <20140205065243.29445.76593.sendpatchset@w520> <52F1F74C.2090106@codethink.co.uk> <CANqRtoRMAjBEXjBzivPxqMu8KhFsOkp0wb6jBbuZQx=B-qYuUA@mail.gmail.com>
+In-Reply-To: <CANqRtoRMAjBEXjBzivPxqMu8KhFsOkp0wb6jBbuZQx=B-qYuUA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-02-24 at 19:22 +0000, Zytaruk, Kelly wrote:
-> >On Fri, Feb 21, 2014 at 2:03 PM, Alex Williamson <alex.williamson@redhat.com> wrote:
-> >On Fri, 2014-02-21 at 14:11 -0700, Bjorn Helgaas wrote:
-> >> [+cc Alex, Yu]
-> >>
-> >> On Fri, Feb 21, 2014 at 10:45 AM, Zytaruk, Kelly <Kelly.Zytaruk@amd.com> wrote:
-> >> >
-> >> > I am working with SR-IOV and I have a question regarding the function
-> >> > sriov_init() in ../drivers/pci/iov.c (linux versions 3.4.9 and 3.13.4)
-> >> >
-> >> > In sriov_init() the code first checks whether the PF is a Root complex
-> >> >  endpoint (0x9) or an Express Endpoint (0x0) as shown in the code
-> >> >  snippet below.  If it is neither it returns the No device error.
-> >> >
-> >> > static int sriov_init(struct pci_dev *dev, int pos)
-> >> > {
-> >> >          int i;
-> >> >          int rc;
-> >> >          int nres;
-> >> >          u32 pgsz;
-> >> >          u16 ctrl, total, offset, stride;
-> >> >          struct pci_sriov *iov;
-> >> >          struct resource *res;
-> >> >          struct pci_dev *pdev;
-> >> >
-> >> >        if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
-> >> >              pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-> >> >                  return -ENODEV;
-> >> >
-> >> > My question is why PCI_EXP_TYPE_LEG_END (0x1) is omitted as being a
-> >> >  valid endpoint.  By excluding Legacy endpoints it fails enabling
-> >> >  SR-IOV on a VGA PF.
-> >> >
-> >> > Is there a design/specification reason why legacy was excluded or was
-> >> >  it just an assumption that VGA would never support SR-IOV?
-> >> >
-> >> > If there is no valid reason to exclude PCI_EXP_TYPE_LEG_END, I would
-> >> >  like to discuss having it included as a valid endpoint for SR-IOV.
-> >>
-> >> Good question.  It looks like it's been that way since the beginning
-> >> [1], but I don't know why.  I don't see any restriction in the spec
-> >> about SR-IOV and legacy endpoints.
-> >>
-> >> I also don't know whether VGA is an issue.  There are some legacy
-> >> addressing issues for [mem 0xa0000-0xbffff] and [io 0x3b0-0x3bb] and
-> >> [io 0x3c0-0x3df].  For example, when a bridge has its VGA Enable bit
-> >> set, it positively decodes [mem 0xa0000-0xbffff] even if that range
-> >> isn't included in one of the bridge windows.  I don't know whether a
-> >> VGA device is similarly allowed to decode that range even if it's not
-> >> in a BAR.  If it is, I could imagine issues if enabling SR-IOV created
-> >> several VGA VFs.
-> >VFs cannot support I/O port space by definition, so I don't think a "VGA
-> >VF" could actually exist.  There would be nothing wrong with a non-VGA
-> >GPU VF though.  I also don't see how the differences in Legacy Endpoint
-> >rules versus a standard Endpoint would preclude supporting SR-IOV.  I
-> >don't think the SR-IOV spec makes any demands on whether the PF requires
-> >I/O port resources, which I assume is the main reason for this to call
-> >itself Legacy.  I'd guess it was likely just an oversight and we should
-> >add legacy endpoints (or remove the test altogether and trust that if a
-> >device has an SR-IOV capability, we should initialize it).  Thanks,
-> >
-> >Alex
-> >
-> >I agree. I vaguely remember there was some reason that excludes legacy
-> >endpoints from using SR-IOV. But after a quick look at the latest specs,
-> >I didn't find any.
-> >
-> Only Legacy Endpoints can claim I/O.  VFs are not allowed to claim I/O.
-> VGA devices claim I/O.
-> 
-> The SR-IOV spec 1.1 section 3.4.1.6 states
-> “The Class Code register is read-only and is used to identify the generic function 
-> of the device and, in some cases, a specific register level programming interface. 
-> The field in the PF and associated VFs must return the same value when read.”
-> 
-> If the PF is a VGA device then by the definition in the SR-IOV spec the class code 
-> of the VF would also indicate it as a VGA device, ie Subclass 0x0 = VGA, 
-> subclass 0x80 = OTHER_DISPLAY_CONTROLLER.  
-> 
-> Ideally we would want to have the PF sub-class as 0x0 and the VF subclass as 0x80
-> But the spec doesn't support this.
-> 
-> One speculation as to why Legacy endpoints were omitted might be the assumption
-> that doing so would allow VGA VFs to be created.
-> 
-> It is not reasonable to prevent a VGA PF from enabling SR-IOV as this is a real world 
-> possibility.  We might need to add more code elsewhere however to prevent a VF
-> from becoming a VGA device outside of passing it through to a guest VM.
-> 
-> Any thoughts on this?
+On 05/02/14 09:00, Magnus Damm wrote:
+> Hi Ben,
 
-Good catch, I think you'll need to contact the PCI SIG for
-clarification.  A VF with a VGA class code implies I/O space that a VF
-is not allowed to have.  I wouldn't be surprised if they had hoped VGA
-was a non-issue by this point and legacy-free graphics were standard.
+[snip]
+> I think we should try to pick out the stuff that is ready to be merged
+> first. I think these patches may require a bit of time before people
+> start looking at them. I don't mind resending in the future.
+>
+> To be honest, I have not been paying too much attention to other
+> patches including yours - been focused trying to get the memory
+> management part right.. So I'd like to focus on correctness over DT
+> for now if possible. Of course we it all.
+>
+> Would it be possible for you to provide a list of pci-rcar-gen2.c
+> patches that you posted? Or perhaps you can resend your series and
+> include acks that you received?
 
-Probably the most appealing solution would be an ECN allowing the VF to
-expose a different class code from the PF.  This seems generally useful
-even beyond the scope of this legacy resource issue.  Probably a less
-appealing option for you would be to expose the PF as a non-VGA display
-controller, which avoids both the legacy endpoint problem and the VF
-class code problem.  I suspect we wouldn't find a lot of support for a
-software only solution to virtualize the class code unless it was
-standardized.  Such a change would require support in every hypervisor.
-Thanks,
+I don't think I have any acks, only review comments. I think the code
+itself is pretty much ready to be merged and has been tested here with
+the Lager board.
 
-Alex
+The big issue for us is that we /must/ boot with fdt, which means the
+less fdt support that is in the kernel then the more patches we end up
+carrying out of tree. This is why we have been pushing patches out to
+try and get the support in.
 
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
