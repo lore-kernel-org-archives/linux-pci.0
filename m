@@ -1,24 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Luck, Tony" <tony.luck@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 00/17] x86, ia64 NUMA cleanup
-Date: Tue, 4 Feb 2014 18:32:23 +0000
-Message-ID: <3908561D78D1C84285E8C5FCA982C28F31DC030A@ORSMSX106.amr.corp.intel.com>
-References: <20140129174106.15476.7075.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <CAErSpo5whsUH0aM8iocKdn4FOQLEjCQoM+ShjVjzWDxSWTzQnA@mail.gmail.com>
-In-Reply-To: <CAErSpo5whsUH0aM8iocKdn4FOQLEjCQoM+ShjVjzWDxSWTzQnA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:46302 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbaBEICy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:02:54 -0500
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20140205065254.29445.77939.sendpatchset@w520>
+References: <20140205065243.29445.76593.sendpatchset@w520>
+	<20140205065254.29445.77939.sendpatchset@w520>
+Date: Wed, 5 Feb 2014 09:02:53 +0100
+Message-ID: <CAMuHMdVrkPybrONnw5fZaMZ-vuaq_arrBMZvnRYZ9EnvE8Y4cA@mail.gmail.com>
+Subject: Re: [PATCH 01/04] PCI: rcar: Register each instance independently
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Magnus Damm <magnus.damm@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Valentine <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBJIGFkZGVkIHRoaXMgc2VyaWVzIHRvIG15ICJuZXh0IiBicmFuY2ggZm9yIHYzLjE0LiAgVG9u
-eSwgbGV0IG1lIGtub3cNCj4gaWYgeW91IHNlZSBhbnkgaWE2NCBpc3N1ZXMuDQoNCkl0IHNob3dl
-ZCB1cCBpbiBuZXh0LTIwMTQwMjA0IC0gYW5kIGRvZXNuJ3Qgc2VlbSB0byBoYXZlIGNhdXNlZCBh
-bnkgYnVpbGQgb3IgYm9vdA0KcHJvYmxlbXMgb24gbXkgdGVzdCBtYWNoaW5lcy4NCg0KLVRvbnkN
-Cg==
+On Wed, Feb 5, 2014 at 7:52 AM, Magnus Damm <magnus.damm@gmail.com> wrote:
+> +static int rcar_pci_probe(struct platform_device *pdev)
+>  {
+>         struct resource *cfg_res, *mem_res;
+>         struct rcar_pci_priv *priv;
+>         void __iomem *reg;
+> +       struct hw_pci hw;
+>
+>         cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>         reg = devm_ioremap_resource(&pdev->dev, cfg_res);
+> @@ -308,31 +271,26 @@ static int __init rcar_pci_probe(struct
+>         priv->reg = reg;
+>         priv->dev = &pdev->dev;
+>
+> -       return rcar_pci_add_controller(priv);
+> +       memset(&hw, 0, sizeof(hw));
+> +       hw.nr_controllers = 1;
+> +       hw.private_data = (void **)&priv;
+
+This raised a red flag: taking the address of a variable on the stack.
+I know it's correct, as hw.private_data is an array of pointers copied
+by pci_common_init_dev() below.
+But perhaps it's a good idea to turn priv into an array with one element,
+to make this clearer, and avoid the ugly cast?
+
+> +       hw.map_irq = rcar_pci_map_irq;
+> +       hw.ops = &rcar_pci_ops;
+> +       hw.setup = rcar_pci_setup;
+> +       pci_common_init_dev(&pdev->dev, &hw);
+> +       return 0;
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
