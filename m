@@ -1,144 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52351 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753541AbaBCX2Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:25 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 13/24][Resend] ACPI / hotplug / PCI: Drop crit_sect locking
-Date: Tue, 04 Feb 2014 00:27:01 +0100
-Message-ID: <5034851.lQfU1PoFxK@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:53903 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751346AbaBEJA1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 04:00:27 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <52F1F74C.2090106@codethink.co.uk>
+References: <20140205065243.29445.76593.sendpatchset@w520>
+	<52F1F74C.2090106@codethink.co.uk>
+Date: Wed, 5 Feb 2014 18:00:26 +0900
+Message-ID: <CANqRtoRMAjBEXjBzivPxqMu8KhFsOkp0wb6jBbuZQx=B-qYuUA@mail.gmail.com>
+Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space update
+From: Magnus Damm <magnus.damm@gmail.com>
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	"Simon Horman [Horms]" <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Ben,
 
-After recent PCI core changes related to the rescan/remove locking,
-the code sections under crit_sect mutexes from ACPIPHP slot objects
-are always executed under the general PCI rescan/remove lock.
-For this reason, the crit_sect mutexes are simply redundant, so drop
-them.
+On Wed, Feb 5, 2014 at 5:33 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
+> On 05/02/14 06:52, Magnus Damm wrote:
+>>
+>> PCI: rcar: Driver model and physical address space update
+>>
+>> [PATCH 01/04] PCI: rcar: Register each instance independently
+>> [PATCH 02/04] PCI: rcar: Break out window size handling
+>> [PATCH 03/04] PCI: rcar: Add DMABOUNCE support
+>> [PATCH 04/04] PCI: rcar: Enable BOUNCE in case of HIGHMEM
+>>
+>> These patches update the pci-rcar-gen2.c driver in various ways
+>> including cleanups for driver model interface (1/4), readability
+>> update (2/4) and also bounce buffer support (3/4, 4/4). Basically
+>> the first two are just cleanups and the rest are fixes.
+>>
+>> As it is today without these patches the system memory start address
+>> is hard coded at 0x4000000 and the window is fixed at 1GiB. So we
+>> have board specific code hidden in the driver which is good to avoid.
+>>
+>> With these hard coded board specific constants there are some error cases
+>> that are not handled, in particular the issue that only maximum 1GiB of
+>> physical address space can be used for bus mastering with a single window.
+>> The common case of using ARM CONFIG_VMSPLIT_3G results in no visible
+>> issues
+>> as long as CONFIG_BOUNCE is used, but other CONFIG_VMSPLIT settings will
+>> break due to the hard coded 1GiB window not being enough. It has been
+>> verified that reducing the window size to 256MB makes the driver behave
+>> the same with VMSPLIT_3G as 1GiB window size and other VMSPLIT settings.
+>>
+>> To handle the maximum 1GiB physical address space limitation two types
+>> of bounce buffers are added. The ARM specific DMABOUNCE code is in 3/4
+>> hooked up to a chunk of local memory that is also handed of as coherent
+>> memory to the pci devices hanging off the PCI bridge. The driver makes
+>> sure to set the window so the local memory is always included. When the
+>> PCI devices are operating and in case memory is used outside the window
+>> then the DMABOUNCE buffers kicks in. This makes the driver support all
+>> kinds of VMSPLIT settings and window sizes. The BOUNCE code in 4/4 is
+>> selected to make sure bounce buffers are used for HIGHMEM.
+>>
+>> With these patches this driver can be used with or without CMA and
+>> with or without DMA zone. Basically the system wide memory setup is
+>> left to the user. If a DMA zone is used then the PCI window will
+>> be setup to cover that. Same thing with CMA.
+>>
+>> Tested with USB storage using LPAE and various VMSPLIT settings together
+>> with renesas git tag renesas-devel-v3.14-rc1-20140204 from kernel.org
+>
+>
+> Ok, is it possible to build a set with my of updates ready for next
+> merge window? I can update the set based on this if you like and try
+> and make the necessary changes to deal with the modifications from this
+> series.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_glue.c |   23 +++--------------------
- 2 files changed, 3 insertions(+), 21 deletions(-)
+I think we should try to pick out the stuff that is ready to be merged
+first. I think these patches may require a bit of time before people
+start looking at them. I don't mind resending in the future.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -347,7 +347,6 @@ static acpi_status register_slot(acpi_ha
- 	slot->bus = bridge->pci_bus;
- 	slot->device = device;
- 	INIT_LIST_HEAD(&slot->funcs);
--	mutex_init(&slot->crit_sect);
- 
- 	list_add_tail(&slot->node, &bridge->slots);
- 
-@@ -744,7 +743,6 @@ static void acpiphp_check_bridge(struct
- 		struct pci_bus *bus = slot->bus;
- 		struct pci_dev *dev, *tmp;
- 
--		mutex_lock(&slot->crit_sect);
- 		if (slot_no_hotplug(slot)) {
- 			; /* do nothing */
- 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
-@@ -759,7 +757,6 @@ static void acpiphp_check_bridge(struct
- 		} else {
- 			disable_slot(slot);
- 		}
--		mutex_unlock(&slot->crit_sect);
- 	}
- }
- 
-@@ -846,12 +843,8 @@ static void hotplug_event(acpi_handle ha
- 		} else {
- 			struct acpiphp_slot *slot = func->slot;
- 
--			if (slot->flags & SLOT_IS_GOING_AWAY)
--				break;
--
--			mutex_lock(&slot->crit_sect);
--			enable_slot(slot);
--			mutex_unlock(&slot->crit_sect);
-+			if (!(slot->flags & SLOT_IS_GOING_AWAY))
-+				enable_slot(slot);
- 		}
- 		break;
- 
-@@ -862,7 +855,6 @@ static void hotplug_event(acpi_handle ha
- 			acpiphp_check_bridge(bridge);
- 		} else {
- 			struct acpiphp_slot *slot = func->slot;
--			int ret;
- 
- 			if (slot->flags & SLOT_IS_GOING_AWAY)
- 				break;
-@@ -871,10 +863,7 @@ static void hotplug_event(acpi_handle ha
- 			 * Check if anything has changed in the slot and rescan
- 			 * from the parent if that's the case.
- 			 */
--			mutex_lock(&slot->crit_sect);
--			ret = acpiphp_rescan_slot(slot);
--			mutex_unlock(&slot->crit_sect);
--			if (ret)
-+			if (acpiphp_rescan_slot(slot))
- 				acpiphp_check_bridge(func->parent);
- 		}
- 		break;
-@@ -1088,13 +1077,10 @@ int acpiphp_enable_slot(struct acpiphp_s
- 	if (slot->flags & SLOT_IS_GOING_AWAY)
- 		return -ENODEV;
- 
--	mutex_lock(&slot->crit_sect);
- 	/* configure all functions */
- 	if (!(slot->flags & SLOT_ENABLED))
- 		enable_slot(slot);
- 
--	mutex_unlock(&slot->crit_sect);
--
- 	pci_unlock_rescan_remove();
- 	return 0;
- }
-@@ -1110,8 +1096,6 @@ static int acpiphp_disable_and_eject_slo
- 	if (slot->flags & SLOT_IS_GOING_AWAY)
- 		return -ENODEV;
- 
--	mutex_lock(&slot->crit_sect);
--
- 	/* unconfigure all functions */
- 	disable_slot(slot);
- 
-@@ -1125,7 +1109,6 @@ static int acpiphp_disable_and_eject_slo
- 			break;
- 		}
- 
--	mutex_unlock(&slot->crit_sect);
- 	return 0;
- }
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -93,7 +93,6 @@ struct acpiphp_slot {
- 	struct list_head funcs;		/* one slot may have different
- 					   objects (i.e. for each function) */
- 	struct slot *slot;
--	struct mutex crit_sect;
- 
- 	u8		device;		/* pci device# */
- 	u32		flags;		/* see below */
+To be honest, I have not been paying too much attention to other
+patches including yours - been focused trying to get the memory
+management part right.. So I'd like to focus on correctness over DT
+for now if possible. Of course we it all.
 
+Would it be possible for you to provide a list of pci-rcar-gen2.c
+patches that you posted? Or perhaps you can resend your series and
+include acks that you received?
+
+Thanks,
+
+/ magnus
