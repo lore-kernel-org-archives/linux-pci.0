@@ -1,68 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15133 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:56865 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754413AbaBRKGi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:06:38 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Michael Chan <mchan@broadcom.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 01/35] bnx2: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:07:53 +0100
-Message-Id: <c8d230441b63d4c30818a55b0e6ca0f376572b87.1392717502.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+	id S1751317AbaBET1i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Feb 2014 14:27:38 -0500
+Date: Wed, 5 Feb 2014 12:27:33 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140205192733.GG25695@obsidianresearch.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <1391532784-1953-3-git-send-email-will.deacon@arm.com>
+ <3460536.Sh23gjDa6X@wuerfel>
+ <20140205190947.GA22297@mudshark.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140205190947.GA22297@mudshark.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Wed, Feb 05, 2014 at 07:09:47PM +0000, Will Deacon wrote:
+> Hi Arnd,
+> 
+> Thanks for having a look.
+> 
+> On Tue, Feb 04, 2014 at 07:13:49PM +0000, Arnd Bergmann wrote:
+> > On Tuesday 04 February 2014 16:53:03 Will Deacon wrote:
+> > > +
+> > > +- ranges         : As described in IEEE Std 1275-1994, but must provide
+> > > +                   at least a definition of the Configuration Space plus
+> > > +                   one or both of IO and Memory Space.
+> > > +
+> > 
+> > I might need to reread the spec, but I think the config space is not
+> > actually supposed to be in the 'ranges' of the host bridge at all,
+> > and it should just be listed in the 'reg'.
+> 
+> This wasn't at all clear to me (I listed it in the cover-letter as being
+> something to sort out).
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Michael Chan <mchan@broadcom.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/broadcom/bnx2.c |   15 ++++-----------
- 1 files changed, 4 insertions(+), 11 deletions(-)
+When we talked about this earlier on the DT bindings list the
+consensus seemed to be that configuration MMIO ranges should only be
+used if the underlying memory was exactly ECAM, and was not to be used
+for random configuration related register blocks.
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2.c b/drivers/net/ethernet/broadcom/bnx2.c
-index cda25ac..ca6b362 100644
---- a/drivers/net/ethernet/broadcom/bnx2.c
-+++ b/drivers/net/ethernet/broadcom/bnx2.c
-@@ -6206,7 +6206,7 @@ bnx2_free_irq(struct bnx2 *bp)
- static void
- bnx2_enable_msix(struct bnx2 *bp, int msix_vecs)
- {
--	int i, total_vecs, rc;
-+	int i, total_vecs;
- 	struct msix_entry msix_ent[BNX2_MAX_MSIX_VEC];
- 	struct net_device *dev = bp->dev;
- 	const int len = sizeof(bp->irq_tbl[0].name);
-@@ -6229,16 +6229,9 @@ bnx2_enable_msix(struct bnx2 *bp, int msix_vecs)
- #ifdef BCM_CNIC
- 	total_vecs++;
- #endif
--	rc = -ENOSPC;
--	while (total_vecs >= BNX2_MIN_MSIX_VEC) {
--		rc = pci_enable_msix(bp->pdev, msix_ent, total_vecs);
--		if (rc <= 0)
--			break;
--		if (rc > 0)
--			total_vecs = rc;
--	}
--
--	if (rc != 0)
-+	total_vecs = pci_enable_msix_range(bp->pdev, msix_ent,
-+					   BNX2_MIN_MSIX_VEC, total_vecs);
-+	if (total_vecs < 0)
- 		return;
- 
- 	msix_vecs = total_vecs;
--- 
-1.7.7.6
+The rational being that generic code, upon seeing that ranges entry,
+could just go ahead and assume ECAM mapping.
 
+> Now, if "reg" is definitely the correct thing to do, is it simply a matter
+> of putting the Configuration Space base address in there, or do we also need
+> to do the rest of what ePAPR says (expansion ROM details, ...)? I don't like
+> the idea of enumerating the entire bus in the DT when we don't need to.
+
+If you use 'reg' then it is a private base address to your driver and
+you can do whatever you want with it.
+
+Most of the ePAPR things are only needed if the FW is going to
+communicate detailed information to the OS, for an environment that
+relies on Linux resource assignment and discovery you can just ignore
+all that.
+
+> > This won't allow extended config space. Why not just do the
+> > regular mmconfig layout and make this:
+> > 
+> > 	cfg_offset(bus, device, function, register) =
+> > 		bus << 20 | device << 15 | function << 12 | register;
+> 
+> Is it worth adding a DT property to support both, or is ECAM the only thing
+> to care about? I'm happy either way, although I'll need to hack kvmtool to
+> use the new scheme.
+
+If you use ECAM then I wonder if your driver might be a generic SBSA
+driver too?
+
+I can't think of a reason to support alternate MMIO layouts if
+kvmtool is the only user and can be changed.
+
+> > I don't think we even want "virt" in the compatible string. The
+> > binding should be generic enough that it can actually work with
+> > real hardware.
+> 
+> Sure. How about "arm,pci-generic" ? Alternatives are
+> "arm,pcie-generic" or "linux,pci-generic".
+
+arm,pci-ecam-generic ?
+
+Regards,
+Jason
