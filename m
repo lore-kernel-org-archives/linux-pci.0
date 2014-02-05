@@ -1,77 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <52F20E8B.4070108@codethink.co.uk>
-Date: Wed, 05 Feb 2014 10:12:27 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
-MIME-Version: 1.0
-To: Magnus Damm <magnus.damm@gmail.com>
-CC: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	"Simon Horman [Horms]" <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space
- update
-References: <20140205065243.29445.76593.sendpatchset@w520> <52F1F74C.2090106@codethink.co.uk> <CANqRtoRMAjBEXjBzivPxqMu8KhFsOkp0wb6jBbuZQx=B-qYuUA@mail.gmail.com> <52F20388.9080109@codethink.co.uk> <CANqRtoRUWC5ioDXJdEM6utQo2uHB3xar3RHzapR--xhjRmRQag@mail.gmail.com>
-In-Reply-To: <CANqRtoRUWC5ioDXJdEM6utQo2uHB3xar3RHzapR--xhjRmRQag@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:36041 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752723AbaBERDX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 12:03:23 -0500
+Date: Wed, 5 Feb 2014 18:03:19 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: bhelgaas@google.com, Jason Cooper <jason@lakedaemon.net>,
+	linux-pci@vger.kernel.org,
+	linux ARM <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] PCI: MVEBU: Use Device ID and revision from underlying
+ endpoint
+Message-ID: <20140205180319.0bbcfad3@skate>
+In-Reply-To: <20140205165432.GD29860@lunn.ch>
+References: <1391597749-29807-1-git-send-email-andrew@lunn.ch>
+	<20140205172110.22507687@skate>
+	<20140205165432.GD29860@lunn.ch>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/02/14 09:40, Magnus Damm wrote:
-> On Wed, Feb 5, 2014 at 6:25 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
->> On 05/02/14 09:00, Magnus Damm wrote:
->>>
->>> Hi Ben,
->>
->>
->> [snip]
->>
->>> I think we should try to pick out the stuff that is ready to be merged
->>> first. I think these patches may require a bit of time before people
->>> start looking at them. I don't mind resending in the future.
->>>
->>> To be honest, I have not been paying too much attention to other
->>> patches including yours - been focused trying to get the memory
->>> management part right.. So I'd like to focus on correctness over DT
->>> for now if possible. Of course we it all.
->>>
->>> Would it be possible for you to provide a list of pci-rcar-gen2.c
->>> patches that you posted? Or perhaps you can resend your series and
->>> include acks that you received?
->>
->>
->> I don't think I have any acks, only review comments. I think the code
->> itself is pretty much ready to be merged and has been tested here with
->> the Lager board.
->
-> Ok, thanks. I'd like to go through them myself if possible. I was
-> looking for a cover letter or something that listed the patches but I
-> can't seem to find it. Can you please provide a list?
+Dear Andrew Lunn,
 
-I will re-send the patches once I've applied the relevant fixups from
-the last round, hopefully within the next few hours.
+On Wed, 5 Feb 2014 17:54:32 +0100, Andrew Lunn wrote:
+> > > @@ -388,7 +380,8 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
+> > >  
+> > >  	bridge->class = PCI_CLASS_BRIDGE_PCI;
+> > >  	bridge->vendor = PCI_VENDOR_ID_MARVELL;
+> > 
+> > This could also have been replaced by:
+> > 
+> > 	bridge->vendor = mvebu_readl(port, PCIE_DEV_ID_OFF) & 0xff;
+> 
+> O.K, but do we ever expect it not to be PCI_VENDOR_ID_MARVELL on the
+> underlying hardware?
 
->> The big issue for us is that we /must/ boot with fdt, which means the
->> less fdt support that is in the kernel then the more patches we end up
->> carrying out of tree. This is why we have been pushing patches out to
->> try and get the support in.
->
-> Can you please define "boot with fdt"? As you probably know, both
-> board-lager.c and board-lager-reference.c boot with DT. I suppose you
-> mean that you want DT to describe the entire system, with no C code
-> for the board? Please note that some devices like timers still don't
-> use DT, so if you can live without those then... =)
+No, I don't expect it to be different. Which is why I said it "could"
+have been replaced, because I am not sure it is worth doing it.
 
-We currently have enough to use the system. And yes, we boot with
-board-lager-reference.c which current seems to be turning up bugs
-in the up-stream (see the recent new bug with cpg clock code reported
-by my colleague).
+> > > -	bridge->device = MARVELL_EMULATED_PCI_PCI_BRIDGE_ID;
+> > > +	bridge->device = mvebu_readl(port, PCIE_DEV_ID_OFF) >> 16;
+> > > +	bridge->revision = mvebu_readl(port, PCIE_DEV_REV_OFF) & 0xff;
+> > 
+> > On Armada 370 and XP, this field is apparently always 0x0, so not very
+> > useful. But if it's useful on other mvebu SoCs, that's fine, it's just
+> > an informative field anyway.
+> 
+> Humm, that should be the stepping, unless i have made a mistake. The
+> code Gregory wrote for mvebu-soc-id.c does:
+> 
+>        /* SoC ID */
+>         soc_dev_id = readl(pci_base + PCIE_DEV_ID_OFF) >> 16;
+> 
+>         /* SoC revision */
+>         soc_rev = readl(pci_base + PCIE_DEV_REV_OFF) & SOC_REV_MASK;
+> 
+> However, the box i'm testing on has stepping 0, so it is hard to test.
+> Could you test this in an OpenBlocks AX3 B0, or some other B0 device?
 
-Due to issues out of our control we can test with board-lager.c but
-we must use the board-lager-reference.c for actual product test. The
-only way we found around this is ugly hacking of the core driver code
-to link platform and fdt devices...
+Tested on a B0 now, and the revision returned is indeed 0x2, so you're
+correct. Seems like the datasheet that indicates the value is 0x0 is
+wrong :)
 
+Thanks!
+
+Thomas
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
