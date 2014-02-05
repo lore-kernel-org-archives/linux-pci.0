@@ -1,77 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22879 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752712AbaBNWWh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Feb 2014 17:22:37 -0500
-Message-ID: <1392416555.15608.430.camel@ul30vt.home>
-Subject: Re: [PATCH v2 0/3] Quirk Intel PCH root ports for ACS-like features
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Don Dugger <donald.d.dugger@intel.com>
-Date: Fri, 14 Feb 2014 15:22:35 -0700
-In-Reply-To: <CAErSpo5D55RcaSASGrU8hEcg+BYvGKOQHFjor8k1gSzfZKWy2g@mail.gmail.com>
-References: <20140203212216.8607.68273.stgit@bling.home>
-	 <CAErSpo5D55RcaSASGrU8hEcg+BYvGKOQHFjor8k1gSzfZKWy2g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:64002 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbaBETmN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 14:42:13 -0500
+Received: by mail-lb0-f172.google.com with SMTP id c11so710242lbj.31
+        for <linux-pci@vger.kernel.org>; Wed, 05 Feb 2014 11:42:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140205192733.GG25695@obsidianresearch.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <1391532784-1953-3-git-send-email-will.deacon@arm.com> <3460536.Sh23gjDa6X@wuerfel>
+ <20140205190947.GA22297@mudshark.cambridge.arm.com> <20140205192733.GG25695@obsidianresearch.com>
+From: Peter Maydell <peter.maydell@linaro.org>
+Date: Wed, 5 Feb 2014 19:41:47 +0000
+Message-ID: <CAFEAcA9bhWK+pSy8wVLtNPyHtBCnudLi7pMhNny=ZfgNLty87Q@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Will Deacon <will.deacon@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-02-14 at 14:43 -0700, Bjorn Helgaas wrote:
-> [+cc Don]
-> 
-> On Mon, Feb 03, 2014 at 02:27:27PM -0700, Alex Williamson wrote:
-> > v2:
-> >  - Remove bus #0 bug in filtering matching
-> >  - Add 2/3 introducing PCI_DEV_FLAGS_ACS_ENABLED_QUIRK, this gives
-> >    is better tracking and addresses the theoretical hotplug issue
-> >  - Update 3/3 for PCI_DEV_FLAGS_ACS_ENABLED_QUIRK
-> >  - Add dev_info to print regardless of whether we changes bits
-> >  - Add Intel cc
-> >
-> > As described in 3/3 many Intel root ports lack PCIe ACS capabilities
-> > which results in excessively large IOMMU groups.  Many of these root
-> > ports do provide isolation capabilities, we just need to use device
-> > specific mechanisms to enable and verify.  Long term, I hope we can
-> > round out this list (particularly to include X79 root ports) and
-> > more importantly, encourage proper PCIe ACS support in future
-> > products.  I'm really hoping we can get this in during the 3.14 cycle.
-> > Thanks,
-> >
-> > Alex
-> > ---
-> >
-> > Alex Williamson (3):
-> >       pci: Add device specific PCI ACS enable
-> >       pci: Add pci_dev_flag for ACS enable quirks
-> >       pci/quirks: Enable quirks for PCIe ACS on Intel PCH root ports
-> 
-> I applied these (with Don's ack for 3/3) to pci/virtualization.
-> 
-> I tried to figure out how to handle post-merge window patches.  Per
-> Documentation/development-process/2.Process, "[after -rc1], only patches
-> which fix problems should be submitted to the mainline," so one might
-> conclude that a fix for any sort of problem is allowed.  However,
-> Documentation/networking/netdev-FAQ.txt says "No new features get mainlined
-> after this [-rc1] -- only fixes to the rc1 content are expected," which is
-> how I've been operating.
-> 
-> In any case, these patches look more like new functionality (enabling a
-> non-standard ACS feature) than a bug fix to me, so my preference is to
-> merge them during the v3.15 merge window.
-> 
-> I understand the desire for v3.14, namely, "lots of Intel devices don't
-> support ACS, and that makes it hard for users to expose devices to
-> userspace with fine granularity, and waiting for v3.15 will mean another
-> two months."  But this problem is really of Intel's own making: if they'd
-> used standard ACS, or if they'd documented their non-standard mechanism,
-> this wouldn't be an issue.
+On 5 February 2014 19:27, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> I can't think of a reason to support alternate MMIO layouts if
+> kvmtool is the only user and can be changed.
 
-I appreciate you taking the time to consider it for 3.14.  I'll look
-forward to it appearing in linux-next for 3.15.  Thanks for review and
-applying,
+I expect we'll get a QEMU implementation too at some point,
+but we should be able to just make that match whatever you
+decide is the correct layout and behaviour.
 
-Alex
+The only constraint QEMU has which kvmtool doesn't is that
+we care about not randomly shuffling things around between
+QEMU versions, so whatever we pick we're more or less
+stuck with. So a layout which leaves scope for "supports
+PCI now, may do PCI-e later, MSI after that" would be good.
+(My PCI knowledge is very piecemeal, I hope that makes sense...)
 
+thanks
+-- PMM
