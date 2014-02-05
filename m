@@ -1,51 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65126 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753182AbaBSI4k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 03:56:40 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Joshua Morris <josh.h.morris@us.ibm.com>,
-	Philip Kelleher <pjk1939@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 5/9] rsxx: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 19 Feb 2014 09:58:17 +0100
-Message-Id: <884e8e236ae1e7223230ee0de75f2f01817140cf.1392799751.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
-References: <cover.1392799751.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <52F20388.9080109@codethink.co.uk>
+References: <20140205065243.29445.76593.sendpatchset@w520>
+	<52F1F74C.2090106@codethink.co.uk>
+	<CANqRtoRMAjBEXjBzivPxqMu8KhFsOkp0wb6jBbuZQx=B-qYuUA@mail.gmail.com>
+	<52F20388.9080109@codethink.co.uk>
+Date: Wed, 5 Feb 2014 18:40:00 +0900
+Message-ID: <CANqRtoRUWC5ioDXJdEM6utQo2uHB3xar3RHzapR--xhjRmRQag@mail.gmail.com>
+Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space update
+From: Magnus Damm <magnus.damm@gmail.com>
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	"Simon Horman [Horms]" <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Wed, Feb 5, 2014 at 6:25 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
+> On 05/02/14 09:00, Magnus Damm wrote:
+>>
+>> Hi Ben,
+>
+>
+> [snip]
+>
+>> I think we should try to pick out the stuff that is ready to be merged
+>> first. I think these patches may require a bit of time before people
+>> start looking at them. I don't mind resending in the future.
+>>
+>> To be honest, I have not been paying too much attention to other
+>> patches including yours - been focused trying to get the memory
+>> management part right.. So I'd like to focus on correctness over DT
+>> for now if possible. Of course we it all.
+>>
+>> Would it be possible for you to provide a list of pci-rcar-gen2.c
+>> patches that you posted? Or perhaps you can resend your series and
+>> include acks that you received?
+>
+>
+> I don't think I have any acks, only review comments. I think the code
+> itself is pretty much ready to be merged and has been tested here with
+> the Lager board.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Joshua Morris <josh.h.morris@us.ibm.com>
-Cc: Philip Kelleher <pjk1939@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/block/rsxx/core.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Ok, thanks. I'd like to go through them myself if possible. I was
+looking for a cover letter or something that listed the patches but I
+can't seem to find it. Can you please provide a list?
 
-diff --git a/drivers/block/rsxx/core.c b/drivers/block/rsxx/core.c
-index a8de2ee..76c8124 100644
---- a/drivers/block/rsxx/core.c
-+++ b/drivers/block/rsxx/core.c
-@@ -880,8 +880,8 @@ static int rsxx_pci_probe(struct pci_dev *dev,
- 	spin_unlock_irq(&card->irq_lock);
- 
- 	if (!force_legacy) {
--		st = pci_enable_msi(dev);
--		if (st)
-+		st = pci_enable_msi_range(dev, 1, 1);
-+		if (st < 0)
- 			dev_warn(CARD_TO_DEV(card),
- 				"Failed to enable MSI\n");
- 	}
--- 
-1.7.7.6
+> The big issue for us is that we /must/ boot with fdt, which means the
+> less fdt support that is in the kernel then the more patches we end up
+> carrying out of tree. This is why we have been pushing patches out to
+> try and get the support in.
 
+Can you please define "boot with fdt"? As you probably know, both
+board-lager.c and board-lager-reference.c boot with DT. I suppose you
+mean that you want DT to describe the entire system, with no C code
+for the board? Please note that some devices like timers still don't
+use DT, so if you can live without those then... =)
+
+Thanks,
+
+/ magnus
