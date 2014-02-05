@@ -1,49 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49133 "EHLO
-	alan.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751274AbaBELyc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 06:54:32 -0500
-Received: from alan.etchedpixels.co.uk (localhost [127.0.0.1])
-	by alan.etchedpixels.co.uk (8.14.4/8.14.4/Debian-2.1ubuntu4) with ESMTP id s15BsYfb014448
-	for <linux-pci@vger.kernel.org>; Wed, 5 Feb 2014 11:54:35 GMT
-Subject: [PATCH] pci: allocation check missing
-To: linux-pci@vger.kernel.org
-From: Alan <gnomes@lxorguk.ukuu.org.uk>
-Date: Wed, 05 Feb 2014 11:54:34 +0000
-Message-ID: <20140205115412.14423.23707.stgit@alan.etchedpixels.co.uk>
+Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:40006 "EHLO
+	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751344AbaBEEks convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Feb 2014 23:40:48 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>,
+	Pratyush ANAND <pratyush.anand@st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 5 Feb 2014 12:40:33 +0800
+Subject: RE: designware: RC BARs setup related fix
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FD2CA14F@EAPEX1MAIL1.st.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we fail to allocate the name, just drop nicely into the fail path
++Cc linux-pci@vger.kernel.org
 
-(as a footnote someone who works on this code more might want to shuffle
- the allocations about so the name and attributes are allocated and freed
- as one. There seems to be no reason to keep them separate)
-
-Signed-off-by: Alan Cox <alan@linux.intel.com>
----
- drivers/pci/msi.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 18ca2497..9bdf290 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -544,9 +544,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 		return -ENOMEM;
- 	list_for_each_entry(entry, &pdev->msi_list, list) {
- 		char *name = kmalloc(20, GFP_KERNEL);
-+		if (!name)
-+		        goto error_attrs;
- 		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
--		if (!msi_dev_attr)
-+		if (!msi_dev_attr) {
-+		        kfree(name);
- 			goto error_attrs;
-+                }
- 		sprintf(name, "%d", entry->irq);
- 		sysfs_attr_init(&msi_dev_attr->attr);
- 		msi_dev_attr->attr.name = name;
+> -----Original Message-----
+> From: Mohit KUMAR DCG
+> Sent: Wednesday, February 05, 2014 10:06 AM
+> To: 'Jingoo Han'
+> Cc: Arnd Bergmann (arnd@arndb.de); Pratyush ANAND
+> Subject: designware: RC BARs setup related fix
+> 
+> Hello Jingoo,
+> 
+> The Synopsys  PCIe core provides one pair of 32-bit BARs (BAR 0 and BAR 1).
+> The BARs can  be configured as follows:
+> - One 64-bit BAR: BARs 0 and 1 are combined to form a single 64-bit BAR.
+> - Two 32-bit BARs: BARs 0 and 1 are two independent 32-bit BARs
+> 
+> For the 64-bit, non-prefetchable memory BAR configuration should be:
+> 	/* setup RC BARs */
+> 	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
+> 	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
+> 
+> For 32-bit, non-prefetchable memory BAR configuration should be:
+> 	/* setup RC BARs */
+> 	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_0);
+> 	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
+> 
+> While reviewing the code I find that dw driver programmed BARs as:
+> 	/* setup RC BARs */
+> 	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
+> 	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_1);
+> 
+> I think it needs to be fixed. If you agree I will fix it as in option 1 or you  have
+> some  other point?
+> 
+> Thanks
+> Mohit
+> 
 
