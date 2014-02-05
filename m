@@ -1,58 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:57444 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607AbaBZXsS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 18:48:18 -0500
-Received: by mail-ie0-f176.google.com with SMTP id y20so890601ier.35
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 15:48:18 -0800 (PST)
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:45975 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750994AbaBETKS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 14:10:18 -0500
+Date: Wed, 5 Feb 2014 19:09:47 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140205190947.GA22297@mudshark.cambridge.arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <1391532784-1953-3-git-send-email-will.deacon@arm.com>
+ <3460536.Sh23gjDa6X@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <20140226224844.219fe0ac@alan.etchedpixels.co.uk>
-References: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140226190927.9616.43043.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140226224844.219fe0ac@alan.etchedpixels.co.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Feb 2014 16:47:58 -0700
-Message-ID: <CAErSpo7=vbbNck6Ua+-5ycHVCuby0OnxHMGmhSw3Qb-iXOsaeA@mail.gmail.com>
-Subject: Re: [PATCH 4/4] i2o: Use pci_bus_alloc_resource(), not
- allocate_resource() directly
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Markus Lidel <Markus.Lidel@shadowconnect.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3460536.Sh23gjDa6X@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 26, 2014 at 3:48 PM, One Thousand Gnomes
-<gnomes@lxorguk.ukuu.org.uk> wrote:
-> On Wed, 26 Feb 2014 12:09:27 -0700
-> Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> Convert i2o_res_alloc() to use pci_bus_alloc_resource() rather than
->> pci_find_parent_resource() and allocate_resource().  We don't have a
->> resource to start with, so pci_find_parent_resource() can't do anything
->> useful: a bus may have several memory resources available, so there might
->> be several possible parents.  This is more likely on root buses because
->> host bridges may have any number of apertures.
->>
->> I'm pretty sure this didn't work in the first place because it passed
->> size == min == max to allocate_resource().  The min and max parameters are
->> constraints on the *addresses* of the resource, not on its size, so I think
->> it was impossible for allocate_resource() to succeed.
->
-> I don't think many i2o controllers ever used that path, and I doubt any
-> in normal use did as the vision of offloading for devices on the host bus
-> basically never happened (it happened even less than i2o)
->
-> A rather more sensible question might be "If i2o went away is there
-> anyone who would even notice". About the only devices that ever used i2o
-> in the real world (AMI MegaRAID and some FC stuff) had native firmware or
-> modes that worked better anyway.
+Hi Arnd,
 
-I don't know anything about i2o, so I have no idea whether it could be
-completely removed.  I just want to remove its usage of
-pci_find_parent_resource() so I can change the semantics of that a bit
-(see [1]).
+Thanks for having a look.
 
-Bjorn
+On Tue, Feb 04, 2014 at 07:13:49PM +0000, Arnd Bergmann wrote:
+> On Tuesday 04 February 2014 16:53:03 Will Deacon wrote:
+> > +
+> > +- ranges         : As described in IEEE Std 1275-1994, but must provide
+> > +                   at least a definition of the Configuration Space plus
+> > +                   one or both of IO and Memory Space.
+> > +
+> 
+> I might need to reread the spec, but I think the config space is not
+> actually supposed to be in the 'ranges' of the host bridge at all,
+> and it should just be listed in the 'reg'.
 
-[1] https://lkml.kernel.org/r/20140226193723.10125.15799.stgit@bhelgaas-glaptop.roam.corp.google.com
+This wasn't at all clear to me (I listed it in the cover-letter as being
+something to sort out).
+
+> IIRC the reason why the config space is part of the three-cell address
+> is so that you can have funky ways to say "memory space of the device
+> with bus/dev/fn is actually translated to address X rather then Y".
+> 
+> It's too late to change that for the other drivers now, after the
+> binding is established.
+
+The spec is based on the idea that open-firmware enumerates your entire PCI
+bus topology, then provides the Conriguation Space address for each device
+using a reg property.
+
+Since:
+
+  (a) This doesn't match what we're planning to support
+  (b) Runs the risk of making the "reg" encoding something specific to this
+      driver
+  (c) Doesn't match how we describe Memory and IO Spaces
+  (d) There is already precendence in mainline
+
+I chose to use "ranges" instead.
+
+Now, if "reg" is definitely the correct thing to do, is it simply a matter
+of putting the Configuration Space base address in there, or do we also need
+to do the rest of what ePAPR says (expansion ROM details, ...)? I don't like
+the idea of enumerating the entire bus in the DT when we don't need to.
+
+> > +Configuration Space is assumed to be memory-mapped (as opposed to being
+> > +accessed via an ioport) and laid out with a direct correspondence to the
+> > +geography of a PCI bus address, by concatenating the various components
+> > +to form a 24-bit offset:
+> > +
+> > +        cfg_offset(bus, device, function, register) =
+> > +                bus << 16 | device << 11 | function << 8 | register
+> 
+> This won't allow extended config space. Why not just do the
+> regular mmconfig layout and make this:
+> 
+> 	cfg_offset(bus, device, function, register) =
+> 		bus << 20 | device << 15 | function << 12 | register;
+
+Is it worth adding a DT property to support both, or is ECAM the only thing
+to care about? I'm happy either way, although I'll need to hack kvmtool to
+use the new scheme.
+
+> > +static int virt_pci_setup(int nr, struct pci_sys_data *sys)
+> > +{
+> > +	struct virt_pci *pci = sys->private_data;
+> > +
+> > +	if (resource_type(&pci->io)) {
+> > +		pci_add_resource(&sys->resources, &pci->io);
+> > +		pci_ioremap_io(nr * resource_size(&pci->io), pci->io.start);
+> > +	}
+> 
+> This should really compute an io_offset.
+> 
+> > +	if (resource_type(&pci->mem))
+> > +		pci_add_resource(&sys->resources, &pci->mem);
+> 
+> and also a mem_offset, which is something different.
+
+As somebody new to PCI, I'm afraid you've lost me here. Are you referring to
+using pci_add_resource_offset instead, then removing my restriction on
+having a single resource from the parsing code?
+
+> > +	pci->cfg_base = devm_ioremap_resource(pci->dev, &pci->cfg);
+> > +	return !IS_ERR(pci->cfg_base);
+> > +}
+> > +
+> > +static const struct of_device_id virt_pci_of_match[] = {
+> > +	{ .compatible = "linux,pci-virt" },
+> > +	{ },
+> > +};
+> > +MODULE_DEVICE_TABLE(of, virt_pci_of_match);
+> 
+> I don't think we even want "virt" in the compatible string. The
+> binding should be generic enough that it can actually work with
+> real hardware.
+
+Sure. How about "arm,pci-generic" ? Alternatives are
+"arm,pcie-generic" or "linux,pci-generic".
+
+> > +	for_each_of_pci_range(&parser, &range) {
+> > +		u32 restype = range.flags & IORESOURCE_TYPE_BITS;
+> > +
+> > +		switch (restype) {
+> > +		case IORESOURCE_IO:
+> > +			if (resource_type(&pci->io))
+> > +				dev_warn(dev,
+> > +					 "ignoring additional io resource\n");
+> > +			else
+> > +				of_pci_range_to_resource(&range, np, &pci->io);
+> > +			break;
+> > +		case IORESOURCE_MEM:
+> > +			if (resource_type(&pci->mem))
+> > +				dev_warn(dev,
+> > +					 "ignoring additional mem resource\n");
+> > +			else
+> > +				of_pci_range_to_resource(&range, np, &pci->mem);
+> > +			break;
+> 
+> This shows once more that the range parser code is suboptimal. So far
+> every single driver got the I/O space wrong here, because the obvious
+> way to write this function is also completely wrong.
+
+I see you mentioned to Liviu that you should register a logical resource,
+rather than physical resource returned from the parser. It seems odd that
+I/O space appears to work with this code as-is (I've tested it on arm using
+kvmtool by removing the memory bars).
+
+> What you get out of "of_pci_range_to_resource(&range, np, &pci->io)"
+> is not the resource you want to pass into pci_add_resource()
+> later.
+
+Do I need to open-code the resource translation from phys -> logical?
+
+> 
+> > +	memset(&hw, 0, sizeof(hw));
+> > +	hw.nr_controllers	= 1;
+> > +	hw.private_data		= (void **)&pci;
+> > +	hw.setup		= virt_pci_setup;
+> > +	hw.map_irq		= of_irq_parse_and_map_pci;
+> > +	hw.ops			= &virt_pci_ops;
+> > +	pci_common_init_dev(dev, &hw);
+> 
+> Since most fields here are constant, I'd just write this as
+> 
+> 	struct hw_pci hw = {
+> 		.nr_controllers = 1,
+> 		.setup = virt_pci_setup,
+> 		...
+> 	};
+
+Can do.
+
+Thanks,
+
+Will
