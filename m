@@ -1,157 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:50613 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970AbaBML2P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 06:28:15 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linaro-kernel@lists.linaro.org
-Cc: Jingoo Han <jg1.han@samsung.com>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	devicetree@vger.kernel.org,
-	'Catalin Marinas' <Catalin.Marinas@arm.com>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from device tree
-Date: Thu, 13 Feb 2014 12:27:05 +0100
-Message-ID: <3204351.WykFFcX4zJ@wuerfel>
-In-Reply-To: <000001cf2899$a6eb75b0$f4c26110$%han@samsung.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com> <CACoXjc=epN8=tFQKw6kZ27hTA=a+c56q1pikX_SSMKK1rsScCw@mail.gmail.com> <000001cf2899$a6eb75b0$f4c26110$%han@samsung.com>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:45652 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753588AbaBESml (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 13:42:41 -0500
+Date: Wed, 5 Feb 2014 13:42:29 -0500
+From: Jason Cooper <jason@lakedaemon.net>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux ARM <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] PCI: MVEBU: Use Device ID and revision from underlying
+ endpoint
+Message-ID: <20140205184229.GX8533@titan.lakedaemon.net>
+References: <1391597749-29807-1-git-send-email-andrew@lunn.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1391597749-29807-1-git-send-email-andrew@lunn.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 13 February 2014 17:57:41 Jingoo Han wrote:
-> I want to use 'drivers/pci/host/pcie-designware.c' for both arm32
-> and arm64, without any code changes. However, it looks impossible.
-
-It is impossible at the moment, and I agree we have to fix that.
-
-> I made 'drivers/pci/host/pcie-designware.c' based on 32bit arm PCI
-> support. Then, with Liviu's patch, do I have to make new code for arm64,
-> even though the same HW PCIe IP is used?
+On Wed, Feb 05, 2014 at 11:55:49AM +0100, Andrew Lunn wrote:
+> Marvell SoCs place the SoC number into the PCIe endpoint device ID.
+> The SoC stepping is placed into the PCIe revision. The old plat-orion
+> PCIe driver allowed this information to be seen in user space with a
+> simple lspci command.
 > 
-> - For arm32
->   drivers/pci/host/pcie-designware.c
+> The new driver places a virtual PCI-PCI bridge on top of these
+> endpoints. It has its own hard coded PCI device ID. Thus it is no
+> longer possible to see what the SoC is using lspci.
 > 
-> - For arm64
->   drivers/pci/host/pcie-designware-arm64.c
+> When initializing the PCI-PCI bridge, set its device ID and revision
+> from the underlying endpoint, thus restoring this functionality.
+> Debian would like to use this in order to aid installing the correct
+> DTB file.
+> 
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+> ---
+>  drivers/pci/host/pci-mvebu.c | 11 ++---------
+>  1 file changed, 2 insertions(+), 9 deletions(-)
 
-As a start, I'd suggest using "#ifdef CONFIG_ARM" in the driver,
-but sharing as much code as you can. We should try to make the #else
-section of the #ifdef architecture independent and get have the arm64
-implementation shared with any architecture that doesn't have or want
-its own pcibios32.c implementation.
+Acked-by: Jason Cooper <jason@lakedaemon.net>
 
-> > > I am reviewing and compiling your patch.
-> > > Would you consider adding 'struct pci_sys_data' and 'struct hw_pci'?
+Also, since this fixes a userspace regression:
 
-I would rather get rid of struct hw_pci for architecture independent
-drivers and add a different registration method on arm32 that is
-compatible with what we come up with on arm64. The main purpose of
-hw_pci is to allow multiple PCI controllers to be initialized at
-once, but we don't actually need that for any of the "modern" platforms
-where we already have a probe function that gets called once for
-each controller.
+Fixes: 45361a4fe4464 ("pci: PCIe driver for Marvell Armada 370/XP systems")
+Cc: <stable@vger.kernel.org> # v3.11+
 
-As a start, we could add a pci_host_bridge_register() function like
-the one below to arm32 and migrate the drivers/pci/host/ drivers
-over to use it with little effort. Instead of filling out hw_pci,
-these drivers would allocate (by embedding in their device struct)
-and fill out pci_sys_data directly. After that, we can gradually
-move more code out of the arm32 implementation into common code, if
-it doesn't already exist there, up to the point where a host driver
-no longer has to call any function in bios32.c.
+thx,
 
-	Arnd
+Jason.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 317da88..12c2178 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -514,6 +514,26 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 	}
- }
- 
-+static void pci_common_bus_probe(struct pci_bus *bus)
-+{
-+	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-+		/*
-+		 * Size the bridge windows.
-+		 */
-+		pci_bus_size_bridges(bus);
-+
-+		/*
-+		 * Assign resources.
-+		 */
-+		pci_bus_assign_resources(bus);
-+	}
-+
-+	/*
-+	 * Tell drivers about devices found.
-+	 */
-+	pci_bus_add_devices(bus);
-+}
-+
- void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
- {
- 	struct pci_sys_data *sys;
-@@ -528,27 +548,38 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
- 
- 	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
- 
--	list_for_each_entry(sys, &head, node) {
--		struct pci_bus *bus = sys->bus;
-+	list_for_each_entry(sys, &head, node)
-+		pci_common_bus_probe(sys->bus);
-+}
- 
--		if (!pci_has_flag(PCI_PROBE_ONLY)) {
--			/*
--			 * Size the bridge windows.
--			 */
--			pci_bus_size_bridges(bus);
- 
--			/*
--			 * Assign resources.
--			 */
--			pci_bus_assign_resources(bus);
--		}
- 
--		/*
--		 * Tell drivers about devices found.
--		 */
--		pci_bus_add_devices(bus);
--	}
-+
-+int pci_host_bridge_register(struct device *parent, struct pci_sys_data *sys, struct pci_ops *ops, int (*setup)(int nr, struct pci_sys_data *))
-+{
-+	int ret;
-+
-+	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-+	INIT_LIST_HEAD(&sys->resources);
-+
-+	ret = setup(0, sys);
-+	if (ret)
-+		return ret;
-+
-+	ret = pcibios_init_resources(0, sys);
-+	if (ret)
-+		return ret;
-+
-+	sys->bus = pci_scan_root_bus(parent, sys->busnr, ops, sys, &sys->resources);
-+	if (!sys->bus)
-+		return -ENODEV;
-+
-+	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
-+
-+	pci_common_bus_probe(sys->bus);
-+	return ret;
- }
-+EXPORT_SYMBOL_GPL(pci_host_bridge_register);
- 
- #ifndef CONFIG_PCI_HOST_ITE8152
- void pcibios_set_master(struct pci_dev *dev)
-
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 13478ecd4113..0e79665afd44 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -60,14 +60,6 @@
+>  #define PCIE_DEBUG_CTRL         0x1a60
+>  #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
+>  
+> -/*
+> - * This product ID is registered by Marvell, and used when the Marvell
+> - * SoC is not the root complex, but an endpoint on the PCIe bus. It is
+> - * therefore safe to re-use this PCI ID for our emulated PCI-to-PCI
+> - * bridge.
+> - */
+> -#define MARVELL_EMULATED_PCI_PCI_BRIDGE_ID 0x7846
+> -
+>  /* PCI configuration space of a PCI-to-PCI bridge */
+>  struct mvebu_sw_pci_bridge {
+>  	u16 vendor;
+> @@ -388,7 +380,8 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
+>  
+>  	bridge->class = PCI_CLASS_BRIDGE_PCI;
+>  	bridge->vendor = PCI_VENDOR_ID_MARVELL;
+> -	bridge->device = MARVELL_EMULATED_PCI_PCI_BRIDGE_ID;
+> +	bridge->device = mvebu_readl(port, PCIE_DEV_ID_OFF) >> 16;
+> +	bridge->revision = mvebu_readl(port, PCIE_DEV_REV_OFF) & 0xff;
+>  	bridge->header_type = PCI_HEADER_TYPE_BRIDGE;
+>  	bridge->cache_line_size = 0x10;
+>  
+> -- 
+> 1.8.5.2
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
