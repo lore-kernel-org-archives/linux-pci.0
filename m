@@ -1,91 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:35847 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752638AbaBEQVw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 11:21:52 -0500
-Date: Wed, 5 Feb 2014 17:21:10 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: bhelgaas@google.com, Jason Cooper <jason@lakedaemon.net>,
-	linux-pci@vger.kernel.org,
-	linux ARM <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] PCI: MVEBU: Use Device ID and revision from underlying
- endpoint
-Message-ID: <20140205172110.22507687@skate>
-In-Reply-To: <1391597749-29807-1-git-send-email-andrew@lunn.ch>
-References: <1391597749-29807-1-git-send-email-andrew@lunn.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from quartz.orcorp.ca ([184.70.90.242]:59143 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754709AbaBEUx1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Feb 2014 15:53:27 -0500
+Date: Wed, 5 Feb 2014 13:53:19 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Will Deacon <will.deacon@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140205205319.GH25695@obsidianresearch.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <3460536.Sh23gjDa6X@wuerfel>
+ <20140205190947.GA22297@mudshark.cambridge.arm.com>
+ <3724624.kd9jZNUiTF@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3724624.kd9jZNUiTF@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Andrew Lunn,
+On Wed, Feb 05, 2014 at 09:26:17PM +0100, Arnd Bergmann wrote:
+> > > What you get out of "of_pci_range_to_resource(&range, np, &pci->io)"
+> > > is not the resource you want to pass into pci_add_resource()
+> > > later.
 
-On Wed,  5 Feb 2014 11:55:49 +0100, Andrew Lunn wrote:
-> Marvell SoCs place the SoC number into the PCIe endpoint device ID.
-> The SoC stepping is placed into the PCIe revision. The old plat-orion
-> PCIe driver allowed this information to be seen in user space with a
-> simple lspci command.
+Right, of_pci_range_to_resource returns the CPU MMIO address. A big
+problem here is that struct resource is being re-used for bus
+physical, CPU MMIO, and Linux Driver addressing domains without any
+helpful tagging.
+
+typedef struct resource resource_bus;
+typedef struct resource resource_cpu;
+
+?
+
+> > Do I need to open-code the resource translation from phys -> logical?
 > 
-> The new driver places a virtual PCI-PCI bridge on top of these
-> endpoints. It has its own hard coded PCI device ID. Thus it is no
-> longer possible to see what the SoC is using lspci.
-> 
-> When initializing the PCI-PCI bridge, set its device ID and revision
-> from the underlying endpoint, thus restoring this functionality.
-> Debian would like to use this in order to aid installing the correct
-> DTB file.
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> ---
->  drivers/pci/host/pci-mvebu.c | 11 ++---------
->  1 file changed, 2 insertions(+), 9 deletions(-)
+> I think we should have some common infrastructure that lets you
+> get this right more easily.
 
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+The offset stuff seems to be very confusing to people, removing it
+from the APIs and forcing drivers to talk about bus addresess, CPU
+addresses and internal Linux addresses seems a bit more plain?
 
-I have two comments below, though.
+What do you think about something like this:
 
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 13478ecd4113..0e79665afd44 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -60,14 +60,6 @@
->  #define PCIE_DEBUG_CTRL         0x1a60
->  #define  PCIE_DEBUG_SOFT_RESET		BIT(20)
->  
-> -/*
-> - * This product ID is registered by Marvell, and used when the Marvell
-> - * SoC is not the root complex, but an endpoint on the PCIe bus. It is
-> - * therefore safe to re-use this PCI ID for our emulated PCI-to-PCI
-> - * bridge.
-> - */
-> -#define MARVELL_EMULATED_PCI_PCI_BRIDGE_ID 0x7846
-> -
->  /* PCI configuration space of a PCI-to-PCI bridge */
->  struct mvebu_sw_pci_bridge {
->  	u16 vendor;
-> @@ -388,7 +380,8 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
->  
->  	bridge->class = PCI_CLASS_BRIDGE_PCI;
->  	bridge->vendor = PCI_VENDOR_ID_MARVELL;
+int of_pci_alloc_io(.. resources,
+                    struct of_pci_range *range,
+                    struct device_node *np)
+{
+  struct resource bus_address, mmio_window, res;
 
-This could also have been replaced by:
+  bus_address.start = range->pci_addr;
+  bus_address.end = range->pci_addr + range->size - 1;
 
-	bridge->vendor = mvebu_readl(port, PCIE_DEV_ID_OFF) & 0xff;
+  mmio_window.start = range->cpu_addr;
+  mmio_window.end = range->cpu_addr + range->size - 1;
 
-> -	bridge->device = MARVELL_EMULATED_PCI_PCI_BRIDGE_ID;
-> +	bridge->device = mvebu_readl(port, PCIE_DEV_ID_OFF) >> 16;
-> +	bridge->revision = mvebu_readl(port, PCIE_DEV_REV_OFF) & 0xff;
+  /* Input bus_address - addresses seen on the bus
+           mmio_window - physical CPU address to create the bus
+	   	         addreses
+     Output res - Address suitable for use in drivers
+     This does the pci_ioremap_io too */
+  pci_alloc_virtual_io_window(&bus_address, &mmio_window, &res);
 
-On Armada 370 and XP, this field is apparently always 0x0, so not very
-useful. But if it's useful on other mvebu SoCs, that's fine, it's just
-an informative field anyway.
+  /* bus_address - addresses seen on the bus
+     res - matching driver view for the bus addresses */
+  pci_add_resource_bus(&resources, &bus_address, &res);
+}
 
-Thanks!
+And a similar function for MMIO that just omits
+pci_alloc_virtual_io_window.
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Jason
