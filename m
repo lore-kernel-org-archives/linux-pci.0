@@ -1,197 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:36391 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbaBKWez (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 17:34:55 -0500
-Received: by mail-oa0-f54.google.com with SMTP id i4so10030732oah.13
-        for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2014 14:34:54 -0800 (PST)
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:46534 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754984AbaBECan (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:30:43 -0500
+Message-ID: <52F1A250.6030808@gmail.com>
+Date: Tue, 04 Feb 2014 18:30:40 -0800
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <52F9896D.7090908@gmail.com>
-References: <52F1A1B6.2090709@gmail.com> <4f93bb24b6214bfb9dbcc91b682184eb@DM2PR05MB671.namprd05.prod.outlook.com>
- <20140211011816.GA15412@google.com> <52F9896D.7090908@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Feb 2014 15:34:34 -0700
-Message-ID: <CAErSpo4n0souqCfnjwvA37321Wmr1RHZCX2tqx2Oa-jS_s7QYQ@mail.gmail.com>
-Subject: Re: [PATCH v5 8/8] Allow Link state changes for Hot-Plug
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: Rajat Jain <rajatjain@juniper.net>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yhlu.kernel@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=UTF-8
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
+CC: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH v4 6/8] pciehp: Disabling the link notification across slot
+ reset
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 10, 2014 at 7:22 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> Today it is there is no protection around pciehp_enable_slot() and
-> pciehp_disable_slot() to ensure that they complete before another
-> hot-plug operation can be done on that particular slot.
->
-> This patch introduces the slot->hotplug_lock to ensure that any
-> hotplug operations (add / remove) complete before another HP event
-> can begin processing on that particular slot.
->
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
-> ---
-> Hello Bjorn,
->
->>
->> I applied these to pci/pciehp for v3.15, thanks!  I dropped the "ret" decl
->> in 8/8, which I assume was the cause of the unused variable warning.
->>
->
-> Thank you so much for accepting the patchset. The "ret" variable in 8/8
-> was supposed to be used for holding the return value, so that the call to
-> pciehp_green_led_off() could be moved to after releasing the lock. Here
-> is the revised 8/8 patch (only a couple lines diff from v4). Please feel
-> free to either use this, or just make that small change in
-> pciehp_power_thread(). I was holding off sending this in case there were
-> any other comments.
-> ...
+Disable the link notification (in addition to presence detect
+notifications) across the slot reset since it could potentialy flap
+the link and we don't want to treat it as hot unplug followed by a
+hotplug.
 
-> v5: Remove the "unused variable" warning by using it to hold return value
->     (Thus reducing lock hold time, by moving pciehp_green_led_off() to
->      after releasing the lock)
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |   30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
 
-Thanks, I folded this into my pci/pciehp branch.
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 15ca3a1..6433e73 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -619,33 +619,37 @@ static void pcie_disable_notification(struct controller *ctrl)
+ 
+ /*
+  * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
+- * bus reset of the bridge, but if the slot supports surprise removal we need
+- * to disable presence detection around the bus reset and clear any spurious
++ * bus reset of the bridge, but if the slot supports surprise removal (or
++ * link state change based hotplug), we need to disable presence detection
++ * (or link state notifications) around the bus reset and clear any spurious
+  * events after.
+  */
+ int pciehp_reset_slot(struct slot *slot, int probe)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
++	u16 stat_mask = 0, ctrl_mask = 0;
+ 
+ 	if (probe)
+ 		return 0;
+ 
+-	if (HP_SUPR_RM(ctrl)) {
+-		pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_PDCE);
+-		if (pciehp_poll_mode)
+-			del_timer_sync(&ctrl->poll_timer);
++	if (HP_SUPR_RM(ctrl) && !ATTN_BUTTN(ctrl)) {
++		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
++		stat_mask |= PCI_EXP_SLTSTA_PDC;
+ 	}
++	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
++	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
++
++	pcie_write_cmd(ctrl, 0, ctrl_mask);
++	if (pciehp_poll_mode)
++		del_timer_sync(&ctrl->poll_timer);
+ 
+ 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
+ 
+-	if (HP_SUPR_RM(ctrl)) {
+-		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+-					   PCI_EXP_SLTSTA_PDC);
+-		pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PDCE, PCI_EXP_SLTCTL_PDCE);
+-		if (pciehp_poll_mode)
+-			int_poll_timeout(ctrl->poll_timer.data);
+-	}
++	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
++	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
++	if (pciehp_poll_mode)
++		int_poll_timeout(ctrl->poll_timer.data);
+ 
+ 	return 0;
+ }
+-- 
+1.7.9.5
 
-> v4: same as v3, only rebased on top of 3.14-rc1
-> v3: same as v2, only patch numbering changed from [4/4] to [8/8].
-> v2: Same as v1, dropped the "RFC" from subject, added Guenter's signature
-> v1: Initial patch
->
->  drivers/pci/hotplug/pciehp.h      |    1 +
->  drivers/pci/hotplug/pciehp_core.c |    7 ++++++-
->  drivers/pci/hotplug/pciehp_ctrl.c |   17 +++++++++++++++--
->  drivers/pci/hotplug/pciehp_hpc.c  |    1 +
->  4 files changed, 23 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index d8d0336..8a66866 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -76,6 +76,7 @@ struct slot {
->         struct hotplug_slot *hotplug_slot;
->         struct delayed_work work;       /* work for button event */
->         struct mutex lock;
-> +       struct mutex hotplug_lock;
->         struct workqueue_struct *wq;
->  };
->
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 53b58de..23b4bde 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -283,8 +283,11 @@ static int pciehp_probe(struct pcie_device *dev)
->         slot = ctrl->slot;
->         pciehp_get_adapter_status(slot, &occupied);
->         pciehp_get_power_status(slot, &poweron);
-> -       if (occupied && pciehp_force)
-> +       if (occupied && pciehp_force) {
-> +               mutex_lock(&slot->hotplug_lock);
->                 pciehp_enable_slot(slot);
-> +               mutex_unlock(&slot->hotplug_lock);
-> +       }
->         /* If empty slot's power status is on, turn power off */
->         if (!occupied && poweron && POWER_CTRL(ctrl))
->                 pciehp_power_off_slot(slot);
-> @@ -328,10 +331,12 @@ static int pciehp_resume (struct pcie_device *dev)
->
->         /* Check if slot is occupied */
->         pciehp_get_adapter_status(slot, &status);
-> +       mutex_lock(&slot->hotplug_lock);
->         if (status)
->                 pciehp_enable_slot(slot);
->         else
->                 pciehp_disable_slot(slot);
-> +       mutex_unlock(&slot->hotplug_lock);
->         return 0;
->  }
->  #endif /* PM */
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 3e40ec0..fec99a1 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -293,6 +293,7 @@ static void pciehp_power_thread(struct work_struct *work)
->         struct power_work_info *info =
->                 container_of(work, struct power_work_info, work);
->         struct slot *p_slot = info->p_slot;
-> +       int ret;
->
->         switch (info->req) {
->         case DISABLE_REQ:
-> @@ -300,7 +301,9 @@ static void pciehp_power_thread(struct work_struct *work)
->                          "Disabling domain:bus:device=%04x:%02x:00\n",
->                          pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
->                          p_slot->ctrl->pcie->port->subordinate->number);
-> +               mutex_lock(&p_slot->hotplug_lock);
->                 pciehp_disable_slot(p_slot);
-> +               mutex_unlock(&p_slot->hotplug_lock);
->                 mutex_lock(&p_slot->lock);
->                 p_slot->state = STATIC_STATE;
->                 mutex_unlock(&p_slot->lock);
-> @@ -310,7 +313,10 @@ static void pciehp_power_thread(struct work_struct *work)
->                          "Enabling domain:bus:device=%04x:%02x:00\n",
->                          pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
->                          p_slot->ctrl->pcie->port->subordinate->number);
-> -               if (pciehp_enable_slot(p_slot))
-> +               mutex_lock(&p_slot->hotplug_lock);
-> +               ret = pciehp_enable_slot(p_slot);
-> +               mutex_unlock(&p_slot->hotplug_lock);
-> +               if (ret)
->                         pciehp_green_led_off(p_slot);
->                 mutex_lock(&p_slot->lock);
->                 p_slot->state = STATIC_STATE;
-> @@ -546,6 +552,9 @@ static void interrupt_event_handler(struct work_struct *work)
->         kfree(info);
->  }
->
-> +/*
-> + * Note: This function must be called with slot->hotplug_lock held
-> + */
->  int pciehp_enable_slot(struct slot *p_slot)
->  {
->         u8 getstatus = 0;
-> @@ -584,7 +593,9 @@ int pciehp_enable_slot(struct slot *p_slot)
->         return rc;
->  }
->
-> -
-> +/*
-> + * Note: This function must be called with slot->hotplug_lock held
-> + */
->  int pciehp_disable_slot(struct slot *p_slot)
->  {
->         u8 getstatus = 0;
-> @@ -617,7 +628,9 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
->         case STATIC_STATE:
->                 p_slot->state = POWERON_STATE;
->                 mutex_unlock(&p_slot->lock);
-> +               mutex_lock(&p_slot->hotplug_lock);
->                 retval = pciehp_enable_slot(p_slot);
-> +               mutex_unlock(&p_slot->hotplug_lock);
->                 mutex_lock(&p_slot->lock);
->                 p_slot->state = STATIC_STATE;
->                 break;
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 55cc389..68447a1 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -686,6 +686,7 @@ static int pcie_init_slot(struct controller *ctrl)
->
->         slot->ctrl = ctrl;
->         mutex_init(&slot->lock);
-> +       mutex_init(&slot->hotplug_lock);
->         INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
->         ctrl->slot = slot;
->         return 0;
-> --
-> 1.7.9.5
->
