@@ -1,84 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21017 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752650AbaBXIBT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:01:19 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 21/23] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:21 +0100
-Message-Id: <09a448376c6da694f2d865a063f0eb75efa2e408.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:55396 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754AbaBEIuz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:50:55 -0500
+MIME-Version: 1.0
+In-Reply-To: <1390902468-7753-3-git-send-email-ben.dooks@codethink.co.uk>
+References: <1390902468-7753-1-git-send-email-ben.dooks@codethink.co.uk>
+	<1390902468-7753-3-git-send-email-ben.dooks@codethink.co.uk>
+Date: Wed, 5 Feb 2014 17:50:53 +0900
+Message-ID: <CANqRtoRy9bEUMCDqMtbfa3NvLuuLxda5RN=CZs9V37caNnwdWw@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: rcar: add error interrupt handling
+From: Magnus Damm <magnus.damm@gmail.com>
+To: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-kernel@lists.codethink.co.uk,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	SH-Linux <linux-sh@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Tue, Jan 28, 2014 at 6:47 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
+> Add option to enable interrupts to report any errors from
+> the AHB-PCI bridge to help find any issues with the bridge
+> when in use.
+>
+> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+> ---
+> Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> Cc: Simon Horman <horms@verge.net.au>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-sh@vger.kernel.org
+> ---
+>  drivers/pci/host/Kconfig         |  9 ++++++
+>  drivers/pci/host/pci-rcar-gen2.c | 60 ++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 69 insertions(+)
+>
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 47d46c6..6d4c46e 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -33,4 +33,13 @@ config PCI_RCAR_GEN2
+>           There are 3 internal PCI controllers available with a single
+>           built-in EHCI/OHCI host controller present on each one.
+>
+> +config PCI_RCAR_GEN2_ERRIRQ
+> +       bool "Enable error reporting interrupt support"
+> +       depends on PCI_RCAR_GEN2
+> +       help
+> +         Say Y here to enable support for the bus-error interrupts from
+> +         the PCI controller bridge.
+> +
+> +         This is here for aiding in debugging issues with the hardware.
+> +
 
-Log message code 0x00c6 preserved, although it is reported
-after successful call to pci_enable_msix_range(), not before
-possibly unsuccessful call to pci_enable_msix(). Consumers
-of the error code should not notice the difference.
+Thanks for your patches. Handling errors sounds good. About this
+particular one, I'm not so keen on introducing Kconfig options for
+each driver. Instead I'd prefer to handle this during runtime or as
+Valentine suggested using CONFIG_PCI_DEBUG.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
- 1 files changed, 11 insertions(+), 16 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 9bc86b9..b2dcfa4 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2896,27 +2896,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 	for (i = 0; i < ha->msix_count; i++)
- 		entries[i].entry = i;
- 
--	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--	if (ret) {
--		if (ret < MIN_MSIX_COUNT)
--			goto msix_failed;
--
-+	ret = pci_enable_msix_range(ha->pdev,
-+				    entries, MIN_MSIX_COUNT, ha->msix_count);
-+	if (ret < 0) {
-+		ql_log(ql_log_fatal, vha, 0x00c7,
-+		    "MSI-X: Failed to enable support, "
-+		    "giving   up -- %d/%d.\n",
-+		    ha->msix_count, ret);
-+		goto msix_out;
-+	} else if (ret < ha->msix_count) {
- 		ql_log(ql_log_warn, vha, 0x00c6,
- 		    "MSI-X: Failed to enable support "
- 		    "-- %d/%d\n Retry with %d vectors.\n",
- 		    ha->msix_count, ret, ret);
--		ha->msix_count = ret;
--		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
--		if (ret) {
--msix_failed:
--			ql_log(ql_log_fatal, vha, 0x00c7,
--			    "MSI-X: Failed to enable support, "
--			    "giving   up -- %d/%d.\n",
--			    ha->msix_count, ret);
--			goto msix_out;
--		}
--		ha->max_rsp_queues = ha->msix_count - 1;
- 	}
-+	ha->msix_count = ret;
-+	ha->max_rsp_queues = ha->msix_count - 1;
- 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
- 				ha->msix_count, GFP_KERNEL);
- 	if (!ha->msix_entries) {
--- 
-1.7.7.6
-
+/ magnus
