@@ -1,49 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:44820 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753910AbaBMMey (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 07:34:54 -0500
-Message-ID: <52FCBBEA.70300@codethink.co.uk>
-Date: Thu, 13 Feb 2014 12:34:50 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49133 "EHLO
+	alan.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751274AbaBELyc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 06:54:32 -0500
+Received: from alan.etchedpixels.co.uk (localhost [127.0.0.1])
+	by alan.etchedpixels.co.uk (8.14.4/8.14.4/Debian-2.1ubuntu4) with ESMTP id s15BsYfb014448
+	for <linux-pci@vger.kernel.org>; Wed, 5 Feb 2014 11:54:35 GMT
+Subject: [PATCH] pci: allocation check missing
+To: linux-pci@vger.kernel.org
+From: Alan <gnomes@lxorguk.ukuu.org.uk>
+Date: Wed, 05 Feb 2014 11:54:34 +0000
+Message-ID: <20140205115412.14423.23707.stgit@alan.etchedpixels.co.uk>
 MIME-Version: 1.0
-To: Magnus Damm <magnus.damm@gmail.com>
-CC: linux-pci@vger.kernel.org, horms@verge.net.au,
-	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
-	valentine.barshak@cogentembedded.com, geert@linux-m68k.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH 00/08] PCI: rcar: Recent driver patches from Ben Dooks
- and me
-References: <20140213030302.10398.37322.sendpatchset@w520>
-In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/02/14 03:03, Magnus Damm wrote:
-> PCI: rcar: Recent driver patches from Ben Dooks and me
->
-> [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
-> [PATCH v2 02/08] PCI: rcar: add error interrupt handling
-> [PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
-> [PATCH v2 04/08] PCI: rcar: Register each instance independently
-> [PATCH v2 05/08] PCI: rcar: Break out window size handling
-> [PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
-> [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
-> [PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
->
-> These patches update the pci-rcar-gen2.c driver with patches from
-> Ben Dooks and me. The first 3 are written by Ben (thanks!) and are
-> included here to show what I would like to have merged and what I
-> rebased my patches on. The following 4 are updated versions of
->
-> [PATCH 00/04] PCI: rcar: Driver model and physical address space update
->
-> The final patch is a new one that fixes up the Kconfig dependencies.
+If we fail to allocate the name, just drop nicely into the fail path
 
-Thanks. Is there any chance of getting this driver device-tree
-enabled too?
+(as a footnote someone who works on this code more might want to shuffle
+ the allocations about so the name and attributes are allocated and freed
+ as one. There seems to be no reason to keep them separate)
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Signed-off-by: Alan Cox <alan@linux.intel.com>
+---
+ drivers/pci/msi.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 18ca2497..9bdf290 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -544,9 +544,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 		return -ENOMEM;
+ 	list_for_each_entry(entry, &pdev->msi_list, list) {
+ 		char *name = kmalloc(20, GFP_KERNEL);
++		if (!name)
++		        goto error_attrs;
+ 		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+-		if (!msi_dev_attr)
++		if (!msi_dev_attr) {
++		        kfree(name);
+ 			goto error_attrs;
++                }
+ 		sprintf(name, "%d", entry->irq);
+ 		sysfs_attr_init(&msi_dev_attr->attr);
+ 		msi_dev_attr->attr.name = name;
+
