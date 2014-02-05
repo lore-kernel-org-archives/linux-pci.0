@@ -1,40 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47654 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751227AbaBSXLs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 18:11:48 -0500
-From: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Roland Dreier <roland@kernel.org>,
-	"Hefty, Sean" <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH 2/2] qib: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Date: Wed, 19 Feb 2014 23:11:39 +0000
-Message-ID: <32E1700B9017364D9B60AED9960492BC211F62DC@FMSMSX107.amr.corp.intel.com>
-References: <cover.1392733151.git.agordeev@redhat.com>
- <f0eabd77b96e0d679ce6c2e2e544c73063c508ee.1392733151.git.agordeev@redhat.com>
-In-Reply-To: <f0eabd77b96e0d679ce6c2e2e544c73063c508ee.1392733151.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35266 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234AbaBECa0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:30:26 -0500
+Message-ID: <52F1A23D.9040909@gmail.com>
+Date: Tue, 04 Feb 2014 18:30:21 -0800
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
+CC: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH v4 5/8] pciehp: Don't check for adapter or latch status while
+ disabling
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: [PATCH 2/2] qib: Use pci_enable_msix_range() instead of
-> pci_enable_msix()
-> 
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers using these two
-> interfaces need to be updated to use the new pci_enable_msi_range() and
-> pci_enable_msix_range() interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+It does not make much sense to refuse to disable a slot if an
+adapter is not present or the latch is open. If an adapter is not
+present, it provides an even better reason to disable the device
+slot.
 
-This worked fine!
+This is specially a problem for link state hot-plug, because some
+ports use in band mechanism for presence detection. Thus
+when link goes down, presence detect also goes down. We _want_ that
+the removal should take place in such case.
 
-Roland, can you fix up the subject to change qib to IB/qib when you merge it?
+Thus remove the checks for adapter and latch in pciehp_disable_slot()
 
-Acked-by: Mike Marciniszyn <mike.marciniszyn@intel.com>
+Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+Signed-off-by: Guenter Roeck <groeck@juniper.net>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c |   18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 5608284..b418e3b 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -582,24 +582,6 @@ int pciehp_disable_slot(struct slot *p_slot)
+ 	if (!p_slot->ctrl)
+ 		return 1;
+ 
+-	if (!HP_SUPR_RM(p_slot->ctrl)) {
+-		pciehp_get_adapter_status(p_slot, &getstatus);
+-		if (!getstatus) {
+-			ctrl_info(ctrl, "No adapter on slot(%s)\n",
+-				  slot_name(p_slot));
+-			return -ENODEV;
+-		}
+-	}
+-
+-	if (MRL_SENS(p_slot->ctrl)) {
+-		pciehp_get_latch_status(p_slot, &getstatus);
+-		if (getstatus) {
+-			ctrl_info(ctrl, "Latch open on slot(%s)\n",
+-				  slot_name(p_slot));
+-			return -ENODEV;
+-		}
+-	}
+-
+ 	if (POWER_CTRL(p_slot->ctrl)) {
+ 		pciehp_get_power_status(p_slot, &getstatus);
+ 		if (!getstatus) {
+-- 
+1.7.9.5
+
