@@ -1,73 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:35065 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbaBEIdU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:33:20 -0500
-Message-ID: <52F1F74C.2090106@codethink.co.uk>
-Date: Wed, 05 Feb 2014 08:33:16 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:45113 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbaBEIjP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:39:15 -0500
 MIME-Version: 1.0
-To: Magnus Damm <magnus.damm@gmail.com>
-CC: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	horms@verge.net.au, bhelgaas@google.com
-Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space
- update
+In-Reply-To: <CAMuHMdVrkPybrONnw5fZaMZ-vuaq_arrBMZvnRYZ9EnvE8Y4cA@mail.gmail.com>
 References: <20140205065243.29445.76593.sendpatchset@w520>
-In-Reply-To: <20140205065243.29445.76593.sendpatchset@w520>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	<20140205065254.29445.77939.sendpatchset@w520>
+	<CAMuHMdVrkPybrONnw5fZaMZ-vuaq_arrBMZvnRYZ9EnvE8Y4cA@mail.gmail.com>
+Date: Wed, 5 Feb 2014 17:39:13 +0900
+Message-ID: <CANqRtoTLdBVj9EF2nsZm2QXc-gCGigB8vfsVJGCjS1Ger0zFTg@mail.gmail.com>
+Subject: Re: [PATCH 01/04] PCI: rcar: Register each instance independently
+From: Magnus Damm <magnus.damm@gmail.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-pci@vger.kernel.org,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Valentine <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/02/14 06:52, Magnus Damm wrote:
-> PCI: rcar: Driver model and physical address space update
+On Wed, Feb 5, 2014 at 5:02 PM, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> On Wed, Feb 5, 2014 at 7:52 AM, Magnus Damm <magnus.damm@gmail.com> wrote:
+>> +static int rcar_pci_probe(struct platform_device *pdev)
+>>  {
+>>         struct resource *cfg_res, *mem_res;
+>>         struct rcar_pci_priv *priv;
+>>         void __iomem *reg;
+>> +       struct hw_pci hw;
+>>
+>>         cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>>         reg = devm_ioremap_resource(&pdev->dev, cfg_res);
+>> @@ -308,31 +271,26 @@ static int __init rcar_pci_probe(struct
+>>         priv->reg = reg;
+>>         priv->dev = &pdev->dev;
+>>
+>> -       return rcar_pci_add_controller(priv);
+>> +       memset(&hw, 0, sizeof(hw));
+>> +       hw.nr_controllers = 1;
+>> +       hw.private_data = (void **)&priv;
 >
-> [PATCH 01/04] PCI: rcar: Register each instance independently
-> [PATCH 02/04] PCI: rcar: Break out window size handling
-> [PATCH 03/04] PCI: rcar: Add DMABOUNCE support
-> [PATCH 04/04] PCI: rcar: Enable BOUNCE in case of HIGHMEM
->
-> These patches update the pci-rcar-gen2.c driver in various ways
-> including cleanups for driver model interface (1/4), readability
-> update (2/4) and also bounce buffer support (3/4, 4/4). Basically
-> the first two are just cleanups and the rest are fixes.
->
-> As it is today without these patches the system memory start address
-> is hard coded at 0x4000000 and the window is fixed at 1GiB. So we
-> have board specific code hidden in the driver which is good to avoid.
->
-> With these hard coded board specific constants there are some error cases
-> that are not handled, in particular the issue that only maximum 1GiB of
-> physical address space can be used for bus mastering with a single window.
-> The common case of using ARM CONFIG_VMSPLIT_3G results in no visible issues
-> as long as CONFIG_BOUNCE is used, but other CONFIG_VMSPLIT settings will
-> break due to the hard coded 1GiB window not being enough. It has been
-> verified that reducing the window size to 256MB makes the driver behave
-> the same with VMSPLIT_3G as 1GiB window size and other VMSPLIT settings.
->
-> To handle the maximum 1GiB physical address space limitation two types
-> of bounce buffers are added. The ARM specific DMABOUNCE code is in 3/4
-> hooked up to a chunk of local memory that is also handed of as coherent
-> memory to the pci devices hanging off the PCI bridge. The driver makes
-> sure to set the window so the local memory is always included. When the
-> PCI devices are operating and in case memory is used outside the window
-> then the DMABOUNCE buffers kicks in. This makes the driver support all
-> kinds of VMSPLIT settings and window sizes. The BOUNCE code in 4/4 is
-> selected to make sure bounce buffers are used for HIGHMEM.
->
-> With these patches this driver can be used with or without CMA and
-> with or without DMA zone. Basically the system wide memory setup is
-> left to the user. If a DMA zone is used then the PCI window will
-> be setup to cover that. Same thing with CMA.
->
-> Tested with USB storage using LPAE and various VMSPLIT settings together
-> with renesas git tag renesas-devel-v3.14-rc1-20140204 from kernel.org
+> This raised a red flag: taking the address of a variable on the stack.
+> I know it's correct, as hw.private_data is an array of pointers copied
+> by pci_common_init_dev() below.
+> But perhaps it's a good idea to turn priv into an array with one element,
+> to make this clearer, and avoid the ugly cast?
 
-Ok, is it possible to build a set with my of updates ready for next
-merge window? I can update the set based on this if you like and try
-and make the necessary changes to deal with the modifications from this
-series.
+I simply followed the same style as pci-tegra.c, but I agree that it
+can be made prettier. Also, there may be some better way how to
+register independent instances, not sure.
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Thanks,
+
+/ magnus
