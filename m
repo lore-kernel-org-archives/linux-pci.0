@@ -1,42 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:47617 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001AbaBMUUW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Feb 2014 15:20:22 -0500
-Date: Thu, 13 Feb 2014 13:20:14 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140213202014.GF17248@obsidianresearch.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <20140213110721.GC13576@mudshark.cambridge.arm.com>
- <BA5E6077-77F8-4BE8-80E5-BAB9FE111387@codeaurora.org>
- <4110788.UI9TADVhpa@wuerfel>
- <20140213182654.GA20043@obsidianresearch.com>
- <20140213195317.GQ13576@mudshark.cambridge.arm.com>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:61663 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbaBEC2J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:28:09 -0500
+Message-ID: <52F1A1B6.2090709@gmail.com>
+Date: Tue, 04 Feb 2014 18:28:06 -0800
+From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140213195317.GQ13576@mudshark.cambridge.arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
+CC: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: [PATCH v4 0/8] Allow Link state changes for Hot-Plug
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 07:53:17PM +0000, Will Deacon wrote:
-> > This may be less than 256 busses, as ECAM allows the implementor to
-> > select how many upper address bits are actually supported.
-> 
-> Ok, but the ECAM/CAM base always corresponds to bus 0, right?
+Hello,
 
-Yes, or it isn't ECAM.
+This patch set enables the use of PCI Express link up and link down events
+for Hotplug or Unplug. This is the pretty much the same patchset as v3, only
+resending after rebasing on top of 3.14-rc1.
 
-> Ok, so this answers Kumar's point about the reg property. I'll augment it
-> with a size.
+(As a side effect, this patch also fixes the bug 
+https://bugzilla.kernel.org/show_bug.cgi?id=65521 )
 
-Don't forget to request_region it as well...
+I'd appreciate if you could please review and provide me with any comments.
 
-Jason
+Thanks,
+
+Rajat
+
+Rajat Jain (8):
+  pciehp: Make check_link_active() non-static
+  pciehp: Use link change notifications for hot-plug and removal
+  pciehp: Enable link state change notifications
+  pciehp: Don't disable the link permanently, during removal
+  pciehp: Don't check for adapter or latch status while disabling
+  pciehp: Disabling the link notification across slot reset
+  pciehp: Ensure very fast hotplug events are also processed.
+  pciehp: Introduce hotplug_lock to serialize HP events
+
+ drivers/pci/hotplug/pciehp.h      |    5 ++
+ drivers/pci/hotplug/pciehp_core.c |    7 +-
+ drivers/pci/hotplug/pciehp_ctrl.c |  149 ++++++++++++++++++++++++++++++-------
+ drivers/pci/hotplug/pciehp_hpc.c  |   74 +++++++++---------
+ 4 files changed, 169 insertions(+), 66 deletions(-)
+
+-- 
+1.7.9.5
+
