@@ -1,47 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:56824 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbaBRSrk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 13:47:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Tue, 18 Feb 2014 19:47:15 +0100
-Message-ID: <10244486.cKXs90tdz5@wuerfel>
-In-Reply-To: <20140218184420.GD2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com> <20140218182142.GF29304@obsidianresearch.com> <20140218184420.GD2010@mudshark.cambridge.arm.com>
+Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:35065 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbaBEIdU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:33:20 -0500
+Message-ID: <52F1F74C.2090106@codethink.co.uk>
+Date: Wed, 05 Feb 2014 08:33:16 +0000
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Magnus Damm <magnus.damm@gmail.com>
+CC: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	horms@verge.net.au, bhelgaas@google.com
+Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space
+ update
+References: <20140205065243.29445.76593.sendpatchset@w520>
+In-Reply-To: <20140205065243.29445.76593.sendpatchset@w520>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 18 February 2014 18:44:20 Will Deacon wrote:
-> On Tue, Feb 18, 2014 at 06:21:42PM +0000, Jason Gunthorpe wrote:
-> > On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
-> > > +
-> > > +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
-> > > +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
-> >                                            ^^^^^^^^^^^^^^
-> > 
-> > This probably shouldn't be 0 in the example, nor in your kvm tool
-> > output. For example purposes any value will do.
-> 
-> Hmm, so kvmtool actually provides a PC ioport at 0x0, which is handy since
-> there's an 8250 down there. That means we have:
-> 
-> 0x0    - 0x6200  : Weird PC stuff
-> 0x6200 - 0x10000 : PCI IO space
-> 
-> Should I just change everything to be offset by 0x6200?
+On 05/02/14 06:52, Magnus Damm wrote:
+> PCI: rcar: Driver model and physical address space update
+>
+> [PATCH 01/04] PCI: rcar: Register each instance independently
+> [PATCH 02/04] PCI: rcar: Break out window size handling
+> [PATCH 03/04] PCI: rcar: Add DMABOUNCE support
+> [PATCH 04/04] PCI: rcar: Enable BOUNCE in case of HIGHMEM
+>
+> These patches update the pci-rcar-gen2.c driver in various ways
+> including cleanups for driver model interface (1/4), readability
+> update (2/4) and also bounce buffer support (3/4, 4/4). Basically
+> the first two are just cleanups and the rest are fixes.
+>
+> As it is today without these patches the system memory start address
+> is hard coded at 0x4000000 and the window is fixed at 1GiB. So we
+> have board specific code hidden in the driver which is good to avoid.
+>
+> With these hard coded board specific constants there are some error cases
+> that are not handled, in particular the issue that only maximum 1GiB of
+> physical address space can be used for bus mastering with a single window.
+> The common case of using ARM CONFIG_VMSPLIT_3G results in no visible issues
+> as long as CONFIG_BOUNCE is used, but other CONFIG_VMSPLIT settings will
+> break due to the hard coded 1GiB window not being enough. It has been
+> verified that reducing the window size to 256MB makes the driver behave
+> the same with VMSPLIT_3G as 1GiB window size and other VMSPLIT settings.
+>
+> To handle the maximum 1GiB physical address space limitation two types
+> of bounce buffers are added. The ARM specific DMABOUNCE code is in 3/4
+> hooked up to a chunk of local memory that is also handed of as coherent
+> memory to the pci devices hanging off the PCI bridge. The driver makes
+> sure to set the window so the local memory is always included. When the
+> PCI devices are operating and in case memory is used outside the window
+> then the DMABOUNCE buffers kicks in. This makes the driver support all
+> kinds of VMSPLIT settings and window sizes. The BOUNCE code in 4/4 is
+> selected to make sure bounce buffers are used for HIGHMEM.
+>
+> With these patches this driver can be used with or without CMA and
+> with or without DMA zone. Basically the system wide memory setup is
+> left to the user. If a DMA zone is used then the PCI window will
+> be setup to cover that. Same thing with CMA.
+>
+> Tested with USB storage using LPAE and various VMSPLIT settings together
+> with renesas git tag renesas-devel-v3.14-rc1-20140204 from kernel.org
 
-Do you have a list of the stuff in there?
+Ok, is it possible to build a set with my of updates ready for next
+merge window? I can update the set based on this if you like and try
+and make the necessary changes to deal with the modifications from this
+series.
 
-If that is actually port I/O, leaving it in there may be best,
-but I agree the example should be changed.
-
-	Arnd
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
