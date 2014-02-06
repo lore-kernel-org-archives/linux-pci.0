@@ -1,130 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.13]:60946 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752184AbaBXTaB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 14:30:01 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Will Deacon <will.deacon@arm.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, jgunthorpe@obsidianresearch.com
-Subject: Re: [PATCH v4] PCI: ARM: add support for generic PCI host controller
-Date: Mon, 24 Feb 2014 20:23:23 +0100
-Message-ID: <1721648.K4nYY7eS55@wuerfel>
-In-Reply-To: <1393268359-17224-1-git-send-email-will.deacon@arm.com>
-References: <1393268359-17224-1-git-send-email-will.deacon@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: [Update][PATCH 22/24] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
+Date: Thu, 06 Feb 2014 14:09:25 +0100
+Message-ID: <1570837.kWWUv8FW0Z@vostro.rjw.lan>
+In-Reply-To: <2300097.5mc1uSoD5p@vostro.rjw.lan>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <7532948.aJNUotNMpR@vostro.rjw.lan> <2300097.5mc1uSoD5p@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 24 February 2014 18:59:19 Will Deacon wrote:
-> +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
-> +    ranges = <0x1000000 0x0 0x01000000  0x0 0x01000000  0x0 0x00010000>,
-> +             <0x2000000 0x0 0x41000000  0x0 0x41000000  0x0 0x3f000000>;
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
 
-The I/O window looks very odd. Why would you start it at bus address
-0x01000000 rather than 0 like everyone else?
+Since acpi_hotplug_notify_cb() does not use its data argument any
+more, the second argument of acpi_install_hotplug_notify_handler()
+can be dropped, so do that and update its callers accordingly.
 
-> +static int gen_pci_calc_io_offset(struct device *dev,
-> +				  struct of_pci_range *range,
-> +				  struct resource *res,
-> +				  resource_size_t *offset)
-> +{
-> +	static atomic_t wins = ATOMIC_INIT(0);
-> +	int err, idx, max_win;
-> +	unsigned int io_offset;
-> +
-> +	/* Ensure the CPU physical address is aligned to a 64K boundary */
-> +	range->size += range->cpu_addr & (SZ_64K - 1);
-> +	range->cpu_addr = round_down(range->cpu_addr, SZ_64K);
-> +	range->pci_addr = round_down(range->pci_addr, SZ_64K);
-> +
-> +	if (range->size > SZ_64K)
-> +		return -E2BIG;
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-What is the rounding for? Isn't it enough to round to PAGE_SIZE here?
-Do you just want to make sure it works with 64K pages on ARM64? I guess
-if you end up rounding for the mapping, you should later make sure
-that you still only register the original resource.
+This one had to be updated after patch [20/24] had been updated.
 
-Presumably, the size would normally be 64K, so if you add anything
-for rounding, you just fail here. How about cropping to 64K in that
-case?
+Thanks,
+Rafael
 
-> +	max_win = IO_SPACE_LIMIT + 1 / SZ_64K;
-> +	idx = atomic_inc_return(&wins);
-> +	if (idx >= max_win)
-> +		return -ENOSPC;
-> +
-> +	io_offset = (idx - 1) * SZ_64K;
-> +	err = pci_ioremap_io(io_offset, range->cpu_addr);
+---
+ drivers/acpi/scan.c                |    6 +++---
+ drivers/pci/hotplug/acpiphp_glue.c |    2 +-
+ include/acpi/acpi_bus.h            |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-As discussed the last time, calling it "io_offset" here
-is extremely confusing. Don't do that, and call it "window"
-or something appropriate instead.
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -577,10 +577,10 @@ static void acpi_hotplug_notify_cb(acpi_
+ 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
+ }
+ 
+-void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
++void acpi_install_hotplug_notify_handler(acpi_handle handle)
+ {
+ 	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-				    acpi_hotplug_notify_cb, data);
++				    acpi_hotplug_notify_cb, NULL);
+ }
+ 
+ void acpi_remove_hotplug_notify_handler(acpi_handle handle)
+@@ -2040,7 +2040,7 @@ static void acpi_scan_init_hotplug(struc
+ 		if (!handler)
+ 			continue;
+ 
+-		acpi_install_hotplug_notify_handler(adev->handle, handler);
++		acpi_install_hotplug_notify_handler(adev->handle);
+ 		adev->flags.hotplug_notify = true;
+ 		break;
+ 	}
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -372,7 +372,7 @@ static acpi_status register_slot(acpi_ha
+ 
+ 	/* install notify handler */
+ 	if (!(newfunc->flags & FUNC_HAS_DCK))
+-		acpi_install_hotplug_notify_handler(handle, NULL);
++		acpi_install_hotplug_notify_handler(handle);
+ 
+ 	return AE_OK;
+ }
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -446,7 +446,7 @@ static inline bool acpi_device_enumerate
+ typedef void (*acpi_hp_callback)(void *data, u32 src);
+ 
+ acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
+-void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
++void acpi_install_hotplug_notify_handler(acpi_handle handle);
+ void acpi_remove_hotplug_notify_handler(acpi_handle handle);
+ 
+ /**
 
-> +	if (err)
-> +		return err;
-> +
-> +	of_pci_range_to_resource(range, dev->of_node, res);
-> +	res->start = io_offset + range->pci_addr;
-> +	res->end = res->start + range->size - 1;
-
-You have just rounded down range->pci_addr, so the resource
-now contains more than what the bus node described.
-
-> +	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
-
-of_property_read_bool()
-
-> +	if (of_pci_parse_bus_range(np, &pci->cfg.bus_range))
-> +		pci->cfg.bus_range = (struct resource) {
-> +			.name	= np->name,
-> +			.start	= 0,
-> +			.end	= 0xff,
-> +			.flags	= IORESOURCE_BUS,
-> +		};
-
-I wonder if this should just be part of of_pci_parse_bus_range(),
-or maybe an extended helper.
-
-> +	/* Limit the bus-range to fit within reg */
-> +	bus_max = pci->cfg.bus_range.start +
-> +		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
-> +	pci->cfg.bus_range.end = min_t(resource_size_t, pci->cfg.bus_range.end,
-> +				       bus_max);
-
-I think I would instead print a warning and bail out here. This should
-only happen for inconsistent DT properties.
-
-> +		err = request_resource(parent, res);
-> +		if (err)
-> +			goto out_release_res;
-> +
-> +		pci_add_resource_offset(&sys->resources, res, offset);
-> +	}
-
-Wrong offset for the I/O space. Why not call pci_add_resource_offset()
-directly from gen_pci_calc_io_offset where you have the right number?
-
-> +	bus_range = &pci->cfg.bus_range;
-> +	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
-> +		u32 idx = busn - bus_range->start;
-> +		u32 sz = 1 << pci->cfg.ops->bus_shift;
-> +
-> +		pci->cfg.win[idx] = devm_ioremap(dev,
-> +						 pci->cfg.res.start + busn * sz,
-> +						 sz);
-> +		if (!pci->cfg.win[idx]) {
-> +			err = -ENOMEM;
-> +			goto out_unmap_cfg;
-> +		}
-> +	}
-
-I saw a trick in the tegra driver that maps the buses dynamically during
-probe. While I mentioned that we can't dynamically map/unmap the config
-space during access, it's probably fine to just map each bus at the first
-access, since that will happen during the initial bus probe that is allowed
-to sleep.
-
-	Arnd
