@@ -1,51 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4493 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754214AbaBDLQH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:16:07 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Arvind Kumar <arvindkumar@vmware.com>, pv-drivers@vmware.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 22/22] vmw_pvscsi: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:17:08 +0100
-Message-Id: <9a6fa1d91c1f23ee0bbde7c854ce03f22054345a.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+Date: Fri, 7 Feb 2014 00:26:12 +0100
+Message-ID: <CAJZ5v0ht94v9Rap4EN4kMUTLJFZPD_AKMYz8FdrDOQ-E=ifJZQ@mail.gmail.com>
+Subject: [GIT PULL] ACPI and power management fixes for v3.14-rc2
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Hi Linus,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Arvind Kumar <arvindkumar@vmware.com>
-Cc: pv-drivers@vmware.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/vmw_pvscsi.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Please pull from the git repository at
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index b9755ec..c521f8e 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1078,8 +1078,8 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
- 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
- 	int ret;
- 
--	ret = pci_enable_msix(adapter->dev, &entry, 1);
--	if (ret)
-+	ret = pci_enable_msix_range(adapter->dev, &entry, 1, 1);
-+	if (ret < 0)
- 		return ret;
- 
- 	*irq = entry.vector;
--- 
-1.7.7.6
+  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
+pm+acpi-3.14-rc2
 
+to receive ACPI and power management fixes for v3.14-rc2
+with top-most commit a2ff34c433932e201ea3c5081335f3beeb2509bd
+
+  Merge branches 'acpi-cleanup' and 'acpi-video'
+
+on top of commit 38dbfb59d1175ef458d006556061adeaa8751b72
+
+  Linus 3.14-rc1
+
+These include a fix for a recent ACPI hotplug regression, four concurrency
+related fixes and one PCI device removal fix for ACPI-based PCI hotplug
+(ACPIPHP), intel_pstate fix that should go into stable, three simple
+ACPI cleanups and a new entry for the ACPI video blacklist.
+
+Specifics:
+
+ - Fix for a recent ACPI hotplug regression causing a NULL pointer
+   dereference to occur while handling ACPI eject notifications for
+   already ejected devices.  From Toshi Kani.
+
+ - Four concurrency-related fixes for ACPIPHP.  Two of them add
+   missing locking and the other two fix race conditions related to
+   reference counting.
+
+ - ACPIPHP fix to avoid NULL pointer dereferences during device removal
+   involving Virtual Funcions.
+
+ - intel_pstate fix to make it compute the percentage of time the CPU
+   is busy properly.  From Dirk Brandewie.
+
+ - Removal of two unnecessary NULL pointer checks in ACPI code and a
+   fix for sscanf() format string from Dan Carpenter and Luis G.F.
+
+ - New ACPI video blacklist entry for HP EliteBook Revolve 810 from
+   Mika Westerberg.
+
+Thanks!
+
+
+---------------
+
+Dan Carpenter (2):
+      ACPI / utils: remove a pointless NULL check
+      ACPI / proc: remove unneeded NULL check
+
+Dirk Brandewie (1):
+      intel_pstate: Take core C0 time into account for core busy calculation
+
+Luis G.F (1):
+      ACPI / battery: Fix incorrect sscanf() string in acpi_battery_init_alarm()
+
+Mika Westerberg (1):
+      ACPI / video: Add HP EliteBook Revolve 810 to the blacklist
+
+Rafael J. Wysocki (5):
+      ACPI / hotplug / PCI: Remove entries from bus->devices in reverse order
+      ACPI / hotplug / PCI: Move PCI rescan-remove locking to hotplug_event()
+      ACPI / hotplug / PCI: Scan root bus under the PCI rescan-remove lock
+      ACPI / hotplug / PCI: Fix bridge removal race in handle_hotplug_event()
+      ACPI / hotplug / PCI: Fix bridge removal race vs dock events
+
+Toshi Kani (1):
+      ACPI / hotplug: Fix panic on eject to ejected device
+
+---------------
+
+ drivers/acpi/battery.c             |    2 +-
+ drivers/acpi/proc.c                |    2 +-
+ drivers/acpi/scan.c                |    6 ++--
+ drivers/acpi/utils.c               |    4 ---
+ drivers/acpi/video_detect.c        |    8 ++++++
+ drivers/cpufreq/intel_pstate.c     |   21 +++++++++++---
+ drivers/pci/hotplug/acpiphp_glue.c |   55 ++++++++++++++++++++++++++++--------
+ 7 files changed, 75 insertions(+), 23 deletions(-)
