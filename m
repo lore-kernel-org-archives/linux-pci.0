@@ -1,196 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:53344 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753415AbaBCUGG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 15:06:06 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linaro-kernel@lists.linaro.org
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] arm64: Add architecture support for PCI
-Date: Mon, 03 Feb 2014 21:05:56 +0100
-Message-ID: <3808209.DeG1VobanZ@wuerfel>
-In-Reply-To: <20140203191837.GC4889@e106497-lin.cambridge.arm.com>
-References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <21596846.kVTqp7roW4@wuerfel> <20140203191837.GC4889@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:64420 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754308AbaBFO0N convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Feb 2014 09:26:13 -0500
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>,
+	"Jiang, Dave" <dave.jiang@intel.com>,
+	intel-linux-scu <intel-linux-scu@intel.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+Subject: RE: [PATCH 10/22] isci: Use pci_enable_msix_range()
+Date: Thu, 6 Feb 2014 14:25:13 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6C7012@IRSMSX105.ger.corp.intel.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+ <ff99281291c3189da00a7d8150da326808a723ea.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <ff99281291c3189da00a7d8150da326808a723ea.1391512266.git.agordeev@redhat.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 03 February 2014 19:18:38 Liviu Dudau wrote:
-> On Mon, Feb 03, 2014 at 06:58:56PM +0000, Arnd Bergmann wrote:
-> > On Monday 03 February 2014 18:43:48 Liviu Dudau wrote:
-> > > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-> > > index 4cc813e..ce5bad2 100644
-> > > --- a/arch/arm64/include/asm/io.h
-> > > +++ b/arch/arm64/include/asm/io.h
-> > > @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
-> > >  /*
-> > >   *  I/O port access primitives.
-> > >   */
-> > > +#define arch_has_dev_port()	(0)
-> > 
-> > Why not?
+On Tuesday, February 04, 2014 12:17 PM Alexander Gordeev <agordeev@redhat.com> wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
 > 
-> Maybe I got it the wrong way around, but the comment in include/linux/io.h says:
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Lukasz Dorau <lukasz.dorau@intel.com>
+> Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
+> Cc: Dave Jiang <dave.jiang@intel.com>
+> Cc: intel-linux-scu@intel.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/scsi/isci/init.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
 > 
-> /*
->  * Some systems do not have legacy ISA devices.
->  * /dev/port is not a valid interface on these systems.
->  * So for those archs, <asm/io.h> should define the following symbol.
->  */
+> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+> index d25d0d8..b99f307 100644
+> --- a/drivers/scsi/isci/init.c
+> +++ b/drivers/scsi/isci/init.c
+> @@ -356,8 +356,9 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
+>  	for (i = 0; i < num_msix; i++)
+>  		pci_info->msix_entries[i].entry = i;
 > 
-> So ... defining it should mean no legacy ISA devices, right?
-
-I would read that comment as referring to systems that don't have
-any I/O space. If you have PCI, you can by definition have ISA
-compatible devices behind a bridge. A typical example would be
-a VGA card that supports the 03c0-03df port range.
-
-> > 
-> > >  #define IO_SPACE_LIMIT		0xffff
-> > 
-> > You probably want to increase this a bit, to allow multiple host bridges
-> > to have their own I/O space.
+> -	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
+> -	if (err)
+> +	err = pci_enable_msix_range(pdev,
+> +				    pci_info->msix_entries, num_msix, num_msix);
+> +	if (err < 0)
+>  		goto intx;
 > 
-> OK, but to what size?
+>  	for (i = 0; i < num_msix; i++) {
+> --
+> 1.7.7.6
 
-2 MB was a compromise on arm32 to allow up to 32 PCI host bridges but not
-take up too much virtual space. On arm64 it should be at least as big.
-Could be more than that, although I don't see a reason why it should be,
-unless we expect to see systems with tons of host bridges, or buses
-that exceed 64KB of I/O space.
+Looks fine.
 
-> > > +#define ioport_map(port, nr)	(PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
-> > > +#define ioport_unmap(addr)
-> > 
-> > inline functions?
-> 
-> Will do, thanks!
+Acked-by: Lukasz Dorau <lukasz.dorau@intel.com>
 
-I suppose you can actually use the generic implementation from
-asm-generic/io.h, and fix it by using the definition you have
-above, since it's currently broken.
+Thanks,
+Lukasz
 
-> > > diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-> > > new file mode 100644
-> > > index 0000000..dd084a3
-> > > --- /dev/null
-> > > +++ b/arch/arm64/include/asm/pci.h
-> > > @@ -0,0 +1,35 @@
-> > > +#ifndef __ASM_PCI_H
-> > > +#define __ASM_PCI_H
-> > > +#ifdef __KERNEL__
-> > > +
-> > > +#include <linux/types.h>
-> > > +#include <linux/slab.h>
-> > > +#include <linux/dma-mapping.h>
-> > > +
-> > > +#include <asm/io.h>
-> > > +#include <asm-generic/pci-bridge.h>
-> > > +#include <asm-generic/pci-dma-compat.h>
-> > > +
-> > > +#define PCIBIOS_MIN_IO		0
-> > > +#define PCIBIOS_MIN_MEM		0
-> > 
-> > PCIBIOS_MIN_IO is normally set to 0x1000, to stay out of the ISA range.
-> 
-> :) No ISA support! (Die ISA, die!!) 
-
-If only it were that easy.
-
-> > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > > new file mode 100644
-> > > index 0000000..7b652cf
-> > > --- /dev/null
-> > > +++ b/arch/arm64/kernel/pci.c
-> > > @@ -0,0 +1,112 @@
-> > 
-> > None of this looks really arm64 specific, nor should it be. I think
-> > we should try a little harder to move this as a default implementation
-> > into common code, even if we start out by having all architectures
-> > override it.
-> 
-> Agree. This is the RFC version. I didn't dare to post a patch with fixes
-> for all architectures. :)
-
-No need to change the other architectures. You can make it opt-in for
-now and just put the code into a common location.
- 
-An interesting question however is what the transition plan is to
-have the code shared between arm32 and arm64: We will certainly need
-to share at least the dw-pcie and the generic SBSA compliant pci
-implementation.
-
-> > > +int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
-> > > +{
-> > > +	BUG_ON(offset + SZ_64K - 1 > IO_SPACE_LIMIT);
-> > > +
-> > > +	return ioremap_page_range((unsigned long)PCI_IOBASE + offset,
-> > > +				(unsigned long)PCI_IOBASE + offset + SZ_64K,
-> > > +				phys_addr,
-> > > +				__pgprot(PROT_DEVICE_nGnRE));
-> > > +}
-> > 
-> > Not sure if we want to treat this one as architecture specific though.
-> > It certainly won't be portable to x86, but it could be shared with
-> > a couple of others. We may also want to redesign the interface.
-> > I've been thinking we could make this function allocate space in the
-> > Linux virtual I/O space aperture, and pass two resources into it
-> > (physical I/O aperture and bus I/O range), and get the actual
-> > io_offset as the return value, or a negative error number.
-> 
-> Not sure I completely follow your idea.
-
-Something like this (coded in mail client, don't try to compile):
-
-#define IO_SPACE_PAGES (IO_SPACE_LIMIT + 1) / PAGE_SIZE)
-static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
-unsigned long pci_ioremap_io(const struct resource *bus, const struct resource phys)
-{
-	unsigned long start, len, virt_start;
-	int error;
-
-	/* use logical address == bus address if possible */
-	start = bus->start / PAGE_SIZE;
-	if (start > IO_SPACE_LIMIT / PAGE_SIZE)
-		start = 0;
-
-	/*
-	 * try finding free space for the whole size first,
-	 * fall back to 64K if not available
-	 */
-	len = min(resource_size(bus), resource_size(phys);
-	start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-				start, len / PAGE_SIZE, 0);
-	if (start == IO_SPACE_PAGES && len > SZ_64K)
-		len = SZ_64K;
-		start = 0;
-		start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-				start, len / PAGE_SIZE, 0);
-	}
-
-	/* no 64K area found */
-	if (start == IO_SPACE_PAGES)
-		return -ENOMEM;
-
-	/* ioremap physical aperture to virtual aperture */
-	virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
-	error = ioremap_page_range(virt_start, virt_start + len,
-				    phys->start, __pgprot(PROT_DEVICE_nGnRE));
-	if (error)
-		return error;
-
-	bitmap_set(start, len / PAGE_SIZE);
-
-	/* return io_offset */
-	return start * PAGE_SIZE - bus->start;
-}
-EXPORT_SYMBOL_GPL(pci_ioremap_io);
-
-	Arnd
