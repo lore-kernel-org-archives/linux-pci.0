@@ -1,136 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:53239 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbaBEIoA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:44:00 -0500
+Received: from moutng.kundenserver.de ([212.227.17.8]:60326 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932303AbaBFI3X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Feb 2014 03:29:23 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Date: Thu, 6 Feb 2014 09:28:52 +0100
+Cc: linux-arm-kernel@lists.infradead.org,
+	Will Deacon <will.deacon@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <3724624.kd9jZNUiTF@wuerfel> <20140205205319.GH25695@obsidianresearch.com>
+In-Reply-To: <20140205205319.GH25695@obsidianresearch.com>
 MIME-Version: 1.0
-In-Reply-To: <52F1F67A.6070509@codethink.co.uk>
-References: <20140205065243.29445.76593.sendpatchset@w520>
-	<20140205065254.29445.77939.sendpatchset@w520>
-	<52F1F67A.6070509@codethink.co.uk>
-Date: Wed, 5 Feb 2014 17:43:57 +0900
-Message-ID: <CANqRtoSZaDFF-_ROnAonyKiujKHUyNVTSrscC6bHZk9waWzxnw@mail.gmail.com>
-Subject: Re: [PATCH 01/04] PCI: rcar: Register each instance independently
-From: Magnus Damm <magnus.damm@gmail.com>
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	"Simon Horman [Horms]" <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201402060928.53310.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 5, 2014 at 5:29 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
-> On 05/02/14 06:52, Magnus Damm wrote:
->>
->> From: Magnus Damm <damm@opensource.se>
->>
->> Convert the code to allow per-device probe() like other device
->> drivers. This also delays driver registration due to change from
->> subsys_initcall() to regular module_platform_driver().
->>
->> Signed-off-by: Magnus Damm <damm@opensource.se>
->> ---
->>
->>   drivers/pci/host/pci-rcar-gen2.c |   74
->> ++++++++------------------------------
->>   1 file changed, 16 insertions(+), 58 deletions(-)
->>
->> --- 0001/drivers/pci/host/pci-rcar-gen2.c
->> +++ work/drivers/pci/host/pci-rcar-gen2.c       2014-02-04
->> 16:38:46.000000000 +0900
->> @@ -74,9 +74,6 @@
->>
->>   #define RCAR_PCI_UNIT_REV_REG         (RCAR_AHBPCI_PCICOM_OFFSET + 0x48)
->>
->> -/* Number of internal PCI controllers */
->> -#define RCAR_PCI_NR_CONTROLLERS                3
->> -
->>   struct rcar_pci_priv {
->>         struct device *dev;
->>         void __iomem *reg;
->> @@ -228,6 +225,8 @@ static int __init rcar_pci_setup(int nr,
->>         pci_add_resource(&sys->resources, &priv->io_res);
->>         pci_add_resource(&sys->resources, &priv->mem_res);
->>
->> +       /* Setup bus number based on platform device id */
->> +       sys->busnr = to_platform_device(priv->dev)->id;
->>         return 1;
->>   }
->>
->> @@ -236,48 +235,12 @@ static struct pci_ops rcar_pci_ops = {
->>         .write  = rcar_pci_write_config,
->>   };
->>
->> -static struct hw_pci rcar_hw_pci __initdata = {
->> -       .map_irq        = rcar_pci_map_irq,
->> -       .ops            = &rcar_pci_ops,
->> -       .setup          = rcar_pci_setup,
->> -};
->> -
->> -static int rcar_pci_count __initdata;
->> -
->> -static int __init rcar_pci_add_controller(struct rcar_pci_priv *priv)
->> -{
->> -       void **private_data;
->> -       int count;
->> -
->> -       if (rcar_hw_pci.nr_controllers < rcar_pci_count)
->> -               goto add_priv;
->> -
->> -       /* (Re)allocate private data pointer array if needed */
->> -       count = rcar_pci_count + RCAR_PCI_NR_CONTROLLERS;
->> -       private_data = kzalloc(count * sizeof(void *), GFP_KERNEL);
->> -       if (!private_data)
->> -               return -ENOMEM;
->> -
->> -       rcar_pci_count = count;
->> -       if (rcar_hw_pci.private_data) {
->> -               memcpy(private_data, rcar_hw_pci.private_data,
->> -                      rcar_hw_pci.nr_controllers * sizeof(void *));
->> -               kfree(rcar_hw_pci.private_data);
->> -       }
->> -
->> -       rcar_hw_pci.private_data = private_data;
->> -
->> -add_priv:
->> -       /* Add private data pointer to the array */
->> -       rcar_hw_pci.private_data[rcar_hw_pci.nr_controllers++] = priv;
->> -       return 0;
->> -}
->> -
->> -static int __init rcar_pci_probe(struct platform_device *pdev)
->> +static int rcar_pci_probe(struct platform_device *pdev)
->>   {
->>         struct resource *cfg_res, *mem_res;
->>         struct rcar_pci_priv *priv;
->>         void __iomem *reg;
->> +       struct hw_pci hw;
->>
->>         cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->>         reg = devm_ioremap_resource(&pdev->dev, cfg_res);
->> @@ -308,31 +271,26 @@ static int __init rcar_pci_probe(struct
->>         priv->reg = reg;
->>         priv->dev = &pdev->dev;
->>
->> -       return rcar_pci_add_controller(priv);
->> +       memset(&hw, 0, sizeof(hw));
->> +       hw.nr_controllers = 1;
->> +       hw.private_data = (void **)&priv;
->> +       hw.map_irq = rcar_pci_map_irq;
->> +       hw.ops = &rcar_pci_ops;
->> +       hw.setup = rcar_pci_setup;
->> +       pci_common_init_dev(&pdev->dev, &hw);
->> +       return 0;
->>   }
->
->
-> Do we really want to explicitly set the bus number here?
+On Wednesday 05 February 2014, Jason Gunthorpe wrote:
+> On Wed, Feb 05, 2014 at 09:26:17PM +0100, Arnd Bergmann wrote:
+> > > > What you get out of "of_pci_range_to_resource(&range, np, &pci->io)"
+> > > > is not the resource you want to pass into pci_add_resource()
+> > > > later.
+> 
+> Right, of_pci_range_to_resource returns the CPU MMIO address. A big
+> problem here is that struct resource is being re-used for bus
+> physical, CPU MMIO, and Linux Driver addressing domains without any
+> helpful tagging.
+> 
+> typedef struct resource resource_bus;
+> typedef struct resource resource_cpu;
+> 
+> ?
 
-Right now the code in rcar_pci_setup() sets up the bus number. Ugly
-but better than before IMO. If you have any suggestions how to make
-this prettier then please let me know. =)
+I fear the resource management needs a bigger overhaul than than.
+Most importantly, 'struct resource' is not connected to 'struct device'
+at the moment, and it only deals with resource types that were around
+15 years ago.
 
-/ magnus
+> > > Do I need to open-code the resource translation from phys -> logical?
+> > 
+> > I think we should have some common infrastructure that lets you
+> > get this right more easily.
+> 
+> The offset stuff seems to be very confusing to people, removing it
+> from the APIs and forcing drivers to talk about bus addresess, CPU
+> addresses and internal Linux addresses seems a bit more plain?
+
+Interesting idea. I'm not sure how Bjorn will like that
+after he just did an overhaul of all users of the offset
+API some time ago, but let's see what he thinks.
+
+> What do you think about something like this:
+> 
+> int of_pci_alloc_io(.. resources,
+>                     struct of_pci_range *range,
+>                     struct device_node *np)
+> {
+>   struct resource bus_address, mmio_window, res;
+> 
+>   bus_address.start = range->pci_addr;
+>   bus_address.end = range->pci_addr + range->size - 1;
+> 
+>   mmio_window.start = range->cpu_addr;
+>   mmio_window.end = range->cpu_addr + range->size - 1;
+> 
+>   /* Input bus_address - addresses seen on the bus
+>            mmio_window - physical CPU address to create the bus
+> 	   	         addreses
+>      Output res - Address suitable for use in drivers
+>      This does the pci_ioremap_io too */
+>   pci_alloc_virtual_io_window(&bus_address, &mmio_window, &res);
+> 
+>   /* bus_address - addresses seen on the bus
+>      res - matching driver view for the bus addresses */
+>   pci_add_resource_bus(&resources, &bus_address, &res);
+> }
+> 
+> And a similar function for MMIO that just omits
+> pci_alloc_virtual_io_window.
+
+It certainly seems workable. OTOH if we just manage to do a
+helper that scans the OF ranges, allocates the I/O window,
+remaps it and calls the existing pci_add_resource_offset()
+helper, PCI host drivers don't need to worry about the
+io_offsets computation either and just need to pull out the
+correct window locations if they need to set up the hardware
+translation windows (which I'd hope we can often let the boot
+loader take care of).
+
+	Arnd
