@@ -1,51 +1,353 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Asai Thambi S P <asamymuthupa@micron.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 3/9] mtip32xx: Remove superfluous call to pci_disable_msi()
-Date: Wed, 19 Feb 2014 09:58:15 +0100
-Message-Id: <eb0c7ed053e6e047d0d09ea7e803dd39a1ef71ed.1392799751.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
-References: <cover.1392799751.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:54156 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755949AbaBFKyq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Feb 2014 05:54:46 -0500
+Date: Thu, 6 Feb 2014 10:54:42 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Anup Patel <anup@brainfault.org>
+Cc: Will Deacon <Will.Deacon@arm.com>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140206105442.GB4993@e106497-lin.cambridge.arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <1391532784-1953-3-git-send-email-will.deacon@arm.com>
+ <CAAhSdy0X56UcMrp0bsH0na=GBkND=jqZVqbHxKsBampr8YM3cA@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAAhSdy0X56UcMrp0bsH0na=GBkND=jqZVqbHxKsBampr8YM3cA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to call pci_disable_msi() in case
-the previous call to pci_enable_msi() failed
+On Thu, Feb 06, 2014 at 08:54:03AM +0000, Anup Patel wrote:
+> On Tue, Feb 4, 2014 at 10:23 PM, Will Deacon <will.deacon@arm.com> wrote:
+> > This patch adds support for an extremely simple virtual PCI host
+> > controller. The controller itself has no configuration registers, and
+> > has its address spaces described entirely by the device-tree (using the
+> > bindings described by ePAPR). This allows emulations, such as kvmtool,
+> > to provide a simple means for a guest Linux instance to make use of
+> > PCI devices.
+> >
+> > Corresponding documentation is added for the DT binding.
+> >
+> > Signed-off-by: Will Deacon <will.deacon@arm.com>
+> > ---
+> >  .../devicetree/bindings/pci/linux,pci-virt.txt     |  38 ++++
+> >  drivers/pci/host/Kconfig                           |   7 +
+> >  drivers/pci/host/Makefile                          |   1 +
+> >  drivers/pci/host/pci-virt.c                        | 200 +++++++++++++++++++++
+> >  4 files changed, 246 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/linux,pci-virt.txt
+> >  create mode 100644 drivers/pci/host/pci-virt.c
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/linux,pci-virt.txt b/Documentation/devicetree/bindings/pci/linux,pci-virt.txt
+> > new file mode 100644
+> > index 000000000000..54668a283498
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/linux,pci-virt.txt
+> > @@ -0,0 +1,38 @@
+> > +* ARM Basic Virtual PCI controller
+> > +
+> > +PCI emulations, such as the virtio-pci implementations found in kvmtool
+> > +and other para-virtualised systems, do not require driver support for
+> > +complexities such as regulator and clock management. In fact, the
+> > +controller may not even have a control interface visible to the
+> > +operating system, instead presenting a set of fixed windows describing a
+> > +subset of IO, Memory and Configuration spaces.
+> > +
+> > +Such a controller can be described purely in terms of the standardized
+> > +device tree bindings communicated in pci.txt:
+> > +
+> > +- compatible     : Must be "linux,pci-virt"
+> > +
+> > +- ranges         : As described in IEEE Std 1275-1994, but must provide
+> > +                   at least a definition of the Configuration Space plus
+> > +                   one or both of IO and Memory Space.
+> > +
+> > +- #address-cells : Must be 3
+> > +
+> > +- #size-cells    : Must be 2
+> > +
+> > +Configuration Space is assumed to be memory-mapped (as opposed to being
+> 
+> It would be great to have a flag to specify whether Configuration Space is over
+> ioports or memory mapped.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Asai Thambi S P <asamymuthupa@micron.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/block/mtip32xx/mtip32xx.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+This is another reason why I prefer the reg property for specifying the configuration
+space address range. I don't see a straight way of making the distinction you
+need using the ranges property.
 
-diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
-index 5160269..5299a65 100644
---- a/drivers/block/mtip32xx/mtip32xx.c
-+++ b/drivers/block/mtip32xx/mtip32xx.c
-@@ -4615,7 +4615,7 @@ static int mtip_pci_probe(struct pci_dev *pdev,
- 	if (rv) {
- 		dev_warn(&pdev->dev,
- 			"Unable to enable MSI interrupt.\n");
--		goto block_initialize_err;
-+		goto msi_initialize_err;
- 	}
- 
- 	/* Initialize the block layer. */
-@@ -4645,6 +4645,8 @@ static int mtip_pci_probe(struct pci_dev *pdev,
- 
- block_initialize_err:
- 	pci_disable_msi(pdev);
-+
-+msi_initialize_err:
- 	if (dd->isr_workq) {
- 		flush_workqueue(dd->isr_workq);
- 		destroy_workqueue(dd->isr_workq);
+> 
+> Regards,
+> Anup
+> 
+> > +accessed via an ioport) and laid out with a direct correspondence to the
+> > +geography of a PCI bus address, by concatenating the various components
+> > +to form a 24-bit offset:
+> > +
+> > +        cfg_offset(bus, device, function, register) =
+> > +                bus << 16 | device << 11 | function << 8 | register
+> > +
+> > +Interrupt mapping is exactly as described in `Open Firmware Recommended
+> > +Practice: Interrupt Mapping' and requires the following properties:
+> > +
+> > +- #interrupt-cells   : Must be 1
+> > +
+> > +- interrupt-map      : <see aforementioned specification>
+> > +
+> > +- interrupt-map-mask : <see aforementioned specification>
+> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> > index 47d46c6d8468..fd4460573b81 100644
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -33,4 +33,11 @@ config PCI_RCAR_GEN2
+> >           There are 3 internal PCI controllers available with a single
+> >           built-in EHCI/OHCI host controller present on each one.
+> >
+> > +config PCI_VIRT_HOST
+> > +       bool "Virtual PCI host controller"
+> > +       depends on ARM && OF
+> > +       help
+> > +         Say Y here if you want to support a very simple virtual PCI
+> > +         host controller, such as the one emulated by kvmtool.
+> > +
+> >  endmenu
+> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> > index 13fb3333aa05..9b6775d95d3b 100644
+> > --- a/drivers/pci/host/Makefile
+> > +++ b/drivers/pci/host/Makefile
+> > @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+> >  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+> >  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+> >  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+> > +obj-$(CONFIG_PCI_VIRT_HOST) += pci-virt.o
+> > diff --git a/drivers/pci/host/pci-virt.c b/drivers/pci/host/pci-virt.c
+> > new file mode 100644
+> > index 000000000000..ded01474453b
+> > --- /dev/null
+> > +++ b/drivers/pci/host/pci-virt.c
+> > @@ -0,0 +1,200 @@
+> > +/*
+> > + * Very basic PCI host controller driver targetting virtual machines
+> > + * (e.g. the PCI emulation provided by kvmtool).
+> > + *
+> > + * This program is free software; you can redistribute it and/or modify
+> > + * it under the terms of the GNU General Public License version 2 as
+> > + * published by the Free Software Foundation.
+> > + *
+> > + * This program is distributed in the hope that it will be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> > + *
+> > + * Copyright (C) 2014 ARM Limited
+> > + *
+> > + * Author: Will Deacon <will.deacon@arm.com>
+> > + *
+> > + * This driver currently supports (per instance):
+> > + *     - A single controller
+> > + *     - A single memory space and/or port space
+> > + *     - A memory-mapped configuration space
+> > + */
+> > +
+> > +#include <linux/kernel.h>
+> > +#include <linux/module.h>
+> > +#include <linux/of_address.h>
+> > +#include <linux/of_pci.h>
+> > +#include <linux/platform_device.h>
+> > +
+> > +struct virt_pci {
+> > +       struct device   *dev;
+> > +
+> > +       struct resource cfg;
+> > +       struct resource io;
+> > +       struct resource mem;
+> > +
+> > +       void __iomem    *cfg_base;
+> > +};
+> > +
+> > +static void __iomem *virt_pci_config_address(struct pci_bus *bus,
+> > +                                            unsigned int devfn,
+> > +                                            int where)
+> > +{
+> > +       struct pci_sys_data *sys = bus->sysdata;
+> > +       struct virt_pci *pci = sys->private_data;
+> > +       void __iomem *addr = pci->cfg_base;
+> > +
+> > +       /*
+> > +        * We construct config space addresses by simply sandwiching
+> > +        * together all of the PCI address components and using the
+> > +        * result as an offset into a 16M region.
+> > +        */
+> > +       return addr + (((u32)bus->number << 16) | (devfn << 8) | where);
+> > +}
+> > +
+> > +
+> > +static int virt_pci_config_read(struct pci_bus *bus, unsigned int devfn,
+> > +                               int where, int size, u32 *val)
+> > +{
+> > +       void __iomem *addr = virt_pci_config_address(bus, devfn, where);
+> > +
+> > +       switch (size) {
+> > +       case 1:
+> > +               *val = readb(addr);
+> > +               break;
+> > +       case 2:
+> > +               *val = readw(addr);
+> > +               break;
+> > +       default:
+> > +               *val = readl(addr);
+> > +       }
+> > +
+> > +       return PCIBIOS_SUCCESSFUL;
+> > +}
+> > +
+> > +static int virt_pci_config_write(struct pci_bus *bus, unsigned int devfn,
+> > +                                int where, int size, u32 val)
+> > +{
+> > +       void __iomem *addr = virt_pci_config_address(bus, devfn, where);
+> > +
+> > +       switch (size) {
+> > +       case 1:
+> > +               writeb(val, addr);
+> > +               break;
+> > +       case 2:
+> > +               writew(val, addr);
+> > +               break;
+> > +       default:
+> > +               writel(val, addr);
+> > +       }
+> > +
+> > +       return PCIBIOS_SUCCESSFUL;
+> > +}
+> > +
+> > +static struct pci_ops virt_pci_ops = {
+> > +       .read   = virt_pci_config_read,
+> > +       .write  = virt_pci_config_write,
+> > +};
+> > +
+> > +static int virt_pci_setup(int nr, struct pci_sys_data *sys)
+> > +{
+> > +       struct virt_pci *pci = sys->private_data;
+> > +
+> > +       if (resource_type(&pci->io)) {
+> > +               pci_add_resource(&sys->resources, &pci->io);
+> > +               pci_ioremap_io(nr * resource_size(&pci->io), pci->io.start);
+> > +       }
+> > +
+> > +       if (resource_type(&pci->mem))
+> > +               pci_add_resource(&sys->resources, &pci->mem);
+> > +
+> > +       pci->cfg_base = devm_ioremap_resource(pci->dev, &pci->cfg);
+> > +       return !IS_ERR(pci->cfg_base);
+> > +}
+> > +
+> > +static const struct of_device_id virt_pci_of_match[] = {
+> > +       { .compatible = "linux,pci-virt" },
+> > +       { },
+> > +};
+> > +MODULE_DEVICE_TABLE(of, virt_pci_of_match);
+> > +
+> > +static int virt_pci_probe(struct platform_device *pdev)
+> > +{
+> > +       struct hw_pci hw;
+> > +       struct of_pci_range range;
+> > +       struct of_pci_range_parser parser;
+> > +       struct virt_pci *pci;
+> > +       struct device *dev = &pdev->dev;
+> > +       struct device_node *np = dev->of_node;
+> > +
+> > +       if (of_pci_range_parser_init(&parser, np)) {
+> > +               dev_err(dev, "missing \"ranges\" property\n");
+> > +               return -EINVAL;
+> > +       }
+> > +
+> > +       pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> > +       if (!pci)
+> > +               return -ENOMEM;
+> > +
+> > +       pci->dev = dev;
+> > +       for_each_of_pci_range(&parser, &range) {
+> > +               u32 restype = range.flags & IORESOURCE_TYPE_BITS;
+> > +
+> > +               switch (restype) {
+> > +               case IORESOURCE_IO:
+> > +                       if (resource_type(&pci->io))
+> > +                               dev_warn(dev,
+> > +                                        "ignoring additional io resource\n");
+> > +                       else
+> > +                               of_pci_range_to_resource(&range, np, &pci->io);
+> > +                       break;
+> > +               case IORESOURCE_MEM:
+> > +                       if (resource_type(&pci->mem))
+> > +                               dev_warn(dev,
+> > +                                        "ignoring additional mem resource\n");
+> > +                       else
+> > +                               of_pci_range_to_resource(&range, np, &pci->mem);
+> > +                       break;
+> > +               case 0: /* cfg */
+> > +                       if (resource_type(&pci->cfg)) {
+> > +                               dev_warn(dev,
+> > +                                        "ignoring additional cfg resource\n");
+> > +                       } else {
+> > +                               of_pci_range_to_resource(&range, np, &pci->cfg);
+> > +                               pci->cfg.flags |= IORESOURCE_MEM;
+> > +                       }
+> > +                       break;
+> > +               default:
+> > +                       dev_warn(dev,
+> > +                               "ignoring unknown/unsupported resource type %x\n",
+> > +                                restype);
+> > +               }
+> > +       }
+> > +
+> > +       memset(&hw, 0, sizeof(hw));
+> > +       hw.nr_controllers       = 1;
+> > +       hw.private_data         = (void **)&pci;
+> > +       hw.setup                = virt_pci_setup;
+> > +       hw.map_irq              = of_irq_parse_and_map_pci;
+> > +       hw.ops                  = &virt_pci_ops;
+> > +       pci_common_init_dev(dev, &hw);
+> > +       return 0;
+> > +}
+> > +
+> > +static struct platform_driver virt_pci_driver = {
+> > +       .driver = {
+> > +               .name = "pci-virt",
+> > +               .owner = THIS_MODULE,
+> > +               .of_match_table = virt_pci_of_match,
+> > +       },
+> > +       .probe = virt_pci_probe,
+> > +};
+> > +module_platform_driver(virt_pci_driver);
+> > +
+> > +MODULE_DESCRIPTION("Virtual PCI host driver");
+> > +MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+> > +MODULE_LICENSE("GPLv2");
+> > --
+> > 1.8.2.2
+> >
+> >
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+
 -- 
-1.7.7.6
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
