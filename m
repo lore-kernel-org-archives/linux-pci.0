@@ -1,55 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:40002 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752837AbaBNWiJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 17:38:09 -0500
-Received: by mail-ie0-f181.google.com with SMTP id rl12so77656iec.26
-        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 14:38:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140214222758.GA7395@xanatos>
-References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
- <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
- <20140117182231.GA18421@google.com> <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
- <CAErSpo4fGBhb+pj6pTpKFTTj9rzLYzB2w-EX2ghWRYR3Cjyd9g@mail.gmail.com>
- <CAErSpo4rTHFOgUDjmrGxxFAuE-+i9y7hW+T7+xTzB7x4_72_pg@mail.gmail.com>
- <F01C6967BCFFB14E8DF7F5D2FD1053EB1ECC22@PGSMSX103.gar.corp.intel.com>
- <CAErSpo4_ecD6Gom=WnH2MMSLsO=SEBnWHKhx3BiXz3Fgs8d2uQ@mail.gmail.com> <20140214222758.GA7395@xanatos>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Feb 2014 15:37:48 -0700
-Message-ID: <CAErSpo4nkr=W8ktbSewRL5MOYQ=k_gcN5QPNgMoE_o0inW2U-A@mail.gmail.com>
-Subject: Re: EHCI host broken -- interrupts disabled
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: "Chen, Jamie" <jamie.chen@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	USB list <linux-usb@vger.kernel.org>,
-	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
+Received: from mail-bn1blp0188.outbound.protection.outlook.com ([207.46.163.188]:12676
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750868AbaBGLRo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Feb 2014 06:17:44 -0500
+From: "Saxena, Sumit" <Sumit.Saxena@lsi.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: DL-MegaRAID Linux <megaraidlinux@lsi.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: RE: [PATCH 13/22] megaraid: Use pci_enable_msix_range()
+Date: Fri, 7 Feb 2014 11:17:41 +0000
+Message-ID: <c2679d9fa6874a65955aaed2f79c040f@DM2PR07MB400.namprd07.prod.outlook.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+ <ba26af069a9e8c1260b17210820be17f8eab0d63.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <ba26af069a9e8c1260b17210820be17f8eab0d63.1391512266.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 3:27 PM, Sarah Sharp
-<sarah.a.sharp@linux.intel.com> wrote:
-> On Fri, Feb 14, 2014 at 01:47:48PM -0700, Bjorn Helgaas wrote:
->> On Fri, Feb 14, 2014 at 9:36 AM, Chen, Jamie <jamie.chen@intel.com> wrote:
->> > Sorry for late response.
->> >
->> > The dmesg attach in the mail.
->>
->> Thanks, I put this info in
->> https://bugzilla.kernel.org/show_bug.cgi?id=70601 and applied the
->> patch to pci/misc.
->>
->> This seems like a potentially important fix, so I think I'll
->> cherry-pick it into for-linus for v3.14.
->
-> Thanks, Bjorn!
->
-> Do you think this patch is a candidate for stable as well?  Anyone with
-> an EHCI-only Baytrail system won't have working USB without this patch,
-> and the patch itself seems relatively small.
 
-Yep, I marked it for stable.  I'll ask Linus to pull it early next
-week, after it has appeared in at least one -next kernel.
 
-Bjorn
+>-----Original Message-----
+>From: Alexander Gordeev [mailto:agordeev@redhat.com]
+>Sent: Tuesday, February 04, 2014 4:47 PM
+>To: linux-kernel@vger.kernel.org
+>Cc: Alexander Gordeev; DL-MegaRAID Linux; linux-scsi@vger.kernel.org;
+>linux-pci@vger.kernel.org
+>Subject: [PATCH 13/22] megaraid: Use pci_enable_msix_range()
+>
+>As result of deprecation of MSI-X/MSI enablement functions
+>pci_enable_msix() and pci_enable_msi_block() all drivers using these two
+>interfaces need to be updated to use the new pci_enable_msi_range() and
+>pci_enable_msix_range() interfaces.
+>
+>Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+>Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+>Cc: linux-scsi@vger.kernel.org
+>Cc: linux-pci@vger.kernel.org
+>---
+> drivers/scsi/megaraid/megaraid_sas_base.c |   25 +++++++++++--------------
+> 1 files changed, 11 insertions(+), 14 deletions(-)
+>
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>index 3b7ad10..90944f1 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>@@ -3731,18 +3731,12 @@ static int megasas_init_fw(struct
+>megasas_instance *instance)
+> 					     (unsigned int)num_online_cpus());
+> 		for (i = 0; i < instance->msix_vectors; i++)
+> 			instance->msixentry[i].entry = i;
+>-		i = pci_enable_msix(instance->pdev, instance->msixentry,
+>-				    instance->msix_vectors);
+>-		if (i >= 0) {
+>-			if (i) {
+>-				if (!pci_enable_msix(instance->pdev,
+>-						     instance->msixentry, i))
+>-					instance->msix_vectors = i;
+>-				else
+>-					instance->msix_vectors = 0;
+>-			}
+>-		} else
+>+		i = pci_enable_msix_range(instance->pdev, instance-
+>>msixentry,
+>+					  1, instance->msix_vectors);
+>+		if (i < 0)
+> 			instance->msix_vectors = 0;
+>+		else
+>+			instance->msix_vectors = i;
+>
+> 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+> 			"<%d> MSIX vector,Online CPUs: <%d>,"
+>@@ -4667,9 +4661,11 @@ megasas_resume(struct pci_dev *pdev)
+> 		goto fail_ready_state;
+>
+> 	/* Now re-enable MSI-X */
+>-	if (instance->msix_vectors)
+>-		pci_enable_msix(instance->pdev, instance->msixentry,
+>-				instance->msix_vectors);
+>+	if (instance->msix_vectors &&
+>+	    pci_enable_msix_range(instance->pdev, instance->msixentry,
+>+				  instance->msix_vectors,
+>+				  instance->msix_vectors) < 0)
+>+		goto fail_reenable_msix;
+>
+> 	switch (instance->pdev->device) {
+> 	case PCI_DEVICE_ID_LSI_FUSION:
+>@@ -4756,6 +4752,7 @@ fail_init_mfi:
+>
+> fail_set_dma_mask:
+> fail_ready_state:
+>+fail_reenable_msix:
+>
+> 	pci_disable_device(pdev);
+
+Acked-by: Sumit Saxena <sumit.saxena@lsi.com>
+
+Sumit
+>
+>--
+>1.7.7.6
+>
+
