@@ -1,54 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:48985 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958AbaBDMBU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 07:01:20 -0500
-Message-ID: <52F0D683.4000205@gmail.com>
-Date: Tue, 04 Feb 2014 13:01:07 +0100
-From: Jack Wang <xjtuwjp@gmail.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:51966 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752080AbaBGRyS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Feb 2014 12:54:18 -0500
+Date: Fri, 7 Feb 2014 10:54:10 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140207175410.GC16263@obsidianresearch.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <3460536.Sh23gjDa6X@wuerfel>
+ <20140205190947.GA22297@mudshark.cambridge.arm.com>
+ <3724624.kd9jZNUiTF@wuerfel>
+ <20140207114607.GE5976@mudshark.cambridge.arm.com>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org, lindar_liu@usish.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 16/22] pm8001: Fix invalid success return when request_irq()
- failed
-References: <cover.1391512266.git.agordeev@redhat.com> <f724cdc95b9e1eb578cf7297ad32b830885f681c.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <f724cdc95b9e1eb578cf7297ad32b830885f681c.1391512266.git.agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140207114607.GE5976@mudshark.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/04/2014 12:17 PM, Alexander Gordeev wrote:
-> When enabling MSI-X if a call to request_irq() failed
-> pm8001_setup_msix() still returns success. This udate
-> fixes the described misbehaviour.
+On Fri, Feb 07, 2014 at 11:46:07AM +0000, Will Deacon wrote:
+
+> > In practice, there can be various ways that a system requires something
+> > more complex:
+> > 
+> > * You can have a memory space range that puts PCI bus address zero
+> >   at the start of the pci->mem resource. In this case, you have
+> >   mem_offset = pci->mem.start. We should probably try not to do
+> >   this, but there is existing hardware doing it.
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: xjtuwjp@gmail.com
-> Cc: lindar_liu@usish.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/scsi/pm8001/pm8001_init.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
+> If it's not the common case, then the generic driver might not need to care
+> (at least, initially).
+
+Something to think about, other people are going to reference this
+driver when writing drivers for their own hardware, it would be nice
+to see it perfect..
+
+AFAIK, the job is fairly simple, when you call pci_add_resource_offset
+for memory compute the offset from 
+  of_pci_range.pci_addr - of_pci_range.cpu_addr
+
+(or is it the other way around ?)
+
+And when you do it for IO then you compute the offset between the
+requested io mapping base to the pci_addr.
+
+> > * You might have multiple sections of the PCI bus space mapped
+> >   into CPU physical space. If you want to support legacy VGA
+> >   console, you probably want to map the first 16MB of the bus
+> >   space at an arbitrary location (with the mem_offset as above),
+> >   plus a second, larger section of the bus space with an identity
+> >   mapping (mem_offset_= 0) for all devices other than VGA.
+> >   You'd also need to copy some VGA specific code from arm32 to
+> >   arm64 to actually make this work.
 > 
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index 73a120d..efffbb9 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -739,9 +739,10 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
->  			pm8001_ha->irq_vector[i].irq_id = i;
->  			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
->  
-> -			if (request_irq(pm8001_ha->msix_entries[i].vector,
-> +			rc = request_irq(pm8001_ha->msix_entries[i].vector,
->  				pm8001_interrupt_handler_msix, flag,
-> -				intr_drvname[i], &(pm8001_ha->irq_vector[i]))) {
-> +				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-> +			if (rc) {
->  				for (j = 0; j < i; j++)
->  					free_irq(
->  					pm8001_ha->msix_entries[j].vector,
-> 
-Thanks, looks fine.
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
+> Again, I'd rather cross that bridge (no pun intended) when we decide we want
+> legacy VGA.
+
+Fortuantely if you compute the offset directly from the DT then you
+don't need to do anything more. If someone wants to use this
+arrangement then they just have to setup the HW and write a proper DT
+with two ranges lines for memory and everything should just work.
+
+> Okey doke, is anybody working on that? (I see the follow up from
+> Jason, but it's not clear whether that's going to be merged).
+
+Nope, just a thought to stimulate discussion :)
+
+Regards,
+Jason
