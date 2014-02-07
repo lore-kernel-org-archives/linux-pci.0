@@ -1,74 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61582 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932145AbaBUPrm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Feb 2014 10:47:42 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jon Mason <jon.mason@intel.com>, linux-pci@vger.kernel.org
-Subject: [PATCH v2 4/4] ntb: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Fri, 21 Feb 2014 16:49:32 +0100
-Message-Id: <0afccb5cf0710f980b47e57c4e9b27eeb3033955.1392996332.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392996332.git.agordeev@redhat.com>
-References: <cover.1392996332.git.agordeev@redhat.com>
+Received: from vserver.eikelenboom.it ([84.200.39.61]:42168 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011AbaBGLEG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Feb 2014 06:04:06 -0500
+Date: Fri, 7 Feb 2014 12:03:57 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <652007466.20140207120357@eikelenboom.it>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
+	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
+	<linux-ia64@vger.kernel.org>
+Subject: Re: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary prevents it from reading it's own rom. It will get the content of the shadowrom at C000 instead, which is of the primary VGA card and the driver of the secondary card will bail out.
+In-Reply-To: <20140203145205.GB2992@phenom.dumpdata.com>
+References: <20140130000831.GJ16825@google.com> <1391160503-11122-1-git-send-email-linux@eikelenboom.it> <20140203145205.GB2992@phenom.dumpdata.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Hi All,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jon Mason <jon.mason@intel.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/ntb/ntb_hw.c |   20 +++++---------------
- 1 files changed, 5 insertions(+), 15 deletions(-)
+Still trying to collect tested and acked-by's ..
 
-diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-index 0472045..9f2005d 100644
---- a/drivers/ntb/ntb_hw.c
-+++ b/drivers/ntb/ntb_hw.c
-@@ -1088,11 +1088,9 @@ static int ntb_setup_snb_msix(struct ntb_device *ndev, int msix_entries)
- 	if (msix_entries < SNB_MSIX_CNT)
- 		return -ENOSPC;
- 
--	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-+	rc = pci_enable_msix_exact(pdev, ndev->msix_entries, msix_entries);
- 	if (rc < 0)
- 		return rc;
--	else if (rc > 0)
--		return -ENOSPC;
- 
- 	for (i = 0; i < msix_entries; i++) {
- 		msix = &ndev->msix_entries[i];
-@@ -1142,18 +1140,10 @@ static int ntb_setup_bwd_msix(struct ntb_device *ndev, int msix_entries)
- 	struct msix_entry *msix;
- 	int rc, i;
- 
--retry:
--	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
--	if (rc < 0)
--		return rc;
--	else if (rc > 0) {
--		dev_warn(&pdev->dev,
--			 "Only %d MSI-X vectors. "
--			 "Limiting the number of queues to that number.\n",
--			 rc);
--		msix_entries = rc;
--		goto retry;
--	}
-+	msix_entries = pci_enable_msix_range(pdev, ndev->msix_entries,
-+					     1, msix_entries);
-+	if (msix_entries < 0)
-+		return msix_entries;
- 
- 	for (i = 0; i < msix_entries; i++) {
- 		msix = &ndev->msix_entries[i];
--- 
-1.7.7.6
+Dave,
+          In commit 6cf20beec4b91c240cf759b4db72669e251f1fc4 you changed pci_fixup_video saying:
+          "This fixes the switcheroo on my T410s."
+          Do you still have the machine and could you verify if it still works with this patch applied ?
+
+Eiichiro,
+          Most of last major overhaul of pci_fixup_video was in commit 6b5c76b8e2ff204fa8d7201acce461188873bf2b saying:
+          "PCI: fix pci_fixup_video as it blows up on sparc64"
+          Is it possible for you to verify you can still boot on sparc64 with this patch applied ?
+
+Tony,
+          Since ia64's pci_fixup_video is also changed to be inline with x86, could you verify it still compiles and boots for you ?
+
+
+Konrad,
+          Thanks for reviewing and testing !
+
+--
+Sander
+
+
+
+
+Monday, February 3, 2014, 3:52:05 PM, you wrote:
+
+> On Fri, Jan 31, 2014 at 10:28:22AM +0100, Sander Eikelenboom wrote:
+>> Hi Bjorn / Tony,
+>> 
+>> I fixed up ia64 as well and brought it inline again with the x86 code,
+>> but i don't have a ia64 machine, so that part is untested.
+>> Perhaps Tony is able to review/test it ?
+>> 
+>> Sander
+>> 
+>> 
+>> 
+>> Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary
+>> prevents it from reading it's own rom. It will get the content of the shadowrom
+>> at C000 instead, which is of the primary VGA card and the driver of the
+>> secondary card will bail out.
+>> 
+>> Fix this by checking if the arch code or vga-arbitration has already
+>> determined the vga_default_device, if so only apply the fix to this
+>> primary video device and let the comment reflect this.
+>> 
+>> v2:
+>>     - Fix pci_fixup_video both in x86 and ia64
+>> 
+>> 
+>> Sander Eikelenboom (1):
+>>   Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the
+>>     primary     prevents it from reading it's own rom. It will get the
+>>     content of the shadowrom     at C000 instead, which is of the
+>>     primary VGA card and the driver of the     secondary card will bail
+>>     out.
+
+> Your editor mutilated your subject line. It ought to have been just
+> one line.
+
+> Anyhow, you can also add 'Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com'
+> on the patch for the x86 part.
+
+> The ia64 "looks" OK to me, but my ia64 box won't boot v3.11 or later
+> so I can't give it a 'Tested-by' yet.
+
+>> 
+>>  arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
+>>  arch/x86/pci/fixup.c  |   18 ++++++++++--------
+>>  2 files changed, 23 insertions(+), 19 deletions(-)
+>> 
+>> -- 
+>> 1.7.10.4
+>> 
+
 
