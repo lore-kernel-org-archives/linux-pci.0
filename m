@@ -1,100 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Dimitris Michailidis <dm@chelsio.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 07/35] cxgb4: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:07:59 +0100
-Message-Id: <1d6d822d670b3492cd9cbc03c5383dec570a3a31.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:62638 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbaBHBui (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Feb 2014 20:50:38 -0500
+Message-ID: <52F58D5D.40503@huawei.com>
+Date: Sat, 8 Feb 2014 09:50:21 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH] PCI,pciehp: Don't set slot off when found device already
+ exists.
+References: <1389600168-23228-1-git-send-email-wangyijing@huawei.com> <20140129223850.GH16825@google.com>
+In-Reply-To: <20140129223850.GH16825@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On 2014/1/30 6:38, Bjorn Helgaas wrote:
+> On Mon, Jan 13, 2014 at 04:02:48PM +0800, Yijing Wang wrote:
+>> If we found device already exists during hot add device, we should
+>> leave it, not to set slot off.
+> 
+> Does this fix a defect?  What's the scenario where this fixes a problem
+> in the current code?  I think this change makes sense, but I'd like to
+> have a better description of the problem that we're fixing.
+> 
+> I see the following path that looks like it might be a problem with the
+> current code if slot power is off when we resume after a suspend:
+> 
+>     pciehp_resume
+>       pciehp_enable_slot
+>         board_added
+>           pciehp_configure_device
+> 
+> Is this the scenario you're addressing?
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Dimitris Michailidis <dm@chelsio.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   50 +++++++++++------------
- 1 files changed, 24 insertions(+), 26 deletions(-)
+Yes, it is.
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index 43ab35f..bd0321d 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -5737,7 +5737,7 @@ static void reduce_ethqs(struct adapter *adap, int n)
- static int enable_msix(struct adapter *adap)
- {
- 	int ofld_need = 0;
--	int i, err, want, need;
-+	int i, want, need;
- 	struct sge *s = &adap->sge;
- 	unsigned int nchan = adap->params.nports;
- 	struct msix_entry entries[MAX_INGQ + 1];
-@@ -5753,32 +5753,30 @@ static int enable_msix(struct adapter *adap)
- 	}
- 	need = adap->params.nports + EXTRA_VECS + ofld_need;
- 
--	while ((err = pci_enable_msix(adap->pdev, entries, want)) >= need)
--		want = err;
-+	want = pci_enable_msix_range(adap->pdev, entries, need, want);
-+	if (want < 0)
-+		return want;
- 
--	if (!err) {
--		/*
--		 * Distribute available vectors to the various queue groups.
--		 * Every group gets its minimum requirement and NIC gets top
--		 * priority for leftovers.
--		 */
--		i = want - EXTRA_VECS - ofld_need;
--		if (i < s->max_ethqsets) {
--			s->max_ethqsets = i;
--			if (i < s->ethqsets)
--				reduce_ethqs(adap, i);
--		}
--		if (is_offload(adap)) {
--			i = want - EXTRA_VECS - s->max_ethqsets;
--			i -= ofld_need - nchan;
--			s->ofldqsets = (i / nchan) * nchan;  /* round down */
--		}
--		for (i = 0; i < want; ++i)
--			adap->msix_info[i].vec = entries[i].vector;
--	} else if (err > 0)
--		dev_info(adap->pdev_dev,
--			 "only %d MSI-X vectors left, not using MSI-X\n", err);
--	return err;
-+	/*
-+	 * Distribute available vectors to the various queue groups.
-+	 * Every group gets its minimum requirement and NIC gets top
-+	 * priority for leftovers.
-+	 */
-+	i = want - EXTRA_VECS - ofld_need;
-+	if (i < s->max_ethqsets) {
-+		s->max_ethqsets = i;
-+		if (i < s->ethqsets)
-+			reduce_ethqs(adap, i);
-+	}
-+	if (is_offload(adap)) {
-+		i = want - EXTRA_VECS - s->max_ethqsets;
-+		i -= ofld_need - nchan;
-+		s->ofldqsets = (i / nchan) * nchan;  /* round down */
-+	}
-+	for (i = 0; i < want; ++i)
-+		adap->msix_info[i].vec = entries[i].vector;
-+
-+	return 0;
- }
- 
- #undef EXTRA_VECS
+I found this case by reviewing the code. But I have no platform
+supports pciehp resume. So I can not test it in real.
+
+Thanks!
+Yijing.
+
+> 
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/hotplug/pciehp_ctrl.c |    3 ++-
+>>  drivers/pci/hotplug/pciehp_pci.c  |    2 +-
+>>  2 files changed, 3 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+>> index 38f0186..f27b0ff 100644
+>> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+>> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+>> @@ -224,7 +224,8 @@ static int board_added(struct slot *p_slot)
+>>  	if (retval) {
+>>  		ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
+>>  			 pci_domain_nr(parent), parent->number);
+>> -		goto err_exit;
+>> +		if (retval != -EEXIST)
+>> +			goto err_exit;
+>>  	}
+>>  
+>>  	if (PWR_LED(ctrl))
+>> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+>> index aac7a40..9b87b49 100644
+>> --- a/drivers/pci/hotplug/pciehp_pci.c
+>> +++ b/drivers/pci/hotplug/pciehp_pci.c
+>> @@ -48,7 +48,7 @@ int pciehp_configure_device(struct slot *p_slot)
+>>  			 "at %04x:%02x:00, cannot hot-add\n", pci_name(dev),
+>>  			 pci_domain_nr(parent), parent->number);
+>>  		pci_dev_put(dev);
+>> -		return -EINVAL;
+>> +		return -EEXIST;
+>>  	}
+>>  
+>>  	num = pci_scan_slot(parent, PCI_DEVFN(0, 0));
+>> -- 
+>> 1.7.1
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
+
 -- 
-1.7.7.6
+Thanks!
+Yijing
 
