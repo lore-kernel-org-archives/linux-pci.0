@@ -1,70 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:54445 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508AbaBXLA5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 06:00:57 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Magnus Damm <damm@opensource.se>, linux-pci@vger.kernel.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: DMABOUNCE in pci-rcar
-Date: Mon, 24 Feb 2014 12:00:21 +0100
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
-	Ben Dooks <ben-linux@fluff.org>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:58898 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751969AbaBIUeU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Feb 2014 15:34:20 -0500
+Date: Sun, 9 Feb 2014 20:34:12 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host
+	controller
+Message-ID: <20140209203412.GN26684@n2100.arm.linux.org.uk>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <201402060928.53310.arnd@arndb.de> <20140206203114.GW26684@n2100.arm.linux.org.uk> <201402092118.19701.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201402241200.21944.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201402092118.19701.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Magnus,
+On Sun, Feb 09, 2014 at 09:18:19PM +0100, Arnd Bergmann wrote:
+> On Thursday 06 February 2014, Russell King - ARM Linux wrote:
+> > On Thu, Feb 06, 2014 at 09:28:52AM +0100, Arnd Bergmann wrote:
+> > > It certainly seems workable. OTOH if we just manage to do a
+> > > helper that scans the OF ranges, allocates the I/O window,
+> > > remaps it and calls the existing pci_add_resource_offset()
+> > > helper, PCI host drivers don't need to worry about the
+> > > io_offsets computation either and just need to pull out the
+> > > correct window locations if they need to set up the hardware
+> > > translation windows (which I'd hope we can often let the boot
+> > > loader take care of).
+> 
+> ...
+> 
+> > So, whenever you enumerate a PCI bus, and read the resource information
+> > out of the BARs, you must know how that address region specified in
+> > the BAR as a bus address maps to the host address space.
+> > 
+> 
+> None of that contradicts what I wrote. Please try to understand what
+> I suggested, which is to have a common way to communicate that
+> information from DT to the PCI core without involving the PCI host
+> bridge driver.
 
-I noticed during randconfig testing that you enabled DMABOUNCE for the
-pci-rcar-gen2 driver as posted in this patch https://lkml.org/lkml/2014/2/5/30
+Please explain it better then.
 
-I didn't see the original post unfortunately, but I fear we have to
-revert it and come up with a better solution, as your approach seems
-wrong on a number of levels:
-
-* We really don't want any new users of DMABOUNCE on ARM but instead leave
-  it to the PXA/IXP/SA1100 based platforms using it today.
-
-* If your SoCs have an IOMMU, you should really use it, as that would
-  give you much better performance than bounce buffers anyway
-
-* If the hardware is so screwed up that you have to use bounce buffers,
-  use the SWIOTLB code that is reasonably modern.
-
-* The window base and size in the driver should not be hardcoded, as
-  this is likely not a device specific property but rather an artifact of
-  how it's connected. Use the standard "dma-ranges" property.
-
-* You should not need your own dma_map_ops in the driver. What you
-  do there isn't really specific to your host but should live in some
-  place where it can be shared with other drivers.
-
-* The implementation of the dma_map_ops is wrong: at the very least,
-  you cannot use the dma_mask of the pci host when translating
-  calls from the device, since each pci device can have a different
-  dma mask that is set by the driver if it needs larger or smaller
-  than 32-bit DMA space.
-
-* The block bounce code can't be enabled if CONFIG_BLOCK is disabled,
-  this is how I noticed your changes.
-
-* The block layer assumes that it will bounce any highmem pages,
-  but that isn't necessarily what you want here: if you have 2GB
-  of lowmem space (CONFIG_VMSPLIT_2G) or more, you will also have
-  lowmem pages that need bouncing.
-
-* (completely unrelated, I noticed you set up a bogus I/O space
-  window. Don't do that, you will get get a panic if a device happens
-  to use it. Not providing an resource should work fine though)
-
-On the bright side, your other changes in the same series all look
-good. Thanks especially for sorting out the probe() function, I was
-already wondering if we could change that the way you did.
-
-	Arnd
+-- 
+FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
+in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
+Estimate before purchase was "up to 13.2Mbit".
