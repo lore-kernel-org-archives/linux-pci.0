@@ -1,39 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:30475 "EHLO
+Received: from szxga01-in.huawei.com ([119.145.14.64]:8490 "EHLO
 	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752605AbaBOAye (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 19:54:34 -0500
-Message-ID: <52FEB98D.4070001@huawei.com>
-Date: Sat, 15 Feb 2014 08:49:17 +0800
+	with ESMTP id S1752257AbaBJEFF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Feb 2014 23:05:05 -0500
 From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH part1 v5 7/7] PCI: pciehp: Don't enable/disable slot on resume unless status changed
+Date: Mon, 10 Feb 2014 12:04:11 +0800
+Message-ID: <1392005051-54508-8-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
+References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	David Airlie <airlied@linux.ie>,
-	<dri-devel@lists.freedesktop.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	<linux-pcmcia@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH 1/6] PCI,acpiphp: Use list_for_each_entry() for bus traversal
-References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com> <2601738.3Ek05F9oo5@vostro.rjw.lan> <52FD7D3D.4030409@huawei.com> <2512180.zyEb2tzySd@vostro.rjw.lan>
-In-Reply-To: <2512180.zyEb2tzySd@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> Does it conflict with anything currently in linux-next (the linux-next branch
->>> of linux-pm.git in particular)?
->>
->> Hi Rafael,
->>    I applied this to your linux-next branch successfully . No conflicts found.
-> 
-> Good. :-)
-> 
-> Please feel free to add my ACK to it.
+Currently pciehp_resume() always enables the slot if it is occupied.  But
+often the slot was already occupied before the suspend, so we complain like
+this:
 
-Thanks very much!
+    pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
+    pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
 
+This patch only enables the slot if it was empty before the suspend and is
+now occupied, i.e., a card was inserted while suspended.
+
+Similarly, we only disable the slot if a card was removed while suspended.
+If it was already empty before the suspend, we don't need to do anything.
+
+[bhelgaas: changelog]
+Tested-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ drivers/pci/hotplug/pciehp_core.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 53b58de..551137f 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -317,6 +317,7 @@ static int pciehp_resume (struct pcie_device *dev)
+ {
+ 	struct controller *ctrl;
+ 	struct slot *slot;
++	struct pci_bus *pbus = dev->port->subordinate;
+ 	u8 status;
+ 
+ 	ctrl = get_service_data(dev);
+@@ -328,10 +329,13 @@ static int pciehp_resume (struct pcie_device *dev)
+ 
+ 	/* Check if slot is occupied */
+ 	pciehp_get_adapter_status(slot, &status);
+-	if (status)
+-		pciehp_enable_slot(slot);
+-	else
++	if (status) {
++		if (list_empty(&pbus->devices))
++			pciehp_enable_slot(slot);
++	} else if (!list_empty(&pbus->devices)) {
+ 		pciehp_disable_slot(slot);
++	}
++
+ 	return 0;
+ }
+ #endif /* PM */
+-- 
+1.7.1
 
 
