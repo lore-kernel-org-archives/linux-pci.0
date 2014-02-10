@@ -1,70 +1,84 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jingoo Han <jg1.han@samsung.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 32/35] niu: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:12:01 +0100
-Message-Id: <8832462673133006827fa3eb2fd0c92e34fb7b69.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH part1 v5 2/7] PCI: introduce pci_bus_find_ext_capability()
+Date: Mon, 10 Feb 2014 12:04:06 +0800
+Message-ID: <1392005051-54508-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
+References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Sometimes we need to find PCI EXT CAP before
+pci_dev set up. So introduce pci_bus_find_ext_capability(),
+it will be used to get PCI EXT DSN before pci_dev set up.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/net/ethernet/sun/niu.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
+ drivers/pci/pci.c   |   31 +++++++++++++++++++++++++++++++
+ include/linux/pci.h |    1 +
+ 2 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/ethernet/sun/niu.c b/drivers/net/ethernet/sun/niu.c
-index 8e2266e..79606f47a 100644
---- a/drivers/net/ethernet/sun/niu.c
-+++ b/drivers/net/ethernet/sun/niu.c
-@@ -9041,7 +9041,7 @@ static void niu_try_msix(struct niu *np, u8 *ldg_num_map)
- 	struct msix_entry msi_vec[NIU_NUM_LDG];
- 	struct niu_parent *parent = np->parent;
- 	struct pci_dev *pdev = np->pdev;
--	int i, num_irqs, err;
-+	int i, num_irqs;
- 	u8 first_ldg;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a263c0a..432ac86 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -327,6 +327,37 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap)
+ }
+ EXPORT_SYMBOL_GPL(pci_find_ext_capability);
  
- 	first_ldg = (NIU_NUM_LDG / parent->num_ports) * np->port;
-@@ -9053,21 +9053,16 @@ static void niu_try_msix(struct niu *np, u8 *ldg_num_map)
- 		    (np->port == 0 ? 3 : 1));
- 	BUG_ON(num_irqs > (NIU_NUM_LDG / parent->num_ports));
- 
--retry:
- 	for (i = 0; i < num_irqs; i++) {
- 		msi_vec[i].vector = 0;
- 		msi_vec[i].entry = i;
- 	}
- 
--	err = pci_enable_msix(pdev, msi_vec, num_irqs);
--	if (err < 0) {
-+	num_irqs = pci_enable_msix_range(pdev, msi_vec, 1, num_irqs);
-+	if (num_irqs < 0) {
- 		np->flags &= ~NIU_FLAGS_MSIX;
- 		return;
- 	}
--	if (err > 0) {
--		num_irqs = err;
--		goto retry;
--	}
- 
- 	np->flags |= NIU_FLAGS_MSIX;
- 	for (i = 0; i < num_irqs; i++)
++/**
++ * pci_bus_find_ext_capability - Find an extended capability
++ * @bus: the PCI bus to query
++ * @devfn: PCI device to query
++ * @cap: capability code
++ *
++ * Like pci_find_ext_capability() but works for pci devices that do not have a
++ * pci_dev structure set up yet.
++ *
++ * Returns the address of the requested capability structure within the
++ * device's PCI configuration space or 0 in case the device does not
++ * support it.
++ *
++ * */
++int pci_bus_find_ext_capability(struct pci_bus *bus, int devfn, int cap)
++{
++	int pos;
++	u32 status;
++
++	pos = pci_bus_find_capability(bus, devfn, PCI_CAP_ID_EXP);
++	if (!pos)
++		return 0;
++	
++	if (pci_bus_read_config_dword(bus, devfn, PCI_CFG_SPACE_SIZE, &status) != 
++			PCIBIOS_SUCCESSFUL || status == 0xffffffff)
++		return 0;
++	
++	return pci_find_next_ext_capability(bus, devfn, 0, cap);
++}
++
++
+ static int __pci_find_next_ht_cap(struct pci_dev *dev, int pos, int ht_cap)
+ {
+ 	int rc, ttl = PCI_FIND_CAP_TTL;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index df495e9..470de02 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -797,6 +797,7 @@ int pci_find_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_capability(struct pci_dev *dev, u8 pos, int cap);
+ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_ext_capability(struct pci_bus *bus, int devfn, int pos, int cap);
++int pci_bus_find_ext_capability(struct pci_bus *bus, int devfn, int cap);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
 -- 
-1.7.7.6
+1.7.1
+
 
