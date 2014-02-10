@@ -1,72 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49978 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753999AbaBDLPt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:15:49 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	James Smart <james.smart@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 11/22] lpfc: Remove superfluous call to pci_disable_msix()
-Date: Tue,  4 Feb 2014 12:16:57 +0100
-Message-Id: <6341596a5594023854c22f5ab6ad0a439d26d762.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32619 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752195AbaBJKyS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 05:54:18 -0500
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<wil6210@qca.qualcomm.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] wil6210: Fix switch operator "missing break?" warning
+Date: Mon, 10 Feb 2014 12:54:13 +0200
+Message-ID: <3132701.EBRqRlvTI9@lx-vladimir>
+In-Reply-To: <20140207144639.GA10939@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com> <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com> <20140207144639.GA10939@dhcp-26-207.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+On Friday, February 07, 2014 03:46:40 PM Alexander Gordeev wrote:
+> This update fixes a warning introduced with commit bc977ba1
+> ("wil6210: Use pci_enable_msi_range() instead of pci_enable_msi_block()")
+> 
+> drivers/net/wireless/ath/wil6210/pcie_bus.c:65 wil_if_pcie_enable()
+> warn: missing break? reassigning 'use_msi'
+> 
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 68c94cc..a9df97a 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8078,7 +8078,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-@@ -8156,6 +8156,8 @@ irq_fail_out:
- msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
- }
- 
-@@ -8644,7 +8646,7 @@ enable_msix_vectors:
- 	} else if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 
- 	/* Log MSI-X vector assignment */
-@@ -8696,9 +8698,10 @@ cfg_fail_out:
- 			 &phba->sli4_hba.fcp_eq_hdl[index]);
- 	}
- 
--msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
- }
- 
--- 
-1.7.7.6
+I can't reproduce this warning. What tools used to get it?
+Neither gcc (I have 4.8.1) nor sparse report it.
+
+Anyway, I am fine with both 'switch' and 'if'.
+
+Thanks, Vladimir.
+
 
