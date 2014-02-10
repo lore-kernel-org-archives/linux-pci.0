@@ -1,59 +1,30 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH] ACPI / hotplug / PCI: Execute _EJ0 under the ACPI scan lock
-Date: Sat, 08 Feb 2014 16:22:30 +0100
-Message-ID: <1629492.WLGZp2sePX@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f193.google.com ([209.85.192.193]:45187 "EHLO
+	mail-pd0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751889AbaBJObK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 09:31:10 -0500
+Received: by mail-pd0-f193.google.com with SMTP id fp1so2387314pdb.4
+        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 06:31:09 -0800 (PST)
+Received: from [192.168.1.27] ([112.80.114.123])
+        by mx.google.com with ESMTPSA id e6sm43096724pbg.4.2014.02.10.06.31.07
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Mon, 10 Feb 2014 06:31:08 -0800 (PST)
+Message-ID: <52F8E2A9.4000501@gmail.com>
+Date: Mon, 10 Feb 2014 22:31:05 +0800
+From: zsaitom <zsaitom@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org
+Subject: How to combine two PCIe devices in one domain?
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi all,
 
-Since acpi_device_hotplug() assumes that ACPI handles of device
-objects passed to it will not become invalid while acpi_scan_lock
-is being held, make acpiphp_disable_slot() acquire acpi_scan_lock,
-because it generally causes _EJ0 to be executed for one of the
-devices in the slot and that may cause its ACPI handle to become
-invalid.
+I have a driver module which would drive two PCIe devices to access a same memory area with intel IOMMU enabled.
+As the two devices are in two different domains, I should map the memory to every PCIe device.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+How could I combine these two PCIe device in one domain so they share some address space?
 
-Hi All,
-
-This change is not necessary in 3.14-rc (it wouldn't hurt, though), but it
-closes a (mostly theoretical) race on top of the changes I've queued up for
-3.15 in linux-next.
-
-Thanks,
-Rafael
-
----
- drivers/pci/hotplug/acpiphp_glue.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1007,9 +1007,15 @@ int acpiphp_disable_slot(struct acpiphp_
- {
- 	int ret;
- 
-+	/*
-+	 * Acquire acpi_scan_lock to ensure that the execution of _EJ0 in
-+	 * acpiphp_disable_and_eject_slot() will be synchronized properly.
-+	 */
-+	acpi_scan_lock_acquire();
- 	pci_lock_rescan_remove();
- 	ret = acpiphp_disable_and_eject_slot(slot);
- 	pci_unlock_rescan_remove();
-+	acpi_scan_lock_release();
- 	return ret;
- }
- 
-
+Thanks.
