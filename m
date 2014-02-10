@@ -1,32 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20040 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:45818 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751820AbaBMRoi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Feb 2014 12:44:38 -0500
-Date: Thu, 13 Feb 2014 18:46:39 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 11/22] lpfc: Remove superfluous call to pci_disable_msix()
-Message-ID: <20140213174637.GC26610@dhcp-26-207.brq.redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <6341596a5594023854c22f5ab6ad0a439d26d762.1391512266.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6341596a5594023854c22f5ab6ad0a439d26d762.1391512266.git.agordeev@redhat.com>
+	id S1751831AbaBJKHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Feb 2014 05:07:16 -0500
+Message-ID: <1392026834.2082.10.camel@linux-fkkt.site>
+Subject: Re: [PATCH part1 v5 5/7] PCI: Add pci_dummy_ops to isolate pci
+ device temporarily
+From: Oliver Neukum <oneukum@suse.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
+Date: Mon, 10 Feb 2014 11:07:14 +0100
+In-Reply-To: <52F886ED.7040603@huawei.com>
+References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
+		 <1392005051-54508-6-git-send-email-wangyijing@huawei.com>
+	 <1392015399.21271.9.camel@linux-fkkt.site> <52F886ED.7040603@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 04, 2014 at 12:16:57PM +0100, Alexander Gordeev wrote:
+On Mon, 2014-02-10 at 15:59 +0800, Yijing Wang wrote:
+> Hi Oliver,
+>    Thanks for your review and comments!
+> 
+> >> +static DEFINE_SPINLOCK(pci_freeze_lock);
+> > 
+> > The lock is used only here.
+> 
+> Also be used in pci_bus_unfreeze_device();
 
-Hi James,
+Sorry, I meant only in this patch.
 
-Any feedback?
+> 
+> > 
+> >> +/**
+> >> + * pci_bus_freeze_device - freeze pci bus to access pci device
+> >> + * @bus: the pci bus to freeze
+> >> + *
+> >> + * Replace pci bus ops by pci_dummy_ops, protect system from
+> >> + * accessing pci devices.
+> >> + */
+> >> +void pci_bus_freeze_device(struct pci_bus *bus)
+> >> +{
+> >> +	struct pci_ops *ops;
+> >> +	unsigned long flags;
+> >> +
+> >> +	spin_lock_irqsave(&pci_freeze_lock, flags);
+> >> +	ops = pci_bus_set_ops(bus, &pci_dummy_ops);
+> >> +	bus->save_ops = ops;
+> >> +	spin_unlock_irqrestore(&pci_freeze_lock, flags);
+> > 
+> > Against what exactly are you locking here?
+> 
+> I want to use this spin lock to serialize freeze device and unfreeze device.
 
-Thanks!
+Yes, but against what? I am sorry I should have been more explicit.
+You are using these functions only in pci_scan_single_device()
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+
+CPU A					CPU B
+pci_bus_freeze_device()			wait
+bus->save_ops = ops {valid}		wait
+...					pci_bus_freeze_device()
+wait					bus->save_ops = ops
+					{pci_dummy_ops !}
+pci_bus_unfreeze_device()		wait
+pci_bus_set_ops(bus, bus->save_ops)
+
+You see the problem?
+
+If this function ever races with itself, the locking is useless.
+If it doesn't race with itself, the locking is not needed.
+If this function can really race with itself, you need a refcount
+for freezing.
+
+	Regards
+		Oliver
+
+
