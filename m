@@ -1,37 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63486 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932141AbaBUQuo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Feb 2014 11:50:44 -0500
-Date: Fri, 21 Feb 2014 17:52:35 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc: linux-kernel@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] xen-pciback: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140221165235.GF17353@dhcp-26-207.brq.redhat.com>
-References: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
- <5304CC49.7020000@oracle.com>
- <5304D063.90000@oracle.com>
- <20140219160501.GA32067@dhcp-26-207.brq.redhat.com>
- <5304DABD.9000605@oracle.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18218 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752362AbaBJPXx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 10:23:53 -0500
+Date: Mon, 10 Feb 2014 18:23:50 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Marta Rybczynska <rybczynska@gmail.com>,
+	linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] PCI hotplug: cpqphp: hex vs decimal typo in cpqhpc_probe()
+Message-ID: <20140210152350.GA24189@elgon.mountain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5304DABD.9000605@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 11:24:29AM -0500, Boris Ostrovsky wrote:
+This is a static checker fix and I can't test it, but from the context
+it definitely looks like hexidecimal 0x20 was intended here instead of
+decimal 20.
 
-Hi Boris et al,
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Based on recently accepted to the mainline pci_enable_msix_exact() function,
-I am sending an updated version of the patch.
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
+index 31273e155e6c..037e2612c5bd 100644
+--- a/drivers/pci/hotplug/cpqphp_core.c
++++ b/drivers/pci/hotplug/cpqphp_core.c
+@@ -920,12 +920,12 @@ static int cpqhpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 				bus->max_bus_speed = PCI_SPEED_100MHz_PCIX;
+ 				break;
+ 			}
+-			if (bus_cap & 20) {
++			if (bus_cap & 0x20) {
+ 				dbg("bus max supports 66MHz PCI-X\n");
+ 				bus->max_bus_speed = PCI_SPEED_66MHz_PCIX;
+ 				break;
+ 			}
+-			if (bus_cap & 10) {
++			if (bus_cap & 0x10) {
+ 				dbg("bus max supports 66MHz PCI\n");
+ 				bus->max_bus_speed = PCI_SPEED_66MHz;
+ 				break;
