@@ -1,37 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11362 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751083AbaB1Ldv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Feb 2014 06:33:51 -0500
-Date: Fri, 28 Feb 2014 12:35:48 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] ntb: Fix leakage of ntb_device::msix_entries[]
- array
-Message-ID: <20140228113547.GA4447@dhcp-26-207.brq.redhat.com>
-References: <cover.1392996332.git.agordeev@redhat.com>
- <7f4150adb1b01e79555af6a9e13f1c0e0df6fdac.1392996332.git.agordeev@redhat.com>
- <20140221233325.GB3112@jonmason-lab>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:8553 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752270AbaBJEFI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Feb 2014 23:05:08 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Paul Bolle <pebolle@tiscali.nl>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH part1 v5 4/7] PCI: Introduce pci_serial_number_changed()
+Date: Mon, 10 Feb 2014 12:04:08 +0800
+Message-ID: <1392005051-54508-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
+References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140221233325.GB3112@jonmason-lab>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 04:33:25PM -0700, Jon Mason wrote:
-> On Fri, Feb 21, 2014 at 04:49:29PM +0100, Alexander Gordeev wrote:
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: Jon Mason <jon.mason@intel.com>
-> > Cc: linux-pci@vger.kernel.org
-> 
-> Good catch.  Applied.
+Sometimes OS do not know the physical device swap,
+for instance, some device hotplug during system suspend.
+Interrupt can not deliver to OS in some platform.
+So we can use pci serial number capability to detect this
+issue if device supports serial number.
 
-Hi Jon,
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/pci.c   |   28 ++++++++++++++++++++++++++++
+ include/linux/pci.h |    2 ++
+ 2 files changed, 30 insertions(+), 0 deletions(-)
 
-If the other three patches are okay?
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af06064..8f31ab3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2198,6 +2198,34 @@ void pci_dsn_init(struct pci_dev *dev)
+ }
+ 
+ /**
++ * pci_serial_number_changed - check the device SN is changed
++ * @pdev: the PCI device
++ *
++ * check the device serial number is changed.
++ * if device does not support device serial number,
++ * return false.
++ */
++bool pci_serial_number_changed(struct pci_dev *pdev)
++{
++	u64 old, new;
++	old = pdev->sn;
++
++	if (!pci_is_pcie(pdev))
++		return false;
++
++	new = pci_device_serial_number(pdev->bus,
++			pdev->devfn);
++
++	if (old != new) {
++		pr_info("%s: Device Serial Number Changed!\n",
++				pci_name(pdev));
++		return true;
++	} else
++		return false;
++}
++EXPORT_SYMBOL(pci_serial_number_changed);
++
++/**
+  * pci_configure_ari - enable or disable ARI forwarding
+  * @dev: the PCI device
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3631859..d60c0b6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1025,6 +1025,8 @@ void pci_unlock_rescan_remove(void);
+ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+ 
++bool pci_serial_number_changed(struct pci_dev *pdev);
++
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+ void pci_bus_assign_resources(const struct pci_bus *bus);
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
+
