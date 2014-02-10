@@ -1,100 +1,263 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54953 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722AbaBXIAy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:00:54 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, iss_storagedev@hp.com,
-	intel-linux-scu@intel.com, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com,
-	iscsi-driver@qlogic.com, pv-drivers@vmware.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:00 +0100
-Message-Id: <cover.1393191330.git.agordeev@redhat.com>
+Received: from exprod5og110.obsmtp.com ([64.18.0.20]:55561 "HELO
+	exprod5og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752233AbaBJSGD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 13:06:03 -0500
+Received: by mail-vc0-f180.google.com with SMTP id ks9so5140348vcb.11
+        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 10:06:01 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140208142207.GR4993@e106497-lin.cambridge.arm.com>
+References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
+	<1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
+	<7398333.9L5KlyFggU@wuerfel>
+	<CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
+	<20140206101814.GA4993@e106497-lin.cambridge.arm.com>
+	<CACoXjcnTHgtBDesqFUOca1nf34HvNGAV0vP9AEB5xV1mvcRGfw@mail.gmail.com>
+	<20140208142207.GR4993@e106497-lin.cambridge.arm.com>
+Date: Mon, 10 Feb 2014 10:06:01 -0800
+Message-ID: <CACoXjck_yhsp8fSfPe4=XR+-YmuVZEKFs-SXhdzJdvTEpNKsxw@mail.gmail.com>
+Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
+ device tree
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Tanmay Inamdar <tinamdar@apm.com>, Arnd Bergmann <arnd@arndb.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On Sat, Feb 8, 2014 at 6:22 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> On Sat, Feb 08, 2014 at 12:21:56AM +0000, Tanmay Inamdar wrote:
+>> On Thu, Feb 6, 2014 at 2:18 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+>> > On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
+>> >> Hello Liviu,
+>> >>
+>> >> I did not get the first email of this particular patch on any of
+>> >> subscribed mailing lists (don't know why), hence replying here.
+>> >
+>> > Strange, it shows in the MARC and GMANE archive for linux-pci, probably
+>> > a hickup on your receiving side?
+>> >
+>> >>
+>> >> +struct pci_host_bridge *
+>> >> +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
+>> >> + void *host_data, struct list_head *resources)
+>> >> +{
+>> >> + struct pci_bus *root_bus;
+>> >> + struct pci_host_bridge *bridge;
+>> >> +
+>> >> + /* first parse the host bridge bus ranges */
+>> >> + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
+>> >> + return NULL;
+>> >> +
+>> >> + /* then create the root bus */
+>> >> + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
+>> >> + if (!root_bus)
+>> >> + return NULL;
+>> >> +
+>> >> + bridge = to_pci_host_bridge(root_bus->bridge);
+>> >> +
+>> >> + return bridge;
+>> >> +}
+>> >>
+>> >> You are keeping the domain_nr inside pci_host_bridge structure. In
+>> >> above API, domain_nr is required in 'pci_find_bus' function called
+>> >> from 'pci_create_root_bus'. Since the bridge is allocated after
+>> >> creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
+>> >> will cause problem for scanning multiple domains.
+>> >
+>> > Good catch. I was switching between creating a pci_controller in arch/arm64 and
+>> > adding the needed bits in pci_host_bridge. After internal review I've decided to
+>> > add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
+>> >
+>> > Thanks for reviewing this, will fix in v2.
+>> >
+>> > Do you find porting to the new API straight forward?
+>>
+>> It is quite straight forward for MEM regions but for IO regions it is
+>> not. You always assume IO resource starting at 0x0. IMO, this will
+>> cause problem for systems with multiple ports / IO windows. You can
+>> take a look at 'drivers/pci/host/pcie-designware.c'.
+>>
+>> Also the manipulations of addresses for IO_RESOURCES can be dangerous.
+>> It can make some value negative. For example if my PCI IO range starts
+>> in 32 bit address range say 0x8000_0000 with CPU address
+>> 0xb0_8000_0000, window->offset after manipulation will become
+>> negative.
+>>
+>> Personally I would like to do get all the PCI and CPU addresses from
+>> my device tree as is and do the 'pci_add_resource_offset'. This will
+>> help me setup my regions correctly without any further arithmetic.
+>> Please let me know what you think.
+>
+> Yes, that parsing code of ranges is incorrect in light of the current discussion. I
+> will try to propose a fix in the v2 series.
 
-This series is against James Bottomley's SCSI tree [1], but it needs
-commit f7fc32c ("PCI/MSI: Add pci_enable_msi_exact() and
-pci_enable_msix_exact()") from from Bjorn Helgaas's PCI tree [2]:
+Okay. Thanks.
+>
+> Regarding your PCI IO range: if your bus address starts at 0x8000_0000, would
+> that not cause problems with devices that use less than 32bits for address
+> decoding? It is a rather unusual setup, I believe the x86 world (even PCI spec?)
+> mandates IO bus ranges in the first 16MB of address range?
+>
 
-1. git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-2. git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
+Yes. It will cause problem with few devices. Anyways it was just an example.
 
-Recently pci_enable_msix_exact() function has been accepted to
-the mainline. That is a variation of pci_enable_msix_range() which
-allows a device driver to request a particular number of MSI-Xs.
-
-As result, most of the changes posted in version 1 of this series
-are invalidated and need to use pci_enable_msix_exact() instead of
-originally posted pci_enable_msix_range() usages.
-
-I removed almost all ACKs, since unlike pci_enable_msix_range()
-function which returns the number of MSI-Xs allocated or negative
-errno, pci_enable_msix_exact() returns either zero success code or
-a negative errno. Although this change is simple, it still entails
-an updated error code analysis and would be better reviewed by
-driver maintainers.
-
-Thanks!
-
-Cc: iss_storagedev@hp.com
-Cc: intel-linux-scu@intel.com
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
-Cc: qla2xxx-upstream@qlogic.com
-Cc: iscsi-driver@qlogic.com
-Cc: pv-drivers@vmware.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-
-Alexander Gordeev (23):
-  be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  bfa: Do not call pci_enable_msix() after it failed once
-  bfa: Cleanup bfad_setup_intr() function
-  bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  csiostor: Remove superfluous call to pci_disable_msix()
-  csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
-  fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  hpsa: Fallback to MSI rather than to INTx if MSI-X failed
-  hpsa: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  lpfc: Remove superfluous call to pci_disable_msix()
-  lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
-  megaraid: Fail resume if MSI-X re-initialization failed
-  megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
-  mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  pm8001: Fix invalid return when request_irq() failed
-  pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  pmcraid: Get rid of a redundant assignment
-  pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
-  qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
-  qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
-  vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-
- drivers/scsi/be2iscsi/be_main.c           |    6 +--
- drivers/scsi/bfa/bfad.c                   |   62 ++++++++++++-----------------
- drivers/scsi/csiostor/csio_hw.h           |    2 +-
- drivers/scsi/csiostor/csio_isr.c          |   24 ++++-------
- drivers/scsi/fnic/fnic_isr.c              |    4 +-
- drivers/scsi/hpsa.c                       |   12 +-----
- drivers/scsi/isci/init.c                  |    2 +-
- drivers/scsi/lpfc/lpfc_init.c             |   54 ++++++++++++-------------
- drivers/scsi/megaraid/megaraid_sas_base.c |   24 +++++------
- drivers/scsi/mpt2sas/mpt2sas_base.c       |    6 +-
- drivers/scsi/mpt3sas/mpt3sas_base.c       |    4 +-
- drivers/scsi/pm8001/pm8001_init.c         |   44 +++++++++++----------
- drivers/scsi/pmcraid.c                    |   14 +------
- drivers/scsi/qla2xxx/qla_isr.c            |   27 +++++-------
- drivers/scsi/qla4xxx/ql4_nx.c             |    2 +-
- drivers/scsi/vmw_pvscsi.c                 |    2 +-
- 16 files changed, 121 insertions(+), 168 deletions(-)
-
--- 
-1.7.7.6
-
+> Best regards,
+> Liviu
+>
+>>
+>> >
+>> > Best regards,
+>> > Liviu
+>> >
+>> >>
+>> >>
+>> >> On Mon, Feb 3, 2014 at 10:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> >> > On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
+>> >> >> +/**
+>> >> >> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
+>> >> >> + * @dev: device node of the host bridge having the range property
+>> >> >> + * @resources: list where the range of resources will be added after DT parsing
+>> >> >> + *
+>> >> >> + * This function will parse the "ranges" property of a PCI host bridge device
+>> >> >> + * node and setup the resource mapping based on its content. It is expected
+>> >> >> + * that the property conforms with the Power ePAPR document.
+>> >> >> + *
+>> >> >> + * Each architecture will then apply their filtering based on the limitations
+>> >> >> + * of each platform. One general restriction seems to be the number of IO space
+>> >> >> + * ranges, the PCI framework makes intensive use of struct resource management,
+>> >> >> + * and for IORESOURCE_IO types they can only be requested if they are contained
+>> >> >> + * within the global ioport_resource, so that should be limited to one IO space
+>> >> >> + * range.
+>> >> >
+>> >> > Actually we have quite a different set of restrictions around I/O space on ARM32
+>> >> > at the moment: Each host bridge can have its own 64KB range in an arbitrary
+>> >> > location on MMIO space, and the total must not exceed 2MB of I/O space.
+>> >> >
+>> >> >> + */
+>> >> >> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
+>> >> >> +                                     struct list_head *resources)
+>> >> >> +{
+>> >> >> +     struct resource *res;
+>> >> >> +     struct of_pci_range range;
+>> >> >> +     struct of_pci_range_parser parser;
+>> >> >> +     int err;
+>> >> >> +
+>> >> >> +     pr_info("PCI host bridge %s ranges:\n", dev->full_name);
+>> >> >> +
+>> >> >> +     /* Check for ranges property */
+>> >> >> +     err = of_pci_range_parser_init(&parser, dev);
+>> >> >> +     if (err)
+>> >> >> +             return err;
+>> >> >> +
+>> >> >> +     pr_debug("Parsing ranges property...\n");
+>> >> >> +     for_each_of_pci_range(&parser, &range) {
+>> >> >> +             /* Read next ranges element */
+>> >> >> +             pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+>> >> >> +                             range.pci_space, range.pci_addr);
+>> >> >> +             pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+>> >> >> +                                     range.cpu_addr, range.size);
+>> >> >> +
+>> >> >> +             /* If we failed translation or got a zero-sized region
+>> >> >> +              * (some FW try to feed us with non sensical zero sized regions
+>> >> >> +              * such as power3 which look like some kind of attempt
+>> >> >> +              * at exposing the VGA memory hole) then skip this range
+>> >> >> +              */
+>> >> >> +             if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+>> >> >> +                     continue;
+>> >> >> +
+>> >> >> +             res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+>> >> >> +             if (!res) {
+>> >> >> +                     err = -ENOMEM;
+>> >> >> +                     goto bridge_ranges_nomem;
+>> >> >> +             }
+>> >> >> +
+>> >> >> +             of_pci_range_to_resource(&range, dev, res);
+>> >> >> +
+>> >> >> +             pci_add_resource_offset(resources, res,
+>> >> >> +                             range.cpu_addr - range.pci_addr);
+>> >> >> +     }
+>> >> >
+>> >> > I believe of_pci_range_to_resource() will return the MMIO aperture for the
+>> >> > I/O space window here, which is not what you are supposed to pass into
+>> >> > pci_add_resource_offset.
+>> >> >
+>> >> >> +EXPORT_SYMBOL(pci_host_bridge_of_init);
+>> >> >
+>> >> > EXPORT_SYMBOL_GPL
+>> >> >
+>> >> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> >> >> index 6e34498..16febae 100644
+>> >> >> --- a/drivers/pci/probe.c
+>> >> >> +++ b/drivers/pci/probe.c
+>> >> >> @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>> >> >>       list_for_each_entry_safe(window, n, resources, list) {
+>> >> >>               list_move_tail(&window->list, &bridge->windows);
+>> >> >>               res = window->res;
+>> >> >> +             /*
+>> >> >> +              * IO resources are stored in the kernel with a CPU start
+>> >> >> +              * address of zero. Adjust the data accordingly and remember
+>> >> >> +              * the offset
+>> >> >> +              */
+>> >> >> +             if (resource_type(res) == IORESOURCE_IO) {
+>> >> >> +                     bridge->io_offset = res->start;
+>> >> >> +                     res->end -= res->start;
+>> >> >> +                     window->offset -= res->start;
+>> >> >> +                     res->start = 0;
+>> >> >> +             }
+>> >> >>               offset = window->offset;
+>> >> >>               if (res->flags & IORESOURCE_BUS)
+>> >> >
+>> >> > Won't this break all existing host bridges?
+>> >> >
+>> >> >         Arnd
+>> >> >
+>> >> > _______________________________________________
+>> >> > linux-arm-kernel mailing list
+>> >> > linux-arm-kernel@lists.infradead.org
+>> >> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>> >>
+>> >
+>> > --
+>> > ====================
+>> > | I would like to |
+>> > | fix the world,  |
+>> > | but they're not |
+>> > | giving me the   |
+>> >  \ source code!  /
+>> >   ---------------
+>> >     ¯\_(ツ)_/¯
+>> >
+>> > -- IMPORTANT NOTICE: The contents of this email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and do not disclose the contents to any other person, use it for any purpose, or store or copy the information in any medium.  Thank you.
+>> >
+>> > ARM Limited, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2557590
+>> > ARM Holdings plc, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2548782
+>> >
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> --
+> ====================
+> | I would like to |
+> | fix the world,  |
+> | but they're not |
+> | giving me the   |
+>  \ source code!  /
+>   ---------------
+>     ¯\_(ツ)_/¯
+>
+> -- IMPORTANT NOTICE: The contents of this email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and do not disclose the contents to any other person, use it for any purpose, or store or copy the information in any medium.  Thank you.
+>
+> ARM Limited, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2557590
+> ARM Holdings plc, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2548782
+>
