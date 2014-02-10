@@ -1,42 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:39241 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026AbaBMDDB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:03:01 -0500
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
-Date: Thu, 13 Feb 2014 12:04:13 +0900
-Message-Id: <20140213030413.10398.20246.sendpatchset@w520>
-In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
-References: <20140213030302.10398.37322.sendpatchset@w520>
-Subject: [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:50761 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753084AbaBJWmD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 17:42:03 -0500
+Received: by mail-qa0-f46.google.com with SMTP id ii20so10394165qab.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 14:42:02 -0800 (PST)
+Date: Mon, 10 Feb 2014 17:41:58 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Peter Chang <dpf@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PATCH: platforms: avoid queuing work if possible
+Message-ID: <20140210224158.GF25350@mtj.dyndns.org>
+References: <CAF2xp_HgT+2zmxHTYpxRFiK-pfQKQJhJ74SJhQVER4s2ZZX0PQ@mail.gmail.com>
+ <20140131115340.GD26148@htj.dyndns.org>
+ <CAF2xp_F_WeMOhffLv+tA2O8L6+8Vn=VZtNh3S4WXmEAMEQC-jw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAF2xp_F_WeMOhffLv+tA2O8L6+8Vn=VZtNh3S4WXmEAMEQC-jw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Magnus Damm <damm@opensource.se>
+Hello, Peter.
 
-Select BOUNCE in case of HIGHMEM to enable bounce buffers in
-the block layer. Without this patch the DMABOUNCE code will
-error out due to lack of HIGHMEM support, and without DMABOUNCE
-there will be silent errors.
+On Tue, Feb 04, 2014 at 08:13:58PM -0800, Peter Chang wrote:
+> the problem is that our current user-space environment expects block
+> devices to be in /sys/block after the module load completes. if the
+> cross cpu worker task is marked w/ ASYNC_USED (rather than the module
+> loading task), module loading completes and the async tasks are
+> 'racing' w/ user space.
+>
+> i fixed up the patch to just do the ASYNC_USED copying in the worker
+> function (since there was some bogus-ness in the original w/
+> get_cpu()). does this patch make more sense?
 
-Signed-off-by: Magnus Damm <damm@opensource.se>
----
+Heh, this is almost inherently nasty.  The whole thing is a nasty hack
+after all. :( Would it be possible to make work_on_cpu() do the
+copying instead?  That might be a bit cleaner and I think it could be
+better to keep the work around in async / workqueue side rather than
+specific drivers.
 
- drivers/pci/host/Kconfig |    1 +
- 1 file changed, 1 insertion(+)
+Thanks.
 
---- 0009/drivers/pci/host/Kconfig
-+++ work/drivers/pci/host/Kconfig	2014-02-04 16:11:27.000000000 +0900
-@@ -30,6 +30,7 @@ config PCI_RCAR_GEN2
- 	depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || COMPILE_TEST)
- 	select GENERIC_ALLOCATOR
- 	select DMABOUNCE
-+	select BOUNCE if HIGHMEM
- 	help
- 	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
- 	  There are 3 internal PCI controllers available with a single
+-- 
+tejun
