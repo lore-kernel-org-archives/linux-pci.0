@@ -1,43 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:50921 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755805AbaBUVga (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 16:36:30 -0500
-Message-ID: <5307C6D9.4030503@redhat.com>
-Date: Fri, 21 Feb 2014 22:36:25 +0100
-From: Paolo Bonzini <pbonzini@redhat.com>
-MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org, Gleb Natapov <gleb@kernel.org>,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] kvm: Use pci_enable_msix_exact() instead of pci_enable_msix()
-References: <1392804931-30671-11-git-send-email-agordeev@redhat.com> <5304B09D.7010900@redhat.com> <20140221170414.GM17353@dhcp-26-207.brq.redhat.com> <20140221170504.GN17353@dhcp-26-207.brq.redhat.com> <530788C1.6030109@redhat.com> <20140221185620.GA18725@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20140221185620.GA18725@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from cantor2.suse.de ([195.135.220.15]:42972 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751977AbaBJHfp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Feb 2014 02:35:45 -0500
+Message-ID: <1392015399.21271.9.camel@linux-fkkt.site>
+Subject: Re: [PATCH part1 v5 5/7] PCI: Add pci_dummy_ops to isolate pci
+ device temporarily
+From: Oliver Neukum <oneukum@suse.de>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
+In-Reply-To: <1392005051-54508-6-git-send-email-wangyijing@huawei.com>
+References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
+	 <1392005051-54508-6-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 Feb 2014 07:56:39 +0100
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Il 21/02/2014 19:56, Alexander Gordeev ha scritto:
-> On Fri, Feb 21, 2014 at 06:11:29PM +0100, Paolo Bonzini wrote:
->> It's okay, but it's not clear to me whether I should include this
->> patch or someone else will. :)
->
-> Please, include it.
+On Mon, 2014-02-10 at 12:04 +0800, Yijing Wang wrote:
 
-And where do I get pci_enable_msix_exact?  When will pci_enable_msix 
-disappear?
+> +static DEFINE_SPINLOCK(pci_freeze_lock);
 
-So, do I have to pull something (which I'd rather not, since pulling the 
-wrong thing in a submaintainer tree will make Linus angry), or should I 
-do it in the next merge window after pci_enable_msix_exact gets in?
+The lock is used only here.
 
-All in all, it seems much simpler to me if the linux-pci tree just 
-includes the whole patch series with my Acked-by.
+> +/**
+> + * pci_bus_freeze_device - freeze pci bus to access pci device
+> + * @bus: the pci bus to freeze
+> + *
+> + * Replace pci bus ops by pci_dummy_ops, protect system from
+> + * accessing pci devices.
+> + */
+> +void pci_bus_freeze_device(struct pci_bus *bus)
+> +{
+> +	struct pci_ops *ops;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&pci_freeze_lock, flags);
+> +	ops = pci_bus_set_ops(bus, &pci_dummy_ops);
+> +	bus->save_ops = ops;
+> +	spin_unlock_irqrestore(&pci_freeze_lock, flags);
 
-Paolo
+Against what exactly are you locking here?
 
-> Thanks!
->
->> Paolo
->
+	Regards
+		Oliver
+
 
