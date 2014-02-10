@@ -1,263 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og110.obsmtp.com ([64.18.0.20]:55561 "HELO
-	exprod5og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752233AbaBJSGD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 13:06:03 -0500
-Received: by mail-vc0-f180.google.com with SMTP id ks9so5140348vcb.11
-        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 10:06:01 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.187]:65490 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770AbaBJPnj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 10:43:39 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Mohit Kumar <mohit.kumar@st.com>
+Subject: Re: [PATCH V5 7/8] pcie: SPEAr13xx: Add designware pcie support
+Date: Mon, 10 Feb 2014 16:43:22 +0100
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Viresh Kumar <viresh.linux@gmail.com>, spear-devel@list.st.com,
+	linux-pci@vger.kernel.org
+References: <cover.1391871170.git.pratyush.anand@st.com> <5c82e0b022ce6ce9c42afdc9e59081a95a9394ac.1391871170.git.pratyush.anand@st.com>
+In-Reply-To: <5c82e0b022ce6ce9c42afdc9e59081a95a9394ac.1391871170.git.pratyush.anand@st.com>
 MIME-Version: 1.0
-In-Reply-To: <20140208142207.GR4993@e106497-lin.cambridge.arm.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
-	<1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
-	<7398333.9L5KlyFggU@wuerfel>
-	<CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
-	<20140206101814.GA4993@e106497-lin.cambridge.arm.com>
-	<CACoXjcnTHgtBDesqFUOca1nf34HvNGAV0vP9AEB5xV1mvcRGfw@mail.gmail.com>
-	<20140208142207.GR4993@e106497-lin.cambridge.arm.com>
-Date: Mon, 10 Feb 2014 10:06:01 -0800
-Message-ID: <CACoXjck_yhsp8fSfPe4=XR+-YmuVZEKFs-SXhdzJdvTEpNKsxw@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
- device tree
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>, Arnd Bergmann <arnd@arndb.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201402101643.23186.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 8, 2014 at 6:22 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Sat, Feb 08, 2014 at 12:21:56AM +0000, Tanmay Inamdar wrote:
->> On Thu, Feb 6, 2014 at 2:18 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
->> >> Hello Liviu,
->> >>
->> >> I did not get the first email of this particular patch on any of
->> >> subscribed mailing lists (don't know why), hence replying here.
->> >
->> > Strange, it shows in the MARC and GMANE archive for linux-pci, probably
->> > a hickup on your receiving side?
->> >
->> >>
->> >> +struct pci_host_bridge *
->> >> +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
->> >> + void *host_data, struct list_head *resources)
->> >> +{
->> >> + struct pci_bus *root_bus;
->> >> + struct pci_host_bridge *bridge;
->> >> +
->> >> + /* first parse the host bridge bus ranges */
->> >> + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
->> >> + return NULL;
->> >> +
->> >> + /* then create the root bus */
->> >> + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
->> >> + if (!root_bus)
->> >> + return NULL;
->> >> +
->> >> + bridge = to_pci_host_bridge(root_bus->bridge);
->> >> +
->> >> + return bridge;
->> >> +}
->> >>
->> >> You are keeping the domain_nr inside pci_host_bridge structure. In
->> >> above API, domain_nr is required in 'pci_find_bus' function called
->> >> from 'pci_create_root_bus'. Since the bridge is allocated after
->> >> creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
->> >> will cause problem for scanning multiple domains.
->> >
->> > Good catch. I was switching between creating a pci_controller in arch/arm64 and
->> > adding the needed bits in pci_host_bridge. After internal review I've decided to
->> > add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
->> >
->> > Thanks for reviewing this, will fix in v2.
->> >
->> > Do you find porting to the new API straight forward?
->>
->> It is quite straight forward for MEM regions but for IO regions it is
->> not. You always assume IO resource starting at 0x0. IMO, this will
->> cause problem for systems with multiple ports / IO windows. You can
->> take a look at 'drivers/pci/host/pcie-designware.c'.
->>
->> Also the manipulations of addresses for IO_RESOURCES can be dangerous.
->> It can make some value negative. For example if my PCI IO range starts
->> in 32 bit address range say 0x8000_0000 with CPU address
->> 0xb0_8000_0000, window->offset after manipulation will become
->> negative.
->>
->> Personally I would like to do get all the PCI and CPU addresses from
->> my device tree as is and do the 'pci_add_resource_offset'. This will
->> help me setup my regions correctly without any further arithmetic.
->> Please let me know what you think.
->
-> Yes, that parsing code of ranges is incorrect in light of the current discussion. I
-> will try to propose a fix in the v2 series.
+On Monday 10 February 2014, Mohit Kumar wrote:
+> diff --git a/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt b/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+> new file mode 100644
+> index 0000000..dc8ae44
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+> @@ -0,0 +1,7 @@
+> +Required properties:
+> +- compatible : should be "st,spear1340-pcie", "snps,dw-pcie".
+> +- pcie_is_gen1: pass <1> if forced gen1 initialization is needed to work with
+> +  some buggy cards else pass <0>.
 
-Okay. Thanks.
->
-> Regarding your PCI IO range: if your bus address starts at 0x8000_0000, would
-> that not cause problems with devices that use less than 32bits for address
-> decoding? It is a rather unusual setup, I believe the x86 world (even PCI spec?)
-> mandates IO bus ranges in the first 16MB of address range?
->
+Better make this an optional property that is only present if gen1 is forced,
+and then use of_property_read_bool to check it.
 
-Yes. It will cause problem with few devices. Anyways it was just an example.
+Also, use the common naming convention: "-" instead of "_", and you may want to
+prefix it with 'st,'.
 
-> Best regards,
-> Liviu
->
->>
->> >
->> > Best regards,
->> > Liviu
->> >
->> >>
->> >>
->> >> On Mon, Feb 3, 2014 at 10:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> >> > On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
->> >> >> +/**
->> >> >> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
->> >> >> + * @dev: device node of the host bridge having the range property
->> >> >> + * @resources: list where the range of resources will be added after DT parsing
->> >> >> + *
->> >> >> + * This function will parse the "ranges" property of a PCI host bridge device
->> >> >> + * node and setup the resource mapping based on its content. It is expected
->> >> >> + * that the property conforms with the Power ePAPR document.
->> >> >> + *
->> >> >> + * Each architecture will then apply their filtering based on the limitations
->> >> >> + * of each platform. One general restriction seems to be the number of IO space
->> >> >> + * ranges, the PCI framework makes intensive use of struct resource management,
->> >> >> + * and for IORESOURCE_IO types they can only be requested if they are contained
->> >> >> + * within the global ioport_resource, so that should be limited to one IO space
->> >> >> + * range.
->> >> >
->> >> > Actually we have quite a different set of restrictions around I/O space on ARM32
->> >> > at the moment: Each host bridge can have its own 64KB range in an arbitrary
->> >> > location on MMIO space, and the total must not exceed 2MB of I/O space.
->> >> >
->> >> >> + */
->> >> >> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
->> >> >> +                                     struct list_head *resources)
->> >> >> +{
->> >> >> +     struct resource *res;
->> >> >> +     struct of_pci_range range;
->> >> >> +     struct of_pci_range_parser parser;
->> >> >> +     int err;
->> >> >> +
->> >> >> +     pr_info("PCI host bridge %s ranges:\n", dev->full_name);
->> >> >> +
->> >> >> +     /* Check for ranges property */
->> >> >> +     err = of_pci_range_parser_init(&parser, dev);
->> >> >> +     if (err)
->> >> >> +             return err;
->> >> >> +
->> >> >> +     pr_debug("Parsing ranges property...\n");
->> >> >> +     for_each_of_pci_range(&parser, &range) {
->> >> >> +             /* Read next ranges element */
->> >> >> +             pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
->> >> >> +                             range.pci_space, range.pci_addr);
->> >> >> +             pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
->> >> >> +                                     range.cpu_addr, range.size);
->> >> >> +
->> >> >> +             /* If we failed translation or got a zero-sized region
->> >> >> +              * (some FW try to feed us with non sensical zero sized regions
->> >> >> +              * such as power3 which look like some kind of attempt
->> >> >> +              * at exposing the VGA memory hole) then skip this range
->> >> >> +              */
->> >> >> +             if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->> >> >> +                     continue;
->> >> >> +
->> >> >> +             res = kzalloc(sizeof(struct resource), GFP_KERNEL);
->> >> >> +             if (!res) {
->> >> >> +                     err = -ENOMEM;
->> >> >> +                     goto bridge_ranges_nomem;
->> >> >> +             }
->> >> >> +
->> >> >> +             of_pci_range_to_resource(&range, dev, res);
->> >> >> +
->> >> >> +             pci_add_resource_offset(resources, res,
->> >> >> +                             range.cpu_addr - range.pci_addr);
->> >> >> +     }
->> >> >
->> >> > I believe of_pci_range_to_resource() will return the MMIO aperture for the
->> >> > I/O space window here, which is not what you are supposed to pass into
->> >> > pci_add_resource_offset.
->> >> >
->> >> >> +EXPORT_SYMBOL(pci_host_bridge_of_init);
->> >> >
->> >> > EXPORT_SYMBOL_GPL
->> >> >
->> >> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> >> >> index 6e34498..16febae 100644
->> >> >> --- a/drivers/pci/probe.c
->> >> >> +++ b/drivers/pci/probe.c
->> >> >> @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->> >> >>       list_for_each_entry_safe(window, n, resources, list) {
->> >> >>               list_move_tail(&window->list, &bridge->windows);
->> >> >>               res = window->res;
->> >> >> +             /*
->> >> >> +              * IO resources are stored in the kernel with a CPU start
->> >> >> +              * address of zero. Adjust the data accordingly and remember
->> >> >> +              * the offset
->> >> >> +              */
->> >> >> +             if (resource_type(res) == IORESOURCE_IO) {
->> >> >> +                     bridge->io_offset = res->start;
->> >> >> +                     res->end -= res->start;
->> >> >> +                     window->offset -= res->start;
->> >> >> +                     res->start = 0;
->> >> >> +             }
->> >> >>               offset = window->offset;
->> >> >>               if (res->flags & IORESOURCE_BUS)
->> >> >
->> >> > Won't this break all existing host bridges?
->> >> >
->> >> >         Arnd
->> >> >
->> >> > _______________________________________________
->> >> > linux-arm-kernel mailing list
->> >> > linux-arm-kernel@lists.infradead.org
->> >> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->> >>
->> >
->> > --
->> > ====================
->> > | I would like to |
->> > | fix the world,  |
->> > | but they're not |
->> > | giving me the   |
->> >  \ source code!  /
->> >   ---------------
->> >     ¯\_(ツ)_/¯
->> >
->> > -- IMPORTANT NOTICE: The contents of this email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and do not disclose the contents to any other person, use it for any purpose, or store or copy the information in any medium.  Thank you.
->> >
->> > ARM Limited, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2557590
->> > ARM Holdings plc, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2548782
->> >
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> --
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
->
-> -- IMPORTANT NOTICE: The contents of this email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and do not disclose the contents to any other person, use it for any purpose, or store or copy the information in any medium.  Thank you.
->
-> ARM Limited, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2557590
-> ARM Holdings plc, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2548782
->
+> +- phys		    : phandle to phy node associated with pcie controller
+> +- phy-names	    : must be "pcie-phy"
+> +- All other definitions as per generic PCI bindings
+
+Please send the binding to the devicetree mailing list, ideally as a separate patch.
+
+> diff --git a/arch/arm/boot/dts/spear1310.dtsi b/arch/arm/boot/dts/spear1310.dtsi
+> index 64e7dd5..8d7aefe 100644
+> --- a/arch/arm/boot/dts/spear1310.dtsi
+> +++ b/arch/arm/boot/dts/spear1310.dtsi
+
+Best split out the DT changes as well, since we may want to apply them through
+the arm-soc tree.
+
+> @@ -83,6 +83,63 @@
+>  			status = "disabled";
+>  		};
+>  
+> +		pcie0: pcie@b1000000 {
+> +			compatible = "st,spear1340-pcie", "snps,dw-pcie";
+> +			reg = <0xb1000000 0x4000>;
+> +			interrupts = <0 68 0x4>;
+> +			interrupt-map-mask = <0 0 0 0>;
+> +			interrupt-map = <0x0 0 &gic 68>;
+> +			pcie_is_gen1 = <0>;
+> +			num-lanes = <1>;
+> +			phys = <&miphy0 1>;
+> +			phy-names = "pcie-phy";
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			ranges = <0x00000800 0 0x80000000 0x80000000 0 0x00020000   /* configuration space */
+> +				0x81000000 0 0	 0x80020000 0 0x00010000   /* downstream I/O */
+> +				0x82000000 0 0x80030000 0xc0030000 0 0x0ffd0000>; /* non-prefetchable memory */
+> +			status = "disabled";
+> +		};
+
+But keep the changes for the phy together with the pci changes.
+
+> @@ -338,6 +338,7 @@
+>  				reg = <0xe07008c4 0x4>;
+>  				thermal_flags = <0x7000>;
+>  			};
+> +
+>  		};
+>  	};
+>  };
+
+I assume this change was not intentional.
+
+> diff --git a/arch/arm/configs/spear13xx_defconfig b/arch/arm/configs/spear13xx_defconfig
+> index 1e0bb6f..96ede50 100644
+> --- a/arch/arm/configs/spear13xx_defconfig
+> +++ b/arch/arm/configs/spear13xx_defconfig
+> @@ -11,6 +11,8 @@ CONFIG_ARCH_SPEAR13XX=y
+>  CONFIG_MACH_SPEAR1310=y
+>  CONFIG_MACH_SPEAR1340=y
+>  # CONFIG_SWP_EMULATE is not set
+> +CONFIG_PCI_MSI=y
+> +CONFIG_PCIE_SPEAR13XX=y
+>  CONFIG_SMP=y
+>  # CONFIG_SMP_ON_UP is not set
+>  # CONFIG_ARM_CPU_TOPOLOGY is not set
+
+This change can also get folded into patch 3. 
+
+> diff --git a/arch/arm/mach-spear/Kconfig b/arch/arm/mach-spear/Kconfig
+> index 7e7f1b0..701b6c3 100644
+> --- a/arch/arm/mach-spear/Kconfig
+> +++ b/arch/arm/mach-spear/Kconfig
+> @@ -28,6 +28,7 @@ config ARCH_SPEAR13XX
+>  	select USE_OF
+>  	select MFD_SYSCON
+>  	select PHY_ST_MIPHY40LP
+> +	select PCI
+>  	help
+>  	  Supports for ARM's SPEAR13XX family
+>  
+
+This doesn't seem right: You are making it impossible to turn off PCI
+here. Better use MIGHT_HAVE_PCI instead to make CONFIG_PCI a user-selectable
+option.
+
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 47d46c6..df52fad 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -33,4 +33,9 @@ config PCI_RCAR_GEN2
+>  	  There are 3 internal PCI controllers available with a single
+>  	  built-in EHCI/OHCI host controller present on each one.
+>  
+> +config PCIE_SPEAR13XX
+> +	bool "STMicroelectronics SPEAr PCIe controller"
+> +	depends on ARCH_SPEAR13XX
+> +	select PCIEPORTBUS
+> +	select PCIE_DW
+>  endmenu
+
+This can probably be "tristate" instead of "bool. You need to add
+a help text.
+
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 13fb333..42a491d 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+>  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+>  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+>  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+> +obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+
+I'd use the "pci" naming instead of "pcie" here for consistency.
+
+> +
+> +/* SPEAr13xx PCIe driver does not allow module unload */
+> +
+> +static int __init pcie_init(void)
+> +{
+> +
+> +	return platform_driver_probe(&spear13xx_pcie_driver,
+> +				spear13xx_pcie_probe);
+> +}
+
+This should be platform_driver_register() so you can support
+deferred probing, e.g. if the phy driver gets loaded after the
+PCI driver.
+
+	Arnd
