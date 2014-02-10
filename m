@@ -1,52 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25517 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754478AbaBDLQv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:16:51 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 08/22] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
-Date: Tue,  4 Feb 2014 12:16:54 +0100
-Message-Id: <5e62a50e8b663ccca1f362734406f168b6cfdd53.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
+Received: from eu1sys200aog105.obsmtp.com ([207.126.144.119]:36967 "EHLO
+	eu1sys200aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752214AbaBJIwr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 03:52:47 -0500
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <arnd@arndb.de>
+Cc: Mohit Kumar <mohit.kumar@st.com>,
+	Pratyush Anand <pratyush.anand@st.com>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH V5 8/8] MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
+Date: Mon, 10 Feb 2014 14:21:59 +0530
+Message-ID: <61242f305b3e7173bece431f200f488bfc8908be.1391871170.git.pratyush.anand@st.com>
+In-Reply-To: <cover.1391871170.git.pratyush.anand@st.com>
+References: <cover.1391871170.git.pratyush.anand@st.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
-Cc: linux-scsi@vger.kernel.org
+Add Mohit Kumar as maintainer for ST SPEAr13xx PCIe driver.
+
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Acked-by: Jingoo Han <jg1.han@samsung.com>
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/hpsa.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ MAINTAINERS | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 868318a..68eec7a 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4180,13 +4180,14 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 		if (err > 0) {
- 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
- 			       "available\n", err);
--			goto default_int_mode;
-+			goto single_msi_mode;
- 		} else {
- 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
- 			       err);
--			goto default_int_mode;
-+			goto single_msi_mode;
- 		}
- 	}
-+single_msi_mode:
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
- 		dev_info(&h->pdev->dev, "MSI\n");
- 		if (!pci_enable_msi(h->pdev))
+diff --git a/MAINTAINERS b/MAINTAINERS
+index b2cf5cf..ebdca89 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6596,6 +6596,12 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*designware*
+ 
++PCIE DRIVER FOR ST SPEAR13XX
++M:	Mohit Kumar <mohit.kumar@st.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	drivers/pci/host/pcie-spear13xx.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-1.7.7.6
+1.8.1.2
 
