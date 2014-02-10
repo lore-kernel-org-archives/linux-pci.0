@@ -1,170 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 3 Feb 2014 19:06:49 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
- device tree
-Message-ID: <20140203190649.GB4889@e106497-lin.cambridge.arm.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
- <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
- <7398333.9L5KlyFggU@wuerfel>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:8311 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751691AbaBJEE7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Feb 2014 23:04:59 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH part1 v5 0/7] Introduce PCIe Device Serial Number capability support
+Date: Mon, 10 Feb 2014 12:04:04 +0800
+Message-ID: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <7398333.9L5KlyFggU@wuerfel>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+This series is based on Bjorn's pci-next branch.
+Currently, more and more PCIe devices support PCIe DSN(Device Serial Number)
+capability, we can use this cap to identify device. In some platform,
+when we hotplug PCIe device, no interrupts will be received in system.
+So we can not identify the device whether is changed during suspend.
+PCIe DSN can help to identify this. 
 
-First of all, thanks for reviewing this!
+Legacy PCI device can achieve it by PCI Vital Product Data capability.
+We can use its SN keyword to report the unique number.
+But in my platform, PCI devices which support VPD SN cap report the
+meaningless same string "0123456789". 
+Rework PCI VPD code to support device identification is not an easy work.
+Plan to do it in part2.
 
-On Mon, Feb 03, 2014 at 06:46:10PM +0000, Arnd Bergmann wrote:
-> On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
-> > +/**
-> > + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
-> > + * @dev: device node of the host bridge having the range property
-> > + * @resources: list where the range of resources will be added after DT parsing
-> > + *
-> > + * This function will parse the "ranges" property of a PCI host bridge device
-> > + * node and setup the resource mapping based on its content. It is expected
-> > + * that the property conforms with the Power ePAPR document.
-> > + *
-> > + * Each architecture will then apply their filtering based on the limitations
-> > + * of each platform. One general restriction seems to be the number of IO space
-> > + * ranges, the PCI framework makes intensive use of struct resource management,
-> > + * and for IORESOURCE_IO types they can only be requested if they are contained
-> > + * within the global ioport_resource, so that should be limited to one IO space
-> > + * range.
-> 
-> Actually we have quite a different set of restrictions around I/O space on ARM32
-> at the moment: Each host bridge can have its own 64KB range in an arbitrary
-> location on MMIO space, and the total must not exceed 2MB of I/O space.
+Yijing Wang (7):
+  PCI: rework pci_find_next_ext_capability()
+  PCI: introduce pci_bus_find_ext_capability()
+  PCI: Add support for Device Serial Number capability
+  PCI: Introduce pci_serial_number_changed()
+  PCI: Add pci_dummy_ops to isolate pci device temporarily
+  PCI: Check pci device serial number when scan device
+  PCI: pciehp: Don't enable/disable slot on resume unless status
+    changed
 
-And that is why the filtering is not (yet) imposed in the generic code. But once
-you use pci_request_region, that will call request_region which will check
-against ioport_resource as parent for the requested resource. That should fail
-if is is not in the correct range, so I don't know how arm arch code manages
-multiple IO ranges.
+ drivers/pci/hotplug/pciehp_core.c |   10 ++-
+ drivers/pci/pci.c                 |  160 +++++++++++++++++++++++++++++++++++--
+ drivers/pci/pci.h                 |    2 +-
+ drivers/pci/probe.c               |   15 +++-
+ include/linux/pci.h               |    9 ++-
+ 5 files changed, 182 insertions(+), 14 deletions(-)
 
-> 
-> > + */
-> > +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
-> > +					struct list_head *resources)
-> > +{
-> > +	struct resource *res;
-> > +	struct of_pci_range range;
-> > +	struct of_pci_range_parser parser;
-> > +	int err;
-> > +
-> > +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-> > +
-> > +	/* Check for ranges property */
-> > +	err = of_pci_range_parser_init(&parser, dev);
-> > +	if (err)
-> > +		return err;
-> > +
-> > +	pr_debug("Parsing ranges property...\n");
-> > +	for_each_of_pci_range(&parser, &range) {
-> > +		/* Read next ranges element */
-> > +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
-> > +				range.pci_space, range.pci_addr);
-> > +		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
-> > +					range.cpu_addr, range.size);
-> > +
-> > +		/* If we failed translation or got a zero-sized region
-> > +		 * (some FW try to feed us with non sensical zero sized regions
-> > +		 * such as power3 which look like some kind of attempt
-> > +		 * at exposing the VGA memory hole) then skip this range
-> > +		 */
-> > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> > +			continue;
-> > +
-> > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> > +		if (!res) {
-> > +			err = -ENOMEM;
-> > +			goto bridge_ranges_nomem;
-> > +		}
-> > +
-> > +		of_pci_range_to_resource(&range, dev, res);
-> > +
-> > +		pci_add_resource_offset(resources, res,
-> > +				range.cpu_addr - range.pci_addr);
-> > +	}
-> 
-> I believe of_pci_range_to_resource() will return the MMIO aperture for the
-> I/O space window here, which is not what you are supposed to pass into
-> pci_add_resource_offset.
-
-And that is why the code in probe.c has been added to deal with that. It is
-too early to do the adjustments here as all we have is the list of resources
-and that might get culled by the architecture fixup code. Remembering the
-io_offset will happen once the pci_host_bridge gets created, and the resources
-are then adjusted.
-
-> 
-> > +EXPORT_SYMBOL(pci_host_bridge_of_init);
-> 
-> EXPORT_SYMBOL_GPL
-
-Will change for v2, thanks!
-
-> 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 6e34498..16febae 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >  	list_for_each_entry_safe(window, n, resources, list) {
-> >  		list_move_tail(&window->list, &bridge->windows);
-> >  		res = window->res;
-> > +		/*
-> > +		 * IO resources are stored in the kernel with a CPU start
-> > +		 * address of zero. Adjust the data accordingly and remember
-> > +		 * the offset
-> > +		 */
-> > +		if (resource_type(res) == IORESOURCE_IO) {
-> > +			bridge->io_offset = res->start;
-> > +			res->end -= res->start;
-> > +			window->offset -= res->start;
-> > +			res->start = 0;
-> > +		}
-> >  		offset = window->offset;
-> >  		if (res->flags & IORESOURCE_BUS)
-> 
-> Won't this break all existing host bridges?
-
-I am not sure. I believe not, due to what I've explained earlier, but you might be right.
-
-The adjustment happens before the resource is added to the host bridge windows and translates
-it from MMIO range into IO range.
-
-Best regards,
-Liviu
-
-> 
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
 
