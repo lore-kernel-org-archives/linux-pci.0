@@ -1,56 +1,29 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 21 Feb 2014 15:27:49 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	x86@kernel.org, dougthompson@xmission.com, bhelgaas@google.com,
-	JBeulich@suse.com, dan.carpenter@oracle.com,
-	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
-	linux-pci@vger.kernel.org, Arindam.Nath@amd.com
-Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
-Message-ID: <20140221142749.GC11531@pd.tnic>
-References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:65071 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919AbaBJO31 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 09:29:27 -0500
+Received: by mail-pb0-f45.google.com with SMTP id un15so6321051pbc.32
+        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 06:29:27 -0800 (PST)
+Received: from [192.168.1.27] ([112.80.114.123])
+        by mx.google.com with ESMTPSA id om6sm43006785pbc.43.2014.02.10.06.29.24
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Mon, 10 Feb 2014 06:29:26 -0800 (PST)
+Message-ID: <52F8E242.4040106@gmail.com>
+Date: Mon, 10 Feb 2014 22:29:22 +0800
+From: zsaitom <zsaitom@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org
+Subject: How to combine two PCIe devices in one domain?
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 10:28:46AM -0600, Aravind Gopalakrishnan wrote:
-> Extending ECC decoding support for F16h M30h.
-> 
-> Tested on F16h M30h with ECC turned on using mce_amd_inj module and
-> the patch works fine.
-> 
-> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-> Tested-by: Arindam Nath <Arindam.Nath@amd.com>
-> ---
->  arch/x86/kernel/amd_nb.c  |  2 ++
->  drivers/edac/amd64_edac.c | 24 ++++++++++++++++++++++++
->  drivers/edac/amd64_edac.h |  3 +++
->  include/linux/pci_ids.h   |  2 ++
->  4 files changed, 31 insertions(+)
+Hi all,
 
-...
+I have a driver module which would drive two PCIe devices to access a same memory area.
+As the two devices are in different domains, I should map the memory to every PCIe device. And also the mapped address may be different for individual PCIe device.
+How could I combine these two PCIe device in one domain so they share same address space?
 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 97fbecd..e91ad27 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -528,6 +528,8 @@
->  #define PCI_DEVICE_ID_AMD_15H_NB_F5	0x1605
->  #define PCI_DEVICE_ID_AMD_16H_NB_F3	0x1533
->  #define PCI_DEVICE_ID_AMD_16H_NB_F4	0x1534
-> +#define PCI_DEVICE_ID_AMD_16H_M30H_NB_F3 0x1583
-> +#define PCI_DEVICE_ID_AMD_16H_M30H_NB_F4 0x1584
-
-Just put those in arch/x86/include/asm/amd_nb.h as amd64_edac.c includes
-it already and you can avoid the pci_ids.h addition. Unless there are
-plans to use F{3,4} in other places too...
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Thanks.
