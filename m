@@ -1,59 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58801 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753526AbaBSKOF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 05:14:05 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Matt Porter <mporter@kernel.crashing.org>,
-	Alexandre Bounine <alexandre.bounine@idt.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] tsi721: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 19 Feb 2014 11:15:27 +0100
-Message-Id: <1392804931-30671-7-git-send-email-agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <52F886ED.7040603@huawei.com>
+Date: Mon, 10 Feb 2014 15:59:41 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Oliver Neukum <oneukum@suse.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH part1 v5 5/7] PCI: Add pci_dummy_ops to isolate pci device
+ temporarily
+References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>	 <1392005051-54508-6-git-send-email-wangyijing@huawei.com> <1392015399.21271.9.camel@linux-fkkt.site>
+In-Reply-To: <1392015399.21271.9.camel@linux-fkkt.site>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Hi Oliver,
+   Thanks for your review and comments!
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Matt Porter <mporter@kernel.crashing.org>
-Cc: Alexandre Bounine <alexandre.bounine@idt.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/rapidio/devices/tsi721.c |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
+>> +static DEFINE_SPINLOCK(pci_freeze_lock);
+> 
+> The lock is used only here.
 
-diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
-index ff7cbf2..3071492 100644
---- a/drivers/rapidio/devices/tsi721.c
-+++ b/drivers/rapidio/devices/tsi721.c
-@@ -768,15 +768,11 @@ static int tsi721_enable_msix(struct tsi721_device *priv)
- 	}
- #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
- 
--	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
--	if (err) {
--		if (err > 0)
--			dev_info(&priv->pdev->dev,
--				 "Only %d MSI-X vectors available, "
--				 "not using MSI-X\n", err);
--		else
--			dev_err(&priv->pdev->dev,
--				"Failed to enable MSI-X (err=%d)\n", err);
-+	err = pci_enable_msix_range(priv->pdev, entries,
-+				    ARRAY_SIZE(entries), ARRAY_SIZE(entries));
-+	if (err < 0) {
-+		dev_err(&priv->pdev->dev,
-+			"Failed to enable MSI-X (err=%d)\n", err);
- 		return err;
- 	}
- 
+Also be used in pci_bus_unfreeze_device();
+
+> 
+>> +/**
+>> + * pci_bus_freeze_device - freeze pci bus to access pci device
+>> + * @bus: the pci bus to freeze
+>> + *
+>> + * Replace pci bus ops by pci_dummy_ops, protect system from
+>> + * accessing pci devices.
+>> + */
+>> +void pci_bus_freeze_device(struct pci_bus *bus)
+>> +{
+>> +	struct pci_ops *ops;
+>> +	unsigned long flags;
+>> +
+>> +	spin_lock_irqsave(&pci_freeze_lock, flags);
+>> +	ops = pci_bus_set_ops(bus, &pci_dummy_ops);
+>> +	bus->save_ops = ops;
+>> +	spin_unlock_irqrestore(&pci_freeze_lock, flags);
+> 
+> Against what exactly are you locking here?
+
+I want to use this spin lock to serialize freeze device and unfreeze device.
+
+Thanks!
+Yijing.
+> 
+> 
+> 
+> 
+
+
 -- 
-1.7.7.6
+Thanks!
+Yijing
 
