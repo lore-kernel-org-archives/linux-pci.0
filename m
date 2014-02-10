@@ -1,50 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52215 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:42018 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752525AbaBXIBA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:01:00 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 05/23] csiostor: Remove superfluous call to pci_disable_msix()
-Date: Mon, 24 Feb 2014 09:02:05 +0100
-Message-Id: <410d02ab88ab90693eac528292e3688b5941c2ee.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+	id S1753123AbaBJRey (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Feb 2014 12:34:54 -0500
+Date: Mon, 10 Feb 2014 10:34:50 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Will Deacon <will.deacon@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140210173450.GA5554@obsidianresearch.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <3724624.kd9jZNUiTF@wuerfel>
+ <20140207114607.GE5976@mudshark.cambridge.arm.com>
+ <201402092130.25615.arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201402092130.25615.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to call pci_disable_msix() in case
-the previous call to pci_enable_msix() failed
+On Sun, Feb 09, 2014 at 09:30:25PM +0100, Arnd Bergmann wrote:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/csiostor/csio_isr.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+> > bash-4.2# cat /proc/iomem
+> > 40000000-40ffffff : /pci
+> > 41000400-410005ff : virtio-pci
+> > 41000c00-41000dff : virtio-pci
+> > 41001400-410015ff : virtio-pci
+> > 41001c00-41001dff : virtio-pci
+> > 80000000-93ffffff : System RAM
+> >   80008000-8053df0b : Kernel code
+> >   80570000-805c07fb : Kernel data
+> 
+> You should normally see a parent resource for the PCI bus and the virtio-pci
+> resources under that. For some reason, neither of the two appears to have
+> been registered correctly.
 
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 7ee9777..91ba91d 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -529,10 +529,8 @@ csio_enable_msix(struct csio_hw *hw)
- 			csio_reduce_sqsets(hw, cnt - extra);
- 		}
- 	} else {
--		if (rv > 0) {
--			pci_disable_msix(hw->pdev);
-+		if (rv > 0)
- 			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
--		}
- 
- 		kfree(entries);
- 		return -ENOMEM;
--- 
-1.7.7.6
+I noticed this on mvebu as well..
 
+3.13 w/ mvebu driver:
+
+e0001000-e0001fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/fpga_sysmon@1000
+e0006000-e0006fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/qdr2p@6000
+
+3.10 w/ old kirkwood driver:
+
+e0000000-e7ffffff : PCIe 0 MEM
+  e0000000-e001ffff : 0000:00:01.0
+    e0001000-e0001fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/fpga_sysmon@1000
+    e0006000-e0006fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/qdr2p@6000
+
+The latter is obviously correct and matches x86. I'm not sure where
+the new style host drivers are going wrong, even the resource that
+should be added by the PCI core itself for the BAR is missing..
+
+Jason
