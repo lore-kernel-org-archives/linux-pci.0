@@ -1,93 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:49631 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbaBRGeL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 01:34:11 -0500
-Message-ID: <5302FED1.80903@huawei.com>
-Date: Tue, 18 Feb 2014 14:33:53 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:49650 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869AbaBKBST (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 20:18:19 -0500
+Received: by mail-ig0-f173.google.com with SMTP id c10so7750884igq.0
+        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 17:18:19 -0800 (PST)
+Date: Mon, 10 Feb 2014 18:18:16 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Rajat Jain <rajatxjain@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yhlu.kernel@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: Re: [PATCH v4 0/8] Allow Link state changes for Hot-Plug
+Message-ID: <20140211011816.GA15412@google.com>
+References: <52F1A1B6.2090709@gmail.com>
+ <4f93bb24b6214bfb9dbcc91b682184eb@DM2PR05MB671.namprd05.prod.outlook.com>
 MIME-Version: 1.0
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] arm64: Add architecture support for PCI
-References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4f93bb24b6214bfb9dbcc91b682184eb@DM2PR05MB671.namprd05.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> +#include <linux/init.h>
-> +#include <linux/io.h>
-> +#include <linux/kernel.h>
-> +#include <linux/mm.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/of_platform.h>
-> +#include <linux/slab.h>
-> +
-> +#include <asm/pci-bridge.h>
-> +
-> +
-> +/*
-> + * Return the domain number for this bus
-> + */
-> +int pci_domain_nr(struct pci_bus *bus)
-> +{
-> +	struct pci_host_bridge *bridge = to_pci_host_bridge(bus->bridge);
+On Wed, Feb 05, 2014 at 03:15:19AM +0000, Rajat Jain wrote:
+> Hello list,
+> 
+> My apologies for I forgot to attach the version history information of each individual patch.
+> 
+> Essentially the v4 is exactly same as v3, except that it is rebased on top of 3.14-rc1.
+> 
+> Thanks,
+> 
+> Rajat
+> 
+> > -----Original Message-----
+> > From: Rajat Jain [mailto:rajatxjain@gmail.com]
+> > Sent: Tuesday, February 04, 2014 6:28 PM
+> > To: Bjorn Helgaas; Rafael J. Wysocki; Kenji Kaneshige; Alex Williamson;
+> > Yijing Wang; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > Yinghai Lu
+> > Cc: Guenter Roeck; Rajat Jain; Rajat Jain
+> > Subject: [PATCH v4 0/8] Allow Link state changes for Hot-Plug
+> > 
+> > Hello,
+> > 
+> > This patch set enables the use of PCI Express link up and link down
+> > events for Hotplug or Unplug. This is the pretty much the same patchset
+> > as v3, only resending after rebasing on top of 3.14-rc1.
+> > 
+> > (As a side effect, this patch also fixes the bug
+> > https://bugzilla.kernel.org/show_bug.cgi?id=65521 )
+> > 
+> > I'd appreciate if you could please review and provide me with any
+> > comments.
+> > 
+> > Thanks,
+> > 
+> > Rajat
+> > 
+> > Rajat Jain (8):
+> >   pciehp: Make check_link_active() non-static
+> >   pciehp: Use link change notifications for hot-plug and removal
+> >   pciehp: Enable link state change notifications
+> >   pciehp: Don't disable the link permanently, during removal
+> >   pciehp: Don't check for adapter or latch status while disabling
+> >   pciehp: Disabling the link notification across slot reset
+> >   pciehp: Ensure very fast hotplug events are also processed.
+> >   pciehp: Introduce hotplug_lock to serialize HP events
+> > 
+> >  drivers/pci/hotplug/pciehp.h      |    5 ++
+> >  drivers/pci/hotplug/pciehp_core.c |    7 +-
+> >  drivers/pci/hotplug/pciehp_ctrl.c |  149
+> > ++++++++++++++++++++++++++++++-------
+> >  drivers/pci/hotplug/pciehp_hpc.c  |   74 +++++++++---------
+> >  4 files changed, 169 insertions(+), 66 deletions(-)
 
-Here bus is specific to root bus ? or, what about use find_pci_host_bridge() to get the pci_host_bridge
-instead.
+I applied these to pci/pciehp for v3.15, thanks!  I dropped the "ret" decl
+in 8/8, which I assume was the cause of the unused variable warning.
 
-> +
-> +	if (bridge)
-> +		return bridge->domain_nr;
-> +
-> +	return 0;
-> +}
-> +
-> +int pci_proc_domain(struct pci_bus *bus)
-> +{
-> +	return pci_domain_nr(bus);
-> +}
-> +
-> +/*
-> + * Called after each bus is probed, but before its children are examined
-> + */
-> +void pcibios_fixup_bus(struct pci_bus *bus)
-> +{
-> +	struct pci_dev *dev;
-> +	struct resource *res;
-> +	int i;
-> +
-> +	if (bus->self != NULL) {
+Yinghai, if "Don't disable the link permanently, during removal" causes
+trouble on your platforms, let us know so we can figure out how to deal
+with it.
 
-What about use !pci_is_root_bus() ?
-
-> +		pci_read_bridge_bases(bus);
-> +
-> +		pci_bus_for_each_resource(bus, res, i) {
-> +			if (!res || !res->flags || res->parent)
-> +				continue;
-> +
-> +			/*
-> +			 * If we are going to reassign everything, we can
-> +			 * shrink the P2P resource to have zero size to
-> +			 * save space
-> +			 */
-> +			if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
-> +				res->flags |= IORESOURCE_UNSET;
-> +				res->start = 0;
-> +				res->end = -1;
-> +				continue;
-> +			}
-> +		}
-> +	}
-> +
-
+Bjorn
