@@ -1,65 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:55932 "EHLO
-	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934414AbaBDVrF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 16:47:05 -0500
-Date: Tue, 4 Feb 2014 13:47:04 -0800 (PST)
-From: Arvind Kumar <arvindkumar@vmware.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, pv-drivers@vmware.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Message-ID: <1720135544.11645858.1391550424291.JavaMail.root@vmware.com>
-In-Reply-To: <9a6fa1d91c1f23ee0bbde7c854ce03f22054345a.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com> <9a6fa1d91c1f23ee0bbde7c854ce03f22054345a.1391512266.git.agordeev@redhat.com>
-Subject: Re: [PATCH 22/22] vmw_pvscsi: Use pci_enable_msix_range()
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:53994 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752681AbaBKAiS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 19:38:18 -0500
+Received: by mail-ie0-f178.google.com with SMTP id rl12so883422iec.9
+        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 16:38:17 -0800 (PST)
+Date: Mon, 10 Feb 2014 17:38:14 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David Miller <davem@davemloft.net>
+Cc: agordeev@redhat.com, linux-kernel@vger.kernel.org,
+	mchan@broadcom.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/34] bnx2: Use pci_enable_msix_range()
+Message-ID: <20140211003814.GC12851@google.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+ <434a34e01c353441131204edef36126a95e8928a.1391172839.git.agordeev@redhat.com>
+ <20140131.133051.483295479425700960.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140131.133051.483295479425700960.davem@davemloft.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Looks fine to me.
+On Fri, Jan 31, 2014 at 01:30:51PM -0800, David Miller wrote:
+> 
+> Please submit this patch series when the net-next tree opens back up,
+> I'm only accepting bug fixes at this time.
+> 
+> Also, please always provide a proper "00/NN" openning posting for a
+> patch series, that gives background and high level information about
+> what your patch series is trying to achieve and how it achieves it.
+> 
+> That way people reviewing the patches know what to expect, and why,
+> and I have exactly one posting to reply to if I apply the whole
+> series.
 
-Acked-by: Arvind Kumar <arvindkumar@vmware.com>
+I *think* this whole series applies to drivers/net (the usual patch sending
+tools like "stg mail" insert the diffstat automatically in the 00/nn
+message), and it sounds like David is willing to apply them via his tree,
+so I'm ignoring these for now.  Let me know if you need me to do anything.
 
-Thanks!
-Arvind
-
------ Original Message -----
-From: "Alexander Gordeev" <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: "Alexander Gordeev" <agordeev@redhat.com>, "Arvind Kumar" <arvindkumar@vmware.com>, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Sent: Tuesday, February 4, 2014 3:17:08 AM
-Subject: [PATCH 22/22] vmw_pvscsi: Use pci_enable_msix_range()
-
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Arvind Kumar <arvindkumar@vmware.com>
-Cc: pv-drivers@vmware.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/vmw_pvscsi.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index b9755ec..c521f8e 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1078,8 +1078,8 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
- 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
- 	int ret;
- 
--	ret = pci_enable_msix(adapter->dev, &entry, 1);
--	if (ret)
-+	ret = pci_enable_msix_range(adapter->dev, &entry, 1, 1);
-+	if (ret < 0)
- 		return ret;
- 
- 	*irq = entry.vector;
--- 
-1.7.7.6
+Bjorn
