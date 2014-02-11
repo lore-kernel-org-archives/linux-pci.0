@@ -1,48 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:33013 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753997AbaBZThk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:40 -0500
-Received: by mail-ig0-f181.google.com with SMTP id h18so1521193igc.2
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:40 -0800 (PST)
-Subject: [PATCH 5/9] PCI: Don't clear IORESOURCE_UNSET when updating BAR
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:37:35 -0700
-Message-ID: <20140226193735.10125.32502.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:42973 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501AbaBKBuK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 20:50:10 -0500
+Message-ID: <52F981C1.8010706@huawei.com>
+Date: Tue, 11 Feb 2014 09:49:53 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Oliver Neukum <oneukum@suse.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH part1 v5 5/7] PCI: Add pci_dummy_ops to isolate pci device
+ temporarily
+References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>		 <1392005051-54508-6-git-send-email-wangyijing@huawei.com>	 <1392015399.21271.9.camel@linux-fkkt.site> <52F886ED.7040603@huawei.com> <1392026834.2082.10.camel@linux-fkkt.site>
+In-Reply-To: <1392026834.2082.10.camel@linux-fkkt.site>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Clear IORESOURCE_UNSET when we assign an address to a resource, not when we
-write the address to the BAR.
+>>>> +	spin_lock_irqsave(&pci_freeze_lock, flags);
+>>>> +	ops = pci_bus_set_ops(bus, &pci_dummy_ops);
+>>>> +	bus->save_ops = ops;
+>>>> +	spin_unlock_irqrestore(&pci_freeze_lock, flags);
+>>>
+>>> Against what exactly are you locking here?
+>>
+>> I want to use this spin lock to serialize freeze device and unfreeze device.
+> 
+> Yes, but against what? I am sorry I should have been more explicit.
+> You are using these functions only in pci_scan_single_device()
 
-Also, drop the "BAR %d: set to %pR" message; this is mostly redundant with
-the "BAR %d: assigned %pR" message from pci_assign_resource().
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/setup-res.c |    5 -----
- 1 file changed, 5 deletions(-)
+Hi Oliver, thanks very much for your detailed analysis. My original intention to use
+pci_freeze_lock to serialize pci_bus_freeze_device() and pci_bus_unfreeze_device(),
+because I think these two functions maybe used in other places, although currently
+only used in pci_scan_single_device().
+Like:
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 0474b0217fdf..725d5b28398c 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -101,11 +101,6 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 
- 	if (disable)
- 		pci_write_config_word(dev, PCI_COMMAND, cmd);
--
--	res->flags &= ~IORESOURCE_UNSET;
--	dev_dbg(&dev->dev, "BAR %d: set to %pR (PCI address [%#llx-%#llx])\n",
--		resno, res, (unsigned long long)region.start,
--		(unsigned long long)region.end);
- }
- 
- int pci_claim_resource(struct pci_dev *dev, int resource)
+CPU A         					         CPU B
+pci_bus_freeze_device()                                pci_bus_unfreeze_device()
+  pci_bus_set_ops(bus, &pci_dummy_ops);
+  							 pci_bus_set_ops(bus, bus->save_ops);   ---> here, save_ops is NULL, it's bad.
+  bus->save_ops = ops;
+
+
+> 
+> 
+> CPU A					CPU B
+> pci_bus_freeze_device()			wait
+> bus->save_ops = ops {valid}		wait
+> ...					pci_bus_freeze_device()
+> wait					bus->save_ops = ops
+> 					{pci_dummy_ops !}
+> pci_bus_unfreeze_device()		wait
+> pci_bus_set_ops(bus, bus->save_ops)
+> 
+> You see the problem?
+> 
+
+Yes, this is a issue, good catch. I should add a refcount to avoid this situation.
+
+> If this function ever races with itself, the locking is useless.
+> If it doesn't race with itself, the locking is not needed.
+> If this function can really race with itself, you need a refcount
+> for freezing.
+
+Thanks again!
+
+
+
+
+> 
+> 
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
