@@ -1,45 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:60347 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752293AbaBTUmp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 15:42:45 -0500
-Date: Thu, 20 Feb 2014 21:42:41 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Murray <amurray@embedded-bits.co.uk>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	jg1.han@samsung.com, Jason Cooper <jason@lakedaemon.net>,
-	mohit.kumar@st.com
-Subject: Re: Serialization of configuration accesses for mvebu/designware
-Message-ID: <20140220214241.633a5a2b@skate>
-In-Reply-To: <CAPcvp5FJLcpe8PunwAyjRBvzESqxx1kv4Sqy0Oqc87Gn9AY3Eg@mail.gmail.com>
-References: <CAPcvp5FJLcpe8PunwAyjRBvzESqxx1kv4Sqy0Oqc87Gn9AY3Eg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:63691 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751585AbaBKXXK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 18:23:10 -0500
+Received: by mail-ig0-f177.google.com with SMTP id k19so9855087igc.4
+        for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2014 15:23:09 -0800 (PST)
+Date: Tue, 11 Feb 2014 16:23:06 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Marta Rybczynska <rybczynska@gmail.com>,
+	linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] PCI hotplug: cpqphp: hex vs decimal typo in
+ cpqhpc_probe()
+Message-ID: <20140211232306.GB21057@google.com>
+References: <20140210152350.GA24189@elgon.mountain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140210152350.GA24189@elgon.mountain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Andrew Murray,
-
-On Thu, 20 Feb 2014 18:51:32 +0000, Andrew Murray wrote:
-
-> I've noticed that the mvebu and designware both use spinlocks to
-> serialize access to the configuration space (pci_ops.[read|write]).
-> However the read/write ops are only ever used from the pci core
-> (access.c, pci.c) where they are already protected with the pci_lock.
+On Mon, Feb 10, 2014 at 06:23:50PM +0300, Dan Carpenter wrote:
+> This is a static checker fix and I can't test it, but from the context
+> it definitely looks like hexidecimal 0x20 was intended here instead of
+> decimal 20.
 > 
-> As far as I can tell these extra spinlocks are superfluous, therefore...
-> 
-> Can they be removed?
-> Can future host bridge drivers assume that calls to the pci_ops are serialized?
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Just had a quick look, and indeed all the PCI configuration space
-access functions in drivers/pci/access.c seem to be taking the
-pci_lock, making the internal driver lock useless. Patches welcome! :-)
+Applied to pci/misc for v3.15, thanks a lot!
 
-Thanks!
+Bjorn
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+> diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
+> index 31273e155e6c..037e2612c5bd 100644
+> --- a/drivers/pci/hotplug/cpqphp_core.c
+> +++ b/drivers/pci/hotplug/cpqphp_core.c
+> @@ -920,12 +920,12 @@ static int cpqhpc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  				bus->max_bus_speed = PCI_SPEED_100MHz_PCIX;
+>  				break;
+>  			}
+> -			if (bus_cap & 20) {
+> +			if (bus_cap & 0x20) {
+>  				dbg("bus max supports 66MHz PCI-X\n");
+>  				bus->max_bus_speed = PCI_SPEED_66MHz_PCIX;
+>  				break;
+>  			}
+> -			if (bus_cap & 10) {
+> +			if (bus_cap & 0x10) {
+>  				dbg("bus max supports 66MHz PCI\n");
+>  				bus->max_bus_speed = PCI_SPEED_66MHz;
+>  				break;
