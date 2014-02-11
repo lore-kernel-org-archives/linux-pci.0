@@ -1,61 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:42901 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbaBMNQv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 08:16:51 -0500
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52004 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750758AbaBKH7f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Feb 2014 02:59:35 -0500
+Date: Tue, 11 Feb 2014 09:01:28 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Russell King <linux@arm.linux.org.uk>,
-	David Airlie <airlied@linux.ie>,
-	<dri-devel@lists.freedesktop.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	<linux-pcmcia@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH 5/6] PCI/pcmcia: Use list_for_each_entry() for bus traversal
-Date: Thu, 13 Feb 2014 21:14:02 +0800
-Message-ID: <1392297243-61848-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392297243-61848-1-git-send-email-wangyijing@huawei.com>
-References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com>
+Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
+	mchan@broadcom.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/34] bnx2: Use pci_enable_msix_range()
+Message-ID: <20140211080128.GB16680@dhcp-26-207.brq.redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+ <434a34e01c353441131204edef36126a95e8928a.1391172839.git.agordeev@redhat.com>
+ <20140131.133051.483295479425700960.davem@davemloft.net>
+ <20140211003814.GC12851@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140211003814.GC12851@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace list_for_each() + pci_bus_b() with the simpler
-list_for_each_entry().
+On Mon, Feb 10, 2014 at 05:38:14PM -0700, Bjorn Helgaas wrote:
+> I *think* this whole series applies to drivers/net (the usual patch sending
+> tools like "stg mail" insert the diffstat automatically in the 00/nn
+> message), and it sounds like David is willing to apply them via his tree,
+> so I'm ignoring these for now.  Let me know if you need me to do anything.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pcmcia/yenta_socket.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Hi Bjorn,
 
-diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
-index 8485761..d16fb12 100644
---- a/drivers/pcmcia/yenta_socket.c
-+++ b/drivers/pcmcia/yenta_socket.c
-@@ -1076,7 +1076,7 @@ static void yenta_config_init(struct yenta_socket *socket)
-  */
- static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
- {
--	struct list_head *tmp;
-+	struct pci_bus *silbling;
- 	unsigned char upper_limit;
- 	/*
- 	 * We only check and fix the parent bridge: All systems which need
-@@ -1096,8 +1096,8 @@ static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
- 	upper_limit = bridge_to_fix->parent->busn_res.end;
- 
- 	/* check the bus ranges of all silbling bridges to prevent overlap */
--	list_for_each(tmp, &bridge_to_fix->parent->children) {
--		struct pci_bus *silbling = pci_bus_b(tmp);
-+	list_for_each_entry(silbling, &bridge_to_fix->parent->children,
-+			node) {
- 		/*
- 		 * If the silbling has a higher secondary bus number
- 		 * and it's secondary is equal or smaller than our
+Unlike just a handful of patches concerning pci_enable_msi_range(), some
+few dozens of pci_enable_msix_range() updates would be difficult to route
+thru your tree. So for net and scsi (and block is pending) I am putting
+linux-pci on CC just to let you know what is happening.
+
+> Bjorn
+
 -- 
-1.7.1
-
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
