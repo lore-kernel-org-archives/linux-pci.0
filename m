@@ -1,45 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:56690 "EHLO
-	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750722AbaBTFX1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 00:23:27 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <jg1.han@samsung.com>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Bjorn Helgaas <bhelgass@google.com>, <spear-devel@list.st.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 1/2] PCI:designware:Fix comment for setting number of lanes
-Date: Thu, 20 Feb 2014 10:52:53 +0530
-Message-ID: <1392873774-22249-1-git-send-email-mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:51225 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752270AbaBKBIH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 20:08:07 -0500
+Received: by mail-ig0-f170.google.com with SMTP id m12so7865441iga.1
+        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 17:08:07 -0800 (PST)
+Date: Mon, 10 Feb 2014 18:08:03 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David Miller <davem@davemloft.net>
+Cc: agordeev@redhat.com, linux-kernel@vger.kernel.org,
+	mchan@broadcom.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/34] bnx2: Use pci_enable_msix_range()
+Message-ID: <20140211010803.GD12851@google.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+ <434a34e01c353441131204edef36126a95e8928a.1391172839.git.agordeev@redhat.com>
+ <20140131.133051.483295479425700960.davem@davemloft.net>
+ <20140211003814.GC12851@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140211003814.GC12851@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Corrects comment for setting number of lanes.
+On Mon, Feb 10, 2014 at 05:38:14PM -0700, Bjorn Helgaas wrote:
+> On Fri, Jan 31, 2014 at 01:30:51PM -0800, David Miller wrote:
+> > 
+> > Please submit this patch series when the net-next tree opens back up,
+> > I'm only accepting bug fixes at this time.
+> > 
+> > Also, please always provide a proper "00/NN" openning posting for a
+> > patch series, that gives background and high level information about
+> > what your patch series is trying to achieve and how it achieves it.
+> > 
+> > That way people reviewing the patches know what to expect, and why,
+> > and I have exactly one posting to reply to if I apply the whole
+> > series.
+> 
+> I *think* this whole series applies to drivers/net (the usual patch sending
+> tools like "stg mail" insert the diffstat automatically in the 00/nn
+> message), and it sounds like David is willing to apply them via his tree,
+> so I'm ignoring these for now.  Let me know if you need me to do anything.
 
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Bjorn Helgaas <bhelgass@google.com>
-Cc: spear-devel@list.st.com
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/host/pcie-designware.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I skimmed these and the scsi patches, and I think you were right in
+proposing an MSI-X enable function that takes a single "number of vectors"
+argument, in addition to pci_enable_msix_range(), which takes a minimum and
+a maximum.  Obviously the pci_enable_msix_fixed() or whatever could be a
+simple #define wrapper or something.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 6d23d8c..391966f 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -766,7 +766,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	u32 membase;
- 	u32 memlimit;
- 
--	/* set the number of lines as 4 */
-+	/* set the number of lanes */
- 	dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL, &val);
- 	val &= ~PORT_LINK_MODE_MASK;
- 	switch (pp->lanes) {
--- 
-1.7.0.1
+Of the fifty-some net and scsi patches, I counted 23 that use the min ==
+max pattern, and it seems a shame to have to repeat that expression.
 
+BTW, I noticed that Documentation/PCI/MSI-HOWTO.txt uses
+pci_enable_msi_range() in some of the examples that are really talking
+about pci_enable_msix_range() (4.3.1.1 and 4.3.1.2, at least).
+
+Bjorn
