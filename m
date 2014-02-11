@@ -1,78 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:57798 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbaBMQ3C convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 11:29:02 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Will Deacon <will.deacon@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Thu, 13 Feb 2014 17:28:20 +0100
-Message-ID: <4110788.UI9TADVhpa@wuerfel>
-In-Reply-To: <BA5E6077-77F8-4BE8-80E5-BAB9FE111387@codeaurora.org>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <20140213110721.GC13576@mudshark.cambridge.arm.com> <BA5E6077-77F8-4BE8-80E5-BAB9FE111387@codeaurora.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:45307 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752111AbaBKAUB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 19:20:01 -0500
+Received: by mail-ig0-f171.google.com with SMTP id uy17so7751902igb.4
+        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 16:20:00 -0800 (PST)
+Date: Mon, 10 Feb 2014 17:19:58 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH 0/11] ACPI / hotplug / PCI: Updates on top of changes
+ merged recently
+Message-ID: <20140211001958.GB12851@google.com>
+References: <2217793.001RY6hKlo@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 13 February 2014 10:22:25 Kumar Gala wrote:
-> On Feb 13, 2014, at 5:07 AM, Will Deacon <will.deacon@arm.com> wrote:
-> > Happy to change it, but I'm also struggling for names. Maybe "linux,…"?
->
-> I was thinking that as well, I’d say go with “linux,”.
-
-I see nothing linux specific in there. I would only use that namespace
-for things we don't expect to work with another OS.
-
-> >>> +- ranges         : As described in IEEE Std 1275-1994, but must provide
-> >>> +                   at least a definition of one or both of IO and Memory
-> >>> +                   Space.
-> >>> +
-> >>> +- #address-cells : Must be 3
-> >>> +
-> >>> +- #size-cells    : Must be 2
-> >>> +
-> >>> +- reg            : The Configuration Space base address, as accessed by the
-> >>> +                   parent bus.
-> >> 
-> >> Isn’t the size fixed here for cam or ecam?
-> > 
-> > Yes, which is why reg just specifies the base address.
+On Mon, Jan 27, 2014 at 01:37:17AM +0100, Rafael J. Wysocki wrote:
+> Hi All,
 > 
-> Huh?  The reg property clearly has the size in it (as shown in the example below).
-> I guess I was just asking for the description here to say what the size was for
-> the 2 compatibles since its fixed and known.
-
-It's still an open question whether the config space in the reg property should
-cover all 256 buses or just the ones in the bus-range. In the latter case,
-it would be variable (but predictable) size.
-
-> You could clean it up a bit to be human readable even if its kvmtool that’s creating it.
+> ACPIPHP can be simplified a bit on top of some PCI and ACPI changes merged
+> recently and the following series of patches implements those simplifications:
 > 
-> 	pci {
-> 		compatible = "arm,pci-cam-generic”;
-> 		#address-cells = <3>;
-> 		#size-cells = <2>;
-> 		#interrupt-cells = <1>
-> 		reg = <0x0 0x40000000>;
-> 		ranges = <
-> 			0x1000000 0x0 0x00000000 0x0 0x00000000 0x0 0x00010000
-> 			0x2000000 0x0 0x41000000 0x0 0x41000000 0x0 0x3f000000
-> 			>;
+> [1/11] Fix up two kerneldoc comments in acpiphp_glue.c.
+> [2/11] Get rid of an unnecessary label in register_slot().
+> [3/11] Drop acpiphp_bus_trim() and use acpi_bus_trim() instead of it directly.
+> [4/11] Move the acpi_bus_get_device() call out of acpiphp_no_hotplug().
+> [5/11] Store struct acpi_device pointers instead of ACPI handles in struct acpiphp_context.
+> [6/11] Drop acpiphp_bus_add() (which has only one user).
+> [7/11] Drop crit_sect mutexes (that are redundant).
+> [8/11] Clean up the usage of the slot variable in hotplug_event().
+> [9/11] Drop dev_in_slot() and rework disable_slot() to walk bus->devices directly.
+> [10/11] Use acpi_handle_debug() in hotplug_event() instead of open-coded stuff.
+> [11/11] Drop handle argument from the member functions of struct acpi_dock_ops.
 
-Make it 
+I assume you'll handle all these through your tree, Rafael.  Let me know if
+you need me to do anything.
 
- 		ranges = <0x1000000 0x0 0x00000000 0x0 0x00000000 0x0 0x00010000>,
- 			 <0x2000000 0x0 0x41000000 0x0 0x41000000 0x0 0x3f000000>;
+Bjorn
 
-and it will be perfect ;-)
-
-	Arnd
-
-
+> All of that is relateively straightforward, but I have some more intrusive changes
+> on top of it in the works.  They will be posted separately later this week.
+> 
+> Thanks!
+> 
+> -- 
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
