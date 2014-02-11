@@ -1,68 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:56917 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752365AbaBNUsJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 15:48:09 -0500
-Received: by mail-ie0-f170.google.com with SMTP id lx4so3648241iec.1
-        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 12:48:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <F01C6967BCFFB14E8DF7F5D2FD1053EB1ECC22@PGSMSX103.gar.corp.intel.com>
-References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
- <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
- <20140117182231.GA18421@google.com> <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
- <CAErSpo4fGBhb+pj6pTpKFTTj9rzLYzB2w-EX2ghWRYR3Cjyd9g@mail.gmail.com>
- <CAErSpo4rTHFOgUDjmrGxxFAuE-+i9y7hW+T7+xTzB7x4_72_pg@mail.gmail.com> <F01C6967BCFFB14E8DF7F5D2FD1053EB1ECC22@PGSMSX103.gar.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Feb 2014 13:47:48 -0700
-Message-ID: <CAErSpo4_ecD6Gom=WnH2MMSLsO=SEBnWHKhx3BiXz3Fgs8d2uQ@mail.gmail.com>
-Subject: Re: EHCI host broken -- interrupts disabled
-To: "Chen, Jamie" <jamie.chen@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	USB list <linux-usb@vger.kernel.org>,
-	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
+Received: from moutng.kundenserver.de ([212.227.17.10]:55699 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969AbaBKMi3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 07:38:29 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+Cc: Pratyush ANAND <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Viresh Kumar <viresh.linux@gmail.com>,
+	spear-devel <spear-devel@list.st.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH V5 7/8] pcie: SPEAr13xx: Add designware pcie support
+Date: Tue, 11 Feb 2014 13:38:08 +0100
+Message-ID: <1923851.AhH781i5Mk@wuerfel>
+In-Reply-To: <2CC2A0A4A178534D93D5159BF3BCB66189FD2CAAA9@EAPEX1MAIL1.st.com>
+References: <cover.1391871170.git.pratyush.anand@st.com> <201402101643.23186.arnd@arndb.de> <2CC2A0A4A178534D93D5159BF3BCB66189FD2CAAA9@EAPEX1MAIL1.st.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 9:36 AM, Chen, Jamie <jamie.chen@intel.com> wrote:
-> Sorry for late response.
->
-> The dmesg attach in the mail.
+On Tuesday 11 February 2014 12:23:58 Mohit KUMAR DCG wrote:
 
-Thanks, I put this info in
-https://bugzilla.kernel.org/show_bug.cgi?id=70601 and applied the
-patch to pci/misc.
+> > > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> > > index 13fb333..42a491d 100644
+> > > --- a/drivers/pci/host/Makefile
+> > > +++ b/drivers/pci/host/Makefile
+> > > @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+> > >  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+> > >  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+> > >  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+> > > +obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+> > 
+> > I'd use the "pci" naming instead of "pcie" here for consistency.
+> > 
+> 
+> - No, let it be pcie as SPEAr13xx soc has pci controller as well , though  PCI is
+> not used on current eval boards.
 
-This seems like a potentially important fix, so I think I'll
-cherry-pick it into for-linus for v3.14.
+Hmm, it's still inconsistent, but I can see your argument.
+Let's see if someone has a better idea, otherwise keep the
+pcie name.
 
-Bjorn
+I'd prefer to avoid having to rename drivers in the long run,
+but if we start naming some pcie drivers pci and others pcie,
+it gets rather confusing.
 
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Wednesday, February 12, 2014 7:24 AM
->> To: Chen, Jamie
->> Cc: Alan Stern; Sarah Sharp; USB list; Tsai, Gaggery; linux-pci@vger.kernel.org
->> Subject: Re: EHCI host broken -- interrupts disabled
->>
->> On Wed, Jan 29, 2014 at 5:04 PM, Bjorn Helgaas <bhelgaas@google.com>
->> wrote:
->> > On Mon, Jan 20, 2014 at 5:15 AM, Chen, Jamie <jamie.chen@intel.com>
->> wrote:
->> >> Try to apply this patch to kernel 3.8.0.
->> >>
->> >> Make sure the ehci can work fine and lspci show that
->> PCI_COMMAND_INTX_DISABLE is 0.
->> >>
->> >> The patch can resolved this issue.
->> >
->> > Thanks for testing it.  Can you collect the complete dmesg output or
->> > dmidecode output?  (Remove secret details from it, of course.)
->> >
->> > I'm going to put this info into a bugzilla report for future reference.
->>
->> Ping, I'm ready to apply this, just waiting for the dmesg log.
->>
->> Bjorn
+	Arnd
