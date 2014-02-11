@@ -1,86 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:61544 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753375AbaBSOSZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 09:18:25 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:54558 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbaBKXSj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 18:18:39 -0500
+Received: by mail-ie0-f173.google.com with SMTP id y20so2364938ier.18
+        for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2014 15:18:38 -0800 (PST)
+Date: Tue, 11 Feb 2014 16:18:35 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Takashi Iwai <tiwai@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Wed, 19 Feb 2014 15:17:56 +0100
-Message-ID: <2724033.O0vxCdfViQ@wuerfel>
-In-Reply-To: <20140219110718.GD28173@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com> <20140218191023.GG2010@mudshark.cambridge.arm.com> <20140219110718.GD28173@mudshark.cambridge.arm.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: pciehp: Remove surprise bit checks
+Message-ID: <20140211231835.GA21057@google.com>
+References: <s5hmwhx98vx.wl%tiwai@suse.de>
+ <1117e550ec6248e3a1834f887cbfdfad@DM2PR05MB671.namprd05.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1117e550ec6248e3a1834f887cbfdfad@DM2PR05MB671.namprd05.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 19 February 2014 11:07:19 Will Deacon wrote:
-> On Tue, Feb 18, 2014 at 07:10:23PM +0000, Will Deacon wrote:
-> > On Tue, Feb 18, 2014 at 01:46:44PM +0000, Arnd Bergmann wrote:
-> > > On Tuesday 18 February 2014 12:20:43 Will Deacon wrote:
-> > > > + /* Register our I/O and Memory resources */
-> > > > + res_valid = 0;
-> > > > + list_for_each_entry(win, &pci->host.windows, list) {
-> > > > +         struct resource *parent;
-> > > > +
-> > > > +         if (resource_type(win->res) == IORESOURCE_IO) {
-> > > > +                 parent = &ioport_resource;
-> > > > +                 err = pci_ioremap_io(win->offset, win->res->start);
-> > > 
-> > > and consequently pass the pci_addr rather than the offset here. How about
-> > > moving the pci_ioremap_io() call into gen_pci_alloc_io_offset()?
+On Tue, Feb 11, 2014 at 06:52:30PM +0000, Rajat Jain wrote:
+> Hello Takashi,
 > 
-> I've probably just confused myself, but passing the pci_addr to
-> pci_ioremap_io doesn't make sense to me. 
-
-I think the confusion is that there are two different things we call
-offset here. The calculation of the offset you pass into
-pci_ioremap_io() is correct AFAICT now, but it's not what you are
-supposed to pass into pci_add_resource_offset() or what we normally
-put into pci_host_bridge_window->offset.
-
-> My understanding is that:
+> > -----Original Message-----
+> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> > owner@vger.kernel.org] On Behalf Of Takashi Iwai
+> > Sent: Tuesday, February 11, 2014 3:39 AM
+> > To: Bjorn Helgaas
+> > Cc: Alex Williamson; linux-pci@vger.kernel.org; linux-
+> > kernel@vger.kernel.org
+> > Subject: [PATCH] PCI: pciehp: Remove surprise bit checks
+> > 
+> > Currently pciehp driver checks the surprise removal bit and handles
+> > the hotplug event only when the bit is set.  But there are devices
+> > that don't set that bit but yet expect the hotplug working, e.g. the
+> > PCI card reader on HP ProBook 445 and 455 laptops appears only when
+> > you insert a card, and it needs the hotplug event handling.
+> > 
+> > For fixing this, basically we may ignore the surprise bit and always
+> > handle the event.
 > 
->   cpu = bus + offset
-
-Right. This would be the case for mem_offset.
-
-> In the case of I/O, the offset is really:
+> Some of this has been taken care of in the recent changes to pciehcp (last night).
 > 
->   offset = (PCI_IO_VIRT_BASE - bus) + window
-
-I can't seem to make sense of this calculation. PCI_IO_VIRT_BASE
-is a pointer to the start of the virtual window. You can add offsets
-to the pointer, but subtracting a number from it is not a well-defined
-operation.
-
-> where window is determined by the simple allocator I wrote.
-
-And your allocator calls it offset, which is what confused me.
-
-> Now, the __io macro takes care of PCI_IO_VIRT_BASE so we don't actually care
-> about that when adding the PCI I/O resources, instead we'll just pass:
+> Please see
 > 
->   offset = window - bus
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/pciehp&id=a3eba3887960d00abb912fe3703cd3a058c721b8
+> 
+> Also, link state hotplug has been added as part of this patch set. Can you please try with Bjorn's latest pci tree?
+> 
+> With that, I think you should not see the issue you are describing, because if the PCIe Link comes up when you insert the card, it shall be added (now) irrespective of whether or not you have the surprise bit set.
 
-Yes, this would be the io_offset that you pass into pci_add_resource_offset().
+Takashi's patch removed more HP_SUPR_RM() usage than yours, and I think
+those additional changes are probably necessary.  I rebased Takashi's patch
+on top of my pci/pciehp branch, resulting in the patch below.
 
-> and then pci_ioremap_io will just want the window offset, since that's added
-> directly on to PCI_IO_VIRT_BASE for the ioremap_page_range.
+I pushed this, so you can try the whole thing out at:
 
-Yes.
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/pciehp&id=237e0218bcad52d3df6746cd8d15a0d353bae84f
 
-> If I call pci_ioremap_io(range->pci_addr, ...) then I'm going to trip a BUG_ON
-> unless the pci_addr is within IO_SPACE_LIMIT.
+Bjorn
 
-range->pci_addr is what you call 'bus' above. Since you want 'window', you
-have to pass 'bus'+'offset', or 'range->pci_addr + io_offset'. Normally, one
-of the two would be zero, while the other is equal to 'window'.
 
-	Arnd
+
+PCI: pciehp: Remove surprise bit checks
+
+From: Takashi Iwai <tiwai@suse.de>
+
+Currently pciehp driver checks the surprise removal bit and handles the
+hotplug event only when the bit is set.  But there are devices that don't
+set that bit, yet expect hotplug to work, e.g., the SD/MMC card reader on
+HP ProBook 445 and 455 laptops appears only when you insert a card, and it
+needs the hotplug event handling.
+
+For fixing this, basically we may ignore the surprise bit and always handle
+the event.  The only big concern in the past was the KVM device assignment,
+but this has been fixed in KVM side (ignoring hotplug events during
+secondary bus resets), there should be no obstacle ahead.
+
+The earlier discussion thread is found at:
+    https://lkml.kernel.org/r/s5h38vqjhk6.wl%25tiwai@suse.de
+
+[bhelgaas: rebase on Rajat's changes, remove HP_SUPR_RM() completely]
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=70261
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp.h      |    1 -
+ drivers/pci/hotplug/pciehp_ctrl.c |    2 --
+ drivers/pci/hotplug/pciehp_hpc.c  |   11 +++++------
+ 3 files changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 8a66866b8cf1..d2a67aa0e49d 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -124,7 +124,6 @@ struct controller {
+ #define MRL_SENS(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_MRLSP)
+ #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
+ #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
+-#define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
+ #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
+ #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+ #define PSN(ctrl)		((ctrl)->slot_cap >> 19)
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index fec99a164d93..a4d29d24057d 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -535,8 +535,6 @@ static void interrupt_event_handler(struct work_struct *work)
+ 		break;
+ 	case INT_PRESENCE_ON:
+ 	case INT_PRESENCE_OFF:
+-		if (!HP_SUPR_RM(ctrl))
+-			break;
+ 		ctrl_dbg(ctrl, "Surprise Removal\n");
+ 		handle_surprise_event(p_slot);
+ 		break;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index da4b0204b4f7..1076a51623b5 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -628,17 +628,18 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ {
+ 	struct controller *ctrl = slot->ctrl;
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+-	u16 stat_mask = 0, ctrl_mask = 0;
++	u16 stat_mask, ctrl_mask;
+ 
+ 	if (probe)
+ 		return 0;
+ 
+-	if (HP_SUPR_RM(ctrl) && !ATTN_BUTTN(ctrl)) {
++	ctrl_mask = PCI_EXP_SLTCTL_DLLSCE;
++	stat_mask = PCI_EXP_SLTSTA_DLLSC;
++
++	if (!ATTN_BUTTN(ctrl)) {	/* as in pcie_enable_notification() */
+ 		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
+ 		stat_mask |= PCI_EXP_SLTSTA_PDC;
+ 	}
+-	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
+-	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
+ 
+ 	pcie_write_cmd(ctrl, 0, ctrl_mask);
+ 	if (pciehp_poll_mode)
+@@ -741,8 +742,6 @@ static inline void dbg_ctrl(struct controller *ctrl)
+ 		  ATTN_LED(ctrl)   ? "yes" : "no");
+ 	ctrl_info(ctrl, "  Power Indicator      : %3s\n",
+ 		  PWR_LED(ctrl)    ? "yes" : "no");
+-	ctrl_info(ctrl, "  Hot-Plug Surprise    : %3s\n",
+-		  HP_SUPR_RM(ctrl) ? "yes" : "no");
+ 	ctrl_info(ctrl, "  EMI Present          : %3s\n",
+ 		  EMI(ctrl)        ? "yes" : "no");
+ 	ctrl_info(ctrl, "  Command Completed    : %3s\n",
