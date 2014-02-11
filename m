@@ -1,106 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5242 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753138AbaBSI4s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 03:56:48 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 9/9] skd: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 19 Feb 2014 09:58:21 +0100
-Message-Id: <916f0aad90121bc7d2d43deb4088c63f600c1d20.1392799752.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
-References: <cover.1392799751.git.agordeev@redhat.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:51008 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751105AbaBKMjU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 07:39:20 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH 0/11] ACPI / hotplug / PCI: Updates on top of changes merged recently
+Date: Tue, 11 Feb 2014 13:53:58 +0100
+Message-ID: <2679492.S4dAZoqvRT@vostro.rjw.lan>
+In-Reply-To: <20140211001958.GB12851@google.com>
+References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140211001958.GB12851@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Monday, February 10, 2014 05:19:58 PM Bjorn Helgaas wrote:
+> On Mon, Jan 27, 2014 at 01:37:17AM +0100, Rafael J. Wysocki wrote:
+> > Hi All,
+> > 
+> > ACPIPHP can be simplified a bit on top of some PCI and ACPI changes merged
+> > recently and the following series of patches implements those simplifications:
+> > 
+> > [1/11] Fix up two kerneldoc comments in acpiphp_glue.c.
+> > [2/11] Get rid of an unnecessary label in register_slot().
+> > [3/11] Drop acpiphp_bus_trim() and use acpi_bus_trim() instead of it directly.
+> > [4/11] Move the acpi_bus_get_device() call out of acpiphp_no_hotplug().
+> > [5/11] Store struct acpi_device pointers instead of ACPI handles in struct acpiphp_context.
+> > [6/11] Drop acpiphp_bus_add() (which has only one user).
+> > [7/11] Drop crit_sect mutexes (that are redundant).
+> > [8/11] Clean up the usage of the slot variable in hotplug_event().
+> > [9/11] Drop dev_in_slot() and rework disable_slot() to walk bus->devices directly.
+> > [10/11] Use acpi_handle_debug() in hotplug_event() instead of open-coded stuff.
+> > [11/11] Drop handle argument from the member functions of struct acpi_dock_ops.
+> 
+> I assume you'll handle all these through your tree, Rafael.  Let me know if
+> you need me to do anything.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Kyungmin Park <kyungmin.park@samsung.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/block/skd_main.c |   38 ++++++++++++--------------------------
- 1 files changed, 12 insertions(+), 26 deletions(-)
+Yes, I'll handle these, thanks!
 
-diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
-index 1cd1095..a69dd93 100644
---- a/drivers/block/skd_main.c
-+++ b/drivers/block/skd_main.c
-@@ -3932,42 +3932,28 @@ static void skd_release_msix(struct skd_device *skdev)
- 
- static int skd_acquire_msix(struct skd_device *skdev)
- {
--	int i, rc, msix_count = SKD_MAX_MSIX_COUNT;
-+	int i, rc;
- 	struct pci_dev *pdev = skdev->pdev;
- 	struct msix_entry *entries;
- 	struct skd_msix_entry *qentry;
- 
--	entries = kzalloc(sizeof(struct msix_entry) * msix_count, GFP_KERNEL);
-+	entries = kzalloc(sizeof(struct msix_entry) * SKD_MAX_MSIX_COUNT,
-+			  GFP_KERNEL);
- 	if (!entries)
- 		return -ENOMEM;
- 
--	for (i = 0; i < msix_count; i++)
-+	for (i = 0; i < SKD_MAX_MSIX_COUNT; i++)
- 		entries[i].entry = i;
- 
--	rc = pci_enable_msix(pdev, entries, msix_count);
--	if (rc < 0)
-+	rc = pci_enable_msix_range(pdev, entries,
-+				   SKD_MIN_MSIX_COUNT, SKD_MAX_MSIX_COUNT);
-+	if (rc < 0) {
-+		pr_err("(%s): failed to enable MSI-X %d\n",
-+		       skd_name(skdev), rc);
- 		goto msix_out;
--	else if (rc) {
--		if (rc < SKD_MIN_MSIX_COUNT) {
--			pr_err("(%s): failed to enable MSI-X %d\n",
--			       skd_name(skdev), rc);
--			goto msix_out;
--		}
--		pr_debug("%s:%s:%d %s: <%s> allocated %d MSI-X vectors\n",
--			 skdev->name, __func__, __LINE__,
--			 pci_name(pdev), skdev->name, rc);
--
--		msix_count = rc;
--		rc = pci_enable_msix(pdev, entries, msix_count);
--		if (rc) {
--			pr_err("(%s): failed to enable MSI-X "
--			       "support (%d) %d\n",
--			       skd_name(skdev), msix_count, rc);
--			goto msix_out;
--		}
- 	}
- 
--	skdev->msix_count = msix_count;
-+	skdev->msix_count = rc;
- 	skdev->msix_entries = kzalloc(sizeof(struct skd_msix_entry) *
- 				      skdev->msix_count, GFP_KERNEL);
- 	if (!skdev->msix_entries) {
-@@ -4046,8 +4032,8 @@ RETRY_IRQ_TYPE:
- 	case SKD_IRQ_MSI:
- 		snprintf(skdev->isr_name, sizeof(skdev->isr_name), "%s%d-msi",
- 			 DRV_NAME, skdev->devno);
--		rc = pci_enable_msi(pdev);
--		if (!rc) {
-+		rc = pci_enable_msi_range(pdev, 1, 1);
-+		if (rc > 0) {
- 			rc = devm_request_irq(&pdev->dev, pdev->irq, skd_isr, 0,
- 					      skdev->isr_name, skdev);
- 			if (rc) {
--- 
-1.7.7.6
+Rafael
 
