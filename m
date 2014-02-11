@@ -1,71 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:34220 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359AbaBRA7d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 19:59:33 -0500
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:61693 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbaBKX2u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 18:28:50 -0500
+Received: by mail-ig0-f170.google.com with SMTP id m12so532034iga.1
+        for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2014 15:28:49 -0800 (PST)
+Date: Tue, 11 Feb 2014 16:28:45 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alan <gnomes@lxorguk.ukuu.org.uk>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: allocation check missing
+Message-ID: <20140211232845.GC21057@google.com>
+References: <20140205115412.14423.23707.stgit@alan.etchedpixels.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-	<1388707565-16535-3-git-send-email-yinghai@kernel.org>
-	<alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
-Date: Mon, 17 Feb 2014 16:59:32 -0800
-Message-ID: <CAE9FiQUo9NGbjiZbMsf2yBFbn=iLJ-jc3QtZ8K6qwVuhmqzq=Q@mail.gmail.com>
-Subject: Re: [PATCH v5 02/33] genirq: Add irq_alloc_reserved_desc()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140205115412.14423.23707.stgit@alan.etchedpixels.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 22, 2014 at 4:03 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> There is a clear step by step approach to get this done proper:
->
->  1) Get rid of the existing misconception/misnomer of
->     irq_reserve_irqs().
->
->     Make it explicit that this is dealing with legacy irq spaces. It's
->     not that hard as there are only two users in tree which are both
->     trivial to fix.
+On Wed, Feb 05, 2014 at 11:54:34AM +0000, Alan wrote:
+> If we fail to allocate the name, just drop nicely into the fail path
+> 
+> (as a footnote someone who works on this code more might want to shuffle
+>  the allocations about so the name and attributes are allocated and freed
+>  as one. There seems to be no reason to keep them separate)
+> 
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
 
-Hi, Thomas,
+I already applied Greg KH's identical patch, thanks! :)
 
-While going through the code for kill irq_reserve_irqs(), I found that
-there is irq_reserve_irq().
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/msi&id=b3bac8e57c82e8d3e05f4abcb18c4f0a40656655
 
-in include/linux/irq.h
-
-static inline int irq_reserve_irq(unsigned int irq)
-{
-        return irq_reserve_irqs(irq, 1);
-}
-
-it is called via kernel/irq/chip.c::irq_set_chip().
-
-        /*
-         * For !CONFIG_SPARSE_IRQ make the irq show up in
-         * allocated_irqs. For the CONFIG_SPARSE_IRQ case, it is
-         * already marked, and this call is harmless.
-         */
-        irq_reserve_irq(irq);
-
-There are tens of irq_set_chip... calling for arches that does not
-support SPARSE_IRQ yet, and they does not use  irq_alloc_desc()
-anywhere.
-
-so how about change those irq_reserve_irq to irq_set_allocated_irqs() and
-leave them there?
-
-Thanks
-
-Yinghai
+> ---
+>  drivers/pci/msi.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 18ca2497..9bdf290 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -544,9 +544,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+>  		return -ENOMEM;
+>  	list_for_each_entry(entry, &pdev->msi_list, list) {
+>  		char *name = kmalloc(20, GFP_KERNEL);
+> +		if (!name)
+> +		        goto error_attrs;
+>  		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+> -		if (!msi_dev_attr)
+> +		if (!msi_dev_attr) {
+> +		        kfree(name);
+>  			goto error_attrs;
+> +                }
+>  		sprintf(name, "%d", entry->irq);
+>  		sysfs_attr_init(&msi_dev_attr->attr);
+>  		msi_dev_attr->attr.name = name;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
