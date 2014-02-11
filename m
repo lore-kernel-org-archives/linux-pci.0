@@ -1,45 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50601 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752586AbaB0NKe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:10:34 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-Date: Thu, 27 Feb 2014 13:09:57 +0000
-Message-Id: <1393506599-11561-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 2/2] ACPI / hotplug / PCI: Add ACPIPHP contexts to devices handled by PCIeHP
+Date: Tue, 11 Feb 2014 01:18:37 +0100
+Message-ID: <6623444.enfLAe3lRN@vostro.rjw.lan>
+In-Reply-To: <1461050.jQppMgDSvA@vostro.rjw.lan>
+References: <1461050.jQppMgDSvA@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
-is wrong. It returns a mapped (i.e. virtual) address that can start from
-zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
-architectures that use !CONFIG_GENERIC_MAP define.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Currently, ACPIPHP does not add hotplug context to devices that
+should be handled by the native PCI hotplug (PCIeHP) code.  The
+reason why was because PCIeHP didn't know about the devices'
+connections with ACPI and would not clean up things properly
+during an eject of an ACPI-backed device, for example.
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index d5afe96..df72051 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
- #ifndef CONFIG_GENERIC_IOMAP
- static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- {
--	return (void __iomem *) port;
-+	return (void __iomem *)(PCI_IOBASE + (port & IO_SPACE_LIMIT));
- }
+However, after recent changes that made the ACPI core create struct
+acpi_device objects for all namespace nodes regardless of the
+underlying devices' status and added PCI rescan-remove locking to
+both ACPIPHP and PCIeHP, that concern is not valid any more.
+Namely, after those changes PCIeHP need not care about the ACPI
+side of things any more and it should be serialized with respect to
+ACPIPHP and they won't be running concurrently with each other in
+any case.
+
+For this reason, make ACPIPHP to add its hotplug context to
+all devices with ACPI companions, even the ones that should be
+handled by PCIeHP in principle.  That may work around hotplug
+issues on some systems where PCIeHP is supposed to work, but it
+doesn't and the ACPI hotplug signaling works instead.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -277,9 +277,6 @@ static acpi_status acpiphp_add_context(a
+ 	struct pci_dev *pdev = bridge->pci_dev;
+ 	u32 val;
  
- static inline void ioport_unmap(void __iomem *p)
--- 
-1.9.0
+-	if (pdev && device_is_managed_by_native_pciehp(pdev))
+-		return AE_OK;
+-
+ 	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
+ 	if (ACPI_FAILURE(status)) {
+ 		if (status != AE_NOT_FOUND)
+@@ -338,8 +335,14 @@ static acpi_status acpiphp_add_context(a
+ 
+ 	list_add_tail(&slot->node, &bridge->slots);
+ 
+-	/* Register slots for ejectable functions only. */
+-	if (acpi_pci_check_ejectable(pbus, handle)  || is_dock_device(handle)) {
++	/*
++	 * Expose slots to user space for functions that have _EJ0 or _RMV or
++	 * are located in dock stations.  Do not expose them for devices handled
++	 * by the native PCIe hotplug (PCIeHP), becuase that code is supposed to
++	 * expose slots to user space in those cases.
++	 */
++	if ((acpi_pci_check_ejectable(pbus, handle) || is_dock_device(handle))
++	    && !(pdev && device_is_managed_by_native_pciehp(pdev))) {
+ 		unsigned long long sun;
+ 		int retval;
+ 
 
