@@ -1,156 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
-	Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH 5/9] ACPI / dock: Add .uevent() callback to struct acpi_hotplug_context
-Date: Wed, 19 Feb 2014 02:30:02 +0100
-Message-ID: <1634069.8i1LGae7Tj@vostro.rjw.lan>
-In-Reply-To: <3011875.q18rCmXyYX@vostro.rjw.lan>
-References: <3011875.q18rCmXyYX@vostro.rjw.lan>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:50558
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751435AbaBKSwi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 13:52:38 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI: pciehp: Remove surprise bit checks
+Date: Tue, 11 Feb 2014 18:52:30 +0000
+Message-ID: <1117e550ec6248e3a1834f887cbfdfad@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <s5hmwhx98vx.wl%tiwai@suse.de>
+In-Reply-To: <s5hmwhx98vx.wl%tiwai@suse.de>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-In order to avoid the need to register special ACPI dock
-operations for SATA devices add a .uevent() callback pointer to
-struct acpi_hotplug_context and make dock_hotplug_event() use that
-callback if available.  Also rename the existing .event() callback
-in struct acpi_hotplug_context to .notify() to avoid possible
-confusion in the future.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/dock.c                |   11 ++++++++++-
- drivers/acpi/scan.c                |    8 ++++----
- drivers/pci/hotplug/acpiphp_glue.c |    8 ++++----
- include/acpi/acpi_bus.h            |    9 ++++++---
- 4 files changed, 24 insertions(+), 12 deletions(-)
-
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -145,7 +145,8 @@ struct acpi_scan_handler {
- 
- struct acpi_hotplug_context {
- 	struct acpi_device *self;
--	int (*event)(struct acpi_device *, u32);
-+	int (*notify)(struct acpi_device *, u32);
-+	void (*uevent)(struct acpi_device *, u32);
- 	void (*fixup)(struct acpi_device *);
- };
- 
-@@ -369,11 +370,13 @@ static inline void acpi_set_device_statu
- 
- static inline void acpi_set_hp_context(struct acpi_device *adev,
- 				       struct acpi_hotplug_context *hp,
--				       int (*event)(struct acpi_device *, u32),
-+				       int (*notify)(struct acpi_device *, u32),
-+				       void (*uevent)(struct acpi_device *, u32),
- 				       void (*fixup)(struct acpi_device *))
- {
- 	hp->self = adev;
--	hp->event = event;
-+	hp->notify = notify;
-+	hp->uevent = uevent;
- 	hp->fixup = fixup;
- 	adev->hp = hp;
- }
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -496,17 +496,17 @@ void acpi_device_hotplug(void *data, u32
- 			goto err_out;
- 		}
- 	} else {
--		int (*event)(struct acpi_device *, u32);
-+		int (*notify)(struct acpi_device *, u32);
- 
- 		acpi_lock_hp_context();
--		event = adev->hp ? adev->hp->event : NULL;
-+		notify = adev->hp ? adev->hp->notify : NULL;
- 		acpi_unlock_hp_context();
- 		/*
- 		 * There may be additional notify handlers for device objects
- 		 * without the .event() callback, so ignore them here.
- 		 */
--		if (event)
--			error = event(adev, src);
-+		if (notify)
-+			error = notify(adev, src);
- 		else
- 			goto out;
- 	}
-Index: linux-pm/drivers/acpi/dock.c
-===================================================================
---- linux-pm.orig/drivers/acpi/dock.c
-+++ linux-pm/drivers/acpi/dock.c
-@@ -203,10 +203,19 @@ static void dock_hotplug_event(struct do
- 			fixup(adev);
- 			return;
- 		}
-+	} else if (cb_type == DOCK_CALL_UEVENT) {
-+		void (*uevent)(struct acpi_device *, u32);
-+
-+		uevent = adev->hp->uevent;
-+		if (uevent) {
-+			acpi_unlock_hp_context();
-+			uevent(adev, event);
-+			return;
-+		}
- 	} else {
- 		int (*notify)(struct acpi_device *, u32);
- 
--		notify = adev->hp->event;
-+		notify = adev->hp->notify;
- 		if (notify) {
- 			acpi_unlock_hp_context();
- 			notify(adev, event);
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -59,7 +59,7 @@
- static LIST_HEAD(bridge_list);
- static DEFINE_MUTEX(bridge_mutex);
- 
--static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type);
-+static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type);
- static void acpiphp_post_dock_fixup(struct acpi_device *adev);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
-@@ -81,7 +81,7 @@ static struct acpiphp_context *acpiphp_i
- 		return NULL;
- 
- 	context->refcount = 1;
--	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_event,
-+	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_notify, NULL,
- 			    acpiphp_post_dock_fixup);
- 	return context;
- }
-@@ -400,7 +400,7 @@ static void cleanup_bridge(struct acpiph
- 			struct acpi_device *adev = func_to_acpi_device(func);
- 
- 			acpi_lock_hp_context();
--			adev->hp->event = NULL;
-+			adev->hp->notify = NULL;
- 			adev->hp->fixup = NULL;
- 			acpi_unlock_hp_context();
- 		}
-@@ -833,7 +833,7 @@ static void hotplug_event(u32 type, stru
- 		put_bridge(bridge);
- }
- 
--static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type)
-+static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type)
- {
- 	struct acpiphp_context *context;
- 
+SGVsbG8gVGFrYXNoaSwNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBs
+aW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiBvd25l
+ckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBUYWthc2hpIEl3YWkNCj4gU2VudDogVHVl
+c2RheSwgRmVicnVhcnkgMTEsIDIwMTQgMzozOSBBTQ0KPiBUbzogQmpvcm4gSGVsZ2Fhcw0KPiBD
+YzogQWxleCBXaWxsaWFtc29uOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4g
+a2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIFBDSTogcGNpZWhwOiBS
+ZW1vdmUgc3VycHJpc2UgYml0IGNoZWNrcw0KPiANCj4gQ3VycmVudGx5IHBjaWVocCBkcml2ZXIg
+Y2hlY2tzIHRoZSBzdXJwcmlzZSByZW1vdmFsIGJpdCBhbmQgaGFuZGxlcw0KPiB0aGUgaG90cGx1
+ZyBldmVudCBvbmx5IHdoZW4gdGhlIGJpdCBpcyBzZXQuICBCdXQgdGhlcmUgYXJlIGRldmljZXMN
+Cj4gdGhhdCBkb24ndCBzZXQgdGhhdCBiaXQgYnV0IHlldCBleHBlY3QgdGhlIGhvdHBsdWcgd29y
+a2luZywgZS5nLiB0aGUNCj4gUENJIGNhcmQgcmVhZGVyIG9uIEhQIFByb0Jvb2sgNDQ1IGFuZCA0
+NTUgbGFwdG9wcyBhcHBlYXJzIG9ubHkgd2hlbg0KPiB5b3UgaW5zZXJ0IGEgY2FyZCwgYW5kIGl0
+IG5lZWRzIHRoZSBob3RwbHVnIGV2ZW50IGhhbmRsaW5nLg0KPiANCj4gRm9yIGZpeGluZyB0aGlz
+LCBiYXNpY2FsbHkgd2UgbWF5IGlnbm9yZSB0aGUgc3VycHJpc2UgYml0IGFuZCBhbHdheXMNCj4g
+aGFuZGxlIHRoZSBldmVudC4NCg0KU29tZSBvZiB0aGlzIGhhcyBiZWVuIHRha2VuIGNhcmUgb2Yg
+aW4gdGhlIHJlY2VudCBjaGFuZ2VzIHRvIHBjaWVoY3AgKGxhc3QgbmlnaHQpLg0KDQpQbGVhc2Ug
+c2VlDQoNCmh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2hlbGdh
+YXMvcGNpLmdpdC9jb21taXQvP2g9cGNpL3BjaWVocCZpZD1hM2ViYTM4ODc5NjBkMDBhYmI5MTJm
+ZTM3MDNjZDNhMDU4YzcyMWI4DQoNCkFsc28sIGxpbmsgc3RhdGUgaG90cGx1ZyBoYXMgYmVlbiBh
+ZGRlZCBhcyBwYXJ0IG9mIHRoaXMgcGF0Y2ggc2V0LiBDYW4geW91IHBsZWFzZSB0cnkgd2l0aCBC
+am9ybidzIGxhdGVzdCBwY2kgdHJlZT8NCg0KV2l0aCB0aGF0LCBJIHRoaW5rIHlvdSBzaG91bGQg
+bm90IHNlZSB0aGUgaXNzdWUgeW91IGFyZSBkZXNjcmliaW5nLCBiZWNhdXNlIGlmIHRoZSBQQ0ll
+IExpbmsgY29tZXMgdXAgd2hlbiB5b3UgaW5zZXJ0IHRoZSBjYXJkLCBpdCBzaGFsbCBiZSBhZGRl
+ZCAobm93KSBpcnJlc3BlY3RpdmUgb2Ygd2hldGhlciBvciBub3QgeW91IGhhdmUgdGhlIHN1cnBy
+aXNlIGJpdCBzZXQuDQoNClRoYW5rcywNCg0KUmFqYXQNCg0KDQo+IFRoZSBvbmx5IGJpZyBjb25j
+ZXJuIGluIHRoZSBwYXN0IHdhcyB0aGUgS1ZNIGRldmljZQ0KPiBhc3NpZ25tZW50LCBidXQgdGhp
+cyBoYXMgYmVlbiBmaXhlZCBpbiBLVk0gc2lkZSAoaWdub3JpbmcgaG90cGx1Zw0KPiBldmVudHMg
+ZHVyaW5nIHNlY29uZGFyeSBidXMgcmVzZXRzKSwgdGhlcmUgc2hvdWxkIGJlIG5vIG9ic3RhY2xl
+DQo+IGFoZWFkLg0KPiANCj4gVGhlIGVhcmxpZXIgZGlzY3Vzc2lvbiB0aHJlYWQgaXMgZm91bmQg
+YXQ6DQo+ICAgICBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxMy8zLzIwLzI3NA0KPiANCj4gQnVn
+emlsbGE6IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9NzAyNjEN
+Cj4gU2lnbmVkLW9mZi1ieTogVGFrYXNoaSBJd2FpIDx0aXdhaUBzdXNlLmRlPg0KPiAtLS0NCj4g
+IGRyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2N0cmwuYyB8IDExIC0tLS0tLS0tLS0tDQo+ICBk
+cml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYyAgfCAxOSArKysrKysrLS0tLS0tLS0tLS0t
+DQo+ICAyIGZpbGVzIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygrKSwgMjMgZGVsZXRpb25zKC0pDQo+
+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfY3RybC5jDQo+IGIv
+ZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfY3RybC5jDQo+IGluZGV4IDUwNjI4NDg3NTk3ZC4u
+OGY2YzYyNmI0ZTIxIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9j
+dHJsLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfY3RybC5jDQo+IEBAIC00
+MzQsOCArNDM0LDYgQEAgc3RhdGljIHZvaWQgaW50ZXJydXB0X2V2ZW50X2hhbmRsZXIoc3RydWN0
+DQo+IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiAgCQlicmVhazsNCj4gIAljYXNlIElOVF9QUkVTRU5D
+RV9PTjoNCj4gIAljYXNlIElOVF9QUkVTRU5DRV9PRkY6DQo+IC0JCWlmICghSFBfU1VQUl9STShj
+dHJsKSkNCj4gLQkJCWJyZWFrOw0KPiAgCQljdHJsX2RiZyhjdHJsLCAiU3VycHJpc2UgUmVtb3Zh
+bFxuIik7DQo+ICAJCWhhbmRsZV9zdXJwcmlzZV9ldmVudChwX3Nsb3QpOw0KPiAgCQlicmVhazsN
+Cj4gQEAgLTQ5NCwxNSArNDkyLDYgQEAgaW50IHBjaWVocF9kaXNhYmxlX3Nsb3Qoc3RydWN0IHNs
+b3QgKnBfc2xvdCkNCj4gIAlpZiAoIXBfc2xvdC0+Y3RybCkNCj4gIAkJcmV0dXJuIDE7DQo+IA0K
+PiAtCWlmICghSFBfU1VQUl9STShwX3Nsb3QtPmN0cmwpKSB7DQo+IC0JCXBjaWVocF9nZXRfYWRh
+cHRlcl9zdGF0dXMocF9zbG90LCAmZ2V0c3RhdHVzKTsNCj4gLQkJaWYgKCFnZXRzdGF0dXMpIHsN
+Cj4gLQkJCWN0cmxfaW5mbyhjdHJsLCAiTm8gYWRhcHRlciBvbiBzbG90KCVzKVxuIiwNCj4gLQkJ
+CQkgIHNsb3RfbmFtZShwX3Nsb3QpKTsNCj4gLQkJCXJldHVybiAtRU5PREVWOw0KPiAtCQl9DQo+
+IC0JfQ0KPiAtDQo+ICAJaWYgKE1STF9TRU5TKHBfc2xvdC0+Y3RybCkpIHsNCj4gIAkJcGNpZWhw
+X2dldF9sYXRjaF9zdGF0dXMocF9zbG90LCAmZ2V0c3RhdHVzKTsNCj4gIAkJaWYgKGdldHN0YXR1
+cykgew0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBjLmMNCj4g
+Yi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiBpbmRleCAxNGFjZmNjYjc2NzAu
+LjVmOTE5NmE4NWE1MyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBf
+aHBjLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBjLmMNCj4gQEAgLTYz
+NiwyMSArNjM2LDE2IEBAIGludCBwY2llaHBfcmVzZXRfc2xvdChzdHJ1Y3Qgc2xvdCAqc2xvdCwg
+aW50DQo+IHByb2JlKQ0KPiAgCWlmIChwcm9iZSkNCj4gIAkJcmV0dXJuIDA7DQo+IA0KPiAtCWlm
+IChIUF9TVVBSX1JNKGN0cmwpKSB7DQo+IC0JCXBjaWVfd3JpdGVfY21kKGN0cmwsIDAsIFBDSV9F
+WFBfU0xUQ1RMX1BEQ0UpOw0KPiAtCQlpZiAocGNpZWhwX3BvbGxfbW9kZSkNCj4gLQkJCWRlbF90
+aW1lcl9zeW5jKCZjdHJsLT5wb2xsX3RpbWVyKTsNCj4gLQl9DQo+ICsJcGNpZV93cml0ZV9jbWQo
+Y3RybCwgMCwgUENJX0VYUF9TTFRDVExfUERDRSk7DQo+ICsJaWYgKHBjaWVocF9wb2xsX21vZGUp
+DQo+ICsJCWRlbF90aW1lcl9zeW5jKCZjdHJsLT5wb2xsX3RpbWVyKTsNCj4gDQo+ICAJcGNpX3Jl
+c2V0X2JyaWRnZV9zZWNvbmRhcnlfYnVzKGN0cmwtPnBjaWUtPnBvcnQpOw0KPiANCj4gLQlpZiAo
+SFBfU1VQUl9STShjdHJsKSkgew0KPiAtCQlwY2llX2NhcGFiaWxpdHlfd3JpdGVfd29yZChwZGV2
+LCBQQ0lfRVhQX1NMVFNUQSwNCj4gLQkJCQkJICAgUENJX0VYUF9TTFRTVEFfUERDKTsNCj4gLQkJ
+cGNpZV93cml0ZV9jbWQoY3RybCwgUENJX0VYUF9TTFRDVExfUERDRSwNCj4gUENJX0VYUF9TTFRD
+VExfUERDRSk7DQo+IC0JCWlmIChwY2llaHBfcG9sbF9tb2RlKQ0KPiAtCQkJaW50X3BvbGxfdGlt
+ZW91dChjdHJsLT5wb2xsX3RpbWVyLmRhdGEpOw0KPiAtCX0NCj4gKwlwY2llX2NhcGFiaWxpdHlf
+d3JpdGVfd29yZChwZGV2LCBQQ0lfRVhQX1NMVFNUQSwNCj4gUENJX0VYUF9TTFRTVEFfUERDKTsN
+Cj4gKwlwY2llX3dyaXRlX2NtZChjdHJsLCBQQ0lfRVhQX1NMVENUTF9QRENFLCBQQ0lfRVhQX1NM
+VENUTF9QRENFKTsNCj4gKwlpZiAocGNpZWhwX3BvbGxfbW9kZSkNCj4gKwkJaW50X3BvbGxfdGlt
+ZW91dChjdHJsLT5wb2xsX3RpbWVyLmRhdGEpOw0KPiANCj4gIAlyZXR1cm4gMDsNCj4gIH0NCj4g
+LS0NCj4gMS44LjUuMg0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6
+IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4gdGhlIGJvZHkgb2Yg
+YSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8g
+aW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+IA0K
+DQo=
 
