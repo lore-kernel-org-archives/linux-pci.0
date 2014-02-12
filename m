@@ -1,86 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:58735 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbaBCUMk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 15:12:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:52371 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752013AbaBLTtw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 14:49:52 -0500
+Date: Wed, 12 Feb 2014 19:49:10 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
-	Jon Masters <jcm@redhat.com>, Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [RFC PATCH V3 1/4] pci: APM X-Gene PCIe controller driver
-Date: Mon, 03 Feb 2014 21:12:32 +0100
-Message-ID: <4985267.LnsktRmabM@wuerfel>
-In-Reply-To: <CACoXjcnXoysMeBsGuOb3t5b10zdeJ8pOnuOOzR8AaZhsOOYVEw@mail.gmail.com>
-References: <1390599168-13150-1-git-send-email-tinamdar@apm.com> <201401301516.27091.arnd@arndb.de> <CACoXjcnXoysMeBsGuOb3t5b10zdeJ8pOnuOOzR8AaZhsOOYVEw@mail.gmail.com>
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140212194909.GM29132@mudshark.cambridge.arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <201402092130.25615.arnd@arndb.de>
+ <20140210173450.GA5554@obsidianresearch.com>
+ <2006726.HhIT01YuXY@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2006726.HhIT01YuXY@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 03 February 2014 11:42:22 Tanmay Inamdar wrote:
-> On Thu, Jan 30, 2014 at 6:16 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Friday 24 January 2014, Tanmay Inamdar wrote:
-> >
-> >> +static void xgene_pcie_fixup_bridge(struct pci_dev *dev)
-> >> +{
-> >> +     int i;
-> >> +
-> >> +     /* Hide the PCI host BARs from the kernel as their content doesn't
-> >> +      * fit well in the resource management
-> >> +      */
-> >> +     for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-> >> +             dev->resource[i].start = dev->resource[i].end = 0;
-> >> +             dev->resource[i].flags = 0;
-> >> +     }
-> >> +     dev_info(&dev->dev, "Hiding X-Gene pci host bridge resources %s\n",
-> >> +              pci_name(dev));
-> >> +}
-> >> +DECLARE_PCI_FIXUP_HEADER(XGENE_PCIE_VENDORID, XGENE_PCIE_DEVICEID,
-> >> +                      xgene_pcie_fixup_bridge);
-> >
-> > Shouldn't this be gone now that the host bridge is correctly shown
-> > at the domain root?
+On Tue, Feb 11, 2014 at 10:42:52AM +0000, Arnd Bergmann wrote:
+> On Monday 10 February 2014 10:34:50 Jason Gunthorpe wrote:
 > 
-> In inbound region configuration, whole DDR space is mapped into the
-> BAR of RC. When Linux PCI mid-layer starts enumerating, it reads the
-> size of BAR of RC and tries to fit it into the memory resource. First
-> thing is that the outbound memory is not enough to map the inbound BAR
-> space. This creates problem with the resource management logic and
-> second thing is that, it is not required to map inbound BAR space RC
-> bar as no one will be accessing it further.
+> > I noticed this on mvebu as well..
+> > 
+> > 3.13 w/ mvebu driver:
+> > 
+> > e0001000-e0001fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/fpga_sysmon@1000
+> > e0006000-e0006fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/qdr2p@6000
+> > 
+> > 3.10 w/ old kirkwood driver:
+> > 
+> > e0000000-e7ffffff : PCIe 0 MEM
+> >   e0000000-e001ffff : 0000:00:01.0
+> >     e0001000-e0001fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/fpga_sysmon@1000
+> >     e0006000-e0006fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/qdr2p@6000
+> > 
+> > The latter is obviously correct and matches x86. I'm not sure where
+> > the new style host drivers are going wrong, even the resource that
+> > should be added by the PCI core itself for the BAR is missing..
 > 
-> As Jason suggested, Bridge BAR's should be 0 size unless the bridge
-> itself has registers. However this is not the case with XGene PCIe
-> controller. It may have been inherited from the legacy design.
-> 'arch/powerpc/sysdev/ppc4xx_pci.c' has similar fixup function.
+> I looked briefly at the code and found that mach-kirkwood/pcie.c does
+> both request_resource() and pci_add_resource_offset(), while
+> drivers/pci/host/pci-mvebu.c only does the latter. Does the patch
+> below restore the previous behavior?
 
-Are you sure that is true for the root bridge as well? I don't
-remember the details, but I though that for the host bridge,
-we don't actually look at the BARs at all.
+Making the equivalent changes in my generic driver fixes the issue, cheers
+Arnd!
 
-> > If you want to try out the I/O space, I'd suggest using an Intel
-> > e1000 network card, which has both memory and i/o space. There
-> > is a patch at http://www.spinics.net/lists/linux-pci/msg27684.html
-> > that lets you check the I/O registers on it, or you can go
-> > through /dev/port from user space.
-> >
-> > I also haven't seen your patch that adds pci_ioremap_io() for
-> > arm64. It would be helpful to keep it in the same patch
-> > series, since it won't build without this patch.
-> 
-> I will post the arm64 pci patch along with next revision of this
-> driver. That will cover the 'pci_ioremap_io' as well.
+  bash-4.2# cat /proc/ioports
+  00000000-0000ffff : /pci
+    00006200-000065ff : virtio-pci
+    00006600-000069ff : virtio-pci
+    00006a00-00006dff : virtio-pci
+    00006e00-000071ff : virtio-pci
+  bash-4.2# cat /proc/iomem
+  41000000-7fffffff : /pci
+    41000000-410003ff : virtio-pci
+    41000400-410005ff : virtio-pci
+    41000800-41000bff : virtio-pci
+    41000c00-41000dff : virtio-pci
+    41001000-410013ff : virtio-pci
+    41001400-410015ff : virtio-pci
+    41001800-41001bff : virtio-pci
+    41001c00-41001dff : virtio-pci
+  80000000-93ffffff : System RAM
+    80008000-80697e4f : Kernel code
+    806f6000-8077b4c3 : Kernel data
 
-Please note that today, Liviu Dudau has also posted patches for this,
-so you should coordinate a bit.
-
-	Arnd
+Will
