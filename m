@@ -1,90 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62665 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:56597 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754135AbaBRKLo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:11:44 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	wil6210@qca.qualcomm.com, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 35/35] wil6210: Use pci_enable_msi_range() instead of pci_enable_msi_block()
-Date: Tue, 18 Feb 2014 11:12:04 +0100
-Message-Id: <2dd74b72b819405a2810664c4fd47f541047b856.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+	id S1753284AbaBLW5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Feb 2014 17:57:15 -0500
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH 1/2] bus: mvebu-mbus: Fix incorrect size for PCI aperture resources
+Date: Wed, 12 Feb 2014 15:57:07 -0700
+Message-Id: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+reg[0] is the DT base, reg[1] is the DT length in bytes,
+struct resource.end is the inclusive end address, so a -1 is
+required.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: wil6210@qca.qualcomm.com
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Tested on kirkwood.
+
+Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 ---
- drivers/net/wireless/ath/wil6210/pcie_bus.c |   32 ++++++++++++--------------
- 1 files changed, 15 insertions(+), 17 deletions(-)
+ drivers/bus/mvebu-mbus.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index eeceab3..e1c8cc4 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -41,30 +41,28 @@ static int wil_if_pcie_enable(struct wil6210_priv *wil)
- 	switch (use_msi) {
- 	case 3:
- 	case 1:
-+		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
-+		break;
- 	case 0:
-+		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
- 		break;
- 	default:
--		wil_err(wil, "Invalid use_msi=%d, default to 1\n",
--			use_msi);
-+		wil_err(wil, "Invalid use_msi=%d, default to 1\n", use_msi);
- 		use_msi = 1;
- 	}
--	wil->n_msi = use_msi;
--	if (wil->n_msi) {
--		wil_dbg_misc(wil, "Setup %d MSI interrupts\n", use_msi);
--		rc = pci_enable_msi_block(pdev, wil->n_msi);
--		if (rc && (wil->n_msi == 3)) {
--			wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
--			wil->n_msi = 1;
--			rc = pci_enable_msi_block(pdev, wil->n_msi);
--		}
--		if (rc) {
--			wil_err(wil, "pci_enable_msi failed, use INTx\n");
--			wil->n_msi = 0;
--		}
--	} else {
--		wil_dbg_misc(wil, "MSI interrupts disabled, use INTx\n");
-+
-+	if (use_msi == 3 && pci_enable_msi_range(pdev, 3, 3) < 0) {
-+		wil_err(wil, "3 MSI mode failed, try 1 MSI\n");
-+		use_msi = 1;
-+	}
-+
-+	if (use_msi == 1 && pci_enable_msi(pdev)) {
-+		wil_err(wil, "pci_enable_msi failed, use INTx\n");
-+		use_msi = 0;
+diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
+index 2394e97..7fd54e9 100644
+--- a/drivers/bus/mvebu-mbus.c
++++ b/drivers/bus/mvebu-mbus.c
+@@ -876,14 +876,14 @@ static void __init mvebu_mbus_get_pcie_resources(struct device_node *np,
+ 	ret = of_property_read_u32_array(np, "pcie-mem-aperture", reg, ARRAY_SIZE(reg));
+ 	if (!ret) {
+ 		mem->start = reg[0];
+-		mem->end = mem->start + reg[1];
++		mem->end = mem->start + reg[1] - 1;
+ 		mem->flags = IORESOURCE_MEM;
  	}
  
-+	wil->n_msi = use_msi;
-+
- 	rc = wil6210_init_irq(wil, pdev->irq);
- 	if (rc)
- 		goto stop_master;
+ 	ret = of_property_read_u32_array(np, "pcie-io-aperture", reg, ARRAY_SIZE(reg));
+ 	if (!ret) {
+ 		io->start = reg[0];
+-		io->end = io->start + reg[1];
++		io->end = io->start + reg[1] - 1;
+ 		io->flags = IORESOURCE_IO;
+ 	}
+ }
 -- 
-1.7.7.6
+1.8.1.2
 
