@@ -1,46 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:62241 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753181AbaBFK0e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Feb 2014 05:26:34 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Anup Patel <anup@brainfault.org>
-Cc: Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com, mohit.kumar@st.com,
-	bhelgaas@google.com
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Date: Thu, 06 Feb 2014 11:26:15 +0100
-Message-ID: <2629498.fOknbqpyEP@wuerfel>
-In-Reply-To: <CAAhSdy0X56UcMrp0bsH0na=GBkND=jqZVqbHxKsBampr8YM3cA@mail.gmail.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <1391532784-1953-3-git-send-email-will.deacon@arm.com> <CAAhSdy0X56UcMrp0bsH0na=GBkND=jqZVqbHxKsBampr8YM3cA@mail.gmail.com>
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:46337 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbaBLTLQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 14:11:16 -0500
+Received: by mail-oa0-f53.google.com with SMTP id m1so11549448oag.12
+        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 11:11:15 -0800 (PST)
+Received: from localhost ([172.16.48.185])
+        by mx.google.com with ESMTPSA id m7sm55039033obo.7.2014.02.12.11.11.12
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Wed, 12 Feb 2014 11:11:14 -0800 (PST)
+Subject: [PATCH 3/4] x86/PCI: Reword comments
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Feb 2014 12:11:07 -0700
+Message-ID: <20140212191107.5459.69509.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140212190949.5459.46330.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140212190949.5459.46330.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 06 February 2014 14:24:03 Anup Patel wrote:
-> > diff --git a/Documentation/devicetree/bindings/pci/linux,pci-virt.txt b/Documentation/devicetree/bindings/pci/linux,pci-virt.txt
-> > new file mode 100644
-> > index 000000000000..54668a283498
-> > +- compatible     : Must be "linux,pci-virt"
-> > +
-> > +- ranges         : As described in IEEE Std 1275-1994, but must provide
-> > +                   at least a definition of the Configuration Space plus
-> > +                   one or both of IO and Memory Space.
-> > +
-> > +- #address-cells : Must be 3
-> > +
-> > +- #size-cells    : Must be 2
-> > +
-> > +Configuration Space is assumed to be memory-mapped (as opposed to being
-> 
-> It would be great to have a flag to specify whether Configuration Space is over
-> ioports or memory mapped.
-> 
+Reword comments so they make sense.
 
-I haven't seen config space access through ioport for a long
-time on non-x86. Do you have reason to believe that we will need
-that?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |    9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-	Arnd
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index ef7e92068eb1..0073348b2960 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -519,15 +519,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	sd->domain = domain;
+ 	sd->node = node;
+ 	sd->companion = device;
+-	/*
+-	 * Maybe the desired pci bus has been already scanned. In such case
+-	 * it is unnecessary to scan the pci bus with the given domain,busnum.
+-	 */
++
+ 	bus = pci_find_bus(domain, busnum);
+ 	if (bus) {
+ 		/*
+-		 * If the desired bus exits, the content of bus->sysdata will
+-		 * be replaced by sd.
++		 * If the desired bus has been scanned already, replace
++		 * its bus->sysdata.
+ 		 */
+ 		memcpy(bus->sysdata, sd, sizeof(*sd));
+ 		kfree(info);
+
