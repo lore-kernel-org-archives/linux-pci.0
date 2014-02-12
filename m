@@ -1,54 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11340 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:58891 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752252AbaBXIBF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:01:05 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Lukasz Dorau <lukasz.dorau@intel.com>,
-	Maciej Patelczyk <maciej.patelczyk@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>, intel-linux-scu@intel.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 10/23] isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:10 +0100
-Message-Id: <b6c5934fa5e2f17f49a48a38f036bcd5149455c6.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+	id S1752966AbaBLSTW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Feb 2014 13:19:22 -0500
+Date: Wed, 12 Feb 2014 11:19:13 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140212181913.GA16428@obsidianresearch.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <3460536.Sh23gjDa6X@wuerfel>
+ <20140205190947.GA22297@mudshark.cambridge.arm.com>
+ <3724624.kd9jZNUiTF@wuerfel>
+ <20140207114607.GE5976@mudshark.cambridge.arm.com>
+ <20140207175410.GC16263@obsidianresearch.com>
+ <20140212181015.GJ29132@mudshark.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140212181015.GJ29132@mudshark.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Wed, Feb 12, 2014 at 06:10:15PM +0000, Will Deacon wrote:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: Maciej Patelczyk <maciej.patelczyk@intel.com>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: intel-linux-scu@intel.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/isci/init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> > AFAIK, the job is fairly simple, when you call pci_add_resource_offset
+> > for memory compute the offset from 
+> >   of_pci_range.pci_addr - of_pci_range.cpu_addr
+> > 
+> > (or is it the other way around ?)
+> 
+> I think it's the other way round: bus = cpu - offset, then Arnd's example of
+> PCI bus 0 works out as: 0 = cpu - pci->mem_start.
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index d25d0d8..ce40538 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -356,7 +356,7 @@ static int isci_setup_interrupts(struct pci_dev *pdev)
- 	for (i = 0; i < num_msix; i++)
- 		pci_info->msix_entries[i].entry = i;
- 
--	err = pci_enable_msix(pdev, pci_info->msix_entries, num_msix);
-+	err = pci_enable_msix_exact(pdev, pci_info->msix_entries, num_msix);
- 	if (err)
- 		goto intx;
- 
--- 
-1.7.7.6
+That looks right to me
 
+> I added that to my driver, but I get some weird looking bus addresses in
+> dmesg:
+> 
+> [    0.307585] pci-arm-generic 40000000.pci: PCI host bridge to bus 0000:00
+> [    0.307601] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> [    0.307615] pci_bus 0000:00: root bus resource [mem 0x00000000-0x3effffff] (bus address [0xffffffffbf000000-0xfffffffffdffffff])
+> 
+> Looking at drivers/pci/probe.c, it seems to think that res->start - offset
+> gives a bus address, which implies that the resources are indeed *CPU*
+> addresses.
+> 
+> Are you sure pci_add_resource_offset wants bus addresses?
+
+Sorry, I wasn't clear: It accepts a cpu address in the struct
+resource and an offset to convert back to a bus address.
+
+You should compute 0 as the offset in the normal case, ie
+of_pci_range.pci_addr and of_pci_range.cpu_addr should be identical,
+which depends on the DT ranges being correct..
+
+Jason
