@@ -1,60 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:64830 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752142AbaBZSMS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 13:12:18 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
-References: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1393438283-10542-4-git-send-email-phil.edworthy@renesas.com>
-Date: Wed, 26 Feb 2014 18:11:21 +0000
-Subject: [PATCH 3/5 v2 RFC] ARM: shmobile: Add PCIe resources to r8a7791 device
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 12 Feb 2014 12:14:25 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/MSI: Fix cut-and-paste errors in documentation
+Message-ID: <20140212191425.GA5554@google.com>
+References: <1392201325-11173-1-git-send-email-agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392201325-11173-1-git-send-email-agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/mach-shmobile/setup-r8a7791.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+On Wed, Feb 12, 2014 at 11:35:25AM +0100, Alexander Gordeev wrote:
+> Function pci_enable_msi_range() is used in examples where
+> pci_enable_msix_range() should have been used instead.
+> 
+> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
-index d9393d6..7751aae 100644
---- a/arch/arm/mach-shmobile/setup-r8a7791.c
-+++ b/arch/arm/mach-shmobile/setup-r8a7791.c
-@@ -136,6 +136,16 @@ static struct resource irqc0_resources[] = {
- 					  &irqc##idx##_data,		\
- 					  sizeof(struct renesas_irqc_config))
- 
-+/* PCI Express */
-+static struct resource pcie_resources[] = {
-+	DEFINE_RES_MEM(0xfe000000, SZ_512K),
-+	DEFINE_RES_MEM(0xfe100000, SZ_1M),
-+	DEFINE_RES_MEM(0xfe200000, SZ_2M),
-+	DEFINE_RES_MEM(0x30000000, SZ_128M),
-+	DEFINE_RES_MEM(0x38000000, SZ_128M),
-+	DEFINE_RES_IRQ(gic_spi(116)),
-+};
-+
- void __init r8a7791_add_dt_devices(void)
- {
- 	r8a7791_register_scif(SCIFA0);
-@@ -160,6 +170,9 @@ void __init r8a7791_add_standard_devices(void)
- {
- 	r8a7791_add_dt_devices();
- 	r8a7791_register_irqc(0);
-+	platform_device_register_simple("r8a7791-pcie", -1,
-+					pcie_resources,
-+					ARRAY_SIZE(pcie_resources));
- }
- 
- void __init r8a7791_init_early(void)
--- 
-1.7.9.5
+Applied to pci/misc for v3.15, thanks!
 
+Bjorn
+
+> ---
+>  Documentation/PCI/MSI-HOWTO.txt |   12 ++++++------
+>  1 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+> index a8d0100..43c5a5f 100644
+> --- a/Documentation/PCI/MSI-HOWTO.txt
+> +++ b/Documentation/PCI/MSI-HOWTO.txt
+> @@ -257,8 +257,8 @@ possible, likely up to the limit returned by pci_msix_vec_count() function:
+>  
+>  static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
+>  {
+> -	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
+> -				    1, nvec);
+> +	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
+> +				     1, nvec);
+>  }
+>  
+>  Note the value of 'minvec' parameter is 1.  As 'minvec' is inclusive,
+> @@ -269,8 +269,8 @@ In this case the function could look like this:
+>  
+>  static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
+>  {
+> -	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
+> -				    FOO_DRIVER_MINIMUM_NVEC, nvec);
+> +	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
+> +				     FOO_DRIVER_MINIMUM_NVEC, nvec);
+>  }
+>  
+>  4.3.1.2 Exact number of MSI-X interrupts
+> @@ -282,8 +282,8 @@ parameters:
+>  
+>  static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
+>  {
+> -	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
+> -				    nvec, nvec);
+> +	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
+> +				     nvec, nvec);
+>  }
+>  
+>  4.3.1.3 Specific requirements to the number of MSI-X interrupts
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
