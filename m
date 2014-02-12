@@ -1,101 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11127 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750937AbaBDLPj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:15:39 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:49766 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbaBLVkr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 16:40:47 -0500
+Received: by mail-oa0-f53.google.com with SMTP id m1so11417938oag.26
+        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 13:40:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
+References: <cover.1389904166.git.agordeev@redhat.com> <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+ <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
+ <20140204190935.GA1430@dhcp-26-207.brq.redhat.com> <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
+ <20140205085047.GA27820@dhcp-26-207.brq.redhat.com> <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
+ <20140212003143.GD21057@google.com> <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
+ <CAErSpo6c_EPc5c8aaTeD9=eXWw4OowcKhWHG6YZgTOkZRMtZHQ@mail.gmail.com> <87ppmsauij.fsf@kamboji.qca.qualcomm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Feb 2014 14:40:26 -0700
+Message-ID: <CAErSpo47k8WuHded1TnHoRedHHLe-Sk7kKsXcR4XjKmQPb0Ggg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
+To: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 06/22] csiostor: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:16:52 +0100
-Message-Id: <69eff1cf2298be42528554f6169c038dd3707349.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath10k@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Wed, Feb 12, 2014 at 2:30 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Bjorn Helgaas <bhelgaas@google.com> writes:
+>
+>>> Well, as this series is small I thought it could quickly go thru your
+>>> tree. But since ipr had conflicts, there is no point routing all patches
+>>> altogether, so up to you guys. The wil6210 patch is already in your pci/msi
+>>> branch though.
+>>
+>> It's in pci/msi, but that's not in my -next branch yet, so I can
+>> easily drop it.  Do drivers/net/wireless patches normally follow a
+>> different path than the other drivers/net patches?  The wil6210 and
+>> ath10k patches look just like the others in the 34-patch series (bnx2,
+>> bnx2x, tg3, bna, cxgb3, etc.), so I thought it would make more sense
+>> to include them there.
+>
+> ath10k patches normally go through my ath.git tree to Linville and then
+> to David Miller. To avoid conflicts I would prefer to take ath10k
+> patches to my tree whenever possible.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/csiostor/csio_hw.h  |    2 +-
- drivers/scsi/csiostor/csio_isr.c |   24 ++++++++++--------------
- 2 files changed, 11 insertions(+), 15 deletions(-)
+OK, I won't do anything with ath10k (I haven't applied it anywhere).
+And if Alexander re-posts the networking series (I think he might, to
+add a pci_enable_msix_exact() interface), maybe he can include wil6210
+with that series.
 
-diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
-index 49b1daa..5db2d85 100644
---- a/drivers/scsi/csiostor/csio_hw.h
-+++ b/drivers/scsi/csiostor/csio_hw.h
-@@ -94,7 +94,7 @@ enum {
- };
- 
- struct csio_msix_entries {
--	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
-+	unsigned short	vector;		/* Assigned MSI-X vector */
- 	void		*dev_id;	/* Priv object associated w/ this msix*/
- 	char		desc[24];	/* Description of this vector */
- };
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 91ba91d..06f283f 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
- static int
- csio_enable_msix(struct csio_hw *hw)
- {
--	int rv, i, j, k, n, min, cnt;
-+	int i, j, k, n, min, cnt;
- 	struct csio_msix_entries *entryp;
- 	struct msix_entry *entries;
- 	int extra = CSIO_EXTRA_VECS;
-@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
- 
- 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
- 
--	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
--		cnt = rv;
--	if (!rv) {
--		if (cnt < (hw->num_sqsets + extra)) {
--			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
--			csio_reduce_sqsets(hw, cnt - extra);
--		}
--	} else {
--		if (rv > 0)
--			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
--
-+	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
-+	if (cnt < 0) {
- 		kfree(entries);
--		return -ENOMEM;
-+		return cnt;
-+	}
-+
-+	if (cnt < (hw->num_sqsets + extra)) {
-+		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
-+		csio_reduce_sqsets(hw, cnt - extra);
- 	}
- 
- 	/* Save off vectors */
-@@ -585,7 +581,7 @@ csio_intr_enable(struct csio_hw *hw)
- 			}
- 		}
- 
--		if ((csio_msi == 1) && !pci_enable_msi(hw->pdev))
-+		if ((csio_msi == 1) && pci_enable_msi_range(hw->pdev, 1, 1) > 0)
- 			hw->intr_mode = CSIO_IM_MSI;
- 		else
- 			hw->intr_mode = CSIO_IM_INTX;
--- 
-1.7.7.6
-
+Bjorn
