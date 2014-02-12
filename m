@@ -1,50 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:60888 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516AbaBXWGx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 17:06:53 -0500
-Date: Mon, 24 Feb 2014 23:06:48 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
+Received: from mx1.redhat.com ([209.132.183.28]:33292 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751153AbaBLNYn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Feb 2014 08:24:43 -0500
+Date: Wed, 12 Feb 2014 14:26:40 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-cc: Jingoo Han <jg1.han@samsung.com>,
-	LKML <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	pci <linux-pci@vger.kernel.org>
-Subject: Re: [patch 07/26] pci: pcie-designware: Remove irq_desc abuse
-In-Reply-To: <CAErSpo5WW4=aL_BqhnrG+J1Xq=FVtdu0BWkHUyeiOrbBhqmYwg@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1402242306060.21251@ionos.tec.linutronix.de>
-References: <21860356.103351393198399120.JavaMail.weblogic@epml01> <CAErSpo5WW4=aL_BqhnrG+J1Xq=FVtdu0BWkHUyeiOrbBhqmYwg@mail.gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/34] bnx2: Use pci_enable_msix_range()
+Message-ID: <20140212132640.GA3147@dhcp-26-207.brq.redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com>
+ <434a34e01c353441131204edef36126a95e8928a.1391172839.git.agordeev@redhat.com>
+ <20140131.133051.483295479425700960.davem@davemloft.net>
+ <20140211003814.GC12851@google.com>
+ <20140211010803.GD12851@google.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140211010803.GD12851@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 24 Feb 2014, Bjorn Helgaas wrote:
-> On Sun, Feb 23, 2014 at 4:33 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> > On Monday, February 24, 2014 6:40 AM, Thomas Gleixner wrote:
-> >>
-> >> There is no reason to care about irq_desc in that context, escpecially
-> >> as irq_data for that interrupt is retrieved as well.
-> >>
-> >> Use the proper accessor for the msi descriptor
-> >>
-> >> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Jingoo Han <jg1.han@samsung.com>
-> >> Cc: Mohit Kumar <mohit.kumar@st.com>
-> >> Cc: pci <linux-pci@vger.kernel.org>
-> >
-> > Acked-by: Jingoo Han <jg1.han@samsung.com>
+On Mon, Feb 10, 2014 at 06:08:03PM -0700, Bjorn Helgaas wrote:
+> I skimmed these and the scsi patches, and I think you were right in
+> proposing an MSI-X enable function that takes a single "number of vectors"
+> argument, in addition to pci_enable_msix_range(), which takes a minimum and
+> a maximum.  Obviously the pci_enable_msix_fixed() or whatever could be a
+> simple #define wrapper or something.
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Thomas, I assume you'll merge this along with the rest of your series.
->  I don't have any pending changes in this area.
+> Of the fifty-some net and scsi patches, I counted 23 that use the min ==
+> max pattern, and it seems a shame to have to repeat that expression.
 
-I can do, but it does not depend on anything else, so you can pick it
-up as well. Either way is fine.
+(un-CCing netdev@vger.kernel.org)
 
-Thanks,
+Hi Bjorn,
 
-	tglx
+I propose pci_enable_msix_exact(pdev, entries, nvec) rather than
+pci_enable_msix_fixed().
+
+Do you prefer this one to return 0/-errno or nvec/-errno?
+
+Do you want pci_enable_msi_exact() in addition to pci_enable_msix_exact()?
+
+Thanks!
+
+> Bjorn
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
