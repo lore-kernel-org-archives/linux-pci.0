@@ -1,151 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:40687 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752645AbaBTLNZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 06:13:25 -0500
-Date: Thu, 20 Feb 2014 11:12:38 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v3 2/3] ARM: bios32: use pci_enable_resource to enable
- PCI resources
-Message-ID: <20140220111238.GD3615@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
- <1392726043-31088-3-git-send-email-will.deacon@arm.com>
- <20140218154139.GF21483@n2100.arm.linux.org.uk>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:47799 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020AbaBLU7P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 15:59:15 -0500
+Received: by mail-ig0-f182.google.com with SMTP id uy17so11715229igb.3
+        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 12:59:14 -0800 (PST)
+Date: Wed, 12 Feb 2014 13:59:11 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Magnus Damm <magnus.damm@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	horms@verge.net.au, ben.dooks@codethink.co.uk
+Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space
+ update
+Message-ID: <20140212205911.GB5554@google.com>
+References: <20140205065243.29445.76593.sendpatchset@w520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140218154139.GF21483@n2100.arm.linux.org.uk>
+In-Reply-To: <20140205065243.29445.76593.sendpatchset@w520>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 03:41:39PM +0000, Russell King - ARM Linux wrote:
-> On Tue, Feb 18, 2014 at 12:20:42PM +0000, Will Deacon wrote:
-> > This patch moves bios32 over to using the generic code for enabling PCI
-> > resources. Since the core code takes care of bridge resources too, we
-> > can also drop the explicit IO and MEMORY enabling for them in the arch
-> > code.
-> > 
-> > A side-effect of this change is that we no longer explicitly enable
-> > devices when running in PCI_PROBE_ONLY mode. This stays closer to the
-> > meaning of the option and prevents us from trying to enable devices
-> > without any assigned resources (the core code refuses to enable
-> > resources without parents).
-> > 
-> > Tested-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> > Tested-by: Jingoo Han <jg1.han@samsung.com>
-> > Signed-off-by: Will Deacon <will.deacon@arm.com>
+On Wed, Feb 05, 2014 at 03:52:43PM +0900, Magnus Damm wrote:
+> PCI: rcar: Driver model and physical address space update
 > 
-> Tested acceptably fine here with crudbus-from-hell.
+> [PATCH 01/04] PCI: rcar: Register each instance independently
+> [PATCH 02/04] PCI: rcar: Break out window size handling
+> [PATCH 03/04] PCI: rcar: Add DMABOUNCE support
+> [PATCH 04/04] PCI: rcar: Enable BOUNCE in case of HIGHMEM
 > 
-> Tested-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> These patches update the pci-rcar-gen2.c driver in various ways
+> including cleanups for driver model interface (1/4), readability
+> update (2/4) and also bounce buffer support (3/4, 4/4). Basically
+> the first two are just cleanups and the rest are fixes.
+> 
+> As it is today without these patches the system memory start address
+> is hard coded at 0x4000000 and the window is fixed at 1GiB. So we
+> have board specific code hidden in the driver which is good to avoid.
+> 
+> With these hard coded board specific constants there are some error cases
+> that are not handled, in particular the issue that only maximum 1GiB of
+> physical address space can be used for bus mastering with a single window.
+> The common case of using ARM CONFIG_VMSPLIT_3G results in no visible issues
+> as long as CONFIG_BOUNCE is used, but other CONFIG_VMSPLIT settings will
+> break due to the hard coded 1GiB window not being enough. It has been
+> verified that reducing the window size to 256MB makes the driver behave
+> the same with VMSPLIT_3G as 1GiB window size and other VMSPLIT settings.
+> 
+> To handle the maximum 1GiB physical address space limitation two types
+> of bounce buffers are added. The ARM specific DMABOUNCE code is in 3/4
+> hooked up to a chunk of local memory that is also handed of as coherent
+> memory to the pci devices hanging off the PCI bridge. The driver makes
+> sure to set the window so the local memory is always included. When the
+> PCI devices are operating and in case memory is used outside the window
+> then the DMABOUNCE buffers kicks in. This makes the driver support all
+> kinds of VMSPLIT settings and window sizes. The BOUNCE code in 4/4 is
+> selected to make sure bounce buffers are used for HIGHMEM.
+> 
+> With these patches this driver can be used with or without CMA and
+> with or without DMA zone. Basically the system wide memory setup is
+> left to the user. If a DMA zone is used then the PCI window will
+> be setup to cover that. Same thing with CMA.
+> 
+> Tested with USB storage using LPAE and various VMSPLIT settings together
+> with renesas git tag renesas-devel-v3.14-rc1-20140204 from kernel.org
+> 
+> Signed-off-by: Magnus Damm <damm@opensource.se>
+> ---
+> 
+>  Written against renesas.git tag renesas-devel-v3.14-rc1-20140204
+> 
+>  drivers/pci/host/Kconfig         |    3 
+>  drivers/pci/host/pci-rcar-gen2.c |  367 +++++++++++++++++++++++++++++++-------
+>  2 files changed, 306 insertions(+), 64 deletions(-)
 
-Damn, I just found a problem with this patch when PCI_PROBE_ONLY is set.
+Simon, if you want to ack these, I'll be happy to merge them for v3.15.
+I'm not really qualified to review them myself.
 
-The problem is that bios32.c won't create a resource hierarchy for the
-firmware-initialised resources, so we have a bunch of orphaned resources
-that we can't pass to pci_enable_resources (since it checks r->parent).
-
-This means that, unless firmware *enables* all of the resources, Linux won't
-be able to enable them. I think this is stronger than simply not
-re-assigning devices like the PCI_PROBE_ONLY flag intends.
-
-I can see two solutions:
-
-  (1) Just drop this patch and stick with the old code (which doesn't check
-      r->parent). The downside is we still don't have any resource
-      hierarchy, so /proc/iomem doesn't contain bus information.
-
-  (2) Walk over the bus claiming the resources that we find. Patch below.
-
-Any thoughts?
-
-Will
-
---->8
-
-commit 802062290eee961362d3090a50cf851412a63314
-Author: Will Deacon <will.deacon@arm.com>
-Date:   Wed Feb 19 23:29:30 2014 +0000
-
-    ARM: bios32: claim firmware-initialised resources when PCI_PROBE_ONLY
-    
-    When initialising a PCI bus with the PCI_PROBE_ONLY flag set, we don't
-    (re-)assign any firmware-initialised resources, leading to an incomplete
-    resource hierarchy and devices with orphaned resources.
-    
-    If we try to enable these orphaned resources using pci_enable_resources,
-    we will get back -EINVAL since a valid ->parent pointer is required.
-    Consequently, pcibios_enable_device doesn't attempt to enable devices
-    when PCI_PROBE_ONLY is set. This has the unfortunate effect of requiring
-    the firmware to *enable* all of the devices!
-    
-    This patch fixes the problem by building up a resource hierarchy from
-    the firmware-initialised resources when PCI_PROBE_ONLY is set.
-    
-    Signed-off-by: Will Deacon <will.deacon@arm.com>
-
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 91f48804e3bb..d65c76a4d7ad 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -514,6 +514,35 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 	}
- }
- 
-+static void pcibios_claim_one_bus(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+	struct pci_bus *child_bus;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		int i;
-+
-+		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+			struct resource *r = &dev->resource[i];
-+
-+			if (r->parent || !r->start || !r->flags)
-+				continue;
-+
-+			pr_debug("PCI: Claiming %s: "
-+				 "Resource %d: %016llx..%016llx [%x]\n",
-+				 pci_name(dev), i,
-+				 (unsigned long long)r->start,
-+				 (unsigned long long)r->end,
-+				 (unsigned int)r->flags);
-+
-+			pci_claim_resource(dev, i);
-+		}
-+	}
-+
-+	list_for_each_entry(child_bus, &bus->children, node)
-+		pcibios_claim_one_bus(child_bus);
-+}
-+
- void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
- {
- 	struct pci_sys_data *sys;
-@@ -541,6 +570,8 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
- 			 * Assign resources.
- 			 */
- 			pci_bus_assign_resources(bus);
-+		} else {
-+			pcibios_claim_one_bus(bus);
- 		}
- 
- 		/*
-@@ -608,9 +639,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-  */
- int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
--	if (pci_has_flag(PCI_PROBE_ONLY))
--		return 0;
--
- 	return pci_enable_resources(dev, mask);
- }
- 
+Bjorn
