@@ -1,138 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 28 Feb 2014 12:50:45 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
- resources.
-Message-ID: <20140228125045.GV1692@e106497-lin.cambridge.arm.com>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
- <5379319.g8IPYmY2Zo@wuerfel>
- <20140227200729.GB7773@obsidianresearch.com>
- <11097076.0C13zaKdYD@wuerfel>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:41482 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752100AbaBLBI4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 20:08:56 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Tom Nguyen <tom.l.nguyen@intel.com>,
+	Kristen Accardi <kristen.c.accardi@intel.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	Guenter Roeck <groeck@juniper.net>
+Subject: RE: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
+Date: Wed, 12 Feb 2014 01:08:50 +0000
+Message-ID: <8a021ad12c5548fe8e79e0208725c14f@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
+ <CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
+ <20131108012352.GE2955@google.com>
+ <CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
+ <CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
+ <CADTPrLRJD0er1kijjm2SEE6wUA9eQaz+OOd67E3MpHLu6k-R6Q@mail.gmail.com>
+ <20131123005102.GA14690@google.com>
+ <a3dc3d613f274e4d993d6a7612f1dde6@BLUPR05MB118.namprd05.prod.outlook.com>
+ <CAErSpo7J8UZpYSaAPavJrR8iOt368expOuF-s_M7x+jW7drnWw@mail.gmail.com>
+ <18997e8c20fb4bdd8a72e4c01b3fd308@BLUPR05MB118.namprd05.prod.outlook.com>
+ <20140212003458.GE21057@google.com>
+In-Reply-To: <20140212003458.GE21057@google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <11097076.0C13zaKdYD@wuerfel>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 08:22:12PM +0000, Arnd Bergmann wrote:
-> On Thursday 27 February 2014 13:07:29 Jason Gunthorpe wrote:
-> > On Thu, Feb 27, 2014 at 08:48:08PM +0100, Arnd Bergmann wrote:
-> > > > It also looks correct for architectures that use the CPU MMIO address
-> > > > as the IO address directly (where IO_SPACE_LIMIT would be 4G)
-> > > 
-> > > Are you aware of any that still do? I thought we had stopped doing
-> > > that.
-> > 
-> > I thought ia64 used to, but it has been a long time since I've touched
-> > one...
-> 
-> They have a different way of doing it now, no idea how it looked in
-> the past:
-> 
-> #define IO_SPACE_LIMIT          0xffffffffffffffffUL
-> 
-> #define MAX_IO_SPACES_BITS              8
-> #define MAX_IO_SPACES                   (1UL << MAX_IO_SPACES_BITS)
-> #define IO_SPACE_BITS                   24
-> #define IO_SPACE_SIZE                   (1UL << IO_SPACE_BITS)
-> 
-> #define IO_SPACE_NR(port)               ((port) >> IO_SPACE_BITS)
-> #define IO_SPACE_BASE(space)            ((space) << IO_SPACE_BITS)
-> #define IO_SPACE_PORT(port)             ((port) & (IO_SPACE_SIZE - 1))
-> 
-> #define IO_SPACE_SPARSE_ENCODING(p)     ((((p) >> 2) << 12) | ((p) & 0xfff))
-> 
-> So their port number is a logical token that contains the I/O space number
-> and a 16MB offset.
-> 
-> Apparently sparc64 uses physical memory addressing for I/O space, the
-> same way they do for memory space, and they just set IO_SPACE_LIMIT to
-> 0xffffffffffffffffUL.
-> 
-> > > > Architectures that use the virtual IO window technique will always
-> > > > require a custom pci_address_to_pio implementation.
-> > > 
-> > > Hmm, at the moment we only call it from of_address_to_resource(),
-> > > which in turn does not get called on PCI devices, and does not
-> > > call pci_address_to_pio for 'simple' platform devices. The only
-> > > case I can think of where it actually matters is when we have
-> > > ISA devices in DT that use an I/O port address in the reg property,
-> > > and that case hopefully won't happen on ARM32 or ARM64.
-> > 
-> > Sure, I ment, after Liviu's patch it will become required since he is
-> > cleverly using it to figure out what the io mapping the bridge driver
-> > setup before calling the helper.
-> 
-> Ok. I was arguing more that we should add this dependency.
-
-I've thought about this last night and I think I was trying to be too clever
-for my own good. As Jason points out, arm64 needs its own version of
-pci_address_to_pio(). I have an idea on how to borrow the powerpc/microblaze
-one and make it useful without the need for pci_controller *hose. It would
-be generic enough for other platforms that use virtual I/O windows can use,
-but I'll start with it being defined for arm64 for discussions in this list.
-
-I'll post v3 shortly.
-
-Best regards,
-Liviu
-
-> 
-> > > > I think the legacy reasons for having all those layers of translation
-> > > > are probably not applicable to ARM64, and it is much simpler without
-> > > > the extra translation step....
-> > > > 
-> > > > Arnd, what do you think?
-> > > 
-> > > Either I don't like it or I misunderstand you ;-)
-> > > 
-> > > Most PCI drivers normally don't call ioport_map or pci_iomap, so
-> > > we can't just do it there. If you are thinking of calling ioport_map
-> > 
-> > Okay, that was one of the 'legacy reasons'. Certainly lots of drivers
-> > do call pci_iomap, but if you think legacy drivers that don't are
-> > important to ARM64 then it makes sense to use the virtual IO window.
-> 
-> I think all uses of I/O space are legacy, but I don't think that
-> drivers doing inb/outb are more obsolete than those doing pci_iomap.
-> It's got more to do with the subsystem requirements, e.g. libata
-> requires the use of pci_iomap.
-> 
-> > > for every PCI device that has an I/O BAR and storing the virtual
-> > > address in the pci_dev resource, I don't see what that gains us
-> > 
-> > Mainly we get to drop the fancy dynamic allocation stuff for the fixed
-> > virtual window, and it gives the option to have a 1:1 relationship
-> > between CPU addresses and PCI BARs.
-> 
-> I don't think the allocation is much of a problem, as long as we
-> can localize it in one function that is shared by everyone.
-> The problems I saw were all about explaining to people how it
-> works, but they really shouldn't have to know.
-> 
-> 
-> 	Arnd
-> 
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+SGVsbG8gQmpvcm4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
+dXgtaG90cGx1Zy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1ob3RwbHVnLQ0K
+PiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBCam9ybiBIZWxnYWFzDQo+IFNl
+bnQ6IFR1ZXNkYXksIEZlYnJ1YXJ5IDExLCAyMDE0IDQ6MzUgUE0NCj4gVG86IFJhamF0IEphaW4N
+Cj4gQ2M6IFJhamF0IEphaW47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4IGhvdHBs
+dWcgbWFpbGluZzsgS2VuamkNCj4gS2FuZXNoaWdlOyBZaWppbmcgV2FuZzsgR3JlZyBLSDsgVG9t
+IE5ndXllbjsgS3Jpc3RlbiBBY2NhcmRpOyBSYWphdA0KPiBKYWluOyBHdWVudGVyIFJvZWNrDQo+
+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIHBjaWVocDogQWNrbm93bGVkZ2UgdGhlIHNwdXJpb3VzICJj
+bWQgY29tcGxldGVkIg0KPiBldmVudC4NCj4gDQo+IE9uIE1vbiwgTm92IDI1LCAyMDEzIGF0IDA3
+OjAzOjExUE0gKzAwMDAsIFJhamF0IEphaW4gd3JvdGU6DQo+ID4gSGVsbG8sDQo+ID4NCj4gPiA+
+ID4gT24gYSBkaWZmZXJlbnQgbm90ZSwgSSBmZWVsIHRoZXJlIGlzIHN0aWxsIGEgbmVlZCB0byBh
+cHBseSBteQ0KPiA+ID4gPiBvcmlnaW5hbA0KPiA+ID4gcGF0Y2guIFRoZXJlIGlzIHN0aWxsIGFu
+IG9wZW4gcHJvYmxlbSBpbiBjYXNlIG9mIHNwdXJpb3VzIGludGVycnVwdHMNCj4gPiA+IChvciBp
+biBhbnkgY2FzZSB3aGVyZSB0aGUgY29uZGl0aW9uICJpZiAoc2xvdF9zdGF0dXMgJg0KPiBQQ0lf
+RVhQX1NMVFNUQV9DQykiDQo+ID4gPiBiZWNvbWVzIHRydWUgaW4gcGNpZV93cml0ZV9jbWQoKSku
+IFRoYXQgaXMgYmVjYXVzZSBvbmNlIHRoYXQNCj4gPiA+IGhhcHBlbnMsIHdlIG5ldmVyIGNsZWFy
+IHRoYXQgaW50ZXJydXB0LCBhbmQgbm8gZnVydGhlciBob3RwbHVnDQo+ID4gPiBpbnRlcnJ1cHRz
+IHNoYWxsIGJlIHJlY2VpdmVkIHVubGVzcyB3ZSBkbyB0aGF0Lg0KPiA+ID4NCj4gPiA+IEkgYWdy
+ZWUgdGhpcyBpcyBhbiBpc3N1ZSBhbmQgd2Ugc2hvdWxkIGFkZHJlc3MgaXQgc29tZWhvdy4gIE15
+DQo+ID4gPiBoZXNpdGF0aW9uIGlzIGp1c3QgdGhhdCBJJ2QgcHJlZmVyIHRvIGRvIHNvbWUgbW9y
+ZSBhZ2dyZXNzaXZlDQo+ID4gPiByZXN0cnVjdHVyaW5nIHJhdGhlciB0aGFuIGFwcGx5IGEgcG9p
+bnQgZml4LiAgRm9yIGV4YW1wbGU6DQo+ID4NCj4gPiBPSywgSSdsbCBhdHRlbXB0IHRvIGZpeCBp
+dCB0aGF0IHdheSB3aGVuIEkgZ2V0IHRpbWUuDQo+ID4NCj4gPiA+DQo+ID4gPiAtIFdlIGN1cnJl
+bnRseSBsb29rIGF0IFBDSV9FWFBfU0xUU1RBX0NDIGluIHBjaWVfaXNyKCksDQo+ID4gPiBwY2ll
+X3BvbGxfY21kKCksIGFuZCBwY2llX3dyaXRlX2NtZCgpLiAgSSB0aGluayBpdCB3b3VsZCBiZSBi
+ZXR0ZXINCj4gPiA+IHRvIGxvb2sgYXQgaXQgb25seSBpbiBwY2llX2lzcigpLg0KPiA+ID4NCj4g
+PiA+IC0gSSBkb24ndCB0aGluayBwY2llX3BvbGxfY21kKCkgc2hvdWxkIGV4aXN0IGF0IGFsbDsg
+d2Ugc2hvdWxkIHBvbGwNCj4gPiA+IGJ5IGNhbGxpbmcgcGNpZV9pc3IoKSBpbnN0ZWFkLg0KPiA+
+ID4NCj4gPiA+IC0gV2UgbmVlZCBwY2llX3dyaXRlX2NtZCgpLCBidXQgSSB0aGluayB0aGUgd2F5
+IGl0IHdhaXRzIGlzDQo+IGJhY2t3YXJkcy4NCj4gPiA+ICBDdXJyZW50bHkgd2UgaXNzdWUgdGhl
+IGNvbW1hbmQsIHRoZW4gd2FpdCBmb3IgaXQgdG8gY29tcGxldGUuICBJDQo+ID4gPiB0aGluayB3
+ZSBzaG91bGQgaXNzdWUgdGhlIGNvbW1hbmQsIG5vdGUgdGhlIGN1cnJlbnQgdGltZSwgYW5kIHJl
+dHVybg0KPiA+ID4gd2l0aG91dCB3YWl0aW5nLiAgVGhlICpuZXh0KiB0aW1lIHdlIG5lZWQgdG8g
+aXNzdWUgYSBjb21tYW5kLCB3ZSBjYW4NCj4gPiA+IHdhaXQgZm9yIGNvbXBsZXRpb24gb2YgdGhl
+IHByZXZpb3VzIG9uZSAob3IgdGltZW91dCkgaWYgbmVjZXNzYXJ5Lg0KPiA+ID4NCj4gPiA+IEJ1
+dCBtYXliZSB3ZSBuZWVkIHRoZSBwb2ludCBmaXggaW4gdGhlIGludGVyaW0sIGVzcGVjaWFsbHkg
+aWYNCj4gPiA+IGFueWJvZHkgY2FuIGFjdHVhbGx5IHByb2R1Y2UgdGhlIHNjZW5hcmlvIHlvdSBt
+ZW50aW9uLg0KPiA+DQo+ID4gT2suDQo+IA0KPiBUaGlzIHBhdGNoIGlzIHN0aWxsIGluIHBhdGNo
+d29yaywgYnV0IEkndmUgbG9zdCB0cmFjayBvZiB3aGVyZSB3ZSBhcmUuDQo+IERpZCB5b3UgcmVz
+b2x2ZSB0aGlzIGluIHRoZSBzZXJpZXMgdGhhdCBJIGp1c3QgYXBwbGllZCwgb3IgaXMgaXQgc3Rp
+bGwNCj4gYW4gb3V0c3RhbmRpbmcgaXNzdWU/DQoNCk5vLCBJIGRpZCBub3Qgc29sdmUgaXQuIEl0
+IGlzIHN0aWxsIGFuIG91dHN0YW5kaW5nIGlzc3VlLiBTbyBmYXIgSSBhbSB1c2luZyB5b3VyIHBh
+dGNoIHRvIG92ZXJjb21lIHRoaXM6DQoNCmh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvaG90
+cGx1Zy9tc2cwNTgzMC5odG1sDQoNCkknbGwganVzdCBhdHRlbXB0IHRvIGNvbmNsdWRlIHRoZSBz
+dGF0dXMgb24gdGhpcyBpc3N1ZSBzbyB0aGF0IHlvdSBjYW4gbWFrZSB0aGUgZGVjaXNpb24gb24g
+dGhlIGNvdXJzZSBvZiBhY3Rpb24uIElNSE8gdGhlcmUgYXJlIDIgaW5kZXBlbmRlbnQgaXNzdWVz
+IHRoYXQgd2UgZGlzY3Vzc2VkIGluIHRoaXMgdGhyZWFkOg0KCQ0KMSkgUENJZSBjb21wbGlhbnQg
+SFcgKHRoYXQgZ2VuZXJhdGVzIGNtZCBjb21wbGV0ZWQgaW50ZXJydXB0cyBhdCBldmVyeSB3cml0
+ZSBvZiBTbG90X2N0cmwgcmVnaXN0ZXIpIGJlaW5nIHBlbmFsaXplZCB3aXRoIDEgc2Vjb25kIGRl
+bGF5IGR1cmluZyB0aGUgYm9vdCB1cC4gWW91ciBwYXRjaCBzb2x2ZXMgdGhpcy4NCg0KMikgSWYg
+dGhlcmUgaXMgYSBnZW51aW5lIHNwdXJpb3VzIGludGVycnVwdCwgaXQgZG9lcyBub3QgZ2V0IGFj
+a25vd2xlZGdlZC4gSSBoYWQgb3JpZ2luYWxseSBwb3N0ZWQgYSBwYXRjaCBmb3IgVEhJUyBwcm9i
+bGVtLg0KaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9ob3RwbHVnL21zZzA1ODE1Lmh0bWwN
+Cg0KWW91IGhhZCBpbmRpY2F0ZWQgdGhhdCB5b3Ugd291bGQgcmF0aGVyIHdhbnQgYSBiaWdnZXIg
+cmVzdHJ1Y3R1cmluZyBvZiB0aGUgZHJpdmVyIHRvIHNvbHZlICgyKS4NCg0KTXkgb2JzZXJ2YXRp
+b246IE1ZIHByb2JsZW0gKGluIG15IHNldHVwKSBpcyBub3Qgc2VlbiBpZiBJIHVzZSBlaXRoZXIg
+b2YgdGhlIHBhdGNoZXMgKHlvdXJzIG9yIG1pbmUpLg0KDQpNeSBvcGluaW9uOiBJIHRoaW5rIG15
+IHBhdGNoIHNvbHZlcyAoMikgYnV0IG1pZ2h0IG5vdCBzb2x2ZSAoMSkgZm9yIGFsbCBjb3JuZXIg
+Y2FzZXMuIEFsc28geW91ciBwYXRjaCBzb2x2ZXMgKDEpIGJ1dCBtYXkgbm90IHNvbHZlICgyKSBm
+b3IgYWxsIGNvcm5lciBjYXNlcyAtVGh1cyB3ZSBzaG91bGQgcHJvYmFibHkgc29sdmUgYm90aCBv
+ZiB0aGVzZSBwcm9ibGVtcyBpbmRpdmlkdWFsbHkuDQoNClRoYW5rcywNCg0KUmFqYXQNCg0KDQoN
+CiANCg0KDQo+IA0KPiBCam9ybg0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlz
+dDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtaG90cGx1ZyINCj4gaW4gdGhlIGJv
+ZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRv
+bW8NCj4gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
+DQo+IA0KDQo=
 
