@@ -1,66 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52072 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932849AbaBUQ7c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Feb 2014 11:59:32 -0500
-Date: Fri, 21 Feb 2014 18:01:28 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: linux-kernel@vger.kernel.org,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	virtio-dev@lists.oasis-open.org,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2] virtio: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140221170128.GK17353@dhcp-26-207.brq.redhat.com>
-References: <1392804931-30671-9-git-send-email-agordeev@redhat.com>
- <87eh2yblsk.fsf@rustcorp.com.au>
- <20140221165946.GJ17353@dhcp-26-207.brq.redhat.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:49254 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751875AbaBLAnQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 19:43:16 -0500
+Received: by mail-ig0-f178.google.com with SMTP id uq10so9994640igb.5
+        for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2014 16:43:16 -0800 (PST)
+Date: Tue, 11 Feb 2014 17:43:14 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] pci: fix kernel-doc notation warning
+Message-ID: <20140212004314.GG21057@google.com>
+References: <52EF06C0.1050104@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140221165946.GJ17353@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <52EF06C0.1050104@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Sun, Feb 02, 2014 at 07:02:24PM -0800, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@infradead.org>
+> 
+> Fix a "blank" kernel-doc line to have an asterisk instead of
+> being totally empty.  This fixes the kernel-doc warning:
+> 
+> Warning(drivers/pci/msi.c:962): bad line: 
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: virtio-dev@lists.oasis-open.org
-Cc: virtualization@lists.linux-foundation.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/virtio/virtio_pci.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+I applied this fix already (but it's not in -next yet):
 
-diff --git a/drivers/virtio/virtio_pci.c b/drivers/virtio/virtio_pci.c
-index a416f9b..101db3f 100644
---- a/drivers/virtio/virtio_pci.c
-+++ b/drivers/virtio/virtio_pci.c
-@@ -333,10 +333,8 @@ static int vp_request_msix_vectors(struct virtio_device *vdev, int nvectors,
- 	for (i = 0; i < nvectors; ++i)
- 		vp_dev->msix_entries[i].entry = i;
- 
--	/* pci_enable_msix returns positive if we can't get this many. */
--	err = pci_enable_msix(vp_dev->pci_dev, vp_dev->msix_entries, nvectors);
--	if (err > 0)
--		err = -ENOSPC;
-+	err = pci_enable_msix_exact(vp_dev->pci_dev,
-+				    vp_dev->msix_entries, nvectors);
- 	if (err)
- 		goto error;
- 	vp_dev->msix_enabled = 1;
--- 
-1.7.7.6
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/msi&id=39af663b5fd25c9dd427e12e106763b6b4f9572c
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Thanks!
+
+Bjorn
+
+> ---
+>  drivers/pci/msi.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- lnx-314-rc1.orig/drivers/pci/msi.c
+> +++ lnx-314-rc1/drivers/pci/msi.c
+> @@ -959,7 +959,7 @@ EXPORT_SYMBOL(pci_disable_msi);
+>  /**
+>   * pci_msix_vec_count - return the number of device's MSI-X table entries
+>   * @dev: pointer to the pci_dev data structure of MSI-X device function
+> -
+> + *
+>   * This function returns the number of device's MSI-X table entries and
+>   * therefore the number of MSI-X vectors device is capable of sending.
+>   * It returns a negative errno if the device is not capable of sending MSI-X
