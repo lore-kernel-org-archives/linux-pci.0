@@ -1,62 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:42018 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753123AbaBJRey (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Feb 2014 12:34:54 -0500
-Date: Mon, 10 Feb 2014 10:34:50 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Will Deacon <will.deacon@arm.com>,
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:50879 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753875AbaBLSWC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 13:22:02 -0500
+Date: Wed, 12 Feb 2014 18:21:28 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
+	"mohit.kumar@st.com" <mohit.kumar@st.com>
 Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Message-ID: <20140210173450.GA5554@obsidianresearch.com>
+Message-ID: <20140212182128.GL29132@mudshark.cambridge.arm.com>
 References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <3460536.Sh23gjDa6X@wuerfel>
+ <20140205190947.GA22297@mudshark.cambridge.arm.com>
  <3724624.kd9jZNUiTF@wuerfel>
  <20140207114607.GE5976@mudshark.cambridge.arm.com>
- <201402092130.25615.arnd@arndb.de>
+ <20140207175410.GC16263@obsidianresearch.com>
+ <20140212181015.GJ29132@mudshark.cambridge.arm.com>
+ <20140212181913.GA16428@obsidianresearch.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201402092130.25615.arnd@arndb.de>
+In-Reply-To: <20140212181913.GA16428@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 09, 2014 at 09:30:25PM +0100, Arnd Bergmann wrote:
-
-> > bash-4.2# cat /proc/iomem
-> > 40000000-40ffffff : /pci
-> > 41000400-410005ff : virtio-pci
-> > 41000c00-41000dff : virtio-pci
-> > 41001400-410015ff : virtio-pci
-> > 41001c00-41001dff : virtio-pci
-> > 80000000-93ffffff : System RAM
-> >   80008000-8053df0b : Kernel code
-> >   80570000-805c07fb : Kernel data
+On Wed, Feb 12, 2014 at 06:19:13PM +0000, Jason Gunthorpe wrote:
+> On Wed, Feb 12, 2014 at 06:10:15PM +0000, Will Deacon wrote:
 > 
-> You should normally see a parent resource for the PCI bus and the virtio-pci
-> resources under that. For some reason, neither of the two appears to have
-> been registered correctly.
+> > > AFAIK, the job is fairly simple, when you call pci_add_resource_offset
+> > > for memory compute the offset from 
+> > >   of_pci_range.pci_addr - of_pci_range.cpu_addr
+> > > 
+> > > (or is it the other way around ?)
+> > 
+> > I think it's the other way round: bus = cpu - offset, then Arnd's example of
+> > PCI bus 0 works out as: 0 = cpu - pci->mem_start.
+> 
+> That looks right to me
+> 
+> > I added that to my driver, but I get some weird looking bus addresses in
+> > dmesg:
+> > 
+> > [    0.307585] pci-arm-generic 40000000.pci: PCI host bridge to bus 0000:00
+> > [    0.307601] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> > [    0.307615] pci_bus 0000:00: root bus resource [mem 0x00000000-0x3effffff] (bus address [0xffffffffbf000000-0xfffffffffdffffff])
+> > 
+> > Looking at drivers/pci/probe.c, it seems to think that res->start - offset
+> > gives a bus address, which implies that the resources are indeed *CPU*
+> > addresses.
+> > 
+> > Are you sure pci_add_resource_offset wants bus addresses?
+> 
+> Sorry, I wasn't clear: It accepts a cpu address in the struct
+> resource and an offset to convert back to a bus address.
+> 
+> You should compute 0 as the offset in the normal case, ie
+> of_pci_range.pci_addr and of_pci_range.cpu_addr should be identical,
+> which depends on the DT ranges being correct..
 
-I noticed this on mvebu as well..
+Aha! That explains all of the confusion. I'll remove my homebrew
+resource translation code then :)
 
-3.13 w/ mvebu driver:
+Thanks,
 
-e0001000-e0001fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/fpga_sysmon@1000
-e0006000-e0006fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/qdr2p@6000
-
-3.10 w/ old kirkwood driver:
-
-e0000000-e7ffffff : PCIe 0 MEM
-  e0000000-e001ffff : 0000:00:01.0
-    e0001000-e0001fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/fpga_sysmon@1000
-    e0006000-e0006fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/qdr2p@6000
-
-The latter is obviously correct and matches x86. I'm not sure where
-the new style host drivers are going wrong, even the resource that
-should be added by the PCI core itself for the BAR is missing..
-
-Jason
+Will
