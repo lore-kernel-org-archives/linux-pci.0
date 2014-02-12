@@ -1,89 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Robert Moore <robert.moore@intel.com>
-Subject: [PATCH v3 0/7] ACPI / hotplug / PCI: Consolidation of ACPIPHP with ACPI core device hotplug
-Date: Sun, 02 Feb 2014 18:11:19 +0100
-Message-ID: <5157096.hCmU2aoKCT@vostro.rjw.lan>
-In-Reply-To: <1519631.YS65c9Af2C@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1693151.2qrLZHyp0o@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:48207 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751492AbaBLQTi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 11:19:38 -0500
+Date: Wed, 12 Feb 2014 16:18:56 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"arnd@arndb.de" <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>, linux@arm.linux.org.uk
+Subject: Re: [PATCH 1/3] ARM: bios32: use pci_enable_resource to enable PCI
+ resources
+Message-ID: <20140212161855.GG29132@mudshark.cambridge.arm.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <1391532784-1953-2-git-send-email-will.deacon@arm.com>
+ <20140212010650.GI21057@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140212010650.GI21057@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, February 02, 2014 01:52:26 AM Rafael J. Wysocki wrote:
-> On Wednesday, January 29, 2014 12:57:06 AM Rafael J. Wysocki wrote:
-> > On Tuesday, January 28, 2014 11:10:30 PM Rafael J. Wysocki wrote:
-> > > Hi All,
-> > > 
-> > > It looks like there's time for more adventurous stuff. :-)
-> > > 
-> > > The following series is on top of the one I sent on Sunday:
-> > > 
-> > > https://lkml.org/lkml/2014/1/26/191
-> > > 
-> > > The final outcome of the patches below is that all ACPI hotplug notifications
-> > > for PCI devices and for core system things like CPU, memory, PCI roots etc.,
-> > > will be dispatched from acpi_bus_notify() and it is not necessary to install a
-> > > separate hotplug notify handler for each device any more.
-> > > 
-> > > [1/5] Attach ACPIPHP hotplug contexts to struct acpi_device objects.
-> > > [2/5] Introduce wrappers for installing and removing hotplug notify handlers
-> > >       (those wrappers go away later on, but they are useful for separating
-> > >        changes).
-> > > [3/5] Consolidate ACPI hotplug signaling for PCI and ACPI core.
-> > > [4/5] Simplify notify handle registration wrapper.
-> > > [5/5] Dispatch ACPI hotplug notifications for "core" devices and PCI from acpi_bus_notify().
+Hi Bjorn,
+
+[Adding rmk]
+
+On Wed, Feb 12, 2014 at 01:06:50AM +0000, Bjorn Helgaas wrote:
+> On Tue, Feb 04, 2014 at 04:53:02PM +0000, Will Deacon wrote:
+> > This patch moves bios32 over to using the generic code for enabling PCI
+> > resources. All that's left to take care of is the case of PCI bridges,
+> > which need to be enabled for both IO and MEMORY, regardless of the
+> > resource types.
 > > 
-> > Unfortunately, I realized that patches [3-5/5] were buggy.  The bugs were
-> > kind of subtle and might not be easy to reproduce, but they were bugs anyway. :-)
+> > A side-effect of this change is that we no longer explicitly enable
+> > devices when running in PCI_PROBE_ONLY mode. This stays closer to the
+> > meaning of the option and prevents us from trying to enable devices
+> > without any assigned resources (the core code refuses to enable
+> > resources without parents).
+> 
+> Heh, I've been looking at this, too :)  I have a similar patch for ARM and
+> other architectures with their own versions of pcibios_enable_device().
+> 
+> Several of them (arm m68k tile tegra unicore32) have this special code that
+> enables IO and MEMORY for bridges unconditionally.  But from a PCI
+> perspective, I don't know why we should do this unconditionally.  If a
+> bridge doesn't have an enabled MEM window or MEM BAR, I don't think we
+> should have to enable PCI_COMMAND_MEMORY for it.
+> 
+> The architectures that do this only check for valid MEM BARs, i.e., they
+> only look at resources 0-5, and they don't look at the window resources.
+
+Ok, so they would miss the bridge resources, which would explain the
+additional step to enable both IO and MEM unconditionally.
+
+> The architectures that don't enable IO and MEMORY for bridges
+> unconditionally check *all* the resources up to PCI_NUM_RESOURCES, which
+> includes the BARs, bridge windows, and any IOV resources.
+> 
+> The generic pci_enable_resources() does check all the resources, so I
+> *think* it should be safe for all architectures to use that and just drop
+> the check for bridges.  What do you think?
+
+Right, your explanation certainly makes sense to me: if
+pci_enable_resources() enables bridge resources, then there's no reason for
+the extra logic in the caller.
+
+The problem is, I don't have a platform to test our theory. I've added
+Russell, since he might have a relevant ARM platform where we could test our
+change.
+
+Will
+
+> > diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> > index 317da88ae65b..9f3c76638689 100644
+> > --- a/arch/arm/kernel/bios32.c
+> > +++ b/arch/arm/kernel/bios32.c
+> > @@ -608,40 +608,25 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> >   */
+> >  int pcibios_enable_device(struct pci_dev *dev, int mask)
+> >  {
+> > -	u16 cmd, old_cmd;
+> > -	int idx;
+> > -	struct resource *r;
+> > +	int err;
+> > +	u16 cmd;
+> >  
+> > -	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> > -	old_cmd = cmd;
+> > -	for (idx = 0; idx < 6; idx++) {
+> > -		/* Only set up the requested stuff */
+> > -		if (!(mask & (1 << idx)))
+> > -			continue;
+> > +	if (pci_has_flag(PCI_PROBE_ONLY))
+> > +		return 0;
+> >  
+> > -		r = dev->resource + idx;
+> > -		if (!r->start && r->end) {
+> > -			printk(KERN_ERR "PCI: Device %s not available because"
+> > -			       " of resource collisions\n", pci_name(dev));
+> > -			return -EINVAL;
+> > -		}
+> > -		if (r->flags & IORESOURCE_IO)
+> > -			cmd |= PCI_COMMAND_IO;
+> > -		if (r->flags & IORESOURCE_MEM)
+> > -			cmd |= PCI_COMMAND_MEMORY;
+> > -	}
+> > +	err = pci_enable_resources(dev, mask);
+> > +	if (err)
+> > +		return err;
+> >  
+> >  	/*
+> >  	 * Bridges (eg, cardbus bridges) need to be fully enabled
+> >  	 */
+> > -	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
+> > +	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE) {
+> > +		pci_read_config_word(dev, PCI_COMMAND, &cmd);
+> >  		cmd |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
+> > -
+> > -	if (cmd != old_cmd) {
+> > -		printk("PCI: enabling device %s (%04x -> %04x)\n",
+> > -		       pci_name(dev), old_cmd, cmd);
+> >  		pci_write_config_word(dev, PCI_COMMAND, cmd);
+> >  	}
+> > +
+> >  	return 0;
+> >  }
+> >  
+> > -- 
+> > 1.8.2.2
 > > 
-> > A respin of the whole series follows.
 > 
-> After the Mika's testing it turned out that they were more buggy than I had
-> though.  Oh well.
-> 
-> The following patchset is a reworked version of the previous one.  Functionality-wise
-> the final result should be very similar, but not exactly the same.
-> 
-> [1/6] Fix a theoretical race condition in acpi_hotplug_notify_cb().
-> [2/6] Move the hotplug context lock definition to the ACPI core (from ACPIPHP).
-> [3/6] Consolidate ACPI hotplug signaling for PCI and ACPI core (this is a combination
->       of patches [1-3/5] from the previous series).
-> [4/6] Rework the handling of eject requests in the ACPI core.
-> [5/6] Simplify a routine for installing hotplug notify handlers.
-> [6/6] Dispatch ACPI hotplug notifications for "core" devices and PCI from acpi_bus_notify().
-> 
-> This is on top of https://lkml.org/lkml/2014/2/1/123 which in turn is on top of
-> the current mainline.
-> 
-> For the adventurous all this stuff is on the test-next branch of linux-pm.git.
-
-As stated in the message at http://marc.info/?l=linux-acpi&m=139135963030012&w=4 ,
-patch [1/6] was actaully wrong and the whole patchset had to be reworked for that
-reason.  What follows is an entirely new version:
-
-[1/7] Add a new function to ACPICA allowing a callback to be executed under the
-      namespace mutex after calling acpi_ns_get_attached_data().
-
-[2/7] Use the new ACPICA's function to fix a couple of potential races related
-      to ACPI notifies.
-
-[3/7] Same as [2/6] above.
-[4/7] Same as [3/6] above, rebased.
-[5/7] Same as [4/6] above.
-[6/7] Same as [5/6] above.
-[7/7] Dispatch ACPI hotplug notifications for "core" devices and PCI from
-      acpi_bus_notify().  This actually is different from [6/6] above, although
-      it serves the same purpose.
-
-Thanks!
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
