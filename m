@@ -1,62 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Robert Moore <robert.moore@intel.com>
-Subject: Re: [PATCH v3 0/7] ACPI / hotplug / PCI: Consolidation of ACPIPHP with ACPI core device hotplug
-Date: Mon, 03 Feb 2014 22:51:09 +0100
-Message-ID: <3208910.EcIUVqxZdQ@vostro.rjw.lan>
-In-Reply-To: <20140203104511.GR18029@intel.com>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <5157096.hCmU2aoKCT@vostro.rjw.lan> <20140203104511.GR18029@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:52824 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752537AbaBLUQr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 15:16:47 -0500
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
+Subject: [PATCH v2 0/3] ARM: PCI: implement generic PCI host controller
+Date: Wed, 12 Feb 2014 20:16:08 +0000
+Message-Id: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 03, 2014 12:45:11 PM Mika Westerberg wrote:
-> On Sun, Feb 02, 2014 at 06:11:19PM +0100, Rafael J. Wysocki wrote:
-> > As stated in the message at http://marc.info/?l=linux-acpi&m=139135963030012&w=4 ,
-> > patch [1/6] was actaully wrong and the whole patchset had to be reworked for that
-> > reason.  What follows is an entirely new version:
-> > 
-> > [1/7] Add a new function to ACPICA allowing a callback to be executed under the
-> >       namespace mutex after calling acpi_ns_get_attached_data().
-> > 
-> > [2/7] Use the new ACPICA's function to fix a couple of potential races related
-> >       to ACPI notifies.
-> > 
-> > [3/7] Same as [2/6] above.
-> > [4/7] Same as [3/6] above, rebased.
-> > [5/7] Same as [4/6] above.
-> > [6/7] Same as [5/6] above.
-> > [7/7] Dispatch ACPI hotplug notifications for "core" devices and PCI from
-> >       acpi_bus_notify().  This actually is different from [6/6] above, although
-> >       it serves the same purpose.
-> > 
-> 
-> On Intel NUC and DZ77RE-75K,
-> 
-> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Hello again,
 
-Thanks a lot for testing!
+This is version 2 of the patches I originally posted here:
 
-In the meantime, though, I found two more race conditions in ACPIPHP related to
-races with sysfs-triggered device remove.  I have patches to fix them, but then
-I had to rebase this series (and the ACPIPHP one this is based on) on top of
-those fixes.
+  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/229679.html
 
-I'm going to resend the two patchsets as one series including the fixes
-mentioned above.  I tried to avoid sending out a series of 20+ patches, because
-then it's almost guaranteed that no one will look at them unless they happen to
-break things in testing, but I guess I have no choice but to do that at this
-point.
+Changes since v1 include:
 
-Thanks!
+  - Complete rename of files, comments and compatible strings to remove
+    references to a `virtual' host controller
+
+  - Support for ECAM (depending on matched compatible string)
+
+  - Support for multiple mem resources
+
+  - Correct use of resource offsets (I think...)
+
+  - Removed explicit bridge enabling from bios32.c after discussion with
+    Bjorn (pending testing/feedback from rmk)
+
+Like v1, I continue to support only a single controller and therefore a
+single I/O space. I'm not sure how to represent multiple controllers in the
+device-tree without inventing some horrible hacks, so any ideas in this area
+would be much appreciated.
+
+I still need to take the step of moving parts of this into a library, but
+I'd like to make sure the code is correct first. Tested on TC2 running KVM
+with kvmtool and virtio-pci.
+
+All feedback welcome (and thanks to Jason and Arnd for their comments on v1),
+
+Will
+
+
+Will Deacon (3):
+  ARM: mach-virt: allow PCI support to be selected
+  ARM: bios32: use pci_enable_resource to enable PCI resources
+  PCI: ARM: add support for generic PCI host controller
+
+ .../devicetree/bindings/pci/arm-generic-pci.txt    |  51 ++++
+ arch/arm/kernel/bios32.c                           |  37 +--
+ arch/arm/mach-virt/Kconfig                         |   1 +
+ drivers/pci/host/Kconfig                           |   7 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-arm-generic.c                 | 318 +++++++++++++++++++++
+ 6 files changed, 381 insertions(+), 34 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/arm-generic-pci.txt
+ create mode 100644 drivers/pci/host/pci-arm-generic.c
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.2.2
+
