@@ -1,140 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:33286 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750813AbaBZRsD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 12:48:03 -0500
-Date: Wed, 26 Feb 2014 17:46:59 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v4] PCI: ARM: add support for generic PCI host controller
-Message-ID: <20140226174659.GF12882@mudshark.cambridge.arm.com>
-References: <1393268359-17224-1-git-send-email-will.deacon@arm.com>
- <1721648.K4nYY7eS55@wuerfel>
- <20140225180111.GF23136@mudshark.cambridge.arm.com>
- <201402252330.34236.arnd@arndb.de>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:21463 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752694AbaBLCxZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 21:53:25 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH part1 v6 7/7] PCI: pciehp: Don't enable/disable slot on resume unless status changed
+Date: Wed, 12 Feb 2014 10:52:53 +0800
+Message-ID: <1392173573-59844-8-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
+References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201402252330.34236.arnd@arndb.de>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+Currently pciehp_resume() always enables the slot if it is occupied.  But
+often the slot was already occupied before the suspend, so we complain like
+this:
 
-On Tue, Feb 25, 2014 at 10:30:33PM +0000, Arnd Bergmann wrote:
-> On Tuesday 25 February 2014, Will Deacon wrote:
-> > I need the alignment code so I can handle being passed a CPU physical
-> > address which isn't 64K aligned. In this case, pci_ioremap_io needs a 64K
-> > aligned address so that the __io macro does the right thing.
-> 
-> I still don't see why pci_ioremap_io needs 64K alignment. For all I can tell,
-> it just needs a page-aligned address.
+    pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
+    pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
 
-I misread __io as an '|' rather than a '+'. You're right, we just need page
-alignment for the mapping.
+This patch only enables the slot if it was empty before the suspend and is
+now occupied, i.e., a card was inserted while suspended.
 
-> > For example, I can tell kvmtool to place I/O space at CPU physical 0x16000,
-> > bus address 0x6000 (so ports 0x0-0x5fff are unavailable). In that case, I
-> > still need to map those lower ports for the __io macro to offset into the
-> > window correctly.
->  
-> I don't think so. pci_ioremap_io will still try to map 64K of address space,
-> but you can map 0x16000-0x25fff to PCI_IO_VIRT_BASE. The io_offset in
-> that case will be negative (-0x6000).
+Similarly, we only disable the slot if a card was removed while suspended.
+If it was already empty before the suspend, we don't need to do anything.
 
-Yes, and that means that all this rounding is unnecessary; I can just fail
-addresses that aren't page-aligned (which is much more reasonable).
+[bhelgaas: changelog]
+Tested-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Oliver Neukum <oneukum@suse.de>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ drivers/pci/hotplug/pciehp_core.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-> > 	of_pci_range_to_resource(range, dev->of_node, res);
-> > 	res->start = window + range->pci_addr;
-> > 	res->end = res->start + range->size - 1;
-> > 	*offset = window - range->pci_addr;
-> > 	return 0;
-> > }
-> 
-> The offset is good now, but the start is not: res->start refers to
-> the linux I/O space and should just be 'window' here. Adding up
-> window and pci_addr makes no sense. Think of the case where you
-> have two host bridges, one using bus address 0x0-0xffff and the other
-> one using 0x10000-0x1ffff. You really want the first one to
-> have res->start=0 and the second one res->start=0x10000, and
-> using offset=0. Instead the second one get start=0x20000,
-> which is wrong in both CPU and bus space.
-
-Aha, so res->start is the offset into our virtual I/O space at which the
-window starts? That's what I've been getting wrong -- I thought res->start
-was a PCI bus address for some reason.
-
-> The round_down() also still gets you into trouble here, because you
-> don't adjust the start or the size.
-
-I'll just get rid of the rounding.
-
-> > If I do:
-> > 
-> > 	*offset = window;
-> > 
-> > then things work as expected (this is all referring back to the kvmtool example
-> > I mentioned earlier in this mail).
-> 
-> Yes, but only only because you have two bugs that cancel each other out
-> to some degree. It only works for the first bus though, as explained
-> above: if offset is >0, the Linux I/O port number that gets assigned
-> in the resource is no longer the one that maps to the one in your
-> virtual address space pointing to the right physical address.
-
-Ok, so taking all this on board I end up with the diff below (against v4).
-It seems to work well with my kvmtool setup:
-
-  pci_bus 0000:00: root bus resource [io  0x0000-0x9fff] (bus address [0x6000-0xffff])
-
-Will
-
---->8
-
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 71b0960772ec..b761f3e64a6a 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -133,30 +133,25 @@ static int gen_pci_calc_io_offset(struct device *dev,
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 53b58de..551137f 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -317,6 +317,7 @@ static int pciehp_resume (struct pcie_device *dev)
  {
-        static atomic_t wins = ATOMIC_INIT(0);
-        int err, idx, max_win;
--       unsigned int io_offset;
-+       unsigned int window;
+ 	struct controller *ctrl;
+ 	struct slot *slot;
++	struct pci_bus *pbus = dev->port->subordinate;
+ 	u8 status;
  
--       /* Ensure the CPU physical address is aligned to a 64K boundary */
--       range->size += range->cpu_addr & (SZ_64K - 1);
--       range->cpu_addr = round_down(range->cpu_addr, SZ_64K);
--       range->pci_addr = round_down(range->pci_addr, SZ_64K);
--
--       if (range->size > SZ_64K)
--               return -E2BIG;
-+       if (!PAGE_ALIGNED(range->cpu_addr))
-+               return -EINVAL;
+ 	ctrl = get_service_data(dev);
+@@ -328,10 +329,13 @@ static int pciehp_resume (struct pcie_device *dev)
  
--       max_win = IO_SPACE_LIMIT + 1 / SZ_64K;
-+       max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
-        idx = atomic_inc_return(&wins);
-        if (idx >= max_win)
-                return -ENOSPC;
- 
--       io_offset = (idx - 1) * SZ_64K;
--       err = pci_ioremap_io(io_offset, range->cpu_addr);
-+       window = (idx - 1) * SZ_64K;
-+       err = pci_ioremap_io(window, range->cpu_addr);
-        if (err)
-                return err;
- 
-        of_pci_range_to_resource(range, dev->of_node, res);
--       res->start = io_offset + range->pci_addr;
-+       res->start = window;
-        res->end = res->start + range->size - 1;
--       *offset = io_offset;
-+       *offset = window - range->pci_addr;
-        return 0;
+ 	/* Check if slot is occupied */
+ 	pciehp_get_adapter_status(slot, &status);
+-	if (status)
+-		pciehp_enable_slot(slot);
+-	else
++	if (status) {
++		if (list_empty(&pbus->devices))
++			pciehp_enable_slot(slot);
++	} else if (!list_empty(&pbus->devices)) {
+ 		pciehp_disable_slot(slot);
++	}
++
+ 	return 0;
  }
+ #endif /* PM */
+-- 
+1.7.1
+
+
