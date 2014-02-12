@@ -1,71 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65518 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755196AbaBRKKv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:10:51 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jon Mason <jdmason@kudzu.us>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 22/35] vxge: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:11:51 +0100
-Message-Id: <799aa59d70b2e96f094917a8581a331afa068702.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:49033 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751609AbaBLK61 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 05:58:27 -0500
+From: Marek Vasut <marex@denx.de>
+To: Sascha Hauer <s.hauer@pengutronix.de>
+Subject: Re: [PATCH] PCI: imx6: Fix link_up detection
+Date: Wed, 12 Feb 2014 08:36:16 +0100
+Cc: linux-pci@vger.kernel.org, kernel@pengutronix.de,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Troy Kisky <troy.kisky@boundarydevices.com>
+References: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de>
+In-Reply-To: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de>
+MIME-Version: 1.0
+Message-Id: <201402120836.16221.marex@denx.de>
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Wednesday, February 12, 2014 at 08:27:55 AM, Sascha Hauer wrote:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/neterion/vxge/vxge-main.c |   15 +++++++++------
- 1 files changed, 9 insertions(+), 6 deletions(-)
++CC Troy Kisky, since I think he submitted something similar some time ago 
+already.
 
-diff --git a/drivers/net/ethernet/neterion/vxge/vxge-main.c b/drivers/net/ethernet/neterion/vxge/vxge-main.c
-index e46e869..c83cedd 100644
---- a/drivers/net/ethernet/neterion/vxge/vxge-main.c
-+++ b/drivers/net/ethernet/neterion/vxge/vxge-main.c
-@@ -2349,12 +2349,18 @@ start:
- 	vdev->vxge_entries[j].entry = VXGE_ALARM_MSIX_ID;
- 	vdev->vxge_entries[j].in_use = 0;
- 
--	ret = pci_enable_msix(vdev->pdev, vdev->entries, vdev->intr_cnt);
--	if (ret > 0) {
-+	ret = pci_enable_msix_range(vdev->pdev,
-+				    vdev->entries, 3, vdev->intr_cnt);
-+	if (ret < 0) {
-+		ret = -ENODEV;
-+		goto enable_msix_failed;
-+	} else if (ret < vdev->intr_cnt) {
-+		pci_disable_msix(vdev->pdev);
-+
- 		vxge_debug_init(VXGE_ERR,
- 			"%s: MSI-X enable failed for %d vectors, ret: %d",
- 			VXGE_DRIVER_NAME, vdev->intr_cnt, ret);
--		if ((max_config_vpath != VXGE_USE_DEFAULT) || (ret < 3)) {
-+		if (max_config_vpath != VXGE_USE_DEFAULT) {
- 			ret = -ENODEV;
- 			goto enable_msix_failed;
- 		}
-@@ -2368,9 +2374,6 @@ start:
- 		vxge_close_vpaths(vdev, temp);
- 		vdev->no_of_vpath = temp;
- 		goto start;
--	} else if (ret < 0) {
--		ret = -ENODEV;
--		goto enable_msix_failed;
- 	}
- 	return 0;
- 
--- 
-1.7.7.6
+Otherwise I agree this happens.
 
+> This is broken since:
+> | commit e6daf4a5e1b813bc7f85507ec83b8c2452c121e6
+> | Author: Marek Vasut <marex@denx.de>
+> | Date:   Thu Dec 12 22:49:59 2013 +0100
+> | 
+> |     PCI: imx6: Report "link up" only after link training completes
+> |     
+> |     While waiting for the PHY to report the PCIe link is up, we might hit
+> |     a situation where the link training is still in progress, while the
+> |     PHY already reports the link is up.  Add additional check for this
+> |     condition.
+> |     
+> |     Signed-off-by: Marek Vasut <marex@denx.de>
+> |     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> |     Acked-by: Shawn Guo <shawn.guo@linaro.org>
+> 
+> The problem is: Before the above commit only the
+> PCIE_PHY_DEBUG_R1_XMLH_LINK_UP bit was used to determine whether the link
+> is up or not. Since the above commit also the
+> PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING is used. This means a link still
+> being trained is as link down.
+> The designware driver changes the PORT_LOGIC_SPEED_CHANGE bit in
+> dw_pcie_host_init() which causes the link to be retrained. During the next
+> call to dw_pcie_rd_conf() the link is then reported being down and the
+> function returns PCIBIOS_DEVICE_NOT_FOUND resulting in nonfunctioning
+> PCIe.
+> 
+> This patch fixes this by waiting until the link training has finished
+> before testing the PCIE_PHY_DEBUG_R1_XMLH_LINK_UP bit. This is hardly the
+> correct solution, but I don't know what should be done instead.
+> 
+> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+> Cc: Richard Zhu <r65037@freescale.com> (maintainer:PCI DRIVER FOR IMX6)
+> Cc: Shawn Guo <shawn.guo@linaro.org> (maintainer:PCI DRIVER FOR IMX6)
+> Cc: Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM)
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: Marek Vasut <marex@denx.de>
+> ---
+>  drivers/pci/host/pci-imx6.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 866bdc7..9b6b501 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -449,6 +449,7 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+>  static int imx6_pcie_link_up(struct pcie_port *pp)
+>  {
+>  	u32 rc, ltssm, rx_valid;
+> +	int count = 1000;
+> 
+>  	/*
+>  	 * Test if the PHY reports that the link is up and also that
+> @@ -458,8 +459,13 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  	 * as well here.
+>  	 */
+>  	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+> -	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
+> -	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
+> +	while (rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING) {
+> +		if (!count--)
+> +			return 0;
+> +		rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+> +	}
+> +
+> +	if (rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP)
+>  		return 1;
+> 
+>  	/*
