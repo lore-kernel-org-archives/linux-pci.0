@@ -1,121 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:50804 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753584AbaBCX20 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:26 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 17/24][Resend] ACPICA: Introduce acpi_get_data_full() and rework acpi_get_data()
-Date: Tue, 04 Feb 2014 00:34:19 +0100
-Message-ID: <2346175.LEPCgcSjCH@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:43493 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbaBLIAY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 03:00:24 -0500
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 2EEA23EE1B9
+	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:23 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 2145C45DF43
+	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:23 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.nic.fujitsu.com [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 0AAC045DF40
+	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:23 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id EB3FD1DB803C
+	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:22 +0900 (JST)
+Received: from g01jpfmpwyt01.exch.g01.fujitsu.local (g01jpfmpwyt01.exch.g01.fujitsu.local [10.128.193.38])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 9AFB81DB802C
+	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:22 +0900 (JST)
+From: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: RE: [PATCH] PCI: pciehp: Fix the problem that the present bit is
+ not cleared though slot is empty
+Date: Wed, 12 Feb 2014 08:00:20 +0000
+Message-ID: <E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
+References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
+ <20140212004927.GH21057@google.com>
+In-Reply-To: <20140212004927.GH21057@google.com>
+Content-Type: text/plain; charset="iso-2022-jp"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Bjorn,
 
-Introduce a new function, acpi_get_data_full(), working in analogy
-with acpi_get_data() except that it can execute a callback provided
-as its 4th argument right after acpi_ns_get_attached_data() has
-returned a success.
+> Hi Taku,
+> 
+> Thanks a lot for finding and bisecting this problem.  I recently merged
+> some patches from Rajat that partially revert 2debd9289997.  Can you try
+> out my pci/pciehp branch and see whether it is enough to fix the problem
+> for you?
+> 
+> Here's the branch:
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pciehp
+> 
+> and the specific change Rajat made is:
+> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/pciehp&id=b1811d2455f32754cc3d8725bf2e961c
+> 5eda2a72
+> 
+> Let me know if that isn't enough to fix the problem you're seeing, and we
+> can work on it some more.
 
-That will allow Linux to reference count the object pointed to by
-*data before the namespace mutex is released so as to ensure that it
-will not be freed going forward until the reference to it acquired
-by acpi_get_data_full() is dropped.
+ I tested the kernel checkouted from remotes/origin/pci/pciehp.
+ The original problem I reported was fixed.
+ However the sequence of hot-plug operation got changed.
+ The slot power becomes ON the moment when I insert PCIe card on the slot.
+ This behavior is unacceptable to me.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/acpi/acpica/nsxfeval.c |   33 ++++++++++++++++++++++++++++++---
- include/acpi/acpixf.h          |    4 ++++
- 2 files changed, 34 insertions(+), 3 deletions(-)
+ (before)
+   - hot-add
+     1. insert PCIe card
+     2. echo 1 > power
+   - hot-remove
+     1. echo 0 > power
+     2. eject PCIe card
 
-Index: linux-pm/drivers/acpi/acpica/nsxfeval.c
-===================================================================
---- linux-pm.orig/drivers/acpi/acpica/nsxfeval.c
-+++ linux-pm/drivers/acpi/acpica/nsxfeval.c
-@@ -923,19 +923,22 @@ ACPI_EXPORT_SYMBOL(acpi_detach_data)
- 
- /*******************************************************************************
-  *
-- * FUNCTION:    acpi_get_data
-+ * FUNCTION:    acpi_get_data_full
-  *
-  * PARAMETERS:  obj_handle          - Namespace node
-  *              handler             - Handler used in call to attach_data
-  *              data                - Where the data is returned
-+ *              callback            - function to execute before returning
-  *
-  * RETURN:      Status
-  *
-- * DESCRIPTION: Retrieve data that was previously attached to a namespace node.
-+ * DESCRIPTION: Retrieve data that was previously attached to a namespace node
-+ *              and execute a callback before returning.
-  *
-  ******************************************************************************/
- acpi_status
--acpi_get_data(acpi_handle obj_handle, acpi_object_handler handler, void **data)
-+acpi_get_data_full(acpi_handle obj_handle, acpi_object_handler handler,
-+		   void **data, void (*callback)(void *))
- {
- 	struct acpi_namespace_node *node;
- 	acpi_status status;
-@@ -960,10 +963,34 @@ acpi_get_data(acpi_handle obj_handle, ac
- 	}
- 
- 	status = acpi_ns_get_attached_data(node, handler, data);
-+	if (ACPI_SUCCESS(status) && callback) {
-+		callback(*data);
-+	}
- 
- unlock_and_exit:
- 	(void)acpi_ut_release_mutex(ACPI_MTX_NAMESPACE);
- 	return (status);
- }
- 
-+ACPI_EXPORT_SYMBOL(acpi_get_data_full)
-+
-+/*******************************************************************************
-+ *
-+ * FUNCTION:    acpi_get_data
-+ *
-+ * PARAMETERS:  obj_handle          - Namespace node
-+ *              handler             - Handler used in call to attach_data
-+ *              data                - Where the data is returned
-+ *
-+ * RETURN:      Status
-+ *
-+ * DESCRIPTION: Retrieve data that was previously attached to a namespace node.
-+ *
-+ ******************************************************************************/
-+acpi_status
-+acpi_get_data(acpi_handle obj_handle, acpi_object_handler handler, void **data)
-+{
-+	return acpi_get_data_full(obj_handle, handler, data, NULL);
-+}
-+
- ACPI_EXPORT_SYMBOL(acpi_get_data)
-Index: linux-pm/include/acpi/acpixf.h
-===================================================================
---- linux-pm.orig/include/acpi/acpixf.h
-+++ linux-pm/include/acpi/acpixf.h
-@@ -230,6 +230,10 @@ acpi_attach_data(acpi_handle object, acp
- acpi_status acpi_detach_data(acpi_handle object, acpi_object_handler handler);
- 
- acpi_status
-+acpi_get_data_full(acpi_handle object, acpi_object_handler handler, void **data,
-+		   void (*callback)(void *));
-+
-+acpi_status
- acpi_get_data(acpi_handle object, acpi_object_handler handler, void **data);
- 
- acpi_status
+ (after)
+   - hot-add
+    1. insert PCIe card (and automatically power-on)
+
+   - hot-remove
+    1. echo 0 > power
+    2. eject PCIe card
+   
+
+ Best regards,
+ Taku Izumi
