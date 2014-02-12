@@ -1,43 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:51900 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbaBRTcj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 14:32:39 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Tue, 18 Feb 2014 20:32:33 +0100
-Message-ID: <1411925.bMiMyFpUnW@wuerfel>
-In-Reply-To: <20140218190929.GF2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com> <20140218185947.GA22340@obsidianresearch.com> <20140218190929.GF2010@mudshark.cambridge.arm.com>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:55331 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbaBLTLX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 14:11:23 -0500
+Received: by mail-oa0-f43.google.com with SMTP id h16so11476740oag.2
+        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 11:11:22 -0800 (PST)
+Received: from localhost ([172.16.48.185])
+        by mx.google.com with ESMTPSA id o7sm141286469oed.3.2014.02.12.11.11.22
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Wed, 12 Feb 2014 11:11:22 -0800 (PST)
+Subject: [PATCH 4/4] x86/PCI: Fix function definition whitespace
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Feb 2014 12:11:21 -0700
+Message-ID: <20140212191121.5459.10902.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140212190949.5459.46330.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140212190949.5459.46330.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 18 February 2014 19:09:29 Will Deacon wrote:
-> 
-> > Regarding the 0x6200.. There are two conflicting issues there 
-> >  - You really don't want to let the PCI core assign resources to that
-> >    range, it probably won't work.
-> 
-> Right, with kvmtool we don't support resource assignment (the BARs are fixed)
-> so everything is PCI_PROBE_ONLY.
+Consistently put the function type, name, and parameters on one line,
+wrapping only as necessary.
 
-Ok, I looked at the source now and can confirm:
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |   17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-* 0x0-0x1000 are used for lots of legacy ISA devices.
-* PCI devices get assigned IO addresses in 0x400 steps starting at 0x6200.
-* There are three PCI drivers doing this: VESA, PCI-SHMEM and virtio-pci.
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 0073348b2960..b0bc5920f5c6 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -218,9 +218,8 @@ static void teardown_mcfg_map(struct pci_root_info *info)
+ }
+ #endif
+ 
+-static acpi_status
+-resource_to_addr(struct acpi_resource *resource,
+-			struct acpi_resource_address64 *addr)
++static acpi_status resource_to_addr(struct acpi_resource *resource,
++				    struct acpi_resource_address64 *addr)
+ {
+ 	acpi_status status;
+ 	struct acpi_resource_memory24 *memory24;
+@@ -265,8 +264,7 @@ resource_to_addr(struct acpi_resource *resource,
+ 	return AE_ERROR;
+ }
+ 
+-static acpi_status
+-count_resource(struct acpi_resource *acpi_res, void *data)
++static acpi_status count_resource(struct acpi_resource *acpi_res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+ 	struct acpi_resource_address64 addr;
+@@ -278,8 +276,7 @@ count_resource(struct acpi_resource *acpi_res, void *data)
+ 	return AE_OK;
+ }
+ 
+-static acpi_status
+-setup_resource(struct acpi_resource *acpi_res, void *data)
++static acpi_status setup_resource(struct acpi_resource *acpi_res, void *data)
+ {
+ 	struct pci_root_info *info = data;
+ 	struct resource *res;
+@@ -435,9 +432,9 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
+ 	__release_pci_root_info(info);
+ }
+ 
+-static void
+-probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+-		    int busnum, int domain)
++static void probe_pci_root_info(struct pci_root_info *info,
++				struct acpi_device *device,
++				int busnum, int domain)
+ {
+ 	size_t size;
+ 
 
-Regarding the PCI_PROBE_ONLY flag, how do you set that? Should we
-have a standard DT property for that? On PowerPC we already specified
-"linux,pci-probe-only" and "linux,pci-assign-all-buses", which seems
-reasonable to use in architecture independent code as well.
-
-	Arnd
