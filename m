@@ -1,179 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:57368 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683AbaBTQrI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 11:47:08 -0500
-Subject: Re: [PATCH 12/22] lpfc: Use pci_enable_msix_range()
-From: James Smart <james.smart@emulex.com>
-Reply-To: <james.smart@emulex.com>
-To: <agordeev@redhat.com>
-CC: <james.smart@emulex.com>, <linux-scsi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Date: Thu, 20 Feb 2014 11:47:02 -0500
-Content-Type: text/plain; charset="UTF-8"
+Received: from cn.fujitsu.com ([222.73.24.84]:10054 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751403AbaBLHzB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Feb 2014 02:55:01 -0500
+Message-ID: <52FB26DC.1050804@cn.fujitsu.com>
+Date: Wed, 12 Feb 2014 15:46:36 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Message-ID: <a34533b1-77d9-45bc-ad66-aab336972b95@CMEXHTCAS2.ad.emulex.com>
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH part1 v6 5/7] PCI: Add pci_dummy_ops to isolate pci device
+ temporarily
+References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com> <1392173573-59844-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1392173573-59844-6-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alexander,
+Hi Yijing,
+On 02/12/2014 10:52 AM, Yijing Wang wrote:
 
-I've reworked this patch to layer on top of our rev 8.3.45 patches
-that were just posted to linux-scsi. There were some conflicts due to
-new additions.  Additionally, there were two other uses of pci_enable_msiXXX
-that needed to be addressed.  The changes in this patch also address the
-change requested by:
-"[PATCH 11/22] lpfc: Remove superfluous call to pci_disable_msix()"
+> Pci_dummy_ops does nothing when we use it to read/write
+> pci_device. So we can isolate pci device by replace its
+> bus pci_ops by pci_dummy_ops. This is preparation for
+> the later patch.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/pci.c   |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |    4 +++
+>  2 files changed, 66 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index af34057..283e82e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2226,6 +2226,68 @@ bool pci_serial_number_changed(struct pci_dev *pdev)
+>  }
+>  EXPORT_SYMBOL(pci_serial_number_changed);
+>  
+> +static int pci_dummy_read(struct pci_bus *bus, unsigned int devfn,
+> +		int where, int size, u32 *val)
+> +{
+> +	return PCIBIOS_DEVICE_NOT_FOUND;
+> +}
+> +
+> +static int pci_dummy_write(struct pci_bus *bus, unsigned int devfn,
+> +		int reg, int size, u32 val)
+> +{
+> +	return PCIBIOS_DEVICE_NOT_FOUND;
+> +}
+> +
+> +static struct pci_ops pci_dummy_ops = {
+> +	.read = pci_dummy_read,
+> +	.write = pci_dummy_write,
+> +};
+> +
+> +static DEFINE_SPINLOCK(pci_freeze_lock);
+> +/**
+> + * pci_bus_freeze_device - freeze pci bus to access pci device
+> + * @bus: the pci bus to freeze
+> + *
+> + * Replace pci bus ops by pci_dummy_ops, protect system from
+> + * accessing pci devices.
+> + */
+> +void pci_bus_freeze_device(struct pci_bus *bus)
+> +{
+> +	struct pci_ops *ops;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&pci_freeze_lock, flags);
+> +	if (bus->is_frozen)
+> +		goto out;
+> +	bus->is_frozen = 1;
+> +	ops = pci_bus_set_ops(bus, &pci_dummy_ops);
+> +	bus->save_ops = ops;
+> +out:
+> +	spin_unlock_irqrestore(&pci_freeze_lock, flags);
+> +}
+> +
+> +/**
+> + * pci_bus_unfreeze_device - unfreeze pci bus to acess pci devices
+> + * @bus: the pci bus to unfreeze
+> + *
+> + * Restore pci bus original ops, so pci bus can access
+> + * pci devices normally.
+> + */
+> +void pci_bus_unfreeze_device(struct pci_bus *bus)
+> +{
+> +	unsigned long flags;
+> +
+> +	BUG_ON(!bus->save_ops);
+> +	spin_lock_irqsave(&pci_freeze_lock, flags);
+> +	if (!bus->is_frozen)
+> +		goto out;
 
-To avoid creating merge conflicts - either by your patches going in then
-scsi git tree trying to merge or by scsi git tree going in and your patches
-trying to merge - I recommend that you eliminate your lpfc patches from the
-kernel and apply the patch below once scsi git with the updated lpfc driver
-has actually merged.
+It seems that the BUG_ON() should placed here, otherwise it will be
+triggered if we try to unfreeze the same bus multiply.
 
--- james s
+Regards,
+Gu
 
-
-Revised patch:
-
-
-
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
-
-CC: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-
-
-
-Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- lpfc_init.c |   43 ++++++++++++++++++++++---------------------
- 1 file changed, 22 insertions(+), 21 deletions(-)
-
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2014-02-19 16:23:07.260097013 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2014-02-20 11:39:20.348203354 -0500
-@@ -8100,8 +8100,8 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
-- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
-+ * with SLI-3 interface specs. The kernel function pci_enable_msix_range() is
-+ * called to enable the MSI-X vectors. Note that pci_enable_msix_range(), once
-  * invoked, enables either all or nothing, depending on the current
-  * availability of PCI vector resources. The device driver is responsible
-  * for calling the individual request_irq() to register each MSI-X vector
-@@ -8126,12 +8126,12 @@ lpfc_sli_enable_msix(struct lpfc_hba *ph
- 		phba->msix_entries[i].entry = i;
- 
- 	/* Configure MSI-X capability structure */
--	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				ARRAY_SIZE(phba->msix_entries));
--	if (rc) {
-+	rc = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
-+				   LPFC_MSIX_VECTORS, LPFC_MSIX_VECTORS);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
--		goto msi_fail_out;
-+		goto vec_fail_out;
- 	}
- 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-@@ -8209,6 +8209,8 @@ irq_fail_out:
- msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+vec_fail_out:
- 	return rc;
- }
- 
-@@ -8238,8 +8240,8 @@ lpfc_sli_disable_msix(struct lpfc_hba *p
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI interrupt mode to device with
-- * SLI-3 interface spec. The kernel function pci_enable_msi() is called to
-- * enable the MSI vector. The device driver is responsible for calling the
-+ * SLI-3 interface spec. The kernel function pci_enable_msi_range() is called
-+ * to enable the MSI vector. The device driver is responsible for calling the
-  * request_irq() to register MSI vector with a interrupt the handler, which
-  * is done in this function.
-  *
-@@ -8252,8 +8254,8 @@ lpfc_sli_enable_msi(struct lpfc_hba *phb
- {
- 	int rc;
- 
--	rc = pci_enable_msi(phba->pcidev);
--	if (!rc)
-+	rc = pci_enable_msi_range(phba->pcidev, 1, 1);
-+	if (rc > 0)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0462 PCI enable MSI mode success.\n");
- 	else {
-@@ -8692,17 +8694,15 @@ lpfc_sli4_enable_msix(struct lpfc_hba *p
- 		phba->sli4_hba.msix_entries[index].entry = index;
- 		vectors++;
- 	}
--enable_msix_vectors:
--	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     vectors);
--	if (rc > 1) {
--		vectors = rc;
--		goto enable_msix_vectors;
--	} else if (rc) {
-+
-+	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
-+				   2, vectors);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto msi_fail_out;
- 	}
-+	vectors = rc;
- 
- 	/* Log MSI-X vector assignment */
- 	for (index = 0; index < vectors; index++)
-@@ -8764,9 +8764,10 @@ cfg_fail_out:
- 			 &phba->sli4_hba.fcp_eq_hdl[index]);
- 	}
- 
--msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
- 	pci_disable_msix(phba->pcidev);
-+
-+msi_fail_out:
- 	return rc;
- }
- 
-@@ -8804,7 +8805,7 @@ lpfc_sli4_disable_msix(struct lpfc_hba *
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI interrupt mode to device with
-- * SLI-4 interface spec. The kernel function pci_enable_msi() is called
-+ * SLI-4 interface spec. The kernel function pci_enable_msi_range() is called
-  * to enable the MSI vector. The device driver is responsible for calling
-  * the request_irq() to register MSI vector with a interrupt the handler,
-  * which is done in this function.
-@@ -8818,8 +8819,8 @@ lpfc_sli4_enable_msi(struct lpfc_hba *ph
- {
- 	int rc, index;
- 
--	rc = pci_enable_msi(phba->pcidev);
--	if (!rc)
-+	rc = pci_enable_msi_range(phba->pcidev, 1, 1);
-+	if (rc > 0)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0487 PCI enable MSI mode success.\n");
- 	else {
+> +	pci_bus_set_ops(bus, bus->save_ops);
+> +	bus->save_ops = NULL;
+> +	bus->is_frozen = 0;
+> +out:
+> +	spin_unlock_irqrestore(&pci_freeze_lock, flags);
+> +}
+> +
+>  /**
+>   * pci_configure_ari - enable or disable ARI forwarding
+>   * @dev: the PCI device
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index d60c0b6..e3dd4ea 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -442,6 +442,7 @@ struct pci_bus {
+>  	struct resource busn_res;	/* bus numbers routed to this bus */
+>  
+>  	struct pci_ops	*ops;		/* configuration access functions */
+> +	struct pci_ops	*save_ops; /* save configuration access functions */
+>  	struct msi_chip	*msi;		/* MSI controller */
+>  	void		*sysdata;	/* hook for sys-specific extension */
+>  	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
+> @@ -460,6 +461,7 @@ struct pci_bus {
+>  	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
+>  	struct bin_attribute	*legacy_mem; /* legacy mem */
+>  	unsigned int		is_added:1;
+> +	unsigned int		is_frozen:1;
+>  };
+>  
+>  #define pci_bus_b(n)	list_entry(n, struct pci_bus, node)
+> @@ -1026,6 +1028,8 @@ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+>  ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+>  
+>  bool pci_serial_number_changed(struct pci_dev *pdev);
+> +void pci_bus_freeze_device(struct pci_bus *bus);
+> +void pci_bus_unfreeze_device(struct pci_bus *bus);
+>  
+>  /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+>  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
 
 
