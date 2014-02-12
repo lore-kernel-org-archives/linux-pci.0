@@ -1,36 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.13]:61087 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954AbaB0OJl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 09:09:41 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linaro-kernel@lists.linaro.org
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-Date: Thu, 27 Feb 2014 15:09:28 +0100
-Message-ID: <5331963.VjH27eqhpK@wuerfel>
-In-Reply-To: <1393506599-11561-2-git-send-email-Liviu.Dudau@arm.com>
-References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com> <1393506599-11561-2-git-send-email-Liviu.Dudau@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 12 Feb 2014 20:58:16 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Tom Gundersen <teg@jklm.no>
+Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Kay Sievers <kay@vrfy.org>
+Subject: Re: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb
+ support
+Message-ID: <mj+md-20140212.194230.3341.nikam@ucw.cz>
+References: <CAG-2HqWcnZ-z7EbDd0aAj6y_Ho6szfRZUiK0psEnmoz17Kw-xA@mail.gmail.com>
+ <mj+md-20131110.114139.9646.albireo@ucw.cz>
+ <CAG-2HqXsEBB_nxUF4gza-eTsUjmysYR7iPEjJPUFyR1rC2KGMg@mail.gmail.com>
+ <CAPXgP12MLL_Z5gyrCndQLRT6SR_TJi9xHp1HkHMX1ahwnxx3yw@mail.gmail.com>
+ <mj+md-20131215.091609.28546.nikam@ucw.cz>
+ <CAPXgP10+1WtX8_xN+QSHvKws01hbKhP3FN95sXk9EtezdSPtqg@mail.gmail.com>
+ <mj+md-20131215.110132.29802.nikam@ucw.cz>
+ <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
+ <CAG-2HqWYZtTMNRvLwWRy-5_5yb=EasiWzpL2xc0_42SyP=bg1w@mail.gmail.com>
+ <CAG-2HqVS1avGdvi6SFc1dq0sCzcA4z5sZUBH4WhpNN87tZrnxA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAG-2HqVS1avGdvi6SFc1dq0sCzcA4z5sZUBH4WhpNN87tZrnxA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 27 February 2014 13:09:57 Liviu Dudau wrote:
-> The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
-> is wrong. It returns a mapped (i.e. virtual) address that can start from
-> zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
-> architectures that use !CONFIG_GENERIC_MAP define.
-> 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> 
-> 
+Hi!
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+> Ping?
+
+Sorry for the delay, I was alternatingly ill and overloaded with other stuff...
+
+As I said before, I do not like the current implementation of hwdb much (it's
+too much tied to Linux, and hardware description strings, originally intended
+for internal use between the kernel and its modules, are far from a nice API).
+
+I would prefer a more general HW identification library and I am willing to
+write it, but I have to admit that with my current load, it will be hardly
+finished before this summer.
+
+I will merge your patches. It's better to have the current hwdb than nothing.
+
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+First law of socio-genetics: Celibacy is not hereditary.
