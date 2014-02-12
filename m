@@ -1,39 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44514 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752335AbaBMRp4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Feb 2014 12:45:56 -0500
-Date: Thu, 13 Feb 2014 18:47:54 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 14/22] mpt2sas: Use pci_enable_msix_range()
-Message-ID: <20140213174753.GD26610@dhcp-26-207.brq.redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <9502363c4325496286e36221acaff63da3af42b0.1391512266.git.agordeev@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH part1 v6 0/7] Introduce PCIe Device Serial Number capability support
+Date: Wed, 12 Feb 2014 10:52:46 +0800
+Message-ID: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9502363c4325496286e36221acaff63da3af42b0.1391512266.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 04, 2014 at 12:17:00PM +0100, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
+v5->v6: Add is_frozen flag to protect pci bus from double frozen.
 
-Nagalakshmi, Sreekanth,
+This series is based on Bjorn's pci-next branch.
+Currently, more and more PCIe devices support PCIe DSN(Device Serial Number)
+capability, we can use this cap to identify device. In some platform,
+when we hotplug PCIe device, no interrupts will be received in system.
+So we can not identify the device whether is changed during suspend.
+PCIe DSN can help to identify this. 
 
-Any feedback?
+Legacy PCI device can achieve it by PCI Vital Product Data capability.
+We can use its SN keyword to report the unique number.
+But in my platform, PCI devices which support VPD SN cap report the
+meaningless same string "0123456789". 
+Rework PCI VPD code to support device identification is not an easy work.
+Plan to do it in part2.
 
-Thanks!
+Yijing Wang (7):
+  PCI: rework pci_find_next_ext_capability()
+  PCI: introduce pci_bus_find_ext_capability()
+  PCI: Add support for Device Serial Number capability
+  PCI: Introduce pci_serial_number_changed()
+  PCI: Add pci_dummy_ops to isolate pci device temporarily
+  PCI: Check pci device serial number when scan device
+  PCI: pciehp: Don't enable/disable slot on resume unless status
+    changed
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+ drivers/pci/hotplug/pciehp_core.c |   10 ++-
+ drivers/pci/pci.c                 |  169 +++++++++++++++++++++++++++++++++++--
+ drivers/pci/pci.h                 |    2 +-
+ drivers/pci/probe.c               |   15 +++-
+ include/linux/pci.h               |   10 ++-
+ 5 files changed, 192 insertions(+), 14 deletions(-)
+
+
