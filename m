@@ -1,71 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:56142 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751869AbaBLAl0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 19:41:26 -0500
-Received: by mail-ie0-f171.google.com with SMTP id as1so5163995iec.2
-        for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2014 16:41:26 -0800 (PST)
-Date: Tue, 11 Feb 2014 17:41:23 -0700
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:50121 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752204AbaBLTKu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 14:10:50 -0500
+Received: by mail-ob0-f177.google.com with SMTP id wp18so10995024obc.36
+        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 11:10:48 -0800 (PST)
+Received: from localhost ([172.16.48.185])
+        by mx.google.com with ESMTPSA id qh4sm55025159obc.4.2014.02.12.11.10.47
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Wed, 12 Feb 2014 11:10:47 -0800 (PST)
+Subject: [PATCH 0/4] Minor miscellaneous cleanups
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH] PCI,pciehp: Don't set slot off when found device already
- exists.
-Message-ID: <20140212004123.GF21057@google.com>
-References: <1389600168-23228-1-git-send-email-wangyijing@huawei.com>
+Date: Wed, 12 Feb 2014 12:10:46 -0700
+Message-ID: <20140212190949.5459.46330.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1389600168-23228-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 13, 2014 at 04:02:48PM +0800, Yijing Wang wrote:
-> If we found device already exists during hot add device, we should
-> leave it, not to set slot off.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+These are minor cleanups I'm planning for v3.15.
 
-Applied to pci/pciehp for v3.15, thanks!
+---
 
-Bjorn
+Bjorn Helgaas (4):
+      PCI: Remove unnecessary list_empty(&pci_pme_list) check
+      x86/PCI: Remove unnecessary local variable initialization
+      x86/PCI: Reword comments
+      x86/PCI: Fix function definition whitespace
 
-> ---
->  drivers/pci/hotplug/pciehp_ctrl.c |    3 ++-
->  drivers/pci/hotplug/pciehp_pci.c  |    2 +-
->  2 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 38f0186..f27b0ff 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -224,7 +224,8 @@ static int board_added(struct slot *p_slot)
->  	if (retval) {
->  		ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
->  			 pci_domain_nr(parent), parent->number);
-> -		goto err_exit;
-> +		if (retval != -EEXIST)
-> +			goto err_exit;
->  	}
->  
->  	if (PWR_LED(ctrl))
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index aac7a40..9b87b49 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -48,7 +48,7 @@ int pciehp_configure_device(struct slot *p_slot)
->  			 "at %04x:%02x:00, cannot hot-add\n", pci_name(dev),
->  			 pci_domain_nr(parent), parent->number);
->  		pci_dev_put(dev);
-> -		return -EINVAL;
-> +		return -EEXIST;
->  	}
->  
->  	num = pci_scan_slot(parent, PCI_DEVFN(0, 0));
-> -- 
-> 1.7.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+ arch/x86/pci/acpi.c |   30 ++++++++++++------------------
+ drivers/pci/pci.c   |   40 +++++++++++++++++++---------------------
+ 2 files changed, 31 insertions(+), 39 deletions(-)
