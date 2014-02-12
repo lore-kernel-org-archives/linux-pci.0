@@ -1,174 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:33396 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174AbaBNRcn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 12:32:43 -0500
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: RE: PCI memory BAR assigned by u-boot not honored when using recent
- kernel
-Date: Fri, 14 Feb 2014 17:32:39 +0000
-Message-ID: <3E54258959B69E4282D79E01AB1F32B704696651@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704695360@DFLE11.ent.ti.com>
- <20140214164444.GA29491@google.com>
-In-Reply-To: <20140214164444.GA29491@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:60682 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799AbaBLAtb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 19:49:31 -0500
+Received: by mail-ig0-f175.google.com with SMTP id uq10so10139207igb.2
+        for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2014 16:49:30 -0800 (PST)
+Date: Tue, 11 Feb 2014 17:49:27 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Fix the problem that the present bit is not
+ cleared though slot is empty
+Message-ID: <20140212004927.GH21057@google.com>
+References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->Sent: Friday, February 14, 2014 11:45 AM
->To: Karicheri, Muralidharan
->Cc: linux-pci@vger.kernel.org; Yinghai Lu
->Subject: Re: PCI memory BAR assigned by u-boot not honored when using recent kernel
->
->[+cc Yinghai]
->
->On Fri, Feb 14, 2014 at 02:51:26PM +0000, Karicheri, Muralidharan wrote:
->> All,
->>
->> I am working to port our PCI driver from v3.10 to v3.13 as part of
->> up-streaming. The end point is Marvel SATA controller and a SCSI drive.
->> The BARs are setup by U-Boot and Kernel is expected to honor the BAR
->> assignments.
->
->There is no guarantee that the kernel will keep the BAR assignments done by firmware or
->a bootloader.  Usually the kernel *does* keep them, as long as they are valid, but you
->can not rely on that.
->
-Bjorn,
+[+cc Rajat]
 
-Thanks for responding.
+On Mon, Feb 03, 2014 at 04:07:24PM +0900, Taku Izumi wrote:
+> 
+> I found the problem that the present bit does not be cleared
+> though the slot is empty.
+> 
+>  Step to reproduce:
+> 
+>   # cd /sys/bus/pci/slots/66
+>   # cat adapter
+>   0
+>   --- (insert PCIe card on slot#66) ---
+>   # cat adapter
+>   1
+>   # echo 1 > power
+>   # echo 0 > power
+>   --- (eject PCIe card on slot#66) ---
+>   # cat adapter
+>   1
+>     ==> should be 0.
+> 
+> According to git-bisect this is caused by:
+>     2debd9289997fc5d1c0043b41201a8b40d5e11d0
+>        PCI: pciehp: Disable/enable link during slot power off/on
+>     is the first bad commit
+> 
+> By reverting the above patch, this bug can be solved.
+> And I also found this can be fixed by changing the timing of link-disable
+> during power off the slot.
+> So, this patch changes the timing of link-disable during power off.
 
-Doesn't pci=firmware supposed to do this? Is it broken?
+Hi Taku,
 
->> In v3.10 based driver, I see bridge window size is 2MB for pre-fetch
->> and non prefetched memory,  where as in v3.13rc4 based driver, it
->> assigns a window size of 1MB. There is nothing in my driver that sets
->> up the maximum window size.
->
->Drivers are only responsible for their device; they don't control other devices, including
->upstream bridges.  Bridge configuration is done before the driver is even bound to the
->device.
->
->Does U-Boot program the windows of the 00:00.0 bridge?  From the logs below, it looks
->like it does not.
->
+Thanks a lot for finding and bisecting this problem.  I recently merged
+some patches from Rajat that partially revert 2debd9289997.  Can you try
+out my pci/pciehp branch and see whether it is enough to fix the problem
+for you?
 
-Not sure if u-boot sets up the 00.00.0 bridge, I will check and get back
-and also provide more log.But is there a way I can override the default from 1MB
-to 2MB to check if that resolves the issue. Which part of the pci code uses default 1MB?
-Thanks in advance for your input.
+Here's the branch:
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pciehp
 
-Murali
->> Has this been changed in recent kernel (v3.13+)? Even setting
->> pci=firmware doesn't honor the BAR settings w.r.t to the memory BAR of
->> the EP? The driver works fine with a e1000e NIC device driver from
->> Intel and both Ethernet ports are functional, in this case, kernel
->> does the BAR assignments. W.r.t SATA + SCSI, if I mount the filesystem
->> on hard disk after boot up and do some basic read write tests, it is
->> working, however when kernel is boot with filesystem on the harddisk,
->> then it doesn't boot. I have attached PCI BAR related logs at boot up
->> below for your information. Do you know what could be causing this? I
->> am assuming the problem is due to the memory BARs being re-assigned
->> with a different range than what is setup by U-Boot causing this
->> issue.
->
->I don't see anything in the logs below that would explain the problem you're seeing.  It's
->true that v3.13-rc4 assigns a smaller prefetchable window to 00:00.0, but it's still big
->enough to contain the 01:00.0 ROM (reg 30/BAR 6), so that shouldn't be a problem.
->
->Maybe the complete logs would have a clue.
->
->Bjorn
->
->> Logs from a non working v3.13-rc4 driver
->>
->> [    0.303686] pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]
->> [    0.303695] pci_bus 0000:00: root bus resource [io  0x0000-0x3fff]
->> [    0.303704] pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-
->ff]
->> [    0.303733] pci 0000:00:00.0: [104c:8888] type 01 class 0x060400
->> [    0.303980] PCI: bus0: Fast back to back transfers disabled
->> [    0.304151] pci 0000:01:00.0: [1b4b:9125] type 00 class 0x010601
->> [    0.304176] pci 0000:01:00.0: reg 0x10: [io  0x1000-0x1007]
->> [    0.304195] pci 0000:01:00.0: reg 0x14: [io  0x1008-0x100b]
->> [    0.304213] pci 0000:01:00.0: reg 0x18: [io  0x1010-0x1017]
->> [    0.304231] pci 0000:01:00.0: reg 0x1c: [io  0x1018-0x101b]
->> [    0.304248] pci 0000:01:00.0: reg 0x20: [io  0x1020-0x102f]
->> [    0.304266] pci 0000:01:00.0: reg 0x24: [mem 0x50000000-0x500007ff]
->> [    0.304285] pci 0000:01:00.0: reg 0x30: [mem 0xd0000000-0xd000ffff pref]
->> [    0.304347] pci 0000:01:00.0: PME# supported from D3hot
->> [    0.304502] PCI: bus1: Fast back to back transfers disabled
->> [    0.304512] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
->> [    0.304524] pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 01
->> [    0.304536] keystone-pcie: Ending PCI scan...
->> [    0.304550] keystone-pcie: keystone_pcie_map_irq: slot 0, pin 1
->> [    0.304555] keystone-pcie: keystone_pcie_map_irq: legacy_irq 512
->> [    0.304577] pci 0000:00:00.0: BAR 8: assigned [mem 0x50000000-0x500fffff]
->> [    0.304587] pci 0000:00:00.0: BAR 9: assigned [mem 0x50100000-0x501fffff pref]
->> [    0.304596] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
->> [    0.304608] pci 0000:01:00.0: BAR 6: assigned [mem 0x50100000-0x5010ffff pref]
->> [    0.304618] pci 0000:01:00.0: BAR 5: assigned [mem 0x50000000-0x500007ff]
->> [    0.304629] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x100f]
->> [    0.304641] pci 0000:01:00.0: BAR 0: assigned [io  0x1010-0x1017]
->> [    0.304652] pci 0000:01:00.0: BAR 2: assigned [io  0x1018-0x101f]
->> [    0.304663] pci 0000:01:00.0: BAR 1: assigned [io  0x1020-0x1023]
->> [    0.304674] pci 0000:01:00.0: BAR 3: assigned [io  0x1024-0x1027]
->> [    0.304687] pci 0000:00:00.0: PCI bridge to [bus 01]
->> [    0.304696] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
->> [    0.304707] pci 0000:00:00.0:   bridge window [mem 0x50000000-0x500fffff]
->> [    0.304716] pci 0000:00:00.0:   bridge window [mem 0x50100000-0x501fffff pref]
->>
->> Logs from a working v3.10 driver
->>
->> [  105.763092] pci_bus 0000:00: root bus resource [mem
->> 0x50000000-0x5fffffff] [  105.763101] pci_bus 0000:00: root bus
->> resource [io  0x0000-0x3fff] [  105.763110] pci_bus 0000:00: No busn
->> resource found for root bus, will use [bus 00-ff] [  105.763137] pci
->> 0000:00:00.0: [104c:8888] type 01 class 0x060400 [  105.763389] PCI:
->> bus0: Fast back to back transfers disabled [  105.763563] pci
->> 0000:01:00.0: [1b4b:9125] type 00 class 0x010601 [  105.763587] pci
->> 0000:01:00.0: reg 10: [io  0x1000-0x1007] [  105.763606] pci
->> 0000:01:00.0: reg 14: [io  0x1008-0x100b] [  105.763623] pci
->> 0000:01:00.0: reg 18: [io  0x1010-0x1017] [  105.763640] pci
->> 0000:01:00.0: reg 1c: [io  0x1018-0x101b] [  105.763657] pci
->> 0000:01:00.0: reg 20: [io  0x1020-0x102f] [  105.763674] pci
->> 0000:01:00.0: reg 24: [mem 0x50000000-0x500007ff] [  105.763692] pci
->> 0000:01:00.0: reg 30: [mem 0xd0000000-0xd000ffff pref] [  105.763754]
->> pci 0000:01:00.0: PME# supported from D3hot [  105.763919] PCI: bus1:
->> Fast back to back transfers disabled [  105.763930] pci_bus 0000:01:
->> busn_res: [bus 01-ff] end is updated to 01 [  105.763942] pci_bus
->> 0000:00: busn_res: [bus 00-ff] end is updated to 01 [  105.763954] keystone-pcie:
->Ending PCI scan...
->> [  105.763968] keystone-pcie: keystone_pcie_map_irq: slot 0, pin 1 [
->> 105.763973] keystone-pcie: keystone_pcie_map_irq: legacy_irq 572 [
->> 105.763996] pci 0000:00:00.0: BAR 8: assigned [mem
->> 0x50000000-0x501fffff] [  105.764006] pci 0000:00:00.0: BAR 9:
->> assigned [mem 0x50200000-0x503fffff pref] [  105.764015] pci
->> 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff] [  105.764027] pci
->> 0000:01:00.0: BAR 6: assigned [mem 0x50200000-0x5020ffff pref] [
->> 105.764037] pci 0000:01:00.0: BAR 5: assigned [mem
->> 0x50000000-0x500007ff] [  105.764048] pci 0000:01:00.0: BAR 4:
->> assigned [io  0x1000-0x100f] [  105.764060] pci 0000:01:00.0: BAR 0:
->> assigned [io  0x1010-0x1017] [  105.764071] pci 0000:01:00.0: BAR 2:
->> assigned [io  0x1018-0x101f] [  105.764082] pci 0000:01:00.0: BAR 1:
->> assigned [io  0x1020-0x1023] [  105.764092] pci 0000:01:00.0: BAR 3: assigned [io
->0x1024-0x1027] [  105.764105] pci 0000:00:00.0: PCI bridge to [bus 01]
->> [  105.764113] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
->> [  105.764124] pci 0000:00:00.0:   bridge window [mem 0x50000000-0x501fffff]
->> [  105.764133] pci 0000:00:00.0:   bridge window [mem 0x50200000-0x503fffff pref]
->>
->>
->> Murali Karicheri
->> Linux Kernel, Software Development
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci"
->> in the body of a message to majordomo@vger.kernel.org More majordomo
->> info at  http://vger.kernel.org/majordomo-info.html
+and the specific change Rajat made is:
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/pciehp&id=b1811d2455f32754cc3d8725bf2e961c5eda2a72
+
+Let me know if that isn't enough to fix the problem you're seeing, and we
+can work on it some more.
+
+Bjorn
+
+> 
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 14acfcc..163f0b4 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -508,7 +508,12 @@ void pciehp_power_off_slot(struct slot * slot)
+>  {
+>  	struct controller *ctrl = slot->ctrl;
+>  
+> -	/* Disable the link at first */
+> +	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
+> +	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+> +		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+> +		 PCI_EXP_SLTCTL_PWR_OFF);
+> +
+> +	/* Disable the link */
+>  	pciehp_link_disable(ctrl);
+>  	/* wait the link is down */
+>  	if (ctrl->link_active_reporting)
+> @@ -516,10 +521,6 @@ void pciehp_power_off_slot(struct slot * slot)
+>  	else
+>  		msleep(1000);
+>  
+> -	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
+> -	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+> -		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+> -		 PCI_EXP_SLTCTL_PWR_OFF);
+>  }
+>  
+>  static irqreturn_t pcie_isr(int irq, void *dev_id)
+> -- 
+> 1.8.3.1
+> 
