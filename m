@@ -1,46 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Arvind Kumar <arvindkumar@vmware.com>, pv-drivers@vmware.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:23 +0100
-Message-Id: <a414d28c5587e57e78777a75c07873e1535dc839.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:49464 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751533AbaBLBUJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 20:20:09 -0500
+Received: by mail-ie0-f179.google.com with SMTP id ar20so5167529iec.10
+        for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2014 17:20:09 -0800 (PST)
+Date: Tue, 11 Feb 2014 18:20:06 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Liviu Dudau <liviu@dudau.co.uk>
+Subject: Re: [PATCH] pci: Makefile: Cleanup per-arch list of object files
+Message-ID: <20140212012006.GJ21057@google.com>
+References: <1391449116-22276-1-git-send-email-Liviu.Dudau@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1391449116-22276-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Mon, Feb 03, 2014 at 05:38:36PM +0000, Liviu Dudau wrote:
+> setup-bus.o is now included unconditionally as of commit
+> 7dc30303342562685392c8c7aa5194e98fd27625. Remove it from
+> the per-arch list of object files.
+> 
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Arvind Kumar <arvindkumar@vmware.com>
-Cc: pv-drivers@vmware.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/vmw_pvscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Applied to pci/misc for v3.15, thanks!
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index b9755ec..a046618 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1078,7 +1078,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
- 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
- 	int ret;
- 
--	ret = pci_enable_msix(adapter->dev, &entry, 1);
-+	ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
- 	if (ret)
- 		return ret;
- 
--- 
-1.7.7.6
+Bjorn
 
+> ---
+>  drivers/pci/Makefile | 22 ++++++++--------------
+>  1 file changed, 8 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 17d2b07..e2501ac 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -33,21 +33,15 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+>  #
+>  # Some architectures use the generic PCI setup functions
+>  #
+> -obj-$(CONFIG_X86) += setup-bus.o
+> -obj-$(CONFIG_ALPHA) += setup-bus.o setup-irq.o
+> -obj-$(CONFIG_ARM) += setup-bus.o setup-irq.o
+> -obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
+> -obj-$(CONFIG_PARISC) += setup-bus.o
+> -obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
+> -obj-$(CONFIG_PPC) += setup-bus.o
+> -obj-$(CONFIG_FRV) += setup-bus.o
+> -obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
+> +obj-$(CONFIG_ALPHA) += setup-irq.o
+> +obj-$(CONFIG_ARM) += setup-irq.o
+> +obj-$(CONFIG_UNICORE32) += setup-irq.o
+> +obj-$(CONFIG_SUPERH) += setup-irq.o
+> +obj-$(CONFIG_MIPS) += setup-irq.o
+>  obj-$(CONFIG_X86_VISWS) += setup-irq.o
+> -obj-$(CONFIG_MN10300) += setup-bus.o
+> -obj-$(CONFIG_MICROBLAZE) += setup-bus.o
+> -obj-$(CONFIG_TILE) += setup-bus.o setup-irq.o
+> -obj-$(CONFIG_SPARC_LEON) += setup-bus.o setup-irq.o
+> -obj-$(CONFIG_M68K) += setup-bus.o setup-irq.o
+> +obj-$(CONFIG_TILE) += setup-irq.o
+> +obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+> +obj-$(CONFIG_M68K) += setup-irq.o
+>  
+>  #
+>  # ACPI Related PCI FW Functions
+> -- 
+> 1.8.5.3
+> 
