@@ -1,92 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 25 Feb 2014 00:17:48 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Magnus Damm <magnus.damm@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Magnus Damm <damm@opensource.se>,
-	linux-pci@vger.kernel.org,
-	Simon Horman <horms+renesas@verge.net.au>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	SH-Linux <linux-sh@vger.kernel.org>,
-	Ben Dooks <ben-linux@fluff.org>
-Subject: Re: DMABOUNCE in pci-rcar
-Message-ID: <20140225001748.GS21483@n2100.arm.linux.org.uk>
-References: <201402241200.21944.arnd@arndb.de> <CANqRtoTLUfK7bjhmUbTdBi7r7OzrmwdAg_wnRbGHN7EUjGtouQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:43403 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbaBLRAu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 12:00:50 -0500
+Received: by mail-oa0-f45.google.com with SMTP id i11so11268099oag.18
+        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 09:00:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANqRtoTLUfK7bjhmUbTdBi7r7OzrmwdAg_wnRbGHN7EUjGtouQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20140212132640.GA3147@dhcp-26-207.brq.redhat.com>
+References: <cover.1391172839.git.agordeev@redhat.com> <434a34e01c353441131204edef36126a95e8928a.1391172839.git.agordeev@redhat.com>
+ <20140131.133051.483295479425700960.davem@davemloft.net> <20140211003814.GC12851@google.com>
+ <20140211010803.GD12851@google.com> <20140212132640.GA3147@dhcp-26-207.brq.redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Feb 2014 10:00:28 -0700
+Message-ID: <CAErSpo7Puj1hgpmnjvuBjvoNjHQUyOU-axsKm+PY3j8jkZHDAQ@mail.gmail.com>
+Subject: Re: [PATCH 01/34] bnx2: Use pci_enable_msix_range()
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 25, 2014 at 08:49:28AM +0900, Magnus Damm wrote:
-> On Mon, Feb 24, 2014 at 8:00 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> >From my point of view we need some kind of bounce buffer unless we
-> have IOMMU support. I understand that an IOMMU would be much better
-> than a software-based implementation. If it is possible to use an
-> IOMMU with these devices remain to be seen.
-> 
-> I didn't know about the SWIOTLB code, neither did I know that
-> DMABOUNCE was supposed to be avoided. Now I do!
+On Wed, Feb 12, 2014 at 6:26 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Mon, Feb 10, 2014 at 06:08:03PM -0700, Bjorn Helgaas wrote:
+>> I skimmed these and the scsi patches, and I think you were right in
+>> proposing an MSI-X enable function that takes a single "number of vectors"
+>> argument, in addition to pci_enable_msix_range(), which takes a minimum and
+>> a maximum.  Obviously the pci_enable_msix_fixed() or whatever could be a
+>> simple #define wrapper or something.
+>>
+>> Of the fifty-some net and scsi patches, I counted 23 that use the min ==
+>> max pattern, and it seems a shame to have to repeat that expression.
+>
+> (un-CCing netdev@vger.kernel.org)
+>
+> Hi Bjorn,
+>
+> I propose pci_enable_msix_exact(pdev, entries, nvec) rather than
+> pci_enable_msix_fixed().
 
-The reason DMABOUNCE should be avoided is because it is a known source
-of OOMs, and that has never been investigated and fixed.  You can read
-about some of the kinds of problems this code creates here:
+OK, that sounds fine.
 
-http://webcache.googleusercontent.com/search?q=cache:jwl4g8hqWa8J:comments.gmane.org/gmane.linux.ports.arm.kernel/15850+&cd=2&hl=en&ct=clnk&gl=uk&client=firefox-a
+> Do you prefer this one to return 0/-errno or nvec/-errno?
 
-That was never got to the bottom of.  I could harp on about not having
-the hardware, the people with the hardware not being capable of debugging
-it, or not willing to litter their kernels with printks when they've
-found a reproducable way to trigger it, etc - but none of that really
-matters.
+0/-errno seems right to me.  We are asking for a very specific thing,
+and returning nvec doesn't give the caller any additional information
+(since the caller supplied nvec in the first place), so simple
+success/failure is what I would expect.
 
-What matters is the end result is nothing was ever done to investigate
-the causes, so it remains "unsafe" to use.
+> Do you want pci_enable_msi_exact() in addition to pci_enable_msix_exact()?
 
-> I do realize that my following patches madly mix potential bus code
-> and actual device support, however..
-> 
-> [PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
-> [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
-> 
-> .. without my patches the driver does not handle CONFIG_BOUNCE and
-> CONFIG_VMSPLIT_2G.
+If there are cases where pci_enable_msi_exact() would be used, I guess
+the same arguments would apply, so yes.  I haven't looked at the
+archives, but I have this nagging feeling that this is exactly what
+you proposed initially, and I had some objection.  If so, I'm sorry
+about changing my mind :)
 
-Can we please kill the idea that CONFIG_VMSPLIT_* has something to do
-with DMA?  It doesn't.  VMSPLIT sets where the boundary between userspace
-and kernel space is placed in virtual memory.  It doesn't really change
-which memory is DMA-able.
-
-There is the BLK_BOUNCE_HIGH option, but that's more to do with drivers
-saying "I don't handle highmem pages because I'm old and no one's updated
-me".
-
-The same is true of highmem vs bouncing for DMA.  Highmem is purely a
-virtual memory concept and has /nothing/ to do with whether the memory
-can be DMA'd to.
-
-Let's take an extreme example.  Let's say I set a 3G VM split, so kernel
-memory starts at 0xc0000000.  I then set the vmalloc space to be 1024M -
-but the kernel strinks that down to the maximum that can be accomodated,
-which leaves something like 16MB of lowmem.  Let's say I have 512MB of
-RAM in the machine.
-
-Now let's consider I do the same thing, but with a 2G VM split.  Has the
-memory pages which can be DMA'd to changed at all?  Yes, the CPU's view
-of pages has changed, but the DMA engine's view hasn't changed /one/ /bit/.
-
-Now consider when vmalloc space isn't expanded to maximum and all that
-RAM is mapped into the kernel direct mapped region.  Again, any
-difference as far as the DMA engine goes?  No there isn't.
-
-So, the idea that highmem or vmsplit has any kind of impact on whether
-memory can be DMA'd to by the hardware is absolutely absurd.
-
-VMsplit and highmem are a CPU visible concept, and has very little to do
-with whether the memory is DMA-able.
-
--- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
+Bjorn
