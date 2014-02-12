@@ -1,94 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f52.google.com ([209.85.160.52]:46534 "EHLO
-	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754984AbaBECan (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:30:43 -0500
-Message-ID: <52F1A250.6030808@gmail.com>
-Date: Tue, 04 Feb 2014 18:30:40 -0800
-From: Rajat Jain <rajatxjain@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v4 6/8] pciehp: Disabling the link notification across slot
- reset
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:34571 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087AbaBLH2Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 02:28:16 -0500
+From: Sascha Hauer <s.hauer@pengutronix.de>
+To: linux-pci@vger.kernel.org
+Cc: kernel@pengutronix.de, Sascha Hauer <s.hauer@pengutronix.de>,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>
+Subject: [PATCH] PCI: imx6: Fix link_up detection
+Date: Wed, 12 Feb 2014 08:27:55 +0100
+Message-Id: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Disable the link notification (in addition to presence detect
-notifications) across the slot reset since it could potentialy flap
-the link and we don't want to treat it as hot unplug followed by a
-hotplug.
+This is broken since:
 
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
+| commit e6daf4a5e1b813bc7f85507ec83b8c2452c121e6
+| Author: Marek Vasut <marex@denx.de>
+| Date:   Thu Dec 12 22:49:59 2013 +0100
+|
+|     PCI: imx6: Report "link up" only after link training completes
+|
+|     While waiting for the PHY to report the PCIe link is up, we might hit a
+|     situation where the link training is still in progress, while the PHY
+|     already reports the link is up.  Add additional check for this condition.
+|
+|     Signed-off-by: Marek Vasut <marex@denx.de>
+|     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+|     Acked-by: Shawn Guo <shawn.guo@linaro.org>
+
+The problem is: Before the above commit only the PCIE_PHY_DEBUG_R1_XMLH_LINK_UP
+bit was used to determine whether the link is up or not. Since the above commit
+also the PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING is used. This means a link
+still being trained is as link down.
+The designware driver changes the PORT_LOGIC_SPEED_CHANGE bit in
+dw_pcie_host_init() which causes the link to be retrained. During the next call
+to dw_pcie_rd_conf() the link is then reported being down and the function
+returns PCIBIOS_DEVICE_NOT_FOUND resulting in nonfunctioning PCIe.
+
+This patch fixes this by waiting until the link training has finished before
+testing the PCIE_PHY_DEBUG_R1_XMLH_LINK_UP bit. This is hardly the correct
+solution, but I don't know what should be done instead.
+
+Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Richard Zhu <r65037@freescale.com> (maintainer:PCI DRIVER FOR IMX6)
+Cc: Shawn Guo <shawn.guo@linaro.org> (maintainer:PCI DRIVER FOR IMX6)
+Cc: Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM)
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: Marek Vasut <marex@denx.de>
 ---
- drivers/pci/hotplug/pciehp_hpc.c |   30 +++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 13 deletions(-)
+ drivers/pci/host/pci-imx6.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 15ca3a1..6433e73 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -619,33 +619,37 @@ static void pcie_disable_notification(struct controller *ctrl)
- 
- /*
-  * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-- * bus reset of the bridge, but if the slot supports surprise removal we need
-- * to disable presence detection around the bus reset and clear any spurious
-+ * bus reset of the bridge, but if the slot supports surprise removal (or
-+ * link state change based hotplug), we need to disable presence detection
-+ * (or link state notifications) around the bus reset and clear any spurious
-  * events after.
-  */
- int pciehp_reset_slot(struct slot *slot, int probe)
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 866bdc7..9b6b501 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -449,6 +449,7 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+ static int imx6_pcie_link_up(struct pcie_port *pp)
  {
- 	struct controller *ctrl = slot->ctrl;
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
-+	u16 stat_mask = 0, ctrl_mask = 0;
+ 	u32 rc, ltssm, rx_valid;
++	int count = 1000;
  
- 	if (probe)
- 		return 0;
- 
--	if (HP_SUPR_RM(ctrl)) {
--		pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_PDCE);
--		if (pciehp_poll_mode)
--			del_timer_sync(&ctrl->poll_timer);
-+	if (HP_SUPR_RM(ctrl) && !ATTN_BUTTN(ctrl)) {
-+		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
-+		stat_mask |= PCI_EXP_SLTSTA_PDC;
- 	}
-+	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
-+	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
+ 	/*
+ 	 * Test if the PHY reports that the link is up and also that
+@@ -458,8 +459,13 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 	 * as well here.
+ 	 */
+ 	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+-	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
+-	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
++	while (rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING) {
++		if (!count--)
++			return 0;
++		rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
++	}
 +
-+	pcie_write_cmd(ctrl, 0, ctrl_mask);
-+	if (pciehp_poll_mode)
-+		del_timer_sync(&ctrl->poll_timer);
++	if (rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP)
+ 		return 1;
  
- 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
- 
--	if (HP_SUPR_RM(ctrl)) {
--		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
--					   PCI_EXP_SLTSTA_PDC);
--		pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PDCE, PCI_EXP_SLTCTL_PDCE);
--		if (pciehp_poll_mode)
--			int_poll_timeout(ctrl->poll_timer.data);
--	}
-+	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
-+	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
-+	if (pciehp_poll_mode)
-+		int_poll_timeout(ctrl->poll_timer.data);
- 
- 	return 0;
- }
+ 	/*
 -- 
-1.7.9.5
+1.8.5.3
 
