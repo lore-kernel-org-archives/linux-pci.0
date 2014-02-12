@@ -1,66 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f41.google.com ([209.85.160.41]:46302 "EHLO
-	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936AbaBEICy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:02:54 -0500
+Received: from szxga02-in.huawei.com ([119.145.14.65]:12635 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333AbaBLCxY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 21:53:24 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH part1 v6 6/7] PCI: Check pci device serial number when scan device
+Date: Wed, 12 Feb 2014 10:52:52 +0800
+Message-ID: <1392173573-59844-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
+References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140205065254.29445.77939.sendpatchset@w520>
-References: <20140205065243.29445.76593.sendpatchset@w520>
-	<20140205065254.29445.77939.sendpatchset@w520>
-Date: Wed, 5 Feb 2014 09:02:53 +0100
-Message-ID: <CAMuHMdVrkPybrONnw5fZaMZ-vuaq_arrBMZvnRYZ9EnvE8Y4cA@mail.gmail.com>
-Subject: Re: [PATCH 01/04] PCI: rcar: Register each instance independently
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Magnus Damm <magnus.damm@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Valentine <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 5, 2014 at 7:52 AM, Magnus Damm <magnus.damm@gmail.com> wrote:
-> +static int rcar_pci_probe(struct platform_device *pdev)
->  {
->         struct resource *cfg_res, *mem_res;
->         struct rcar_pci_priv *priv;
->         void __iomem *reg;
-> +       struct hw_pci hw;
->
->         cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->         reg = devm_ioremap_resource(&pdev->dev, cfg_res);
-> @@ -308,31 +271,26 @@ static int __init rcar_pci_probe(struct
->         priv->reg = reg;
->         priv->dev = &pdev->dev;
->
-> -       return rcar_pci_add_controller(priv);
-> +       memset(&hw, 0, sizeof(hw));
-> +       hw.nr_controllers = 1;
-> +       hw.private_data = (void **)&priv;
+Sometimes pci device will be removed and reinsert
+while suspended. In this case system can not identify
+the device has been changed. Now PCIe support Device
+Serial Number Capability which has the unique number.
+So make system check pci device DSN during scanning
+device if support.
 
-This raised a red flag: taking the address of a variable on the stack.
-I know it's correct, as hw.private_data is an array of pointers copied
-by pci_common_init_dev() below.
-But perhaps it's a good idea to turn priv into an array with one element,
-to make this clearer, and avoid the ugly cast?
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-> +       hw.map_irq = rcar_pci_map_irq;
-> +       hw.ops = &rcar_pci_ops;
-> +       hw.setup = rcar_pci_setup;
-> +       pci_common_init_dev(&pdev->dev, &hw);
-> +       return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 27d3e6f..370b25c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1383,11 +1383,22 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
+ {
+ 	struct pci_dev *dev;
++	int rescan = 0;
+ 
+ 	dev = pci_get_slot(bus, devfn);
+ 	if (dev) {
++		/* only check func 0 device */
++		if (PCI_FUNC(devfn) == 0) {
++			if (pci_serial_number_changed(dev)) {
++				pci_bus_freeze_device(bus);
++				pci_stop_and_remove_bus_device(dev);
++				pci_bus_unfreeze_device(bus);
++				rescan = 1;
++			}
++		}
+ 		pci_dev_put(dev);
+-		return dev;
++		if (!rescan)
++			return dev;
+ 	}
+ 
+ 	dev = pci_scan_device(bus, devfn);
+-- 
+1.7.1
 
-Gr{oetje,eeting}s,
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
