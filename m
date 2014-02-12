@@ -1,74 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:55879 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753642AbaB0Ql7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 11:41:59 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:52833 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753056AbaBLUQu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 15:16:50 -0500
+From: Will Deacon <will.deacon@arm.com>
 To: linux-arm-kernel@lists.infradead.org
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	Richard Zhu <r65037@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Mark Rutland <mark.rutland@arm.com>, kernel@pengutronix.de
-Subject: [PATCH v3 2/3] ARM: dts: imx6: extend PCIe interrupt list for MSI
-Date: Thu, 27 Feb 2014 17:41:44 +0100
-Message-Id: <1393519305-15128-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1393519305-15128-1-git-send-email-l.stach@pengutronix.de>
-References: <1393519305-15128-1-git-send-email-l.stach@pengutronix.de>
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
+Subject: [PATCH v2 2/3] ARM: bios32: use pci_enable_resource to enable PCI resources
+Date: Wed, 12 Feb 2014 20:16:10 +0000
+Message-Id: <1392236171-10512-3-git-send-email-will.deacon@arm.com>
+In-Reply-To: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add optional irqs, necessary for MSI handling.
+This patch moves bios32 over to using the generic code for enabling PCI
+resources. Since the core code takes care of bridge resources too, we
+can also drop the explicit IO and MEMORY enabling for them in the arch
+code.
 
-Signed-off-by: Juergen Beisert <jbe@pengutronix.de>
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+A side-effect of this change is that we no longer explicitly enable
+devices when running in PCI_PROBE_ONLY mode. This stays closer to the
+meaning of the option and prevents us from trying to enable devices
+without any assigned resources (the core code refuses to enable
+resources without parents).
+
+Signed-off-by: Will Deacon <will.deacon@arm.com>
 ---
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 10 +++++++++-
- arch/arm/boot/dts/imx6qdl.dtsi                           |  3 ++-
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ arch/arm/kernel/bios32.c | 37 +++----------------------------------
+ 1 file changed, 3 insertions(+), 34 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index aade8d29314c..3b27ec310ec4 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -16,6 +16,13 @@ Required properties:
- 	- "pcie_axi"
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 317da88ae65b..91f48804e3bb 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -608,41 +608,10 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+  */
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+-	u16 cmd, old_cmd;
+-	int idx;
+-	struct resource *r;
+-
+-	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+-	old_cmd = cmd;
+-	for (idx = 0; idx < 6; idx++) {
+-		/* Only set up the requested stuff */
+-		if (!(mask & (1 << idx)))
+-			continue;
+-
+-		r = dev->resource + idx;
+-		if (!r->start && r->end) {
+-			printk(KERN_ERR "PCI: Device %s not available because"
+-			       " of resource collisions\n", pci_name(dev));
+-			return -EINVAL;
+-		}
+-		if (r->flags & IORESOURCE_IO)
+-			cmd |= PCI_COMMAND_IO;
+-		if (r->flags & IORESOURCE_MEM)
+-			cmd |= PCI_COMMAND_MEMORY;
+-	}
++	if (pci_has_flag(PCI_PROBE_ONLY))
++		return 0;
  
- Optional properties:
-+- interrupts: Must contain an entry for each entry in the
-+  interrupt-names property.
-+- interrupt-names: May include the following entries:
-+	- "inta"
-+	- "intb"
-+	- "intc"
-+	- "intd/msi" if not present the driver won't be able to handle MSI
- - power-on-gpio: gpio pin number of power-enable signal
- - wake-up-gpio:  gpio pin number of incoming wakeup signal
- - disable-gpio:  gpio pin number of outgoing rfkill/endpoint disable signal
-@@ -32,7 +39,8 @@ Example:
- 			  0x81000000 0 0          0x01f80000 0 0x00010000
- 			  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>;
- 		num-lanes = <1>;
--		interrupts = <0 123 0x04>;
-+		interrupt-names = "inta", "intb", "intc", "intd/msi";
-+		interrupts = <0 123 0x04>, <0 122 0x04>, <0 121 0x04>, <0 120 0x04>;
- 		clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
- 		clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
- 	};
-diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
-index fb28b2ecb1db..e0261dd3fdd3 100644
---- a/arch/arm/boot/dts/imx6qdl.dtsi
-+++ b/arch/arm/boot/dts/imx6qdl.dtsi
-@@ -126,7 +126,8 @@
- 				  0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
- 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
--			interrupts = <0 123 0x04>;
-+			interrupt-names = "inta", "intb", "intc", "intd/msi";
-+			interrupts = <0 123 0x04>, <0 122 0x04>, <0 121 0x04>, <0 120 0x04>;
- 			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
- 			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
- 			status = "disabled";
+-	/*
+-	 * Bridges (eg, cardbus bridges) need to be fully enabled
+-	 */
+-	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
+-		cmd |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
+-
+-	if (cmd != old_cmd) {
+-		printk("PCI: enabling device %s (%04x -> %04x)\n",
+-		       pci_name(dev), old_cmd, cmd);
+-		pci_write_config_word(dev, PCI_COMMAND, cmd);
+-	}
+-	return 0;
++	return pci_enable_resources(dev, mask);
+ }
+ 
+ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
 -- 
-1.8.5.3
+1.8.2.2
 
