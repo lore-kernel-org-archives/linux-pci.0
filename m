@@ -1,48 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:64366 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754262AbaBUA75 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 19:59:57 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N1B00AOZMRWMC60@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 21 Feb 2014 09:59:56 +0900 (KST)
-Date: Fri, 21 Feb 2014 00:59:56 +0000 (GMT)
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 1/2] PCI:designware:Fix comment for setting number of lanes
-To: Mohit Kumar <mohit.kumar@st.com>
-Cc: Bjorn Helgaas <bhelgass@google.com>,
-	"spear-devel@list.st.com" <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Reply-to: jg1.han@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=euc-kr
-MIME-version: 1.0
-Message-id: <27943985.11341392944394457.JavaMail.weblogic@epml01>
+Received: from quartz.orcorp.ca ([184.70.90.242]:54102 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752843AbaBLWYU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Feb 2014 17:24:20 -0500
+Date: Wed, 12 Feb 2014 15:24:14 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
+Message-ID: <20140212222414.GB17248@obsidianresearch.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+ <201402092130.25615.arnd@arndb.de>
+ <20140210173450.GA5554@obsidianresearch.com>
+ <2006726.HhIT01YuXY@wuerfel>
+ <20140212194313.GA17248@obsidianresearch.com>
+ <20140212221526.60fd7f8b@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140212221526.60fd7f8b@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRmViIDIwLCAyMDE0IDE0OjIyIChHTVQrMDk6MDApLCBNb2hpdCBLdW1hciB3cm90ZToNCj4g
-DQo+IENvcnJlY3RzIGNvbW1lbnQgZm9yIHNldHRpbmcgbnVtYmVyIG9mIGxhbmVzLg0KPiANCj4g
-U2lnbmVkLW9mZi1ieTogTW9oaXQgS3VtYXIgPG1vaGl0Lmt1bWFyQHN0LmNvbT4NCj4gQ2M6IEpp
-bmdvbyBIYW4gPGpnMS5oYW5Ac2Ftc3VuZy5jb20+DQo+IENjOiBCam9ybiBIZWxnYWFzIDxiaGVs
-Z2Fzc0Bnb29nbGUuY29tPg0KPiBDYzogc3BlYXItZGV2ZWxAbGlzdC5zdC5jb20NCj4gQ2M6IGxp
-bnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCg0KQWNrZWQtYnk6IEppbmdvbyBIYW4gPGpnMS5oYW5A
-c2Ftc3VuZy5jb20+DQoNClJpZ2h0LCB0aGFua3MuDQoNCkJlc3QgcmVnYXJkcywNCkppbmdvbyBI
-YW4NCg0KPiAtLS0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMgfCAgICAy
-ICstDQo+ICAxIGZpbGVzIGNoYW5nZWQsIDEgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkN
-Cj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIGIv
-ZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KPiBpbmRleCA2ZDIzZDhjLi4zOTE5
-NjZmIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+
-ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gQEAgLTc2Niw3ICs3
-NjYsNyBAQCB2b2lkIGR3X3BjaWVfc2V0dXBfcmMoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ICAJ
-dTMyIG1lbWJhc2U7DQo+ICAJdTMyIG1lbWxpbWl0Ow0KPiAgDQo+IC0JLyogc2V0IHRoZSBudW1i
-ZXIgb2YgbGluZXMgYXMgNCAqLw0KPiArCS8qIHNldCB0aGUgbnVtYmVyIG9mIGxhbmVzICovDQo+
-ICAJZHdfcGNpZV9yZWFkbF9yYyhwcCwgUENJRV9QT1JUX0xJTktfQ09OVFJPTCwgJnZhbCk7DQo+
-ICAJdmFsICY9IH5QT1JUX0xJTktfTU9ERV9NQVNLOw0KPiAgCXN3aXRjaCAocHAtPmxhbmVzKSB7
-DQo+IC0tIA0KPiAxLjcuMC4x
+On Wed, Feb 12, 2014 at 10:15:26PM +0100, Thomas Petazzoni wrote:
+
+> > +#ifdef CONFIG_PCI_DOMAINS
+> > +       domain = sys->domain;
+> > +#endif
+> > +
+> > +       snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x", domain);
+> > +       pcie->mem.name = pcie->mem_name;
+> > +
+> > +       snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", domain);
+> > +       pcie->realio.name = pcie->io_name;
+> 
+> I honestly don't know what PCI domains are, but this change looks
+> fairly harmless to me. I would however use kasprintf() instead maybe. I
+> can submit patches for those two changes if you want.
+
+For this purpose imagine that each PCI host controller driver gets a
+unique domain, and every domain has a unique
+aperture. domain:bus:device:function is the full unique path to a PCI
+device.
+
+So when you look at the resource hierarchy it makes some logical
+sense:
+
+e0000000-efffffff : PCI MEM 0000
+  e0000000-e00fffff : PCI Bus 0000:01
+    e0000000-e001ffff : 0000:01:00.0
+
+PCI Domain -> domain + subordinate bus # -> domain:bus:device:function, bar #
+
+The ARM PCI BIOS code used bus number, and Will's version ended up
+using the DT path to the PCI node. Would be nice to see an
+agreement/common code :)
+ 
+> > Still missing release_region..
+> 
+> To match which request_region?
+
+Ah, sorry, Arnd added one:
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 13478ec..b55e9a6 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -680,9 +680,17 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+        struct mvebu_pcie *pcie = sys_to_pcie(sys);
+        int i;
+
+-       if (resource_size(&pcie->realio) != 0)
++       if (request_resource(&iomem_resource, &pcie->mem))
++               return 0;
++
++       if (resource_size(&pcie->realio) != 0) {
++               if (request_resource(&ioport_resource, &pcie->realio)) {
++                       release_resource(&pcie->mem);
++                       return 0;
++               }
+                pci_add_resource_offset(&sys->resources, &pcie->realio,
+                                        sys->io_offset);
++       }
+        pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
+        pci_add_resource(&sys->resources, &pcie->busn);
 
 
+Which is why I didn't use kasprintf, that would complicate freeing
+further.
+
+Ideally we'd be able to use a devm_request_region someday.
+
+Jason
