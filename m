@@ -1,64 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:12635 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752333AbaBLCxY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 21:53:24 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH part1 v6 6/7] PCI: Check pci device serial number when scan device
-Date: Wed, 12 Feb 2014 10:52:52 +0800
-Message-ID: <1392173573-59844-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
-References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:64535 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753542AbaBLXXD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 18:23:03 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] bus: mvebu-mbus: Fix incorrect size for PCI aperture resources
+Date: Thu, 13 Feb 2014 00:22:57 +0100
+Message-ID: <1701545.GmtElNcB8L@wuerfel>
+In-Reply-To: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
+References: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sometimes pci device will be removed and reinsert
-while suspended. In this case system can not identify
-the device has been changed. Now PCIe support Device
-Serial Number Capability which has the unique number.
-So make system check pci device DSN during scanning
-device if support.
+On Wednesday 12 February 2014 15:57:07 Jason Gunthorpe wrote:
+> reg[0] is the DT base, reg[1] is the DT length in bytes,
+> struct resource.end is the inclusive end address, so a -1 is
+> required.
+> 
+> Tested on kirkwood.
+> 
+> Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 27d3e6f..370b25c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1383,11 +1383,22 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
- {
- 	struct pci_dev *dev;
-+	int rescan = 0;
- 
- 	dev = pci_get_slot(bus, devfn);
- 	if (dev) {
-+		/* only check func 0 device */
-+		if (PCI_FUNC(devfn) == 0) {
-+			if (pci_serial_number_changed(dev)) {
-+				pci_bus_freeze_device(bus);
-+				pci_stop_and_remove_bus_device(dev);
-+				pci_bus_unfreeze_device(bus);
-+				rescan = 1;
-+			}
-+		}
- 		pci_dev_put(dev);
--		return dev;
-+		if (!rescan)
-+			return dev;
- 	}
- 
- 	dev = pci_scan_device(bus, devfn);
--- 
-1.7.1
-
-
+Acked-by: Arnd Bergmann <arnd@arndb.de>
