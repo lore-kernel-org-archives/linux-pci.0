@@ -1,168 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og106.obsmtp.com ([64.18.0.182]:52254 "HELO
-	exprod5og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756194AbaBEW02 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 17:26:28 -0500
-Received: by mail-vc0-f181.google.com with SMTP id ie18so821759vcb.12
-        for <linux-pci@vger.kernel.org>; Wed, 05 Feb 2014 14:26:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <7398333.9L5KlyFggU@wuerfel>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
-	<1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
-	<7398333.9L5KlyFggU@wuerfel>
-Date: Wed, 5 Feb 2014 14:26:27 -0800
-Message-ID: <CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
- device tree
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from top.free-electrons.com ([176.31.233.9]:46944 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754200AbaBLVP3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 16:15:29 -0500
+Date: Wed, 12 Feb 2014 22:15:26 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host
+ controller
+Message-ID: <20140212221526.60fd7f8b@skate>
+In-Reply-To: <20140212194313.GA17248@obsidianresearch.com>
+References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+	<201402092130.25615.arnd@arndb.de>
+	<20140210173450.GA5554@obsidianresearch.com>
+	<2006726.HhIT01YuXY@wuerfel>
+	<20140212194313.GA17248@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Liviu,
+Dear Jason Gunthorpe,
 
-I did not get the first email of this particular patch on any of
-subscribed mailing lists (don't know why), hence replying here.
+On Wed, 12 Feb 2014 12:43:13 -0700, Jason Gunthorpe wrote:
 
-+struct pci_host_bridge *
-+pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
-+ void *host_data, struct list_head *resources)
-+{
-+ struct pci_bus *root_bus;
-+ struct pci_host_bridge *bridge;
-+
-+ /* first parse the host bridge bus ranges */
-+ if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
-+ return NULL;
-+
-+ /* then create the root bus */
-+ root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
-+ if (!root_bus)
-+ return NULL;
-+
-+ bridge = to_pci_host_bridge(root_bus->bridge);
-+
-+ return bridge;
-+}
+> diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
+> index 2394e97..7fd54e9 100644
+> --- a/drivers/bus/mvebu-mbus.c
+> +++ b/drivers/bus/mvebu-mbus.c
+> @@ -876,14 +876,14 @@ static void __init mvebu_mbus_get_pcie_resources(struct device_node *np,
+>         ret = of_property_read_u32_array(np, "pcie-mem-aperture", reg, ARRAY_SIZE(reg));
+>         if (!ret) {
+>                 mem->start = reg[0];
+> -               mem->end = mem->start + reg[1];
+> +               mem->end = mem->start + reg[1] - 1;
+>                 mem->flags = IORESOURCE_MEM;
+>         }
+>  
+>         ret = of_property_read_u32_array(np, "pcie-io-aperture", reg, ARRAY_SIZE(reg));
+>         if (!ret) {
+>                 io->start = reg[0];
+> -               io->end = io->start + reg[1];
+> +               io->end = io->start + reg[1] - 1;
+>                 io->flags = IORESOURCE_IO;
+>         }
+>  }
 
-You are keeping the domain_nr inside pci_host_bridge structure. In
-above API, domain_nr is required in 'pci_find_bus' function called
-from 'pci_create_root_bus'. Since the bridge is allocated after
-creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
-will cause problem for scanning multiple domains.
+This certainly looks good.
 
+> Fixes the wrong length (e0000000-f0000000 should be e0000000-efffffff)
+> 
+> And this fixes the <BAD>:
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index ef8691a..fbb89cb 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -109,7 +109,9 @@ struct mvebu_pcie {
+>         struct mvebu_pcie_port *ports;
+>         struct msi_chip *msi;
+>         struct resource io;
+> +       char io_name[30];
+>         struct resource realio;
+> +       char mem_name[30];
+>         struct resource mem;
+>         struct resource busn;
+>         int nports;
+> @@ -681,10 +683,29 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+>  {
+>         struct mvebu_pcie *pcie = sys_to_pcie(sys);
+>         int i;
+> +       int domain = 0;
+>  
+> +#ifdef CONFIG_PCI_DOMAINS
+> +       domain = sys->domain;
+> +#endif
+> +
+> +       snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x", domain);
+> +       pcie->mem.name = pcie->mem_name;
+> +
+> +       snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", domain);
+> +       pcie->realio.name = pcie->io_name;
 
-On Mon, Feb 3, 2014 at 10:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
->> +/**
->> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
->> + * @dev: device node of the host bridge having the range property
->> + * @resources: list where the range of resources will be added after DT parsing
->> + *
->> + * This function will parse the "ranges" property of a PCI host bridge device
->> + * node and setup the resource mapping based on its content. It is expected
->> + * that the property conforms with the Power ePAPR document.
->> + *
->> + * Each architecture will then apply their filtering based on the limitations
->> + * of each platform. One general restriction seems to be the number of IO space
->> + * ranges, the PCI framework makes intensive use of struct resource management,
->> + * and for IORESOURCE_IO types they can only be requested if they are contained
->> + * within the global ioport_resource, so that should be limited to one IO space
->> + * range.
->
-> Actually we have quite a different set of restrictions around I/O space on ARM32
-> at the moment: Each host bridge can have its own 64KB range in an arbitrary
-> location on MMIO space, and the total must not exceed 2MB of I/O space.
->
->> + */
->> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
->> +                                     struct list_head *resources)
->> +{
->> +     struct resource *res;
->> +     struct of_pci_range range;
->> +     struct of_pci_range_parser parser;
->> +     int err;
->> +
->> +     pr_info("PCI host bridge %s ranges:\n", dev->full_name);
->> +
->> +     /* Check for ranges property */
->> +     err = of_pci_range_parser_init(&parser, dev);
->> +     if (err)
->> +             return err;
->> +
->> +     pr_debug("Parsing ranges property...\n");
->> +     for_each_of_pci_range(&parser, &range) {
->> +             /* Read next ranges element */
->> +             pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
->> +                             range.pci_space, range.pci_addr);
->> +             pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
->> +                                     range.cpu_addr, range.size);
->> +
->> +             /* If we failed translation or got a zero-sized region
->> +              * (some FW try to feed us with non sensical zero sized regions
->> +              * such as power3 which look like some kind of attempt
->> +              * at exposing the VGA memory hole) then skip this range
->> +              */
->> +             if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->> +                     continue;
->> +
->> +             res = kzalloc(sizeof(struct resource), GFP_KERNEL);
->> +             if (!res) {
->> +                     err = -ENOMEM;
->> +                     goto bridge_ranges_nomem;
->> +             }
->> +
->> +             of_pci_range_to_resource(&range, dev, res);
->> +
->> +             pci_add_resource_offset(resources, res,
->> +                             range.cpu_addr - range.pci_addr);
->> +     }
->
-> I believe of_pci_range_to_resource() will return the MMIO aperture for the
-> I/O space window here, which is not what you are supposed to pass into
-> pci_add_resource_offset.
->
->> +EXPORT_SYMBOL(pci_host_bridge_of_init);
->
-> EXPORT_SYMBOL_GPL
->
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 6e34498..16febae 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>       list_for_each_entry_safe(window, n, resources, list) {
->>               list_move_tail(&window->list, &bridge->windows);
->>               res = window->res;
->> +             /*
->> +              * IO resources are stored in the kernel with a CPU start
->> +              * address of zero. Adjust the data accordingly and remember
->> +              * the offset
->> +              */
->> +             if (resource_type(res) == IORESOURCE_IO) {
->> +                     bridge->io_offset = res->start;
->> +                     res->end -= res->start;
->> +                     window->offset -= res->start;
->> +                     res->start = 0;
->> +             }
->>               offset = window->offset;
->>               if (res->flags & IORESOURCE_BUS)
->
-> Won't this break all existing host bridges?
->
->         Arnd
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I honestly don't know what PCI domains are, but this change looks
+fairly harmless to me. I would however use kasprintf() instead maybe. I
+can submit patches for those two changes if you want.
+
+> Still missing release_region..
+
+To match which request_region?
+
+> > Since the mvebu_pcie_setup() function seems very generic at this,
+> > we should probably try to factor out that code into a common
+> > helper, at least for arm64, but ideally shared with arm32
+> > as well.
+> 
+> Yah, especially since people are not getting it completely right..
+> 
+> But some of the trouble here is a lack of a generic pci host driver
+> structure, eg I have to pull the domain number out of the ARM32
+> specific structure ..
+
+There is indeed a good deal of duplication of PCI related code in the
+different architectures. The PCI_DOMAINS Kconfig option is for example
+replicated in multiple architectures.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
