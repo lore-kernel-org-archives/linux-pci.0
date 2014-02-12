@@ -1,143 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:59435 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753532AbaBZTJX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:09:23 -0500
-Received: by mail-ig0-f170.google.com with SMTP id uq10so3007448igb.1
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:09:22 -0800 (PST)
-Subject: [PATCH 3/4] i2o: Refactor i2o_iop_systab_set() PCI space allocation
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>,
-	linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:09:20 -0700
-Message-ID: <20140226190920.9616.82654.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mx1.redhat.com ([209.132.183.28]:20213 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752412AbaBLNgn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Feb 2014 08:36:43 -0500
+Date: Wed, 12 Feb 2014 14:38:17 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to
+ pci_disable_msi()
+Message-ID: <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
+ <20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
+ <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
+ <20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
+ <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
+ <20140205085047.GA27820@dhcp-26-207.brq.redhat.com>
+ <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
+ <20140212003143.GD21057@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140212003143.GD21057@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refactor the PCI space allocation in i2o_iop_systab_set().  This might
-improve readability slightly, but mainly it is to make the next patch
-simpler.
+On Tue, Feb 11, 2014 at 05:31:43PM -0700, Bjorn Helgaas wrote:
+> I haven't put these in my branch, so you can take them.
+> 
+> Alexander has a whole batch of network driver updates that I think David
+> Miller is going to apply; would it make sense to include these in that
+> batch?
+> 
+> There's also the wil6210 patch for
+> drivers/net/wireless/ath/wil6210/pcie_bus.c, which seems like it maybe
+> could be in that batch, too.
 
-No functional change.
+Well, as this series is small I thought it could quickly go thru your
+tree. But since ipr had conflicts, there is no point routing all patches
+altogether, so up to you guys. The wil6210 patch is already in your pci/msi
+branch though.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/message/i2o/iop.c |   89 +++++++++++++++++++++++----------------------
- 1 file changed, 46 insertions(+), 43 deletions(-)
+> Bjorn
 
-diff --git a/drivers/message/i2o/iop.c b/drivers/message/i2o/iop.c
-index 68aef58bf89c..c334ba7224a1 100644
---- a/drivers/message/i2o/iop.c
-+++ b/drivers/message/i2o/iop.c
-@@ -652,6 +652,48 @@ static int i2o_iop_activate(struct i2o_controller *c)
- 	return i2o_hrt_get(c);
- };
- 
-+static void i2o_res_alloc(struct i2o_controller *c, unsigned long flags)
-+{
-+	i2o_status_block *sb = c->status_block.virt;
-+	struct resource *root, *res = &c->mem_resource;
-+	resource_size_t size, min, max, align;
-+	int err;
-+
-+	res->name = c->pdev->bus->name;
-+	res->flags = flags;
-+	res->start = 0;
-+	res->end = 0;
-+	osm_info("%s: requires private memory resources.\n", c->name);
-+	root = pci_find_parent_resource(c->pdev, res);
-+	if (root == NULL) {
-+		osm_warn("%s: Can't find parent resource!\n", c->name);
-+		return;
-+	}
-+
-+	if (flags & IORESOURCE_MEM) {
-+		size = min = max = sb->desired_mem_size;
-+		align = 1 << 20;	/* unspecified, use 1Mb and play safe */
-+	} else if (flags & IORESOURCE_IO) {
-+		size = min = max = sb->desired_io_size;
-+		align = 1 << 12;	/* unspecified, use 4Kb and play safe */
-+	}
-+
-+	err = allocate_resource(root, res, size, min, max, align, NULL, NULL);
-+	if (err < 0)
-+		return;
-+
-+	if (flags & IORESOURCE_MEM) {
-+		c->mem_alloc = 1;
-+		sb->current_mem_size = resource_size(res);
-+		sb->current_mem_base = res->start;
-+	} else if (flags & IORESOURCE_IO) {
-+		c->io_alloc = 1;
-+		sb->current_io_size = resource_size(res);
-+		sb->current_io_base = res->start;
-+	}
-+	osm_info("%s: allocated PCI space %pR\n", c->name, res);
-+}
-+
- /**
-  *	i2o_iop_systab_set - Set the I2O System Table of the specified IOP
-  *	@c: I2O controller to which the system table should be send
-@@ -665,52 +707,13 @@ static int i2o_iop_systab_set(struct i2o_controller *c)
- 	struct i2o_message *msg;
- 	i2o_status_block *sb = c->status_block.virt;
- 	struct device *dev = &c->pdev->dev;
--	struct resource *root;
- 	int rc;
- 
--	if (sb->current_mem_size < sb->desired_mem_size) {
--		struct resource *res = &c->mem_resource;
--		res->name = c->pdev->bus->name;
--		res->flags = IORESOURCE_MEM;
--		res->start = 0;
--		res->end = 0;
--		osm_info("%s: requires private memory resources.\n", c->name);
--		root = pci_find_parent_resource(c->pdev, res);
--		if (root == NULL)
--			osm_warn("%s: Can't find parent resource!\n", c->name);
--		if (root && allocate_resource(root, res, sb->desired_mem_size, sb->desired_mem_size, sb->desired_mem_size, 1 << 20,	/* Unspecified, so use 1Mb and play safe */
--					      NULL, NULL) >= 0) {
--			c->mem_alloc = 1;
--			sb->current_mem_size = resource_size(res);
--			sb->current_mem_base = res->start;
--			osm_info("%s: allocated %llu bytes of PCI memory at "
--				"0x%016llX.\n", c->name,
--				(unsigned long long)resource_size(res),
--				(unsigned long long)res->start);
--		}
--	}
-+	if (sb->current_mem_size < sb->desired_mem_size)
-+		i2o_res_alloc(c, IORESOURCE_MEM);
- 
--	if (sb->current_io_size < sb->desired_io_size) {
--		struct resource *res = &c->io_resource;
--		res->name = c->pdev->bus->name;
--		res->flags = IORESOURCE_IO;
--		res->start = 0;
--		res->end = 0;
--		osm_info("%s: requires private memory resources.\n", c->name);
--		root = pci_find_parent_resource(c->pdev, res);
--		if (root == NULL)
--			osm_warn("%s: Can't find parent resource!\n", c->name);
--		if (root && allocate_resource(root, res, sb->desired_io_size, sb->desired_io_size, sb->desired_io_size, 1 << 12,	/* Unspecified, so use 4Kb and play safe */
--					      NULL, NULL) >= 0) {
--			c->io_alloc = 1;
--			sb->current_io_size = resource_size(res);
--			sb->current_io_base = res->start;
--			osm_info("%s: allocated %llu bytes of PCI I/O at "
--				"0x%016llX.\n", c->name,
--				(unsigned long long)resource_size(res),
--				(unsigned long long)res->start);
--		}
--	}
-+	if (sb->current_io_size < sb->desired_io_size)
-+		i2o_res_alloc(c, IORESOURCE_IO);
- 
- 	msg = i2o_msg_get_wait(c, I2O_TIMEOUT_MESSAGE_GET);
- 	if (IS_ERR(msg))
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
