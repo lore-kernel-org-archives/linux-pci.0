@@ -1,129 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:40524 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752215AbaBYArU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 19:47:20 -0500
-Received: by mail-ig0-f181.google.com with SMTP id y6so93533igj.2
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 16:47:19 -0800 (PST)
+Received: from quartz.orcorp.ca ([184.70.90.242]:52197 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752596AbaBMS1D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Feb 2014 13:27:03 -0500
+Date: Thu, 13 Feb 2014 11:26:54 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140213182654.GA20043@obsidianresearch.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+ <20140213110721.GC13576@mudshark.cambridge.arm.com>
+ <BA5E6077-77F8-4BE8-80E5-BAB9FE111387@codeaurora.org>
+ <4110788.UI9TADVhpa@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
-References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Feb 2014 17:46:59 -0700
-Message-ID: <CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4110788.UI9TADVhpa@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rajat]
+On Thu, Feb 13, 2014 at 05:28:20PM +0100, Arnd Bergmann wrote:
 
-On Mon, Feb 24, 2014 at 4:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On system with 16 PCI express hotplug slots, customer complain every slot
-> will report "Command not completed in 1000 msec" during initialization.
->
-> Intel says that we should only wait command complete only for
->            Electromechanical Interlock Control
->            Power Controller Control
->            Power Indicator Control
->            Attention Indicator Control
+> > Huh?  The reg property clearly has the size in it (as shown in the
+> > example below).  I guess I was just asking for the description
+> > here to say what the size was for the 2 compatibles since its
+> > fixed and known.
+> 
+> It's still an open question whether the config space in the reg
+> property should cover all 256 buses or just the ones in the
+> bus-range. In the latter case, it would be variable (but
+> predictable) size.
 
-Is there something in the spec that says this?  I'm looking at section
-6.7.3.2.  It says "If command completed events are supported, then
-software must wait for a command to complete before issuing the next
-command."  It's obvious that this is conditional on the "No Command
-Completed Support" bit, but I don't see anything about a connection
-with the other bits you mentioned.
+The 'describe the hardware principle' says the reg should be the
+entire available ECAM/CAM region the hardware is able to support.
 
-Is this related to an erratum in the Intel/AMD/Nvidia chipsets?  If
-so, we need at least a comment about that in the source, and
-preferably, some sort of quirk for these chipsets.
+This may be less than 256 busses, as ECAM allows the implementor to
+select how many upper address bits are actually supported.
 
-Otherwise, we're likely to break this in the future when somebody
-reading the code says "this doesn't correspond with what the spec
-says."  In case we *do* break this in the future, I'd like to have a
-bugzilla that contains the dmesg showing the problem and "lspci -vv"
-so we have a hope of figuring out what systems this affects.
+IMHO, the bus-range should be used to indicate the range of busses
+discovered by the firmware, but we have historically tweaked it to
+indicate the max range of bus numbers available on this bus (I think
+to support the hack where two physical PCI domains were roughly glued
+into a single Linux domain).
 
-This is similar to the issue Rajat is working on with
-http://patchwork.ozlabs.org/patch/322387/ .  I haven't merged that
-yet, but I probably will.  Is there any connection between that patch
-and this issue?  Does this issue still happen even with Rajat's patch
-applied?
+Which is not necessary when the DT stanza maps 1:1 into a PCI
+domain. The driver default for bus-range should just be 0 to 255, and
+it shouldn't be included in most cases.
 
-Bjorn
+The max busnr resource passed to the PCI core should be the lower of
+the busnr property and the reg limit, IMHO.
 
-> System with AMD/Nvidia chipset have same problem.
->
-> So change to only wait when following bits get changed.
->         PCI_EXP_SLTCTL_EIC
->         PCI_EXP_SLTCTL_PCC
->         PCI_EXP_SLTCTL_PIC
->         PCI_EXP_SLTCTL_AIC
->
-> With that we could set 16 seconds during booting, later with 32 sockets system
-> with 64 pcie hotplug slots we could save 64 seconds.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |   11 ++++++-----
->  include/uapi/linux/pci_regs.h    |    5 +++++
->  2 files changed, 11 insertions(+), 5 deletions(-)
->
-> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -152,8 +152,8 @@ static void pcie_wait_cmd(struct control
->  static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
->  {
->         struct pci_dev *pdev = ctrl_dev(ctrl);
-> +       u16 slot_ctrl, old_slot_ctrl;
->         u16 slot_status;
-> -       u16 slot_ctrl;
->
->         mutex_lock(&ctrl->ctrl_lock);
->
-> @@ -181,9 +181,8 @@ static void pcie_write_cmd(struct contro
->                 }
->         }
->
-> -       pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-> -       slot_ctrl &= ~mask;
-> -       slot_ctrl |= (cmd & mask);
-> +       pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &old_slot_ctrl);
-> +       slot_ctrl = (old_slot_ctrl & ~mask) | (cmd & mask);
->         ctrl->cmd_busy = 1;
->         smp_mb();
->         pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
-> @@ -191,7 +190,9 @@ static void pcie_write_cmd(struct contro
->         /*
->          * Wait for command completion.
->          */
-> -       if (!ctrl->no_cmd_complete) {
-> +       if (!ctrl->no_cmd_complete &&
-> +           ((PCI_EXP_SLTCTL_WAIT_MASK & old_slot_ctrl) !=
-> +            (PCI_EXP_SLTCTL_WAIT_MASK & slot_ctrl))) {
->                 int poll = 0;
->                 /*
->                  * if hotplug interrupt is not enabled or command
-> Index: linux-2.6/include/uapi/linux/pci_regs.h
-> ===================================================================
-> --- linux-2.6.orig/include/uapi/linux/pci_regs.h
-> +++ linux-2.6/include/uapi/linux/pci_regs.h
-> @@ -535,6 +535,11 @@
->  #define  PCI_EXP_SLTCTL_PWR_OFF        0x0400 /* Power Off */
->  #define  PCI_EXP_SLTCTL_EIC    0x0800  /* Electromechanical Interlock Control */
->  #define  PCI_EXP_SLTCTL_DLLSCE 0x1000  /* Data Link Layer State Changed Enable */
-> +/* only need to wait command complete for hpc related */
-> +#define  PCI_EXP_SLTCTL_WAIT_MASK (PCI_EXP_SLTCTL_EIC | \
-> +                                  PCI_EXP_SLTCTL_PCC | \
-> +                                  PCI_EXP_SLTCTL_PIC | \
-> +                                  PCI_EXP_SLTCTL_AIC)
->  #define PCI_EXP_SLTSTA         26      /* Slot Status */
->  #define  PCI_EXP_SLTSTA_ABP    0x0001  /* Attention Button Pressed */
->  #define  PCI_EXP_SLTSTA_PFD    0x0002  /* Power Fault Detected */
+The issue with burning VM in Linux is a Linux issue and shouldn't leak
+into the DT... Ideally the solution here would be to have the PCI core
+call back to the host driver when it allocates/deallocates a bus
+number and then the driver can manage the config space VM mapping on a
+bus by bus basis.
+
+Jason
