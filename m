@@ -1,97 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:60326 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932303AbaBFI3X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Feb 2014 03:29:23 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Date: Thu, 6 Feb 2014 09:28:52 +0100
-Cc: linux-arm-kernel@lists.infradead.org,
-	Will Deacon <will.deacon@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <3724624.kd9jZNUiTF@wuerfel> <20140205205319.GH25695@obsidianresearch.com>
-In-Reply-To: <20140205205319.GH25695@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201402060928.53310.arnd@arndb.de>
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:39241 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753026AbaBMDDB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:03:01 -0500
+From: Magnus Damm <magnus.damm@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
+	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
+Date: Thu, 13 Feb 2014 12:04:13 +0900
+Message-Id: <20140213030413.10398.20246.sendpatchset@w520>
+In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
+References: <20140213030302.10398.37322.sendpatchset@w520>
+Subject: [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 05 February 2014, Jason Gunthorpe wrote:
-> On Wed, Feb 05, 2014 at 09:26:17PM +0100, Arnd Bergmann wrote:
-> > > > What you get out of "of_pci_range_to_resource(&range, np, &pci->io)"
-> > > > is not the resource you want to pass into pci_add_resource()
-> > > > later.
-> 
-> Right, of_pci_range_to_resource returns the CPU MMIO address. A big
-> problem here is that struct resource is being re-used for bus
-> physical, CPU MMIO, and Linux Driver addressing domains without any
-> helpful tagging.
-> 
-> typedef struct resource resource_bus;
-> typedef struct resource resource_cpu;
-> 
-> ?
+From: Magnus Damm <damm@opensource.se>
 
-I fear the resource management needs a bigger overhaul than than.
-Most importantly, 'struct resource' is not connected to 'struct device'
-at the moment, and it only deals with resource types that were around
-15 years ago.
+Select BOUNCE in case of HIGHMEM to enable bounce buffers in
+the block layer. Without this patch the DMABOUNCE code will
+error out due to lack of HIGHMEM support, and without DMABOUNCE
+there will be silent errors.
 
-> > > Do I need to open-code the resource translation from phys -> logical?
-> > 
-> > I think we should have some common infrastructure that lets you
-> > get this right more easily.
-> 
-> The offset stuff seems to be very confusing to people, removing it
-> from the APIs and forcing drivers to talk about bus addresess, CPU
-> addresses and internal Linux addresses seems a bit more plain?
+Signed-off-by: Magnus Damm <damm@opensource.se>
+---
 
-Interesting idea. I'm not sure how Bjorn will like that
-after he just did an overhaul of all users of the offset
-API some time ago, but let's see what he thinks.
+ drivers/pci/host/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-> What do you think about something like this:
-> 
-> int of_pci_alloc_io(.. resources,
->                     struct of_pci_range *range,
->                     struct device_node *np)
-> {
->   struct resource bus_address, mmio_window, res;
-> 
->   bus_address.start = range->pci_addr;
->   bus_address.end = range->pci_addr + range->size - 1;
-> 
->   mmio_window.start = range->cpu_addr;
->   mmio_window.end = range->cpu_addr + range->size - 1;
-> 
->   /* Input bus_address - addresses seen on the bus
->            mmio_window - physical CPU address to create the bus
-> 	   	         addreses
->      Output res - Address suitable for use in drivers
->      This does the pci_ioremap_io too */
->   pci_alloc_virtual_io_window(&bus_address, &mmio_window, &res);
-> 
->   /* bus_address - addresses seen on the bus
->      res - matching driver view for the bus addresses */
->   pci_add_resource_bus(&resources, &bus_address, &res);
-> }
-> 
-> And a similar function for MMIO that just omits
-> pci_alloc_virtual_io_window.
-
-It certainly seems workable. OTOH if we just manage to do a
-helper that scans the OF ranges, allocates the I/O window,
-remaps it and calls the existing pci_add_resource_offset()
-helper, PCI host drivers don't need to worry about the
-io_offsets computation either and just need to pull out the
-correct window locations if they need to set up the hardware
-translation windows (which I'd hope we can often let the boot
-loader take care of).
-
-	Arnd
+--- 0009/drivers/pci/host/Kconfig
++++ work/drivers/pci/host/Kconfig	2014-02-04 16:11:27.000000000 +0900
+@@ -30,6 +30,7 @@ config PCI_RCAR_GEN2
+ 	depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || COMPILE_TEST)
+ 	select GENERIC_ALLOCATOR
+ 	select DMABOUNCE
++	select BOUNCE if HIGHMEM
+ 	help
+ 	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
+ 	  There are 3 internal PCI controllers available with a single
