@@ -1,33 +1,112 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 0/2] ACPI / PCI / PM: Delay resuming runtine-suspended devices during system-suspend
-Date: Mon, 24 Feb 2014 00:18:22 +0100
-Message-ID: <1853950.oxM3KDpyLu@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:37919 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482AbaBMISl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 03:18:41 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Liviu Dudau' <Liviu.Dudau@arm.com>,
+	'Tanmay Inamdar' <tinamdar@apm.com>
+Cc: 'Arnd Bergmann' <arnd@arndb.de>, devicetree@vger.kernel.org,
+	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Will Deacon' <Will.Deacon@arm.com>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
+ <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
+ <7398333.9L5KlyFggU@wuerfel>
+ <CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
+ <20140206101814.GA4993@e106497-lin.cambridge.arm.com>
+ <000201cf2893$0f5e3710$2e1aa530$%han@samsung.com>
+In-reply-to: <000201cf2893$0f5e3710$2e1aa530$%han@samsung.com>
+Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
+ device tree
+Date: Thu, 13 Feb 2014 17:18:39 +0900
+Message-id: <000401cf2894$333a3fc0$99aebf40$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+On 
 
-The PCI bus type and the ACPI PM domain resume runtime-suspended devices during
-their .prepare() callbacks, which is suboptimal.
+> -----Original Message-----
+> From: Jingoo Han [mailto:jg1.han@samsung.com]
+> Sent: Thursday, February 13, 2014 5:10 PM
+> To: 'Liviu Dudau'; 'Tanmay Inamdar'
+> Cc: 'Arnd Bergmann'; devicetree@vger.kernel.org; 'linaro-kernel'; 'linux-pci'; 'Will Deacon'; 'LKML';
+> 'Catalin Marinas'; 'Bjorn Helgaas'; 'LAKML'; 'Jingoo Han'
+> Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from device tree
+> 
+> On Thursday, February 06, 2014 7:18 PM, Liviu Dudau wrote:
+> > On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
+> > > Hello Liviu,
+> > >
+> > > I did not get the first email of this particular patch on any of
+> > > subscribed mailing lists (don't know why), hence replying here.
+> >
+> > Strange, it shows in the MARC and GMANE archive for linux-pci, probably
+> > a hickup on your receiving side?
+> >
+> > >
+> > > +struct pci_host_bridge *
+> > > +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
+> > > + void *host_data, struct list_head *resources)
+> > > +{
+> > > + struct pci_bus *root_bus;
+> > > + struct pci_host_bridge *bridge;
+> > > +
+> > > + /* first parse the host bridge bus ranges */
+> > > + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
+> > > + return NULL;
+> > > +
+> > > + /* then create the root bus */
+> > > + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
+> > > + if (!root_bus)
+> > > + return NULL;
+> > > +
+> > > + bridge = to_pci_host_bridge(root_bus->bridge);
+> > > +
+> > > + return bridge;
+> > > +}
+> > >
+> > > You are keeping the domain_nr inside pci_host_bridge structure. In
+> > > above API, domain_nr is required in 'pci_find_bus' function called
+> > > from 'pci_create_root_bus'. Since the bridge is allocated after
+> > > creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
+> > > will cause problem for scanning multiple domains.
+> >
+> > Good catch. I was switching between creating a pci_controller in arch/arm64 and
+> > adding the needed bits in pci_host_bridge. After internal review I've decided to
+> > add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
+> 
+> Hi Liviu Dudau,
+> 
+> One more thing,
+> I am reviewing and compiling your patch.
+> Would you consider adding 'struct pci_sys_data' and 'struct hw_pci'?
+> 
+> Currently, 4 PCIe Host drivers (pci-mvebu.c, pci-tegra.c,
+> pci-rcar-gen2.c, pcie-designware.c) are using 'struct pci_sys_data'
+> and 'struct hw_pci' in their drivers. Without this, it makes build
+> errors.
+> 
+> In arm32, 'struct pci_sys_data' and 'struct hw_pci' is defined
+> in "arch/arm/include/asm/mach/pci.h".
+> 
+> Tanmay Inamdar,
+> Your 'APM X-Gene PCIe' patch also needs 'struct pci_sys_data' and
+> 'struct hw_pci'. With Liviu Dudau's patch, it will make build
+> errors. Would you check this?
 
-One problem caused by that is increasing the time of system suspend if there
-are many runtime-suspended devices to resume during it (because the .prepare()
-callbacks are executed sequentially).
+I mean the patch '[PATCH] arm64: Add architecture support for PCI'.
+With this patch, it makes build errors in PCIe Host drivers such as
+pcie-designware.c.
 
-The following two patches are intended to improve that one aspect slightly
-in those two subsystems.
+Best regards,
+Jingoo Han
 
-Thanks!
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
