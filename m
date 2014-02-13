@@ -1,70 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f172.google.com ([209.85.128.172]:45240 "EHLO
-	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711AbaBUBag (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 20:30:36 -0500
-Received: by mail-ve0-f172.google.com with SMTP id jz11so806730veb.17
-        for <linux-pci@vger.kernel.org>; Thu, 20 Feb 2014 17:30:35 -0800 (PST)
+Received: from szxga03-in.huawei.com ([119.145.14.66]:42901 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753284AbaBMNQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 08:16:51 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Russell King <linux@arm.linux.org.uk>,
+	David Airlie <airlied@linux.ie>,
+	<dri-devel@lists.freedesktop.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	<linux-pcmcia@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH 5/6] PCI/pcmcia: Use list_for_each_entry() for bus traversal
+Date: Thu, 13 Feb 2014 21:14:02 +0800
+Message-ID: <1392297243-61848-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1392297243-61848-1-git-send-email-wangyijing@huawei.com>
+References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20140218205925.11014.14973.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140218205925.11014.14973.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Feb 2014 18:30:15 -0700
-Message-ID: <CAErSpo7z9-gTGLHT8gOGC-KHek-kzNBtWVMWQEU8DWn3PekmTw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/4] Remove dead code
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	Joerg Roedel <joro@8bytes.org>,
-	Sudeep Dutt <sudeep.dutt@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Aaron F Brown <aaron.f.brown@intel.com>,
-	Arjan van de Ven <arjan@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 1:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> This is v2 of my rework of part of Stephen's patch [1].  My v1 posting,
-> with a little discussion, is here [2].
->
-> This removes SR-IOV migration support, which seems to be unused.
->
-> Changes since v1:
->   - Drop the removal of MMIO exclusivity.
->   - Add a few includes of <linux/irqreturn.h>.  The SR-IOV migration
->     support included irqreturn.h via linux/pci.h, and a few drivers relied
->     on that.  So this v2 series updates those drivers to include
->     irqreturn.h directly.
->
-> Unless there's objection, I'd like to merge all these through my PCI tree
-> for v3.15.
+Replace list_for_each() + pci_bus_b() with the simpler
+list_for_each_entry().
 
-I applied these to my pci/dead-code branch, which is now in -next, for v3.15.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pcmcia/yenta_socket.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> Bjorn
->
-> [1] http://lkml.kernel.org/r/20131227132710.7190647c@nehalam.linuxnetplumber.net
-> [2] https://lkml.kernel.org/r/20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com
->
-> ---
->
-> Bjorn Helgaas (4):
->       misc: mic: Add include of <linux/irqreturn.h>
->       mei: Add include of <linux/irqreturn.h>
->       iommu/amd: Add include of <linux/irqreturn.h>
->       PCI: Remove unused SR-IOV VF Migration support
->
->
->  Documentation/PCI/pci-iov-howto.txt |    4 -
->  drivers/iommu/amd_iommu_types.h     |    1
->  drivers/misc/mei/hw-me.h            |    1
->  drivers/misc/mic/card/mic_device.h  |    1
->  drivers/misc/mic/host/mic_device.h  |    1
->  drivers/pci/iov.c                   |  119 -----------------------------------
->  drivers/pci/pci.h                   |    4 -
->  include/linux/pci.h                 |    4 -
->  8 files changed, 4 insertions(+), 131 deletions(-)
+diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
+index 8485761..d16fb12 100644
+--- a/drivers/pcmcia/yenta_socket.c
++++ b/drivers/pcmcia/yenta_socket.c
+@@ -1076,7 +1076,7 @@ static void yenta_config_init(struct yenta_socket *socket)
+  */
+ static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
+ {
+-	struct list_head *tmp;
++	struct pci_bus *silbling;
+ 	unsigned char upper_limit;
+ 	/*
+ 	 * We only check and fix the parent bridge: All systems which need
+@@ -1096,8 +1096,8 @@ static void yenta_fixup_parent_bridge(struct pci_bus *cardbus_bridge)
+ 	upper_limit = bridge_to_fix->parent->busn_res.end;
+ 
+ 	/* check the bus ranges of all silbling bridges to prevent overlap */
+-	list_for_each(tmp, &bridge_to_fix->parent->children) {
+-		struct pci_bus *silbling = pci_bus_b(tmp);
++	list_for_each_entry(silbling, &bridge_to_fix->parent->children,
++			node) {
+ 		/*
+ 		 * If the silbling has a higher secondary bus number
+ 		 * and it's secondary is equal or smaller than our
+-- 
+1.7.1
+
+
