@@ -1,43 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:33947 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251AbaBSLoa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 06:44:30 -0500
-Received: by mail-we0-f179.google.com with SMTP id q58so224196wes.38
-        for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 03:44:29 -0800 (PST)
-Date: Wed, 19 Feb 2014 11:44:24 +0000
-From: Lee Jones <lee.jones@linaro.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] timberdale: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140219114424.GD10504@lee--X1>
-References: <1392804931-30671-3-git-send-email-agordeev@redhat.com>
+Received: from vserver.eikelenboom.it ([84.200.39.61]:59304 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065AbaBMJsd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 04:48:33 -0500
+Date: Thu, 13 Feb 2014 10:48:24 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <939539486.20140213104824@eikelenboom.it>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
+	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
+	<linux-ia64@vger.kernel.org>
+Subject: Re: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary prevents it from reading it's own rom. It will get the content of the shadowrom at C000 instead, which is of the primary VGA card and the driver of the secondary card will bail out.
+In-Reply-To: <20140203145205.GB2992@phenom.dumpdata.com>
+References: <20140130000831.GJ16825@google.com> <1391160503-11122-1-git-send-email-linux@eikelenboom.it> <20140203145205.GB2992@phenom.dumpdata.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1392804931-30671-3-git-send-email-agordeev@redhat.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Samuel Ortiz <sameo@linux.intel.com>
-> Cc: Lee Jones <lee.jones@linaro.org>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/mfd/timberdale.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
+Hi Bjorn,
 
-Applied, thanks.
+I have given it another email and another week, but without gaining any reviewed or acked-by's.
+It seems the only way forward is to shovel it in linux-next earlier, give it a good soak and see if
+anyone starts to squeal .. or that everything seems to be ok :-)
 
--- 
-Lee Jones
-Linaro STMicroelectronics Landing Team Lead
-Linaro.org │ Open source software for ARM SoCs
-Follow Linaro: Facebook | Twitter | Blog
+Would you need a v3 with the acked and reviewed-by from Konrad for x86 in it ?
+
+--
+
+Sander
+
+
+Monday, February 3, 2014, 3:52:05 PM, you wrote:
+
+> On Fri, Jan 31, 2014 at 10:28:22AM +0100, Sander Eikelenboom wrote:
+>> Hi Bjorn / Tony,
+>> 
+>> I fixed up ia64 as well and brought it inline again with the x86 code,
+>> but i don't have a ia64 machine, so that part is untested.
+>> Perhaps Tony is able to review/test it ?
+>> 
+>> Sander
+>> 
+>> 
+>> 
+>> Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary
+>> prevents it from reading it's own rom. It will get the content of the shadowrom
+>> at C000 instead, which is of the primary VGA card and the driver of the
+>> secondary card will bail out.
+>> 
+>> Fix this by checking if the arch code or vga-arbitration has already
+>> determined the vga_default_device, if so only apply the fix to this
+>> primary video device and let the comment reflect this.
+>> 
+>> v2:
+>>     - Fix pci_fixup_video both in x86 and ia64
+>> 
+>> 
+>> Sander Eikelenboom (1):
+>>   Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the
+>>     primary     prevents it from reading it's own rom. It will get the
+>>     content of the shadowrom     at C000 instead, which is of the
+>>     primary VGA card and the driver of the     secondary card will bail
+>>     out.
+
+> Your editor mutilated your subject line. It ought to have been just
+> one line.
+
+> Anyhow, you can also add 'Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com'
+> on the patch for the x86 part.
+
+> The ia64 "looks" OK to me, but my ia64 box won't boot v3.11 or later
+> so I can't give it a 'Tested-by' yet.
+
+>> 
+>>  arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
+>>  arch/x86/pci/fixup.c  |   18 ++++++++++--------
+>>  2 files changed, 23 insertions(+), 19 deletions(-)
+>> 
+>> -- 
+>> 1.7.10.4
+>> 
+
+
