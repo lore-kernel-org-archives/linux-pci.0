@@ -1,58 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:56379 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753776AbaBLUIR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 15:08:17 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Date: Wed, 12 Feb 2014 21:07:40 +0100
-Message-ID: <1545472.qN7M5OiOyA@wuerfel>
-In-Reply-To: <20140212194313.GA17248@obsidianresearch.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com> <2006726.HhIT01YuXY@wuerfel> <20140212194313.GA17248@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Magnus Damm <magnus.damm@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
+	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
+Date: Thu, 13 Feb 2014 12:03:53 +0900
+Message-Id: <20140213030353.10398.71544.sendpatchset@w520>
+In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
+References: <20140213030302.10398.37322.sendpatchset@w520>
+Subject: [PATCH v2 05/08] PCI: rcar: Break out window size handling
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 12 February 2014 12:43:13 Jason Gunthorpe wrote:
-> On Tue, Feb 11, 2014 at 11:42:52AM +0100, Arnd Bergmann wrote:
-> 
-> 
-> Still missing release_region..
-> 
-> Thoughts on upstreamining these bits?
+From: Magnus Damm <damm@opensource.se>
 
-Upstreaming them would be great. Patches look correct by inspection as well.
+Break out the hard coded window size code to allow
+dynamic setup. The window size is still left at 1GiB
+but with this patch changing window size is easy for
+testing.
 
-> > Since the mvebu_pcie_setup() function seems very generic at this,
-> > we should probably try to factor out that code into a common
-> > helper, at least for arm64, but ideally shared with arm32
-> > as well.
-> 
-> Yah, especially since people are not getting it completely right..
-> 
-> But some of the trouble here is a lack of a generic pci host driver
-> structure, eg I have to pull the domain number out of the ARM32
-> specific structure ..
+Signed-off-by: Magnus Damm <damm@opensource.se>
+---
 
-I'm sure that Bjorn also has some plans of his own, but I think
-we should have a generic host driver structure and gradually move
-stuff into it from the architecture specific structs.
+Changes since V1:
+ - Updated to fit on top of patches from Ben Dooks
 
-Now there is a 'struct pci_host_bridge' that is used on some
-architectures already but not on ARM. It also contains a list
-of resource windows plus offsets, and there is a set of functions
-associated with it:
+ drivers/pci/host/pci-rcar-gen2.c |   31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
 
-pci_create_root_bus()
-pcibios_root_bridge_prepare()
-
-etc.
-
-Maybe all that's needed is to actually start using those on arm32?
-
-	Arnd
+--- 0007/drivers/pci/host/pci-rcar-gen2.c
++++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 10:16:48.000000000 +0900
+@@ -18,6 +18,7 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/sizes.h>
+ #include <linux/slab.h>
+ 
+ /* AHB-PCI Bridge PCI communication registers */
+@@ -98,6 +99,7 @@ struct rcar_pci_priv {
+ 	struct resource mem_res;
+ 	struct resource *cfg_res;
+ 	int irq;
++	unsigned long window_size;
+ };
+ 
+ /* PCI configuration space operations */
+@@ -241,10 +243,31 @@ static int __init rcar_pci_setup(int nr,
+ 	iowrite32(val, reg + RCAR_USBCTR_REG);
+ 	udelay(4);
+ 
+-	/* De-assert reset and set PCIAHB window1 size to 1GB */
++	/* De-assert reset and reset PCIAHB window1 size */
+ 	val &= ~(RCAR_USBCTR_PCIAHB_WIN1_MASK | RCAR_USBCTR_PCICLK_MASK |
+ 		 RCAR_USBCTR_USBH_RST | RCAR_USBCTR_PLL_RST);
+-	iowrite32(val | RCAR_USBCTR_PCIAHB_WIN1_1G, reg + RCAR_USBCTR_REG);
++
++	/* Setup PCIAHB window1 size */
++	switch (priv->window_size) {
++	case SZ_2G:
++		val |= RCAR_USBCTR_PCIAHB_WIN1_2G;
++		break;
++	case SZ_1G:
++		val |= RCAR_USBCTR_PCIAHB_WIN1_1G;
++		break;
++	case SZ_512M:
++		val |= RCAR_USBCTR_PCIAHB_WIN1_512M;
++		break;
++	default:
++		pr_warn("unknown window size %ld - defaulting to 256M\n",
++			priv->window_size);
++		priv->window_size = SZ_256M;
++		/* fall-through */
++	case SZ_256M:
++		val |= RCAR_USBCTR_PCIAHB_WIN1_256M;
++		break;
++	}
++	iowrite32(val, reg + RCAR_USBCTR_REG);
+ 
+ 	/* Configure AHB master and slave modes */
+ 	iowrite32(RCAR_AHB_BUS_MODE, reg + RCAR_AHB_BUS_CTR_REG);
+@@ -255,7 +278,7 @@ static int __init rcar_pci_setup(int nr,
+ 	       RCAR_PCI_ARBITER_PCIBP_MODE;
+ 	iowrite32(val, reg + RCAR_PCI_ARBITER_CTR_REG);
+ 
+-	/* PCI-AHB mapping: 0x40000000-0x80000000 */
++	/* PCI-AHB mapping: 0x40000000 base */
+ 	iowrite32(0x40000000 | RCAR_PCIAHB_PREFETCH16,
+ 		  reg + RCAR_PCIAHB_WIN1_CTR_REG);
+ 
+@@ -341,6 +364,8 @@ static int rcar_pci_probe(struct platfor
+ 		return priv->irq;
+ 	}
+ 
++	priv->window_size = SZ_1G;
++
+ 	hw_private[0] = priv;
+ 	memset(&hw, 0, sizeof(hw));
+ 	hw.nr_controllers = ARRAY_SIZE(hw_private);
