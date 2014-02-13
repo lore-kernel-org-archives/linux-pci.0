@@ -1,40 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Casey Leedom <leedom@chelsio.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 08/35] cxgb4vf: Remove superfluous call to pci_disable_msix()
-Date: Tue, 18 Feb 2014 11:08:00 +0100
-Message-Id: <88e8e62d2dd643c9237c9cdb86fe19444f3651b8.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:46266 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752907AbaBMTxt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 14:53:49 -0500
+Date: Thu, 13 Feb 2014 19:53:17 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140213195317.GQ13576@mudshark.cambridge.arm.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+ <20140213110721.GC13576@mudshark.cambridge.arm.com>
+ <BA5E6077-77F8-4BE8-80E5-BAB9FE111387@codeaurora.org>
+ <4110788.UI9TADVhpa@wuerfel>
+ <20140213182654.GA20043@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140213182654.GA20043@obsidianresearch.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to call pci_disable_msix() in case
-the previous call to pci_enable_msix() failed
+On Thu, Feb 13, 2014 at 06:26:54PM +0000, Jason Gunthorpe wrote:
+> On Thu, Feb 13, 2014 at 05:28:20PM +0100, Arnd Bergmann wrote:
+> 
+> > > Huh?  The reg property clearly has the size in it (as shown in the
+> > > example below).  I guess I was just asking for the description
+> > > here to say what the size was for the 2 compatibles since its
+> > > fixed and known.
+> > 
+> > It's still an open question whether the config space in the reg
+> > property should cover all 256 buses or just the ones in the
+> > bus-range. In the latter case, it would be variable (but
+> > predictable) size.
+> 
+> The 'describe the hardware principle' says the reg should be the
+> entire available ECAM/CAM region the hardware is able to support.
+> 
+> This may be less than 256 busses, as ECAM allows the implementor to
+> select how many upper address bits are actually supported.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Casey Leedom <leedom@chelsio.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Ok, but the ECAM/CAM base always corresponds to bus 0, right?
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-index 0899c09..509fed9 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-@@ -2475,7 +2475,6 @@ static int enable_msix(struct adapter *adapter)
- 		for (i = 0; i < want; ++i)
- 			adapter->msix_info[i].vec = entries[i].vector;
- 	} else if (err > 0) {
--		pci_disable_msix(adapter->pdev);
- 		dev_info(adapter->pdev_dev, "only %d MSI-X vectors left,"
- 			 " not using MSI-X\n", err);
- 	}
--- 
-1.7.7.6
+> IMHO, the bus-range should be used to indicate the range of busses
+> discovered by the firmware, but we have historically tweaked it to
+> indicate the max range of bus numbers available on this bus (I think
+> to support the hack where two physical PCI domains were roughly glued
+> into a single Linux domain).
 
+Ok, so this answers Kumar's point about the reg property. I'll augment it
+with a size.
+
+Will
