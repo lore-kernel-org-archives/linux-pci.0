@@ -1,129 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:38914 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065AbaBMS3t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 13:29:49 -0500
+Received: by mail-pa0-f54.google.com with SMTP id fa1so11218104pad.27
+        for <linux-pci@vger.kernel.org>; Thu, 13 Feb 2014 10:29:48 -0800 (PST)
+Message-ID: <52FD0F1A.4000208@boundarydevices.com>
+Date: Thu, 13 Feb 2014 11:29:46 -0700
+From: Troy Kisky <troy.kisky@boundarydevices.com>
+MIME-Version: 1.0
+To: Marek Vasut <marex@denx.de>, Sascha Hauer <s.hauer@pengutronix.de>
+CC: linux-pci@vger.kernel.org, kernel@pengutronix.de,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 0/4] [RFC] Support for creating generic host_bridge from device tree
-Date: Thu, 27 Feb 2014 13:06:38 +0000
-Message-Id: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: imx6: Fix link_up detection
+References: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de> <201402120836.16221.marex@denx.de>
+In-Reply-To: <201402120836.16221.marex@denx.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is v2 of my attempt to add support for a generic pci_host_bridge controller created
-from a description passed in the device tree.
+On 2/12/2014 12:36 AM, Marek Vasut wrote:
+> On Wednesday, February 12, 2014 at 08:27:55 AM, Sascha Hauer wrote:
+>
+> +CC Troy Kisky, since I think he submitted something similar some time ago
+> already.
+>
+> Otherwise I agree this happens.
+>
+Sorry, I haven't submitted this yet, but was planning to today. Here's
+what would have been sent.
 
-Changes from v1:
-  - Add patch to fix conversion of IO ranges into IO resources.
-  - Added a domain_nr member to pci_host_bridge structure, and a new function
-    to create a root bus in a given domain number. In order to facilitate that
-    I propose changing the order of initialisation between pci_host_bridge and
-    it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
-    This is done in patch 1/4 and 2/4.
-  - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
-    code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
-    and if that fails assign the next unallocated domain id.
-  - Changed the name of the function that creates the generic host bridge from
-    pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
+ From 32c560d33fe2c3945d69f3396689f0abb76f7e1f Mon Sep 17 00:00:00 2001
+From: Marek Vasut <marex@denx.de>
+Date: Sat, 25 Jan 2014 14:22:48 -0700
+Subject: [PATCH 1/1] pci-imx6.c: wait for retraining
 
-v1 thread here: https://lkml.org/lkml/2014/2/3/380
+This patch handles the case where the PCIe link is up and running, yet drops
+into the LTSSM training mode. The link spends short time in the LTSSM training
+mode, but the current code can misinterpret it as the link being stalled.
+Waiting for the LTSSM training to complete fixes the issue.
 
-The following is an edit of the original blurb:
+Signed-off-by: Marek Vasut <marex@denx.de>
+Tested-by: Troy Kisky <troy.kisky@boundarydevices.com>
+---
+  drivers/pci/host/pci-imx6.c | 47 ++++++++++++++++++++++++++++++++-------------
+  1 file changed, 34 insertions(+), 13 deletions(-)
 
-Following the discussion started here [1], I now have a proposal for tackling
-generic support for host bridges described via device tree. It is an initial
-stab at it, to try to get feedback and suggestions, but it is functional enough
-that I have PCI Express for arm64 working on an FPGA using the patch that I am
-also publishing that adds support for PCI for that platform.
-
-Looking at the existing architectures that fit the requirements (use of device
-tree and PCI) yields the powerpc and microblaze as generic enough to make them
-candidates for conversion. I have a tentative patch for microblaze that I can
-only compile test it, unfortunately using qemu-microblaze leads to an early
-crash in the kernel.
-
-As Bjorn has mentioned in the previous discussion, the idea is to add to
-struct pci_host_bridge enough data to be able to reduce the size or remove the
-architecture specific pci_controller structure. arm64 support actually manages
-to get rid of all the architecture static data and has no pci_controller structure
-defined. For host bridge drivers that means a change of API unless architectures
-decide to provide a compatibility layer (comments here please).
-
-In order to initialise a host bridge with the new API, the following example
-code is sufficient for a _probe() function:
-
-static int myhostbridge_probe(struct platform_device *pdev)
-{
-	int err;
-	struct device_node *dev;
-	struct pci_host_bridge *bridge;
-	struct myhostbridge_port *pp;
-	resource_size_t lastbus;
-
-	dev = pdev->dev.of_node;
-
-	if (!of_device_is_available(dev)) {
-		pr_warn("%s: disabled\n", dev->full_name);
-		return -ENODEV;
-	}
-
-	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
-	if (!pp)
-		return -ENOMEM;
-
-	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
-	if (!bridge) {
-		err = -EINVAL;
-		goto bridge_init_fail;
-	}
-
-	err = myhostbridge_setup(bridge->bus);
-	if (err)
-		goto bridge_init_fail;
-
-	/* We always enable PCI domains and we keep domain 0 backward
-	 * compatible in /proc for video cards
-	 */
-	pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
-	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-
-	lastbus = pci_scan_child_bus(bridge->bus);
-	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-
-	pci_assign_unassigned_bus_resources(bridge->bus);
-
-	pci_bus_add_devices(bridge->bus);
-
-	return 0;
-
-bridge_init_fail:
-	kfree(pp);
-	return err;
-}
-
-[1] http://thread.gmane.org/gmane.linux.kernel.pci/25946
-
-Best regards,
-Liviu
-
-
-Liviu Dudau (4):
-  pci: OF: Fix the conversion of IO ranges into IO resources.
-  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-  pci: Introduce a domain number for pci_host_bridge.
-  pci: Add support for creating a generic host_bridge from device tree
-
- drivers/of/address.c       |  31 +++++++++++
- drivers/pci/host-bridge.c  | 134 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c        |  66 ++++++++++++++--------
- include/linux/of_address.h |  13 +----
- include/linux/pci.h        |  17 ++++++
- 5 files changed, 227 insertions(+), 34 deletions(-)
-
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index e8663a8..ee08250 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -424,20 +424,40 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+  
+  static int imx6_pcie_link_up(struct pcie_port *pp)
+  {
+-	u32 rc, ltssm, rx_valid;
++	u32 rc, debug_r0, rx_valid;
++	int count = 5;
+  
+  	/*
+-	 * Test if the PHY reports that the link is up and also that
+-	 * the link training finished.  It might happen that the PHY
+-	 * reports the link is already up, but the link training bit
+-	 * is still set, so make sure to check the training is done
+-	 * as well here.
++	 * Test if the PHY reports that the link is up and also that the LTSSM
++	 * training finished. There are three possible states of the link when
++	 * this code is called:
++	 * 1) The link is DOWN (unlikely)
++	 *     The link didn't come up yet for some reason. This usually means
++	 *     we have a real problem somewhere. Reset the PHY and exit. This
++	 *     state calls for inspection of the DEBUG registers.
++	 * 2) The link is UP, but still in LTSSM training
++	 *     Wait for the training to finish, which should take a very short
++	 *     time. If the training does not finish, we have a problem and we
++	 *     need to inspect the DEBUG registers. If the training does finish,
++	 *     the link is up and operating correctly.
++	 * 3) The link is UP and no longer in LTSSM training
++	 *     The link is up and operating correctly.
+  	 */
+-	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+-	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
+-	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
+-		return 1;
+-
++	while (1) {
++		rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
++		if (!(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP))
++			break;
++		if (!(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
++			return 1;
++		if (!count--)
++			break;
++		dev_dbg(pp->dev, "Link is up, but still in training\n");
++		/*
++		 * Wait a little bit, then re-check if the link finished
++		 * the training.
++		 */
++		usleep_range(1000, 2000);
++	}
+  	/*
+  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+  	 * Wait 2ms (LTSSM timeout is 24ms, PHY lock is ~5us in gen2).
+@@ -446,15 +466,16 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+  	 * to gen2 is stuck
+  	 */
+  	pcie_phy_read(pp->dbi_base, PCIE_PHY_RX_ASIC_OUT, &rx_valid);
+-	ltssm = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0) & 0x3F;
++	debug_r0 = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0);
+  
+  	if (rx_valid & 0x01)
+  		return 0;
+  
+-	if (ltssm != 0x0d)
++	if ((debug_r0 & 0x3f) != 0x0d)
+  		return 0;
+  
+  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
++	dev_dbg(pp->dev, "debug_r0=%08x debug_r1=%08x\n", debug_r0, rc);
+  
+  	imx6_pcie_reset_phy(pp);
+  
 -- 
-1.9.0
+1.8.1.2
+
 
