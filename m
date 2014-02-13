@@ -1,131 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f41.google.com ([209.85.213.41]:43558 "EHLO
-	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353AbaB0NWU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:22:20 -0500
-Received: by mail-yh0-f41.google.com with SMTP id f73so2612548yha.28
-        for <linux-pci@vger.kernel.org>; Thu, 27 Feb 2014 05:22:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1393506402-11474-2-git-send-email-Liviu.Dudau@arm.com>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
-	<1393506402-11474-2-git-send-email-Liviu.Dudau@arm.com>
-Date: Thu, 27 Feb 2014 13:22:19 +0000
-Message-ID: <CAPcvp5EqcKEWoH_--azp+sMykmEWtY5whHG=c9t3sZVXZyAPUg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO resources.
-From: Andrew Murray <amurray@embedded-bits.co.uk>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:56159 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbaBMDCa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:02:30 -0500
+From: Magnus Damm <magnus.damm@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
+	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
+Date: Thu, 13 Feb 2014 12:03:42 +0900
+Message-Id: <20140213030342.10398.10051.sendpatchset@w520>
+In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
+References: <20140213030302.10398.37322.sendpatchset@w520>
+Subject: [PATCH v2 04/08] PCI: rcar: Register each instance independently
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27 February 2014 13:06, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->
-> The ranges property for a host bridge controller in DT describes
-> the mapping between the PCI bus address and the CPU physical address.
-> The resources framework however expects that the IO resources start
-> at a pseudo "port" address 0 (zero) and have a maximum size of 64kb.
+From: Magnus Damm <damm@opensource.se>
 
-Is this just in the case of ARM? (I've tried to keep up with the
-conversation, but apologies if I've misunderstood).
+Convert the code to allow per-device probe() like other device
+drivers. This also delays driver registration due to change from
+subsys_initcall() to regular module_platform_driver().
 
-> The conversion from pci ranges to resources failed to take that into
-> account.
->
-> In the process move the function into drivers/of/address.c as it
-> now depends on pci_address_to_pio() code.
->
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 1a54f1f..7cf2b16 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -719,3 +719,34 @@ void __iomem *of_iomap(struct device_node *np, int index)
->         return ioremap(res.start, resource_size(&res));
->  }
->  EXPORT_SYMBOL(of_iomap);
-> +
-> +/**
-> + * of_pci_range_to_resource - Create a resource from an of_pci_range
-> + * @range:     the PCI range that describes the resource
-> + * @np:                device node where the range belongs to
-> + * @res:       pointer to a valid resource that will be updated to
-> + *              reflect the values contained in the range.
-> + * Note that if the range is an IO range, the resource will be converted
-> + * using pci_address_to_pio() which can fail if it is called to early or
-> + * if the range cannot be matched to any host bridge IO space.
-> + */
-> +void of_pci_range_to_resource(struct of_pci_range *range,
-> +       struct device_node *np, struct resource *res)
-> +{
-> +       res->flags = range->flags;
-> +       if (res->flags & IORESOURCE_IO) {
-> +               unsigned long port;
-> +               port = pci_address_to_pio(range->pci_addr);
+Signed-off-by: Magnus Damm <damm@opensource.se>
+---
 
-Is this likely to break existing users of of_pci_range_to_resource?
+Changes since V1:
+ - Updated to fit on top of patches from Ben Dooks
+ - Use hw_private[1] for hw.private_data, thanks Geert!
+ - Use ARRAY_SIZE with hw_private for hw.nr_controllers
 
-For example arch/mips: IO_SPACE_LIMIT defaults to 0xffff and there is
-no overridden implementation for pci_address_to_pio, therefore this
-will set res->start to OF_BAD_ADDR whereas previously it would have
-been the CPU address for I/O (assuming the cpu_addr was previously >
-64K).
+ drivers/pci/host/pci-rcar-gen2.c |   76 +++++++++-----------------------------
+ 1 file changed, 18 insertions(+), 58 deletions(-)
 
-I have no idea if I/O previously worked for mips, but this patch seems
-to change that behavior. It may be a similar story for microblaze and
-powerpc.
-
-Andrew Murray
-
-> +               if (port == (unsigned long)-1) {
-> +                       res->start = (resource_size_t)OF_BAD_ADDR;
-> +                       res->end = (resource_size_t)OF_BAD_ADDR;
-> +                       return;
-> +               }
-> +               res->start = port;
-> +       } else {
-> +               res->start = range->cpu_addr;
-> +       }
-> +       res->end = res->start + range->size - 1;
-> +       res->parent = res->child = res->sibling = NULL;
-> +       res->name = np->full_name;
-> +}
-> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> index 5f6ed6b..a667762 100644
-> --- a/include/linux/of_address.h
-> +++ b/include/linux/of_address.h
-> @@ -23,17 +23,8 @@ struct of_pci_range {
->  #define for_each_of_pci_range(parser, range) \
->         for (; of_pci_range_parser_one(parser, range);)
->
-> -static inline void of_pci_range_to_resource(struct of_pci_range *range,
-> -                                           struct device_node *np,
-> -                                           struct resource *res)
-> -{
-> -       res->flags = range->flags;
-> -       res->start = range->cpu_addr;
-> -       res->end = range->cpu_addr + range->size - 1;
-> -       res->parent = res->child = res->sibling = NULL;
-> -       res->name = np->full_name;
-> -}
-> -
-> +extern void of_pci_range_to_resource(struct of_pci_range *range,
-> +               struct device_node *np, struct resource *res);
->  /* Translate a DMA address from device space to CPU space */
->  extern u64 of_translate_dma_address(struct device_node *dev,
->                                     const __be32 *in_addr);
-> --
-> 1.9.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- 0006/drivers/pci/host/pci-rcar-gen2.c
++++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 10:10:25.000000000 +0900
+@@ -91,9 +91,6 @@
+ 
+ #define RCAR_PCI_UNIT_REV_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x48)
+ 
+-/* Number of internal PCI controllers */
+-#define RCAR_PCI_NR_CONTROLLERS		3
+-
+ struct rcar_pci_priv {
+ 	struct device *dev;
+ 	void __iomem *reg;
+@@ -292,6 +289,8 @@ static int __init rcar_pci_setup(int nr,
+ 	pci_add_resource(&sys->resources, &priv->io_res);
+ 	pci_add_resource(&sys->resources, &priv->mem_res);
+ 
++	/* Setup bus number based on platform device id */
++	sys->busnr = to_platform_device(priv->dev)->id;
+ 	return 1;
+ }
+ 
+@@ -300,48 +299,13 @@ static struct pci_ops rcar_pci_ops = {
+ 	.write	= rcar_pci_write_config,
+ };
+ 
+-static struct hw_pci rcar_hw_pci __initdata = {
+-	.map_irq	= rcar_pci_map_irq,
+-	.ops		= &rcar_pci_ops,
+-	.setup		= rcar_pci_setup,
+-};
+-
+-static int rcar_pci_count __initdata;
+-
+-static int __init rcar_pci_add_controller(struct rcar_pci_priv *priv)
+-{
+-	void **private_data;
+-	int count;
+-
+-	if (rcar_hw_pci.nr_controllers < rcar_pci_count)
+-		goto add_priv;
+-
+-	/* (Re)allocate private data pointer array if needed */
+-	count = rcar_pci_count + RCAR_PCI_NR_CONTROLLERS;
+-	private_data = kzalloc(count * sizeof(void *), GFP_KERNEL);
+-	if (!private_data)
+-		return -ENOMEM;
+-
+-	rcar_pci_count = count;
+-	if (rcar_hw_pci.private_data) {
+-		memcpy(private_data, rcar_hw_pci.private_data,
+-		       rcar_hw_pci.nr_controllers * sizeof(void *));
+-		kfree(rcar_hw_pci.private_data);
+-	}
+-
+-	rcar_hw_pci.private_data = private_data;
+-
+-add_priv:
+-	/* Add private data pointer to the array */
+-	rcar_hw_pci.private_data[rcar_hw_pci.nr_controllers++] = priv;
+-	return 0;
+-}
+-
+-static int __init rcar_pci_probe(struct platform_device *pdev)
++static int rcar_pci_probe(struct platform_device *pdev)
+ {
+ 	struct resource *cfg_res, *mem_res;
+ 	struct rcar_pci_priv *priv;
+ 	void __iomem *reg;
++	struct hw_pci hw;
++	void *hw_private[1];
+ 
+ 	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
+@@ -377,31 +341,27 @@ static int __init rcar_pci_probe(struct
+ 		return priv->irq;
+ 	}
+ 
+-	return rcar_pci_add_controller(priv);
++	hw_private[0] = priv;
++	memset(&hw, 0, sizeof(hw));
++	hw.nr_controllers = ARRAY_SIZE(hw_private);
++	hw.private_data = hw_private;
++	hw.map_irq = rcar_pci_map_irq;
++	hw.ops = &rcar_pci_ops;
++	hw.setup = rcar_pci_setup;
++	pci_common_init_dev(&pdev->dev, &hw);
++	return 0;
+ }
+ 
+ static struct platform_driver rcar_pci_driver = {
+ 	.driver = {
+ 		.name = "pci-rcar-gen2",
++		.owner = THIS_MODULE,
++		.suppress_bind_attrs = true,
+ 	},
++	.probe = rcar_pci_probe,
+ };
+ 
+-static int __init rcar_pci_init(void)
+-{
+-	int retval;
+-
+-	retval = platform_driver_probe(&rcar_pci_driver, rcar_pci_probe);
+-	if (!retval)
+-		pci_common_init(&rcar_hw_pci);
+-
+-	/* Private data pointer array is not needed any more */
+-	kfree(rcar_hw_pci.private_data);
+-	rcar_hw_pci.private_data = NULL;
+-
+-	return retval;
+-}
+-
+-subsys_initcall(rcar_pci_init);
++module_platform_driver(rcar_pci_driver);
+ 
+ MODULE_LICENSE("GPL v2");
+ MODULE_DESCRIPTION("Renesas R-Car Gen2 internal PCI");
