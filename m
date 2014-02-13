@@ -1,71 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 9/13] ACPI / hotplug / PCI: Drop acpiphp_bus_add()
-Date: Sun, 02 Feb 2014 01:28:35 +0100
-Message-ID: <4431636.K6MNiyT2UB@vostro.rjw.lan>
-In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:57798 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbaBMQ3C convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 11:29:02 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Will Deacon <will.deacon@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
+Date: Thu, 13 Feb 2014 17:28:20 +0100
+Message-ID: <4110788.UI9TADVhpa@wuerfel>
+In-Reply-To: <BA5E6077-77F8-4BE8-80E5-BAB9FE111387@codeaurora.org>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <20140213110721.GC13576@mudshark.cambridge.arm.com> <BA5E6077-77F8-4BE8-80E5-BAB9FE111387@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thursday 13 February 2014 10:22:25 Kumar Gala wrote:
+> On Feb 13, 2014, at 5:07 AM, Will Deacon <will.deacon@arm.com> wrote:
+> > Happy to change it, but I'm also struggling for names. Maybe "linux,…"?
+>
+> I was thinking that as well, I’d say go with “linux,”.
 
-acpiphp_bus_add() is only called from one place, so move the code out
-of it into that place and drop it.  Also make that code use
-func_to_acpi_device() to get the struct acpi_device pointer it needs
-instead of calling acpi_bus_get_device() which may be costly.
+I see nothing linux specific in there. I would only use that namespace
+for things we don't expect to work with another OS.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+> >>> +- ranges         : As described in IEEE Std 1275-1994, but must provide
+> >>> +                   at least a definition of one or both of IO and Memory
+> >>> +                   Space.
+> >>> +
+> >>> +- #address-cells : Must be 3
+> >>> +
+> >>> +- #size-cells    : Must be 2
+> >>> +
+> >>> +- reg            : The Configuration Space base address, as accessed by the
+> >>> +                   parent bus.
+> >> 
+> >> Isn’t the size fixed here for cam or ecam?
+> > 
+> > Yes, which is why reg just specifies the base address.
+> 
+> Huh?  The reg property clearly has the size in it (as shown in the example below).
+> I guess I was just asking for the description here to say what the size was for
+> the 2 compatibles since its fixed and known.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -470,20 +470,6 @@ static unsigned char acpiphp_max_busnr(s
- 	return max;
- }
- 
--/**
-- * acpiphp_bus_add - Scan ACPI namespace subtree.
-- * @handle: ACPI object handle to start the scan from.
-- */
--static void acpiphp_bus_add(acpi_handle handle)
--{
--	struct acpi_device *adev = NULL;
--
--	acpi_bus_scan(handle);
--	acpi_bus_get_device(handle, &adev);
--	if (acpi_device_enumerated(adev))
--		acpi_device_set_power(adev, ACPI_STATE_D0);
--}
--
- static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
- {
- 	struct acpiphp_func *func;
-@@ -523,9 +509,13 @@ static int acpiphp_rescan_slot(struct ac
- {
- 	struct acpiphp_func *func;
- 
--	list_for_each_entry(func, &slot->funcs, sibling)
--		acpiphp_bus_add(func_to_handle(func));
-+	list_for_each_entry(func, &slot->funcs, sibling) {
-+		struct acpi_device *adev = func_to_acpi_device(func);
- 
-+		acpi_bus_scan(adev->handle);
-+		if (acpi_device_enumerated(adev))
-+			acpi_device_set_power(adev, ACPI_STATE_D0);
-+	}
- 	return pci_scan_slot(slot->bus, PCI_DEVFN(slot->device, 0));
- }
- 
+It's still an open question whether the config space in the reg property should
+cover all 256 buses or just the ones in the bus-range. In the latter case,
+it would be variable (but predictable) size.
+
+> You could clean it up a bit to be human readable even if its kvmtool that’s creating it.
+> 
+> 	pci {
+> 		compatible = "arm,pci-cam-generic”;
+> 		#address-cells = <3>;
+> 		#size-cells = <2>;
+> 		#interrupt-cells = <1>
+> 		reg = <0x0 0x40000000>;
+> 		ranges = <
+> 			0x1000000 0x0 0x00000000 0x0 0x00000000 0x0 0x00010000
+> 			0x2000000 0x0 0x41000000 0x0 0x41000000 0x0 0x3f000000
+> 			>;
+
+Make it 
+
+ 		ranges = <0x1000000 0x0 0x00000000 0x0 0x00000000 0x0 0x00010000>,
+ 			 <0x2000000 0x0 0x41000000 0x0 0x41000000 0x0 0x3f000000>;
+
+and it will be perfect ;-)
+
+	Arnd
+
 
