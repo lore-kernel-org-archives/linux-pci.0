@@ -1,49 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:62151 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754024AbaBZThr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:47 -0500
-Received: by mail-ie0-f178.google.com with SMTP id ar20so1131934iec.9
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:46 -0800 (PST)
-Subject: [PATCH 6/9] PCI: Check IORESOURCE_UNSET before updating BAR
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:37:44 -0700
-Message-ID: <20140226193744.10125.99627.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout1.samsung.com ([203.254.224.24]:35789 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417AbaBMIKe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 03:10:34 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Liviu Dudau' <Liviu.Dudau@arm.com>,
+	'Tanmay Inamdar' <tinamdar@apm.com>
+Cc: 'Arnd Bergmann' <arnd@arndb.de>, devicetree@vger.kernel.org,
+	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Will Deacon' <Will.Deacon@arm.com>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
+ <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
+ <7398333.9L5KlyFggU@wuerfel>
+ <CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
+ <20140206101814.GA4993@e106497-lin.cambridge.arm.com>
+In-reply-to: <20140206101814.GA4993@e106497-lin.cambridge.arm.com>
+Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
+ device tree
+Date: Thu, 13 Feb 2014 17:10:29 +0900
+Message-id: <000201cf2893$0f5e3710$2e1aa530$%han@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Check to make sure we don't update a BAR with an address we haven't
-assigned.
+On Thursday, February 06, 2014 7:18 PM, Liviu Dudau wrote:
+> On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
+> > Hello Liviu,
+> >
+> > I did not get the first email of this particular patch on any of
+> > subscribed mailing lists (don't know why), hence replying here.
+> 
+> Strange, it shows in the MARC and GMANE archive for linux-pci, probably
+> a hickup on your receiving side?
+> 
+> >
+> > +struct pci_host_bridge *
+> > +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
+> > + void *host_data, struct list_head *resources)
+> > +{
+> > + struct pci_bus *root_bus;
+> > + struct pci_host_bridge *bridge;
+> > +
+> > + /* first parse the host bridge bus ranges */
+> > + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
+> > + return NULL;
+> > +
+> > + /* then create the root bus */
+> > + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
+> > + if (!root_bus)
+> > + return NULL;
+> > +
+> > + bridge = to_pci_host_bridge(root_bus->bridge);
+> > +
+> > + return bridge;
+> > +}
+> >
+> > You are keeping the domain_nr inside pci_host_bridge structure. In
+> > above API, domain_nr is required in 'pci_find_bus' function called
+> > from 'pci_create_root_bus'. Since the bridge is allocated after
+> > creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
+> > will cause problem for scanning multiple domains.
+> 
+> Good catch. I was switching between creating a pci_controller in arch/arm64 and
+> adding the needed bits in pci_host_bridge. After internal review I've decided to
+> add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
 
-If we haven't assigned an address to a resource, we shouldn't write it to a
-BAR.  This isn't a problem for the usual path via pci_assign_resource(),
-which clears IORESOURCE_UNSET before calling pci_update_resource(), but
-paths like pci_restore_bars() can call this for resources we haven't
-assigned.
+Hi Liviu Dudau,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/setup-res.c |    3 +++
- 1 file changed, 3 insertions(+)
+One more thing,
+I am reviewing and compiling your patch.
+Would you consider adding 'struct pci_sys_data' and 'struct hw_pci'?
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 725d5b28398c..7f7652176fc5 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -44,6 +44,9 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	if (!res->flags)
- 		return;
- 
-+	if (res->flags & IORESOURCE_UNSET)
-+		return;
-+
- 	/*
- 	 * Ignore non-moveable resources.  This might be legacy resources for
- 	 * which no functional BAR register exists or another important
+Currently, 4 PCIe Host drivers (pci-mvebu.c, pci-tegra.c,
+pci-rcar-gen2.c, pcie-designware.c) are using 'struct pci_sys_data'
+and 'struct hw_pci' in their drivers. Without this, it makes build
+errors.
+
+In arm32, 'struct pci_sys_data' and 'struct hw_pci' is defined
+in "arch/arm/include/asm/mach/pci.h".
+
+Tanmay Inamdar,
+Your 'APM X-Gene PCIe' patch also needs 'struct pci_sys_data' and
+'struct hw_pci'. With Liviu Dudau's patch, it will make build
+errors. Would you check this?
+
+Thank you.
+
+Best regards,
+Jingoo Han
+
+> 
+> Thanks for reviewing this, will fix in v2.
+> 
+> Do you find porting to the new API straight forward?
+> 
 
