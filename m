@@ -1,146 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:38831 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754065AbaBZThb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:31 -0500
-Received: by mail-ig0-f174.google.com with SMTP id h18so1516401igc.1
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:31 -0800 (PST)
-Subject: [PATCH 4/9] PCI: Mark resources as IORESOURCE_UNSET if we can't
- assign them
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:39767 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417AbaBMDCA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:02:00 -0500
+From: Magnus Damm <magnus.damm@gmail.com>
 To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:37:29 -0700
-Message-ID: <20140226193729.10125.54723.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
+	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
+Date: Thu, 13 Feb 2014 12:03:12 +0900
+Message-Id: <20140213030312.10398.47163.sendpatchset@w520>
+In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
+References: <20140213030302.10398.37322.sendpatchset@w520>
+Subject: [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When assigning addresses to resources, mark them with IORESOURCE_UNSET
-before we start and clear IORESOURCE_UNSET if assignment is successful.
-That means that if we print the resource during assignment, we will show
-the size, not a meaningless address.
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 
-Also, clear IORESOURCE_UNSET if we do assign an address, so we print the
-address when it is valid.
+The current code does not check the return from platform_get_irq()
+so add an error check and return if this call does fail.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+Signed-off-by: Magnus Damm <damm@opensource.se>
 ---
- drivers/pci/pci.c       |    2 ++
- drivers/pci/quirks.c    |    5 +++++
- drivers/pci/rom.c       |    2 ++
- drivers/pci/setup-res.c |    4 ++++
- 4 files changed, 13 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 99293fa40db9..dc9ce62be7aa 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4244,6 +4244,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 				"Rounding up size of resource #%d to %#llx.\n",
- 				i, (unsigned long long)size);
- 		}
-+		r->flags |= IORESOURCE_UNSET;
- 		r->end = size - 1;
- 		r->start = 0;
- 	}
-@@ -4257,6 +4258,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 			r = &dev->resource[i];
- 			if (!(r->flags & IORESOURCE_MEM))
- 				continue;
-+			r->flags |= IORESOURCE_UNSET;
- 			r->end = resource_size(r) - 1;
- 			r->start = 0;
- 		}
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 5cb726c193de..6e596ab77fb9 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -296,6 +296,7 @@ static void quirk_s3_64M(struct pci_dev *dev)
- 	struct resource *r = &dev->resource[0];
+ drivers/pci/host/pci-rcar-gen2.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+--- 0001/drivers/pci/host/pci-rcar-gen2.c
++++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 09:41:55.000000000 +0900
+@@ -308,6 +308,11 @@ static int __init rcar_pci_probe(struct
+ 	priv->reg = reg;
+ 	priv->dev = &pdev->dev;
  
- 	if ((r->start & 0x3ffffff) || r->end != r->start + 0x3ffffff) {
-+		r->flags |= IORESOURCE_UNSET;
- 		r->start = 0;
- 		r->end = 0x3ffffff;
- 	}
-@@ -937,6 +938,8 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_FE_GATE_700C
- static void quirk_dunord(struct pci_dev *dev)
- {
- 	struct resource *r = &dev->resource [1];
++	if (priv->irq < 0) {
++		dev_err(&pdev->dev, "no valid irq found\n");
++		return priv->irq;
++	}
 +
-+	r->flags |= IORESOURCE_UNSET;
- 	r->start = 0;
- 	r->end = 0xffffff;
+ 	return rcar_pci_add_controller(priv);
  }
-@@ -1740,6 +1743,7 @@ static void quirk_tc86c001_ide(struct pci_dev *dev)
- 	struct resource *r = &dev->resource[0];
  
- 	if (r->start & 0x8) {
-+		r->flags |= IORESOURCE_UNSET;
- 		r->start = 0;
- 		r->end = 0xf;
- 	}
-@@ -1769,6 +1773,7 @@ static void quirk_plx_pci9050(struct pci_dev *dev)
- 			dev_info(&dev->dev,
- 				 "Re-allocating PLX PCI 9050 BAR %u to length 256 to avoid bit 7 bug\n",
- 				 bar);
-+			r->flags |= IORESOURCE_UNSET;
- 			r->start = 0;
- 			r->end = 0xff;
- 		}
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index 5d595724e5f4..c1839450d4d6 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -197,8 +197,10 @@ void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom)
- void pci_cleanup_rom(struct pci_dev *pdev)
- {
- 	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
-+
- 	if (res->flags & IORESOURCE_ROM_COPY) {
- 		kfree((void*)(unsigned long)res->start);
-+		res->flags |= IORESOURCE_UNSET;
- 		res->flags &= ~IORESOURCE_ROM_COPY;
- 		res->start = 0;
- 		res->end = 0;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 5c060b152ce6..0474b0217fdf 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -263,6 +263,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 	resource_size_t align, size;
- 	int ret;
- 
-+	res->flags |= IORESOURCE_UNSET;
- 	align = pci_resource_alignment(dev, res);
- 	if (!align) {
- 		dev_info(&dev->dev, "BAR %d: can't assign %pR "
-@@ -282,6 +283,7 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 		ret = pci_revert_fw_address(res, dev, resno, size);
- 
- 	if (!ret) {
-+		res->flags &= ~IORESOURCE_UNSET;
- 		res->flags &= ~IORESOURCE_STARTALIGN;
- 		dev_info(&dev->dev, "BAR %d: assigned %pR\n", resno, res);
- 		if (resno < PCI_BRIDGE_RESOURCES)
-@@ -297,6 +299,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	resource_size_t new_size;
- 	int ret;
- 
-+	res->flags |= IORESOURCE_UNSET;
- 	if (!res->parent) {
- 		dev_info(&dev->dev, "BAR %d: can't reassign an unassigned resource %pR "
- 			 "\n", resno, res);
-@@ -307,6 +310,7 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	new_size = resource_size(res) + addsize;
- 	ret = _pci_assign_resource(dev, resno, new_size, min_align);
- 	if (!ret) {
-+		res->flags &= ~IORESOURCE_UNSET;
- 		res->flags &= ~IORESOURCE_STARTALIGN;
- 		dev_info(&dev->dev, "BAR %d: reassigned %pR\n", resno, res);
- 		if (resno < PCI_BRIDGE_RESOURCES)
-
