@@ -1,103 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:44291 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155AbaB0P0M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 10:26:12 -0500
-Received: by mail-pa0-f43.google.com with SMTP id rd3so2627092pab.2
-        for <linux-pci@vger.kernel.org>; Thu, 27 Feb 2014 07:26:12 -0800 (PST)
-From: Tim Harvey <tharvey@gateworks.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: [RFC PATCH] sky2: allow mac to come from dt
-Date: Thu, 27 Feb 2014 07:26:03 -0800
-Message-Id: <1393514763-8384-1-git-send-email-tharvey@gateworks.com>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:34915 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752156AbaBMLxg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 06:53:36 -0500
+Date: Thu, 13 Feb 2014 11:53:27 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linaro-kernel@lists.linaro.org, devicetree@vger.kernel.org,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	Jingoo Han <jg1.han@samsung.com>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	'Tanmay Inamdar' <tinamdar@apm.com>,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge
+	from device tree
+Message-ID: <20140213115327.GV26684@n2100.arm.linux.org.uk>
+References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com> <CACoXjc=epN8=tFQKw6kZ27hTA=a+c56q1pikX_SSMKK1rsScCw@mail.gmail.com> <000001cf2899$a6eb75b0$f4c26110$%han@samsung.com> <3204351.WykFFcX4zJ@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3204351.WykFFcX4zJ@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The sky2 driver currently reads the mac address from the device registers
-which would need to have been programmed by the bootloader.
+On Thu, Feb 13, 2014 at 12:27:05PM +0100, Arnd Bergmann wrote:
+> I would rather get rid of struct hw_pci for architecture independent
+> drivers and add a different registration method on arm32 that is
+> compatible with what we come up with on arm64. The main purpose of
+> hw_pci is to allow multiple PCI controllers to be initialized at
+> once, but we don't actually need that for any of the "modern" platforms
+> where we already have a probe function that gets called once for
+> each controller.
 
-This patch adds the ability to pull the mac from devicetree via the
-aliases/sky2 node.
+No.  The main purpose of hw_pci is as a container to support multiple
+different platform specific PCI implementations in one kernel.  It's
+exactly what you need for single zImage.
 
-The RFC is because I'm not clear if there is a better way to reference the
-devicetree node for a PCI device from both the bootloader perspective and
-the driver perspective.  Using an alias feels a bit like a hack.  An example
-of a dts that describes a marvell,sky2 sitting on bus8 of the PCI bus is:
-
-aliases {
-	sky2 = &eth1;
-};
-
-&pcie { 
-        eth1: sky2@8 { /* MAC/PHY on bus 8 */
-                compatible = "marvell,sky2";
-        };
-};
-
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
- drivers/net/ethernet/marvell/sky2.c | 33 ++++++++++++++++++++++++++++++++-
- 1 file changed, 32 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/ethernet/marvell/sky2.c b/drivers/net/ethernet/marvell/sky2.c
-index 55a37ae..4165fc0 100644
---- a/drivers/net/ethernet/marvell/sky2.c
-+++ b/drivers/net/ethernet/marvell/sky2.c
-@@ -44,6 +44,8 @@
- #include <linux/prefetch.h>
- #include <linux/debugfs.h>
- #include <linux/mii.h>
-+#include <linux/of_device.h>
-+#include <linux/of_net.h>
- 
- #include <asm/irq.h>
- 
-@@ -4748,6 +4750,7 @@ static struct net_device *sky2_init_netdev(struct sky2_hw *hw, unsigned port,
- {
- 	struct sky2_port *sky2;
- 	struct net_device *dev = alloc_etherdev(sizeof(*sky2));
-+	unsigned char *iap, tmpaddr[ETH_ALEN];
- 
- 	if (!dev)
- 		return NULL;
-@@ -4805,8 +4808,36 @@ static struct net_device *sky2_init_netdev(struct sky2_hw *hw, unsigned port,
- 
- 	dev->features |= dev->hw_features;
- 
-+	/*
-+	 * try to get mac address in the following order:
-+	 * 1) from device tree data
-+	 * 2) from internal registers set by bootloader
-+	 */
-+	iap = NULL;
-+	if (IS_ENABLED(CONFIG_OF)) {
-+		struct device_node *np;
-+		np = of_find_node_by_path("/aliases");
-+		if (np) {
-+			const char *path = of_get_property(np, "sky2", NULL);
-+			if (path)
-+				np = of_find_node_by_path(path);
-+			if (np)
-+				path = of_get_mac_address(np);
-+			if (path)
-+				iap = (unsigned char *) path;
-+		}
-+	}
-+
-+	/*
-+	 * 2) mac registers set by bootloader
-+	 */
-+	if (!iap || !is_valid_ether_addr(iap)) {
-+		memcpy_fromio(&tmpaddr, hw->regs + B2_MAC_1 + port * 8, ETH_ALEN);
-+		iap = &tmpaddr[0];
-+	}
-+
- 	/* read the mac address */
--	memcpy_fromio(dev->dev_addr, hw->regs + B2_MAC_1 + port * 8, ETH_ALEN);
-+	memcpy(dev->dev_addr, iap, ETH_ALEN);
- 
- 	return dev;
- }
 -- 
-1.8.3.2
-
+FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
+in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
+Estimate before purchase was "up to 13.2Mbit".
