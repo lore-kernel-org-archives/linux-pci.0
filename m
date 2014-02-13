@@ -1,54 +1,38 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 0/13] ACPI / hotplug / PCI: Updates on top of changes merged recently
-Date: Sun, 02 Feb 2014 01:19:33 +0100
-Message-ID: <1935791.liE9ZlzmO9@vostro.rjw.lan>
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:8694 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751397AbaBMRwU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Feb 2014 12:52:20 -0500
+Date: Thu, 13 Feb 2014 18:54:19 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>,
+	iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 21/22] qla4xxx: Use pci_enable_msix_range()
+Message-ID: <20140213175418.GF26610@dhcp-26-207.brq.redhat.com>
+References: <cover.1391512266.git.agordeev@redhat.com>
+ <eb9c6c476786ff901512e46859f0d59a5e62170d.1391512266.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <eb9c6c476786ff901512e46859f0d59a5e62170d.1391512266.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 27, 2014 01:37:17 AM Rafael J. Wysocki wrote:
-> Hi All,
-> 
-> ACPIPHP can be simplified a bit on top of some PCI and ACPI changes merged
-> recently and the following series of patches implements those simplifications:
-> 
-> [1/11] Fix up two kerneldoc comments in acpiphp_glue.c.
-> [2/11] Get rid of an unnecessary label in register_slot().
-> [3/11] Drop acpiphp_bus_trim() and use acpi_bus_trim() instead of it directly.
-> [4/11] Move the acpi_bus_get_device() call out of acpiphp_no_hotplug().
-> [5/11] Store struct acpi_device pointers instead of ACPI handles in struct acpiphp_context.
-> [6/11] Drop acpiphp_bus_add() (which has only one user).
-> [7/11] Drop crit_sect mutexes (that are redundant).
-> [8/11] Clean up the usage of the slot variable in hotplug_event().
-> [9/11] Drop dev_in_slot() and rework disable_slot() to walk bus->devices directly.
-> [10/11] Use acpi_handle_debug() in hotplug_event() instead of open-coded stuff.
-> [11/11] Drop handle argument from the member functions of struct acpi_dock_ops.
-> 
-> All of that is relateively straightforward, but I have some more intrusive changes
-> on top of it in the works.  They will be posted separately later this week.
+On Tue, Feb 04, 2014 at 12:17:07PM +0100, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
 
-I've learned a couple of things since I sent this patchset.  First, all
-bus->devices list walks that may remove PCI devices should be done in reverse
-order or they can crash if virtual functions are involved.  Second, hotplug_event()
-(in acpiphp_glue.c) has to acquire pci_rescan_remove_lock by itself, because it
-may be called from multiple places and all of them need that lock to be held.
-That is done by patches [1-2/13] which I'm planning to push as fixes for 3.14-rc2.
+Hi Vikas,
 
-The rest is pretty much the same as last time except that the old patch [9/11]
-became [3/13] in this series and it has been changed so that the list is walked in
-reverse order.
+Any feedback on this?
 
 Thanks!
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
