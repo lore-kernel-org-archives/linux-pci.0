@@ -1,104 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:42168 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011AbaBGLEG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Feb 2014 06:04:06 -0500
-Date: Fri, 7 Feb 2014 12:03:57 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <652007466.20140207120357@eikelenboom.it>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
-	<linux-ia64@vger.kernel.org>
-Subject: Re: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary prevents it from reading it's own rom. It will get the content of the shadowrom at C000 instead, which is of the primary VGA card and the driver of the secondary card will bail out.
-In-Reply-To: <20140203145205.GB2992@phenom.dumpdata.com>
-References: <20140130000831.GJ16825@google.com> <1391160503-11122-1-git-send-email-linux@eikelenboom.it> <20140203145205.GB2992@phenom.dumpdata.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:60128 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751600AbaBMSGZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Feb 2014 13:06:25 -0500
+Date: Thu, 13 Feb 2014 11:06:16 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140213180616.GD17248@obsidianresearch.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+ <1392236171-10512-4-git-send-email-will.deacon@arm.com>
+ <D2AE4AE6-E8FA-4DD8-B92B-E37205A2548C@codeaurora.org>
+ <20140213110721.GC13576@mudshark.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140213110721.GC13576@mudshark.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+On Thu, Feb 13, 2014 at 11:07:21AM +0000, Will Deacon wrote:
 
-Still trying to collect tested and acked-by's ..
+> Not in this case! kvmtool generates the following:
 
-Dave,
-          In commit 6cf20beec4b91c240cf759b4db72669e251f1fc4 you changed pci_fixup_video saying:
-          "This fixes the switcheroo on my T410s."
-          Do you still have the machine and could you verify if it still works with this patch applied ?
-
-Eiichiro,
-          Most of last major overhaul of pci_fixup_video was in commit 6b5c76b8e2ff204fa8d7201acce461188873bf2b saying:
-          "PCI: fix pci_fixup_video as it blows up on sparc64"
-          Is it possible for you to verify you can still boot on sparc64 with this patch applied ?
-
-Tony,
-          Since ia64's pci_fixup_video is also changed to be inline with x86, could you verify it still compiles and boots for you ?
-
-
-Konrad,
-          Thanks for reviewing and testing !
-
---
-Sander
+Well, the example is nice so someone can review it..
+ 
+> 	pci {
+> 		#address-cells = <0x3>;
+> 		#size-cells = <0x2>;
+> 		#interrupt-cells = <0x1>;
+> 		compatible = "arm,pci-cam-generic";
+> 		reg = <0x0 0x40000000>;
+> 		ranges = <0x1000000 0x0 0x0 0x0 0x0 0x0 0x10000 0x2000000 0x0 0x41000000 0x0 0x41000000 0x0 0x3f000000>;
+> 		interrupt-map = <0x0 0x0 0x0 0x1 0x1 0x0 0x4 0x1 0x800 0x0 0x0 0x1 0x1 0x0 0x5 0x1 0x1000 0x0 0x0 0x1 0x1 0x0 0x6 0x1 0x1800 0x0 0x0 0x1 0x1 0x0 0x7 0x1>;
+> 		interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
+> 	};
 
 
+Looks like there are a few misses in the above. How about this:
 
+pci {
+    compatible = "arm,pci-cam-generic"
+    device_type = "pci";
+    ** ^^^^^^^^^^^^^^^^^
+    ** MANDATORY for the host bridge node
+    #address-cells = <3>;
+    #size-cells = <2>;
 
-Monday, February 3, 2014, 3:52:05 PM, you wrote:
+    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
+    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
+                                        ^^^^^^^^^^^^^^
+            ** ?? Is this why you had problems with the offset? Should
+	    ** be the cpu physical address of the start of the IO window.
+             <0x2000000 0x0 0x41000000  0x0 0x41000000  0x0 0x3f000000>;
 
-> On Fri, Jan 31, 2014 at 10:28:22AM +0100, Sander Eikelenboom wrote:
->> Hi Bjorn / Tony,
->> 
->> I fixed up ia64 as well and brought it inline again with the x86 code,
->> but i don't have a ia64 machine, so that part is untested.
->> Perhaps Tony is able to review/test it ?
->> 
->> Sander
->> 
->> 
->> 
->> Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary
->> prevents it from reading it's own rom. It will get the content of the shadowrom
->> at C000 instead, which is of the primary VGA card and the driver of the
->> secondary card will bail out.
->> 
->> Fix this by checking if the arch code or vga-arbitration has already
->> determined the vga_default_device, if so only apply the fix to this
->> primary video device and let the comment reflect this.
->> 
->> v2:
->>     - Fix pci_fixup_video both in x86 and ia64
->> 
->> 
->> Sander Eikelenboom (1):
->>   Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the
->>     primary     prevents it from reading it's own rom. It will get the
->>     content of the shadowrom     at C000 instead, which is of the
->>     primary VGA card and the driver of the     secondary card will bail
->>     out.
+   
+    #interrupt-cells = <0x1>;
+    // PCI_DEVICE(3) INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(3)
+    interrupt-map = <  0x0 0x0 0x0 0x1  0x1  0x0 0x4 0x1
+                     0x800 0x0 0x0 0x1  0x1  0x0 0x5 0x1 
+                    0x1000 0x0 0x0 0x1  0x1  0x0 0x6 0x1
+                    0x1800 0x0 0x0 0x1  0x1  0x0 0x7 0x1>;
+                 **                    ^^^^^^
+                 ** This should be a phandle to the interrupt controller
+    // PCI_DEVICE(3) INT#1()
+    interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
+}
 
-> Your editor mutilated your subject line. It ought to have been just
-> one line.
+I keep thinking of making a pcie-dt.h file with helper macros for
+all this. :|
 
-> Anyhow, you can also add 'Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com'
-> on the patch for the x86 part.
+FWWI, I like to put a double space between the logically distinct
+things in the lists.
 
-> The ia64 "looks" OK to me, but my ia64 box won't boot v3.11 or later
-> so I can't give it a 'Tested-by' yet.
-
->> 
->>  arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
->>  arch/x86/pci/fixup.c  |   18 ++++++++++--------
->>  2 files changed, 23 insertions(+), 19 deletions(-)
->> 
->> -- 
->> 1.7.10.4
->> 
-
-
+Jason
