@@ -1,40 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 1/7] PCI: Add "weak" generic pcibios_enable_device()
- implementation
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 16:41:36 -0700
-Message-ID: <20140226234136.18970.21352.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:44820 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753910AbaBMMey (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 07:34:54 -0500
+Message-ID: <52FCBBEA.70300@codethink.co.uk>
+Date: Thu, 13 Feb 2014 12:34:50 +0000
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Magnus Damm <magnus.damm@gmail.com>
+CC: linux-pci@vger.kernel.org, horms@verge.net.au,
+	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
+	valentine.barshak@cogentembedded.com, geert@linux-m68k.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH 00/08] PCI: rcar: Recent driver patches from Ben Dooks
+ and me
+References: <20140213030302.10398.37322.sendpatchset@w520>
+In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Many architectures implement pcibios_enable_device() the same way, so
-provide a default implementation in the core.
+On 13/02/14 03:03, Magnus Damm wrote:
+> PCI: rcar: Recent driver patches from Ben Dooks and me
+>
+> [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
+> [PATCH v2 02/08] PCI: rcar: add error interrupt handling
+> [PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
+> [PATCH v2 04/08] PCI: rcar: Register each instance independently
+> [PATCH v2 05/08] PCI: rcar: Break out window size handling
+> [PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
+> [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
+> [PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
+>
+> These patches update the pci-rcar-gen2.c driver with patches from
+> Ben Dooks and me. The first 3 are written by Ben (thanks!) and are
+> included here to show what I would like to have merged and what I
+> rebased my patches on. The following 4 are updated versions of
+>
+> [PATCH 00/04] PCI: rcar: Driver model and physical address space update
+>
+> The final patch is a new one that fixes up the Kconfig dependencies.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c |    5 +++++
- 1 file changed, 5 insertions(+)
+Thanks. Is there any chance of getting this driver device-tree
+enabled too?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index dc9ce62be7aa..c3ce3d61091c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1185,6 +1185,11 @@ int pci_load_and_free_saved_state(struct pci_dev *dev,
- }
- EXPORT_SYMBOL_GPL(pci_load_and_free_saved_state);
- 
-+int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
-+{
-+	return pci_enable_resources(dev, bars);
-+}
-+
- static int do_pci_enable_device(struct pci_dev *dev, int bars)
- {
- 	int err;
-
+-- 
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
