@@ -1,196 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:40390 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755307AbaBFKSU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Feb 2014 05:18:20 -0500
-Date: Thu, 6 Feb 2014 10:18:15 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:44502 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751760AbaBMSMh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 13:12:37 -0500
+Date: Thu, 13 Feb 2014 18:11:48 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kumar Gala <galak@codeaurora.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
- device tree
-Message-ID: <20140206101814.GA4993@e106497-lin.cambridge.arm.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
- <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
- <7398333.9L5KlyFggU@wuerfel>
- <CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>,
+	devicetree@vger.kernel.org, grant.likely@linaro.org,
+	robh+dt@kernel.org
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140213181148.GC25107@e106331-lin.cambridge.arm.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+ <20140213110721.GC13576@mudshark.cambridge.arm.com>
+ <BA5E6077-77F8-4BE8-80E5-BAB9FE111387@codeaurora.org>
+ <4110788.UI9TADVhpa@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4110788.UI9TADVhpa@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
-> Hello Liviu,
+[adding devicetree, Grant, Rob]
+
+Apologies to all those who aren't too bothered about the naming, I'm
+going to derail this subthread for a general device tree policy
+discussion.
+
+On Thu, Feb 13, 2014 at 04:28:20PM +0000, Arnd Bergmann wrote:
+> On Thursday 13 February 2014 10:22:25 Kumar Gala wrote:
+> > On Feb 13, 2014, at 5:07 AM, Will Deacon <will.deacon@arm.com> wrote:
+> > > Happy to change it, but I'm also struggling for names. Maybe "linux,…"?
+> >
+> > I was thinking that as well, I’d say go with “linux,”.
 > 
-> I did not get the first email of this particular patch on any of
-> subscribed mailing lists (don't know why), hence replying here.
+> I see nothing linux specific in there. I would only use that namespace
+> for things we don't expect to work with another OS.
 
-Strange, it shows in the MARC and GMANE archive for linux-pci, probably
-a hickup on your receiving side?
+Let's take a stop back. This is an instance of a wider problem, and to
+be honest it's a rather trivial one. As usual, because there's been no
+policy there's no consistency, and everyone's got their own favourite.
 
-> 
-> +struct pci_host_bridge *
-> +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
-> + void *host_data, struct list_head *resources)
-> +{
-> + struct pci_bus *root_bus;
-> + struct pci_host_bridge *bridge;
-> +
-> + /* first parse the host bridge bus ranges */
-> + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
-> + return NULL;
-> +
-> + /* then create the root bus */
-> + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
-> + if (!root_bus)
-> + return NULL;
-> +
-> + bridge = to_pci_host_bridge(root_bus->bridge);
-> +
-> + return bridge;
-> +}
-> 
-> You are keeping the domain_nr inside pci_host_bridge structure. In
-> above API, domain_nr is required in 'pci_find_bus' function called
-> from 'pci_create_root_bus'. Since the bridge is allocated after
-> creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
-> will cause problem for scanning multiple domains.
+All we need is a policy for how generic bindings are named/prefixed. As
+long as this is consistent and unlikely to cause problems it doesn't
+really matter what that specific policy is.
 
-Good catch. I was switching between creating a pci_controller in arch/arm64 and
-adding the needed bits in pci_host_bridge. After internal review I've decided to
-add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
+Regardless, we need to support our existing bindings.
 
-Thanks for reviewing this, will fix in v2.
+So far we have instances of (in v3.14-rc2):
 
-Do you find porting to the new API straight forward?
+A) No prefix
 
-Best regards,
-Liviu
+  $ git grep 'compatible\s*=\s*"[^,]*"' -- Documentation/devicetree | \
+    awk '{ print $NF }' | sort -u | wc -l
+    96
 
-> 
-> 
-> On Mon, Feb 3, 2014 at 10:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
-> >> +/**
-> >> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
-> >> + * @dev: device node of the host bridge having the range property
-> >> + * @resources: list where the range of resources will be added after DT parsing
-> >> + *
-> >> + * This function will parse the "ranges" property of a PCI host bridge device
-> >> + * node and setup the resource mapping based on its content. It is expected
-> >> + * that the property conforms with the Power ePAPR document.
-> >> + *
-> >> + * Each architecture will then apply their filtering based on the limitations
-> >> + * of each platform. One general restriction seems to be the number of IO space
-> >> + * ranges, the PCI framework makes intensive use of struct resource management,
-> >> + * and for IORESOURCE_IO types they can only be requested if they are contained
-> >> + * within the global ioport_resource, so that should be limited to one IO space
-> >> + * range.
-> >
-> > Actually we have quite a different set of restrictions around I/O space on ARM32
-> > at the moment: Each host bridge can have its own 64KB range in an arbitrary
-> > location on MMIO space, and the total must not exceed 2MB of I/O space.
-> >
-> >> + */
-> >> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
-> >> +                                     struct list_head *resources)
-> >> +{
-> >> +     struct resource *res;
-> >> +     struct of_pci_range range;
-> >> +     struct of_pci_range_parser parser;
-> >> +     int err;
-> >> +
-> >> +     pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-> >> +
-> >> +     /* Check for ranges property */
-> >> +     err = of_pci_range_parser_init(&parser, dev);
-> >> +     if (err)
-> >> +             return err;
-> >> +
-> >> +     pr_debug("Parsing ranges property...\n");
-> >> +     for_each_of_pci_range(&parser, &range) {
-> >> +             /* Read next ranges element */
-> >> +             pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
-> >> +                             range.pci_space, range.pci_addr);
-> >> +             pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
-> >> +                                     range.cpu_addr, range.size);
-> >> +
-> >> +             /* If we failed translation or got a zero-sized region
-> >> +              * (some FW try to feed us with non sensical zero sized regions
-> >> +              * such as power3 which look like some kind of attempt
-> >> +              * at exposing the VGA memory hole) then skip this range
-> >> +              */
-> >> +             if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> >> +                     continue;
-> >> +
-> >> +             res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> >> +             if (!res) {
-> >> +                     err = -ENOMEM;
-> >> +                     goto bridge_ranges_nomem;
-> >> +             }
-> >> +
-> >> +             of_pci_range_to_resource(&range, dev, res);
-> >> +
-> >> +             pci_add_resource_offset(resources, res,
-> >> +                             range.cpu_addr - range.pci_addr);
-> >> +     }
-> >
-> > I believe of_pci_range_to_resource() will return the MMIO aperture for the
-> > I/O space window here, which is not what you are supposed to pass into
-> > pci_add_resource_offset.
-> >
-> >> +EXPORT_SYMBOL(pci_host_bridge_of_init);
-> >
-> > EXPORT_SYMBOL_GPL
-> >
-> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >> index 6e34498..16febae 100644
-> >> --- a/drivers/pci/probe.c
-> >> +++ b/drivers/pci/probe.c
-> >> @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >>       list_for_each_entry_safe(window, n, resources, list) {
-> >>               list_move_tail(&window->list, &bridge->windows);
-> >>               res = window->res;
-> >> +             /*
-> >> +              * IO resources are stored in the kernel with a CPU start
-> >> +              * address of zero. Adjust the data accordingly and remember
-> >> +              * the offset
-> >> +              */
-> >> +             if (resource_type(res) == IORESOURCE_IO) {
-> >> +                     bridge->io_offset = res->start;
-> >> +                     res->end -= res->start;
-> >> +                     window->offset -= res->start;
-> >> +                     res->start = 0;
-> >> +             }
-> >>               offset = window->offset;
-> >>               if (res->flags & IORESOURCE_BUS)
-> >
-> > Won't this break all existing host bridges?
-> >
-> >         Arnd
-> >
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
+  $ git grep 'compatible\s*=\s*"[^,]*"' -- arch/*/boot/dts | \
+    awk ' { print $NF }' | sort -u | wc -l
+    233
 
+  These include some commonly use bindings like "fixed-clock",
+  "regulator-fixed", and (everybody's favourite) "simple-bus". The
+  "ns16550" binding falls here too.
+ 
+  There are subdivisions within this, like "simple-*" and "*-generic".
+  There are three "simple-" prefixed variants, perhaps that's worth it's
+  own class?
+ 
+  There are also some dubious ones like "ldo4" that are probably only
+  appearing in sub-nodes and probably don't matter that much for this
+  discussion.
+
+
+B) "linux," prefixed
+
+  $ git grep 'compatible\s*=\s*"linux,.*"' -- Documentation/devicetree | \
+    awk ' { print $NF }' | sort -u | wc -l
+    4
+
+  $ git grep 'compatible\s*=\s*"linux,.*"' -- arch/*/boot/dts | \
+    awk ' {print $NF }' | sort -u | wc -l
+    1
+
+  These include:
+  * "linux,hdmi-audio"
+  * "linux,spdif-dir"
+  * "linux,spdif-dit"
+  * "linux,wdt-gpio"
+
+Is there another class I've missed?
+
+If a binding originates for Linux, a "linux," prefix doesn't seem that
+bad to me. It's just a namespace, it doesn't have to mean that it's only
+ever going to work for Linux, and two such bindings within Linux
+shouldn't be able to collide.
+
+As long as we choose something that reduces the possibility of name
+collisions (several people might come up with incompatible "pci"
+bindings) then we're fine regardless of the particular prefix or lack
+thereof. A "generic," prefix feels like it's too easy to collide with if
+another community also creates bindings.
+
+Thoughts?
+
+One final option for generic bindings would be a prefix per-author (e.g.
+in this case the compatible string could be "will-deacon,pci"). That
+might lead to the fewest namespace issues in future, and helps to
+immortalise/demonise the original author of any binding claiming to be
+generic. Patch below.
+
+Thanks,
+Mark.
+
+---->8----
+>From 6ed3e3564199ed6dbd8782a740d4067fb1e6d3b6 Mon Sep 17 00:00:00 2001
+From: Mark Rutland <mark.rutland@arm.com>
+Date: Thu, 13 Feb 2014 17:50:33 +0000
+Subject: [PATCH] Documentation: devicetree: add vendor prefix for Will Deacon
+
+This patch adds a vendor prefix for Will Deacon, for use in generic
+hardware bindings originating from Will Deacon.
+
+Signed-off-by: Mark Rutland <mark.rutland@arm.com>
+---
+ Documentation/devicetree/bindings/vendor-prefixes.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
+index 3f900cd..b945e74 100644
+--- a/Documentation/devicetree/bindings/vendor-prefixes.txt
++++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
+@@ -88,6 +88,7 @@ toumaz	Toumaz
+ v3	V3 Semiconductor
+ via	VIA Technologies, Inc.
+ winbond Winbond Electronics corp.
++will-deacon	Will Deacon MEng
+ wlf	Wolfson Microelectronics
+ wm	Wondermedia Technologies, Inc.
+ xlnx	Xilinx
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+1.8.1.1
