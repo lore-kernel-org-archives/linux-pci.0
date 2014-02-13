@@ -1,116 +1,164 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:62928 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751456AbaBSVeP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 16:34:15 -0500
-Received: by mail-ie0-f171.google.com with SMTP id to1so684677ieb.30
-        for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 13:34:15 -0800 (PST)
+Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:29071
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751533AbaBMQDk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 11:03:40 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
+	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	Takashi Iwai <tiwai@suse.de>
+Subject: RE: [PATCH] PCI: pciehp: Fix the problem that the present bit is
+ not cleared though slot is empty
+Date: Thu, 13 Feb 2014 16:03:30 +0000
+Message-ID: <11994c276661475080d900fa8b5942a5@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
+	<20140212004927.GH21057@google.com>
+	<E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
+	<CAErSpo5ycKF4Xm26z80wNrms7G5onn1ASzcU2AHy7XN1YNAYuA@mail.gmail.com>
+ <CAA93t1psHnnVSbaaaJ1LsqeNzRYmNiiO9RiTggVovDVJpk4cqw@mail.gmail.com>
+ <E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01>
+In-Reply-To: <E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <3905203.TvF8RmfLsz@wuerfel>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <3312083.odPX4th7oi@wuerfel> <CAErSpo5PCTyZ5jzumJxD=CCN+-t-Z31Cw+9ejT_oTQ4fFQePag@mail.gmail.com>
- <3905203.TvF8RmfLsz@wuerfel>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Feb 2014 14:33:54 -0700
-Message-ID: <CAErSpo7g5G0vn_8tyRE52MK6YuTB8XhBbk9thhzLx4tg0hmDMg@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 1:48 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 19 February 2014 13:18:24 Bjorn Helgaas wrote:
->> >
->> > Right, this is an interesting case indeed, and I think we haven't
->> > considered it in the binding so far. We already encode a "bus-range"
->> > in DT, so we can easily partition the ECAM config space, but it
->> > still violates one of the two assumptions:
->> > a) that the register ranges for the two host bridge devices are
->> >    non-overlapping in DT
->> > b) that the ECAM register range as specified in DT starts at bus
->> >    0 and is a power-of-two size.
->> > Since the binding is not fixed that, we could change the definition to
->> > say that the ECAM register range in the "reg" property must match
->> > the buses listed in the "bus-range" property.
->>
->> Addresses in the ACPI MCFG table correspond to bus number 0, but the
->> MCFG also provides start & end bus numbers, so the valid range does
->> not necessarily start with bus 0 and need not be power-of-two in size.
->>  Something similar sounds like a good idea for DT.
->
-> Hmm, we'll have to think about that. From a DT perspective, we try
-> to keep things local to the node using it, so listing only the
-> registers we are allowed to access is more natural.
+WytUYWthc2hpXQ0KDQpIZWxsbywNCj4gDQo+ID4gPiBIdWgsIHRoYXQgZG9lc24ndCBzb3VuZCBn
+b29kLiAgRG9lcyB5b3VyIHNsb3QgaGF2ZSBhbiBhdHRlbnRpb24NCj4gPiA+IGJ1dHRvbj8gIENh
+biB5b3UgY29sbGVjdCB0aGUgImxzcGNpIC12dnYiIG91dHB1dCBmb3IgdGhlIERvd25zdHJlYW0N
+Cj4gPiA+IFBvcnQgbGVhZGluZyB0byB0aGlzIHNsb3Q/DQo+IA0KPiAgICBUaGUgc2xvdHMgaGF2
+ZSBubyBBdHRlbnRpb24gYnV0dG9uIGFuZCBhcmUgbm90IGZvciBFeHByZXNzQ2FyZC4NCj4gICAg
+bHNwY2kgLXZ2diBvdXRwdXQgaXM6DQo+IA0KPiAgICAgICAgIENvbnRyb2w6IEkvTysgTWVtKyBC
+dXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtDQo+IFBhckVycisgU3RlcHBp
+bmctIFNFUlIrIEZhc3RCMkItIERpc0lOVHgrDQo+ICAgICAgICAgU3RhdHVzOiBDYXArIDY2TUh6
+LSBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0NCj4gPFRBYm9ydC0g
+PE1BYm9ydC0gPlNFUlItIDxQRVJSLSBJTlR4LQ0KPiAgICAgICAgIExhdGVuY3k6IDANCj4gICAg
+ICAgICBCdXM6IHByaW1hcnk9MmMsIHNlY29uZGFyeT0yZCwgc3Vib3JkaW5hdGU9MmYsIHNlYy1s
+YXRlbmN5PTANCj4gICAgICAgICBJL08gYmVoaW5kIGJyaWRnZTogMDAwMGYwMDAtMDAwMDBmZmYN
+Cj4gICAgICAgICBNZW1vcnkgYmVoaW5kIGJyaWRnZTogYjE4MDAwMDAtYjFmZmZmZmYNCj4gICAg
+ICAgICBQcmVmZXRjaGFibGUgbWVtb3J5IGJlaGluZCBicmlkZ2U6IDAwMDAwMDAwYWU4MDAwMDAt
+DQo+IDAwMDAwMDAwYWVmZmZmZmYNCj4gICAgICAgICBTZWNvbmRhcnkgc3RhdHVzOiA2Nk1Iei0g
+RmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdCA+VEFib3J0LQ0KPiA8VEFib3J0LSA8TUFib3J0
+LSA8U0VSUi0gPFBFUlItDQo+ICAgICAgICAgQnJpZGdlQ3RsOiBQYXJpdHktIFNFUlIrIE5vSVNB
+LSBWR0EtIE1BYm9ydC0gPlJlc2V0LSBGYXN0QjJCLQ0KPiAgICAgICAgICAgICAgICAgUHJpRGlz
+Y1Rtci0gU2VjRGlzY1Rtci0gRGlzY1RtclN0YXQtIERpc2NUbXJTRVJSRW4tDQo+ICAgICAgICAg
+Q2FwYWJpbGl0aWVzOiBbNDBdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAzDQo+ICAgICAgICAg
+ICAgICAgICBGbGFnczogUE1FQ2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQw
+KyxEMS0NCj4gLEQyLSxEM2hvdCssRDNjb2xkKykNCj4gICAgICAgICAgICAgICAgIFN0YXR1czog
+RDAgTm9Tb2Z0UnN0KyBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAgUE1FLQ0KPiAgICAgICAg
+IENhcGFiaWxpdGllczogWzQ4XSBNU0k6IEVuYWJsZSsgQ291bnQ9MS84IE1hc2thYmxlKyA2NGJp
+dCsNCj4gICAgICAgICAgICAgICAgIEFkZHJlc3M6IDAwMDAwMDAwZmVlMDA1MTggIERhdGE6IDAw
+MDANCj4gICAgICAgICAgICAgICAgIE1hc2tpbmc6IDAwMDAwMGZlICBQZW5kaW5nOiAwMDAwMDAw
+MA0KPiAgICAgICAgIENhcGFiaWxpdGllczogWzY4XSBFeHByZXNzICh2MikgRG93bnN0cmVhbSBQ
+b3J0IChTbG90KyksIE1TSSAwMA0KPiAgICAgICAgICAgICAgICAgRGV2Q2FwOiBNYXhQYXlsb2Fk
+IDIwNDggYnl0ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5IEwwcw0KPiA8NjRucywgTDEgPDF1cw0K
+PiAgICAgICAgICAgICAgICAgICAgICAgICBFeHRUYWctIFJCRSsgRkxSZXNldC0NCj4gICAgICAg
+ICAgICAgICAgIERldkN0bDogUmVwb3J0IGVycm9yczogQ29ycmVjdGFibGUrIE5vbi1GYXRhbCsg
+RmF0YWwrDQo+IFVuc3VwcG9ydGVkLQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICBSbHhkT3Jk
+KyBFeHRUYWctIFBoYW50RnVuYy0gQXV4UHdyLSBOb1Nub29wKw0KPiAgICAgICAgICAgICAgICAg
+ICAgICAgICBNYXhQYXlsb2FkIDEyOCBieXRlcywgTWF4UmVhZFJlcSAxMjggYnl0ZXMNCj4gICAg
+ICAgICAgICAgICAgIERldlN0YTogQ29yckVycisgVW5jb3JyRXJyLSBGYXRhbEVyci0gVW5zdXBw
+UmVxKyBBdXhQd3ItDQo+IFRyYW5zUGVuZC0NCj4gICAgICAgICAgICAgICAgIExua0NhcDogUG9y
+dCAjMSwgU3BlZWQgOEdUL3MsIFdpZHRoIHg4LCBBU1BNIEwxLCBMYXRlbmN5DQo+IEwwIDw0dXMs
+IEwxIDw0dXMNCj4gICAgICAgICAgICAgICAgICAgICAgICAgQ2xvY2tQTS0gU3VycHJpc2UrIExM
+QWN0UmVwKyBCd05vdCsNCj4gICAgICAgICAgICAgICAgIExua0N0bDogQVNQTSBEaXNhYmxlZDsg
+RGlzYWJsZWQtIFJldHJhaW4tIENvbW1DbGstDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIEV4
+dFN5bmNoLSBDbG9ja1BNLSBBdXRXaWREaXMtIEJXSW50LSBBdXRCV0ludC0NCj4gICAgICAgICAg
+ICAgICAgIExua1N0YTogU3BlZWQgMi41R1QvcywgV2lkdGggeDAsIFRyRXJyLSBUcmFpbi0gU2xv
+dENsaysNCj4gRExBY3RpdmUtIEJXTWdtdC0gQUJXTWdtdC0NCj4gICAgICAgICAgICAgICAgIFNs
+dENhcDogQXR0bkJ0bi0gUHdyQ3RybCsgTVJMKyBBdHRuSW5kKyBQd3JJbmQrIEhvdFBsdWcrDQo+
+IFN1cnByaXNlLQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICBTbG90ICM2NywgUG93ZXJMaW1p
+dCAyNS4wMDBXOyBJbnRlcmxvY2stDQo+IE5vQ29tcGwtDQoNCkhtbS4uLiBJIHNlZSB0aGF0IHRo
+ZSBTbG90IGhhcyBhIHBvd2VyIGNvbnRyb2xsZXIuIFdoaWNoIG1lYW5zIHRoYXQgdGhlIHBvd2Vy
+IHRvIHRoZSBzbG90IHNoYWxsIG5vdCBiZSB0dXJuZWQgb24gYXV0b21hdGljYWxseSAoYnkgSFcp
+IHdoZW4gdGhlIGNhcmQgaXMgcGx1Z2dlZCBpbi4gQWxzbyBtZWFuaW5nIHRoYXQgdGhlIGxpbmsg
+d2lsbCBub3QgY29tZSB1cCBhdXRvbWF0aWNhbGx5IC0gc28gdGhpcyBkb2VzIG5vdCBzZWVtIGxp
+a2UgdGhlIExpbmsgc3RhdGUgYmFzZWQgaG90cGx1ZyBraWNraW5nIGluLg0KDQpXaGF0IEkgc3Vz
+cGVjdCBpcyB0aGlzIG9uZToNCg0KZjAyZDE4NDNkODNiICJQQ0k6IHBjaWVocDogUmVtb3ZlIHN1
+cnByaXNlIGJpdCBjaGVja3MiDQoNClNpbmNlIHRoaXMgcGF0Y2ggcmVtb3ZlcyAqYWxsKiB0aGUg
+c3VycHJpc2UgYml0IGNoZWNrcyBjYXVzaW5nIGFsbCB0aGUgcHJlc2VuY2UgZGV0ZWN0IGNoYW5n
+ZXMgKGluY2x1ZGluZyAwLT4xKSB0byBiZSBpbml0aWF0ZSBob3RwbHVnLiBJIHRoaW5rIGl0IG1h
+eSBiZSB3b3J0aHdoaWxlIHRvIHRyeSBpdCBvdXQgd2hpbGUgcmVtb3ZpbmcgdGhpcyBwYXJ0aWN1
+bGFyIGh1bms6DQoNCkBAIC01MzUsOCArNTM1LDYgQEAgc3RhdGljIHZvaWQgaW50ZXJydXB0X2V2
+ZW50X2hhbmRsZXIoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KIAkJYnJlYWs7DQogCWNhc2Ug
+SU5UX1BSRVNFTkNFX09OOg0KIAljYXNlIElOVF9QUkVTRU5DRV9PRkY6DQotCQlpZiAoIUhQX1NV
+UFJfUk0oY3RybCkpDQotCQkJYnJlYWs7DQogCQljdHJsX2RiZyhjdHJsLCAiU3VycHJpc2UgUmVt
+b3ZhbFxuIik7DQogCQloYW5kbGVfc3VycHJpc2VfZXZlbnQocF9zbG90KTsNCiAJCWJyZWFrOw0K
+DQpNYXkgYmUgd2Ugc2hvdWxkIHJlbW92ZSB0aGUgc3VycHJpc2UgY2hlY2sgZm9yIElOVF9QUkVT
+RU5DRV9PRkYgb25seSAoYW5kIGxldCBpdCBzdGF5IGZvciBJTlRfUFJFU0VXTkNFX09OKT8NCg0K
+VGhhbmtzLA0KDQpSYWphdA0KDQoNCg0KPiAgICAgICAgICAgICAgICAgU2x0Q3RsOiBFbmFibGU6
+IEF0dG5CdG4tIFB3ckZsdC0gTVJMKyBQcmVzRGV0KyBDbWRDcGx0Kw0KPiBIUElycSsgTGlua0No
+ZysNCj4gICAgICAgICAgICAgICAgICAgICAgICAgQ29udHJvbDogQXR0bkluZCBPZmYsIFB3cklu
+ZCBPZmYsIFBvd2VyKw0KPiBJbnRlcmxvY2stDQo+ICAgICAgICAgICAgICAgICBTbHRTdGE6IFN0
+YXR1czogQXR0bkJ0bi0gUG93ZXJGbHQtIE1STC0gQ21kQ3BsdC0NCj4gUHJlc0RldC0gSW50ZXJs
+b2NrLQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICBDaGFuZ2VkOiBNUkwtIFByZXNEZXQtIExp
+bmtTdGF0ZS0NCj4gICAgICAgICAgICAgICAgIERldkNhcDI6IENvbXBsZXRpb24gVGltZW91dDog
+Tm90IFN1cHBvcnRlZCwgVGltZW91dERpcy0sDQo+IExUUissIE9CRkYgVmlhIG1lc3NhZ2UgQVJJ
+RndkKw0KPiAgICAgICAgICAgICAgICAgRGV2Q3RsMjogQ29tcGxldGlvbiBUaW1lb3V0OiA1MHVz
+IHRvIDUwbXMsIFRpbWVvdXREaXMtLA0KPiBMVFItLCBPQkZGIERpc2FibGVkIEFSSUZ3ZC0NCj4g
+ICAgICAgICAgICAgICAgIExua0N0bDI6IFRhcmdldCBMaW5rIFNwZWVkOiA4R1QvcywgRW50ZXJD
+b21wbGlhbmNlLQ0KPiBTcGVlZERpcy0sIFNlbGVjdGFibGUgRGUtZW1waGFzaXM6IC02ZEINCj4g
+ICAgICAgICAgICAgICAgICAgICAgICAgIFRyYW5zbWl0IE1hcmdpbjogTm9ybWFsIE9wZXJhdGlu
+ZyBSYW5nZSwNCj4gRW50ZXJNb2RpZmllZENvbXBsaWFuY2UtIENvbXBsaWFuY2VTT1MtDQo+ICAg
+ICAgICAgICAgICAgICAgICAgICAgICBDb21wbGlhbmNlIERlLWVtcGhhc2lzOiAtNmRCDQo+ICAg
+ICAgICAgICAgICAgICBMbmtTdGEyOiBDdXJyZW50IERlLWVtcGhhc2lzIExldmVsOiAtMy41ZEIs
+DQo+IEVxdWFsaXphdGlvbkNvbXBsZXRlLSwgRXF1YWxpemF0aW9uUGhhc2UxLQ0KPiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgRXF1YWxpemF0aW9uUGhhc2UyLSwgRXF1YWxpemF0aW9uUGhhc2Uz
+LSwNCj4gTGlua0VxdWFsaXphdGlvblJlcXVlc3QtDQo+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBb
+YTRdIFN1YnN5c3RlbTogRnVqaXRzdSBMaW1pdGVkLiBEZXZpY2UgMTgwNA0KPiAgICAgICAgIENh
+cGFiaWxpdGllczogWzEwMCB2MV0gRGV2aWNlIFNlcmlhbCBOdW1iZXIgYWEtODctMDAtMTAtYjUt
+ZGYtDQo+IDBlLTAwDQo+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbZmI0IHYxXSBBZHZhbmNlZCBF
+cnJvciBSZXBvcnRpbmcNCj4gICAgICAgICAgICAgICAgIFVFU3RhOiAgRExQLSBTREVTLSBUTFAt
+IEZDUC0gQ21wbHRUTy0gQ21wbHRBYnJ0LQ0KPiBVbnhDbXBsdC0gUnhPRi0gTWFsZlRMUC0gRUNS
+Qy0gVW5zdXBSZXEtIEFDU1Zpb2wtDQo+ICAgICAgICAgICAgICAgICBVRU1zazogIERMUC0gU0RF
+Uy0gVExQLSBGQ1AtIENtcGx0VE8tIENtcGx0QWJydC0NCj4gVW54Q21wbHQtIFJ4T0YtIE1hbGZU
+TFAtIEVDUkMrIFVuc3VwUmVxKyBBQ1NWaW9sLQ0KPiAgICAgICAgICAgICAgICAgVUVTdnJ0OiBE
+TFArIFNERVMrIFRMUCsgRkNQKyBDbXBsdFRPLSBDbXBsdEFicnQrDQo+IFVueENtcGx0KyBSeE9G
+KyBNYWxmVExQKyBFQ1JDKyBVbnN1cFJlcS0gQUNTVmlvbCsNCj4gICAgICAgICAgICAgICAgIENF
+U3RhOiAgUnhFcnItIEJhZFRMUC0gQmFkRExMUC0gUm9sbG92ZXItIFRpbWVvdXQtDQo+IE5vbkZh
+dGFsRXJyKw0KPiAgICAgICAgICAgICAgICAgQ0VNc2s6ICBSeEVyci0gQmFkVExQLSBCYWRETExQ
+LSBSb2xsb3Zlci0gVGltZW91dC0NCj4gTm9uRmF0YWxFcnIrDQo+ICAgICAgICAgICAgICAgICBB
+RVJDYXA6IEZpcnN0IEVycm9yIFBvaW50ZXI6IDFmLCBHZW5DYXArIENHZW5Fbi0gQ2hrQ2FwKw0K
+PiBDaGtFbi0NCj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFsxMzggdjFdIFBvd2VyIEJ1ZGdldGlu
+ZyA8Pz4NCj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFsxMGMgdjFdICMxOQ0KPiAgICAgICAgIENh
+cGFiaWxpdGllczogWzE0OCB2MV0gVmlydHVhbCBDaGFubmVsDQo+ICAgICAgICAgICAgICAgICBD
+YXBzOiAgIExQRVZDPTAgUmVmQ2xrPTEwMG5zIFBBVEVudHJ5Qml0cz0xDQo+ICAgICAgICAgICAg
+ICAgICBBcmI6ICAgIEZpeGVkLSBXUlIzMi0gV1JSNjQtIFdSUjEyOC0NCj4gICAgICAgICAgICAg
+ICAgIEN0cmw6ICAgQXJiU2VsZWN0PUZpeGVkDQo+ICAgICAgICAgICAgICAgICBTdGF0dXM6IElu
+UHJvZ3Jlc3MtDQo+ICAgICAgICAgICAgICAgICBWQzA6ICAgIENhcHM6ICAgUEFUT2Zmc2V0PTAw
+IE1heFRpbWVTbG90cz0xDQo+IFJlalNub29wVHJhbnMtDQo+ICAgICAgICAgICAgICAgICAgICAg
+ICAgIEFyYjogICAgRml4ZWQrIFdSUjMyLSBXUlI2NC0gV1JSMTI4LSBUV1JSMTI4LQ0KPiBXUlIy
+NTYtDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIEN0cmw6ICAgRW5hYmxlKyBJRD0wIEFyYlNl
+bGVjdD1GaXhlZCBUQy9WQz1mZg0KPiAgICAgICAgICAgICAgICAgICAgICAgICBTdGF0dXM6IE5l
+Z29QZW5kaW5nKyBJblByb2dyZXNzLQ0KPiAgICAgICAgIENhcGFiaWxpdGllczogW2UwMCB2MV0g
+IzEyDQo+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbZjI0IHYxXSBBY2Nlc3MgQ29udHJvbCBTZXJ2
+aWNlcw0KPiAgICAgICAgICAgICAgICAgQUNTQ2FwOiBTcmNWYWxpZCsgVHJhbnNCbGsrIFJlcVJl
+ZGlyKyBDbXBsdFJlZGlyKw0KPiBVcHN0cmVhbUZ3ZCsgRWdyZXNzQ3RybCsgRGlyZWN0VHJhbnMr
+DQo+ICAgICAgICAgICAgICAgICBBQ1NDdGw6IFNyY1ZhbGlkLSBUcmFuc0Jsay0gUmVxUmVkaXIt
+IENtcGx0UmVkaXItDQo+IFVwc3RyZWFtRndkLSBFZ3Jlc3NDdHJsLSBEaXJlY3RUcmFucy0NCj4g
+ICAgICAgICBDYXBhYmlsaXRpZXM6IFtiNzAgdjFdIFZlbmRvciBTcGVjaWZpYyBJbmZvcm1hdGlv
+bjogSUQ9MDAwMQ0KPiBSZXY9MCBMZW49MDEwIDw/Pg0KPiAgICAgICAgIEtlcm5lbCBkcml2ZXIg
+aW4gdXNlOiBwY2llcG9ydA0KPiANCj4gDQo+ID4gSWYgdGhlcmUgaXMgbm8gYXR0ZW50aW9uIGJ1
+dHRvbiwgdGhlbiB0aGUgYmVoYXZpb3Igc2VlbiwgbWF0Y2hlcyB3aXRoDQo+ID4gd2hhdCBJIGV4
+cGVjdGVkIG9mIHRoZSBjb2RlLg0KPiA+DQo+ID4gU2VlbWluZ2x5LCB0aGUgSFcgZG9lcyBub3Qg
+aGF2ZSBhIHBvd2VyIGNvbnRyb2xsZXIgKGFuZCBhdHRlbnRpb24NCj4gPiBidXR0b24pLCB0aHVz
+IHRoZSBwb3dlciBpcyBhdXRvbWF0aWNhbGx5IHR1cm5lZCBvbiAoYnkgSFcpIHdoZW4gY2FyZA0K
+PiA+IGlzIGluc2VydGVkIGFuZCB0aGUgbGluayBjb21lcyB1cC4gVGh1cyBwcmlvciB0byBsaW5r
+IHN0YXRlIGJhc2VkDQo+ID4gaG90LXBsdWcsICJlY2hvIDEgPiBwb3dlciIgdXNlZCB0byBkbyBh
+IGxpdHRsZSBlbHNlIHRoYW4gaW5pdGlhdGUgYQ0KPiA+IHJlc2NhbiBmb3IgdGhpcyBwYXJ0aWN1
+bGFyIEhXLg0KPiANCj4gPg0KPiA+ID4NCj4gPiA+IEkgdGhpbmsgdGhhdCBmb3IgRXhwcmVzc0Nh
+cmQgYW5kIHNpbWlsYXIgZGV2aWNlcywgd2Ugd2FudCB0byB0dXJuIG9uDQo+ID4gPiB0aGUgZGV2
+aWNlIGFuZCBhdHRhY2ggYSBkcml2ZXIgYXMgc29vbiBhcyB0aGUgY2FyZCBpcyBpbnNlcnRlZC4g
+IEJ1dA0KPiA+ID4gaW4geW91ciBjYXNlLCBJIGFzc3VtZSB3ZSB3YW50IGEgbW9kZWwgbGlrZSB0
+aGF0IGluIFRhYmxlIDItNyBvZiB0aGUNCj4gPiA+ICJQQ0kgU3RhbmRhcmQgSG90LVBsdWcgQ29u
+dHJvbGxlciBhbmQgU3Vic3lzdGVtIFNwZWNpZmljYXRpb24sIiByZXYNCj4gPiA+IDEuMCwgaS5l
+LiwgIkhvdCBJbnNlcnRpb24gSW5pdGlhdGVkIHZpYSBTb2Z0d2FyZSBVSS4iICBTbyB0aGVyZSBt
+dXN0DQo+ID4gPiBiZSBzb21lIHdheSB0byBkaWZmZXJlbnRpYXRlIGFuIEV4cHJlc3NDYXJkIHNs
+b3QgZnJvbSBhIHNsb3QgbGlrZQ0KPiA+ID4geW91cnMuDQo+ID4NCj4gPiBZZXMsIHRoYXQgd291
+bGQgaGVscCBpZiB0aGVyZSB3YXMgc29tZSB3YXkuDQo+ID4NCj4gDQo+IEJlc3QgcmVnYXJkcywN
+Cj4gVGFrdSBJenVtaQ0KDQo=
 
-The combination of MCFG base address for bus 00 and the bus number
-range from _CRS, plus the obvious offset computation does effectively
-describe the registers you're allowed to access; it's just up to the
-OS to compute the offsets.  _CBA (an optional method that returns the
-ECAM address for a hot-added host bridge) uses the same bus 00 base.
-My guess is that _CBA uses a bus number 00 base so it can return a
-constant, regardless of whether the OS changes the bus number range.
-If _CBA returned the ECAM base for the current bus number aperture, it
-would be dependent on _CRS (the current settings), and the OS would
-have to re-evaluate _CBA if it ever changed the bus number aperture.
-
->> > * Each host would always have a fixed memory space aperture, right?
->>
->> The ACPI _CRS/_PRS/_SRS mechanism theoretically allows changes to the
->> bus number, I/O space, and memory space apertures of host bridges.
->> But we don't do any of those changes today, and I don't know if any
->> BIOSes actually allow it.
->
-> I mean non-overlapping apertures in particular. We also have
-> cases where the aperture that we list in DT is just programmed
-> into hardware registers by the host driver and could be arbitrary,
-> but you can't normally have the same MMIO address go to two
-> devices on internal buses (or not in a sensible way).
-
-I don't remember specific spec statements about that, but I can't
-imagine how to make sense of an address that's claimed by two devices.
-
->> > * From what I understand from your description, the hardware does
->> >   not enforce specific bus numbers for each host. How does the
->> >   host bridge know its root bus number then?
->>
->> I don't know details of any specific hardware.  I'm just saying that
->> ACPI provides a mechanism for the OS to manipulate the bus number
->> range below a host bridge.  Of course, a BIOS is free to omit _PRS and
->> _SRS, and in that case, the bus/IO/memory apertures reported by _CRS
->> are fixed and can't be changed.  We learn the root bus number from the
->> host bridge _CRS (but I'm sure you knew that, so maybe I missed the
->> point of your question).
->
-> I guess the answer then is that the host bridge can have a register
-> for programming the root bus number, but it's not standardized and
-> therefore the access is hidden in the _PRS/_SRS methods. If we have
-> the same on DT and want to reprogram the bus numbers, we'd need to
-> have a kernel driver for the nonstandard registers of the host bridge.
-
-Exactly; that's my mental model of how it works: _CRS/_PRS/_SRS are
-basically accessors for generalized BARs.
-
->> > * Should I expect one IOMMU per host bridge or one ECAM region,
->> >   or can either be possible?
->>
->> It's possible to have multiple IOMMUs per host bridge, and I think
->> they can even be buried down in the PCIe hierarchy.
->
-> Oh, I didn't know that. So how do you actually find the IOMMU for
-> a given domain/bus/device/function combination?
-
-For VT-d on x86, there's a DMAR table that describes the remapping
-units (IOMMUs), and each has a list of associated devices.  This is
-one place where the FW/OS interface uses segment and bus numbers.
-There's something different for AMD IOMMUs, but I think it also
-involves looking up the device in a table from the firmware.
-
- Bjorn
