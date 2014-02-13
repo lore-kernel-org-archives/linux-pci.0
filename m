@@ -1,169 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:57592 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932097AbaBECa7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:30:59 -0500
-Message-ID: <52F1A260.8010609@gmail.com>
-Date: Tue, 04 Feb 2014 18:30:56 -0800
-From: Rajat Jain <rajatxjain@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v4 7/8] pciehp: Ensure very fast hotplug events are also processed.
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:47160 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752376AbaBMDCK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:02:10 -0500
+From: Magnus Damm <magnus.damm@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
+	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
+Date: Thu, 13 Feb 2014 12:03:22 +0900
+Message-Id: <20140213030322.10398.46204.sendpatchset@w520>
+In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
+References: <20140213030302.10398.37322.sendpatchset@w520>
+Subject: [PATCH v2 02/08] PCI: rcar: add error interrupt handling
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Today, this is how all the hotplug and unplug events work:
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 
-Hotplug / Removal needs to be done
-  => Set slot->state (protected by slot->lock) to either
-    POWERON_STATE (for enabling) or POWEROFF_STATE (for disabling).
-  => Submit the work item for pciehp_power_thread() to slot->wq.
+Add option to enable interrupts to report any errors from
+the AHB-PCI bridge to help find any issues with the bridge
+when in use.
 
-Problem:
-  There is a problem if the hotplug events can happen fast enough that
-  they do not give SW enough time to add or remove the new devices.
-
-  => Assume: Event for unplug comes (e.g. surprise removal). But
-     before the pciehp_power_thread() work item was executed, the
-     card was replaced by another card, causing surprise hotplug event.
-
-  => What goes wrong:
-    => The hot-removal event sets slot->state to POWEROFF_STATE, and
-       schedules the pciehp_power_thread().
-    => The hot-add event sets slot->state to POWERON_STATE, and
-       schedules the pciehp_power_thread().
-    => Now the pciehp_power_thread() is scheduled twice, and on both
-       occasions it will find POWERON_STATE and will try to add the
-       devices on the slot, and will fail complaining that the devices
-       already exist.
-
-  => Why this is a problem: If the device was replaced between the hot
-     removal and hot-add, then we should unload the old driver and
-     reload the new one. This does not happen today. The kernel or the
-     driver is not even aware that the device was replaced.
-
-     The problem is that the pciehp_power_thread() only looks at the
-     slot->state which would only contain the *latest* state - not
-     the actual event (add / remove) that was the intent of the IRQ
-     handler who submitted the work.
-
-What this patch does:
-
-  => Hotplug events pass on an actual request (for addition or removal)
-     to pciehp_power_thread() which is local to that work item
-     submission.
-
-  => pciehp_power_thread() does not need to look at slote->state and
-     hence no locks needed in that.
-
-  => Essentially this results in all the hotplug and unplug events
-     "replayed" by pciehp_power_thread().
-
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+Signed-off-by: Magnus Damm <damm@opensource.se>
 ---
- drivers/pci/hotplug/pciehp_ctrl.c |   29 ++++++++++++++++++++---------
- 1 file changed, 20 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index b418e3b..3e40ec0 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -276,6 +276,9 @@ static int remove_board(struct slot *p_slot)
- struct power_work_info {
- 	struct slot *p_slot;
- 	struct work_struct work;
-+	unsigned int req;
-+#define DISABLE_REQ 0
-+#define ENABLE_REQ  1
- };
+v2:
+        - removed kconfig entry and use CONFIG_PCI_DEBUG
+        - check for irq > 0 before trying to attach irq
+
+ drivers/pci/host/pci-rcar-gen2.c |   60 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+--- 0004/drivers/pci/host/pci-rcar-gen2.c
++++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 09:42:56.000000000 +0900
+@@ -39,9 +39,26 @@
  
- /**
-@@ -291,10 +294,8 @@ static void pciehp_power_thread(struct work_struct *work)
- 		container_of(work, struct power_work_info, work);
- 	struct slot *p_slot = info->p_slot;
+ #define RCAR_PCI_INT_ENABLE_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x20)
+ #define RCAR_PCI_INT_STATUS_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x24)
++#define RCAR_PCI_INT_SIGTABORT		(1 << 0)
++#define RCAR_PCI_INT_SIGRETABORT	(1 << 1)
++#define RCAR_PCI_INT_REMABORT		(1 << 2)
++#define RCAR_PCI_INT_PERR		(1 << 3)
++#define RCAR_PCI_INT_SIGSERR		(1 << 4)
++#define RCAR_PCI_INT_RESERR		(1 << 5)
++#define RCAR_PCI_INT_WIN1ERR		(1 << 12)
++#define RCAR_PCI_INT_WIN2ERR		(1 << 13)
+ #define RCAR_PCI_INT_A			(1 << 16)
+ #define RCAR_PCI_INT_B			(1 << 17)
+ #define RCAR_PCI_INT_PME		(1 << 19)
++#define RCAR_PCI_INT_ALLERRORS (RCAR_PCI_INT_SIGTABORT		| \
++				RCAR_PCI_INT_SIGRETABORT	| \
++				RCAR_PCI_INT_SIGRETABORT	| \
++				RCAR_PCI_INT_REMABORT		| \
++				RCAR_PCI_INT_PERR		| \
++				RCAR_PCI_INT_SIGSERR		| \
++				RCAR_PCI_INT_RESERR		| \
++				RCAR_PCI_INT_WIN1ERR		| \
++				RCAR_PCI_INT_WIN2ERR)
  
--	mutex_lock(&p_slot->lock);
--	switch (p_slot->state) {
--	case POWEROFF_STATE:
--		mutex_unlock(&p_slot->lock);
-+	switch (info->req) {
-+	case DISABLE_REQ:
- 		ctrl_dbg(p_slot->ctrl,
- 			 "Disabling domain:bus:device=%04x:%02x:00\n",
- 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
-@@ -302,18 +303,22 @@ static void pciehp_power_thread(struct work_struct *work)
- 		pciehp_disable_slot(p_slot);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
--		break;
--	case POWERON_STATE:
- 		mutex_unlock(&p_slot->lock);
-+		break;
-+	case ENABLE_REQ:
-+		ctrl_dbg(p_slot->ctrl,
-+			 "Enabling domain:bus:device=%04x:%02x:00\n",
-+			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
-+			 p_slot->ctrl->pcie->port->subordinate->number);
- 		if (pciehp_enable_slot(p_slot))
- 			pciehp_green_led_off(p_slot);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
-+		mutex_unlock(&p_slot->lock);
- 		break;
- 	default:
- 		break;
- 	}
--	mutex_unlock(&p_slot->lock);
- 
- 	kfree(info);
+ #define RCAR_AHB_BUS_CTR_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x30)
+ #define RCAR_AHB_BUS_MMODE_HTRANS	(1 << 0)
+@@ -164,6 +181,46 @@ static int __init rcar_pci_map_irq(const
+ 	return priv->irq;
  }
-@@ -336,9 +341,11 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
- 	switch (p_slot->state) {
- 	case BLINKINGOFF_STATE:
- 		p_slot->state = POWEROFF_STATE;
-+		info->req = DISABLE_REQ;
- 		break;
- 	case BLINKINGON_STATE:
- 		p_slot->state = POWERON_STATE;
-+		info->req = ENABLE_REQ;
- 		break;
- 	default:
- 		kfree(info);
-@@ -428,10 +435,13 @@ static void handle_surprise_event(struct slot *p_slot)
- 	INIT_WORK(&info->work, pciehp_power_thread);
  
- 	pciehp_get_adapter_status(p_slot, &getstatus);
--	if (!getstatus)
-+	if (!getstatus) {
- 		p_slot->state = POWEROFF_STATE;
--	else
-+		info->req = DISABLE_REQ;
-+	} else {
- 		p_slot->state = POWERON_STATE;
-+		info->req = ENABLE_REQ;
++#ifdef CONFIG_PCI_DEBUG
++/* if debug enabled, then attach an error handler irq to the bridge */
++
++static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
++{
++	struct rcar_pci_priv *priv = pw;
++	u32 status = ioread32(priv->reg + RCAR_PCI_INT_STATUS_REG);
++
++	if (status & RCAR_PCI_INT_ALLERRORS) {
++		dev_err(priv->dev, "error irq: status %08x\n", status);
++
++		/* clear the error(s) */
++		iowrite32(status & RCAR_PCI_INT_ALLERRORS,
++			  priv->reg + RCAR_PCI_INT_STATUS_REG);
++		return IRQ_HANDLED;
 +	}
++
++	return IRQ_NONE;
++}
++
++static void rcar_pci_setup_errirq(struct rcar_pci_priv *priv)
++{
++	int ret;
++	u32 val;
++
++	ret = devm_request_irq(priv->dev, priv->irq, rcar_pci_err_irq,
++			       IRQF_SHARED, "error irq", priv);
++	if (ret) {
++		dev_err(priv->dev, "cannot claim IRQ for error handling\n");
++		return;
++	}
++
++	val = ioread32(priv->reg + RCAR_PCI_INT_ENABLE_REG);
++	val |= RCAR_PCI_INT_ALLERRORS;
++	iowrite32(val, priv->reg + RCAR_PCI_INT_ENABLE_REG);
++}
++#else
++static inline void rcar_pci_setup_errirq(struct rcar_pci_priv *priv) { }
++#endif
++
+ /* PCI host controller setup */
+ static int __init rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ {
+@@ -224,6 +281,9 @@ static int __init rcar_pci_setup(int nr,
+ 	iowrite32(RCAR_PCI_INT_A | RCAR_PCI_INT_B | RCAR_PCI_INT_PME,
+ 		  reg + RCAR_PCI_INT_ENABLE_REG);
  
- 	queue_work(p_slot->wq, &info->work);
- }
-@@ -451,6 +461,7 @@ static void handle_link_event(struct slot *p_slot, u32 event)
- 		return;
- 	}
- 	info->p_slot = p_slot;
-+	info->req = event == INT_LINK_UP ? ENABLE_REQ : DISABLE_REQ;
- 	INIT_WORK(&info->work, pciehp_power_thread);
- 
- 	switch (p_slot->state) {
--- 
-1.7.9.5
-
++	if (priv->irq > 0)
++		rcar_pci_setup_errirq(priv);
++
+ 	/* Add PCI resources */
+ 	pci_add_resource(&sys->resources, &priv->io_res);
+ 	pci_add_resource(&sys->resources, &priv->mem_res);
