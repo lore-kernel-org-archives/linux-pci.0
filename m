@@ -1,107 +1,157 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 10 Jan 2014 17:41:32 +0800
-From: Guo Chao <yan@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v6 2/2] PCI: Try best to allocate pref mmio 64bit above 4g
-Message-ID: <20140110094132.GC3444@yanx>
-References: <1387485843-17403-1-git-send-email-yinghai@kernel.org>
- <1387485843-17403-3-git-send-email-yinghai@kernel.org>
- <CAErSpo5VWREGptW0MU0wLJUa3h23DXMZPGkdJFMTx5WAGL8J6Q@mail.gmail.com>
- <CAE9FiQU88EO=e+CR7RKnZ6r7ofSwi9J1QisnrnDyDz6Qh367YQ@mail.gmail.com>
- <CAE9FiQVZ9yrcViFNx5q65ot=nNP=JBuvotpEjUis2FF11wjg6w@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:50613 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751970AbaBML2P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 06:28:15 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linaro-kernel@lists.linaro.org
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	'Tanmay Inamdar' <tinamdar@apm.com>,
+	devicetree@vger.kernel.org,
+	'Catalin Marinas' <Catalin.Marinas@arm.com>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from device tree
+Date: Thu, 13 Feb 2014 12:27:05 +0100
+Message-ID: <3204351.WykFFcX4zJ@wuerfel>
+In-Reply-To: <000001cf2899$a6eb75b0$f4c26110$%han@samsung.com>
+References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com> <CACoXjc=epN8=tFQKw6kZ27hTA=a+c56q1pikX_SSMKK1rsScCw@mail.gmail.com> <000001cf2899$a6eb75b0$f4c26110$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVZ9yrcViFNx5q65ot=nNP=JBuvotpEjUis2FF11wjg6w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 08, 2014 at 03:34:54PM -0800, Yinghai Lu wrote:
-> On Sun, Dec 22, 2013 at 5:14 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Sun, Dec 22, 2013 at 4:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> On Thu, Dec 19, 2013 at 1:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >>
-> >> Let me see if I can figure out what you're trying to do here.  Please
-> >> correct me if I'm wrong:
-> >>
-> >>> When one of children resources does not support MEM_64, MEM_64 for
-> >>> bridge get reset, so pull down whole pref resource on the bridge under 4G.
-> >>
-> >> When we allocate space for a bridge's prefetchable window, we
-> >> currently look at the devices behind the bridge and put the window
-> >> below 4GB if any of those children has a 32-bit prefetchable BAR.
-> >>
-> >> This maximizes the use of prefetch, at the cost of using more 32-bit
-> >> address space.
-> >
-> > yes. and we have problem when we have 8 sockets or 32 sockets system,
-> > will have limit 32bit space.
-> > but we have enough above 4G 64bit mmio for prefetchable.
-> >
-> >>
-> >>> If the bridge support pref mem 64, will only allocate that with pref mem64 to
-> >>> children that support it.
-> >>> For children resources if they only support pref mem 32, will allocate them
-> >>> from non pref mem instead.
-> >>
-> >> You are changing this so that we will always try to put a bridge's
-> >> 64-bit prefetchable window above 4GB, regardless of what devices are
-> >> behind the bridge.  If a device behind the bridge has a 32-bit
-> >> prefetchable BAR, we will place that BAR in the bridge's 32-bit
-> >> non-prefetchable window.
-> >
-> > Yes. so we can keep IORESOURCE_MEM64 in the flags for PREF.
-> >
-> >>
-> >> This minimizes the use of the 32-bit address space, at the cost of not
-> >> being able to use prefetch as much.
-> >>
-> >>> If the bridge only support 32bit pref mmio, will still have all children pref
-> >>> mmio under that.
-> >>
-> >> Obviously, if a bridge has a prefetchable window that's only 32 bits,
-> >> 64-bit prefetchable BARs behind the bridge will have to be in that
-> >> 32-bit prefetchable window or the 32-bit non-prefetchable window.  And
-> >> if the bridge has no prefetchable window at all, every memory BAR
-> >> behind the bridge will have to be in the 32-bit non-prefetchable
-> >> window.
-> >
-> > Yes.
-> >
-> >>
-> >> I'll look at the actual patch later; I just want to make sure I
-> >> understand your intent first.
+On Thursday 13 February 2014 17:57:41 Jingoo Han wrote:
+> I want to use 'drivers/pci/host/pcie-designware.c' for both arm32
+> and arm64, without any code changes. However, it looks impossible.
+
+It is impossible at the moment, and I agree we have to fix that.
+
+> I made 'drivers/pci/host/pcie-designware.c' based on 32bit arm PCI
+> support. Then, with Liviu's patch, do I have to make new code for arm64,
+> even though the same HW PCIe IP is used?
 > 
-> Hi, Bjorn,
+> - For arm32
+>   drivers/pci/host/pcie-designware.c
 > 
-> Can you check and add this one to your pci/resource branch?
-> With that we can close the loop for 64bit mmio resource allocation.
-> 
+> - For arm64
+>   drivers/pci/host/pcie-designware-arm64.c
 
-Just FYI, a Mellanox net card failed after exactly this patch.
+As a start, I'd suggest using "#ifdef CONFIG_ARM" in the driver,
+but sharing as much code as you can. We should try to make the #else
+section of the #ifdef architecture independent and get have the arm64
+implementation shared with any architecture that doesn't have or want
+its own pcibios32.c implementation.
 
-3.13-rc7 + bjorn's series is OK. After this patch applied, Mellanox
-driver complains:
+> > > I am reviewing and compiling your patch.
+> > > Would you consider adding 'struct pci_sys_data' and 'struct hw_pci'?
 
- |mlx4_core 0003:05:00.0: Multiple PFs not yet supported.  Skipping PF.
- |mlx4_core: probe of 0003:05:00.0 failed with error -22
+I would rather get rid of struct hw_pci for architecture independent
+drivers and add a different registration method on arm32 that is
+compatible with what we come up with on arm64. The main purpose of
+hw_pci is to allow multiple PCI controllers to be initialized at
+once, but we don't actually need that for any of the "modern" platforms
+where we already have a probe function that gets called once for
+each controller.
 
-This is caused by MMIO read from BAR 0 (64-bit non-prefetchable) returns
-non-zore value.
+As a start, we could add a pci_host_bridge_register() function like
+the one below to arm32 and migrate the drivers/pci/host/ drivers
+over to use it with little effort. Instead of filling out hw_pci,
+these drivers would allocate (by embedding in their device struct)
+and fill out pci_sys_data directly. After that, we can gradually
+move more code out of the arm32 implementation into common code, if
+it doesn't already exist there, up to the point where a host driver
+no longer has to call any function in bios32.c.
 
-Resource assignment, as far as we can see, works fine. The noticable
-effect of this patch is putting ROM BAR under non-prefetachable. I try
-to revert this effect by adding MEM_64 to its ROM resource and it works
-again (system does not expose 4G above aperture yet). Not sure what's
-the root cause, looks like a driver/firmware/hardware defect.
+	Arnd
 
-Thanks
-Guo Chao
-
-> Thanks
-> 
-> Yinghai
-> 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 317da88..12c2178 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -514,6 +514,26 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 	}
+ }
+ 
++static void pci_common_bus_probe(struct pci_bus *bus)
++{
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		/*
++		 * Size the bridge windows.
++		 */
++		pci_bus_size_bridges(bus);
++
++		/*
++		 * Assign resources.
++		 */
++		pci_bus_assign_resources(bus);
++	}
++
++	/*
++	 * Tell drivers about devices found.
++	 */
++	pci_bus_add_devices(bus);
++}
++
+ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ {
+ 	struct pci_sys_data *sys;
+@@ -528,27 +548,38 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ 
+ 	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+ 
+-	list_for_each_entry(sys, &head, node) {
+-		struct pci_bus *bus = sys->bus;
++	list_for_each_entry(sys, &head, node)
++		pci_common_bus_probe(sys->bus);
++}
+ 
+-		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-			/*
+-			 * Size the bridge windows.
+-			 */
+-			pci_bus_size_bridges(bus);
+ 
+-			/*
+-			 * Assign resources.
+-			 */
+-			pci_bus_assign_resources(bus);
+-		}
+ 
+-		/*
+-		 * Tell drivers about devices found.
+-		 */
+-		pci_bus_add_devices(bus);
+-	}
++
++int pci_host_bridge_register(struct device *parent, struct pci_sys_data *sys, struct pci_ops *ops, int (*setup)(int nr, struct pci_sys_data *))
++{
++	int ret;
++
++	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
++	INIT_LIST_HEAD(&sys->resources);
++
++	ret = setup(0, sys);
++	if (ret)
++		return ret;
++
++	ret = pcibios_init_resources(0, sys);
++	if (ret)
++		return ret;
++
++	sys->bus = pci_scan_root_bus(parent, sys->busnr, ops, sys, &sys->resources);
++	if (!sys->bus)
++		return -ENODEV;
++
++	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
++
++	pci_common_bus_probe(sys->bus);
++	return ret;
+ }
++EXPORT_SYMBOL_GPL(pci_host_bridge_register);
+ 
+ #ifndef CONFIG_PCI_HOST_ITE8152
+ void pcibios_set_master(struct pci_dev *dev)
 
