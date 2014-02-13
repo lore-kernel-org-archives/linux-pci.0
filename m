@@ -1,36 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:46247 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752748AbaBYWT0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 17:19:26 -0500
-Received: by mail-pa0-f52.google.com with SMTP id fb1so51912pad.11
-        for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2014 14:19:26 -0800 (PST)
-Date: Tue, 25 Feb 2014 14:19:22 -0800
-From: Jens Axboe <axboe@kernel.dk>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	linux-pci@vger.kernel.org,
-	Asai Thambi S P <asamymuthupa@micron.com>
-Subject: Re: [PATCH 10/9] skd: Use pci_enable_msix_exact() instead of
- pci_enable_msix_range()
-Message-ID: <20140225221922.GA10563@kernel.dk>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:60830 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753284AbaBMNRE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 08:17:04 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Russell King <linux@arm.linux.org.uk>,
+	David Airlie <airlied@linux.ie>,
+	<dri-devel@lists.freedesktop.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	<linux-pcmcia@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [PATCH 6/6] PCI: Remove pci_bus_b() and use list_entry() directly
+Date: Thu, 13 Feb 2014 21:14:03 +0800
+Message-ID: <1392297243-61848-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1392297243-61848-1-git-send-email-wangyijing@huawei.com>
+References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140225213317.GB20652@dhcp-26-207.brq.redhat.com>
- <20140225213109.GA20652@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 25 2014, Alexander Gordeev wrote:
-> Function pci_enable_msix_exact() is a variation of
-> pci_enable_msix_range() that allows a device driver
-> to request a particular number of MSI-X interrupts,
-> rather than any number within a specified range.
+Replace pci_bus_b() with list_entry(), so we can remove
+pci_bus_b().
 
-Applied 10-11, thanks.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.c    |    6 +++---
+ drivers/pci/search.c |   10 +++++-----
+ include/linux/pci.h  |    1 -
+ 3 files changed, 8 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1febe90..6f5ed88 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -108,12 +108,12 @@ static bool pcie_ari_disabled;
+  */
+ unsigned char pci_bus_max_busnr(struct pci_bus* bus)
+ {
+-	struct list_head *tmp;
++	struct pci_bus *tmp;
+ 	unsigned char max, n;
+ 
+ 	max = bus->busn_res.end;
+-	list_for_each(tmp, &bus->children) {
+-		n = pci_bus_max_busnr(pci_bus_b(tmp));
++	list_for_each_entry(tmp, &bus->children, node) {
++		n = pci_bus_max_busnr(tmp);
+ 		if(n > max)
+ 			max = n;
+ 	}
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 3ff2ac7..4a1b972 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -54,14 +54,14 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+ 
+ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+ {
+-	struct pci_bus* child;
+-	struct list_head *tmp;
++	struct pci_bus *child;
++	struct pci_bus *tmp;
+ 
+ 	if(bus->number == busnr)
+ 		return bus;
+ 
+-	list_for_each(tmp, &bus->children) {
+-		child = pci_do_find_bus(pci_bus_b(tmp), busnr);
++	list_for_each_entry(tmp, &bus->children, node) {
++		child = pci_do_find_bus(tmp, busnr);
+ 		if(child)
+ 			return child;
+ 	}
+@@ -111,7 +111,7 @@ pci_find_next_bus(const struct pci_bus *from)
+ 	down_read(&pci_bus_sem);
+ 	n = from ? from->node.next : pci_root_buses.next;
+ 	if (n != &pci_root_buses)
+-		b = pci_bus_b(n);
++		b = list_entry(n, struct pci_bus, node);
+ 	up_read(&pci_bus_sem);
+ 	return b;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fb57c89..e1b5752 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -461,7 +461,6 @@ struct pci_bus {
+ 	unsigned int		is_added:1;
+ };
+ 
+-#define pci_bus_b(n)	list_entry(n, struct pci_bus, node)
+ #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
+ 
+ /*
 -- 
-Jens Axboe
+1.7.1
+
 
