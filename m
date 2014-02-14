@@ -1,64 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:54487 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754840AbaBBASV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 19:18:21 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 4/13] ACPI / hotplug / PCI: Proper kerneldoc comments for enumeration/removal
-Date: Sun, 02 Feb 2014 01:24:11 +0100
-Message-ID: <1433595.AEFb5xDlZx@vostro.rjw.lan>
-In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:51412 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752180AbaBNSvH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 13:51:07 -0500
+Received: by mail-ig0-f172.google.com with SMTP id k19so1398319igc.5
+        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 10:51:06 -0800 (PST)
+Date: Fri, 14 Feb 2014 11:51:04 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jean-Jacques Hiblot <jjhiblot@traphandler.com>,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	gregory.clement@free-electrons.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] mvebu : pcie: dt: potential issue in range parsing
+Message-ID: <20140214185103.GE31093@google.com>
+References: <1389349431-7997-1-git-send-email-jjhiblot@traphandler.com>
+ <20140205164710.082f689e@skate>
+ <20140205172107.GU8533@titan.lakedaemon.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140205172107.GU8533@titan.lakedaemon.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Feb 05, 2014 at 12:21:07PM -0500, Jason Cooper wrote:
+> 
+> + Bjorn, linux-pci
+> 
+> Bjorn,
+> 
+> It looks like this didn't get Cc'd to linux-pci.  Here's a link:
+> 
+>   http://www.spinics.net/lists/arm-kernel/msg299721.html
 
-Add proper kerneldoc comments describing acpiphp_enumerate_slots()
-and acpiphp_remove_slots().
+Thanks for the heads-up; I had indeed missed this (I mostly rely on
+patchwork, which only tracks linux-pci, and it's not smart enough to
+extract quoted patches).
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Applied to pci/host-mvebu for v3.15, thanks!
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -968,9 +968,12 @@ static void handle_hotplug_event(acpi_ha
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
--/*
-- * Create hotplug slots for the PCI bus.
-- * It should always return 0 to avoid skipping following notifiers.
-+/**
-+ * acpiphp_enumerate_slots - Enumerate PCI slots for a given bus.
-+ * @bus: PCI bus to enumerate the slots for.
-+ *
-+ * A "slot" is an object associated with a PCI device number.  All functions
-+ * (PCI devices) with the same bus and device number belong to the same slot.
-  */
- void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
-@@ -1043,7 +1046,10 @@ void acpiphp_enumerate_slots(struct pci_
- 	}
- }
- 
--/* Destroy hotplug slots associated with the PCI bus */
-+/**
-+ * acpiphp_remove_slots - Remove slot objects associated with a given bus.
-+ * @bus: PCI bus to remove the slot objects for.
-+ */
- void acpiphp_remove_slots(struct pci_bus *bus)
- {
- 	struct acpiphp_bridge *bridge;
-
+> 
+> On Wed, Feb 05, 2014 at 04:47:10PM +0100, Thomas Petazzoni wrote:
+> > Dear Jean-Jacques Hiblot,
+> > 
+> > On Fri, 10 Jan 2014 11:23:51 +0100, Jean-Jacques Hiblot wrote:
+> > > The second parameter of of_read_number is not the index, but a size.
+> > > As it happens, in this case it may work just fine because of the the conversion
+> > > to u32 and the favorable endianness on this architecture.
+> > > 
+> > > Signed-off-by: Jean-Jacques Hiblot <jjhiblot@traphandler.com>
+> > > ---
+> > >  drivers/pci/host/pci-mvebu.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> > > index c269e43..877e8ce 100644
+> > > --- a/drivers/pci/host/pci-mvebu.c
+> > > +++ b/drivers/pci/host/pci-mvebu.c
+> > > @@ -768,7 +768,7 @@ static int mvebu_get_tgt_attr(struct device_node *np, int devfn,
+> > >  
+> > >  	for (i = 0; i < nranges; i++) {
+> > >  		u32 flags = of_read_number(range, 1);
+> > > -		u32 slot = of_read_number(range, 2);
+> > > +		u32 slot = of_read_number(range + 1, 1);
+> > >  		u64 cpuaddr = of_read_number(range + na, pna);
+> > >  		unsigned long rtype;
+> > >  
+> > 
+> > Sorry for the long delay, and thanks for the fix!
+> > 
+> > Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > Tested-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > 
+> > (on Armada 370, with PCIe cards plugged in)
+> 
+> 
+> Fixes: 11be65472a427 ("PCI: mvebu: Adapt to the new device tree layout")
+> Cc: <stable@vger.kernel.org> # v3.12+
+> Acked-by: Jason Cooper <jason@lakedaemon.net>
+> 
+> thx,
+> 
+> Jason.
