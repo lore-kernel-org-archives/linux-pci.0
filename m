@@ -1,71 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:41445 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067AbaBLUdm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 15:33:42 -0500
-Received: by mail-oa0-f53.google.com with SMTP id m1so11669791oag.12
-        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 12:33:42 -0800 (PST)
+Received: from mga09.intel.com ([134.134.136.24]:2387 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752752AbaBNW2G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Feb 2014 17:28:06 -0500
+Date: Fri, 14 Feb 2014 14:27:58 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Chen, Jamie" <jamie.chen@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	USB list <linux-usb@vger.kernel.org>,
+	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: EHCI host broken -- interrupts disabled
+Message-ID: <20140214222758.GA7395@xanatos>
+References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
+ <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
+ <20140117182231.GA18421@google.com>
+ <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
+ <CAErSpo4fGBhb+pj6pTpKFTTj9rzLYzB2w-EX2ghWRYR3Cjyd9g@mail.gmail.com>
+ <CAErSpo4rTHFOgUDjmrGxxFAuE-+i9y7hW+T7+xTzB7x4_72_pg@mail.gmail.com>
+ <F01C6967BCFFB14E8DF7F5D2FD1053EB1ECC22@PGSMSX103.gar.corp.intel.com>
+ <CAErSpo4_ecD6Gom=WnH2MMSLsO=SEBnWHKhx3BiXz3Fgs8d2uQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1545472.qN7M5OiOyA@wuerfel>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <2006726.HhIT01YuXY@wuerfel> <20140212194313.GA17248@obsidianresearch.com> <1545472.qN7M5OiOyA@wuerfel>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Feb 2014 13:33:22 -0700
-Message-ID: <CAErSpo52jJ1EN18v0Z_3rJapsY2G_Uxwhwfe1cWYa4tKN1dD1g@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4_ecD6Gom=WnH2MMSLsO=SEBnWHKhx3BiXz3Fgs8d2uQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 1:07 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 12 February 2014 12:43:13 Jason Gunthorpe wrote:
->> On Tue, Feb 11, 2014 at 11:42:52AM +0100, Arnd Bergmann wrote:
->>
->>
->> Still missing release_region..
->>
->> Thoughts on upstreamining these bits?
->
-> Upstreaming them would be great. Patches look correct by inspection as well.
->
->> > Since the mvebu_pcie_setup() function seems very generic at this,
->> > we should probably try to factor out that code into a common
->> > helper, at least for arm64, but ideally shared with arm32
->> > as well.
->>
->> Yah, especially since people are not getting it completely right..
->>
->> But some of the trouble here is a lack of a generic pci host driver
->> structure, eg I have to pull the domain number out of the ARM32
->> specific structure ..
->
-> I'm sure that Bjorn also has some plans of his own, but I think
-> we should have a generic host driver structure and gradually move
-> stuff into it from the architecture specific structs.
+On Fri, Feb 14, 2014 at 01:47:48PM -0700, Bjorn Helgaas wrote:
+> On Fri, Feb 14, 2014 at 9:36 AM, Chen, Jamie <jamie.chen@intel.com> wrote:
+> > Sorry for late response.
+> >
+> > The dmesg attach in the mail.
+> 
+> Thanks, I put this info in
+> https://bugzilla.kernel.org/show_bug.cgi?id=70601 and applied the
+> patch to pci/misc.
+> 
+> This seems like a potentially important fix, so I think I'll
+> cherry-pick it into for-linus for v3.14.
 
-I don't have plans in this area right now, but I would definitely like
-to migrate things like the domain, NUMA node, etc., into a generic
-structure.
+Thanks, Bjorn!
 
-> Now there is a 'struct pci_host_bridge' that is used on some
-> architectures already but not on ARM. It also contains a list
-> of resource windows plus offsets, and there is a set of functions
-> associated with it:
->
-> pci_create_root_bus()
-> pcibios_root_bridge_prepare()
->
-> etc.
->
-> Maybe all that's needed is to actually start using those on arm32?
->
->         Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Do you think this patch is a candidate for stable as well?  Anyone with
+an EHCI-only Baytrail system won't have working USB without this patch,
+and the patch itself seems relatively small.
+
+Sarah Sharp
