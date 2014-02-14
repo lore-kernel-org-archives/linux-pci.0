@@ -1,64 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:55204 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755208AbaBRMV3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 07:21:29 -0500
-From: Will Deacon <will.deacon@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
-Subject: [PATCH v3 0/3] ARM: PCI: implement generic PCI host controller
-Date: Tue, 18 Feb 2014 12:20:40 +0000
-Message-Id: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:61946 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752034AbaBNTYM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 14:24:12 -0500
+Received: by mail-ob0-f178.google.com with SMTP id wn1so14582293obc.9
+        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 11:24:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704696651@DFLE11.ent.ti.com>
+References: <3E54258959B69E4282D79E01AB1F32B704695360@DFLE11.ent.ti.com>
+	<20140214164444.GA29491@google.com>
+	<3E54258959B69E4282D79E01AB1F32B704696651@DFLE11.ent.ti.com>
+Date: Fri, 14 Feb 2014 11:24:11 -0800
+Message-ID: <CAE9FiQWRvQNpGXhDJXFGV1rhqPrRctBO5HO9dzwGk1xSzJgE=Q@mail.gmail.com>
+Subject: Re: PCI memory BAR assigned by u-boot not honored when using recent kernel
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Fri, Feb 14, 2014 at 9:32 AM, Karicheri, Muralidharan
+>>There is no guarantee that the kernel will keep the BAR assignments done by firmware or
+>>a bootloader.  Usually the kernel *does* keep them, as long as they are valid, but you
+>>can not rely on that.
 
-This is version 3 of the patches previously posted here:
+Not sure what arch in your case.
 
-  v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/229679.html
-  v2: http://lists.infradead.org/pipermail/linux-arm-kernel/2014-February/232213.html
+You need to have code like pcibios_resource_survey() in x86 to
+checking and reserve resource from firmware.
 
-Changes since v2 include:
+Also firmware need to make sure mmio assignments are valid otherwise
+kernel will reject and reassign a new one.
 
-  - Tightening up of the DT requirements:
-    * Must have at least a non-prefetchable memory region
-    * "reg" property now defines a base and size for config space
-    * bus-range property supported and used in conjunction with "reg"
-    * device_type must be "pci"
+Thanks
 
-  - Fixed bus mapping so we don't sleep in atomic
-
-  - Updated compatible strings and file names to get rid of "arm"
-
-  - Added a really dumb I/O space allocator
-
-  - Moved a bunch of ->probe() into ->setup(). Note that I've not included
-    Arnd's patch to propagate ->setup() failures back to ->probe(), so despite
-    the use of devm_* to manage resource allocations, I still have explicit
-    cleanup code on the failure paths.
-
-All feedback welcome.
-
-Will
-
-
-Will Deacon (3):
-  ARM: mach-virt: allow PCI support to be selected
-  ARM: bios32: use pci_enable_resource to enable PCI resources
-  PCI: ARM: add support for generic PCI host controller
-
- .../devicetree/bindings/pci/host-generic-pci.txt   |  88 +++++
- arch/arm/kernel/bios32.c                           |  37 +-
- arch/arm/mach-virt/Kconfig                         |   1 +
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-host-generic.c                | 381 +++++++++++++++++++++
- 6 files changed, 481 insertions(+), 34 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/host-generic-pci.txt
- create mode 100644 drivers/pci/host/pci-host-generic.c
-
--- 
-1.8.2.2
-
+Yinghai
