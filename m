@@ -1,106 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:21267 "EHLO
-	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbaBCGVQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 01:21:16 -0500
-From: Sathya Perla <Sathya.Perla@Emulex.Com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Subramanian Seetharaman <subbu.seetharaman@emulex.com>,
-	Ajit Khaparde <Ajit.Khaparde@Emulex.Com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH 11/34] benet: Use pci_enable_msix_range()
-Date: Mon, 3 Feb 2014 06:21:12 +0000
-Message-ID: <e0310928-327b-4318-99dc-66730e261eb7@CMEXHTCAS2.ad.emulex.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
- <0ab74b1142006d2e7a8065ec8a2d3ba48fc3ec0c.1391172839.git.agordeev@redhat.com>
-In-Reply-To: <0ab74b1142006d2e7a8065ec8a2d3ba48fc3ec0c.1391172839.git.agordeev@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:44794 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752487AbaBNVkJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 16:40:09 -0500
 MIME-Version: 1.0
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <CAErSpo4YwCaS+zc50L8PMO5nx9XscEua7nHXqM3eR3XzG4TtJQ@mail.gmail.com>
+References: <52FE89FF.4020700@gmail.com>
+	<CAErSpo4YwCaS+zc50L8PMO5nx9XscEua7nHXqM3eR3XzG4TtJQ@mail.gmail.com>
+Date: Fri, 14 Feb 2014 13:40:08 -0800
+Message-ID: <CAA93t1oWguvHkSuUqgBSjV7tgrvU2wgfBrnpRUZ_U7rqED6cUQ@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: Display the link state change reporting capability
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: netdev-owner@vger.kernel.org [mailto:netdev-owner@vger.kernel.org] On Behalf
-> Of Alexander Gordeev
-> 
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Hello Bjorn,
 
-Acked-by: Sathya Perla < sathya.perla@emulex.com>
+On Fri, Feb 14, 2014 at 1:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Feb 14, 2014 at 2:26 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+>> With recent addition of Link state change based hot-plug, it makes
+>> sense to display this capability in dbg_ctrl() addition to others.
+>>
+>> (Also move the call to dbg_ctrl() further down untill after the value
+>> is populated in ctrl->link_active_reporting)
+>>
+>> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+>> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+>> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+>
+> This is fine as it is, but I'd like to get rid of dbg_ctrl()
+> altogether someday.  I made pcie_init() more verbose with afe2478f2e3f
+> ("PCI: pciehp: Announce slot capabilities (slot #, button, LEDs,
+> etc)"), and it does include the PCI_EXP_LNKCAP_DLLLARC info.
+>
+> Is there anything important left in dbg_ctrl() that we don't already
+> print elsewhere?  The PCI core prints the vendor/device and BAR info.
+> Of course, we don't print the entire capabilities/status/control words
+> anywhere else.  Is that important?
 
-> ---
->  drivers/net/ethernet/emulex/benet/be_main.c |   31 +++++++++++---------------
->  1 files changed, 13 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/emulex/benet/be_main.c
-> b/drivers/net/ethernet/emulex/benet/be_main.c
-> index 04ac9c6..f55c09b 100644
-> --- a/drivers/net/ethernet/emulex/benet/be_main.c
-> +++ b/drivers/net/ethernet/emulex/benet/be_main.c
-> @@ -2505,7 +2505,7 @@ static void be_msix_disable(struct be_adapter *adapter)
-> 
->  static int be_msix_enable(struct be_adapter *adapter)
->  {
-> -	int i, status, num_vec;
-> +	int i, num_vec;
->  	struct device *dev = &adapter->pdev->dev;
-> 
->  	/* If RoCE is supported, program the max number of NIC vectors that
-> @@ -2521,24 +2521,11 @@ static int be_msix_enable(struct be_adapter *adapter)
->  	for (i = 0; i < num_vec; i++)
->  		adapter->msix_entries[i].entry = i;
-> 
-> -	status = pci_enable_msix(adapter->pdev, adapter->msix_entries, num_vec);
-> -	if (status == 0) {
-> -		goto done;
-> -	} else if (status >= MIN_MSIX_VECTORS) {
-> -		num_vec = status;
-> -		status = pci_enable_msix(adapter->pdev, adapter->msix_entries,
-> -					 num_vec);
-> -		if (!status)
-> -			goto done;
-> -	}
-> +	num_vec = pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-> +					MIN_MSIX_VECTORS, num_vec);
-> +	if (num_vec < 0)
-> +		goto fail;
-> 
-> -	dev_warn(dev, "MSIx enable failed\n");
-> -
-> -	/* INTx is not supported in VFs, so fail probe if enable_msix fails */
-> -	if (!be_physfn(adapter))
-> -		return status;
-> -	return 0;
-> -done:
->  	if (be_roce_supported(adapter) && num_vec > MIN_MSIX_VECTORS) {
->  		adapter->num_msix_roce_vec = num_vec / 2;
->  		dev_info(dev, "enabled %d MSI-x vector(s) for RoCE\n",
-> @@ -2550,6 +2537,14 @@ done:
->  	dev_info(dev, "enabled %d MSI-x vector(s) for NIC\n",
->  		 adapter->num_msix_vec);
->  	return 0;
-> +
-> +fail:
-> +	dev_warn(dev, "MSIx enable failed\n");
-> +
-> +	/* INTx is not supported in VFs, so fail probe if enable_msix fails */
-> +	if (!be_physfn(adapter))
-> +		return num_vec;
-> +	return 0;
->  }
-> 
->  static inline int be_msix_vec_get(struct be_adapter *adapter,
-> --
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No, there doesn't seem a good use for it today. It all changes a short
+while after it gets printed anyway.
+
+
+>
+>> ---
+>>  drivers/pci/hotplug/pciehp_hpc.c |    8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+>> index da4b020..cbe8e924 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -747,6 +747,8 @@ static inline void dbg_ctrl(struct controller *ctrl)
+>>                   EMI(ctrl)        ? "yes" : "no");
+>>         ctrl_info(ctrl, "  Command Completed    : %3s\n",
+>>                   NO_CMD_CMPL(ctrl) ? "no" : "yes");
+>> +       ctrl_info(ctrl, "  Link Change Reporting: %3s\n",
+>> +                 ctrl->link_active_reporting ? "yes" : "no");
+>>         pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &reg16);
+>>         ctrl_info(ctrl, "Slot Status            : 0x%04x\n", reg16);
+>>         pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &reg16);
+>> @@ -771,7 +773,6 @@ struct controller *pcie_init(struct pcie_device *dev)
+>>         ctrl->slot_cap = slot_cap;
+>>         mutex_init(&ctrl->ctrl_lock);
+>>         init_waitqueue_head(&ctrl->queue);
+>> -       dbg_ctrl(ctrl);
+>>         /*
+>>          * Controller doesn't notify of command completion if the "No
+>>          * Command Completed Support" bit is set in Slot Capability
+>> @@ -784,10 +785,9 @@ struct controller *pcie_init(struct pcie_device *dev)
+>>
+>>          /* Check if Data Link Layer Link Active Reporting is implemented */
+>>          pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
+>> -        if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
+>> -                ctrl_dbg(ctrl, "Link Active Reporting supported\n");
+>> +       if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
+>>                  ctrl->link_active_reporting = 1;
+>> -        }
+>> +       dbg_ctrl(ctrl);
+>>
+>>         /* Clear all remaining event bits in Slot Status register */
+>>         pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+>> --
+>> 1.7.9.5
+>>
