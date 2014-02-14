@@ -1,92 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, xjtuwjp@gmail.com,
-	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 18/23] pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:18 +0100
-Message-Id: <7d5c87e3c881becca4f2fa61f40c9d5734d6ad2e.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:50336 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721AbaBNSXU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 13:23:20 -0500
+Received: by mail-ie0-f177.google.com with SMTP id rp18so2770097iec.36
+        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 10:23:20 -0800 (PST)
+Date: Fri, 14 Feb 2014 11:23:16 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	David Airlie <airlied@linux.ie>,
+	dri-devel@lists.freedesktop.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-pcmcia@lists.infradead.org,
+	linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH 1/6] PCI,acpiphp: Use list_for_each_entry() for bus
+ traversal
+Message-ID: <20140214182316.GB31093@google.com>
+References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392297243-61848-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Thu, Feb 13, 2014 at 09:13:58PM +0800, Yijing Wang wrote:
+> Replace list_for_each() + pci_bus_b() with the simpler
+> list_for_each_entry().
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: xjtuwjp@gmail.com
-Cc: lindar_liu@usish.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/pm8001/pm8001_init.c |   39 +++++++++++++++++++------------------
- 1 files changed, 20 insertions(+), 19 deletions(-)
+I applied all six of these (please include a 0/6 cover letter in the
+future; that's a nice place to note that I applied things) to
+pci/list-for-each-entry for v3.15, thanks!
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index efffbb9..0aa9059 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -724,34 +724,35 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
- 		sizeof(pm8001_ha->msix_entries[0]);
- 	for (i = 0; i < max_entry ; i++)
- 		pm8001_ha->msix_entries[i].entry = i;
--	rc = pci_enable_msix(pm8001_ha->pdev, pm8001_ha->msix_entries,
-+	rc = pci_enable_msix_exact(pm8001_ha->pdev, pm8001_ha->msix_entries,
- 		number_of_intr);
- 	pm8001_ha->number_of_intr = number_of_intr;
--	if (!rc) {
--		PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
--			"pci_enable_msix request ret:%d no of intr %d\n",
--					rc, pm8001_ha->number_of_intr));
-+	if (rc)
-+		return rc;
- 
-+	PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
-+		"pci_enable_msix_exact request ret:%d no of intr %d\n",
-+				rc, pm8001_ha->number_of_intr));
- 
--		for (i = 0; i < number_of_intr; i++) {
--			snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
--					DRV_NAME"%d", i);
--			pm8001_ha->irq_vector[i].irq_id = i;
--			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
-+	for (i = 0; i < number_of_intr; i++) {
-+		snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
-+				DRV_NAME"%d", i);
-+		pm8001_ha->irq_vector[i].irq_id = i;
-+		pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
- 
--			rc = request_irq(pm8001_ha->msix_entries[i].vector,
--				pm8001_interrupt_handler_msix, flag,
--				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
--			if (rc) {
--				for (j = 0; j < i; j++)
--					free_irq(
--					pm8001_ha->msix_entries[j].vector,
-+		rc = request_irq(pm8001_ha->msix_entries[i].vector,
-+			pm8001_interrupt_handler_msix, flag,
-+			intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-+		if (rc) {
-+			for (j = 0; j < i; j++) {
-+				free_irq(pm8001_ha->msix_entries[j].vector,
- 					&(pm8001_ha->irq_vector[i]));
--				pci_disable_msix(pm8001_ha->pdev);
--				break;
- 			}
-+			pci_disable_msix(pm8001_ha->pdev);
-+			break;
- 		}
- 	}
-+
- 	return rc;
- }
- #endif
--- 
-1.7.7.6
-
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index cd929ae..aee6a0a 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -450,7 +450,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
+>   */
+>  static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
+>  {
+> -	struct list_head *tmp;
+> +	struct pci_bus *tmp;
+>  	unsigned char max, n;
+>  
+>  	/*
+> @@ -463,8 +463,8 @@ static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
+>  	 */
+>  	max = bus->busn_res.start;
+>  
+> -	list_for_each(tmp, &bus->children) {
+> -		n = pci_bus_max_busnr(pci_bus_b(tmp));
+> +	list_for_each_entry(tmp, &bus->children, node) {
+> +		n = pci_bus_max_busnr(tmp);
+>  		if (n > max)
+>  			max = n;
+>  	}
+> -- 
+> 1.7.1
+> 
+> 
