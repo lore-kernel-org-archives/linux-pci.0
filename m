@@ -1,75 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24873 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753796AbaBDLPg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:15:36 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 04/22] bfa: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:16:50 +0100
-Message-Id: <27badb9a4468decf94f38a625b9faa8a3498dc85.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:55720 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948AbaBNLFj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 06:05:39 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Will Deacon <will.deacon@arm.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/3] ARM: PCI: implement generic PCI host controller
+Date: Fri, 14 Feb 2014 12:05:27 +0100
+Message-ID: <1800297.J3Exeqph4n@wuerfel>
+In-Reply-To: <20140213182655.GE17248@obsidianresearch.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <20140213182655.GE17248@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Thursday 13 February 2014 11:26:55 Jason Gunthorpe wrote:
+> The DT representation is very straightforward, just have more copies
+> of what you already have. Each DT stanza should be represented in
+> Linux a distinct PCI domain.
+> 
+> In Linux you run into two small problems
+>  1) PCI Domain numbers needs to be allocated dynamically
+>     * I think there should be a core thing to allocate a domain
+>       object w/ a struct device, and assign a unique domain number.
+>       We are already seeing drivers do things like keep track
+>       of their own domain numbers via a counter (pcie-designware.c)
+>       The host bridge object is similar to this but it isn't focused
+>       on a domain.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/bfa/bfad.c |   20 ++++++--------------
- 1 files changed, 6 insertions(+), 14 deletions(-)
+Right, see also my other comment I just sent in the "Re: [PATCH v2 3/3]
+PCI: ARM: add support for generic PCI host controller" thread.
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index cd318f1..ee7442e 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1234,27 +1234,19 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
- 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
- 
--		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
-+		error = pci_enable_msix_range(bfad->pcidev, msix_entries,
-+					      bfad->nvec, bfad->nvec);
- 		/* In CT1 & CT2, try to allocate just one vector */
--		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
-+		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
- 			printk(KERN_WARNING "bfa %s: trying one msix "
- 			       "vector failed to allocate %d[%d]\n",
- 			       bfad->pci_name, bfad->nvec, error);
- 			bfad->nvec = 1;
--			error = pci_enable_msix(bfad->pcidev,
--						msix_entries, bfad->nvec);
-+			error = pci_enable_msix_range(bfad->pcidev,
-+						      msix_entries, 1, 1);
- 		}
- 
--		/*
--		 * Only error number of vector is available.
--		 * We don't have a mechanism to map multiple
--		 * interrupts into one vector, so even if we
--		 * can try to request less vectors, we don't
--		 * know how to associate interrupt events to
--		 *  vectors. Linux doesn't duplicate vectors
--		 * in the MSIX table for this case.
--		 */
--		if (error) {
-+		if (error < 0) {
- 			printk(KERN_WARNING "bfad%d: "
- 			       "pci_enable_msix failed (%d), "
- 			       "use line based.\n",
--- 
-1.7.7.6
+The host driver is the wrong place to pick a domain number, but someone
+has to do it.
 
+>  2) The space in the IO fixed mapping needs to be allocated to PCI
+>     host drivers dynamically
+>     * pci_ioremap_io_dynamic that takes a bus address + cpu_physical
+>       address and returns a Linux virtual address.
+>       The first caller can get a nice traslation where bus address ==
+>       Linux virtual address, everyone after can get best efforts.
+
+I think we can have a helper that everything we need to do
+with the I/O space:
+
+* parse the ranges property
+* pick an appropriate virtual address window
+* ioremap the physical window there
+* compute the io_offset
+* pick a name for the resource
+* request the io resource
+* register the pci_host_bridge_window
+
+> You will have overlapping physical IO bus addresses - each domain will
+> have a 0 IO BAR - but those will have distinct CPU physical addresses
+> and can then be uniquely mapped into the IO mapping. So at the struct
+> resource level the two domains have disjoint IO addresses, but each
+> domain uses a different IO offset..
+
+This would be the common case, but when we have a generic helper function,
+it's actually not that are to handle a couple of variations of that,
+which we may see in the field and can easily be described with the
+existing binding.
+
+* If we allow multiple host bridges to be in the same PCI domain with
+  a split bus space, we should also allow them to have a split I/O
+  space, e.g. have two 32KB windows, both with io_offset=0. This would
+  imply that the second bridge can only support relocatable I/O BARs.
+
+* Similar to that, you may have multiple 64KB windows with io_offset=0.
+
+* Some system may have hardwire I/O windows at a high bus address larger
+  than IO_SPACE_LIMIT. This would mean a *negative* io_offset. I can't
+  see any reason why anyone would do this, but I also don't see a reason
+  to prevent it if we can easily keep the code generic enough to handle
+  it without adding extra code.
+
+* A more obscure case would be to have multiple I/O windows on a bus.
+  This is allowed by the binding and by the pci_host_bridge_window,
+  and while again I don't see a use case, it also doesn't seem hard
+  to do, we just keep looping for all ranges rather than stop after
+  the first window.
+
+	Arnd
