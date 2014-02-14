@@ -1,61 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1767 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750748AbaBZJlR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:41:17 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
-	Jens Axboe <axboe@kernel.dk>, linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/2] cciss: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 26 Feb 2014 10:02:42 +0100
-Message-Id: <1a724c5d82ae6476960e4beedefdd65217bb6832.1393404496.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393404496.git.agordeev@redhat.com>
-References: <cover.1393404496.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <52FE89FF.4020700@gmail.com>
+References: <52FE89FF.4020700@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 14 Feb 2014 14:35:51 -0700
+Message-ID: <CAErSpo4YwCaS+zc50L8PMO5nx9XscEua7nHXqM3eR3XzG4TtJQ@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: Display the link state change reporting capability
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatjain@juniper.net>,
+	Guenter Roeck <groeck@juniper.net>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Kees Cook <keescook@chromium.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Fri, Feb 14, 2014 at 2:26 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> With recent addition of Link state change based hot-plug, it makes
+> sense to display this capability in dbg_ctrl() addition to others.
+>
+> (Also move the call to dbg_ctrl() further down untill after the value
+> is populated in ctrl->link_active_reporting)
+>
+> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
+> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
+> Signed-off-by: Guenter Roeck <groeck@juniper.net>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Mike Miller <mike.miller@hp.com>
-Cc: iss_storagedev@hp.com
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: linux-pci@vger.kernel.org
----
- drivers/block/cciss.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+This is fine as it is, but I'd like to get rid of dbg_ctrl()
+altogether someday.  I made pcie_init() more verbose with afe2478f2e3f
+("PCI: pciehp: Announce slot capabilities (slot #, button, LEDs,
+etc)"), and it does include the PCI_EXP_LNKCAP_DLLLARC info.
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 73894ca..4595c22 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -4080,7 +4080,7 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
- 		goto default_int_mode;
- 
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
--		err = pci_enable_msix(h->pdev, cciss_msix_entries, 4);
-+		err = pci_enable_msix_exact(h->pdev, cciss_msix_entries, 4);
- 		if (!err) {
- 			h->intr[0] = cciss_msix_entries[0].vector;
- 			h->intr[1] = cciss_msix_entries[1].vector;
-@@ -4088,10 +4088,6 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
- 			h->intr[3] = cciss_msix_entries[3].vector;
- 			h->msix_vector = 1;
- 			return;
--		}
--		if (err > 0) {
--			dev_warn(&h->pdev->dev,
--				"only %d MSI-X vectors available\n", err);
- 		} else {
- 			dev_warn(&h->pdev->dev,
- 				"MSI-X init failed %d\n", err);
--- 
-1.7.7.6
+Is there anything important left in dbg_ctrl() that we don't already
+print elsewhere?  The PCI core prints the vendor/device and BAR info.
+Of course, we don't print the entire capabilities/status/control words
+anywhere else.  Is that important?
 
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index da4b020..cbe8e924 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -747,6 +747,8 @@ static inline void dbg_ctrl(struct controller *ctrl)
+>                   EMI(ctrl)        ? "yes" : "no");
+>         ctrl_info(ctrl, "  Command Completed    : %3s\n",
+>                   NO_CMD_CMPL(ctrl) ? "no" : "yes");
+> +       ctrl_info(ctrl, "  Link Change Reporting: %3s\n",
+> +                 ctrl->link_active_reporting ? "yes" : "no");
+>         pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &reg16);
+>         ctrl_info(ctrl, "Slot Status            : 0x%04x\n", reg16);
+>         pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &reg16);
+> @@ -771,7 +773,6 @@ struct controller *pcie_init(struct pcie_device *dev)
+>         ctrl->slot_cap = slot_cap;
+>         mutex_init(&ctrl->ctrl_lock);
+>         init_waitqueue_head(&ctrl->queue);
+> -       dbg_ctrl(ctrl);
+>         /*
+>          * Controller doesn't notify of command completion if the "No
+>          * Command Completed Support" bit is set in Slot Capability
+> @@ -784,10 +785,9 @@ struct controller *pcie_init(struct pcie_device *dev)
+>
+>          /* Check if Data Link Layer Link Active Reporting is implemented */
+>          pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
+> -        if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
+> -                ctrl_dbg(ctrl, "Link Active Reporting supported\n");
+> +       if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
+>                  ctrl->link_active_reporting = 1;
+> -        }
+> +       dbg_ctrl(ctrl);
+>
+>         /* Clear all remaining event bits in Slot Status register */
+>         pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+> --
+> 1.7.9.5
+>
