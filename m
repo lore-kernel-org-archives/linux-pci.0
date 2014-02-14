@@ -1,125 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:8405 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889AbaBJEFF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Feb 2014 23:05:05 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH part1 v5 3/7] PCI: Add support for Device Serial Number capability
-Date: Mon, 10 Feb 2014 12:04:07 +0800
-Message-ID: <1392005051-54508-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
-References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
+Received: from dliviu.plus.com ([80.229.23.120]:51687 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752738AbaBNWLc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Feb 2014 17:11:32 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id B89B2FFAFE
+	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 22:06:06 +0000 (GMT)
+Date: Fri, 14 Feb 2014 22:00:47 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Will Deacon <will.deacon@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140214220047.GA5394@bart.dudau.co.uk>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+ <20140213182654.GA20043@obsidianresearch.com>
+ <20140213195317.GQ13576@mudshark.cambridge.arm.com>
+ <5805232.JrD2FybBlg@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5805232.JrD2FybBlg@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for the Device Serial Number capability, so we can use the
-unique device serial number to identify the physical device.  This helps
-determine whether a device was replaced while the system was suspended.
+On Fri, Feb 14, 2014 at 10:59:06AM +0100, Arnd Bergmann wrote:
+> On Thursday 13 February 2014 19:53:17 Will Deacon wrote:
+> > On Thu, Feb 13, 2014 at 06:26:54PM +0000, Jason Gunthorpe wrote:
+> > > On Thu, Feb 13, 2014 at 05:28:20PM +0100, Arnd Bergmann wrote:
+> > > 
+> > > > > Huh?  The reg property clearly has the size in it (as shown in the
+> > > > > example below).  I guess I was just asking for the description
+> > > > > here to say what the size was for the 2 compatibles since its
+> > > > > fixed and known.
+> > > > 
+> > > > It's still an open question whether the config space in the reg
+> > > > property should cover all 256 buses or just the ones in the
+> > > > bus-range. In the latter case, it would be variable (but
+> > > > predictable) size.
+> > > 
+> > > The 'describe the hardware principle' says the reg should be the
+> > > entire available ECAM/CAM region the hardware is able to support.
+> > > 
+> > > This may be less than 256 busses, as ECAM allows the implementor to
+> > > select how many upper address bits are actually supported.
+> > 
+> > Ok, but the ECAM/CAM base always corresponds to bus 0, right?
+> 
+> Ah, plus I suppose it ought to be a power-of-two size?
+> 
+> > > IMHO, the bus-range should be used to indicate the range of busses
+> > > discovered by the firmware, but we have historically tweaked it to
+> > > indicate the max range of bus numbers available on this bus (I think
+> > > to support the hack where two physical PCI domains were roughly glued
+> > > into a single Linux domain).
+> 
+> There is an interesting point about the domain assignment, brought to
+> my attention by Russell's comment about the hw_pci struct: If we want
+> to support arbitrary combinations of pci host bridges described in DT,
+> we need a better policy to decide what domain to use. The approaches
+> I've seen so far are:
+> 
+> 1. We assume each host bridge in DT is a domain by itself. I think
+> we do that for all DT probed bridges on ARM (aside from shmobile)
+> at the moment. In some cases, the the host bridge is a really a
+> fiction made up by the host driver to couple various identical
+> but independent PCIe root ports, but the same fiction is shared
+> between DT and the PCI core view of it. This requires that we
+> enable the PCI domain code unconditionally, and breaks all user
+> space that doesn't understand domains (this should be rare but
+> can still exist for x86 based software).
+> 
+> 2. The architecture or platform code decides and uses a method equivalent
+> to ARM's pci_common_init_dev() after it has found all host bridges.
+> The architecture "knows" how many domains it wants and calls
+> pci_common_init_dev() for each domain, and then the setup() callbacks
+> grab as many buses as they need within the domain. For a generic
+> multiplatform kernel, this means we need to add a top-level driver
+> that looks at all pci hosts in DT before any of them are probed.
+> It also means the pci host drivers can't be loadable modules.
+> 
+> 3. We assume there is only one domain, and require each host bridge
+> in DT to specify a bus-range that is a subset of the available 256
+> bus numbers. This should work for anything but really big systems
+> with many hot-pluggable ports, since we need to reserve a few bus
+> numbers on each port for hotplugging.
+> 
+> 4. Like 3, but start a new domain if the bus-range properties don't
+> fit in the existing domains.
+> 
+> 5. Like 3, but specify a generic "pci-domain" property for DT
+> that allows putting host bridges into explicit domains in
+> a predictable way.
 
-[bhelgaas: changelog, drop pci_dsn_init(), spell out "serial_number"]
-Reviewed-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
----
- drivers/pci/pci.c   |   30 ++++++++++++++++++++++++++++++
- drivers/pci/pci.h   |    2 +-
- drivers/pci/probe.c |    2 ++
- include/linux/pci.h |    1 +
- 4 files changed, 34 insertions(+), 1 deletions(-)
+What I'm going to suggest in my v2 patch (hope to send it before Monday)
+is a new API in the generic PCI code that will allow you to create a
+host bridge in a new domain or in the existing domain, with the management
+of the domain number being done in the generic code.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 432ac86..af06064 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2168,6 +2168,36 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_device_serial_number - get device serial number
-+ * @bus: PCI bus the device on
-+ * @devfn: the PCI device
-+ *
-+ * return the device serial number if device support,
-+ * otherwise return 0.
-+ */
-+static u64 pci_device_serial_number(struct pci_bus *bus, int devfn)
-+{
-+	int pos;
-+	u32 lo, hi;
-+
-+	if (!pci_bus_find_capability(bus, devfn, PCI_CAP_ID_EXP))
-+		return 0;
-+
-+	pos = pci_bus_find_ext_capability(bus, devfn, PCI_EXT_CAP_ID_DSN);
-+	if (!pos)
-+		return 0;
-+
-+	pci_bus_read_config_dword(bus, devfn, pos + 4, &lo);
-+	pci_bus_read_config_dword(bus, devfn, pos + 8, &hi);
-+	return ((u64)hi << 32) | lo;
-+}
-+
-+void pci_dsn_init(struct pci_dev *dev)
-+{
-+	dev->sn = pci_device_serial_number(dev->bus, dev->devfn);
-+}
-+
-+/**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4df38df..685301a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -208,7 +208,7 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
- 				      struct list_head *realloc_head,
- 				      struct list_head *fail_head);
--
-+void pci_dsn_init(struct pci_dev *dev);
- /**
-  * pci_ari_enabled - query ARI forwarding status
-  * @bus: the PCI bus
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6e34498..27d3e6f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1324,6 +1324,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Vital Product Data */
- 	pci_vpd_pci22_init(dev);
- 
-+	pci_dsn_init(dev);
-+
- 	/* Alternative Routing-ID Forwarding */
- 	pci_configure_ari(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 470de02..3631859 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -354,6 +354,7 @@ struct pci_dev {
- 	struct list_head msi_list;
- 	const struct attribute_group **msi_irq_groups;
- #endif
-+	u64 sn;		/* device serial number, 0 if not support */
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
- 	union {
--- 
-1.7.1
+Something like:
 
+  int create_hostbridge_in_new_domain(....);
+  int create_hostbridge(....);
+
+with the functions being wrappers around the pci_hostbridge_of_init function
+that I'm introducing.
+
+What do you think?
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
