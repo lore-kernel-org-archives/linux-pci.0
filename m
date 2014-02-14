@@ -1,103 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:33049 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752522AbaB0QUH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 11:20:07 -0500
-Date: Thu, 27 Feb 2014 16:20:03 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140227162003.GP1692@e106497-lin.cambridge.arm.com>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
- <18746655.qWHLpMg2Yy@wuerfel>
- <20140227141322.GL1692@e106497-lin.cambridge.arm.com>
- <5722634.VerP6OyMlP@wuerfel>
+Received: from mga02.intel.com ([134.134.136.20]:5483 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752034AbaBNWR3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Feb 2014 17:17:29 -0500
+From: "Dugger, Donald D" <donald.d.dugger@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2 0/3] Quirk Intel PCH root ports for ACS-like features
+Date: Fri, 14 Feb 2014 22:17:02 +0000
+Message-ID: <6AF484C0160C61439DE06F17668F3BCB5285C7EC@ORSMSX102.amr.corp.intel.com>
+References: <20140203212216.8607.68273.stgit@bling.home>
+ <CAErSpo5D55RcaSASGrU8hEcg+BYvGKOQHFjor8k1gSzfZKWy2g@mail.gmail.com>
+In-Reply-To: <CAErSpo5D55RcaSASGrU8hEcg+BYvGKOQHFjor8k1gSzfZKWy2g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <5722634.VerP6OyMlP@wuerfel>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 03:58:41PM +0000, Arnd Bergmann wrote:
-> On Thursday 27 February 2014 14:13:22 Liviu Dudau wrote:
-> > 
-> > It is useful for host bridge drivers as this is the only place where we store
-> > the physical CPU address for the IO range. This is then needed when setting up the
-> > translation registers. Also used when calling the pci_ioremap_io function that I'm
-> > introducing in the AArch64 patches.
-> 
-> I don't understand what translation windows you are talking about. Is this
-> about how the PCI spaces are mapped into the CPU address space? If so, I
-> would strongly recommend to have this handled by the boot loader before
-> calling into the kernel. For ARM32, we have a lot of embedded systems
-> that require the PCI host driver to set up those windows, but actually
-> it would be much better to just have the firmware tell us what the setup
-> is and that use that.
-
-The AXI to PCI bridge that I'm using has a set of registers for doing address translation.
-When it sees an AXI translation that matches the programmed translation window will
-convert it into a PCI write using the PCI address base written in that translation window.
-In other words you basically program the DT range into those address translation registers
-and the bridge does the AXI to PCI conversion for you.
-
-> 
-> > Whole patch is still under legal review, but the fragment for setting up the ATR looks
-> > like this:
-> > 
-> >         list_for_each_entry(window, &bridge->windows, list) {
-> >                 res = window->res;
-> >                 offset = window->offset;
-> >                 wsize = ilog2(resource_size(res)) - 1;
-> > 
-> >                 if (resource_type(res) == IORESOURCE_MEM)
-> >                         update_atr_entry(pp->base + ATR_REG_whatever,
-> >                                 res->start,                             /* CPU address */
-> >                                 res->start - offset,                    /* PCI address */
-> >                                 0, wsize);
-> >                 else if (resource_type(res) == IORESOURCE_IO) {
-> >                         io_offset = pci_ioremap_io(res, bridge->io_base + offset);
-> >                         update_atr_entry(pp->base + ATR_REG_whatever,
-> >                                 bridge->io_base + res->start + offset,  /* CPU address */
-> >                                 res->start,                             /* PCI address */
-> >                                 0x20000, wsize);
-> >                 }
-> >         }
-> 
-> Hmm, I again don't see how 'bridge->io_base + res->start + offset' is
-> the correct address here. What is it you are trying to pass into
-> update_atr_entry()?
-
-The physical CPU address where the IO range starts. 
-
-For IO:
-  res->start = beginning of logical I/O port block
-  offset = window->offset = res->start - range.pci_addr
-  bridge->io_base = range.cpu_addr
-
-  bridge->io_base + res->start + offset = range.cpu_addr + res->start + res->start - range.pci_addr
-
-Hmm, writting code without coffee .... :) 
-
-Lucky for me res->start = range.pci_addr = 0, but I can see now where I've got it wrong. Thanks!
-
-Liviu
-
-> 
-> 	Arnd
-> 
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+SW4gcmU6IEZlYXR1cmUgdnMuIGJ1ZyBmaXgNCg0KQXQgdGhlIHJpc2sgb2YgdHJ5aW5nIHRvIGFy
+Z3VpbmcgYWJvdXQgdGhlIG1lYW5pbmcgb2YgYGlzJyBJIHdvdWxkIGFyZ3VlIHRoYXQgdGhpcyBp
+cyBtb3JlIGEgYnVnIGZpeCB0aGFuIGEgZmVhdHVyZS4gIFdlJ3JlIG5vdCBhZGRpbmcgYSBuZXcg
+Y2FwYWJpbGl0eSwgd2UgYXJlIHRyeWluZyB0byB3b3JrIGFyb3VuZCBkZWZpY2llbnQgSFcgKG5v
+IGFyZ3VtZW50IHRoYXQgd2Ugc2hvdWxkIGhhdmUgaW1wbGVtZW50ZWQgQUNTIG9uIGFsbCBwbGF0
+Zm9ybXMpLg0KDQpIYXZpbmcgc2FpZCB0aGF0LCBhbHRob3VnaCBJIHdvdWxkIG9idmlvdXNseSBw
+cmVmZXIgdG8gc2VlIHRoaXMgaW4gdjMuMTQgd2UgY2FuIGxpdmUgd2l0aCB0aGlzIGhpdHRpbmcg
+djMuMTUuDQoNCi0tDQpEb24gRHVnZ2VyDQoiQ2Vuc2VvIFRvdG8gbm9zIGluIEthbnNhIGVzc2Ug
+ZGVjaXNzZS4iIC0gRC4gR2FsZQ0KUGg6IDMwMy80NDMtMzc4Ng0KDQotLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5j
+b21dIA0KU2VudDogRnJpZGF5LCBGZWJydWFyeSAxNCwgMjAxNCAyOjQzIFBNDQpUbzogQWxleCBX
+aWxsaWFtc29uDQpDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZn
+ZXIua2VybmVsLm9yZzsgRHVnZ2VyLCBEb25hbGQgRA0KU3ViamVjdDogUmU6IFtQQVRDSCB2MiAw
+LzNdIFF1aXJrIEludGVsIFBDSCByb290IHBvcnRzIGZvciBBQ1MtbGlrZSBmZWF0dXJlcw0KDQpb
+K2NjIERvbl0NCg0KT24gTW9uLCBGZWIgMDMsIDIwMTQgYXQgMDI6Mjc6MjdQTSAtMDcwMCwgQWxl
+eCBXaWxsaWFtc29uIHdyb3RlOg0KPiB2MjoNCj4gIC0gUmVtb3ZlIGJ1cyAjMCBidWcgaW4gZmls
+dGVyaW5nIG1hdGNoaW5nDQo+ICAtIEFkZCAyLzMgaW50cm9kdWNpbmcgUENJX0RFVl9GTEFHU19B
+Q1NfRU5BQkxFRF9RVUlSSywgdGhpcyBnaXZlcw0KPiAgICBpcyBiZXR0ZXIgdHJhY2tpbmcgYW5k
+IGFkZHJlc3NlcyB0aGUgdGhlb3JldGljYWwgaG90cGx1ZyBpc3N1ZQ0KPiAgLSBVcGRhdGUgMy8z
+IGZvciBQQ0lfREVWX0ZMQUdTX0FDU19FTkFCTEVEX1FVSVJLDQo+ICAtIEFkZCBkZXZfaW5mbyB0
+byBwcmludCByZWdhcmRsZXNzIG9mIHdoZXRoZXIgd2UgY2hhbmdlcyBiaXRzDQo+ICAtIEFkZCBJ
+bnRlbCBjYw0KPg0KPiBBcyBkZXNjcmliZWQgaW4gMy8zIG1hbnkgSW50ZWwgcm9vdCBwb3J0cyBs
+YWNrIFBDSWUgQUNTIGNhcGFiaWxpdGllcyANCj4gd2hpY2ggcmVzdWx0cyBpbiBleGNlc3NpdmVs
+eSBsYXJnZSBJT01NVSBncm91cHMuICBNYW55IG9mIHRoZXNlIHJvb3QgDQo+IHBvcnRzIGRvIHBy
+b3ZpZGUgaXNvbGF0aW9uIGNhcGFiaWxpdGllcywgd2UganVzdCBuZWVkIHRvIHVzZSBkZXZpY2Ug
+DQo+IHNwZWNpZmljIG1lY2hhbmlzbXMgdG8gZW5hYmxlIGFuZCB2ZXJpZnkuICBMb25nIHRlcm0s
+IEkgaG9wZSB3ZSBjYW4gDQo+IHJvdW5kIG91dCB0aGlzIGxpc3QgKHBhcnRpY3VsYXJseSB0byBp
+bmNsdWRlIFg3OSByb290IHBvcnRzKSBhbmQgbW9yZSANCj4gaW1wb3J0YW50bHksIGVuY291cmFn
+ZSBwcm9wZXIgUENJZSBBQ1Mgc3VwcG9ydCBpbiBmdXR1cmUgcHJvZHVjdHMuICANCj4gSSdtIHJl
+YWxseSBob3Bpbmcgd2UgY2FuIGdldCB0aGlzIGluIGR1cmluZyB0aGUgMy4xNCBjeWNsZS4NCj4g
+VGhhbmtzLA0KPg0KPiBBbGV4DQo+IC0tLQ0KPg0KPiBBbGV4IFdpbGxpYW1zb24gKDMpOg0KPiAg
+ICAgICBwY2k6IEFkZCBkZXZpY2Ugc3BlY2lmaWMgUENJIEFDUyBlbmFibGUNCj4gICAgICAgcGNp
+OiBBZGQgcGNpX2Rldl9mbGFnIGZvciBBQ1MgZW5hYmxlIHF1aXJrcw0KPiAgICAgICBwY2kvcXVp
+cmtzOiBFbmFibGUgcXVpcmtzIGZvciBQQ0llIEFDUyBvbiBJbnRlbCBQQ0ggcm9vdCBwb3J0cw0K
+DQpJIGFwcGxpZWQgdGhlc2UgKHdpdGggRG9uJ3MgYWNrIGZvciAzLzMpIHRvIHBjaS92aXJ0dWFs
+aXphdGlvbi4NCg0KSSB0cmllZCB0byBmaWd1cmUgb3V0IGhvdyB0byBoYW5kbGUgcG9zdC1tZXJn
+ZSB3aW5kb3cgcGF0Y2hlcy4gIFBlciBEb2N1bWVudGF0aW9uL2RldmVsb3BtZW50LXByb2Nlc3Mv
+Mi5Qcm9jZXNzLCAiW2FmdGVyIC1yYzFdLCBvbmx5IHBhdGNoZXMgd2hpY2ggZml4IHByb2JsZW1z
+IHNob3VsZCBiZSBzdWJtaXR0ZWQgdG8gdGhlIG1haW5saW5lLCIgc28gb25lIG1pZ2h0IGNvbmNs
+dWRlIHRoYXQgYSBmaXggZm9yIGFueSBzb3J0IG9mIHByb2JsZW0gaXMgYWxsb3dlZC4gIEhvd2V2
+ZXIsIERvY3VtZW50YXRpb24vbmV0d29ya2luZy9uZXRkZXYtRkFRLnR4dCBzYXlzICJObyBuZXcg
+ZmVhdHVyZXMgZ2V0IG1haW5saW5lZCBhZnRlciB0aGlzIFstcmMxXSAtLSBvbmx5IGZpeGVzIHRv
+IHRoZSByYzEgY29udGVudCBhcmUgZXhwZWN0ZWQsIiB3aGljaCBpcyBob3cgSSd2ZSBiZWVuIG9w
+ZXJhdGluZy4NCg0KSW4gYW55IGNhc2UsIHRoZXNlIHBhdGNoZXMgbG9vayBtb3JlIGxpa2UgbmV3
+IGZ1bmN0aW9uYWxpdHkgKGVuYWJsaW5nIGEgbm9uLXN0YW5kYXJkIEFDUyBmZWF0dXJlKSB0aGFu
+IGEgYnVnIGZpeCB0byBtZSwgc28gbXkgcHJlZmVyZW5jZSBpcyB0byBtZXJnZSB0aGVtIGR1cmlu
+ZyB0aGUgdjMuMTUgbWVyZ2Ugd2luZG93Lg0KDQpJIHVuZGVyc3RhbmQgdGhlIGRlc2lyZSBmb3Ig
+djMuMTQsIG5hbWVseSwgImxvdHMgb2YgSW50ZWwgZGV2aWNlcyBkb24ndCBzdXBwb3J0IEFDUywg
+YW5kIHRoYXQgbWFrZXMgaXQgaGFyZCBmb3IgdXNlcnMgdG8gZXhwb3NlIGRldmljZXMgdG8gdXNl
+cnNwYWNlIHdpdGggZmluZSBncmFudWxhcml0eSwgYW5kIHdhaXRpbmcgZm9yIHYzLjE1IHdpbGwg
+bWVhbiBhbm90aGVyIHR3byBtb250aHMuIiAgQnV0IHRoaXMgcHJvYmxlbSBpcyByZWFsbHkgb2Yg
+SW50ZWwncyBvd24gbWFraW5nOiBpZiB0aGV5J2QgdXNlZCBzdGFuZGFyZCBBQ1MsIG9yIGlmIHRo
+ZXknZCBkb2N1bWVudGVkIHRoZWlyIG5vbi1zdGFuZGFyZCBtZWNoYW5pc20sIHRoaXMgd291bGRu
+J3QgYmUgYW4gaXNzdWUuDQoNCkJqb3JuDQo=
