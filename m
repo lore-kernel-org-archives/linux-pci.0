@@ -1,63 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:44161 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbaBYV2T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 16:28:19 -0500
-Received: by mail-oa0-f41.google.com with SMTP id o6so1142218oag.28
-        for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2014 13:28:18 -0800 (PST)
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:48050 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135AbaBNGmE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 01:42:04 -0500
+Date: Fri, 14 Feb 2014 07:41:53 +0100
+From: Sascha Hauer <s.hauer@pengutronix.de>
+To: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Marek Vasut <marex@denx.de>, linux-pci@vger.kernel.org,
+	kernel@pengutronix.de, Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: imx6: Fix link_up detection
+Message-ID: <20140214064153.GE17250@pengutronix.de>
+References: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de>
+ <201402120836.16221.marex@denx.de>
+ <52FD0F1A.4000208@boundarydevices.com>
 MIME-Version: 1.0
-In-Reply-To: <CAA93t1osfYie-CWSTsqdeyzFOwCfsBPaGJ2rtyEkiY0e4kHUMw@mail.gmail.com>
-References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
-	<CAA93t1osfYie-CWSTsqdeyzFOwCfsBPaGJ2rtyEkiY0e4kHUMw@mail.gmail.com>
-Date: Tue, 25 Feb 2014 13:28:18 -0800
-Message-ID: <CAE9FiQX9-eSe06STMjhFhwk6RoupOd5v6Jsi3yBwJsCna1uk=A@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
-From: Yinghai Lu <yinghai@kernel.org>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52FD0F1A.4000208@boundarydevices.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 25, 2014 at 11:27 AM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> On Mon, Feb 24, 2014 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc Rajat]
->>
->> On Mon, Feb 24, 2014 at 4:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On system with 16 PCI express hotplug slots, customer complain every slot
->>> will report "Command not completed in 1000 msec" during initialization.
->>>
->>> Intel says that we should only wait command complete only for
->>>            Electromechanical Interlock Control
->>>            Power Controller Control
->>>            Power Indicator Control
->>>            Attention Indicator Control
->
->
-> Hello,
->
-> I have a HW that generates Command Completion notifications, even
-> though it does not implement any of the EMI, Power Controller, Power
-> Indicator, Attention indicator. Although I'm not sure whether or not
-> this behavior is compliant to PCIe spec, just wanted to pitch in to
-> convey that there are HW which have this behavior:
->
-> PCI bridge: Integrated Device Technology, Inc. Device 807a (rev 02)
-> (prog-if 00 [Normal decode])
->         SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise-
->                 Slot #13, PowerLimit 0.000W; Interlock- NoCompl-
->         SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt+ HPIrq+ LinkChg+
->                 Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
->         SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
->                 Changed: MRL- PresDet- LinkState-
+On Thu, Feb 13, 2014 at 11:29:46AM -0700, Troy Kisky wrote:
+> On 2/12/2014 12:36 AM, Marek Vasut wrote:
+> >On Wednesday, February 12, 2014 at 08:27:55 AM, Sascha Hauer wrote:
+> >
+> >+CC Troy Kisky, since I think he submitted something similar some time ago
+> >already.
+> >
+> >Otherwise I agree this happens.
+> >
+> Sorry, I haven't submitted this yet, but was planning to today. Here's
+> what would have been sent.
+> 
+> From 32c560d33fe2c3945d69f3396689f0abb76f7e1f Mon Sep 17 00:00:00 2001
+> From: Marek Vasut <marex@denx.de>
+> Date: Sat, 25 Jan 2014 14:22:48 -0700
+> Subject: [PATCH 1/1] pci-imx6.c: wait for retraining
+> 
+> This patch handles the case where the PCIe link is up and running, yet drops
+> into the LTSSM training mode. The link spends short time in the LTSSM training
+> mode, but the current code can misinterpret it as the link being stalled.
+> Waiting for the LTSSM training to complete fixes the issue.
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Tested-by: Troy Kisky <troy.kisky@boundarydevices.com>
 
-Looks like different vendors have different understanding of that part.
+Thanks, that works.
 
-so may need to add vendor quirk checking for waiting..., aka only wait for IDT
-for all bits, and other vendor will only wait for 4 bits.
+Tested-by: Sascha Hauer <s.hauer@pengutronix.de>
 
-Thanks
+Sascha
 
-Yinghai
+> ---
+>  drivers/pci/host/pci-imx6.c | 47 ++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 34 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index e8663a8..ee08250 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -424,20 +424,40 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+>  static int imx6_pcie_link_up(struct pcie_port *pp)
+>  {
+> -	u32 rc, ltssm, rx_valid;
+> +	u32 rc, debug_r0, rx_valid;
+> +	int count = 5;
+>  	/*
+> -	 * Test if the PHY reports that the link is up and also that
+> -	 * the link training finished.  It might happen that the PHY
+> -	 * reports the link is already up, but the link training bit
+> -	 * is still set, so make sure to check the training is done
+> -	 * as well here.
+> +	 * Test if the PHY reports that the link is up and also that the LTSSM
+> +	 * training finished. There are three possible states of the link when
+> +	 * this code is called:
+> +	 * 1) The link is DOWN (unlikely)
+> +	 *     The link didn't come up yet for some reason. This usually means
+> +	 *     we have a real problem somewhere. Reset the PHY and exit. This
+> +	 *     state calls for inspection of the DEBUG registers.
+> +	 * 2) The link is UP, but still in LTSSM training
+> +	 *     Wait for the training to finish, which should take a very short
+> +	 *     time. If the training does not finish, we have a problem and we
+> +	 *     need to inspect the DEBUG registers. If the training does finish,
+> +	 *     the link is up and operating correctly.
+> +	 * 3) The link is UP and no longer in LTSSM training
+> +	 *     The link is up and operating correctly.
+>  	 */
+> -	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+> -	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
+> -	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
+> -		return 1;
+> -
+> +	while (1) {
+> +		rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+> +		if (!(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP))
+> +			break;
+> +		if (!(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
+> +			return 1;
+> +		if (!count--)
+> +			break;
+> +		dev_dbg(pp->dev, "Link is up, but still in training\n");
+> +		/*
+> +		 * Wait a little bit, then re-check if the link finished
+> +		 * the training.
+> +		 */
+> +		usleep_range(1000, 2000);
+> +	}
+>  	/*
+>  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+>  	 * Wait 2ms (LTSSM timeout is 24ms, PHY lock is ~5us in gen2).
+> @@ -446,15 +466,16 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  	 * to gen2 is stuck
+>  	 */
+>  	pcie_phy_read(pp->dbi_base, PCIE_PHY_RX_ASIC_OUT, &rx_valid);
+> -	ltssm = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0) & 0x3F;
+> +	debug_r0 = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0);
+>  	if (rx_valid & 0x01)
+>  		return 0;
+> -	if (ltssm != 0x0d)
+> +	if ((debug_r0 & 0x3f) != 0x0d)
+>  		return 0;
+>  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
+> +	dev_dbg(pp->dev, "debug_r0=%08x debug_r1=%08x\n", debug_r0, rc);
+>  	imx6_pcie_reset_phy(pp);
+> -- 
+> 1.8.1.2
+> 
+> 
+> 
+
+-- 
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
