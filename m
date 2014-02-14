@@ -1,98 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:46244 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750987AbaBMTwY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 14:52:24 -0500
-Date: Thu, 13 Feb 2014 19:51:48 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140213195148.GP13576@mudshark.cambridge.arm.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <1392236171-10512-4-git-send-email-will.deacon@arm.com>
- <D2AE4AE6-E8FA-4DD8-B92B-E37205A2548C@codeaurora.org>
- <20140213110721.GC13576@mudshark.cambridge.arm.com>
- <20140213180616.GD17248@obsidianresearch.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:40002 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837AbaBNWiJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 17:38:09 -0500
+Received: by mail-ie0-f181.google.com with SMTP id rl12so77656iec.26
+        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 14:38:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140213180616.GD17248@obsidianresearch.com>
+In-Reply-To: <20140214222758.GA7395@xanatos>
+References: <CAErSpo6v-QLkthigN3HdLizCa_7QxOS+dZ61Fse2jz5KJRdh0Q@mail.gmail.com>
+ <Pine.LNX.4.44L0.1401161435350.1109-100000@iolanthe.rowland.org>
+ <20140117182231.GA18421@google.com> <F01C6967BCFFB14E8DF7F5D2FD1053EB1A18C3@PGSMSX103.gar.corp.intel.com>
+ <CAErSpo4fGBhb+pj6pTpKFTTj9rzLYzB2w-EX2ghWRYR3Cjyd9g@mail.gmail.com>
+ <CAErSpo4rTHFOgUDjmrGxxFAuE-+i9y7hW+T7+xTzB7x4_72_pg@mail.gmail.com>
+ <F01C6967BCFFB14E8DF7F5D2FD1053EB1ECC22@PGSMSX103.gar.corp.intel.com>
+ <CAErSpo4_ecD6Gom=WnH2MMSLsO=SEBnWHKhx3BiXz3Fgs8d2uQ@mail.gmail.com> <20140214222758.GA7395@xanatos>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 14 Feb 2014 15:37:48 -0700
+Message-ID: <CAErSpo4nkr=W8ktbSewRL5MOYQ=k_gcN5QPNgMoE_o0inW2U-A@mail.gmail.com>
+Subject: Re: EHCI host broken -- interrupts disabled
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: "Chen, Jamie" <jamie.chen@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	USB list <linux-usb@vger.kernel.org>,
+	"Tsai, Gaggery" <gaggery.tsai@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 06:06:16PM +0000, Jason Gunthorpe wrote:
-> On Thu, Feb 13, 2014 at 11:07:21AM +0000, Will Deacon wrote:
-> 
-> > Not in this case! kvmtool generates the following:
-> 
-> Well, the example is nice so someone can review it..
->  
-> > 	pci {
-> > 		#address-cells = <0x3>;
-> > 		#size-cells = <0x2>;
-> > 		#interrupt-cells = <0x1>;
-> > 		compatible = "arm,pci-cam-generic";
-> > 		reg = <0x0 0x40000000>;
-> > 		ranges = <0x1000000 0x0 0x0 0x0 0x0 0x0 0x10000 0x2000000 0x0 0x41000000 0x0 0x41000000 0x0 0x3f000000>;
-> > 		interrupt-map = <0x0 0x0 0x0 0x1 0x1 0x0 0x4 0x1 0x800 0x0 0x0 0x1 0x1 0x0 0x5 0x1 0x1000 0x0 0x0 0x1 0x1 0x0 0x6 0x1 0x1800 0x0 0x0 0x1 0x1 0x0 0x7 0x1>;
-> > 		interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
-> > 	};
-> 
-> 
-> Looks like there are a few misses in the above. How about this:
-> 
-> pci {
->     compatible = "arm,pci-cam-generic"
->     device_type = "pci";
->     ** ^^^^^^^^^^^^^^^^^
->     ** MANDATORY for the host bridge node
+On Fri, Feb 14, 2014 at 3:27 PM, Sarah Sharp
+<sarah.a.sharp@linux.intel.com> wrote:
+> On Fri, Feb 14, 2014 at 01:47:48PM -0700, Bjorn Helgaas wrote:
+>> On Fri, Feb 14, 2014 at 9:36 AM, Chen, Jamie <jamie.chen@intel.com> wrote:
+>> > Sorry for late response.
+>> >
+>> > The dmesg attach in the mail.
+>>
+>> Thanks, I put this info in
+>> https://bugzilla.kernel.org/show_bug.cgi?id=70601 and applied the
+>> patch to pci/misc.
+>>
+>> This seems like a potentially important fix, so I think I'll
+>> cherry-pick it into for-linus for v3.14.
+>
+> Thanks, Bjorn!
+>
+> Do you think this patch is a candidate for stable as well?  Anyone with
+> an EHCI-only Baytrail system won't have working USB without this patch,
+> and the patch itself seems relatively small.
 
-Ok, I'll add that.
+Yep, I marked it for stable.  I'll ask Linus to pull it early next
+week, after it has appeared in at least one -next kernel.
 
->     #address-cells = <3>;
->     #size-cells = <2>;
-> 
->     // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
->     ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
->                                         ^^^^^^^^^^^^^^
->             ** ?? Is this why you had problems with the offset? Should
-> 	    ** be the cpu physical address of the start of the IO window.
->              <0x2000000 0x0 0x41000000  0x0 0x41000000  0x0 0x3f000000>;
-> 
->    
->     #interrupt-cells = <0x1>;
->     // PCI_DEVICE(3) INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(3)
->     interrupt-map = <  0x0 0x0 0x0 0x1  0x1  0x0 0x4 0x1
->                      0x800 0x0 0x0 0x1  0x1  0x0 0x5 0x1 
->                     0x1000 0x0 0x0 0x1  0x1  0x0 0x6 0x1
->                     0x1800 0x0 0x0 0x1  0x1  0x0 0x7 0x1>;
->                  **                    ^^^^^^
->                  ** This should be a phandle to the interrupt controller
-
-That is a phandle, libfdt/kvmtool just ends up dealing with the number
-directly. I'll fix in the example.
-
->     // PCI_DEVICE(3) INT#1()
->     interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
-> }
-> 
-> I keep thinking of making a pcie-dt.h file with helper macros for
-> all this. :|
-
-If it's not being generated automatically, that could be useful.
-
-> FWWI, I like to put a double space between the logically distinct
-> things in the lists.
-
-
-Makes sense, I may well do the same.
-
-Thanks,
-
-Will
+Bjorn
