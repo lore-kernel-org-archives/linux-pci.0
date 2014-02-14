@@ -1,55 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1392801107.15829.36.camel@artifact>
-Subject: Re: pci-3.14 resource alloc
-From: Steven Newbury <steve@snewbury.org.uk>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Wed, 19 Feb 2014 09:11:47 +0000
-In-Reply-To: <7133100.UJBc8oSLiz@vostro.rjw.lan>
-References: <1390773698.3450.12.camel@artifact>
-	 <1392718107.15829.12.camel@artifact>
-	 <CAE9FiQXUhvG2Jub3sbBxyCERVbt-L22+O+mcZ_HWEVQ_QaRawA@mail.gmail.com>
-	 <7133100.UJBc8oSLiz@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:22879 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752712AbaBNWWh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Feb 2014 17:22:37 -0500
+Message-ID: <1392416555.15608.430.camel@ul30vt.home>
+Subject: Re: [PATCH v2 0/3] Quirk Intel PCH root ports for ACS-like features
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Don Dugger <donald.d.dugger@intel.com>
+Date: Fri, 14 Feb 2014 15:22:35 -0700
+In-Reply-To: <CAErSpo5D55RcaSASGrU8hEcg+BYvGKOQHFjor8k1gSzfZKWy2g@mail.gmail.com>
+References: <20140203212216.8607.68273.stgit@bling.home>
+	 <CAErSpo5D55RcaSASGrU8hEcg+BYvGKOQHFjor8k1gSzfZKWy2g@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-02-18 at 23:29 +0100, Rafael J. Wysocki wrote:
-> On Tuesday, February 18, 2014 10:52:54 AM Yinghai Lu wrote:
-> > On Tue, Feb 18, 2014 at 2:08 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
-> > >> >
-> > >> > There's no pci bridge/bus hotplug though. Docking doesn't reveal the
-> > >> > pci-e->pci bridge or the (radeon) devices on the other side.
-> > >>
-> > >> oh, no. could be other regression in linus tree or pci/next.
-> > >>
-> > >
-> > > Previously I needed the busn work to get it working, this was included
-> > > in the resource-alloc branch.  It never worked on mainline, the bridge
-> > > used to show up but never get scanned.  Now it's not showing up at all
-> > > on hotplug.  It could be a dock driver regression.
-> > 
-> > I had the busn_res_alloc patches in the branch.
-> > 
-> > There is some changes about acpi dock driver from Rafael in recent
-> > kernels. Maybe Rafael could suggest which commit could cause problem,
-> > then you could try revert them on top of branch.
+On Fri, 2014-02-14 at 14:43 -0700, Bjorn Helgaas wrote:
+> [+cc Don]
 > 
-> I kind of suspect what might have caused them, but that particular thing
-> would not be easy to revert.
+> On Mon, Feb 03, 2014 at 02:27:27PM -0700, Alex Williamson wrote:
+> > v2:
+> >  - Remove bus #0 bug in filtering matching
+> >  - Add 2/3 introducing PCI_DEV_FLAGS_ACS_ENABLED_QUIRK, this gives
+> >    is better tracking and addresses the theoretical hotplug issue
+> >  - Update 3/3 for PCI_DEV_FLAGS_ACS_ENABLED_QUIRK
+> >  - Add dev_info to print regardless of whether we changes bits
+> >  - Add Intel cc
+> >
+> > As described in 3/3 many Intel root ports lack PCIe ACS capabilities
+> > which results in excessively large IOMMU groups.  Many of these root
+> > ports do provide isolation capabilities, we just need to use device
+> > specific mechanisms to enable and verify.  Long term, I hope we can
+> > round out this list (particularly to include X79 root ports) and
+> > more importantly, encourage proper PCIe ACS support in future
+> > products.  I'm really hoping we can get this in during the 3.14 cycle.
+> > Thanks,
+> >
+> > Alex
+> > ---
+> >
+> > Alex Williamson (3):
+> >       pci: Add device specific PCI ACS enable
+> >       pci: Add pci_dev_flag for ACS enable quirks
+> >       pci/quirks: Enable quirks for PCIe ACS on Intel PCH root ports
 > 
-> Steven, what was the last kernel in which the bridge showed up?
+> I applied these (with Don's ack for 3/3) to pci/virtualization.
 > 
-> Did you test 3.14-rc3?
+> I tried to figure out how to handle post-merge window patches.  Per
+> Documentation/development-process/2.Process, "[after -rc1], only patches
+> which fix problems should be submitted to the mainline," so one might
+> conclude that a fix for any sort of problem is allowed.  However,
+> Documentation/networking/netdev-FAQ.txt says "No new features get mainlined
+> after this [-rc1] -- only fixes to the rc1 content are expected," which is
+> how I've been operating.
 > 
-> Rafael
+> In any case, these patches look more like new functionality (enabling a
+> non-standard ACS feature) than a bug fix to me, so my preference is to
+> merge them during the v3.15 merge window.
 > 
+> I understand the desire for v3.14, namely, "lots of Intel devices don't
+> support ACS, and that makes it hard for users to expose devices to
+> userspace with fine granularity, and waiting for v3.15 will mean another
+> two months."  But this problem is really of Intel's own making: if they'd
+> used standard ACS, or if they'd documented their non-standard mechanism,
+> this wouldn't be an issue.
 
-I'll try a few different kernels today and see when it last worked.  I
-hadn't updated the machine since some 3.12-rc + my local patches so I've
-no idea at the moment when it stopped working...
+I appreciate you taking the time to consider it for 3.14.  I'll look
+forward to it appearing in linux-next for 3.15.  Thanks for review and
+applying,
 
+Alex
 
