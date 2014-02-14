@@ -1,97 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:55343 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbaBCHHd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 02:07:33 -0500
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 7B9753EE181
-	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:32 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 6D1F745DEB5
-	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:32 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.nic.fujitsu.com [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 5588445DD77
-	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:32 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 44BDC1DB803B
-	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:32 +0900 (JST)
-Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id ED5881DB8038
-	for <linux-pci@vger.kernel.org>; Mon,  3 Feb 2014 16:07:31 +0900 (JST)
-Date: Mon, 3 Feb 2014 16:07:24 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com, yinghai@kernel.org
-Subject: [PATCH] PCI: pciehp: Fix the problem that the present bit is not
- cleared though slot is empty
-Message-Id: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:44316 "EHLO
+	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108AbaBNKw2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 05:52:28 -0500
+Message-ID: <52FDF564.1070904@codethink.co.uk>
+Date: Fri, 14 Feb 2014 10:52:20 +0000
+From: Ben Dooks <ben.dooks@codethink.co.uk>
+MIME-Version: 1.0
+To: Magnus Damm <magnus.damm@gmail.com>
+CC: linux-pci@vger.kernel.org,
+	"Simon Horman [Horms]" <horms@verge.net.au>,
+	SH-Linux <linux-sh@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 00/08] PCI: rcar: Recent driver patches from Ben Dooks
+ and me
+References: <20140213030302.10398.37322.sendpatchset@w520> <52FCBBEA.70300@codethink.co.uk> <CANqRtoRJvvFHXGTMVmyhu3_ERH0wB8McMeE3P-jbp5_HT_2COQ@mail.gmail.com>
+In-Reply-To: <CANqRtoRJvvFHXGTMVmyhu3_ERH0wB8McMeE3P-jbp5_HT_2COQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 14/02/14 05:40, Magnus Damm wrote:
+> On Thu, Feb 13, 2014 at 9:34 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
+>> On 13/02/14 03:03, Magnus Damm wrote:
+>>>
+>>> PCI: rcar: Recent driver patches from Ben Dooks and me
+>>>
+>>> [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
+>>> [PATCH v2 02/08] PCI: rcar: add error interrupt handling
+>>> [PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
+>>> [PATCH v2 04/08] PCI: rcar: Register each instance independently
+>>> [PATCH v2 05/08] PCI: rcar: Break out window size handling
+>>> [PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
+>>> [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
+>>> [PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
+>>>
+>>> These patches update the pci-rcar-gen2.c driver with patches from
+>>> Ben Dooks and me. The first 3 are written by Ben (thanks!) and are
+>>> included here to show what I would like to have merged and what I
+>>> rebased my patches on. The following 4 are updated versions of
+>>>
+>>> [PATCH 00/04] PCI: rcar: Driver model and physical address space update
+>>>
+>>> The final patch is a new one that fixes up the Kconfig dependencies.
+>>
+>>
+>> Thanks. Is there any chance of getting this driver device-tree
+>> enabled too?
+>
+> I think so! The DT bindings proposed by you looked good for this device.
+>
+> The only question is how to handle the PHY hardware in a sane way. The
+> PHY is the central problematic point so to say, since it ties these
+> PCI USB2.0 devices together with USBHS and for some SoCs USB 3.0 as
+> well.
+>
+> I'm thinking of something along these lines:
+>
+> 1) To use DT to describe the full hardware topology
+> 2) Enable all or some device drivers in the kernel configuration
+> 3) Have a sane default but use the bind interface to reassign
+> driver-to-port configuration.
+>
+> What is your intended use case?
 
-I found the problem that the present bit does not be cleared
-though the slot is empty.
+I think we can describe this all from the PHY node or links to
+the PHY node. I was going to look at sorting out the bindings
+next week, due to this week being mostly consumed by chasing
+bugs.
 
- Step to reproduce:
-
-  # cd /sys/bus/pci/slots/66
-  # cat adapter
-  0
-  --- (insert PCIe card on slot#66) ---
-  # cat adapter
-  1
-  # echo 1 > power
-  # echo 0 > power
-  --- (eject PCIe card on slot#66) ---
-  # cat adapter
-  1
-    ==> should be 0.
-
-According to git-bisect this is caused by:
-    2debd9289997fc5d1c0043b41201a8b40d5e11d0
-       PCI: pciehp: Disable/enable link during slot power off/on
-    is the first bad commit
-
-By reverting the above patch, this bug can be solved.
-And I also found this can be fixed by changing the timing of link-disable
-during power off the slot.
-So, this patch changes the timing of link-disable during power off.
-
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 14acfcc..163f0b4 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -508,7 +508,12 @@ void pciehp_power_off_slot(struct slot * slot)
- {
- 	struct controller *ctrl = slot->ctrl;
- 
--	/* Disable the link at first */
-+	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
-+	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-+		 PCI_EXP_SLTCTL_PWR_OFF);
-+
-+	/* Disable the link */
- 	pciehp_link_disable(ctrl);
- 	/* wait the link is down */
- 	if (ctrl->link_active_reporting)
-@@ -516,10 +521,6 @@ void pciehp_power_off_slot(struct slot * slot)
- 	else
- 		msleep(1000);
- 
--	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
--	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
--		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
--		 PCI_EXP_SLTCTL_PWR_OFF);
- }
- 
- static irqreturn_t pcie_isr(int irq, void *dev_id)
 -- 
-1.8.3.1
-
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
