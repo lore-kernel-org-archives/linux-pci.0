@@ -1,214 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:54636 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753796AbaBEC3N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:29:13 -0500
-Message-ID: <52F1A1F6.2000800@gmail.com>
-Date: Tue, 04 Feb 2014 18:29:10 -0800
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:37161 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752712AbaBNV0Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 16:26:25 -0500
+Message-ID: <52FE89FF.4020700@gmail.com>
+Date: Fri, 14 Feb 2014 13:26:23 -0800
 From: Rajat Jain <rajatxjain@gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+CC: rajatjain@juniper.net, groeck@juniper.net,
 	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v4 2/8] pciehp: Use link change notifications for hot-plug
- and removal
+	Kees Cook <keescook@chromium.org>
+Subject: [PATCH] pciehp: Display the link state change reporting capability
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A lot of systems do not have the fancy buttons and LEDs, and instead
-want to rely only on the Link state change events to drive the hotplug
-and removal state machinery.
-(http://www.spinics.net/lists/hotplug/msg05802.html)
+With recent addition of Link state change based hot-plug, it makes
+sense to display this capability in dbg_ctrl() addition to others.
 
-This patch adds support for that functionality. Here are the details
-about the patch itself:
-
-* Define and use interrupt events for linkup / linkdown.
-
-* Make the pcie_isr() also look at link events, and direct control to
-  corresponding (new) link state change handler function.
-
-* Introduce the functions to handle link-up and link-down events and
-  queue the add / removal work in the slot->wq to be processed by
-  pciehp_power_thread()
-
-As a side note, this patch also fixes the bug
-https://bugzilla.kernel.org/show_bug.cgi?id=65521
+(Also move the call to dbg_ctrl() further down untill after the value
+is populated in ctrl->link_active_reporting)
 
 Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
 Signed-off-by: Rajat Jain <rajatjain@juniper.net>
 Signed-off-by: Guenter Roeck <groeck@juniper.net>
 ---
- drivers/pci/hotplug/pciehp.h      |    3 ++
- drivers/pci/hotplug/pciehp_ctrl.c |   88 +++++++++++++++++++++++++++++++++++++
- drivers/pci/hotplug/pciehp_hpc.c  |    6 ++-
- 3 files changed, 96 insertions(+), 1 deletion(-)
+ drivers/pci/hotplug/pciehp_hpc.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index f952459..d8d0336 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -109,6 +109,8 @@ struct controller {
- #define INT_BUTTON_PRESS		7
- #define INT_BUTTON_RELEASE		8
- #define INT_BUTTON_CANCEL		9
-+#define INT_LINK_UP			10
-+#define INT_LINK_DOWN			11
- 
- #define STATIC_STATE			0
- #define BLINKINGON_STATE		1
-@@ -132,6 +134,7 @@ u8 pciehp_handle_attention_button(struct slot *p_slot);
- u8 pciehp_handle_switch_change(struct slot *p_slot);
- u8 pciehp_handle_presence_change(struct slot *p_slot);
- u8 pciehp_handle_power_fault(struct slot *p_slot);
-+void pciehp_handle_linkstate_change(struct slot *p_slot);
- int pciehp_configure_device(struct slot *p_slot);
- int pciehp_unconfigure_device(struct slot *p_slot);
- void pciehp_queue_pushbutton_work(struct work_struct *work);
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 5062848..5608284 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -150,6 +150,27 @@ u8 pciehp_handle_power_fault(struct slot *p_slot)
- 	return 1;
- }
- 
-+void pciehp_handle_linkstate_change(struct slot *p_slot)
-+{
-+	u32 event_type;
-+	struct controller *ctrl = p_slot->ctrl;
-+
-+	/* Link Status Change */
-+	ctrl_dbg(ctrl, "Data Link Layer State change\n");
-+
-+	if (pciehp_check_link_active(ctrl)) {
-+		ctrl_info(ctrl, "slot(%s): Link Up event\n",
-+			  slot_name(p_slot));
-+		event_type = INT_LINK_UP;
-+	} else {
-+		ctrl_info(ctrl, "slot(%s): Link Down event\n",
-+			  slot_name(p_slot));
-+		event_type = INT_LINK_DOWN;
-+	}
-+
-+	queue_interrupt_event(p_slot, event_type);
-+}
-+
- /* The following routines constitute the bulk of the
-    hotplug controller logic
-  */
-@@ -415,6 +436,69 @@ static void handle_surprise_event(struct slot *p_slot)
- 	queue_work(p_slot->wq, &info->work);
- }
- 
-+/*
-+ * Note: This function must be called with slot->lock held
-+ */
-+static void handle_link_event(struct slot *p_slot, u32 event)
-+{
-+	struct controller *ctrl = p_slot->ctrl;
-+	struct power_work_info *info;
-+
-+	info = kmalloc(sizeof(*info), GFP_KERNEL);
-+	if (!info) {
-+		ctrl_err(p_slot->ctrl, "%s: Cannot allocate memory\n",
-+			 __func__);
-+		return;
-+	}
-+	info->p_slot = p_slot;
-+	INIT_WORK(&info->work, pciehp_power_thread);
-+
-+	switch (p_slot->state) {
-+	case BLINKINGON_STATE:
-+	case BLINKINGOFF_STATE:
-+		cancel_delayed_work(&p_slot->work);
-+		/* Fall through */
-+	case STATIC_STATE:
-+		p_slot->state = event == INT_LINK_UP ?
-+		    POWERON_STATE : POWEROFF_STATE;
-+		queue_work(p_slot->wq, &info->work);
-+		break;
-+	case POWERON_STATE:
-+		if (event == INT_LINK_UP) {
-+			ctrl_info(ctrl,
-+				  "Link Up event ignored on slot(%s): already powering on\n",
-+				  slot_name(p_slot));
-+			kfree(info);
-+		} else {
-+			ctrl_info(ctrl,
-+				  "Link Down event queued on slot(%s): currently getting powered on\n",
-+				  slot_name(p_slot));
-+			p_slot->state = POWEROFF_STATE;
-+			queue_work(p_slot->wq, &info->work);
-+		}
-+		break;
-+	case POWEROFF_STATE:
-+		if (event == INT_LINK_UP) {
-+			ctrl_info(ctrl,
-+				  "Link Up event queued on slot(%s): currently getting powered off\n",
-+				  slot_name(p_slot));
-+			p_slot->state = POWERON_STATE;
-+			queue_work(p_slot->wq, &info->work);
-+		} else {
-+			ctrl_info(ctrl,
-+				  "Link Down event ignored on slot(%s): already powering off\n",
-+				  slot_name(p_slot));
-+			kfree(info);
-+		}
-+		break;
-+	default:
-+		ctrl_err(ctrl, "Not a valid state on slot(%s)\n",
-+			 slot_name(p_slot));
-+		kfree(info);
-+		break;
-+	}
-+}
-+
- static void interrupt_event_handler(struct work_struct *work)
- {
- 	struct event_info *info = container_of(work, struct event_info, work);
-@@ -439,6 +523,10 @@ static void interrupt_event_handler(struct work_struct *work)
- 		ctrl_dbg(ctrl, "Surprise Removal\n");
- 		handle_surprise_event(p_slot);
- 		break;
-+	case INT_LINK_UP:
-+	case INT_LINK_DOWN:
-+		handle_link_event(p_slot, info->event_type);
-+		break;
- 	default:
- 		break;
- 	}
 diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index aed6ab4..b413dce 100644
+index da4b020..cbe8e924 100644
 --- a/drivers/pci/hotplug/pciehp_hpc.c
 +++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -540,7 +540,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+@@ -747,6 +747,8 @@ static inline void dbg_ctrl(struct controller *ctrl)
+ 		  EMI(ctrl)        ? "yes" : "no");
+ 	ctrl_info(ctrl, "  Command Completed    : %3s\n",
+ 		  NO_CMD_CMPL(ctrl) ? "no" : "yes");
++	ctrl_info(ctrl, "  Link Change Reporting: %3s\n",
++		  ctrl->link_active_reporting ? "yes" : "no");
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &reg16);
+ 	ctrl_info(ctrl, "Slot Status            : 0x%04x\n", reg16);
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &reg16);
+@@ -771,7 +773,6 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	ctrl->slot_cap = slot_cap;
+ 	mutex_init(&ctrl->ctrl_lock);
+ 	init_waitqueue_head(&ctrl->queue);
+-	dbg_ctrl(ctrl);
+ 	/*
+ 	 * Controller doesn't notify of command completion if the "No
+ 	 * Command Completed Support" bit is set in Slot Capability
+@@ -784,10 +785,9 @@ struct controller *pcie_init(struct pcie_device *dev)
  
- 		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
- 			     PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
--			     PCI_EXP_SLTSTA_CC);
-+			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
- 		detected &= ~intr_loc;
- 		intr_loc |= detected;
- 		if (!intr_loc)
-@@ -579,6 +579,10 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
- 		ctrl->power_fault_detected = 1;
- 		pciehp_handle_power_fault(slot);
- 	}
-+
-+	if (intr_loc & PCI_EXP_SLTSTA_DLLSC)
-+		pciehp_handle_linkstate_change(slot);
-+
- 	return IRQ_HANDLED;
- }
+         /* Check if Data Link Layer Link Active Reporting is implemented */
+         pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
+-        if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
+-                ctrl_dbg(ctrl, "Link Active Reporting supported\n");
++	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
+                 ctrl->link_active_reporting = 1;
+-        }
++	dbg_ctrl(ctrl);
  
+ 	/* Clear all remaining event bits in Slot Status register */
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
 -- 
 1.7.9.5
 
