@@ -1,191 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57363 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755370AbaBRKLV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:11:21 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Shreyas Bhatewara <sbhatewara@vmware.com>,
-	pv-drivers@vmware.com, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 33/35] vmxnet3: Fix MSI-X/MSI enablement code
-Date: Tue, 18 Feb 2014 11:12:02 +0100
-Message-Id: <f3587622a05915038c5264a181e3141c141fe42a.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+Received: from [216.32.180.31] ([216.32.180.31]:13115 "EHLO
+	va3outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751145AbaBNH0v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 02:26:51 -0500
+From: Rajat Jain <rajatjain@juniper.net>
+To: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
+	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	Takashi Iwai <tiwai@suse.de>
+Subject: RE: [PATCH] PCI: pciehp: Fix the problem that the present bit is
+ not cleared though slot is empty
+Date: Fri, 14 Feb 2014 07:26:29 +0000
+Message-ID: <a38b7de4bfb74ba880afbf6e20e8cb18@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
+	<20140212004927.GH21057@google.com>
+	<E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
+	<CAErSpo5ycKF4Xm26z80wNrms7G5onn1ASzcU2AHy7XN1YNAYuA@mail.gmail.com>
+ <CAA93t1psHnnVSbaaaJ1LsqeNzRYmNiiO9RiTggVovDVJpk4cqw@mail.gmail.com>
+ <E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01>
+ <11994c276661475080d900fa8b5942a5@DM2PR05MB671.namprd05.prod.outlook.com>
+ <E86EADE93E2D054CBCD4E708C38D364A53C3D4C5@G01JPEXMBYT01>
+In-Reply-To: <E86EADE93E2D054CBCD4E708C38D364A53C3D4C5@G01JPEXMBYT01>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This update cleans up the MSI-X/MSI enablement code, fixes
-vmxnet3_acquire_msix_vectors() invalid return values and
-enables a dead code in case VMXNET3_LINUX_MIN_MSIX_VECT
-MSI-X vectors were allocated.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Shreyas Bhatewara <sbhatewara@vmware.com>
-Cc: pv-drivers@vmware.com
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/vmxnet3/vmxnet3_drv.c |  101 +++++++++++++++++--------------------
- 1 files changed, 46 insertions(+), 55 deletions(-)
-
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index 3be786f..3a17797 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -2729,47 +2729,44 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
- /*
-  * Enable MSIx vectors.
-  * Returns :
-- *	0 on successful enabling of required vectors,
-  *	VMXNET3_LINUX_MIN_MSIX_VECT when only minimum number of vectors required
-- *	 could be enabled.
-- *	number of vectors which can be enabled otherwise (this number is smaller
-+ *	 were enabled.
-+ *	number of vectors which were enabled otherwise (this number is greater
-  *	 than VMXNET3_LINUX_MIN_MSIX_VECT)
-  */
- 
- static int
--vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
--			     int vectors)
-+vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter, int nvec)
- {
--	int err = 0, vector_threshold;
--	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
--
--	while (vectors >= vector_threshold) {
--		err = pci_enable_msix(adapter->pdev, adapter->intr.msix_entries,
--				      vectors);
-+	do {
-+		int err = pci_enable_msix(adapter->pdev,
-+					  adapter->intr.msix_entries, nvec);
- 		if (!err) {
--			adapter->intr.num_intrs = vectors;
--			return 0;
-+			return nvec;
- 		} else if (err < 0) {
- 			dev_err(&adapter->netdev->dev,
--				   "Failed to enable MSI-X, error: %d\n", err);
--			vectors = 0;
--		} else if (err < vector_threshold) {
--			break;
-+				"Failed to enable MSI-X, error: %d\n", err);
-+			return err;
-+		} else if (err < VMXNET3_LINUX_MIN_MSIX_VECT) {
-+			dev_info(&adapter->pdev->dev,
-+				 "Number of MSI-X which can be allocated "
-+				 "is lower than min threshold required.\n");
-+			return -ENOSPC;
- 		} else {
- 			/* If fails to enable required number of MSI-x vectors
- 			 * try enabling minimum number of vectors required.
- 			 */
- 			dev_err(&adapter->netdev->dev,
--				"Failed to enable %d MSI-X, trying %d instead\n",
--				    vectors, vector_threshold);
--			vectors = vector_threshold;
-+				"Failed to enable %d MSI-X, trying %d\n",
-+				nvec, VMXNET3_LINUX_MIN_MSIX_VECT);
-+			nvec = VMXNET3_LINUX_MIN_MSIX_VECT;
- 		}
--	}
-+	} while (nvec >= VMXNET3_LINUX_MIN_MSIX_VECT);
- 
--	dev_info(&adapter->pdev->dev,
--		 "Number of MSI-X interrupts which can be allocated "
--		 "is lower than min threshold required.\n");
--	return err;
-+	/*
-+	 * Should never get here
-+	 */
-+	return -ENOSPC;
- }
- 
- 
-@@ -2796,56 +2793,50 @@ vmxnet3_alloc_intr_resources(struct vmxnet3_adapter *adapter)
- 
- #ifdef CONFIG_PCI_MSI
- 	if (adapter->intr.type == VMXNET3_IT_MSIX) {
--		int vector, err = 0;
--
--		adapter->intr.num_intrs = (adapter->share_intr ==
--					   VMXNET3_INTR_TXSHARE) ? 1 :
--					   adapter->num_tx_queues;
--		adapter->intr.num_intrs += (adapter->share_intr ==
--					   VMXNET3_INTR_BUDDYSHARE) ? 0 :
--					   adapter->num_rx_queues;
--		adapter->intr.num_intrs += 1;		/* for link event */
--
--		adapter->intr.num_intrs = (adapter->intr.num_intrs >
--					   VMXNET3_LINUX_MIN_MSIX_VECT
--					   ? adapter->intr.num_intrs :
--					   VMXNET3_LINUX_MIN_MSIX_VECT);
--
--		for (vector = 0; vector < adapter->intr.num_intrs; vector++)
--			adapter->intr.msix_entries[vector].entry = vector;
--
--		err = vmxnet3_acquire_msix_vectors(adapter,
--						   adapter->intr.num_intrs);
-+		int i, nvec;
-+
-+		nvec  = adapter->share_intr == VMXNET3_INTR_TXSHARE ?
-+			1 : adapter->num_tx_queues;
-+		nvec += adapter->share_intr == VMXNET3_INTR_BUDDYSHARE ?
-+			0 : adapter->num_rx_queues;
-+		nvec += 1;	/* for link event */
-+		nvec = nvec > VMXNET3_LINUX_MIN_MSIX_VECT ?
-+		       nvec : VMXNET3_LINUX_MIN_MSIX_VECT;
-+
-+		for (i = 0; i < nvec; i++)
-+			adapter->intr.msix_entries[i].entry = i;
-+
-+		nvec = vmxnet3_acquire_msix_vectors(adapter, nvec);
-+		if (nvec < 0)
-+			goto msix_err;
-+
- 		/* If we cannot allocate one MSIx vector per queue
- 		 * then limit the number of rx queues to 1
- 		 */
--		if (err == VMXNET3_LINUX_MIN_MSIX_VECT) {
-+		if (nvec == VMXNET3_LINUX_MIN_MSIX_VECT) {
- 			if (adapter->share_intr != VMXNET3_INTR_BUDDYSHARE
- 			    || adapter->num_rx_queues != 1) {
- 				adapter->share_intr = VMXNET3_INTR_TXSHARE;
- 				netdev_err(adapter->netdev,
- 					   "Number of rx queues : 1\n");
- 				adapter->num_rx_queues = 1;
--				adapter->intr.num_intrs =
--						VMXNET3_LINUX_MIN_MSIX_VECT;
- 			}
--			return;
- 		}
--		if (!err)
--			return;
- 
-+		adapter->intr.num_intrs = nvec;
-+		return;
-+
-+msix_err:
- 		/* If we cannot allocate MSIx vectors use only one rx queue */
- 		dev_info(&adapter->pdev->dev,
- 			 "Failed to enable MSI-X, error %d. "
--			 "Limiting #rx queues to 1, try MSI.\n", err);
-+			 "Limiting #rx queues to 1, try MSI.\n", nvec);
- 
- 		adapter->intr.type = VMXNET3_IT_MSI;
- 	}
- 
- 	if (adapter->intr.type == VMXNET3_IT_MSI) {
--		int err;
--		err = pci_enable_msi(adapter->pdev);
--		if (!err) {
-+		if (!pci_enable_msi(adapter->pdev)) {
- 			adapter->num_rx_queues = 1;
- 			adapter->intr.num_intrs = 1;
- 			return;
--- 
-1.7.7.6
+VGhhbmtzIGEgYnVuY2ggZm9yIFRlc3RpbmchDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCj4gRnJvbTogSXp1bWksIFRha3UgW21haWx0bzppenVtaS50YWt1QGpwLmZ1aml0c3UuY29t
+XQ0KPiBTZW50OiBUaHVyc2RheSwgRmVicnVhcnkgMTMsIDIwMTQgMTE6MjEgUE0NCj4gVG86IFJh
+amF0IEphaW47IHJhamF0eGphaW5AZ21haWwuY29tOyBCam9ybiBIZWxnYWFzDQo+IENjOiBsaW51
+eC1wY2lAdmdlci5rZXJuZWwub3JnOyB5aW5naGFpQGtlcm5lbC5vcmc7IEd1ZW50ZXIgUm9lY2s7
+DQo+IFRha2FzaGkgSXdhaQ0KPiBTdWJqZWN0OiBSRTogW1BBVENIXSBQQ0k6IHBjaWVocDogRml4
+IHRoZSBwcm9ibGVtIHRoYXQgdGhlIHByZXNlbnQgYml0DQo+IGlzIG5vdCBjbGVhcmVkIHRob3Vn
+aCBzbG90IGlzIGVtcHR5DQo+IA0KPiBIaSBSYWphdCwNCj4gDQo+ID4gWytUYWthc2hpXQ0KPiA+
+DQo+ID4gSGVsbG8sDQo+ID4gPg0KPiA+ID4gPiA+IEh1aCwgdGhhdCBkb2Vzbid0IHNvdW5kIGdv
+b2QuICBEb2VzIHlvdXIgc2xvdCBoYXZlIGFuIGF0dGVudGlvbg0KPiA+ID4gPiA+IGJ1dHRvbj8g
+IENhbiB5b3UgY29sbGVjdCB0aGUgImxzcGNpIC12dnYiIG91dHB1dCBmb3IgdGhlDQo+ID4gPiA+
+ID4gRG93bnN0cmVhbSBQb3J0IGxlYWRpbmcgdG8gdGhpcyBzbG90Pw0KPiA+ID4NCj4gPiA+ICAg
+IFRoZSBzbG90cyBoYXZlIG5vIEF0dGVudGlvbiBidXR0b24gYW5kIGFyZSBub3QgZm9yIEV4cHJl
+c3NDYXJkLg0KPiA+ID4gICAgbHNwY2kgLXZ2diBvdXRwdXQgaXM6DQo+ID4gPg0KPiA+ID4gICAg
+ICAgICBDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1lbVdJTlYtIFZH
+QVNub29wLQ0KPiA+ID4gUGFyRXJyKyBTdGVwcGluZy0gU0VSUisgRmFzdEIyQi0gRGlzSU5UeCsN
+Cj4gPiA+ICAgICAgICAgU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0g
+REVWU0VMPWZhc3QNCj4gPiA+ID5UQWJvcnQtDQo+ID4gPiA8VEFib3J0LSA8TUFib3J0LSA+U0VS
+Ui0gPFBFUlItIElOVHgtDQo+ID4gPiAgICAgICAgIExhdGVuY3k6IDANCj4gPiA+ICAgICAgICAg
+QnVzOiBwcmltYXJ5PTJjLCBzZWNvbmRhcnk9MmQsIHN1Ym9yZGluYXRlPTJmLCBzZWMtbGF0ZW5j
+eT0wDQo+ID4gPiAgICAgICAgIEkvTyBiZWhpbmQgYnJpZGdlOiAwMDAwZjAwMC0wMDAwMGZmZg0K
+PiA+ID4gICAgICAgICBNZW1vcnkgYmVoaW5kIGJyaWRnZTogYjE4MDAwMDAtYjFmZmZmZmYNCj4g
+PiA+ICAgICAgICAgUHJlZmV0Y2hhYmxlIG1lbW9yeSBiZWhpbmQgYnJpZGdlOiAwMDAwMDAwMGFl
+ODAwMDAwLQ0KPiA+ID4gMDAwMDAwMDBhZWZmZmZmZg0KPiA+ID4gICAgICAgICBTZWNvbmRhcnkg
+c3RhdHVzOiA2Nk1Iei0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdA0KPiA+ID4gPlRBYm9y
+dC0NCj4gPiA+IDxUQWJvcnQtIDxNQWJvcnQtIDxTRVJSLSA8UEVSUi0NCj4gPiA+ICAgICAgICAg
+QnJpZGdlQ3RsOiBQYXJpdHktIFNFUlIrIE5vSVNBLSBWR0EtIE1BYm9ydC0gPlJlc2V0LQ0KPiBG
+YXN0QjJCLQ0KPiA+ID4gICAgICAgICAgICAgICAgIFByaURpc2NUbXItIFNlY0Rpc2NUbXItIERp
+c2NUbXJTdGF0LSBEaXNjVG1yU0VSUkVuLQ0KPiA+ID4gICAgICAgICBDYXBhYmlsaXRpZXM6IFs0
+MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDMNCj4gPiA+ICAgICAgICAgICAgICAgICBGbGFn
+czogUE1FQ2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVudD0wbUENCj4gPiA+IFBNRShEMCssRDEt
+DQo+ID4gPiAsRDItLEQzaG90KyxEM2NvbGQrKQ0KPiA+ID4gICAgICAgICAgICAgICAgIFN0YXR1
+czogRDAgTm9Tb2Z0UnN0KyBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTANCj4gUE1FLQ0KPiA+
+ID4gICAgICAgICBDYXBhYmlsaXRpZXM6IFs0OF0gTVNJOiBFbmFibGUrIENvdW50PTEvOCBNYXNr
+YWJsZSsgNjRiaXQrDQo+ID4gPiAgICAgICAgICAgICAgICAgQWRkcmVzczogMDAwMDAwMDBmZWUw
+MDUxOCAgRGF0YTogMDAwMA0KPiA+ID4gICAgICAgICAgICAgICAgIE1hc2tpbmc6IDAwMDAwMGZl
+ICBQZW5kaW5nOiAwMDAwMDAwMA0KPiA+ID4gICAgICAgICBDYXBhYmlsaXRpZXM6IFs2OF0gRXhw
+cmVzcyAodjIpIERvd25zdHJlYW0gUG9ydCAoU2xvdCspLCBNU0kNCj4gMDANCj4gPiA+ICAgICAg
+ICAgICAgICAgICBEZXZDYXA6IE1heFBheWxvYWQgMjA0OCBieXRlcywgUGhhbnRGdW5jIDAsIExh
+dGVuY3kNCj4gPiA+IEwwcyA8NjRucywgTDEgPDF1cw0KPiA+ID4gICAgICAgICAgICAgICAgICAg
+ICAgICAgRXh0VGFnLSBSQkUrIEZMUmVzZXQtDQo+ID4gPiAgICAgICAgICAgICAgICAgRGV2Q3Rs
+OiBSZXBvcnQgZXJyb3JzOiBDb3JyZWN0YWJsZSsgTm9uLUZhdGFsKw0KPiA+ID4gRmF0YWwrDQo+
+ID4gPiBVbnN1cHBvcnRlZC0NCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIFJseGRPcmQr
+IEV4dFRhZy0gUGhhbnRGdW5jLSBBdXhQd3ItIE5vU25vb3ArDQo+ID4gPiAgICAgICAgICAgICAg
+ICAgICAgICAgICBNYXhQYXlsb2FkIDEyOCBieXRlcywgTWF4UmVhZFJlcSAxMjggYnl0ZXMNCj4g
+PiA+ICAgICAgICAgICAgICAgICBEZXZTdGE6IENvcnJFcnIrIFVuY29yckVyci0gRmF0YWxFcnIt
+IFVuc3VwcFJlcSsNCj4gPiA+IEF1eFB3ci0NCj4gPiA+IFRyYW5zUGVuZC0NCj4gPiA+ICAgICAg
+ICAgICAgICAgICBMbmtDYXA6IFBvcnQgIzEsIFNwZWVkIDhHVC9zLCBXaWR0aCB4OCwgQVNQTSBM
+MSwNCj4gPiA+IExhdGVuY3kNCj4gPiA+IEwwIDw0dXMsIEwxIDw0dXMNCj4gPiA+ICAgICAgICAg
+ICAgICAgICAgICAgICAgIENsb2NrUE0tIFN1cnByaXNlKyBMTEFjdFJlcCsgQndOb3QrDQo+ID4g
+PiAgICAgICAgICAgICAgICAgTG5rQ3RsOiBBU1BNIERpc2FibGVkOyBEaXNhYmxlZC0gUmV0cmFp
+bi0gQ29tbUNsay0NCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIEV4dFN5bmNoLSBDbG9j
+a1BNLSBBdXRXaWREaXMtIEJXSW50LQ0KPiBBdXRCV0ludC0NCj4gPiA+ICAgICAgICAgICAgICAg
+ICBMbmtTdGE6IFNwZWVkIDIuNUdUL3MsIFdpZHRoIHgwLCBUckVyci0gVHJhaW4tDQo+ID4gPiBT
+bG90Q2xrKw0KPiA+ID4gRExBY3RpdmUtIEJXTWdtdC0gQUJXTWdtdC0NCj4gPiA+ICAgICAgICAg
+ICAgICAgICBTbHRDYXA6IEF0dG5CdG4tIFB3ckN0cmwrIE1STCsgQXR0bkluZCsgUHdySW5kKw0K
+PiA+ID4gSG90UGx1ZysNCj4gPiA+IFN1cnByaXNlLQ0KPiA+ID4gICAgICAgICAgICAgICAgICAg
+ICAgICAgU2xvdCAjNjcsIFBvd2VyTGltaXQgMjUuMDAwVzsgSW50ZXJsb2NrLQ0KPiA+ID4gTm9D
+b21wbC0NCj4gPg0KPiA+IEhtbS4uLiBJIHNlZSB0aGF0IHRoZSBTbG90IGhhcyBhIHBvd2VyIGNv
+bnRyb2xsZXIuIFdoaWNoIG1lYW5zIHRoYXQNCj4gPiB0aGUgcG93ZXIgdG8gdGhlIHNsb3Qgc2hh
+bGwgbm90IGJlIHR1cm5lZCBvbiBhdXRvbWF0aWNhbGx5IChieSBIVykNCj4gPiB3aGVuIHRoZSBj
+YXJkIGlzIHBsdWdnZWQgaW4uIEFsc28gbWVhbmluZyB0aGF0IHRoZSBsaW5rIHdpbGwgbm90IGNv
+bWUNCj4gdXAgYXV0b21hdGljYWxseSAtIHNvIHRoaXMgZG9lcyBub3Qgc2VlbSBsaWtlIHRoZSBM
+aW5rIHN0YXRlIGJhc2VkDQo+IGhvdHBsdWcga2lja2luZyBpbi4NCj4gPg0KPiA+IFdoYXQgSSBz
+dXNwZWN0IGlzIHRoaXMgb25lOg0KPiA+DQo+ID4gZjAyZDE4NDNkODNiICJQQ0k6IHBjaWVocDog
+UmVtb3ZlIHN1cnByaXNlIGJpdCBjaGVja3MiDQo+IA0KPiAgIFlvdSBhcmUgcmlnaHQuDQo+ICAg
+SW4gY2FzZSBvZiBvbWl0dGluZyBjb21pdC1mMDJkMTg0MywgaXQgd29ya2VkIGFzIGV4cGVjdGVk
+Lg0KPiAgIFNsb3QgcG93ZXIgZG9lc24ndCBiZWNvbWUgT04gYXV0b21hdGljYWxseSB3aGVuIFBD
+SWUgY2FyZCBpcyBpbnNlcnRlZC4NCj4gDQo+ICAgQmVzdCByZWdhcmRzLA0KPiAgIFRha3UgSXp1
+bWkNCj4gDQo+ID4NCj4gPiBTaW5jZSB0aGlzIHBhdGNoIHJlbW92ZXMgKmFsbCogdGhlIHN1cnBy
+aXNlIGJpdCBjaGVja3MgY2F1c2luZyBhbGwgdGhlDQo+ID4gcHJlc2VuY2UgZGV0ZWN0IGNoYW5n
+ZXMgKGluY2x1ZGluZyAwLT4xKSB0byBiZSBpbml0aWF0ZSBob3RwbHVnLiBJDQo+IHRoaW5rIGl0
+IG1heSBiZSB3b3J0aHdoaWxlIHRvIHRyeSBpdCBvdXQgd2hpbGUgcmVtb3ZpbmcgdGhpcyBwYXJ0
+aWN1bGFyDQo+IGh1bms6DQo+ID4NCj4gPiBAQCAtNTM1LDggKzUzNSw2IEBAIHN0YXRpYyB2b2lk
+IGludGVycnVwdF9ldmVudF9oYW5kbGVyKHN0cnVjdA0KPiB3b3JrX3N0cnVjdCAqd29yaykNCj4g
+PiAgCQlicmVhazsNCj4gPiAgCWNhc2UgSU5UX1BSRVNFTkNFX09OOg0KPiA+ICAJY2FzZSBJTlRf
+UFJFU0VOQ0VfT0ZGOg0KPiA+IC0JCWlmICghSFBfU1VQUl9STShjdHJsKSkNCj4gPiAtCQkJYnJl
+YWs7DQo+ID4gIAkJY3RybF9kYmcoY3RybCwgIlN1cnByaXNlIFJlbW92YWxcbiIpOw0KPiA+ICAJ
+CWhhbmRsZV9zdXJwcmlzZV9ldmVudChwX3Nsb3QpOw0KPiA+ICAJCWJyZWFrOw0KPiA+DQo+ID4g
+TWF5IGJlIHdlIHNob3VsZCByZW1vdmUgdGhlIHN1cnByaXNlIGNoZWNrIGZvciBJTlRfUFJFU0VO
+Q0VfT0ZGIG9ubHkNCj4gKGFuZCBsZXQgaXQgc3RheSBmb3IgSU5UX1BSRVNFV05DRV9PTik/DQo+
+ID4NCj4gPiBUaGFua3MsDQo+ID4NCj4gPiBSYWphdA0KPiA+DQo+ID4NCj4gPg0KPiA+ID4gICAg
+ICAgICAgICAgICAgIFNsdEN0bDogRW5hYmxlOiBBdHRuQnRuLSBQd3JGbHQtIE1STCsgUHJlc0Rl
+dCsNCj4gPiA+IENtZENwbHQrDQo+ID4gPiBIUElycSsgTGlua0NoZysNCj4gPiA+ICAgICAgICAg
+ICAgICAgICAgICAgICAgIENvbnRyb2w6IEF0dG5JbmQgT2ZmLCBQd3JJbmQgT2ZmLCBQb3dlcisN
+Cj4gPiA+IEludGVybG9jay0NCj4gPiA+ICAgICAgICAgICAgICAgICBTbHRTdGE6IFN0YXR1czog
+QXR0bkJ0bi0gUG93ZXJGbHQtIE1STC0gQ21kQ3BsdC0NCj4gPiA+IFByZXNEZXQtIEludGVybG9j
+ay0NCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIENoYW5nZWQ6IE1STC0gUHJlc0RldC0g
+TGlua1N0YXRlLQ0KPiA+ID4gICAgICAgICAgICAgICAgIERldkNhcDI6IENvbXBsZXRpb24gVGlt
+ZW91dDogTm90IFN1cHBvcnRlZCwNCj4gPiA+IFRpbWVvdXREaXMtLA0KPiA+ID4gTFRSKywgT0JG
+RiBWaWEgbWVzc2FnZSBBUklGd2QrDQo+ID4gPiAgICAgICAgICAgICAgICAgRGV2Q3RsMjogQ29t
+cGxldGlvbiBUaW1lb3V0OiA1MHVzIHRvIDUwbXMsDQo+ID4gPiBUaW1lb3V0RGlzLSwgTFRSLSwg
+T0JGRiBEaXNhYmxlZCBBUklGd2QtDQo+ID4gPiAgICAgICAgICAgICAgICAgTG5rQ3RsMjogVGFy
+Z2V0IExpbmsgU3BlZWQ6IDhHVC9zLCBFbnRlckNvbXBsaWFuY2UtDQo+ID4gPiBTcGVlZERpcy0s
+IFNlbGVjdGFibGUgRGUtZW1waGFzaXM6IC02ZEINCj4gPiA+ICAgICAgICAgICAgICAgICAgICAg
+ICAgICBUcmFuc21pdCBNYXJnaW46IE5vcm1hbCBPcGVyYXRpbmcgUmFuZ2UsDQo+ID4gPiBFbnRl
+ck1vZGlmaWVkQ29tcGxpYW5jZS0gQ29tcGxpYW5jZVNPUy0NCj4gPiA+ICAgICAgICAgICAgICAg
+ICAgICAgICAgICBDb21wbGlhbmNlIERlLWVtcGhhc2lzOiAtNmRCDQo+ID4gPiAgICAgICAgICAg
+ICAgICAgTG5rU3RhMjogQ3VycmVudCBEZS1lbXBoYXNpcyBMZXZlbDogLTMuNWRCLA0KPiA+ID4g
+RXF1YWxpemF0aW9uQ29tcGxldGUtLCBFcXVhbGl6YXRpb25QaGFzZTEtDQo+ID4gPiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgRXF1YWxpemF0aW9uUGhhc2UyLSwgRXF1YWxpemF0aW9uUGhhc2Uz
+LSwNCj4gPiA+IExpbmtFcXVhbGl6YXRpb25SZXF1ZXN0LQ0KPiA+ID4gICAgICAgICBDYXBhYmls
+aXRpZXM6IFthNF0gU3Vic3lzdGVtOiBGdWppdHN1IExpbWl0ZWQuIERldmljZSAxODA0DQo+ID4g
+PiAgICAgICAgIENhcGFiaWxpdGllczogWzEwMCB2MV0gRGV2aWNlIFNlcmlhbCBOdW1iZXINCj4g
+PiA+IGFhLTg3LTAwLTEwLWI1LWRmLQ0KPiA+ID4gMGUtMDANCj4gPiA+ICAgICAgICAgQ2FwYWJp
+bGl0aWVzOiBbZmI0IHYxXSBBZHZhbmNlZCBFcnJvciBSZXBvcnRpbmcNCj4gPiA+ICAgICAgICAg
+ICAgICAgICBVRVN0YTogIERMUC0gU0RFUy0gVExQLSBGQ1AtIENtcGx0VE8tIENtcGx0QWJydC0N
+Cj4gPiA+IFVueENtcGx0LSBSeE9GLSBNYWxmVExQLSBFQ1JDLSBVbnN1cFJlcS0gQUNTVmlvbC0N
+Cj4gPiA+ICAgICAgICAgICAgICAgICBVRU1zazogIERMUC0gU0RFUy0gVExQLSBGQ1AtIENtcGx0
+VE8tIENtcGx0QWJydC0NCj4gPiA+IFVueENtcGx0LSBSeE9GLSBNYWxmVExQLSBFQ1JDKyBVbnN1
+cFJlcSsgQUNTVmlvbC0NCj4gPiA+ICAgICAgICAgICAgICAgICBVRVN2cnQ6IERMUCsgU0RFUysg
+VExQKyBGQ1ArIENtcGx0VE8tIENtcGx0QWJydCsNCj4gPiA+IFVueENtcGx0KyBSeE9GKyBNYWxm
+VExQKyBFQ1JDKyBVbnN1cFJlcS0gQUNTVmlvbCsNCj4gPiA+ICAgICAgICAgICAgICAgICBDRVN0
+YTogIFJ4RXJyLSBCYWRUTFAtIEJhZERMTFAtIFJvbGxvdmVyLSBUaW1lb3V0LQ0KPiA+ID4gTm9u
+RmF0YWxFcnIrDQo+ID4gPiAgICAgICAgICAgICAgICAgQ0VNc2s6ICBSeEVyci0gQmFkVExQLSBC
+YWRETExQLSBSb2xsb3Zlci0gVGltZW91dC0NCj4gPiA+IE5vbkZhdGFsRXJyKw0KPiA+ID4gICAg
+ICAgICAgICAgICAgIEFFUkNhcDogRmlyc3QgRXJyb3IgUG9pbnRlcjogMWYsIEdlbkNhcCsgQ0dl
+bkVuLQ0KPiA+ID4gQ2hrQ2FwKw0KPiA+ID4gQ2hrRW4tDQo+ID4gPiAgICAgICAgIENhcGFiaWxp
+dGllczogWzEzOCB2MV0gUG93ZXIgQnVkZ2V0aW5nIDw/Pg0KPiA+ID4gICAgICAgICBDYXBhYmls
+aXRpZXM6IFsxMGMgdjFdICMxOQ0KPiA+ID4gICAgICAgICBDYXBhYmlsaXRpZXM6IFsxNDggdjFd
+IFZpcnR1YWwgQ2hhbm5lbA0KPiA+ID4gICAgICAgICAgICAgICAgIENhcHM6ICAgTFBFVkM9MCBS
+ZWZDbGs9MTAwbnMgUEFURW50cnlCaXRzPTENCj4gPiA+ICAgICAgICAgICAgICAgICBBcmI6ICAg
+IEZpeGVkLSBXUlIzMi0gV1JSNjQtIFdSUjEyOC0NCj4gPiA+ICAgICAgICAgICAgICAgICBDdHJs
+OiAgIEFyYlNlbGVjdD1GaXhlZA0KPiA+ID4gICAgICAgICAgICAgICAgIFN0YXR1czogSW5Qcm9n
+cmVzcy0NCj4gPiA+ICAgICAgICAgICAgICAgICBWQzA6ICAgIENhcHM6ICAgUEFUT2Zmc2V0PTAw
+IE1heFRpbWVTbG90cz0xDQo+ID4gPiBSZWpTbm9vcFRyYW5zLQ0KPiA+ID4gICAgICAgICAgICAg
+ICAgICAgICAgICAgQXJiOiAgICBGaXhlZCsgV1JSMzItIFdSUjY0LSBXUlIxMjgtDQo+IFRXUlIx
+MjgtDQo+ID4gPiBXUlIyNTYtDQo+ID4gPiAgICAgICAgICAgICAgICAgICAgICAgICBDdHJsOiAg
+IEVuYWJsZSsgSUQ9MCBBcmJTZWxlY3Q9Rml4ZWQNCj4gVEMvVkM9ZmYNCj4gPiA+ICAgICAgICAg
+ICAgICAgICAgICAgICAgIFN0YXR1czogTmVnb1BlbmRpbmcrIEluUHJvZ3Jlc3MtDQo+ID4gPiAg
+ICAgICAgIENhcGFiaWxpdGllczogW2UwMCB2MV0gIzEyDQo+ID4gPiAgICAgICAgIENhcGFiaWxp
+dGllczogW2YyNCB2MV0gQWNjZXNzIENvbnRyb2wgU2VydmljZXMNCj4gPiA+ICAgICAgICAgICAg
+ICAgICBBQ1NDYXA6IFNyY1ZhbGlkKyBUcmFuc0JsaysgUmVxUmVkaXIrIENtcGx0UmVkaXIrDQo+
+ID4gPiBVcHN0cmVhbUZ3ZCsgRWdyZXNzQ3RybCsgRGlyZWN0VHJhbnMrDQo+ID4gPiAgICAgICAg
+ICAgICAgICAgQUNTQ3RsOiBTcmNWYWxpZC0gVHJhbnNCbGstIFJlcVJlZGlyLSBDbXBsdFJlZGly
+LQ0KPiA+ID4gVXBzdHJlYW1Gd2QtIEVncmVzc0N0cmwtIERpcmVjdFRyYW5zLQ0KPiA+ID4gICAg
+ICAgICBDYXBhYmlsaXRpZXM6IFtiNzAgdjFdIFZlbmRvciBTcGVjaWZpYyBJbmZvcm1hdGlvbjog
+SUQ9MDAwMQ0KPiA+ID4gUmV2PTAgTGVuPTAxMCA8Pz4NCj4gPiA+ICAgICAgICAgS2VybmVsIGRy
+aXZlciBpbiB1c2U6IHBjaWVwb3J0DQo+ID4gPg0KPiA+ID4NCj4gPiA+ID4gSWYgdGhlcmUgaXMg
+bm8gYXR0ZW50aW9uIGJ1dHRvbiwgdGhlbiB0aGUgYmVoYXZpb3Igc2VlbiwgbWF0Y2hlcw0KPiA+
+ID4gPiB3aXRoIHdoYXQgSSBleHBlY3RlZCBvZiB0aGUgY29kZS4NCj4gPiA+ID4NCj4gPiA+ID4g
+U2VlbWluZ2x5LCB0aGUgSFcgZG9lcyBub3QgaGF2ZSBhIHBvd2VyIGNvbnRyb2xsZXIgKGFuZCBh
+dHRlbnRpb24NCj4gPiA+ID4gYnV0dG9uKSwgdGh1cyB0aGUgcG93ZXIgaXMgYXV0b21hdGljYWxs
+eSB0dXJuZWQgb24gKGJ5IEhXKSB3aGVuDQo+ID4gPiA+IGNhcmQgaXMgaW5zZXJ0ZWQgYW5kIHRo
+ZSBsaW5rIGNvbWVzIHVwLiBUaHVzIHByaW9yIHRvIGxpbmsgc3RhdGUNCj4gPiA+ID4gYmFzZWQg
+aG90LXBsdWcsICJlY2hvIDEgPiBwb3dlciIgdXNlZCB0byBkbyBhIGxpdHRsZSBlbHNlIHRoYW4N
+Cj4gPiA+ID4gaW5pdGlhdGUgYSByZXNjYW4gZm9yIHRoaXMgcGFydGljdWxhciBIVy4NCj4gPiA+
+DQo+ID4gPiA+DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBJIHRoaW5rIHRoYXQgZm9yIEV4cHJlc3ND
+YXJkIGFuZCBzaW1pbGFyIGRldmljZXMsIHdlIHdhbnQgdG8NCj4gPiA+ID4gPiB0dXJuIG9uIHRo
+ZSBkZXZpY2UgYW5kIGF0dGFjaCBhIGRyaXZlciBhcyBzb29uIGFzIHRoZSBjYXJkIGlzDQo+ID4g
+PiA+ID4gaW5zZXJ0ZWQuICBCdXQgaW4geW91ciBjYXNlLCBJIGFzc3VtZSB3ZSB3YW50IGEgbW9k
+ZWwgbGlrZSB0aGF0DQo+ID4gPiA+ID4gaW4gVGFibGUgMi03IG9mIHRoZSAiUENJIFN0YW5kYXJk
+IEhvdC1QbHVnIENvbnRyb2xsZXIgYW5kDQo+ID4gPiA+ID4gU3Vic3lzdGVtIFNwZWNpZmljYXRp
+b24sIiByZXYgMS4wLCBpLmUuLCAiSG90IEluc2VydGlvbg0KPiA+ID4gPiA+IEluaXRpYXRlZCB2
+aWEgU29mdHdhcmUgVUkuIiAgU28gdGhlcmUgbXVzdCBiZSBzb21lIHdheSB0bw0KPiA+ID4gPiA+
+IGRpZmZlcmVudGlhdGUgYW4gRXhwcmVzc0NhcmQgc2xvdCBmcm9tIGEgc2xvdCBsaWtlIHlvdXJz
+Lg0KPiA+ID4gPg0KPiA+ID4gPiBZZXMsIHRoYXQgd291bGQgaGVscCBpZiB0aGVyZSB3YXMgc29t
+ZSB3YXkuDQo+ID4gPiA+DQo+ID4gPg0KPiA+ID4gQmVzdCByZWdhcmRzLA0KPiA+ID4gVGFrdSBJ
+enVtaQ0KDQo=
 
