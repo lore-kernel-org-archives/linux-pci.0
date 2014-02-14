@@ -1,56 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:7446 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752746AbaBZQOP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 11:14:15 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1393430893-2466-1-git-send-email-phil.edworthy@renesas.com>
-References: <1393430893-2466-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1393430893-2466-3-git-send-email-phil.edworthy@renesas.com>
-Date: Wed, 26 Feb 2014 16:08:10 +0000
-Subject: [PATCH 2/5] ARM: shmobile: r8a7791: Add PCIe clock
+Received: from v094114.home.net.pl ([79.96.170.134]:60986 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751926AbaBNNYt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 08:24:49 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	David Airlie <airlied@linux.ie>,
+	dri-devel@lists.freedesktop.org,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, linux-pcmcia@lists.infradead.org,
+	linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH 1/6] PCI,acpiphp: Use list_for_each_entry() for bus traversal
+Date: Fri, 14 Feb 2014 14:39:32 +0100
+Message-ID: <2512180.zyEb2tzySd@vostro.rjw.lan>
+In-Reply-To: <52FD7D3D.4030409@huawei.com>
+References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com> <2601738.3Ek05F9oo5@vostro.rjw.lan> <52FD7D3D.4030409@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/mach-shmobile/clock-r8a7791.c |    3 +++
- 1 file changed, 3 insertions(+)
+On Friday, February 14, 2014 10:19:41 AM Yijing Wang wrote:
+> On 2014/2/14 7:54, Rafael J. Wysocki wrote:
+> > On Thursday, February 13, 2014 09:13:58 PM Yijing Wang wrote:
+> >> Replace list_for_each() + pci_bus_b() with the simpler
+> >> list_for_each_entry().
+> >>
+> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> > 
+> > Looks reasonable to me.
+> > 
+> > Does it conflict with anything currently in linux-next (the linux-next branch
+> > of linux-pm.git in particular)?
+> 
+> Hi Rafael,
+>    I applied this to your linux-next branch successfully . No conflicts found.
 
-diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
-index c574292..cba9b3c 100644
---- a/arch/arm/mach-shmobile/clock-r8a7791.c
-+++ b/arch/arm/mach-shmobile/clock-r8a7791.c
-@@ -123,6 +123,7 @@ enum {
- 	MSTP813,
- 	MSTP721, MSTP720,
- 	MSTP719, MSTP718, MSTP715, MSTP714,
-+	MSTP319,
- 	MSTP216, MSTP207, MSTP206,
- 	MSTP204, MSTP203, MSTP202, MSTP1105, MSTP1106, MSTP1107,
- 	MSTP124,
-@@ -137,6 +138,7 @@ static struct clk mstp_clks[MSTP_NR] = {
- 	[MSTP718] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 18, 0), /* SCIF3 */
- 	[MSTP715] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 15, 0), /* SCIF4 */
- 	[MSTP714] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 14, 0), /* SCIF5 */
-+	[MSTP319] = SH_CLK_MSTP32(&mp_clk, SMSTPCR3, 19, 0), /* PCIEC */
- 	[MSTP216] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 16, 0), /* SCIFB2 */
- 	[MSTP207] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 7, 0), /* SCIFB1 */
- 	[MSTP206] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 6, 0), /* SCIFB0 */
-@@ -166,6 +168,7 @@ static struct clk_lookup lookups[] = {
- 	CLKDEV_CON_ID("peripheral_clk", &hp_clk),
- 
- 	/* MSTP */
-+	CLKDEV_DEV_ID("r8a7791-pcie", &mstp_clks[MSTP319]),
- 	CLKDEV_DEV_ID("sh-sci.0", &mstp_clks[MSTP204]), /* SCIFA0 */
- 	CLKDEV_DEV_ID("sh-sci.1", &mstp_clks[MSTP203]), /* SCIFA1 */
- 	CLKDEV_DEV_ID("sh-sci.2", &mstp_clks[MSTP206]), /* SCIFB0 */
+Good. :-)
+
+Please feel free to add my ACK to it.
+
+Rafael
+
+
+> >> ---
+> >>  drivers/pci/hotplug/acpiphp_glue.c |    6 +++---
+> >>  1 files changed, 3 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> >> index cd929ae..aee6a0a 100644
+> >> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> >> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> >> @@ -450,7 +450,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
+> >>   */
+> >>  static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
+> >>  {
+> >> -	struct list_head *tmp;
+> >> +	struct pci_bus *tmp;
+> >>  	unsigned char max, n;
+> >>  
+> >>  	/*
+> >> @@ -463,8 +463,8 @@ static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
+> >>  	 */
+> >>  	max = bus->busn_res.start;
+> >>  
+> >> -	list_for_each(tmp, &bus->children) {
+> >> -		n = pci_bus_max_busnr(pci_bus_b(tmp));
+> >> +	list_for_each_entry(tmp, &bus->children, node) {
+> >> +		n = pci_bus_max_busnr(tmp);
+> >>  		if (n > max)
+> >>  			max = n;
+> >>  	}
+> >>
+> > 
+> 
+> 
+> 
+
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
