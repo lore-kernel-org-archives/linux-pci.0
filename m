@@ -1,109 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18482 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751547AbaBSGHN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 01:07:13 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:51447 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753690AbaBNU0w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 15:26:52 -0500
+Received: by mail-oa0-f54.google.com with SMTP id i4so15324590oah.27
+        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 12:26:52 -0800 (PST)
+Date: Fri, 14 Feb 2014 13:26:43 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V2 04/17] iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
-Date: Wed, 19 Feb 2014 14:07:24 +0800
-Message-Id: <1392790057-32434-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+	Dave Airlie <airlied@redhat.com>,
+	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
+	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
+	linux-ia64@vger.kernel.org
+Subject: Re: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card
+ other than the primary prevents it from reading it's own rom. It will get
+ the content of the shadowrom at C000 instead, which is of the primary VGA
+ card and the driver of the secondary card will bail out.
+Message-ID: <20140214202643.GF31093@google.com>
+References: <20140130000831.GJ16825@google.com>
+ <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
+ <20140203145205.GB2992@phenom.dumpdata.com>
+ <939539486.20140213104824@eikelenboom.it>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <939539486.20140213104824@eikelenboom.it>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Factor out function dmar_alloc_dev_scope() from dmar_parse_dev_scope()
-for later reuse.
+On Thu, Feb 13, 2014 at 10:48:24AM +0100, Sander Eikelenboom wrote:
+> Hi Bjorn,
+> 
+> I have given it another email and another week, but without gaining any reviewed or acked-by's.
+> It seems the only way forward is to shovel it in linux-next earlier, give it a good soak and see if
+> anyone starts to squeal .. or that everything seems to be ok :-)
+> 
+> Would you need a v3 with the acked and reviewed-by from Konrad for x86 in it ?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/dmar.c |   28 ++++++++++++++++------------
- include/linux/dmar.h |    1 +
- 2 files changed, 17 insertions(+), 12 deletions(-)
+No need, I applied this to my pci/misc branch for v3.15.
 
-diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-index 1581565..58dde75 100644
---- a/drivers/iommu/dmar.c
-+++ b/drivers/iommu/dmar.c
-@@ -117,13 +117,9 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
- 	return 0;
- }
- 
--int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
--				struct pci_dev ***devices, u16 segment)
-+void *dmar_alloc_dev_scope(void *start, void *end, int *cnt)
- {
- 	struct acpi_dmar_device_scope *scope;
--	void * tmp = start;
--	int index;
--	int ret;
- 
- 	*cnt = 0;
- 	while (start < end) {
-@@ -138,15 +134,24 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 		start += scope->length;
- 	}
- 	if (*cnt == 0)
--		return 0;
-+		return NULL;
-+
-+	return kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
-+}
-+
-+int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
-+				struct pci_dev ***devices, u16 segment)
-+{
-+	struct acpi_dmar_device_scope *scope;
-+	int index, ret;
- 
--	*devices = kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
--	if (!*devices)
-+	*devices = dmar_alloc_dev_scope(start, end, cnt);
-+	if (*cnt == 0)
-+		return 0;
-+	else if (!*devices)
- 		return -ENOMEM;
- 
--	start = tmp;
--	index = 0;
--	while (start < end) {
-+	for (index = 0; start < end; start += scope->length) {
- 		scope = start;
- 		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT ||
- 		    scope->entry_type == ACPI_DMAR_SCOPE_TYPE_BRIDGE) {
-@@ -158,7 +163,6 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 			}
- 			index ++;
- 		}
--		start += scope->length;
- 	}
- 
- 	return 0;
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index eccb0c0..1b08ce8 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -69,6 +69,7 @@ extern int dmar_table_init(void);
- extern int dmar_dev_scope_init(void);
- extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
- 				struct pci_dev ***devices, u16 segment);
-+extern void *dmar_alloc_dev_scope(void *start, void *end, int *cnt);
- extern void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt);
- 
- /* Intel IOMMU detection */
--- 
-1.7.10.4
+Tony, let me know if you have any issues with this.
 
+Bjorn
+
+> Monday, February 3, 2014, 3:52:05 PM, you wrote:
+> 
+> > On Fri, Jan 31, 2014 at 10:28:22AM +0100, Sander Eikelenboom wrote:
+> >> Hi Bjorn / Tony,
+> >> 
+> >> I fixed up ia64 as well and brought it inline again with the x86 code,
+> >> but i don't have a ia64 machine, so that part is untested.
+> >> Perhaps Tony is able to review/test it ?
+> >> 
+> >> Sander
+> >> 
+> >> 
+> >> 
+> >> Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary
+> >> prevents it from reading it's own rom. It will get the content of the shadowrom
+> >> at C000 instead, which is of the primary VGA card and the driver of the
+> >> secondary card will bail out.
+> >> 
+> >> Fix this by checking if the arch code or vga-arbitration has already
+> >> determined the vga_default_device, if so only apply the fix to this
+> >> primary video device and let the comment reflect this.
+> >> 
+> >> v2:
+> >>     - Fix pci_fixup_video both in x86 and ia64
+> >> 
+> >> 
+> >> Sander Eikelenboom (1):
+> >>   Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the
+> >>     primary     prevents it from reading it's own rom. It will get the
+> >>     content of the shadowrom     at C000 instead, which is of the
+> >>     primary VGA card and the driver of the     secondary card will bail
+> >>     out.
+> 
+> > Your editor mutilated your subject line. It ought to have been just
+> > one line.
+> 
+> > Anyhow, you can also add 'Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com'
+> > on the patch for the x86 part.
+> 
+> > The ia64 "looks" OK to me, but my ia64 box won't boot v3.11 or later
+> > so I can't give it a 'Tested-by' yet.
+> 
+> >> 
+> >>  arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
+> >>  arch/x86/pci/fixup.c  |   18 ++++++++++--------
+> >>  2 files changed, 23 insertions(+), 19 deletions(-)
+> >> 
+> >> -- 
+> >> 1.7.10.4
+> >> 
+> 
+> 
