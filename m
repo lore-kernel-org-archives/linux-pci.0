@@ -1,41 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:36091 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675AbaBCDC0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Feb 2014 22:02:26 -0500
-Message-ID: <52EF06C0.1050104@infradead.org>
-Date: Sun, 02 Feb 2014 19:02:24 -0800
-From: Randy Dunlap <rdunlap@infradead.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:30475 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752605AbaBOAye (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 19:54:34 -0500
+Message-ID: <52FEB98D.4070001@huawei.com>
+Date: Sat, 15 Feb 2014 08:49:17 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: LKML <linux-kernel@vger.kernel.org>
-CC: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: [PATCH] pci: fix kernel-doc notation warning
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	David Airlie <airlied@linux.ie>,
+	<dri-devel@lists.freedesktop.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	<linux-pcmcia@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH 1/6] PCI,acpiphp: Use list_for_each_entry() for bus traversal
+References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com> <2601738.3Ek05F9oo5@vostro.rjw.lan> <52FD7D3D.4030409@huawei.com> <2512180.zyEb2tzySd@vostro.rjw.lan>
+In-Reply-To: <2512180.zyEb2tzySd@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+>>> Does it conflict with anything currently in linux-next (the linux-next branch
+>>> of linux-pm.git in particular)?
+>>
+>> Hi Rafael,
+>>    I applied this to your linux-next branch successfully . No conflicts found.
+> 
+> Good. :-)
+> 
+> Please feel free to add my ACK to it.
 
-Fix a "blank" kernel-doc line to have an asterisk instead of
-being totally empty.  This fixes the kernel-doc warning:
+Thanks very much!
 
-Warning(drivers/pci/msi.c:962): bad line: 
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
- drivers/pci/msi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- lnx-314-rc1.orig/drivers/pci/msi.c
-+++ lnx-314-rc1/drivers/pci/msi.c
-@@ -959,7 +959,7 @@ EXPORT_SYMBOL(pci_disable_msi);
- /**
-  * pci_msix_vec_count - return the number of device's MSI-X table entries
-  * @dev: pointer to the pci_dev data structure of MSI-X device function
--
-+ *
-  * This function returns the number of device's MSI-X table entries and
-  * therefore the number of MSI-X vectors device is capable of sending.
-  * It returns a negative errno if the device is not capable of sending MSI-X
