@@ -1,70 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:50656 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752782AbaBLSK7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 13:10:59 -0500
-Date: Wed, 12 Feb 2014 18:10:15 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Message-ID: <20140212181015.GJ29132@mudshark.cambridge.arm.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <3460536.Sh23gjDa6X@wuerfel>
- <20140205190947.GA22297@mudshark.cambridge.arm.com>
- <3724624.kd9jZNUiTF@wuerfel>
- <20140207114607.GE5976@mudshark.cambridge.arm.com>
- <20140207175410.GC16263@obsidianresearch.com>
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:59796 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751718AbaBQGkG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Feb 2014 01:40:06 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1WFHs3-0002L8-MQ
+	for linux-pci@vger.kernel.org; Mon, 17 Feb 2014 07:40:03 +0100
+Received: from ABTS-North-Static-072.159.160.122.airtelbroadband.in ([ABTS-North-Static-072.159.160.122.airtelbroadband.in])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2014 07:40:03 +0100
+Received: from anand.mistry by ABTS-North-Static-072.159.160.122.airtelbroadband.in with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2014 07:40:03 +0100
+To: linux-pci@vger.kernel.org
+From: Anand Mistry <anand.mistry@spectross.com>
+Subject: PCI-PCI bridge memory ranges in linux device tree
+Date: Mon, 17 Feb 2014 06:31:16 +0000 (UTC)
+Message-ID: <loom.20140217T065100-603@post.gmane.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140207175410.GC16263@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 07, 2014 at 05:54:10PM +0000, Jason Gunthorpe wrote:
-> On Fri, Feb 07, 2014 at 11:46:07AM +0000, Will Deacon wrote:
-> 
-> > > In practice, there can be various ways that a system requires something
-> > > more complex:
-> > > 
-> > > * You can have a memory space range that puts PCI bus address zero
-> > >   at the start of the pci->mem resource. In this case, you have
-> > >   mem_offset = pci->mem.start. We should probably try not to do
-> > >   this, but there is existing hardware doing it.
-> > 
-> > If it's not the common case, then the generic driver might not need to care
-> > (at least, initially).
-> 
-> Something to think about, other people are going to reference this
-> driver when writing drivers for their own hardware, it would be nice
-> to see it perfect..
-> 
-> AFAIK, the job is fairly simple, when you call pci_add_resource_offset
-> for memory compute the offset from 
->   of_pci_range.pci_addr - of_pci_range.cpu_addr
-> 
-> (or is it the other way around ?)
+Hello,
 
-I think it's the other way round: bus = cpu - offset, then Arnd's example of
-PCI bus 0 works out as: 0 = cpu - pci->mem_start.
+Can anybody please help me out with this one. My linux kernel is not
+programming memory ranges of PCI-PCI bridges and crashes on finding devices
+beyond the bridge. How do i enable automatic resource allocation of PCI-PCi
+bridges in the kernel? 
 
-I added that to my driver, but I get some weird looking bus addresses in
-dmesg:
+For reference,
+Processor is MPC8313
+Kernel version is 2.6.23.
+Code from the DTS file
 
-[    0.307585] pci-arm-generic 40000000.pci: PCI host bridge to bus 0000:00
-[    0.307601] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-[    0.307615] pci_bus 0000:00: root bus resource [mem 0x00000000-0x3effffff] (bus address [0xffffffffbf000000-0xfffffffffdffffff])
+/* code starts */
+pci@8500 {
+	bus-range = <0 0>;
+	ranges = <02000000 0 90000000 90000000 0 10000000
+	          42000000 0 80000000 80000000 0 10000000
+	          01000000 0 00000000 e2000000 0 00100000>;
+	#interrupt-cells = <1>;
+	#size-cells = <2>;
+	#address-cells = <3>;
+	reg = <8500 100>;
+	compatible = "fsl,mpc8349-pci";
+	device_type = "pci";
+	interrupt-parent = < &ipic >;
+	interrupts = <42 8>;
+	interrupt-map-mask = <0F800 0 0 7>;
+	interrupt-map = <
 
-Looking at drivers/pci/probe.c, it seems to think that res->start - offset
-gives a bus address, which implies that the resources are indeed *CPU*
-addresses.
+			// ** For reference **
+			// INTA = IRQ1 = 0x11
+			// INTB = IRQ2 = 0x12
+			// INTC = IRQ0 = 0x30
+			// INTD = IRQ4 = 0x14
 
-Are you sure pci_add_resource_offset wants bus addresses?
+			// BUS 0 IDSEL 0x18 (IDSEL = AD24)
+			0c000 0 0 1 &ipic 11 8  // PCI_INTA 
+			0c000 0 0 2 &ipic 12 8  // PCI_INTB  
+			0c000 0 0 3 &ipic 30 8  // PCI_INTC 
+			0c000 0 0 4 &ipic 14 8  // PCI_INTD 
+			>;
 
-Will
+}; 
+
+/* code ends */
+
+
+
+Thanks and Regards,
+Anand Mistry
+
+
