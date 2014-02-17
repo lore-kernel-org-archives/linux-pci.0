@@ -1,158 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:34032 "EHLO
-	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754212AbaBRIhH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 03:37:07 -0500
-Content-Type: multipart/mixed;
-	boundary="_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701avmb3qlogicorg_"
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: Dept-Eng iSCSI Driver <Dept-iSCSIDriver@qlogic.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 21/22] qla4xxx: Use pci_enable_msix_range()
-Date: Tue, 18 Feb 2014 08:37:05 +0000
-Message-ID: <3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701@avmb3.qlogic.org>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <eb9c6c476786ff901512e46859f0d59a5e62170d.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <eb9c6c476786ff901512e46859f0d59a5e62170d.1391512266.git.agordeev@redhat.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:60581 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752359AbaBQXGK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 18:06:10 -0500
+Received: by mail-ig0-f181.google.com with SMTP id hl1so4739825igb.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2014 15:06:09 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <loom.20140217T065100-603@post.gmane.org>
+References: <loom.20140217T065100-603@post.gmane.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Feb 2014 16:05:49 -0700
+Message-ID: <CAErSpo4ABT+yMwvZSfR7op130iJnzgA1c=fH2LdH3kDH293kzw@mail.gmail.com>
+Subject: Re: PCI-PCI bridge memory ranges in linux device tree
+To: Anand Mistry <anand.mistry@spectross.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701avmb3qlogicorg_
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <99113A8B646FA54AAC94F583A3CA15E7@qlogic.com>
-Content-Transfer-Encoding: quoted-printable
-
-
-
-On 04/02/14 3:17 AM, "Alexander Gordeev" <agordeev@redhat.com> wrote:
-
->As result of deprecation of MSI-X/MSI enablement functions
->pci_enable_msix() and pci_enable_msi_block() all drivers
->using these two interfaces need to be updated to use the
->new pci_enable_msi_range() and pci_enable_msix_range()
->interfaces.
+On Sun, Feb 16, 2014 at 11:31 PM, Anand Mistry
+<anand.mistry@spectross.com> wrote:
+> Hello,
 >
->Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->Cc: iscsi-driver@qlogic.com
->Cc: linux-scsi@vger.kernel.org
->Cc: linux-pci@vger.kernel.org
->---
-> drivers/scsi/qla4xxx/ql4_nx.c |    5 +++--
-> 1 files changed, 3 insertions(+), 2 deletions(-)
+> Can anybody please help me out with this one. My linux kernel is not
+> programming memory ranges of PCI-PCI bridges and crashes on finding devices
+> beyond the bridge. How do i enable automatic resource allocation of PCI-PCi
+> bridges in the kernel?
+
+Can you collect a complete dmesg log (or console output with
+"ignore_loglevel" option)?
+
+> For reference,
+> Processor is MPC8313
+> Kernel version is 2.6.23.
+> Code from the DTS file
 >
->diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
->index d001202..7f5412d 100644
->--- a/drivers/scsi/qla4xxx/ql4_nx.c
->+++ b/drivers/scsi/qla4xxx/ql4_nx.c
->@@ -3805,8 +3805,9 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
-> 	for (i =3D 0; i < QLA_MSIX_ENTRIES; i++)
-> 		entries[i].entry =3D qla4_8xxx_msix_entries[i].entry;
->=20
->-	ret =3D pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
->-	if (ret) {
->+	ret =3D pci_enable_msix_range(ha->pdev, entries,
->+				    ARRAY_SIZE(entries), ARRAY_SIZE(entries));
->+	if (ret < 0) {
-> 		ql4_printk(KERN_WARNING, ha,
-> 		    "MSI-X: Failed to enable support -- %d/%d\n",
-> 		    QLA_MSIX_ENTRIES, ret);
-
-Looks good to me.
-Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701avmb3qlogicorg_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-eJ8+InFcAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADkwM0ZCNzM0
-MjM4M0QzNEI5QUM3MDk0RThCNjZBODY4ACIHAQ2ABAACAAAAAgACAAEFgAMADgAAAN4HAgASAAgA
-JQAFAAIALQEBIIADAA4AAADeBwIAEgAIACUABQACAC0BAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABADcAAABSZTogW1BBVENIIDIxLzIyXSBxbGE0eHh4OiBVc2UgcGNpX2Vu
-YWJsZV9tc2l4X3JhbmdlKCkAzxEBA5AGAHQRAAA1AAAAAgF/AAEAAAA8AAAAPDNGQzRBQjhCNDdF
-Q0Q1NDZCQ0Q0QjM2MUE2NEJFQUNEOEM2NEU3MDFAYXZtYjMucWxvZ2ljLm9yZz4ACwAfDgEAAAAC
-AQkQAQAAAEgEAABEBAAA0QcAAExaRnUU9U1fYQAKZmJpZAQAAGNjwHBnMTI1MgD+A0PwdGV4dAH3
-AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqACMg7CWIxOQ7AvwnDFnIKMhZxAoAV
-YioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQF7YCEHIAwHR9CFBuGjEQIAXABaAb
-ZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfyYmttawZzAZAAICBCTV9C4EVHSU59
-CvwB8QvyWmwLgGUKgSGkTwOgMAA0LzAyLzE0IAAzOjE3IEFNLGggIkEecHgAcASBIAZHBbABAGV2
-IiA8NGFnJIRACXER0HQuYQWgbT4gdwNgECA6GSGcPkEEIAlwc3VsawVAGTAgAQBwCXAeUHQOaQIg
-KEIF4EktWC/9KXEgCfABoB5wB4ACMBxwOHVuYyjyDgAnRXBjJGlfKhRfbQCQeChUKSAkESAr3F8C
-YG/UY2sswmwDIGQFEBox3StHdQCQGcAcwGgHkBngsHR3byALgBuhZgDQTweRGFAcURiQIGIZ4HX8
-cGQYgDGkL9AwcTBAJzb/GFAH4C09GHAZwSzPLHM09hsnNjDYLic2JzZTaWcJGFBkLRkwZi1ieT46
-I3Aj7iT/JgMnNkNjoTowVmlrYQQgQxHQ8nUlwXJ5O2AdYD2hJgDpPfZAcQkAZw5QPH8EAHpjAJAt
-LuQ/iTzKIaF1JHgtQRJAdhgwci6iawSRZWwuBbBnQn/uLSvRQ98nRS1HoCc2LtaKL0ESLz+QYTR4
-SXAhSSE0X254JgAgfGIgSlE1ICtKsEe5Ma8ccAMQB5EZlGQjoDMwwUcSAAAgKxIoKykjoDL3KHEe
-cE0ULTcnJzYN4AEgziBHoD/ABUBhL0hvSXveYlBfSWs3OAEAeChwHqADDpAi0C4uN2Y1NMcOkBxg
-HpE2NDRHKVA/P1NPJ1RKsVI/WE8nVEBAgU/QMzgwNSw4SqCZXKM5IFxhUTJfOElxUywLH2BydSrw
-IEESX9lRMV9oGRAFQCoR0DcnDwMwAZEccAWxKGkgPQ0ikDswwDtgIFFMQQJfKXFYX0VOVFL4SUVT
-YjFKsGCsYUMqgcEIgXNbaV0uZRI+YP9iAF3INnNlHhYgYMdHNmFD3wlwBUBiACveEdAtK8ABAA52
-I6BlFSOgQVJSQURZXymAWkUoZRUpfiloN2lUBpBhwGmxNWBc3wAAWUZpbzYuax8sbytzev9KUmw/
-bUFsL208b6RudWJhfjBu6mR4SbIooDDRLmBLoEVSTl9XdhBOICC+RyOgEdBy12R4SlIiKXP9OjBG
-C3AecDGzKhRfgDIwhnAJEU/RICVkL3+w8FxcbiJ8D3RkYp4joEdusmg2IZVMb28fUCDfO5AEcDHC
-B4A4VkEuUDmhfzoSPY8+nz+vIZUVQooAHwBCAAEAAAAgAAAAVgBpAGsAYQBzACAAQwBoAGEAdQBk
-AGgAYQByAHkAAAAfAGUAAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAeAAA
-AAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFYAaQBrAGEAcwAgAEMAaABhAHUAZABoAGEAcgB5AAAA
-UwBNAFQAUAAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8AZwBpAGMALgBj
-AG8AbQAAAB8AAl0BAAAANgAAAHYAaQBrAGEAcwAuAGMAaABhAHUAZABoAGEAcgB5AEAAcQBsAG8A
-ZwBpAGMALgBjAG8AbQAAAAAAHwDlXwEAAAA+AAAAcwBpAHAAOgB2AGkAawBhAHMALgBjAGgAYQB1
-AGQAaABhAHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAIAAAAFYAaQBrAGEA
-cwAgAEMAaABhAHUAZABoAGEAcgB5AAAAHwAfDAEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBk
-AGgAYQByAHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAA
-AAACARkMAQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBWAGkAawBhAHMAIABDAGgAYQB1
-AGQAaABhAHIAeQAAAFMATQBUAFAAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEA
-bABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABh
-AHIAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8A+D8BAAAAIAAAAFYAaQBrAGEAcwAgAEMA
-aABhAHUAZABoAGEAcgB5AAAAHwAjQAEAAAA2AAAAdgBpAGsAYQBzAC4AYwBoAGEAdQBkAGgAYQBy
-AHkAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/
-AQAAAHgAAAAAAAAAgSsfpL6jEBmdbgDdAQ9UAgAAAIBWAGkAawBhAHMAIABDAGgAYQB1AGQAaABh
-AHIAeQAAAFMATQBUAFAAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBAAHEAbABvAGcA
-aQBjAC4AYwBvAG0AAAAfAAldAQAAADYAAAB2AGkAawBhAHMALgBjAGgAYQB1AGQAaABhAHIAeQBA
-AHEAbABvAGcAaQBjAC4AYwBvAG0AAAAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAA
-AgAAAAAAAAAfABoAAQAAABIAAABJAFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAAD
-AP0/5AQAAAIBCzABAAAAEAAAAJA/tzQjg9NLmscJTotmqGgDABcAAQAAAEAAOQCADh6ahCzPAUAA
-CDDE306ahCzPAQsAAIAIIAYAAAAAAMAAAAAAAABGAAAAABSFAAABAAAAHwAAgIYDAgAAAAAAwAAA
-AAAAAEYBAAAAHgAAAGEAYwBjAGUAcAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAAAwAAABlAG4A
-LQBVAFMAAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAbgAAAFIAZQA6
-ACAAWwBQAEEAVABDAEgAIAAyADEALwAyADIAXQAgAHEAbABhADQAeAB4AHgAOgAgAFUAcwBlACAA
-cABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwByAGEAbgBnAGUAKAApAAAAAAAfAD0AAQAA
-AAoAAABSAGUAOgAgAAAAAAADADYAAAAAAB8AQhABAAAAnAAAADwAZQBiADkAYwA2AGMANAA3ADYA
-NwA4ADYAZgBmADkAMAAxADUAMQAyAGUANAA2ADgANQA5AGYAMABkADUAOQBhADUAZQA2ADIAMQA3
-ADAAZAAuADEAMwA5ADEANQAxADIAMgA2ADYALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUAdgBAAHIA
-ZQBkAGgAYQB0AC4AYwBvAG0APgAAAAIBcQABAAAAGwAAAAEBzyGafwCS3FOH8X9EhBKaEiY7b++a
-u6hKgAAfAHAAAQAAAGYAAABbAFAAQQBUAEMASAAgADIAMQAvADIAMgBdACAAcQBsAGEANAB4AHgA
-eAA6ACAAVQBzAGUAIABwAGMAaQBfAGUAbgBhAGIAbABlAF8AbQBzAGkAeABfAHIAYQBuAGcAZQAo
-ACkAAAAAAB8ANRABAAAAeAAAADwAMwBGAEMANABBAEIAOABCADQANwBFAEMARAA1ADQANgBCAEMA
-RAA0AEIAMwA2ADEAQQA2ADQAQgBFAEEAQwBEADgAQwA2ADQARQA3ADAAMQBAAGEAdgBtAGIAMwAu
-AHEAbABvAGcAaQBjAC4AbwByAGcAPgAAAB8AORABAAAA8gAAADwAYwBvAHYAZQByAC4AMQAzADkA
-MQA1ADEAMgAyADYANgAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBj
-AG8AbQA+ACAAPABlAGIAOQBjADYAYwA0ADcANgA3ADgANgBmAGYAOQAwADEANQAxADIAZQA0ADYA
-OAA1ADkAZgAwAGQANQA5AGEANQBlADYAMgAxADcAMABkAC4AMQAzADkAMQA1ADEAMgAyADYANgAu
-AGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAAAAADAN4/
-n04AAEAABzDi+EKahCzPAQMAJgAAAAAAAgFHAAEAAAAvAAAAYz1VUzthPSA7cD1RTG9naWM7bD1B
-Vk1CMy0xNDAyMTgwODM3MDVaLTEwNzYxNAAAHwAVEAEAAABYAAAAOQA5ADEAMQAzAEEAOABCADYA
-NAA2AEYAQQA1ADQAQQBBAEMAOQA0AEYANQA4ADMAQQAzAEMAQQAxADUARQA3AEAAcQBsAG8AZwBp
-AGMALgBjAG8AbQAAAAIBFDABAAAADAAAAGcAAACRWjKmTwAAAB8A+j8BAAAAIAAAAFYAaQBrAGEA
-cwAgAEMAaABhAHUAZABoAGEAcgB5AAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAFgAAAHUAcwBl
-AHIALQBhAGcAZQBuAHQAAAAAAAEAAABGAAAATQBpAGMAcgBvAHMAbwBmAHQALQBNAGEAYwBPAHUA
-dABsAG8AbwBrAC8AMQA0AC4AMwAuADkALgAxADMAMQAwADMAMAAAAAAAHwAAgB+k6zOoei5Cvnt5
-4amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBuAEkAbgBkAGUAeABUAHIAYQBjAGsA
-aQBuAGcARQB4AAAAAQAAAG4BAABJAEkAPQAwADEAMAAxAEMARgAyAEMAOAA0ADkAOQBBADkANwA2
-ADYARgAwADMAMwBEADUAOQBCADAANAA3ADgAQwBCAEIAMQA5ADAAOABGADAAQgA3ADEANwA2AEYA
-OwBTAEIATQBJAEQAPQAzADkAOwBTADEAPQA8AGUAYgA5AGMANgBjADQANwA2ADcAOAA2AGYAZgA5
-ADAAMQA1ADEAMgBlADQANgA4ADUAOQBmADAAZAA1ADkAYQA1AGUANgAyADEANwAwAGQALgAxADMA
-OQAxADUAMQAyADIANgA2AC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAu
-AGMAbwBtAD4AOwBWAGUAcgBzAGkAbwBuAD0AVgBlAHIAcwBpAG8AbgAgADEANAAuADIAIAAoAEIA
-dQBpAGwAZAAgADMAOAA3AC4AMAApACwAIABTAHQAYQBnAGUAPQBIADIAAAAAAAMADTT9PwAAHwAA
-gIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEAcwAtAGEAdAB0AGEAYwBoAAAA
-AQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIgAAAHgALQBvAHIAaQBnAGkAbgBh
-AHQAaQBuAGcALQBpAHAAAAAAAAEAAAAYAAAAWwAxADAALgAxAC4ANAAuADEAMABdAAAAMFk=
-
---_000_3FC4AB8B47ECD546BCD4B361A64BEACD8C64E701avmb3qlogicorg_--
+> /* code starts */
+> pci@8500 {
+>         bus-range = <0 0>;
+>         ranges = <02000000 0 90000000 90000000 0 10000000
+>                   42000000 0 80000000 80000000 0 10000000
+>                   01000000 0 00000000 e2000000 0 00100000>;
+>         #interrupt-cells = <1>;
+>         #size-cells = <2>;
+>         #address-cells = <3>;
+>         reg = <8500 100>;
+>         compatible = "fsl,mpc8349-pci";
+>         device_type = "pci";
+>         interrupt-parent = < &ipic >;
+>         interrupts = <42 8>;
+>         interrupt-map-mask = <0F800 0 0 7>;
+>         interrupt-map = <
+>
+>                         // ** For reference **
+>                         // INTA = IRQ1 = 0x11
+>                         // INTB = IRQ2 = 0x12
+>                         // INTC = IRQ0 = 0x30
+>                         // INTD = IRQ4 = 0x14
+>
+>                         // BUS 0 IDSEL 0x18 (IDSEL = AD24)
+>                         0c000 0 0 1 &ipic 11 8  // PCI_INTA
+>                         0c000 0 0 2 &ipic 12 8  // PCI_INTB
+>                         0c000 0 0 3 &ipic 30 8  // PCI_INTC
+>                         0c000 0 0 4 &ipic 14 8  // PCI_INTD
+>                         >;
+>
+> };
+>
+> /* code ends */
+>
+>
+>
+> Thanks and Regards,
+> Anand Mistry
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
