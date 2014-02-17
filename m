@@ -1,57 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:50618 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932286AbaBUQ2a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Feb 2014 11:28:30 -0500
-Date: Fri, 21 Feb 2014 09:28:24 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Srikanth Thokala <sthokal@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Michal Simek <michal.simek@xilinx.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] pcie: Add Xilinx PCIe Host Bridge IP driver
-Message-ID: <20140221162824.GA4706@obsidianresearch.com>
-References: <1392564830-5868-1-git-send-email-sthokal@xilinx.com>
- <CAErSpo5FGPhgnp8Gfy-1_Lk7ckCi7U5+z5pLnPU+jScPxD5yUQ@mail.gmail.com>
- <20140219003523.GJ29304@obsidianresearch.com>
- <CA+mB=1KSxkN+mKce5k1n93pmAA_FnWYaqNweWzxd4GD3Mo4PZA@mail.gmail.com>
- <20140220174503.GB19893@obsidianresearch.com>
- <CA+mB=1L+QM2cKq==mwYesp=E7S2N-xTiN7AoBvbzAO2UMn0qVQ@mail.gmail.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:46487 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752327AbaBQBMN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Feb 2014 20:12:13 -0500
+Date: Mon, 17 Feb 2014 10:12:07 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
+	valentine.barshak@cogentembedded.com, ben.dooks@codethink.co.uk,
+	geert@linux-m68k.org
+Subject: Re: [PATCH 00/08] PCI: rcar: Recent driver patches from Ben Dooks
+ and me
+Message-ID: <20140217011207.GB15117@verge.net.au>
+References: <20140213030302.10398.37322.sendpatchset@w520>
+ <20140213043951.GA22116@verge.net.au>
+ <20140214183430.GD31093@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+mB=1L+QM2cKq==mwYesp=E7S2N-xTiN7AoBvbzAO2UMn0qVQ@mail.gmail.com>
+In-Reply-To: <20140214183430.GD31093@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 08:18:00PM +0530, Srikanth Thokala wrote:
+On Fri, Feb 14, 2014 at 11:34:30AM -0700, Bjorn Helgaas wrote:
+> On Thu, Feb 13, 2014 at 01:39:54PM +0900, Simon Horman wrote:
+> > On Thu, Feb 13, 2014 at 12:03:02PM +0900, Magnus Damm wrote:
+> > > PCI: rcar: Recent driver patches from Ben Dooks and me
+> > > 
+> > > [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
+> > > [PATCH v2 02/08] PCI: rcar: add error interrupt handling
+> > > [PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
+> > > [PATCH v2 04/08] PCI: rcar: Register each instance independently
+> > > [PATCH v2 05/08] PCI: rcar: Break out window size handling
+> > > [PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
+> > > [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
+> > > [PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
+> > > 
+> > > These patches update the pci-rcar-gen2.c driver with patches from
+> > > Ben Dooks and me. The first 3 are written by Ben (thanks!) and are
+> > > included here to show what I would like to have merged and what I
+> > > rebased my patches on. The following 4 are updated versions of
+> > > 
+> > > [PATCH 00/04] PCI: rcar: Driver model and physical address space update
+> > > 
+> > > The final patch is a new one that fixes up the Kconfig dependencies.
+> > > 
+> > > Patch 1-3:
+> > > Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+> > > 
+> > > Patch 4-8:
+> > > Signed-off-by: Magnus Damm <damm@opensource.se>
+> > > ---
+> > > 
+> > >  Written against renesas.git tag renesas-devel-v3.14-rc1-20140207
+> > > 
+> > >  drivers/pci/host/Kconfig         |    5 
+> > >  drivers/pci/host/pci-rcar-gen2.c |  445 ++++++++++++++++++++++++++++++++------
+> > >  2 files changed, 385 insertions(+), 65 deletions(-)
+> > 
+> > Bjorn,
+> > 
+> > I am happy with these.
+> > Could you consider merging this series?
+> > 
+> > Acked-by: Simon Horman <horms+renesas@verge.net.au>
+> 
+> Applied to pci/host-rcar for v3.15, thanks!
+> 
+> Bjorn
 
-> 00:00.0 Class 0604: Device 10ee:7081
-
-So this is great, a root port bridge is exactly correct - I would
-recommend using device 1 for this (device 0 is the host bridge in most
-cases), but I don't think that has any functional impact.
-
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr+ Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->         I/O behind bridge: 00000000-00000fff
->         Memory behind bridge: 00000000-000fffff
->         Prefetchable memory behind bridge: 00000000-000fffff
-
-What is going on here?  These ranges should match the MMIO aperture and
-critically must enclose the downstream bars:
-
-> 01:00.0 Class 0200: Device 14e4:1677 (rev 11)
->         Region 0: Memory at 60000000 (64-bit, non-prefetchable) [size=64K]
->         Expansion ROM at 60010000 [disabled] [size=64K]
-
-So one of those two is not right..
-
-Jason
+Thanks!
