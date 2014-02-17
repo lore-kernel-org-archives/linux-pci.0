@@ -1,250 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:56040 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbaBHOWM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Feb 2014 09:22:12 -0500
-Date: Sat, 8 Feb 2014 14:22:08 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
- device tree
-Message-ID: <20140208142207.GR4993@e106497-lin.cambridge.arm.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
- <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
- <7398333.9L5KlyFggU@wuerfel>
- <CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
- <20140206101814.GA4993@e106497-lin.cambridge.arm.com>
- <CACoXjcnTHgtBDesqFUOca1nf34HvNGAV0vP9AEB5xV1mvcRGfw@mail.gmail.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:51717 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbaBQVPQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 16:15:16 -0500
+Received: by mail-ob0-f171.google.com with SMTP id wp4so17598358obc.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2014 13:15:15 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CACoXjcnTHgtBDesqFUOca1nf34HvNGAV0vP9AEB5xV1mvcRGfw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAE9FiQXmWG2RNP-t=U06JUsqkmDm2My5762za8QuwUMZsG+yNg@mail.gmail.com>
+References: <20140217045004.GB3230@yanx>
+	<CAE9FiQXmWG2RNP-t=U06JUsqkmDm2My5762za8QuwUMZsG+yNg@mail.gmail.com>
+Date: Mon, 17 Feb 2014 13:15:15 -0800
+Message-ID: <CAE9FiQWxcBCy+dp-0D2erB83uyyTNKFo5y0sKwiiFxo1xM0Z=g@mail.gmail.com>
+Subject: Re: Support huge alignment in pbus_size_mem()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Guo Chao <yan@linux.vnet.ibm.com>,
+	Nikhil P Rao <nikhil.rao@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 08, 2014 at 12:21:56AM +0000, Tanmay Inamdar wrote:
-> On Thu, Feb 6, 2014 at 2:18 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> > On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
-> >> Hello Liviu,
-> >>
-> >> I did not get the first email of this particular patch on any of
-> >> subscribed mailing lists (don't know why), hence replying here.
-> >
-> > Strange, it shows in the MARC and GMANE archive for linux-pci, probably
-> > a hickup on your receiving side?
-> >
-> >>
-> >> +struct pci_host_bridge *
-> >> +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
-> >> + void *host_data, struct list_head *resources)
-> >> +{
-> >> + struct pci_bus *root_bus;
-> >> + struct pci_host_bridge *bridge;
-> >> +
-> >> + /* first parse the host bridge bus ranges */
-> >> + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
-> >> + return NULL;
-> >> +
-> >> + /* then create the root bus */
-> >> + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
-> >> + if (!root_bus)
-> >> + return NULL;
-> >> +
-> >> + bridge = to_pci_host_bridge(root_bus->bridge);
-> >> +
-> >> + return bridge;
-> >> +}
-> >>
-> >> You are keeping the domain_nr inside pci_host_bridge structure. In
-> >> above API, domain_nr is required in 'pci_find_bus' function called
-> >> from 'pci_create_root_bus'. Since the bridge is allocated after
-> >> creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
-> >> will cause problem for scanning multiple domains.
-> >
-> > Good catch. I was switching between creating a pci_controller in arch/arm64 and
-> > adding the needed bits in pci_host_bridge. After internal review I've decided to
-> > add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
-> >
-> > Thanks for reviewing this, will fix in v2.
-> >
-> > Do you find porting to the new API straight forward?
-> 
-> It is quite straight forward for MEM regions but for IO regions it is
-> not. You always assume IO resource starting at 0x0. IMO, this will
-> cause problem for systems with multiple ports / IO windows. You can
-> take a look at 'drivers/pci/host/pcie-designware.c'.
-> 
-> Also the manipulations of addresses for IO_RESOURCES can be dangerous.
-> It can make some value negative. For example if my PCI IO range starts
-> in 32 bit address range say 0x8000_0000 with CPU address
-> 0xb0_8000_0000, window->offset after manipulation will become
-> negative.
-> 
-> Personally I would like to do get all the PCI and CPU addresses from
-> my device tree as is and do the 'pci_add_resource_offset'. This will
-> help me setup my regions correctly without any further arithmetic.
-> Please let me know what you think.
+On Mon, Feb 17, 2014 at 11:28 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sun, Feb 16, 2014 at 8:50 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
+>> pbus_size_mem() limits resource alignment within 2G. We want to extend
+>> this limit to support a 16G BAR. I found similar effort was tried before:
+>>
+>>         https://lkml.org/lkml/2012/6/21/411
+>>
+>> What's the result? Does anyone come up with an adaptive algorithm?
+>
+> I suggest following changes:
+>
+> From: Nikhil P Rao <nikhil.rao@intel.com>
+> Subject: [PATCH] PCI: Fix bus align checking to support more than 2G
+>
+> current 2G is out of date.
+>
+> -v3: We only need to extend that when 64bit mmio is supported.
+>      So extract mmio64 mask checking, and still keep old 2G checking
+>      for other path.  --- Yinghai
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> ---
+>  drivers/pci/setup-bus.c |   42 ++++++++++++++++++++++++++++++++++++++----
+>  1 file changed, 38 insertions(+), 4 deletions(-)
+>
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -921,7 +921,7 @@ static int pbus_size_mem(struct pci_bus
+>  {
+>      struct pci_dev *dev;
+>      resource_size_t min_align, align, size, size0, size1;
+> -    resource_size_t aligns[12];    /* Alignments from 1Mb to 2Gb */
+> +    resource_size_t aligns[44];    /* Alignments from 1Mb to 2^63 */
+>      int order, max_order;
+>      struct resource *b_res = find_free_bus_resource(bus, type);
+>      unsigned int mem64_mask = 0;
+> @@ -937,6 +937,40 @@ static int pbus_size_mem(struct pci_bus
+>      mem64_mask = b_res->flags & IORESOURCE_MEM_64;
+>      b_res->flags &= ~IORESOURCE_MEM_64;
+>
+> +    /* kernel does not support 64bit */
+> +    if (sizeof(resource_size_t) == 4)
+> +        mem64_mask &=  ~IORESOURCE_MEM_64;
+> +
+> +    if (!(mem64_mask & IORESOURCE_MEM_64))
+> +        goto mem64_mask_check_done;
+> +
+> +    /* check if mem64 support is supported and needed at first */
+> +    list_for_each_entry(dev, &bus->devices, bus_list) {
+> +        int i;
+> +
+> +        for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> +            struct resource *r = &dev->resource[i];
+> +            resource_size_t r_size;
+> +
+> +            if (r->parent || (r->flags & mask) != type)
+> +                continue;
+> +            r_size = resource_size(r);
+> +#ifdef CONFIG_PCI_IOV
+> +            /* put SRIOV requested res to the optional list */
+> +            if (realloc_head && i >= PCI_IOV_RESOURCES &&
+> +                    i <= PCI_IOV_RESOURCE_END)
+> +                continue;
+> +#endif
+> +            mem64_mask &= r->flags & IORESOURCE_MEM_64;
+> +
+> +            if (!(mem64_mask & IORESOURCE_MEM_64))
+> +                goto mem64_mask_check_done;
+> +
+> +        }
+> +    }
+> +
+> +mem64_mask_check_done:
+> +
+>      list_for_each_entry(dev, &bus->devices, bus_list) {
+>          int i;
+>
+> @@ -959,8 +993,9 @@ static int pbus_size_mem(struct pci_bus
+>  #endif
+>              /* For bridges size != alignment */
+>              align = pci_resource_alignment(dev, r);
+> -            order = __ffs(align) - 20;
+> -            if (order > 11) {
+> +            order = __ffs64(align) - 20;
+> +            if (order > ARRAY_SIZE(aligns) ||
+> +                (!(mem64_mask & IORESOURCE_MEM_64) && order > 11) ) {
 
-Yes, that parsing code of ranges is incorrect in light of the current discussion. I
-will try to propose a fix in the v2 series.
+...
+> For 64bit systems, we want to ensure that the align < 1^63, so shouldn't
+> order be checked against 43, instead of ARRAY_SIZE(aligns) ?
 
-Regarding your PCI IO range: if your bus address starts at 0x8000_0000, would
-that not cause problems with devices that use less than 32bits for address
-decoding? It is a rather unusual setup, I believe the x86 world (even PCI spec?)
-mandates IO bus ranges in the first 16MB of address range?
+yes, should change to 43.
 
-Best regards,
-Liviu
+Thanks
 
-> 
-> >
-> > Best regards,
-> > Liviu
-> >
-> >>
-> >>
-> >> On Mon, Feb 3, 2014 at 10:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> >> > On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
-> >> >> +/**
-> >> >> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
-> >> >> + * @dev: device node of the host bridge having the range property
-> >> >> + * @resources: list where the range of resources will be added after DT parsing
-> >> >> + *
-> >> >> + * This function will parse the "ranges" property of a PCI host bridge device
-> >> >> + * node and setup the resource mapping based on its content. It is expected
-> >> >> + * that the property conforms with the Power ePAPR document.
-> >> >> + *
-> >> >> + * Each architecture will then apply their filtering based on the limitations
-> >> >> + * of each platform. One general restriction seems to be the number of IO space
-> >> >> + * ranges, the PCI framework makes intensive use of struct resource management,
-> >> >> + * and for IORESOURCE_IO types they can only be requested if they are contained
-> >> >> + * within the global ioport_resource, so that should be limited to one IO space
-> >> >> + * range.
-> >> >
-> >> > Actually we have quite a different set of restrictions around I/O space on ARM32
-> >> > at the moment: Each host bridge can have its own 64KB range in an arbitrary
-> >> > location on MMIO space, and the total must not exceed 2MB of I/O space.
-> >> >
-> >> >> + */
-> >> >> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
-> >> >> +                                     struct list_head *resources)
-> >> >> +{
-> >> >> +     struct resource *res;
-> >> >> +     struct of_pci_range range;
-> >> >> +     struct of_pci_range_parser parser;
-> >> >> +     int err;
-> >> >> +
-> >> >> +     pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-> >> >> +
-> >> >> +     /* Check for ranges property */
-> >> >> +     err = of_pci_range_parser_init(&parser, dev);
-> >> >> +     if (err)
-> >> >> +             return err;
-> >> >> +
-> >> >> +     pr_debug("Parsing ranges property...\n");
-> >> >> +     for_each_of_pci_range(&parser, &range) {
-> >> >> +             /* Read next ranges element */
-> >> >> +             pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
-> >> >> +                             range.pci_space, range.pci_addr);
-> >> >> +             pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
-> >> >> +                                     range.cpu_addr, range.size);
-> >> >> +
-> >> >> +             /* If we failed translation or got a zero-sized region
-> >> >> +              * (some FW try to feed us with non sensical zero sized regions
-> >> >> +              * such as power3 which look like some kind of attempt
-> >> >> +              * at exposing the VGA memory hole) then skip this range
-> >> >> +              */
-> >> >> +             if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> >> >> +                     continue;
-> >> >> +
-> >> >> +             res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> >> >> +             if (!res) {
-> >> >> +                     err = -ENOMEM;
-> >> >> +                     goto bridge_ranges_nomem;
-> >> >> +             }
-> >> >> +
-> >> >> +             of_pci_range_to_resource(&range, dev, res);
-> >> >> +
-> >> >> +             pci_add_resource_offset(resources, res,
-> >> >> +                             range.cpu_addr - range.pci_addr);
-> >> >> +     }
-> >> >
-> >> > I believe of_pci_range_to_resource() will return the MMIO aperture for the
-> >> > I/O space window here, which is not what you are supposed to pass into
-> >> > pci_add_resource_offset.
-> >> >
-> >> >> +EXPORT_SYMBOL(pci_host_bridge_of_init);
-> >> >
-> >> > EXPORT_SYMBOL_GPL
-> >> >
-> >> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >> >> index 6e34498..16febae 100644
-> >> >> --- a/drivers/pci/probe.c
-> >> >> +++ b/drivers/pci/probe.c
-> >> >> @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >> >>       list_for_each_entry_safe(window, n, resources, list) {
-> >> >>               list_move_tail(&window->list, &bridge->windows);
-> >> >>               res = window->res;
-> >> >> +             /*
-> >> >> +              * IO resources are stored in the kernel with a CPU start
-> >> >> +              * address of zero. Adjust the data accordingly and remember
-> >> >> +              * the offset
-> >> >> +              */
-> >> >> +             if (resource_type(res) == IORESOURCE_IO) {
-> >> >> +                     bridge->io_offset = res->start;
-> >> >> +                     res->end -= res->start;
-> >> >> +                     window->offset -= res->start;
-> >> >> +                     res->start = 0;
-> >> >> +             }
-> >> >>               offset = window->offset;
-> >> >>               if (res->flags & IORESOURCE_BUS)
-> >> >
-> >> > Won't this break all existing host bridges?
-> >> >
-> >> >         Arnd
-> >> >
-> >> > _______________________________________________
-> >> > linux-arm-kernel mailing list
-> >> > linux-arm-kernel@lists.infradead.org
-> >> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> >>
-> >
-> > --
-> > ====================
-> > | I would like to |
-> > | fix the world,  |
-> > | but they're not |
-> > | giving me the   |
-> >  \ source code!  /
-> >   ---------------
-> >     ¯\_(ツ)_/¯
-> >
-> > -- IMPORTANT NOTICE: The contents of this email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and do not disclose the contents to any other person, use it for any purpose, or store or copy the information in any medium.  Thank you.
-> >
-> > ARM Limited, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2557590
-> > ARM Holdings plc, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2548782
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Yinghai
