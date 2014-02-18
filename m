@@ -1,72 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27254 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751175AbaBXIAt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:00:49 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Gurumurthy <agurumur@brocade.com>,
-	Vijaya Mohan Guvva <vmohan@brocade.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 03/23] bfa: Cleanup bfad_setup_intr() function
-Date: Mon, 24 Feb 2014 09:02:03 +0100
-Message-Id: <c3fb3d552113a7c180741cf9f577081fc690366f.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Ariel Elior <ariele@broadcom.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 02/35] bnx2x: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:07:54 +0100
+Message-Id: <f8822086d21320729a274f5920d5ed613016501b.1392717502.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
+
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Gurumurthy <agurumur@brocade.com>
-Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: Ariel Elior <ariele@broadcom.com>
+Cc: netdev@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/bfa/bfad.c |   18 ++++++++----------
- 1 files changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c |   46 ++++++++++-------------
+ 1 files changed, 20 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 972ff8d..e7e4774 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)
- int
- bfad_setup_intr(struct bfad_s *bfad)
- {
--	int error = 0;
-+	int error;
- 	u32 mask = 0, i, num_bit = 0, max_bit = 0;
- 	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
- 	struct pci_dev *pdev = bfad->pcidev;
-@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
+index 9ded3db..8363b9d 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
+@@ -1638,36 +1638,16 @@ int bnx2x_enable_msix(struct bnx2x *bp)
+ 	DP(BNX2X_MSG_SP, "about to request enable msix with %d vectors\n",
+ 	   msix_vec);
  
- 		bfad->bfad_flags |= BFAD_MSIX_ON;
- 
--		return error;
-+		return 0;
+-	rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], msix_vec);
+-
++	rc = pci_enable_msix_range(bp->pdev, &bp->msix_table[0],
++				   BNX2X_MIN_MSIX_VEC_CNT(bp), msix_vec);
+ 	/*
+ 	 * reconfigure number of tx/rx queues according to available
+ 	 * MSI-X vectors
+ 	 */
+-	if (rc >= BNX2X_MIN_MSIX_VEC_CNT(bp)) {
+-		/* how less vectors we will have? */
+-		int diff = msix_vec - rc;
+-
+-		BNX2X_DEV_INFO("Trying to use less MSI-X vectors: %d\n", rc);
+-
+-		rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], rc);
+-
+-		if (rc) {
+-			BNX2X_DEV_INFO("MSI-X is not attainable rc %d\n", rc);
+-			goto no_msix;
+-		}
+-		/*
+-		 * decrease number of queues by number of unallocated entries
+-		 */
+-		bp->num_ethernet_queues -= diff;
+-		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
+-
+-		BNX2X_DEV_INFO("New queue configuration set: %d\n",
+-			       bp->num_queues);
+-	} else if (rc > 0) {
++	if (rc == -ENOSPC) {
+ 		/* Get by with single vector */
+-		rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], 1);
+-		if (rc) {
++		rc = pci_enable_msix_range(bp->pdev, &bp->msix_table[0], 1, 1);
++		if (rc < 0) {
+ 			BNX2X_DEV_INFO("Single MSI-X is not attainable rc %d\n",
+ 				       rc);
+ 			goto no_msix;
+@@ -1680,8 +1660,22 @@ int bnx2x_enable_msix(struct bnx2x *bp)
+ 		bp->num_ethernet_queues = 1;
+ 		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
+ 	} else if (rc < 0) {
+-		BNX2X_DEV_INFO("MSI-X is not attainable  rc %d\n", rc);
++		BNX2X_DEV_INFO("MSI-X is not attainable rc %d\n", rc);
+ 		goto no_msix;
++	} else if (rc < msix_vec) {
++		/* how less vectors we will have? */
++		int diff = msix_vec - rc;
++
++		BNX2X_DEV_INFO("Trying to use less MSI-X vectors: %d\n", rc);
++
++		/*
++		 * decrease number of queues by number of unallocated entries
++		 */
++		bp->num_ethernet_queues -= diff;
++		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
++
++		BNX2X_DEV_INFO("New queue configuration set: %d\n",
++			       bp->num_queues);
  	}
  
- line_based:
--	error = 0;
--	if (request_irq
--	    (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
--	     BFAD_DRIVER_NAME, bfad) != 0) {
--		/* Enable interrupt handler failed */
--		return 1;
--	}
-+	error = request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
-+			    BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
-+	if (error)
-+		return error;
-+
- 	bfad->bfad_flags |= BFAD_INTX_ON;
- 
--	return error;
-+	return 0;
- }
- 
- void
+ 	bp->flags |= USING_MSIX_FLAG;
 -- 
 1.7.7.6
 
