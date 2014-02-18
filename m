@@ -1,64 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:58891 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752966AbaBLSTW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Feb 2014 13:19:22 -0500
-Date: Wed, 12 Feb 2014 11:19:13 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Message-ID: <20140212181913.GA16428@obsidianresearch.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <3460536.Sh23gjDa6X@wuerfel>
- <20140205190947.GA22297@mudshark.cambridge.arm.com>
- <3724624.kd9jZNUiTF@wuerfel>
- <20140207114607.GE5976@mudshark.cambridge.arm.com>
- <20140207175410.GC16263@obsidianresearch.com>
- <20140212181015.GJ29132@mudshark.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140212181015.GJ29132@mudshark.cambridge.arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Magnus Damm <magnus.damm@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
+	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
+Date: Tue, 18 Feb 2014 11:10:51 +0900
+Message-Id: <20140218021051.14164.6194.sendpatchset@w520>
+In-Reply-To: <20140218021041.14164.56411.sendpatchset@w520>
+References: <20140218021041.14164.56411.sendpatchset@w520>
+Subject: [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 06:10:15PM +0000, Will Deacon wrote:
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 
-> > AFAIK, the job is fairly simple, when you call pci_add_resource_offset
-> > for memory compute the offset from 
-> >   of_pci_range.pci_addr - of_pci_range.cpu_addr
-> > 
-> > (or is it the other way around ?)
-> 
-> I think it's the other way round: bus = cpu - offset, then Arnd's example of
-> PCI bus 0 works out as: 0 = cpu - pci->mem_start.
+The current code does not check the return from platform_get_irq()
+so add an error check and return if this call does fail.
 
-That looks right to me
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+Signed-off-by: Magnus Damm <damm@opensource.se>
+---
 
-> I added that to my driver, but I get some weird looking bus addresses in
-> dmesg:
-> 
-> [    0.307585] pci-arm-generic 40000000.pci: PCI host bridge to bus 0000:00
-> [    0.307601] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-> [    0.307615] pci_bus 0000:00: root bus resource [mem 0x00000000-0x3effffff] (bus address [0xffffffffbf000000-0xfffffffffdffffff])
-> 
-> Looking at drivers/pci/probe.c, it seems to think that res->start - offset
-> gives a bus address, which implies that the resources are indeed *CPU*
-> addresses.
-> 
-> Are you sure pci_add_resource_offset wants bus addresses?
+ drivers/pci/host/pci-rcar-gen2.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-Sorry, I wasn't clear: It accepts a cpu address in the struct
-resource and an offset to convert back to a bus address.
-
-You should compute 0 as the offset in the normal case, ie
-of_pci_range.pci_addr and of_pci_range.cpu_addr should be identical,
-which depends on the DT ranges being correct..
-
-Jason
+--- 0001/drivers/pci/host/pci-rcar-gen2.c
++++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 09:41:55.000000000 +0900
+@@ -308,6 +308,11 @@ static int __init rcar_pci_probe(struct
+ 	priv->reg = reg;
+ 	priv->dev = &pdev->dev;
+ 
++	if (priv->irq < 0) {
++		dev_err(&pdev->dev, "no valid irq found\n");
++		return priv->irq;
++	}
++
+ 	return rcar_pci_add_controller(priv);
+ }
+ 
