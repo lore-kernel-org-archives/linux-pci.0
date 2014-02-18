@@ -1,42 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 4/7] sh/PCI: Use default pcibios_enable_device()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Mundt <lethal@linux-sh.org>, linux-kernel@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Date: Wed, 26 Feb 2014 16:41:55 -0700
-Message-ID: <20140226234155.18970.93520.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Eli Cohen <eli@mellanox.com>, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH net-next 19/35] mlx5: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:11:48 +0100
+Message-Id: <3a48ed13ea35014e0fcdf7bf18b928d9de525779.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We don't need anything arch-specific in pcibios_enable_device(), so drop
-the arch implementation and use the default generic one.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Paul Mundt <lethal@linux-sh.org>
-CC: linux-sh@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Eli Cohen <eli@mellanox.com>
+Cc: linux-rdma@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- arch/sh/drivers/pci/pci.c |    5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/ethernet/mellanox/mlx5/core/main.c |   16 +++++-----------
+ 1 files changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 60ed3e1c4b75..1bc09ee7948f 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -186,11 +186,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index a064f06..81df046 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -116,7 +116,6 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
+ 	struct mlx5_eq_table *table = &dev->priv.eq_table;
+ 	int num_eqs = 1 << dev->caps.log_max_eq;
+ 	int nvec;
+-	int err;
+ 	int i;
  
--int pcibios_enable_device(struct pci_dev *dev, int mask)
--{
--	return pci_enable_resources(dev, mask);
--}
--
- static void __init
- pcibios_bus_report_status_early(struct pci_channel *hose,
- 				int top_bus, int current_bus,
+ 	nvec = dev->caps.num_ports * num_online_cpus() + MLX5_EQ_VEC_COMP_BASE;
+@@ -131,17 +130,12 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
+ 	for (i = 0; i < nvec; i++)
+ 		table->msix_arr[i].entry = i;
+ 
+-retry:
+-	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
+-	err = pci_enable_msix(dev->pdev, table->msix_arr, nvec);
+-	if (err <= 0) {
+-		return err;
+-	} else if (err > 2) {
+-		nvec = err;
+-		goto retry;
+-	}
++	nvec = pci_enable_msix_range(dev->pdev, table->msix_arr,
++				     MLX5_EQ_VEC_COMP_BASE, nvec);
++	if (nvec < 0)
++		return nvec;
+ 
+-	mlx5_core_dbg(dev, "received %d MSI vectors out of %d requested\n", err, nvec);
++	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
+ 
+ 	return 0;
+ }
+-- 
+1.7.7.6
 
