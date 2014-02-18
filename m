@@ -1,86 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:61547 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753868AbaBSWNR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 17:13:17 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Wed, 19 Feb 2014 23:12:52 +0100
-Message-ID: <3351875.BO8J5k2cFs@wuerfel>
-In-Reply-To: <CAErSpo7g5G0vn_8tyRE52MK6YuTB8XhBbk9thhzLx4tg0hmDMg@mail.gmail.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <3905203.TvF8RmfLsz@wuerfel> <CAErSpo7g5G0vn_8tyRE52MK6YuTB8XhBbk9thhzLx4tg0hmDMg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:51329 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755202AbaBRKKp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:10:45 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Hyong-Youb Kim <hykim@myri.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 20/35] myri10ge: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:11:49 +0100
+Message-Id: <4174e05e893a4b62b9c39692691b926cec2dc2c3.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 19 February 2014 14:33:54 Bjorn Helgaas wrote:
-> On Wed, Feb 19, 2014 at 1:48 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Wednesday 19 February 2014 13:18:24 Bjorn Helgaas wrote:
-> >> >
-> >> > Right, this is an interesting case indeed, and I think we haven't
-> >> > considered it in the binding so far. We already encode a "bus-range"
-> >> > in DT, so we can easily partition the ECAM config space, but it
-> >> > still violates one of the two assumptions:
-> >> > a) that the register ranges for the two host bridge devices are
-> >> >    non-overlapping in DT
-> >> > b) that the ECAM register range as specified in DT starts at bus
-> >> >    0 and is a power-of-two size.
-> >> > Since the binding is not fixed that, we could change the definition to
-> >> > say that the ECAM register range in the "reg" property must match
-> >> > the buses listed in the "bus-range" property.
-> >>
-> >> Addresses in the ACPI MCFG table correspond to bus number 0, but the
-> >> MCFG also provides start & end bus numbers, so the valid range does
-> >> not necessarily start with bus 0 and need not be power-of-two in size.
-> >>  Something similar sounds like a good idea for DT.
-> >
-> > Hmm, we'll have to think about that. From a DT perspective, we try
-> > to keep things local to the node using it, so listing only the
-> > registers we are allowed to access is more natural.
-> 
-> The combination of MCFG base address for bus 00 and the bus number
-> range from _CRS, plus the obvious offset computation does effectively
-> describe the registers you're allowed to access; it's just up to the
-> OS to compute the offsets.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-That's not what I meant. The 'reg' property is supposed to list the
-registers that are exclusively owned by the device. We normally
-expect that we want to request_mem_region() and ioremap() the entire
-range for each device, which doesn't make sense if we only want a
-small part of it, or if another device owns the same registers.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Hyong-Youb Kim <hykim@myri.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/net/ethernet/myricom/myri10ge/myri10ge.c |   40 +++++++++++-----------
+ 1 files changed, 20 insertions(+), 20 deletions(-)
 
-Having a separate device that just owns the ECAM region would work
-fine, because then it can ioremap that once and get referenced
-by the host bridge drivers.
+diff --git a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
+index 68026f7..130f6b2 100644
+--- a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
++++ b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
+@@ -2329,16 +2329,14 @@ static int myri10ge_request_irq(struct myri10ge_priv *mgp)
+ 	status = 0;
+ 	if (myri10ge_msi) {
+ 		if (mgp->num_slices > 1) {
+-			status =
+-			    pci_enable_msix(pdev, mgp->msix_vectors,
+-					    mgp->num_slices);
+-			if (status == 0) {
+-				mgp->msix_enabled = 1;
+-			} else {
++			status = pci_enable_msix_range(pdev, mgp->msix_vectors,
++					mgp->num_slices, mgp->num_slices);
++			if (status < 0) {
+ 				dev_err(&pdev->dev,
+ 					"Error %d setting up MSI-X\n", status);
+ 				return status;
+ 			}
++			mgp->msix_enabled = 1;
+ 		}
+ 		if (mgp->msix_enabled == 0) {
+ 			status = pci_enable_msi(pdev);
+@@ -3895,32 +3893,34 @@ static void myri10ge_probe_slices(struct myri10ge_priv *mgp)
+ 	mgp->msix_vectors = kcalloc(mgp->num_slices, sizeof(*mgp->msix_vectors),
+ 				    GFP_KERNEL);
+ 	if (mgp->msix_vectors == NULL)
+-		goto disable_msix;
++		goto no_msix;
+ 	for (i = 0; i < mgp->num_slices; i++) {
+ 		mgp->msix_vectors[i].entry = i;
+ 	}
+ 
+ 	while (mgp->num_slices > 1) {
+-		/* make sure it is a power of two */
+-		while (!is_power_of_2(mgp->num_slices))
+-			mgp->num_slices--;
++		mgp->num_slices = rounddown_pow_of_two(mgp->num_slices);
+ 		if (mgp->num_slices == 1)
+-			goto disable_msix;
+-		status = pci_enable_msix(pdev, mgp->msix_vectors,
+-					 mgp->num_slices);
+-		if (status == 0) {
+-			pci_disable_msix(pdev);
++			goto no_msix;
++		status = pci_enable_msix_range(pdev,
++					       mgp->msix_vectors,
++					       mgp->num_slices,
++					       mgp->num_slices);
++		if (status < 0)
++			goto no_msix;
++
++		pci_disable_msix(pdev);
++
++		if (status == mgp->num_slices) {
+ 			if (old_allocated)
+ 				kfree(old_fw);
+ 			return;
+-		}
+-		if (status > 0)
++		} else {
+ 			mgp->num_slices = status;
+-		else
+-			goto disable_msix;
++		}
+ 	}
+ 
+-disable_msix:
++no_msix:
+ 	if (mgp->msix_vectors != NULL) {
+ 		kfree(mgp->msix_vectors);
+ 		mgp->msix_vectors = NULL;
+-- 
+1.7.7.6
 
-> >> > * Should I expect one IOMMU per host bridge or one ECAM region,
-> >> >   or can either be possible?
-> >>
-> >> It's possible to have multiple IOMMUs per host bridge, and I think
-> >> they can even be buried down in the PCIe hierarchy.
-> >
-> > Oh, I didn't know that. So how do you actually find the IOMMU for
-> > a given domain/bus/device/function combination?
-> 
-> For VT-d on x86, there's a DMAR table that describes the remapping
-> units (IOMMUs), and each has a list of associated devices.  This is
-> one place where the FW/OS interface uses segment and bus numbers.
-> There's something different for AMD IOMMUs, but I think it also
-> involves looking up the device in a table from the firmware.
-
-Ok, that seems complicated. I hope we don't have to get this deep
-on ARM and can keep it on a per host-bridge basis rather than having
-to get down all the way to the device. We wouldn't be able to encode
-IOMMUs for hotplugged devices in DT, because the firmware is no
-longer running by the time they show up.
-
-	Arnd
