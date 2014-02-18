@@ -1,50 +1,30 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:19700
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751072AbaB0QWj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 11:22:39 -0500
-Message-ID: <530F6643.5090009@amd.com>
-Date: Thu, 27 Feb 2014 10:22:27 -0600
-From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: infinipath <infinipath@intel.com>,
+	Roland Dreier <roland@kernel.org>,
+	"Hefty, Sean" <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH 2/2] qib: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Date: Tue, 18 Feb 2014 16:52:14 +0000
+Message-ID: <32E1700B9017364D9B60AED9960492BC211F5860@FMSMSX107.amr.corp.intel.com>
+References: <cover.1392733151.git.agordeev@redhat.com>
+ <f0eabd77b96e0d679ce6c2e2e544c73063c508ee.1392733151.git.agordeev@redhat.com>
+In-Reply-To: <f0eabd77b96e0d679ce6c2e2e544c73063c508ee.1392733151.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Borislav Petkov <bp@alien8.de>
-CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<x86@kernel.org>, <dougthompson@xmission.com>,
-	<bhelgaas@google.com>, <JBeulich@suse.com>,
-	<dan.carpenter@oracle.com>, <linux-kernel@vger.kernel.org>,
-	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<Arindam.Nath@amd.com>
-Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
-References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20140221142749.GC11531@pd.tnic> <5307BF6F.8040303@amd.com> <20140224140931.GA16457@pd.tnic>
-In-Reply-To: <20140224140931.GA16457@pd.tnic>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/24/2014 8:09 AM, Borislav Petkov wrote:
-> On Fri, Feb 21, 2014 at 03:04:47PM -0600, Aravind Gopalakrishnan wrote:
->> F{3,4} are used by hwmon/k10temp.c and hwmon/fam15h_power.c and they
->> will need definitions to be places here in pci_ids.h But I'm not sure
->> if the hwmon drivers need to carry support for this model yet (will
->> verify that)
->>
->> If not, I'll remove them and resend.
-> Yes, please check that and let me know.
->
->
-Ok, here's more info: we will need to add support in k10temp for this 
-model; and support is
-not required in fam15h_power as register bits used by the driver code 
-are unavailable for OS.
-But F{3,4} usage is split: k10temp uses F3 device ID and fam15h_power 
-uses F4 device ID.
+> Subject: [PATCH 2/2] qib: Use pci_enable_msix_range() instead of
+> pci_enable_msix()
+> 
+We are testing this now.
 
-Not sure if you want to split these definitions between amd_nb.h and 
-pci_ids.h or just let it be.
-
-Thanks,
--Aravind.
-
-
-
+I suggest a subject/summary adding the IB/:
+IB/qib: Use pci_enable_msix_range() instead of pci_enable_msix()
 
