@@ -1,59 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog124.obsmtp.com ([207.126.144.157]:43639 "EHLO
-	eu1sys200aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753078AbaBTNeJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 08:34:09 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	"jg1.han@samsung.com" <jg1.han@samsung.com>
-Cc: Ajay KHANDELWAL <ajay.khandelwal@st.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 20 Feb 2014 21:33:48 +0800
-Subject: RE: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io
- and mem viewport
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FD40D8D7@EAPEX1MAIL1.st.com>
-References: <1392873774-22249-1-git-send-email-mohit.kumar@st.com>
- <1392873774-22249-2-git-send-email-mohit.kumar@st.com>
- <5305E928.5070505@ti.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189FD40D8B3@EAPEX1MAIL1.st.com>
- <5305F154.8020507@ti.com>
-In-Reply-To: <5305F154.8020507@ti.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:18794 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755434AbaBRPHL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 10:07:11 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Roland Dreier <roland@kernel.org>,
+	Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 0/2] ib: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 16:09:00 +0100
+Message-Id: <cover.1392733151.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gS2lzaG9uLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEtp
-c2hvbiBWaWpheSBBYnJhaGFtIEkgW21haWx0bzpraXNob25AdGkuY29tXQ0KPiBTZW50OiBUaHVy
-c2RheSwgRmVicnVhcnkgMjAsIDIwMTQgNTo0MyBQTQ0KPiBUbzogTW9oaXQgS1VNQVIgRENHOyBq
-ZzEuaGFuQHNhbXN1bmcuY29tDQo+IENjOiBBamF5IEtIQU5ERUxXQUw7IEJqb3JuIEhlbGdhYXM7
-IHNwZWFyLWRldmVsOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBS
-ZTogW1BBVENIIDIvMl0gUENJOmRlc2lnbndhcmU6Rml4IGlBVFUgcHJvZ3JhbW1pbmcgZm9yIGNm
-ZzEsIGlvDQo+IGFuZCBtZW0gdmlld3BvcnQNCj4gDQo+IEhpIE1vaGl0LA0KPiANCj4gT24gVGh1
-cnNkYXkgMjAgRmVicnVhcnkgMjAxNCAwNToyOCBQTSwgTW9oaXQgS1VNQVIgRENHIHdyb3RlOg0K
-PiA+IEhlbGxvIEtpc2hvbiwNCj4gPg0KPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
-PiA+PiBGcm9tOiBLaXNob24gVmlqYXkgQWJyYWhhbSBJIFttYWlsdG86a2lzaG9uQHRpLmNvbV0N
-Cj4gPj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDIwLCAyMDE0IDU6MDggUE0NCj4gPj4gVG86
-IE1vaGl0IEtVTUFSIERDRzsgamcxLmhhbkBzYW1zdW5nLmNvbQ0KPiA+PiBDYzogQWpheSBLSEFO
-REVMV0FMOyBCam9ybiBIZWxnYWFzOyBzcGVhci1kZXZlbDsgbGludXgtDQo+ID4+IHBjaUB2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSCAyLzJdIFBDSTpkZXNpZ253YXJl
-OkZpeCBpQVRVIHByb2dyYW1taW5nIGZvcg0KPiA+PiBjZmcxLCBpbyBhbmQgbWVtIHZpZXdwb3J0
-DQo+ID4+DQo+ID4+IEhpLA0KPiA+Pg0KPiA+PiBPbiBUaHVyc2RheSAyMCBGZWJydWFyeSAyMDE0
-IDEwOjUyIEFNLCBNb2hpdCBLdW1hciB3cm90ZToNCj4gPj4+IFRoaXMgcGF0Y2ggY29ycmVjdCBp
-QVRVIHByb2dyYW1taW5nIGZvciBjZmcxLCBpbyBhbmQgbWVtIHZpZXdwb3J0Lg0KPiA+Pj4gRW5h
-YmxlIEFUVSBvbmx5IGFmdGVyIGNvbmZpZ3VyaW5nIGl0Lg0KPiA+Pg0KPiA+PiBEb2VzIHRoaXMg
-cGF0Y2ggYWN0dWFsbHkgZml4ZXMgZGV2aWNlIGVudW1lcmF0aW9uIGJlaGluZCBhIFBDSWUtcGNp
-DQo+ID4+IGJyaWRnZSBvciB0aGlzIGlzIG1vcmUgb2YgY2xlYW5pbmcgdXAgdGhlIHNlcXVlbmNl
-Pw0KPiA+Pg0KPiA+IC0gVGhpcyBwYXRjaCBjb3JyZWN0cyBBVFUgcHJvZ3JhbW1pbmcgc2VxdWVu
-Y2UuIEkgYW0gbm90IGF3YXJlIG9mIGFueQ0KPiA+IHN1Y2ggaXNzdWUgd2l0aCBjdXJyZW50IGRy
-aXZlci4gUGxzIHNwZWNpZnkgIHdoaWNoIGJyaWRnZSBkbyB5b3UgdXNlIGluIHlvdXINCj4gc2V0
-dXAgYW5kIHdoYXQgaXMgdGhlIHByb2JsZW0/DQo+IA0KPiBJIHRyaWVkIHdpdGggY2FyZCBbMV0s
-IGl0IGhhZCBhIFBMWCBicmlkZ2UgY2hpcC4gSXQgY291bGRuJ3QgcmVhZCB0aGUgY29uZmlndXJh
-dGlvbg0KPiBzcGFjZSBvZiB0aGUgZGV2aWNlIGNvbm5lY3RlZCB0byB0aGUgUENJZS1QQ0kgYnJp
-ZGdlLg0KPiANCi0gSSBkb27igJl0IGhhdmUgdGhlIG1lbnRpb25lZCBjYXJkIHdpdGggbWUsIGJ1
-dCB3ZSBhcmUgc3VjY2Vzc2Z1bGx5IHVzaW5nIExlY3JveSBQVEMgc3dpdGNoDQogYW5kIFNJTDMx
-MjQtMkNCMzY0IFBDSS1YIGNvbXBhdGlibGUgUkFJRCBjYXJkLg0KDQpNYXkgYmUgSmluZ29vIG9y
-IG90aGVycyBjYW4gYWxzbyBjb21tZW50IGlmIHRoZXkgYXJlIHVzaW5nIFBDSSBicmlkZ2UgY2Fy
-ZC4NCg0KVGhhbmtzDQpNb2hpdA0KDQo=
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
+
+Cc: Roland Dreier <roland@kernel.org>
+Cc: Sean Hefty <sean.hefty@intel.com>
+Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+Cc: linux-rdma@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+
+Alexander Gordeev (2):
+  mthca: Use pci_enable_msix_range() instead of pci_enable_msix()
+  qib: Use pci_enable_msix_range() instead of pci_enable_msix()
+
+ drivers/infiniband/hw/mthca/mthca_main.c |    9 ++---
+ drivers/infiniband/hw/qib/qib_pcie.c     |   55 +++++++++++++++--------------
+ 2 files changed, 31 insertions(+), 33 deletions(-)
+
+-- 
+1.7.7.6
+
