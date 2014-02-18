@@ -1,187 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:52370 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317AbaBYGcZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 01:32:25 -0500
-Received: by mail-we0-f175.google.com with SMTP id q59so5449362wes.6
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 22:32:24 -0800 (PST)
-From: Andrew Murray <amurray@embedded-bits.co.uk>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, bhelgass@google.com,
-	benh@kernel.crashing.org,
-	Andrew Murray <amurray@embedded-bits.co.uk>
-Subject: [PATCH] powerpc/pci: Use of_pci_range_parser helper in pci_process_bridge_OF_ranges
-Date: Tue, 25 Feb 2014 06:32:11 +0000
-Message-Id: <1393309931-20405-1-git-send-email-amurray@embedded-bits.co.uk>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:47503 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752371AbaBRCKS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 21:10:18 -0500
+From: Magnus Damm <magnus.damm@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
+	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
+Date: Tue, 18 Feb 2014 11:11:32 +0900
+Message-Id: <20140218021132.14164.62223.sendpatchset@w520>
+In-Reply-To: <20140218021041.14164.56411.sendpatchset@w520>
+References: <20140218021041.14164.56411.sendpatchset@w520>
+Subject: [PATCH v2 05/08] PCI: rcar: Break out window size handling
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch updates the implementation of pci_process_bridge_OF_ranges to use
-the of_pci_range_parser helpers.
+From: Magnus Damm <damm@opensource.se>
 
-Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
----
-I've verified that this builds, however I have no hardware to test this.
----
- arch/powerpc/kernel/pci-common.c | 88 +++++++++++++---------------------------
- 1 file changed, 29 insertions(+), 59 deletions(-)
+Break out the hard coded window size code to allow
+dynamic setup. The window size is still left at 1GiB
+but with this patch changing window size is easy for
+testing.
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index d9476c1..a05fe18 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -666,60 +666,36 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
- void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 				  struct device_node *dev, int primary)
- {
--	const __be32 *ranges;
--	int rlen;
--	int pna = of_n_addr_cells(dev);
--	int np = pna + 5;
- 	int memno = 0;
--	u32 pci_space;
--	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
- 	struct resource *res;
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
+Signed-off-by: Magnus Damm <damm@opensource.se>
+---
+
+Changes since V1:
+ - Updated to fit on top of patches from Ben Dooks
+
+ drivers/pci/host/pci-rcar-gen2.c |   31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
+
+--- 0007/drivers/pci/host/pci-rcar-gen2.c
++++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 10:16:48.000000000 +0900
+@@ -18,6 +18,7 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
++#include <linux/sizes.h>
+ #include <linux/slab.h>
  
- 	printk(KERN_INFO "PCI host bridge %s %s ranges:\n",
- 	       dev->full_name, primary ? "(primary)" : "");
+ /* AHB-PCI Bridge PCI communication registers */
+@@ -98,6 +99,7 @@ struct rcar_pci_priv {
+ 	struct resource mem_res;
+ 	struct resource *cfg_res;
+ 	int irq;
++	unsigned long window_size;
+ };
  
--	/* Get ranges property */
--	ranges = of_get_property(dev, "ranges", &rlen);
--	if (ranges == NULL)
-+	/* Check for ranges property */
-+	if (of_pci_range_parser_init(&parser, dev))
- 		return;
+ /* PCI configuration space operations */
+@@ -241,10 +243,31 @@ static int __init rcar_pci_setup(int nr,
+ 	iowrite32(val, reg + RCAR_USBCTR_REG);
+ 	udelay(4);
  
- 	/* Parse it */
--	while ((rlen -= np * 4) >= 0) {
--		/* Read next ranges element */
--		pci_space = of_read_number(ranges, 1);
--		pci_addr = of_read_number(ranges + 1, 2);
--		cpu_addr = of_translate_address(dev, ranges + 3);
--		size = of_read_number(ranges + pna + 3, 2);
--		ranges += np;
--
-+	for_each_of_pci_range(&parser, &range) {
- 		/* If we failed translation or got a zero-sized region
- 		 * (some FW try to feed us with non sensical zero sized regions
- 		 * such as power3 which look like some kind of attempt at exposing
- 		 * the VGA memory hole)
- 		 */
--		if (cpu_addr == OF_BAD_ADDR || size == 0)
-+		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
- 			continue;
+-	/* De-assert reset and set PCIAHB window1 size to 1GB */
++	/* De-assert reset and reset PCIAHB window1 size */
+ 	val &= ~(RCAR_USBCTR_PCIAHB_WIN1_MASK | RCAR_USBCTR_PCICLK_MASK |
+ 		 RCAR_USBCTR_USBH_RST | RCAR_USBCTR_PLL_RST);
+-	iowrite32(val | RCAR_USBCTR_PCIAHB_WIN1_1G, reg + RCAR_USBCTR_REG);
++
++	/* Setup PCIAHB window1 size */
++	switch (priv->window_size) {
++	case SZ_2G:
++		val |= RCAR_USBCTR_PCIAHB_WIN1_2G;
++		break;
++	case SZ_1G:
++		val |= RCAR_USBCTR_PCIAHB_WIN1_1G;
++		break;
++	case SZ_512M:
++		val |= RCAR_USBCTR_PCIAHB_WIN1_512M;
++		break;
++	default:
++		pr_warn("unknown window size %ld - defaulting to 256M\n",
++			priv->window_size);
++		priv->window_size = SZ_256M;
++		/* fall-through */
++	case SZ_256M:
++		val |= RCAR_USBCTR_PCIAHB_WIN1_256M;
++		break;
++	}
++	iowrite32(val, reg + RCAR_USBCTR_REG);
  
--		/* Now consume following elements while they are contiguous */
--		for (; rlen >= np * sizeof(u32);
--		     ranges += np, rlen -= np * 4) {
--			if (of_read_number(ranges, 1) != pci_space)
--				break;
--			pci_next = of_read_number(ranges + 1, 2);
--			cpu_next = of_translate_address(dev, ranges + 3);
--			if (pci_next != pci_addr + size ||
--			    cpu_next != cpu_addr + size)
--				break;
--			size += of_read_number(ranges + pna + 3, 2);
--		}
--
- 		/* Act based on address space type */
- 		res = NULL;
--		switch ((pci_space >> 24) & 0x3) {
--		case 1:		/* PCI IO space */
-+		switch (range.flags & IORESOURCE_TYPE_BITS) {
-+		case IORESOURCE_IO:
- 			printk(KERN_INFO
- 			       "  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
--			       cpu_addr, cpu_addr + size - 1, pci_addr);
-+			       range.cpu_addr, range.cpu_addr + range.size - 1,
-+			       range.pci_addr);
+ 	/* Configure AHB master and slave modes */
+ 	iowrite32(RCAR_AHB_BUS_MODE, reg + RCAR_AHB_BUS_CTR_REG);
+@@ -255,7 +278,7 @@ static int __init rcar_pci_setup(int nr,
+ 	       RCAR_PCI_ARBITER_PCIBP_MODE;
+ 	iowrite32(val, reg + RCAR_PCI_ARBITER_CTR_REG);
  
- 			/* We support only one IO range */
- 			if (hose->pci_io_size) {
-@@ -729,11 +705,12 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 			}
- #ifdef CONFIG_PPC32
- 			/* On 32 bits, limit I/O space to 16MB */
--			if (size > 0x01000000)
--				size = 0x01000000;
-+			if (range.size > 0x01000000)
-+				range.size = 0x01000000;
+-	/* PCI-AHB mapping: 0x40000000-0x80000000 */
++	/* PCI-AHB mapping: 0x40000000 base */
+ 	iowrite32(0x40000000 | RCAR_PCIAHB_PREFETCH16,
+ 		  reg + RCAR_PCIAHB_WIN1_CTR_REG);
  
- 			/* 32 bits needs to map IOs here */
--			hose->io_base_virt = ioremap(cpu_addr, size);
-+			hose->io_base_virt = ioremap(range.cpu_addr,
-+						range.size);
- 
- 			/* Expect trouble if pci_addr is not 0 */
- 			if (primary)
-@@ -743,20 +720,20 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 			/* pci_io_size and io_base_phys always represent IO
- 			 * space starting at 0 so we factor in pci_addr
- 			 */
--			hose->pci_io_size = pci_addr + size;
--			hose->io_base_phys = cpu_addr - pci_addr;
-+			hose->pci_io_size = range.pci_addr + range.size;
-+			hose->io_base_phys = range.cpu_addr - range.pci_addr;
- 
- 			/* Build resource */
- 			res = &hose->io_resource;
--			res->flags = IORESOURCE_IO;
--			res->start = pci_addr;
-+			range.cpu_addr = range.pci_addr;
- 			break;
--		case 2:		/* PCI Memory space */
--		case 3:		/* PCI 64 bits Memory space */
-+		case IORESOURCE_MEM:
- 			printk(KERN_INFO
- 			       " MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
--			       cpu_addr, cpu_addr + size - 1, pci_addr,
--			       (pci_space & 0x40000000) ? "Prefetch" : "");
-+			       range.cpu_addr, range.cpu_addr + range.size - 1,
-+			       range.pci_addr,
-+			       (range.pci_space & 0x40000000) ?
-+			       "Prefetch" : "");
- 
- 			/* We support only 3 memory ranges */
- 			if (memno >= 3) {
-@@ -765,28 +742,21 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
- 				continue;
- 			}
- 			/* Handles ISA memory hole space here */
--			if (pci_addr == 0) {
-+			if (range.pci_addr == 0) {
- 				if (primary || isa_mem_base == 0)
--					isa_mem_base = cpu_addr;
--				hose->isa_mem_phys = cpu_addr;
--				hose->isa_mem_size = size;
-+					isa_mem_base = range.cpu_addr;
-+				hose->isa_mem_phys = range.cpu_addr;
-+				hose->isa_mem_size = range.size;
- 			}
- 
- 			/* Build resource */
--			hose->mem_offset[memno] = cpu_addr - pci_addr;
-+			hose->mem_offset[memno] = range.cpu_addr -
-+							range.pci_addr;
- 			res = &hose->mem_resources[memno++];
--			res->flags = IORESOURCE_MEM;
--			if (pci_space & 0x40000000)
--				res->flags |= IORESOURCE_PREFETCH;
--			res->start = cpu_addr;
- 			break;
- 		}
- 		if (res != NULL) {
--			res->name = dev->full_name;
--			res->end = res->start + size - 1;
--			res->parent = NULL;
--			res->sibling = NULL;
--			res->child = NULL;
-+			of_pci_range_to_resource(&range, dev, res);
- 		}
+@@ -341,6 +364,8 @@ static int rcar_pci_probe(struct platfor
+ 		return priv->irq;
  	}
- }
--- 
-1.8.3.2
-
+ 
++	priv->window_size = SZ_1G;
++
+ 	hw_private[0] = priv;
+ 	memset(&hw, 0, sizeof(hw));
+ 	hw.nr_controllers = ARRAY_SIZE(hw_private);
