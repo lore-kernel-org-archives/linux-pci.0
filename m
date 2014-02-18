@@ -1,75 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:35266 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234AbaBECa0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:30:26 -0500
-Message-ID: <52F1A23D.9040909@gmail.com>
-Date: Tue, 04 Feb 2014 18:30:21 -0800
-From: Rajat Jain <rajatxjain@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v4 5/8] pciehp: Don't check for adapter or latch status while
- disabling
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Nithin Nayak Sujir <nsujir@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 03/35] tg3: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:07:55 +0100
+Message-Id: <0a7f2b8a12cdd300aa3e2ec2649e3e401381181c.1392717502.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It does not make much sense to refuse to disable a slot if an
-adapter is not present or the latch is open. If an adapter is not
-present, it provides an even better reason to disable the device
-slot.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-This is specially a problem for link state hot-plug, because some
-ports use in band mechanism for presence detection. Thus
-when link goes down, presence detect also goes down. We _want_ that
-the removal should take place in such case.
-
-Thus remove the checks for adapter and latch in pciehp_disable_slot()
-
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Nithin Nayak Sujir <nsujir@broadcom.com>
+Cc: Michael Chan <mchan@broadcom.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/pciehp_ctrl.c |   18 ------------------
- 1 file changed, 18 deletions(-)
+ drivers/net/ethernet/broadcom/tg3.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 5608284..b418e3b 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -582,24 +582,6 @@ int pciehp_disable_slot(struct slot *p_slot)
- 	if (!p_slot->ctrl)
- 		return 1;
+diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
+index 3167ed6..6e5e7c0 100644
+--- a/drivers/net/ethernet/broadcom/tg3.c
++++ b/drivers/net/ethernet/broadcom/tg3.c
+@@ -11362,12 +11362,10 @@ static bool tg3_enable_msix(struct tg3 *tp)
+ 		msix_ent[i].vector = 0;
+ 	}
  
--	if (!HP_SUPR_RM(p_slot->ctrl)) {
--		pciehp_get_adapter_status(p_slot, &getstatus);
--		if (!getstatus) {
--			ctrl_info(ctrl, "No adapter on slot(%s)\n",
--				  slot_name(p_slot));
--			return -ENODEV;
--		}
--	}
--
--	if (MRL_SENS(p_slot->ctrl)) {
--		pciehp_get_latch_status(p_slot, &getstatus);
--		if (getstatus) {
--			ctrl_info(ctrl, "Latch open on slot(%s)\n",
--				  slot_name(p_slot));
--			return -ENODEV;
--		}
--	}
--
- 	if (POWER_CTRL(p_slot->ctrl)) {
- 		pciehp_get_power_status(p_slot, &getstatus);
- 		if (!getstatus) {
+-	rc = pci_enable_msix(tp->pdev, msix_ent, tp->irq_cnt);
++	rc = pci_enable_msix_range(tp->pdev, msix_ent, 1, tp->irq_cnt);
+ 	if (rc < 0) {
+ 		return false;
+-	} else if (rc != 0) {
+-		if (pci_enable_msix(tp->pdev, msix_ent, rc))
+-			return false;
++	} else if (rc < tp->irq_cnt) {
+ 		netdev_notice(tp->dev, "Requested %d MSI-X vectors, received %d\n",
+ 			      tp->irq_cnt, rc);
+ 		tp->irq_cnt = rc;
 -- 
-1.7.9.5
+1.7.7.6
 
