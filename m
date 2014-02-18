@@ -1,56 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53280 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755212AbaBURLf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Feb 2014 12:11:35 -0500
-Message-ID: <530788C1.6030109@redhat.com>
-Date: Fri, 21 Feb 2014 18:11:29 +0100
-From: Paolo Bonzini <pbonzini@redhat.com>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:43363 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752052AbaBRVPl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 16:15:41 -0500
+Received: by mail-ig0-f172.google.com with SMTP id k19so8052341igc.5
+        for <linux-pci@vger.kernel.org>; Tue, 18 Feb 2014 13:15:40 -0800 (PST)
+Date: Tue, 18 Feb 2014 14:15:37 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>, Marek Vasut <marex@denx.de>,
+	linux-pci@vger.kernel.org, kernel@pengutronix.de,
+	Richard Zhu <r65037@freescale.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: imx6: Fix link_up detection
+Message-ID: <20140218211537.GC8786@google.com>
+References: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de>
+ <201402120836.16221.marex@denx.de>
+ <52FD0F1A.4000208@boundarydevices.com>
+ <20140214064153.GE17250@pengutronix.de>
+ <52FE6DA7.1010305@boundarydevices.com>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org, Gleb Natapov <gleb@kernel.org>,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] kvm: Use pci_enable_msix_exact() instead of pci_enable_msix()
-References: <1392804931-30671-11-git-send-email-agordeev@redhat.com> <5304B09D.7010900@redhat.com> <20140221170414.GM17353@dhcp-26-207.brq.redhat.com> <20140221170504.GN17353@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20140221170504.GN17353@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52FE6DA7.1010305@boundarydevices.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Il 21/02/2014 18:05, Alexander Gordeev ha scritto:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
->
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Gleb Natapov <gleb@kernel.org>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: kvm@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  virt/kvm/assigned-dev.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
-> index 8db4370..bf06577 100644
-> --- a/virt/kvm/assigned-dev.c
-> +++ b/virt/kvm/assigned-dev.c
-> @@ -395,7 +395,8 @@ static int assigned_device_enable_host_msix(struct kvm *kvm,
->  	if (dev->entries_nr == 0)
->  		return r;
->
-> -	r = pci_enable_msix(dev->dev, dev->host_msix_entries, dev->entries_nr);
-> +	r = pci_enable_msix_exact(dev->dev,
-> +				  dev->host_msix_entries, dev->entries_nr);
->  	if (r)
->  		return r;
->
->
+On Fri, Feb 14, 2014 at 12:25:27PM -0700, Troy Kisky wrote:
+> On 2/13/2014 11:41 PM, Sascha Hauer wrote:
+> > On Thu, Feb 13, 2014 at 11:29:46AM -0700, Troy Kisky wrote:
+> >> On 2/12/2014 12:36 AM, Marek Vasut wrote:
+> >>> On Wednesday, February 12, 2014 at 08:27:55 AM, Sascha Hauer wrote:
+> >>>
+> >>> +CC Troy Kisky, since I think he submitted something similar some time ago
+> >>> already.
+> >>>
+> >>> Otherwise I agree this happens.
+> >>>
+> >> Sorry, I haven't submitted this yet, but was planning to today. Here's
+> >> what would have been sent.
+> >>
+> >> From 32c560d33fe2c3945d69f3396689f0abb76f7e1f Mon Sep 17 00:00:00 2001
+> >> From: Marek Vasut <marex@denx.de>
+> >> Date: Sat, 25 Jan 2014 14:22:48 -0700
+> >> Subject: [PATCH 1/1] pci-imx6.c: wait for retraining
+> >>
+> >> This patch handles the case where the PCIe link is up and running, yet drops
+> >> into the LTSSM training mode. The link spends short time in the LTSSM training
+> >> mode, but the current code can misinterpret it as the link being stalled.
+> >> Waiting for the LTSSM training to complete fixes the issue.
+> >>
+> >> Signed-off-by: Marek Vasut <marex@denx.de>
+> >> Tested-by: Troy Kisky <troy.kisky@boundarydevices.com>
+> > 
+> > Thanks, that works.
+> > 
+> > Tested-by: Sascha Hauer <s.hauer@pengutronix.de>
+> > 
+> > Sascha
+> 
+> I don't want to step on your toes, does that means you
+> expect me to send a formal patch ?
 
-It's okay, but it's not clear to me whether I should include this patch 
-or someone else will. :)
+I don't care which way we go, but we should make progress on this.
 
-Paolo
+It looks like Troy's patch is slightly more extensive (adds comments, uses
+actual times instead of a CPU speed-dependent wait loop, prints registers
+for analysis in failure case), so based on that, I would go that route.
+
+But we need an ack from Richard or Shawn anyway, so I'll just wait for
+direction from them.
+
+Bjorn
