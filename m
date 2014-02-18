@@ -1,59 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:61403 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754533AbaBZXmL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 18:42:11 -0500
-Received: by mail-ie0-f178.google.com with SMTP id ar20so1388376iec.37
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 15:42:11 -0800 (PST)
-Subject: [PATCH 6/7] tile PCI RC: Use default pcibios_enable_device()
-To: linux-pci@vger.kernel.org
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:46773 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703AbaBRUiG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 15:38:06 -0500
+Received: by mail-ob0-f171.google.com with SMTP id wp4so19256749obc.30
+        for <linux-pci@vger.kernel.org>; Tue, 18 Feb 2014 12:38:05 -0800 (PST)
+Date: Tue, 18 Feb 2014 13:38:01 -0700
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
-Date: Wed, 26 Feb 2014 16:42:08 -0700
-Message-ID: <20140226234208.18970.41395.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 1/2] bus: mvebu-mbus: Fix incorrect size for PCI aperture
+ resources
+Message-ID: <20140218203801.GA8786@google.com>
+References: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
+ <20140214182910.GC31093@google.com>
+ <20140217013949.GE7862@titan.lakedaemon.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140217013949.GE7862@titan.lakedaemon.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We don't need anything arch-specific in pcibios_enable_device(), so drop
-the arch implementation and use the default generic one.
+On Sun, Feb 16, 2014 at 08:39:49PM -0500, Jason Cooper wrote:
+> On Fri, Feb 14, 2014 at 11:29:10AM -0700, Bjorn Helgaas wrote:
+> > On Wed, Feb 12, 2014 at 03:57:07PM -0700, Jason Gunthorpe wrote:
+> > > reg[0] is the DT base, reg[1] is the DT length in bytes,
+> > > struct resource.end is the inclusive end address, so a -1 is
+> > > required.
+> > > 
+> > > Tested on kirkwood.
+> > > 
+> > > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+> > 
+> > Do these two patches need to go together?  I don't maintain
+> > drivers/bus/mvebu-mbus.c, but if these should be kept together, I'd be
+> > happy to merge them both, given the appropriate ack from Jason C or Thomas.
+> 
+> I have one small change for mvebu-mbus queued up, which won't conflict
+> here.  Please take both:
+> 
+> Acked-by: Jason Cooper <jason@lakedaemon.net>
 
-Note: pci_enable_resources() checks that r->parent is non-NULL, which
-basically checks that pci_claim_resource() or request_resource() has been
-called for each BAR.  I don't see where that happens for tile, but this
-patch doesn't change that behavior, so if it worked before, it should still
-work.
+I added the acks and applied both patches to pci/host-mvebu for v3.15,
+thanks!
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Chris Metcalf <cmetcalf@tilera.com>
----
- arch/tile/kernel/pci_gx.c |   12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index a97a6452b812..077b7bc437e5 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -1065,18 +1065,6 @@ char *__init pcibios_setup(char *str)
- }
- 
- /*
-- * Enable memory address decoding, as appropriate, for the
-- * device described by the 'dev' struct.
-- *
-- * This is called from the generic PCI layer, and can be called
-- * for bridges or endpoints.
-- */
--int pcibios_enable_device(struct pci_dev *dev, int mask)
--{
--	return pci_enable_resources(dev, mask);
--}
--
--/*
-  * Called for each device after PCI setup is done.
-  * We initialize the PCI device capabilities conservatively, assuming that
-  * all devices can only address the 32-bit DMA space. The exception here is
-
+Bjorn
