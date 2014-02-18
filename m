@@ -1,71 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32397 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753505AbaBSKOA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 05:14:00 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:34220 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752359AbaBRA7d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 19:59:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+	<1388707565-16535-3-git-send-email-yinghai@kernel.org>
+	<alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
+Date: Mon, 17 Feb 2014 16:59:32 -0800
+Message-ID: <CAE9FiQUo9NGbjiZbMsf2yBFbn=iLJ-jc3QtZ8K6qwVuhmqzq=Q@mail.gmail.com>
+Subject: Re: [PATCH v5 02/33] genirq: Add irq_alloc_reserved_desc()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] xen-pciback: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 19 Feb 2014 11:15:30 +0100
-Message-Id: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Wed, Jan 22, 2014 at 4:03 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>
+> There is a clear step by step approach to get this done proper:
+>
+>  1) Get rid of the existing misconception/misnomer of
+>     irq_reserve_irqs().
+>
+>     Make it explicit that this is dealing with legacy irq spaces. It's
+>     not that hard as there are only two users in tree which are both
+>     trivial to fix.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc: David Vrabel <david.vrabel@citrix.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/xen/xen-pciback/pciback_ops.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+Hi, Thomas,
 
-diff --git a/drivers/xen/xen-pciback/pciback_ops.c b/drivers/xen/xen-pciback/pciback_ops.c
-index 64eb0cd..f5b4c3e 100644
---- a/drivers/xen/xen-pciback/pciback_ops.c
-+++ b/drivers/xen/xen-pciback/pciback_ops.c
-@@ -213,9 +213,15 @@ int xen_pcibk_enable_msix(struct xen_pcibk_device *pdev,
- 		entries[i].vector = op->msix_entries[i].vector;
- 	}
- 
--	result = pci_enable_msix(dev, entries, op->value);
-+	result = pci_enable_msix_range(dev, entries, op->value, op->value);
-+	if (result < op->value) {
-+		if (result > 0)
-+			pci_disable_msix(dev);
- 
--	if (result == 0) {
-+		pr_warn_ratelimited("%s: error enabling MSI-X for guest %u: err %d!\n",
-+				    pci_name(dev), pdev->xdev->otherend_id,
-+				    result);
-+	} else {
- 		for (i = 0; i < op->value; i++) {
- 			op->msix_entries[i].entry = entries[i].entry;
- 			if (entries[i].vector)
-@@ -227,10 +233,8 @@ int xen_pcibk_enable_msix(struct xen_pcibk_device *pdev,
- 						pci_name(dev), i,
- 						op->msix_entries[i].vector);
- 		}
--	} else
--		pr_warn_ratelimited("%s: error enabling MSI-X for guest %u: err %d!\n",
--				    pci_name(dev), pdev->xdev->otherend_id,
--				    result);
-+	}
-+
- 	kfree(entries);
- 
- 	op->value = result;
--- 
-1.7.7.6
+While going through the code for kill irq_reserve_irqs(), I found that
+there is irq_reserve_irq().
 
+in include/linux/irq.h
+
+static inline int irq_reserve_irq(unsigned int irq)
+{
+        return irq_reserve_irqs(irq, 1);
+}
+
+it is called via kernel/irq/chip.c::irq_set_chip().
+
+        /*
+         * For !CONFIG_SPARSE_IRQ make the irq show up in
+         * allocated_irqs. For the CONFIG_SPARSE_IRQ case, it is
+         * already marked, and this call is harmless.
+         */
+        irq_reserve_irq(irq);
+
+There are tens of irq_set_chip... calling for arches that does not
+support SPARSE_IRQ yet, and they does not use  irq_alloc_desc()
+anywhere.
+
+so how about change those irq_reserve_irq to irq_set_allocated_irqs() and
+leave them there?
+
+Thanks
+
+Yinghai
