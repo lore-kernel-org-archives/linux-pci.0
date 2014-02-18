@@ -1,60 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:64720 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750911AbaBRT6N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 14:58:13 -0500
-Date: Tue, 18 Feb 2014 19:57:32 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140218195732.GL2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
- <20140218185947.GA22340@obsidianresearch.com>
- <20140218190929.GF2010@mudshark.cambridge.arm.com>
- <1411925.bMiMyFpUnW@wuerfel>
- <20140218193654.GK2010@mudshark.cambridge.arm.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:49631 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727AbaBRGeL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 01:34:11 -0500
+Message-ID: <5302FED1.80903@huawei.com>
+Date: Tue, 18 Feb 2014 14:33:53 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140218193654.GK2010@mudshark.cambridge.arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] arm64: Add architecture support for PCI
+References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 07:36:54PM +0000, Will Deacon wrote:
-> On Tue, Feb 18, 2014 at 07:32:33PM +0000, Arnd Bergmann wrote:
-> > On Tuesday 18 February 2014 19:09:29 Will Deacon wrote:
-> > > 
-> > > > Regarding the 0x6200.. There are two conflicting issues there 
-> > > >  - You really don't want to let the PCI core assign resources to that
-> > > >    range, it probably won't work.
-> > > 
-> > > Right, with kvmtool we don't support resource assignment (the BARs are fixed)
-> > > so everything is PCI_PROBE_ONLY.
-> > 
-> > Ok, I looked at the source now and can confirm:
-> > 
-> > * 0x0-0x1000 are used for lots of legacy ISA devices.
-> > * PCI devices get assigned IO addresses in 0x400 steps starting at 0x6200.
-> > * There are three PCI drivers doing this: VESA, PCI-SHMEM and virtio-pci.
-> > 
-> > Regarding the PCI_PROBE_ONLY flag, how do you set that? Should we
-> > have a standard DT property for that? On PowerPC we already specified
-> > "linux,pci-probe-only" and "linux,pci-assign-all-buses", which seems
-> > reasonable to use in architecture independent code as well.
-> 
-> For arch/arm/ it's done on the command line (pci=firmware) but yes, for the
-> generic driver it sounds like a good idea to put this in the device-tree.
-> I'll look at adding the ppc properties in the next version.
+> +#include <linux/init.h>
+> +#include <linux/io.h>
+> +#include <linux/kernel.h>
+> +#include <linux/mm.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/slab.h>
+> +
+> +#include <asm/pci-bridge.h>
+> +
+> +
+> +/*
+> + * Return the domain number for this bus
+> + */
+> +int pci_domain_nr(struct pci_bus *bus)
+> +{
+> +	struct pci_host_bridge *bridge = to_pci_host_bridge(bus->bridge);
 
-Damn, I spoke too soon. PowerPC puts this information in the /chosen node, so
-it applies to all PCI host controllers in the system. That then maps nicely
-to pci_{add,clear}_flags which are global properties in Linux.
+Here bus is specific to root bus ? or, what about use find_pci_host_bridge() to get the pci_host_bridge
+instead.
 
-It sounds like this should really be per-controller. What do you think?
+> +
+> +	if (bridge)
+> +		return bridge->domain_nr;
+> +
+> +	return 0;
+> +}
+> +
+> +int pci_proc_domain(struct pci_bus *bus)
+> +{
+> +	return pci_domain_nr(bus);
+> +}
+> +
+> +/*
+> + * Called after each bus is probed, but before its children are examined
+> + */
+> +void pcibios_fixup_bus(struct pci_bus *bus)
+> +{
+> +	struct pci_dev *dev;
+> +	struct resource *res;
+> +	int i;
+> +
+> +	if (bus->self != NULL) {
 
-Will
+What about use !pci_is_root_bus() ?
+
+> +		pci_read_bridge_bases(bus);
+> +
+> +		pci_bus_for_each_resource(bus, res, i) {
+> +			if (!res || !res->flags || res->parent)
+> +				continue;
+> +
+> +			/*
+> +			 * If we are going to reassign everything, we can
+> +			 * shrink the P2P resource to have zero size to
+> +			 * save space
+> +			 */
+> +			if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
+> +				res->flags |= IORESOURCE_UNSET;
+> +				res->start = 0;
+> +				res->end = -1;
+> +				continue;
+> +			}
+> +		}
+> +	}
+> +
+
