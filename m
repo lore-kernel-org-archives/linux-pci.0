@@ -1,83 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 16/24][New] ACPI / hotplug / PCI: Do not pass ACPI handle to hotplug_event()
-Date: Tue, 04 Feb 2014 00:34:07 +0100
-Message-ID: <5511377.gn3BWNPSGH@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:61480 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755382AbaBRKLW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:11:22 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Shreyas Bhatewara <sbhatewara@vmware.com>,
+	pv-drivers@vmware.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 34/35] vmxnet3: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:12:03 +0100
+Message-Id: <2296cb5c4186552f5d612e73b263371e00eceb1a.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Since hotplug_event() can get the ACPI handle needed for debug
-printouts from its context argument, there's no need to pass the
-handle to it.  Moreover, the second argument's type may be changed
-to (struct acpiphp_context *), because that's what is always passed
-to hotplug_event() as the second argument anyway.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Shreyas Bhatewara <sbhatewara@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/vmxnet3/vmxnet3_drv.c |   47 +++++++++++++++----------------------
+ 1 files changed, 19 insertions(+), 28 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -63,7 +63,7 @@ static DEFINE_MUTEX(acpiphp_context_lock
- static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
--static void hotplug_event(acpi_handle handle, u32 type, void *data);
-+static void hotplug_event(u32 type, struct acpiphp_context *context);
- static void free_bridge(struct kref *kref);
- 
- static void acpiphp_context_handler(acpi_handle handle, void *context)
-@@ -225,7 +225,7 @@ static void dock_event(acpi_handle handl
- 	acpiphp_put_context(context);
- 	mutex_unlock(&acpiphp_context_lock);
- 
--	hotplug_event(handle, type, data);
-+	hotplug_event(type, context);
- 
- 	put_bridge(context->func.parent);
- }
-@@ -813,9 +813,9 @@ void acpiphp_check_host_bridge(acpi_hand
- 
- static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot);
- 
--static void hotplug_event(acpi_handle handle, u32 type, void *data)
-+static void hotplug_event(u32 type, struct acpiphp_context *context)
+diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+index 3a17797..9275c8c 100644
+--- a/drivers/net/vmxnet3/vmxnet3_drv.c
++++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+@@ -2738,35 +2738,26 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
+ static int
+ vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter, int nvec)
  {
--	struct acpiphp_context *context = data;
-+	acpi_handle handle = context->adev->handle;
- 	struct acpiphp_func *func = &context->func;
- 	struct acpiphp_slot *slot = func->slot;
- 	struct acpiphp_bridge *bridge;
-@@ -870,14 +870,14 @@ static void hotplug_event(acpi_handle ha
- static void hotplug_event_work(void *data, u32 type)
- {
- 	struct acpiphp_context *context = data;
--	acpi_handle handle = context->adev->handle;
+-	do {
+-		int err = pci_enable_msix(adapter->pdev,
+-					  adapter->intr.msix_entries, nvec);
+-		if (!err) {
+-			return nvec;
+-		} else if (err < 0) {
+-			dev_err(&adapter->netdev->dev,
+-				"Failed to enable MSI-X, error: %d\n", err);
+-			return err;
+-		} else if (err < VMXNET3_LINUX_MIN_MSIX_VECT) {
+-			dev_info(&adapter->pdev->dev,
+-				 "Number of MSI-X which can be allocated "
+-				 "is lower than min threshold required.\n");
+-			return -ENOSPC;
+-		} else {
+-			/* If fails to enable required number of MSI-x vectors
+-			 * try enabling minimum number of vectors required.
+-			 */
+-			dev_err(&adapter->netdev->dev,
+-				"Failed to enable %d MSI-X, trying %d\n",
+-				nvec, VMXNET3_LINUX_MIN_MSIX_VECT);
+-			nvec = VMXNET3_LINUX_MIN_MSIX_VECT;
+-		}
+-	} while (nvec >= VMXNET3_LINUX_MIN_MSIX_VECT);
++	int ret = pci_enable_msix_range(adapter->pdev,
++					adapter->intr.msix_entries, nvec, nvec);
  
- 	acpi_scan_lock_acquire();
- 
--	hotplug_event(handle, type, context);
-+	hotplug_event(type, context);
- 
- 	acpi_scan_lock_release();
--	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
-+	acpi_evaluate_hotplug_ost(context->adev->handle, type,
-+				  ACPI_OST_SC_SUCCESS, NULL);
- 	put_bridge(context->func.parent);
+-	/*
+-	 * Should never get here
+-	 */
+-	return -ENOSPC;
++	if (ret == -ENOSPC && nvec > VMXNET3_LINUX_MIN_MSIX_VECT) {
++		dev_err(&adapter->netdev->dev,
++			"Failed to enable %d MSI-X, trying %d\n",
++			nvec, VMXNET3_LINUX_MIN_MSIX_VECT);
++
++		ret = pci_enable_msix_range(adapter->pdev,
++					    adapter->intr.msix_entries,
++					    VMXNET3_LINUX_MIN_MSIX_VECT,
++					    VMXNET3_LINUX_MIN_MSIX_VECT);
++	}
++
++	if (ret < 0) {
++		dev_err(&adapter->netdev->dev,
++			"Failed to enable MSI-X, error: %d\n", ret);
++	}
++
++	return ret;
  }
  
+ 
+-- 
+1.7.7.6
+
