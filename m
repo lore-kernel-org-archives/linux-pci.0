@@ -1,101 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:58219 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753686AbaBCX21 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:27 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 9/24][Resend] ACPI / hotplug / PCI: Drop acpiphp_bus_trim()
-Date: Tue, 04 Feb 2014 00:23:27 +0100
-Message-ID: <1689985.1LxlJr9Vc9@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:14482 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754702AbaBRKLT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:11:19 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 13/35] i40e: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:11:42 +0100
+Message-Id: <3655fd750c2f1c00c2474900539a305d50fdeb6f.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-If trim_stale_devices() calls acpi_bus_trim() directly, we can
-save a potentially costly acpi_bus_get_device() invocation.  After
-making that change acpiphp_bus_trim() would only be called from one
-place, so move the code from it to that place and drop it.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   30 +++++++++++-------------------
- 1 file changed, 11 insertions(+), 19 deletions(-)
+ drivers/net/ethernet/intel/i40e/i40e_main.c |   33 +++++----------------------
+ 1 files changed, 6 insertions(+), 27 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -489,19 +489,6 @@ static unsigned char acpiphp_max_busnr(s
- }
- 
- /**
-- * acpiphp_bus_trim - Trim device objects in an ACPI namespace subtree.
-- * @handle: ACPI device object handle to start from.
-- */
--static void acpiphp_bus_trim(acpi_handle handle)
--{
--	struct acpi_device *adev = NULL;
--
--	acpi_bus_get_device(handle, &adev);
--	if (adev)
--		acpi_bus_trim(adev);
--}
--
--/**
-  * acpiphp_bus_add - Scan ACPI namespace subtree.
-  * @handle: ACPI object handle to start the scan from.
-  */
-@@ -641,8 +628,12 @@ static void disable_slot(struct acpiphp_
- 		if (PCI_SLOT(dev->devfn) == slot->device)
- 			pci_stop_and_remove_bus_device(dev);
- 
--	list_for_each_entry(func, &slot->funcs, sibling)
--		acpiphp_bus_trim(func_to_handle(func));
-+	list_for_each_entry(func, &slot->funcs, sibling) {
-+		struct acpi_device *adev;
-+
-+		if (!acpi_bus_get_device(func_to_handle(func), &adev))
-+			acpi_bus_trim(adev);
-+	}
- 
- 	slot->flags &= (~SLOT_ENABLED);
- }
-@@ -714,11 +705,12 @@ static unsigned int get_slot_status(stru
-  */
- static void trim_stale_devices(struct pci_dev *dev)
+diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
+index 628e917..3116861 100644
+--- a/drivers/net/ethernet/intel/i40e/i40e_main.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
+@@ -5856,37 +5856,16 @@ err_out:
+  **/
+ static int i40e_reserve_msix_vectors(struct i40e_pf *pf, int vectors)
  {
--	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
- 	struct pci_bus *bus = dev->subordinate;
- 	bool alive = false;
- 
--	if (handle) {
-+	if (adev) {
-+		acpi_handle handle = adev->handle;
- 		acpi_status status;
- 		unsigned long long sta;
- 
-@@ -734,8 +726,8 @@ static void trim_stale_devices(struct pc
+-	int err = 0;
+-
+-	pf->num_msix_entries = 0;
+-	while (vectors >= I40E_MIN_MSIX) {
+-		err = pci_enable_msix(pf->pdev, pf->msix_entries, vectors);
+-		if (err == 0) {
+-			/* good to go */
+-			pf->num_msix_entries = vectors;
+-			break;
+-		} else if (err < 0) {
+-			/* total failure */
+-			dev_info(&pf->pdev->dev,
+-				 "MSI-X vector reservation failed: %d\n", err);
+-			vectors = 0;
+-			break;
+-		} else {
+-			/* err > 0 is the hint for retry */
+-			dev_info(&pf->pdev->dev,
+-				 "MSI-X vectors wanted %d, retrying with %d\n",
+-				 vectors, err);
+-			vectors = err;
+-		}
+-	}
+-
+-	if (vectors > 0 && vectors < I40E_MIN_MSIX) {
++	vectors = pci_enable_msix_range(pf->pdev, pf->msix_entries,
++					I40E_MIN_MSIX, vectors);
++	if (vectors < 0) {
+ 		dev_info(&pf->pdev->dev,
+-			 "Couldn't get enough vectors, only %d available\n",
+-			 vectors);
++			 "MSI-X vector reservation failed: %d\n", vectors);
+ 		vectors = 0;
  	}
- 	if (!alive) {
- 		pci_stop_and_remove_bus_device(dev);
--		if (handle)
--			acpiphp_bus_trim(handle);
-+		if (adev)
-+			acpi_bus_trim(adev);
- 	} else if (bus) {
- 		struct pci_dev *child, *tmp;
  
++	pf->num_msix_entries = vectors;
++
+ 	return vectors;
+ }
+ 
+-- 
+1.7.7.6
 
