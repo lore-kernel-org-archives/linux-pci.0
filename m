@@ -1,104 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:35789 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbaBMIKe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 03:10:34 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Liviu Dudau' <Liviu.Dudau@arm.com>,
-	'Tanmay Inamdar' <tinamdar@apm.com>
-Cc: 'Arnd Bergmann' <arnd@arndb.de>, devicetree@vger.kernel.org,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'linux-pci' <linux-pci@vger.kernel.org>,
-	'Will Deacon' <Will.Deacon@arm.com>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	'Catalin Marinas' <Catalin.Marinas@arm.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
- <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
- <7398333.9L5KlyFggU@wuerfel>
- <CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
- <20140206101814.GA4993@e106497-lin.cambridge.arm.com>
-In-reply-to: <20140206101814.GA4993@e106497-lin.cambridge.arm.com>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
- device tree
-Date: Thu, 13 Feb 2014 17:10:29 +0900
-Message-id: <000201cf2893$0f5e3710$2e1aa530$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:13987 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755264AbaBRKK4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:10:56 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 24/35] forcedeth: Cleanup MSI-X to MSI to INTx fallback code
+Date: Tue, 18 Feb 2014 11:11:53 +0100
+Message-Id: <717634ee6d507e7c868a898778d7fcd4300f9196.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, February 06, 2014 7:18 PM, Liviu Dudau wrote:
-> On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
-> > Hello Liviu,
-> >
-> > I did not get the first email of this particular patch on any of
-> > subscribed mailing lists (don't know why), hence replying here.
-> 
-> Strange, it shows in the MARC and GMANE archive for linux-pci, probably
-> a hickup on your receiving side?
-> 
-> >
-> > +struct pci_host_bridge *
-> > +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
-> > + void *host_data, struct list_head *resources)
-> > +{
-> > + struct pci_bus *root_bus;
-> > + struct pci_host_bridge *bridge;
-> > +
-> > + /* first parse the host bridge bus ranges */
-> > + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
-> > + return NULL;
-> > +
-> > + /* then create the root bus */
-> > + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
-> > + if (!root_bus)
-> > + return NULL;
-> > +
-> > + bridge = to_pci_host_bridge(root_bus->bridge);
-> > +
-> > + return bridge;
-> > +}
-> >
-> > You are keeping the domain_nr inside pci_host_bridge structure. In
-> > above API, domain_nr is required in 'pci_find_bus' function called
-> > from 'pci_create_root_bus'. Since the bridge is allocated after
-> > creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
-> > will cause problem for scanning multiple domains.
-> 
-> Good catch. I was switching between creating a pci_controller in arch/arm64 and
-> adding the needed bits in pci_host_bridge. After internal review I've decided to
-> add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Patrick McHardy <kaber@trash.net>
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/net/ethernet/nvidia/forcedeth.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-Hi Liviu Dudau,
-
-One more thing,
-I am reviewing and compiling your patch.
-Would you consider adding 'struct pci_sys_data' and 'struct hw_pci'?
-
-Currently, 4 PCIe Host drivers (pci-mvebu.c, pci-tegra.c,
-pci-rcar-gen2.c, pcie-designware.c) are using 'struct pci_sys_data'
-and 'struct hw_pci' in their drivers. Without this, it makes build
-errors.
-
-In arm32, 'struct pci_sys_data' and 'struct hw_pci' is defined
-in "arch/arm/include/asm/mach/pci.h".
-
-Tanmay Inamdar,
-Your 'APM X-Gene PCIe' patch also needs 'struct pci_sys_data' and
-'struct hw_pci'. With Liviu Dudau's patch, it will make build
-errors. Would you check this?
-
-Thank you.
-
-Best regards,
-Jingoo Han
-
-> 
-> Thanks for reviewing this, will fix in v2.
-> 
-> Do you find porting to the new API straight forward?
-> 
+diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
+index f4270b8..74da489 100644
+--- a/drivers/net/ethernet/nvidia/forcedeth.c
++++ b/drivers/net/ethernet/nvidia/forcedeth.c
+@@ -3930,7 +3930,7 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+ {
+ 	struct fe_priv *np = get_nvpriv(dev);
+ 	u8 __iomem *base = get_hwbase(dev);
+-	int ret = 1;
++	int ret;
+ 	int i;
+ 	irqreturn_t (*handler)(int foo, void *data);
+ 
+@@ -4010,9 +4010,10 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+ 				writel(0, base + NvRegMSIXMap1);
+ 			}
+ 			netdev_info(dev, "MSI-X enabled\n");
++			return 0;
+ 		}
+ 	}
+-	if (ret != 0 && np->msi_flags & NV_MSI_CAPABLE) {
++	if (np->msi_flags & NV_MSI_CAPABLE) {
+ 		ret = pci_enable_msi(np->pci_dev);
+ 		if (ret == 0) {
+ 			np->msi_flags |= NV_MSI_ENABLED;
+@@ -4031,13 +4032,12 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
+ 			/* enable msi vector 0 */
+ 			writel(NVREG_MSI_VECTOR_0_ENABLED, base + NvRegMSIIrqMask);
+ 			netdev_info(dev, "MSI enabled\n");
++			return 0;
+ 		}
+ 	}
+-	if (ret != 0) {
+-		if (request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev) != 0)
+-			goto out_err;
+ 
+-	}
++	if (request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev) != 0)
++		goto out_err;
+ 
+ 	return 0;
+ out_free_tx:
+-- 
+1.7.7.6
 
