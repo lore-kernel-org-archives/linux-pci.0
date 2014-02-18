@@ -1,144 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18482 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751547AbaBSGHR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 01:07:17 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V2 05/17] iommu/vt-d: move private structures and variables into intel-iommu.c
-Date: Wed, 19 Feb 2014 14:07:25 +0800
-Message-Id: <1392790057-32434-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:56824 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbaBRSrk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 13:47:40 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host controller
+Date: Tue, 18 Feb 2014 19:47:15 +0100
+Message-ID: <10244486.cKXs90tdz5@wuerfel>
+In-Reply-To: <20140218184420.GD2010@mudshark.cambridge.arm.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com> <20140218182142.GF29304@obsidianresearch.com> <20140218184420.GD2010@mudshark.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move private structures and variables into intel-iommu.c, which will
-help to simplify locking policy for hotplug. Also delete redundant
-declarations.
+On Tuesday 18 February 2014 18:44:20 Will Deacon wrote:
+> On Tue, Feb 18, 2014 at 06:21:42PM +0000, Jason Gunthorpe wrote:
+> > On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
+> > > +
+> > > +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
+> > > +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
+> >                                            ^^^^^^^^^^^^^^
+> > 
+> > This probably shouldn't be 0 in the example, nor in your kvm tool
+> > output. For example purposes any value will do.
+> 
+> Hmm, so kvmtool actually provides a PC ioport at 0x0, which is handy since
+> there's an 8250 down there. That means we have:
+> 
+> 0x0    - 0x6200  : Weird PC stuff
+> 0x6200 - 0x10000 : PCI IO space
+> 
+> Should I just change everything to be offset by 0x6200?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   31 +++++++++++++++++++++++++------
- include/linux/dmar.h        |   23 +----------------------
- 2 files changed, 26 insertions(+), 28 deletions(-)
+Do you have a list of the stuff in there?
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 5a411e8..fffe3d1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -380,6 +380,29 @@ struct device_domain_info {
- 	struct dmar_domain *domain; /* pointer to domain */
- };
- 
-+struct dmar_rmrr_unit {
-+	struct list_head list;		/* list of rmrr units	*/
-+	struct acpi_dmar_header *hdr;	/* ACPI header		*/
-+	u64	base_address;		/* reserved base address*/
-+	u64	end_address;		/* reserved end address */
-+	struct pci_dev **devices;	/* target devices */
-+	int	devices_cnt;		/* target device count */
-+};
-+
-+struct dmar_atsr_unit {
-+	struct list_head list;		/* list of ATSR units */
-+	struct acpi_dmar_header *hdr;	/* ACPI header */
-+	struct pci_dev **devices;	/* target devices */
-+	int devices_cnt;		/* target device count */
-+	u8 include_all:1;		/* include all ports */
-+};
-+
-+static LIST_HEAD(dmar_atsr_units);
-+static LIST_HEAD(dmar_rmrr_units);
-+
-+#define for_each_rmrr_units(rmrr) \
-+	list_for_each_entry(rmrr, &dmar_rmrr_units, list)
-+
- static void flush_unmaps_timeout(unsigned long data);
- 
- static DEFINE_TIMER(unmap_timer,  flush_unmaps_timeout, 0, 0);
-@@ -403,6 +426,8 @@ static int timer_on;
- static long list_size;
- 
- static void domain_remove_dev_info(struct dmar_domain *domain);
-+static void domain_remove_one_dev_info(struct dmar_domain *domain,
-+				       struct pci_dev *pdev);
- 
- #ifdef CONFIG_INTEL_IOMMU_DEFAULT_ON
- int dmar_disabled = 0;
-@@ -2243,8 +2268,6 @@ static int __init si_domain_init(int hw)
- 	return 0;
- }
- 
--static void domain_remove_one_dev_info(struct dmar_domain *domain,
--					  struct pci_dev *pdev);
- static int identity_mapping(struct pci_dev *pdev)
- {
- 	struct device_domain_info *info;
-@@ -3432,8 +3455,6 @@ static void __init init_iommu_pm_ops(void)
- static inline void init_iommu_pm_ops(void) {}
- #endif	/* CONFIG_PM */
- 
--LIST_HEAD(dmar_rmrr_units);
--
- static void __init dmar_register_rmrr_unit(struct dmar_rmrr_unit *rmrr)
- {
- 	list_add(&rmrr->list, &dmar_rmrr_units);
-@@ -3470,8 +3491,6 @@ rmrr_parse_dev(struct dmar_rmrr_unit *rmrru)
- 				    rmrr->segment);
- }
- 
--static LIST_HEAD(dmar_atsr_units);
--
- int __init dmar_parse_one_atsr(struct acpi_dmar_header *hdr)
- {
- 	struct acpi_dmar_atsr *atsr;
-diff --git a/include/linux/dmar.h b/include/linux/dmar.h
-index 1b08ce8..ea599d4 100644
---- a/include/linux/dmar.h
-+++ b/include/linux/dmar.h
-@@ -139,28 +139,7 @@ extern int arch_setup_dmar_msi(unsigned int irq);
- 
- #ifdef CONFIG_INTEL_IOMMU
- extern int iommu_detected, no_iommu;
--extern struct list_head dmar_rmrr_units;
--struct dmar_rmrr_unit {
--	struct list_head list;		/* list of rmrr units	*/
--	struct acpi_dmar_header *hdr;	/* ACPI header		*/
--	u64	base_address;		/* reserved base address*/
--	u64	end_address;		/* reserved end address */
--	struct pci_dev **devices;	/* target devices */
--	int	devices_cnt;		/* target device count */
--};
--
--#define for_each_rmrr_units(rmrr) \
--	list_for_each_entry(rmrr, &dmar_rmrr_units, list)
--
--struct dmar_atsr_unit {
--	struct list_head list;		/* list of ATSR units */
--	struct acpi_dmar_header *hdr;	/* ACPI header */
--	struct pci_dev **devices;	/* target devices */
--	int devices_cnt;		/* target device count */
--	u8 include_all:1;		/* include all ports */
--};
--
--int dmar_parse_rmrr_atsr_dev(void);
-+extern int dmar_parse_rmrr_atsr_dev(void);
- extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
- extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
- extern int intel_iommu_init(void);
--- 
-1.7.10.4
+If that is actually port I/O, leaving it in there may be best,
+but I agree the example should be changed.
 
+	Arnd
