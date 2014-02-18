@@ -1,163 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:34791 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751716AbaB0N4U convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:56:20 -0500
-Date: Thu, 27 Feb 2014 13:56:16 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
- resources.
-Message-ID: <20140227135616.GK1692@e106497-lin.cambridge.arm.com>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
- <1393506402-11474-2-git-send-email-Liviu.Dudau@arm.com>
- <CAPcvp5EqcKEWoH_--azp+sMykmEWtY5whHG=c9t3sZVXZyAPUg@mail.gmail.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:64486 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752260AbaBRTh3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 14:37:29 -0500
+Date: Tue, 18 Feb 2014 19:36:54 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140218193654.GK2010@mudshark.cambridge.arm.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+ <20140218185947.GA22340@obsidianresearch.com>
+ <20140218190929.GF2010@mudshark.cambridge.arm.com>
+ <1411925.bMiMyFpUnW@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <CAPcvp5EqcKEWoH_--azp+sMykmEWtY5whHG=c9t3sZVXZyAPUg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1411925.bMiMyFpUnW@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 01:22:19PM +0000, Andrew Murray wrote:
-> On 27 February 2014 13:06, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> >
-> > The ranges property for a host bridge controller in DT describes
-> > the mapping between the PCI bus address and the CPU physical address.
-> > The resources framework however expects that the IO resources start
-> > at a pseudo "port" address 0 (zero) and have a maximum size of 64kb.
+On Tue, Feb 18, 2014 at 07:32:33PM +0000, Arnd Bergmann wrote:
+> On Tuesday 18 February 2014 19:09:29 Will Deacon wrote:
+> > 
+> > > Regarding the 0x6200.. There are two conflicting issues there 
+> > >  - You really don't want to let the PCI core assign resources to that
+> > >    range, it probably won't work.
+> > 
+> > Right, with kvmtool we don't support resource assignment (the BARs are fixed)
+> > so everything is PCI_PROBE_ONLY.
 > 
-> Is this just in the case of ARM? (I've tried to keep up with the
-> conversation, but apologies if I've misunderstood).
+> Ok, I looked at the source now and can confirm:
 > 
-> > The conversion from pci ranges to resources failed to take that into
-> > account.
-> >
-> > In the process move the function into drivers/of/address.c as it
-> > now depends on pci_address_to_pio() code.
-> >
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> >
-> > diff --git a/drivers/of/address.c b/drivers/of/address.c
-> > index 1a54f1f..7cf2b16 100644
-> > --- a/drivers/of/address.c
-> > +++ b/drivers/of/address.c
-> > @@ -719,3 +719,34 @@ void __iomem *of_iomap(struct device_node *np, int index)
-> >         return ioremap(res.start, resource_size(&res));
-> >  }
-> >  EXPORT_SYMBOL(of_iomap);
-> > +
-> > +/**
-> > + * of_pci_range_to_resource - Create a resource from an of_pci_range
-> > + * @range:     the PCI range that describes the resource
-> > + * @np:                device node where the range belongs to
-> > + * @res:       pointer to a valid resource that will be updated to
-> > + *              reflect the values contained in the range.
-> > + * Note that if the range is an IO range, the resource will be converted
-> > + * using pci_address_to_pio() which can fail if it is called to early or
-> > + * if the range cannot be matched to any host bridge IO space.
-> > + */
-> > +void of_pci_range_to_resource(struct of_pci_range *range,
-> > +       struct device_node *np, struct resource *res)
-> > +{
-> > +       res->flags = range->flags;
-> > +       if (res->flags & IORESOURCE_IO) {
-> > +               unsigned long port;
-> > +               port = pci_address_to_pio(range->pci_addr);
+> * 0x0-0x1000 are used for lots of legacy ISA devices.
+> * PCI devices get assigned IO addresses in 0x400 steps starting at 0x6200.
+> * There are three PCI drivers doing this: VESA, PCI-SHMEM and virtio-pci.
 > 
-> Is this likely to break existing users of of_pci_range_to_resource?
+> Regarding the PCI_PROBE_ONLY flag, how do you set that? Should we
+> have a standard DT property for that? On PowerPC we already specified
+> "linux,pci-probe-only" and "linux,pci-assign-all-buses", which seems
+> reasonable to use in architecture independent code as well.
 
-I've tested the change with a tegra2 based device (trimslice) and I've
-got a functional board.
+For arch/arm/ it's done on the command line (pci=firmware) but yes, for the
+generic driver it sounds like a good idea to put this in the device-tree.
+I'll look at adding the ppc properties in the next version.
 
-> 
-> For example arch/mips: IO_SPACE_LIMIT defaults to 0xffff and there is
-> no overridden implementation for pci_address_to_pio, therefore this
-> will set res->start to OF_BAD_ADDR whereas previously it would have
-> been the CPU address for I/O (assuming the cpu_addr was previously >
-> 64K).
+Cheers,
 
-And that is why I'm using pci_addr as the physical address passed to
-pci_address_to_pio. My idea is that when converting ranges into resources,
-for IORESOURCE_IO we should generate a resource that uses logical I/O
-addresses, not physical CPU addresses. How we get that needs debating,
-currently I've took the shortcut of using the pci_addr to get the port
-number.
-
-> 
-> I have no idea if I/O previously worked for mips, but this patch seems
-> to change that behavior. It may be a similar story for microblaze and
-> powerpc.
-
-Both microblaze and powerpc share an identical implementation and it is
-expecting that the physical address passed as parameter fits between
-io_base_phys and io_base_phys + pcibios_io_size(hose). So yes, the
-correct way is to use cpu_addr and fix the weak implementation? But we
-don't have enough information for the weak implementation to work, as
-we don't know where the physical IO base start (we are just about to
-find out from DT).
-
-Thanks for reviewing these patches!
-
-Liviu
-
-> 
-> Andrew Murray
-> 
-> > +               if (port == (unsigned long)-1) {
-> > +                       res->start = (resource_size_t)OF_BAD_ADDR;
-> > +                       res->end = (resource_size_t)OF_BAD_ADDR;
-> > +                       return;
-> > +               }
-> > +               res->start = port;
-> > +       } else {
-> > +               res->start = range->cpu_addr;
-> > +       }
-> > +       res->end = res->start + range->size - 1;
-> > +       res->parent = res->child = res->sibling = NULL;
-> > +       res->name = np->full_name;
-> > +}
-> > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> > index 5f6ed6b..a667762 100644
-> > --- a/include/linux/of_address.h
-> > +++ b/include/linux/of_address.h
-> > @@ -23,17 +23,8 @@ struct of_pci_range {
-> >  #define for_each_of_pci_range(parser, range) \
-> >         for (; of_pci_range_parser_one(parser, range);)
-> >
-> > -static inline void of_pci_range_to_resource(struct of_pci_range *range,
-> > -                                           struct device_node *np,
-> > -                                           struct resource *res)
-> > -{
-> > -       res->flags = range->flags;
-> > -       res->start = range->cpu_addr;
-> > -       res->end = range->cpu_addr + range->size - 1;
-> > -       res->parent = res->child = res->sibling = NULL;
-> > -       res->name = np->full_name;
-> > -}
-> > -
-> > +extern void of_pci_range_to_resource(struct of_pci_range *range,
-> > +               struct device_node *np, struct resource *res);
-> >  /* Translate a DMA address from device space to CPU space */
-> >  extern u64 of_translate_dma_address(struct device_node *dev,
-> >                                     const __be32 *in_addr);
-> > --
-> > 1.9.0
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
-
+Will
