@@ -1,58 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:53869 "EHLO quartz.orcorp.ca"
+Received: from mx1.redhat.com ([209.132.183.28]:55848 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231AbaBSGtH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 01:49:07 -0500
-Date: Tue, 18 Feb 2014 23:48:50 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Liviu Dudau <liviu@dudau.co.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Will Deacon <will.deacon@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Russell King <rmk@arm.linux.org.uk>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140219064850.GD6186@obsidianresearch.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <5805232.JrD2FybBlg@wuerfel>
- <20140214220047.GA5394@bart.dudau.co.uk>
- <2312919.pM61KLBcYY@wuerfel>
- <20140218174125.GC29304@obsidianresearch.com>
- <20140219024427.GC5394@bart.dudau.co.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140219024427.GC5394@bart.dudau.co.uk>
+	id S1755177AbaBRKKl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:10:41 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 15/35] igbvf: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:11:44 +0100
+Message-Id: <ba2612aaa8ac27968822c7789ea313010b6d0984.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 02:44:27AM +0000, Liviu Dudau wrote:
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+Cc: Bruce Allan <bruce.w.allan@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/net/ethernet/intel/igbvf/netdev.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igbvf/netdev.c b/drivers/net/ethernet/intel/igbvf/netdev.c
+index 675435f..e2c6d80 100644
+--- a/drivers/net/ethernet/intel/igbvf/netdev.c
++++ b/drivers/net/ethernet/intel/igbvf/netdev.c
+@@ -1043,11 +1043,11 @@ static void igbvf_set_interrupt_capability(struct igbvf_adapter *adapter)
+ 		for (i = 0; i < 3; i++)
+ 			adapter->msix_entries[i].entry = i;
  
-> I wish things were easier!
+-		err = pci_enable_msix(adapter->pdev,
+-		                      adapter->msix_entries, 3);
++		err = pci_enable_msix_range(adapter->pdev,
++		                            adapter->msix_entries, 3, 3);
+ 	}
+ 
+-	if (err) {
++	if (err < 0) {
+ 		/* MSI-X failed */
+ 		dev_err(&adapter->pdev->dev,
+ 		        "Failed to initialize MSI-X interrupts.\n");
+-- 
+1.7.7.6
 
-Yah, I've seen some of this complexity too..
-
-A thought that crosses my head is to try and leave the entire arch
-support intact and build a separate 'domain-driver-based' support
-that completely replaces the arch support, a domain would use one or
-the other but never both.
-
-So pci_domain_nr could become:
-
-  struct pci_domain_driver *drv = pci_get_domain_driver(bus);
-  if (drv)
-       return drv->domain_nr;
-  else
-       return _arch_pci_domain_nr(bus);
-
-And other funcs would change effectively the same way.
-
-> And if someone has a good idea on how to determine the domain # from
-> DT we can pluck it into the pcibios_root_bridge_prepare() function
-> (either the generic version or the arch specific one).
-
-You can probably start with 'of_alias_get_id'..
-
-Jason
