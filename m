@@ -1,62 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:49065 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbaB0Np6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:45:58 -0500
-Date: Thu, 27 Feb 2014 13:45:55 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
- resources.
-Message-ID: <20140227134555.GJ1692@e106497-lin.cambridge.arm.com>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
- <1393506402-11474-2-git-send-email-Liviu.Dudau@arm.com>
- <14735193.MhDlU8yNYG@wuerfel>
-MIME-Version: 1.0
-In-Reply-To: <14735193.MhDlU8yNYG@wuerfel>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:62645 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755371AbaBRKLW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:11:22 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 12/35] e1000e: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:11:41 +0100
+Message-Id: <535cdf2dd9a61b8272b6323b72f1dca6a2460ab3.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 01:20:54PM +0000, Arnd Bergmann wrote:
-> On Thursday 27 February 2014 13:06:39 Liviu Dudau wrote:
-> > +       res->flags = range->flags;
-> > +       if (res->flags & IORESOURCE_IO) {
-> > +               unsigned long port;
-> > +               port = pci_address_to_pio(range->pci_addr);
-> > +               if (port == (unsigned long)-1) {
-> > +                       res->start = (resource_size_t)OF_BAD_ADDR;
-> > +                       res->end = (resource_size_t)OF_BAD_ADDR;
-> > +                       return;
-> > +               }
-> > 
-> 
-> I think this conflicts with the way that pci_address_to_pio() is
-> defined on powerpc, where it expects a CPU address as the input,
-> not a PCI i/o address.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-And you are right, maybe what I need is to fix weak version of the
-function, as that one cannot cope with cpu addresses. But I think
-the idea still stands.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+Cc: Bruce Allan <bruce.w.allan@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/net/ethernet/intel/e1000e/netdev.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-Thanks for reviewing this version as well!
-
-Liviu
-
-> 
-> 	Arnd
-> 
-> 
-
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index 6d91933..e6f8961d 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -2038,13 +2038,16 @@ void e1000e_set_interrupt_capability(struct e1000_adapter *adapter)
+ 							       msix_entry),
+ 							GFP_KERNEL);
+ 			if (adapter->msix_entries) {
++				struct e1000_adapter *a = adapter;
++
+ 				for (i = 0; i < adapter->num_vectors; i++)
+ 					adapter->msix_entries[i].entry = i;
+ 
+-				err = pci_enable_msix(adapter->pdev,
+-						      adapter->msix_entries,
+-						      adapter->num_vectors);
+-				if (err == 0)
++				err = pci_enable_msix_range(a->pdev,
++							    a->msix_entries,
++							    a->num_vectors,
++							    a->num_vectors);
++				if (err > 0)
+ 					return;
+ 			}
+ 			/* MSI-X failed, so fall through and try MSI */
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+1.7.7.6
 
