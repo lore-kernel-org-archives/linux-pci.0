@@ -1,138 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:48050 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135AbaBNGmE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 01:42:04 -0500
-Date: Fri, 14 Feb 2014 07:41:53 +0100
-From: Sascha Hauer <s.hauer@pengutronix.de>
-To: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Marek Vasut <marex@denx.de>, linux-pci@vger.kernel.org,
-	kernel@pengutronix.de, Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: imx6: Fix link_up detection
-Message-ID: <20140214064153.GE17250@pengutronix.de>
-References: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de>
- <201402120836.16221.marex@denx.de>
- <52FD0F1A.4000208@boundarydevices.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:54038 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911AbaBRUPl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 15:15:41 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Will Deacon <will.deacon@arm.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host controller
+Date: Tue, 18 Feb 2014 21:15:12 +0100
+Message-ID: <3220206.h6hgmMzWTX@wuerfel>
+In-Reply-To: <20140218184420.GD2010@mudshark.cambridge.arm.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com> <20140218182142.GF29304@obsidianresearch.com> <20140218184420.GD2010@mudshark.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52FD0F1A.4000208@boundarydevices.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 11:29:46AM -0700, Troy Kisky wrote:
-> On 2/12/2014 12:36 AM, Marek Vasut wrote:
-> >On Wednesday, February 12, 2014 at 08:27:55 AM, Sascha Hauer wrote:
-> >
-> >+CC Troy Kisky, since I think he submitted something similar some time ago
-> >already.
-> >
-> >Otherwise I agree this happens.
-> >
-> Sorry, I haven't submitted this yet, but was planning to today. Here's
-> what would have been sent.
+On Tuesday 18 February 2014 18:44:20 Will Deacon wrote:
+> On Tue, Feb 18, 2014 at 06:21:42PM +0000, Jason Gunthorpe wrote:
+> > On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
+> > > +
+> > > +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
+> > > +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
+> >                                            ^^^^^^^^^^^^^^
+> > 
+> > This probably shouldn't be 0 in the example, nor in your kvm tool
+> > output. For example purposes any value will do.
 > 
-> From 32c560d33fe2c3945d69f3396689f0abb76f7e1f Mon Sep 17 00:00:00 2001
-> From: Marek Vasut <marex@denx.de>
-> Date: Sat, 25 Jan 2014 14:22:48 -0700
-> Subject: [PATCH 1/1] pci-imx6.c: wait for retraining
+> Hmm, so kvmtool actually provides a PC ioport at 0x0, which is handy since
+> there's an 8250 down there. That means we have:
 > 
-> This patch handles the case where the PCIe link is up and running, yet drops
-> into the LTSSM training mode. The link spends short time in the LTSSM training
-> mode, but the current code can misinterpret it as the link being stalled.
-> Waiting for the LTSSM training to complete fixes the issue.
+> 0x0    - 0x6200  : Weird PC stuff
+> 0x6200 - 0x10000 : PCI IO space
 > 
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Tested-by: Troy Kisky <troy.kisky@boundarydevices.com>
+> Should I just change everything to be offset by 0x6200?
 
-Thanks, that works.
+Some more comments about this:
 
-Tested-by: Sascha Hauer <s.hauer@pengutronix.de>
+* After I looked at the kvmtool code some more, I think it would be nice to
+  actually move the I/O space window to a nonzero location, e.g. between the
+  PCI space and the AXI space. It's really confusing the way it is, and easy
+  to introduce bugs if you have any code that accidentally relies on the
+  numbers matching up. For all I can tell, kvmtool should just work fine
+  with any definition of ARM_IOPORT_AREA, as long as you apply the trivial
+  patch below.
 
-Sascha
+* pci_get_io_space_block() is a very confusing name for a function that
+  allocates a memory space block in kvmtool. It seems that KVM_IOPORT_AREA
+  is a misnomer for the same reason. Note that PowerPC sets KVM_IOPORT_AREA
+  to zero, but has the I/O space window at SPAPR_PCI_IO_WIN_ADDR, 
+  which is non-zero.
 
-> ---
->  drivers/pci/host/pci-imx6.c | 47 ++++++++++++++++++++++++++++++++-------------
->  1 file changed, 34 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index e8663a8..ee08250 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -424,20 +424,40 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
->  static int imx6_pcie_link_up(struct pcie_port *pp)
->  {
-> -	u32 rc, ltssm, rx_valid;
-> +	u32 rc, debug_r0, rx_valid;
-> +	int count = 5;
->  	/*
-> -	 * Test if the PHY reports that the link is up and also that
-> -	 * the link training finished.  It might happen that the PHY
-> -	 * reports the link is already up, but the link training bit
-> -	 * is still set, so make sure to check the training is done
-> -	 * as well here.
-> +	 * Test if the PHY reports that the link is up and also that the LTSSM
-> +	 * training finished. There are three possible states of the link when
-> +	 * this code is called:
-> +	 * 1) The link is DOWN (unlikely)
-> +	 *     The link didn't come up yet for some reason. This usually means
-> +	 *     we have a real problem somewhere. Reset the PHY and exit. This
-> +	 *     state calls for inspection of the DEBUG registers.
-> +	 * 2) The link is UP, but still in LTSSM training
-> +	 *     Wait for the training to finish, which should take a very short
-> +	 *     time. If the training does not finish, we have a problem and we
-> +	 *     need to inspect the DEBUG registers. If the training does finish,
-> +	 *     the link is up and operating correctly.
-> +	 * 3) The link is UP and no longer in LTSSM training
-> +	 *     The link is up and operating correctly.
->  	 */
-> -	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
-> -	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
-> -	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
-> -		return 1;
-> -
-> +	while (1) {
-> +		rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
-> +		if (!(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP))
-> +			break;
-> +		if (!(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
-> +			return 1;
-> +		if (!count--)
-> +			break;
-> +		dev_dbg(pp->dev, "Link is up, but still in training\n");
-> +		/*
-> +		 * Wait a little bit, then re-check if the link finished
-> +		 * the training.
-> +		 */
-> +		usleep_range(1000, 2000);
-> +	}
->  	/*
->  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
->  	 * Wait 2ms (LTSSM timeout is 24ms, PHY lock is ~5us in gen2).
-> @@ -446,15 +466,16 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
->  	 * to gen2 is stuck
->  	 */
->  	pcie_phy_read(pp->dbi_base, PCIE_PHY_RX_ASIC_OUT, &rx_valid);
-> -	ltssm = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0) & 0x3F;
-> +	debug_r0 = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0);
->  	if (rx_valid & 0x01)
->  		return 0;
-> -	if (ltssm != 0x0d)
-> +	if ((debug_r0 & 0x3f) != 0x0d)
->  		return 0;
->  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
-> +	dev_dbg(pp->dev, "debug_r0=%08x debug_r1=%08x\n", debug_r0, rc);
->  	imx6_pcie_reset_phy(pp);
-> -- 
-> 1.8.1.2
-> 
-> 
-> 
+* It's interesting that you also support I/O space access to the PCI config
+  space through PC-Style ports 0cf8-0cff. Not sure if that helps at all,
+  but it is another standard way to probe the bus that could easily be
+  implemented as an alternative to CAM and ECAM, in a generic PCI host
+  driver.
 
--- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+	Arnd
+
+diff --git a/tools/kvm/arm/kvm-cpu.c b/tools/kvm/arm/kvm-cpu.c
+index b017994..caf9a57 100644
+--- a/tools/kvm/arm/kvm-cpu.c
++++ b/tools/kvm/arm/kvm-cpu.c
+@@ -105,7 +105,7 @@ bool kvm_cpu__emulate_mmio(struct kvm *kvm, u64 phys_addr, u8 *data, u32 len,
+ 		return kvm__emulate_mmio(kvm, phys_addr, data, len, is_write);
+ 	} else if (arm_addr_in_ioport_region(phys_addr)) {
+ 		int direction = is_write ? KVM_EXIT_IO_OUT : KVM_EXIT_IO_IN;
+-		u16 port = phys_addr & USHRT_MAX;
++		u16 port = (phys_addr - ARM_IOPORT_AREA) & USHRT_MAX;
+ 		return kvm__emulate_io(kvm, port, data, direction, len, 1);
+ 	} else if (arm_addr_in_pci_region(phys_addr)) {
+ 		return kvm__emulate_mmio(kvm, phys_addr, data, len, is_write);
+
