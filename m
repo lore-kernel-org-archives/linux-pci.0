@@ -1,93 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30566 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751175AbaBXIAx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:00:53 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	Arvind Bhushan <arvindb@chelsio.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 06/23] csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:06 +0100
-Message-Id: <c7d2dc937c290f25c179f2ebbe1fcdb79e13b010.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Santosh Raspatur <santosh@chelsio.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 06/35] cxgb3: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:07:58 +0100
+Message-Id: <985df9ebc23ee76c17abfba4e26f91ff03d2d857.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 As result of deprecation of MSI-X/MSI enablement functions
 pci_enable_msix() and pci_enable_msi_block() all drivers
 using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
+new pci_enable_msi_range() and pci_enable_msix_range()
 interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Naresh Kumar Inna <naresh@chelsio.com>
-Cc: Arvind Bhushan <arvindb@chelsio.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: Santosh Raspatur <santosh@chelsio.com>
+Cc: netdev@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/scsi/csiostor/csio_hw.h  |    2 +-
- drivers/scsi/csiostor/csio_isr.c |   22 +++++++++-------------
- 2 files changed, 10 insertions(+), 14 deletions(-)
+ drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c |   23 +++++++++--------------
+ 1 files changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
-index 49b1daa..5db2d85 100644
---- a/drivers/scsi/csiostor/csio_hw.h
-+++ b/drivers/scsi/csiostor/csio_hw.h
-@@ -94,7 +94,7 @@ enum {
- };
- 
- struct csio_msix_entries {
--	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
-+	unsigned short	vector;		/* Assigned MSI-X vector */
- 	void		*dev_id;	/* Priv object associated w/ this msix*/
- 	char		desc[24];	/* Description of this vector */
- };
-diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
-index 91ba91d..a8c748a 100644
---- a/drivers/scsi/csiostor/csio_isr.c
-+++ b/drivers/scsi/csiostor/csio_isr.c
-@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
- static int
- csio_enable_msix(struct csio_hw *hw)
+diff --git a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+index b72d2ed..07bbb71 100644
+--- a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+@@ -3088,27 +3088,22 @@ static int cxgb_enable_msix(struct adapter *adap)
  {
--	int rv, i, j, k, n, min, cnt;
-+	int i, j, k, n, min, cnt;
- 	struct csio_msix_entries *entryp;
- 	struct msix_entry *entries;
- 	int extra = CSIO_EXTRA_VECS;
-@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
+ 	struct msix_entry entries[SGE_QSETS + 1];
+ 	int vectors;
+-	int i, err;
++	int i;
  
- 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
+ 	vectors = ARRAY_SIZE(entries);
+ 	for (i = 0; i < vectors; ++i)
+ 		entries[i].entry = i;
  
--	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
--		cnt = rv;
--	if (!rv) {
--		if (cnt < (hw->num_sqsets + extra)) {
--			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
--			csio_reduce_sqsets(hw, cnt - extra);
--		}
--	} else {
--		if (rv > 0)
--			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+-	while ((err = pci_enable_msix(adap->pdev, entries, vectors)) > 0)
+-		vectors = err;
 -
-+	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
-+	if (cnt < 0) {
- 		kfree(entries);
--		return -ENOMEM;
-+		return cnt;
-+	}
-+
-+	if (cnt < (hw->num_sqsets + extra)) {
-+		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
-+		csio_reduce_sqsets(hw, cnt - extra);
- 	}
+-	if (!err && vectors < (adap->params.nports + 1)) {
+-		pci_disable_msix(adap->pdev);
+-		err = -1;
+-	}
++	vectors = pci_enable_msix_range(adap->pdev, entries,
++					adap->params.nports + 1, vectors);
++	if (vectors < 0)
++		return vectors;
  
- 	/* Save off vectors */
+-	if (!err) {
+-		for (i = 0; i < vectors; ++i)
+-			adap->msix_info[i].vec = entries[i].vector;
+-		adap->msix_nvectors = vectors;
+-	}
++	for (i = 0; i < vectors; ++i)
++		adap->msix_info[i].vec = entries[i].vector;
++	adap->msix_nvectors = vectors;
+ 
+-	return err;
++	return 0;
+ }
+ 
+ static void print_port_info(struct adapter *adap, const struct adapter_info *ai)
 -- 
 1.7.7.6
 
