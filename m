@@ -1,144 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53609 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752150AbaB1NJA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 08:09:00 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 0/5] [RFC] Support for creating generic host_bridge from device tree
-Date: Fri, 28 Feb 2014 13:08:17 +0000
-Message-Id: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:39236 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993AbaBRU7e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 15:59:34 -0500
+Received: by mail-ob0-f179.google.com with SMTP id wo20so19021589obc.24
+        for <linux-pci@vger.kernel.org>; Tue, 18 Feb 2014 12:59:34 -0800 (PST)
+Subject: [PATCH v2 0/4] Remove dead code
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: e1000-devel@lists.sourceforge.net, Joerg Roedel <joro@8bytes.org>,
+	Sudeep Dutt <sudeep.dutt@intel.com>,
+	linux-kernel@vger.kernel.org,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	iommu@lists.linux-foundation.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Aaron F Brown <aaron.f.brown@intel.com>,
+	Arjan van de Ven <arjan@linux.intel.com>
+Date: Tue, 18 Feb 2014 13:59:31 -0700
+Message-ID: <20140218205925.11014.14973.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is v3 of my attempt to add support for a generic pci_host_bridge controller created
-from a description passed in the device tree.
+This is v2 of my rework of part of Stephen's patch [1].  My v1 posting,
+with a little discussion, is here [2].
 
-Changes from v2:
-  - Use range->cpu_addr when calling pci_address_to_pio()
-  - Introduce pci_register_io_range() helper function in order to register
-    io ranges ahead of their conversion to PIO values. This is needed as no
-    information is being stored yet regarding the range mapping, making
-    pci_address_to_pio() fail. Default weak implementation does nothing,
-    to cover the default weak implementation of pci_address_to_pio() that
-    expects direct mapping of physical addresses into PIO values (x86 view).
+This removes SR-IOV migration support, which seems to be unused.
 
-Changes from v1:
-  - Add patch to fix conversion of IO ranges into IO resources.
-  - Added a domain_nr member to pci_host_bridge structure, and a new function
-    to create a root bus in a given domain number. In order to facilitate that
-    I propose changing the order of initialisation between pci_host_bridge and
-    it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
-    This is done in patch 1/4 and 2/4.
-  - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
-    code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
-    and if that fails assign the next unallocated domain id.
-  - Changed the name of the function that creates the generic host bridge from
-    pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
+Changes since v1:
+  - Drop the removal of MMIO exclusivity.
+  - Add a few includes of <linux/irqreturn.h>.  The SR-IOV migration
+    support included irqreturn.h via linux/pci.h, and a few drivers relied
+    on that.  So this v2 series updates those drivers to include
+    irqreturn.h directly.
 
-v1 thread here: https://lkml.org/lkml/2014/2/3/380
+Unless there's objection, I'd like to merge all these through my PCI tree
+for v3.15.
 
-The following is an edit of the original blurb:
+Bjorn
 
-Following the discussion started here [1], I now have a proposal for tackling
-generic support for host bridges described via device tree. It is an initial
-stab at it, to try to get feedback and suggestions, but it is functional enough
-that I have PCI Express for arm64 working on an FPGA using the patch that I am
-also publishing that adds support for PCI for that platform.
+[1] http://lkml.kernel.org/r/20131227132710.7190647c@nehalam.linuxnetplumber.net
+[2] https://lkml.kernel.org/r/20140130192011.25426.45702.stgit@bhelgaas-glaptop.roam.corp.google.com
 
-Looking at the existing architectures that fit the requirements (use of device
-tree and PCI) yields the powerpc and microblaze as generic enough to make them
-candidates for conversion. I have a tentative patch for microblaze that I can
-only compile test it, unfortunately using qemu-microblaze leads to an early
-crash in the kernel.
+---
 
-As Bjorn has mentioned in the previous discussion, the idea is to add to
-struct pci_host_bridge enough data to be able to reduce the size or remove the
-architecture specific pci_controller structure. arm64 support actually manages
-to get rid of all the architecture static data and has no pci_controller structure
-defined. For host bridge drivers that means a change of API unless architectures
-decide to provide a compatibility layer (comments here please).
-
-In order to initialise a host bridge with the new API, the following example
-code is sufficient for a _probe() function:
-
-static int myhostbridge_probe(struct platform_device *pdev)
-{
-	int err;
-	struct device_node *dev;
-	struct pci_host_bridge *bridge;
-	struct myhostbridge_port *pp;
-	resource_size_t lastbus;
-
-	dev = pdev->dev.of_node;
-
-	if (!of_device_is_available(dev)) {
-		pr_warn("%s: disabled\n", dev->full_name);
-		return -ENODEV;
-	}
-
-	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
-	if (!pp)
-		return -ENOMEM;
-
-	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
-	if (!bridge) {
-		err = -EINVAL;
-		goto bridge_init_fail;
-	}
-
-	err = myhostbridge_setup(bridge->bus);
-	if (err)
-		goto bridge_init_fail;
-
-	/* We always enable PCI domains and we keep domain 0 backward
-	 * compatible in /proc for video cards
-	 */
-	pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
-	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-
-	lastbus = pci_scan_child_bus(bridge->bus);
-	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-
-	pci_assign_unassigned_bus_resources(bridge->bus);
-
-	pci_bus_add_devices(bridge->bus);
-
-	return 0;
-
-bridge_init_fail:
-	kfree(pp);
-	return err;
-}
-
-[1] http://thread.gmane.org/gmane.linux.kernel.pci/25946
-
-Best regards,
-Liviu
+Bjorn Helgaas (4):
+      misc: mic: Add include of <linux/irqreturn.h>
+      mei: Add include of <linux/irqreturn.h>
+      iommu/amd: Add include of <linux/irqreturn.h>
+      PCI: Remove unused SR-IOV VF Migration support
 
 
-Liviu Dudau (5):
-  pci: Introduce pci_register_io_range() helper function.
-  pci: OF: Fix the conversion of IO ranges into IO resources.
-  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-  pci: Introduce a domain number for pci_host_bridge.
-  pci: Add support for creating a generic host_bridge from device tree
-
- drivers/of/address.c       |  39 +++++++++++++
- drivers/pci/host-bridge.c  | 134 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c        |  66 ++++++++++++++--------
- include/linux/of_address.h |  14 +----
- include/linux/pci.h        |  17 ++++++
- 5 files changed, 236 insertions(+), 34 deletions(-)
-
--- 
-1.9.0
-
+ Documentation/PCI/pci-iov-howto.txt |    4 -
+ drivers/iommu/amd_iommu_types.h     |    1 
+ drivers/misc/mei/hw-me.h            |    1 
+ drivers/misc/mic/card/mic_device.h  |    1 
+ drivers/misc/mic/host/mic_device.h  |    1 
+ drivers/pci/iov.c                   |  119 -----------------------------------
+ drivers/pci/pci.h                   |    4 -
+ include/linux/pci.h                 |    4 -
+ 8 files changed, 4 insertions(+), 131 deletions(-)
