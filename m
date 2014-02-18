@@ -1,46 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:64219 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756560AbaBUA7M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 19:59:12 -0500
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N1B00B91MQMGR60@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 21 Feb 2014 09:59:10 +0900 (KST)
-Date: Fri, 21 Feb 2014 00:59:09 +0000 (GMT)
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 1/1] Designware:RC BARs setup related fix
-To: Mohit Kumar <mohit.kumar@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"spear-devel@list.st.com" <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jg1.han@samsung.com>
-Reply-to: jg1.han@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=euc-kr
-MIME-version: 1.0
-Message-id: <10133227.11261392944347149.JavaMail.weblogic@epml01>
+Received: from mx1.redhat.com ([209.132.183.28]:37480 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756534AbaBRPHP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 10:07:15 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Roland Dreier <roland@kernel.org>,
+	Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 1/2] mthca: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 16:09:01 +0100
+Message-Id: <479c40ee9e4f3efa45aa6f57647ed1a1918e9deb.1392733151.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392733151.git.agordeev@redhat.com>
+References: <cover.1392733151.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRmViIDE5LCAyMDE0IDIxOjA0IChHTVQrMDk6MDApLCBNb2hpdCBLdW1hciB3cml0ZToNCj4g
-VGhlIFN5bm9wc3lzICBQQ0llIGNvcmUgcHJvdmlkZXMgb25lIHBhaXIgb2YgMzItYml0IEJBUnMg
-KEJBUiAwIGFuZCBCQVIgMSkuDQo+IFRoZSBCQVJzIGNhbiAgYmUgY29uZmlndXJlZCBhcyBmb2xs
-b3dzOg0KPiANCj4gLSBPbmUgNjQtYml0IEJBUjogQkFScyAwIGFuZCAxIGFyZSBjb21iaW5lZCB0
-byBmb3JtIGEgc2luZ2xlIDY0LWJpdCBCQVIuDQo+IC0gVHdvIDMyLWJpdCBCQVJzOiBCQVJzIDAg
-YW5kIDEgYXJlIHR3byBpbmRlcGVuZGVudCAzMi1iaXQgQkFScw0KPiANCj4gVGhpcyBwYXRjaCBj
-b3JyZWN0cyA2NC1iaXQsIG5vbi1wcmVmZXRjaGFibGUgbWVtb3J5IEJBUiBjb25maWd1cmF0aW9u
-DQo+IGltcGxlbWVudGVkIGluIGR3IGRyaXZlci4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IE1vaGl0
-IEt1bWFyIDxtb2hpdC5rdW1hckBzdC5jb20+DQo+IENjOiBQcmF0eXVzaCBBbmFuZCA8cHJhdHl1
-c2guYW5hbmRAc3QuY29tPg0KPiBDYzogSmluZ29vIEhhbiA8amcxLmhhbkBzYW1zdW5nLmNvbT4N
-Cj4gQ2M6IEFybmQgQmVyZ21hbm4gPGFybmRAYXJuZGIuZGU+DQo+IENjOiBzcGVhci1kZXZlbEBs
-aXN0LnN0LmNvbQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KDQpJIHdvcmtzIHBy
-b3Blcmx5IG9uIEV4eW5vcyBwbGF0ZnJvbS4NCg0KQWNrZWQtYnk6IEppbmdvbyBIYW4gPGpnMS5o
-YW5Ac2Ftc3VuZy5jb20+DQoNCkJlc3QgcmVnYXJkcywNCkppbmdvbyBIYW4NCg0KPiAtLS0NCj4g
-IGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMgfCAgICAyICstDQo+ICAxIGZpbGVz
-IGNoYW5nZWQsIDEgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSk=
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Roland Dreier <roland@kernel.org>
+Cc: Sean Hefty <sean.hefty@intel.com>
+Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+Cc: linux-rdma@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/infiniband/hw/mthca/mthca_main.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/infiniband/hw/mthca/mthca_main.c b/drivers/infiniband/hw/mthca/mthca_main.c
+index 87897b9..959d600 100644
+--- a/drivers/infiniband/hw/mthca/mthca_main.c
++++ b/drivers/infiniband/hw/mthca/mthca_main.c
+@@ -858,13 +858,10 @@ static int mthca_enable_msi_x(struct mthca_dev *mdev)
+ 	entries[1].entry = 1;
+ 	entries[2].entry = 2;
+ 
+-	err = pci_enable_msix(mdev->pdev, entries, ARRAY_SIZE(entries));
+-	if (err) {
+-		if (err > 0)
+-			mthca_info(mdev, "Only %d MSI-X vectors available, "
+-				   "not using MSI-X\n", err);
++	err = pci_enable_msix_range(mdev->pdev, entries,
++				    ARRAY_SIZE(entries), ARRAY_SIZE(entries));
++	if (err < 0)
+ 		return err;
+-	}
+ 
+ 	mdev->eq_table.eq[MTHCA_EQ_COMP ].msi_x_vector = entries[0].vector;
+ 	mdev->eq_table.eq[MTHCA_EQ_ASYNC].msi_x_vector = entries[1].vector;
+-- 
+1.7.7.6
 
