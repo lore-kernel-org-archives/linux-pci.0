@@ -1,46 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:64002 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbaBETmN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 14:42:13 -0500
-Received: by mail-lb0-f172.google.com with SMTP id c11so710242lbj.31
-        for <linux-pci@vger.kernel.org>; Wed, 05 Feb 2014 11:42:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140205192733.GG25695@obsidianresearch.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <1391532784-1953-3-git-send-email-will.deacon@arm.com> <3460536.Sh23gjDa6X@wuerfel>
- <20140205190947.GA22297@mudshark.cambridge.arm.com> <20140205192733.GG25695@obsidianresearch.com>
-From: Peter Maydell <peter.maydell@linaro.org>
-Date: Wed, 5 Feb 2014 19:41:47 +0000
-Message-ID: <CAFEAcA9bhWK+pSy8wVLtNPyHtBCnudLi7pMhNny=ZfgNLty87Q@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Will Deacon <will.deacon@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+Received: from quartz.orcorp.ca ([184.70.90.242]:49938 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751558AbaBRS75 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 13:59:57 -0500
+Date: Tue, 18 Feb 2014 11:59:47 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"arnd@arndb.de" <arnd@arndb.de>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140218185947.GA22340@obsidianresearch.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+ <1392726043-31088-4-git-send-email-will.deacon@arm.com>
+ <20140218182142.GF29304@obsidianresearch.com>
+ <20140218184420.GD2010@mudshark.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140218184420.GD2010@mudshark.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5 February 2014 19:27, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> I can't think of a reason to support alternate MMIO layouts if
-> kvmtool is the only user and can be changed.
+On Tue, Feb 18, 2014 at 06:44:20PM +0000, Will Deacon wrote:
+> On Tue, Feb 18, 2014 at 06:21:42PM +0000, Jason Gunthorpe wrote:
+> > On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
+> > > +
+> > > +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
+> > > +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
+> >                                            ^^^^^^^^^^^^^^
+> > 
+> > This probably shouldn't be 0 in the example, nor in your kvm tool
+> > output. For example purposes any value will do.
+> 
+> Hmm, so kvmtool actually provides a PC ioport at 0x0, which is handy since
+> there's an 8250 down there. That means we have:
+> 
+> 0x0    - 0x6200  : Weird PC stuff
+> 0x6200 - 0x10000 : PCI IO space
+> 
+> Should I just change everything to be offset by 0x6200?
 
-I expect we'll get a QEMU implementation too at some point,
-but we should be able to just make that match whatever you
-decide is the correct layout and behaviour.
+Just to be clear, kvm has reserved the first 64k of physical address
+space for this IO window? The 0 is fine then, but it isn't typical of
+real hardware.
 
-The only constraint QEMU has which kvmtool doesn't is that
-we care about not randomly shuffling things around between
-QEMU versions, so whatever we pick we're more or less
-stuck with. So a layout which leaves scope for "supports
-PCI now, may do PCI-e later, MSI after that" would be good.
-(My PCI knowledge is very piecemeal, I hope that makes sense...)
+Regarding the 0x6200.. There are two conflicting issues there :(
+ - You really don't want to let the PCI core assign resources to that
+   range, it probably won't work.
+ - You probably need that range mapped into the ARM IO window, and the
+   PCI driver is the thing doing that
 
-thanks
--- PMM
+The PCI core already has a black out for low IO ports, I think it
+already covers the usual PC suspects so you are probably fine with
+what you have for KVM.
+
+Jason
