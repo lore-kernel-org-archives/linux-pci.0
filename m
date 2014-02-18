@@ -1,108 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46289 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752613AbaBTMmB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Feb 2014 07:42:01 -0500
-Date: Thu, 20 Feb 2014 13:44:01 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] portdrv: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140220124400.GA8198@dhcp-26-207.brq.redhat.com>
-References: <1392804931-30671-6-git-send-email-agordeev@redhat.com>
- <CAErSpo7xWe6n3Nk3Aatik4tfSHQLQehf3WELqD=q1oTmXYVVuw@mail.gmail.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:64720 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750911AbaBRT6N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 14:58:13 -0500
+Date: Tue, 18 Feb 2014 19:57:32 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140218195732.GL2010@mudshark.cambridge.arm.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+ <20140218185947.GA22340@obsidianresearch.com>
+ <20140218190929.GF2010@mudshark.cambridge.arm.com>
+ <1411925.bMiMyFpUnW@wuerfel>
+ <20140218193654.GK2010@mudshark.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7xWe6n3Nk3Aatik4tfSHQLQehf3WELqD=q1oTmXYVVuw@mail.gmail.com>
+In-Reply-To: <20140218193654.GK2010@mudshark.cambridge.arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 03:09:41PM -0700, Bjorn Helgaas wrote:
-> On Wed, Feb 19, 2014 at 3:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> > As result of deprecation of MSI-X/MSI enablement functions
-> > pci_enable_msix() and pci_enable_msi_block() all drivers
-> > using these two interfaces need to be updated to use the
-> > new pci_enable_msi_range() and pci_enable_msix_range()
-> > interfaces.
-> >
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: linux-pci@vger.kernel.org
-> > ---
-> >  drivers/pci/pcie/portdrv_core.c |   17 ++++++++++-------
-> >  1 files changed, 10 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> > index 986f8ea..4e46eca 100644
-> > --- a/drivers/pci/pcie/portdrv_core.c
-> > +++ b/drivers/pci/pcie/portdrv_core.c
-> > @@ -99,8 +99,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
-> >         for (i = 0; i < nr_entries; i++)
-> >                 msix_entries[i].entry = i;
-> >
-> > -       status = pci_enable_msix(dev, msix_entries, nr_entries);
-> > -       if (status)
-> > +       status = pci_enable_msix_range(dev,
-> > +                                      msix_entries, nr_entries, nr_entries);
+On Tue, Feb 18, 2014 at 07:36:54PM +0000, Will Deacon wrote:
+> On Tue, Feb 18, 2014 at 07:32:33PM +0000, Arnd Bergmann wrote:
+> > On Tuesday 18 February 2014 19:09:29 Will Deacon wrote:
+> > > 
+> > > > Regarding the 0x6200.. There are two conflicting issues there 
+> > > >  - You really don't want to let the PCI core assign resources to that
+> > > >    range, it probably won't work.
+> > > 
+> > > Right, with kvmtool we don't support resource assignment (the BARs are fixed)
+> > > so everything is PCI_PROBE_ONLY.
+> > 
+> > Ok, I looked at the source now and can confirm:
+> > 
+> > * 0x0-0x1000 are used for lots of legacy ISA devices.
+> > * PCI devices get assigned IO addresses in 0x400 steps starting at 0x6200.
+> > * There are three PCI drivers doing this: VESA, PCI-SHMEM and virtio-pci.
+> > 
+> > Regarding the PCI_PROBE_ONLY flag, how do you set that? Should we
+> > have a standard DT property for that? On PowerPC we already specified
+> > "linux,pci-probe-only" and "linux,pci-assign-all-buses", which seems
+> > reasonable to use in architecture independent code as well.
 > 
-> This is a place we could use pci_enable_msix_exact(), isn't it?  (Also below.)
+> For arch/arm/ it's done on the command line (pci=firmware) but yes, for the
+> generic driver it sounds like a good idea to put this in the device-tree.
+> I'll look at adding the ppc properties in the next version.
 
-Yes, absolutely.
+Damn, I spoke too soon. PowerPC puts this information in the /chosen node, so
+it applies to all PCI host controllers in the system. That then maps nicely
+to pci_{add,clear}_flags which are global properties in Linux.
 
-I posted it (and other updates) as is, since I understood
-pci_enable_msix_exact() is not going to make it into 3.14. Was I wrong here?
+It sounds like this should really be per-controller. What do you think?
 
-I think more time in testing with either pci_enable_msix_range() or
-pci_enable_msix_exact() is good. And a follow-up switch from
-pci_enable_msix_range() to pci_enable_msix_exact() should be easy eigher.
-
-What do you think is the best course of action now? 
-
-> > +       if (status < 0)
-> >                 goto Exit;
-> >
-> >         for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-> > @@ -159,21 +160,23 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
-> >                 idx[PCIE_PORT_SERVICE_AER_SHIFT] = i;
-> >         }
-> >
-> > +       status = 0;
-> > +
-> >         /*
-> >          * If nvec is equal to the allocated number of entries, we can just use
-> >          * what we have.  Otherwise, the port has some extra entries not for the
-> >          * services we know and we need to work around that.
-> >          */
-> > -       if (nvec == nr_entries) {
-> > -               status = 0;
-> > -       } else {
-> > +       if (nvec != nr_entries) {
-> >                 /* Drop the temporary MSI-X setup */
-> >                 pci_disable_msix(dev);
-> >
-> >                 /* Now allocate the MSI-X vectors for real */
-> > -               status = pci_enable_msix(dev, msix_entries, nvec);
-> > -               if (status)
-> > +               nvec = pci_enable_msix_range(dev, msix_entries, nvec, nvec);
-> > +               if (nvec < 0) {
-> > +                       status = nvec;
-> >                         goto Exit;
-> > +               }
-> >         }
-> >
-> >         for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-> > --
-> > 1.7.7.6
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Will
