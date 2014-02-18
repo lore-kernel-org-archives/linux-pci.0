@@ -1,103 +1,46 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH part1 v6 1/7] PCI: rework pci_find_next_ext_capability()
-Date: Wed, 12 Feb 2014 10:52:47 +0800
-Message-ID: <1392173573-59844-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
-References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1392718107.15829.12.camel@artifact>
+References: <1390773698.3450.12.camel@artifact>
+	<CAE9FiQVD=oVHM5WJgSJ5cNpXZ1NYy9E_pcGWfjKnmD9OZoHHsw@mail.gmail.com>
+	<1391643656.1067.1.camel@artifact>
+	<CAE9FiQV8jutRhaBicL4kjqVYd07FzHmNoSN3NxdA2TYvOc_KUg@mail.gmail.com>
+	<z9zi9m.n0zpxd.1hgeaud-qmf@mail.snewbury.org.uk>
+	<i9nn22.n0zs79.1hgeaud-qmf@mail.snewbury.org.uk>
+	<1392392764.3520.11.camel@devel-n900>
+	<CAE9FiQV3H_nxH0gxcM0kW4uLm6b_qmHT9hRQUVY_4xPqjpvMtA@mail.gmail.com>
+	<1392718107.15829.12.camel@artifact>
+Date: Tue, 18 Feb 2014 10:52:54 -0800
+Message-ID: <CAE9FiQXUhvG2Jub3sbBxyCERVbt-L22+O+mcZ_HWEVQ_QaRawA@mail.gmail.com>
+Subject: Re: pci-3.14 resource alloc
+From: Yinghai Lu <yinghai@kernel.org>
+To: Steven Newbury <steve@snewbury.org.uk>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rework pci_find_next_ext_capability(), use
-pci_bus_read_config_xxx() instead of
-pci_read_config_xxx(). So we can use this
-function before pci_dev setup.
+On Tue, Feb 18, 2014 at 2:08 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
+>> >
+>> > There's no pci bridge/bus hotplug though. Docking doesn't reveal the
+>> > pci-e->pci bridge or the (radeon) devices on the other side.
+>>
+>> oh, no. could be other regression in linus tree or pci/next.
+>>
+>
+> Previously I needed the busn work to get it working, this was included
+> in the resource-alloc branch.  It never worked on mainline, the bridge
+> used to show up but never get scanned.  Now it's not showing up at all
+> on hotplug.  It could be a dock driver regression.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci.c   |   17 +++++++++--------
- include/linux/pci.h |    2 +-
- 2 files changed, 10 insertions(+), 9 deletions(-)
+I had the busn_res_alloc patches in the branch.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1febe90..a263c0a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -256,7 +256,8 @@ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap)
- 
- /**
-  * pci_find_next_ext_capability - Find an extended capability
-- * @dev: PCI device to query
-+ * @bus: the PCI bus to query
-+ * @devfn: PCI device to query
-  * @start: address at which to start looking (0 to start at beginning of list)
-  * @cap: capability code
-  *
-@@ -265,7 +266,7 @@ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap)
-  * not support it.  Some capabilities can occur several times, e.g., the
-  * vendor-specific capability, and this provides a way to find them all.
-  */
--int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
-+int pci_find_next_ext_capability(struct pci_bus *bus, int devfn, int start, int cap)
- {
- 	u32 header;
- 	int ttl;
-@@ -274,13 +275,10 @@ int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
- 	/* minimum 8 bytes per capability */
- 	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
- 
--	if (dev->cfg_size <= PCI_CFG_SPACE_SIZE)
--		return 0;
--
- 	if (start)
- 		pos = start;
- 
--	if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
-+	if (pci_bus_read_config_dword(bus, devfn, pos, &header) != PCIBIOS_SUCCESSFUL)
- 		return 0;
- 
- 	/*
-@@ -298,7 +296,7 @@ int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
- 		if (pos < PCI_CFG_SPACE_SIZE)
- 			break;
- 
--		if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
-+		if (pci_bus_read_config_dword(bus, devfn, pos, &header) != PCIBIOS_SUCCESSFUL)
- 			break;
- 	}
- 
-@@ -322,7 +320,10 @@ EXPORT_SYMBOL_GPL(pci_find_next_ext_capability);
-  */
- int pci_find_ext_capability(struct pci_dev *dev, int cap)
- {
--	return pci_find_next_ext_capability(dev, 0, cap);
-+	if (dev->cfg_size <= PCI_CFG_SPACE_SIZE)
-+		return 0;
-+
-+	return pci_find_next_ext_capability(dev->bus, dev->devfn, 0, cap);
- }
- EXPORT_SYMBOL_GPL(pci_find_ext_capability);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fb57c89..df495e9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -796,7 +796,7 @@ enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *dev);
- int pci_find_capability(struct pci_dev *dev, int cap);
- int pci_find_next_capability(struct pci_dev *dev, u8 pos, int cap);
- int pci_find_ext_capability(struct pci_dev *dev, int cap);
--int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
-+int pci_find_next_ext_capability(struct pci_bus *bus, int devfn, int pos, int cap);
- int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
- int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
- struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
--- 
-1.7.1
+There is some changes about acpi dock driver from Rafael in recent
+kernels. Maybe Rafael could suggest which commit could cause problem,
+then you could try revert them on top of branch.
 
+Thanks
 
+Yinghai
