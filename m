@@ -1,36 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:40080 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313AbaBUSbc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 13:31:32 -0500
-Received: by mail-oa0-f43.google.com with SMTP id i7so1458530oag.30
-        for <linux-pci@vger.kernel.org>; Fri, 21 Feb 2014 10:31:32 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20140219005241.GE8786@google.com>
-References: <20140217045004.GB3230@yanx>
-	<CAE9FiQXmWG2RNP-t=U06JUsqkmDm2My5762za8QuwUMZsG+yNg@mail.gmail.com>
-	<CAE9FiQWxcBCy+dp-0D2erB83uyyTNKFo5y0sKwiiFxo1xM0Z=g@mail.gmail.com>
-	<20140219005241.GE8786@google.com>
-Date: Fri, 21 Feb 2014 10:31:32 -0800
-Message-ID: <CAE9FiQUVP96YAwn8MCNZs0njvThzARHucE8ukhQ0oM7jTi+OZQ@mail.gmail.com>
-Subject: Re: Support huge alignment in pbus_size_mem()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	Nikhil P Rao <nikhil.rao@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6cnT6JDh0rj_3TCjw8vkLbM0ztzES0Qh1R=wUCp0PfTw@mail.gmail.com>
+References: <1390773698.3450.12.camel@artifact> <CAE9FiQVD=oVHM5WJgSJ5cNpXZ1NYy9E_pcGWfjKnmD9OZoHHsw@mail.gmail.com>
+ <1391643656.1067.1.camel@artifact> <CAE9FiQV8jutRhaBicL4kjqVYd07FzHmNoSN3NxdA2TYvOc_KUg@mail.gmail.com>
+ <z9zi9m.n0zpxd.1hgeaud-qmf@mail.snewbury.org.uk> <i9nn22.n0zs79.1hgeaud-qmf@mail.snewbury.org.uk>
+ <1392392764.3520.11.camel@devel-n900> <CAE9FiQV3H_nxH0gxcM0kW4uLm6b_qmHT9hRQUVY_4xPqjpvMtA@mail.gmail.com>
+ <1392718107.15829.12.camel@artifact> <CAErSpo6cnT6JDh0rj_3TCjw8vkLbM0ztzES0Qh1R=wUCp0PfTw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 18 Feb 2014 07:37:04 -0700
+Message-ID: <CAErSpo4CLB7G5DHpdr69t+wZjywuOXKXsvS6W3eTMJgU5Xpycg@mail.gmail.com>
+Subject: Re: pci-3.14 resource alloc
+To: Steven Newbury <steve@snewbury.org.uk>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 4:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Tue, Feb 18, 2014 at 6:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Feb 18, 2014 at 3:08 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
+
+>> No, the only unusual option is I use pci=nocrs since the bios is
+>> completely ignorant of support for 64bit BARs.
 >
-> Why did you add the loop above?  Didn't the original loop compute the same
-> value of mem64_mask as your new loop?
+> Hi Steven, this is a tangent, but can you collect the complete dmesg
+> log with "pci=nocrs" and let me know what happens when you *don't* use
+> "pci=nocrs" (a complete dmesg log there would be useful too, but I
+> don't know if you can boot without it)?  I think Linux *should* be
+> able to handle 64bit BARs even if the BIOS doesn't.
+>
+> Please post these as a separate thread so we don't muddle this
+> conversation with Yinghai.
 
-it is the same at last. but that could be different in the middle.
-like several resources, but only last one can not use 64bit resource.
+Oh, never mind.  I think I remember now.  I think the problem is not
+so much that the BIOS doesn't handle 64bit *BARs*, but that your BIOS
+doesn't report 64bit host bridge *apertures*, and you want to use
+space above 4G for a graphics card or something.
 
-Thanks
+That's not really anything we can fix in PCI because PCI doesn't
+discover those apertures.  Host bridge drivers like the generic ACPI
+pci_root.c or the native amd_bus.c discover them.  If those drivers
+don't discover them, PCI can't just make them up.
 
-Yinghai
+It might be nice if we had cleaner kernel options to say "assume a
+host bridge window here" and "put this device here," so you didn't
+have to use the big hammer of "pci=nocrs".  It's sort of a pain to
+figure out how to attach info like that to the correct device (there
+might be several host bridges, so how do you specify which one you
+care about?), but maybe it could be done.
+
+Bjorn
