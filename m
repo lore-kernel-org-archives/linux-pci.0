@@ -1,109 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51329 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755202AbaBRKKp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:10:45 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Hyong-Youb Kim <hykim@myri.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 20/35] myri10ge: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:11:49 +0100
-Message-Id: <4174e05e893a4b62b9c39692691b926cec2dc2c3.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:55202 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755213AbaBRMV1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 07:21:27 -0500
+From: Will Deacon <will.deacon@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
+Subject: [PATCH v3 1/3] ARM: mach-virt: allow PCI support to be selected
+Date: Tue, 18 Feb 2014 12:20:41 +0000
+Message-Id: <1392726043-31088-2-git-send-email-will.deacon@arm.com>
+In-Reply-To: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+mach-virt can make use of virtio-pci devices, which requires the guest
+kernel to have PCI support selected.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Hyong-Youb Kim <hykim@myri.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+This patch selects CONFIG_MIGHT_HAVE_PCI when CONFIG_ARCH_VIRT=y.
+
+Signed-off-by: Will Deacon <will.deacon@arm.com>
 ---
- drivers/net/ethernet/myricom/myri10ge/myri10ge.c |   40 +++++++++++-----------
- 1 files changed, 20 insertions(+), 20 deletions(-)
+ arch/arm/mach-virt/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-index 68026f7..130f6b2 100644
---- a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-+++ b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-@@ -2329,16 +2329,14 @@ static int myri10ge_request_irq(struct myri10ge_priv *mgp)
- 	status = 0;
- 	if (myri10ge_msi) {
- 		if (mgp->num_slices > 1) {
--			status =
--			    pci_enable_msix(pdev, mgp->msix_vectors,
--					    mgp->num_slices);
--			if (status == 0) {
--				mgp->msix_enabled = 1;
--			} else {
-+			status = pci_enable_msix_range(pdev, mgp->msix_vectors,
-+					mgp->num_slices, mgp->num_slices);
-+			if (status < 0) {
- 				dev_err(&pdev->dev,
- 					"Error %d setting up MSI-X\n", status);
- 				return status;
- 			}
-+			mgp->msix_enabled = 1;
- 		}
- 		if (mgp->msix_enabled == 0) {
- 			status = pci_enable_msi(pdev);
-@@ -3895,32 +3893,34 @@ static void myri10ge_probe_slices(struct myri10ge_priv *mgp)
- 	mgp->msix_vectors = kcalloc(mgp->num_slices, sizeof(*mgp->msix_vectors),
- 				    GFP_KERNEL);
- 	if (mgp->msix_vectors == NULL)
--		goto disable_msix;
-+		goto no_msix;
- 	for (i = 0; i < mgp->num_slices; i++) {
- 		mgp->msix_vectors[i].entry = i;
- 	}
- 
- 	while (mgp->num_slices > 1) {
--		/* make sure it is a power of two */
--		while (!is_power_of_2(mgp->num_slices))
--			mgp->num_slices--;
-+		mgp->num_slices = rounddown_pow_of_two(mgp->num_slices);
- 		if (mgp->num_slices == 1)
--			goto disable_msix;
--		status = pci_enable_msix(pdev, mgp->msix_vectors,
--					 mgp->num_slices);
--		if (status == 0) {
--			pci_disable_msix(pdev);
-+			goto no_msix;
-+		status = pci_enable_msix_range(pdev,
-+					       mgp->msix_vectors,
-+					       mgp->num_slices,
-+					       mgp->num_slices);
-+		if (status < 0)
-+			goto no_msix;
-+
-+		pci_disable_msix(pdev);
-+
-+		if (status == mgp->num_slices) {
- 			if (old_allocated)
- 				kfree(old_fw);
- 			return;
--		}
--		if (status > 0)
-+		} else {
- 			mgp->num_slices = status;
--		else
--			goto disable_msix;
-+		}
- 	}
- 
--disable_msix:
-+no_msix:
- 	if (mgp->msix_vectors != NULL) {
- 		kfree(mgp->msix_vectors);
- 		mgp->msix_vectors = NULL;
+diff --git a/arch/arm/mach-virt/Kconfig b/arch/arm/mach-virt/Kconfig
+index 081d46929436..f40fb55574cb 100644
+--- a/arch/arm/mach-virt/Kconfig
++++ b/arch/arm/mach-virt/Kconfig
+@@ -8,3 +8,4 @@ config ARCH_VIRT
+ 	select CPU_V7
+ 	select SPARSE_IRQ
+ 	select USE_OF
++	select MIGHT_HAVE_PCI
 -- 
-1.7.7.6
+1.8.2.2
 
