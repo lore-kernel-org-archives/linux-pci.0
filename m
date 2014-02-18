@@ -1,91 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:62035 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754010AbaBFLAs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Feb 2014 06:00:48 -0500
-Date: Thu, 6 Feb 2014 11:00:16 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Anup Patel <anup@brainfault.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Message-ID: <20140206110016.GI26035@mudshark.cambridge.arm.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <1391532784-1953-3-git-send-email-will.deacon@arm.com>
- <CAAhSdy0X56UcMrp0bsH0na=GBkND=jqZVqbHxKsBampr8YM3cA@mail.gmail.com>
- <20140206105442.GB4993@e106497-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140206105442.GB4993@e106497-lin.cambridge.arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57363 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755370AbaBRKLV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:11:21 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Shreyas Bhatewara <sbhatewara@vmware.com>,
+	pv-drivers@vmware.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 33/35] vmxnet3: Fix MSI-X/MSI enablement code
+Date: Tue, 18 Feb 2014 11:12:02 +0100
+Message-Id: <f3587622a05915038c5264a181e3141c141fe42a.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 06, 2014 at 10:54:42AM +0000, Liviu Dudau wrote:
-> On Thu, Feb 06, 2014 at 08:54:03AM +0000, Anup Patel wrote:
-> > On Tue, Feb 4, 2014 at 10:23 PM, Will Deacon <will.deacon@arm.com> wrote:
-> > > This patch adds support for an extremely simple virtual PCI host
-> > > controller. The controller itself has no configuration registers, and
-> > > has its address spaces described entirely by the device-tree (using the
-> > > bindings described by ePAPR). This allows emulations, such as kvmtool,
-> > > to provide a simple means for a guest Linux instance to make use of
-> > > PCI devices.
-> > >
-> > > Corresponding documentation is added for the DT binding.
-> > >
-> > > Signed-off-by: Will Deacon <will.deacon@arm.com>
-> > > ---
-> > >  .../devicetree/bindings/pci/linux,pci-virt.txt     |  38 ++++
-> > >  drivers/pci/host/Kconfig                           |   7 +
-> > >  drivers/pci/host/Makefile                          |   1 +
-> > >  drivers/pci/host/pci-virt.c                        | 200 +++++++++++++++++++++
-> > >  4 files changed, 246 insertions(+)
-> > >  create mode 100644 Documentation/devicetree/bindings/pci/linux,pci-virt.txt
-> > >  create mode 100644 drivers/pci/host/pci-virt.c
-> > >
-> > > diff --git a/Documentation/devicetree/bindings/pci/linux,pci-virt.txt b/Documentation/devicetree/bindings/pci/linux,pci-virt.txt
-> > > new file mode 100644
-> > > index 000000000000..54668a283498
-> > > --- /dev/null
-> > > +++ b/Documentation/devicetree/bindings/pci/linux,pci-virt.txt
-> > > @@ -0,0 +1,38 @@
-> > > +* ARM Basic Virtual PCI controller
-> > > +
-> > > +PCI emulations, such as the virtio-pci implementations found in kvmtool
-> > > +and other para-virtualised systems, do not require driver support for
-> > > +complexities such as regulator and clock management. In fact, the
-> > > +controller may not even have a control interface visible to the
-> > > +operating system, instead presenting a set of fixed windows describing a
-> > > +subset of IO, Memory and Configuration spaces.
-> > > +
-> > > +Such a controller can be described purely in terms of the standardized
-> > > +device tree bindings communicated in pci.txt:
-> > > +
-> > > +- compatible     : Must be "linux,pci-virt"
-> > > +
-> > > +- ranges         : As described in IEEE Std 1275-1994, but must provide
-> > > +                   at least a definition of the Configuration Space plus
-> > > +                   one or both of IO and Memory Space.
-> > > +
-> > > +- #address-cells : Must be 3
-> > > +
-> > > +- #size-cells    : Must be 2
-> > > +
-> > > +Configuration Space is assumed to be memory-mapped (as opposed to being
-> > 
-> > It would be great to have a flag to specify whether Configuration Space is over
-> > ioports or memory mapped.
-> 
-> This is another reason why I prefer the reg property for specifying the configuration
-> space address range. I don't see a straight way of making the distinction you
-> need using the ranges property.
+This update cleans up the MSI-X/MSI enablement code, fixes
+vmxnet3_acquire_msix_vectors() invalid return values and
+enables a dead code in case VMXNET3_LINUX_MIN_MSIX_VECT
+MSI-X vectors were allocated.
 
-Well if we need to distinguish cam vs ecam, then adding ioport to the mix
-should be (conceptually) easy and I don't think it would involve the "reg"
-property.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Shreyas Bhatewara <sbhatewara@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/net/vmxnet3/vmxnet3_drv.c |  101 +++++++++++++++++--------------------
+ 1 files changed, 46 insertions(+), 55 deletions(-)
 
-However, I'm not planning to add ioport support myself.
+diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
+index 3be786f..3a17797 100644
+--- a/drivers/net/vmxnet3/vmxnet3_drv.c
++++ b/drivers/net/vmxnet3/vmxnet3_drv.c
+@@ -2729,47 +2729,44 @@ vmxnet3_read_mac_addr(struct vmxnet3_adapter *adapter, u8 *mac)
+ /*
+  * Enable MSIx vectors.
+  * Returns :
+- *	0 on successful enabling of required vectors,
+  *	VMXNET3_LINUX_MIN_MSIX_VECT when only minimum number of vectors required
+- *	 could be enabled.
+- *	number of vectors which can be enabled otherwise (this number is smaller
++ *	 were enabled.
++ *	number of vectors which were enabled otherwise (this number is greater
+  *	 than VMXNET3_LINUX_MIN_MSIX_VECT)
+  */
+ 
+ static int
+-vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter,
+-			     int vectors)
++vmxnet3_acquire_msix_vectors(struct vmxnet3_adapter *adapter, int nvec)
+ {
+-	int err = 0, vector_threshold;
+-	vector_threshold = VMXNET3_LINUX_MIN_MSIX_VECT;
+-
+-	while (vectors >= vector_threshold) {
+-		err = pci_enable_msix(adapter->pdev, adapter->intr.msix_entries,
+-				      vectors);
++	do {
++		int err = pci_enable_msix(adapter->pdev,
++					  adapter->intr.msix_entries, nvec);
+ 		if (!err) {
+-			adapter->intr.num_intrs = vectors;
+-			return 0;
++			return nvec;
+ 		} else if (err < 0) {
+ 			dev_err(&adapter->netdev->dev,
+-				   "Failed to enable MSI-X, error: %d\n", err);
+-			vectors = 0;
+-		} else if (err < vector_threshold) {
+-			break;
++				"Failed to enable MSI-X, error: %d\n", err);
++			return err;
++		} else if (err < VMXNET3_LINUX_MIN_MSIX_VECT) {
++			dev_info(&adapter->pdev->dev,
++				 "Number of MSI-X which can be allocated "
++				 "is lower than min threshold required.\n");
++			return -ENOSPC;
+ 		} else {
+ 			/* If fails to enable required number of MSI-x vectors
+ 			 * try enabling minimum number of vectors required.
+ 			 */
+ 			dev_err(&adapter->netdev->dev,
+-				"Failed to enable %d MSI-X, trying %d instead\n",
+-				    vectors, vector_threshold);
+-			vectors = vector_threshold;
++				"Failed to enable %d MSI-X, trying %d\n",
++				nvec, VMXNET3_LINUX_MIN_MSIX_VECT);
++			nvec = VMXNET3_LINUX_MIN_MSIX_VECT;
+ 		}
+-	}
++	} while (nvec >= VMXNET3_LINUX_MIN_MSIX_VECT);
+ 
+-	dev_info(&adapter->pdev->dev,
+-		 "Number of MSI-X interrupts which can be allocated "
+-		 "is lower than min threshold required.\n");
+-	return err;
++	/*
++	 * Should never get here
++	 */
++	return -ENOSPC;
+ }
+ 
+ 
+@@ -2796,56 +2793,50 @@ vmxnet3_alloc_intr_resources(struct vmxnet3_adapter *adapter)
+ 
+ #ifdef CONFIG_PCI_MSI
+ 	if (adapter->intr.type == VMXNET3_IT_MSIX) {
+-		int vector, err = 0;
+-
+-		adapter->intr.num_intrs = (adapter->share_intr ==
+-					   VMXNET3_INTR_TXSHARE) ? 1 :
+-					   adapter->num_tx_queues;
+-		adapter->intr.num_intrs += (adapter->share_intr ==
+-					   VMXNET3_INTR_BUDDYSHARE) ? 0 :
+-					   adapter->num_rx_queues;
+-		adapter->intr.num_intrs += 1;		/* for link event */
+-
+-		adapter->intr.num_intrs = (adapter->intr.num_intrs >
+-					   VMXNET3_LINUX_MIN_MSIX_VECT
+-					   ? adapter->intr.num_intrs :
+-					   VMXNET3_LINUX_MIN_MSIX_VECT);
+-
+-		for (vector = 0; vector < adapter->intr.num_intrs; vector++)
+-			adapter->intr.msix_entries[vector].entry = vector;
+-
+-		err = vmxnet3_acquire_msix_vectors(adapter,
+-						   adapter->intr.num_intrs);
++		int i, nvec;
++
++		nvec  = adapter->share_intr == VMXNET3_INTR_TXSHARE ?
++			1 : adapter->num_tx_queues;
++		nvec += adapter->share_intr == VMXNET3_INTR_BUDDYSHARE ?
++			0 : adapter->num_rx_queues;
++		nvec += 1;	/* for link event */
++		nvec = nvec > VMXNET3_LINUX_MIN_MSIX_VECT ?
++		       nvec : VMXNET3_LINUX_MIN_MSIX_VECT;
++
++		for (i = 0; i < nvec; i++)
++			adapter->intr.msix_entries[i].entry = i;
++
++		nvec = vmxnet3_acquire_msix_vectors(adapter, nvec);
++		if (nvec < 0)
++			goto msix_err;
++
+ 		/* If we cannot allocate one MSIx vector per queue
+ 		 * then limit the number of rx queues to 1
+ 		 */
+-		if (err == VMXNET3_LINUX_MIN_MSIX_VECT) {
++		if (nvec == VMXNET3_LINUX_MIN_MSIX_VECT) {
+ 			if (adapter->share_intr != VMXNET3_INTR_BUDDYSHARE
+ 			    || adapter->num_rx_queues != 1) {
+ 				adapter->share_intr = VMXNET3_INTR_TXSHARE;
+ 				netdev_err(adapter->netdev,
+ 					   "Number of rx queues : 1\n");
+ 				adapter->num_rx_queues = 1;
+-				adapter->intr.num_intrs =
+-						VMXNET3_LINUX_MIN_MSIX_VECT;
+ 			}
+-			return;
+ 		}
+-		if (!err)
+-			return;
+ 
++		adapter->intr.num_intrs = nvec;
++		return;
++
++msix_err:
+ 		/* If we cannot allocate MSIx vectors use only one rx queue */
+ 		dev_info(&adapter->pdev->dev,
+ 			 "Failed to enable MSI-X, error %d. "
+-			 "Limiting #rx queues to 1, try MSI.\n", err);
++			 "Limiting #rx queues to 1, try MSI.\n", nvec);
+ 
+ 		adapter->intr.type = VMXNET3_IT_MSI;
+ 	}
+ 
+ 	if (adapter->intr.type == VMXNET3_IT_MSI) {
+-		int err;
+-		err = pci_enable_msi(adapter->pdev);
+-		if (!err) {
++		if (!pci_enable_msi(adapter->pdev)) {
+ 			adapter->num_rx_queues = 1;
+ 			adapter->intr.num_intrs = 1;
+ 			return;
+-- 
+1.7.7.6
 
-Will
