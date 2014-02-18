@@ -1,36 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39808 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017AbaBEItQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Feb 2014 03:49:16 -0500
-Date: Wed, 5 Feb 2014 09:50:48 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Alexander Gordeev <agordeev@redhat.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to
- pci_disable_msi()
-Message-ID: <20140205085047.GA27820@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
- <20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
- <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
- <20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
- <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Santosh Raspatur <santosh@chelsio.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 05/35] cxgb3: Remove superfluous call to pci_disable_msix()
+Date: Tue, 18 Feb 2014 11:07:57 +0100
+Message-Id: <675f194d3843c6536c9c900e5ee0a1dfa70417d6.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 05, 2014 at 10:21:28AM +0200, Kalle Valo wrote:
-> Is it ok for me to take these patches to my ath.git tree or would you
-> prefer to route them some other way?
+There is no need to call pci_disable_msix() in case
+the previous call to pci_enable_msix() failed
 
-Yeah, Bjorn has indicated he would pull it to his tree.
-I get it you are fine with 2/3 and 3/3?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Santosh Raspatur <santosh@chelsio.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+index 45d7733..b72d2ed 100644
+--- a/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb3/cxgb3_main.c
+@@ -3097,9 +3097,6 @@ static int cxgb_enable_msix(struct adapter *adap)
+ 	while ((err = pci_enable_msix(adap->pdev, entries, vectors)) > 0)
+ 		vectors = err;
+ 
+-	if (err < 0)
+-		pci_disable_msix(adap->pdev);
+-
+ 	if (!err && vectors < (adap->params.nports + 1)) {
+ 		pci_disable_msix(adap->pdev);
+ 		err = -1;
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7.6
+
