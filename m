@@ -1,57 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:24987 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752392AbaBZSMS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 13:12:18 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
-References: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1393438283-10542-3-git-send-email-phil.edworthy@renesas.com>
-Date: Wed, 26 Feb 2014 18:11:20 +0000
-Subject: [PATCH 2/5 v2 RFC] ARM: shmobile: r8a7791: Add PCIe clock
+Received: from quartz.orcorp.ca ([184.70.90.242]:38501 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751833AbaBRSpv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 13:45:51 -0500
+Date: Tue, 18 Feb 2014 11:45:42 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140218184542.GA22004@obsidianresearch.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+ <2312919.pM61KLBcYY@wuerfel>
+ <20140218174125.GC29304@obsidianresearch.com>
+ <1663692.UxtD9eTEBL@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1663692.UxtD9eTEBL@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/mach-shmobile/clock-r8a7791.c |    3 +++
- 1 file changed, 3 insertions(+)
+On Tue, Feb 18, 2014 at 07:25:35PM +0100, Arnd Bergmann wrote:
 
-diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
-index c574292..cba9b3c 100644
---- a/arch/arm/mach-shmobile/clock-r8a7791.c
-+++ b/arch/arm/mach-shmobile/clock-r8a7791.c
-@@ -123,6 +123,7 @@ enum {
- 	MSTP813,
- 	MSTP721, MSTP720,
- 	MSTP719, MSTP718, MSTP715, MSTP714,
-+	MSTP319,
- 	MSTP216, MSTP207, MSTP206,
- 	MSTP204, MSTP203, MSTP202, MSTP1105, MSTP1106, MSTP1107,
- 	MSTP124,
-@@ -137,6 +138,7 @@ static struct clk mstp_clks[MSTP_NR] = {
- 	[MSTP718] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 18, 0), /* SCIF3 */
- 	[MSTP715] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 15, 0), /* SCIF4 */
- 	[MSTP714] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 14, 0), /* SCIF5 */
-+	[MSTP319] = SH_CLK_MSTP32(&mp_clk, SMSTPCR3, 19, 0), /* PCIEC */
- 	[MSTP216] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 16, 0), /* SCIFB2 */
- 	[MSTP207] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 7, 0), /* SCIFB1 */
- 	[MSTP206] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 6, 0), /* SCIFB0 */
-@@ -166,6 +168,7 @@ static struct clk_lookup lookups[] = {
- 	CLKDEV_CON_ID("peripheral_clk", &hp_clk),
- 
- 	/* MSTP */
-+	CLKDEV_DEV_ID("r8a7791-pcie", &mstp_clks[MSTP319]),
- 	CLKDEV_DEV_ID("sh-sci.0", &mstp_clks[MSTP204]), /* SCIFA0 */
- 	CLKDEV_DEV_ID("sh-sci.1", &mstp_clks[MSTP203]), /* SCIFA1 */
- 	CLKDEV_DEV_ID("sh-sci.2", &mstp_clks[MSTP206]), /* SCIFB0 */
--- 
-1.7.9.5
+> Apple have also used the same trick on their G5 Macs, presumably
+> to simplify things for OS9 and OS-X, but even at the time making
+> it harder for Linux.
 
+I actually think some x86's have done the same thing, however the
+firmware hides all that from the OS and the OS just sees a normal PCI
+environment. So if we can't hide the mess in firmware, the next best
+place is in drivers?
+
+> Do we even need stable domain numbers? If we do, aliases sound fine.
+> A more complex method would be to sort them by MMIO window address
+> or perhaps by phandle.
+
+PCI ordering has been a bane in the past on x86, so I think stable
+domain numbers is certainly desirable. Particularly since the domain
+number may be influenced by module load order :( Alises followed by
+sorting by phandle sounds great to me.
+
+Jason
