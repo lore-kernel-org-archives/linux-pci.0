@@ -1,164 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:29071
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751533AbaBMQDk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 11:03:40 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
-	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	Takashi Iwai <tiwai@suse.de>
-Subject: RE: [PATCH] PCI: pciehp: Fix the problem that the present bit is
- not cleared though slot is empty
-Date: Thu, 13 Feb 2014 16:03:30 +0000
-Message-ID: <11994c276661475080d900fa8b5942a5@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
-	<20140212004927.GH21057@google.com>
-	<E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
-	<CAErSpo5ycKF4Xm26z80wNrms7G5onn1ASzcU2AHy7XN1YNAYuA@mail.gmail.com>
- <CAA93t1psHnnVSbaaaJ1LsqeNzRYmNiiO9RiTggVovDVJpk4cqw@mail.gmail.com>
- <E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01>
-In-Reply-To: <E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:58015 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925AbaBRCJs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 21:09:48 -0500
+From: Magnus Damm <magnus.damm@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
+	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
+	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
+Date: Tue, 18 Feb 2014 11:11:01 +0900
+Message-Id: <20140218021101.14164.97765.sendpatchset@w520>
+In-Reply-To: <20140218021041.14164.56411.sendpatchset@w520>
+References: <20140218021041.14164.56411.sendpatchset@w520>
+Subject: [PATCH v2 02/08] PCI: rcar: add error interrupt handling
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-WytUYWthc2hpXQ0KDQpIZWxsbywNCj4gDQo+ID4gPiBIdWgsIHRoYXQgZG9lc24ndCBzb3VuZCBn
-b29kLiAgRG9lcyB5b3VyIHNsb3QgaGF2ZSBhbiBhdHRlbnRpb24NCj4gPiA+IGJ1dHRvbj8gIENh
-biB5b3UgY29sbGVjdCB0aGUgImxzcGNpIC12dnYiIG91dHB1dCBmb3IgdGhlIERvd25zdHJlYW0N
-Cj4gPiA+IFBvcnQgbGVhZGluZyB0byB0aGlzIHNsb3Q/DQo+IA0KPiAgICBUaGUgc2xvdHMgaGF2
-ZSBubyBBdHRlbnRpb24gYnV0dG9uIGFuZCBhcmUgbm90IGZvciBFeHByZXNzQ2FyZC4NCj4gICAg
-bHNwY2kgLXZ2diBvdXRwdXQgaXM6DQo+IA0KPiAgICAgICAgIENvbnRyb2w6IEkvTysgTWVtKyBC
-dXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtDQo+IFBhckVycisgU3RlcHBp
-bmctIFNFUlIrIEZhc3RCMkItIERpc0lOVHgrDQo+ICAgICAgICAgU3RhdHVzOiBDYXArIDY2TUh6
-LSBVREYtIEZhc3RCMkItIFBhckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0NCj4gPFRBYm9ydC0g
-PE1BYm9ydC0gPlNFUlItIDxQRVJSLSBJTlR4LQ0KPiAgICAgICAgIExhdGVuY3k6IDANCj4gICAg
-ICAgICBCdXM6IHByaW1hcnk9MmMsIHNlY29uZGFyeT0yZCwgc3Vib3JkaW5hdGU9MmYsIHNlYy1s
-YXRlbmN5PTANCj4gICAgICAgICBJL08gYmVoaW5kIGJyaWRnZTogMDAwMGYwMDAtMDAwMDBmZmYN
-Cj4gICAgICAgICBNZW1vcnkgYmVoaW5kIGJyaWRnZTogYjE4MDAwMDAtYjFmZmZmZmYNCj4gICAg
-ICAgICBQcmVmZXRjaGFibGUgbWVtb3J5IGJlaGluZCBicmlkZ2U6IDAwMDAwMDAwYWU4MDAwMDAt
-DQo+IDAwMDAwMDAwYWVmZmZmZmYNCj4gICAgICAgICBTZWNvbmRhcnkgc3RhdHVzOiA2Nk1Iei0g
-RmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdCA+VEFib3J0LQ0KPiA8VEFib3J0LSA8TUFib3J0
-LSA8U0VSUi0gPFBFUlItDQo+ICAgICAgICAgQnJpZGdlQ3RsOiBQYXJpdHktIFNFUlIrIE5vSVNB
-LSBWR0EtIE1BYm9ydC0gPlJlc2V0LSBGYXN0QjJCLQ0KPiAgICAgICAgICAgICAgICAgUHJpRGlz
-Y1Rtci0gU2VjRGlzY1Rtci0gRGlzY1RtclN0YXQtIERpc2NUbXJTRVJSRW4tDQo+ICAgICAgICAg
-Q2FwYWJpbGl0aWVzOiBbNDBdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAzDQo+ICAgICAgICAg
-ICAgICAgICBGbGFnczogUE1FQ2xrLSBEU0ktIEQxLSBEMi0gQXV4Q3VycmVudD0wbUEgUE1FKEQw
-KyxEMS0NCj4gLEQyLSxEM2hvdCssRDNjb2xkKykNCj4gICAgICAgICAgICAgICAgIFN0YXR1czog
-RDAgTm9Tb2Z0UnN0KyBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTAgUE1FLQ0KPiAgICAgICAg
-IENhcGFiaWxpdGllczogWzQ4XSBNU0k6IEVuYWJsZSsgQ291bnQ9MS84IE1hc2thYmxlKyA2NGJp
-dCsNCj4gICAgICAgICAgICAgICAgIEFkZHJlc3M6IDAwMDAwMDAwZmVlMDA1MTggIERhdGE6IDAw
-MDANCj4gICAgICAgICAgICAgICAgIE1hc2tpbmc6IDAwMDAwMGZlICBQZW5kaW5nOiAwMDAwMDAw
-MA0KPiAgICAgICAgIENhcGFiaWxpdGllczogWzY4XSBFeHByZXNzICh2MikgRG93bnN0cmVhbSBQ
-b3J0IChTbG90KyksIE1TSSAwMA0KPiAgICAgICAgICAgICAgICAgRGV2Q2FwOiBNYXhQYXlsb2Fk
-IDIwNDggYnl0ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5IEwwcw0KPiA8NjRucywgTDEgPDF1cw0K
-PiAgICAgICAgICAgICAgICAgICAgICAgICBFeHRUYWctIFJCRSsgRkxSZXNldC0NCj4gICAgICAg
-ICAgICAgICAgIERldkN0bDogUmVwb3J0IGVycm9yczogQ29ycmVjdGFibGUrIE5vbi1GYXRhbCsg
-RmF0YWwrDQo+IFVuc3VwcG9ydGVkLQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICBSbHhkT3Jk
-KyBFeHRUYWctIFBoYW50RnVuYy0gQXV4UHdyLSBOb1Nub29wKw0KPiAgICAgICAgICAgICAgICAg
-ICAgICAgICBNYXhQYXlsb2FkIDEyOCBieXRlcywgTWF4UmVhZFJlcSAxMjggYnl0ZXMNCj4gICAg
-ICAgICAgICAgICAgIERldlN0YTogQ29yckVycisgVW5jb3JyRXJyLSBGYXRhbEVyci0gVW5zdXBw
-UmVxKyBBdXhQd3ItDQo+IFRyYW5zUGVuZC0NCj4gICAgICAgICAgICAgICAgIExua0NhcDogUG9y
-dCAjMSwgU3BlZWQgOEdUL3MsIFdpZHRoIHg4LCBBU1BNIEwxLCBMYXRlbmN5DQo+IEwwIDw0dXMs
-IEwxIDw0dXMNCj4gICAgICAgICAgICAgICAgICAgICAgICAgQ2xvY2tQTS0gU3VycHJpc2UrIExM
-QWN0UmVwKyBCd05vdCsNCj4gICAgICAgICAgICAgICAgIExua0N0bDogQVNQTSBEaXNhYmxlZDsg
-RGlzYWJsZWQtIFJldHJhaW4tIENvbW1DbGstDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIEV4
-dFN5bmNoLSBDbG9ja1BNLSBBdXRXaWREaXMtIEJXSW50LSBBdXRCV0ludC0NCj4gICAgICAgICAg
-ICAgICAgIExua1N0YTogU3BlZWQgMi41R1QvcywgV2lkdGggeDAsIFRyRXJyLSBUcmFpbi0gU2xv
-dENsaysNCj4gRExBY3RpdmUtIEJXTWdtdC0gQUJXTWdtdC0NCj4gICAgICAgICAgICAgICAgIFNs
-dENhcDogQXR0bkJ0bi0gUHdyQ3RybCsgTVJMKyBBdHRuSW5kKyBQd3JJbmQrIEhvdFBsdWcrDQo+
-IFN1cnByaXNlLQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICBTbG90ICM2NywgUG93ZXJMaW1p
-dCAyNS4wMDBXOyBJbnRlcmxvY2stDQo+IE5vQ29tcGwtDQoNCkhtbS4uLiBJIHNlZSB0aGF0IHRo
-ZSBTbG90IGhhcyBhIHBvd2VyIGNvbnRyb2xsZXIuIFdoaWNoIG1lYW5zIHRoYXQgdGhlIHBvd2Vy
-IHRvIHRoZSBzbG90IHNoYWxsIG5vdCBiZSB0dXJuZWQgb24gYXV0b21hdGljYWxseSAoYnkgSFcp
-IHdoZW4gdGhlIGNhcmQgaXMgcGx1Z2dlZCBpbi4gQWxzbyBtZWFuaW5nIHRoYXQgdGhlIGxpbmsg
-d2lsbCBub3QgY29tZSB1cCBhdXRvbWF0aWNhbGx5IC0gc28gdGhpcyBkb2VzIG5vdCBzZWVtIGxp
-a2UgdGhlIExpbmsgc3RhdGUgYmFzZWQgaG90cGx1ZyBraWNraW5nIGluLg0KDQpXaGF0IEkgc3Vz
-cGVjdCBpcyB0aGlzIG9uZToNCg0KZjAyZDE4NDNkODNiICJQQ0k6IHBjaWVocDogUmVtb3ZlIHN1
-cnByaXNlIGJpdCBjaGVja3MiDQoNClNpbmNlIHRoaXMgcGF0Y2ggcmVtb3ZlcyAqYWxsKiB0aGUg
-c3VycHJpc2UgYml0IGNoZWNrcyBjYXVzaW5nIGFsbCB0aGUgcHJlc2VuY2UgZGV0ZWN0IGNoYW5n
-ZXMgKGluY2x1ZGluZyAwLT4xKSB0byBiZSBpbml0aWF0ZSBob3RwbHVnLiBJIHRoaW5rIGl0IG1h
-eSBiZSB3b3J0aHdoaWxlIHRvIHRyeSBpdCBvdXQgd2hpbGUgcmVtb3ZpbmcgdGhpcyBwYXJ0aWN1
-bGFyIGh1bms6DQoNCkBAIC01MzUsOCArNTM1LDYgQEAgc3RhdGljIHZvaWQgaW50ZXJydXB0X2V2
-ZW50X2hhbmRsZXIoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KIAkJYnJlYWs7DQogCWNhc2Ug
-SU5UX1BSRVNFTkNFX09OOg0KIAljYXNlIElOVF9QUkVTRU5DRV9PRkY6DQotCQlpZiAoIUhQX1NV
-UFJfUk0oY3RybCkpDQotCQkJYnJlYWs7DQogCQljdHJsX2RiZyhjdHJsLCAiU3VycHJpc2UgUmVt
-b3ZhbFxuIik7DQogCQloYW5kbGVfc3VycHJpc2VfZXZlbnQocF9zbG90KTsNCiAJCWJyZWFrOw0K
-DQpNYXkgYmUgd2Ugc2hvdWxkIHJlbW92ZSB0aGUgc3VycHJpc2UgY2hlY2sgZm9yIElOVF9QUkVT
-RU5DRV9PRkYgb25seSAoYW5kIGxldCBpdCBzdGF5IGZvciBJTlRfUFJFU0VXTkNFX09OKT8NCg0K
-VGhhbmtzLA0KDQpSYWphdA0KDQoNCg0KPiAgICAgICAgICAgICAgICAgU2x0Q3RsOiBFbmFibGU6
-IEF0dG5CdG4tIFB3ckZsdC0gTVJMKyBQcmVzRGV0KyBDbWRDcGx0Kw0KPiBIUElycSsgTGlua0No
-ZysNCj4gICAgICAgICAgICAgICAgICAgICAgICAgQ29udHJvbDogQXR0bkluZCBPZmYsIFB3cklu
-ZCBPZmYsIFBvd2VyKw0KPiBJbnRlcmxvY2stDQo+ICAgICAgICAgICAgICAgICBTbHRTdGE6IFN0
-YXR1czogQXR0bkJ0bi0gUG93ZXJGbHQtIE1STC0gQ21kQ3BsdC0NCj4gUHJlc0RldC0gSW50ZXJs
-b2NrLQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICBDaGFuZ2VkOiBNUkwtIFByZXNEZXQtIExp
-bmtTdGF0ZS0NCj4gICAgICAgICAgICAgICAgIERldkNhcDI6IENvbXBsZXRpb24gVGltZW91dDog
-Tm90IFN1cHBvcnRlZCwgVGltZW91dERpcy0sDQo+IExUUissIE9CRkYgVmlhIG1lc3NhZ2UgQVJJ
-RndkKw0KPiAgICAgICAgICAgICAgICAgRGV2Q3RsMjogQ29tcGxldGlvbiBUaW1lb3V0OiA1MHVz
-IHRvIDUwbXMsIFRpbWVvdXREaXMtLA0KPiBMVFItLCBPQkZGIERpc2FibGVkIEFSSUZ3ZC0NCj4g
-ICAgICAgICAgICAgICAgIExua0N0bDI6IFRhcmdldCBMaW5rIFNwZWVkOiA4R1QvcywgRW50ZXJD
-b21wbGlhbmNlLQ0KPiBTcGVlZERpcy0sIFNlbGVjdGFibGUgRGUtZW1waGFzaXM6IC02ZEINCj4g
-ICAgICAgICAgICAgICAgICAgICAgICAgIFRyYW5zbWl0IE1hcmdpbjogTm9ybWFsIE9wZXJhdGlu
-ZyBSYW5nZSwNCj4gRW50ZXJNb2RpZmllZENvbXBsaWFuY2UtIENvbXBsaWFuY2VTT1MtDQo+ICAg
-ICAgICAgICAgICAgICAgICAgICAgICBDb21wbGlhbmNlIERlLWVtcGhhc2lzOiAtNmRCDQo+ICAg
-ICAgICAgICAgICAgICBMbmtTdGEyOiBDdXJyZW50IERlLWVtcGhhc2lzIExldmVsOiAtMy41ZEIs
-DQo+IEVxdWFsaXphdGlvbkNvbXBsZXRlLSwgRXF1YWxpemF0aW9uUGhhc2UxLQ0KPiAgICAgICAg
-ICAgICAgICAgICAgICAgICAgRXF1YWxpemF0aW9uUGhhc2UyLSwgRXF1YWxpemF0aW9uUGhhc2Uz
-LSwNCj4gTGlua0VxdWFsaXphdGlvblJlcXVlc3QtDQo+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBb
-YTRdIFN1YnN5c3RlbTogRnVqaXRzdSBMaW1pdGVkLiBEZXZpY2UgMTgwNA0KPiAgICAgICAgIENh
-cGFiaWxpdGllczogWzEwMCB2MV0gRGV2aWNlIFNlcmlhbCBOdW1iZXIgYWEtODctMDAtMTAtYjUt
-ZGYtDQo+IDBlLTAwDQo+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbZmI0IHYxXSBBZHZhbmNlZCBF
-cnJvciBSZXBvcnRpbmcNCj4gICAgICAgICAgICAgICAgIFVFU3RhOiAgRExQLSBTREVTLSBUTFAt
-IEZDUC0gQ21wbHRUTy0gQ21wbHRBYnJ0LQ0KPiBVbnhDbXBsdC0gUnhPRi0gTWFsZlRMUC0gRUNS
-Qy0gVW5zdXBSZXEtIEFDU1Zpb2wtDQo+ICAgICAgICAgICAgICAgICBVRU1zazogIERMUC0gU0RF
-Uy0gVExQLSBGQ1AtIENtcGx0VE8tIENtcGx0QWJydC0NCj4gVW54Q21wbHQtIFJ4T0YtIE1hbGZU
-TFAtIEVDUkMrIFVuc3VwUmVxKyBBQ1NWaW9sLQ0KPiAgICAgICAgICAgICAgICAgVUVTdnJ0OiBE
-TFArIFNERVMrIFRMUCsgRkNQKyBDbXBsdFRPLSBDbXBsdEFicnQrDQo+IFVueENtcGx0KyBSeE9G
-KyBNYWxmVExQKyBFQ1JDKyBVbnN1cFJlcS0gQUNTVmlvbCsNCj4gICAgICAgICAgICAgICAgIENF
-U3RhOiAgUnhFcnItIEJhZFRMUC0gQmFkRExMUC0gUm9sbG92ZXItIFRpbWVvdXQtDQo+IE5vbkZh
-dGFsRXJyKw0KPiAgICAgICAgICAgICAgICAgQ0VNc2s6ICBSeEVyci0gQmFkVExQLSBCYWRETExQ
-LSBSb2xsb3Zlci0gVGltZW91dC0NCj4gTm9uRmF0YWxFcnIrDQo+ICAgICAgICAgICAgICAgICBB
-RVJDYXA6IEZpcnN0IEVycm9yIFBvaW50ZXI6IDFmLCBHZW5DYXArIENHZW5Fbi0gQ2hrQ2FwKw0K
-PiBDaGtFbi0NCj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFsxMzggdjFdIFBvd2VyIEJ1ZGdldGlu
-ZyA8Pz4NCj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFsxMGMgdjFdICMxOQ0KPiAgICAgICAgIENh
-cGFiaWxpdGllczogWzE0OCB2MV0gVmlydHVhbCBDaGFubmVsDQo+ICAgICAgICAgICAgICAgICBD
-YXBzOiAgIExQRVZDPTAgUmVmQ2xrPTEwMG5zIFBBVEVudHJ5Qml0cz0xDQo+ICAgICAgICAgICAg
-ICAgICBBcmI6ICAgIEZpeGVkLSBXUlIzMi0gV1JSNjQtIFdSUjEyOC0NCj4gICAgICAgICAgICAg
-ICAgIEN0cmw6ICAgQXJiU2VsZWN0PUZpeGVkDQo+ICAgICAgICAgICAgICAgICBTdGF0dXM6IElu
-UHJvZ3Jlc3MtDQo+ICAgICAgICAgICAgICAgICBWQzA6ICAgIENhcHM6ICAgUEFUT2Zmc2V0PTAw
-IE1heFRpbWVTbG90cz0xDQo+IFJlalNub29wVHJhbnMtDQo+ICAgICAgICAgICAgICAgICAgICAg
-ICAgIEFyYjogICAgRml4ZWQrIFdSUjMyLSBXUlI2NC0gV1JSMTI4LSBUV1JSMTI4LQ0KPiBXUlIy
-NTYtDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIEN0cmw6ICAgRW5hYmxlKyBJRD0wIEFyYlNl
-bGVjdD1GaXhlZCBUQy9WQz1mZg0KPiAgICAgICAgICAgICAgICAgICAgICAgICBTdGF0dXM6IE5l
-Z29QZW5kaW5nKyBJblByb2dyZXNzLQ0KPiAgICAgICAgIENhcGFiaWxpdGllczogW2UwMCB2MV0g
-IzEyDQo+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbZjI0IHYxXSBBY2Nlc3MgQ29udHJvbCBTZXJ2
-aWNlcw0KPiAgICAgICAgICAgICAgICAgQUNTQ2FwOiBTcmNWYWxpZCsgVHJhbnNCbGsrIFJlcVJl
-ZGlyKyBDbXBsdFJlZGlyKw0KPiBVcHN0cmVhbUZ3ZCsgRWdyZXNzQ3RybCsgRGlyZWN0VHJhbnMr
-DQo+ICAgICAgICAgICAgICAgICBBQ1NDdGw6IFNyY1ZhbGlkLSBUcmFuc0Jsay0gUmVxUmVkaXIt
-IENtcGx0UmVkaXItDQo+IFVwc3RyZWFtRndkLSBFZ3Jlc3NDdHJsLSBEaXJlY3RUcmFucy0NCj4g
-ICAgICAgICBDYXBhYmlsaXRpZXM6IFtiNzAgdjFdIFZlbmRvciBTcGVjaWZpYyBJbmZvcm1hdGlv
-bjogSUQ9MDAwMQ0KPiBSZXY9MCBMZW49MDEwIDw/Pg0KPiAgICAgICAgIEtlcm5lbCBkcml2ZXIg
-aW4gdXNlOiBwY2llcG9ydA0KPiANCj4gDQo+ID4gSWYgdGhlcmUgaXMgbm8gYXR0ZW50aW9uIGJ1
-dHRvbiwgdGhlbiB0aGUgYmVoYXZpb3Igc2VlbiwgbWF0Y2hlcyB3aXRoDQo+ID4gd2hhdCBJIGV4
-cGVjdGVkIG9mIHRoZSBjb2RlLg0KPiA+DQo+ID4gU2VlbWluZ2x5LCB0aGUgSFcgZG9lcyBub3Qg
-aGF2ZSBhIHBvd2VyIGNvbnRyb2xsZXIgKGFuZCBhdHRlbnRpb24NCj4gPiBidXR0b24pLCB0aHVz
-IHRoZSBwb3dlciBpcyBhdXRvbWF0aWNhbGx5IHR1cm5lZCBvbiAoYnkgSFcpIHdoZW4gY2FyZA0K
-PiA+IGlzIGluc2VydGVkIGFuZCB0aGUgbGluayBjb21lcyB1cC4gVGh1cyBwcmlvciB0byBsaW5r
-IHN0YXRlIGJhc2VkDQo+ID4gaG90LXBsdWcsICJlY2hvIDEgPiBwb3dlciIgdXNlZCB0byBkbyBh
-IGxpdHRsZSBlbHNlIHRoYW4gaW5pdGlhdGUgYQ0KPiA+IHJlc2NhbiBmb3IgdGhpcyBwYXJ0aWN1
-bGFyIEhXLg0KPiANCj4gPg0KPiA+ID4NCj4gPiA+IEkgdGhpbmsgdGhhdCBmb3IgRXhwcmVzc0Nh
-cmQgYW5kIHNpbWlsYXIgZGV2aWNlcywgd2Ugd2FudCB0byB0dXJuIG9uDQo+ID4gPiB0aGUgZGV2
-aWNlIGFuZCBhdHRhY2ggYSBkcml2ZXIgYXMgc29vbiBhcyB0aGUgY2FyZCBpcyBpbnNlcnRlZC4g
-IEJ1dA0KPiA+ID4gaW4geW91ciBjYXNlLCBJIGFzc3VtZSB3ZSB3YW50IGEgbW9kZWwgbGlrZSB0
-aGF0IGluIFRhYmxlIDItNyBvZiB0aGUNCj4gPiA+ICJQQ0kgU3RhbmRhcmQgSG90LVBsdWcgQ29u
-dHJvbGxlciBhbmQgU3Vic3lzdGVtIFNwZWNpZmljYXRpb24sIiByZXYNCj4gPiA+IDEuMCwgaS5l
-LiwgIkhvdCBJbnNlcnRpb24gSW5pdGlhdGVkIHZpYSBTb2Z0d2FyZSBVSS4iICBTbyB0aGVyZSBt
-dXN0DQo+ID4gPiBiZSBzb21lIHdheSB0byBkaWZmZXJlbnRpYXRlIGFuIEV4cHJlc3NDYXJkIHNs
-b3QgZnJvbSBhIHNsb3QgbGlrZQ0KPiA+ID4geW91cnMuDQo+ID4NCj4gPiBZZXMsIHRoYXQgd291
-bGQgaGVscCBpZiB0aGVyZSB3YXMgc29tZSB3YXkuDQo+ID4NCj4gDQo+IEJlc3QgcmVnYXJkcywN
-Cj4gVGFrdSBJenVtaQ0KDQo=
+From: Ben Dooks <ben.dooks@codethink.co.uk>
 
+Add option to enable interrupts to report any errors from
+the AHB-PCI bridge to help find any issues with the bridge
+when in use.
+
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+Signed-off-by: Magnus Damm <damm@opensource.se>
+---
+
+v2:
+        - removed kconfig entry and use CONFIG_PCI_DEBUG
+        - check for irq > 0 before trying to attach irq
+
+ drivers/pci/host/pci-rcar-gen2.c |   60 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+--- 0004/drivers/pci/host/pci-rcar-gen2.c
++++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 09:42:56.000000000 +0900
+@@ -39,9 +39,26 @@
+ 
+ #define RCAR_PCI_INT_ENABLE_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x20)
+ #define RCAR_PCI_INT_STATUS_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x24)
++#define RCAR_PCI_INT_SIGTABORT		(1 << 0)
++#define RCAR_PCI_INT_SIGRETABORT	(1 << 1)
++#define RCAR_PCI_INT_REMABORT		(1 << 2)
++#define RCAR_PCI_INT_PERR		(1 << 3)
++#define RCAR_PCI_INT_SIGSERR		(1 << 4)
++#define RCAR_PCI_INT_RESERR		(1 << 5)
++#define RCAR_PCI_INT_WIN1ERR		(1 << 12)
++#define RCAR_PCI_INT_WIN2ERR		(1 << 13)
+ #define RCAR_PCI_INT_A			(1 << 16)
+ #define RCAR_PCI_INT_B			(1 << 17)
+ #define RCAR_PCI_INT_PME		(1 << 19)
++#define RCAR_PCI_INT_ALLERRORS (RCAR_PCI_INT_SIGTABORT		| \
++				RCAR_PCI_INT_SIGRETABORT	| \
++				RCAR_PCI_INT_SIGRETABORT	| \
++				RCAR_PCI_INT_REMABORT		| \
++				RCAR_PCI_INT_PERR		| \
++				RCAR_PCI_INT_SIGSERR		| \
++				RCAR_PCI_INT_RESERR		| \
++				RCAR_PCI_INT_WIN1ERR		| \
++				RCAR_PCI_INT_WIN2ERR)
+ 
+ #define RCAR_AHB_BUS_CTR_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x30)
+ #define RCAR_AHB_BUS_MMODE_HTRANS	(1 << 0)
+@@ -164,6 +181,46 @@ static int __init rcar_pci_map_irq(const
+ 	return priv->irq;
+ }
+ 
++#ifdef CONFIG_PCI_DEBUG
++/* if debug enabled, then attach an error handler irq to the bridge */
++
++static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
++{
++	struct rcar_pci_priv *priv = pw;
++	u32 status = ioread32(priv->reg + RCAR_PCI_INT_STATUS_REG);
++
++	if (status & RCAR_PCI_INT_ALLERRORS) {
++		dev_err(priv->dev, "error irq: status %08x\n", status);
++
++		/* clear the error(s) */
++		iowrite32(status & RCAR_PCI_INT_ALLERRORS,
++			  priv->reg + RCAR_PCI_INT_STATUS_REG);
++		return IRQ_HANDLED;
++	}
++
++	return IRQ_NONE;
++}
++
++static void rcar_pci_setup_errirq(struct rcar_pci_priv *priv)
++{
++	int ret;
++	u32 val;
++
++	ret = devm_request_irq(priv->dev, priv->irq, rcar_pci_err_irq,
++			       IRQF_SHARED, "error irq", priv);
++	if (ret) {
++		dev_err(priv->dev, "cannot claim IRQ for error handling\n");
++		return;
++	}
++
++	val = ioread32(priv->reg + RCAR_PCI_INT_ENABLE_REG);
++	val |= RCAR_PCI_INT_ALLERRORS;
++	iowrite32(val, priv->reg + RCAR_PCI_INT_ENABLE_REG);
++}
++#else
++static inline void rcar_pci_setup_errirq(struct rcar_pci_priv *priv) { }
++#endif
++
+ /* PCI host controller setup */
+ static int __init rcar_pci_setup(int nr, struct pci_sys_data *sys)
+ {
+@@ -224,6 +281,9 @@ static int __init rcar_pci_setup(int nr,
+ 	iowrite32(RCAR_PCI_INT_A | RCAR_PCI_INT_B | RCAR_PCI_INT_PME,
+ 		  reg + RCAR_PCI_INT_ENABLE_REG);
+ 
++	if (priv->irq > 0)
++		rcar_pci_setup_errirq(priv);
++
+ 	/* Add PCI resources */
+ 	pci_add_resource(&sys->resources, &priv->io_res);
+ 	pci_add_resource(&sys->resources, &priv->mem_res);
