@@ -1,32 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.13]:51859 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbaB0SnB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 13:43:01 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic host_bridge from device tree
-Date: Thu, 27 Feb 2014 19:42:52 +0100
-Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com> <5679503.gWR3MVnuZs@wuerfel> <20140227165449.GR1692@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20140227165449.GR1692@e106497-lin.cambridge.arm.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:57725 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751491AbaBRSVv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 13:21:51 -0500
+Date: Tue, 18 Feb 2014 11:21:42 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+	linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140218182142.GF29304@obsidianresearch.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+ <1392726043-31088-4-git-send-email-will.deacon@arm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201402271942.52764.arnd@arndb.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392726043-31088-4-git-send-email-will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 27 February 2014, Liviu Dudau wrote:
-> There are examples of other host controllers doing similar things. pci-tegra.c does it in
-> tegra_pcie_setup_translations(), pcie-designware.c has dw_pcie_prog_viewport_*() functions.
-> 
-> I'm afraid for the moment the bootloader on my platform is not going to be of too much use on
-> this, so it will have to be initially in Linux.
+On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
+> +
+> +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
+> +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
+                                           ^^^^^^^^^^^^^^
 
-Ah, too bad. I know that we always do it wrong on arm32, I was hoping for a fresh
-start on arm64 to fix this particular issue.
+This probably shouldn't be 0 in the example, nor in your kvm tool
+output. For example purposes any value will do.
 
-	Arnd
+Regards,
+Jason
