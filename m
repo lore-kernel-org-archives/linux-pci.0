@@ -1,54 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:64486 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752260AbaBRTh3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 14:37:29 -0500
-Date: Tue, 18 Feb 2014 19:36:54 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Received: from know-smtprelay-omc-10.server.virginmedia.net ([80.0.253.74]:60926
+	"EHLO know-smtprelay-omc-10.server.virginmedia.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753948AbaBRRbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 12:31:22 -0500
+Message-ID: <1392744674.15829.31.camel@artifact>
+Subject: Re: pci-3.14 resource alloc
+From: Steven Newbury <steve@snewbury.org.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140218193654.GK2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
- <20140218185947.GA22340@obsidianresearch.com>
- <20140218190929.GF2010@mudshark.cambridge.arm.com>
- <1411925.bMiMyFpUnW@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1411925.bMiMyFpUnW@wuerfel>
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Tue, 18 Feb 2014 17:31:14 +0000
+In-Reply-To: <CAErSpo4CLB7G5DHpdr69t+wZjywuOXKXsvS6W3eTMJgU5Xpycg@mail.gmail.com>
+References: <1390773698.3450.12.camel@artifact>
+	 <CAE9FiQVD=oVHM5WJgSJ5cNpXZ1NYy9E_pcGWfjKnmD9OZoHHsw@mail.gmail.com>
+	 <1391643656.1067.1.camel@artifact>
+	 <CAE9FiQV8jutRhaBicL4kjqVYd07FzHmNoSN3NxdA2TYvOc_KUg@mail.gmail.com>
+	 <z9zi9m.n0zpxd.1hgeaud-qmf@mail.snewbury.org.uk>
+	 <i9nn22.n0zs79.1hgeaud-qmf@mail.snewbury.org.uk>
+	 <1392392764.3520.11.camel@devel-n900>
+	 <CAE9FiQV3H_nxH0gxcM0kW4uLm6b_qmHT9hRQUVY_4xPqjpvMtA@mail.gmail.com>
+	 <1392718107.15829.12.camel@artifact>
+	 <CAErSpo6cnT6JDh0rj_3TCjw8vkLbM0ztzES0Qh1R=wUCp0PfTw@mail.gmail.com>
+	 <CAErSpo4CLB7G5DHpdr69t+wZjywuOXKXsvS6W3eTMJgU5Xpycg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 07:32:33PM +0000, Arnd Bergmann wrote:
-> On Tuesday 18 February 2014 19:09:29 Will Deacon wrote:
-> > 
-> > > Regarding the 0x6200.. There are two conflicting issues there 
-> > >  - You really don't want to let the PCI core assign resources to that
-> > >    range, it probably won't work.
-> > 
-> > Right, with kvmtool we don't support resource assignment (the BARs are fixed)
-> > so everything is PCI_PROBE_ONLY.
+On Tue, 2014-02-18 at 07:37 -0700, Bjorn Helgaas wrote:
+> On Tue, Feb 18, 2014 at 6:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Tue, Feb 18, 2014 at 3:08 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
 > 
-> Ok, I looked at the source now and can confirm:
+> >> No, the only unusual option is I use pci=nocrs since the bios is
+> >> completely ignorant of support for 64bit BARs.
+> >
+> > Hi Steven, this is a tangent, but can you collect the complete dmesg
+> > log with "pci=nocrs" and let me know what happens when you *don't* use
+> > "pci=nocrs" (a complete dmesg log there would be useful too, but I
+> > don't know if you can boot without it)?  I think Linux *should* be
+> > able to handle 64bit BARs even if the BIOS doesn't.
+> >
+> > Please post these as a separate thread so we don't muddle this
+> > conversation with Yinghai.
 > 
-> * 0x0-0x1000 are used for lots of legacy ISA devices.
-> * PCI devices get assigned IO addresses in 0x400 steps starting at 0x6200.
-> * There are three PCI drivers doing this: VESA, PCI-SHMEM and virtio-pci.
+> Oh, never mind.  I think I remember now.  I think the problem is not
+> so much that the BIOS doesn't handle 64bit *BARs*, but that your BIOS
+> doesn't report 64bit host bridge *apertures*, and you want to use
+> space above 4G for a graphics card or something.
 > 
-> Regarding the PCI_PROBE_ONLY flag, how do you set that? Should we
-> have a standard DT property for that? On PowerPC we already specified
-> "linux,pci-probe-only" and "linux,pci-assign-all-buses", which seems
-> reasonable to use in architecture independent code as well.
+Yes, exactly. I should have stated it better.  I need to push the
+on-board i965 up above 4G to make room for a radeon which is accessed
+through a 32 bit only bridge.  The BIOS doesn't provide any
+functionality like this.  The intel devs seemed a little surprised that
+the i965 actually worked stably in this configuration given known
+errata, but I've actually had no problems with this side of things. 
 
-For arch/arm/ it's done on the command line (pci=firmware) but yes, for the
-generic driver it sounds like a good idea to put this in the device-tree.
-I'll look at adding the ppc properties in the next version.
+> That's not really anything we can fix in PCI because PCI doesn't
+> discover those apertures.  Host bridge drivers like the generic ACPI
+> pci_root.c or the native amd_bus.c discover them.  If those drivers
+> don't discover them, PCI can't just make them up.
 
-Cheers,
+32 bit only bridges must be getting pretty rare by now, and I presume
+any new hardware out there with a dockable PCI bus would provide 64 bit
+resource allocation for host bridge apertures when booting to a 64 bit
+OS?  Maybe not?
+> 
+> It might be nice if we had cleaner kernel options to say "assume a
+> host bridge window here" and "put this device here," so you didn't
+> have to use the big hammer of "pci=nocrs".  It's sort of a pain to
+> figure out how to attach info like that to the correct device (there
+> might be several host bridges, so how do you specify which one you
+> care about?), but maybe it could be done.
+> 
+That would be much better, even if it's only some way to say "ignore crs
+for *this* host bridge (and parents)", or "for host bridges to which
+*this* device is attached".
 
-Will
+
