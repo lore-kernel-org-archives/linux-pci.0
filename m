@@ -1,73 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:32819 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585AbaBSIUs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 03:20:48 -0500
-Date: Wed, 19 Feb 2014 09:20:43 +0100
-From: Sascha Hauer <s.hauer@pengutronix.de>
-To: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: Marek Vasut <marex@denx.de>, linux-pci@vger.kernel.org,
-	kernel@pengutronix.de, Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: imx6: Fix link_up detection
-Message-ID: <20140219082043.GU17250@pengutronix.de>
-References: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de>
- <201402120836.16221.marex@denx.de>
- <52FD0F1A.4000208@boundarydevices.com>
- <20140214064153.GE17250@pengutronix.de>
- <52FE6DA7.1010305@boundarydevices.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:38049 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751270AbaBRRF0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 12:05:26 -0500
+Date: Tue, 18 Feb 2014 10:05:18 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] bus: mvebu-mbus: Fix incorrect size for PCI aperture
+ resources
+Message-ID: <20140218170518.GA29304@obsidianresearch.com>
+References: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
+ <20140214182910.GC31093@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52FE6DA7.1010305@boundarydevices.com>
+In-Reply-To: <20140214182910.GC31093@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 12:25:27PM -0700, Troy Kisky wrote:
-> On 2/13/2014 11:41 PM, Sascha Hauer wrote:
-> > On Thu, Feb 13, 2014 at 11:29:46AM -0700, Troy Kisky wrote:
-> >> On 2/12/2014 12:36 AM, Marek Vasut wrote:
-> >>> On Wednesday, February 12, 2014 at 08:27:55 AM, Sascha Hauer wrote:
-> >>>
-> >>> +CC Troy Kisky, since I think he submitted something similar some time ago
-> >>> already.
-> >>>
-> >>> Otherwise I agree this happens.
-> >>>
-> >> Sorry, I haven't submitted this yet, but was planning to today. Here's
-> >> what would have been sent.
-> >>
-> >> From 32c560d33fe2c3945d69f3396689f0abb76f7e1f Mon Sep 17 00:00:00 2001
-> >> From: Marek Vasut <marex@denx.de>
-> >> Date: Sat, 25 Jan 2014 14:22:48 -0700
-> >> Subject: [PATCH 1/1] pci-imx6.c: wait for retraining
-> >>
-> >> This patch handles the case where the PCIe link is up and running, yet drops
-> >> into the LTSSM training mode. The link spends short time in the LTSSM training
-> >> mode, but the current code can misinterpret it as the link being stalled.
-> >> Waiting for the LTSSM training to complete fixes the issue.
-> >>
-> >> Signed-off-by: Marek Vasut <marex@denx.de>
-> >> Tested-by: Troy Kisky <troy.kisky@boundarydevices.com>
+On Fri, Feb 14, 2014 at 11:29:10AM -0700, Bjorn Helgaas wrote:
+> On Wed, Feb 12, 2014 at 03:57:07PM -0700, Jason Gunthorpe wrote:
+> > reg[0] is the DT base, reg[1] is the DT length in bytes,
+> > struct resource.end is the inclusive end address, so a -1 is
+> > required.
 > > 
-> > Thanks, that works.
+> > Tested on kirkwood.
 > > 
-> > Tested-by: Sascha Hauer <s.hauer@pengutronix.de>
-> > 
-> > Sascha
+> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 > 
-> I don't want to step on your toes, does that means you
-> expect me to send a formal patch ?
+> Do these two patches need to go together?  I don't maintain
+> drivers/bus/mvebu-mbus.c, but if these should be kept together, I'd be
+> happy to merge them both, given the appropriate ack from Jason C or Thomas.
 
-The patch you sent is formal enough for me, but I won't be the one
-applying it. I just wanted to say that I have tested it. I prefer your
-patch over mine and I'd like to see it applied.
+I recommend keeping them together, requesting the wrong resource size
+range in PCI-E did not fail on my test system, but it has the
+potential to fail on systems with a different memory layout.
 
-Sascha
-
--- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+Thanks,
+Jason
