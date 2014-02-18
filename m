@@ -1,123 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:64805 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908AbaBCSqi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 13:46:38 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from device tree
-Date: Mon, 03 Feb 2014 19:46:10 +0100
-Message-ID: <7398333.9L5KlyFggU@wuerfel>
-In-Reply-To: <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com> <1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:14858 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755304AbaBRKLD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Feb 2014 05:11:03 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Himanshu Madhani <himanshu.madhani@qlogic.com>,
+	Rajesh Borundia <rajesh.borundia@qlogic.com>,
+	Shahed Shaikh <shahed.shaikh@qlogic.com>,
+	linux-driver@qlogic.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 27/35] qlcnic: Cleanup qlcnic_enable_msix() return values
+Date: Tue, 18 Feb 2014 11:11:56 +0100
+Message-Id: <137c27c94c88423a6627162e9926f50ab681b30c.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
-> +/**
-> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
-> + * @dev: device node of the host bridge having the range property
-> + * @resources: list where the range of resources will be added after DT parsing
-> + *
-> + * This function will parse the "ranges" property of a PCI host bridge device
-> + * node and setup the resource mapping based on its content. It is expected
-> + * that the property conforms with the Power ePAPR document.
-> + *
-> + * Each architecture will then apply their filtering based on the limitations
-> + * of each platform. One general restriction seems to be the number of IO space
-> + * ranges, the PCI framework makes intensive use of struct resource management,
-> + * and for IORESOURCE_IO types they can only be requested if they are contained
-> + * within the global ioport_resource, so that should be limited to one IO space
-> + * range.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Cc: Rajesh Borundia <rajesh.borundia@qlogic.com>
+Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
+Cc: linux-driver@qlogic.com
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-Actually we have quite a different set of restrictions around I/O space on ARM32
-at the moment: Each host bridge can have its own 64KB range in an arbitrary
-location on MMIO space, and the total must not exceed 2MB of I/O space.
+diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+index ba78c74..0c077cf 100644
+--- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
++++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
+@@ -684,7 +684,7 @@ restore:
+ int qlcnic_enable_msix(struct qlcnic_adapter *adapter, u32 num_msix)
+ {
+ 	struct pci_dev *pdev = adapter->pdev;
+-	int err = -1, vector;
++	int err, vector;
+ 
+ 	if (!adapter->msix_entries) {
+ 		adapter->msix_entries = kcalloc(num_msix,
+@@ -706,7 +706,7 @@ enable_msix:
+ 			adapter->flags |= QLCNIC_MSIX_ENABLED;
+ 			adapter->ahw->num_msix = num_msix;
+ 			dev_info(&pdev->dev, "using msi-x interrupts\n");
+-			return err;
++			return 0;
+ 		} else if (err > 0) {
+ 			dev_info(&pdev->dev,
+ 				 "Unable to allocate %d MSI-X vectors, Available vectors %d\n",
+@@ -715,12 +715,12 @@ enable_msix:
+ 			if (qlcnic_82xx_check(adapter)) {
+ 				num_msix = rounddown_pow_of_two(err);
+ 				if (err < QLCNIC_82XX_MINIMUM_VECTOR)
+-					return -EIO;
++					return -ENOSPC;
+ 			} else {
+ 				num_msix = rounddown_pow_of_two(err - 1);
+ 				num_msix += 1;
+ 				if (err < QLCNIC_83XX_MINIMUM_VECTOR)
+-					return -EIO;
++					return -ENOSPC;
+ 			}
+ 
+ 			if (qlcnic_82xx_check(adapter) &&
+@@ -747,7 +747,7 @@ enable_msix:
+ 		}
+ 	}
+ 
+-	return err;
++	return -EIO;
+ }
+ 
+ static int qlcnic_82xx_calculate_msix_vector(struct qlcnic_adapter *adapter)
+-- 
+1.7.7.6
 
-> + */
-> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
-> +					struct list_head *resources)
-> +{
-> +	struct resource *res;
-> +	struct of_pci_range range;
-> +	struct of_pci_range_parser parser;
-> +	int err;
-> +
-> +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
-> +
-> +	/* Check for ranges property */
-> +	err = of_pci_range_parser_init(&parser, dev);
-> +	if (err)
-> +		return err;
-> +
-> +	pr_debug("Parsing ranges property...\n");
-> +	for_each_of_pci_range(&parser, &range) {
-> +		/* Read next ranges element */
-> +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
-> +				range.pci_space, range.pci_addr);
-> +		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
-> +					range.cpu_addr, range.size);
-> +
-> +		/* If we failed translation or got a zero-sized region
-> +		 * (some FW try to feed us with non sensical zero sized regions
-> +		 * such as power3 which look like some kind of attempt
-> +		 * at exposing the VGA memory hole) then skip this range
-> +		 */
-> +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> +			continue;
-> +
-> +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> +		if (!res) {
-> +			err = -ENOMEM;
-> +			goto bridge_ranges_nomem;
-> +		}
-> +
-> +		of_pci_range_to_resource(&range, dev, res);
-> +
-> +		pci_add_resource_offset(resources, res,
-> +				range.cpu_addr - range.pci_addr);
-> +	}
-
-I believe of_pci_range_to_resource() will return the MMIO aperture for the
-I/O space window here, which is not what you are supposed to pass into
-pci_add_resource_offset.
-
-> +EXPORT_SYMBOL(pci_host_bridge_of_init);
-
-EXPORT_SYMBOL_GPL
-
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6e34498..16febae 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	list_for_each_entry_safe(window, n, resources, list) {
->  		list_move_tail(&window->list, &bridge->windows);
->  		res = window->res;
-> +		/*
-> +		 * IO resources are stored in the kernel with a CPU start
-> +		 * address of zero. Adjust the data accordingly and remember
-> +		 * the offset
-> +		 */
-> +		if (resource_type(res) == IORESOURCE_IO) {
-> +			bridge->io_offset = res->start;
-> +			res->end -= res->start;
-> +			window->offset -= res->start;
-> +			res->start = 0;
-> +		}
->  		offset = window->offset;
->  		if (res->flags & IORESOURCE_BUS)
-
-Won't this break all existing host bridges?
-
-	Arnd
