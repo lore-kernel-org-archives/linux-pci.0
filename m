@@ -1,39 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:53199 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516AbaBMVJh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 16:09:37 -0500
-From: Marek Vasut <marex@denx.de>
-To: Troy Kisky <troy.kisky@boundarydevices.com>
-Subject: Re: [PATCH] PCI: imx6: Fix link_up detection
-Date: Thu, 13 Feb 2014 19:41:21 +0100
-Cc: Sascha Hauer <s.hauer@pengutronix.de>, linux-pci@vger.kernel.org,
-	kernel@pengutronix.de, Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-References: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de> <201402120836.16221.marex@denx.de> <52FD0F1A.4000208@boundarydevices.com>
-In-Reply-To: <52FD0F1A.4000208@boundarydevices.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201402131941.21883.marex@denx.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Shradha Shah <sshah@solarflare.com>,
+	linux-net-drivers@solarflare.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH net-next 31/35] sfc: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:12:00 +0100
+Message-Id: <ee04d8c3b86765cbfd0f5ea7ce2e79db34113401.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, February 13, 2014 at 07:29:46 PM, Troy Kisky wrote:
-> On 2/12/2014 12:36 AM, Marek Vasut wrote:
-> > On Wednesday, February 12, 2014 at 08:27:55 AM, Sascha Hauer wrote:
-> > 
-> > +CC Troy Kisky, since I think he submitted something similar some time
-> > ago already.
-> > 
-> > Otherwise I agree this happens.
-> 
-> Sorry, I haven't submitted this yet, but was planning to today. Here's
-> what would have been sent.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Release early, release often ... ;-)
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Shradha Shah <sshah@solarflare.com>
+Cc: linux-net-drivers@solarflare.com
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Acked-by: Shradha Shah <sshah@solarflare.com>
+---
+ drivers/net/ethernet/sfc/efx.c |   20 +++++++++-----------
+ 1 files changed, 9 insertions(+), 11 deletions(-)
 
-Best regards,
-Marek Vasut
+diff --git a/drivers/net/ethernet/sfc/efx.c b/drivers/net/ethernet/sfc/efx.c
+index 62d1a78..d72e003 100644
+--- a/drivers/net/ethernet/sfc/efx.c
++++ b/drivers/net/ethernet/sfc/efx.c
+@@ -1344,20 +1344,23 @@ static int efx_probe_interrupts(struct efx_nic *efx)
+ 
+ 		for (i = 0; i < n_channels; i++)
+ 			xentries[i].entry = i;
+-		rc = pci_enable_msix(efx->pci_dev, xentries, n_channels);
+-		if (rc > 0) {
++		rc = pci_enable_msix_range(efx->pci_dev,
++					   xentries, 1, n_channels);
++		if (rc < 0) {
++			/* Fall back to single channel MSI */
++			efx->interrupt_mode = EFX_INT_MODE_MSI;
++			netif_err(efx, drv, efx->net_dev,
++				  "could not enable MSI-X\n");
++		} else if (rc < n_channels) {
+ 			netif_err(efx, drv, efx->net_dev,
+ 				  "WARNING: Insufficient MSI-X vectors"
+ 				  " available (%d < %u).\n", rc, n_channels);
+ 			netif_err(efx, drv, efx->net_dev,
+ 				  "WARNING: Performance may be reduced.\n");
+-			EFX_BUG_ON_PARANOID(rc >= n_channels);
+ 			n_channels = rc;
+-			rc = pci_enable_msix(efx->pci_dev, xentries,
+-					     n_channels);
+ 		}
+ 
+-		if (rc == 0) {
++		if (rc > 0) {
+ 			efx->n_channels = n_channels;
+ 			if (n_channels > extra_channels)
+ 				n_channels -= extra_channels;
+@@ -1373,11 +1376,6 @@ static int efx_probe_interrupts(struct efx_nic *efx)
+ 			for (i = 0; i < efx->n_channels; i++)
+ 				efx_get_channel(efx, i)->irq =
+ 					xentries[i].vector;
+-		} else {
+-			/* Fall back to single channel MSI */
+-			efx->interrupt_mode = EFX_INT_MODE_MSI;
+-			netif_err(efx, drv, efx->net_dev,
+-				  "could not enable MSI-X\n");
+ 		}
+ 	}
+ 
+-- 
+1.7.7.6
+
