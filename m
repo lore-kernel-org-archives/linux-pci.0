@@ -1,48 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51008 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751105AbaBKMjU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 07:39:20 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH 0/11] ACPI / hotplug / PCI: Updates on top of changes merged recently
-Date: Tue, 11 Feb 2014 13:53:58 +0100
-Message-ID: <2679492.S4dAZoqvRT@vostro.rjw.lan>
-In-Reply-To: <20140211001958.GB12851@google.com>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140211001958.GB12851@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Shahed Shaikh <shahed.shaikh@qlogic.com>,
+	Jitendra Kalsaria <jitendra.kalsaria@qlogic.com>,
+	Ron Mercer <ron.mercer@qlogic.com>, linux-driver@qlogic.com,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH net-next 30/35] qlge: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Tue, 18 Feb 2014 11:11:59 +0100
+Message-Id: <443a0172bc2fe0aa92fca6044d7374475e2ad4c1.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 10, 2014 05:19:58 PM Bjorn Helgaas wrote:
-> On Mon, Jan 27, 2014 at 01:37:17AM +0100, Rafael J. Wysocki wrote:
-> > Hi All,
-> > 
-> > ACPIPHP can be simplified a bit on top of some PCI and ACPI changes merged
-> > recently and the following series of patches implements those simplifications:
-> > 
-> > [1/11] Fix up two kerneldoc comments in acpiphp_glue.c.
-> > [2/11] Get rid of an unnecessary label in register_slot().
-> > [3/11] Drop acpiphp_bus_trim() and use acpi_bus_trim() instead of it directly.
-> > [4/11] Move the acpi_bus_get_device() call out of acpiphp_no_hotplug().
-> > [5/11] Store struct acpi_device pointers instead of ACPI handles in struct acpiphp_context.
-> > [6/11] Drop acpiphp_bus_add() (which has only one user).
-> > [7/11] Drop crit_sect mutexes (that are redundant).
-> > [8/11] Clean up the usage of the slot variable in hotplug_event().
-> > [9/11] Drop dev_in_slot() and rework disable_slot() to walk bus->devices directly.
-> > [10/11] Use acpi_handle_debug() in hotplug_event() instead of open-coded stuff.
-> > [11/11] Drop handle argument from the member functions of struct acpi_dock_ops.
-> 
-> I assume you'll handle all these through your tree, Rafael.  Let me know if
-> you need me to do anything.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Yes, I'll handle these, thanks!
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
+Cc: Jitendra Kalsaria <jitendra.kalsaria@qlogic.com>
+Cc: Ron Mercer <ron.mercer@qlogic.com>
+Cc: linux-driver@qlogic.com
+Cc: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/net/ethernet/qlogic/qlge/qlge_main.c |   15 ++++-----------
+ 1 files changed, 4 insertions(+), 11 deletions(-)
 
-Rafael
+diff --git a/drivers/net/ethernet/qlogic/qlge/qlge_main.c b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
+index 82bace5..adf87d2 100644
+--- a/drivers/net/ethernet/qlogic/qlge/qlge_main.c
++++ b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
+@@ -3331,23 +3331,16 @@ static void ql_enable_msix(struct ql_adapter *qdev)
+ 		for (i = 0; i < qdev->intr_count; i++)
+ 			qdev->msi_x_entry[i].entry = i;
+ 
+-		/* Loop to get our vectors.  We start with
+-		 * what we want and settle for what we get.
+-		 */
+-		do {
+-			err = pci_enable_msix(qdev->pdev,
+-				qdev->msi_x_entry, qdev->intr_count);
+-			if (err > 0)
+-				qdev->intr_count = err;
+-		} while (err > 0);
+-
++		err = pci_enable_msix_range(qdev->pdev, qdev->msi_x_entry,
++					    1, qdev->intr_count);
+ 		if (err < 0) {
+ 			kfree(qdev->msi_x_entry);
+ 			qdev->msi_x_entry = NULL;
+ 			netif_warn(qdev, ifup, qdev->ndev,
+ 				   "MSI-X Enable failed, trying MSI.\n");
+ 			qlge_irq_type = MSI_IRQ;
+-		} else if (err == 0) {
++		} else {
++			qdev->intr_count = err;
+ 			set_bit(QL_MSIX_ENABLED, &qdev->flags);
+ 			netif_info(qdev, ifup, qdev->ndev,
+ 				   "MSI-X Enabled, got %d vectors.\n",
+-- 
+1.7.7.6
 
