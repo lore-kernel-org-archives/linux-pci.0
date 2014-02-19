@@ -1,249 +1,303 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 3 Feb 2014 21:36:58 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] arm64: Add architecture support for PCI
-Message-ID: <20140203213658.GA24036@e106497-lin.cambridge.arm.com>
-References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
- <21596846.kVTqp7roW4@wuerfel>
- <20140203191837.GC4889@e106497-lin.cambridge.arm.com>
- <3808209.DeG1VobanZ@wuerfel>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 4/9] ACPI / dock: Use callback pointers from devices' ACPI hotplug contexts
+Date: Wed, 19 Feb 2014 02:29:23 +0100
+Message-ID: <1472780.lDZ1hkyq2L@vostro.rjw.lan>
+In-Reply-To: <3011875.q18rCmXyYX@vostro.rjw.lan>
+References: <3011875.q18rCmXyYX@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <3808209.DeG1VobanZ@wuerfel>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 03, 2014 at 08:05:56PM +0000, Arnd Bergmann wrote:
-> On Monday 03 February 2014 19:18:38 Liviu Dudau wrote:
-> > On Mon, Feb 03, 2014 at 06:58:56PM +0000, Arnd Bergmann wrote:
-> > > On Monday 03 February 2014 18:43:48 Liviu Dudau wrote:
-> > > > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-> > > > index 4cc813e..ce5bad2 100644
-> > > > --- a/arch/arm64/include/asm/io.h
-> > > > +++ b/arch/arm64/include/asm/io.h
-> > > > @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
-> > > >  /*
-> > > >   *  I/O port access primitives.
-> > > >   */
-> > > > +#define arch_has_dev_port()	(0)
-> > > 
-> > > Why not?
-> > 
-> > Maybe I got it the wrong way around, but the comment in include/linux/io.h says:
-> > 
-> > /*
-> >  * Some systems do not have legacy ISA devices.
-> >  * /dev/port is not a valid interface on these systems.
-> >  * So for those archs, <asm/io.h> should define the following symbol.
-> >  */
-> > 
-> > So ... defining it should mean no legacy ISA devices, right?
-> 
-> I would read that comment as referring to systems that don't have
-> any I/O space. If you have PCI, you can by definition have ISA
-> compatible devices behind a bridge. A typical example would be
-> a VGA card that supports the 03c0-03df port range.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-But if you have PCI and don't want to support ISA do you have /dev/port? I guess yes.
-In that case ISA support is irrelevant here. Will update the value when I send v2.
+Instead of requiring a set of special dock operations to be registered
+via register_hotplug_dock_device() for each ACPI dock device, it is
+much more straightforward to use callback pointers from the devices'
+hotplug contexts if available.
 
-> 
-> > > 
-> > > >  #define IO_SPACE_LIMIT		0xffff
-> > > 
-> > > You probably want to increase this a bit, to allow multiple host bridges
-> > > to have their own I/O space.
-> > 
-> > OK, but to what size?
-> 
-> 2 MB was a compromise on arm32 to allow up to 32 PCI host bridges but not
-> take up too much virtual space. On arm64 it should be at least as big.
-> Could be more than that, although I don't see a reason why it should be,
-> unless we expect to see systems with tons of host bridges, or buses
-> that exceed 64KB of I/O space.
+For this reason, modify dock_hotplug_event() to use callback pointers
+from the hotplug contexts of ACPI devices and fall back to using the
+special dock operarions only if those callbacks are missing.  Also
+make the ACPI-based PCI hotplug (ACPIPHP) subsystem set the .fixup
+callback pointer in the hotplug contexts of devices handled by it to
+a new function, acpiphp_post_dock_fixup(), so that the dock station
+driver can use the callbacks from those contexts instead of special
+dock operations registered via register_hotplug_dock_device().
 
-I will increase the size to 2MB for v2.
+Along with the above changes drop the ACPIPHP's dock operations that
+are not necessary any more.
 
-> 
-> > > > +#define ioport_map(port, nr)	(PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
-> > > > +#define ioport_unmap(addr)
-> > > 
-> > > inline functions?
-> > 
-> > Will do, thanks!
-> 
-> I suppose you can actually use the generic implementation from
-> asm-generic/io.h, and fix it by using the definition you have
-> above, since it's currently broken.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/dock.c                |   29 +++++++++
+ drivers/pci/hotplug/acpiphp_glue.c |  119 +++++++++++++++----------------------
+ 2 files changed, 78 insertions(+), 70 deletions(-)
 
-Not exactly broken, but it makes the assumption that your IO space starts at
-physical address zero and you have not remapped it. It does guard the
-definition with #ifndef CONFIG_GENERIC_IOMAP after all, so it does not
-expect to be generic :)
-
-> 
-> > > > diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-> > > > new file mode 100644
-> > > > index 0000000..dd084a3
-> > > > --- /dev/null
-> > > > +++ b/arch/arm64/include/asm/pci.h
-> > > > @@ -0,0 +1,35 @@
-> > > > +#ifndef __ASM_PCI_H
-> > > > +#define __ASM_PCI_H
-> > > > +#ifdef __KERNEL__
-> > > > +
-> > > > +#include <linux/types.h>
-> > > > +#include <linux/slab.h>
-> > > > +#include <linux/dma-mapping.h>
-> > > > +
-> > > > +#include <asm/io.h>
-> > > > +#include <asm-generic/pci-bridge.h>
-> > > > +#include <asm-generic/pci-dma-compat.h>
-> > > > +
-> > > > +#define PCIBIOS_MIN_IO		0
-> > > > +#define PCIBIOS_MIN_MEM		0
-> > > 
-> > > PCIBIOS_MIN_IO is normally set to 0x1000, to stay out of the ISA range.
-> > 
-> > :) No ISA support! (Die ISA, die!!) 
-> 
-> If only it were that easy.
-
-Lets try! :)
-
-I wonder how many active devices that have an ISA slot are still supported
-by mainline kernel.
-
-I will update PCIBIOS_MIN_xxxx to match arch/arm for v2.
-
-> 
-> > > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > > > new file mode 100644
-> > > > index 0000000..7b652cf
-> > > > --- /dev/null
-> > > > +++ b/arch/arm64/kernel/pci.c
-> > > > @@ -0,0 +1,112 @@
-> > > 
-> > > None of this looks really arm64 specific, nor should it be. I think
-> > > we should try a little harder to move this as a default implementation
-> > > into common code, even if we start out by having all architectures
-> > > override it.
-> > 
-> > Agree. This is the RFC version. I didn't dare to post a patch with fixes
-> > for all architectures. :)
-> 
-> No need to change the other architectures. You can make it opt-in for
-> now and just put the code into a common location.
->  
-> An interesting question however is what the transition plan is to
-> have the code shared between arm32 and arm64: We will certainly need
-> to share at least the dw-pcie and the generic SBSA compliant pci
-> implementation.
-
-My vote would be for updating the host controllers to the new API and
-to offer the CONFIG option to choose between arch APIs. The alternative
-is to use the existing API to wrap the generic implementation.
-
-My main concern with the existing API is the requirement to have a subsys_initcall
-in your host bridge or mach code, due to the way the initialisation is done (you
-need the DT code to probe your driver, but you cannot start the scanning of the 
-PCI bus until the arch code is initialised, so it gets deferred via 
-subsys_initcall when it calls pci_common_init). I bet that if one tries to
-instantiate a Tegra PCI host bridge controller on a Marvell platform things will
-break pretty quickly (random example here).
-
-> 
-> > > > +int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
-> > > > +{
-> > > > +	BUG_ON(offset + SZ_64K - 1 > IO_SPACE_LIMIT);
-> > > > +
-> > > > +	return ioremap_page_range((unsigned long)PCI_IOBASE + offset,
-> > > > +				(unsigned long)PCI_IOBASE + offset + SZ_64K,
-> > > > +				phys_addr,
-> > > > +				__pgprot(PROT_DEVICE_nGnRE));
-> > > > +}
-> > > 
-> > > Not sure if we want to treat this one as architecture specific though.
-> > > It certainly won't be portable to x86, but it could be shared with
-> > > a couple of others. We may also want to redesign the interface.
-> > > I've been thinking we could make this function allocate space in the
-> > > Linux virtual I/O space aperture, and pass two resources into it
-> > > (physical I/O aperture and bus I/O range), and get the actual
-> > > io_offset as the return value, or a negative error number.
-> > 
-> > Not sure I completely follow your idea.
-> 
-> Something like this (coded in mail client, don't try to compile):
-> 
-> #define IO_SPACE_PAGES (IO_SPACE_LIMIT + 1) / PAGE_SIZE)
-> static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
-> unsigned long pci_ioremap_io(const struct resource *bus, const struct resource phys)
-> {
-> 	unsigned long start, len, virt_start;
-> 	int error;
-> 
-> 	/* use logical address == bus address if possible */
-> 	start = bus->start / PAGE_SIZE;
-> 	if (start > IO_SPACE_LIMIT / PAGE_SIZE)
-> 		start = 0;
-> 
-> 	/*
-> 	 * try finding free space for the whole size first,
-> 	 * fall back to 64K if not available
-> 	 */
-> 	len = min(resource_size(bus), resource_size(phys);
-> 	start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-> 				start, len / PAGE_SIZE, 0);
-> 	if (start == IO_SPACE_PAGES && len > SZ_64K)
-> 		len = SZ_64K;
-> 		start = 0;
-> 		start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-> 				start, len / PAGE_SIZE, 0);
-> 	}
-> 
-> 	/* no 64K area found */
-> 	if (start == IO_SPACE_PAGES)
-> 		return -ENOMEM;
-> 
-> 	/* ioremap physical aperture to virtual aperture */
-> 	virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
-> 	error = ioremap_page_range(virt_start, virt_start + len,
-> 				    phys->start, __pgprot(PROT_DEVICE_nGnRE));
-> 	if (error)
-> 		return error;
-> 
-> 	bitmap_set(start, len / PAGE_SIZE);
-> 
-> 	/* return io_offset */
-> 	return start * PAGE_SIZE - bus->start;
-> }
-> EXPORT_SYMBOL_GPL(pci_ioremap_io);
-> 
-> 	Arnd
-> 
-
-I see. I need to think how this will change the existing code. Current users of pci_ioremap_io
-ask for multiples of SZ_64K offsets regardless of the actual need. 
-
-Best regards,
-Liviu
-
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -60,6 +60,7 @@ static LIST_HEAD(bridge_list);
+ static DEFINE_MUTEX(bridge_mutex);
+ 
+ static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type);
++static void acpiphp_post_dock_fixup(struct acpi_device *adev);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+ static void hotplug_event(u32 type, struct acpiphp_context *context);
+@@ -80,7 +81,8 @@ static struct acpiphp_context *acpiphp_i
+ 		return NULL;
+ 
+ 	context->refcount = 1;
+-	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_event, NULL);
++	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_event,
++			    acpiphp_post_dock_fixup);
+ 	return context;
+ }
+ 
+@@ -130,6 +132,27 @@ static inline void put_bridge(struct acp
+ 	kref_put(&bridge->ref, free_bridge);
+ }
+ 
++static struct acpiphp_context *acpiphp_grab_context(struct acpi_device *adev)
++{
++	struct acpiphp_context *context;
++
++	acpi_lock_hp_context();
++	context = acpiphp_get_context(adev);
++	if (!context || context->func.parent->is_going_away) {
++		acpi_unlock_hp_context();
++		return NULL;
++	}
++	get_bridge(context->func.parent);
++	acpiphp_put_context(context);
++	acpi_unlock_hp_context();
++	return context;
++}
++
++static void acpiphp_let_context_go(struct acpiphp_context *context)
++{
++	put_bridge(context->func.parent);
++}
++
+ static void free_bridge(struct kref *kref)
+ {
+ 	struct acpiphp_context *context;
+@@ -164,28 +187,29 @@ static void free_bridge(struct kref *kre
+ 	acpi_unlock_hp_context();
+ }
+ 
+-/*
+- * the _DCK method can do funny things... and sometimes not
+- * hah-hah funny.
++/**
++ * acpiphp_post_dock_fixup - Post-dock fixups for PCI devices.
++ * @adev: ACPI device object corresponding to a PCI device.
+  *
+- * TBD - figure out a way to only call fixups for
+- * systems that require them.
++ * TBD - figure out a way to only call fixups for systems that require them.
+  */
+-static void post_dock_fixups(acpi_handle not_used, u32 event, void *data)
++static void acpiphp_post_dock_fixup(struct acpi_device *adev)
+ {
+-	struct acpiphp_context *context = data;
+-	struct pci_bus *bus = context->func.slot->bus;
++	struct acpiphp_context *context = acpiphp_grab_context(adev);
++	struct pci_bus *bus;
+ 	u32 buses;
+ 
+-	if (!bus->self)
++	if (!context)
+ 		return;
+ 
++	bus = context->func.slot->bus;
++	if (!bus->self)
++		goto out;
++
+ 	/* fixup bad _DCK function that rewrites
+ 	 * secondary bridge on slot
+ 	 */
+-	pci_read_config_dword(bus->self,
+-			PCI_PRIMARY_BUS,
+-			&buses);
++	pci_read_config_dword(bus->self, PCI_PRIMARY_BUS, &buses);
+ 
+ 	if (((buses >> 8) & 0xff) != bus->busn_res.start) {
+ 		buses = (buses & 0xff000000)
+@@ -194,24 +218,11 @@ static void post_dock_fixups(acpi_handle
+ 			| ((unsigned int)(bus->busn_res.end) << 16);
+ 		pci_write_config_dword(bus->self, PCI_PRIMARY_BUS, buses);
+ 	}
+-}
+ 
+-static void dock_event(acpi_handle handle, u32 type, void *data)
+-{
+-	struct acpi_device *adev;
+-
+-	adev = acpi_bus_get_acpi_device(handle);
+-	if (adev) {
+-		acpiphp_hotplug_event(adev, type);
+-		acpi_bus_put_acpi_device(adev);
+-	}
++ out:
++	acpiphp_let_context_go(context);
+ }
+ 
+-static const struct acpi_dock_ops acpiphp_dock_ops = {
+-	.fixup = post_dock_fixups,
+-	.handler = dock_event,
+-};
+-
+ /* Check whether the PCI device is managed by native PCIe hotplug driver */
+ static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
+ {
+@@ -241,20 +252,6 @@ static bool device_is_managed_by_native_
+ 	return true;
+ }
+ 
+-static void acpiphp_dock_init(void *data)
+-{
+-	struct acpiphp_context *context = data;
+-
+-	get_bridge(context->func.parent);
+-}
+-
+-static void acpiphp_dock_release(void *data)
+-{
+-	struct acpiphp_context *context = data;
+-
+-	put_bridge(context->func.parent);
+-}
+-
+ /**
+  * acpiphp_add_context - Add ACPIPHP context to an ACPI device object.
+  * @handle: ACPI handle of the object to add a context to.
+@@ -300,15 +297,18 @@ static acpi_status acpiphp_add_context(a
+ 	newfunc = &context->func;
+ 	newfunc->function = function;
+ 	newfunc->parent = bridge;
++	acpi_unlock_hp_context();
+ 
+-	if (acpi_has_method(handle, "_EJ0"))
++	/*
++	 * If this is a dock device, its _EJ0 should be executed by the dock
++	 * notify handler after calling _DCK.
++	 */
++	if (!is_dock_device(adev) && acpi_has_method(handle, "_EJ0"))
+ 		newfunc->flags = FUNC_HAS_EJ0;
+ 
+ 	if (acpi_has_method(handle, "_STA"))
+ 		newfunc->flags |= FUNC_HAS_STA;
+ 
+-	acpi_unlock_hp_context();
+-
+ 	/* search for objects that share the same slot */
+ 	list_for_each_entry(slot, &bridge->slots, node)
+ 		if (slot->device == device)
+@@ -369,18 +369,6 @@ static acpi_status acpiphp_add_context(a
+ 				       &val, 60*1000))
+ 		slot->flags |= SLOT_ENABLED;
+ 
+-	if (is_dock_device(adev)) {
+-		/* we don't want to call this device's _EJ0
+-		 * because we want the dock notify handler
+-		 * to call it after it calls _DCK
+-		 */
+-		newfunc->flags &= ~FUNC_HAS_EJ0;
+-		if (register_hotplug_dock_device(handle,
+-			&acpiphp_dock_ops, context,
+-			acpiphp_dock_init, acpiphp_dock_release))
+-			pr_debug("failed to register dock device\n");
+-	}
+-
+ 	return AE_OK;
+ }
+ 
+@@ -411,11 +399,9 @@ static void cleanup_bridge(struct acpiph
+ 		list_for_each_entry(func, &slot->funcs, sibling) {
+ 			struct acpi_device *adev = func_to_acpi_device(func);
+ 
+-			if (is_dock_device(adev))
+-				unregister_hotplug_dock_device(adev->handle);
+-
+ 			acpi_lock_hp_context();
+ 			adev->hp->event = NULL;
++			adev->hp->fixup = NULL;
+ 			acpi_unlock_hp_context();
+ 		}
+ 		slot->flags |= SLOT_IS_GOING_AWAY;
+@@ -851,19 +837,12 @@ static int acpiphp_hotplug_event(struct
+ {
+ 	struct acpiphp_context *context;
+ 
+-	acpi_lock_hp_context();
+-	context = acpiphp_get_context(adev);
+-	if (!context || context->func.parent->is_going_away) {
+-		acpi_unlock_hp_context();
++	context = acpiphp_grab_context(adev);
++	if (!context)
+ 		return -ENODATA;
+-	}
+-	get_bridge(context->func.parent);
+-	acpiphp_put_context(context);
+-	acpi_unlock_hp_context();
+ 
+ 	hotplug_event(type, context);
+-
+-	put_bridge(context->func.parent);
++	acpiphp_let_context_go(context);
+ 	return 0;
+ }
+ 
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -185,9 +185,38 @@ static void dock_release_hotplug(struct
+ static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
+ 			       enum dock_callback_type cb_type)
+ {
++	struct acpi_device *adev = dd->adev;
+ 	acpi_notify_handler cb = NULL;
+ 	bool run = false;
+ 
++	acpi_lock_hp_context();
++
++	if (!adev->hp)
++		goto no_context;
++
++	if (cb_type == DOCK_CALL_FIXUP) {
++		void (*fixup)(struct acpi_device *);
++
++		fixup = adev->hp->fixup;
++		if (fixup) {
++			acpi_unlock_hp_context();
++			fixup(adev);
++			return;
++		}
++	} else {
++		int (*notify)(struct acpi_device *, u32);
++
++		notify = adev->hp->event;
++		if (notify) {
++			acpi_unlock_hp_context();
++			notify(adev, event);
++			return;
++		}
++	}
++
++ no_context:
++	acpi_unlock_hp_context();
++
+ 	mutex_lock(&hotplug_lock);
+ 
+ 	if (dd->hp_context) {
 
