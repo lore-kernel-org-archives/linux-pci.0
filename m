@@ -1,80 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 2/3] arm64: Extend the PCI I/O space to 16MB
-Date: Fri, 28 Feb 2014 13:08:32 +0000
-Message-Id: <1393592913-24796-3-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393592913-24796-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393592913-24796-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:36647 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856AbaBSVyC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 16:54:02 -0500
+Received: by mail-ie0-f170.google.com with SMTP id rl12so705664iec.29
+        for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 13:54:02 -0800 (PST)
+Date: Wed, 19 Feb 2014 14:53:59 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Mohit Kumar <mohit.kumar@st.com>
+Cc: jg1.han@samsung.com, Pratyush Anand <pratyush.anand@st.com>,
+	Arnd Bergmann <arnd@arndb.de>, spear-devel@list.st.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/1] Designware:RC BARs setup related fix
+Message-ID: <20140219215359.GA19233@google.com>
+References: <1392811475-17744-1-git-send-email-mohit.kumar@st.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392811475-17744-1-git-send-email-mohit.kumar@st.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Catalin Marinas <catalin.marinas@arm.com>
+On Wed, Feb 19, 2014 at 05:34:35PM +0530, Mohit Kumar wrote:
+> The Synopsys  PCIe core provides one pair of 32-bit BARs (BAR 0 and BAR 1).
+> The BARs can  be configured as follows:
+> 
+> - One 64-bit BAR: BARs 0 and 1 are combined to form a single 64-bit BAR.
+> - Two 32-bit BARs: BARs 0 and 1 are two independent 32-bit BARs
+> 
+> This patch corrects 64-bit, non-prefetchable memory BAR configuration
+> implemented in dw driver.
+> 
+> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+> Cc: Pratyush Anand <pratyush.anand@st.com>
+> Cc: Jingoo Han <jg1.han@samsung.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: spear-devel@list.st.com
+> Cc: linux-pci@vger.kernel.org
 
-The patch moves the PCI I/O space (currently at 64K) before the
-earlyprintk mapping and extends it to 16MB.
+Applied to pci/host-designware for v3.15, thanks!
 
-Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
+I update the summary to the following; let me know if it's not accurate:
 
-diff --git a/Documentation/arm64/memory.txt b/Documentation/arm64/memory.txt
-index 5e054bf..85e24c4 100644
---- a/Documentation/arm64/memory.txt
-+++ b/Documentation/arm64/memory.txt
-@@ -35,11 +35,13 @@ ffffffbc00000000	ffffffbdffffffff	   8GB		vmemmap
- 
- ffffffbe00000000	ffffffbffbbfffff	  ~8GB		[guard, future vmmemap]
- 
--ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
-+ffffffbffa000000	ffffffbffaffffff	  16MB		PCI I/O space
-+
-+ffffffbffb000000	ffffffbffbbfffff	  12MB		[guard]
- 
--ffffffbffbe00000	ffffffbffbe0ffff	  64KB		PCI I/O space
-+ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
- 
--ffffffbffbe10000	ffffffbcffffffff	  ~2MB		[guard]
-+ffffffbffbe00000	ffffffbffbffffff	   2MB		[guard]
- 
- ffffffbffc000000	ffffffbfffffffff	  64MB		modules
- 
-@@ -60,11 +62,13 @@ fffffdfc00000000	fffffdfdffffffff	   8GB		vmemmap
- 
- fffffdfe00000000	fffffdfffbbfffff	  ~8GB		[guard, future vmmemap]
- 
--fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
-+fffffdfffa000000	fffffdfffaffffff	  16MB		PCI I/O space
-+
-+fffffdfffb000000	fffffdfffbbfffff	  12MB		[guard]
- 
--fffffdfffbe00000	fffffdfffbe0ffff	  64KB		PCI I/O space
-+fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
- 
--fffffdfffbe10000	fffffdfffbffffff	  ~2MB		[guard]
-+fffffdfffbe00000	fffffdfffbffffff	   2MB		[guard]
- 
- fffffdfffc000000	fffffdffffffffff	  64MB		modules
- 
-diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-index 4cc813e..7846a6b 100644
---- a/arch/arm64/include/asm/io.h
-+++ b/arch/arm64/include/asm/io.h
-@@ -121,7 +121,7 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
-  *  I/O port access primitives.
-  */
- #define IO_SPACE_LIMIT		0xffff
--#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
-+#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
- 
- static inline u8 inb(unsigned long addr)
- {
--- 
-1.9.0
+  PCI: designware: Fix RC BAR to be single 64-bit non-prefetchable memory BAR
 
+> ---
+>  drivers/pci/host/pcie-designware.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 17ce88f..6d23d8c 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -800,7 +800,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  
+>  	/* setup RC BARs */
+>  	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
+> -	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_1);
+> +	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
+>  
+>  	/* setup interrupt pins */
+>  	dw_pcie_readl_rc(pp, PCI_INTERRUPT_LINE, &val);
+> -- 
+> 1.7.0.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
