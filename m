@@ -1,77 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:32776 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753520AbaBZThG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:06 -0500
-Received: by mail-ie0-f172.google.com with SMTP id as1so617486iec.31
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:06 -0800 (PST)
-Subject: [PATCH 0/9] PCI: Use IORESOURCE_UNSET for unassigned BARs
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:37:04 -0700
-Message-ID: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 9/9] ACPI / dock: Update copyright notice
+Date: Wed, 19 Feb 2014 02:32:50 +0100
+Message-ID: <2585039.uxTQ3ZVMg2@vostro.rjw.lan>
+In-Reply-To: <3011875.q18rCmXyYX@vostro.rjw.lan>
+References: <3011875.q18rCmXyYX@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm trying to unify the way we handle unassigned PCI BARs, i.e., resources
-where we know the type and size, but we haven't assigned an address yet.
-The PCI core and the various architectures don't really have a consistent
-way of dealing with these.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Many places currently use "res->start == 0" to indicate unassigned
-resources.  I don't think that's a good idea in general, because it's
-possible for a resource to actually start at zero.  Zero is also a
-perfectly good BAR value, especially for a host bridge that translates
-addresses, so I want to support that, too.
+Update the copyright notice of the ACPI dock driver to reflect the
+fact that substantial changes have been made to it recently.
 
-The IORESOURCE_UNSET flag exists already, but is hardly used at all.  In
-drivers/pci, we set it for an obscure error case, and clear it when
-updating a BAR.  The microblaze and powerpc architectures use it the same
-way I want to use it here: to indicate a resource with no assigned address.
-
-Here's the outline of what this series does:
-
-- Add resource_contains(): true iff r1 contains r2 (for minor cleanup)
-- Make %pR print resource size, not address, when IORESOURCE_UNSET
-- Stop advertising pci_find_parent_resource() for use in allocation
-- Mark PCI resources IORESOURCE_UNSET when BIOS left decoding disabled
-- Mark PCI resources IORESOURCE_UNSET while we're trying to assign addresses
-- Don't enable PCI decoding when no address has been assigned to BARs
-
-It might be too aggressive to ignore the initial value of a BAR and try to
-reassign it when the BIOS left decoding disabled.  If the BIOS left
-decoding *enabled*, we can have some confidence that the BAR value is
-valid.  It's possible the BAR is also valid even if the BIOS turned off
-decoding.  We could conceivably try to use BAR values that are inside
-upstream bridge windows, even if the BAR was initially disabled.  But this
-first pass just ignores the values in BARs that are disabled.
-
-I welcome any comments :)
-
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
+ drivers/acpi/dock.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Bjorn Helgaas (9):
-      resource: Add resource_contains()
-      vsprintf: Add support for IORESOURCE_UNSET in %pR
-      PCI: Remove pci_find_parent_resource() use for allocation
-      PCI: Mark resources as IORESOURCE_UNSET if we can't assign them
-      PCI: Don't clear IORESOURCE_UNSET when updating BAR
-      PCI: Check IORESOURCE_UNSET before updating BAR
-      PCI: Don't try to claim IORESOURCE_UNSET resources
-      PCI: Ignore BAR contents when firmware left decoding disabled
-      PCI: Don't enable decoding if BAR hasn't been assigned an address
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -1,7 +1,9 @@
+ /*
+  *  dock.c - ACPI dock station driver
+  *
+- *  Copyright (C) 2006 Kristen Carlson Accardi <kristen.c.accardi@intel.com>
++ *  Copyright (C) 2006, 2014, Intel Corp.
++ *  Author: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
++ *          Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+  *
+  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  *
 
-
- drivers/pci/host-bridge.c |    8 --------
- drivers/pci/pci.c         |   41 +++++++++++++++++++++++++----------------
- drivers/pci/probe.c       |    8 +++++++-
- drivers/pci/quirks.c      |    5 +++++
- drivers/pci/rom.c         |    2 ++
- drivers/pci/setup-res.c   |   37 +++++++++++++++++++++++++------------
- include/linux/ioport.h    |   12 +++++++++++-
- kernel/resource.c         |    8 ++------
- lib/vsprintf.c            |   13 +++++++++----
- 9 files changed, 86 insertions(+), 48 deletions(-)
