@@ -1,46 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22808 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbaBEIyn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 03:54:43 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <linux-pci@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
-References: <cover.1389904166.git.agordeev@redhat.com>
-	<ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
-	<20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
-	<87y51qohjn.fsf@kamboji.qca.qualcomm.com>
-	<20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
-	<8761oum0l3.fsf@kamboji.qca.qualcomm.com>
-	<20140205085047.GA27820@dhcp-26-207.brq.redhat.com>
-Date: Wed, 5 Feb 2014 10:54:37 +0200
-In-Reply-To: <20140205085047.GA27820@dhcp-26-207.brq.redhat.com> (Alexander
-	Gordeev's message of "Wed, 5 Feb 2014 09:50:48 +0100")
-Message-ID: <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga09.intel.com ([134.134.136.24]:18482 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752293AbaBSGHX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 01:07:23 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 07/17] iommu/vt-d: free resources if failed to create domain for PCIe endpoint
+Date: Wed, 19 Feb 2014 14:07:27 +0800
+Message-Id: <1392790057-32434-8-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alexander Gordeev <agordeev@redhat.com> writes:
+Enhance function get_domain_for_dev() to release allocated resources
+if failed to create domain for PCIe endpoint, otherwise the allocated
+resources will get lost.
 
-> On Wed, Feb 05, 2014 at 10:21:28AM +0200, Kalle Valo wrote:
->> Is it ok for me to take these patches to my ath.git tree or would you
->> prefer to route them some other way?
->
-> Yeah, Bjorn has indicated he would pull it to his tree.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-Ok, I'll drop these from my pending branch then. I just think it would
-have been easier if I would take these, smaller chance of conflicts that
-way.
-
-> I get it you are fine with 2/3 and 3/3?
-
-Yes, with the addition of the commit log to 1/3 I'll give:
-
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 67b114e..503cc73 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -2015,7 +2015,7 @@ static int dmar_insert_dev_info(int segment, int bus, int devfn,
+ /* domain is initialized */
+ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ {
+-	struct dmar_domain *domain;
++	struct dmar_domain *domain, *free = NULL;
+ 	struct intel_iommu *iommu;
+ 	struct dmar_drhd_unit *drhd;
+ 	struct pci_dev *dev_tmp;
+@@ -2062,17 +2062,16 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 		free_domain_mem(domain);
+ 		goto error;
+ 	}
+-	if (domain_init(domain, gaw)) {
+-		domain_exit(domain);
++	free = domain;
++	if (domain_init(domain, gaw))
+ 		goto error;
+-	}
+ 
+ 	/* register pcie-to-pci device */
+ 	if (dev_tmp) {
+-		if (dmar_insert_dev_info(segment, bus, devfn, NULL, &domain)) {
+-			domain_exit(domain);
++		if (dmar_insert_dev_info(segment, bus, devfn, NULL, &domain))
+ 			goto error;
+-		}
++		else
++			free = NULL;
+ 	}
+ 
+ found_domain:
+@@ -2080,6 +2079,8 @@ found_domain:
+ 				 pdev, &domain) == 0)
+ 		return domain;
+ error:
++	if (free)
++		domain_exit(free);
+ 	/* recheck it here, maybe others set it */
+ 	return find_domain(pdev);
+ }
 -- 
-Kalle Valo
+1.7.10.4
+
