@@ -1,95 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:56865 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751317AbaBET1i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Feb 2014 14:27:38 -0500
-Date: Wed, 5 Feb 2014 12:27:33 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Message-ID: <20140205192733.GG25695@obsidianresearch.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <1391532784-1953-3-git-send-email-will.deacon@arm.com>
- <3460536.Sh23gjDa6X@wuerfel>
- <20140205190947.GA22297@mudshark.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140205190947.GA22297@mudshark.cambridge.arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 02/17] iommu/vt-d: avoid caching stale domain_device_info and fix memory leak
+Date: Wed, 19 Feb 2014 14:07:22 +0800
+Message-Id: <1392790057-32434-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 05, 2014 at 07:09:47PM +0000, Will Deacon wrote:
-> Hi Arnd,
-> 
-> Thanks for having a look.
-> 
-> On Tue, Feb 04, 2014 at 07:13:49PM +0000, Arnd Bergmann wrote:
-> > On Tuesday 04 February 2014 16:53:03 Will Deacon wrote:
-> > > +
-> > > +- ranges         : As described in IEEE Std 1275-1994, but must provide
-> > > +                   at least a definition of the Configuration Space plus
-> > > +                   one or both of IO and Memory Space.
-> > > +
-> > 
-> > I might need to reread the spec, but I think the config space is not
-> > actually supposed to be in the 'ranges' of the host bridge at all,
-> > and it should just be listed in the 'reg'.
-> 
-> This wasn't at all clear to me (I listed it in the cover-letter as being
-> something to sort out).
+Function device_notifier() in intel-iommu.c fails to remove
+device_domain_info data structures for PCI devices if they are
+associated with si_domain because iommu_no_mapping() returns true
+for those PCI devices. This will cause memory leak and caching of
+stale information in domain->devices list.
 
-When we talked about this earlier on the DT bindings list the
-consensus seemed to be that configuration MMIO ranges should only be
-used if the underlying memory was exactly ECAM, and was not to be used
-for random configuration related register blocks.
+So fix the issue by not calling iommu_no_mapping() and skipping check
+of iommu_pass_through.
 
-The rational being that generic code, upon seeing that ranges entry,
-could just go ahead and assume ECAM mapping.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Now, if "reg" is definitely the correct thing to do, is it simply a matter
-> of putting the Configuration Space base address in there, or do we also need
-> to do the rest of what ePAPR says (expansion ROM details, ...)? I don't like
-> the idea of enumerating the entire bus in the DT when we don't need to.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 52be755..f75d3ae 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3600,14 +3600,14 @@ static int device_notifier(struct notifier_block *nb,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct dmar_domain *domain;
+ 
+-	if (iommu_no_mapping(dev))
++	if (iommu_dummy(pdev))
+ 		return 0;
+ 
+ 	domain = find_domain(pdev);
+ 	if (!domain)
+ 		return 0;
+ 
+-	if (action == BUS_NOTIFY_UNBOUND_DRIVER && !iommu_pass_through) {
++	if (action == BUS_NOTIFY_UNBOUND_DRIVER) {
+ 		domain_remove_one_dev_info(domain, pdev);
+ 
+ 		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
+-- 
+1.7.10.4
 
-If you use 'reg' then it is a private base address to your driver and
-you can do whatever you want with it.
-
-Most of the ePAPR things are only needed if the FW is going to
-communicate detailed information to the OS, for an environment that
-relies on Linux resource assignment and discovery you can just ignore
-all that.
-
-> > This won't allow extended config space. Why not just do the
-> > regular mmconfig layout and make this:
-> > 
-> > 	cfg_offset(bus, device, function, register) =
-> > 		bus << 20 | device << 15 | function << 12 | register;
-> 
-> Is it worth adding a DT property to support both, or is ECAM the only thing
-> to care about? I'm happy either way, although I'll need to hack kvmtool to
-> use the new scheme.
-
-If you use ECAM then I wonder if your driver might be a generic SBSA
-driver too?
-
-I can't think of a reason to support alternate MMIO layouts if
-kvmtool is the only user and can be changed.
-
-> > I don't think we even want "virt" in the compatible string. The
-> > binding should be generic enough that it can actually work with
-> > real hardware.
-> 
-> Sure. How about "arm,pci-generic" ? Alternatives are
-> "arm,pcie-generic" or "linux,pci-generic".
-
-arm,pci-ecam-generic ?
-
-Regards,
-Jason
