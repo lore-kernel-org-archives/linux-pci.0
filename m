@@ -1,66 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:56253 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753748AbaBCX22 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:28 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 7/24][Resend] ACPI / hotplug / PCI: Proper kerneldoc comments for enumeration/removal
-Date: Tue, 04 Feb 2014 00:21:09 +0100
-Message-ID: <1440107.UAdRzE8vMj@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+Received: from moutng.kundenserver.de ([212.227.17.8]:61547 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753868AbaBSWNR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 17:13:17 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
+Date: Wed, 19 Feb 2014 23:12:52 +0100
+Message-ID: <3351875.BO8J5k2cFs@wuerfel>
+In-Reply-To: <CAErSpo7g5G0vn_8tyRE52MK6YuTB8XhBbk9thhzLx4tg0hmDMg@mail.gmail.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <3905203.TvF8RmfLsz@wuerfel> <CAErSpo7g5G0vn_8tyRE52MK6YuTB8XhBbk9thhzLx4tg0hmDMg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wednesday 19 February 2014 14:33:54 Bjorn Helgaas wrote:
+> On Wed, Feb 19, 2014 at 1:48 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Wednesday 19 February 2014 13:18:24 Bjorn Helgaas wrote:
+> >> >
+> >> > Right, this is an interesting case indeed, and I think we haven't
+> >> > considered it in the binding so far. We already encode a "bus-range"
+> >> > in DT, so we can easily partition the ECAM config space, but it
+> >> > still violates one of the two assumptions:
+> >> > a) that the register ranges for the two host bridge devices are
+> >> >    non-overlapping in DT
+> >> > b) that the ECAM register range as specified in DT starts at bus
+> >> >    0 and is a power-of-two size.
+> >> > Since the binding is not fixed that, we could change the definition to
+> >> > say that the ECAM register range in the "reg" property must match
+> >> > the buses listed in the "bus-range" property.
+> >>
+> >> Addresses in the ACPI MCFG table correspond to bus number 0, but the
+> >> MCFG also provides start & end bus numbers, so the valid range does
+> >> not necessarily start with bus 0 and need not be power-of-two in size.
+> >>  Something similar sounds like a good idea for DT.
+> >
+> > Hmm, we'll have to think about that. From a DT perspective, we try
+> > to keep things local to the node using it, so listing only the
+> > registers we are allowed to access is more natural.
+> 
+> The combination of MCFG base address for bus 00 and the bus number
+> range from _CRS, plus the obvious offset computation does effectively
+> describe the registers you're allowed to access; it's just up to the
+> OS to compute the offsets.
 
-Add proper kerneldoc comments describing acpiphp_enumerate_slots()
-and acpiphp_remove_slots().
+That's not what I meant. The 'reg' property is supposed to list the
+registers that are exclusively owned by the device. We normally
+expect that we want to request_mem_region() and ioremap() the entire
+range for each device, which doesn't make sense if we only want a
+small part of it, or if another device owns the same registers.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Having a separate device that just owns the ECAM region would work
+fine, because then it can ioremap that once and get referenced
+by the host bridge drivers.
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1001,9 +1001,12 @@ static void handle_hotplug_event(acpi_ha
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
--/*
-- * Create hotplug slots for the PCI bus.
-- * It should always return 0 to avoid skipping following notifiers.
-+/**
-+ * acpiphp_enumerate_slots - Enumerate PCI slots for a given bus.
-+ * @bus: PCI bus to enumerate the slots for.
-+ *
-+ * A "slot" is an object associated with a PCI device number.  All functions
-+ * (PCI devices) with the same bus and device number belong to the same slot.
-  */
- void acpiphp_enumerate_slots(struct pci_bus *bus)
- {
-@@ -1076,7 +1079,10 @@ void acpiphp_enumerate_slots(struct pci_
- 	}
- }
- 
--/* Destroy hotplug slots associated with the PCI bus */
-+/**
-+ * acpiphp_remove_slots - Remove slot objects associated with a given bus.
-+ * @bus: PCI bus to remove the slot objects for.
-+ */
- void acpiphp_remove_slots(struct pci_bus *bus)
- {
- 	struct acpiphp_bridge *bridge;
+> >> > * Should I expect one IOMMU per host bridge or one ECAM region,
+> >> >   or can either be possible?
+> >>
+> >> It's possible to have multiple IOMMUs per host bridge, and I think
+> >> they can even be buried down in the PCIe hierarchy.
+> >
+> > Oh, I didn't know that. So how do you actually find the IOMMU for
+> > a given domain/bus/device/function combination?
+> 
+> For VT-d on x86, there's a DMAR table that describes the remapping
+> units (IOMMUs), and each has a list of associated devices.  This is
+> one place where the FW/OS interface uses segment and bus numbers.
+> There's something different for AMD IOMMUs, but I think it also
+> involves looking up the device in a table from the firmware.
 
+Ok, that seems complicated. I hope we don't have to get this deep
+on ARM and can keep it on a per host-bridge basis rather than having
+to get down all the way to the device. We wouldn't be able to encode
+IOMMUs for hotplugged devices in DT, because the firmware is no
+longer running by the time they show up.
+
+	Arnd
