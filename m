@@ -1,49 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26021 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357AbaBDScS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 13:32:18 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
-References: <cover.1389904166.git.agordeev@redhat.com>
-	<ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
-	<20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
-Date: Tue, 4 Feb 2014 20:32:12 +0200
-In-Reply-To: <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> (Alexander
-	Gordeev's message of "Thu, 30 Jan 2014 14:48:20 +0100")
-Message-ID: <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Asai Thambi S P <asamymuthupa@micron.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 3/9] mtip32xx: Remove superfluous call to pci_disable_msi()
+Date: Wed, 19 Feb 2014 09:58:15 +0100
+Message-Id: <eb0c7ed053e6e047d0d09ea7e803dd39a1ef71ed.1392799751.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
+References: <cover.1392799751.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Alexander Gordeev <agordeev@redhat.com> writes:
+There is no need to call pci_disable_msi() in case
+the previous call to pci_enable_msi() failed
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/net/wireless/ath/ath10k/pci.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-> index 29fd197..6525e1f 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -2414,8 +2414,6 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
->  		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
->  		if (ret == 0)
->  			return 0;
-> -		if (ret > 0)
-> -			pci_disable_msi(ar_pci->pdev);
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Asai Thambi S P <asamymuthupa@micron.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/block/mtip32xx/mtip32xx.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-I don't understand how this is superfluous. When I read the
-documentation for pci_enable_msi_block() it states that if it can't
-allocate all requests, it will return the number requests it could
-allocate. And in that case we want to fall back other modes.
-
-Am I missing something?
-
+diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
+index 5160269..5299a65 100644
+--- a/drivers/block/mtip32xx/mtip32xx.c
++++ b/drivers/block/mtip32xx/mtip32xx.c
+@@ -4615,7 +4615,7 @@ static int mtip_pci_probe(struct pci_dev *pdev,
+ 	if (rv) {
+ 		dev_warn(&pdev->dev,
+ 			"Unable to enable MSI interrupt.\n");
+-		goto block_initialize_err;
++		goto msi_initialize_err;
+ 	}
+ 
+ 	/* Initialize the block layer. */
+@@ -4645,6 +4645,8 @@ static int mtip_pci_probe(struct pci_dev *pdev,
+ 
+ block_initialize_err:
+ 	pci_disable_msi(pdev);
++
++msi_initialize_err:
+ 	if (dd->isr_workq) {
+ 		flush_workqueue(dd->isr_workq);
+ 		destroy_workqueue(dd->isr_workq);
 -- 
-Kalle Valo
+1.7.7.6
+
