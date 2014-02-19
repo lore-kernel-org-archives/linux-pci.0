@@ -1,70 +1,234 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:64137 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752351AbaBRTKQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 14:10:16 -0500
-Date: Tue, 18 Feb 2014 19:09:29 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140218190929.GF2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
- <1392726043-31088-4-git-send-email-will.deacon@arm.com>
- <20140218182142.GF29304@obsidianresearch.com>
- <20140218184420.GD2010@mudshark.cambridge.arm.com>
- <20140218185947.GA22340@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140218185947.GA22340@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 06/17] iommu/vt-d: simplify function get_domain_for_dev()
+Date: Wed, 19 Feb 2014 14:07:26 +0800
+Message-Id: <1392790057-32434-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 06:59:47PM +0000, Jason Gunthorpe wrote:
-> On Tue, Feb 18, 2014 at 06:44:20PM +0000, Will Deacon wrote:
-> > On Tue, Feb 18, 2014 at 06:21:42PM +0000, Jason Gunthorpe wrote:
-> > > On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
-> > > > +
-> > > > +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
-> > > > +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
-> > >                                            ^^^^^^^^^^^^^^
-> > > 
-> > > This probably shouldn't be 0 in the example, nor in your kvm tool
-> > > output. For example purposes any value will do.
-> > 
-> > Hmm, so kvmtool actually provides a PC ioport at 0x0, which is handy since
-> > there's an 8250 down there. That means we have:
-> > 
-> > 0x0    - 0x6200  : Weird PC stuff
-> > 0x6200 - 0x10000 : PCI IO space
-> > 
-> > Should I just change everything to be offset by 0x6200?
-> 
-> Just to be clear, kvm has reserved the first 64k of physical address
-> space for this IO window? The 0 is fine then, but it isn't typical of
-> real hardware.
+Function get_domain_for_dev() is a little complex, simplify it
+by factoring out dmar_search_domain_by_dev_info() and
+dmar_insert_dev_info().
 
-Yup, that's spot on.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |  142 ++++++++++++++++++++-----------------------
+ 1 file changed, 66 insertions(+), 76 deletions(-)
 
-> Regarding the 0x6200.. There are two conflicting issues there :(
->  - You really don't want to let the PCI core assign resources to that
->    range, it probably won't work.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index fffe3d1..67b114e 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1957,18 +1957,71 @@ find_domain(struct pci_dev *pdev)
+ 	return NULL;
+ }
+ 
++static inline struct dmar_domain *
++dmar_search_domain_by_dev_info(int segment, int bus, int devfn)
++{
++	struct device_domain_info *info;
++
++	list_for_each_entry(info, &device_domain_list, global)
++		if (info->segment == segment && info->bus == bus &&
++		    info->devfn == devfn)
++			return info->domain;
++
++	return NULL;
++}
++
++static int dmar_insert_dev_info(int segment, int bus, int devfn,
++				struct pci_dev *dev, struct dmar_domain **domp)
++{
++	struct dmar_domain *found, *domain = *domp;
++	struct device_domain_info *info;
++	unsigned long flags;
++
++	info = alloc_devinfo_mem();
++	if (!info)
++		return -ENOMEM;
++
++	info->segment = segment;
++	info->bus = bus;
++	info->devfn = devfn;
++	info->dev = dev;
++	info->domain = domain;
++	if (!dev)
++		domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
++
++	spin_lock_irqsave(&device_domain_lock, flags);
++	if (dev)
++		found = find_domain(dev);
++	else
++		found = dmar_search_domain_by_dev_info(segment, bus, devfn);
++	if (found) {
++		spin_unlock_irqrestore(&device_domain_lock, flags);
++		free_devinfo_mem(info);
++		if (found != domain) {
++			domain_exit(domain);
++			*domp = found;
++		}
++	} else {
++		list_add(&info->link, &domain->devices);
++		list_add(&info->global, &device_domain_list);
++		if (dev)
++			dev->dev.archdata.iommu = info;
++		spin_unlock_irqrestore(&device_domain_lock, flags);
++	}
++
++	return 0;
++}
++
+ /* domain is initialized */
+ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ {
+-	struct dmar_domain *domain, *found = NULL;
++	struct dmar_domain *domain;
+ 	struct intel_iommu *iommu;
+ 	struct dmar_drhd_unit *drhd;
+-	struct device_domain_info *info, *tmp;
+ 	struct pci_dev *dev_tmp;
+ 	unsigned long flags;
+ 	int bus = 0, devfn = 0;
+ 	int segment;
+-	int ret;
+ 
+ 	domain = find_domain(pdev);
+ 	if (domain)
+@@ -1986,41 +2039,29 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 			devfn = dev_tmp->devfn;
+ 		}
+ 		spin_lock_irqsave(&device_domain_lock, flags);
+-		list_for_each_entry(info, &device_domain_list, global) {
+-			if (info->segment == segment &&
+-			    info->bus == bus && info->devfn == devfn) {
+-				found = info->domain;
+-				break;
+-			}
+-		}
++		domain = dmar_search_domain_by_dev_info(segment, bus, devfn);
+ 		spin_unlock_irqrestore(&device_domain_lock, flags);
+ 		/* pcie-pci bridge already has a domain, uses it */
+-		if (found) {
+-			domain = found;
++		if (domain)
+ 			goto found_domain;
+-		}
+ 	}
+ 
+-	domain = alloc_domain();
+-	if (!domain)
+-		goto error;
+-
+-	/* Allocate new domain for the device */
+ 	drhd = dmar_find_matched_drhd_unit(pdev);
+ 	if (!drhd) {
+ 		printk(KERN_ERR "IOMMU: can't find DMAR for device %s\n",
+ 			pci_name(pdev));
+-		free_domain_mem(domain);
+ 		return NULL;
+ 	}
+ 	iommu = drhd->iommu;
+ 
+-	ret = iommu_attach_domain(domain, iommu);
+-	if (ret) {
++	/* Allocate and intialize new domain for the device */
++	domain = alloc_domain();
++	if (!domain)
++		goto error;
++	if (iommu_attach_domain(domain, iommu)) {
+ 		free_domain_mem(domain);
+ 		goto error;
+ 	}
+-
+ 	if (domain_init(domain, gaw)) {
+ 		domain_exit(domain);
+ 		goto error;
+@@ -2028,67 +2069,16 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
+ 
+ 	/* register pcie-to-pci device */
+ 	if (dev_tmp) {
+-		info = alloc_devinfo_mem();
+-		if (!info) {
++		if (dmar_insert_dev_info(segment, bus, devfn, NULL, &domain)) {
+ 			domain_exit(domain);
+ 			goto error;
+ 		}
+-		info->segment = segment;
+-		info->bus = bus;
+-		info->devfn = devfn;
+-		info->dev = NULL;
+-		info->domain = domain;
+-		/* This domain is shared by devices under p2p bridge */
+-		domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
+-
+-		/* pcie-to-pci bridge already has a domain, uses it */
+-		found = NULL;
+-		spin_lock_irqsave(&device_domain_lock, flags);
+-		list_for_each_entry(tmp, &device_domain_list, global) {
+-			if (tmp->segment == segment &&
+-			    tmp->bus == bus && tmp->devfn == devfn) {
+-				found = tmp->domain;
+-				break;
+-			}
+-		}
+-		if (found) {
+-			spin_unlock_irqrestore(&device_domain_lock, flags);
+-			free_devinfo_mem(info);
+-			domain_exit(domain);
+-			domain = found;
+-		} else {
+-			list_add(&info->link, &domain->devices);
+-			list_add(&info->global, &device_domain_list);
+-			spin_unlock_irqrestore(&device_domain_lock, flags);
+-		}
+ 	}
+ 
+ found_domain:
+-	info = alloc_devinfo_mem();
+-	if (!info)
+-		goto error;
+-	info->segment = segment;
+-	info->bus = pdev->bus->number;
+-	info->devfn = pdev->devfn;
+-	info->dev = pdev;
+-	info->domain = domain;
+-	spin_lock_irqsave(&device_domain_lock, flags);
+-	/* somebody is fast */
+-	found = find_domain(pdev);
+-	if (found != NULL) {
+-		spin_unlock_irqrestore(&device_domain_lock, flags);
+-		if (found != domain) {
+-			domain_exit(domain);
+-			domain = found;
+-		}
+-		free_devinfo_mem(info);
++	if (dmar_insert_dev_info(segment, pdev->bus->number, pdev->devfn,
++				 pdev, &domain) == 0)
+ 		return domain;
+-	}
+-	list_add(&info->link, &domain->devices);
+-	list_add(&info->global, &device_domain_list);
+-	pdev->dev.archdata.iommu = info;
+-	spin_unlock_irqrestore(&device_domain_lock, flags);
+-	return domain;
+ error:
+ 	/* recheck it here, maybe others set it */
+ 	return find_domain(pdev);
+-- 
+1.7.10.4
 
-Right, with kvmtool we don't support resource assignment (the BARs are fixed)
-so everything is PCI_PROBE_ONLY.
-
->  - You probably need that range mapped into the ARM IO window, and the
->    PCI driver is the thing doing that
-> 
-> The PCI core already has a black out for low IO ports, I think it
-> already covers the usual PC suspects so you are probably fine with
-> what you have for KVM.
-
-Great, so I'll just update the example then. Thanks!
-
-Will
