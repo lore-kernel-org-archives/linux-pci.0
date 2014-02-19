@@ -1,33 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58403 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52384 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751066AbaBYIfZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Feb 2014 03:35:25 -0500
-Date: Tue, 25 Feb 2014 09:37:08 +0100
+	id S1752871AbaBSI4m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 03:56:42 -0500
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
-Cc: iss_storagedev@hp.com, intel-linux-scu@intel.com, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com,
-	iscsi-driver@qlogic.com, pv-drivers@vmware.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140225083708.GB2794@dhcp-26-207.brq.redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 6/9] skd: Fix out of array boundary access
+Date: Wed, 19 Feb 2014 09:58:18 +0100
+Message-Id: <06ae7409fef678184a982ace652a299c0018dab8.1392799751.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
+References: <cover.1392799751.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 24, 2014 at 09:02:00AM +0100, Alexander Gordeev wrote:
-> This series is against James Bottomley's SCSI tree [1], but it needs
-> commit f7fc32c ("PCI/MSI: Add pci_enable_msi_exact() and
-> pci_enable_msix_exact()") from from Bjorn Helgaas's PCI tree [2]:
+When enabling MSI-X, interrupts are requested for SKD_MAX_MSIX_COUNT
+entries in skdev->msix_entries array, while the number of actually
+allocated entries is skdev->msix_count. This might lead to an out of
+boundary access in case number of allocated entries is less than
+SKD_MAX_MSIX_COUNT. This update fixes the described misbehaviour.
 
-The prerequisite commit 3ce4e86 is in 3.14-rc4 now.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Kyungmin Park <kyungmin.park@samsung.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/block/skd_main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
+index eb6e1e0..3fa0918 100644
+--- a/drivers/block/skd_main.c
++++ b/drivers/block/skd_main.c
+@@ -3989,7 +3989,7 @@ static int skd_acquire_msix(struct skd_device *skdev)
+ 	}
+ 
+ 	/* Enable MSI-X vectors for the base queue */
+-	for (i = 0; i < SKD_MAX_MSIX_COUNT; i++) {
++	for (i = 0; i < skdev->msix_count; i++) {
+ 		qentry = &skdev->msix_entries[i];
+ 		snprintf(qentry->isr_name, sizeof(qentry->isr_name),
+ 			 "%s%d-msix %s", DRV_NAME, skdev->devno,
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7.6
+
