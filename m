@@ -1,74 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V2 00/17] Enhance DMAR drivers to handle PCI/memory hotplug events
-Date: Wed, 19 Feb 2014 14:07:20 +0800
-Message-Id: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:53869 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751231AbaBSGtH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 01:49:07 -0500
+Date: Tue, 18 Feb 2014 23:48:50 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Liviu Dudau <liviu@dudau.co.uk>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Will Deacon <will.deacon@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Kumar Gala <galak@codeaurora.org>,
+	Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140219064850.GD6186@obsidianresearch.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+ <5805232.JrD2FybBlg@wuerfel>
+ <20140214220047.GA5394@bart.dudau.co.uk>
+ <2312919.pM61KLBcYY@wuerfel>
+ <20140218174125.GC29304@obsidianresearch.com>
+ <20140219024427.GC5394@bart.dudau.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140219024427.GC5394@bart.dudau.co.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Intel DMA/interrupt remapping drivers scan available PCI/memory devices
-at startup and cache discovered hardware topologies. They don't update
-cached information if PCI/memory hotplug event happens at runtime, then
-the stale information may break DMA/interrupt remapping logic.
+On Wed, Feb 19, 2014 at 02:44:27AM +0000, Liviu Dudau wrote:
+ 
+> I wish things were easier!
 
-This patchset first (Patch 1-12) tries to introduces some helper
-functions and fixes several bugs, then (Patch 13,14) uses a global
-rwsem and RCU to protect global DMA/interrupt remapping data
-structures, and finally (Patch 15-17) hook PCI/memory hotplug events
-to update cached information.
+Yah, I've seen some of this complexity too..
 
-It's also a preparation for supporting of DMA/interrupt remapping
-hotplug.
+A thought that crosses my head is to try and leave the entire arch
+support intact and build a separate 'domain-driver-based' support
+that completely replaces the arch support, a domain would use one or
+the other but never both.
 
-V1->V2:
-1) fix more bugs in dealing with identify mapping domain
-2) address round 1 review comments
+So pci_domain_nr could become:
 
-Jiang Liu (17):
-  iommu/vt-d: avoid double free of g_iommus on error recovery path
-  iommu/vt-d: avoid caching stale domain_device_info and fix memory
-    leak
-  iommu/vt-d: avoid caching stale domain_device_info when hot-removing
-    PCI device
-  iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
-  iommu/vt-d: move private structures and variables into intel-iommu.c
-  iommu/vt-d: simplify function get_domain_for_dev()
-  iommu/vt-d: free resources if failed to create domain for PCIe
-    endpoint
-  iommu/vt-d: reduce duplicated code to handle virtual machine domains
-  iommu/vt-d: fix incorrect iommu_count for si_domain
-  iommu/vt-d: check for NULL pointer when freeing IOMMU data structure
-  iommu/vt-d: fix error in detect ATS capability
-  iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
-    entries
-  iommu/vt-d: introduce a rwsem to protect global data structures
-  iommu/vt-d: use RCU to protect global resources in interrupt context
-  iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
-    hotplug happens
-  iommu/vt-d, PCI: unify the way to process DMAR device scope array
-  iommu/vt-d: update IOMMU state when memory hotplug happens
+  struct pci_domain_driver *drv = pci_get_domain_driver(bus);
+  if (drv)
+       return drv->domain_nr;
+  else
+       return _arch_pci_domain_nr(bus);
 
- drivers/iommu/dmar.c                |  412 +++++++++++++------
- drivers/iommu/intel-iommu.c         |  750 ++++++++++++++++++-----------------
- drivers/iommu/intel_irq_remapping.c |  108 +++--
- drivers/iommu/iova.c                |   64 ++-
- include/linux/dmar.h                |   74 ++--
- include/linux/iova.h                |    2 +
- 6 files changed, 848 insertions(+), 562 deletions(-)
+And other funcs would change effectively the same way.
 
--- 
-1.7.10.4
+> And if someone has a good idea on how to determine the domain # from
+> DT we can pluck it into the pcibios_root_bridge_prepare() function
+> (either the generic version or the arch specific one).
 
+You can probably start with 'of_alias_get_id'..
+
+Jason
