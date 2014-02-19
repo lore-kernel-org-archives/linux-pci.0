@@ -1,147 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:52089 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932240AbaBEGvy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 01:51:54 -0500
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
-	valentine.barshak@cogentembedded.com, horms@verge.net.au,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>,
-	ben.dooks@codethink.co.uk
-Date: Wed, 05 Feb 2014 15:52:54 +0900
-Message-Id: <20140205065254.29445.77939.sendpatchset@w520>
-In-Reply-To: <20140205065243.29445.76593.sendpatchset@w520>
-References: <20140205065243.29445.76593.sendpatchset@w520>
-Subject: [PATCH 01/04] PCI: rcar: Register each instance independently
+Received: from moutng.kundenserver.de ([212.227.17.9]:63900 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754834AbaBSTGf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 14:06:35 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
+Date: Wed, 19 Feb 2014 20:06:25 +0100
+Message-ID: <3312083.odPX4th7oi@wuerfel>
+In-Reply-To: <CAErSpo7JNyqK3NZgP++OWkQYQzZ1_BdR3GrK3vOd8c=_YAX7nA@mail.gmail.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <2200534.anptP81x7X@wuerfel> <CAErSpo7JNyqK3NZgP++OWkQYQzZ1_BdR3GrK3vOd8c=_YAX7nA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Magnus Damm <damm@opensource.se>
+On Wednesday 19 February 2014 11:20:19 Bjorn Helgaas wrote:
+> On Wed, Feb 19, 2014 at 2:58 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Tuesday 18 February 2014 17:28:14 Bjorn Helgaas wrote:
 
-Convert the code to allow per-device probe() like other device
-drivers. This also delays driver registration due to change from
-subsys_initcall() to regular module_platform_driver().
+> > The second one seems a little easier to implement, and I don't
+> > see what _SEG is used for other than to avoid having domains
+> > when you don't need them. Is there more to it that I'm missing?
+> 
+> Not really, but I do have a question related to OS management of host
+> bridge bus number apertures.  Currently, Linux never changes a host
+> bridge's bus number range, but it's conceivable that we could in some
+> hotplug scenario.  ACPI does provide a mechanism to do so (_PRS,
+> _SRS), and other host bridge drivers could also do this by programming
+> CSRs to change the bus number range.  The PCI domain is the logical
+> place to manage allocation of the 00-ff range of bus numbers.
+> 
+> 1) x86 platforms may have constraints because PCIBIOS and the 0xcf8
+> config access mechanism are unaware of segments.  If a platform has to
+> support legacy OSes that use those, it can't reuse bus numbers even in
+> different segment groups.  The platform might have to use multiple
+> segments to allow multiple ECAM regions, but use _PRS/_SRS to prevent
+> bus number overlaps to keep legacy config access working.  Obviously
+> this is only an issue if there are non-segment aware config access
+> methods.
 
-Signed-off-by: Magnus Damm <damm@opensource.se>
----
+Right, I don't think this will be an issue outside of x86/ia64/alpha,
+since on all other architectures I'm aware of you have no PCIBIOS
+and each host controller would also have its own config space.
+Even host controllers using 0xfc8 would be fine because each host
+bridge normally has its own I/O space.
 
- drivers/pci/host/pci-rcar-gen2.c |   74 ++++++++------------------------------
- 1 file changed, 16 insertions(+), 58 deletions(-)
+> 2) If two host bridges share an ECAM region, I think we're forced to
+> put them in the same domain: if we put them in different domains,
+> Linux might assign [bus 00-ff] to both bridges, and ECAM config
+> accesses would only work for one of the bridges.  This is quite common
+> on x86 and is a potential issue for any architecture.
 
---- 0001/drivers/pci/host/pci-rcar-gen2.c
-+++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-04 16:38:46.000000000 +0900
-@@ -74,9 +74,6 @@
- 
- #define RCAR_PCI_UNIT_REV_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x48)
- 
--/* Number of internal PCI controllers */
--#define RCAR_PCI_NR_CONTROLLERS		3
--
- struct rcar_pci_priv {
- 	struct device *dev;
- 	void __iomem *reg;
-@@ -228,6 +225,8 @@ static int __init rcar_pci_setup(int nr,
- 	pci_add_resource(&sys->resources, &priv->io_res);
- 	pci_add_resource(&sys->resources, &priv->mem_res);
- 
-+	/* Setup bus number based on platform device id */
-+	sys->busnr = to_platform_device(priv->dev)->id;
- 	return 1;
- }
- 
-@@ -236,48 +235,12 @@ static struct pci_ops rcar_pci_ops = {
- 	.write	= rcar_pci_write_config,
- };
- 
--static struct hw_pci rcar_hw_pci __initdata = {
--	.map_irq	= rcar_pci_map_irq,
--	.ops		= &rcar_pci_ops,
--	.setup		= rcar_pci_setup,
--};
--
--static int rcar_pci_count __initdata;
--
--static int __init rcar_pci_add_controller(struct rcar_pci_priv *priv)
--{
--	void **private_data;
--	int count;
--
--	if (rcar_hw_pci.nr_controllers < rcar_pci_count)
--		goto add_priv;
--
--	/* (Re)allocate private data pointer array if needed */
--	count = rcar_pci_count + RCAR_PCI_NR_CONTROLLERS;
--	private_data = kzalloc(count * sizeof(void *), GFP_KERNEL);
--	if (!private_data)
--		return -ENOMEM;
--
--	rcar_pci_count = count;
--	if (rcar_hw_pci.private_data) {
--		memcpy(private_data, rcar_hw_pci.private_data,
--		       rcar_hw_pci.nr_controllers * sizeof(void *));
--		kfree(rcar_hw_pci.private_data);
--	}
--
--	rcar_hw_pci.private_data = private_data;
--
--add_priv:
--	/* Add private data pointer to the array */
--	rcar_hw_pci.private_data[rcar_hw_pci.nr_controllers++] = priv;
--	return 0;
--}
--
--static int __init rcar_pci_probe(struct platform_device *pdev)
-+static int rcar_pci_probe(struct platform_device *pdev)
- {
- 	struct resource *cfg_res, *mem_res;
- 	struct rcar_pci_priv *priv;
- 	void __iomem *reg;
-+	struct hw_pci hw;
- 
- 	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
-@@ -308,31 +271,26 @@ static int __init rcar_pci_probe(struct
- 	priv->reg = reg;
- 	priv->dev = &pdev->dev;
- 
--	return rcar_pci_add_controller(priv);
-+	memset(&hw, 0, sizeof(hw));
-+	hw.nr_controllers = 1;
-+	hw.private_data = (void **)&priv;
-+	hw.map_irq = rcar_pci_map_irq;
-+	hw.ops = &rcar_pci_ops;
-+	hw.setup = rcar_pci_setup;
-+	pci_common_init_dev(&pdev->dev, &hw);
-+	return 0;
- }
- 
- static struct platform_driver rcar_pci_driver = {
- 	.driver = {
- 		.name = "pci-rcar-gen2",
-+		.owner = THIS_MODULE,
-+		.suppress_bind_attrs = true,
- 	},
-+	.probe = rcar_pci_probe,
- };
- 
--static int __init rcar_pci_init(void)
--{
--	int retval;
--
--	retval = platform_driver_probe(&rcar_pci_driver, rcar_pci_probe);
--	if (!retval)
--		pci_common_init(&rcar_hw_pci);
--
--	/* Private data pointer array is not needed any more */
--	kfree(rcar_hw_pci.private_data);
--	rcar_hw_pci.private_data = NULL;
--
--	return retval;
--}
--
--subsys_initcall(rcar_pci_init);
-+module_platform_driver(rcar_pci_driver);
- 
- MODULE_LICENSE("GPL v2");
- MODULE_DESCRIPTION("Renesas R-Car Gen2 internal PCI");
+Right, this is an interesting case indeed, and I think we haven't
+considered it in the binding so far. We already encode a "bus-range"
+in DT, so we can easily partition the ECAM config space, but it
+still violates one of the two assumptions:
+a) that the register ranges for the two host bridge devices are
+   non-overlapping in DT
+b) that the ECAM register range as specified in DT starts at bus
+   0 and is a power-of-two size.
+Since the binding is not fixed that, we could change the definition to
+say that the ECAM register range in the "reg" property must match
+the buses listed in the "bus-range" property.
+
+I still want to make sure I understand exactly what this case is about
+though, i.e. what is shared and what is separate if you have two host
+bridges with a common ECAM region:
+
+* I assume I/O space is always shared on x86, but probably separate
+  elsewhere.
+* Each host would always have a fixed memory space aperture, right?
+* From what I understand from your description, the hardware does
+  not enforce specific bus numbers for each host. How does the
+  host bridge know its root bus number then?
+* Should I expect one IOMMU per host bridge or one ECAM region,
+  or can either be possible?
+* The IntA-IntB IRQ numbers are always per host bridge I assume.
+* Memory space on one host bridge is visible to bus master DMA
+  from a device on another host bridge on x86, right? I assume
+  this won't normally be the case on other architectures.
+
+	Arnd
