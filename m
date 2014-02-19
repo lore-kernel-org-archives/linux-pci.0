@@ -1,68 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Shahed Shaikh <shahed.shaikh@qlogic.com>,
-	Jitendra Kalsaria <jitendra.kalsaria@qlogic.com>,
-	Ron Mercer <ron.mercer@qlogic.com>, linux-driver@qlogic.com,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH net-next 30/35] qlge: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:11:59 +0100
-Message-Id: <443a0172bc2fe0aa92fca6044d7374475e2ad4c1.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:47654 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751227AbaBSXLs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 18:11:48 -0500
+From: "Marciniszyn, Mike" <mike.marciniszyn@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: Roland Dreier <roland@kernel.org>,
+	"Hefty, Sean" <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH 2/2] qib: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Date: Wed, 19 Feb 2014 23:11:39 +0000
+Message-ID: <32E1700B9017364D9B60AED9960492BC211F62DC@FMSMSX107.amr.corp.intel.com>
+References: <cover.1392733151.git.agordeev@redhat.com>
+ <f0eabd77b96e0d679ce6c2e2e544c73063c508ee.1392733151.git.agordeev@redhat.com>
+In-Reply-To: <f0eabd77b96e0d679ce6c2e2e544c73063c508ee.1392733151.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+> Subject: [PATCH 2/2] qib: Use pci_enable_msix_range() instead of
+> pci_enable_msix()
+> 
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers using these two
+> interfaces need to be updated to use the new pci_enable_msi_range() and
+> pci_enable_msix_range() interfaces.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Shahed Shaikh <shahed.shaikh@qlogic.com>
-Cc: Jitendra Kalsaria <jitendra.kalsaria@qlogic.com>
-Cc: Ron Mercer <ron.mercer@qlogic.com>
-Cc: linux-driver@qlogic.com
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/qlogic/qlge/qlge_main.c |   15 ++++-----------
- 1 files changed, 4 insertions(+), 11 deletions(-)
+This worked fine!
 
-diff --git a/drivers/net/ethernet/qlogic/qlge/qlge_main.c b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-index 82bace5..adf87d2 100644
---- a/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-+++ b/drivers/net/ethernet/qlogic/qlge/qlge_main.c
-@@ -3331,23 +3331,16 @@ static void ql_enable_msix(struct ql_adapter *qdev)
- 		for (i = 0; i < qdev->intr_count; i++)
- 			qdev->msi_x_entry[i].entry = i;
- 
--		/* Loop to get our vectors.  We start with
--		 * what we want and settle for what we get.
--		 */
--		do {
--			err = pci_enable_msix(qdev->pdev,
--				qdev->msi_x_entry, qdev->intr_count);
--			if (err > 0)
--				qdev->intr_count = err;
--		} while (err > 0);
--
-+		err = pci_enable_msix_range(qdev->pdev, qdev->msi_x_entry,
-+					    1, qdev->intr_count);
- 		if (err < 0) {
- 			kfree(qdev->msi_x_entry);
- 			qdev->msi_x_entry = NULL;
- 			netif_warn(qdev, ifup, qdev->ndev,
- 				   "MSI-X Enable failed, trying MSI.\n");
- 			qlge_irq_type = MSI_IRQ;
--		} else if (err == 0) {
-+		} else {
-+			qdev->intr_count = err;
- 			set_bit(QL_MSIX_ENABLED, &qdev->flags);
- 			netif_info(qdev, ifup, qdev->ndev,
- 				   "MSI-X Enabled, got %d vectors.\n",
--- 
-1.7.7.6
+Roland, can you fix up the subject to change qib to IB/qib when you merge it?
 
+Acked-by: Mike Marciniszyn <mike.marciniszyn@intel.com>
