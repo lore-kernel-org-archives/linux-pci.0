@@ -1,74 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:42688 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752463AbaBSPOi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 10:14:38 -0500
-Received: by mail-la0-f47.google.com with SMTP id hr17so381150lab.20
-        for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 07:14:36 -0800 (PST)
-Message-ID: <5304CA61.3020400@cogentembedded.com>
-Date: Wed, 19 Feb 2014 19:14:41 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org
-CC: Hyong-Youb Kim <hykim@myri.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH net-next 20/35] myri10ge: Use pci_enable_msix_range()
- instead of pci_enable_msix()
-References: <cover.1392717502.git.agordeev@redhat.com> <4174e05e893a4b62b9c39692691b926cec2dc2c3.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <4174e05e893a4b62b9c39692691b926cec2dc2c3.1392717503.git.agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:28115 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751893AbaBSKN4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 05:13:56 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH] xhci: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 11:15:28 +0100
+Message-Id: <1392804931-30671-8-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-On 18-02-2014 14:11, Alexander Gordeev wrote:
+This update also cleans up a bit xhci_setup_msi() and
+xhci_setup_msix() returning of success.
 
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/usb/host/xhci.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Hyong-Youb Kim <hykim@myri.com>
-> Cc: netdev@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->   drivers/net/ethernet/myricom/myri10ge/myri10ge.c |   40 +++++++++++-----------
->   1 files changed, 20 insertions(+), 20 deletions(-)
-
-> diff --git a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-> index 68026f7..130f6b2 100644
-> --- a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-> +++ b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-> @@ -2329,16 +2329,14 @@ static int myri10ge_request_irq(struct myri10ge_priv *mgp)
->   	status = 0;
->   	if (myri10ge_msi) {
->   		if (mgp->num_slices > 1) {
-> -			status =
-> -			    pci_enable_msix(pdev, mgp->msix_vectors,
-> -					    mgp->num_slices);
-> -			if (status == 0) {
-> -				mgp->msix_enabled = 1;
-> -			} else {
-> +			status = pci_enable_msix_range(pdev, mgp->msix_vectors,
-> +					mgp->num_slices, mgp->num_slices);
-
-    Networking coding style assumes that you align the function call 
-continuation lines under the next character after (.
-
-[...]
-> @@ -3895,32 +3893,34 @@ static void myri10ge_probe_slices(struct myri10ge_priv *mgp)
-[...]
-> +			goto no_msix;
-> +		status = pci_enable_msix_range(pdev,
-> +					       mgp->msix_vectors,
-> +					       mgp->num_slices,
-> +					       mgp->num_slices);
-
-    Here you get this right.
-
-WBR, Sergei
+diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+index 6fe577d..1755d18 100644
+--- a/drivers/usb/host/xhci.c
++++ b/drivers/usb/host/xhci.c
+@@ -232,9 +232,10 @@ static int xhci_setup_msi(struct xhci_hcd *xhci)
+ 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
+ 				"disable MSI interrupt");
+ 		pci_disable_msi(pdev);
++		return ret;
+ 	}
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ /*
+@@ -291,8 +292,9 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+ 		xhci->msix_entries[i].vector = 0;
+ 	}
+ 
+-	ret = pci_enable_msix(pdev, xhci->msix_entries, xhci->msix_count);
+-	if (ret) {
++	ret = pci_enable_msix_range(pdev, xhci->msix_entries,
++				    xhci->msix_count, xhci->msix_count);
++	if (ret < 0) {
+ 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
+ 				"Failed to enable MSI-X");
+ 		goto free_entries;
+@@ -307,7 +309,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+ 	}
+ 
+ 	hcd->msix_enabled = 1;
+-	return ret;
++	return 0;
+ 
+ disable_msix:
+ 	xhci_dbg_trace(xhci, trace_xhci_dbg_init, "disable MSI-X interrupt");
+-- 
+1.7.7.6
 
