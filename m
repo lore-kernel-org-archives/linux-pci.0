@@ -1,98 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:58067 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbaBSWHa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 17:07:30 -0500
-Received: by mail-ob0-f178.google.com with SMTP id wn1so1191266obc.9
-        for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 14:07:28 -0800 (PST)
-Date: Wed, 19 Feb 2014 15:07:25 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] pciehp: Remove a non-existent card, regardless of
- "surprise" capability
-Message-ID: <20140219220725.GC19233@google.com>
-References: <53041C9F.7050801@gmail.com>
+Received: from mail-la0-f47.google.com ([209.85.215.47]:42688 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463AbaBSPOi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 10:14:38 -0500
+Received: by mail-la0-f47.google.com with SMTP id hr17so381150lab.20
+        for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 07:14:36 -0800 (PST)
+Message-ID: <5304CA61.3020400@cogentembedded.com>
+Date: Wed, 19 Feb 2014 19:14:41 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <53041C9F.7050801@gmail.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel@vger.kernel.org
+CC: Hyong-Youb Kim <hykim@myri.com>, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH net-next 20/35] myri10ge: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+References: <cover.1392717502.git.agordeev@redhat.com> <4174e05e893a4b62b9c39692691b926cec2dc2c3.1392717503.git.agordeev@redhat.com>
+In-Reply-To: <4174e05e893a4b62b9c39692691b926cec2dc2c3.1392717503.git.agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 06:53:19PM -0800, Rajat Jain wrote:
-> In case a card is physically yanked out, it should immediately be
-> removed, regardless of the "surprise" capability bit. Thus:
-> 
-> * Always handle the physical removal - regardless of the "surprise" bit.
-> * Don't use "surprise" capability when making decisions about enabling
-> presence detect notifications.
-> * Reword the comments to indicate the intent.
-> 
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
+Hello.
 
-Applied to pci/pciehp for v3.15, thanks!
+On 18-02-2014 14:11, Alexander Gordeev wrote:
 
-Bjorn
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Hyong-Youb Kim <hykim@myri.com>
+> Cc: netdev@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
 > ---
->  drivers/pci/hotplug/pciehp_ctrl.c |    9 ++++++++-
->  drivers/pci/hotplug/pciehp_hpc.c  |    9 +++++----
->  2 files changed, 13 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index e027e36..c75e6a6 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -534,9 +534,16 @@ static void interrupt_event_handler(struct work_struct *work)
->  		pciehp_green_led_off(p_slot);
->  		break;
->  	case INT_PRESENCE_ON:
-> -	case INT_PRESENCE_OFF:
->  		if (!HP_SUPR_RM(ctrl))
->  			break;
-> +		ctrl_dbg(ctrl, "Surprise Insertion\n");
-> +		handle_surprise_event(p_slot);
-> +		break;
-> +	case INT_PRESENCE_OFF:
-> +		/*
-> +		 * Regardless of surprise capability, we need to
-> +		 * definitely remove a card that has been pulled out!
-> +		 */
->  		ctrl_dbg(ctrl, "Surprise Removal\n");
->  		handle_surprise_event(p_slot);
->  		break;
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index da4b020..d7d058f 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -619,9 +619,10 @@ static void pcie_disable_notification(struct controller *ctrl)
->  
->  /*
->   * pciehp has a 1:1 bus:slot relationship so we ultimately want a secondary
-> - * bus reset of the bridge, but if the slot supports surprise removal (or
-> - * link state change based hotplug), we need to disable presence detection
-> - * (or link state notifications) around the bus reset and clear any spurious
-> + * bus reset of the bridge, but at the same time we want to ensure that it is
-> + * not seen as a hot-unplug, followed by the hot-plug of the device. Thus,
-> + * disable link state notification and presence detection change notification
-> + * momentarily, if we see that they could interfere. Also, clear any spurious
->   * events after.
->   */
->  int pciehp_reset_slot(struct slot *slot, int probe)
-> @@ -633,7 +634,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
->  	if (probe)
->  		return 0;
->  
-> -	if (HP_SUPR_RM(ctrl) && !ATTN_BUTTN(ctrl)) {
-> +	if (!ATTN_BUTTN(ctrl)) {
->  		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
->  		stat_mask |= PCI_EXP_SLTSTA_PDC;
->  	}
-> -- 
-> 1.7.9.5
-> 
+>   drivers/net/ethernet/myricom/myri10ge/myri10ge.c |   40 +++++++++++-----------
+>   1 files changed, 20 insertions(+), 20 deletions(-)
+
+> diff --git a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
+> index 68026f7..130f6b2 100644
+> --- a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
+> +++ b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
+> @@ -2329,16 +2329,14 @@ static int myri10ge_request_irq(struct myri10ge_priv *mgp)
+>   	status = 0;
+>   	if (myri10ge_msi) {
+>   		if (mgp->num_slices > 1) {
+> -			status =
+> -			    pci_enable_msix(pdev, mgp->msix_vectors,
+> -					    mgp->num_slices);
+> -			if (status == 0) {
+> -				mgp->msix_enabled = 1;
+> -			} else {
+> +			status = pci_enable_msix_range(pdev, mgp->msix_vectors,
+> +					mgp->num_slices, mgp->num_slices);
+
+    Networking coding style assumes that you align the function call 
+continuation lines under the next character after (.
+
+[...]
+> @@ -3895,32 +3893,34 @@ static void myri10ge_probe_slices(struct myri10ge_priv *mgp)
+[...]
+> +			goto no_msix;
+> +		status = pci_enable_msix_range(pdev,
+> +					       mgp->msix_vectors,
+> +					       mgp->num_slices,
+> +					       mgp->num_slices);
+
+    Here you get this right.
+
+WBR, Sergei
+
