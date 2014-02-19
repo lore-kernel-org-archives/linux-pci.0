@@ -1,10 +1,14 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:50450 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754486AbaBSTsg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 14:48:36 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <liviu@dudau.co.uk>
+Received: from dliviu.plus.com ([80.229.23.120]:46683 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752463AbaBSPcd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 10:32:33 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 44E7BFF11B
+	for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 15:32:31 +0000 (GMT)
+Date: Wed, 19 Feb 2014 15:30:44 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Arnd Bergmann <arnd@arndb.de>
 Cc: linux-arm-kernel@lists.infradead.org,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -12,70 +16,123 @@ Cc: linux-arm-kernel@lists.infradead.org,
 	Russell King <rmk@arm.linux.org.uk>,
 	Kumar Gala <galak@codeaurora.org>,
 	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Wed, 19 Feb 2014 20:47:52 +0100
-Message-ID: <2490895.sJxhc9aC7d@wuerfel>
-In-Reply-To: <20140219153044.GE5394@bart.dudau.co.uk>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <2734695.F6QKszum67@wuerfel> <20140219153044.GE5394@bart.dudau.co.uk>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140219153044.GE5394@bart.dudau.co.uk>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+ <1948942.cIbLaKDEOa@wuerfel>
+ <20140219113755.GD5394@bart.dudau.co.uk>
+ <2734695.F6QKszum67@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2734695.F6QKszum67@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 19 February 2014 15:30:44 Liviu Dudau wrote:
-> On Wed, Feb 19, 2014 at 02:26:10PM +0100, Arnd Bergmann wrote:
-> > On Wednesday 19 February 2014 11:37:55 Liviu Dudau wrote:
-
-> > >   - code is trying to get the domain number of a bus that it just created but not
-> > >     plugged yet in the hierarchy
+On Wed, Feb 19, 2014 at 02:26:10PM +0100, Arnd Bergmann wrote:
+> On Wednesday 19 February 2014 11:37:55 Liviu Dudau wrote:
 > > 
-> > The sysdata is already assigned, and all architectures either assume there is
-> > only one domain, or they get the domain number out of the sysdata that is
-> > filled out prior to calling pci_create_root_bus.
-> 
-> Arnd, the question is not how it does it, the question is what is the correct answer?
-> It's a new bus, does that mean that all new busses get created in the current domain?
-> If that is the case, then fine, things start to make more sense, with the caveat
-> that the domain # depends heavily on what the architecture uses for counting.
-
-Here is what each architecture does:
-
-Alpha: managed by host bridge driver, counting the hosts or fixed in hardware
-ARM: managed in host bridge driver, counting the hosts or using just one domain
-IA64: taken from firmware (either ACPI or SAL)
-microblaze: managed globally, counting the hosts
-powerpc: managed globally, counting the hosts
-s390: each PCI function has its own domain (!)
-sh: managed in host bridge driver, counting the hosts
-sparc: managed by host bridge driger, counting the hosts
-tile: managed globally, counting the hosts
-x86: managed by ACPI firmware
-
-In each case, we either know the domain from hardware or firmware
-when creating the host bridge, or we pick the next free number.
-
-> > >   - pci_find_bus tries to find a bus in the global list of busses that has the
-> > >     same domain number and bus number as the parameters of the function. But
-> > >     the domain number was plucked out of thin air and all architectures seem to
-> > >     actually give you the current active domain number, not the one that actually
-> > >     covers the bus (and host_bridge) that you are trying to create.
+> > > Right, this needs to be changed when moving the domain into pci_host_bridge.
 > > 
-> > Not sure what you mean with 'current active domain number': They clearly look at
-> > b->sysdata here, which is a local structure describing what we are currently
-> > probing.
+> > Yes, if only I understood what the intent was here. Unfortunately, the history
+> > of the file stops (for my git tree) at Linus' first commit from v2.6.0, so
+> > I need to dig deeper. What I am looking to understand is the answer to this
+> > question: "When you want to create a new bus and you want to make sure it
+> > is not duplicated, do you go across all domains or pick the current domain
+> > and allow for same bus number in different domains?"
 > 
-> Yes, but that definition of locality is not common to all architectures. arm for
-> example stores it in the domain member of pci_sys_data, but that gets initialised
-> every time someone calls pcibios_init_hw (or pci_common_init_dev) with the domain
-> value held in struct hw_pci. But the host controllers don't talk to each other,
-> so if you want to instantiate two different drivers that use hw_pci they likely
-> use an individual count that starts at zero.
+> I suspect this is for some large IA64 machines where you can see the same
+> domain at different addresses, depending on which CPU you are on, or
+> something similarly fancy.
+> 
+> Another explanation would be that you can have different ways to describe
+> the same hardware: On a PC you can assume that the PCI bus is discoverable
+> on I/O port 0x0cf8. At the same time, you may see it in ACPI with an
+> mmconfig method.
+> 
+> In any case, you definitely need to allow the same bus numbers on each domain,
+> since the most important use case of domains is to get around the 256 bus
+> limit.
+> 
+> > To give some context: I'm looking at drivers/pci/probe.c, pci_create_root_bus().
+> > Specifically, this code:
+> > 
+> >         b = pci_alloc_bus();
+> >         if (!b)
+> >                 return NULL;
+> > 
+> >         b->sysdata = sysdata;
+> >         b->ops = ops;
+> >         b->number = b->busn_res.start = bus;
+> >         b2 = pci_find_bus(pci_domain_nr(b), bus);
+> >         if (b2) {
+> >                 /* If we already got to this bus through a different bridge, ignore it */
+> >                 dev_dbg(&b2->dev, "bus already known\n");
+> >                 goto err_out;
+> >         }
+> > 
+> >         bridge = pci_alloc_host_bridge(b);
+> >         if (!bridge)
+> >                 goto err_out;
+> > 
+> > 
+> > If you look at the comment after pci_find_bus, you can see that the intent was
+> > to try to find duplicate busses covered by different bridges (but in the same
+> > domain? maybe, because there used to be only one domain at the beginning, but
+> > then why use pci_domain_nr() here?). Problems I see here:
+> 
+> Definitely duplicate buses in the same domain, as mentioned above.
+> 
+> >   - code is trying to get the domain number of a bus that it just created but not
+> >     plugged yet in the hierarchy
+> 
+> The sysdata is already assigned, and all architectures either assume there is
+> only one domain, or they get the domain number out of the sysdata that is
+> filled out prior to calling pci_create_root_bus.
 
-The assumption is that whoever calls pci_common_init{_dev} knows about all the
-PCI hosts in the system. As Jason Gunthorpe said, it would be desirable to
-have stable domain numbers, so it's probably best to take the number from
-DT (e.g. the aliases node). It's probably safe to assume that any machine
-using ATAGS for booting falls into the category where it's safe to keep the
-policy local in the host bridge driver.
+Arnd, the question is not how it does it, the question is what is the correct answer?
+It's a new bus, does that mean that all new busses get created in the current domain?
+If that is the case, then fine, things start to make more sense, with the caveat
+that the domain # depends heavily on what the architecture uses for counting.
 
-	Arnd
+> 
+> >   - pci_find_bus tries to find a bus in the global list of busses that has the
+> >     same domain number and bus number as the parameters of the function. But
+> >     the domain number was plucked out of thin air and all architectures seem to
+> >     actually give you the current active domain number, not the one that actually
+> >     covers the bus (and host_bridge) that you are trying to create.
+> 
+> Not sure what you mean with 'current active domain number': They clearly look at
+> b->sysdata here, which is a local structure describing what we are currently
+> probing.
+
+Yes, but that definition of locality is not common to all architectures. arm for
+example stores it in the domain member of pci_sys_data, but that gets initialised
+every time someone calls pcibios_init_hw (or pci_common_init_dev) with the domain
+value held in struct hw_pci. But the host controllers don't talk to each other,
+so if you want to instantiate two different drivers that use hw_pci they likely
+use an individual count that starts at zero.
+
+Anyway, I don't think that using your suggestion is going to be a problem, so once
+I get out of this god forsaken task of bringing up a board I will post an updated
+patch.
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+
+-- 
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
+
