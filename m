@@ -1,71 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:50811 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242AbaBNFkl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 00:40:41 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 1/9] ACPI / hotplug / PCI: Do not clear event callback pointer for docks
+Date: Wed, 19 Feb 2014 02:27:01 +0100
+Message-ID: <2117607.1Rv04qGaoi@vostro.rjw.lan>
+In-Reply-To: <3011875.q18rCmXyYX@vostro.rjw.lan>
+References: <3011875.q18rCmXyYX@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <52FCBBEA.70300@codethink.co.uk>
-References: <20140213030302.10398.37322.sendpatchset@w520>
-	<52FCBBEA.70300@codethink.co.uk>
-Date: Fri, 14 Feb 2014 14:40:39 +0900
-Message-ID: <CANqRtoRJvvFHXGTMVmyhu3_ERH0wB8McMeE3P-jbp5_HT_2COQ@mail.gmail.com>
-Subject: Re: [PATCH 00/08] PCI: rcar: Recent driver patches from Ben Dooks and me
-From: Magnus Damm <magnus.damm@gmail.com>
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: linux-pci@vger.kernel.org,
-	"Simon Horman [Horms]" <horms@verge.net.au>,
-	SH-Linux <linux-sh@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 9:34 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
-> On 13/02/14 03:03, Magnus Damm wrote:
->>
->> PCI: rcar: Recent driver patches from Ben Dooks and me
->>
->> [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
->> [PATCH v2 02/08] PCI: rcar: add error interrupt handling
->> [PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
->> [PATCH v2 04/08] PCI: rcar: Register each instance independently
->> [PATCH v2 05/08] PCI: rcar: Break out window size handling
->> [PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
->> [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
->> [PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
->>
->> These patches update the pci-rcar-gen2.c driver with patches from
->> Ben Dooks and me. The first 3 are written by Ben (thanks!) and are
->> included here to show what I would like to have merged and what I
->> rebased my patches on. The following 4 are updated versions of
->>
->> [PATCH 00/04] PCI: rcar: Driver model and physical address space update
->>
->> The final patch is a new one that fixes up the Kconfig dependencies.
->
->
-> Thanks. Is there any chance of getting this driver device-tree
-> enabled too?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I think so! The DT bindings proposed by you looked good for this device.
+After recent changes adding dock station handling to the ACPI hotplug
+core, it is not necessary to clear the .event() pointer in the
+ACPIPHP device hotplug context for dock stations any more, so don't
+do that.
 
-The only question is how to handle the PHY hardware in a sane way. The
-PHY is the central problematic point so to say, since it ties these
-PCI USB2.0 devices together with USBHS and for some SoCs USB 3.0 as
-well.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    7 -------
+ 1 file changed, 7 deletions(-)
 
-I'm thinking of something along these lines:
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -307,13 +307,6 @@ static acpi_status acpiphp_add_context(a
+ 	if (acpi_has_method(handle, "_STA"))
+ 		newfunc->flags |= FUNC_HAS_STA;
+ 
+-	/*
+-	 * Dock stations' notify handler should be used for dock devices instead
+-	 * of the common one, so clear hp.event in their contexts.
+-	 */
+-	if (acpi_has_method(handle, "_DCK"))
+-		context->hp.event = NULL;
+-
+ 	acpi_unlock_hp_context();
+ 
+ 	/* search for objects that share the same slot */
 
-1) To use DT to describe the full hardware topology
-2) Enable all or some device drivers in the kernel configuration
-3) Have a sane default but use the bind interface to reassign
-driver-to-port configuration.
-
-What is your intended use case?
-
-Thanks,
-
-/ magnus
