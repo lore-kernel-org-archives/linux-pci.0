@@ -1,95 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 6/13] ACPI / hotplug / PCI: Drop acpiphp_bus_trim()
-Date: Sun, 02 Feb 2014 01:26:12 +0100
-Message-ID: <2923642.zryv5SIjaW@vostro.rjw.lan>
-In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:22585 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751893AbaBSKNr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 05:13:47 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andy King <acking@vmware.com>,
+	Dmitry Torokhov <dtor@vmware.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] vmw_vmci: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 11:15:25 +0100
+Message-Id: <1392804931-30671-5-git-send-email-agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-If trim_stale_devices() calls acpi_bus_trim() directly, we can
-save a potentially costly acpi_bus_get_device() invocation.  After
-making that change acpiphp_bus_trim() would only be called from one
-place, so move the code from it to that place and drop it.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Andy King <acking@vmware.com>
+Cc: Dmitry Torokhov <dtor@vmware.com>
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   30 +++++++++++-------------------
- 1 file changed, 11 insertions(+), 19 deletions(-)
+ drivers/misc/vmw_vmci/vmci_guest.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -468,19 +468,6 @@ static unsigned char acpiphp_max_busnr(s
- }
+diff --git a/drivers/misc/vmw_vmci/vmci_guest.c b/drivers/misc/vmw_vmci/vmci_guest.c
+index d35cda0..877ec8a 100644
+--- a/drivers/misc/vmw_vmci/vmci_guest.c
++++ b/drivers/misc/vmw_vmci/vmci_guest.c
+@@ -383,13 +383,18 @@ static int vmci_enable_msix(struct pci_dev *pdev,
+ 		vmci_dev->msix_entries[i].vector = i;
+ 	}
  
- /**
-- * acpiphp_bus_trim - Trim device objects in an ACPI namespace subtree.
-- * @handle: ACPI device object handle to start from.
-- */
--static void acpiphp_bus_trim(acpi_handle handle)
--{
--	struct acpi_device *adev = NULL;
--
--	acpi_bus_get_device(handle, &adev);
--	if (adev)
--		acpi_bus_trim(adev);
--}
--
--/**
-  * acpiphp_bus_add - Scan ACPI namespace subtree.
-  * @handle: ACPI object handle to start the scan from.
-  */
-@@ -620,8 +607,12 @@ static void disable_slot(struct acpiphp_
- 		if (PCI_SLOT(dev->devfn) == slot->device)
- 			pci_stop_and_remove_bus_device(dev);
- 
--	list_for_each_entry(func, &slot->funcs, sibling)
--		acpiphp_bus_trim(func_to_handle(func));
-+	list_for_each_entry(func, &slot->funcs, sibling) {
-+		struct acpi_device *adev;
-+
-+		if (!acpi_bus_get_device(func_to_handle(func), &adev))
-+			acpi_bus_trim(adev);
+-	result = pci_enable_msix(pdev, vmci_dev->msix_entries, VMCI_MAX_INTRS);
+-	if (result == 0)
++	result = pci_enable_msix_range(pdev, vmci_dev->msix_entries,
++				       VMCI_MAX_INTRS, VMCI_MAX_INTRS);
++	if (result > 0) {
+ 		vmci_dev->exclusive_vectors = true;
+-	else if (result > 0)
+-		result = pci_enable_msix(pdev, vmci_dev->msix_entries, 1);
++	} else if (result == -ENOSPC) {
++		result = pci_enable_msix_range(pdev, vmci_dev->msix_entries,
++					       1, 1);
++		if (result < 0)
++			return result;
 +	}
  
- 	slot->flags &= (~SLOT_ENABLED);
+-	return result;
++	return 0;
  }
-@@ -693,11 +684,12 @@ static unsigned int get_slot_status(stru
-  */
- static void trim_stale_devices(struct pci_dev *dev)
- {
--	acpi_handle handle = ACPI_HANDLE(&dev->dev);
-+	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
- 	struct pci_bus *bus = dev->subordinate;
- 	bool alive = false;
  
--	if (handle) {
-+	if (adev) {
-+		acpi_handle handle = adev->handle;
- 		acpi_status status;
- 		unsigned long long sta;
- 
-@@ -713,8 +705,8 @@ static void trim_stale_devices(struct pc
- 	}
- 	if (!alive) {
- 		pci_stop_and_remove_bus_device(dev);
--		if (handle)
--			acpiphp_bus_trim(handle);
-+		if (adev)
-+			acpi_bus_trim(adev);
- 	} else if (bus) {
- 		struct pci_dev *child, *tmp;
- 
+ /*
+-- 
+1.7.7.6
 
