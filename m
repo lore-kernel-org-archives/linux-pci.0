@@ -1,115 +1,156 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 0/3] [RFC] Add support for PCI in AArch64
-Date: Thu, 27 Feb 2014 13:09:56 +0000
-Message-Id: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 5/9] ACPI / dock: Add .uevent() callback to struct acpi_hotplug_context
+Date: Wed, 19 Feb 2014 02:30:02 +0100
+Message-ID: <1634069.8i1LGae7Tj@vostro.rjw.lan>
+In-Reply-To: <3011875.q18rCmXyYX@vostro.rjw.lan>
+References: <3011875.q18rCmXyYX@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This patch adds support for PCI to AArch64. It is based on my v2 patch
-that adds support for creating generic host bridge structure from
-device tree. With that in place, I was able to boot a platform that
-has PCIe host bridge support and use a PCIe network card.
+In order to avoid the need to register special ACPI dock
+operations for SATA devices add a .uevent() callback pointer to
+struct acpi_hotplug_context and make dock_hotplug_event() use that
+callback if available.  Also rename the existing .event() callback
+in struct acpi_hotplug_context to .notify() to avoid possible
+confusion in the future.
 
-Changes from v1:
-  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
-    its size to 16MB
-  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
-    keeping track of assigned IO space and returns an io_offset. At the
-    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
-  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
-    as suggested by Arnd.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/dock.c                |   11 ++++++++++-
+ drivers/acpi/scan.c                |    8 ++++----
+ drivers/pci/hotplug/acpiphp_glue.c |    8 ++++----
+ include/acpi/acpi_bus.h            |    9 ++++++---
+ 4 files changed, 24 insertions(+), 12 deletions(-)
 
-The API used is different from the one used by ARM architecture. There is
-no pci_common_init_dev() function and no hw_pci structure, as that is no
-longer needed. Once the last signature is added to the legal agreement, I
-will post the host bridge driver code that I am using. Meanwhile, here
-is an example of what the probe function looks like, posted as an example:
-
-static int myhostbridge_probe(struct platform_device *pdev)
-{
-	int err;
-	struct device_node *dev;
-	struct pci_host_bridge *bridge;
-	struct myhostbridge_port *pp;
-	resource_size_t lastbus;
-
-	dev = pdev->dev.of_node;
-
-	if (!of_device_is_available(dev)) {
-		pr_warn("%s: disabled\n", dev->full_name);
-		return -ENODEV;
-	}
-
-	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
-	if (!pp)
-		return -ENOMEM;
-
-	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
-	if (!bridge) {
-		err = -EINVAL;
-		goto bridge_init_fail;
-	}
-
-	err = myhostbridge_setup(bridge->bus);
-	if (err)
-		goto bridge_init_fail;
-
-	/* We always enable PCI domains and we keep domain 0 backward
-	 * compatible in /proc for video cards
-	 */
-	pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
-	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-
-	lastbus = pci_scan_child_bus(bridge->bus);
-	pci_bus_update_busn_res_end(bridge->bus, lastbus);
-
-	pci_assign_unassigned_bus_resources(bridge->bus);
-
-	pci_bus_add_devices(bridge->bus);
-
-	return 0;
-
-bridge_init_fail:
-	kfree(pp);
-	return err;
-}
-
-
-Best regards,
-Liviu
-
-
-
-Catalin Marinas (1):
-  arm64: Extend the PCI I/O space to 16MB
-
-Liviu Dudau (2):
-  Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-  arm64: Add architecture support for PCI
-
- Documentation/arm64/memory.txt |  16 ++++--
- arch/arm64/Kconfig             |  19 ++++++-
- arch/arm64/include/asm/Kbuild  |   1 +
- arch/arm64/include/asm/io.h    |   5 +-
- arch/arm64/include/asm/pci.h   |  47 +++++++++++++++
- arch/arm64/kernel/Makefile     |   1 +
- arch/arm64/kernel/pci.c        | 126 +++++++++++++++++++++++++++++++++++++++++
- include/asm-generic/io.h       |   2 +-
- 8 files changed, 207 insertions(+), 10 deletions(-)
- create mode 100644 arch/arm64/include/asm/pci.h
- create mode 100644 arch/arm64/kernel/pci.c
-
--- 
-1.9.0
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -145,7 +145,8 @@ struct acpi_scan_handler {
+ 
+ struct acpi_hotplug_context {
+ 	struct acpi_device *self;
+-	int (*event)(struct acpi_device *, u32);
++	int (*notify)(struct acpi_device *, u32);
++	void (*uevent)(struct acpi_device *, u32);
+ 	void (*fixup)(struct acpi_device *);
+ };
+ 
+@@ -369,11 +370,13 @@ static inline void acpi_set_device_statu
+ 
+ static inline void acpi_set_hp_context(struct acpi_device *adev,
+ 				       struct acpi_hotplug_context *hp,
+-				       int (*event)(struct acpi_device *, u32),
++				       int (*notify)(struct acpi_device *, u32),
++				       void (*uevent)(struct acpi_device *, u32),
+ 				       void (*fixup)(struct acpi_device *))
+ {
+ 	hp->self = adev;
+-	hp->event = event;
++	hp->notify = notify;
++	hp->uevent = uevent;
+ 	hp->fixup = fixup;
+ 	adev->hp = hp;
+ }
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -496,17 +496,17 @@ void acpi_device_hotplug(void *data, u32
+ 			goto err_out;
+ 		}
+ 	} else {
+-		int (*event)(struct acpi_device *, u32);
++		int (*notify)(struct acpi_device *, u32);
+ 
+ 		acpi_lock_hp_context();
+-		event = adev->hp ? adev->hp->event : NULL;
++		notify = adev->hp ? adev->hp->notify : NULL;
+ 		acpi_unlock_hp_context();
+ 		/*
+ 		 * There may be additional notify handlers for device objects
+ 		 * without the .event() callback, so ignore them here.
+ 		 */
+-		if (event)
+-			error = event(adev, src);
++		if (notify)
++			error = notify(adev, src);
+ 		else
+ 			goto out;
+ 	}
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -203,10 +203,19 @@ static void dock_hotplug_event(struct do
+ 			fixup(adev);
+ 			return;
+ 		}
++	} else if (cb_type == DOCK_CALL_UEVENT) {
++		void (*uevent)(struct acpi_device *, u32);
++
++		uevent = adev->hp->uevent;
++		if (uevent) {
++			acpi_unlock_hp_context();
++			uevent(adev, event);
++			return;
++		}
+ 	} else {
+ 		int (*notify)(struct acpi_device *, u32);
+ 
+-		notify = adev->hp->event;
++		notify = adev->hp->notify;
+ 		if (notify) {
+ 			acpi_unlock_hp_context();
+ 			notify(adev, event);
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -59,7 +59,7 @@
+ static LIST_HEAD(bridge_list);
+ static DEFINE_MUTEX(bridge_mutex);
+ 
+-static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type);
++static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type);
+ static void acpiphp_post_dock_fixup(struct acpi_device *adev);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+@@ -81,7 +81,7 @@ static struct acpiphp_context *acpiphp_i
+ 		return NULL;
+ 
+ 	context->refcount = 1;
+-	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_event,
++	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_notify, NULL,
+ 			    acpiphp_post_dock_fixup);
+ 	return context;
+ }
+@@ -400,7 +400,7 @@ static void cleanup_bridge(struct acpiph
+ 			struct acpi_device *adev = func_to_acpi_device(func);
+ 
+ 			acpi_lock_hp_context();
+-			adev->hp->event = NULL;
++			adev->hp->notify = NULL;
+ 			adev->hp->fixup = NULL;
+ 			acpi_unlock_hp_context();
+ 		}
+@@ -833,7 +833,7 @@ static void hotplug_event(u32 type, stru
+ 		put_bridge(bridge);
+ }
+ 
+-static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type)
++static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type)
+ {
+ 	struct acpiphp_context *context;
+ 
 
