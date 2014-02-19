@@ -1,77 +1,218 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:18482 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752451AbaBSGHi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 01:07:38 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 0/24] ACPI / hotplug / PCI: ACPIPHP updates and consolidation with ACPI core
-Date: Wed, 05 Feb 2014 11:59:37 +0100
-Message-ID: <1534008.38OOjEfjoH@vostro.rjw.lan>
-In-Reply-To: <20140205101405.GC18029@intel.com>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <7532948.aJNUotNMpR@vostro.rjw.lan> <20140205101405.GC18029@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 11/17] iommu/vt-d: fix error in detect ATS capability
+Date: Wed, 19 Feb 2014 14:07:31 +0800
+Message-Id: <1392790057-32434-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, February 05, 2014 12:14:05 PM Mika Westerberg wrote:
-> On Tue, Feb 04, 2014 at 12:12:26AM +0100, Rafael J. Wysocki wrote:
-> > As I said previously, I have found two concurrency-related bugs more in ACPIPHP
-> > and I needed to put fixes for those bugs at the top of the series (after previous
-> > [1-2/13] and the patch at https://patchwork.kernel.org/patch/3567701/).  For this
-> > reason, I also had to rebase the ACPI/PCI hotplug consolidation patchset
-> > (https://lkml.org/lkml/2014/2/2/87) which got a few additional cosmetic changes too.
-> > 
-> > The following is a combination of the two series with one patch dropped (it would
-> > conflict with [4-5/24]) and a few patches added.  It is on top of 3.14-rc1.
-> > 
-> > Patches [1-5/24], that are regarded as 3.14-rc2 material, are on the bleeding-edge
-> > branch of linux-pm.git.  The remaining patches will show up in bleeding-edge
-> > shortly.
-> > 
-> > [1/24] Remove entries from bus->devices in reverse order (in ACPIPHP).
-> > [2/24] Move PCI rescan-remove locking to hotplug_event().
-> > [3/24] Scan root bus under the PCI rescan-remove lock
-> > [4/24] Fix race in handle_hotplug_event() related to concurrent bridge removal.
-> > [5/24] Fix race in hotplug_event() related to dock events and concurrent bridge removal.
-> > [6/24] Drop dev_in_slot() and rework disable_slot() to walk bus->devices directly.
-> > [7/24] Fix up two kerneldoc comments in acpiphp_glue.c.
-> > [8/24] Get rid of an unnecessary label in register_slot().
-> > [9/24] Drop acpiphp_bus_trim() and use acpi_bus_trim() instead of it directly.
-> > [10/24] Move the acpi_bus_get_device() call out of acpiphp_no_hotplug().
-> > [11/24] Store struct acpi_device pointers instead of ACPI handles in struct acpiphp_context.
-> > [12/24] Drop acpiphp_bus_add() (which has only one user).
-> > [13/24] Drop crit_sect mutexes (that are redundant).
-> > [14/24] Clean up the usage of the slot variable in hotplug_event().
-> > [15/24] Use acpi_handle_debug() in hotplug_event() instead of open-coded stuff.
-> > [16/24] Do not pass ACPI handle to hotplug_event().
-> > [17/24] Add a new function to ACPICA allowing a callback to be executed under the
-> >         namespace mutex after calling acpi_ns_get_attached_data().
-> > [18/24] Use the new ACPICA's function to fix a couple of potential races related
-> >         to ACPI notifies.
-> > [19/24] Move the hotplug context lock definition to the ACPI core (from ACPIPHP).
-> > [20/24] Consolidate ACPI hotplug signaling for PCI and ACPI core.
-> > [21/24] Rework the handling of eject requests in the ACPI core.
-> > [22/24] Simplify a routine for installing hotplug notify handlers.
-> > [23/24] Dispatch ACPI hotplug notifications for "core" devices and PCI from
-> >         acpi_bus_notify().
-> > [24/24] Pass struct acpi_device pointer to acpiphp_check_host_bridge().
-> 
-> Tried your latest bleeding-edge branch (it seemed to have all the above
-> patches) on my TBT test machines (Acer Aspire S5, Intel NUC and Intel
-> DZ77RE-75K).
+Current Intel IOMMU driver only matches a PCIe root port with the first
+DRHD unit with the samge segment number. It will report false result
+if there are multiple DRHD units with the same segment number, thus fail
+to detect ATS capability for some PCIe devices.
 
-Yes, bleeding-edge already has the patches (linux-next has them too now for
-that matter).
+This patch refines function dmar_find_matched_atsr_unit() to search all
+DRHD units with the same segment number.
 
-> TBT hotplug works nicely, no deadlocks or anything like that.
-> 
-> Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+An example DMAR table entries as below:
+[1D0h 0464  2]                Subtable Type : 0002 <Root Port ATS Capability>
+[1D2h 0466  2]                       Length : 0028
+[1D4h 0468  1]                        Flags : 00
+[1D5h 0469  1]                     Reserved : 00
+[1D6h 0470  2]           PCI Segment Number : 0000
 
-Thanks!
+[1D8h 0472  1]      Device Scope Entry Type : 02
+[1D9h 0473  1]                 Entry Length : 08
+[1DAh 0474  2]                     Reserved : 0000
+[1DCh 0476  1]               Enumeration ID : 00
+[1DDh 0477  1]               PCI Bus Number : 00
+[1DEh 0478  2]                     PCI Path : [02, 00]
 
+[1E0h 0480  1]      Device Scope Entry Type : 02
+[1E1h 0481  1]                 Entry Length : 08
+[1E2h 0482  2]                     Reserved : 0000
+[1E4h 0484  1]               Enumeration ID : 00
+[1E5h 0485  1]               PCI Bus Number : 00
+[1E6h 0486  2]                     PCI Path : [03, 00]
+
+[1E8h 0488  1]      Device Scope Entry Type : 02
+[1E9h 0489  1]                 Entry Length : 08
+[1EAh 0490  2]                     Reserved : 0000
+[1ECh 0492  1]               Enumeration ID : 00
+[1EDh 0493  1]               PCI Bus Number : 00
+[1EEh 0494  2]                     PCI Path : [03, 02]
+
+[1F0h 0496  1]      Device Scope Entry Type : 02
+[1F1h 0497  1]                 Entry Length : 08
+[1F2h 0498  2]                     Reserved : 0000
+[1F4h 0500  1]               Enumeration ID : 00
+[1F5h 0501  1]               PCI Bus Number : 00
+[1F6h 0502  2]                     PCI Path : [03, 03]
+
+[1F8h 0504  2]                Subtable Type : 0002 <Root Port ATS Capability>
+[1FAh 0506  2]                       Length : 0020
+[1FCh 0508  1]                        Flags : 00
+[1FDh 0509  1]                     Reserved : 00
+[1FEh 0510  2]           PCI Segment Number : 0000
+
+[200h 0512  1]      Device Scope Entry Type : 02
+[201h 0513  1]                 Entry Length : 08
+[202h 0514  2]                     Reserved : 0000
+[204h 0516  1]               Enumeration ID : 00
+[205h 0517  1]               PCI Bus Number : 40
+[206h 0518  2]                     PCI Path : [02, 00]
+
+[208h 0520  1]      Device Scope Entry Type : 02
+[209h 0521  1]                 Entry Length : 08
+[20Ah 0522  2]                     Reserved : 0000
+[20Ch 0524  1]               Enumeration ID : 00
+[20Dh 0525  1]               PCI Bus Number : 40
+[20Eh 0526  2]                     PCI Path : [02, 02]
+
+[210h 0528  1]      Device Scope Entry Type : 02
+[211h 0529  1]                 Entry Length : 08
+[212h 0530  2]                     Reserved : 0000
+[214h 0532  1]               Enumeration ID : 00
+[215h 0533  1]               PCI Bus Number : 40
+[216h 0534  2]                     PCI Path : [03, 00]
+
+[218h 0536  2]                Subtable Type : 0002 <Root Port ATS Capability>
+[21Ah 0538  2]                       Length : 0020
+[21Ch 0540  1]                        Flags : 00
+[21Dh 0541  1]                     Reserved : 00
+[21Eh 0542  2]           PCI Segment Number : 0000
+
+[220h 0544  1]      Device Scope Entry Type : 02
+[221h 0545  1]                 Entry Length : 08
+[222h 0546  2]                     Reserved : 0000
+[224h 0548  1]               Enumeration ID : 00
+[225h 0549  1]               PCI Bus Number : 80
+[226h 0550  2]                     PCI Path : [02, 00]
+
+[228h 0552  1]      Device Scope Entry Type : 02
+[229h 0553  1]                 Entry Length : 08
+[22Ah 0554  2]                     Reserved : 0000
+[22Ch 0556  1]               Enumeration ID : 00
+[22Dh 0557  1]               PCI Bus Number : 80
+[22Eh 0558  2]                     PCI Path : [02, 02]
+
+[230h 0560  1]      Device Scope Entry Type : 02
+[231h 0561  1]                 Entry Length : 08
+[232h 0562  2]                     Reserved : 0000
+[234h 0564  1]               Enumeration ID : 00
+[235h 0565  1]               PCI Bus Number : 80
+[236h 0566  2]                     PCI Path : [03, 00]
+
+[238h 0568  2]                Subtable Type : 0002 <Root Port ATS Capability>
+[23Ah 0570  2]                       Length : 0020
+[23Ch 0572  1]                        Flags : 00
+[23Dh 0573  1]                     Reserved : 00
+[23Eh 0574  2]           PCI Segment Number : 0000
+
+[240h 0576  1]      Device Scope Entry Type : 02
+[241h 0577  1]                 Entry Length : 08
+[242h 0578  2]                     Reserved : 0000
+[244h 0580  1]               Enumeration ID : 00
+[245h 0581  1]               PCI Bus Number : C0
+[246h 0582  2]                     PCI Path : [02, 00]
+
+[248h 0584  1]      Device Scope Entry Type : 02
+[249h 0585  1]                 Entry Length : 08
+[24Ah 0586  2]                     Reserved : 0000
+[24Ch 0588  1]               Enumeration ID : 00
+[24Dh 0589  1]               PCI Bus Number : C0
+[24Eh 0590  2]                     PCI Path : [02, 02]
+
+[250h 0592  1]      Device Scope Entry Type : 02
+[251h 0593  1]                 Entry Length : 08
+[252h 0594  2]                     Reserved : 0000
+[254h 0596  1]               Enumeration ID : 00
+[255h 0597  1]               PCI Bus Number : C0
+[256h 0598  2]                     PCI Path : [03, 00]
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/intel-iommu.c |   37 +++++++++++++++++--------------------
+ 1 file changed, 17 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index afbc8d6..7732c43 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3562,37 +3562,34 @@ int dmar_find_matched_atsr_unit(struct pci_dev *dev)
+ {
+ 	int i;
+ 	struct pci_bus *bus;
++	struct pci_dev *bridge = NULL;
+ 	struct acpi_dmar_atsr *atsr;
+ 	struct dmar_atsr_unit *atsru;
+ 
+ 	dev = pci_physfn(dev);
+-
+-	list_for_each_entry(atsru, &dmar_atsr_units, list) {
+-		atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
+-		if (atsr->segment == pci_domain_nr(dev->bus))
+-			goto found;
+-	}
+-
+-	return 0;
+-
+-found:
+ 	for (bus = dev->bus; bus; bus = bus->parent) {
+-		struct pci_dev *bridge = bus->self;
+-
++		bridge = bus->self;
+ 		if (!bridge || !pci_is_pcie(bridge) ||
+ 		    pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE)
+ 			return 0;
+-
+-		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
+-			for (i = 0; i < atsru->devices_cnt; i++)
+-				if (atsru->devices[i] == bridge)
+-					return 1;
++		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT)
+ 			break;
+-		}
+ 	}
++	if (!bridge)
++		return 0;
+ 
+-	if (atsru->include_all)
+-		return 1;
++	list_for_each_entry_rcu(atsru, &dmar_atsr_units, list) {
++		atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
++		if (atsr->segment != pci_domain_nr(dev->bus))
++			continue;
++
++		for (i = 0; i < atsru->devices_cnt; i++)
++			if (atsru->devices[i] == bridge)
++				return 1;
++
++		if (atsru->include_all)
++			return 1;
++	}
+ 
+ 	return 0;
+ }
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.10.4
+
