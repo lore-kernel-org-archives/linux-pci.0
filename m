@@ -1,77 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding
- disabled
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:37:57 -0700
-Message-ID: <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:18482 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751547AbaBSGHN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 01:07:13 -0500
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 04/17] iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
+Date: Wed, 19 Feb 2014 14:07:24 +0800
+Message-Id: <1392790057-32434-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Don't rely on BAR contents when the command register says the BAR is
-disabled.
+Factor out function dmar_alloc_dev_scope() from dmar_parse_dev_scope()
+for later reuse.
 
-If we receive a PCI device from firmware (or a hot-added device that was
-just powered up) with the MEMORY or IO enable bits in the PCI command
-register cleared, there's no reason to believe the BARs contain valid
-addresses.
-
-In that case, we still know the type and size of the BAR, but this
-patch marks the resource as "unset" so we have a chance to reassign it.
-
-Historically, we often used "BAR == 0" to decide the BAR is invalid.  But 0
-is a legal BAR value, especially if the host bridge translates addresses,
-so I think it's better to decide based on the PCI command register, and
-store the conclusion in the IORESOURCE_UNSET bit.
-
-Reference: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=679545
-Reference: https://bugzilla.kernel.org/show_bug.cgi?id=48451
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/probe.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/iommu/dmar.c |   28 ++++++++++++++++------------
+ include/linux/dmar.h |    1 +
+ 2 files changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6e34498ec9f0..02654b5ec1b9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -177,9 +177,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 1581565..58dde75 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -117,13 +117,9 @@ static int __init dmar_parse_one_dev_scope(struct acpi_dmar_device_scope *scope,
+ 	return 0;
+ }
  
- 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
+-int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
+-				struct pci_dev ***devices, u16 segment)
++void *dmar_alloc_dev_scope(void *start, void *end, int *cnt)
+ {
+ 	struct acpi_dmar_device_scope *scope;
+-	void * tmp = start;
+-	int index;
+-	int ret;
  
-+	pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
+ 	*cnt = 0;
+ 	while (start < end) {
+@@ -138,15 +134,24 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 		start += scope->length;
+ 	}
+ 	if (*cnt == 0)
+-		return 0;
++		return NULL;
 +
- 	/* No printks while decoding is disabled! */
- 	if (!dev->mmio_always_on) {
--		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
- 		if (orig_cmd & PCI_COMMAND_DECODE_ENABLE) {
- 			pci_write_config_word(dev, PCI_COMMAND,
- 				orig_cmd & ~PCI_COMMAND_DECODE_ENABLE);
-@@ -215,9 +216,13 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		if (res->flags & IORESOURCE_IO) {
- 			l &= PCI_BASE_ADDRESS_IO_MASK;
- 			mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT;
-+			if (!(orig_cmd & PCI_COMMAND_IO))
-+				res->flags |= IORESOURCE_UNSET;
- 		} else {
- 			l &= PCI_BASE_ADDRESS_MEM_MASK;
- 			mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
-+			if (!(orig_cmd & PCI_COMMAND_MEMORY))
-+				res->flags |= IORESOURCE_UNSET;
++	return kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
++}
++
++int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
++				struct pci_dev ***devices, u16 segment)
++{
++	struct acpi_dmar_device_scope *scope;
++	int index, ret;
+ 
+-	*devices = kcalloc(*cnt, sizeof(struct pci_dev *), GFP_KERNEL);
+-	if (!*devices)
++	*devices = dmar_alloc_dev_scope(start, end, cnt);
++	if (*cnt == 0)
++		return 0;
++	else if (!*devices)
+ 		return -ENOMEM;
+ 
+-	start = tmp;
+-	index = 0;
+-	while (start < end) {
++	for (index = 0; start < end; start += scope->length) {
+ 		scope = start;
+ 		if (scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT ||
+ 		    scope->entry_type == ACPI_DMAR_SCOPE_TYPE_BRIDGE) {
+@@ -158,7 +163,6 @@ int __init dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 			}
+ 			index ++;
  		}
- 	} else {
- 		res->flags |= (l & IORESOURCE_ROM_ENABLE);
-@@ -252,6 +257,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			/* Address above 32-bit boundary; disable the BAR */
- 			pci_write_config_dword(dev, pos, 0);
- 			pci_write_config_dword(dev, pos + 4, 0);
-+			res->flags |= IORESOURCE_UNSET;
- 			region.start = 0;
- 			region.end = sz64;
- 			bar_disabled = true;
+-		start += scope->length;
+ 	}
+ 
+ 	return 0;
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index eccb0c0..1b08ce8 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -69,6 +69,7 @@ extern int dmar_table_init(void);
+ extern int dmar_dev_scope_init(void);
+ extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 				struct pci_dev ***devices, u16 segment);
++extern void *dmar_alloc_dev_scope(void *start, void *end, int *cnt);
+ extern void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt);
+ 
+ /* Intel IOMMU detection */
+-- 
+1.7.10.4
 
