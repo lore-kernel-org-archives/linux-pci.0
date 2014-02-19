@@ -1,137 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <53041A0C.4040306@intel.com>
-Date: Wed, 19 Feb 2014 10:42:20 +0800
-From: Aaron Lu <aaron.lu@intel.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-CC: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 6/9] ACPI / ATA: Add hotplug contexts to ACPI companions
- of SATA devices
-References: <3011875.q18rCmXyYX@vostro.rjw.lan> <1707532.0BItEHDuFB@vostro.rjw.lan>
-In-Reply-To: <1707532.0BItEHDuFB@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:19319 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753507AbaBSKOB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 05:14:01 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Gleb Natapov <gleb@kernel.org>,
+	Paolo Bonzini <pbonzini@redhat.com>, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] kvm: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 11:15:31 +0100
+Message-Id: <1392804931-30671-11-git-send-email-agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/19/2014 09:30 AM, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Modify the SATA subsystem to add hotplug contexts to ACPI companions
-> of SATA devices and ports instead of registering special ACPI dock
-> operations using register_hotplug_dock_device().
-> 
-> That change will allow the entire code handling those special ACPI
-> dock operations to be dropped in the next commit.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/ata/libata-acpi.c |   76 +++++++++++++++++++++++++++++-----------------
->  1 file changed, 49 insertions(+), 27 deletions(-)
-> 
-> Index: linux-pm/drivers/ata/libata-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/ata/libata-acpi.c
-> +++ linux-pm/drivers/ata/libata-acpi.c
-> @@ -38,6 +38,16 @@ static void ata_acpi_clear_gtf(struct at
->  	dev->gtf_cache = NULL;
->  }
->  
-> +struct ata_acpi_hotplug_context {
-> +	struct acpi_hotplug_context hp;
-> +	union {
-> +		struct ata_port *ap;
-> +		struct ata_device *dev;
-> +	} data;
-> +};
-> +
-> +#define ata_hotplug_data(context) (container_of((context), struct ata_acpi_hotplug_context, hp)->data)
-> +
->  /**
->   * ata_dev_acpi_handle - provide the acpi_handle for an ata_device
->   * @dev: the acpi_handle returned will correspond to this device
-> @@ -121,18 +131,17 @@ static void ata_acpi_handle_hotplug(stru
->  		ata_port_wait_eh(ap);
->  }
->  
-> -static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
-> +static int ata_acpi_dev_notify_dock(struct acpi_device *adev, u32 event)
->  {
-> -	struct ata_device *dev = data;
-> -
-> +	struct ata_device *dev = ata_hotplug_data(adev->hp).dev;
->  	ata_acpi_handle_hotplug(dev->link->ap, dev, event);
-> +	return 0;
->  }
->  
-> -static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
-> +static int ata_acpi_ap_notify_dock(struct acpi_device *adev, u32 event)
->  {
-> -	struct ata_port *ap = data;
-> -
-> -	ata_acpi_handle_hotplug(ap, NULL, event);
-> +	ata_acpi_handle_hotplug(ata_hotplug_data(adev->hp).ap, NULL, event);
-> +	return 0;
->  }
->  
->  static void ata_acpi_uevent(struct ata_port *ap, struct ata_device *dev,
-> @@ -154,31 +163,23 @@ static void ata_acpi_uevent(struct ata_p
->  	}
->  }
->  
-> -static void ata_acpi_ap_uevent(acpi_handle handle, u32 event, void *data)
-> +static void ata_acpi_ap_uevent(struct acpi_device *adev, u32 event)
->  {
-> -	ata_acpi_uevent(data, NULL, event);
-> +	ata_acpi_uevent(ata_hotplug_data(adev->hp).ap, NULL, event);
->  }
->  
-> -static void ata_acpi_dev_uevent(acpi_handle handle, u32 event, void *data)
-> +static void ata_acpi_dev_uevent(struct acpi_device *adev, u32 event)
->  {
-> -	struct ata_device *dev = data;
-> +	struct ata_device *dev = ata_hotplug_data(adev->hp).dev;
->  	ata_acpi_uevent(dev->link->ap, dev, event);
->  }
->  
-> -static const struct acpi_dock_ops ata_acpi_dev_dock_ops = {
-> -	.handler = ata_acpi_dev_notify_dock,
-> -	.uevent = ata_acpi_dev_uevent,
-> -};
-> -
-> -static const struct acpi_dock_ops ata_acpi_ap_dock_ops = {
-> -	.handler = ata_acpi_ap_notify_dock,
-> -	.uevent = ata_acpi_ap_uevent,
-> -};
-> -
->  /* bind acpi handle to pata port */
->  void ata_acpi_bind_port(struct ata_port *ap)
->  {
->  	struct acpi_device *host_companion = ACPI_COMPANION(ap->host->dev);
-> +	struct acpi_device *adev;
-> +	struct ata_acpi_hotplug_context *context;
->  
->  	if (libata_noacpi || ap->flags & ATA_FLAG_ACPI_SATA || !host_companion)
->  		return;
-> @@ -188,9 +189,19 @@ void ata_acpi_bind_port(struct ata_port
->  	if (ata_acpi_gtm(ap, &ap->__acpi_init_gtm) == 0)
->  		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
->  
-> -	/* we might be on a docking station */
-> -	register_hotplug_dock_device(ACPI_HANDLE(&ap->tdev),
-> -				     &ata_acpi_ap_dock_ops, ap, NULL, NULL);
-> +	adev = ACPI_COMPANION(&ap->tdev);
-> +	if (!adev)
-> +		return;
-> +
-> +	context = kzalloc(sizeof(*context), GFP_KERNEL);
-> +	if (!context)
-> +		return;
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-The context isn't freed on ATA driver detach, which doesn't normally
-happen though.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Gleb Natapov <gleb@kernel.org>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ virt/kvm/assigned-dev.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Thanks,
-Aaron
+diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+index 8db4370..92e25e9 100644
+--- a/virt/kvm/assigned-dev.c
++++ b/virt/kvm/assigned-dev.c
+@@ -395,8 +395,9 @@ static int assigned_device_enable_host_msix(struct kvm *kvm,
+ 	if (dev->entries_nr == 0)
+ 		return r;
+ 
+-	r = pci_enable_msix(dev->dev, dev->host_msix_entries, dev->entries_nr);
+-	if (r)
++	r = pci_enable_msix_range(dev->dev, dev->host_msix_entries,
++				  dev->entries_nr, dev->entries_nr);
++	if (r < 0)
+ 		return r;
+ 
+ 	for (i = 0; i < dev->entries_nr; i++) {
+-- 
+1.7.7.6
+
