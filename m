@@ -1,83 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50525 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751646AbaB0NKa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:10:30 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 2/3] arm64: Extend the PCI I/O space to 16MB
-Date: Thu, 27 Feb 2014 13:09:58 +0000
-Message-Id: <1393506599-11561-3-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:43928 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753654AbaBSQXB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 11:23:01 -0500
+Message-ID: <5304DABD.9000605@oracle.com>
+Date: Wed, 19 Feb 2014 11:24:29 -0500
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] xen-pciback: Use pci_enable_msix_range() instead of pci_enable_msix()
+References: <1392804931-30671-10-git-send-email-agordeev@redhat.com> <5304CC49.7020000@oracle.com> <5304D063.90000@oracle.com> <20140219160501.GA32067@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140219160501.GA32067@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Catalin Marinas <catalin.marinas@arm.com>
+On 02/19/2014 11:05 AM, Alexander Gordeev wrote:
+> On Wed, Feb 19, 2014 at 10:40:19AM -0500, Boris Ostrovsky wrote:
+>>>> diff --git a/drivers/xen/xen-pciback/pciback_ops.c
+>>>> b/drivers/xen/xen-pciback/pciback_ops.c
+>>>> index 64eb0cd..f5b4c3e 100644
+>>>> --- a/drivers/xen/xen-pciback/pciback_ops.c
+>>>> +++ b/drivers/xen/xen-pciback/pciback_ops.c
+>>>> @@ -213,9 +213,15 @@ int xen_pcibk_enable_msix(struct
+>>>> xen_pcibk_device *pdev,
+>>>>           entries[i].vector = op->msix_entries[i].vector;
+>>>>       }
+>>>>   -    result = pci_enable_msix(dev, entries, op->value);
+>>>> +    result = pci_enable_msix_range(dev, entries, op->value, op->value);
+>>>> +    if (result < op->value) {
+>>>
+>>> I think it would be better to have 'if (result != op->value)', in
+>>> case op->value is negative (which presumably it should never be).
+>>
+>> Better yet, at the top of the routine we check 'if (op->value >
+>> SH_INFO_MAX_VEC)'. If you add '|| op->value < 0' we'd be all set.
+> xen_pci_op::value is uint32_t
 
-The patch moves the PCI I/O space (currently at 64K) before the
-earlyprintk mapping and extends it to 16MB.
+Ah, OK --- then 'if (op->value > SH_INFO_MAX_VEC)' alone will catch this 
+(hopefully its' not in billions).
 
-Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
-
-diff --git a/Documentation/arm64/memory.txt b/Documentation/arm64/memory.txt
-index 5e054bf..85e24c4 100644
---- a/Documentation/arm64/memory.txt
-+++ b/Documentation/arm64/memory.txt
-@@ -35,11 +35,13 @@ ffffffbc00000000	ffffffbdffffffff	   8GB		vmemmap
- 
- ffffffbe00000000	ffffffbffbbfffff	  ~8GB		[guard, future vmmemap]
- 
--ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
-+ffffffbffa000000	ffffffbffaffffff	  16MB		PCI I/O space
-+
-+ffffffbffb000000	ffffffbffbbfffff	  12MB		[guard]
- 
--ffffffbffbe00000	ffffffbffbe0ffff	  64KB		PCI I/O space
-+ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
- 
--ffffffbffbe10000	ffffffbcffffffff	  ~2MB		[guard]
-+ffffffbffbe00000	ffffffbffbffffff	   2MB		[guard]
- 
- ffffffbffc000000	ffffffbfffffffff	  64MB		modules
- 
-@@ -60,11 +62,13 @@ fffffdfc00000000	fffffdfdffffffff	   8GB		vmemmap
- 
- fffffdfe00000000	fffffdfffbbfffff	  ~8GB		[guard, future vmmemap]
- 
--fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
-+fffffdfffa000000	fffffdfffaffffff	  16MB		PCI I/O space
-+
-+fffffdfffb000000	fffffdfffbbfffff	  12MB		[guard]
- 
--fffffdfffbe00000	fffffdfffbe0ffff	  64KB		PCI I/O space
-+fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
- 
--fffffdfffbe10000	fffffdfffbffffff	  ~2MB		[guard]
-+fffffdfffbe00000	fffffdfffbffffff	   2MB		[guard]
- 
- fffffdfffc000000	fffffdffffffffff	  64MB		modules
- 
-diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-index 4cc813e..7846a6b 100644
---- a/arch/arm64/include/asm/io.h
-+++ b/arch/arm64/include/asm/io.h
-@@ -121,7 +121,7 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
-  *  I/O port access primitives.
-  */
- #define IO_SPACE_LIMIT		0xffff
--#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
-+#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
- 
- static inline u8 inb(unsigned long addr)
- {
--- 
-1.9.0
+Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 
