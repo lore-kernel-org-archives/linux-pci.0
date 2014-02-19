@@ -1,79 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63151 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753733AbaBDLPe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:15:34 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, pv-drivers@vmware.com,
-	iscsi-driver@qlogic.com, qla2xxx-upstream@qlogic.com,
-	support@lsi.com, DL-MPTFusionLinux@lsi.com,
-	intel-linux-scu@intel.com, iss_storagedev@hp.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 00/22] scsi: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:16:46 +0100
-Message-Id: <cover.1391512266.git.agordeev@redhat.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:50450 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754486AbaBSTsg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 14:48:36 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <liviu@dudau.co.uk>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
+Date: Wed, 19 Feb 2014 20:47:52 +0100
+Message-ID: <2490895.sJxhc9aC7d@wuerfel>
+In-Reply-To: <20140219153044.GE5394@bart.dudau.co.uk>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <2734695.F6QKszum67@wuerfel> <20140219153044.GE5394@bart.dudau.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Wednesday 19 February 2014 15:30:44 Liviu Dudau wrote:
+> On Wed, Feb 19, 2014 at 02:26:10PM +0100, Arnd Bergmann wrote:
+> > On Wednesday 19 February 2014 11:37:55 Liviu Dudau wrote:
 
-Cc: pv-drivers@vmware.com
-Cc: iscsi-driver@qlogic.com
-Cc: qla2xxx-upstream@qlogic.com
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
-Cc: intel-linux-scu@intel.com
-Cc: iss_storagedev@hp.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+> > >   - code is trying to get the domain number of a bus that it just created but not
+> > >     plugged yet in the hierarchy
+> > 
+> > The sysdata is already assigned, and all architectures either assume there is
+> > only one domain, or they get the domain number out of the sysdata that is
+> > filled out prior to calling pci_create_root_bus.
+> 
+> Arnd, the question is not how it does it, the question is what is the correct answer?
+> It's a new bus, does that mean that all new busses get created in the current domain?
+> If that is the case, then fine, things start to make more sense, with the caveat
+> that the domain # depends heavily on what the architecture uses for counting.
 
-Alexander Gordeev (22):
-  be2iscsi: Use pci_enable_msix_range()
-  bfa: Do not call pci_enable_msix() once it failed
-  bfa: Cleanup bfad_setup_intr()
-  bfa: Use pci_enable_msix_range()
-  csiostor: Remove superfluous call to pci_disable_msix()
-  csiostor: Use pci_enable_msix_range()
-  fnic: Use pci_enable_msix_range()
-  hpsa: Fallback to MSI rather than to INTx if MSI-X failed
-  hpsa: Use pci_enable_msix_range()
-  isci: Use pci_enable_msix_range()
-  lpfc: Remove superfluous call to pci_disable_msix()
-  lpfc: Use pci_enable_msix_range()
-  megaraid: Use pci_enable_msix_range()
-  mpt2sas: Use pci_enable_msix_range()
-  mpt3sas: Use pci_enable_msix_range()
-  pm8001: Fix invalid success return when request_irq() failed
-  pm8001: Use pci_enable_msix_range()
-  pmcraid: Get rid of a redundant assignment
-  pmcraid: Use pci_enable_msix_range()
-  qla2xxx: Use pci_enable_msix_range()
-  qla4xxx: Use pci_enable_msix_range()
-  vmw_pvscsi: Use pci_enable_msix_range()
+Here is what each architecture does:
 
- drivers/scsi/be2iscsi/be_main.c           |    6 +-
- drivers/scsi/bfa/bfad.c                   |   62 ++++++++++++-----------------
- drivers/scsi/csiostor/csio_hw.h           |    2 +-
- drivers/scsi/csiostor/csio_isr.c          |   26 +++++-------
- drivers/scsi/fnic/fnic_isr.c              |    4 +-
- drivers/scsi/hpsa.c                       |   23 ++++------
- drivers/scsi/isci/init.c                  |    5 +-
- drivers/scsi/lpfc/lpfc_init.c             |   30 +++++++-------
- drivers/scsi/megaraid/megaraid_sas_base.c |   25 +++++------
- drivers/scsi/mpt2sas/mpt2sas_base.c       |   11 +++--
- drivers/scsi/mpt3sas/mpt3sas_base.c       |    9 +++-
- drivers/scsi/pm8001/pm8001_init.c         |   46 +++++++++++----------
- drivers/scsi/pmcraid.c                    |   14 +------
- drivers/scsi/qla2xxx/qla_isr.c            |   27 +++++-------
- drivers/scsi/qla4xxx/ql4_nx.c             |    5 +-
- drivers/scsi/vmw_pvscsi.c                 |    4 +-
- 16 files changed, 134 insertions(+), 165 deletions(-)
+Alpha: managed by host bridge driver, counting the hosts or fixed in hardware
+ARM: managed in host bridge driver, counting the hosts or using just one domain
+IA64: taken from firmware (either ACPI or SAL)
+microblaze: managed globally, counting the hosts
+powerpc: managed globally, counting the hosts
+s390: each PCI function has its own domain (!)
+sh: managed in host bridge driver, counting the hosts
+sparc: managed by host bridge driger, counting the hosts
+tile: managed globally, counting the hosts
+x86: managed by ACPI firmware
 
--- 
-1.7.7.6
+In each case, we either know the domain from hardware or firmware
+when creating the host bridge, or we pick the next free number.
 
+> > >   - pci_find_bus tries to find a bus in the global list of busses that has the
+> > >     same domain number and bus number as the parameters of the function. But
+> > >     the domain number was plucked out of thin air and all architectures seem to
+> > >     actually give you the current active domain number, not the one that actually
+> > >     covers the bus (and host_bridge) that you are trying to create.
+> > 
+> > Not sure what you mean with 'current active domain number': They clearly look at
+> > b->sysdata here, which is a local structure describing what we are currently
+> > probing.
+> 
+> Yes, but that definition of locality is not common to all architectures. arm for
+> example stores it in the domain member of pci_sys_data, but that gets initialised
+> every time someone calls pcibios_init_hw (or pci_common_init_dev) with the domain
+> value held in struct hw_pci. But the host controllers don't talk to each other,
+> so if you want to instantiate two different drivers that use hw_pci they likely
+> use an individual count that starts at zero.
+
+The assumption is that whoever calls pci_common_init{_dev} knows about all the
+PCI hosts in the system. As Jason Gunthorpe said, it would be desirable to
+have stable domain numbers, so it's probably best to take the number from
+DT (e.g. the aliases node). It's probably safe to assume that any machine
+using ATAGS for booting falls into the category where it's safe to keep the
+policy local in the host bridge driver.
+
+	Arnd
