@@ -1,83 +1,423 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48458 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752957AbaBUWDK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Feb 2014 17:03:10 -0500
-Message-ID: <1393020186.9111.91.camel@ul30vt.home>
-Subject: Re: Architectural question regarding IOV support in Linux 3.13.4
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yu Zhao <yuzhao@google.com>
-Date: Fri, 21 Feb 2014 15:03:06 -0700
-In-Reply-To: <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
-References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
-	 <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 15/17] iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI hotplug happens
+Date: Wed, 19 Feb 2014 14:07:35 +0800
+Message-Id: <1392790057-32434-16-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-02-21 at 14:11 -0700, Bjorn Helgaas wrote:
-> [+cc Alex, Yu]
-> 
-> On Fri, Feb 21, 2014 at 10:45 AM, Zytaruk, Kelly <Kelly.Zytaruk@amd.com> wrote:
-> >
-> > I am working with SR-IOV and I have a question regarding the function
-> > sriov_init() in ../drivers/pci/iov.c (linux versions 3.4.9 and 3.13.4)
-> >
-> > In sriov_init() the code first checks whether the PF is a Root complex
-> >  endpoint (0x9) or an Express Endpoint (0x0) as shown in the code
-> >  snippet below.  If it is neither it returns the No device error.
-> >
-> > static int sriov_init(struct pci_dev *dev, int pos)
-> > {
-> >          int i;
-> >          int rc;
-> >          int nres;
-> >          u32 pgsz;
-> >          u16 ctrl, total, offset, stride;
-> >          struct pci_sriov *iov;
-> >          struct resource *res;
-> >          struct pci_dev *pdev;
-> >
-> >        if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
-> >              pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-> >                  return -ENODEV;
-> >
-> > My question is why PCI_EXP_TYPE_LEG_END (0x1) is omitted as being a
-> >  valid endpoint.  By excluding Legacy endpoints it fails enabling
-> >  SR-IOV on a VGA PF.
-> >
-> > Is there a design/specification reason why legacy was excluded or was
-> >  it just an assumption that VGA would never support SR-IOV?
-> >
-> > If there is no valid reason to exclude PCI_EXP_TYPE_LEG_END, I would
-> >  like to discuss having it included as a valid endpoint for SR-IOV.
-> 
-> Good question.  It looks like it's been that way since the beginning
-> [1], but I don't know why.  I don't see any restriction in the spec
-> about SR-IOV and legacy endpoints.
-> 
-> I also don't know whether VGA is an issue.  There are some legacy
-> addressing issues for [mem 0xa0000-0xbffff] and [io 0x3b0-0x3bb] and
-> [io 0x3c0-0x3df].  For example, when a bridge has its VGA Enable bit
-> set, it positively decodes [mem 0xa0000-0xbffff] even if that range
-> isn't included in one of the bridge windows.  I don't know whether a
-> VGA device is similarly allowed to decode that range even if it's not
-> in a BAR.  If it is, I could imagine issues if enabling SR-IOV created
-> several VGA VFs.
+Current Intel DMAR/IOMMU driver assumes that all PCI devices associated
+with DMAR/RMRR/ATSR device scope arrays are created at boot time and
+won't change at runtime, so it caches pointers of associated PCI device
+object. That assumption may be wrong now due to:
+1) introduction of PCI host bridge hotplug
+2) PCI device hotplug through sysfs interfaces.
 
-VFs cannot support I/O port space by definition, so I don't think a "VGA
-VF" could actually exist.  There would be nothing wrong with a non-VGA
-GPU VF though.  I also don't see how the differences in Legacy Endpoint
-rules versus a standard Endpoint would preclude supporting SR-IOV.  I
-don't think the SR-IOV spec makes any demands on whether the PF requires
-I/O port resources, which I assume is the main reason for this to call
-itself Legacy.  I'd guess it was likely just an oversight and we should
-add legacy endpoints (or remove the test altogether and trust that if a
-device has an SR-IOV capability, we should initialize it).  Thanks,
+Wang Yijing has tried to solve this issue by caching <bus, dev, func>
+tupple instead of the PCI device object pointer, but that's still
+unreliable because PCI bus number may change in case of hotplug.
+Please refer to http://lkml.org/lkml/2013/11/5/64
+Message from Yingjing's mail:
+after remove and rescan a pci device
+[  611.857095] dmar: DRHD: handling fault status reg 2
+[  611.857109] dmar: DMAR:[DMA Read] Request device [86:00.3] fault addr ffff7000
+[  611.857109] DMAR:[fault reason 02] Present bit in context entry is clear
+[  611.857524] dmar: DRHD: handling fault status reg 102
+[  611.857534] dmar: DMAR:[DMA Read] Request device [86:00.3] fault addr ffff6000
+[  611.857534] DMAR:[fault reason 02] Present bit in context entry is clear
+[  611.857936] dmar: DRHD: handling fault status reg 202
+[  611.857947] dmar: DMAR:[DMA Read] Request device [86:00.3] fault addr ffff5000
+[  611.857947] DMAR:[fault reason 02] Present bit in context entry is clear
+[  611.858351] dmar: DRHD: handling fault status reg 302
+[  611.858362] dmar: DMAR:[DMA Read] Request device [86:00.3] fault addr ffff4000
+[  611.858362] DMAR:[fault reason 02] Present bit in context entry is clear
+[  611.860819] IPv6: ADDRCONF(NETDEV_UP): eth3: link is not ready
+[  611.860983] dmar: DRHD: handling fault status reg 402
+[  611.860995] dmar: INTR-REMAP: Request device [[86:00.3] fault index a4
+[  611.860995] INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
 
-Alex
+This patch introduces a new mechanism to update the DRHD/RMRR/ATSR device scope
+caches by hooking PCI bus notification.
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/iommu/dmar.c        |  207 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/iommu/intel-iommu.c |   54 +++++++++++
+ include/linux/dmar.h        |   24 ++++-
+ 3 files changed, 283 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index 6e4d851..bf6bfd1 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -194,6 +194,209 @@ void dmar_free_dev_scope(struct pci_dev __rcu ***devices, int *cnt)
+ 	*cnt = 0;
+ }
+ 
++/* Optimize out kzalloc()/kfree() for normal cases */
++static char dmar_pci_notify_info_buf[64];
++
++static struct dmar_pci_notify_info *
++dmar_alloc_pci_notify_info(struct pci_dev *dev, unsigned long event)
++{
++	int level = 0;
++	size_t size;
++	struct pci_dev *tmp;
++	struct dmar_pci_notify_info *info;
++
++	BUG_ON(dev->is_virtfn);
++
++	/* Only generate path[] for device addition event */
++	if (event == BUS_NOTIFY_ADD_DEVICE)
++		for (tmp = dev; tmp; tmp = tmp->bus->self)
++			level++;
++
++	size = sizeof(*info) + level * sizeof(struct acpi_dmar_pci_path);
++	if (size <= sizeof(dmar_pci_notify_info_buf)) {
++		info = (struct dmar_pci_notify_info *)dmar_pci_notify_info_buf;
++	} else {
++		info = kzalloc(size, GFP_KERNEL);
++		if (!info) {
++			pr_warn("Out of memory when allocating notify_info "
++				"for %s.\n", pci_name(dev));
++			return NULL;
++		}
++	}
++
++	info->event = event;
++	info->dev = dev;
++	info->seg = pci_domain_nr(dev->bus);
++	info->level = level;
++	if (event == BUS_NOTIFY_ADD_DEVICE) {
++		for (tmp = dev, level--; tmp; tmp = tmp->bus->self) {
++			info->path[level].device = PCI_SLOT(tmp->devfn);
++			info->path[level].function = PCI_FUNC(tmp->devfn);
++			if (pci_is_root_bus(tmp->bus))
++				info->bus = tmp->bus->number;
++		}
++	}
++
++	return info;
++}
++
++static inline void dmar_free_pci_notify_info(struct dmar_pci_notify_info *info)
++{
++	if ((void *)info != dmar_pci_notify_info_buf)
++		kfree(info);
++}
++
++static bool dmar_match_pci_path(struct dmar_pci_notify_info *info, int bus,
++				struct acpi_dmar_pci_path *path, int count)
++{
++	int i;
++
++	if (info->bus != bus)
++		return false;
++	if (info->level != count)
++		return false;
++
++	for (i = 0; i < count; i++) {
++		if (path[i].device != info->path[i].device ||
++		    path[i].function != info->path[i].function)
++			return false;
++	}
++
++	return true;
++}
++
++/* Return: > 0 if match found, 0 if no match found, < 0 if error happens */
++int dmar_insert_dev_scope(struct dmar_pci_notify_info *info,
++			  void *start, void*end, u16 segment,
++			  struct pci_dev __rcu **devices, int devices_cnt)
++{
++	int i, level;
++	struct pci_dev *tmp, *dev = info->dev;
++	struct acpi_dmar_device_scope *scope;
++	struct acpi_dmar_pci_path *path;
++
++	if (segment != info->seg)
++		return 0;
++
++	for (; start < end; start += scope->length) {
++		scope = start;
++		if (scope->entry_type != ACPI_DMAR_SCOPE_TYPE_ENDPOINT &&
++		    scope->entry_type != ACPI_DMAR_SCOPE_TYPE_BRIDGE)
++			continue;
++
++		path = (struct acpi_dmar_pci_path *)(scope + 1);
++		level = (scope->length - sizeof(*scope)) / sizeof(*path);
++		if (!dmar_match_pci_path(info, scope->bus, path, level))
++			continue;
++
++		if ((scope->entry_type == ACPI_DMAR_SCOPE_TYPE_ENDPOINT) ^
++		    (dev->hdr_type == PCI_HEADER_TYPE_NORMAL)) {
++			pr_warn("Device scope type does not match for %s\n",
++				pci_name(dev));
++			return -EINVAL;
++		}
++
++		for_each_dev_scope(devices, devices_cnt, i, tmp)
++			if (tmp == NULL) {
++				rcu_assign_pointer(devices[i],
++						   pci_dev_get(dev));
++				return 1;
++			}
++		BUG_ON(i >= devices_cnt);
++	}
++
++	return 0;
++}
++
++int dmar_remove_dev_scope(struct dmar_pci_notify_info *info, u16 segment,
++			  struct pci_dev __rcu **devices, int count)
++{
++	int index;
++	struct pci_dev *tmp;
++
++	if (info->seg != segment)
++		return 0;
++
++	for_each_active_dev_scope(devices, count, index, tmp)
++		if (tmp == info->dev) {
++			rcu_assign_pointer(devices[index], NULL);
++			synchronize_rcu();
++			pci_dev_put(tmp);
++			return 1;
++		}
++
++	return 0;
++}
++
++static int dmar_pci_bus_add_dev(struct dmar_pci_notify_info *info)
++{
++	int ret = 0;
++	struct dmar_drhd_unit *dmaru;
++	struct acpi_dmar_hardware_unit *drhd;
++
++	for_each_drhd_unit(dmaru) {
++		if (dmaru->include_all)
++			continue;
++
++		drhd = container_of(dmaru->hdr,
++				    struct acpi_dmar_hardware_unit, header);
++		ret = dmar_insert_dev_scope(info, (void *)(drhd + 1),
++				((void *)drhd) + drhd->header.length,
++				dmaru->segment,
++				dmaru->devices, dmaru->devices_cnt);
++		if (ret != 0)
++			break;
++	}
++	if (ret >= 0)
++		ret = dmar_iommu_notify_scope_dev(info);
++
++	return ret;
++}
++
++static void  dmar_pci_bus_del_dev(struct dmar_pci_notify_info *info)
++{
++	struct dmar_drhd_unit *dmaru;
++
++	for_each_drhd_unit(dmaru)
++		if (dmar_remove_dev_scope(info, dmaru->segment,
++			dmaru->devices, dmaru->devices_cnt))
++			break;
++	dmar_iommu_notify_scope_dev(info);
++}
++
++static int dmar_pci_bus_notifier(struct notifier_block *nb,
++				 unsigned long action, void *data)
++{
++	struct pci_dev *pdev = to_pci_dev(data);
++	struct dmar_pci_notify_info *info;
++
++	/* Only care about add/remove events for physical functions */
++	if (pdev->is_virtfn)
++		return NOTIFY_DONE;
++	if (action != BUS_NOTIFY_ADD_DEVICE && action != BUS_NOTIFY_DEL_DEVICE)
++		return NOTIFY_DONE;
++
++	info = dmar_alloc_pci_notify_info(pdev, action);
++	if (!info)
++		return NOTIFY_DONE;
++
++	down_write(&dmar_global_lock);
++	if (action == BUS_NOTIFY_ADD_DEVICE)
++		dmar_pci_bus_add_dev(info);
++	else if (action == BUS_NOTIFY_DEL_DEVICE)
++		dmar_pci_bus_del_dev(info);
++	up_write(&dmar_global_lock);
++
++	dmar_free_pci_notify_info(info);
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block dmar_pci_bus_nb = {
++	.notifier_call = dmar_pci_bus_notifier,
++	.priority = INT_MIN,
++};
++
+ /**
+  * dmar_parse_one_drhd - parses exactly one DMA remapping hardware definition
+  * structure which uniquely represent one DMA remapping hardware unit
+@@ -482,6 +685,8 @@ int __init dmar_dev_scope_init(void)
+ 	if (ret)
+ 		goto fail;
+ 
++	bus_register_notifier(&pci_bus_type, &dmar_pci_bus_nb);
++
+ 	dmar_dev_scope_initialized = 1;
+ 	return 0;
+ 
+@@ -1412,6 +1617,8 @@ static int __init dmar_free_unused_resources(void)
+ 	if (irq_remapping_enabled || intel_iommu_enabled)
+ 		return 0;
+ 
++	bus_unregister_notifier(&pci_bus_type, &dmar_pci_bus_nb);
++
+ 	down_write(&dmar_global_lock);
+ 	list_for_each_entry_safe(dmaru, dmaru_n, &dmar_drhd_units, list) {
+ 		list_del(&dmaru->list);
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index e1679a6..d9c0dc5 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3625,6 +3625,60 @@ int __init dmar_parse_rmrr_atsr_dev(void)
+ 	return 0;
+ }
+ 
++int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
++{
++	int ret = 0;
++	struct dmar_rmrr_unit *rmrru;
++	struct dmar_atsr_unit *atsru;
++	struct acpi_dmar_atsr *atsr;
++	struct acpi_dmar_reserved_memory *rmrr;
++
++	if (!intel_iommu_enabled && system_state != SYSTEM_BOOTING)
++		return 0;
++
++	list_for_each_entry(rmrru, &dmar_rmrr_units, list) {
++		rmrr = container_of(rmrru->hdr,
++				    struct acpi_dmar_reserved_memory, header);
++		if (info->event == BUS_NOTIFY_ADD_DEVICE) {
++			ret = dmar_insert_dev_scope(info, (void *)(rmrr + 1),
++				((void *)rmrr) + rmrr->header.length,
++				rmrr->segment, rmrru->devices,
++				rmrru->devices_cnt);
++			if (ret > 0)
++				break;
++			else if(ret < 0)
++				return ret;
++		} else if (info->event == BUS_NOTIFY_DEL_DEVICE) {
++			if (dmar_remove_dev_scope(info, rmrr->segment,
++				rmrru->devices, rmrru->devices_cnt))
++				break;
++		}
++	}
++
++	list_for_each_entry(atsru, &dmar_atsr_units, list) {
++		if (atsru->include_all)
++			continue;
++
++		atsr = container_of(atsru->hdr, struct acpi_dmar_atsr, header);
++		if (info->event == BUS_NOTIFY_ADD_DEVICE) {
++			ret = dmar_insert_dev_scope(info, (void *)(atsr + 1),
++					(void *)atsr + atsr->header.length,
++					atsr->segment, atsru->devices,
++					atsru->devices_cnt);
++			if (ret > 0)
++				break;
++			else if(ret < 0)
++				return ret;
++		} else if (info->event == BUS_NOTIFY_DEL_DEVICE) {
++			if (dmar_remove_dev_scope(info, atsr->segment,
++					atsru->devices, atsru->devices_cnt))
++				break;
++		}
++	}
++
++	return 0;
++}
++
+ /*
+  * Here we only respond to action of unbound device from driver.
+  *
+diff --git a/include/linux/dmar.h b/include/linux/dmar.h
+index bedebab..4e19643 100644
+--- a/include/linux/dmar.h
++++ b/include/linux/dmar.h
+@@ -50,6 +50,15 @@ struct dmar_drhd_unit {
+ 	struct intel_iommu *iommu;
+ };
+ 
++struct dmar_pci_notify_info {
++	struct pci_dev			*dev;
++	unsigned long			event;
++	int				bus;
++	u16				seg;
++	u16				level;
++	struct acpi_dmar_pci_path	path[];
++}  __attribute__((packed));
++
+ extern struct rw_semaphore dmar_global_lock;
+ extern struct list_head dmar_drhd_units;
+ 
+@@ -89,12 +98,18 @@ extern int dmar_parse_dev_scope(void *start, void *end, int *cnt,
+ 				struct pci_dev ***devices, u16 segment);
+ extern void *dmar_alloc_dev_scope(void *start, void *end, int *cnt);
+ extern void dmar_free_dev_scope(struct pci_dev __rcu ***devices, int *cnt);
+-extern void dmar_free_dev_scope(struct pci_dev ***devices, int *cnt);
+-
++extern int dmar_insert_dev_scope(struct dmar_pci_notify_info *info,
++				 void *start, void*end, u16 segment,
++				 struct pci_dev __rcu **devices,
++				 int devices_cnt);
++extern int dmar_remove_dev_scope(struct dmar_pci_notify_info *info,
++				 u16 segment, struct pci_dev __rcu **devices,
++				 int count);
+ /* Intel IOMMU detection */
+ extern int detect_intel_iommu(void);
+ extern int enable_drhd_fault_handling(void);
+ #else
++struct dmar_pci_notify_info;
+ static inline int detect_intel_iommu(void)
+ {
+ 	return -ENODEV;
+@@ -161,6 +176,7 @@ extern int iommu_detected, no_iommu;
+ extern int dmar_parse_rmrr_atsr_dev(void);
+ extern int dmar_parse_one_rmrr(struct acpi_dmar_header *header);
+ extern int dmar_parse_one_atsr(struct acpi_dmar_header *header);
++extern int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info);
+ extern int intel_iommu_init(void);
+ #else /* !CONFIG_INTEL_IOMMU: */
+ static inline int intel_iommu_init(void) { return -ENODEV; }
+@@ -176,6 +192,10 @@ static inline int dmar_parse_rmrr_atsr_dev(void)
+ {
+ 	return 0;
+ }
++static inline int dmar_iommu_notify_scope_dev(struct dmar_pci_notify_info *info)
++{
++	return 0;
++}
+ #endif /* CONFIG_INTEL_IOMMU */
+ 
+ #endif /* __DMAR_H__ */
+-- 
+1.7.10.4
 
