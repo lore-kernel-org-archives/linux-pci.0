@@ -1,66 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32938 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:65126 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751339AbaBYV3S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Feb 2014 16:29:18 -0500
-Date: Tue, 25 Feb 2014 22:31:10 +0100
+	id S1753182AbaBSI4k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 03:56:40 -0500
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Joshua Morris <josh.h.morris@us.ibm.com>,
+	Philip Kelleher <pjk1939@linux.vnet.ibm.com>,
 	linux-pci@vger.kernel.org
-Subject: [PATCH 10/9] skd: Use pci_enable_msix_exact() instead of
- pci_enable_msix_range()
-Message-ID: <20140225213109.GA20652@dhcp-26-207.brq.redhat.com>
-References: <cover.1392799751.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 5/9] rsxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 09:58:17 +0100
+Message-Id: <884e8e236ae1e7223230ee0de75f2f01817140cf.1392799751.git.agordeev@redhat.com>
 In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
+References: <cover.1392799751.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pci_enable_msix_exact() is a variation of
-pci_enable_msix_range() that allows a device driver
-to request a particular number of MSI-X interrupts,
-rather than any number within a specified range.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Kyungmin Park <kyungmin.park@samsung.com>
+Cc: Joshua Morris <josh.h.morris@us.ibm.com>
+Cc: Philip Kelleher <pjk1939@linux.vnet.ibm.com>
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/block/skd_main.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/block/rsxx/core.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/skd_main.c b/drivers/block/skd_main.c
-index a69dd93..c244c5bc 100644
---- a/drivers/block/skd_main.c
-+++ b/drivers/block/skd_main.c
-@@ -3945,15 +3945,14 @@ static int skd_acquire_msix(struct skd_device *skdev)
- 	for (i = 0; i < SKD_MAX_MSIX_COUNT; i++)
- 		entries[i].entry = i;
+diff --git a/drivers/block/rsxx/core.c b/drivers/block/rsxx/core.c
+index a8de2ee..76c8124 100644
+--- a/drivers/block/rsxx/core.c
++++ b/drivers/block/rsxx/core.c
+@@ -880,8 +880,8 @@ static int rsxx_pci_probe(struct pci_dev *dev,
+ 	spin_unlock_irq(&card->irq_lock);
  
--	rc = pci_enable_msix_range(pdev, entries,
--				   SKD_MIN_MSIX_COUNT, SKD_MAX_MSIX_COUNT);
--	if (rc < 0) {
-+	rc = pci_enable_msix_exact(pdev, entries, SKD_MAX_MSIX_COUNT);
-+	if (rc) {
- 		pr_err("(%s): failed to enable MSI-X %d\n",
- 		       skd_name(skdev), rc);
- 		goto msix_out;
+ 	if (!force_legacy) {
+-		st = pci_enable_msi(dev);
+-		if (st)
++		st = pci_enable_msi_range(dev, 1, 1);
++		if (st < 0)
+ 			dev_warn(CARD_TO_DEV(card),
+ 				"Failed to enable MSI\n");
  	}
- 
--	skdev->msix_count = rc;
-+	skdev->msix_count = SKD_MAX_MSIX_COUNT;
- 	skdev->msix_entries = kzalloc(sizeof(struct skd_msix_entry) *
- 				      skdev->msix_count, GFP_KERNEL);
- 	if (!skdev->msix_entries) {
 -- 
 1.7.7.6
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
