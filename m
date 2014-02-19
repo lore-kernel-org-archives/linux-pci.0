@@ -1,46 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 12 Feb 2014 20:58:16 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Tom Gundersen <teg@jklm.no>
-Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Kay Sievers <kay@vrfy.org>
-Subject: Re: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb
- support
-Message-ID: <mj+md-20140212.194230.3341.nikam@ucw.cz>
-References: <CAG-2HqWcnZ-z7EbDd0aAj6y_Ho6szfRZUiK0psEnmoz17Kw-xA@mail.gmail.com>
- <mj+md-20131110.114139.9646.albireo@ucw.cz>
- <CAG-2HqXsEBB_nxUF4gza-eTsUjmysYR7iPEjJPUFyR1rC2KGMg@mail.gmail.com>
- <CAPXgP12MLL_Z5gyrCndQLRT6SR_TJi9xHp1HkHMX1ahwnxx3yw@mail.gmail.com>
- <mj+md-20131215.091609.28546.nikam@ucw.cz>
- <CAPXgP10+1WtX8_xN+QSHvKws01hbKhP3FN95sXk9EtezdSPtqg@mail.gmail.com>
- <mj+md-20131215.110132.29802.nikam@ucw.cz>
- <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
- <CAG-2HqWYZtTMNRvLwWRy-5_5yb=EasiWzpL2xc0_42SyP=bg1w@mail.gmail.com>
- <CAG-2HqVS1avGdvi6SFc1dq0sCzcA4z5sZUBH4WhpNN87tZrnxA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:62591 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753804AbaBSQZu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 11:25:50 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 6/9] ACPI / ATA: Add hotplug contexts to ACPI companions of SATA devices
+Date: Wed, 19 Feb 2014 17:40:41 +0100
+Message-ID: <5171255.VRC6s13geU@vostro.rjw.lan>
+In-Reply-To: <53041A0C.4040306@intel.com>
+References: <3011875.q18rCmXyYX@vostro.rjw.lan> <1707532.0BItEHDuFB@vostro.rjw.lan> <53041A0C.4040306@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAG-2HqVS1avGdvi6SFc1dq0sCzcA4z5sZUBH4WhpNN87tZrnxA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+On Wednesday, February 19, 2014 10:42:20 AM Aaron Lu wrote:
+> On 02/19/2014 09:30 AM, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Modify the SATA subsystem to add hotplug contexts to ACPI companions
+> > of SATA devices and ports instead of registering special ACPI dock
+> > operations using register_hotplug_dock_device().
+> > 
+> > That change will allow the entire code handling those special ACPI
+> > dock operations to be dropped in the next commit.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/ata/libata-acpi.c |   76 +++++++++++++++++++++++++++++-----------------
+> >  1 file changed, 49 insertions(+), 27 deletions(-)
+> > 
+> > Index: linux-pm/drivers/ata/libata-acpi.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/ata/libata-acpi.c
+> > +++ linux-pm/drivers/ata/libata-acpi.c
+> > @@ -38,6 +38,16 @@ static void ata_acpi_clear_gtf(struct at
+> >  	dev->gtf_cache = NULL;
+> >  }
+> >  
+> > +struct ata_acpi_hotplug_context {
+> > +	struct acpi_hotplug_context hp;
+> > +	union {
+> > +		struct ata_port *ap;
+> > +		struct ata_device *dev;
+> > +	} data;
+> > +};
+> > +
+> > +#define ata_hotplug_data(context) (container_of((context), struct ata_acpi_hotplug_context, hp)->data)
+> > +
+> >  /**
+> >   * ata_dev_acpi_handle - provide the acpi_handle for an ata_device
+> >   * @dev: the acpi_handle returned will correspond to this device
+> > @@ -121,18 +131,17 @@ static void ata_acpi_handle_hotplug(stru
+> >  		ata_port_wait_eh(ap);
+> >  }
+> >  
+> > -static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
+> > +static int ata_acpi_dev_notify_dock(struct acpi_device *adev, u32 event)
+> >  {
+> > -	struct ata_device *dev = data;
+> > -
+> > +	struct ata_device *dev = ata_hotplug_data(adev->hp).dev;
+> >  	ata_acpi_handle_hotplug(dev->link->ap, dev, event);
+> > +	return 0;
+> >  }
+> >  
+> > -static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
+> > +static int ata_acpi_ap_notify_dock(struct acpi_device *adev, u32 event)
+> >  {
+> > -	struct ata_port *ap = data;
+> > -
+> > -	ata_acpi_handle_hotplug(ap, NULL, event);
+> > +	ata_acpi_handle_hotplug(ata_hotplug_data(adev->hp).ap, NULL, event);
+> > +	return 0;
+> >  }
+> >  
+> >  static void ata_acpi_uevent(struct ata_port *ap, struct ata_device *dev,
+> > @@ -154,31 +163,23 @@ static void ata_acpi_uevent(struct ata_p
+> >  	}
+> >  }
+> >  
+> > -static void ata_acpi_ap_uevent(acpi_handle handle, u32 event, void *data)
+> > +static void ata_acpi_ap_uevent(struct acpi_device *adev, u32 event)
+> >  {
+> > -	ata_acpi_uevent(data, NULL, event);
+> > +	ata_acpi_uevent(ata_hotplug_data(adev->hp).ap, NULL, event);
+> >  }
+> >  
+> > -static void ata_acpi_dev_uevent(acpi_handle handle, u32 event, void *data)
+> > +static void ata_acpi_dev_uevent(struct acpi_device *adev, u32 event)
+> >  {
+> > -	struct ata_device *dev = data;
+> > +	struct ata_device *dev = ata_hotplug_data(adev->hp).dev;
+> >  	ata_acpi_uevent(dev->link->ap, dev, event);
+> >  }
+> >  
+> > -static const struct acpi_dock_ops ata_acpi_dev_dock_ops = {
+> > -	.handler = ata_acpi_dev_notify_dock,
+> > -	.uevent = ata_acpi_dev_uevent,
+> > -};
+> > -
+> > -static const struct acpi_dock_ops ata_acpi_ap_dock_ops = {
+> > -	.handler = ata_acpi_ap_notify_dock,
+> > -	.uevent = ata_acpi_ap_uevent,
+> > -};
+> > -
+> >  /* bind acpi handle to pata port */
+> >  void ata_acpi_bind_port(struct ata_port *ap)
+> >  {
+> >  	struct acpi_device *host_companion = ACPI_COMPANION(ap->host->dev);
+> > +	struct acpi_device *adev;
+> > +	struct ata_acpi_hotplug_context *context;
+> >  
+> >  	if (libata_noacpi || ap->flags & ATA_FLAG_ACPI_SATA || !host_companion)
+> >  		return;
+> > @@ -188,9 +189,19 @@ void ata_acpi_bind_port(struct ata_port
+> >  	if (ata_acpi_gtm(ap, &ap->__acpi_init_gtm) == 0)
+> >  		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
+> >  
+> > -	/* we might be on a docking station */
+> > -	register_hotplug_dock_device(ACPI_HANDLE(&ap->tdev),
+> > -				     &ata_acpi_ap_dock_ops, ap, NULL, NULL);
+> > +	adev = ACPI_COMPANION(&ap->tdev);
+> > +	if (!adev)
+> > +		return;
+> > +
+> > +	context = kzalloc(sizeof(*context), GFP_KERNEL);
+> > +	if (!context)
+> > +		return;
+> 
+> The context isn't freed on ATA driver detach, which doesn't normally
+> happen though.
 
-> Ping?
+Yes, but it will happen for ATA devices in docks and bays.  However,
+the struct acpi_device objects won't go away then and we only need to initialize
+the contexts once, so it should be sufficient to simply return from here if
+the context is already there.
 
-Sorry for the delay, I was alternatingly ill and overloaded with other stuff...
+I'll send an updated patch with that change later today.
 
-As I said before, I do not like the current implementation of hwdb much (it's
-too much tied to Linux, and hardware description strings, originally intended
-for internal use between the kernel and its modules, are far from a nice API).
+Thanks,
+Rafael
 
-I would prefer a more general HW identification library and I am willing to
-write it, but I have to admit that with my current load, it will be hardly
-finished before this summer.
-
-I will merge your patches. It's better to have the current hwdb than nothing.
-
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-First law of socio-genetics: Celibacy is not hereditary.
