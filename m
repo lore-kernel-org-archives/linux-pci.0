@@ -1,64 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:38437 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbaBMEj6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 23:39:58 -0500
-Date: Thu, 13 Feb 2014 13:39:54 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Magnus Damm <magnus.damm@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH 00/08] PCI: rcar: Recent driver patches from Ben Dooks
- and me
-Message-ID: <20140213043951.GA22116@verge.net.au>
-References: <20140213030302.10398.37322.sendpatchset@w520>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 19 Feb 2014 20:22:55 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] ntb: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140219192255.GA20609@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-1-git-send-email-agordeev@redhat.com>
+ <20140219180926.GA1333@jonmason-lab>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20140219180926.GA1333@jonmason-lab>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 12:03:02PM +0900, Magnus Damm wrote:
-> PCI: rcar: Recent driver patches from Ben Dooks and me
+On Wed, Feb 19, 2014 at 11:09:27AM -0700, Jon Mason wrote:
+> > diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+> > index 170e8e6..fda37eb 100644
+> > --- a/drivers/ntb/ntb_hw.c
+> > +++ b/drivers/ntb/ntb_hw.c
+> > @@ -1085,21 +1085,15 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+> >  	struct msix_entry *msix;
+> >  	int msix_entries;
+> >  	int rc, i;
+> > -	u16 val;
+> >  
+> > -	if (!pdev->msix_cap) {
+> > -		rc = -EIO;
+> > -		goto err;
+> > -	}
+> > -
+> > -	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
+> > -	if (rc)
+> > +	rc = pci_msix_vec_count(pdev);
 > 
-> [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
-> [PATCH v2 02/08] PCI: rcar: add error interrupt handling
-> [PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
-> [PATCH v2 04/08] PCI: rcar: Register each instance independently
-> [PATCH v2 05/08] PCI: rcar: Break out window size handling
-> [PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
-> [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
-> [PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
-> 
-> These patches update the pci-rcar-gen2.c driver with patches from
-> Ben Dooks and me. The first 3 are written by Ben (thanks!) and are
-> included here to show what I would like to have merged and what I
-> rebased my patches on. The following 4 are updated versions of
-> 
-> [PATCH 00/04] PCI: rcar: Driver model and physical address space update
-> 
-> The final patch is a new one that fixes up the Kconfig dependencies.
-> 
-> Patch 1-3:
-> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
-> 
-> Patch 4-8:
-> Signed-off-by: Magnus Damm <damm@opensource.se>
-> ---
-> 
->  Written against renesas.git tag renesas-devel-v3.14-rc1-20140207
-> 
->  drivers/pci/host/Kconfig         |    5 
->  drivers/pci/host/pci-rcar-gen2.c |  445 ++++++++++++++++++++++++++++++++------
->  2 files changed, 385 insertions(+), 65 deletions(-)
+> Nit, you should probably use msix_entries instead of rc in this case.
 
-Bjorn,
+This way it resembles the code few lines below, so the style looks more
+consistent. Whichever you wish, though ;)
 
-I am happy with these.
-Could you consider merging this series?
+> > +	if (rc < 0) {
+> >  		goto err;
+> > -
+> > -	msix_entries = msix_table_size(val);
+> > -	if (msix_entries > ndev->limits.msix_cnt) {
+> > +	} else if (rc > ndev->limits.msix_cnt) {
+> >  		rc = -EINVAL;
+> >  		goto err;
+> > +	} else {
+> > +		msix_entries = rc;
+> >  	}
+> 
+> Style Nit.  Braces with only one line.  If you make the change above,
+> then it is moot.
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+Not on the top of my head, but do we mix bracing this way?
 
+> >  
+> >  	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
+> > @@ -1112,26 +1106,21 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+> >  	for (i = 0; i < msix_entries; i++)
+> >  		ndev->msix_entries[i].entry = i;
+> >  
+> > -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> > -	if (rc < 0)
+> > -		goto err1;
+> > -	if (rc > 0) {
+> > +	if (ndev->hw_type != BWD_HW)
+> >  		/* On SNB, the link interrupt is always tied to 4th vector.  If
+> >  		 * we can't get all 4, then we can't use MSI-X.
+> >  		 */
+> > -		if (ndev->hw_type != BWD_HW) {
+> > -			rc = -EIO;
+> > -			goto err1;
+> > -		}
+> > -
+> > -		dev_warn(&pdev->dev,
+> > -			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+> > -			 rc);
+> > +		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
+> > +					   msix_entries, msix_entries);
+> > +	else
+> > +		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
+> > +					   1, msix_entries);
+> 
+> Actually, this must be 2 for the min.  One for the Data and one for
+> the Link.  If you look a few lines after this in the original code,
+> there is a grabbing of the last vector for the link.  I realize there
+> is currently no check for this in the driver and a potential error
+> case occurs.  I can make a separate patch to correct this issue if
+> this patch is not going through my tree.
+
+Well, I can re-post with a separate fix with this condition updated...
+
+	} else if (rc < 2 || rc > ndev->limits.msix_cnt) {
+		rc = -EINVAL;
+		goto err;
+	}
+
+...and the original patch with call to pci_enable_msix_range( ...,
+2, ndev->limits.msix_cnt)
+
+Will it work with both BWD_HW and non-BWD_HW hardware?
+
+> Thanks,
+> Jon
+> 
+> 
+> > +	if (rc < 0)
+> > +		goto err1;
+> > +	else if (rc < msix_entries) {
+> > +		dev_warn(&pdev->dev, "Only %d MSI-X vectors. "
+> > +			 "Limiting the number of queues to that number.\n", rc);
+> >  		msix_entries = rc;
+> > -
+> > -		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> > -		if (rc)
+> > -			goto err1;
+> >  	}
+> >  
+> >  	for (i = 0; i < msix_entries; i++) {
+> > diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
+> > index bbdb7ed..d307107 100644
+> > --- a/drivers/ntb/ntb_hw.h
+> > +++ b/drivers/ntb/ntb_hw.h
+> > @@ -60,8 +60,6 @@
+> >  #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
+> >  #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+> >  
+> > -#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
+> > -
+> >  #ifndef readq
+> >  static inline u64 readq(void __iomem *addr)
+> >  {
+> > -- 
+> > 1.7.7.6
+> > 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
