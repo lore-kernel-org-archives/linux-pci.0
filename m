@@ -1,123 +1,232 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16137 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752288AbaBXIBF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:01:05 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	James Smart <james.smart@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 12/23] lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:12 +0100
-Message-Id: <4deb0051eba22e1a741e4359621b858db0cbe1e5.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 17/17] iommu/vt-d: update IOMMU state when memory hotplug happens
+Date: Wed, 19 Feb 2014 14:07:37 +0800
+Message-Id: <1392790057-32434-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+If static identity domain is created, IOMMU driver needs to update
+si_domain page table when memory hotplug event happens. Otherwise
+PCI device DMA operations can't access the hot-added memory regions.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c |   45 ++++++++++++++++++----------------------
- 1 files changed, 20 insertions(+), 25 deletions(-)
+ drivers/iommu/intel-iommu.c |   71 ++++++++++++++++++++++++++++++++++++++++++-
+ drivers/iommu/iova.c        |   64 ++++++++++++++++++++++++++++++++++----
+ include/linux/iova.h        |    2 ++
+ 3 files changed, 130 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index a9df97a..5368f75 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8047,9 +8047,9 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
-- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
-- * invoked, enables either all or nothing, depending on the current
-+ * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
-+ * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
-+ * once invoked, enables either all or nothing, depending on the current
-  * availability of PCI vector resources. The device driver is responsible
-  * for calling the individual request_irq() to register each MSI-X vector
-  * with a interrupt handler, which is done in this function. Note that
-@@ -8073,8 +8073,8 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 		phba->msix_entries[i].entry = i;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index dd576c0..484d669 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -33,6 +33,7 @@
+ #include <linux/dmar.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/mempool.h>
++#include <linux/memory.h>
+ #include <linux/timer.h>
+ #include <linux/iova.h>
+ #include <linux/iommu.h>
+@@ -3683,6 +3684,73 @@ static struct notifier_block device_nb = {
+ 	.notifier_call = device_notifier,
+ };
  
- 	/* Configure MSI-X capability structure */
--	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
--				ARRAY_SIZE(phba->msix_entries));
-+	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
-+				   ARRAY_SIZE(phba->msix_entries));
- 	if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
-@@ -8187,8 +8187,8 @@ lpfc_sli_disable_msix(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI interrupt mode to device with
-- * SLI-3 interface spec. The kernel function pci_enable_msi() is called to
-- * enable the MSI vector. The device driver is responsible for calling the
-+ * SLI-3 interface spec. The kernel function pci_enable_msi() is called
-+ * to enable the MSI vector. The device driver is responsible for calling the
-  * request_irq() to register MSI vector with a interrupt the handler, which
-  * is done in this function.
-  *
-@@ -8611,16 +8611,14 @@ out:
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-4 interface spec. The kernel function pci_enable_msix() is called
-- * to enable the MSI-X vectors. Note that pci_enable_msix(), once invoked,
-- * enables either all or nothing, depending on the current availability of
-- * PCI vector resources. The device driver is responsible for calling the
-- * individual request_irq() to register each MSI-X vector with a interrupt
-- * handler, which is done in this function. Note that later when device is
-- * unloading, the driver should always call free_irq() on all MSI-X vectors
-- * it has done request_irq() on before calling pci_disable_msix(). Failure
-- * to do so results in a BUG_ON() and a device will be left with MSI-X
-- * enabled and leaks its vectors.
-+ * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
-+ * is called to enable the MSI-X vectors. The device driver is responsible
-+ * for calling the individual request_irq() to register each MSI-X vector
-+ * with a interrupt handler, which is done in this function. Note that
-+ * later when device is unloading, the driver should always call free_irq()
-+ * on all MSI-X vectors it has done request_irq() on before calling
-+ * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
-+ * will be left with MSI-X enabled and leaks its vectors.
-  *
-  * Return codes
-  * 0 - successful
-@@ -8636,17 +8634,14 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->sli4_hba.msix_entries[index].entry = index;
++static int intel_iommu_memory_notifier(struct notifier_block *nb,
++				       unsigned long val, void *v)
++{
++	struct memory_notify *mhp = v;
++	unsigned long long start, end;
++	unsigned long start_vpfn, last_vpfn;
++
++	switch (val) {
++	case MEM_GOING_ONLINE:
++		start = mhp->start_pfn << PAGE_SHIFT;
++		end = ((mhp->start_pfn + mhp->nr_pages) << PAGE_SHIFT) - 1;
++		if (iommu_domain_identity_map(si_domain, start, end)) {
++			pr_warn("dmar: failed to build identity map for [%llx-%llx]\n",
++				start, end);
++			return NOTIFY_BAD;
++		}
++		break;
++
++	case MEM_OFFLINE:
++	case MEM_CANCEL_ONLINE:
++		start_vpfn = mm_to_dma_pfn(mhp->start_pfn);
++		last_vpfn = mm_to_dma_pfn(mhp->start_pfn + mhp->nr_pages - 1);
++		while (start_vpfn <= last_vpfn) {
++			struct iova *iova;
++			struct dmar_drhd_unit *drhd;
++			struct intel_iommu *iommu;
++
++			iova = find_iova(&si_domain->iovad, start_vpfn);
++			if (iova == NULL) {
++				pr_debug("dmar: failed get IOVA for PFN %lx\n",
++					 start_vpfn);
++				break;
++			}
++
++			iova = split_and_remove_iova(&si_domain->iovad, iova,
++						     start_vpfn, last_vpfn);
++			if (iova == NULL) {
++				pr_warn("dmar: failed to split IOVA PFN [%lx-%lx]\n",
++					start_vpfn, last_vpfn);
++				return NOTIFY_BAD;
++			}
++
++			rcu_read_lock();
++			for_each_active_iommu(iommu, drhd)
++				iommu_flush_iotlb_psi(iommu, si_domain->id,
++					iova->pfn_lo,
++					iova->pfn_hi - iova->pfn_lo + 1, 0);
++			rcu_read_unlock();
++			dma_pte_clear_range(si_domain, iova->pfn_lo,
++					    iova->pfn_hi);
++			dma_pte_free_pagetable(si_domain, iova->pfn_lo,
++					       iova->pfn_hi);
++
++			start_vpfn = iova->pfn_hi + 1;
++			free_iova_mem(iova);
++		}
++		break;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block intel_iommu_memory_nb = {
++	.notifier_call = intel_iommu_memory_notifier,
++	.priority = 0
++};
++
+ int __init intel_iommu_init(void)
+ {
+ 	int ret = -ENODEV;
+@@ -3755,8 +3823,9 @@ int __init intel_iommu_init(void)
+ 	init_iommu_pm_ops();
  
- 	/* Configure MSI-X capability structure */
--	vectors = phba->cfg_fcp_io_channel;
--enable_msix_vectors:
--	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     vectors);
--	if (rc > 1) {
--		vectors = rc;
--		goto enable_msix_vectors;
--	} else if (rc) {
-+	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
-+				   2, phba->cfg_fcp_io_channel);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto vec_fail_out;
-+	} else {
-+		vectors = rc;
+ 	bus_set_iommu(&pci_bus_type, &intel_iommu_ops);
+-
+ 	bus_register_notifier(&pci_bus_type, &device_nb);
++	if (si_domain && !hw_pass_through)
++		register_memory_notifier(&intel_iommu_memory_nb);
+ 
+ 	intel_iommu_enabled = 1;
+ 
+diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
+index 67da6cff..f6b17e6 100644
+--- a/drivers/iommu/iova.c
++++ b/drivers/iommu/iova.c
+@@ -342,19 +342,30 @@ __is_range_overlap(struct rb_node *node,
+ 	return 0;
+ }
+ 
++static inline struct iova *
++alloc_and_init_iova(unsigned long pfn_lo, unsigned long pfn_hi)
++{
++	struct iova *iova;
++
++	iova = alloc_iova_mem();
++	if (iova) {
++		iova->pfn_lo = pfn_lo;
++		iova->pfn_hi = pfn_hi;
++	}
++
++	return iova;
++}
++
+ static struct iova *
+ __insert_new_range(struct iova_domain *iovad,
+ 	unsigned long pfn_lo, unsigned long pfn_hi)
+ {
+ 	struct iova *iova;
+ 
+-	iova = alloc_iova_mem();
+-	if (!iova)
+-		return iova;
++	iova = alloc_and_init_iova(pfn_lo, pfn_hi);
++	if (iova)
++		iova_insert_rbtree(&iovad->rbroot, iova);
+ 
+-	iova->pfn_hi = pfn_hi;
+-	iova->pfn_lo = pfn_lo;
+-	iova_insert_rbtree(&iovad->rbroot, iova);
+ 	return iova;
+ }
+ 
+@@ -433,3 +444,44 @@ copy_reserved_iova(struct iova_domain *from, struct iova_domain *to)
  	}
+ 	spin_unlock_irqrestore(&from->iova_rbtree_lock, flags);
+ }
++
++struct iova *
++split_and_remove_iova(struct iova_domain *iovad, struct iova *iova,
++		      unsigned long pfn_lo, unsigned long pfn_hi)
++{
++	unsigned long flags;
++	struct iova *prev = NULL, *next = NULL;
++
++	spin_lock_irqsave(&iovad->iova_rbtree_lock, flags);
++	if (iova->pfn_lo < pfn_lo) {
++		prev = alloc_and_init_iova(iova->pfn_lo, pfn_lo - 1);
++		if (prev == NULL)
++			goto error;
++	}
++	if (iova->pfn_hi > pfn_hi) {
++		next = alloc_and_init_iova(pfn_hi + 1, iova->pfn_hi);
++		if (next == NULL)
++			goto error;
++	}
++
++	__cached_rbnode_delete_update(iovad, iova);
++	rb_erase(&iova->node, &iovad->rbroot);
++
++	if (prev) {
++		iova_insert_rbtree(&iovad->rbroot, prev);
++		iova->pfn_lo = pfn_lo;
++	}
++	if (next) {
++		iova_insert_rbtree(&iovad->rbroot, next);
++		iova->pfn_hi = pfn_hi;
++	}
++	spin_unlock_irqrestore(&iovad->iova_rbtree_lock, flags);
++
++	return iova;
++
++error:
++	spin_unlock_irqrestore(&iovad->iova_rbtree_lock, flags);
++	if (prev)
++		free_iova_mem(prev);
++	return NULL;
++}
+diff --git a/include/linux/iova.h b/include/linux/iova.h
+index 76a0759..3277f47 100644
+--- a/include/linux/iova.h
++++ b/include/linux/iova.h
+@@ -47,5 +47,7 @@ void copy_reserved_iova(struct iova_domain *from, struct iova_domain *to);
+ void init_iova_domain(struct iova_domain *iovad, unsigned long pfn_32bit);
+ struct iova *find_iova(struct iova_domain *iovad, unsigned long pfn);
+ void put_iova_domain(struct iova_domain *iovad);
++struct iova *split_and_remove_iova(struct iova_domain *iovad,
++	struct iova *iova, unsigned long pfn_lo, unsigned long pfn_hi);
  
- 	/* Log MSI-X vector assignment */
+ #endif
 -- 
-1.7.7.6
+1.7.10.4
 
