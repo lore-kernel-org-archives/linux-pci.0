@@ -1,44 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:62181 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753106AbaBMDDL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:03:11 -0500
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
-Date: Thu, 13 Feb 2014 12:04:23 +0900
-Message-Id: <20140213030423.10398.4149.sendpatchset@w520>
-In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
-References: <20140213030302.10398.37322.sendpatchset@w520>
-Subject: [PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
+Received: from mx1.redhat.com ([209.132.183.28]:58801 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753526AbaBSKOF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 05:14:05 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Matt Porter <mporter@kernel.crashing.org>,
+	Alexandre Bounine <alexandre.bounine@idt.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] tsi721: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 11:15:27 +0100
+Message-Id: <1392804931-30671-7-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Magnus Damm <damm@opensource.se>
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Update the R-Car Generation 2 PCI driver Kconfig dependencies
-to follow same style as other drivers - no SoC dependencies.
-
-Also, update the COMPILE_TEST bits to depend on ARM. This since
-the DMA bounce buffer and dma_ops handling code is ARM specific.
-
-Signed-off-by: Magnus Damm <damm@opensource.se>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Matt Porter <mporter@kernel.crashing.org>
+Cc: Alexandre Bounine <alexandre.bounine@idt.com>
+Cc: linux-pci@vger.kernel.org
 ---
+ drivers/rapidio/devices/tsi721.c |   14 +++++---------
+ 1 files changed, 5 insertions(+), 9 deletions(-)
 
- drivers/pci/host/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- 0010/drivers/pci/host/Kconfig
-+++ work/drivers/pci/host/Kconfig	2014-02-13 11:19:19.000000000 +0900
-@@ -27,7 +27,7 @@ config PCI_TEGRA
+diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
+index ff7cbf2..3071492 100644
+--- a/drivers/rapidio/devices/tsi721.c
++++ b/drivers/rapidio/devices/tsi721.c
+@@ -768,15 +768,11 @@ static int tsi721_enable_msix(struct tsi721_device *priv)
+ 	}
+ #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
  
- config PCI_RCAR_GEN2
- 	bool "Renesas R-Car Gen2 Internal PCI controller"
--	depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || COMPILE_TEST)
-+	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
- 	select GENERIC_ALLOCATOR
- 	select DMABOUNCE
- 	select BOUNCE if HIGHMEM
+-	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
+-	if (err) {
+-		if (err > 0)
+-			dev_info(&priv->pdev->dev,
+-				 "Only %d MSI-X vectors available, "
+-				 "not using MSI-X\n", err);
+-		else
+-			dev_err(&priv->pdev->dev,
+-				"Failed to enable MSI-X (err=%d)\n", err);
++	err = pci_enable_msix_range(priv->pdev, entries,
++				    ARRAY_SIZE(entries), ARRAY_SIZE(entries));
++	if (err < 0) {
++		dev_err(&priv->pdev->dev,
++			"Failed to enable MSI-X (err=%d)\n", err);
+ 		return err;
+ 	}
+ 
+-- 
+1.7.7.6
+
