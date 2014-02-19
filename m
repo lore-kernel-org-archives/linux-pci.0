@@ -1,71 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:62566 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074AbaBQIxW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 03:53:22 -0500
-Message-ID: <5301CDD8.5020808@huawei.com>
-Date: Mon, 17 Feb 2014 16:52:40 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH part1 v6 0/7] Introduce PCIe Device Serial Number capability
- support
-References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1392801107.15829.36.camel@artifact>
+Subject: Re: pci-3.14 resource alloc
+From: Steven Newbury <steve@snewbury.org.uk>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Wed, 19 Feb 2014 09:11:47 +0000
+In-Reply-To: <7133100.UJBc8oSLiz@vostro.rjw.lan>
+References: <1390773698.3450.12.camel@artifact>
+	 <1392718107.15829.12.camel@artifact>
+	 <CAE9FiQXUhvG2Jub3sbBxyCERVbt-L22+O+mcZ_HWEVQ_QaRawA@mail.gmail.com>
+	 <7133100.UJBc8oSLiz@vostro.rjw.lan>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-   Sorry to bother you, any comment about this series?
-
-Thanks!
-Yijing.
-
-On 2014/2/12 10:52, Yijing Wang wrote:
-> v5->v6: Add is_frozen flag to protect pci bus from double frozen.
+On Tue, 2014-02-18 at 23:29 +0100, Rafael J. Wysocki wrote:
+> On Tuesday, February 18, 2014 10:52:54 AM Yinghai Lu wrote:
+> > On Tue, Feb 18, 2014 at 2:08 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
+> > >> >
+> > >> > There's no pci bridge/bus hotplug though. Docking doesn't reveal the
+> > >> > pci-e->pci bridge or the (radeon) devices on the other side.
+> > >>
+> > >> oh, no. could be other regression in linus tree or pci/next.
+> > >>
+> > >
+> > > Previously I needed the busn work to get it working, this was included
+> > > in the resource-alloc branch.  It never worked on mainline, the bridge
+> > > used to show up but never get scanned.  Now it's not showing up at all
+> > > on hotplug.  It could be a dock driver regression.
+> > 
+> > I had the busn_res_alloc patches in the branch.
+> > 
+> > There is some changes about acpi dock driver from Rafael in recent
+> > kernels. Maybe Rafael could suggest which commit could cause problem,
+> > then you could try revert them on top of branch.
 > 
-> This series is based on Bjorn's pci-next branch.
-> Currently, more and more PCIe devices support PCIe DSN(Device Serial Number)
-> capability, we can use this cap to identify device. In some platform,
-> when we hotplug PCIe device, no interrupts will be received in system.
-> So we can not identify the device whether is changed during suspend.
-> PCIe DSN can help to identify this. 
+> I kind of suspect what might have caused them, but that particular thing
+> would not be easy to revert.
 > 
-> Legacy PCI device can achieve it by PCI Vital Product Data capability.
-> We can use its SN keyword to report the unique number.
-> But in my platform, PCI devices which support VPD SN cap report the
-> meaningless same string "0123456789". 
-> Rework PCI VPD code to support device identification is not an easy work.
-> Plan to do it in part2.
+> Steven, what was the last kernel in which the bridge showed up?
 > 
-> Yijing Wang (7):
->   PCI: rework pci_find_next_ext_capability()
->   PCI: introduce pci_bus_find_ext_capability()
->   PCI: Add support for Device Serial Number capability
->   PCI: Introduce pci_serial_number_changed()
->   PCI: Add pci_dummy_ops to isolate pci device temporarily
->   PCI: Check pci device serial number when scan device
->   PCI: pciehp: Don't enable/disable slot on resume unless status
->     changed
+> Did you test 3.14-rc3?
 > 
->  drivers/pci/hotplug/pciehp_core.c |   10 ++-
->  drivers/pci/pci.c                 |  169 +++++++++++++++++++++++++++++++++++--
->  drivers/pci/pci.h                 |    2 +-
->  drivers/pci/probe.c               |   15 +++-
->  include/linux/pci.h               |   10 ++-
->  5 files changed, 192 insertions(+), 14 deletions(-)
-> 
-> 
-> 
-> .
+> Rafael
 > 
 
+I'll try a few different kernels today and see when it last worked.  I
+hadn't updated the machine since some 3.12-rc + my local patches so I've
+no idea at the moment when it stopped working...
 
--- 
-Thanks!
-Yijing
 
