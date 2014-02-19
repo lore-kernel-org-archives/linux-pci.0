@@ -1,101 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:37704 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001AbaBLHet convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 02:34:49 -0500
-Message-ID: <52FB2222.20402@cn.fujitsu.com>
-Date: Wed, 12 Feb 2014 15:26:26 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 8/9] ACPI / dock: Drop remove_dock_dependent_devices()
+Date: Wed, 19 Feb 2014 02:32:12 +0100
+Message-ID: <3723851.WP79lXh8Px@vostro.rjw.lan>
+In-Reply-To: <3011875.q18rCmXyYX@vostro.rjw.lan>
+References: <3011875.q18rCmXyYX@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH part1 v6 4/7] PCI: Introduce pci_serial_number_changed()
-References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com> <1392173573-59844-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392173573-59844-5-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yijing,
-On 02/12/2014 10:52 AM, Yijing Wang wrote:
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> Sometimes OS do not know the physical device swap,
-> for instance, some device hotplug during system suspend.
-> Interrupt can not deliver to OS in some platform.
-> So we can use pci serial number capability to detect this
-> issue if device supports serial number.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Paul Bolle <pebolle@tiscali.nl>
-> Cc: Oliver Neukum <oneukum@suse.de>
-> Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/pci.c   |   28 ++++++++++++++++++++++++++++
->  include/linux/pci.h |    2 ++
->  2 files changed, 30 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a8c1c2d..af34057 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2199,6 +2199,34 @@ void pci_dsn_init(struct pci_dev *dev)
->  }
->  
->  /**
-> + * pci_serial_number_changed - check the device SN is changed
+Since remove_dock_dependent_devices() is only called from acpi_dock_add()
+and it only is called if the add_dock_dependent_device() adding the
+dock station to its own list of dependent devices has failed, it is not
+really necessary, because the dock station's list of dependent devices
+is guaranteed to be empty at that point.  Drop it, then.
 
-How about the name “pci_device_changed”? I think it's more readable,
-though the judgement is according to SN.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/dock.c |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
-Regards,
-Gu
-
-> + * @pdev: the PCI device
-> + *
-> + * check the device serial number is changed.
-> + * if device does not support device serial number,
-> + * return false.
-> + */
-> +bool pci_serial_number_changed(struct pci_dev *pdev)
-> +{
-> +	u64 old, new;
-> +	old = pdev->sn;
-> +
-> +	if (!pci_is_pcie(pdev))
-> +		return false;
-> +
-> +	new = pci_device_serial_number(pdev->bus,
-> +			pdev->devfn);
-> +
-> +	if (old != new) {
-> +		pr_info("%s: Device Serial Number Changed!\n",
-> +				pci_name(pdev));
-> +		return true;
-> +	} else
-> +		return false;
-> +}
-> +EXPORT_SYMBOL(pci_serial_number_changed);
-> +
-> +/**
->   * pci_configure_ari - enable or disable ARI forwarding
->   * @dev: the PCI device
->   *
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 3631859..d60c0b6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1025,6 +1025,8 @@ void pci_unlock_rescan_remove(void);
->  ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
->  ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
->  
-> +bool pci_serial_number_changed(struct pci_dev *pdev);
-> +
->  /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
->  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
->  void pci_bus_assign_resources(const struct pci_bus *bus);
-
+Index: linux-pm/drivers/acpi/dock.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/dock.c
++++ linux-pm/drivers/acpi/dock.c
+@@ -114,16 +114,6 @@ static int add_dock_dependent_device(str
+ 	return 0;
+ }
+ 
+-static void remove_dock_dependent_devices(struct dock_station *ds)
+-{
+-	struct dock_dependent_device *dd, *aux;
+-
+-	list_for_each_entry_safe(dd, aux, &ds->dependent_devices, list) {
+-		list_del(&dd->list);
+-		kfree(dd);
+-	}
+-}
+-
+ static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
+ 			       enum dock_callback_type cb_type)
+ {
+@@ -674,8 +664,8 @@ void acpi_dock_add(struct acpi_device *a
+ 	return;
+ 
+ err_rmgroup:
+-	remove_dock_dependent_devices(dock_station);
+ 	sysfs_remove_group(&dd->dev.kobj, &dock_attribute_group);
++
+ err_unregister:
+ 	platform_device_unregister(dd);
+ 	acpi_handle_err(handle, "%s encountered error %d\n", __func__, ret);
 
