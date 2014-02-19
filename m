@@ -1,74 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 12 Feb 2014 12:14:25 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/MSI: Fix cut-and-paste errors in documentation
-Message-ID: <20140212191425.GA5554@google.com>
-References: <1392201325-11173-1-git-send-email-agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392201325-11173-1-git-send-email-agordeev@redhat.com>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 00/17] Enhance DMAR drivers to handle PCI/memory hotplug events
+Date: Wed, 19 Feb 2014 14:07:20 +0800
+Message-Id: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 11:35:25AM +0100, Alexander Gordeev wrote:
-> Function pci_enable_msi_range() is used in examples where
-> pci_enable_msix_range() should have been used instead.
-> 
-> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Intel DMA/interrupt remapping drivers scan available PCI/memory devices
+at startup and cache discovered hardware topologies. They don't update
+cached information if PCI/memory hotplug event happens at runtime, then
+the stale information may break DMA/interrupt remapping logic.
 
-Applied to pci/misc for v3.15, thanks!
+This patchset first (Patch 1-12) tries to introduces some helper
+functions and fixes several bugs, then (Patch 13,14) uses a global
+rwsem and RCU to protect global DMA/interrupt remapping data
+structures, and finally (Patch 15-17) hook PCI/memory hotplug events
+to update cached information.
 
-Bjorn
+It's also a preparation for supporting of DMA/interrupt remapping
+hotplug.
 
-> ---
->  Documentation/PCI/MSI-HOWTO.txt |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> index a8d0100..43c5a5f 100644
-> --- a/Documentation/PCI/MSI-HOWTO.txt
-> +++ b/Documentation/PCI/MSI-HOWTO.txt
-> @@ -257,8 +257,8 @@ possible, likely up to the limit returned by pci_msix_vec_count() function:
->  
->  static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
->  {
-> -	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
-> -				    1, nvec);
-> +	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-> +				     1, nvec);
->  }
->  
->  Note the value of 'minvec' parameter is 1.  As 'minvec' is inclusive,
-> @@ -269,8 +269,8 @@ In this case the function could look like this:
->  
->  static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
->  {
-> -	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
-> -				    FOO_DRIVER_MINIMUM_NVEC, nvec);
-> +	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-> +				     FOO_DRIVER_MINIMUM_NVEC, nvec);
->  }
->  
->  4.3.1.2 Exact number of MSI-X interrupts
-> @@ -282,8 +282,8 @@ parameters:
->  
->  static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
->  {
-> -	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
-> -				    nvec, nvec);
-> +	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-> +				     nvec, nvec);
->  }
->  
->  4.3.1.3 Specific requirements to the number of MSI-X interrupts
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+V1->V2:
+1) fix more bugs in dealing with identify mapping domain
+2) address round 1 review comments
+
+Jiang Liu (17):
+  iommu/vt-d: avoid double free of g_iommus on error recovery path
+  iommu/vt-d: avoid caching stale domain_device_info and fix memory
+    leak
+  iommu/vt-d: avoid caching stale domain_device_info when hot-removing
+    PCI device
+  iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
+  iommu/vt-d: move private structures and variables into intel-iommu.c
+  iommu/vt-d: simplify function get_domain_for_dev()
+  iommu/vt-d: free resources if failed to create domain for PCIe
+    endpoint
+  iommu/vt-d: reduce duplicated code to handle virtual machine domains
+  iommu/vt-d: fix incorrect iommu_count for si_domain
+  iommu/vt-d: check for NULL pointer when freeing IOMMU data structure
+  iommu/vt-d: fix error in detect ATS capability
+  iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
+    entries
+  iommu/vt-d: introduce a rwsem to protect global data structures
+  iommu/vt-d: use RCU to protect global resources in interrupt context
+  iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
+    hotplug happens
+  iommu/vt-d, PCI: unify the way to process DMAR device scope array
+  iommu/vt-d: update IOMMU state when memory hotplug happens
+
+ drivers/iommu/dmar.c                |  412 +++++++++++++------
+ drivers/iommu/intel-iommu.c         |  750 ++++++++++++++++++-----------------
+ drivers/iommu/intel_irq_remapping.c |  108 +++--
+ drivers/iommu/iova.c                |   64 ++-
+ include/linux/dmar.h                |   74 ++--
+ include/linux/iova.h                |    2 +
+ 6 files changed, 848 insertions(+), 562 deletions(-)
+
+-- 
+1.7.10.4
+
