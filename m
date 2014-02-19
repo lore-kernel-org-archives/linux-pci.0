@@ -1,115 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:47385
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752495AbaBXVIu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 16:08:50 -0500
-From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yu Zhao <yuzhao@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: RE: Architectural question regarding IOV support in Linux 3.13.4
-Date: Mon, 24 Feb 2014 21:08:41 +0000
-Message-ID: <B756807489D6244883AC0B799A6EEC15EB2BEA@storexdag02.amd.com>
-References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
- <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
- <1393020186.9111.91.camel@ul30vt.home>
- <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
- <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
- <CAErSpo7tyzujCqvsQcns1wX+j5jM1=Xo9TiCC+5-h67uXqbGSg@mail.gmail.com>
-In-Reply-To: <CAErSpo7tyzujCqvsQcns1wX+j5jM1=Xo9TiCC+5-h67uXqbGSg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga09.intel.com ([134.134.136.24]:29587 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754954AbaBSSJa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 13:09:30 -0500
+Date: Wed, 19 Feb 2014 11:09:27 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] ntb: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140219180926.GA1333@jonmason-lab>
+References: <1392804931-30671-1-git-send-email-agordeev@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392804931-30671-1-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+T24gTW9uLCBGZWIgMjQsIDIwMTQgYXQgMTI6MjIgUE0sIFp5dGFydWssIEtlbGx5IDxLZWxs
-eS5aeXRhcnVrQGFtZC5jb20+IHdyb3RlOg0KPj4NCj4+Pk9uIEZyaSwgRmViIDIxLCAyMDE0IGF0
-IDI6MDMgUE0sIEFsZXggV2lsbGlhbXNvbiA8YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb20+IHdy
-b3RlOg0KPj4+T24gRnJpLCAyMDE0LTAyLTIxIGF0IDE0OjExIC0wNzAwLCBCam9ybiBIZWxnYWFz
-IHdyb3RlOg0KPj4+PiBbK2NjIEFsZXgsIFl1XQ0KPj4+Pg0KPj4+PiBPbiBGcmksIEZlYiAyMSwg
-MjAxNCBhdCAxMDo0NSBBTSwgWnl0YXJ1aywgS2VsbHkgPEtlbGx5Llp5dGFydWtAYW1kLmNvbT4g
-d3JvdGU6DQo+Pj4+ID4NCj4+Pj4gPiBJIGFtIHdvcmtpbmcgd2l0aCBTUi1JT1YgYW5kIEkgaGF2
-ZSBhIHF1ZXN0aW9uIHJlZ2FyZGluZyB0aGUgDQo+Pj4+ID4gZnVuY3Rpb24NCj4+Pj4gPiBzcmlv
-dl9pbml0KCkgaW4gLi4vZHJpdmVycy9wY2kvaW92LmMgKGxpbnV4IHZlcnNpb25zIDMuNC45IGFu
-ZCANCj4+Pj4gPiAzLjEzLjQpDQo+Pj4+ID4NCj4+Pj4gPiBJbiBzcmlvdl9pbml0KCkgdGhlIGNv
-ZGUgZmlyc3QgY2hlY2tzIHdoZXRoZXIgdGhlIFBGIGlzIGEgUm9vdCANCj4+Pj4gPiBjb21wbGV4
-ICBlbmRwb2ludCAoMHg5KSBvciBhbiBFeHByZXNzIEVuZHBvaW50ICgweDApIGFzIHNob3duIGlu
-IA0KPj4+PiA+IHRoZSBjb2RlICBzbmlwcGV0IGJlbG93LiAgSWYgaXQgaXMgbmVpdGhlciBpdCBy
-ZXR1cm5zIHRoZSBObyBkZXZpY2UgZXJyb3IuDQo+Pj4+ID4NCj4+Pj4gPiBzdGF0aWMgaW50IHNy
-aW92X2luaXQoc3RydWN0IHBjaV9kZXYgKmRldiwgaW50IHBvcykgew0KPj4+PiA+ICAgICAgICAg
-IGludCBpOw0KPj4+PiA+ICAgICAgICAgIGludCByYzsNCj4+Pj4gPiAgICAgICAgICBpbnQgbnJl
-czsNCj4+Pj4gPiAgICAgICAgICB1MzIgcGdzejsNCj4+Pj4gPiAgICAgICAgICB1MTYgY3RybCwg
-dG90YWwsIG9mZnNldCwgc3RyaWRlOw0KPj4+PiA+ICAgICAgICAgIHN0cnVjdCBwY2lfc3Jpb3Yg
-KmlvdjsNCj4+Pj4gPiAgICAgICAgICBzdHJ1Y3QgcmVzb3VyY2UgKnJlczsNCj4+Pj4gPiAgICAg
-ICAgICBzdHJ1Y3QgcGNpX2RldiAqcGRldjsNCj4+Pj4gPg0KPj4+PiA+ICAgICAgICBpZiAocGNp
-X3BjaWVfdHlwZShkZXYpICE9IFBDSV9FWFBfVFlQRV9SQ19FTkQgJiYNCj4+Pj4gPiAgICAgICAg
-ICAgICAgcGNpX3BjaWVfdHlwZShkZXYpICE9IFBDSV9FWFBfVFlQRV9FTkRQT0lOVCkNCj4+Pj4g
-PiAgICAgICAgICAgICAgICAgIHJldHVybiAtRU5PREVWOw0KPj4+PiA+DQo+Pj4+ID4gTXkgcXVl
-c3Rpb24gaXMgd2h5IFBDSV9FWFBfVFlQRV9MRUdfRU5EICgweDEpIGlzIG9taXR0ZWQgYXMgYmVp
-bmcgDQo+Pj4+ID4gYSAgdmFsaWQgZW5kcG9pbnQuICBCeSBleGNsdWRpbmcgTGVnYWN5IGVuZHBv
-aW50cyBpdCBmYWlscyANCj4+Pj4gPiBlbmFibGluZyAgU1ItSU9WIG9uIGEgVkdBIFBGLg0KPj4+
-PiA+DQo+Pj4+ID4gSXMgdGhlcmUgYSBkZXNpZ24vc3BlY2lmaWNhdGlvbiByZWFzb24gd2h5IGxl
-Z2FjeSB3YXMgZXhjbHVkZWQgb3IgDQo+Pj4+ID4gd2FzICBpdCBqdXN0IGFuIGFzc3VtcHRpb24g
-dGhhdCBWR0Egd291bGQgbmV2ZXIgc3VwcG9ydCBTUi1JT1Y/DQo+Pj4+ID4NCj4+Pj4gPiBJZiB0
-aGVyZSBpcyBubyB2YWxpZCByZWFzb24gdG8gZXhjbHVkZSBQQ0lfRVhQX1RZUEVfTEVHX0VORCwg
-SSANCj4+Pj4gPiB3b3VsZCAgbGlrZSB0byBkaXNjdXNzIGhhdmluZyBpdCBpbmNsdWRlZCBhcyBh
-IHZhbGlkIGVuZHBvaW50IGZvciBTUi1JT1YuDQo+Pj4+DQo+Pj4+IEdvb2QgcXVlc3Rpb24uICBJ
-dCBsb29rcyBsaWtlIGl0J3MgYmVlbiB0aGF0IHdheSBzaW5jZSB0aGUgYmVnaW5uaW5nIA0KPj4+
-PiBbMV0sIGJ1dCBJIGRvbid0IGtub3cgd2h5LiAgSSBkb24ndCBzZWUgYW55IHJlc3RyaWN0aW9u
-IGluIHRoZSBzcGVjIA0KPj4+PiBhYm91dCBTUi1JT1YgYW5kIGxlZ2FjeSBlbmRwb2ludHMuDQo+
-Pj4+DQo+Pj4+IEkgYWxzbyBkb24ndCBrbm93IHdoZXRoZXIgVkdBIGlzIGFuIGlzc3VlLiAgVGhl
-cmUgYXJlIHNvbWUgbGVnYWN5IA0KPj4+PiBhZGRyZXNzaW5nIGlzc3VlcyBmb3IgW21lbSAweGEw
-MDAwLTB4YmZmZmZdIGFuZCBbaW8gMHgzYjAtMHgzYmJdIGFuZCANCj4+Pj4gW2lvIDB4M2MwLTB4
-M2RmXS4gIEZvciBleGFtcGxlLCB3aGVuIGEgYnJpZGdlIGhhcyBpdHMgVkdBIEVuYWJsZSBiaXQg
-DQo+Pj4+IHNldCwgaXQgcG9zaXRpdmVseSBkZWNvZGVzIFttZW0gMHhhMDAwMC0weGJmZmZmXSBl
-dmVuIGlmIHRoYXQgcmFuZ2UgDQo+Pj4+IGlzbid0IGluY2x1ZGVkIGluIG9uZSBvZiB0aGUgYnJp
-ZGdlIHdpbmRvd3MuICBJIGRvbid0IGtub3cgd2hldGhlciBhIA0KPj4+PiBWR0EgZGV2aWNlIGlz
-IHNpbWlsYXJseSBhbGxvd2VkIHRvIGRlY29kZSB0aGF0IHJhbmdlIGV2ZW4gaWYgaXQncyANCj4+
-Pj4gbm90IGluIGEgQkFSLiAgSWYgaXQgaXMsIEkgY291bGQgaW1hZ2luZSBpc3N1ZXMgaWYgZW5h
-YmxpbmcgU1ItSU9WIA0KPj4+PiBjcmVhdGVkIHNldmVyYWwgVkdBIFZGcy4NCj4+PlZGcyBjYW5u
-b3Qgc3VwcG9ydCBJL08gcG9ydCBzcGFjZSBieSBkZWZpbml0aW9uLCBzbyBJIGRvbid0IHRoaW5r
-IGEgDQo+Pj4iVkdBIFZGIiBjb3VsZCBhY3R1YWxseSBleGlzdC4gIFRoZXJlIHdvdWxkIGJlIG5v
-dGhpbmcgd3Jvbmcgd2l0aCBhIA0KPj4+bm9uLVZHQSBHUFUgVkYgdGhvdWdoLiAgSSBhbHNvIGRv
-bid0IHNlZSBob3cgdGhlIGRpZmZlcmVuY2VzIGluIExlZ2FjeSANCj4+PkVuZHBvaW50IHJ1bGVz
-IHZlcnN1cyBhIHN0YW5kYXJkIEVuZHBvaW50IHdvdWxkIHByZWNsdWRlIHN1cHBvcnRpbmcgDQo+
-Pj5TUi1JT1YuICBJIGRvbid0IHRoaW5rIHRoZSBTUi1JT1Ygc3BlYyBtYWtlcyBhbnkgZGVtYW5k
-cyBvbiB3aGV0aGVyIA0KPj4+dGhlIFBGIHJlcXVpcmVzIEkvTyBwb3J0IHJlc291cmNlcywgd2hp
-Y2ggSSBhc3N1bWUgaXMgdGhlIG1haW4gcmVhc29uIA0KPj4+Zm9yIHRoaXMgdG8gY2FsbCBpdHNl
-bGYgTGVnYWN5LiAgSSdkIGd1ZXNzIGl0IHdhcyBsaWtlbHkganVzdCBhbiANCj4+Pm92ZXJzaWdo
-dCBhbmQgd2Ugc2hvdWxkIGFkZCBsZWdhY3kgZW5kcG9pbnRzIChvciByZW1vdmUgdGhlIHRlc3Qg
-DQo+Pj5hbHRvZ2V0aGVyIGFuZCB0cnVzdCB0aGF0IGlmIGEgZGV2aWNlIGhhcyBhbiBTUi1JT1Yg
-Y2FwYWJpbGl0eSwgd2UgDQo+Pj5zaG91bGQgaW5pdGlhbGl6ZSBpdCkuICBUaGFua3MsDQo+Pj4N
-Cj4+PkFsZXgNCj4+Pg0KPj4+SSBhZ3JlZS4gSSB2YWd1ZWx5IHJlbWVtYmVyIHRoZXJlIHdhcyBz
-b21lIHJlYXNvbiB0aGF0IGV4Y2x1ZGVzIGxlZ2FjeSANCj4+PmVuZHBvaW50cyBmcm9tIHVzaW5n
-IFNSLUlPVi4gQnV0IGFmdGVyIGEgcXVpY2sgbG9vayBhdCB0aGUgbGF0ZXN0IA0KPj4+c3BlY3Ms
-IEkgZGlkbid0IGZpbmQgYW55Lg0KPj4+DQo+PiBPbmx5IExlZ2FjeSBFbmRwb2ludHMgY2FuIGNs
-YWltIEkvTy4gIFZGcyBhcmUgbm90IGFsbG93ZWQgdG8gY2xhaW0gSS9PLg0KPj4gVkdBIGRldmlj
-ZXMgY2xhaW0gSS9PLg0KPj4NCj4+IFRoZSBTUi1JT1Ygc3BlYyAxLjEgc2VjdGlvbiAzLjQuMS42
-IHN0YXRlcyDigJxUaGUgQ2xhc3MgQ29kZSByZWdpc3RlciBpcyANCj4+IHJlYWQtb25seSBhbmQg
-aXMgdXNlZCB0byBpZGVudGlmeSB0aGUgZ2VuZXJpYyBmdW5jdGlvbiBvZiB0aGUgZGV2aWNlIA0K
-Pj4gYW5kLCBpbiBzb21lIGNhc2VzLCBhIHNwZWNpZmljIHJlZ2lzdGVyIGxldmVsIHByb2dyYW1t
-aW5nIGludGVyZmFjZS4NCj4+IFRoZSBmaWVsZCBpbiB0aGUgUEYgYW5kIGFzc29jaWF0ZWQgVkZz
-IG11c3QgcmV0dXJuIHRoZSBzYW1lIHZhbHVlIHdoZW4gcmVhZC7igJ0NCj4+DQo+PiBJZiB0aGUg
-UEYgaXMgYSBWR0EgZGV2aWNlIHRoZW4gYnkgdGhlIGRlZmluaXRpb24gaW4gdGhlIFNSLUlPViBz
-cGVjIA0KPj4gdGhlIGNsYXNzIGNvZGUgb2YgdGhlIFZGIHdvdWxkIGFsc28gaW5kaWNhdGUgaXQg
-YXMgYSBWR0EgZGV2aWNlLCBpZSANCj4+IFN1YmNsYXNzIDB4MCA9IFZHQSwgc3ViY2xhc3MgMHg4
-MCA9IE9USEVSX0RJU1BMQVlfQ09OVFJPTExFUi4NCj4+DQo+PiBJZGVhbGx5IHdlIHdvdWxkIHdh
-bnQgdG8gaGF2ZSB0aGUgUEYgc3ViLWNsYXNzIGFzIDB4MCBhbmQgdGhlIFZGIA0KPj4gc3ViY2xh
-c3MgYXMgMHg4MCBCdXQgdGhlIHNwZWMgZG9lc24ndCBzdXBwb3J0IHRoaXMuDQo+Pg0KPj4gT25l
-IHNwZWN1bGF0aW9uIGFzIHRvIHdoeSBMZWdhY3kgZW5kcG9pbnRzIHdlcmUgb21pdHRlZCBtaWdo
-dCBiZSB0aGUgDQo+PiBhc3N1bXB0aW9uIHRoYXQgZG9pbmcgc28gd291bGQgYWxsb3cgVkdBIFZG
-cyB0byBiZSBjcmVhdGVkLg0KPj4NCj4+IEl0IGlzIG5vdCByZWFzb25hYmxlIHRvIHByZXZlbnQg
-YSBWR0EgUEYgZnJvbSBlbmFibGluZyBTUi1JT1YgYXMgdGhpcyANCj4+IGlzIGEgcmVhbCB3b3Js
-ZCBwb3NzaWJpbGl0eS4gIFdlIG1pZ2h0IG5lZWQgdG8gYWRkIG1vcmUgY29kZSBlbHNld2hlcmUg
-DQo+PiBob3dldmVyIHRvIHByZXZlbnQgYSBWRiBmcm9tIGJlY29taW5nIGEgVkdBIGRldmljZSBv
-dXRzaWRlIG9mIHBhc3NpbmcgaXQgdGhyb3VnaCB0byBhIGd1ZXN0IFZNLg0KPg0KPkNhbiB5b3Ug
-dHJ5IG91dCBZdSdzIHBhdGNoIGFuZCBzZWUgd2hhdCBoYXBwZW5zPyAgSWYgeW91IGRvIHR1cm4g
-b24gU1ItSU9WIG9uIHRoaXMgZGV2aWNlLCBpdCB3b3VsZCBiZSBpbnRlcmVzdGluZyB0byBzZWUg
-dGhlIGNvbXBsZXRlIGRtZXNnIGxvZyBhbmQgImxzcGNpIC12diIgb3V0cHV0IHRvID5zZWUgd2hh
-dCB3ZSBkbyB3aXRoIGl0Lg0KPg0KPkJqb3JuDQoNCkkgYW0gYXdheSBmcm9tIG15IHRlc3Qgc3lz
-dGVtIGZvciB0aGUgbmV4dCAyIHdlZWtzIGJ1dCBJIHdpbGwgZ2l2ZSBpdCBhIHRyeSB3aGVuIEkg
-cmV0dXJuLiAgSSBoYXZlIGJlZW4gd29ya2luZyBhcm91bmQgdGhlIGlzc3VlIGJ5IGNoYW5naW5n
-IHRoZSBwY2ktdHlwZSB0byBQQ0lfRVhQX1RZUEVfRU5EUE9JTlQgd2hpY2ggaGFzIHdvcmtlZCBm
-b3IgbWUgZXZlbiB0aG91Z2ggaXQgaXMgbm90IGNvcnJlY3QuDQoNClRoYW5rcywNCktlbGx5DQo=
+On Wed, Feb 19, 2014 at 11:15:21AM +0100, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Jon Mason <jon.mason@intel.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/ntb/ntb_hw.c |   43 ++++++++++++++++---------------------------
+>  drivers/ntb/ntb_hw.h |    2 --
+>  2 files changed, 16 insertions(+), 29 deletions(-)
+> 
+> diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+> index 170e8e6..fda37eb 100644
+> --- a/drivers/ntb/ntb_hw.c
+> +++ b/drivers/ntb/ntb_hw.c
+> @@ -1085,21 +1085,15 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+>  	struct msix_entry *msix;
+>  	int msix_entries;
+>  	int rc, i;
+> -	u16 val;
+>  
+> -	if (!pdev->msix_cap) {
+> -		rc = -EIO;
+> -		goto err;
+> -	}
+> -
+> -	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
+> -	if (rc)
+> +	rc = pci_msix_vec_count(pdev);
 
+Nit, you should probably use msix_entries instead of rc in this case.
+
+> +	if (rc < 0) {
+>  		goto err;
+> -
+> -	msix_entries = msix_table_size(val);
+> -	if (msix_entries > ndev->limits.msix_cnt) {
+> +	} else if (rc > ndev->limits.msix_cnt) {
+>  		rc = -EINVAL;
+>  		goto err;
+> +	} else {
+> +		msix_entries = rc;
+>  	}
+
+Style Nit.  Braces with only one line.  If you make the change above,
+then it is moot.
+
+>  
+>  	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
+> @@ -1112,26 +1106,21 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+>  	for (i = 0; i < msix_entries; i++)
+>  		ndev->msix_entries[i].entry = i;
+>  
+> -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> -	if (rc < 0)
+> -		goto err1;
+> -	if (rc > 0) {
+> +	if (ndev->hw_type != BWD_HW)
+>  		/* On SNB, the link interrupt is always tied to 4th vector.  If
+>  		 * we can't get all 4, then we can't use MSI-X.
+>  		 */
+> -		if (ndev->hw_type != BWD_HW) {
+> -			rc = -EIO;
+> -			goto err1;
+> -		}
+> -
+> -		dev_warn(&pdev->dev,
+> -			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+> -			 rc);
+> +		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
+> +					   msix_entries, msix_entries);
+> +	else
+> +		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
+> +					   1, msix_entries);
+
+Actually, this must be 2 for the min.  One for the Data and one for
+the Link.  If you look a few lines after this in the original code,
+there is a grabbing of the last vector for the link.  I realize there
+is currently no check for this in the driver and a potential error
+case occurs.  I can make a separate patch to correct this issue if
+this patch is not going through my tree.
+
+Thanks,
+Jon
+
+
+> +	if (rc < 0)
+> +		goto err1;
+> +	else if (rc < msix_entries) {
+> +		dev_warn(&pdev->dev, "Only %d MSI-X vectors. "
+> +			 "Limiting the number of queues to that number.\n", rc);
+>  		msix_entries = rc;
+> -
+> -		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> -		if (rc)
+> -			goto err1;
+>  	}
+>  
+>  	for (i = 0; i < msix_entries; i++) {
+> diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
+> index bbdb7ed..d307107 100644
+> --- a/drivers/ntb/ntb_hw.h
+> +++ b/drivers/ntb/ntb_hw.h
+> @@ -60,8 +60,6 @@
+>  #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
+>  #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+>  
+> -#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
+> -
+>  #ifndef readq
+>  static inline u64 readq(void __iomem *addr)
+>  {
+> -- 
+> 1.7.7.6
+> 
