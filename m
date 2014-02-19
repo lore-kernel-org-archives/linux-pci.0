@@ -1,88 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:39166 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbaBRVdT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 16:33:19 -0500
-Received: by mail-ie0-f176.google.com with SMTP id rd18so2136077iec.35
-        for <linux-pci@vger.kernel.org>; Tue, 18 Feb 2014 13:33:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1392564830-5868-1-git-send-email-sthokal@xilinx.com>
-References: <1392564830-5868-1-git-send-email-sthokal@xilinx.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Feb 2014 14:32:58 -0700
-Message-ID: <CAErSpo5FGPhgnp8Gfy-1_Lk7ckCi7U5+z5pLnPU+jScPxD5yUQ@mail.gmail.com>
-Subject: Re: [PATCH] pcie: Add Xilinx PCIe Host Bridge IP driver
-To: Srikanth Thokala <sthokal@xilinx.com>
-Cc: Michal Simek <michal.simek@xilinx.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:28601 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751986AbaBSKNs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 05:13:48 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] portdrv: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 11:15:26 +0100
+Message-Id: <1392804931-30671-6-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Arnd]
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-On Sun, Feb 16, 2014 at 8:33 AM, Srikanth Thokala <sthokal@xilinx.com> wrote:
-> This is the driver for Xilinx AXI PCIe Host Bridge Soft IP
->
-> Signed-off-by: Srikanth Thokala <sthokal@xilinx.com>
-> ---
-> - Rebased on v3.14.0-rc2
-> ---
->  .../devicetree/bindings/pci/xilinx-pcie.txt        |   43 +
->  drivers/pci/host/Kconfig                           |    7 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pci-xilinx.c                      |  985 ++++++++++++++++++++
->  4 files changed, 1036 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-pcie.txt
->  create mode 100644 drivers/pci/host/pci-xilinx.c
->
-> diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-> new file mode 100644
-> index 0000000..66a2487
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-> @@ -0,0 +1,43 @@
-> +* Xilinx AXI PCIe Root Port Bridge DT description
-> +
-> +Required properties:
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- compatible: Should contain "xlnx,axi-pcie-1.00.a"
-> +- reg: Should contain AXI PCIe registers location and length
-> +- interrupts: Should contain AXI PCIe interrupt
-> +- ranges: ranges for the PCI memory regions
-> +       Please refer to the standard PCI bus binding document for a more
-> +       detailed explanation
-> +- xlnx,axibar-num: Number of memory regions configured in the hardware,
-> +       maximum being three which is configurable in the hardware.
-> +- xlnx,include-rc: Root Port (=1) or End Point (=0)
-> +- xlnx,pciebar2axibar-0: Translation address from PCIe to AXI
-> +       Only one PCIe BAR is applicable in Root port mode, it can be
-> +       either 32/64-bit. If it is 64-bit BAR, lower 32 bits are present
-> +       in 'xlnx,pciebar2axibar-0' and Upper 32 bits in 'xlnx,pciebar2
-> +       axibar-1'. And if it is 32-bit BAR, only 'xlnx,pciebar2axibar-0'
-> +       is valid
-> +
-> +Optional properties
-> +- xlnx,pciebar-as: PCIe BAR aperture size is 32 (=0) or 64-bit (=1).
-> +- xlnx,pciebar2axibar-1: Translation address from PCIe to AXI, contains
-> +       upper 32 bits if PCIe BAR size is 64-bit. When xlnx,pciebar-as
-> +       is set, this is a required property and should contain a valid
-> +       value (other than FF's)
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/pcie/portdrv_core.c |   17 ++++++++++-------
+ 1 files changed, 10 insertions(+), 7 deletions(-)
 
-I hardly know anything about DT, but xlnx,pciebar2axibar-0,
-xlnx,pciebar-as, and xlnx,pciebar2axibar-1 look strange to me.  Is
-that really the DT way of dealing with 32/64-bit BARs and host bridge
-address translation?  I don't see similar things in the other files in
-Documentation/devicetree/bindings/pci/, even though some of the other
-drivers/pci/host/*.c files do use pci_add_resource_offset(), which
-indicates that they support address translation.
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 986f8ea..4e46eca 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -99,8 +99,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+ 	for (i = 0; i < nr_entries; i++)
+ 		msix_entries[i].entry = i;
+ 
+-	status = pci_enable_msix(dev, msix_entries, nr_entries);
+-	if (status)
++	status = pci_enable_msix_range(dev,
++				       msix_entries, nr_entries, nr_entries);
++	if (status < 0)
+ 		goto Exit;
+ 
+ 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+@@ -159,21 +160,23 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+ 		idx[PCIE_PORT_SERVICE_AER_SHIFT] = i;
+ 	}
+ 
++	status = 0;
++
+ 	/*
+ 	 * If nvec is equal to the allocated number of entries, we can just use
+ 	 * what we have.  Otherwise, the port has some extra entries not for the
+ 	 * services we know and we need to work around that.
+ 	 */
+-	if (nvec == nr_entries) {
+-		status = 0;
+-	} else {
++	if (nvec != nr_entries) {
+ 		/* Drop the temporary MSI-X setup */
+ 		pci_disable_msix(dev);
+ 
+ 		/* Now allocate the MSI-X vectors for real */
+-		status = pci_enable_msix(dev, msix_entries, nvec);
+-		if (status)
++		nvec = pci_enable_msix_range(dev, msix_entries, nvec, nvec);
++		if (nvec < 0) {
++			status = nvec;
+ 			goto Exit;
++		}
+ 	}
+ 
+ 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+-- 
+1.7.7.6
 
-Please also include a MAINTAINERS update for drivers/pci/host/pci-xilinx.c.
-
-Bjorn
