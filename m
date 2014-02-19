@@ -1,120 +1,276 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:21622 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257AbaBMMW2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 07:22:28 -0500
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N0X00ARSP1EWI30@mailout3.samsung.com> for
- linux-pci@vger.kernel.org; Thu, 13 Feb 2014 21:22:26 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Will Deacon' <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	jgunthorpe@obsidianresearch.com, 'Jingoo Han' <jg1.han@samsung.com>
+Received: from dliviu.plus.com ([80.229.23.120]:46142 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753191AbaBSLmf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 06:42:35 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id 335B0FF04C
+	for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 11:42:34 +0000 (GMT)
+Date: Wed, 19 Feb 2014 11:37:55 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
+ controller
+Message-ID: <20140219113755.GD5394@bart.dudau.co.uk>
 References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <1392236171-10512-3-git-send-email-will.deacon@arm.com>
-In-reply-to: <1392236171-10512-3-git-send-email-will.deacon@arm.com>
-Subject: Re: [PATCH v2 2/3] ARM: bios32: use pci_enable_resource to enable PCI
- resources
-Date: Thu, 13 Feb 2014 21:22:26 +0900
-Message-id: <000001cf28b6$41846bb0$c48d4310$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+ <20140218174125.GC29304@obsidianresearch.com>
+ <20140219024427.GC5394@bart.dudau.co.uk>
+ <1948942.cIbLaKDEOa@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1948942.cIbLaKDEOa@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, February 13, 2014 5:16 AM, Will Deacon wrote:
+On Wed, Feb 19, 2014 at 11:24:30AM +0100, Arnd Bergmann wrote:
+> On Wednesday 19 February 2014 02:44:27 Liviu Dudau wrote:
+> > On Tue, Feb 18, 2014 at 10:41:25AM -0700, Jason Gunthorpe wrote:
+> > 
+> > > So the Liviu, I would say the API should be similar to what we see in
+> > > other OF enabled driver bases subsystems, call the core code with a
+> > > platform_device pointer and function_ops pointer and have the core
+> > > code create a domain, figure out the domain # from the DT (via
+> > > aliases?), and so on.
+> > 
+> > I wish things were easier!
+> > 
+> > Lets look at the 'int pci_domain_nr(struct pci_bus *bus);' function. It is
+> > used to obtain the domain number of the bus passed as an argument.
+> > 
+> > - include/linux/pci.h defines it as an inline function returning zero if
+> >   !CONFIG_PCI || !CONFIG_PCI_DOMAINS. Otherwise it is silent on what the
+> >   function might look like.
 > 
-> This patch moves bios32 over to using the generic code for enabling PCI
-> resources. Since the core code takes care of bridge resources too, we
-> can also drop the explicit IO and MEMORY enabling for them in the arch
-> code.
+> I think we should come up with a default implementation that works for
+> any architecture using DT based probing, and requires PCI_DOMAINS to
+> be enabled.
+
+Agree. What I was trying to say was that the function is not *defined* if
+you have CONFIG_PCI && !CONFIG_PCI_DOMAINS, but it has a dummy implementation
+for !CONFIG_PCI or CONFIG_PCI && CONFIG_PCI_DOMAINS.
+
 > 
-> A side-effect of this change is that we no longer explicitly enable
-> devices when running in PCI_PROBE_ONLY mode. This stays closer to the
-> meaning of the option and prevents us from trying to enable devices
-> without any assigned resources (the core code refuses to enable
-> resources without parents).
+> > - alpha, ia64, microblaze, mips, powerpc and tile all define it as a cast
+> >   of bus->sysdata to "struct pci_controller *" and then access a data
+> >   member from there to get the domain number. But ... the pci_controller
+> >   structure is different for each architecture, with few more members in
+> >   addition that might be actually shared with generic framework code.
 > 
-> Signed-off-by: Will Deacon <will.deacon@arm.com>
+> We do have the generic 'struct pci_host_bridge'. It would be trivial to
+> add a 'domain' field in there and use it in the generic implementation.
 
-I tested this patch with NIC on Exynos platform.
-It works properly.
+That's what my v1 patch was trying to do, but as Tanmay reported, it is not
+working, see below for the explanation why (short summary, we ask for domain
+number of a bus before the associated pci_host_bridge is alive).
 
-Tested-by: Jingoo Han <jg1.han@samsung.com> 
-
-[    0.406431] PCI: bus1: Fast back to back transfers disabled
-[    0.411912] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-[    0.418608] pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 01
-[    0.425351] pci 0000:00:00.0: BAR 8: assigned [mem 0x40100000-0x401fffff]
-[    0.432144] pci 0000:00:00.0: BAR 9: assigned [mem 0x40200000-0x402fffff pref]
-[    0.439426] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-[    0.445599] pci 0000:01:00.0: BAR 1: assigned [mem 0x40100000-0x4017ffff]
-[    0.452488] pci 0000:01:00.0: BAR 6: assigned [mem 0x40200000-0x4023ffff pref]
-[    0.459745] pci 0000:01:00.0: BAR 0: assigned [mem 0x40180000-0x4019ffff]
-[    0.466635] pci 0000:01:00.0: BAR 3: assigned [mem 0x401a0000-0x401a3fff]
-[    0.473499] pci 0000:01:00.0: BAR 2: assigned [io  0x1000-0x101f]
-[    0.479656] pci 0000:00:00.0: PCI bridge to [bus 01]
-
-Best regards,
-Jingoo Han
-
-> ---
->  arch/arm/kernel/bios32.c | 37 +++----------------------------------
->  1 file changed, 3 insertions(+), 34 deletions(-)
 > 
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 317da88ae65b..91f48804e3bb 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -608,41 +608,10 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->   */
->  int pcibios_enable_device(struct pci_dev *dev, int mask)
+> > - arm, s390, sparc and x86 have all different names for their sysdata,
+> >   but they all contain inside a member that is used for giving a domain
+> >   back. sparc gets an honorary mention here for getting the API wrong
+> >   and returning -ENXIO in certain conditions (not like the generic code
+> >   cares).
+> 
+> I would hope that for the generic case, we can actually remove the
+> use of 'sysdata' and replace it with common code that just looks
+> at pci_host_bridge. Some architectures (s390 in particular) will probably
+> need their own data to be added in sysdata, but overall the architectures
+> are really trying to do the same thing here. With the work that Bjorn
+> and others have done over the past few years, you already need much less
+> architecture specific code. I think it's time to get it to a point where
+> most architectures can do without any at all.
+
+We are on the same page. I was just flagging the amount of work we need to
+do here to bring everyone towards common code.
+
+> 
+> > That takes care of the implementation. But what about usage?
+> > 
+> > - drivers/pci/probe.c: pci_create_root_bus allocates a new bus structure,
+> >   sets up the sysdata and ops member pointers and then goes straight
+> >   into trying to find if the newly created bus doesn't already exist by
+> >   using the bus number given as parameter and pci_domain_nr() with the
+> >   new bus structure as argument. I'm trying really hard to figure out
+> >   what was the intention here, but from the point of view of someone
+> >   trying to implement the pci_domain_nr() function I have no idea what
+> >   to return for a virgin bus structure that is not yet attached to any
+> >   parent.
+> 
+> Right, this needs to be changed when moving the domain into pci_host_bridge.
+
+Yes, if only I understood what the intent was here. Unfortunately, the history
+of the file stops (for my git tree) at Linus' first commit from v2.6.0, so
+I need to dig deeper. What I am looking to understand is the answer to this
+question: "When you want to create a new bus and you want to make sure it
+is not duplicated, do you go across all domains or pick the current domain
+and allow for same bus number in different domains?"
+
+To give some context: I'm looking at drivers/pci/probe.c, pci_create_root_bus().
+Specifically, this code:
+
+	b = pci_alloc_bus();
+	if (!b)
+		return NULL;
+
+	b->sysdata = sysdata;
+	b->ops = ops;
+	b->number = b->busn_res.start = bus;
+	b2 = pci_find_bus(pci_domain_nr(b), bus);
+	if (b2) {
+		/* If we already got to this bus through a different bridge, ignore it */
+		dev_dbg(&b2->dev, "bus already known\n");
+		goto err_out;
+	}
+
+	bridge = pci_alloc_host_bridge(b);
+	if (!bridge)
+		goto err_out;
+
+
+If you look at the comment after pci_find_bus, you can see that the intent was
+to try to find duplicate busses covered by different bridges (but in the same
+domain? maybe, because there used to be only one domain at the beginning, but
+then why use pci_domain_nr() here?). Problems I see here:
+
+  - code is trying to get the domain number of a bus that it just created but not
+    plugged yet in the hierarchy
+  - pci_find_bus tries to find a bus in the global list of busses that has the
+    same domain number and bus number as the parameters of the function. But
+    the domain number was plucked out of thin air and all architectures seem to
+    actually give you the current active domain number, not the one that actually
+    covers the bus (and host_bridge) that you are trying to create.
+
+
+I will try to restructure the code here, but I think the check is superfluous and
+can be done better by a function that tries to find duplicates when you add the
+bus, rather than when creating the scaffolding.
+
+> 
+> > So I can see the intent of what Jason is proposing and I'm heading that
+> > way myself, but I think I need to cleanup pci_create_root_bus first
+> > (change the creation order between bridge and bus). And if someone has
+> > a good idea on how to determine the domain # from DT we can pluck it
+> > into the pcibios_root_bridge_prepare() function (either the generic
+> > version or the arch specific one).
+> 
+> How about the change below, to introduce a new pci_scan_domain() function
+> as a variant of pci_scan_root_bus()?
+> 
+> 	Arnd
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 5094943..9f2ec2f 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1697,8 +1697,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
 >  {
-> -	u16 cmd, old_cmd;
-> -	int idx;
-> -	struct resource *r;
-> -
-> -	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> -	old_cmd = cmd;
-> -	for (idx = 0; idx < 6; idx++) {
-> -		/* Only set up the requested stuff */
-> -		if (!(mask & (1 << idx)))
-> -			continue;
-> -
-> -		r = dev->resource + idx;
-> -		if (!r->start && r->end) {
-> -			printk(KERN_ERR "PCI: Device %s not available because"
-> -			       " of resource collisions\n", pci_name(dev));
-> -			return -EINVAL;
-> -		}
-> -		if (r->flags & IORESOURCE_IO)
-> -			cmd |= PCI_COMMAND_IO;
-> -		if (r->flags & IORESOURCE_MEM)
-> -			cmd |= PCI_COMMAND_MEMORY;
-> -	}
-> +	if (pci_has_flag(PCI_PROBE_ONLY))
-> +		return 0;
-> 
-> -	/*
-> -	 * Bridges (eg, cardbus bridges) need to be fully enabled
-> -	 */
-> -	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
-> -		cmd |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
-> -
-> -	if (cmd != old_cmd) {
-> -		printk("PCI: enabling device %s (%04x -> %04x)\n",
-> -		       pci_name(dev), old_cmd, cmd);
-> -		pci_write_config_word(dev, PCI_COMMAND, cmd);
-> -	}
-> -	return 0;
-> +	return pci_enable_resources(dev, mask);
 >  }
+>  
+> -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +static struct pci_bus *__pci_create_root_bus(struct device *parent,
+> +		int domain, int bus, struct pci_ops *ops, void *sysdata,
+> +		struct list_head *resources)
+>  {
+>  	int error;
+>  	struct pci_host_bridge *bridge;
+> @@ -1716,7 +1717,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	b->sysdata = sysdata;
+>  	b->ops = ops;
+>  	b->number = b->busn_res.start = bus;
+> -	b2 = pci_find_bus(pci_domain_nr(b), bus);
+> +	b2 = pci_find_bus(domain, bus);
+>  	if (b2) {
+>  		/* If we already got to this bus through a different bridge, ignore it */
+>  		dev_dbg(&b2->dev, "bus already known\n");
+> @@ -1727,6 +1728,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	if (!bridge)
+>  		goto err_out;
+>  
+> +	bridge->domain = domain;
+>  	bridge->dev.parent = parent;
+>  	bridge->dev.release = pci_release_host_bridge_dev;
+>  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> @@ -1801,6 +1803,13 @@ err_out:
+>  	return NULL;
+>  }
+>  
+> +struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> +		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +{
+> +	return __pci_create_root_bus(parent, pci_domain_nr(bus), bus,
+> +		ops, sysdata, resources);
+> +}
+> +
+>  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+>  {
+>  	struct resource *res = &b->busn_res;
+> @@ -1899,6 +1908,42 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+>  }
+>  EXPORT_SYMBOL(pci_scan_root_bus);
+>  
+> +struct pci_bus *pci_scan_domain(struct device *parent, int domain,
+> +		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> +{
+> +	struct pci_host_bridge_window *window;
+> +	bool found = false;
+> +	struct pci_bus *b;
+> +	int max;
+> +
+> +	list_for_each_entry(window, resources, list)
+> +		if (window->res->flags & IORESOURCE_BUS) {
+> +			found = true;
+> +			break;
+> +		}
+> +
+> +	if (!found) {
+> +		dev_info(&b->dev,
+> +			 "No busn resource found for domain %d\n", domain);
+> +		return NULL;
+> +	}
+> +
+> +	b = __pci_create_root_bus(parent, domain, window->res->start,
+> +				  ops, sysdata, resources);
+> +	if (!b)
+> +		return NULL;
+> +
+> +		dev_info(&b->dev,
+> +		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+> +			bus);
+> +		pci_bus_insert_busn_res(b, bus, 255);
+> +	}
+> +
+> +	max = pci_scan_child_bus(b);
+> +
+> +	pci_bus_add_devices(b);
+> +	return b;
+> +}
+>  /* Deprecated; use pci_scan_root_bus() instead */
+>  struct pci_bus *pci_scan_bus_parented(struct device *parent,
+>  		int bus, struct pci_ops *ops, void *sysdata)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1e26fc6..734c016 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -395,6 +395,7 @@ struct pci_host_bridge_window {
+>  
+>  struct pci_host_bridge {
+>  	struct device dev;
+> +	int domain;
+>  	struct pci_bus *bus;		/* root bus */
+>  	struct list_head windows;	/* pci_host_bridge_windows */
+>  	void (*release_fn)(struct pci_host_bridge *);
 > 
->  int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-> --
-> 1.8.2.2
+
+Yes, I think this will work, as long as we can figure out if the intent of the
+code is corect.
+
+Thanks,
+Liviu
 
