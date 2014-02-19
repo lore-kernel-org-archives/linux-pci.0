@@ -1,34 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f172.google.com ([209.85.220.172]:60661 "EHLO
-	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457AbaB1Syn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 13:54:43 -0500
-Received: by mail-vc0-f172.google.com with SMTP id lf12so1143560vcb.31
-        for <linux-pci@vger.kernel.org>; Fri, 28 Feb 2014 10:54:42 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]:16843 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751886AbaBSIaQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 03:30:16 -0500
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Dutt, Sudeep" <sudeep.dutt@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Stephen Hemminger" <stephen@networkplumber.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"Brown, Aaron F" <aaron.f.brown@intel.com>,
+	Arjan van de Ven <arjan@linux.intel.com>
+Subject: RE: [PATCH v2 2/4] mei: Add include of <linux/irqreturn.h>
+Date: Wed, 19 Feb 2014 08:29:52 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B1AF74107@HASMSX106.ger.corp.intel.com>
+References: <20140218205925.11014.14973.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140218205946.11014.13654.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140218205946.11014.13654.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAPykPMmLkQ2O5253EcUFuwNdmMKcL-Nr9KQi1EZoMH2yuHXcjQ@mail.gmail.com>
-References: <CAPykPMmLkQ2O5253EcUFuwNdmMKcL-Nr9KQi1EZoMH2yuHXcjQ@mail.gmail.com>
-Date: Fri, 28 Feb 2014 19:54:42 +0100
-Message-ID: <CAPykPM=HhgvAebJbFW76D2umQjH5jz66FVh9egVY5khvGFNH2Q@mail.gmail.com>
-Subject: Fwd: Attaching drivers to identical PCI devices.
-From: Jeroen Van den Keybus <jeroen.vandenkeybus@triphase.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I would like to use 2 versions of a PCI driver, each for one of 2
-identical devices. The driver that gets probed first will seize both
-devices in driver_attach().
-
-Using sysfs's bind and unbind methods, you can arrange to release the
-device for use by the other driver, but the first driver has
-nevertheless been initializing, driving and shutting down the device,
-which is unacceptable in my case.
-
-What would be the best way to deal with this ?
-
-Thanks,
-
-
-J.
+DQoNCj4gDQo+IFdlIGN1cnJlbnRseSBpbmNsdWRlIDxsaW51eC9pcnFyZXR1cm4uaD4gaW4gPGxp
+bnV4L3BjaS5oPiwgYnV0IEknbSBhYm91dCB0bw0KPiByZW1vdmUgdGhhdCBmcm9tIGxpbnV4L3Bj
+aS5oLCBzbyBhZGQgZXhwbGljaXQgaW5jbHVkZXMgd2hlcmUgbmVlZGVkLg0KPiANCj4gU2lnbmVk
+LW9mZi1ieTogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gLS0tDQo+ICBk
+cml2ZXJzL21pc2MvbWVpL2h3LW1lLmggfCAgICAxICsNCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGlu
+c2VydGlvbigrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWlzYy9tZWkvaHctbWUuaCBi
+L2RyaXZlcnMvbWlzYy9tZWkvaHctbWUuaA0KPiBpbmRleCA4MGJkODI5ZmJkOWEuLjg5M2Q1MTE5
+ZmE5YiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9taXNjL21laS9ody1tZS5oDQo+ICsrKyBiL2Ry
+aXZlcnMvbWlzYy9tZWkvaHctbWUuaA0KPiBAQCAtMjAsNiArMjAsNyBAQA0KPiAgI2RlZmluZSBf
+TUVJX0lOVEVSRkFDRV9IXw0KPiANCj4gICNpbmNsdWRlIDxsaW51eC9tZWkuaD4NCj4gKyNpbmNs
+dWRlIDxsaW51eC9pcnFyZXR1cm4uaD4NCj4gICNpbmNsdWRlICJtZWlfZGV2LmgiDQo+ICAjaW5j
+bHVkZSAiY2xpZW50LmgiDQoNCg0KT2theS4NCj4gDQoNCg==
