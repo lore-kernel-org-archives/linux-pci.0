@@ -1,166 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:59233 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754331AbaBBASQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 19:18:16 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 13/13] ACPI / hotplug: Do not pass ACPI handles to ACPI dock operations
-Date: Sun, 02 Feb 2014 01:31:48 +0100
-Message-ID: <5610827.AznebXRq6q@vostro.rjw.lan>
-In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
+Received: from moutng.kundenserver.de ([212.227.126.130]:58551 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753573AbaBSUzG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 15:55:06 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Liviu Dudau <liviu@dudau.co.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King <rmk@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
+Date: Wed, 19 Feb 2014 21:48:48 +0100
+Message-ID: <3905203.TvF8RmfLsz@wuerfel>
+In-Reply-To: <CAErSpo5PCTyZ5jzumJxD=CCN+-t-Z31Cw+9ejT_oTQ4fFQePag@mail.gmail.com>
+References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <3312083.odPX4th7oi@wuerfel> <CAErSpo5PCTyZ5jzumJxD=CCN+-t-Z31Cw+9ejT_oTQ4fFQePag@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wednesday 19 February 2014 13:18:24 Bjorn Helgaas wrote:
+> >
+> > Right, this is an interesting case indeed, and I think we haven't
+> > considered it in the binding so far. We already encode a "bus-range"
+> > in DT, so we can easily partition the ECAM config space, but it
+> > still violates one of the two assumptions:
+> > a) that the register ranges for the two host bridge devices are
+> >    non-overlapping in DT
+> > b) that the ECAM register range as specified in DT starts at bus
+> >    0 and is a power-of-two size.
+> > Since the binding is not fixed that, we could change the definition to
+> > say that the ECAM register range in the "reg" property must match
+> > the buses listed in the "bus-range" property.
+> 
+> Addresses in the ACPI MCFG table correspond to bus number 0, but the
+> MCFG also provides start & end bus numbers, so the valid range does
+> not necessarily start with bus 0 and need not be power-of-two in size.
+>  Something similar sounds like a good idea for DT.
 
-None of the existing users of struct acpi_dock_ops actually needs the
-first argument of its member functions, so redefine those functions
-to take only two arguments, the event type and data pointer, and
-update the users of struct acpi_dock_ops accordingly.
+Hmm, we'll have to think about that. From a DT perspective, we try
+to keep things local to the node using it, so listing only the
+registers we are allowed to access is more natural.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/dock.c                |    4 ++--
- drivers/ata/libata-acpi.c          |    8 ++++----
- drivers/pci/hotplug/acpiphp_glue.c |   13 +++++++------
- include/acpi/acpi_drivers.h        |    6 +++---
- 4 files changed, 16 insertions(+), 15 deletions(-)
+Another option would be to have a separate device node for the ECAM
+registers and point to that from the host controller node, which
+would describe this cleanly but also add a bit of complexity that
+will rarely be used.
 
-Index: linux-pm/include/acpi/acpi_drivers.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_drivers.h
-+++ linux-pm/include/acpi/acpi_drivers.h
-@@ -110,9 +110,9 @@ void pci_acpi_crs_quirks(void);
-                                   Dock Station
-   -------------------------------------------------------------------------- */
- struct acpi_dock_ops {
--	acpi_notify_handler fixup;
--	acpi_notify_handler handler;
--	acpi_notify_handler uevent;
-+	void (*handler)(u32 event_type, void *data);
-+	void (*fixup)(u32 event_type, void *data);
-+	void (*uevent)(u32 event_type, void *data);
- };
- 
- #ifdef CONFIG_ACPI_DOCK
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -63,7 +63,7 @@ static DEFINE_MUTEX(acpiphp_context_lock
- static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
--static void hotplug_event(acpi_handle handle, u32 type, void *data);
-+static void hotplug_event(u32 type, void *data);
- static void free_bridge(struct kref *kref);
- 
- static void acpiphp_context_handler(acpi_handle handle, void *context)
-@@ -185,7 +185,7 @@ static void free_bridge(struct kref *kre
-  * TBD - figure out a way to only call fixups for
-  * systems that require them.
-  */
--static void post_dock_fixups(acpi_handle not_used, u32 event, void *data)
-+static void post_dock_fixups(u32 event, void *data)
- {
- 	struct acpiphp_context *context = data;
- 	struct pci_bus *bus = context->func.slot->bus;
-@@ -788,11 +788,12 @@ void acpiphp_check_host_bridge(acpi_hand
- 
- static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot);
- 
--static void hotplug_event(acpi_handle handle, u32 type, void *data)
-+static void hotplug_event(u32 type, void *data)
- {
- 	struct acpiphp_context *context = data;
- 	struct acpiphp_func *func = &context->func;
- 	struct acpiphp_slot *slot = func->slot;
-+	acpi_handle handle = context->adev->handle;
- 	struct acpiphp_bridge *bridge;
- 
- 	mutex_lock(&acpiphp_context_lock);
-@@ -845,14 +846,14 @@ static void hotplug_event(acpi_handle ha
- static void hotplug_event_work(void *data, u32 type)
- {
- 	struct acpiphp_context *context = data;
--	acpi_handle handle = context->adev->handle;
- 
- 	acpi_scan_lock_acquire();
- 
--	hotplug_event(handle, type, context);
-+	hotplug_event(type, context);
- 
- 	acpi_scan_lock_release();
--	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
-+	acpi_evaluate_hotplug_ost(context->adev->handle, type,
-+				  ACPI_OST_SC_SUCCESS, NULL);
- 	put_bridge(context->func.parent);
- }
- 
-Index: linux-pm/drivers/acpi/dock.c
-===================================================================
---- linux-pm.orig/drivers/acpi/dock.c
-+++ linux-pm/drivers/acpi/dock.c
-@@ -185,7 +185,7 @@ static void dock_release_hotplug(struct
- static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
- 			       enum dock_callback_type cb_type)
- {
--	acpi_notify_handler cb = NULL;
-+	void (*cb)(u32, void *) = NULL;
- 	bool run = false;
- 
- 	mutex_lock(&hotplug_lock);
-@@ -213,7 +213,7 @@ static void dock_hotplug_event(struct do
- 		return;
- 
- 	if (cb)
--		cb(dd->handle, event, dd->hp_context);
-+		cb(event, dd->hp_context);
- 
- 	dock_release_hotplug(dd);
- }
-Index: linux-pm/drivers/ata/libata-acpi.c
-===================================================================
---- linux-pm.orig/drivers/ata/libata-acpi.c
-+++ linux-pm/drivers/ata/libata-acpi.c
-@@ -121,14 +121,14 @@ static void ata_acpi_handle_hotplug(stru
- 		ata_port_wait_eh(ap);
- }
- 
--static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
-+static void ata_acpi_dev_notify_dock(u32 event, void *data)
- {
- 	struct ata_device *dev = data;
- 
- 	ata_acpi_handle_hotplug(dev->link->ap, dev, event);
- }
- 
--static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
-+static void ata_acpi_ap_notify_dock(u32 event, void *data)
- {
- 	struct ata_port *ap = data;
- 
-@@ -154,12 +154,12 @@ static void ata_acpi_uevent(struct ata_p
- 	}
- }
- 
--static void ata_acpi_ap_uevent(acpi_handle handle, u32 event, void *data)
-+static void ata_acpi_ap_uevent(u32 event, void *data)
- {
- 	ata_acpi_uevent(data, NULL, event);
- }
- 
--static void ata_acpi_dev_uevent(acpi_handle handle, u32 event, void *data)
-+static void ata_acpi_dev_uevent(u32 event, void *data)
- {
- 	struct ata_device *dev = data;
- 	ata_acpi_uevent(dev->link->ap, dev, event);
+> > I still want to make sure I understand exactly what this case is about
+> > though, i.e. what is shared and what is separate if you have two host
+> > bridges with a common ECAM region:
+> >
+> > * I assume I/O space is always shared on x86, but probably separate
+> >   elsewhere.
+> 
+> I think x86 *could* support multiple I/O spaces, but user-mode
+> inb/outb could only reach the 0-64K space.  I think ia64 has the same
+> limitation on user code, but it supports many spaces in the kernel.
 
+Ok.
+
+> > * Each host would always have a fixed memory space aperture, right?
+> 
+> The ACPI _CRS/_PRS/_SRS mechanism theoretically allows changes to the
+> bus number, I/O space, and memory space apertures of host bridges.
+> But we don't do any of those changes today, and I don't know if any
+> BIOSes actually allow it.
+
+I mean non-overlapping apertures in particular. We also have
+cases where the aperture that we list in DT is just programmed
+into hardware registers by the host driver and could be arbitrary,
+but you can't normally have the same MMIO address go to two
+devices on internal buses (or not in a sensible way).
+
+> > * From what I understand from your description, the hardware does
+> >   not enforce specific bus numbers for each host. How does the
+> >   host bridge know its root bus number then?
+> 
+> I don't know details of any specific hardware.  I'm just saying that
+> ACPI provides a mechanism for the OS to manipulate the bus number
+> range below a host bridge.  Of course, a BIOS is free to omit _PRS and
+> _SRS, and in that case, the bus/IO/memory apertures reported by _CRS
+> are fixed and can't be changed.  We learn the root bus number from the
+> host bridge _CRS (but I'm sure you knew that, so maybe I missed the
+> point of your question).
+
+I guess the answer then is that the host bridge can have a register
+for programming the root bus number, but it's not standardized and
+therefore the access is hidden in the _PRS/_SRS methods. If we have
+the same on DT and want to reprogram the bus numbers, we'd need to
+have a kernel driver for the nonstandard registers of the host bridge.
+
+> > * Should I expect one IOMMU per host bridge or one ECAM region,
+> >   or can either be possible?
+> 
+> It's possible to have multiple IOMMUs per host bridge, and I think
+> they can even be buried down in the PCIe hierarchy.
+
+Oh, I didn't know that. So how do you actually find the IOMMU for
+a given domain/bus/device/function combination?
+
+> > * The IntA-IntB IRQ numbers are always per host bridge I assume.
+> 
+> For conventional PCI, INTx are just wires that could go anywhere, so
+> there's no connection between them and a host bridge.  You have to
+> have a _PRT or similar to make sense out of them.  For PCIe, a Root
+> Complex maps INTx emulation messages to system interrupts in an
+> implementation-specific way, so we need a _PRT there, too.  I don't
+> think there's a requirement that these IRQ numbers be per-host bridge.
+
+Right, makes sense.
+
+Thanks for the detailed explanations!
+
+	Arnd
