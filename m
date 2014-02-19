@@ -1,85 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 22/24][Resend] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
-Date: Tue, 04 Feb 2014 00:39:38 +0100
-Message-ID: <2300097.5mc1uSoD5p@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:30681 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751375AbaBSI4e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 03:56:34 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 2/9] cciss: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 09:58:14 +0100
+Message-Id: <93bb43ba4d56c17101c7930511851f7e7c3d0c0d.1392799751.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
+References: <cover.1392799751.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Since acpi_hotplug_notify_cb() does not use its data argument any
-more, the second argument of acpi_install_hotplug_notify_handler()
-can be dropped, so do that and update its callers accordingly.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Mike Miller <mike.miller@hp.com>
+Cc: iss_storagedev@hp.com
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/acpi/scan.c                |    6 +++---
- drivers/pci/hotplug/acpiphp_glue.c |    2 +-
- include/acpi/acpi_bus.h            |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/block/cciss.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -577,10 +577,10 @@ static void acpi_hotplug_notify_cb(acpi_
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index fc5b0a4..5463cb5 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -4080,19 +4080,14 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
+ 		goto default_int_mode;
  
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
-+void acpi_install_hotplug_notify_handler(acpi_handle handle)
- {
- 	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				    acpi_hotplug_notify_cb, data);
-+				    acpi_hotplug_notify_cb, NULL);
- }
- 
- void acpi_remove_hotplug_notify_handler(acpi_handle handle)
-@@ -2048,7 +2048,7 @@ static void acpi_scan_init_hotplug(acpi_
- 	list_for_each_entry(hwid, &pnp.ids, list) {
- 		handler = acpi_scan_match_handler(hwid->id, NULL);
- 		if (handler) {
--			acpi_install_hotplug_notify_handler(handle, handler);
-+			acpi_install_hotplug_notify_handler(handle);
- 			break;
- 		}
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+-		err = pci_enable_msix(h->pdev, cciss_msix_entries, 4);
+-		if (!err) {
++		err = pci_enable_msix_range(h->pdev, cciss_msix_entries, 4, 4);
++		if (err > 0) {
+ 			h->intr[0] = cciss_msix_entries[0].vector;
+ 			h->intr[1] = cciss_msix_entries[1].vector;
+ 			h->intr[2] = cciss_msix_entries[2].vector;
+ 			h->intr[3] = cciss_msix_entries[3].vector;
+ 			h->msix_vector = 1;
+ 			return;
+-		}
+-		if (err > 0) {
+-			dev_warn(&h->pdev->dev,
+-				"only %d MSI-X vectors available\n", err);
+-			goto single_msi_mode;
+ 		} else {
+ 			dev_warn(&h->pdev->dev,
+ 				"MSI-X init failed %d\n", err);
+@@ -4101,7 +4096,7 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
  	}
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -372,7 +372,7 @@ static acpi_status register_slot(acpi_ha
- 
- 	/* install notify handler */
- 	if (!(newfunc->flags & FUNC_HAS_DCK))
--		acpi_install_hotplug_notify_handler(handle, NULL);
-+		acpi_install_hotplug_notify_handler(handle);
- 
- 	return AE_OK;
- }
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -445,7 +445,7 @@ static inline bool acpi_device_enumerate
- typedef void (*acpi_hp_callback)(void *data, u32 src);
- 
- acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
-+void acpi_install_hotplug_notify_handler(acpi_handle handle);
- void acpi_remove_hotplug_notify_handler(acpi_handle handle);
- 
- /**
+ single_msi_mode:
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+-		if (!pci_enable_msi(h->pdev))
++		if (pci_enable_msi_range(h->pdev, 1, 1) > 0)
+ 			h->msi_vector = 1;
+ 		else
+ 			dev_warn(&h->pdev->dev, "MSI init failed\n");
+-- 
+1.7.7.6
 
