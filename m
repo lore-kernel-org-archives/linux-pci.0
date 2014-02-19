@@ -1,109 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 4/24][New] ACPI / hotplug / PCI: Fix bridge removal race in handle_hotplug_event()
-Date: Tue, 04 Feb 2014 00:18:03 +0100
-Message-ID: <1460941.uPM2Zn8FLA@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: [Patch Part2 V2 03/17] iommu/vt-d: avoid caching stale domain_device_info when hot-removing PCI device
+Date: Wed, 19 Feb 2014 14:07:23 +0800
+Message-Id: <1392790057-32434-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Function device_notifier() in intel-iommu.c only remove domain_device_info
+data structure associated with a PCI device when handling PCI device
+driver unbinding events. If a PCI device has never been bound to a PCI
+device driver, there won't be BUS_NOTIFY_UNBOUND_DRIVER event when
+hot-removing the PCI device. So associated domain_device_info data
+structure may get lost.
 
-If a PCI bridge with an ACPIPHP context attached is removed via
-sysfs, the code path executed as a result is the following:
+On the other hand, if iommu_pass_through is enabled, function
+iommu_prepare_static_indentify_mapping() will create domain_device_info
+data structure for each PCIe to PCIe bridge and PCIe endpoint,
+no matter whether there are drivers associated with those PCIe devices
+or not. So those domain_device_info data structures will get lost when
+hot-removing the assocated PCIe devices if they have never bound to
+any PCI device driver.
 
-pci_stop_and_remove_bus_device_locked
- pci_remove_bus
-  pcibios_remove_bus
-   acpi_pci_remove_bus
-    acpiphp_remove_slots
-     cleanup_bridge
-     put_bridge
-      free_bridge
-       acpiphp_put_context (for each child, under context lock)
-        kfree (child context)
+To be even worse, it's not only an memory leak issue, but also an
+caching of stale information bug because the memory are kept in
+device_domain_list and domain->devices lists.
 
-Now, if a hotplug notify is dispatched for one of the bridge's
-children and the timing is such that handle_hotplug_event() for
-that notify is executed while free_bridge() above is running,
-the get_bridge(context->func.parent) in handle_hotplug_event()
-will not really help, because it is too late to prevent the bridge
-from going away and the child's context may be freed before
-hotplug_event_work() scheduled from handle_hotplug_event()
-dereferences the pointer to it passed via the data argument.
-That will cause a kernel crash to happpen in hotplug_event_work().
+Fix the bug by trying to remove domain_device_info data structure when
+handling BUS_NOTIFY_DEL_DEVICE event.
 
-To prevent that from happening, make handle_hotplug_event()
-check the is_going_away flag of the function's parent bridge
-(under acpiphp_context_lock) and bail out if it's set.  Also,
-make cleanup_bridge() set the bridge's is_going_away flag under
-acpiphp_context_lock so that it cannot be changed between the
-check and the subsequent get_bridge(context->func.parent) in
-handle_hotplug_event().
-
-Then, in the above scenario, handle_hotplug_event() will notice
-that context->func.parent->is_going_away is already set and it
-will exit immediately preventing the crash from happening.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ drivers/iommu/intel-iommu.c |   17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -441,7 +441,9 @@ static void cleanup_bridge(struct acpiph
- 	list_del(&bridge->list);
- 	mutex_unlock(&bridge_mutex);
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index f75d3ae..5a411e8 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3603,18 +3603,19 @@ static int device_notifier(struct notifier_block *nb,
+ 	if (iommu_dummy(pdev))
+ 		return 0;
  
-+	mutex_lock(&acpiphp_context_lock);
- 	bridge->is_going_away = true;
-+	mutex_unlock(&acpiphp_context_lock);
++	if (action != BUS_NOTIFY_UNBOUND_DRIVER &&
++	    action != BUS_NOTIFY_DEL_DEVICE)
++		return 0;
++
+ 	domain = find_domain(pdev);
+ 	if (!domain)
+ 		return 0;
+ 
+-	if (action == BUS_NOTIFY_UNBOUND_DRIVER) {
+-		domain_remove_one_dev_info(domain, pdev);
+-
+-		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
+-		    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
+-		    list_empty(&domain->devices))
+-			domain_exit(domain);
+-	}
++	domain_remove_one_dev_info(domain, pdev);
++	if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
++	    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
++	    list_empty(&domain->devices))
++		domain_exit(domain);
+ 
+ 	return 0;
  }
- 
- /**
-@@ -941,6 +943,7 @@ static void handle_hotplug_event(acpi_ha
- {
- 	struct acpiphp_context *context;
- 	u32 ost_code = ACPI_OST_SC_SUCCESS;
-+	acpi_status status;
- 
- 	switch (type) {
- 	case ACPI_NOTIFY_BUS_CHECK:
-@@ -976,13 +979,20 @@ static void handle_hotplug_event(acpi_ha
- 
- 	mutex_lock(&acpiphp_context_lock);
- 	context = acpiphp_get_context(handle);
--	if (context && !WARN_ON(context->handle != handle)) {
--		get_bridge(context->func.parent);
--		acpiphp_put_context(context);
--		acpi_hotplug_execute(hotplug_event_work, context, type);
-+	if (!context || WARN_ON(context->handle != handle)
-+	    || context->func.parent->is_going_away)
-+		goto err_out;
-+
-+	get_bridge(context->func.parent);
-+	acpiphp_put_context(context);
-+	status = acpi_hotplug_execute(hotplug_event_work, context, type);
-+	if (ACPI_SUCCESS(status)) {
- 		mutex_unlock(&acpiphp_context_lock);
- 		return;
- 	}
-+	put_bridge(context->func.parent);
-+
-+ err_out:
- 	mutex_unlock(&acpiphp_context_lock);
- 	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
- 
+-- 
+1.7.10.4
 
