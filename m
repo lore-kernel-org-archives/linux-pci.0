@@ -1,81 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:58014 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753701AbaBCX22 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:28 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 15/24][Resend] ACPI / hotplug / PCI: Use acpi_handle_debug() in hotplug_event()
-Date: Tue, 04 Feb 2014 00:33:56 +0100
-Message-ID: <5322449.ygVERcl5IX@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	virtio-dev@lists.oasis-open.org,
+	virtualization@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] virtio: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 11:15:29 +0100
+Message-Id: <1392804931-30671-9-git-send-email-agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Make hotplug_event() use acpi_handle_debug() instead of an open-coded
-debug message printing and clean up the messages printed by it.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: virtio-dev@lists.oasis-open.org
+Cc: virtualization@lists.linux-foundation.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/virtio/virtio_pci.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -819,9 +819,6 @@ static void hotplug_event(acpi_handle ha
- 	struct acpiphp_func *func = &context->func;
- 	struct acpiphp_slot *slot = func->slot;
- 	struct acpiphp_bridge *bridge;
--	char objname[64];
--	struct acpi_buffer buffer = { .length = sizeof(objname),
--				      .pointer = objname };
+diff --git a/drivers/virtio/virtio_pci.c b/drivers/virtio/virtio_pci.c
+index a416f9b..dea042c 100644
+--- a/drivers/virtio/virtio_pci.c
++++ b/drivers/virtio/virtio_pci.c
+@@ -333,11 +333,9 @@ static int vp_request_msix_vectors(struct virtio_device *vdev, int nvectors,
+ 	for (i = 0; i < nvectors; ++i)
+ 		vp_dev->msix_entries[i].entry = i;
  
- 	mutex_lock(&acpiphp_context_lock);
- 	bridge = context->bridge;
-@@ -831,14 +828,11 @@ static void hotplug_event(acpi_handle ha
- 	mutex_unlock(&acpiphp_context_lock);
+-	/* pci_enable_msix returns positive if we can't get this many. */
+-	err = pci_enable_msix(vp_dev->pci_dev, vp_dev->msix_entries, nvectors);
+-	if (err > 0)
+-		err = -ENOSPC;
+-	if (err)
++	err = pci_enable_msix_range(vp_dev->pci_dev,
++				    vp_dev->msix_entries, nvectors, nvectors);
++	if (err < 0)
+ 		goto error;
+ 	vp_dev->msix_enabled = 1;
  
- 	pci_lock_rescan_remove();
--	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
- 	switch (type) {
- 	case ACPI_NOTIFY_BUS_CHECK:
- 		/* bus re-enumerate */
--		pr_debug("%s: Bus check notify on %s\n", __func__, objname);
--		pr_debug("%s: re-enumerating slots under %s\n",
--			 __func__, objname);
-+		acpi_handle_debug(handle, "Bus check in %s()\n", __func__);
- 		if (bridge)
- 			acpiphp_check_bridge(bridge);
- 		else if (!(slot->flags & SLOT_IS_GOING_AWAY))
-@@ -848,7 +842,7 @@ static void hotplug_event(acpi_handle ha
- 
- 	case ACPI_NOTIFY_DEVICE_CHECK:
- 		/* device check */
--		pr_debug("%s: Device check notify on %s\n", __func__, objname);
-+		acpi_handle_debug(handle, "Device check in %s()\n", __func__);
- 		if (bridge) {
- 			acpiphp_check_bridge(bridge);
- 		} else if (!(slot->flags & SLOT_IS_GOING_AWAY)) {
-@@ -863,7 +857,7 @@ static void hotplug_event(acpi_handle ha
- 
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		/* request device eject */
--		pr_debug("%s: Device eject notify on %s\n", __func__, objname);
-+		acpi_handle_debug(handle, "Eject request in %s()\n", __func__);
- 		acpiphp_disable_and_eject_slot(slot);
- 		break;
- 	}
+-- 
+1.7.7.6
+
