@@ -1,123 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64961 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752163AbaBWXGX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Feb 2014 18:06:23 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/2] ACPI / PM: Resume runtime-suspended devices later during system suspend
-Date: Mon, 24 Feb 2014 00:20:11 +0100
-Message-ID: <24034179.VSBkt6DiQs@vostro.rjw.lan>
-In-Reply-To: <1853950.oxM3KDpyLu@vostro.rjw.lan>
-References: <1853950.oxM3KDpyLu@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:64580 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753009AbaBSKNk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Feb 2014 05:13:40 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jon Mason <jon.mason@intel.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] ntb: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Wed, 19 Feb 2014 11:15:21 +0100
+Message-Id: <1392804931-30671-1-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Runtime-suspended devices are resumed during system suspend by
-acpi_subsys_prepare() for two reasons: First, because they may need
-to be reprogrammed in order to change their wakeup settings and,
-second, because they may need to be operatonal for their children
-to be successfully suspended.  That is a problem, though, if there
-are many runtime-suspended devices that need to be resumed this
-way during system suspend, because the .prepare() PM callbacks of
-devices are executed sequentially and the times taken by them
-accumulate, which may increase the total system suspend time quite
-a bit.
-
-For this reason, move the resume of runtime-suspended devices up
-to the next phase of device suspend (during system suspend), except
-for the ones that have power.ignore_children set.  The exception is
-made, because the devices with power.ignore_children set may still
-be necessary for their children to be successfully suspended (during
-system suspend) and they won't be resumed automatically as a result
-of the runtime resume of their children.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Jon Mason <jon.mason@intel.com>
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/acpi/device_pm.c |   41 ++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 38 insertions(+), 3 deletions(-)
+ drivers/ntb/ntb_hw.c |   43 ++++++++++++++++---------------------------
+ drivers/ntb/ntb_hw.h |    2 --
+ 2 files changed, 16 insertions(+), 29 deletions(-)
 
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -901,15 +901,30 @@ EXPORT_SYMBOL_GPL(acpi_dev_resume_early)
- int acpi_subsys_prepare(struct device *dev)
+diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+index 170e8e6..fda37eb 100644
+--- a/drivers/ntb/ntb_hw.c
++++ b/drivers/ntb/ntb_hw.c
+@@ -1085,21 +1085,15 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 	struct msix_entry *msix;
+ 	int msix_entries;
+ 	int rc, i;
+-	u16 val;
+ 
+-	if (!pdev->msix_cap) {
+-		rc = -EIO;
+-		goto err;
+-	}
+-
+-	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
+-	if (rc)
++	rc = pci_msix_vec_count(pdev);
++	if (rc < 0) {
+ 		goto err;
+-
+-	msix_entries = msix_table_size(val);
+-	if (msix_entries > ndev->limits.msix_cnt) {
++	} else if (rc > ndev->limits.msix_cnt) {
+ 		rc = -EINVAL;
+ 		goto err;
++	} else {
++		msix_entries = rc;
+ 	}
+ 
+ 	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
+@@ -1112,26 +1106,21 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 	for (i = 0; i < msix_entries; i++)
+ 		ndev->msix_entries[i].entry = i;
+ 
+-	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+-	if (rc < 0)
+-		goto err1;
+-	if (rc > 0) {
++	if (ndev->hw_type != BWD_HW)
+ 		/* On SNB, the link interrupt is always tied to 4th vector.  If
+ 		 * we can't get all 4, then we can't use MSI-X.
+ 		 */
+-		if (ndev->hw_type != BWD_HW) {
+-			rc = -EIO;
+-			goto err1;
+-		}
+-
+-		dev_warn(&pdev->dev,
+-			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+-			 rc);
++		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
++					   msix_entries, msix_entries);
++	else
++		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
++					   1, msix_entries);
++	if (rc < 0)
++		goto err1;
++	else if (rc < msix_entries) {
++		dev_warn(&pdev->dev, "Only %d MSI-X vectors. "
++			 "Limiting the number of queues to that number.\n", rc);
+ 		msix_entries = rc;
+-
+-		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+-		if (rc)
+-			goto err1;
+ 	}
+ 
+ 	for (i = 0; i < msix_entries; i++) {
+diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
+index bbdb7ed..d307107 100644
+--- a/drivers/ntb/ntb_hw.h
++++ b/drivers/ntb/ntb_hw.h
+@@ -60,8 +60,6 @@
+ #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
+ #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+ 
+-#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
+-
+ #ifndef readq
+ static inline u64 readq(void __iomem *addr)
  {
- 	/*
--	 * Follow PCI and resume devices suspended at run time before running
--	 * their system suspend callbacks.
-+	 * Devices having power.ignore_children set may still be necessary for
-+	 * suspending their children in the next phase of device suspend.
- 	 */
--	pm_runtime_resume(dev);
-+	if (dev->power.ignore_children)
-+		pm_runtime_resume(dev);
-+
- 	return pm_generic_prepare(dev);
- }
- EXPORT_SYMBOL_GPL(acpi_subsys_prepare);
- 
- /**
-+ * acpi_subsys_suspend - Run the device driver's suspend callback.
-+ * @dev: Device to handle.
-+ *
-+ * Follow PCI and resume devices suspended at run time before running their
-+ * system suspend callbacks.
-+ */
-+int acpi_subsys_suspend(struct device *dev)
-+{
-+	pm_runtime_resume(dev);
-+	return pm_generic_suspend(dev);
-+}
-+
-+/**
-  * acpi_subsys_suspend_late - Suspend device using ACPI.
-  * @dev: Device to suspend.
-  *
-@@ -937,6 +952,23 @@ int acpi_subsys_resume_early(struct devi
- 	return ret ? ret : pm_generic_resume_early(dev);
- }
- EXPORT_SYMBOL_GPL(acpi_subsys_resume_early);
-+
-+/**
-+ * acpi_subsys_freeze - Run the device driver's freeze callback.
-+ * @dev: Device to handle.
-+ */
-+int acpi_subsys_freeze(struct device *dev)
-+{
-+	/*
-+	 * This used to be done in acpi_subsys_prepare() for all devices and
-+	 * some drivers may depend on it, so do it here.  Ideally, however,
-+	 * runtime-suspended devices should not be touched during freeze/thaw
-+	 * transitions.
-+	 */
-+	pm_runtime_resume(dev);
-+	return pm_generic_freeze(dev);
-+}
-+
- #endif /* CONFIG_PM_SLEEP */
- 
- static struct dev_pm_domain acpi_general_pm_domain = {
-@@ -947,8 +979,11 @@ static struct dev_pm_domain acpi_general
- #endif
- #ifdef CONFIG_PM_SLEEP
- 		.prepare = acpi_subsys_prepare,
-+		.suspend = acpi_subsys_suspend,
- 		.suspend_late = acpi_subsys_suspend_late,
- 		.resume_early = acpi_subsys_resume_early,
-+		.freeze = acpi_subsys_freeze,
-+		.poweroff = acpi_subsys_suspend,
- 		.poweroff_late = acpi_subsys_suspend_late,
- 		.restore_early = acpi_subsys_resume_early,
- #endif
+-- 
+1.7.7.6
 
