@@ -1,66 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog114.obsmtp.com ([207.126.144.137]:44113 "EHLO
-	eu1sys200aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753656AbaBTENc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 23:13:32 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
-	Pratyush ANAND <pratyush.anand@st.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 20 Feb 2014 12:13:17 +0800
-Subject: RE: [PATCH 1/1] Designware:RC BARs setup related fix
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FD40D6FE@EAPEX1MAIL1.st.com>
-References: <1392811475-17744-1-git-send-email-mohit.kumar@st.com>
- <20140219215359.GA19233@google.com>
-In-Reply-To: <20140219215359.GA19233@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from userp1040.oracle.com ([156.151.31.81]:39115 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbaBSPVX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 10:21:23 -0500
+Message-ID: <5304CC49.7020000@oracle.com>
+Date: Wed, 19 Feb 2014 10:22:49 -0500
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] xen-pciback: Use pci_enable_msix_range() instead of pci_enable_msix()
+References: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
+In-Reply-To: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+On 02/19/2014 05:15 AM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
+>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> Cc: David Vrabel <david.vrabel@citrix.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>   drivers/xen/xen-pciback/pciback_ops.c |   16 ++++++++++------
+>   1 files changed, 10 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/xen/xen-pciback/pciback_ops.c b/drivers/xen/xen-pciback/pciback_ops.c
+> index 64eb0cd..f5b4c3e 100644
+> --- a/drivers/xen/xen-pciback/pciback_ops.c
+> +++ b/drivers/xen/xen-pciback/pciback_ops.c
+> @@ -213,9 +213,15 @@ int xen_pcibk_enable_msix(struct xen_pcibk_device *pdev,
+>   		entries[i].vector = op->msix_entries[i].vector;
+>   	}
+>   
+> -	result = pci_enable_msix(dev, entries, op->value);
+> +	result = pci_enable_msix_range(dev, entries, op->value, op->value);
+> +	if (result < op->value) {
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Thursday, February 20, 2014 3:24 AM
-> To: Mohit KUMAR DCG
-> Cc: jg1.han@samsung.com; Pratyush ANAND; Arnd Bergmann; spear-devel;
-> linux-pci@vger.kernel.org
-> Subject: Re: [PATCH 1/1] Designware:RC BARs setup related fix
-> 
-> On Wed, Feb 19, 2014 at 05:34:35PM +0530, Mohit Kumar wrote:
-> > The Synopsys  PCIe core provides one pair of 32-bit BARs (BAR 0 and BAR
-> 1).
-> > The BARs can  be configured as follows:
-> >
-> > - One 64-bit BAR: BARs 0 and 1 are combined to form a single 64-bit BAR.
-> > - Two 32-bit BARs: BARs 0 and 1 are two independent 32-bit BARs
-> >
-> > This patch corrects 64-bit, non-prefetchable memory BAR configuration
-> > implemented in dw driver.
-> >
-> > Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-> > Cc: Pratyush Anand <pratyush.anand@st.com>
-> > Cc: Jingoo Han <jg1.han@samsung.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: spear-devel@list.st.com
-> > Cc: linux-pci@vger.kernel.org
-> 
-> Applied to pci/host-designware for v3.15, thanks!
 
-- thanks
+I think it would be better to have 'if (result != op->value)', in case 
+op->value is negative (which presumably it should never be).
 
-> 
-> I update the summary to the following; let me know if it's not accurate:
-> 
->   PCI: designware: Fix RC BAR to be single 64-bit non-prefetchable memory
-> BAR
 
-- yes, it looks better
+-boris
 
-Thanks,
-Mohit
+
+> +		if (result > 0)
+> +			pci_disable_msix(dev);
+>   
+> -	if (result == 0) {
+> +		pr_warn_ratelimited("%s: error enabling MSI-X for guest %u: err %d!\n",
+> +				    pci_name(dev), pdev->xdev->otherend_id,
+> +				    result);
+> +	} else {
+>   		for (i = 0; i < op->value; i++) {
+>   			op->msix_entries[i].entry = entries[i].entry;
+>   			if (entries[i].vector)
+> @@ -227,10 +233,8 @@ int xen_pcibk_enable_msix(struct xen_pcibk_device *pdev,
+>   						pci_name(dev), i,
+>   						op->msix_entries[i].vector);
+>   		}
+> -	} else
+> -		pr_warn_ratelimited("%s: error enabling MSI-X for guest %u: err %d!\n",
+> -				    pci_name(dev), pdev->xdev->otherend_id,
+> -				    result);
+> +	}
+> +
+>   	kfree(entries);
+>   
+>   	op->value = result;
+
