@@ -1,115 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35172 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360AbaB1NEb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 08:04:31 -0500
-Date: Tue, 25 Feb 2014 15:45:45 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Rashika Kheria <rashika.kheria@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org,
-	josh@joshtriplett.org
-Subject: Re: [PATCH 3/8] lib: Move prototype declaration to header file
- include/linux/swiotlb.h
-Message-ID: <20140225204545.GA4801@phenom.dumpdata.com>
-References: <7bf34999aea7f3d1441dc8fc344882a814da6e06.1393313946.git.rashika.kheria@gmail.com>
- <f95be69d8113dc58603894701e5a3114723b7acc.1393313946.git.rashika.kheria@gmail.com>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:57368 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683AbaBTQrI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 11:47:08 -0500
+Subject: Re: [PATCH 12/22] lpfc: Use pci_enable_msix_range()
+From: James Smart <james.smart@emulex.com>
+Reply-To: <james.smart@emulex.com>
+To: <agordeev@redhat.com>
+CC: <james.smart@emulex.com>, <linux-scsi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Date: Thu, 20 Feb 2014 11:47:02 -0500
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <f95be69d8113dc58603894701e5a3114723b7acc.1393313946.git.rashika.kheria@gmail.com>
+Message-ID: <a34533b1-77d9-45bc-ad66-aab336972b95@CMEXHTCAS2.ad.emulex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 25, 2014 at 01:14:17PM +0530, Rashika Kheria wrote:
-> Move prototype declaration of function to header file
-> include/linux/swiotlb.h from arch/ia64/hp/common/hwsw_iommu.c,
-> arch/ia64/hp/common/sba_iommu.c and arch/x86/pci/sta2x11-fixup.c because
-> it is used by more than one file.
-> 
-> This eliminates the following warning in lib/swiotlb.c:
-> lib/swiotlb.c:240:1: warning: no previous prototype for ‘swiotlb_late_init_with_default_size’ [-Wmissing-prototypes]
-> lib/swiotlb.c:537:13: warning: no previous prototype for ‘map_single’ [-Wmissing-prototypes]
-> 
-> Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
-> Reviewed-by: Josh Triplett <josh@joshtriplett.org>
+Alexander,
 
-One issue below. Did you compile check it on ia64 and arm?
-I presume you did it on x86 right?
+I've reworked this patch to layer on top of our rev 8.3.45 patches
+that were just posted to linux-scsi. There were some conflicts due to
+new additions.  Additionally, there were two other uses of pci_enable_msiXXX
+that needed to be addressed.  The changes in this patch also address the
+change requested by:
+"[PATCH 11/22] lpfc: Remove superfluous call to pci_disable_msix()"
+
+To avoid creating merge conflicts - either by your patches going in then
+scsi git tree trying to merge or by scsi git tree going in and your patches
+trying to merge - I recommend that you eliminate your lpfc patches from the
+kernel and apply the patch below once scsi git with the updated lpfc driver
+has actually merged.
+
+-- james s
 
 
-> ---
->  arch/ia64/hp/common/hwsw_iommu.c |    3 ---
->  arch/ia64/hp/common/sba_iommu.c  |    2 --
->  arch/x86/pci/sta2x11-fixup.c     |    1 -
->  include/linux/swiotlb.h          |    4 +++-
->  4 files changed, 3 insertions(+), 7 deletions(-)
-> 
-> diff --git a/arch/ia64/hp/common/hwsw_iommu.c b/arch/ia64/hp/common/hwsw_iommu.c
-> index 1e4cae5..b14cab1 100644
-> --- a/arch/ia64/hp/common/hwsw_iommu.c
-> +++ b/arch/ia64/hp/common/hwsw_iommu.c
-> @@ -20,9 +20,6 @@
->  
->  extern struct dma_map_ops sba_dma_ops, swiotlb_dma_ops;
->  
-> -/* swiotlb declarations & definitions: */
-> -extern int swiotlb_late_init_with_default_size (size_t size);
-> -
->  /*
->   * Note: we need to make the determination of whether or not to use
->   * the sw I/O TLB based purely on the device structure.  Anything else
-> diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
-> index 8e858b5..b341994 100644
-> --- a/arch/ia64/hp/common/sba_iommu.c
-> +++ b/arch/ia64/hp/common/sba_iommu.c
-> @@ -46,8 +46,6 @@
->  
->  #include <asm/acpi-ext.h>
->  
-> -extern int swiotlb_late_init_with_default_size (size_t size);
-> -
->  #define PFX "IOC: "
->  
->  /*
-> diff --git a/arch/x86/pci/sta2x11-fixup.c b/arch/x86/pci/sta2x11-fixup.c
-> index 9d8a509..a39000b 100644
-> --- a/arch/x86/pci/sta2x11-fixup.c
-> +++ b/arch/x86/pci/sta2x11-fixup.c
-> @@ -28,7 +28,6 @@
->  #include <linux/list.h>
->  
->  #define STA2X11_SWIOTLB_SIZE (4*1024*1024)
-> -extern int swiotlb_late_init_with_default_size(size_t default_size);
->  
->  /*
->   * We build a list of bus numbers that are under the ConneXt. The
-> diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-> index a5ffd32..7f419b6 100644
-> --- a/include/linux/swiotlb.h
-> +++ b/include/linux/swiotlb.h
-> @@ -27,7 +27,9 @@ int swiotlb_init_with_tbl(char *tlb, unsigned long nslabs, int verbose);
->  extern unsigned long swiotlb_nr_tbl(void);
->  unsigned long swiotlb_size_or_default(void);
->  extern int swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs);
-> -
-> +int swiotlb_late_init_with_default_size (size_t );
+Revised patch:
 
-Your editor seems to have added an extra space!
 
-> +phys_addr_t map_single(struct device *hwdev, phys_addr_t phys, size_t size,
-> +		       enum dma_data_direction dir);
->  /*
->   * Enumeration for sync targets
->   */
-> -- 
-> 1.7.9.5
-> 
+
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
+
+CC: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+
+
+
+Signed-off-by: James Smart <james.smart@emulex.com>
+
+ ---
+
+ lpfc_init.c |   43 ++++++++++++++++++++++---------------------
+ 1 file changed, 22 insertions(+), 21 deletions(-)
+
+
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2014-02-19 16:23:07.260097013 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2014-02-20 11:39:20.348203354 -0500
+@@ -8100,8 +8100,8 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to enable the MSI-X interrupt vectors to device
+- * with SLI-3 interface specs. The kernel function pci_enable_msix() is
+- * called to enable the MSI-X vectors. Note that pci_enable_msix(), once
++ * with SLI-3 interface specs. The kernel function pci_enable_msix_range() is
++ * called to enable the MSI-X vectors. Note that pci_enable_msix_range(), once
+  * invoked, enables either all or nothing, depending on the current
+  * availability of PCI vector resources. The device driver is responsible
+  * for calling the individual request_irq() to register each MSI-X vector
+@@ -8126,12 +8126,12 @@ lpfc_sli_enable_msix(struct lpfc_hba *ph
+ 		phba->msix_entries[i].entry = i;
+ 
+ 	/* Configure MSI-X capability structure */
+-	rc = pci_enable_msix(phba->pcidev, phba->msix_entries,
+-				ARRAY_SIZE(phba->msix_entries));
+-	if (rc) {
++	rc = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
++				   LPFC_MSIX_VECTORS, LPFC_MSIX_VECTORS);
++	if (rc < 0) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0420 PCI enable MSI-X failed (%d)\n", rc);
+-		goto msi_fail_out;
++		goto vec_fail_out;
+ 	}
+ 	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+@@ -8209,6 +8209,8 @@ irq_fail_out:
+ msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++vec_fail_out:
+ 	return rc;
+ }
+ 
+@@ -8238,8 +8240,8 @@ lpfc_sli_disable_msix(struct lpfc_hba *p
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to enable the MSI interrupt mode to device with
+- * SLI-3 interface spec. The kernel function pci_enable_msi() is called to
+- * enable the MSI vector. The device driver is responsible for calling the
++ * SLI-3 interface spec. The kernel function pci_enable_msi_range() is called
++ * to enable the MSI vector. The device driver is responsible for calling the
+  * request_irq() to register MSI vector with a interrupt the handler, which
+  * is done in this function.
+  *
+@@ -8252,8 +8254,8 @@ lpfc_sli_enable_msi(struct lpfc_hba *phb
+ {
+ 	int rc;
+ 
+-	rc = pci_enable_msi(phba->pcidev);
+-	if (!rc)
++	rc = pci_enable_msi_range(phba->pcidev, 1, 1);
++	if (rc > 0)
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0462 PCI enable MSI mode success.\n");
+ 	else {
+@@ -8692,17 +8694,15 @@ lpfc_sli4_enable_msix(struct lpfc_hba *p
+ 		phba->sli4_hba.msix_entries[index].entry = index;
+ 		vectors++;
+ 	}
+-enable_msix_vectors:
+-	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
+-			     vectors);
+-	if (rc > 1) {
+-		vectors = rc;
+-		goto enable_msix_vectors;
+-	} else if (rc) {
++
++	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
++				   2, vectors);
++	if (rc < 0) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0484 PCI enable MSI-X failed (%d)\n", rc);
+ 		goto msi_fail_out;
+ 	}
++	vectors = rc;
+ 
+ 	/* Log MSI-X vector assignment */
+ 	for (index = 0; index < vectors; index++)
+@@ -8764,9 +8764,10 @@ cfg_fail_out:
+ 			 &phba->sli4_hba.fcp_eq_hdl[index]);
+ 	}
+ 
+-msi_fail_out:
+ 	/* Unconfigure MSI-X capability structure */
+ 	pci_disable_msix(phba->pcidev);
++
++msi_fail_out:
+ 	return rc;
+ }
+ 
+@@ -8804,7 +8805,7 @@ lpfc_sli4_disable_msix(struct lpfc_hba *
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to enable the MSI interrupt mode to device with
+- * SLI-4 interface spec. The kernel function pci_enable_msi() is called
++ * SLI-4 interface spec. The kernel function pci_enable_msi_range() is called
+  * to enable the MSI vector. The device driver is responsible for calling
+  * the request_irq() to register MSI vector with a interrupt the handler,
+  * which is done in this function.
+@@ -8818,8 +8819,8 @@ lpfc_sli4_enable_msi(struct lpfc_hba *ph
+ {
+ 	int rc, index;
+ 
+-	rc = pci_enable_msi(phba->pcidev);
+-	if (!rc)
++	rc = pci_enable_msi_range(phba->pcidev, 1, 1);
++	if (rc > 0)
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"0487 PCI enable MSI mode success.\n");
+ 	else {
+
+
