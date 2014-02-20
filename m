@@ -1,61 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10998 "EHLO mx1.redhat.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:48917 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754174AbaBDLQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:16:03 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 19/22] pmcraid: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:17:05 +0100
-Message-Id: <1ccc0975fb2814cd49dba008632faa87839df103.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
+	id S1755681AbaBTRf2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Feb 2014 12:35:28 -0500
+Date: Thu, 20 Feb 2014 10:35:18 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+Message-ID: <20140220173518.GA19893@obsidianresearch.com>
+References: <51DD9A8C.10608@keymile.com>
+ <20130711163220.2b3adf38@skate>
+ <53039894.10905@keymile.com>
+ <20140218212751.07c2aeb5@skate>
+ <53046D98.6020801@keymile.com>
+ <20140219102658.76eec91e@skate>
+ <53047BBB.6040108@keymile.com>
+ <20140219143749.65ff3155@skate>
+ <CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
+ <20140220095518.7ca36f0a@skate>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140220095518.7ca36f0a@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Thu, Feb 20, 2014 at 09:55:18AM +0100, Thomas Petazzoni wrote:
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/pmcraid.c |   13 ++-----------
- 1 files changed, 2 insertions(+), 11 deletions(-)
+> Does that make sense? Keep in mind that I'm still not completely
+> familiar with the PCI terminology, so maybe the above explanation does
+> not use the right terms.
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index c06af7f..6d0f208 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4698,19 +4698,10 @@ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
- 		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
- 			entries[i].entry = i;
- 
--		rc = pci_enable_msix(pdev, entries, num_hrrq);
--		if (rc < 0)
-+		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
-+		if (num_hrrq < 0)
- 			goto pmcraid_isr_legacy;
- 
--		/* Check how many MSIX vectors are allocated and register
--		 * msi-x handlers for each of them giving appropriate buffer
--		 */
--		if (rc > 0) {
--			num_hrrq = rc;
--			if (pci_enable_msix(pdev, entries, num_hrrq))
--				goto pmcraid_isr_legacy;
--		}
--
- 		for (i = 0; i < num_hrrq; i++) {
- 			pinstance->hrrq_vector[i].hrrq_id = i;
- 			pinstance->hrrq_vector[i].drv_inst = pinstance;
--- 
-1.7.7.6
+Stated another way, the Marvel PCI-E to PCI-E bridge config space has
+a quirk that requires the window BARs to be aligned on their size and
+sized to a power of 2.
 
+The first requirement is already being handled by hooking through
+ARM's 'align_resource' callback.
+
+One avenue would be to have mvebu_pcie_align_resource return a struct
+resource and manipulate the size as well. Assuming the PCI core will
+accommodate that.
+
+Jason
