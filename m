@@ -1,42 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:46782 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754369AbaBRCKh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 21:10:37 -0500
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
-Date: Tue, 18 Feb 2014 11:11:51 +0900
-Message-Id: <20140218021151.14164.51263.sendpatchset@w520>
-In-Reply-To: <20140218021041.14164.56411.sendpatchset@w520>
-References: <20140218021041.14164.56411.sendpatchset@w520>
-Subject: [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
+Received: from eu1sys200aog124.obsmtp.com ([207.126.144.157]:43639 "EHLO
+	eu1sys200aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753078AbaBTNeJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 08:34:09 -0500
+From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	"jg1.han@samsung.com" <jg1.han@samsung.com>
+Cc: Ajay KHANDELWAL <ajay.khandelwal@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Thu, 20 Feb 2014 21:33:48 +0800
+Subject: RE: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io
+ and mem viewport
+Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FD40D8D7@EAPEX1MAIL1.st.com>
+References: <1392873774-22249-1-git-send-email-mohit.kumar@st.com>
+ <1392873774-22249-2-git-send-email-mohit.kumar@st.com>
+ <5305E928.5070505@ti.com>
+ <2CC2A0A4A178534D93D5159BF3BCB66189FD40D8B3@EAPEX1MAIL1.st.com>
+ <5305F154.8020507@ti.com>
+In-Reply-To: <5305F154.8020507@ti.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Magnus Damm <damm@opensource.se>
-
-Select BOUNCE in case of HIGHMEM to enable bounce buffers in
-the block layer. Without this patch the DMABOUNCE code will
-error out due to lack of HIGHMEM support, and without DMABOUNCE
-there will be silent errors.
-
-Signed-off-by: Magnus Damm <damm@opensource.se>
----
-
- drivers/pci/host/Kconfig |    1 +
- 1 file changed, 1 insertion(+)
-
---- 0009/drivers/pci/host/Kconfig
-+++ work/drivers/pci/host/Kconfig	2014-02-04 16:11:27.000000000 +0900
-@@ -30,6 +30,7 @@ config PCI_RCAR_GEN2
- 	depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || COMPILE_TEST)
- 	select GENERIC_ALLOCATOR
- 	select DMABOUNCE
-+	select BOUNCE if HIGHMEM
- 	help
- 	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
- 	  There are 3 internal PCI controllers available with a single
+SGVsbG8gS2lzaG9uLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEtp
+c2hvbiBWaWpheSBBYnJhaGFtIEkgW21haWx0bzpraXNob25AdGkuY29tXQ0KPiBTZW50OiBUaHVy
+c2RheSwgRmVicnVhcnkgMjAsIDIwMTQgNTo0MyBQTQ0KPiBUbzogTW9oaXQgS1VNQVIgRENHOyBq
+ZzEuaGFuQHNhbXN1bmcuY29tDQo+IENjOiBBamF5IEtIQU5ERUxXQUw7IEJqb3JuIEhlbGdhYXM7
+IHNwZWFyLWRldmVsOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBS
+ZTogW1BBVENIIDIvMl0gUENJOmRlc2lnbndhcmU6Rml4IGlBVFUgcHJvZ3JhbW1pbmcgZm9yIGNm
+ZzEsIGlvDQo+IGFuZCBtZW0gdmlld3BvcnQNCj4gDQo+IEhpIE1vaGl0LA0KPiANCj4gT24gVGh1
+cnNkYXkgMjAgRmVicnVhcnkgMjAxNCAwNToyOCBQTSwgTW9oaXQgS1VNQVIgRENHIHdyb3RlOg0K
+PiA+IEhlbGxvIEtpc2hvbiwNCj4gPg0KPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
+PiA+PiBGcm9tOiBLaXNob24gVmlqYXkgQWJyYWhhbSBJIFttYWlsdG86a2lzaG9uQHRpLmNvbV0N
+Cj4gPj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDIwLCAyMDE0IDU6MDggUE0NCj4gPj4gVG86
+IE1vaGl0IEtVTUFSIERDRzsgamcxLmhhbkBzYW1zdW5nLmNvbQ0KPiA+PiBDYzogQWpheSBLSEFO
+REVMV0FMOyBCam9ybiBIZWxnYWFzOyBzcGVhci1kZXZlbDsgbGludXgtDQo+ID4+IHBjaUB2Z2Vy
+Lmtlcm5lbC5vcmcNCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSCAyLzJdIFBDSTpkZXNpZ253YXJl
+OkZpeCBpQVRVIHByb2dyYW1taW5nIGZvcg0KPiA+PiBjZmcxLCBpbyBhbmQgbWVtIHZpZXdwb3J0
+DQo+ID4+DQo+ID4+IEhpLA0KPiA+Pg0KPiA+PiBPbiBUaHVyc2RheSAyMCBGZWJydWFyeSAyMDE0
+IDEwOjUyIEFNLCBNb2hpdCBLdW1hciB3cm90ZToNCj4gPj4+IFRoaXMgcGF0Y2ggY29ycmVjdCBp
+QVRVIHByb2dyYW1taW5nIGZvciBjZmcxLCBpbyBhbmQgbWVtIHZpZXdwb3J0Lg0KPiA+Pj4gRW5h
+YmxlIEFUVSBvbmx5IGFmdGVyIGNvbmZpZ3VyaW5nIGl0Lg0KPiA+Pg0KPiA+PiBEb2VzIHRoaXMg
+cGF0Y2ggYWN0dWFsbHkgZml4ZXMgZGV2aWNlIGVudW1lcmF0aW9uIGJlaGluZCBhIFBDSWUtcGNp
+DQo+ID4+IGJyaWRnZSBvciB0aGlzIGlzIG1vcmUgb2YgY2xlYW5pbmcgdXAgdGhlIHNlcXVlbmNl
+Pw0KPiA+Pg0KPiA+IC0gVGhpcyBwYXRjaCBjb3JyZWN0cyBBVFUgcHJvZ3JhbW1pbmcgc2VxdWVu
+Y2UuIEkgYW0gbm90IGF3YXJlIG9mIGFueQ0KPiA+IHN1Y2ggaXNzdWUgd2l0aCBjdXJyZW50IGRy
+aXZlci4gUGxzIHNwZWNpZnkgIHdoaWNoIGJyaWRnZSBkbyB5b3UgdXNlIGluIHlvdXINCj4gc2V0
+dXAgYW5kIHdoYXQgaXMgdGhlIHByb2JsZW0/DQo+IA0KPiBJIHRyaWVkIHdpdGggY2FyZCBbMV0s
+IGl0IGhhZCBhIFBMWCBicmlkZ2UgY2hpcC4gSXQgY291bGRuJ3QgcmVhZCB0aGUgY29uZmlndXJh
+dGlvbg0KPiBzcGFjZSBvZiB0aGUgZGV2aWNlIGNvbm5lY3RlZCB0byB0aGUgUENJZS1QQ0kgYnJp
+ZGdlLg0KPiANCi0gSSBkb27igJl0IGhhdmUgdGhlIG1lbnRpb25lZCBjYXJkIHdpdGggbWUsIGJ1
+dCB3ZSBhcmUgc3VjY2Vzc2Z1bGx5IHVzaW5nIExlY3JveSBQVEMgc3dpdGNoDQogYW5kIFNJTDMx
+MjQtMkNCMzY0IFBDSS1YIGNvbXBhdGlibGUgUkFJRCBjYXJkLg0KDQpNYXkgYmUgSmluZ29vIG9y
+IG90aGVycyBjYW4gYWxzbyBjb21tZW50IGlmIHRoZXkgYXJlIHVzaW5nIFBDSSBicmlkZ2UgY2Fy
+ZC4NCg0KVGhhbmtzDQpNb2hpdA0KDQo=
