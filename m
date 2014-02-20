@@ -1,69 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39832 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42358 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753977AbaBSRSS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 12:18:18 -0500
-Subject: Re: [PATCH v2 1/4] misc: mic: Add include of <linux/irqreturn.h>
-From: Sudeep Dutt <sudeep.dutt@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	Joerg Roedel <joro@8bytes.org>, linux-kernel@vger.kernel.org,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	iommu@lists.linux-foundation.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Aaron F Brown <aaron.f.brown@intel.com>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	Sudeep Dutt <sudeep.dutt@intel.com>,
-	Ashutosh Dixit <ashutosh.dixit@intel.com>
-In-Reply-To: <20140218205939.11014.41761.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140218205925.11014.14973.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <20140218205939.11014.41761.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 19 Feb 2014 09:09:49 -0800
-Message-ID: <1392829789.15950.13.camel@rbtaylor-desk1.amr.corp.intel.com>
-Mime-Version: 1.0
+	id S1750954AbaBTFM4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Feb 2014 00:12:56 -0500
+Date: Thu, 20 Feb 2014 07:17:54 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	virtio-dev@lists.oasis-open.org,
+	virtualization@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] virtio: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140220051754.GB28241@redhat.com>
+References: <1392804931-30671-9-git-send-email-agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392804931-30671-9-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-02-18 at 13:59 -0700, Bjorn Helgaas wrote:
-> We currently include <linux/irqreturn.h> in <linux/pci.h>, but I'm about to
-> remove that from linux/pci.h, so add explicit includes where needed.
+On Wed, Feb 19, 2014 at 11:15:29AM +0100, Alexander Gordeev wrote:
+> As result deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
 > 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Rusty Russell <rusty@rustcorp.com.au>
+> Cc: "Michael S. Tsirkin" <mst@redhat.com>
+> Cc: virtio-dev@lists.oasis-open.org
+> Cc: virtualization@lists.linux-foundation.org
+> Cc: linux-pci@vger.kernel.org
+
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
+
 > ---
->  drivers/misc/mic/card/mic_device.h |    1 +
->  drivers/misc/mic/host/mic_device.h |    1 +
->  2 files changed, 2 insertions(+)
+>  drivers/virtio/virtio_pci.c |    8 +++-----
+>  1 files changed, 3 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/misc/mic/card/mic_device.h b/drivers/misc/mic/card/mic_device.h
-> index 347b9b3b7916..306f502be95e 100644
-> --- a/drivers/misc/mic/card/mic_device.h
-> +++ b/drivers/misc/mic/card/mic_device.h
-> @@ -29,6 +29,7 @@
+> diff --git a/drivers/virtio/virtio_pci.c b/drivers/virtio/virtio_pci.c
+> index a416f9b..dea042c 100644
+> --- a/drivers/virtio/virtio_pci.c
+> +++ b/drivers/virtio/virtio_pci.c
+> @@ -333,11 +333,9 @@ static int vp_request_msix_vectors(struct virtio_device *vdev, int nvectors,
+>  	for (i = 0; i < nvectors; ++i)
+>  		vp_dev->msix_entries[i].entry = i;
 >  
->  #include <linux/workqueue.h>
->  #include <linux/io.h>
-> +#include <linux/irqreturn.h>
+> -	/* pci_enable_msix returns positive if we can't get this many. */
+> -	err = pci_enable_msix(vp_dev->pci_dev, vp_dev->msix_entries, nvectors);
+> -	if (err > 0)
+> -		err = -ENOSPC;
+> -	if (err)
+> +	err = pci_enable_msix_range(vp_dev->pci_dev,
+> +				    vp_dev->msix_entries, nvectors, nvectors);
+> +	if (err < 0)
+>  		goto error;
+>  	vp_dev->msix_enabled = 1;
 >  
->  /**
->   * struct mic_intr_info - Contains h/w specific interrupt sources info
-> diff --git a/drivers/misc/mic/host/mic_device.h b/drivers/misc/mic/host/mic_device.h
-> index 1a6edce2ecde..0398c696d257 100644
-> --- a/drivers/misc/mic/host/mic_device.h
-> +++ b/drivers/misc/mic/host/mic_device.h
-> @@ -24,6 +24,7 @@
->  #include <linux/cdev.h>
->  #include <linux/idr.h>
->  #include <linux/notifier.h>
-> +#include <linux/irqreturn.h>
->  
->  #include "mic_intr.h"
->  
-> 
-
-Acked-by: Sudeep Dutt <sudeep.dutt@intel.com>
-
-Thanks,
-
-
-
+> -- 
+> 1.7.7.6
