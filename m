@@ -1,56 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 4 Feb 2014 20:09:36 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to
- pci_disable_msi()
-Message-ID: <20140204190935.GA1430@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
- <20140130134819.GA31909@dhcp-26-207.brq.redhat.com>
- <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 20 Feb 2014 09:26:39 -0500
+From: Tejun Heo <tj@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [Update][PATCH 6/9] ACPI / ATA: Add hotplug contexts to ACPI
+ companions of SATA devices
+Message-ID: <20140220142639.GD6897@htj.dyndns.org>
+References: <3011875.q18rCmXyYX@vostro.rjw.lan>
+ <1707532.0BItEHDuFB@vostro.rjw.lan>
+ <5317534.79aoyQFAO7@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <5317534.79aoyQFAO7@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 04, 2014 at 08:32:12PM +0200, Kalle Valo wrote:
-> Alexander Gordeev <agordeev@redhat.com> writes:
+On Thu, Feb 20, 2014 at 02:47:19AM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > ---
-> >  drivers/net/wireless/ath/ath10k/pci.c |    2 --
-> >  1 files changed, 0 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-> > index 29fd197..6525e1f 100644
-> > --- a/drivers/net/wireless/ath/ath10k/pci.c
-> > +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> > @@ -2414,8 +2414,6 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
-> >  		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
-> >  		if (ret == 0)
-> >  			return 0;
-> > -		if (ret > 0)
-> > -			pci_disable_msi(ar_pci->pdev);
+> Modify the SATA subsystem to add hotplug contexts to ACPI companions
+> of SATA devices and ports instead of registering special ACPI dock
+> operations using register_hotplug_dock_device().
 > 
-> I don't understand how this is superfluous. When I read the
-> documentation for pci_enable_msi_block() it states that if it can't
-> allocate all requests, it will return the number requests it could
-> allocate. And in that case we want to fall back other modes.
+> That change will allow the entire code handling those special ACPI
+> dock operations to be dropped in the next commit.
 > 
-> Am I missing something?
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+> 
+> As noted by Aaron, the hotplug contexts are not freed during ATA device
+> unregistration, but that is not necessary, because the struct acpi_device
+> things they are attached to never go away.  However, they obviously should
+> not be created more than once per struct acpi_device, so I've modified the
+> patch to skip the creation of hotplug contexts for devices that already
+> have them.
 
-Yep. The documentation states 'could have been allocated', not 'could
-allocate'. IOW, MSIs are *not* enabled if a positive value returned.
-The code I changed tries to disable MSIs in such case, although it is
-not necessary, nor required. Just superfluous.
+Please feel free to route with the rest of acpi changes.
 
-HTH.
+ Acked-by: Tejun Heo <tj@kernel.org>
+
+Thanks.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+tejun
