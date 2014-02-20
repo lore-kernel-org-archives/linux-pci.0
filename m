@@ -1,73 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:35628 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174AbaB1Rao (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 12:30:44 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, kernel@pengutronix.de
-Subject: [PATCH 1/3] ARM: dts: imx6: extend PCIe interrupt list for MSI
-Date: Fri, 28 Feb 2014 18:30:31 +0100
-Message-Id: <1393608633-18321-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1393608633-18321-1-git-send-email-l.stach@pengutronix.de>
-References: <1393608633-18321-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-we0-f175.google.com ([74.125.82.175]:37121 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752218AbaBTVls (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 16:41:48 -0500
+Received: by mail-we0-f175.google.com with SMTP id q59so1909960wes.6
+        for <linux-pci@vger.kernel.org>; Thu, 20 Feb 2014 13:41:47 -0800 (PST)
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: linux-pci@vger.kernel.org
+Cc: mohit.kumar@st.com, jg1.han@samsung.com,
+	Andrew Murray <amurray@embedded-bits.co.uk>
+Subject: [PATCH] PCI: designware: Remove unnecessary use of 'conf_lock' spinlock
+Date: Thu, 20 Feb 2014 21:41:34 +0000
+Message-Id: <1392932494-21630-1-git-send-email-amurray@embedded-bits.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Optional IRQ necessary for handling MSI.
+Serialization of configuration accesses is provided by 'pci_lock' in
+drivers/pci/access.c thus making the driver's 'conf_lock' superfluous.
 
-Signed-off-by: Juergen Beisert <jbe@pengutronix.de>
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
 ---
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 9 ++++++++-
- arch/arm/boot/dts/imx6qdl.dtsi                           | 4 +++-
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-exynos.c      | 1 -
+ drivers/pci/host/pci-imx6.c        | 1 -
+ drivers/pci/host/pcie-designware.c | 6 ------
+ drivers/pci/host/pcie-designware.h | 1 -
+ 4 files changed, 9 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 93fbfd62f13c..0515183a6d96 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -17,6 +17,11 @@ Required properties:
- 	- "pcie_axi"
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 3de6bfb..32c6d56 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -546,7 +546,6 @@ static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+ 	pp->root_bus_nr = -1;
+ 	pp->ops = &exynos_pcie_host_ops;
  
- Optional properties:
-+- interrupts: Must contain an entry for each entry in the
-+  interrupt-names property.
-+- interrupt-names: May include the following entries:
-+	- "inta"
-+	- "msi" if not present the driver won't be able to handle MSI
- - power-on-gpio: gpio pin number of power-enable signal
- - wake-up-gpio:  gpio pin number of incoming wakeup signal
- - disable-gpio:  gpio pin number of outgoing rfkill/endpoint disable signal
-@@ -34,7 +39,9 @@ Example:
- 			  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>;
- 		num-lanes = <1>;
+-	spin_lock_init(&pp->conf_lock);
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to initialize host\n");
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index e8663a8..77588f1 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -480,7 +480,6 @@ static int imx6_add_pcie_port(struct pcie_port *pp,
+ 	pp->root_bus_nr = -1;
+ 	pp->ops = &imx6_pcie_host_ops;
  
--		interrupts = <0 123 0x04>;
-+		interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+		             <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-names = "inta", "msi";
+-	spin_lock_init(&pp->conf_lock);
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "failed to initialize host\n");
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 17ce88f..b25adb8 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -640,7 +640,6 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 			int size, u32 *val)
+ {
+ 	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+-	unsigned long flags;
+ 	int ret;
  
- 		#interrupt-cells = <1>;
- 		interrupt-map-mask = <0 0 0 0x7>;
-diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
-index db3339e7d3a2..a3a3acd90964 100644
---- a/arch/arm/boot/dts/imx6qdl.dtsi
-+++ b/arch/arm/boot/dts/imx6qdl.dtsi
-@@ -129,7 +129,9 @@
- 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
+ 	if (!pp) {
+@@ -653,13 +652,11 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
  
--			interrupts = <0 123 0x04>;
-+			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
-+			             <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "inta", "msi";
+-	spin_lock_irqsave(&pp->conf_lock, flags);
+ 	if (bus->number != pp->root_bus_nr)
+ 		ret = dw_pcie_rd_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_rd_own_conf(pp, where, size, val);
+-	spin_unlock_irqrestore(&pp->conf_lock, flags);
  
- 			#interrupt-cells = <1>;
- 			interrupt-map-mask = <0 0 0 0x7>;
+ 	return ret;
+ }
+@@ -668,7 +665,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 			int where, int size, u32 val)
+ {
+ 	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+-	unsigned long flags;
+ 	int ret;
+ 
+ 	if (!pp) {
+@@ -679,13 +675,11 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+-	spin_lock_irqsave(&pp->conf_lock, flags);
+ 	if (bus->number != pp->root_bus_nr)
+ 		ret = dw_pcie_wr_other_conf(pp, bus, devfn,
+ 						where, size, val);
+ 	else
+ 		ret = dw_pcie_wr_own_conf(pp, where, size, val);
+-	spin_unlock_irqrestore(&pp->conf_lock, flags);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 3063b35..a10747d 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -41,7 +41,6 @@ struct pcie_port {
+ 	void __iomem		*va_cfg1_base;
+ 	u64			io_base;
+ 	u64			mem_base;
+-	spinlock_t		conf_lock;
+ 	struct resource		cfg;
+ 	struct resource		io;
+ 	struct resource		mem;
 -- 
-1.8.5.3
+1.8.3.2
 
