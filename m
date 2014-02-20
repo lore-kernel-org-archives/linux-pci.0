@@ -1,37 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45459 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751397AbaBMRxO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Feb 2014 12:53:14 -0500
-Date: Thu, 13 Feb 2014 18:55:15 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 19/22] pmcraid: Use pci_enable_msix_range()
-Message-ID: <20140213175514.GG26610@dhcp-26-207.brq.redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <1ccc0975fb2814cd49dba008632faa87839df103.1391512266.git.agordeev@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [Update][PATCH 6/9] ACPI / ATA: Add hotplug contexts to ACPI companions of SATA devices
+Date: Fri, 21 Feb 2014 00:59:50 +0100
+Message-ID: <4483557.ntKET9UxSY@vostro.rjw.lan>
+In-Reply-To: <20140220142639.GD6897@htj.dyndns.org>
+References: <3011875.q18rCmXyYX@vostro.rjw.lan> <5317534.79aoyQFAO7@vostro.rjw.lan> <20140220142639.GD6897@htj.dyndns.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ccc0975fb2814cd49dba008632faa87839df103.1391512266.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 04, 2014 at 12:17:05PM +0100, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
+On Thursday, February 20, 2014 09:26:39 AM Tejun Heo wrote:
+> On Thu, Feb 20, 2014 at 02:47:19AM +0100, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Modify the SATA subsystem to add hotplug contexts to ACPI companions
+> > of SATA devices and ports instead of registering special ACPI dock
+> > operations using register_hotplug_dock_device().
+> > 
+> > That change will allow the entire code handling those special ACPI
+> > dock operations to be dropped in the next commit.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> > 
+> > As noted by Aaron, the hotplug contexts are not freed during ATA device
+> > unregistration, but that is not necessary, because the struct acpi_device
+> > things they are attached to never go away.  However, they obviously should
+> > not be created more than once per struct acpi_device, so I've modified the
+> > patch to skip the creation of hotplug contexts for devices that already
+> > have them.
+> 
+> Please feel free to route with the rest of acpi changes.
 
-Hi Anil,
+I will.
 
-Any feedback?
+>  Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks!
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
