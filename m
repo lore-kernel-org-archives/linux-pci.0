@@ -1,40 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:51605 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751242AbaBRTNP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 14:13:15 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Russell King <rmk@arm.linux.org.uk>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Tue, 18 Feb 2014 20:13:05 +0100
-Message-ID: <1507733.rhSv1eYnEK@wuerfel>
-In-Reply-To: <20140218184542.GA22004@obsidianresearch.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <1663692.UxtD9eTEBL@wuerfel> <20140218184542.GA22004@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:50678 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751350AbaBTVcf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 16:32:35 -0500
+Received: by mail-wg0-f50.google.com with SMTP id z12so1887296wgg.17
+        for <linux-pci@vger.kernel.org>; Thu, 20 Feb 2014 13:32:34 -0800 (PST)
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: linux-pci@vger.kernel.org
+Cc: thomas.petazzoni@free-electrons.com, jason@lakedaemon.net,
+	Andrew Murray <amurray@embedded-bits.co.uk>
+Subject: [PATCH] PCI: mvebu: Remove unnecessary use of 'conf_lock' spinlock
+Date: Thu, 20 Feb 2014 21:32:15 +0000
+Message-Id: <1392931935-21313-1-git-send-email-amurray@embedded-bits.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 18 February 2014 11:45:42 Jason Gunthorpe wrote:
-> 
-> > Do we even need stable domain numbers? If we do, aliases sound fine.
-> > A more complex method would be to sort them by MMIO window address
-> > or perhaps by phandle.
-> 
-> PCI ordering has been a bane in the past on x86, so I think stable
-> domain numbers is certainly desirable. Particularly since the domain
-> number may be influenced by module load order  Alises followed by
-> sorting by phandle sounds great to me.
+Serialization of configuration accesses is provided by 'pci_lock' in
+drivers/pci/access.c thus making the driver's 'conf_lock' superfluous.
 
-Ok, makes sense. Let's make sure we come up with a stable numbering
-enforced by DT then, and warn when it's not there (or refuse to
-work even).
+Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
+---
+ drivers/pci/host/pci-mvebu.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-	Arnd
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 13478ec..1d61182 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -119,7 +119,6 @@ struct mvebu_pcie {
+ struct mvebu_pcie_port {
+ 	char *name;
+ 	void __iomem *base;
+-	spinlock_t conf_lock;
+ 	u32 port;
+ 	u32 lane;
+ 	int devfn;
+@@ -590,7 +589,6 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ {
+ 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
+ 	struct mvebu_pcie_port *port;
+-	unsigned long flags;
+ 	int ret;
+ 
+ 	port = mvebu_pcie_find_port(pcie, bus, devfn);
+@@ -616,10 +614,8 @@ static int mvebu_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	/* Access the real PCIe interface */
+-	spin_lock_irqsave(&port->conf_lock, flags);
+ 	ret = mvebu_pcie_hw_wr_conf(port, bus, devfn,
+ 				    where, size, val);
+-	spin_unlock_irqrestore(&port->conf_lock, flags);
+ 
+ 	return ret;
+ }
+@@ -630,7 +626,6 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ {
+ 	struct mvebu_pcie *pcie = sys_to_pcie(bus->sysdata);
+ 	struct mvebu_pcie_port *port;
+-	unsigned long flags;
+ 	int ret;
+ 
+ 	port = mvebu_pcie_find_port(pcie, bus, devfn);
+@@ -662,10 +657,8 @@ static int mvebu_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 	}
+ 
+ 	/* Access the real PCIe interface */
+-	spin_lock_irqsave(&port->conf_lock, flags);
+ 	ret = mvebu_pcie_hw_rd_conf(port, bus, devfn,
+ 				    where, size, val);
+-	spin_unlock_irqrestore(&port->conf_lock, flags);
+ 
+ 	return ret;
+ }
+@@ -985,7 +978,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+ 		mvebu_pcie_set_local_dev_nr(port, 1);
+ 
+ 		port->dn = child;
+-		spin_lock_init(&port->conf_lock);
+ 		mvebu_sw_pci_bridge_init(port);
+ 		i++;
+ 	}
+-- 
+1.8.3.2
+
