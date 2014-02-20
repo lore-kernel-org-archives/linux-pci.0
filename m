@@ -1,59 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45568 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751790AbaBXIBM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Feb 2014 03:01:12 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 15/23] mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Mon, 24 Feb 2014 09:02:15 +0100
-Message-Id: <5ebfc7b99be8b12422e5e4e394a7720010e54399.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+Received: from cmexedge2.ext.emulex.com ([138.239.224.100]:16931 "EHLO
+	CMEXEDGE2.ext.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752986AbaBTPQj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 10:16:39 -0500
+Message-ID: <53061C55.9060708@emulex.com>
+Date: Thu, 20 Feb 2014 10:16:37 -0500
+From: James Smart <james.smart@emulex.com>
+Reply-To: <james.smart@emulex.com>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 11/22] lpfc: Remove superfluous call to pci_disable_msix()
+References: <cover.1391512266.git.agordeev@redhat.com> <6341596a5594023854c22f5ab6ad0a439d26d762.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <6341596a5594023854c22f5ab6ad0a439d26d762.1391512266.git.agordeev@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Hi Alexander,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+The change is fine - but not really necessary.  The pci_disable_msix() 
+call explicitly checks for enablement so it's safe.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index bde63f7..984b605 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1432,10 +1432,10 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
- 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
- 		a->entry = i;
- 
--	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
-+	r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
- 	if (r) {
--		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
--		    "failed (r=%d) !!!\n", ioc->name, r));
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "pci_enable_msix_exact failed (r=%d) !!!\n", ioc->name, r));
- 		kfree(entries);
- 		goto try_ioapic;
- 	}
--- 
-1.7.7.6
+It really is a superfluous change - but if James wants to take it:
+Acked-by: James Smart  <james.smart@emulex.com>
+
+
+-- james  s
+
+
+
+On 2/4/2014 6:16 AM, Alexander Gordeev wrote:
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: James Smart <james.smart@emulex.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>   drivers/scsi/lpfc/lpfc_init.c |    9 ++++++---
+>   1 files changed, 6 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 68c94cc..a9df97a 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -8078,7 +8078,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+>   	if (rc) {
+>   		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>   				"0420 PCI enable MSI-X failed (%d)\n", rc);
+> -		goto msi_fail_out;
+> +		goto vec_fail_out;
+>   	}
+>   	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
+>   		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+> @@ -8156,6 +8156,8 @@ irq_fail_out:
+>   msi_fail_out:
+>   	/* Unconfigure MSI-X capability structure */
+>   	pci_disable_msix(phba->pcidev);
+> +
+> +vec_fail_out:
+>   	return rc;
+>   }
+>   
+> @@ -8644,7 +8646,7 @@ enable_msix_vectors:
+>   	} else if (rc) {
+>   		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+>   				"0484 PCI enable MSI-X failed (%d)\n", rc);
+> -		goto msi_fail_out;
+> +		goto vec_fail_out;
+>   	}
+>   
+>   	/* Log MSI-X vector assignment */
+> @@ -8696,9 +8698,10 @@ cfg_fail_out:
+>   			 &phba->sli4_hba.fcp_eq_hdl[index]);
+>   	}
+>   
+> -msi_fail_out:
+>   	/* Unconfigure MSI-X capability structure */
+>   	pci_disable_msix(phba->pcidev);
+> +
+> +vec_fail_out:
+>   	return rc;
+>   }
+>   
 
