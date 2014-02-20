@@ -1,122 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:47160 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752376AbaBMDCK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:02:10 -0500
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
-Date: Thu, 13 Feb 2014 12:03:22 +0900
-Message-Id: <20140213030322.10398.46204.sendpatchset@w520>
-In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
-References: <20140213030302.10398.37322.sendpatchset@w520>
-Subject: [PATCH v2 02/08] PCI: rcar: add error interrupt handling
+Received: from top.free-electrons.com ([176.31.233.9]:60247 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751834AbaBTU3V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 15:29:21 -0500
+Date: Thu, 20 Feb 2014 21:29:14 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+Message-ID: <20140220212914.29ddc031@skate>
+In-Reply-To: <20140220173518.GA19893@obsidianresearch.com>
+References: <51DD9A8C.10608@keymile.com>
+	<20130711163220.2b3adf38@skate>
+	<53039894.10905@keymile.com>
+	<20140218212751.07c2aeb5@skate>
+	<53046D98.6020801@keymile.com>
+	<20140219102658.76eec91e@skate>
+	<53047BBB.6040108@keymile.com>
+	<20140219143749.65ff3155@skate>
+	<CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
+	<20140220095518.7ca36f0a@skate>
+	<20140220173518.GA19893@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Dear Jason Gunthorpe,
 
-Add option to enable interrupts to report any errors from
-the AHB-PCI bridge to help find any issues with the bridge
-when in use.
+On Thu, 20 Feb 2014 10:35:18 -0700, Jason Gunthorpe wrote:
+> On Thu, Feb 20, 2014 at 09:55:18AM +0100, Thomas Petazzoni wrote:
+> 
+> > Does that make sense? Keep in mind that I'm still not completely
+> > familiar with the PCI terminology, so maybe the above explanation does
+> > not use the right terms.
+> 
+> Stated another way, the Marvel PCI-E to PCI-E bridge config space has
+> a quirk that requires the window BARs to be aligned on their size and
+> sized to a power of 2.
 
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
-Signed-off-by: Magnus Damm <damm@opensource.se>
----
+Correct.
 
-v2:
-        - removed kconfig entry and use CONFIG_PCI_DEBUG
-        - check for irq > 0 before trying to attach irq
+> The first requirement is already being handled by hooking through
+> ARM's 'align_resource' callback.
 
- drivers/pci/host/pci-rcar-gen2.c |   60 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
+Absolutely.
 
---- 0004/drivers/pci/host/pci-rcar-gen2.c
-+++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 09:42:56.000000000 +0900
-@@ -39,9 +39,26 @@
- 
- #define RCAR_PCI_INT_ENABLE_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x20)
- #define RCAR_PCI_INT_STATUS_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x24)
-+#define RCAR_PCI_INT_SIGTABORT		(1 << 0)
-+#define RCAR_PCI_INT_SIGRETABORT	(1 << 1)
-+#define RCAR_PCI_INT_REMABORT		(1 << 2)
-+#define RCAR_PCI_INT_PERR		(1 << 3)
-+#define RCAR_PCI_INT_SIGSERR		(1 << 4)
-+#define RCAR_PCI_INT_RESERR		(1 << 5)
-+#define RCAR_PCI_INT_WIN1ERR		(1 << 12)
-+#define RCAR_PCI_INT_WIN2ERR		(1 << 13)
- #define RCAR_PCI_INT_A			(1 << 16)
- #define RCAR_PCI_INT_B			(1 << 17)
- #define RCAR_PCI_INT_PME		(1 << 19)
-+#define RCAR_PCI_INT_ALLERRORS (RCAR_PCI_INT_SIGTABORT		| \
-+				RCAR_PCI_INT_SIGRETABORT	| \
-+				RCAR_PCI_INT_SIGRETABORT	| \
-+				RCAR_PCI_INT_REMABORT		| \
-+				RCAR_PCI_INT_PERR		| \
-+				RCAR_PCI_INT_SIGSERR		| \
-+				RCAR_PCI_INT_RESERR		| \
-+				RCAR_PCI_INT_WIN1ERR		| \
-+				RCAR_PCI_INT_WIN2ERR)
- 
- #define RCAR_AHB_BUS_CTR_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x30)
- #define RCAR_AHB_BUS_MMODE_HTRANS	(1 << 0)
-@@ -164,6 +181,46 @@ static int __init rcar_pci_map_irq(const
- 	return priv->irq;
- }
- 
-+#ifdef CONFIG_PCI_DEBUG
-+/* if debug enabled, then attach an error handler irq to the bridge */
-+
-+static irqreturn_t rcar_pci_err_irq(int irq, void *pw)
-+{
-+	struct rcar_pci_priv *priv = pw;
-+	u32 status = ioread32(priv->reg + RCAR_PCI_INT_STATUS_REG);
-+
-+	if (status & RCAR_PCI_INT_ALLERRORS) {
-+		dev_err(priv->dev, "error irq: status %08x\n", status);
-+
-+		/* clear the error(s) */
-+		iowrite32(status & RCAR_PCI_INT_ALLERRORS,
-+			  priv->reg + RCAR_PCI_INT_STATUS_REG);
-+		return IRQ_HANDLED;
-+	}
-+
-+	return IRQ_NONE;
-+}
-+
-+static void rcar_pci_setup_errirq(struct rcar_pci_priv *priv)
-+{
-+	int ret;
-+	u32 val;
-+
-+	ret = devm_request_irq(priv->dev, priv->irq, rcar_pci_err_irq,
-+			       IRQF_SHARED, "error irq", priv);
-+	if (ret) {
-+		dev_err(priv->dev, "cannot claim IRQ for error handling\n");
-+		return;
-+	}
-+
-+	val = ioread32(priv->reg + RCAR_PCI_INT_ENABLE_REG);
-+	val |= RCAR_PCI_INT_ALLERRORS;
-+	iowrite32(val, priv->reg + RCAR_PCI_INT_ENABLE_REG);
-+}
-+#else
-+static inline void rcar_pci_setup_errirq(struct rcar_pci_priv *priv) { }
-+#endif
-+
- /* PCI host controller setup */
- static int __init rcar_pci_setup(int nr, struct pci_sys_data *sys)
- {
-@@ -224,6 +281,9 @@ static int __init rcar_pci_setup(int nr,
- 	iowrite32(RCAR_PCI_INT_A | RCAR_PCI_INT_B | RCAR_PCI_INT_PME,
- 		  reg + RCAR_PCI_INT_ENABLE_REG);
- 
-+	if (priv->irq > 0)
-+		rcar_pci_setup_errirq(priv);
-+
- 	/* Add PCI resources */
- 	pci_add_resource(&sys->resources, &priv->io_res);
- 	pci_add_resource(&sys->resources, &priv->mem_res);
+> One avenue would be to have mvebu_pcie_align_resource return a struct
+> resource and manipulate the size as well. Assuming the PCI core will
+> accommodate that.
+
+That would effectively be the easiest solution from the point of view
+of the PCIe driver.
+
+In practice, the story is a little bit more subtle than that: the PCIe
+driver may want to decide to either tell the PCI core to enlarge the
+window BAR up to the next power of two size, or to dedicate two windows
+to it.
+
+For example:
+
+ * If the PCI core allocates a 96 KB BAR, we clearly want it to be
+   enlarged to 128 KB, so that we have to create a single window for it.
+
+ * However, if the PCI core allocates a 192 MB BAR, we may want to
+   instead create two windows: a first one of 128 MB and a second one
+   of 64 MB. This consumes two windows, but saves 64 MB of physical
+   address space.
+
+(Note that I haven't tested myself the creation of two windows for the
+same target device, but I was told by Lior that it should work).
+
+As you can see from the two examples above, we may not necessarily want
+to enforce this power-of-two constraint in all cases. We may want to
+accept a non-power-of-2 size in the case of the 192 MB BAR, and let the
+mvebu-mbus driver figure out that it should allocate several
+consecutive windows to cover these 192 MB.
+
+But to begin with, rounding up all window BARs up to the next power of
+two size would be perfectly OK.
+
+Jason, would you mind maybe replying to Bjorn Helgaas email (Thu, 20
+Feb 2014 12:18:42 -0700) ? I believe that a lot of the misunderstanding
+between Bjorn and me is due to the fact that I don't use the correct
+PCI terminology to describe how the Marvell hardware works, and how the
+Marvell PCIe driver copes with it. I'm sure you would explain it in a
+way that would be more easily understood by someone very familiar with
+the PCI terminology such as Bjorn. Thanks a lot!
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
