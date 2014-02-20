@@ -1,92 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [Update][PATCH 22/24] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
-Date: Thu, 06 Feb 2014 14:09:25 +0100
-Message-ID: <1570837.kWWUv8FW0Z@vostro.rjw.lan>
-In-Reply-To: <2300097.5mc1uSoD5p@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <7532948.aJNUotNMpR@vostro.rjw.lan> <2300097.5mc1uSoD5p@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46289 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752613AbaBTMmB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Feb 2014 07:42:01 -0500
+Date: Thu, 20 Feb 2014 13:44:01 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] portdrv: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140220124400.GA8198@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-6-git-send-email-agordeev@redhat.com>
+ <CAErSpo7xWe6n3Nk3Aatik4tfSHQLQehf3WELqD=q1oTmXYVVuw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7xWe6n3Nk3Aatik4tfSHQLQehf3WELqD=q1oTmXYVVuw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
+On Wed, Feb 19, 2014 at 03:09:41PM -0700, Bjorn Helgaas wrote:
+> On Wed, Feb 19, 2014 at 3:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> > As result of deprecation of MSI-X/MSI enablement functions
+> > pci_enable_msix() and pci_enable_msi_block() all drivers
+> > using these two interfaces need to be updated to use the
+> > new pci_enable_msi_range() and pci_enable_msix_range()
+> > interfaces.
+> >
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: linux-pci@vger.kernel.org
+> > ---
+> >  drivers/pci/pcie/portdrv_core.c |   17 ++++++++++-------
+> >  1 files changed, 10 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> > index 986f8ea..4e46eca 100644
+> > --- a/drivers/pci/pcie/portdrv_core.c
+> > +++ b/drivers/pci/pcie/portdrv_core.c
+> > @@ -99,8 +99,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+> >         for (i = 0; i < nr_entries; i++)
+> >                 msix_entries[i].entry = i;
+> >
+> > -       status = pci_enable_msix(dev, msix_entries, nr_entries);
+> > -       if (status)
+> > +       status = pci_enable_msix_range(dev,
+> > +                                      msix_entries, nr_entries, nr_entries);
+> 
+> This is a place we could use pci_enable_msix_exact(), isn't it?  (Also below.)
 
-Since acpi_hotplug_notify_cb() does not use its data argument any
-more, the second argument of acpi_install_hotplug_notify_handler()
-can be dropped, so do that and update its callers accordingly.
+Yes, absolutely.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+I posted it (and other updates) as is, since I understood
+pci_enable_msix_exact() is not going to make it into 3.14. Was I wrong here?
 
-This one had to be updated after patch [20/24] had been updated.
+I think more time in testing with either pci_enable_msix_range() or
+pci_enable_msix_exact() is good. And a follow-up switch from
+pci_enable_msix_range() to pci_enable_msix_exact() should be easy eigher.
 
-Thanks,
-Rafael
+What do you think is the best course of action now? 
 
----
- drivers/acpi/scan.c                |    6 +++---
- drivers/pci/hotplug/acpiphp_glue.c |    2 +-
- include/acpi/acpi_bus.h            |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+> > +       if (status < 0)
+> >                 goto Exit;
+> >
+> >         for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+> > @@ -159,21 +160,23 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+> >                 idx[PCIE_PORT_SERVICE_AER_SHIFT] = i;
+> >         }
+> >
+> > +       status = 0;
+> > +
+> >         /*
+> >          * If nvec is equal to the allocated number of entries, we can just use
+> >          * what we have.  Otherwise, the port has some extra entries not for the
+> >          * services we know and we need to work around that.
+> >          */
+> > -       if (nvec == nr_entries) {
+> > -               status = 0;
+> > -       } else {
+> > +       if (nvec != nr_entries) {
+> >                 /* Drop the temporary MSI-X setup */
+> >                 pci_disable_msix(dev);
+> >
+> >                 /* Now allocate the MSI-X vectors for real */
+> > -               status = pci_enable_msix(dev, msix_entries, nvec);
+> > -               if (status)
+> > +               nvec = pci_enable_msix_range(dev, msix_entries, nvec, nvec);
+> > +               if (nvec < 0) {
+> > +                       status = nvec;
+> >                         goto Exit;
+> > +               }
+> >         }
+> >
+> >         for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+> > --
+> > 1.7.7.6
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -577,10 +577,10 @@ static void acpi_hotplug_notify_cb(acpi_
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
-+void acpi_install_hotplug_notify_handler(acpi_handle handle)
- {
- 	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				    acpi_hotplug_notify_cb, data);
-+				    acpi_hotplug_notify_cb, NULL);
- }
- 
- void acpi_remove_hotplug_notify_handler(acpi_handle handle)
-@@ -2040,7 +2040,7 @@ static void acpi_scan_init_hotplug(struc
- 		if (!handler)
- 			continue;
- 
--		acpi_install_hotplug_notify_handler(adev->handle, handler);
-+		acpi_install_hotplug_notify_handler(adev->handle);
- 		adev->flags.hotplug_notify = true;
- 		break;
- 	}
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -372,7 +372,7 @@ static acpi_status register_slot(acpi_ha
- 
- 	/* install notify handler */
- 	if (!(newfunc->flags & FUNC_HAS_DCK))
--		acpi_install_hotplug_notify_handler(handle, NULL);
-+		acpi_install_hotplug_notify_handler(handle);
- 
- 	return AE_OK;
- }
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -446,7 +446,7 @@ static inline bool acpi_device_enumerate
- typedef void (*acpi_hp_callback)(void *data, u32 src);
- 
- acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
-+void acpi_install_hotplug_notify_handler(acpi_handle handle);
- void acpi_remove_hotplug_notify_handler(acpi_handle handle);
- 
- /**
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
