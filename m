@@ -1,62 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27946 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754141AbaBDLPy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:15:54 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>,
-	Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 14/22] mpt2sas: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:17:00 +0100
-Message-Id: <9502363c4325496286e36221acaff63da3af42b0.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
+Received: from top.free-electrons.com ([176.31.233.9]:60347 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752293AbaBTUmp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 15:42:45 -0500
+Date: Thu, 20 Feb 2014 21:42:41 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	jg1.han@samsung.com, Jason Cooper <jason@lakedaemon.net>,
+	mohit.kumar@st.com
+Subject: Re: Serialization of configuration accesses for mvebu/designware
+Message-ID: <20140220214241.633a5a2b@skate>
+In-Reply-To: <CAPcvp5FJLcpe8PunwAyjRBvzESqxx1kv4Sqy0Oqc87Gn9AY3Eg@mail.gmail.com>
+References: <CAPcvp5FJLcpe8PunwAyjRBvzESqxx1kv4Sqy0Oqc87Gn9AY3Eg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Dear Andrew Murray,
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@lsi.com>
-Cc: support@lsi.com
-Cc: DL-MPTFusionLinux@lsi.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+On Thu, 20 Feb 2014 18:51:32 +0000, Andrew Murray wrote:
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 3901edc..a0662cb 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1432,10 +1432,13 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
- 	for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
- 		a->entry = i;
- 
--	r = pci_enable_msix(ioc->pdev, entries, ioc->reply_queue_count);
--	if (r) {
--		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "pci_enable_msix "
--		    "failed (r=%d) !!!\n", ioc->name, r));
-+	r = pci_enable_msix_range(ioc->pdev,
-+				  entries,
-+				  ioc->reply_queue_count,
-+				  ioc->reply_queue_count);
-+	if (r < 0) {
-+		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "pci_enable_msix_range failed (r=%d) !!!\n", ioc->name, r));
- 		kfree(entries);
- 		goto try_ioapic;
- 	}
+> I've noticed that the mvebu and designware both use spinlocks to
+> serialize access to the configuration space (pci_ops.[read|write]).
+> However the read/write ops are only ever used from the pci core
+> (access.c, pci.c) where they are already protected with the pci_lock.
+> 
+> As far as I can tell these extra spinlocks are superfluous, therefore...
+> 
+> Can they be removed?
+> Can future host bridge drivers assume that calls to the pci_ops are serialized?
+
+Just had a quick look, and indeed all the PCI configuration space
+access functions in drivers/pci/access.c seem to be taking the
+pci_lock, making the internal driver lock useless. Patches welcome! :-)
+
+Thanks!
+
+Thomas
 -- 
-1.7.7.6
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
