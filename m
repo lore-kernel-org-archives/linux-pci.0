@@ -1,120 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:48855 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752480AbaBSNhx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 08:37:53 -0500
-Date: Wed, 19 Feb 2014 14:37:49 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Gerlando Falauto <gerlando.falauto@keymile.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>
-Subject: Re: pci-mvebu driver on km_kirkwood
-Message-ID: <20140219143749.65ff3155@skate>
-In-Reply-To: <53047BBB.6040108@keymile.com>
-References: <51DD88A4.1030506@keymile.com>
-	<20130710185706.72b124a4@skate>
-	<51DD9A8C.10608@keymile.com>
-	<20130711163220.2b3adf38@skate>
-	<53039894.10905@keymile.com>
-	<20140218212751.07c2aeb5@skate>
-	<53046D98.6020801@keymile.com>
-	<20140219102658.76eec91e@skate>
-	<53047BBB.6040108@keymile.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:62415 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754244AbaBTSpo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 13:45:44 -0500
+Received: by mail-ie0-f177.google.com with SMTP id rp18so1464419iec.8
+        for <linux-pci@vger.kernel.org>; Thu, 20 Feb 2014 10:45:43 -0800 (PST)
+Date: Thu, 20 Feb 2014 11:45:38 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alexander Gordeev <agordeev@redhat.com>,
+	Masanari Iida <standby24x7@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Lunn <andrew@lunn.ch>, Tejun Heo <tj@kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: [GIT PULL] PCI updates for v3.14
+Message-ID: <20140220184538.GA8280@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gerlando, Bjorn,
+Hi Linus,
 
-Bjorn, I added you as the To: because there is a PCI related question
-for you below :)
+The most interesting thing here is the change to enable INTx (by clearing
+PCI_COMMAND_INTX_DISABLE) if the BIOS left INTx disabled.  Apparently the
+Baytrail BIOS does this, which means EHCI doesn't work.
 
-On Wed, 19 Feb 2014 10:39:07 +0100, Gerlando Falauto wrote:
+Also, fix an AHCI MSI regression and other issues with the recent MSI
+changes. This also adds pci_enable_msi_exact() and pci_enable_msix_exact(),
+which aren't regression fixes, but will keep us from touching drivers twice
+(once to stop using the deprecated pci_enable_msi(), etc., and again to use
+the *_exact() variants).
 
-> spoiler first: SUCCESS!!!!
+There's also a minor MVEBU fix.
 
-Awesome :)
+Bjorn
 
-> > I'm obviously interested in seeing the message that gets shown, as well
-> > as the new mvebu-mbus debugfs output.
-> 
-> ----------
-> pci 0000:00:01.0:   bridge window [mem 0xe0000000-0xebffffff]
-> PCIE 0.0: creating window at 0xe0000000, size 0xbffffff rounded up to 
-> 0x10000000
 
-Right, rounding from 192 MB to 265 MB.
+The following changes since commit 38dbfb59d1175ef458d006556061adeaa8751b72:
 
->   cat /sys/kernel/debug/mvebu-mbus/devices
-> [00] disabled
-> [01] disabled
-> [02] disabled
-> [03] disabled
-> [04] 00000000ff000000 - 00000000ff010000 : nand
-> [05] 00000000f4000000 - 00000000f8000000 : vpcie
-> [06] 00000000fe000000 - 00000000fe010000 : dragonite
-> [07] 00000000e0000000 - 00000000f0000000 : pcie0.0
-> 
-> > For good measure, if you could also dump the registers of the PCIe
-> > window. In your case, it was window 7, so dumping 0xf1020070 and
-> > 0xf1020074 would be useful.
-> 
-> Isn't that where the output of debugfs comes from?
+  Linus 3.14-rc1 (2014-02-02 16:42:13 -0800)
 
-It is, but the mvebu-mbus is interpreting the sequence of 1s and 0s to
-give the real size, and this involves a little bit of magic of bit
-manipulation, which I wanted to check by having a look at the raw
-values of the registers.
+are available in the git repository at:
 
-> > I am not sure, but since we are configuring an invalid memory size,
-> > maybe the MBus behavior is undefined, and we get some completely funky
-> > behavior, where parts of the 192 MB window are actually work, but parts
-> > of it are not.
-> 
-> And... Ladies and gentlemen... it turns out YOU'RE RIGHT!!!
-> With your patch now everything works fine!!!
-> 
-> No words (or quads, for that matter) can express how grateful I am! ;-)
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.14-fixes-1
 
-Cool. However, I am not sure my fix is really correct, because is you
-had another PCIe device that needed 64 MB of memory space, the PCIe
-core would have allocated addresses 0xec000000 -> 0xf0000000 to it,
-which would have conflicted with the forced "power of 2 up-rounding"
-we've applied on the memory space of the first device.
+for you to fetch changes up to fc40363b2140f5777c88e67814fac9327bf1ee68:
 
-Therefore, I believe this constraint should be taken into account by
-the PCIe core when allocating the different memory regions for each
-device.
+  ahci: Fix broken fallback to single MSI mode (2014-02-14 14:27:19 -0700)
 
-Bjorn, the mvebu PCIe host driver has the constraint that the I/O and
-memory regions associated to each PCIe device of the emulated bridge
-have a size that is a power of 2.
+----------------------------------------------------------------
+PCI updates for v3.14:
 
-I am currently using the ->align_resource() hook to ensure that the
-start address of the resource matches certain other constraints, but I
-don't see a way of telling the PCI core that I need the resource to
-have its size rounded up to the next power of 2 size. Is there a way of
-doing this?
+  MSI
+    - Fix AHCI single-MSI fallback (Alexander Gordeev)
+    - Fix populate_msi_sysfs() error paths (Greg Kroah-Hartman)
+    - Fix htmldocs problem (Masanari Iida)
+    - Add pci_enable_msi_exact() and pci_enable_msix_exact() (Alexander Gordeev)
+    - Update documentation (Alexander Gordeev)
 
-In the case described by Gerlando, the PCI core has assigned a 192 MB
-region, but the Marvell hardware can only create windows that have a
-power of two size, i.e 256 MB. Therefore, the PCI core should be told
-this constraint, so that it doesn't allocate the next resource right
-after the 192 MB one.
+  Miscellaneous
+    - mvebu: expose device ID & revision via lspci (Andrew Lunn)
+    - Enable INTx if the BIOS left them disabled (Bjorn Helgaas)
 
-Thanks!
+----------------------------------------------------------------
+Alexander Gordeev (4):
+      PCI/MSI: Add pci_enable_msi() documentation back
+      PCI/MSI: Fix cut-and-paste errors in documentation
+      PCI/MSI: Add pci_enable_msi_exact() and pci_enable_msix_exact()
+      ahci: Fix broken fallback to single MSI mode
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Andrew Lunn (1):
+      PCI: mvebu: Use Device ID and revision from underlying endpoint
+
+Bjorn Helgaas (1):
+      PCI: Enable INTx if BIOS left them disabled
+
+Greg Kroah-Hartman (2):
+      PCI/MSI: Check kmalloc() return value, fix leak of name
+      PCI/MSI: Fix leak of msi_attrs
+
+Masanari Iida (1):
+      PCI/MSI: Fix pci_msix_vec_count() htmldocs failure
+
+ Documentation/PCI/MSI-HOWTO.txt | 119 ++++++++++++++++++++++++++++++++++++----
+ drivers/ata/ahci.c              |   4 +-
+ drivers/pci/host/pci-mvebu.c    |  11 +---
+ drivers/pci/msi.c               |  10 +++-
+ drivers/pci/pci.c               |  10 ++++
+ include/linux/pci.h             |  20 +++++++
+ 6 files changed, 152 insertions(+), 22 deletions(-)
