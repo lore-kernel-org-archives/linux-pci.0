@@ -1,62 +1,37 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
-	Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH 8/9] ACPI / dock: Drop remove_dock_dependent_devices()
-Date: Wed, 19 Feb 2014 02:32:12 +0100
-Message-ID: <3723851.WP79lXh8Px@vostro.rjw.lan>
-In-Reply-To: <3011875.q18rCmXyYX@vostro.rjw.lan>
-References: <3011875.q18rCmXyYX@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f177.google.com ([209.85.160.177]:51774 "EHLO
+	mail-yk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754596AbaBTSvd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 13:51:33 -0500
+Received: by mail-yk0-f177.google.com with SMTP id q200so2722615ykb.8
+        for <linux-pci@vger.kernel.org>; Thu, 20 Feb 2014 10:51:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Date: Thu, 20 Feb 2014 18:51:32 +0000
+Message-ID: <CAPcvp5FJLcpe8PunwAyjRBvzESqxx1kv4Sqy0Oqc87Gn9AY3Eg@mail.gmail.com>
+Subject: Serialization of configuration accesses for mvebu/designware
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	jg1.han@samsung.com, Jason Cooper <jason@lakedaemon.net>,
+	mohit.kumar@st.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hello,
 
-Since remove_dock_dependent_devices() is only called from acpi_dock_add()
-and it only is called if the add_dock_dependent_device() adding the
-dock station to its own list of dependent devices has failed, it is not
-really necessary, because the dock station's list of dependent devices
-is guaranteed to be empty at that point.  Drop it, then.
+I've noticed that the mvebu and designware both use spinlocks to
+serialize access to the configuration space (pci_ops.[read|write]).
+However the read/write ops are only ever used from the pci core
+(access.c, pci.c) where they are already protected with the pci_lock.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/dock.c |   12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+As far as I can tell these extra spinlocks are superfluous, therefore...
 
-Index: linux-pm/drivers/acpi/dock.c
-===================================================================
---- linux-pm.orig/drivers/acpi/dock.c
-+++ linux-pm/drivers/acpi/dock.c
-@@ -114,16 +114,6 @@ static int add_dock_dependent_device(str
- 	return 0;
- }
- 
--static void remove_dock_dependent_devices(struct dock_station *ds)
--{
--	struct dock_dependent_device *dd, *aux;
--
--	list_for_each_entry_safe(dd, aux, &ds->dependent_devices, list) {
--		list_del(&dd->list);
--		kfree(dd);
--	}
--}
--
- static void dock_hotplug_event(struct dock_dependent_device *dd, u32 event,
- 			       enum dock_callback_type cb_type)
- {
-@@ -674,8 +664,8 @@ void acpi_dock_add(struct acpi_device *a
- 	return;
- 
- err_rmgroup:
--	remove_dock_dependent_devices(dock_station);
- 	sysfs_remove_group(&dd->dev.kobj, &dock_attribute_group);
-+
- err_unregister:
- 	platform_device_unregister(dd);
- 	acpi_handle_err(handle, "%s encountered error %d\n", __func__, ret);
+Can they be removed?
+Can future host bridge drivers assume that calls to the pci_ops are serialized?
 
+I'm happy to provide a patch for the existing drivers if so.
+
+Thanks,
+
+Andrew Murray
