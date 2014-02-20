@@ -1,31 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:41105 "EHLO
-	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752689AbaBTIaE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 03:30:04 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Rajeev KUMAR <rajeev-dlh.kumar@st.com>
-Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgass@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 20 Feb 2014 16:29:51 +0800
-Subject: RE: [PATCH 1/2] PCI:designware:Fix comment for setting number of
- lanes
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FD40D7E3@EAPEX1MAIL1.st.com>
-References: <1392873774-22249-1-git-send-email-mohit.kumar@st.com>
- <5305A704.7020308@st.com>
-In-Reply-To: <5305A704.7020308@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:35743 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754375AbaBTNU7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Feb 2014 08:20:59 -0500
+Date: Thu, 20 Feb 2014 14:22:58 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] ntb: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140220132258.GB8198@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-1-git-send-email-agordeev@redhat.com>
+ <20140219180926.GA1333@jonmason-lab>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140219180926.GA1333@jonmason-lab>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gUmFqZWV2LA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFJh
-amVldiBLVU1BUg0KPiBTZW50OiBUaHVyc2RheSwgRmVicnVhcnkgMjAsIDIwMTQgMTI6MjYgUE0N
-Cj4gVG86IE1vaGl0IEtVTUFSIERDRw0KPiBDYzogamcxLmhhbkBzYW1zdW5nLmNvbTsgQmpvcm4g
-SGVsZ2Fhczsgc3BlYXItZGV2ZWw7IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnDQo+IFN1
-YmplY3Q6IFJlOiBbUEFUQ0ggMS8yXSBQQ0k6ZGVzaWdud2FyZTpGaXggY29tbWVudCBmb3Igc2V0
-dGluZyBudW1iZXIgb2YNCj4gbGFuZXMNCj4gDQo+IHN1YmplY3QgbGluZQ0KPiANCj4gUENJOiBk
-ZXNpZ253YXJlOiBGaXggY29tbWVudCBmb3Igc2V0dGluZyBudW1iZXIgb2YgbGFuZXMNCj4gDQot
-IHRoYW5rcywgd2lsbCBwdXQgc3BhY2VzLg0KDQpSZWdhcmRzDQpNb2hpdA0K
+On Wed, Feb 19, 2014 at 11:09:27AM -0700, Jon Mason wrote:
+> On Wed, Feb 19, 2014 at 11:15:21AM +0100, Alexander Gordeev wrote:
+> > @@ -1112,26 +1106,21 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+> >  	for (i = 0; i < msix_entries; i++)
+> >  		ndev->msix_entries[i].entry = i;
+> >  
+> > -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> > -	if (rc < 0)
+> > -		goto err1;
+> > -	if (rc > 0) {
+> > +	if (ndev->hw_type != BWD_HW)
+> >  		/* On SNB, the link interrupt is always tied to 4th vector.  If
+> >  		 * we can't get all 4, then we can't use MSI-X.
+> >  		 */
+> > -		if (ndev->hw_type != BWD_HW) {
+> > -			rc = -EIO;
+> > -			goto err1;
+> > -		}
+> > -
+> > -		dev_warn(&pdev->dev,
+> > -			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+> > -			 rc);
+> > +		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
+> > +					   msix_entries, msix_entries);
+> > +	else
+> > +		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
+> > +					   1, msix_entries);
+> 
+> Actually, this must be 2 for the min.  One for the Data and one for
+> the Link.  If you look a few lines after this in the original code,
+> there is a grabbing of the last vector for the link.  I realize there
+> is currently no check for this in the driver and a potential error
+> case occurs.  I can make a separate patch to correct this issue if
+> this patch is not going through my tree.
+
+I am confused here again. In the original code I see "ntb-callback-msix"
+is requested for all MSI-Xs on BWD_HW and "ntb-event-msix" requested for
+the last vector on SNB_HW. Therefore, the range [1..msix_entries] should
+be fine for BWD_HW, isn't it?
+
+> Thanks,
+> Jon
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
