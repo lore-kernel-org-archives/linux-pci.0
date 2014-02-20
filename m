@@ -1,78 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:51966 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752080AbaBGRyS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Feb 2014 12:54:18 -0500
-Date: Fri, 7 Feb 2014 10:54:10 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Message-ID: <20140207175410.GC16263@obsidianresearch.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <3460536.Sh23gjDa6X@wuerfel>
- <20140205190947.GA22297@mudshark.cambridge.arm.com>
- <3724624.kd9jZNUiTF@wuerfel>
- <20140207114607.GE5976@mudshark.cambridge.arm.com>
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:47464 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbaBTHmH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 02:42:07 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140207114607.GE5976@mudshark.cambridge.arm.com>
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <8a021ad12c5548fe8e79e0208725c14f@DM2PR05MB671.namprd05.prod.outlook.com>
+References: <CADTPrLRmCjcKDeapFNk5vT3SfwSqSgVvd=u2p7BjgihXzsyfmg@mail.gmail.com>
+	<CADTPrLQpaCDo_YCC2=MmT1iCrWRPqzDpnqQZrE8OMjRMc6WYmQ@mail.gmail.com>
+	<20131108012352.GE2955@google.com>
+	<CADTPrLTYOXsGovL8HJ7=+K30OWVeSdMKTma_UuMV8ZRFB6CkYA@mail.gmail.com>
+	<CAErSpo7MH=+Jk-ujBoHquk2e+no1cqEV6p=R1E6LGvcLSJQyKw@mail.gmail.com>
+	<CADTPrLRJD0er1kijjm2SEE6wUA9eQaz+OOd67E3MpHLu6k-R6Q@mail.gmail.com>
+	<20131123005102.GA14690@google.com>
+	<a3dc3d613f274e4d993d6a7612f1dde6@BLUPR05MB118.namprd05.prod.outlook.com>
+	<CAErSpo7J8UZpYSaAPavJrR8iOt368expOuF-s_M7x+jW7drnWw@mail.gmail.com>
+	<18997e8c20fb4bdd8a72e4c01b3fd308@BLUPR05MB118.namprd05.prod.outlook.com>
+	<20140212003458.GE21057@google.com>
+	<8a021ad12c5548fe8e79e0208725c14f@DM2PR05MB671.namprd05.prod.outlook.com>
+Date: Wed, 19 Feb 2014 23:42:05 -0800
+Message-ID: <CAA93t1rjOfVgSWepOEWBx6G0mVrdGTVt=VX9X_S-zeYSyjgsAA@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: Acknowledge the spurious "cmd completed" event.
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Rajat Jain <rajatjain@juniper.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatjain.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux hotplug mailing <linux-hotplug@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Tom Nguyen <tom.l.nguyen@intel.com>,
+	Kristen Accardi <kristen.c.accardi@intel.com>,
+	Guenter Roeck <groeck@juniper.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 07, 2014 at 11:46:07AM +0000, Will Deacon wrote:
+Hello Bjorn,
 
-> > In practice, there can be various ways that a system requires something
-> > more complex:
-> > 
-> > * You can have a memory space range that puts PCI bus address zero
-> >   at the start of the pci->mem resource. In this case, you have
-> >   mem_offset = pci->mem.start. We should probably try not to do
-> >   this, but there is existing hardware doing it.
-> 
-> If it's not the common case, then the generic driver might not need to care
-> (at least, initially).
+>>
+>> On Mon, Nov 25, 2013 at 07:03:11PM +0000, Rajat Jain wrote:
+>> > Hello,
+>> >
+>> > > > On a different note, I feel there is still a need to apply my
+>> > > > original
+>> > > patch. There is still an open problem in case of spurious interrupts
+>> > > (or in any case where the condition "if (slot_status &
+>> PCI_EXP_SLTSTA_CC)"
+>> > > becomes true in pcie_write_cmd()). That is because once that
+>> > > happens, we never clear that interrupt, and no further hotplug
+>> > > interrupts shall be received unless we do that.
+>> > >
+>> > > I agree this is an issue and we should address it somehow.  My
+>> > > hesitation is just that I'd prefer to do some more aggressive
+>> > > restructuring rather than apply a point fix.  For example:
+>> >
+>> > OK, I'll attempt to fix it that way when I get time.
+>> >
+>> > >
+>> > > - We currently look at PCI_EXP_SLTSTA_CC in pcie_isr(),
+>> > > pcie_poll_cmd(), and pcie_write_cmd().  I think it would be better
+>> > > to look at it only in pcie_isr().
+>> > >
+>> > > - I don't think pcie_poll_cmd() should exist at all; we should poll
+>> > > by calling pcie_isr() instead.
+>> > >
+>> > > - We need pcie_write_cmd(), but I think the way it waits is
+>> backwards.
+>> > >  Currently we issue the command, then wait for it to complete.  I
+>> > > think we should issue the command, note the current time, and return
+>> > > without waiting.  The *next* time we need to issue a command, we can
+>> > > wait for completion of the previous one (or timeout) if necessary.
+>> > >
+>> > > But maybe we need the point fix in the interim, especially if
+>> > > anybody can actually produce the scenario you mention.
+>> >
+>> > Ok.
+>>
+>> This patch is still in patchwork, but I've lost track of where we are.
+>> Did you resolve this in the series that I just applied, or is it still
+>> an outstanding issue?
+>
+> No, I did not solve it. It is still an outstanding issue. So far I am using your patch to overcome this:
+>
+> http://www.spinics.net/lists/hotplug/msg05830.html
+>
+> I'll just attempt to conclude the status on this issue so that you can make the decision on the course of action. IMHO there are 2 independent issues that we discussed in this thread:
+>
+> 1) PCIe compliant HW (that generates cmd completed interrupts at every write of Slot_ctrl register) being penalized with 1 second delay during the boot up. Your patch solves this.
+>
+> 2) If there is a genuine spurious interrupt, it does not get acknowledged. I had originally posted a patch for THIS problem.
+> http://www.spinics.net/lists/hotplug/msg05815.html
+>
+> You had indicated that you would rather want a bigger restructuring of the driver to solve (2).
+>
+> My observation: MY problem (in my setup) is not seen if I use either of the patches (yours or mine).
+>
+> My opinion: I think my patch solves (2) but might not solve (1) for all corner cases. Also your patch solves (1) but may not solve (2) for all corner cases -Thus we should probably solve both of these problems individually.
+>
 
-Something to think about, other people are going to reference this
-driver when writing drivers for their own hardware, it would be nice
-to see it perfect..
+Just wondering if you decided on how to solve this problem?
 
-AFAIK, the job is fairly simple, when you call pci_add_resource_offset
-for memory compute the offset from 
-  of_pci_range.pci_addr - of_pci_range.cpu_addr
+Are you planning this for 3.15?
 
-(or is it the other way around ?)
+Thanks,
 
-And when you do it for IO then you compute the offset between the
-requested io mapping base to the pci_addr.
-
-> > * You might have multiple sections of the PCI bus space mapped
-> >   into CPU physical space. If you want to support legacy VGA
-> >   console, you probably want to map the first 16MB of the bus
-> >   space at an arbitrary location (with the mem_offset as above),
-> >   plus a second, larger section of the bus space with an identity
-> >   mapping (mem_offset_= 0) for all devices other than VGA.
-> >   You'd also need to copy some VGA specific code from arm32 to
-> >   arm64 to actually make this work.
-> 
-> Again, I'd rather cross that bridge (no pun intended) when we decide we want
-> legacy VGA.
-
-Fortuantely if you compute the offset directly from the DT then you
-don't need to do anything more. If someone wants to use this
-arrangement then they just have to setup the HW and write a proper DT
-with two ranges lines for memory and everything should just work.
-
-> Okey doke, is anybody working on that? (I see the follow up from
-> Jason, but it's not clear whether that's going to be merged).
-
-Nope, just a thought to stimulate discussion :)
-
-Regards,
-Jason
+Rajat
