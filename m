@@ -1,115 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:63465 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752214AbaBWXGX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Feb 2014 18:06:23 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 2/2] PCI / PM: Resume runtime-suspended devices later during system suspend
-Date: Mon, 24 Feb 2014 00:21:11 +0100
-Message-ID: <3851541.s2776YTCMH@vostro.rjw.lan>
-In-Reply-To: <1853950.oxM3KDpyLu@vostro.rjw.lan>
-References: <1853950.oxM3KDpyLu@vostro.rjw.lan>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:39540 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932337AbaBUNuD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 08:50:03 -0500
+Date: Fri, 21 Feb 2014 13:49:16 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>
+Subject: Re: [PATCH v3 2/3] ARM: bios32: use pci_enable_resource to enable
+ PCI resources
+Message-ID: <20140221134916.GH8731@mudshark.cambridge.arm.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+ <1392726043-31088-3-git-send-email-will.deacon@arm.com>
+ <20140218154139.GF21483@n2100.arm.linux.org.uk>
+ <20140220111238.GD3615@mudshark.cambridge.arm.com>
+ <CAErSpo4KEGh7GAfEv-prj-UdJETCN9M5sEtdNF0NARa6-03HYA@mail.gmail.com>
+ <20140221003619.GG19893@obsidianresearch.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140221003619.GG19893@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Jason, Bjorn,
 
-Runtime-suspended devices are resumed during system suspend by
-pci_pm_prepare() for two reasons: First, because they may need
-to be reprogrammed in order to change their wakeup settings and,
-second, because they may need to be operatonal for their children
-to be successfully suspended.  That is a problem, though, if there
-are many runtime-suspended devices that need to be resumed this
-way during system suspend, because the .prepare() PM callbacks of
-devices are executed sequentially and the times taken by them
-accumulate, which may increase the total system suspend time quite
-a bit.
+Thanks for the comments.
 
-For this reason, move the resume of runtime-suspended devices up
-to the next phase of device suspend (during system suspend), except
-for the ones that have power.ignore_children set.  The exception is
-made, because the devices with power.ignore_children set may still
-be necessary for their children to be successfully suspended (during
-system suspend) and they won't be resumed automatically as a result
-of the runtime resume of their children.
+On Fri, Feb 21, 2014 at 12:36:19AM +0000, Jason Gunthorpe wrote:
+> On Thu, Feb 20, 2014 at 12:39:16PM -0700, Bjorn Helgaas wrote:
+> > > Damn, I just found a problem with this patch when PCI_PROBE_ONLY is set.
+> > >
+> > > The problem is that bios32.c won't create a resource hierarchy for the
+> > > firmware-initialised resources, so we have a bunch of orphaned resources
+> > > that we can't pass to pci_enable_resources (since it checks r->parent).
+> > >
+> > > This means that, unless firmware *enables* all of the resources, Linux won't
+> > > be able to enable them. I think this is stronger than simply not
+> > > re-assigning devices like the PCI_PROBE_ONLY flag intends.
+> > 
+> > By "firmware enabling resources," do you mean firmware assigning
+> > addresses in the BARs and turning on the PCI_COMMAND_MEMORY (or _IO)
+> > bits?
+> > 
+> > I'd like to make the generic code ignore BAR values if
+> > PCI_COMMAND_MEMORY (or _IO) is cleared.  When those bits are cleared,
+> > I don't think there's a good way to determine whether the address in a
+> > BAR is valid.
+> 
+> I think this is pretty smart, PROBE_ONLY really should mean
+> 'everything is perfect, do not touch it' and if the device isn't
+> enabled, well.. It isn't enabled, the firmware should have done it.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-driver.c |   33 +++++++++++++++++++++++++--------
- 1 file changed, 25 insertions(+), 8 deletions(-)
+Yes, that's one (sane) interpretation of the PROBE_ONLY flag and I'm happy
+to run with it if we all agree. We'll need some extra code paths to assign
+disabled resources when PROBE_ONLY is passed, but that can come later.
 
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -616,15 +616,11 @@ static int pci_pm_prepare(struct device
- 	int error = 0;
- 
- 	/*
--	 * PCI devices suspended at run time need to be resumed at this
--	 * point, because in general it is necessary to reconfigure them for
--	 * system suspend.  Namely, if the device is supposed to wake up the
--	 * system from the sleep state, we may need to reconfigure it for this
--	 * purpose.  In turn, if the device is not supposed to wake up the
--	 * system from the sleep state, we'll have to prevent it from signaling
--	 * wake-up.
-+	 * Devices having power.ignore_children set may still be necessary for
-+	 * suspending their children in the next phase of device suspend.
- 	 */
--	pm_runtime_resume(dev);
-+	if (dev->power.ignore_children)
-+		pm_runtime_resume(dev);
- 
- 	if (drv && drv->pm && drv->pm->prepare)
- 		error = drv->pm->prepare(dev);
-@@ -654,6 +650,16 @@ static int pci_pm_suspend(struct device
- 		goto Fixup;
- 	}
- 
-+	/*
-+	 * PCI devices suspended at run time need to be resumed at this point,
-+	 * because in general it is necessary to reconfigure them for system
-+	 * suspend.  Namely, if the device is supposed to wake up the system
-+	 * from the sleep state, we may need to reconfigure it for this purpose.
-+	 * In turn, if the device is not supposed to wake up the system from the
-+	 * sleep state, we'll have to prevent it from signaling wake-up.
-+	 */
-+	pm_runtime_resume(dev);
-+
- 	pci_dev->state_saved = false;
- 	if (pm->suspend) {
- 		pci_power_t prev = pci_dev->current_state;
-@@ -808,6 +814,14 @@ static int pci_pm_freeze(struct device *
- 		return 0;
- 	}
- 
-+	/*
-+	 * This used to be done in pci_pm_prepare() for all devices and some
-+	 * drivers may depend on it, so do it here.  Ideally, runtime-suspended
-+	 * devices should not be touched during freeze/thaw transitions,
-+	 * however.
-+	 */
-+	pm_runtime_resume(dev);
-+
- 	pci_dev->state_saved = false;
- 	if (pm->freeze) {
- 		int error;
-@@ -915,6 +929,9 @@ static int pci_pm_poweroff(struct device
- 		goto Fixup;
- 	}
- 
-+	/* The reason to do that is the same as in pci_pm_suspend(). */
-+	pm_runtime_resume(dev);
-+
- 	pci_dev->state_saved = false;
- 	if (pm->poweroff) {
- 		int error;
+> Will, this if for kvmtool right? Keeping the patch as is and instead
+> changing kvmtool to enable the devices seems like a good option?
 
+Sure, I can do that easily enough. I just wanted to make sure that we agree
+on PROBE_ONLY before I start hacking kvmtool. I'll drop this additional
+patch.
+
+Cheers,
+
+Will
