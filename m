@@ -1,234 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:37078 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932190AbaBUNrM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 08:47:12 -0500
+Date: Fri, 21 Feb 2014 14:47:08 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Gerlando Falauto <gerlando.falauto@keymile.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V2 06/17] iommu/vt-d: simplify function get_domain_for_dev()
-Date: Wed, 19 Feb 2014 14:07:26 +0800
-Message-Id: <1392790057-32434-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+Message-ID: <20140221144708.48559045@skate>
+In-Reply-To: <53074584.5010202@keymile.com>
+References: <53039894.10905@keymile.com>
+	<20140218212751.07c2aeb5@skate>
+	<53046D98.6020801@keymile.com>
+	<20140219102658.76eec91e@skate>
+	<53047BBB.6040108@keymile.com>
+	<20140219143749.65ff3155@skate>
+	<CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
+	<20140220095518.7ca36f0a@skate>
+	<20140220173518.GA19893@obsidianresearch.com>
+	<20140220212914.29ddc031@skate>
+	<20140221003227.GF19893@obsidianresearch.com>
+	<20140221093444.35870a73@skate>
+	<5307152D.3020804@keymile.com>
+	<20140221101218.45766e8a@skate>
+	<53071970.1040400@keymile.com>
+	<20140221103936.56b3d9f8@skate>
+	<53074584.5010202@keymile.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function get_domain_for_dev() is a little complex, simplify it
-by factoring out dmar_search_domain_by_dev_info() and
-dmar_insert_dev_info().
+Dear Gerlando Falauto,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |  142 ++++++++++++++++++++-----------------------
- 1 file changed, 66 insertions(+), 76 deletions(-)
+On Fri, 21 Feb 2014 13:24:36 +0100, Gerlando Falauto wrote:
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index fffe3d1..67b114e 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1957,18 +1957,71 @@ find_domain(struct pci_dev *pdev)
- 	return NULL;
- }
- 
-+static inline struct dmar_domain *
-+dmar_search_domain_by_dev_info(int segment, int bus, int devfn)
-+{
-+	struct device_domain_info *info;
-+
-+	list_for_each_entry(info, &device_domain_list, global)
-+		if (info->segment == segment && info->bus == bus &&
-+		    info->devfn == devfn)
-+			return info->domain;
-+
-+	return NULL;
-+}
-+
-+static int dmar_insert_dev_info(int segment, int bus, int devfn,
-+				struct pci_dev *dev, struct dmar_domain **domp)
-+{
-+	struct dmar_domain *found, *domain = *domp;
-+	struct device_domain_info *info;
-+	unsigned long flags;
-+
-+	info = alloc_devinfo_mem();
-+	if (!info)
-+		return -ENOMEM;
-+
-+	info->segment = segment;
-+	info->bus = bus;
-+	info->devfn = devfn;
-+	info->dev = dev;
-+	info->domain = domain;
-+	if (!dev)
-+		domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
-+
-+	spin_lock_irqsave(&device_domain_lock, flags);
-+	if (dev)
-+		found = find_domain(dev);
-+	else
-+		found = dmar_search_domain_by_dev_info(segment, bus, devfn);
-+	if (found) {
-+		spin_unlock_irqrestore(&device_domain_lock, flags);
-+		free_devinfo_mem(info);
-+		if (found != domain) {
-+			domain_exit(domain);
-+			*domp = found;
-+		}
-+	} else {
-+		list_add(&info->link, &domain->devices);
-+		list_add(&info->global, &device_domain_list);
-+		if (dev)
-+			dev->dev.archdata.iommu = info;
-+		spin_unlock_irqrestore(&device_domain_lock, flags);
-+	}
-+
-+	return 0;
-+}
-+
- /* domain is initialized */
- static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- {
--	struct dmar_domain *domain, *found = NULL;
-+	struct dmar_domain *domain;
- 	struct intel_iommu *iommu;
- 	struct dmar_drhd_unit *drhd;
--	struct device_domain_info *info, *tmp;
- 	struct pci_dev *dev_tmp;
- 	unsigned long flags;
- 	int bus = 0, devfn = 0;
- 	int segment;
--	int ret;
- 
- 	domain = find_domain(pdev);
- 	if (domain)
-@@ -1986,41 +2039,29 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- 			devfn = dev_tmp->devfn;
- 		}
- 		spin_lock_irqsave(&device_domain_lock, flags);
--		list_for_each_entry(info, &device_domain_list, global) {
--			if (info->segment == segment &&
--			    info->bus == bus && info->devfn == devfn) {
--				found = info->domain;
--				break;
--			}
--		}
-+		domain = dmar_search_domain_by_dev_info(segment, bus, devfn);
- 		spin_unlock_irqrestore(&device_domain_lock, flags);
- 		/* pcie-pci bridge already has a domain, uses it */
--		if (found) {
--			domain = found;
-+		if (domain)
- 			goto found_domain;
--		}
- 	}
- 
--	domain = alloc_domain();
--	if (!domain)
--		goto error;
--
--	/* Allocate new domain for the device */
- 	drhd = dmar_find_matched_drhd_unit(pdev);
- 	if (!drhd) {
- 		printk(KERN_ERR "IOMMU: can't find DMAR for device %s\n",
- 			pci_name(pdev));
--		free_domain_mem(domain);
- 		return NULL;
- 	}
- 	iommu = drhd->iommu;
- 
--	ret = iommu_attach_domain(domain, iommu);
--	if (ret) {
-+	/* Allocate and intialize new domain for the device */
-+	domain = alloc_domain();
-+	if (!domain)
-+		goto error;
-+	if (iommu_attach_domain(domain, iommu)) {
- 		free_domain_mem(domain);
- 		goto error;
- 	}
--
- 	if (domain_init(domain, gaw)) {
- 		domain_exit(domain);
- 		goto error;
-@@ -2028,67 +2069,16 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- 
- 	/* register pcie-to-pci device */
- 	if (dev_tmp) {
--		info = alloc_devinfo_mem();
--		if (!info) {
-+		if (dmar_insert_dev_info(segment, bus, devfn, NULL, &domain)) {
- 			domain_exit(domain);
- 			goto error;
- 		}
--		info->segment = segment;
--		info->bus = bus;
--		info->devfn = devfn;
--		info->dev = NULL;
--		info->domain = domain;
--		/* This domain is shared by devices under p2p bridge */
--		domain->flags |= DOMAIN_FLAG_P2P_MULTIPLE_DEVICES;
--
--		/* pcie-to-pci bridge already has a domain, uses it */
--		found = NULL;
--		spin_lock_irqsave(&device_domain_lock, flags);
--		list_for_each_entry(tmp, &device_domain_list, global) {
--			if (tmp->segment == segment &&
--			    tmp->bus == bus && tmp->devfn == devfn) {
--				found = tmp->domain;
--				break;
--			}
--		}
--		if (found) {
--			spin_unlock_irqrestore(&device_domain_lock, flags);
--			free_devinfo_mem(info);
--			domain_exit(domain);
--			domain = found;
--		} else {
--			list_add(&info->link, &domain->devices);
--			list_add(&info->global, &device_domain_list);
--			spin_unlock_irqrestore(&device_domain_lock, flags);
--		}
- 	}
- 
- found_domain:
--	info = alloc_devinfo_mem();
--	if (!info)
--		goto error;
--	info->segment = segment;
--	info->bus = pdev->bus->number;
--	info->devfn = pdev->devfn;
--	info->dev = pdev;
--	info->domain = domain;
--	spin_lock_irqsave(&device_domain_lock, flags);
--	/* somebody is fast */
--	found = find_domain(pdev);
--	if (found != NULL) {
--		spin_unlock_irqrestore(&device_domain_lock, flags);
--		if (found != domain) {
--			domain_exit(domain);
--			domain = found;
--		}
--		free_devinfo_mem(info);
-+	if (dmar_insert_dev_info(segment, pdev->bus->number, pdev->devfn,
-+				 pdev, &domain) == 0)
- 		return domain;
--	}
--	list_add(&info->link, &domain->devices);
--	list_add(&info->global, &device_domain_list);
--	pdev->dev.archdata.iommu = info;
--	spin_unlock_irqrestore(&device_domain_lock, flags);
--	return domain;
- error:
- 	/* recheck it here, maybe others set it */
- 	return find_domain(pdev);
+> So I restored the total aperture size to 192MB.
+> I had to rework your patch a bit because:
+> 
+> a) I'm running an older kernel and driver
+> b) sizes are actually 1-byte offset
+
+Hum, right. This is a bit weird, maybe I should change that, I don't
+think the mvebu-mbus driver should accept 1-byte offset sizes.
+
+> Here's the assignment (same as before):
+> 
+> pci 0000:00:01.0: BAR 8: assigned [mem 0xe0000000-0xebffffff]
+> pci 0000:01:00.0: BAR 1: assigned [mem 0xe0000000-0xe7ffffff]
+> pci 0000:01:00.0: BAR 3: assigned [mem 0xe8000000-0xe87fffff]
+> pci 0000:01:00.0: BAR 4: assigned [mem 0xe8800000-0xe8801fff]
+> pci 0000:01:00.0: BAR 0: assigned [mem 0xe8802000-0xe8802fff]
+> pci 0000:01:00.0: BAR 2: assigned [mem 0xe8803000-0xe8803fff]
+> pci 0000:01:00.0: BAR 5: assigned [mem 0xe8804000-0xe8804fff]
+> 
+> And here's the output I get from:
+> 
+> # cat /sys/kernel/debug/mvebu-mbus/devices
+> [00] 00000000e8000000 - 00000000ec000000 : pcie0.0 (remap 00000000e8000000)
+> [01] disabled
+> [02] disabled
+> [03] disabled
+> [04] 00000000ff000000 - 00000000ff010000 : nand
+> [05] 00000000f4000000 - 00000000f8000000 : vpcie
+> [06] 00000000fe000000 - 00000000fe010000 : dragonite
+> [07] 00000000e0000000 - 00000000e8000000 : pcie0.0
+
+This seems correct: we have two windows pointing to the same device,
+and they have consecutive addresses.
+
+> I did not get to test the whole address space thoroughly, but all the 
+> BARs are still accessible (mainly BAR0 which contains the control space 
+> and is mapped on the "new" MBUS window, and BAR1 which is the "big" 
+> one). So at least, the issues we had before are now gone.
+
+Did you check that what you read from BAR0 (which is mapped on the new
+MBUS window) is really what you expect, and not just the same thing as
+BAR1 accessible for the big window? I just want to make sure that the
+hardware indeed properly handles two windows for the same device.
+
+> So I'd say this looks like a very promising approach. :-)
+
+Indeed. However, I don't think this approach solves the entire problem,
+for two reasons:
+
+ *) For small BARs that are not power-of-two sized, we may not want to
+    consume two windows, but instead consume a little bit more address
+    space. Using two windows to map a 96 KB BAR would be a waste of
+    windows: using a single 128 KB window is much more efficient.
+
+ *) I don't know if the algorithm to split the BAR into multiple
+    windows is going to be trivial.
+
+Thomas
 -- 
-1.7.10.4
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
