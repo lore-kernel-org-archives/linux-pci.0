@@ -1,115 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:34984 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460AbaBLVvw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 16:51:52 -0500
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <1392236171-10512-4-git-send-email-will.deacon@arm.com>
-Date: Wed, 12 Feb 2014 15:51:48 -0600
-Cc: linux-arm-kernel@lists.infradead.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	jgunthorpe@obsidianresearch.com
-Message-Id: <D2AE4AE6-E8FA-4DD8-B92B-E37205A2548C@codeaurora.org>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <1392236171-10512-4-git-send-email-will.deacon@arm.com>
-To: Will Deacon <will.deacon@arm.com>
+Received: from top.free-electrons.com ([176.31.233.9]:38543 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754117AbaBURFM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 12:05:12 -0500
+Date: Fri, 21 Feb 2014 18:05:08 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Gerlando Falauto <gerlando.falauto@keymile.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Gregory Cl??ment <gregory.clement@free-electrons.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+Message-ID: <20140221180508.7ed6cfaf@skate>
+In-Reply-To: <20140221163902.GB4706@obsidianresearch.com>
+References: <20140220173518.GA19893@obsidianresearch.com>
+	<20140220212914.29ddc031@skate>
+	<20140221003227.GF19893@obsidianresearch.com>
+	<20140221093444.35870a73@skate>
+	<5307152D.3020804@keymile.com>
+	<20140221101218.45766e8a@skate>
+	<53071970.1040400@keymile.com>
+	<20140221103936.56b3d9f8@skate>
+	<53074584.5010202@keymile.com>
+	<20140221144708.48559045@skate>
+	<20140221163902.GB4706@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Dear Jason Gunthorpe,
 
-On Feb 12, 2014, at 2:16 PM, Will Deacon <will.deacon@arm.com> wrote:
-
-> This patch adds support for a generic PCI host controller, such as a
-> firmware-initialised device with static windows or an emulation by
-> something such as kvmtool.
+On Fri, 21 Feb 2014 09:39:02 -0700, Jason Gunthorpe wrote:
+> On Fri, Feb 21, 2014 at 02:47:08PM +0100, Thomas Petazzoni wrote:
+> >  *) I don't know if the algorithm to split the BAR into multiple
+> >     windows is going to be trivial.
 > 
-> The controller itself has no configuration registers and has its address
-> spaces described entirely by the device-tree (using the bindings from
-> ePAPR). Both CAM and ECAM are supported for Config Space accesses.
+> physaddr_t base,size;
 > 
-> Corresponding documentation is added for the DT binding.
+> while (size != 0) {
+>    physaddr_t window_size = 1 << log2_round_down(size);
+>    create_window(base,window_size);
+>    base += window_size;
+>    size -= window_size;
+> }
 > 
-> Signed-off-by: Will Deacon <will.deacon@arm.com>
-> ---
-> .../devicetree/bindings/pci/arm-generic-pci.txt    |  51 ++++
-> drivers/pci/host/Kconfig                           |   7 +
-> drivers/pci/host/Makefile                          |   1 +
-> drivers/pci/host/pci-arm-generic.c                 | 318 +++++++++++++++++++++
-> 4 files changed, 377 insertions(+)
-> create mode 100644 Documentation/devicetree/bindings/pci/arm-generic-pci.txt
-> create mode 100644 drivers/pci/host/pci-arm-generic.c
+> At the very worst log2_round_down is approxmiately
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/arm-generic-pci.txt b/Documentation/devicetree/bindings/pci/arm-generic-pci.txt
-> new file mode 100644
-> index 000000000000..cc7a35ecfa2d
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/arm-generic-pci.txt
-> @@ -0,0 +1,51 @@
-> +* ARM generic PCI host controller
-> +
-> +Firmware-initialised PCI host controllers and PCI emulations, such as the
-> +virtio-pci implementations found in kvmtool and other para-virtualised
-> +systems, do not require driver support for complexities such as regulator and
-> +clock management. In fact, the controller may not even require the
-> +configuration of a control interface by the operating system, instead
-> +presenting a set of fixed windows describing a subset of IO, Memory and
-> +Configuration Spaces.
-> +
-> +Such a controller can be described purely in terms of the standardized device
-> +tree bindings communicated in pci.txt:
-> +
-> +- compatible     : Must be "arm,pci-cam-generic" or "arm,pci-ecam-generic"
-> +                   depending on the layout of configuration space (CAM vs
-> +                   ECAM respectively)
+> unsigned int log2_round_down(unsigned int val)
+> {
+> 	unsigned int res = 0;
+> 	while ((1<<res) <= val)
+> 		res++;
+> 	return res - 1;
+> }
+> 
+> Minimum PCI required alignment for windows is 1MB so it will always
+> work out into some number of mbus windows..
 
-What’s arm specific here?  I don’t have a great suggestion, but seems odd for this to be vendor prefixed with "arm".
+Interesting! Thanks!
 
-> +
-> +- ranges         : As described in IEEE Std 1275-1994, but must provide
-> +                   at least a definition of one or both of IO and Memory
-> +                   Space.
-> +
-> +- #address-cells : Must be 3
-> +
-> +- #size-cells    : Must be 2
-> +
-> +- reg            : The Configuration Space base address, as accessed by the
-> +                   parent bus.
+Now I have another question: our mvebu_pcie_align_resource() function
+makes sure that the base address of the BAR is aligned on its size,
+because it is a requirement of MBus windows. However, if you later
+split the BAR into multiple windows, will this continue to work out?
 
-Isn’t the size fixed here for cam or ecam?
+Let's take an example: a 96 MB BAR. If it gets put at 0xe0000000, then
+no problem: we create one 64 MB window at 0xe0000000 and a 32 MB window
+at 0xe4000000. Both base addresses are aligned on the size of the
+window.
 
-> +
-> +Configuration Space is assumed to be memory-mapped (as opposed to being
-> +accessed via an ioport) and laid out with a direct correspondence to the
-> +geography of a PCI bus address by concatenating the various components to form
-> +an offset.
-> +
-> +For CAM, this 24-bit offset is:
-> +
-> +        cfg_offset(bus, device, function, register) =
-> +                   bus << 16 | device << 11 | function << 8 | register
-> +
-> +Whilst ECAM extends this by 4 bits to accomodate 4k of function space:
-> +
-> +        cfg_offset(bus, device, function, register) =
-> +                   bus << 20 | device << 15 | function << 12 | register
-> +
-> +Interrupt mapping is exactly as described in `Open Firmware Recommended
-> +Practice: Interrupt Mapping' and requires the following properties:
-> +
-> +- #interrupt-cells   : Must be 1
-> +
-> +- interrupt-map      : <see aforementioned specification>
-> +
-> +- interrupt-map-mask : <see aforementioned specification>
+However, if the 96 MB BAR gets put at 0xea000000 (which is aligned on a
+96 MB boundary, as required by our mvebu_pcie_align_resource). We
+create one 64 MB window at 0xea000000, and one 32 MB window at
+0xee000000. Unfortunately, while 0xea000000 is aligned on a 96 MB
+boundary, it is not aligned on a 64 MB boundary, so the 64 MB window we
+have created is wrong.
 
-Examples are always nice :)
+Which also makes me think that our mvebu_pcie_align_resource()
+function uses round_up(start, size), which most likely doesn't work with
+non power-of-two sizes.
 
-- k
-
+Thomas
 -- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
