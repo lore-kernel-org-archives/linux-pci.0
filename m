@@ -1,48 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:54981 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752880AbaBRCJ1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Feb 2014 21:09:27 -0500
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
-Date: Tue, 18 Feb 2014 11:10:41 +0900
-Message-Id: <20140218021041.14164.56411.sendpatchset@w520>
-Subject: [PATCH v2 00/08] PCI: rcar: Recent driver patches from Ben Dooks and me (V2)
+Received: from userp1040.oracle.com ([156.151.31.81]:40113 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752725AbaBUTH2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 14:07:28 -0500
+Message-ID: <5307A44E.7060006@oracle.com>
+Date: Fri, 21 Feb 2014 14:09:02 -0500
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] xen-pciback: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+References: <1392804931-30671-10-git-send-email-agordeev@redhat.com> <5304CC49.7020000@oracle.com> <5304D063.90000@oracle.com> <20140219160501.GA32067@dhcp-26-207.brq.redhat.com> <5304DABD.9000605@oracle.com> <20140221165235.GF17353@dhcp-26-207.brq.redhat.com> <20140221165340.GG17353@dhcp-26-207.brq.redhat.com> <53079BFE.3010702@oracle.com> <20140221185858.GB18725@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140221185858.GB18725@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI: rcar: Recent driver patches from Ben Dooks and me (V2)
+On 02/21/2014 01:58 PM, Alexander Gordeev wrote:
+> On Fri, Feb 21, 2014 at 01:33:34PM -0500, Boris Ostrovsky wrote:
+>> Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> Thank you, Boris!
+> Whom should I ask this patch for inclusion?
+>
 
-[PATCH 01/08] PCI: rcar: check platform_get_irq() return code
-[PATCH v2 02/08] PCI: rcar: add error interrupt handling
-[PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
-[PATCH v3 04/08] PCI: rcar: Register each instance independently
-[PATCH v2 05/08] PCI: rcar: Break out window size handling
-[PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
-[PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
-[PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
+This should go into the Xen tree. Konrad is usually the one putting 
+together pull requests for Linus.
 
-These patches update the pci-rcar-gen2.c driver with patches from
-Ben Dooks and me. The first 3 are written by Ben (thanks!) and are
-included here to show what I would like to have merged and what I
-rebased my patches on. The following 4 are written by me.
+I don't think this needs to go in right away so presumably this will be 
+queued for the next merge window (unless Konrad has other things for 
+next RCs and decides to tack this onto other patches).
 
-Patch 1-3:
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
 
-Patch 4-8:
-Signed-off-by: Magnus Damm <damm@opensource.se>
----
-
- Changes since V1 of this series:
- - Updated [4/8] from v2 to v3 to fix init section issues, thanks Bjorn!
-
- Written against renesas.git tag renesas-devel-v3.14-rc3-20140217
-
- drivers/pci/host/Kconfig         |    5 
- drivers/pci/host/pci-rcar-gen2.c |  449 ++++++++++++++++++++++++++++++++------
- 2 files changed, 387 insertions(+), 67 deletions(-)
+-boris
