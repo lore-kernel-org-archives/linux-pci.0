@@ -1,81 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:49652 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752005AbaBUHnT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 02:43:19 -0500
+Message-ID: <53070393.5020005@linux.intel.com>
+Date: Fri, 21 Feb 2014 15:43:15 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <52FE89FF.4020700@gmail.com>
-References: <52FE89FF.4020700@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Feb 2014 14:35:51 -0700
-Message-ID: <CAErSpo4YwCaS+zc50L8PMO5nx9XscEua7nHXqM3eR3XzG4TtJQ@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: Display the link state change reporting capability
-To: Rajat Jain <rajatxjain@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kees Cook <keescook@chromium.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v5 10/33] iommu, irq: Allocate irq_desc for dmar_msi with
+ local node
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org> <1388707565-16535-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1388707565-16535-11-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 2:26 PM, Rajat Jain <rajatxjain@gmail.com> wrote:
-> With recent addition of Link state change based hot-plug, it makes
-> sense to display this capability in dbg_ctrl() addition to others.
->
-> (Also move the call to dbg_ctrl() further down untill after the value
-> is populated in ctrl->link_active_reporting)
->
-> Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-> Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-> Signed-off-by: Guenter Roeck <groeck@juniper.net>
 
-This is fine as it is, but I'd like to get rid of dbg_ctrl()
-altogether someday.  I made pcie_init() more verbose with afe2478f2e3f
-("PCI: pciehp: Announce slot capabilities (slot #, button, LEDs,
-etc)"), and it does include the PCI_EXP_LNKCAP_DLLLARC info.
 
-Is there anything important left in dbg_ctrl() that we don't already
-print elsewhere?  The PCI core prints the vendor/device and BAR info.
-Of course, we don't print the entire capabilities/status/control words
-anywhere else.  Is that important?
-
+On 2014/1/3 8:05, Yinghai Lu wrote:
+> iommu irq's irq_desc should be on local node ram.
+> 
+> Fix the return value checking problem.
+>   create_irq() will return -1 when fail to allocate.
+>   create_irq_nr() will return 0 when fail to allocate.
+> here only check !irq, so need to change it to use create_irq_nr instead.
+> 
+> -v2: According to Sebastian, add cc to stable.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Donald Dutile <ddutile@redhat.com>
+> Acked-by: Donald Dutile <ddutile@redhat.com>
+> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+> Cc: stable@vger.kernel.org
 > ---
->  drivers/pci/hotplug/pciehp_hpc.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index da4b020..cbe8e924 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -747,6 +747,8 @@ static inline void dbg_ctrl(struct controller *ctrl)
->                   EMI(ctrl)        ? "yes" : "no");
->         ctrl_info(ctrl, "  Command Completed    : %3s\n",
->                   NO_CMD_CMPL(ctrl) ? "no" : "yes");
-> +       ctrl_info(ctrl, "  Link Change Reporting: %3s\n",
-> +                 ctrl->link_active_reporting ? "yes" : "no");
->         pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &reg16);
->         ctrl_info(ctrl, "Slot Status            : 0x%04x\n", reg16);
->         pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &reg16);
-> @@ -771,7 +773,6 @@ struct controller *pcie_init(struct pcie_device *dev)
->         ctrl->slot_cap = slot_cap;
->         mutex_init(&ctrl->ctrl_lock);
->         init_waitqueue_head(&ctrl->queue);
-> -       dbg_ctrl(ctrl);
->         /*
->          * Controller doesn't notify of command completion if the "No
->          * Command Completed Support" bit is set in Slot Capability
-> @@ -784,10 +785,9 @@ struct controller *pcie_init(struct pcie_device *dev)
->
->          /* Check if Data Link Layer Link Active Reporting is implemented */
->          pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
-> -        if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
-> -                ctrl_dbg(ctrl, "Link Active Reporting supported\n");
-> +       if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
->                  ctrl->link_active_reporting = 1;
-> -        }
-> +       dbg_ctrl(ctrl);
->
->         /* Clear all remaining event bits in Slot Status register */
->         pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-> --
-> 1.7.9.5
->
+>  drivers/iommu/dmar.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+> index 8b452c9..f4eaa50 100644
+> --- a/drivers/iommu/dmar.c
+> +++ b/drivers/iommu/dmar.c
+> @@ -1277,7 +1277,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
+>  	if (iommu->irq)
+>  		return 0;
+>  
+> -	irq = create_irq();
+> +	irq = create_irq_nr(0, iommu->node);
+Hi Yinghai,
+	How about create_irq_nrq(1, iommu->node) here to clearly state
+that 0 is not a valid irq number for dmar here?
+Thanks!
+Gerry
+
+>  	if (!irq) {
+>  		pr_err("IOMMU: no free vectors\n");
+>  		return -EINVAL;
+> 
