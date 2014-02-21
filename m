@@ -1,41 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:58681 "EHLO
-	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752882AbaBTL7H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 06:59:07 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-	"jg1.han@samsung.com" <jg1.han@samsung.com>
-Cc: Ajay KHANDELWAL <ajay.khandelwal@st.com>,
-	Bjorn Helgaas <bhelgass@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 20 Feb 2014 19:58:51 +0800
-Subject: RE: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io
- and mem viewport
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FD40D8B3@EAPEX1MAIL1.st.com>
-References: <1392873774-22249-1-git-send-email-mohit.kumar@st.com>
- <1392873774-22249-2-git-send-email-mohit.kumar@st.com>
- <5305E928.5070505@ti.com>
-In-Reply-To: <5305E928.5070505@ti.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 21 Feb 2014 17:53:40 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2] xen-pciback: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140221165340.GG17353@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
+ <5304CC49.7020000@oracle.com>
+ <5304D063.90000@oracle.com>
+ <20140219160501.GA32067@dhcp-26-207.brq.redhat.com>
+ <5304DABD.9000605@oracle.com>
+ <20140221165235.GF17353@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140221165235.GF17353@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gS2lzaG9uLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEtp
-c2hvbiBWaWpheSBBYnJhaGFtIEkgW21haWx0bzpraXNob25AdGkuY29tXQ0KPiBTZW50OiBUaHVy
-c2RheSwgRmVicnVhcnkgMjAsIDIwMTQgNTowOCBQTQ0KPiBUbzogTW9oaXQgS1VNQVIgRENHOyBq
-ZzEuaGFuQHNhbXN1bmcuY29tDQo+IENjOiBBamF5IEtIQU5ERUxXQUw7IEJqb3JuIEhlbGdhYXM7
-IHNwZWFyLWRldmVsOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBS
-ZTogW1BBVENIIDIvMl0gUENJOmRlc2lnbndhcmU6Rml4IGlBVFUgcHJvZ3JhbW1pbmcgZm9yIGNm
-ZzEsIGlvDQo+IGFuZCBtZW0gdmlld3BvcnQNCj4gDQo+IEhpLA0KPiANCj4gT24gVGh1cnNkYXkg
-MjAgRmVicnVhcnkgMjAxNCAxMDo1MiBBTSwgTW9oaXQgS3VtYXIgd3JvdGU6DQo+ID4gVGhpcyBw
-YXRjaCBjb3JyZWN0IGlBVFUgcHJvZ3JhbW1pbmcgZm9yIGNmZzEsIGlvIGFuZCBtZW0gdmlld3Bv
-cnQuDQo+ID4gRW5hYmxlIEFUVSBvbmx5IGFmdGVyIGNvbmZpZ3VyaW5nIGl0Lg0KPiANCj4gRG9l
-cyB0aGlzIHBhdGNoIGFjdHVhbGx5IGZpeGVzIGRldmljZSBlbnVtZXJhdGlvbiBiZWhpbmQgYSBQ
-Q0llLXBjaSBicmlkZ2Ugb3INCj4gdGhpcyBpcyBtb3JlIG9mIGNsZWFuaW5nIHVwIHRoZSBzZXF1
-ZW5jZT8NCj4gDQotIFRoaXMgcGF0Y2ggY29ycmVjdHMgQVRVIHByb2dyYW1taW5nIHNlcXVlbmNl
-LiBJIGFtIG5vdCBhd2FyZSBvZiBhbnkgc3VjaCBpc3N1ZSB3aXRoDQpjdXJyZW50IGRyaXZlci4g
-UGxzIHNwZWNpZnkgIHdoaWNoIGJyaWRnZSBkbyB5b3UgdXNlIGluIHlvdXIgc2V0dXAgYW5kIHdo
-YXQgaXMgdGhlIHByb2JsZW0/DQoNClJlZ2FyZHMNCk1vaGl0DQo=
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: David Vrabel <david.vrabel@citrix.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/xen/xen-pciback/pciback_ops.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/xen/xen-pciback/pciback_ops.c b/drivers/xen/xen-pciback/pciback_ops.c
+index 64eb0cd..929dd46 100644
+--- a/drivers/xen/xen-pciback/pciback_ops.c
++++ b/drivers/xen/xen-pciback/pciback_ops.c
+@@ -213,8 +213,7 @@ int xen_pcibk_enable_msix(struct xen_pcibk_device *pdev,
+ 		entries[i].vector = op->msix_entries[i].vector;
+ 	}
+ 
+-	result = pci_enable_msix(dev, entries, op->value);
+-
++	result = pci_enable_msix_exact(dev, entries, op->value);
+ 	if (result == 0) {
+ 		for (i = 0; i < op->value; i++) {
+ 			op->msix_entries[i].entry = entries[i].entry;
+-- 
+1.7.7.6
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
