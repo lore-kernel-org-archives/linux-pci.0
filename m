@@ -1,81 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45818 "EHLO mx2.suse.de"
+Received: from gate.crashing.org ([63.228.1.57]:59791 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751831AbaBJKHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Feb 2014 05:07:16 -0500
-Message-ID: <1392026834.2082.10.camel@linux-fkkt.site>
-Subject: Re: [PATCH part1 v5 5/7] PCI: Add pci_dummy_ops to isolate pci
- device temporarily
-From: Oliver Neukum <oneukum@suse.de>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>
-Date: Mon, 10 Feb 2014 11:07:14 +0100
-In-Reply-To: <52F886ED.7040603@huawei.com>
-References: <1392005051-54508-1-git-send-email-wangyijing@huawei.com>
-		 <1392005051-54508-6-git-send-email-wangyijing@huawei.com>
-	 <1392015399.21271.9.camel@linux-fkkt.site> <52F886ED.7040603@huawei.com>
+	id S1752664AbaBUT4k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 14:56:40 -0500
+Message-ID: <1393012403.6771.89.camel@pasglop>
+Subject: Re: pci-mvebu driver on km_kirkwood
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Date: Sat, 22 Feb 2014 06:53:23 +1100
+In-Reply-To: <CAErSpo5c=iMHM_uATxsiUthaHtt-UvX6ySQx2pVgfJT4ABuWGQ@mail.gmail.com>
+References: <20130711163220.2b3adf38@skate> <53039894.10905@keymile.com>
+	 <20140218212751.07c2aeb5@skate> <53046D98.6020801@keymile.com>
+	 <20140219102658.76eec91e@skate> <53047BBB.6040108@keymile.com>
+	 <20140219143749.65ff3155@skate>
+	 <CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
+	 <20140220095518.7ca36f0a@skate>
+	 <CAErSpo5pG3eOG58MiCCOHgr_jQReH0uBnWQFvzQYg3qrOGpZEw@mail.gmail.com>
+	 <20140221002438.GE19893@obsidianresearch.com>
+	 <CAErSpo5c=iMHM_uATxsiUthaHtt-UvX6ySQx2pVgfJT4ABuWGQ@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2014-02-10 at 15:59 +0800, Yijing Wang wrote:
-> Hi Oliver,
->    Thanks for your review and comments!
-> 
-> >> +static DEFINE_SPINLOCK(pci_freeze_lock);
-> > 
-> > The lock is used only here.
-> 
-> Also be used in pci_bus_unfreeze_device();
+On Fri, 2014-02-21 at 12:05 -0700, Bjorn Helgaas wrote:
+> But I wonder if powerpc has a similar issue here: I think EEH might
+> need, for example 16MB bridge window alignment.  Since
+> pcibios_window_alignment() only affects the *starting* address, could
+> the core assign a 9MB window whose starting address is 16MB-aligned?
+> Could EEH deal with that?  What if the PCI core assigned the space
+> right after the 9MB window to another device?
 
-Sorry, I meant only in this patch.
+Gavin, did you guys deal with that at all ? Are we aligning the size as
+well somewhat ?
 
-> 
-> > 
-> >> +/**
-> >> + * pci_bus_freeze_device - freeze pci bus to access pci device
-> >> + * @bus: the pci bus to freeze
-> >> + *
-> >> + * Replace pci bus ops by pci_dummy_ops, protect system from
-> >> + * accessing pci devices.
-> >> + */
-> >> +void pci_bus_freeze_device(struct pci_bus *bus)
-> >> +{
-> >> +	struct pci_ops *ops;
-> >> +	unsigned long flags;
-> >> +
-> >> +	spin_lock_irqsave(&pci_freeze_lock, flags);
-> >> +	ops = pci_bus_set_ops(bus, &pci_dummy_ops);
-> >> +	bus->save_ops = ops;
-> >> +	spin_unlock_irqrestore(&pci_freeze_lock, flags);
-> > 
-> > Against what exactly are you locking here?
-> 
-> I want to use this spin lock to serialize freeze device and unfreeze device.
-
-Yes, but against what? I am sorry I should have been more explicit.
-You are using these functions only in pci_scan_single_device()
-
-
-CPU A					CPU B
-pci_bus_freeze_device()			wait
-bus->save_ops = ops {valid}		wait
-...					pci_bus_freeze_device()
-wait					bus->save_ops = ops
-					{pci_dummy_ops !}
-pci_bus_unfreeze_device()		wait
-pci_bus_set_ops(bus, bus->save_ops)
-
-You see the problem?
-
-If this function ever races with itself, the locking is useless.
-If it doesn't race with itself, the locking is not needed.
-If this function can really race with itself, you need a refcount
-for freezing.
-
-	Regards
-		Oliver
+Cheers,
+Ben.
 
 
