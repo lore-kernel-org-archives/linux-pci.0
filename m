@@ -1,42 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:24754 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754371AbaBML65 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 06:58:57 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
-	"Hanjun Guo" <guohanjun@huawei.com>
-Subject: [PATCH] PCI: Update outdated comment for pcibios_bus_report_status
-Date: Thu, 13 Feb 2014 19:57:43 +0800
-Message-ID: <1392292663-61468-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:8049 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932849AbaBURAv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 12:00:51 -0500
+Date: Fri, 21 Feb 2014 18:02:44 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] xen-pciback: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140221170243.GL17353@dhcp-26-207.brq.redhat.com>
+References: <20140221165235.GF17353@dhcp-26-207.brq.redhat.com>
+ <20140221165340.GG17353@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140221165340.GG17353@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_find_device() has been superseded by pci_get_device().
+Hi Boris et al,
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- arch/arm/kernel/bios32.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Based on recently accepted to the mainline pci_enable_msix_exact() function,
+I am sending a updated version of the patch. Please, let me know if it does
+not work for you and you need and incremental update from the previous version.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 317da88..588ec19 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -19,7 +19,7 @@
- static int debug_pci;
- 
- /*
-- * We can't use pci_find_device() here since we are
-+ * We can't use pci_get_device() here since we are
-  * called from interrupt context.
-  */
- static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, int warn)
+Thanks!
+
 -- 
-1.7.1
-
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
