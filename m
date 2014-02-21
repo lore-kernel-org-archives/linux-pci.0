@@ -1,62 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51236 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751912AbaBCRij (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 12:38:39 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Liviu Dudau <liviu@dudau.co.uk>
-Subject: [PATCH] pci: Makefile: Cleanup per-arch list of object files
-Date: Mon,  3 Feb 2014 17:38:36 +0000
-Message-Id: <1391449116-22276-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42307 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932145AbaBUPrg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 10:47:36 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Jon Mason <jon.mason@intel.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 0/4] ntb: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Fri, 21 Feb 2014 16:49:28 +0100
+Message-Id: <cover.1392996332.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-setup-bus.o is now included unconditionally as of commit
-7dc30303342562685392c8c7aa5194e98fd27625. Remove it from
-the per-arch list of object files.
+Hi Jon,
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/pci/Makefile | 22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
+This is an attempt to make ntb_setup_msix() more readable ( to me :) )
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 17d2b07..e2501ac 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -33,21 +33,15 @@ obj-$(CONFIG_PCI_IOV) += iov.o
- #
- # Some architectures use the generic PCI setup functions
- #
--obj-$(CONFIG_X86) += setup-bus.o
--obj-$(CONFIG_ALPHA) += setup-bus.o setup-irq.o
--obj-$(CONFIG_ARM) += setup-bus.o setup-irq.o
--obj-$(CONFIG_UNICORE32) += setup-bus.o setup-irq.o
--obj-$(CONFIG_PARISC) += setup-bus.o
--obj-$(CONFIG_SUPERH) += setup-bus.o setup-irq.o
--obj-$(CONFIG_PPC) += setup-bus.o
--obj-$(CONFIG_FRV) += setup-bus.o
--obj-$(CONFIG_MIPS) += setup-bus.o setup-irq.o
-+obj-$(CONFIG_ALPHA) += setup-irq.o
-+obj-$(CONFIG_ARM) += setup-irq.o
-+obj-$(CONFIG_UNICORE32) += setup-irq.o
-+obj-$(CONFIG_SUPERH) += setup-irq.o
-+obj-$(CONFIG_MIPS) += setup-irq.o
- obj-$(CONFIG_X86_VISWS) += setup-irq.o
--obj-$(CONFIG_MN10300) += setup-bus.o
--obj-$(CONFIG_MICROBLAZE) += setup-bus.o
--obj-$(CONFIG_TILE) += setup-bus.o setup-irq.o
--obj-$(CONFIG_SPARC_LEON) += setup-bus.o setup-irq.o
--obj-$(CONFIG_M68K) += setup-bus.o setup-irq.o
-+obj-$(CONFIG_TILE) += setup-irq.o
-+obj-$(CONFIG_SPARC_LEON) += setup-irq.o
-+obj-$(CONFIG_M68K) += setup-irq.o
- 
- #
- # ACPI Related PCI FW Functions
+The idea is to get rid of confusing branching between SNB and BWD
+and split MSI-X ininialization into ntb_setup_bwd_msix() and
+ntb_setup_snb_msix() - both small and straight.
+
+Cc: Jon Mason <jon.mason@intel.com>
+Cc: linux-pci@vger.kernel.org
+
+Alexander Gordeev (4):
+  ntb: Fix leakage of ntb_device::msix_entries[] array
+  ntb: Use pci_msix_vec_count() to obtain number of MSI-Xs
+  ntb: Split ntb_setup_msix() into separate BWD/SNB routines
+  ntb: Use pci_enable_msix_range() instead of pci_enable_msix()
+
+ drivers/ntb/ntb_hw.c |  174 +++++++++++++++++++++++++++++---------------------
+ drivers/ntb/ntb_hw.h |    2 -
+ 2 files changed, 100 insertions(+), 76 deletions(-)
+
 -- 
-1.8.5.3
+1.7.7.6
 
