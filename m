@@ -1,45 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:63841 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571AbaBZTJJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:09:09 -0500
-Received: by mail-ig0-f174.google.com with SMTP id h18so1452056igc.1
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:09:08 -0800 (PST)
-Subject: [PATCH 1/4] i2o: Fix I/O space allocation copy/paste error
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>,
-	linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:09:06 -0700
-Message-ID: <20140226190906.9616.52057.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 21 Feb 2014 18:05:05 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Gleb Natapov <gleb@kernel.org>,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2] kvm: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140221170504.GN17353@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-11-git-send-email-agordeev@redhat.com>
+ <5304B09D.7010900@redhat.com>
+ <20140221170414.GM17353@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140221170414.GM17353@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When i2o_iop_systab_set() allocates I/O port space, it assigns the base of
-the new I/O port region to sb->current_mem_base, not sb->current_io_base.
-This looks like a copy/paste error, because we do use current_io_base, but
-there's no other place that sets it.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Gleb Natapov <gleb@kernel.org>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/message/i2o/iop.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ virt/kvm/assigned-dev.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/message/i2o/iop.c b/drivers/message/i2o/iop.c
-index a8c08f332da0..a8373d7aaef7 100644
---- a/drivers/message/i2o/iop.c
-+++ b/drivers/message/i2o/iop.c
-@@ -704,7 +704,7 @@ static int i2o_iop_systab_set(struct i2o_controller *c)
- 					      NULL, NULL) >= 0) {
- 			c->io_alloc = 1;
- 			sb->current_io_size = resource_size(res);
--			sb->current_mem_base = res->start;
-+			sb->current_io_base = res->start;
- 			osm_info("%s: allocated %llu bytes of PCI I/O at "
- 				"0x%016llX.\n", c->name,
- 				(unsigned long long)resource_size(res),
+diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+index 8db4370..bf06577 100644
+--- a/virt/kvm/assigned-dev.c
++++ b/virt/kvm/assigned-dev.c
+@@ -395,7 +395,8 @@ static int assigned_device_enable_host_msix(struct kvm *kvm,
+ 	if (dev->entries_nr == 0)
+ 		return r;
+ 
+-	r = pci_enable_msix(dev->dev, dev->host_msix_entries, dev->entries_nr);
++	r = pci_enable_msix_exact(dev->dev,
++				  dev->host_msix_entries, dev->entries_nr);
+ 	if (r)
+ 		return r;
+ 
+-- 
+1.7.7.6
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
