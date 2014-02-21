@@ -1,56 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:56287 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313AbaBUSFm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 13:05:42 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
+Received: from top.free-electrons.com ([176.31.233.9]:35430 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753973AbaBUJMd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 04:12:33 -0500
+Date: Fri, 21 Feb 2014 10:12:18 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Gerlando Falauto <gerlando.falauto@keymile.com>
 Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
 	Jason Cooper <jason@lakedaemon.net>,
 	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Gregory Cl??ment <gregory.clement@free-electrons.com>,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
 	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+	Lior Amsalem <alior@marvell.com>
 Subject: Re: pci-mvebu driver on km_kirkwood
-Date: Fri, 21 Feb 2014 19:05:32 +0100
-Message-ID: <2321496.TUNdngb8sx@wuerfel>
-In-Reply-To: <20140221173105.GA17611@obsidianresearch.com>
-References: <20140221003227.GF19893@obsidianresearch.com> <20140221180508.7ed6cfaf@skate> <20140221173105.GA17611@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20140221101218.45766e8a@skate>
+In-Reply-To: <5307152D.3020804@keymile.com>
+References: <53039894.10905@keymile.com>
+	<20140218212751.07c2aeb5@skate>
+	<53046D98.6020801@keymile.com>
+	<20140219102658.76eec91e@skate>
+	<53047BBB.6040108@keymile.com>
+	<20140219143749.65ff3155@skate>
+	<CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
+	<20140220095518.7ca36f0a@skate>
+	<20140220173518.GA19893@obsidianresearch.com>
+	<20140220212914.29ddc031@skate>
+	<20140221003227.GF19893@obsidianresearch.com>
+	<20140221093444.35870a73@skate>
+	<5307152D.3020804@keymile.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 21 February 2014 10:31:05 Jason Gunthorpe wrote:
-> On Fri, Feb 21, 2014 at 06:05:08PM +0100, Thomas Petazzoni wrote:
->  
-> > Now I have another question: our mvebu_pcie_align_resource() function
-> > makes sure that the base address of the BAR is aligned on its size,
-> > because it is a requirement of MBus windows. However, if you later
-> > split the BAR into multiple windows, will this continue to work out?
+Dear Gerlando Falauto,
+
+On Fri, 21 Feb 2014 09:58:21 +0100, Gerlando Falauto wrote:
+
+> > Can you give more details about this mechanism, and how it could be
+> > used to alter the size of resources on a bridge?
 > 
-> No, you must align to (1 << log2_round_down(size)) - that will always
-> be the largest mbus window created and thus the highest starting
-> alignment requirement.
+> I'm not sure I understand all the details... but I guess some sort of 
+> rounding mechanism is indeed already in place somewhere:
+> 
+> pci 0000:00:01.0: BAR 8: assigned [mem 0xe0000000-0xebffffff]
+> pci 0000:01:00.0: BAR 1: assigned [mem 0xe0000000-0xe7ffffff]
+> pci 0000:01:00.0: BAR 3: assigned [mem 0xe8000000-0xe87fffff]
+> pci 0000:01:00.0: BAR 4: assigned [mem 0xe8800000-0xe8801fff]
+> pci 0000:01:00.0: BAR 0: assigned [mem 0xe8802000-0xe8802fff]
+> pci 0000:01:00.0: BAR 2: assigned [mem 0xe8803000-0xe8803fff]
+> pci 0000:01:00.0: BAR 5: assigned [mem 0xe8804000-0xe8804fff]
+> pci 0000:00:01.0: PCI bridge to [bus 01]
+> 
+> If you look at the numbers, the total size required by BAR0-5 is 
+> 0x8805000, so around 136MB, that is 128MB+8MB+2K+1K+1K.
+> This gets rounded up (on this 'virtual' BAR 8) to 192MB (I don't know 
+> where or why), which is 1.5x a power of two (i.e. two consecutive bits 
+> followed by all zeroes).
 
-Unless you allow reordering the two windows. If you want a 96MB
-window, you only need 32MB alignment because you can either put
-the actual 64MB window first if you have 64MB alignment, or you
-put the 32MB window first if you don't and then the following
-64MB will be aligned.
+Would indeed be interesting to know who does this rounding, and why,
+and according to what rules.
 
-It gets more complicated if you want to allow a 72MB window
-(16MB+64MB), as that could either be 64MB aligned or start 16MB
-before the next multiple of 64MB.
+> If that's not just a coincidence, finding a coverage subset becomes a 
+> trivial matter (128MB+64MB).
+> 
+> In any case, even if we have an odd number like the above (0x8805000), I 
+> believe we could easily find a suboptimal coverage by just taking the 
+> most significant one and the second most significant one (possibly left 
+> shifted by 1 if there's a third one somewhere else).
+> In the above case, that would be 0x8000000 + 0x1000000. That's 
+> 128MB+16MB, which is even smaller than the rounding above (192MB).
+> 
+> What do you think?
 
-I don't think there is any reason why code anywhere should align
-the window to a multiple of the size though if the size is not
-power-of-two, such as aligning to multiples of 96MB. That wouldn't
-help anyone.
+Sure, but whichever choice we make, the Linux PCI core must know by how
+much we've enlarge the bridge window BAR, otherwise the Linux PCI core
+may allocate for the next bridge window BAR a range of addresses that
+doesn't overlap with what it has allocate for the previous bridge
+window BAR, but that ends up overlapping due to us "extending" the
+previous bridge window BAR to match the MBus requirements.
 
-	Arnd
+Gerlando, would you be able to test a quick hack that creates 2 windows
+to cover exactly 128 MB + 64 MB ? This would at least allow us to
+confirm that the strategy of splitting in multiple windows is usable.
+
+Thanks!
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
