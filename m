@@ -1,82 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:60128 "EHLO quartz.orcorp.ca"
+Received: from mx1.redhat.com ([209.132.183.28]:7969 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751600AbaBMSGZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Feb 2014 13:06:25 -0500
-Date: Thu, 13 Feb 2014 11:06:16 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140213180616.GD17248@obsidianresearch.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <1392236171-10512-4-git-send-email-will.deacon@arm.com>
- <D2AE4AE6-E8FA-4DD8-B92B-E37205A2548C@codeaurora.org>
- <20140213110721.GC13576@mudshark.cambridge.arm.com>
+	id S1755810AbaBUQTW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 11:19:22 -0500
+Date: Fri, 21 Feb 2014 17:21:19 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>, dmaengine@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2] ioat: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140221162118.GA17353@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-2-git-send-email-agordeev@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140213110721.GC13576@mudshark.cambridge.arm.com>
+In-Reply-To: <1392804931-30671-2-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 11:07:21AM +0000, Will Deacon wrote:
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-> Not in this case! kvmtool generates the following:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Vinod Koul <vinod.koul@intel.com>
+Cc: dmaengine@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/dma/ioat/dma.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Well, the example is nice so someone can review it..
+diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
+index 8752918..7bc9e6f 100644
+--- a/drivers/dma/ioat/dma.c
++++ b/drivers/dma/ioat/dma.c
+@@ -909,7 +909,7 @@ msix:
+ 	for (i = 0; i < msixcnt; i++)
+ 		device->msix_entries[i].entry = i;
  
-> 	pci {
-> 		#address-cells = <0x3>;
-> 		#size-cells = <0x2>;
-> 		#interrupt-cells = <0x1>;
-> 		compatible = "arm,pci-cam-generic";
-> 		reg = <0x0 0x40000000>;
-> 		ranges = <0x1000000 0x0 0x0 0x0 0x0 0x0 0x10000 0x2000000 0x0 0x41000000 0x0 0x41000000 0x0 0x3f000000>;
-> 		interrupt-map = <0x0 0x0 0x0 0x1 0x1 0x0 0x4 0x1 0x800 0x0 0x0 0x1 0x1 0x0 0x5 0x1 0x1000 0x0 0x0 0x1 0x1 0x0 0x6 0x1 0x1800 0x0 0x0 0x1 0x1 0x0 0x7 0x1>;
-> 		interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
-> 	};
+-	err = pci_enable_msix(pdev, device->msix_entries, msixcnt);
++	err = pci_enable_msix_exact(pdev, device->msix_entries, msixcnt);
+ 	if (err)
+ 		goto msi;
+ 
+-- 
+1.7.7.6
 
-
-Looks like there are a few misses in the above. How about this:
-
-pci {
-    compatible = "arm,pci-cam-generic"
-    device_type = "pci";
-    ** ^^^^^^^^^^^^^^^^^
-    ** MANDATORY for the host bridge node
-    #address-cells = <3>;
-    #size-cells = <2>;
-
-    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
-    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
-                                        ^^^^^^^^^^^^^^
-            ** ?? Is this why you had problems with the offset? Should
-	    ** be the cpu physical address of the start of the IO window.
-             <0x2000000 0x0 0x41000000  0x0 0x41000000  0x0 0x3f000000>;
-
-   
-    #interrupt-cells = <0x1>;
-    // PCI_DEVICE(3) INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(3)
-    interrupt-map = <  0x0 0x0 0x0 0x1  0x1  0x0 0x4 0x1
-                     0x800 0x0 0x0 0x1  0x1  0x0 0x5 0x1 
-                    0x1000 0x0 0x0 0x1  0x1  0x0 0x6 0x1
-                    0x1800 0x0 0x0 0x1  0x1  0x0 0x7 0x1>;
-                 **                    ^^^^^^
-                 ** This should be a phandle to the interrupt controller
-    // PCI_DEVICE(3) INT#1()
-    interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
-}
-
-I keep thinking of making a pcie-dt.h file with helper macros for
-all this. :|
-
-FWWI, I like to put a double space between the logically distinct
-things in the lists.
-
-Jason
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
