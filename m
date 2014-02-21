@@ -1,45 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:47401 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752719AbaBQBkB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Feb 2014 20:40:01 -0500
-Date: Sun, 16 Feb 2014 20:39:49 -0500
-From: Jason Cooper <jason@lakedaemon.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 1/2] bus: mvebu-mbus: Fix incorrect size for PCI
- aperture resources
-Message-ID: <20140217013949.GE7862@titan.lakedaemon.net>
-References: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
- <20140214182910.GC31093@google.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21790 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752313AbaBUSb6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 13:31:58 -0500
+Message-ID: <53079BFE.3010702@oracle.com>
+Date: Fri, 21 Feb 2014 13:33:34 -0500
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140214182910.GC31093@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] xen-pciback: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+References: <1392804931-30671-10-git-send-email-agordeev@redhat.com> <5304CC49.7020000@oracle.com> <5304D063.90000@oracle.com> <20140219160501.GA32067@dhcp-26-207.brq.redhat.com> <5304DABD.9000605@oracle.com> <20140221165235.GF17353@dhcp-26-207.brq.redhat.com> <20140221165340.GG17353@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140221165340.GG17353@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 11:29:10AM -0700, Bjorn Helgaas wrote:
-> On Wed, Feb 12, 2014 at 03:57:07PM -0700, Jason Gunthorpe wrote:
-> > reg[0] is the DT base, reg[1] is the DT length in bytes,
-> > struct resource.end is the inclusive end address, so a -1 is
-> > required.
-> > 
-> > Tested on kirkwood.
-> > 
-> > Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> 
-> Do these two patches need to go together?  I don't maintain
-> drivers/bus/mvebu-mbus.c, but if these should be kept together, I'd be
-> happy to merge them both, given the appropriate ack from Jason C or Thomas.
+On 02/21/2014 11:53 AM, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> Cc: David Vrabel <david.vrabel@citrix.com>
+> Cc: linux-pci@vger.kernel.org
 
-I have one small change for mvebu-mbus queued up, which won't conflict
-here.  Please take both:
+Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
 
-Acked-by: Jason Cooper <jason@lakedaemon.net>
+> ---
+>   drivers/xen/xen-pciback/pciback_ops.c |    3 +--
+>   1 files changed, 1 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/xen/xen-pciback/pciback_ops.c b/drivers/xen/xen-pciback/pciback_ops.c
+> index 64eb0cd..929dd46 100644
+> --- a/drivers/xen/xen-pciback/pciback_ops.c
+> +++ b/drivers/xen/xen-pciback/pciback_ops.c
+> @@ -213,8 +213,7 @@ int xen_pcibk_enable_msix(struct xen_pcibk_device *pdev,
+>   		entries[i].vector = op->msix_entries[i].vector;
+>   	}
+>   
+> -	result = pci_enable_msix(dev, entries, op->value);
+> -
+> +	result = pci_enable_msix_exact(dev, entries, op->value);
+>   	if (result == 0) {
+>   		for (i = 0; i < op->value; i++) {
+>   			op->msix_entries[i].entry = entries[i].entry;
 
-thx,
-
-Jason.
