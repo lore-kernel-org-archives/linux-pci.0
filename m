@@ -1,80 +1,29 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:27407 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089AbaBNCV7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 21:21:59 -0500
-Message-ID: <52FD7D3D.4030409@huawei.com>
-Date: Fri, 14 Feb 2014 10:19:41 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 21 Feb 2014 17:56:07 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Lee Jones <lee.jones@linaro.org>
+Cc: linux-kernel@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] timberdale: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140221165606.GH17353@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-3-git-send-email-agordeev@redhat.com>
+ <20140219114424.GD10504@lee--X1>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	David Airlie <airlied@linux.ie>,
-	<dri-devel@lists.freedesktop.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	<linux-pcmcia@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH 1/6] PCI,acpiphp: Use list_for_each_entry() for bus traversal
-References: <1392297243-61848-1-git-send-email-wangyijing@huawei.com> <2601738.3Ek05F9oo5@vostro.rjw.lan>
-In-Reply-To: <2601738.3Ek05F9oo5@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140219114424.GD10504@lee--X1>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014/2/14 7:54, Rafael J. Wysocki wrote:
-> On Thursday, February 13, 2014 09:13:58 PM Yijing Wang wrote:
->> Replace list_for_each() + pci_bus_b() with the simpler
->> list_for_each_entry().
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> 
-> Looks reasonable to me.
-> 
-> Does it conflict with anything currently in linux-next (the linux-next branch
-> of linux-pm.git in particular)?
+Hi Lee et al,
 
-Hi Rafael,
-   I applied this to your linux-next branch successfully . No conflicts found.
+Based on recently accepted to the mainline pci_enable_msix_exact() function,
+I am sending an updated version of the patch. Please, let me know if it does
+not work for you and you need and incremental update from the previous version.
 
 Thanks!
-Yijing.
-
-> 
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c |    6 +++---
->>  1 files changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index cd929ae..aee6a0a 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -450,7 +450,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->>   */
->>  static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
->>  {
->> -	struct list_head *tmp;
->> +	struct pci_bus *tmp;
->>  	unsigned char max, n;
->>  
->>  	/*
->> @@ -463,8 +463,8 @@ static unsigned char acpiphp_max_busnr(struct pci_bus *bus)
->>  	 */
->>  	max = bus->busn_res.start;
->>  
->> -	list_for_each(tmp, &bus->children) {
->> -		n = pci_bus_max_busnr(pci_bus_b(tmp));
->> +	list_for_each_entry(tmp, &bus->children, node) {
->> +		n = pci_bus_max_busnr(tmp);
->>  		if (n > max)
->>  			max = n;
->>  	}
->>
-> 
-
 
 -- 
-Thanks!
-Yijing
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
