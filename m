@@ -1,51 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26938 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753157AbaBSI4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 03:56:37 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Asai Thambi S P <asamymuthupa@micron.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 4/9] mtip32xx: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 19 Feb 2014 09:58:16 +0100
-Message-Id: <02b7d83dfc12a519431e48ab54e448bafb4b29fe.1392799751.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
-References: <cover.1392799751.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Jon Mason <jon.mason@intel.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/4] ntb: Use pci_msix_vec_count() to obtain number of MSI-Xs
+Date: Fri, 21 Feb 2014 16:49:30 +0100
+Message-Id: <342d032b652517e2084ba97962ed017a25bf10bd.1392996332.git.agordeev@redhat.com>
+In-Reply-To: <cover.1392996332.git.agordeev@redhat.com>
+References: <cover.1392996332.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
-
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Asai Thambi S P <asamymuthupa@micron.com>
+Cc: Jon Mason <jon.mason@intel.com>
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/block/mtip32xx/mtip32xx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/ntb/ntb_hw.c |   15 ++++-----------
+ drivers/ntb/ntb_hw.h |    2 --
+ 2 files changed, 4 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
-index 5299a65..60e86e8 100644
---- a/drivers/block/mtip32xx/mtip32xx.c
-+++ b/drivers/block/mtip32xx/mtip32xx.c
-@@ -4611,8 +4611,8 @@ static int mtip_pci_probe(struct pci_dev *pdev,
- 	INIT_WORK(&dd->work[7].work, mtip_workq_sdbf7);
+diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+index 487169dd..53468f4 100644
+--- a/drivers/ntb/ntb_hw.c
++++ b/drivers/ntb/ntb_hw.c
+@@ -1085,19 +1085,12 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 	struct msix_entry *msix;
+ 	int msix_entries;
+ 	int rc, i;
+-	u16 val;
  
- 	pci_set_master(pdev);
--	rv = pci_enable_msi(pdev);
--	if (rv) {
-+	rv = pci_enable_msi_range(pdev, 1, 1);
-+	if (rv < 0) {
- 		dev_warn(&pdev->dev,
- 			"Unable to enable MSI interrupt.\n");
- 		goto msi_initialize_err;
+-	if (!pdev->msix_cap) {
+-		rc = -EIO;
+-		goto err;
+-	}
+-
+-	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
+-	if (rc)
++	msix_entries = pci_msix_vec_count(pdev);
++	if (msix_entries < 0) {
++		rc = msix_entries;
+ 		goto err;
+-
+-	msix_entries = msix_table_size(val);
+-	if (msix_entries > ndev->limits.msix_cnt) {
++	} else if (msix_entries > ndev->limits.msix_cnt) {
+ 		rc = -EINVAL;
+ 		goto err;
+ 	}
+diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
+index bbdb7ed..d307107 100644
+--- a/drivers/ntb/ntb_hw.h
++++ b/drivers/ntb/ntb_hw.h
+@@ -60,8 +60,6 @@
+ #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
+ #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
+ 
+-#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
+-
+ #ifndef readq
+ static inline u64 readq(void __iomem *addr)
+ {
 -- 
 1.7.7.6
 
