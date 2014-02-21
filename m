@@ -1,47 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:35801 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911AbaBRU4i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 15:56:38 -0500
-Date: Tue, 18 Feb 2014 15:56:32 -0500 (EST)
-Message-Id: <20140218.155632.1364973664624371603.davem@davemloft.net>
-To: amirv@mellanox.com
-Cc: agordeev@redhat.com, linux-kernel@vger.kernel.org,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	bruce.w.allan@intel.com, e1000-devel@lists.sourceforge.net,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: ixgbevf: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20140218120136.GA8770@mtl-eit-vdi-22.mtl.labs.mlnx>
-References: <cover.1392717502.git.agordeev@redhat.com>
-	<9ee830cfd4b417f230f77dd37256ca8e4396ecbe.1392717503.git.agordeev@redhat.com>
-	<20140218120136.GA8770@mtl-eit-vdi-22.mtl.labs.mlnx>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bear.ext.ti.com ([192.94.94.41]:34124 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750749AbaBUF2q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 00:28:46 -0500
+Message-ID: <5306E3FE.1070405@ti.com>
+Date: Fri, 21 Feb 2014 10:58:30 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: <jg1.han@samsung.com>, Mohit KUMAR DCG <Mohit.KUMAR@st.com>
+CC: Ajay KHANDELWAL <ajay.khandelwal@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io
+ and mem viewport
+References: <17773172.14231392946292058.JavaMail.weblogic@epml01>
+In-Reply-To: <17773172.14231392946292058.JavaMail.weblogic@epml01>
+Content-Type: text/plain; charset="EUC-KR"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Amir Vadai <amirv@mellanox.com>
-Date: Tue, 18 Feb 2014 14:01:38 +0200
+Hi,
 
-> On 18/02/14 11:11 +0100, Alexander Gordeev wrote:
->> As result of deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range() and pci_enable_msix_range()
->> interfaces.
->> 
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->> Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->> Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
->> Cc: Bruce Allan <bruce.w.allan@intel.com>
->> Cc: e1000-devel@lists.sourceforge.net
->> Cc: netdev@vger.kernel.org
->> Cc: linux-pci@vger.kernel.org
->> ---
+On Friday 21 February 2014 07:01 AM, Jingoo Han wrote:
+> On Thursday, February 20, 2014 10:34 PM, Mohit KUMAR DCG wrote:
+>> Thursday, February 20, 2014 5:43 PM, Kishon Vijay Abraham I wrote:
+>>> On Thursday 20 February 2014 05:28 PM, Mohit KUMAR DCG wrote:
+>>>> On Thursday, February 20, 2014 5:08 PM, Kishon Vijay Abraham I wrote:
+>>>>> On Thursday 20 February 2014 10:52 AM, Mohit Kumar wrote:
+>>>>>> This patch correct iATU programming for cfg1, io and mem viewport.
+>>>>>> Enable ATU only after configuring it.
+>>>>>
+>>>>> Does this patch actually fixes device enumeration behind a PCIe-pci
+>>>>> bridge or this is more of cleaning up the sequence?
+>>>>>
+>>>> - This patch corrects ATU programming sequence. I am not aware of any
+>>>> such issue with current driver. Pls specify  which bridge do you use in your
+>>> setup and what is the problem?
+>>>
+>>> I tried with card [1], it had a PLX bridge chip. It couldn't read the configuration
+>>> space of the device connected to the PCIe-PCI bridge.
+>>>
+>> - I don¡¯t have the mentioned card with me, but we are successfully using Lecroy PTC switch
+>>  and SIL3124-2CB364 PCI-X compatible RAID card.
+>>
+>> May be Jingoo or others can also comment if they are using PCI bridge card.
+>>
 > 
-> Acked-By: Amir Vadai <amirv@mellanox.com>
+> Hi Kishon,
+> Nice to see you again. :-)
+> 
+> I don't have PCIe-PCI bridge. Currently, I can test Ethernet cards
+> and SATA cards.
 
-Since you obviously didn't intend to ACK this, I removed this ACK when
-I committed the series.
+The problem seems to be seen only if a device is connected after PCIe-PCI
+bridge. I've tested USB and Ethernet cards but that works just fine.
+> 
+> By the way, according to the Datasheet, PCIE_ATU_CR1 setting can be
+> followed by PCIE_ATU_CR2 setting as below:
+> 
+>   1. Setup the Index Register.
+>   2. Setup the Region Base and Limit Address Registers.
+>   3. Setup the Target Address Registers.
+>   4. Configure the region through the Region Control 1 Register.
+>   5. Enable the region.
+> 
+> Thus, how about testing the following patch?
+> I also moved PCIE_ATU_CR1 as well as PCIE_ATU_CR2.
+
+Thanks for the patch. I have just burnt my PCIE-to-PCI bridge card :-s Will
+test this once I get a new card.
+
+Thanks
+Kishon
