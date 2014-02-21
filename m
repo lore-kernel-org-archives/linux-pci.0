@@ -1,124 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:12625 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbaBLCxX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 21:53:23 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Oliver Neukum <oneukum@suse.de>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH part1 v6 3/7] PCI: Add support for Device Serial Number capability
-Date: Wed, 12 Feb 2014 10:52:49 +0800
-Message-ID: <1392173573-59844-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
-References: <1392173573-59844-1-git-send-email-wangyijing@huawei.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:55425 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754076AbaBUAc3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Feb 2014 19:32:29 -0500
+Date: Thu, 20 Feb 2014 17:32:27 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+Message-ID: <20140221003227.GF19893@obsidianresearch.com>
+References: <53039894.10905@keymile.com>
+ <20140218212751.07c2aeb5@skate>
+ <53046D98.6020801@keymile.com>
+ <20140219102658.76eec91e@skate>
+ <53047BBB.6040108@keymile.com>
+ <20140219143749.65ff3155@skate>
+ <CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
+ <20140220095518.7ca36f0a@skate>
+ <20140220173518.GA19893@obsidianresearch.com>
+ <20140220212914.29ddc031@skate>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140220212914.29ddc031@skate>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for the Device Serial Number capability, so we can use the
-unique device serial number to identify the physical device.  This helps
-determine whether a device was replaced while the system was suspended.
+On Thu, Feb 20, 2014 at 09:29:14PM +0100, Thomas Petazzoni wrote:
 
-[bhelgaas: changelog, drop pci_dsn_init(), spell out "serial_number"]
-Reviewed-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>
-Cc: Oliver Neukum <oneukum@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>
----
- drivers/pci/pci.c   |   30 ++++++++++++++++++++++++++++++
- drivers/pci/pci.h   |    2 +-
- drivers/pci/probe.c |    2 ++
- include/linux/pci.h |    1 +
- 4 files changed, 34 insertions(+), 1 deletions(-)
+> In practice, the story is a little bit more subtle than that: the PCIe
+> driver may want to decide to either tell the PCI core to enlarge the
+> window BAR up to the next power of two size, or to dedicate two windows
+> to it.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4502e6f..a8c1c2d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2169,6 +2169,36 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_device_serial_number - get device serial number
-+ * @bus: PCI bus the device on
-+ * @devfn: the PCI device
-+ *
-+ * return the device serial number if device support,
-+ * otherwise return 0.
-+ */
-+static u64 pci_device_serial_number(struct pci_bus *bus, int devfn)
-+{
-+	int pos;
-+	u32 lo, hi;
-+
-+	if (!pci_bus_find_capability(bus, devfn, PCI_CAP_ID_EXP))
-+		return 0;
-+
-+	pos = pci_bus_find_ext_capability(bus, devfn, PCI_EXT_CAP_ID_DSN);
-+	if (!pos)
-+		return 0;
-+
-+	pci_bus_read_config_dword(bus, devfn, pos + 4, &lo);
-+	pci_bus_read_config_dword(bus, devfn, pos + 8, &hi);
-+	return ((u64)hi << 32) | lo;
-+}
-+
-+void pci_dsn_init(struct pci_dev *dev)
-+{
-+	dev->sn = pci_device_serial_number(dev->bus, dev->devfn);
-+}
-+
-+/**
-  * pci_configure_ari - enable or disable ARI forwarding
-  * @dev: the PCI device
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4df38df..685301a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -208,7 +208,7 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
- void __ref __pci_bus_assign_resources(const struct pci_bus *bus,
- 				      struct list_head *realloc_head,
- 				      struct list_head *fail_head);
--
-+void pci_dsn_init(struct pci_dev *dev);
- /**
-  * pci_ari_enabled - query ARI forwarding status
-  * @bus: the PCI bus
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6e34498..27d3e6f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1324,6 +1324,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Vital Product Data */
- 	pci_vpd_pci22_init(dev);
- 
-+	pci_dsn_init(dev);
-+
- 	/* Alternative Routing-ID Forwarding */
- 	pci_configure_ari(dev);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 470de02..3631859 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -354,6 +354,7 @@ struct pci_dev {
- 	struct list_head msi_list;
- 	const struct attribute_group **msi_irq_groups;
- #endif
-+	u64 sn;		/* device serial number, 0 if not support */
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
- 	union {
--- 
-1.7.1
+That is a smart, easy solution! Maybe that is the least invasive way
+to proceed for now?
 
+I have no idea how you decide when to round up and when to allocate
+more windows, that feels like a fairly complex optimization problem!
 
+Alternatively, I suspect you can use the PCI quirk mechanism to alter
+the resource sizing on a bridge?
+
+> Jason, would you mind maybe replying to Bjorn Helgaas email (Thu, 20
+> Feb 2014 12:18:42 -0700) ? I believe that a lot of the misunderstanding
+> between Bjorn and me is due to the fact that I don't use the correct
+> PCI terminology to describe how the Marvell hardware works, and how the
+> Marvell PCIe driver copes with it. I'm sure you would explain it in a
+> way that would be more easily understood by someone very familiar with
+> the PCI terminology such as Bjorn. Thanks a lot!
+
+Done!
+
+Hope it helps,
+Jason
