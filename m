@@ -1,75 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 4/4] i2o: Use pci_bus_alloc_resource(),
- not allocate_resource() directly
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>,
-	linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:09:27 -0700
-Message-ID: <20140226190927.9616.43043.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:57279 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756093AbaBUAge (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Feb 2014 19:36:34 -0500
+Date: Thu, 20 Feb 2014 17:36:19 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Will Deacon <will.deacon@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"arnd@arndb.de" <arnd@arndb.de>
+Subject: Re: [PATCH v3 2/3] ARM: bios32: use pci_enable_resource to enable
+ PCI resources
+Message-ID: <20140221003619.GG19893@obsidianresearch.com>
+References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+ <1392726043-31088-3-git-send-email-will.deacon@arm.com>
+ <20140218154139.GF21483@n2100.arm.linux.org.uk>
+ <20140220111238.GD3615@mudshark.cambridge.arm.com>
+ <CAErSpo4KEGh7GAfEv-prj-UdJETCN9M5sEtdNF0NARa6-03HYA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4KEGh7GAfEv-prj-UdJETCN9M5sEtdNF0NARa6-03HYA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Convert i2o_res_alloc() to use pci_bus_alloc_resource() rather than
-pci_find_parent_resource() and allocate_resource().  We don't have a
-resource to start with, so pci_find_parent_resource() can't do anything
-useful: a bus may have several memory resources available, so there might
-be several possible parents.  This is more likely on root buses because
-host bridges may have any number of apertures.
+On Thu, Feb 20, 2014 at 12:39:16PM -0700, Bjorn Helgaas wrote:
+> > Damn, I just found a problem with this patch when PCI_PROBE_ONLY is set.
+> >
+> > The problem is that bios32.c won't create a resource hierarchy for the
+> > firmware-initialised resources, so we have a bunch of orphaned resources
+> > that we can't pass to pci_enable_resources (since it checks r->parent).
+> >
+> > This means that, unless firmware *enables* all of the resources, Linux won't
+> > be able to enable them. I think this is stronger than simply not
+> > re-assigning devices like the PCI_PROBE_ONLY flag intends.
+> 
+> By "firmware enabling resources," do you mean firmware assigning
+> addresses in the BARs and turning on the PCI_COMMAND_MEMORY (or _IO)
+> bits?
+> 
+> I'd like to make the generic code ignore BAR values if
+> PCI_COMMAND_MEMORY (or _IO) is cleared.  When those bits are cleared,
+> I don't think there's a good way to determine whether the address in a
+> BAR is valid.
 
-I'm pretty sure this didn't work in the first place because it passed
-size == min == max to allocate_resource().  The min and max parameters are
-constraints on the *addresses* of the resource, not on its size, so I think
-it was impossible for allocate_resource() to succeed.
+I think this is pretty smart, PROBE_ONLY really should mean
+'everything is perfect, do not touch it' and if the device isn't
+enabled, well.. It isn't enabled, the firmware should have done it.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/message/i2o/iop.c |   16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+Will, this if for kvmtool right? Keeping the patch as is and instead
+changing kvmtool to enable the devices seems like a good option?
 
-diff --git a/drivers/message/i2o/iop.c b/drivers/message/i2o/iop.c
-index c334ba7224a1..5e7b1b75f999 100644
---- a/drivers/message/i2o/iop.c
-+++ b/drivers/message/i2o/iop.c
-@@ -655,8 +655,8 @@ static int i2o_iop_activate(struct i2o_controller *c)
- static void i2o_res_alloc(struct i2o_controller *c, unsigned long flags)
- {
- 	i2o_status_block *sb = c->status_block.virt;
--	struct resource *root, *res = &c->mem_resource;
--	resource_size_t size, min, max, align;
-+	struct resource *res = &c->mem_resource;
-+	resource_size_t size, align;
- 	int err;
- 
- 	res->name = c->pdev->bus->name;
-@@ -664,21 +664,17 @@ static void i2o_res_alloc(struct i2o_controller *c, unsigned long flags)
- 	res->start = 0;
- 	res->end = 0;
- 	osm_info("%s: requires private memory resources.\n", c->name);
--	root = pci_find_parent_resource(c->pdev, res);
--	if (root == NULL) {
--		osm_warn("%s: Can't find parent resource!\n", c->name);
--		return;
--	}
- 
- 	if (flags & IORESOURCE_MEM) {
--		size = min = max = sb->desired_mem_size;
-+		size = sb->desired_mem_size;
- 		align = 1 << 20;	/* unspecified, use 1Mb and play safe */
- 	} else if (flags & IORESOURCE_IO) {
--		size = min = max = sb->desired_io_size;
-+		size = sb->desired_io_size;
- 		align = 1 << 12;	/* unspecified, use 4Kb and play safe */
- 	}
- 
--	err = allocate_resource(root, res, size, min, max, align, NULL, NULL);
-+	err = pci_bus_alloc_resource(c->pdev->bus, res, size, align, 0, 0,
-+				     NULL, NULL);
- 	if (err < 0)
- 		return;
- 
+Alternatively, there are OF ways to communicate the BAR assignment
+through the DT. I actually have no idea how this information is used
+by the core code, but it might let you avoid the probe_only by
+specifying the desired BAR value through the DT.
 
+Regards,
+Jason
