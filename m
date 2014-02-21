@@ -1,29 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:65071 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751919AbaBJO31 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 09:29:27 -0500
-Received: by mail-pb0-f45.google.com with SMTP id un15so6321051pbc.32
-        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 06:29:27 -0800 (PST)
-Received: from [192.168.1.27] ([112.80.114.123])
-        by mx.google.com with ESMTPSA id om6sm43006785pbc.43.2014.02.10.06.29.24
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Mon, 10 Feb 2014 06:29:26 -0800 (PST)
-Message-ID: <52F8E242.4040106@gmail.com>
-Date: Mon, 10 Feb 2014 22:29:22 +0800
-From: zsaitom <zsaitom@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53280 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755212AbaBURLf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 12:11:35 -0500
+Message-ID: <530788C1.6030109@redhat.com>
+Date: Fri, 21 Feb 2014 18:11:29 +0100
+From: Paolo Bonzini <pbonzini@redhat.com>
 MIME-Version: 1.0
-To: linux-pci@vger.kernel.org
-Subject: How to combine two PCIe devices in one domain?
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org, Gleb Natapov <gleb@kernel.org>,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] kvm: Use pci_enable_msix_exact() instead of pci_enable_msix()
+References: <1392804931-30671-11-git-send-email-agordeev@redhat.com> <5304B09D.7010900@redhat.com> <20140221170414.GM17353@dhcp-26-207.brq.redhat.com> <20140221170504.GN17353@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140221170504.GN17353@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+Il 21/02/2014 18:05, Alexander Gordeev ha scritto:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range()  or pci_enable_msi_exact()
+> and pci_enable_msix_range() or pci_enable_msix_exact()
+> interfaces.
+>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Gleb Natapov <gleb@kernel.org>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: kvm@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  virt/kvm/assigned-dev.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
+> index 8db4370..bf06577 100644
+> --- a/virt/kvm/assigned-dev.c
+> +++ b/virt/kvm/assigned-dev.c
+> @@ -395,7 +395,8 @@ static int assigned_device_enable_host_msix(struct kvm *kvm,
+>  	if (dev->entries_nr == 0)
+>  		return r;
+>
+> -	r = pci_enable_msix(dev->dev, dev->host_msix_entries, dev->entries_nr);
+> +	r = pci_enable_msix_exact(dev->dev,
+> +				  dev->host_msix_entries, dev->entries_nr);
+>  	if (r)
+>  		return r;
+>
+>
 
-I have a driver module which would drive two PCIe devices to access a same memory area.
-As the two devices are in different domains, I should map the memory to every PCIe device. And also the mapped address may be different for individual PCIe device.
-How could I combine these two PCIe device in one domain so they share same address space?
+It's okay, but it's not clear to me whether I should include this patch 
+or someone else will. :)
 
-Thanks.
+Paolo
