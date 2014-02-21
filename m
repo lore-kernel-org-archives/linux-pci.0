@@ -1,38 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:33670 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752047AbaBKBcO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Feb 2014 20:32:14 -0500
-Date: Tue, 11 Feb 2014 09:32:11 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	wil6210@qca.qualcomm.com, linux-pci@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Subject: Re: [PATCH] wil6210: Fix switch operator "missing break?" warning
-Message-ID: <20140211013211.GA8173@localhost>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
- <20140207144639.GA10939@dhcp-26-207.brq.redhat.com>
- <3132701.EBRqRlvTI9@lx-vladimir>
- <20140210121638.GA320@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140210121638.GA320@dhcp-26-207.brq.redhat.com>
+Received: from top.free-electrons.com ([176.31.233.9]:37707 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754806AbaBUPLW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 10:11:22 -0500
+Date: Fri, 21 Feb 2014 16:11:08 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+Message-ID: <20140221161108.50a4c932@skate>
+In-Reply-To: <2193926.ls2teBqnfK@wuerfel>
+References: <53039894.10905@keymile.com>
+	<53074584.5010202@keymile.com>
+	<20140221144708.48559045@skate>
+	<2193926.ls2teBqnfK@wuerfel>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alexander,
+Dear Arnd Bergmann,
 
-On Mon, Feb 10, 2014 at 01:16:38PM +0100, Alexander Gordeev wrote:
-> On Mon, Feb 10, 2014 at 12:54:13PM +0200, Vladimir Kondratiev wrote:
-> > I can't reproduce this warning. What tools used to get it?
+On Fri, 21 Feb 2014 16:05:16 +0100, Arnd Bergmann wrote:
+
+> >  *) I don't know if the algorithm to split the BAR into multiple
+> >     windows is going to be trivial.
 > 
-> Fengguang?
+> The easiest solution would be to special case 'size is between
+> 128MB+1 and 192MB' if that turns out to be the most interesting
+> case. It's easy enough to make the second window smaller than 64MB
+> if we want.
+> 
+> If we want things to be a little fancier, we could use:
+> 
+> 	switch (size) {
+> 		case (SZ_32M+1) ... (SZ_32M+SZ_16M):
+> 			size2 = size - SZ_32M;
+> 			size -= SZ_32M;
+> 			break;
+> 		case (SZ_64M+1) ... (SZ_64M+SZ_32M):
+> 			size2 = size - SZ_64M;
+> 			size -= SZ_64M;
+> 			break;
+> 		case (SZ_128M+1) ... (SZ_128M+SZ_64M):
+> 			size2 = size - SZ_128M;
+> 			size -= SZ_128M;
+> 			break;
+> 	};
 
-This is a smatch warning:
+What if the size of your BAR is 128 MB + 64 MB + 32 MB ? Then you need
+three windows, and your algorithm doesn't work :-)
 
-        http://smatch.sourceforge.net/
-
-Thanks,
-Fengguang
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
