@@ -1,114 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 24/24][New] ACPI / hotplug / PCI: Rework acpiphp_check_host_bridge()
-Date: Tue, 04 Feb 2014 00:41:54 +0100
-Message-ID: <7962756.Dx5cJ92CrE@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:9883
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752417AbaBUVEz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 16:04:55 -0500
+Message-ID: <5307BF6F.8040303@amd.com>
+Date: Fri, 21 Feb 2014 15:04:47 -0600
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<x86@kernel.org>, <dougthompson@xmission.com>,
+	<bhelgaas@google.com>, <JBeulich@suse.com>,
+	<dan.carpenter@oracle.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<Arindam.Nath@amd.com>
+Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
+References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20140221142749.GC11531@pd.tnic>
+In-Reply-To: <20140221142749.GC11531@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 2/21/2014 8:27 AM, Borislav Petkov wrote:
+> On Thu, Feb 20, 2014 at 10:28:46AM -0600, Aravind Gopalakrishnan wrote:
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>> index 97fbecd..e91ad27 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -528,6 +528,8 @@
+>>   #define PCI_DEVICE_ID_AMD_15H_NB_F5	0x1605
+>>   #define PCI_DEVICE_ID_AMD_16H_NB_F3	0x1533
+>>   #define PCI_DEVICE_ID_AMD_16H_NB_F4	0x1534
+>> +#define PCI_DEVICE_ID_AMD_16H_M30H_NB_F3 0x1583
+>> +#define PCI_DEVICE_ID_AMD_16H_M30H_NB_F4 0x1584
+> Just put those in arch/x86/include/asm/amd_nb.h as amd64_edac.c includes
+> it already and you can avoid the pci_ids.h addition. Unless there are
+> plans to use F{3,4} in other places too...
+>
 
-Since the only existing caller of acpiphp_check_host_bridge(),
-which is acpi_pci_root_scan_dependent(), already has a struct
-acpi_device pointer needed to obtain the ACPIPHP context, it
-doesn't make sense to execute acpi_bus_get_device() on its
-handle in acpiphp_handle_to_bridge() just in order to get that
-pointer back.
+F{3,4} are used by hwmon/k10temp.c and hwmon/fam15h_power.c and they 
+will need definitions to be places here in pci_ids.h
+But I'm not sure if the hwmon drivers need to carry support for this 
+model yet (will verify that)
 
-For this reason, modify acpiphp_check_host_bridge() to take
-a struct acpi_device pointer as its argument and rearrange the
-code accordingly.
+If not, I'll remove them and resend.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/pci_root.c            |    2 +-
- drivers/pci/hotplug/acpiphp_glue.c |   11 +++--------
- include/linux/pci-acpi.h           |    4 ++--
- 3 files changed, 6 insertions(+), 11 deletions(-)
-
-Index: linux-pm/include/linux/pci-acpi.h
-===================================================================
---- linux-pm.orig/include/linux/pci-acpi.h
-+++ linux-pm/include/linux/pci-acpi.h
-@@ -59,12 +59,12 @@ static inline void acpi_pci_slot_remove(
- void acpiphp_init(void);
- void acpiphp_enumerate_slots(struct pci_bus *bus);
- void acpiphp_remove_slots(struct pci_bus *bus);
--void acpiphp_check_host_bridge(acpi_handle handle);
-+void acpiphp_check_host_bridge(struct acpi_device *adev);
- #else
- static inline void acpiphp_init(void) { }
- static inline void acpiphp_enumerate_slots(struct pci_bus *bus) { }
- static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
--static inline void acpiphp_check_host_bridge(acpi_handle handle) { }
-+static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
- #endif
- 
- #else	/* CONFIG_ACPI */
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -51,7 +51,7 @@ static void acpi_pci_root_remove(struct
- 
- static int acpi_pci_root_scan_dependent(struct acpi_device *adev)
- {
--	acpiphp_check_host_bridge(adev->handle);
-+	acpiphp_check_host_bridge(adev);
- 	return 0;
- }
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -378,15 +378,11 @@ static acpi_status register_slot(acpi_ha
- 	return AE_OK;
- }
- 
--static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
-+static struct acpiphp_bridge *acpiphp_dev_to_bridge(struct acpi_device *adev)
- {
--	struct acpi_device *adev = acpi_bus_get_acpi_device(handle);
- 	struct acpiphp_context *context;
- 	struct acpiphp_bridge *bridge = NULL;
- 
--	if (!adev)
--		return NULL;
--
- 	acpi_lock_hp_context();
- 	context = acpiphp_get_context(adev);
- 	if (context) {
-@@ -397,7 +393,6 @@ static struct acpiphp_bridge *acpiphp_ha
- 		acpiphp_put_context(context);
- 	}
- 	acpi_unlock_hp_context();
--	acpi_bus_put_acpi_device(adev);
- 	return bridge;
- }
- 
-@@ -764,11 +759,11 @@ static void acpiphp_sanitize_bus(struct
-  * ACPI event handlers
-  */
- 
--void acpiphp_check_host_bridge(acpi_handle handle)
-+void acpiphp_check_host_bridge(struct acpi_device *adev)
- {
- 	struct acpiphp_bridge *bridge;
- 
--	bridge = acpiphp_handle_to_bridge(handle);
-+	bridge = acpiphp_dev_to_bridge(adev);
- 	if (bridge) {
- 		pci_lock_rescan_remove();
- 
+Thanks,
+-Aravind.
 
