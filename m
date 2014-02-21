@@ -1,78 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:46573 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751716AbaBXVic (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 16:38:32 -0500
-Received: by mail-ig0-f171.google.com with SMTP id l13so662532iga.4
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 13:38:31 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 21 Feb 2014 15:27:49 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, dougthompson@xmission.com, bhelgaas@google.com,
+	JBeulich@suse.com, dan.carpenter@oracle.com,
+	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
+	linux-pci@vger.kernel.org, Arindam.Nath@amd.com
+Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
+Message-ID: <20140221142749.GC11531@pd.tnic>
+References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <21860356.103351393198399120.JavaMail.weblogic@epml01>
-References: <21860356.103351393198399120.JavaMail.weblogic@epml01>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Feb 2014 14:38:11 -0700
-Message-ID: <CAErSpo5WW4=aL_BqhnrG+J1Xq=FVtdu0BWkHUyeiOrbBhqmYwg@mail.gmail.com>
-Subject: Re: [patch 07/26] pci: pcie-designware: Remove irq_desc abuse
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	LKML <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 23, 2014 at 4:33 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Monday, February 24, 2014 6:40 AM, Thomas Gleixner wrote:
->>
->> There is no reason to care about irq_desc in that context, escpecially
->> as irq_data for that interrupt is retrieved as well.
->>
->> Use the proper accessor for the msi descriptor
->>
->> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Jingoo Han <jg1.han@samsung.com>
->> Cc: Mohit Kumar <mohit.kumar@st.com>
->> Cc: pci <linux-pci@vger.kernel.org>
->
-> Acked-by: Jingoo Han <jg1.han@samsung.com>
+On Thu, Feb 20, 2014 at 10:28:46AM -0600, Aravind Gopalakrishnan wrote:
+> Extending ECC decoding support for F16h M30h.
+> 
+> Tested on F16h M30h with ECC turned on using mce_amd_inj module and
+> the patch works fine.
+> 
+> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+> Tested-by: Arindam Nath <Arindam.Nath@amd.com>
+> ---
+>  arch/x86/kernel/amd_nb.c  |  2 ++
+>  drivers/edac/amd64_edac.c | 24 ++++++++++++++++++++++++
+>  drivers/edac/amd64_edac.h |  3 +++
+>  include/linux/pci_ids.h   |  2 ++
+>  4 files changed, 31 insertions(+)
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+...
 
-Thomas, I assume you'll merge this along with the rest of your series.
- I don't have any pending changes in this area.
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 97fbecd..e91ad27 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -528,6 +528,8 @@
+>  #define PCI_DEVICE_ID_AMD_15H_NB_F5	0x1605
+>  #define PCI_DEVICE_ID_AMD_16H_NB_F3	0x1533
+>  #define PCI_DEVICE_ID_AMD_16H_NB_F4	0x1534
+> +#define PCI_DEVICE_ID_AMD_16H_M30H_NB_F3 0x1583
+> +#define PCI_DEVICE_ID_AMD_16H_M30H_NB_F4 0x1584
 
-Bjorn
+Just put those in arch/x86/include/asm/amd_nb.h as amd64_edac.c includes
+it already and you can avoid the pci_ids.h addition. Unless there are
+plans to use F{3,4} in other places too...
 
-> A few days ago, I noticed that irq_data_get_msi() can be used.
-> However, I did not submit the same patch. I really appreciate
-> your patch. :-)
->
-> Best regards,
-> Jingoo Han
->
->> ---
->>  drivers/pci/host/pcie-designware.c |    4 +---
->>  1 file changed, 1 insertion(+), 3 deletions(-)
->>
->> Index: tip/drivers/pci/host/pcie-designware.c
->> ===================================================================
->> --- tip.orig/drivers/pci/host/pcie-designware.c
->> +++ tip/drivers/pci/host/pcie-designware.c
->> @@ -294,14 +294,12 @@ no_valid_irq:
->>  static void clear_irq(unsigned int irq)
->>  {
->>       unsigned int pos, nvec;
->> -     struct irq_desc *desc;
->>       struct msi_desc *msi;
->>       struct pcie_port *pp;
->>       struct irq_data *data = irq_get_irq_data(irq);
->>
->>       /* get the port structure */
->> -     desc = irq_to_desc(irq);
->> -     msi = irq_desc_get_msi_desc(desc);
->> +     msi = irq_data_get_msi(data);
->>       pp = sys_to_pcie(msi->dev->bus->sysdata);
->>       if (!pp) {
->>               BUG();
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
