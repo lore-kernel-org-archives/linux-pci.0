@@ -1,90 +1,140 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 3/13] ACPI / hotplug / PCI: Simplify disable_slot()
-Date: Sun, 02 Feb 2014 01:23:30 +0100
-Message-ID: <1662988.VQzBl3dffR@vostro.rjw.lan>
-In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Date: Fri, 21 Feb 2014 18:16:10 +0100
+Message-ID: <CAJZ5v0jZrD+jML2hT7v=gYog1TuXK-VK2DjoPthNbMpoPxnbmg@mail.gmail.com>
+Subject: [GIT PULL] ACPI and power management fixes for v3.14-rc4
+From: Rafael Wysocki <rjwysocki@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Linus,
 
-After recent PCI core changes related to the rescan/remove locking,
-the ACPIPHP's disable_slot() function is only called under the
-general PCI rescan/remove lock, so it doesn't have to use
-dev_in_slot() any more to avoid race conditions.  Make it simply
-walk the devices on the bus and drop the ones in the slot being
-disabled and drop dev_in_slot() which has no more users.
+Please pull from the git repository at
 
-Moreover, to avoid problems described in the changelog of commit
-29ed1f29b68a (PCI: pciehp: Fix null pointer deref when hot-removing
-SR-IOV device), make disable_slot() carry out the list walk in
-reverse order.
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm+acpi-3.14-rc4
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   28 +++++-----------------------
- 1 file changed, 5 insertions(+), 23 deletions(-)
+to receive ACPI and power management fixes for v3.14-rc4
+with top-most commit fee5ae96e0bc48b13f97512aef91d5aea60240a5
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -604,32 +604,15 @@ static void __ref enable_slot(struct acp
- 	}
- }
- 
--/* return first device in slot, acquiring a reference on it */
--static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
--{
--	struct pci_bus *bus = slot->bus;
--	struct pci_dev *dev;
--	struct pci_dev *ret = NULL;
--
--	down_read(&pci_bus_sem);
--	list_for_each_entry(dev, &bus->devices, bus_list)
--		if (PCI_SLOT(dev->devfn) == slot->device) {
--			ret = pci_dev_get(dev);
--			break;
--		}
--	up_read(&pci_bus_sem);
--
--	return ret;
--}
--
- /**
-  * disable_slot - disable a slot
-  * @slot: ACPI PHP slot
-  */
- static void disable_slot(struct acpiphp_slot *slot)
- {
-+	struct pci_bus *bus = slot->bus;
-+	struct pci_dev *dev, *prev;
- 	struct acpiphp_func *func;
--	struct pci_dev *pdev;
- 
- 	/*
- 	 * enable_slot() enumerates all functions in this device via
-@@ -637,10 +620,9 @@ static void disable_slot(struct acpiphp_
- 	 * methods (_EJ0, etc.) or not.  Therefore, we remove all functions
- 	 * here.
- 	 */
--	while ((pdev = dev_in_slot(slot))) {
--		pci_stop_and_remove_bus_device(pdev);
--		pci_dev_put(pdev);
--	}
-+	list_for_each_entry_safe_reverse(dev, prev, &bus->devices, bus_list)
-+		if (PCI_SLOT(dev->devfn) == slot->device)
-+			pci_stop_and_remove_bus_device(dev);
- 
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		acpiphp_bus_trim(func_to_handle(func));
+  Merge branch 'pm-cpufreq'
 
+on top of commit 6d0abeca3242a88cab8232e4acd7e2bf088f3bc2
+
+  Linux 3.14-rc3
+
+These include two fixes for recent regressions related to ACPI, a
+cpufreq fix for breakage overlooked by a previous fix commit, two
+intel_pstate fixes for stuff added during the 3.13 cycle that need
+to go into -stable, three fixes for older bugs that also are -stable
+candidates, ACPI video blacklist changes related to BIOSes that
+behave in a special way on Windows 8, several build fixes for
+CONFIG_PM_SLEEP unset in ACPI drivers and an ACPI driver
+cleanup.
+
+Specifics:
+
+ - Fix for a recent probing regression in the nouveau driver introduced
+   by an ACPI change related to the handling of _DSM from Jiang Liu.
+
+ - Fix for a dock station sysfs attribute that stopped working correctly
+   after recent changes in the ACPI core.
+
+ - cpufreq fix taking care of broken code related to CPU removal and
+   overlooked by a previous recent fix in that area.  From Viresh Kumar.
+
+ - Two intel_pstate fixes related to Baytrail support added during
+   the 3.13 cycle (candidates for -stable) from Dirk Brandewie.
+
+ - ACPI video fix removing duplicate brightness values from the _BCL
+   table which makes its user space interface behave sanely.  From
+   Hans de Goede.
+
+ - Fix for the powernow-k8 cpufreq driver making it initialize its
+   per-CPU data structures correctly from Srivatsa S. Bhat.
+
+ - Fix for an obscure memory leak in the ACPI PCI interrupt allocation
+   code (related to ISA) from Tomasz Nowicki.
+
+ - ACPI video blacklist changes moving several systems that should
+   use the native backlight interface instead of the ACPI one from
+   the general ACPI _OSI blacklist the the ACPI video driver's
+   blacklist where they belong.  This consists of an ACPI video
+   driver update from Aaron Lu and a revert of a previous commit
+   adding systems to the ACPI _OSI blacklist requested by
+   Takashi Iwai.  All of that has been tested by the involved
+   reporters and should not cause any fallout to happen.
+
+ - Several fixes for build issues in ACPI drivers occuring when
+   CONFIG_PM_SLEEP is unset from Shuah Khan.
+
+ - Fix for an sscanf() format string in the ACPI Smart Battery
+   Subsystem (SBS) driver from Luis G.F.
+
+Thanks!
+
+
+---------------
+
+Aaron Lu (1):
+      ACPI / video: Add systems that should favour native backlight interface
+
+Dirk Brandewie (2):
+      intel_pstate: Use LFM bus ratio as min ratio/P state
+      intel_pstate: Add support for Baytrail turbo P states
+
+Hans de Goede (1):
+      ACPI / video: Filter the _BCL table for duplicate brightness values
+
+Jiang Liu (1):
+      ACPI / nouveau: fix probing regression related to _DSM
+
+Luis G.F (1):
+      ACPI / SBS: Fix incorrect sscanf() string
+
+Rafael J. Wysocki (2):
+      ACPI / dock: Make 'docked' sysfs attribute work as documented
+      Revert "ACPI: Blacklist Win8 OSI for some HP laptop 2013 models"
+
+Shuah Khan (6):
+      ACPI / AC: fix AC driver compile error when CONFIG_PM_SLEEP is undefined
+      ACPI / battery: fix battery driver compile error when
+CONFIG_PM_SLEEP is undefined
+      ACPI / button: fix button driver compile error when
+CONFIG_PM_SLEEP is undefined
+      ACPI / fan: fix fan driver compile error when CONFIG_PM_SLEEP is undefined
+      ACPI / SBS: fix SBS driver compile error when CONFIG_PM_SLEEP is undefined
+      ACPI / thermal: fix thermal driver compile error when
+CONFIG_PM_SLEEP is undefined
+
+Srivatsa S. Bhat (1):
+      cpufreq: powernow-k8: Initialize per-cpu data-structures properly
+
+Tomasz Nowicki (1):
+      ACPI / PCI: Fix memory leak in acpi_pci_irq_enable()
+
+Viresh Kumar (1):
+      cpufreq: remove sysfs link when a cpu != policy->cpu, is removed
+
+---------------
+
+ drivers/acpi/ac.c                      |   2 +
+ drivers/acpi/battery.c                 |   2 +
+ drivers/acpi/blacklist.c               |  58 -------------
+ drivers/acpi/button.c                  |   2 +
+ drivers/acpi/dock.c                    |   8 +-
+ drivers/acpi/fan.c                     |   3 +
+ drivers/acpi/pci_irq.c                 |   1 +
+ drivers/acpi/sbs.c                     |   4 +-
+ drivers/acpi/thermal.c                 |   2 +
+ drivers/acpi/video.c                   | 147 +++++++++++++++++++++++++++++++--
+ drivers/acpi/video_detect.c            |  16 ----
+ drivers/cpufreq/cpufreq.c              |   3 +-
+ drivers/cpufreq/intel_pstate.c         |  17 +++-
+ drivers/cpufreq/powernow-k8.c          |  10 ++-
+ drivers/gpu/drm/nouveau/nouveau_acpi.c |  26 +++++-
+ 15 files changed, 204 insertions(+), 97 deletions(-)
