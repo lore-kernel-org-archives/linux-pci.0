@@ -1,91 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:35609 "EHLO
-	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751213AbaBTGqA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 01:46:00 -0500
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: "jg1.han@samsung.com" <jg1.han@samsung.com>
-Cc: Ajay KHANDELWAL <ajay.khandelwal@st.com>,
-	Bjorn Helgaas <bhelgass@google.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"stable@vger.kerne.org" <stable@vger.kerne.org>
-Date: Thu, 20 Feb 2014 14:45:49 +0800
-Subject: RE: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io
- and mem viewport
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FD40D78E@EAPEX1MAIL1.st.com>
-References: <1392873774-22249-1-git-send-email-mohit.kumar@st.com>
- <1392873774-22249-2-git-send-email-mohit.kumar@st.com>
-In-Reply-To: <1392873774-22249-2-git-send-email-mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:59444 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753468AbaBUXqQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 18:46:16 -0500
+Received: by mail-pa0-f45.google.com with SMTP id lf10so4112919pab.4
+        for <linux-pci@vger.kernel.org>; Fri, 21 Feb 2014 15:46:16 -0800 (PST)
+Date: Fri, 21 Feb 2014 15:46:13 -0800
+From: Jens Axboe <axboe@kernel.dk>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Mike Miller <mike.miller@hp.com>,
+	Asai Thambi S P <asamymuthupa@micron.com>,
+	Joshua Morris <josh.h.morris@us.ibm.com>,
+	Philip Kelleher <pjk1939@linux.vnet.ibm.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	iss_storagedev@hp.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/9] block: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140221234613.GE29129@kernel.dk>
+References: <cover.1392799751.git.agordeev@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-K2NjIHN0YWJsZUB2Z2VyLmtlcm5lLm9yZw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQo+IEZyb206IE1vaGl0IEtVTUFSIERDRw0KPiBTZW50OiBUaHVyc2RheSwgRmVicnVhcnkgMjAs
-IDIwMTQgMTA6NTMgQU0NCj4gVG86IGpnMS5oYW5Ac2Ftc3VuZy5jb20NCj4gQ2M6IE1vaGl0IEtV
-TUFSIERDRzsgQWpheSBLSEFOREVMV0FMOyBCam9ybiBIZWxnYWFzOyBzcGVhci1kZXZlbDsNCj4g
-bGludXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0ggMi8yXSBQQ0k6ZGVz
-aWdud2FyZTpGaXggaUFUVSBwcm9ncmFtbWluZyBmb3IgY2ZnMSwgaW8gYW5kDQo+IG1lbSB2aWV3
-cG9ydA0KPiANCj4gVGhpcyBwYXRjaCBjb3JyZWN0IGlBVFUgcHJvZ3JhbW1pbmcgZm9yIGNmZzEs
-IGlvIGFuZCBtZW0gdmlld3BvcnQuDQo+IEVuYWJsZSBBVFUgb25seSBhZnRlciBjb25maWd1cmlu
-ZyBpdC4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IE1vaGl0IEt1bWFyIDxtb2hpdC5rdW1hckBzdC5j
-b20+DQo+IFNpZ25lZC1vZmYtYnk6IEFqYXkgS2hhbmRlbHdhbCA8YWpheS5raGFuZGVsd2FsQHN0
-LmNvbT4NCj4gQ2M6IEppbmdvbyBIYW4gPGpnMS5oYW5Ac2Ftc3VuZy5jb20+DQo+IENjOiBCam9y
-biBIZWxnYWFzIDxiaGVsZ2Fzc0Bnb29nbGUuY29tPg0KPiBDYzogc3BlYXItZGV2ZWxAbGlzdC5z
-dC5jb20NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gLS0tDQo+ICBkcml2ZXJz
-L3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIHwgICAgNiArKystLS0NCj4gIDEgZmlsZXMgY2hh
-bmdlZCwgMyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMgYi9kcml2ZXJzL3BjaS9ob3N0L3Bj
-aWUtDQo+IGRlc2lnbndhcmUuYw0KPiBpbmRleCAzOTE5NjZmLi40NmY0YTE5IDEwMDY0NA0KPiAt
-LS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+ICsrKyBiL2RyaXZlcnMv
-cGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gQEAgLTUyMiwxMyArNTIyLDEzIEBAIHN0YXRp
-YyB2b2lkIGR3X3BjaWVfcHJvZ192aWV3cG9ydF9jZmcxKHN0cnVjdA0KPiBwY2llX3BvcnQgKnBw
-LCB1MzIgYnVzZGV2KQ0KPiAgCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCBQQ0lFX0FUVV9SRUdJT05f
-T1VUQk9VTkQgfA0KPiBQQ0lFX0FUVV9SRUdJT05fSU5ERVgxLA0KPiAgCQkJICBQQ0lFX0FUVV9W
-SUVXUE9SVCk7DQo+ICAJZHdfcGNpZV93cml0ZWxfcmMocHAsIFBDSUVfQVRVX1RZUEVfQ0ZHMSwg
-UENJRV9BVFVfQ1IxKTsNCj4gLQlkd19wY2llX3dyaXRlbF9yYyhwcCwgUENJRV9BVFVfRU5BQkxF
-LCBQQ0lFX0FUVV9DUjIpOw0KPiAgCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCBwcC0+Y2ZnMV9iYXNl
-LCBQQ0lFX0FUVV9MT1dFUl9CQVNFKTsNCj4gIAlkd19wY2llX3dyaXRlbF9yYyhwcCwgKHBwLT5j
-ZmcxX2Jhc2UgPj4gMzIpLA0KPiBQQ0lFX0FUVV9VUFBFUl9CQVNFKTsNCj4gIAlkd19wY2llX3dy
-aXRlbF9yYyhwcCwgcHAtPmNmZzFfYmFzZSArIHBwLT5jb25maWcuY2ZnMV9zaXplIC0gMSwNCj4g
-IAkJCSAgUENJRV9BVFVfTElNSVQpOw0KPiAgCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCBidXNkZXYs
-IFBDSUVfQVRVX0xPV0VSX1RBUkdFVCk7DQo+ICAJZHdfcGNpZV93cml0ZWxfcmMocHAsIDAsIFBD
-SUVfQVRVX1VQUEVSX1RBUkdFVCk7DQo+ICsJZHdfcGNpZV93cml0ZWxfcmMocHAsIFBDSUVfQVRV
-X0VOQUJMRSwgUENJRV9BVFVfQ1IyKTsNCj4gIH0NCj4gDQo+ICBzdGF0aWMgdm9pZCBkd19wY2ll
-X3Byb2dfdmlld3BvcnRfbWVtX291dGJvdW5kKHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0KPiBAQCAt
-NTM3LDcgKzUzNyw2IEBAIHN0YXRpYyB2b2lkDQo+IGR3X3BjaWVfcHJvZ192aWV3cG9ydF9tZW1f
-b3V0Ym91bmQoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ICAJZHdfcGNpZV93cml0ZWxfcmMocHAs
-IFBDSUVfQVRVX1JFR0lPTl9PVVRCT1VORCB8DQo+IFBDSUVfQVRVX1JFR0lPTl9JTkRFWDAsDQo+
-ICAJCQkgIFBDSUVfQVRVX1ZJRVdQT1JUKTsNCj4gIAlkd19wY2llX3dyaXRlbF9yYyhwcCwgUENJ
-RV9BVFVfVFlQRV9NRU0sIFBDSUVfQVRVX0NSMSk7DQo+IC0JZHdfcGNpZV93cml0ZWxfcmMocHAs
-IFBDSUVfQVRVX0VOQUJMRSwgUENJRV9BVFVfQ1IyKTsNCj4gIAlkd19wY2llX3dyaXRlbF9yYyhw
-cCwgcHAtPm1lbV9iYXNlLCBQQ0lFX0FUVV9MT1dFUl9CQVNFKTsNCj4gIAlkd19wY2llX3dyaXRl
-bF9yYyhwcCwgKHBwLT5tZW1fYmFzZSA+PiAzMiksDQo+IFBDSUVfQVRVX1VQUEVSX0JBU0UpOw0K
-PiAgCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCBwcC0+bWVtX2Jhc2UgKyBwcC0+Y29uZmlnLm1lbV9z
-aXplIC0gMSwNCj4gQEAgLTU0NSw2ICs1NDQsNyBAQCBzdGF0aWMgdm9pZA0KPiBkd19wY2llX3By
-b2dfdmlld3BvcnRfbWVtX291dGJvdW5kKHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0KPiAgCWR3X3Bj
-aWVfd3JpdGVsX3JjKHBwLCBwcC0+Y29uZmlnLm1lbV9idXNfYWRkciwNCj4gUENJRV9BVFVfTE9X
-RVJfVEFSR0VUKTsNCj4gIAlkd19wY2llX3dyaXRlbF9yYyhwcCwgdXBwZXJfMzJfYml0cyhwcC0+
-Y29uZmlnLm1lbV9idXNfYWRkciksDQo+ICAJCQkgIFBDSUVfQVRVX1VQUEVSX1RBUkdFVCk7DQo+
-ICsJZHdfcGNpZV93cml0ZWxfcmMocHAsIFBDSUVfQVRVX0VOQUJMRSwgUENJRV9BVFVfQ1IyKTsN
-Cj4gIH0NCj4gDQo+ICBzdGF0aWMgdm9pZCBkd19wY2llX3Byb2dfdmlld3BvcnRfaW9fb3V0Ym91
-bmQoc3RydWN0IHBjaWVfcG9ydCAqcHApIEBADQo+IC01NTMsNyArNTUzLDYgQEAgc3RhdGljIHZv
-aWQgZHdfcGNpZV9wcm9nX3ZpZXdwb3J0X2lvX291dGJvdW5kKHN0cnVjdA0KPiBwY2llX3BvcnQg
-KnBwKQ0KPiAgCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCBQQ0lFX0FUVV9SRUdJT05fT1VUQk9VTkQg
-fA0KPiBQQ0lFX0FUVV9SRUdJT05fSU5ERVgxLA0KPiAgCQkJICBQQ0lFX0FUVV9WSUVXUE9SVCk7
-DQo+ICAJZHdfcGNpZV93cml0ZWxfcmMocHAsIFBDSUVfQVRVX1RZUEVfSU8sIFBDSUVfQVRVX0NS
-MSk7DQo+IC0JZHdfcGNpZV93cml0ZWxfcmMocHAsIFBDSUVfQVRVX0VOQUJMRSwgUENJRV9BVFVf
-Q1IyKTsNCj4gIAlkd19wY2llX3dyaXRlbF9yYyhwcCwgcHAtPmlvX2Jhc2UsIFBDSUVfQVRVX0xP
-V0VSX0JBU0UpOw0KPiAgCWR3X3BjaWVfd3JpdGVsX3JjKHBwLCAocHAtPmlvX2Jhc2UgPj4gMzIp
-LA0KPiBQQ0lFX0FUVV9VUFBFUl9CQVNFKTsNCj4gIAlkd19wY2llX3dyaXRlbF9yYyhwcCwgcHAt
-PmlvX2Jhc2UgKyBwcC0+Y29uZmlnLmlvX3NpemUgLSAxLCBAQCAtDQo+IDU2MSw2ICs1NjAsNyBA
-QCBzdGF0aWMgdm9pZCBkd19wY2llX3Byb2dfdmlld3BvcnRfaW9fb3V0Ym91bmQoc3RydWN0DQo+
-IHBjaWVfcG9ydCAqcHApDQo+ICAJZHdfcGNpZV93cml0ZWxfcmMocHAsIHBwLT5jb25maWcuaW9f
-YnVzX2FkZHIsDQo+IFBDSUVfQVRVX0xPV0VSX1RBUkdFVCk7DQo+ICAJZHdfcGNpZV93cml0ZWxf
-cmMocHAsIHVwcGVyXzMyX2JpdHMocHAtPmNvbmZpZy5pb19idXNfYWRkciksDQo+ICAJCQkgIFBD
-SUVfQVRVX1VQUEVSX1RBUkdFVCk7DQo+ICsJZHdfcGNpZV93cml0ZWxfcmMocHAsIFBDSUVfQVRV
-X0VOQUJMRSwgUENJRV9BVFVfQ1IyKTsNCj4gIH0NCj4gDQo+ICBzdGF0aWMgaW50IGR3X3BjaWVf
-cmRfb3RoZXJfY29uZihzdHJ1Y3QgcGNpZV9wb3J0ICpwcCwgc3RydWN0IHBjaV9idXMgKmJ1cywN
-Cj4gLS0NCj4gMS43LjAuMQ0KDQo=
+On Wed, Feb 19 2014, Alexander Gordeev wrote:
+> As result of deprecation of MSI-X/MSI enablement functions
+> pci_enable_msix() and pci_enable_msi_block() all drivers
+> using these two interfaces need to be updated to use the
+> new pci_enable_msi_range() and pci_enable_msix_range()
+> interfaces.
+
+Thanks. Applied 3-4, and 6-9 (didn't get the others).
+
+-- 
+Jens Axboe
+
