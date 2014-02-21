@@ -1,92 +1,105 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 6/24][Resend] ACPI / hotplug / PCI: Simplify disable_slot()
-Date: Tue, 04 Feb 2014 00:20:18 +0100
-Message-ID: <2631964.LdI8Nm3YsY@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2lp0209.outbound.protection.outlook.com ([207.46.163.209]:24567
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753104AbaBUCe6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Feb 2014 21:34:58 -0500
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: "jg1.han@samsung.com" <jg1.han@samsung.com>,
+	Andrew Murray <amurray@embedded-bits.co.uk>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"mohit.kumar@st.com" <mohit.kumar@st.com>,
+	"shawn.guo@linaro.org" <shawn.guo@linaro.org>
+Subject: RE: [PATCH] PCI: designware: Remove unnecessary use of 'conf_lock'
+ spinlock
+Date: Fri, 21 Feb 2014 02:34:36 +0000
+Message-ID: <dc140f906932486bb4c76c4374dd236a@BLUPR03MB136.namprd03.prod.outlook.com>
+References: <25373032.16121392947553972.JavaMail.weblogic@epml01>
+In-Reply-To: <25373032.16121392947553972.JavaMail.weblogic@epml01>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-After recent PCI core changes related to the rescan/remove locking,
-the ACPIPHP's disable_slot() function is only called under the
-general PCI rescan/remove lock, so it doesn't have to use
-dev_in_slot() any more to avoid race conditions.  Make it simply
-walk the devices on the bus and drop the ones in the slot being
-disabled and drop dev_in_slot() which has no more users.
-
-Moreover, to avoid problems described in the changelog of commit
-29ed1f29b68a (PCI: pciehp: Fix null pointer deref when hot-removing
-SR-IOV device), make disable_slot() carry out the list walk in
-reverse order.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   28 +++++-----------------------
- 1 file changed, 5 insertions(+), 23 deletions(-)
-
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -625,32 +625,15 @@ static void __ref enable_slot(struct acp
- 	}
- }
- 
--/* return first device in slot, acquiring a reference on it */
--static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
--{
--	struct pci_bus *bus = slot->bus;
--	struct pci_dev *dev;
--	struct pci_dev *ret = NULL;
--
--	down_read(&pci_bus_sem);
--	list_for_each_entry(dev, &bus->devices, bus_list)
--		if (PCI_SLOT(dev->devfn) == slot->device) {
--			ret = pci_dev_get(dev);
--			break;
--		}
--	up_read(&pci_bus_sem);
--
--	return ret;
--}
--
- /**
-  * disable_slot - disable a slot
-  * @slot: ACPI PHP slot
-  */
- static void disable_slot(struct acpiphp_slot *slot)
- {
-+	struct pci_bus *bus = slot->bus;
-+	struct pci_dev *dev, *prev;
- 	struct acpiphp_func *func;
--	struct pci_dev *pdev;
- 
- 	/*
- 	 * enable_slot() enumerates all functions in this device via
-@@ -658,10 +641,9 @@ static void disable_slot(struct acpiphp_
- 	 * methods (_EJ0, etc.) or not.  Therefore, we remove all functions
- 	 * here.
- 	 */
--	while ((pdev = dev_in_slot(slot))) {
--		pci_stop_and_remove_bus_device(pdev);
--		pci_dev_put(pdev);
--	}
-+	list_for_each_entry_safe_reverse(dev, prev, &bus->devices, bus_list)
-+		if (PCI_SLOT(dev->devfn) == slot->device)
-+			pci_stop_and_remove_bus_device(dev);
- 
- 	list_for_each_entry(func, &slot->funcs, sibling)
- 		acpiphp_bus_trim(func_to_handle(func));
-
+DQpCZXN0IFJlZ2FyZHMNClJpY2hhcmQgWmh1DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCj4gRnJvbTogbGludXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4
+LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmddDQo+IE9uIEJlaGFsZiBPZiBKaW5nb28gSGFuDQo+
+IFNlbnQ6IEZyaWRheSwgRmVicnVhcnkgMjEsIDIwMTQgOTo1MyBBTQ0KPiBUbzogQW5kcmV3IE11
+cnJheQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbW9oaXQua3VtYXJAc3QuY29t
+OyBaaHUgUmljaGFyZC1SNjUwMzc7DQo+IHNoYXduLmd1b0BsaW5hcm8ub3JnOyBKaW5nb28gSGFu
+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIFBDSTogZGVzaWdud2FyZTogUmVtb3ZlIHVubmVjZXNz
+YXJ5IHVzZSBvZiAnY29uZl9sb2NrJw0KPiBzcGlubG9jaw0KPiANCj4gT24gRnJpZGF5LCBGZWJy
+dWFyeSAyMSwgMjAxNCA2OjQyIEFNLCBBbmRyZXcgTXVycmF5IHdyb3RlOg0KPiA+DQo+ID4gU2Vy
+aWFsaXphdGlvbiBvZiBjb25maWd1cmF0aW9uIGFjY2Vzc2VzIGlzIHByb3ZpZGVkIGJ5ICdwY2lf
+bG9jaycgaW4NCj4gPiBkcml2ZXJzL3BjaS9hY2Nlc3MuYyB0aHVzIG1ha2luZyB0aGUgZHJpdmVy
+J3MgJ2NvbmZfbG9jaycgc3VwZXJmbHVvdXMuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBBbmRy
+ZXcgTXVycmF5IDxhbXVycmF5QGVtYmVkZGVkLWJpdHMuY28udWs+DQo+IA0KPiAoK2NjIFJpY2hh
+cmQgWmh1LCBTaGF3biBHdW8pDQo+IA0KPiBBY2tlZC1ieTogSmluZ29vIEhhbiA8amcxLmhhbkBz
+YW1zdW5nLmNvbT4NCj4gDQo+IFJpZ2h0LCB0aGFuayB5b3UgZm9yIHNlbmRpbmcgdGhlIHBhdGNo
+LiA6LSkNCg0KQWNrZWQtYnk6IFJpY2hhcmQgWmh1IDxyNjUwMzdAZnJlZXNjYWxlLmNvbT4NClRo
+YW5rcy4NCkJlc3QgUmVnYXJkcw0KUmljaGFyZA0KPiANCj4gQmVzdCByZWdhcmRzLA0KPiBKaW5n
+b28gSGFuDQo+IA0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS1leHlub3MuYyAg
+ICAgIHwgMSAtDQo+ID4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyAgICAgICAgfCAxIC0N
+Cj4gPiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYyB8IDYgLS0tLS0tDQo+ID4g
+ZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuaCB8IDEgLQ0KPiA+ICA0IGZpbGVzIGNo
+YW5nZWQsIDkgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kv
+aG9zdC9wY2ktZXh5bm9zLmMNCj4gPiBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWV4eW5vcy5jIGlu
+ZGV4IDNkZTZiZmIuLjMyYzZkNTYgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9w
+Y2ktZXh5bm9zLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1leHlub3MuYw0KPiA+
+IEBAIC01NDYsNyArNTQ2LDYgQEAgc3RhdGljIGludCBhZGRfcGNpZV9wb3J0KHN0cnVjdCBwY2ll
+X3BvcnQgKnBwLCBzdHJ1Y3QNCj4gcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiA+ICAJcHAtPnJv
+b3RfYnVzX25yID0gLTE7DQo+ID4gIAlwcC0+b3BzID0gJmV4eW5vc19wY2llX2hvc3Rfb3BzOw0K
+PiA+DQo+ID4gLQlzcGluX2xvY2tfaW5pdCgmcHAtPmNvbmZfbG9jayk7DQo+ID4gIAlyZXQgPSBk
+d19wY2llX2hvc3RfaW5pdChwcCk7DQo+ID4gIAlpZiAocmV0KSB7DQo+ID4gIAkJZGV2X2Vycigm
+cGRldi0+ZGV2LCAiZmFpbGVkIHRvIGluaXRpYWxpemUgaG9zdFxuIik7IGRpZmYgLS1naXQNCj4g
+PiBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlt
+eDYuYyBpbmRleA0KPiA+IGU4NjYzYTguLjc3NTg4ZjEgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVy
+cy9wY2kvaG9zdC9wY2ktaW14Ni5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14
+Ni5jDQo+ID4gQEAgLTQ4MCw3ICs0ODAsNiBAQCBzdGF0aWMgaW50IGlteDZfYWRkX3BjaWVfcG9y
+dChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCwNCj4gPiAgCXBwLT5yb290X2J1c19uciA9IC0xOw0KPiA+
+ICAJcHAtPm9wcyA9ICZpbXg2X3BjaWVfaG9zdF9vcHM7DQo+ID4NCj4gPiAtCXNwaW5fbG9ja19p
+bml0KCZwcC0+Y29uZl9sb2NrKTsNCj4gPiAgCXJldCA9IGR3X3BjaWVfaG9zdF9pbml0KHBwKTsN
+Cj4gPiAgCWlmIChyZXQpIHsNCj4gPiAgCQlkZXZfZXJyKCZwZGV2LT5kZXYsICJmYWlsZWQgdG8g
+aW5pdGlhbGl6ZSBob3N0XG4iKTsgZGlmZiAtLWdpdA0KPiA+IGEvZHJpdmVycy9wY2kvaG9zdC9w
+Y2llLWRlc2lnbndhcmUuYw0KPiA+IGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUu
+Yw0KPiA+IGluZGV4IDE3Y2U4OGYuLmIyNWFkYjggMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9w
+Y2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNp
+ZS1kZXNpZ253YXJlLmMNCj4gPiBAQCAtNjQwLDcgKzY0MCw2IEBAIHN0YXRpYyBpbnQgZHdfcGNp
+ZV9yZF9jb25mKHN0cnVjdCBwY2lfYnVzICpidXMsIHUzMg0KPiBkZXZmbiwgaW50IHdoZXJlLA0K
+PiA+ICAJCQlpbnQgc2l6ZSwgdTMyICp2YWwpDQo+ID4gIHsNCj4gPiAgCXN0cnVjdCBwY2llX3Bv
+cnQgKnBwID0gc3lzX3RvX3BjaWUoYnVzLT5zeXNkYXRhKTsNCj4gPiAtCXVuc2lnbmVkIGxvbmcg
+ZmxhZ3M7DQo+ID4gIAlpbnQgcmV0Ow0KPiA+DQo+ID4gIAlpZiAoIXBwKSB7DQo+ID4gQEAgLTY1
+MywxMyArNjUyLDExIEBAIHN0YXRpYyBpbnQgZHdfcGNpZV9yZF9jb25mKHN0cnVjdCBwY2lfYnVz
+ICpidXMsIHUzMg0KPiBkZXZmbiwgaW50IHdoZXJlLA0KPiA+ICAJCXJldHVybiBQQ0lCSU9TX0RF
+VklDRV9OT1RfRk9VTkQ7DQo+ID4gIAl9DQo+ID4NCj4gPiAtCXNwaW5fbG9ja19pcnFzYXZlKCZw
+cC0+Y29uZl9sb2NrLCBmbGFncyk7DQo+ID4gIAlpZiAoYnVzLT5udW1iZXIgIT0gcHAtPnJvb3Rf
+YnVzX25yKQ0KPiA+ICAJCXJldCA9IGR3X3BjaWVfcmRfb3RoZXJfY29uZihwcCwgYnVzLCBkZXZm
+biwNCj4gPiAgCQkJCQkJd2hlcmUsIHNpemUsIHZhbCk7DQo+ID4gIAllbHNlDQo+ID4gIAkJcmV0
+ID0gZHdfcGNpZV9yZF9vd25fY29uZihwcCwgd2hlcmUsIHNpemUsIHZhbCk7DQo+ID4gLQlzcGlu
+X3VubG9ja19pcnFyZXN0b3JlKCZwcC0+Y29uZl9sb2NrLCBmbGFncyk7DQo+ID4NCj4gPiAgCXJl
+dHVybiByZXQ7DQo+ID4gIH0NCj4gPiBAQCAtNjY4LDcgKzY2NSw2IEBAIHN0YXRpYyBpbnQgZHdf
+cGNpZV93cl9jb25mKHN0cnVjdCBwY2lfYnVzICpidXMsIHUzMg0KPiBkZXZmbiwNCj4gPiAgCQkJ
+aW50IHdoZXJlLCBpbnQgc2l6ZSwgdTMyIHZhbCkNCj4gPiAgew0KPiA+ICAJc3RydWN0IHBjaWVf
+cG9ydCAqcHAgPSBzeXNfdG9fcGNpZShidXMtPnN5c2RhdGEpOw0KPiA+IC0JdW5zaWduZWQgbG9u
+ZyBmbGFnczsNCj4gPiAgCWludCByZXQ7DQo+ID4NCj4gPiAgCWlmICghcHApIHsNCj4gPiBAQCAt
+Njc5LDEzICs2NzUsMTEgQEAgc3RhdGljIGludCBkd19wY2llX3dyX2NvbmYoc3RydWN0IHBjaV9i
+dXMgKmJ1cywgdTMyDQo+IGRldmZuLA0KPiA+ICAJaWYgKGR3X3BjaWVfdmFsaWRfY29uZmlnKHBw
+LCBidXMsIFBDSV9TTE9UKGRldmZuKSkgPT0gMCkNCj4gPiAgCQlyZXR1cm4gUENJQklPU19ERVZJ
+Q0VfTk9UX0ZPVU5EOw0KPiA+DQo+ID4gLQlzcGluX2xvY2tfaXJxc2F2ZSgmcHAtPmNvbmZfbG9j
+aywgZmxhZ3MpOw0KPiA+ICAJaWYgKGJ1cy0+bnVtYmVyICE9IHBwLT5yb290X2J1c19ucikNCj4g
+PiAgCQlyZXQgPSBkd19wY2llX3dyX290aGVyX2NvbmYocHAsIGJ1cywgZGV2Zm4sDQo+ID4gIAkJ
+CQkJCXdoZXJlLCBzaXplLCB2YWwpOw0KPiA+ICAJZWxzZQ0KPiA+ICAJCXJldCA9IGR3X3BjaWVf
+d3Jfb3duX2NvbmYocHAsIHdoZXJlLCBzaXplLCB2YWwpOw0KPiA+IC0Jc3Bpbl91bmxvY2tfaXJx
+cmVzdG9yZSgmcHAtPmNvbmZfbG9jaywgZmxhZ3MpOw0KPiA+DQo+ID4gIAlyZXR1cm4gcmV0Ow0K
+PiA+ICB9DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJl
+LmgNCj4gPiBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiBpbmRleCAz
+MDYzYjM1Li5hMTA3NDdkIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1k
+ZXNpZ253YXJlLmgNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5o
+DQo+ID4gQEAgLTQxLDcgKzQxLDYgQEAgc3RydWN0IHBjaWVfcG9ydCB7DQo+ID4gIAl2b2lkIF9f
+aW9tZW0JCSp2YV9jZmcxX2Jhc2U7DQo+ID4gIAl1NjQJCQlpb19iYXNlOw0KPiA+ICAJdTY0CQkJ
+bWVtX2Jhc2U7DQo+ID4gLQlzcGlubG9ja190CQljb25mX2xvY2s7DQo+ID4gIAlzdHJ1Y3QgcmVz
+b3VyY2UJCWNmZzsNCj4gPiAgCXN0cnVjdCByZXNvdXJjZQkJaW87DQo+ID4gIAlzdHJ1Y3QgcmVz
+b3VyY2UJCW1lbTsNCj4gPiAtLQ0KPiA+IDEuOC4zLjINCj4gBOe/gXsubj/CiT/vo6jCie+jp8KG
+KyXCij96d23ChT/Cne+njeq/qT8/eljjjokaXMKKKT/vppt3Kmpn0J8/P8Kawo7CiuWttWovwoHl
+hap667CbwpbCij/Cij/ikaHvo6c/Pw0KPiDlgpg/65u0f++jqj/vo6hHPz/vo6gPPzordsKJP3c/
+5piODQo=
