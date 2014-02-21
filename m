@@ -1,46 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26112 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753633AbaBLSGH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Feb 2014 13:06:07 -0500
-Date: Wed, 12 Feb 2014 19:08:04 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 01/34] bnx2: Use pci_enable_msix_range()
-Message-ID: <20140212180803.GA7948@dhcp-26-207.brq.redhat.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
- <434a34e01c353441131204edef36126a95e8928a.1391172839.git.agordeev@redhat.com>
- <20140131.133051.483295479425700960.davem@davemloft.net>
- <20140211003814.GC12851@google.com>
- <20140211010803.GD12851@google.com>
- <20140212132640.GA3147@dhcp-26-207.brq.redhat.com>
- <CAErSpo7Puj1hgpmnjvuBjvoNjHQUyOU-axsKm+PY3j8jkZHDAQ@mail.gmail.com>
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:56358
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933004AbaBURqA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 12:46:00 -0500
+From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Architectural question regarding IOV support in Linux 3.13.4
+Date: Fri, 21 Feb 2014 17:45:50 +0000
+Message-ID: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7Puj1hgpmnjvuBjvoNjHQUyOU-axsKm+PY3j8jkZHDAQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 10:00:28AM -0700, Bjorn Helgaas wrote:
-> > Do you want pci_enable_msi_exact() in addition to pci_enable_msix_exact()?
-> 
-> If there are cases where pci_enable_msi_exact() would be used, I guess
-> the same arguments would apply, so yes.  I haven't looked at the
 
-Just a handful of cases in the tree where it could be used for MSI right now,
-but still - they do exist.
+I am working with SR-IOV and I have a question regarding the function
+sriov_init() in ../drivers/pci/iov.c (linux versions 3.4.9 and 3.13.4)
 
-> archives, but I have this nagging feeling that this is exactly what
-> you proposed initially, and I had some objection.  If so, I'm sorry
-> about changing my mind :)
+In sriov_init() the code first checks whether the PF is a Root complex 
+ endpoint (0x9) or an Express Endpoint (0x0) as shown in the code 
+ snippet below.  If it is neither it returns the No device error.
 
-You are on PCI guard, no worries ;)
+static int sriov_init(struct pci_dev *dev, int pos)
+{
+         int i;
+         int rc;
+         int nres;
+         u32 pgsz;
+         u16 ctrl, total, offset, stride;
+         struct pci_sriov *iov;
+         struct resource *res;
+         struct pci_dev *pdev;
 
-> Bjorn
+       if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
+             pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+                 return -ENODEV;
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+My question is why PCI_EXP_TYPE_LEG_END (0x1) is omitted as being a 
+ valid endpoint.  By excluding Legacy endpoints it fails enabling 
+ SR-IOV on a VGA PF.
+
+Is there a design/specification reason why legacy was excluded or was 
+ it just an assumption that VGA would never support SR-IOV?
+
+If there is no valid reason to exclude PCI_EXP_TYPE_LEG_END, I would 
+ like to discuss having it included as a valid endpoint for SR-IOV.
+
+Thanks,
+Kelly
+
+
