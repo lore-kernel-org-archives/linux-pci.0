@@ -1,50 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:59504 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126AbaBRUTZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 15:19:25 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Will Deacon <will.deacon@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Tue, 18 Feb 2014 21:19:21 +0100
-Message-ID: <1433616.UrvWxRt80Z@wuerfel>
-In-Reply-To: <20140218195732.GL2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com> <20140218193654.GK2010@mudshark.cambridge.arm.com> <20140218195732.GL2010@mudshark.cambridge.arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45361 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932125AbaBUQYc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Feb 2014 11:24:32 -0500
+Date: Fri, 21 Feb 2014 17:26:26 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Matt Porter <mporter@kernel.crashing.org>,
+	Alexandre Bounine <alexandre.bounine@idt.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2] tsi721: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140221162626.GD17353@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-7-git-send-email-agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392804931-30671-7-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 18 February 2014 19:57:32 Will Deacon wrote:
-> On Tue, Feb 18, 2014 at 07:36:54PM +0000, Will Deacon wrote:
-> > On Tue, Feb 18, 2014 at 07:32:33PM +0000, Arnd Bergmann wrote:
-> > > On Tuesday 18 February 2014 19:09:29 Will Deacon wrote:
-> > > Regarding the PCI_PROBE_ONLY flag, how do you set that? Should we
-> > > have a standard DT property for that? On PowerPC we already specified
-> > > "linux,pci-probe-only" and "linux,pci-assign-all-buses", which seems
-> > > reasonable to use in architecture independent code as well.
-> > 
-> > For arch/arm/ it's done on the command line (pci=firmware) but yes, for the
-> > generic driver it sounds like a good idea to put this in the device-tree.
-> > I'll look at adding the ppc properties in the next version.
-> 
-> Damn, I spoke too soon. PowerPC puts this information in the /chosen node, so
-> it applies to all PCI host controllers in the system. That then maps nicely
-> to pci_{add,clear}_flags which are global properties in Linux.
-> 
-> It sounds like this should really be per-controller. What do you think?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-I don't have a strong opinion either way. I think the reason for having it
-in the /chosen node is so that a second-stage boot loader can easily
-override it, which is not a concern for us. In particular, the properties
-are only used on rtas-pci, which means we access the config space to
-firmware runtime abstraction services rather than hardware registers.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Matt Porter <mporter@kernel.crashing.org>
+Cc: Alexandre Bounine <alexandre.bounine@idt.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/rapidio/devices/tsi721.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
 
-Apparently the embedded powerpc platforms don't support these flags at
-all, which I also didn't notice at first.
+diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
+index ff7cbf2..ce08e8d 100644
+--- a/drivers/rapidio/devices/tsi721.c
++++ b/drivers/rapidio/devices/tsi721.c
+@@ -768,15 +768,10 @@ static int tsi721_enable_msix(struct tsi721_device *priv)
+ 	}
+ #endif /* CONFIG_RAPIDIO_DMA_ENGINE */
+ 
+-	err = pci_enable_msix(priv->pdev, entries, ARRAY_SIZE(entries));
++	err = pci_enable_msix_exact(priv->pdev, entries, ARRAY_SIZE(entries));
+ 	if (err) {
+-		if (err > 0)
+-			dev_info(&priv->pdev->dev,
+-				 "Only %d MSI-X vectors available, "
+-				 "not using MSI-X\n", err);
+-		else
+-			dev_err(&priv->pdev->dev,
+-				"Failed to enable MSI-X (err=%d)\n", err);
++		dev_err(&priv->pdev->dev,
++			"Failed to enable MSI-X (err=%d)\n", err);
+ 		return err;
+ 	}
+ 
+-- 
+1.7.7.6
 
-	Arnd
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
