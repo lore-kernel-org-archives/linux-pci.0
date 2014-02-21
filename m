@@ -1,78 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:51000 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754909AbaBBAS0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Feb 2014 19:18:26 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 2/13] ACPI / hotplug / PCI: Move PCI rescan-remove locking to hotplug_event()
-Date: Sun, 02 Feb 2014 01:22:06 +0100
-Message-ID: <3266705.b26GDtjItd@vostro.rjw.lan>
-In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
+Received: from moutng.kundenserver.de ([212.227.126.171]:49619 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932223AbaBUPFX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 10:05:23 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Gregory =?ISO-8859-1?Q?Cl=E9ment?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+Date: Fri, 21 Feb 2014 16:05:16 +0100
+Message-ID: <2193926.ls2teBqnfK@wuerfel>
+In-Reply-To: <20140221144708.48559045@skate>
+References: <53039894.10905@keymile.com> <53074584.5010202@keymile.com> <20140221144708.48559045@skate>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Friday 21 February 2014 14:47:08 Thomas Petazzoni wrote:
+> 
+> > So I'd say this looks like a very promising approach. 
+> 
+> Indeed. However, I don't think this approach solves the entire problem,
+> for two reasons:
+> 
+>  *) For small BARs that are not power-of-two sized, we may not want to
+>     consume two windows, but instead consume a little bit more address
+>     space. Using two windows to map a 96 KB BAR would be a waste of
+>     windows: using a single 128 KB window is much more efficient.
 
-Commit 9217a984671e (ACPI / hotplug / PCI: Use global PCI rescan-remove
-locking) modified ACPIPHP to protect its PCI device removal and addition
-code paths from races against sysfs-driven rescan and remove operations
-with the help of PCI rescan-remove locking.  However, it overlooked the
-fact that hotplug_event_work() is not the only caller of hotplug_event()
-which may also be called by dock_hotplug_event() and that code path
-is missing the PCI rescan-remove locking.  This means that, although
-the PCI rescan-remove lock is held as appropriate during the handling
-of events originating from handle_hotplug_event(), the ACPIPHP's
-operations resulting from dock events may still suffer the race
-conditions that commit 9217a984671e was supposed to eliminate.
+definitely.
+ 
+>  *) I don't know if the algorithm to split the BAR into multiple
+>     windows is going to be trivial.
 
-To address that problem, move the PCI rescan-remove locking from
-hotplug_event_work() to hotplug_event() so that it is used regardless
-of the way that function is invoked.
+The easiest solution would be to special case 'size is between
+128MB+1 and 192MB' if that turns out to be the most interesting
+case. It's easy enough to make the second window smaller than 64MB
+if we want.
 
-Revamps: 9217a984671e (ACPI / hotplug / PCI: Use global PCI rescan-remove locking)
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+If we want things to be a little fancier, we could use:
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -852,6 +852,7 @@ static void hotplug_event(acpi_handle ha
- 
- 	mutex_unlock(&acpiphp_context_lock);
- 
-+	pci_lock_rescan_remove();
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
- 	switch (type) {
-@@ -905,6 +906,7 @@ static void hotplug_event(acpi_handle ha
- 		break;
- 	}
- 
-+	pci_unlock_rescan_remove();
- 	if (bridge)
- 		put_bridge(bridge);
- }
-@@ -915,11 +917,9 @@ static void hotplug_event_work(void *dat
- 	acpi_handle handle = context->handle;
- 
- 	acpi_scan_lock_acquire();
--	pci_lock_rescan_remove();
- 
- 	hotplug_event(handle, type, context);
- 
--	pci_unlock_rescan_remove();
- 	acpi_scan_lock_release();
- 	acpi_evaluate_hotplug_ost(handle, type, ACPI_OST_SC_SUCCESS, NULL);
- 	put_bridge(context->func.parent);
+	switch (size) {
+		case (SZ_32M+1) ... (SZ_32M+SZ_16M):
+			size2 = size - SZ_32M;
+			size -= SZ_32M;
+			break;
+		case (SZ_64M+1) ... (SZ_64M+SZ_32M):
+			size2 = size - SZ_64M;
+			size -= SZ_64M;
+			break;
+		case (SZ_128M+1) ... (SZ_128M+SZ_64M):
+			size2 = size - SZ_128M;
+			size -= SZ_128M;
+			break;
+	};
 
+
+	Arnd
