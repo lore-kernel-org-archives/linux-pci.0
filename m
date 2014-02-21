@@ -1,193 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:38649 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047AbaBKCWl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 21:22:41 -0500
-Message-ID: <52F9896D.7090908@gmail.com>
-Date: Mon, 10 Feb 2014 18:22:37 -0800
-From: Rajat Jain <rajatxjain@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 21 Feb 2014 17:27:50 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2] xhci: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140221162749.GE17353@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-8-git-send-email-agordeev@redhat.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rajat Jain <rajatjain@juniper.net>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yhlu.kernel@gmail.com>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: [PATCH v5 8/8] Allow Link state changes for Hot-Plug
-References: <52F1A1B6.2090709@gmail.com> <4f93bb24b6214bfb9dbcc91b682184eb@DM2PR05MB671.namprd05.prod.outlook.com> <20140211011816.GA15412@google.com>
-In-Reply-To: <20140211011816.GA15412@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392804931-30671-8-git-send-email-agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Today it is there is no protection around pciehp_enable_slot() and
-pciehp_disable_slot() to ensure that they complete before another
-hot-plug operation can be done on that particular slot.
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-This patch introduces the slot->hotplug_lock to ensure that any
-hotplug operations (add / remove) complete before another HP event
-can begin processing on that particular slot.
+This update also cleans up a bit xhci_setup_msi() and
+xhci_setup_msix() returning of success.
 
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
-Hello Bjorn,
+ drivers/usb/host/xhci.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-> 
-> I applied these to pci/pciehp for v3.15, thanks!  I dropped the "ret" decl
-> in 8/8, which I assume was the cause of the unused variable warning.
->
-
-Thank you so much for accepting the patchset. The "ret" variable in 8/8
-was supposed to be used for holding the return value, so that the call to
-pciehp_green_led_off() could be moved to after releasing the lock. Here
-is the revised 8/8 patch (only a couple lines diff from v4). Please feel
-free to either use this, or just make that small change in
-pciehp_power_thread(). I was holding off sending this in case there were
-any other comments.
-
-Thank you so much once again,
-
-Rajat
+diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
+index 6fe577d..dc7cfb5 100644
+--- a/drivers/usb/host/xhci.c
++++ b/drivers/usb/host/xhci.c
+@@ -232,9 +232,10 @@ static int xhci_setup_msi(struct xhci_hcd *xhci)
+ 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
+ 				"disable MSI interrupt");
+ 		pci_disable_msi(pdev);
++		return ret;
+ 	}
  
-v5: Remove the "unused variable" warning by using it to hold return value
-    (Thus reducing lock hold time, by moving pciehp_green_led_off() to
-     after releasing the lock)
-v4: same as v3, only rebased on top of 3.14-rc1
-v3: same as v2, only patch numbering changed from [4/4] to [8/8].
-v2: Same as v1, dropped the "RFC" from subject, added Guenter's signature
-v1: Initial patch
-
- drivers/pci/hotplug/pciehp.h      |    1 +
- drivers/pci/hotplug/pciehp_core.c |    7 ++++++-
- drivers/pci/hotplug/pciehp_ctrl.c |   17 +++++++++++++++--
- drivers/pci/hotplug/pciehp_hpc.c  |    1 +
- 4 files changed, 23 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index d8d0336..8a66866 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -76,6 +76,7 @@ struct slot {
- 	struct hotplug_slot *hotplug_slot;
- 	struct delayed_work work;	/* work for button event */
- 	struct mutex lock;
-+	struct mutex hotplug_lock;
- 	struct workqueue_struct *wq;
- };
- 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 53b58de..23b4bde 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -283,8 +283,11 @@ static int pciehp_probe(struct pcie_device *dev)
- 	slot = ctrl->slot;
- 	pciehp_get_adapter_status(slot, &occupied);
- 	pciehp_get_power_status(slot, &poweron);
--	if (occupied && pciehp_force)
-+	if (occupied && pciehp_force) {
-+		mutex_lock(&slot->hotplug_lock);
- 		pciehp_enable_slot(slot);
-+		mutex_unlock(&slot->hotplug_lock);
-+	}
- 	/* If empty slot's power status is on, turn power off */
- 	if (!occupied && poweron && POWER_CTRL(ctrl))
- 		pciehp_power_off_slot(slot);
-@@ -328,10 +331,12 @@ static int pciehp_resume (struct pcie_device *dev)
- 
- 	/* Check if slot is occupied */
- 	pciehp_get_adapter_status(slot, &status);
-+	mutex_lock(&slot->hotplug_lock);
- 	if (status)
- 		pciehp_enable_slot(slot);
- 	else
- 		pciehp_disable_slot(slot);
-+	mutex_unlock(&slot->hotplug_lock);
- 	return 0;
- }
- #endif /* PM */
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 3e40ec0..fec99a1 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -293,6 +293,7 @@ static void pciehp_power_thread(struct work_struct *work)
- 	struct power_work_info *info =
- 		container_of(work, struct power_work_info, work);
- 	struct slot *p_slot = info->p_slot;
-+	int ret;
- 
- 	switch (info->req) {
- 	case DISABLE_REQ:
-@@ -300,7 +301,9 @@ static void pciehp_power_thread(struct work_struct *work)
- 			 "Disabling domain:bus:device=%04x:%02x:00\n",
- 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
- 			 p_slot->ctrl->pcie->port->subordinate->number);
-+		mutex_lock(&p_slot->hotplug_lock);
- 		pciehp_disable_slot(p_slot);
-+		mutex_unlock(&p_slot->hotplug_lock);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
- 		mutex_unlock(&p_slot->lock);
-@@ -310,7 +313,10 @@ static void pciehp_power_thread(struct work_struct *work)
- 			 "Enabling domain:bus:device=%04x:%02x:00\n",
- 			 pci_domain_nr(p_slot->ctrl->pcie->port->subordinate),
- 			 p_slot->ctrl->pcie->port->subordinate->number);
--		if (pciehp_enable_slot(p_slot))
-+		mutex_lock(&p_slot->hotplug_lock);
-+		ret = pciehp_enable_slot(p_slot);
-+		mutex_unlock(&p_slot->hotplug_lock);
-+		if (ret)
- 			pciehp_green_led_off(p_slot);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
-@@ -546,6 +552,9 @@ static void interrupt_event_handler(struct work_struct *work)
- 	kfree(info);
+-	return ret;
++	return 0;
  }
  
-+/*
-+ * Note: This function must be called with slot->hotplug_lock held
-+ */
- int pciehp_enable_slot(struct slot *p_slot)
- {
- 	u8 getstatus = 0;
-@@ -584,7 +593,9 @@ int pciehp_enable_slot(struct slot *p_slot)
- 	return rc;
- }
+ /*
+@@ -291,7 +292,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+ 		xhci->msix_entries[i].vector = 0;
+ 	}
  
--
-+/*
-+ * Note: This function must be called with slot->hotplug_lock held
-+ */
- int pciehp_disable_slot(struct slot *p_slot)
- {
- 	u8 getstatus = 0;
-@@ -617,7 +628,9 @@ int pciehp_sysfs_enable_slot(struct slot *p_slot)
- 	case STATIC_STATE:
- 		p_slot->state = POWERON_STATE;
- 		mutex_unlock(&p_slot->lock);
-+		mutex_lock(&p_slot->hotplug_lock);
- 		retval = pciehp_enable_slot(p_slot);
-+		mutex_unlock(&p_slot->hotplug_lock);
- 		mutex_lock(&p_slot->lock);
- 		p_slot->state = STATIC_STATE;
- 		break;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 55cc389..68447a1 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -686,6 +686,7 @@ static int pcie_init_slot(struct controller *ctrl)
+-	ret = pci_enable_msix(pdev, xhci->msix_entries, xhci->msix_count);
++	ret = pci_enable_msix_exact(pdev, xhci->msix_entries, xhci->msix_count);
+ 	if (ret) {
+ 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
+ 				"Failed to enable MSI-X");
+@@ -307,7 +308,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
+ 	}
  
- 	slot->ctrl = ctrl;
- 	mutex_init(&slot->lock);
-+	mutex_init(&slot->hotplug_lock);
- 	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
- 	ctrl->slot = slot;
- 	return 0;
+ 	hcd->msix_enabled = 1;
+-	return ret;
++	return 0;
+ 
+ disable_msix:
+ 	xhci_dbg_trace(xhci, trace_xhci_dbg_init, "disable MSI-X interrupt");
 -- 
-1.7.9.5
+1.7.7.6
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
