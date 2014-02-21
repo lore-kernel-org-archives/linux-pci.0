@@ -1,26 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 22 Feb 2014 20:56:04 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Jon Mason <jon.mason@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] ntb: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140222195603.GB14528@dhcp-26-207.brq.redhat.com>
-References: <cover.1392996332.git.agordeev@redhat.com>
- <20140221160937.GA913@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-de.keymile.com ([195.8.104.250]:43442 "EHLO
+	mail-de.keymile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754468AbaBUJQl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 04:16:41 -0500
+Message-ID: <53071970.1040400@keymile.com>
+Date: Fri, 21 Feb 2014 10:16:32 +0100
+From: Gerlando Falauto <gerlando.falauto@keymile.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20140221160937.GA913@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Lior Amsalem <alior@marvell.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+References: <53039894.10905@keymile.com>	<20140218212751.07c2aeb5@skate>	<53046D98.6020801@keymile.com>	<20140219102658.76eec91e@skate>	<53047BBB.6040108@keymile.com>	<20140219143749.65ff3155@skate>	<CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>	<20140220095518.7ca36f0a@skate>	<20140220173518.GA19893@obsidianresearch.com>	<20140220212914.29ddc031@skate>	<20140221003227.GF19893@obsidianresearch.com>	<20140221093444.35870a73@skate>	<5307152D.3020804@keymile.com> <20140221101218.45766e8a@skate>
+In-Reply-To: <20140221101218.45766e8a@skate>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 05:09:37PM +0100, Alexander Gordeev wrote:
-> Ouch, I was too fast. Patch #3 introduces warning "unused variable ‘msix’"
-> I can re-post if you want, but the rest is still is up to review ;)
+Hi Thomas,
 
-Resent.
+On 02/21/2014 10:12 AM, Thomas Petazzoni wrote:
+> Dear Gerlando Falauto,
+>
+> On Fri, 21 Feb 2014 09:58:21 +0100, Gerlando Falauto wrote:
+>
+>>> Can you give more details about this mechanism, and how it could be
+>>> used to alter the size of resources on a bridge?
+>>
+>> I'm not sure I understand all the details... but I guess some sort of
+>> rounding mechanism is indeed already in place somewhere:
+>>
+>> pci 0000:00:01.0: BAR 8: assigned [mem 0xe0000000-0xebffffff]
+>> pci 0000:01:00.0: BAR 1: assigned [mem 0xe0000000-0xe7ffffff]
+>> pci 0000:01:00.0: BAR 3: assigned [mem 0xe8000000-0xe87fffff]
+>> pci 0000:01:00.0: BAR 4: assigned [mem 0xe8800000-0xe8801fff]
+>> pci 0000:01:00.0: BAR 0: assigned [mem 0xe8802000-0xe8802fff]
+>> pci 0000:01:00.0: BAR 2: assigned [mem 0xe8803000-0xe8803fff]
+>> pci 0000:01:00.0: BAR 5: assigned [mem 0xe8804000-0xe8804fff]
+>> pci 0000:00:01.0: PCI bridge to [bus 01]
+>>
+>> If you look at the numbers, the total size required by BAR0-5 is
+>> 0x8805000, so around 136MB, that is 128MB+8MB+2K+1K+1K.
+>> This gets rounded up (on this 'virtual' BAR 8) to 192MB (I don't know
+>> where or why), which is 1.5x a power of two (i.e. two consecutive bits
+>> followed by all zeroes).
+>
+> Would indeed be interesting to know who does this rounding, and why,
+> and according to what rules.
+>
+>> If that's not just a coincidence, finding a coverage subset becomes a
+>> trivial matter (128MB+64MB).
+>>
+>> In any case, even if we have an odd number like the above (0x8805000), I
+>> believe we could easily find a suboptimal coverage by just taking the
+>> most significant one and the second most significant one (possibly left
+>> shifted by 1 if there's a third one somewhere else).
+>> In the above case, that would be 0x8000000 + 0x1000000. That's
+>> 128MB+16MB, which is even smaller than the rounding above (192MB).
+>>
+>> What do you think?
+>
+> Sure, but whichever choice we make, the Linux PCI core must know by how
+> much we've enlarge the bridge window BAR, otherwise the Linux PCI core
+> may allocate for the next bridge window BAR a range of addresses that
+> doesn't overlap with what it has allocate for the previous bridge
+> window BAR, but that ends up overlapping due to us "extending" the
+> previous bridge window BAR to match the MBus requirements.
+>
+> Gerlando, would you be able to test a quick hack that creates 2 windows
+> to cover exactly 128 MB + 64 MB ? This would at least allow us to
+> confirm that the strategy of splitting in multiple windows is usable.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Sure, though probably not until next week.
+I guess it would then also be useful to restore my previous setup, where 
+the total PCIe aperture is 192MB, right?
+
+Thank you guys!
+Gerlando
