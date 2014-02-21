@@ -1,77 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([37.128.190.40]:44316 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108AbaBNKw2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 05:52:28 -0500
-Message-ID: <52FDF564.1070904@codethink.co.uk>
-Date: Fri, 14 Feb 2014 10:52:20 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
-MIME-Version: 1.0
-To: Magnus Damm <magnus.damm@gmail.com>
-CC: linux-pci@vger.kernel.org,
-	"Simon Horman [Horms]" <horms@verge.net.au>,
-	SH-Linux <linux-sh@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 00/08] PCI: rcar: Recent driver patches from Ben Dooks
- and me
-References: <20140213030302.10398.37322.sendpatchset@w520> <52FCBBEA.70300@codethink.co.uk> <CANqRtoRJvvFHXGTMVmyhu3_ERH0wB8McMeE3P-jbp5_HT_2COQ@mail.gmail.com>
-In-Reply-To: <CANqRtoRJvvFHXGTMVmyhu3_ERH0wB8McMeE3P-jbp5_HT_2COQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from top.free-electrons.com ([176.31.233.9]:37920 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932131AbaBUPjL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 10:39:11 -0500
+Date: Fri, 21 Feb 2014 16:37:50 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Gerlando Falauto <gerlando.falauto@keymile.com>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
+	<gregory.clement@free-electrons.com>,
+	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: pci-mvebu driver on km_kirkwood
+Message-ID: <20140221163750.3741a8ad@skate>
+In-Reply-To: <2344852.BKudsNuPXM@wuerfel>
+References: <53039894.10905@keymile.com>
+	<2193926.ls2teBqnfK@wuerfel>
+	<20140221161108.50a4c932@skate>
+	<2344852.BKudsNuPXM@wuerfel>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/02/14 05:40, Magnus Damm wrote:
-> On Thu, Feb 13, 2014 at 9:34 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
->> On 13/02/14 03:03, Magnus Damm wrote:
->>>
->>> PCI: rcar: Recent driver patches from Ben Dooks and me
->>>
->>> [PATCH 01/08] PCI: rcar: check platform_get_irq() return code
->>> [PATCH v2 02/08] PCI: rcar: add error interrupt handling
->>> [PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
->>> [PATCH v2 04/08] PCI: rcar: Register each instance independently
->>> [PATCH v2 05/08] PCI: rcar: Break out window size handling
->>> [PATCH v2 06/08] PCI: rcar: Add DMABOUNCE support
->>> [PATCH 07/08] PCI: rcar: Enable BOUNCE in case of HIGHMEM
->>> [PATCH 08/08] PCI: rcar: Make the Kconfig dependencies more generic
->>>
->>> These patches update the pci-rcar-gen2.c driver with patches from
->>> Ben Dooks and me. The first 3 are written by Ben (thanks!) and are
->>> included here to show what I would like to have merged and what I
->>> rebased my patches on. The following 4 are updated versions of
->>>
->>> [PATCH 00/04] PCI: rcar: Driver model and physical address space update
->>>
->>> The final patch is a new one that fixes up the Kconfig dependencies.
->>
->>
->> Thanks. Is there any chance of getting this driver device-tree
->> enabled too?
->
-> I think so! The DT bindings proposed by you looked good for this device.
->
-> The only question is how to handle the PHY hardware in a sane way. The
-> PHY is the central problematic point so to say, since it ties these
-> PCI USB2.0 devices together with USBHS and for some SoCs USB 3.0 as
-> well.
->
-> I'm thinking of something along these lines:
->
-> 1) To use DT to describe the full hardware topology
-> 2) Enable all or some device drivers in the kernel configuration
-> 3) Have a sane default but use the bind interface to reassign
-> driver-to-port configuration.
->
-> What is your intended use case?
+Dear Arnd Bergmann,
 
-I think we can describe this all from the PHY node or links to
-the PHY node. I was going to look at sorting out the bindings
-next week, due to this week being mostly consumed by chasing
-bugs.
+On Fri, 21 Feb 2014 16:20:45 +0100, Arnd Bergmann wrote:
 
+> > What if the size of your BAR is 128 MB + 64 MB + 32 MB ? Then you need
+> > three windows, and your algorithm doesn't work 
+> 
+> I was hoping we could avoid using more than two windows.
+> With the algorithm above we would round up to 256MB and
+> fail if that doesn't fit, which is the same thing that
+> happens when you run out of space.
+
+The problem is precisely that we currently don't have any well to tell
+the Linux PCI core that we need to round up the size of a BAR. That's
+the whole starting point of the discussion :-)
+
+Thomas
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
