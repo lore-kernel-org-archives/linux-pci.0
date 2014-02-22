@@ -1,82 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39115 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966AbaBSPVX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 10:21:23 -0500
-Message-ID: <5304CC49.7020000@oracle.com>
-Date: Wed, 19 Feb 2014 10:22:49 -0500
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:59933 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbaBVI6Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 22 Feb 2014 03:58:16 -0500
+Message-ID: <530866A2.7080804@redhat.com>
+Date: Sat, 22 Feb 2014 09:58:10 +0100
+From: Paolo Bonzini <pbonzini@redhat.com>
 MIME-Version: 1.0
 To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] xen-pciback: Use pci_enable_msix_range() instead of pci_enable_msix()
-References: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
-In-Reply-To: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org, Gleb Natapov <gleb@kernel.org>,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] kvm: Use pci_enable_msix_exact() instead of pci_enable_msix()
+References: <1392804931-30671-11-git-send-email-agordeev@redhat.com> <5304B09D.7010900@redhat.com> <20140221170414.GM17353@dhcp-26-207.brq.redhat.com> <20140221170504.GN17353@dhcp-26-207.brq.redhat.com> <530788C1.6030109@redhat.com> <20140221185620.GA18725@dhcp-26-207.brq.redhat.com> <5307C6D9.4030503@redhat.com> <20140222085030.GA26794@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140222085030.GA26794@dhcp-26-207.brq.redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/19/2014 05:15 AM, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
+Il 22/02/2014 09:50, Alexander Gordeev ha scritto:
+> Commit d158fc7 ("Merge tag 'pci-v3.14-fixes-1'") in Linus's tree has it.
 >
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> Cc: David Vrabel <david.vrabel@citrix.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->   drivers/xen/xen-pciback/pciback_ops.c |   16 ++++++++++------
->   1 files changed, 10 insertions(+), 6 deletions(-)
+> pci_enable_msix() is going to be removed once all drivers updated with
+> new interface.
 >
-> diff --git a/drivers/xen/xen-pciback/pciback_ops.c b/drivers/xen/xen-pciback/pciback_ops.c
-> index 64eb0cd..f5b4c3e 100644
-> --- a/drivers/xen/xen-pciback/pciback_ops.c
-> +++ b/drivers/xen/xen-pciback/pciback_ops.c
-> @@ -213,9 +213,15 @@ int xen_pcibk_enable_msix(struct xen_pcibk_device *pdev,
->   		entries[i].vector = op->msix_entries[i].vector;
->   	}
->   
-> -	result = pci_enable_msix(dev, entries, op->value);
-> +	result = pci_enable_msix_range(dev, entries, op->value, op->value);
-> +	if (result < op->value) {
+>> > So, do I have to pull something (which I'd rather not, since pulling
+>> > the wrong thing in a submaintainer tree will make Linus angry), or
+>> > should I do it in the next merge window after pci_enable_msix_exact
+>> > gets in?
+> So it is already in.
 
+It is not, because maintainer branches are not rebased.  KVM development 
+is based on 3.14-rc1, and will not get that commit until the first 3.15 
+pull request is sent to Linux.
 
-I think it would be better to have 'if (result != op->value)', in case 
-op->value is negative (which presumably it should never be).
+No big deal, I'll include this patch in a second 3.15 pull request.
 
-
--boris
-
-
-> +		if (result > 0)
-> +			pci_disable_msix(dev);
->   
-> -	if (result == 0) {
-> +		pr_warn_ratelimited("%s: error enabling MSI-X for guest %u: err %d!\n",
-> +				    pci_name(dev), pdev->xdev->otherend_id,
-> +				    result);
-> +	} else {
->   		for (i = 0; i < op->value; i++) {
->   			op->msix_entries[i].entry = entries[i].entry;
->   			if (entries[i].vector)
-> @@ -227,10 +233,8 @@ int xen_pcibk_enable_msix(struct xen_pcibk_device *pdev,
->   						pci_name(dev), i,
->   						op->msix_entries[i].vector);
->   		}
-> -	} else
-> -		pr_warn_ratelimited("%s: error enabling MSI-X for guest %u: err %d!\n",
-> -				    pci_name(dev), pdev->xdev->otherend_id,
-> -				    result);
-> +	}
-> +
->   	kfree(entries);
->   
->   	op->value = result;
-
+Paolo
