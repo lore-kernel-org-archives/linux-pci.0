@@ -1,56 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:49576 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752962AbaBXXSx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 18:18:53 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 2/2] PCI / PM: Resume runtime-suspended devices later during system suspend
-Date: Tue, 25 Feb 2014 00:33:51 +0100
-Message-ID: <1759353.q92oO0bmJQ@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5rX=1YnAR8QZYLsww-1c4_KvAgEZEkkQ5C26=+cEYqFw@mail.gmail.com>
-References: <1853950.oxM3KDpyLu@vostro.rjw.lan> <3851541.s2776YTCMH@vostro.rjw.lan> <CAErSpo5rX=1YnAR8QZYLsww-1c4_KvAgEZEkkQ5C26=+cEYqFw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:10210 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751350AbaBVKP2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 22 Feb 2014 05:15:28 -0500
+Date: Sat, 22 Feb 2014 11:17:22 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-kernel@vger.kernel.org, Michael Chan <mchan@broadcom.com>,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH net-next 01/35] bnx2: Use pci_enable_msix_range() instead
+ of pci_enable_msix()
+Message-ID: <20140222101722.GA28798@dhcp-26-207.brq.redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+ <c8d230441b63d4c30818a55b0e6ca0f376572b87.1392717502.git.agordeev@redhat.com>
+ <1393029274.15717.68.camel@deadeye.wl.decadent.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1393029274.15717.68.camel@deadeye.wl.decadent.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 24, 2014 01:58:05 PM Bjorn Helgaas wrote:
-> On Sun, Feb 23, 2014 at 4:21 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > Runtime-suspended devices are resumed during system suspend by
-> > pci_pm_prepare() for two reasons: First, because they may need
-> > to be reprogrammed in order to change their wakeup settings and,
-> > second, because they may need to be operatonal for their children
-> > to be successfully suspended.  That is a problem, though, if there
-> > are many runtime-suspended devices that need to be resumed this
-> > way during system suspend, because the .prepare() PM callbacks of
-> > devices are executed sequentially and the times taken by them
-> > accumulate, which may increase the total system suspend time quite
-> > a bit.
-> >
-> > For this reason, move the resume of runtime-suspended devices up
-> > to the next phase of device suspend (during system suspend), except
-> > for the ones that have power.ignore_children set.  The exception is
-> > made, because the devices with power.ignore_children set may still
-> > be necessary for their children to be successfully suspended (during
-> > system suspend) and they won't be resumed automatically as a result
-> > of the runtime resume of their children.
-> >
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Sat, Feb 22, 2014 at 12:34:34AM +0000, Ben Hutchings wrote:
+> > diff --git a/drivers/net/ethernet/broadcom/bnx2.c b/drivers/net/ethernet/broadcom/bnx2.c
+> > index cda25ac..ca6b362 100644
+> > --- a/drivers/net/ethernet/broadcom/bnx2.c
+> > +++ b/drivers/net/ethernet/broadcom/bnx2.c
+> > @@ -6206,7 +6206,7 @@ bnx2_free_irq(struct bnx2 *bp)
+> >  static void
+> >  bnx2_enable_msix(struct bnx2 *bp, int msix_vecs)
+> >  {
+> > -	int i, total_vecs, rc;
+> > +	int i, total_vecs;
+> >  	struct msix_entry msix_ent[BNX2_MAX_MSIX_VEC];
+> >  	struct net_device *dev = bp->dev;
+> >  	const int len = sizeof(bp->irq_tbl[0].name);
+> > @@ -6229,16 +6229,9 @@ bnx2_enable_msix(struct bnx2 *bp, int msix_vecs)
+> >  #ifdef BCM_CNIC
+> >  	total_vecs++;
+> >  #endif
+> > -	rc = -ENOSPC;
+> > -	while (total_vecs >= BNX2_MIN_MSIX_VEC) {
+> > -		rc = pci_enable_msix(bp->pdev, msix_ent, total_vecs);
+> > -		if (rc <= 0)
+> > -			break;
+> > -		if (rc > 0)
+> > -			total_vecs = rc;
+> > -	}
+> > -
+> > -	if (rc != 0)
+> > +	total_vecs = pci_enable_msix_range(bp->pdev, msix_ent,
+> > +					   BNX2_MIN_MSIX_VEC, total_vecs);
+> > +	if (total_vecs < 0)
+> >  		return;
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> This would be better without the assignment to total_vecs.
+
+total_vecs is used as a loop limit few lines below.
+
+> Ben.
 > 
-> You can merge these two via your tree if you want.  I don't have any
-> changes queued up for pci-driver.c.
+> >  	msix_vecs = total_vecs;
+> 
+> -- 
+> Ben Hutchings
+> I haven't lost my mind; it's backed up on tape somewhere.
 
-I will, thanks!
 
-Rafael
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
