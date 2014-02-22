@@ -1,531 +1,172 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:57068 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751157AbaBZQeP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 11:34:15 -0500
-Message-ID: <530E1782.3070403@codethink.co.uk>
-Date: Wed, 26 Feb 2014 16:34:10 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Phil Edworthy <phil.edworthy@renesas.com>
-CC: linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+In-Reply-To: <CAE9FiQVf2L-FjkXR3WC=0iHNY73D2G4jyMeko4f4DPuxAXTK+Q@mail.gmail.com>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+	<1388707565-16535-3-git-send-email-yinghai@kernel.org>
+	<alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
+	<CAE9FiQUo9NGbjiZbMsf2yBFbn=iLJ-jc3QtZ8K6qwVuhmqzq=Q@mail.gmail.com>
+	<alpine.DEB.2.02.1402221104440.21251@ionos.tec.linutronix.de>
+	<CAE9FiQVf2L-FjkXR3WC=0iHNY73D2G4jyMeko4f4DPuxAXTK+Q@mail.gmail.com>
+Date: Sat, 22 Feb 2014 14:05:01 -0800
+Message-ID: <CAE9FiQVf7u62S4puc2iMqiFO2YU-Kf35XVB9mC+SEP6Z73x7Zw@mail.gmail.com>
+Subject: Re: [PATCH v5 02/33] genirq: Add irq_alloc_reserved_desc()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
+	Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>
-Subject: Re: [PATCH 1/5] PCI: host: Add Renesas R-Car PCIe driver
-References: <1393430893-2466-1-git-send-email-phil.edworthy@renesas.com> <1393430893-2466-2-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1393430893-2466-2-git-send-email-phil.edworthy@renesas.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Content-Type: multipart/mixed; boundary=001a11330c9e12892c04f305ee09
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 26/02/14 16:08, Phil Edworthy wrote:
-> This PCIe Host driver currently does not support MSI, so cards
-> fall back to INTx interrupts.
+--001a11330c9e12892c04f305ee09
+Content-Type: text/plain; charset=ISO-8859-1
+
+On Sat, Feb 22, 2014 at 9:28 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Feb 22, 2014 at 2:08 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>>
+>> As I said before irq_reserve_irq() is a misnomer and a
+>> misconception. Of course this needs to be fixed as well.
+>>
+>> And you cannot just blindly change it because !SPARSE can use the
+>> allocation. We are not creating stupid corner cases just to support
+>> your sloppyness. Its not rocket science to do it the right way.
+>>
+>> That said, it might be worthwhile to get rid of the !SPARSE case
+>> completely. That would probably make quite some stuff simpler.
 >
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-
-> +	bool "Renesas R-Car PCIe controller"
-> +	depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || COMPILE_TEST)
-> +	help
-> +	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
-> +
->   endmenu
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 13fb333..19946f9 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
->   obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
->   obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
->   obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
-> +obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> new file mode 100644
-> index 0000000..d9a315f
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -0,0 +1,614 @@
-> +/*
-> + * PCIe driver for Renesas R-Car SoCs
-> + *  Copyright (C) 2013 Renesas Electronics Europe Ltd
-> + *
-> + * Based on:
-> + *  arch/sh/drivers/pci/pcie-sh7786.c
-> + *  arch/sh/drivers/pci/ops-sh7786.c
-> + *  Copyright (C) 2009 - 2011  Paul Mundt
-> + *
-> + * This file is licensed under the terms of the GNU General Public
-> + * License version 2.  This program is licensed "as is" without any
-> + * warranty of any kind, whether express or implied.
-> + */
-> +
-> +#include <linux/clk.h>
-> +#include <linux/delay.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/module.h>
-> +#include <linux/kernel.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/of_platform.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/slab.h>
-> +#include "pcie-rcar.h"
-> +
-> +#define DRV_NAME "rcar-pcie"
-> +
-> +enum chip_id {
-> +	RCAR_GENERIC,
-> +	RCAR_H1,
-> +};
-> +
-> +#define RCONF(x)	(PCICONF(0)+(x))
-> +#define REXPCAP(x)	(EXPCAP(0)+(x))
-> +#define RVCCAP(x)	(VCCAP(0)+(x))
-> +
-> +#define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
-> +#define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
-> +#define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
-> +
-> +#define NR_PCI_RESOURCES 4
-> +
-> +/* Structure representing the PCIe interface */
-> +struct rcar_pcie {
-> +	struct device		*dev;
-> +	void __iomem		*base;
-> +	int			irq;
-> +	struct clk		*clk;
-> +	struct resource		*res[NR_PCI_RESOURCES];
-> +	int			haslink;
-> +	enum chip_id		chip;
-> +	u8			root_bus_nr;
-> +};
-> +
-> +static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
-> +{
-> +	return sys->private_data;
-> +}
-> +
-> +static void
-> +pci_write_reg(struct rcar_pcie *pcie, unsigned long val, unsigned long reg)
-> +{
-> +	writel(val, pcie->base + reg);
-> +}
-
-Do we really need wrappers like these?
-
-> +static unsigned long
-> +pci_read_reg(struct rcar_pcie *pcie, unsigned long reg)
-> +{
-> +	return readl(pcie->base + reg);
-> +}
-> +
-> +enum {
-> +	PCI_ACCESS_READ,
-> +	PCI_ACCESS_WRITE,
-> +};
-
-> +static int rcar_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> +{
-> +	struct rcar_pcie *pcie = sys_to_pcie(dev->bus->sysdata);
-> +	return pcie->irq;
-> +}
-> +
-> +static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
-> +{
-> +	struct hw_pci hw;
-> +
-> +	memset(&hw, 0, sizeof(hw));
-> +
-> +	hw.nr_controllers = 1;
-> +	hw.private_data   = (void **)&pcie;
-> +	hw.setup          = rcar_pcie_setup,
-> +	hw.map_irq        = rcar_pcie_map_irq,
-> +	hw.ops		  = &rcar_pcie_ops,
-> +
-> +	pci_common_init(&hw);
-> +}
-> +
-> +static int __init phy_wait_for_ack(struct rcar_pcie *pcie)
-> +{
-> +	unsigned int timeout = 100;
-> +
-> +	while (timeout--) {
-> +		if (pci_read_reg(pcie, H1_PCIEPHYADRR) & PHY_ACK)
-> +			return 0;
-> +
-> +		udelay(100);
-> +	}
-> +
-> +	dev_err(pcie->dev, "Access to PCIe phy timed out\n");
-> +
-> +	return -ETIMEDOUT;
-> +}
-
-Could this be done with some sort of sleep, instead of having
-to keep delaying? How long is the average wait for pci to finish
-a write?
-
-> +
-> +static void __init phy_write_reg(struct rcar_pcie *pcie,
-> +				 unsigned int rate, unsigned int addr,
-> +				 unsigned int lane, unsigned int data)
-> +{
-> +	unsigned long phyaddr;
-> +
-> +	phyaddr = WRITE_CMD |
-> +		((rate & 1) << RATE_POS) |
-> +		((lane & 0xf) << LANE_POS) |
-> +		((addr & 0xff) << ADR_POS);
-> +
-> +	/* Set write data */
-> +	pci_write_reg(pcie, data, H1_PCIEPHYDOUTR);
-> +	pci_write_reg(pcie, phyaddr, H1_PCIEPHYADRR);
-> +
-> +	/* Ignore errors as they will be dealt with if the data link is down */
-> +	phy_wait_for_ack(pcie);
-> +
-> +	/* Clear command */
-> +	pci_write_reg(pcie, 0, H1_PCIEPHYDOUTR);
-> +	pci_write_reg(pcie, 0, H1_PCIEPHYADRR);
-> +
-> +	/* Ignore errors as they will be dealt with if the data link is down */
-> +	phy_wait_for_ack(pcie);
-> +}
-> +
+> So we need to make all arches support SPARSE_IRQ at first?
 >
-
-> +static int __init rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
-> +{
-> +	unsigned int timeout = 100;
-> +
-> +	while (timeout--) {
-> +		if ((pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
-> +			return 0;
-> +
-> +		udelay(100);
-> +	}
-> +
-> +	return -ETIMEDOUT;
-> +}
-
-Same comments as for previous delay loop
-
-
-> +static void __init rcar_pcie_hw_init(struct rcar_pcie *pcie)
-> +{
-> +	/* Initialise R-Car H1 PHY & wait for it to be ready */
-> +	if (pcie->chip == RCAR_H1)
-> +		if (rcar_pcie_phy_init_rcar_h1(pcie))
-> +			return;
-> +
-> +	/* Begin initialization */
-> +	pci_write_reg(pcie, 0, PCIETCTLR);
-> +
-> +	/* Set mode */
-> +	pci_write_reg(pcie, 1, PCIEMSR);
-> +
-> +	/*
-> +	 * For target transfers, setup a single 64-bit 4GB mapping at address
-> +	 * 0. The hardware can only map memory that starts on a power of two
-> +	 * boundary, and size is power of 2, so best to ignore it.
-> +	 */
-> +	pci_write_reg(pcie, 0, PCIEPRAR(0));
-> +	pci_write_reg(pcie, 0, PCIELAR(0));
-> +	pci_write_reg(pcie, 0xfffffff0UL | LAM_PREFETCH |
-> +		LAM_64BIT | LAR_ENABLE, PCIELAMR(0));
-> +	pci_write_reg(pcie, 0, PCIELAR(1));
-> +	pci_write_reg(pcie, 0, PCIEPRAR(1));
-> +	pci_write_reg(pcie, 0, PCIELAMR(1));
-> +
-> +	/*
-> +	 * Initial header for port config space is type 1, set the device
-> +	 * class to match. Hardware takes care of propagating the IDSETR
-> +	 * settings, so there is no need to bother with a quirk.
-> +	 */
-> +	pci_write_reg(pcie, PCI_CLASS_BRIDGE_PCI << 16, IDSETR1);
-> +
-> +	/*
-> +	 * Setup Secondary Bus Number & Subordinate Bus Number, even though
-> +	 * they aren't used, to avoid bridge being detected as broken.
-> +	 */
-> +	rcar_rmw32(pcie, RCONF(PCI_SECONDARY_BUS), 0xff, 1);
-> +	rcar_rmw32(pcie, RCONF(PCI_SUBORDINATE_BUS), 0xff, 1);
-> +
-> +	/* Initialize default capabilities. */
-> +	rcar_rmw32(pcie, REXPCAP(0), 0, PCI_CAP_ID_EXP);
-> +	rcar_rmw32(pcie, REXPCAP(PCI_EXP_FLAGS),
-> +		PCI_EXP_FLAGS_TYPE, PCI_EXP_TYPE_ROOT_PORT << 4);
-> +	rcar_rmw32(pcie, RCONF(PCI_HEADER_TYPE), 0x7f,
-> +		PCI_HEADER_TYPE_BRIDGE);
-> +
-> +	/* Enable data link layer active state reporting */
-> +	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), 0, PCI_EXP_LNKCAP_DLLLARC);
-> +
-> +	/* Write out the physical slot number = 0 */
-> +	rcar_rmw32(pcie, REXPCAP(PCI_EXP_SLTCAP), PCI_EXP_SLTCAP_PSN, 0);
-> +
-> +	/* Set the completion timer timeout to the maximum 50ms. */
-> +	rcar_rmw32(pcie, TLCTLR+1, 0x3f, 50);
-> +
-> +	/* Terminate list of capabilities (Next Capability Offset=0) */
-> +	rcar_rmw32(pcie, RVCCAP(0), 0xfff0, 0);
-> +
-> +	/* Enable MAC data scrambling. */
-> +	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
-> +
-> +	/* Finish initialization - establish a PCI Express link */
-> +	pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> +
-> +	/* This will timeout if we don't have a link. */
-> +	pcie->haslink = !rcar_pcie_wait_for_dl(pcie);
-> +
-> +	/* Enable INTx interrupts */
-> +	rcar_rmw32(pcie, RCONF(PCI_INTERRUPT_LINE), 0xff, 0);
-> +	rcar_rmw32(pcie, RCONF(PCI_INTERRUPT_PIN), 0xff, 1);
-> +	rcar_rmw32(pcie, PCIEINTXR, 0, 0xF << 8);
-> +
-> +	/* Enable slave Bus Mastering */
-> +	rcar_rmw32(pcie, RCONF(PCI_STATUS), PCI_STATUS_DEVSEL_MASK,
-> +		PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER |
-> +		PCI_STATUS_CAP_LIST | PCI_STATUS_DEVSEL_FAST);
-> +
-> +	wmb();
-> +}
-> +
-> +static int rcar_pcie_clocks_get(struct rcar_pcie *pcie)
-> +{
-> +	int err = 0;
-> +
-> +	pcie->clk = clk_get(pcie->dev, NULL);
-> +	if (IS_ERR(pcie->clk))
-> +		err = PTR_ERR(pcie->clk);
-> +	else
-> +		clk_enable(pcie->clk);
-> +
-> +	return err;
-> +}
-
-Shouldn't you be using pm_runtime for this?
-
-> +static void rcar_pcie_clocks_put(struct rcar_pcie *pcie)
-> +{
-> +	clk_put(pcie->clk);
-> +}
-> +
-> +struct rcar_pcie_errs {
-> +	int bit;
-> +	const char *description;
-> +};
-> +
-> +static int __init rcar_pcie_get_resources(struct platform_device *pdev,
-> +	struct rcar_pcie *pcie)
-> +{
-> +	struct resource *res;
-> +	int i;
-> +	int err;
-> +
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +
-> +	i = platform_get_irq(pdev, 0);
-> +	if (!res || i < 0) {
-> +		dev_err(pcie->dev, "cannot get platform resources\n");
-> +		return -ENOENT;
-> +	}
-> +	pcie->irq = i;
-> +
-> +	err = rcar_pcie_clocks_get(pcie);
-> +	if (err) {
-> +		dev_err(&pdev->dev, "failed to get clocks: %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	pcie->base = devm_request_and_ioremap(&pdev->dev, res);
-> +	if (!pcie->base) {
-> +		dev_err(&pdev->dev, "failed to map PCIe registers: %d\n", err);
-> +		err = -ENOMEM;
-> +		goto err_map_reg;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_map_reg:
-> +	rcar_pcie_clocks_put(pcie);
-> +
-> +	return err;
-> +}
-> +
-> +static struct platform_device_id rcar_pcie_id_table[] = {
-> +	{ "r8a7779-pcie", RCAR_H1 },
-> +	{ "r8a7790-pcie", RCAR_GENERIC },
-> +	{ "r8a7791-pcie", RCAR_GENERIC },
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(platform, rcar_pcie_id_table);
-
-Really, are you still going to submit drivers without OF bindings?
-
-NAK!
-
-> +static int __init rcar_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct rcar_pcie *pcie;
-> +	struct resource *res;
-> +	unsigned int data;
-> +	int i, err;
-> +
-> +	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-> +	if (!pcie)
-> +		return -ENOMEM;
-> +
-> +	pcie->dev = &pdev->dev;
-> +	pcie->chip = pdev->id_entry->driver_data;
-> +
-> +	/* Get resources */
-> +	err = rcar_pcie_get_resources(pdev, pcie);
-> +	if (err < 0) {
-> +		dev_err(&pdev->dev, "failed to request resources: %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	/* Get the I/O and memory ranges */
-> +	for (i = 0; i < NR_PCI_RESOURCES; i++) {
-> +		res = platform_get_resource(pdev, IORESOURCE_MEM, i+1);
-> +		if (!res) {
-> +			dev_err(&pdev->dev, "cannot get MEM%d resources\n", i);
-> +			return -ENOENT;
-> +		}
-> +		pcie->res[i] = res;
-> +	}
-> +
-> +	rcar_pcie_hw_init(pcie);
-> +
-> +	if (!pcie->haslink) {
-> +		dev_info(&pdev->dev, "PCI: PCIe link down\n");
-> +		return 0;
-> +	}
-> +
-> +	data = pci_read_reg(pcie, MACSR);
-> +	dev_info(&pdev->dev, "PCIe x%d: link up\n", (data >> 20) & 0x3f);
-> +
-> +	rcar_pcie_enable(pcie);
-> +
-> +	platform_set_drvdata(pdev, pcie);
-> +	return 0;
-> +}
-> +
-> +static struct platform_driver rcar_pcie_driver = {
-> +	.probe		= rcar_pcie_probe,
-> +	.driver = {
-> +		.name = DRV_NAME,
-> +		.owner = THIS_MODULE,
-> +	},
-> +	.id_table	= rcar_pcie_id_table,
-> +};
-> +
-> +module_platform_driver(rcar_pcie_driver);
-> +
-> +MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
-> +MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
-> +MODULE_LICENSE("GPLv2");
-> diff --git a/drivers/pci/host/pcie-rcar.h b/drivers/pci/host/pcie-rcar.h
-> new file mode 100644
-> index 0000000..a6b407f
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-rcar.h
-> @@ -0,0 +1,84 @@
-> +/*
-> + * PCI Express definitions for Renesas R-Car SoCs
-> + */
-> +#ifndef __PCI_RCAR_H
-> +#define __PCI_RCAR_H
-> +
-> +#define PCI_DEVICE_ID_RENESAS_RCAR	0x0018
-
-should this go into pci ids header?
-
-> +#define PCIECAR			0x000010
-> +#define PCIECCTLR		0x000018
-> +#define  CONFIG_SEND_ENABLE	(1 << 31)
-> +#define  TYPE0			(0 << 8)
-> +#define  TYPE1			(1 << 8)
-> +#define PCIECDR			0x000020
-> +#define PCIEMSR			0x000028
-> +#define PCIEINTXR		0x000400
-> +#define PCIEPHYSR		0x0007f0
-> +
-> +/* Transfer control */
-> +#define PCIETCTLR		0x02000
-> +#define  CFINIT			1
-> +#define PCIETSTR		0x02004
-> +#define  DATA_LINK_ACTIVE	1
-> +#define PCIEINTR		0x02008
-> +#define PCIEINTER		0x0200c
-> +#define PCIEERRFR		0x02020
-> +#define  UNSUPPORTED_REQUEST	(1 << 4)
-> +#define PCIEERRFER		0x02024
-> +#define PCIEERRFR2		0x02028
-> +#define PCIEPMSR		0x02034
-> +#define PCIEPMSCIER		0x02038
-> +#define PCIEMSIFR		0x02044
-> +
-> +/* root port address */
-> +#define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
-> +
-> +/* local address reg & mask */
-> +#define PCIELAR(x)		(0x02200 + ((x) * 0x20))
-> +#define PCIELAMR(x)		(0x02208 + ((x) * 0x20))
-> +#define  LAM_PMIOLAMnB3		(1 << 3)
-> +#define  LAM_PMIOLAMnB2		(1 << 2)
-> +#define  LAM_PREFETCH		(1 << 3)
-> +#define  LAM_64BIT		(1 << 2)
-> +#define  LAR_ENABLE		(1 << 1)
-> +
-> +/* PCIe address reg & mask */
-> +#define PCIEPARL(x)		(0x03400 + ((x) * 0x20))
-> +#define PCIEPARH(x)		(0x03404 + ((x) * 0x20))
-> +#define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
-> +#define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
-> +#define  PAR_ENABLE		(1 << 31)
-> +#define  IO_SPACE		(1 << 8)
-> +
-> +/* Configuration */
-> +#define PCICONF(x)		(0x010000 + ((x) * 0x4))
-> +#define PMCAP(x)		(0x010040 + ((x) * 0x4))
-> +#define MSICAP(x)		(0x010050 + ((x) * 0x4))
-> +#define EXPCAP(x)		(0x010070 + ((x) * 0x4))
-> +#define VCCAP(x)		(0x010100 + ((x) * 0x4))
-> +#define SERNUMCAP(x)		(0x0101b0 + ((x) * 0x4))
-> +
-> +/* link layer */
-> +#define IDSETR0			0x011000
-> +#define IDSETR1			0x011004
-> +#define SUBIDSETR		0x011024
-> +#define DSERSETR0		0x01102c
-> +#define DSERSETR1		0x011030
-> +#define TLCTLR			0x011048
-> +#define MACSR			0x011054
-> +#define MACCTLR			0x011058
-> +#define  SCRAMBLE_DISABLE	(1 << 27)
-> +
-> +/* R-Car H1 PHY */
-> +#define H1_PCIEPHYCTLR		0x040008
-> +#define H1_PCIEPHYADRR		0x04000c
-> +#define  WRITE_CMD		(1 << 16)
-> +#define  PHY_ACK		(1 << 24)
-> +#define  RATE_POS		12
-> +#define  LANE_POS		8
-> +#define  ADR_POS		0
-> +#define H1_PCIEPHYDOUTR		0x040014
-> +#define H1_PCIEPHYSR		0x040018
-> +
-> +#endif /* __PCI_RCAR_H */
+> Now we have arm, arm64, c6x, metag, powerpc, sh, x86 support SPARSE_IRQ.
 >
+> The following  are not with SPARSE_IRQ yet:
+> alpha, arc, avr32, blackfin, cris, frv, hexagon, m32r, m68k, microblaze,
+> mips, mn10300, openrisc, parisc, s390, score, sparc, tile, um,
+> unicore32, xtensa.
 
+or add calling irq_alloc_desc_at() before irq_set_chip... for !SPARSE_IRQ.
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Please check attached partial patch if you like it.
+
+If you are happy with that, I will split it into pieces and add other
+irq_alloc_desc_at()
+calling.
+
+Thanks
+
+Yinghai
+
+--001a11330c9e12892c04f305ee09
+Content-Type: text/x-patch; charset=US-ASCII; name="kill_irq_reserve_irqs.patch"
+Content-Disposition: attachment; filename="kill_irq_reserve_irqs.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hrzfqj720
+
+ZGlmZiAtLWdpdCBhL2FyY2gvYWxwaGEva2VybmVsL2lycV9hbHBoYS5jIGIvYXJjaC9hbHBoYS9r
+ZXJuZWwvaXJxX2FscGhhLmMKaW5kZXggMWM4NjI1Yy4uNmM4NzI4YSAxMDA2NDQKLS0tIGEvYXJj
+aC9hbHBoYS9rZXJuZWwvaXJxX2FscGhhLmMKKysrIGIvYXJjaC9hbHBoYS9rZXJuZWwvaXJxX2Fs
+cGhhLmMKQEAgLTIyMSw2ICsyMjEsNyBAQCBzdHJ1Y3QgaXJxYWN0aW9uIHRpbWVyX2lycWFjdGlv
+biA9IHsKIHZvaWQgX19pbml0CiBpbml0X3J0Y19pcnEodm9pZCkKIHsKKwlpcnFfYWxsb2NfZGVz
+Y19hdChSVENfSVJRLCAwKTsKIAlpcnFfc2V0X2NoaXBfYW5kX2hhbmRsZXJfbmFtZShSVENfSVJR
+LCAmZHVtbXlfaXJxX2NoaXAsCiAJCQkJICAgICAgaGFuZGxlX3BlcmNwdV9pcnEsICJSVEMiKTsK
+IAlzZXR1cF9pcnEoUlRDX0lSUSwgJnRpbWVyX2lycWFjdGlvbik7CmRpZmYgLS1naXQgYS9hcmNo
+L2FscGhhL2tlcm5lbC9pcnFfaTgyNTkuYyBiL2FyY2gvYWxwaGEva2VybmVsL2lycV9pODI1OS5j
+CmluZGV4IGUxODYxYzcuLmM1MjIzNTkgMTAwNjQ0Ci0tLSBhL2FyY2gvYWxwaGEva2VybmVsL2ly
+cV9pODI1OS5jCisrKyBiL2FyY2gvYWxwaGEva2VybmVsL2lycV9pODI1OS5jCkBAIC05Miw2ICs5
+Miw3IEBAIGluaXRfaTgyNTlhX2lycXModm9pZCkKIAlvdXRiKDB4ZmYsIDB4QTEpOwkvKiBtYXNr
+IGFsbCBvZiA4MjU5QS0yICovCiAKIAlmb3IgKGkgPSAwOyBpIDwgMTY7IGkrKykgeworCQlpcnFf
+YWxsb2NfZGVzY19hdChpLCAwKTsKIAkJaXJxX3NldF9jaGlwX2FuZF9oYW5kbGVyKGksICZpODI1
+OWFfaXJxX3R5cGUsIGhhbmRsZV9sZXZlbF9pcnEpOwogCX0KIApkaWZmIC0tZ2l0IGEvYXJjaC9h
+bHBoYS9rZXJuZWwvaXJxX3B5eGlzLmMgYi9hcmNoL2FscGhhL2tlcm5lbC9pcnFfcHl4aXMuYwpp
+bmRleCAxM2M5N2E1Li5iNmRhNmQxIDEwMDY0NAotLS0gYS9hcmNoL2FscGhhL2tlcm5lbC9pcnFf
+cHl4aXMuYworKysgYi9hcmNoL2FscGhhL2tlcm5lbC9pcnFfcHl4aXMuYwpAQCAtMTAyLDYgKzEw
+Miw3IEBAIGluaXRfcHl4aXNfaXJxcyh1bnNpZ25lZCBsb25nIGlnbm9yZV9tYXNrKQogCWZvciAo
+aSA9IDE2OyBpIDwgNDg7ICsraSkgewogCQlpZiAoKGlnbm9yZV9tYXNrID4+IGkpICYgMSkKIAkJ
+CWNvbnRpbnVlOworCQlpcnFfYWxsb2NfZGVzY19hdChpLCAwKTsKIAkJaXJxX3NldF9jaGlwX2Fu
+ZF9oYW5kbGVyKGksICZweXhpc19pcnFfdHlwZSwgaGFuZGxlX2xldmVsX2lycSk7CiAJCWlycV9z
+ZXRfc3RhdHVzX2ZsYWdzKGksIElSUV9MRVZFTCk7CiAJfQpkaWZmIC0tZ2l0IGEvYXJjaC9zMzkw
+L2tlcm5lbC9pcnEuYyBiL2FyY2gvczM5MC9rZXJuZWwvaXJxLmMKaW5kZXggYmIyN2EyNi4uMmQx
+NTY3YiAxMDA2NDQKLS0tIGEvYXJjaC9zMzkwL2tlcm5lbC9pcnEuYworKysgYi9hcmNoL3MzOTAv
+a2VybmVsL2lycS5jCkBAIC04OCw5ICs4OCwxMyBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IGlycV9j
+bGFzcyBpcnFjbGFzc19zdWJfZGVzY1tOUl9BUkNIX0lSUVNdID0gewogCVtDUFVfUlNUXSAgICA9
+IHsubmFtZSA9ICJSU1QiLCAuZGVzYyA9ICJbQ1BVXSBDUFUgUmVzdGFydCJ9LAogfTsKIAoraW50
+IGFyY2hfcHJvYmVfZWFybHlfYWxsb2NhdGVfbnJfaXJxcyh2b2lkKQoreworCXJldHVybiBUSElO
+X0lOVEVSUlVQVDsKK30KKwogdm9pZCBfX2luaXQgaW5pdF9JUlEodm9pZCkKIHsKLQlpcnFfcmVz
+ZXJ2ZV9pcnFzKDAsIFRISU5fSU5URVJSVVBUKTsKIAlpbml0X2Npb19pbnRlcnJ1cHRzKCk7CiAJ
+aW5pdF9haXJxX2ludGVycnVwdHMoKTsKIAlpbml0X2V4dF9pbnRlcnJ1cHRzKCk7CmRpZmYgLS1n
+aXQgYS9hcmNoL3g4Ni9rZXJuZWwvYXBpYy9pb19hcGljLmMgYi9hcmNoL3g4Ni9rZXJuZWwvYXBp
+Yy9pb19hcGljLmMKaW5kZXggNmFkNDY1OC4uMzk4ZjljNCAxMDA2NDQKLS0tIGEvYXJjaC94ODYv
+a2VybmVsL2FwaWMvaW9fYXBpYy5jCisrKyBiL2FyY2gveDg2L2tlcm5lbC9hcGljL2lvX2FwaWMu
+YwpAQCAtMjA2LDkgKzIwNiw2IEBAIGludCBfX2luaXQgYXJjaF9lYXJseV9pcnFfaW5pdCh2b2lk
+KQogCWNvdW50ID0gQVJSQVlfU0laRShpcnFfY2ZneCk7CiAJbm9kZSA9IGNwdV90b19ub2RlKDAp
+OwogCi0JLyogTWFrZSBzdXJlIHRoZSBsZWdhY3kgaW50ZXJydXB0cyBhcmUgbWFya2VkIGluIHRo
+ZSBiaXRtYXAgKi8KLQlpcnFfcmVzZXJ2ZV9pcnFzKDAsIGxlZ2FjeV9waWMtPm5yX2xlZ2FjeV9p
+cnFzKTsKLQogCWZvciAoaSA9IDA7IGkgPCBjb3VudDsgaSsrKSB7CiAJCWlycV9zZXRfY2hpcF9k
+YXRhKGksICZjZmdbaV0pOwogCQl6YWxsb2NfY3B1bWFza192YXJfbm9kZSgmY2ZnW2ldLmRvbWFp
+biwgR0ZQX0tFUk5FTCwgbm9kZSk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL3NoL2ludGMvY29yZS5j
+IGIvZHJpdmVycy9zaC9pbnRjL2NvcmUuYwppbmRleCA4ZjMyYTEzLi4wNTExOGY5MiAxMDA2NDQK
+LS0tIGEvZHJpdmVycy9zaC9pbnRjL2NvcmUuYworKysgYi9kcml2ZXJzL3NoL2ludGMvY29yZS5j
+CkBAIC04MSwxMSArODEsOCBAQCBzdGF0aWMgdm9pZCBfX2luaXQgaW50Y19yZWdpc3Rlcl9pcnEo
+c3RydWN0IGludGNfZGVzYyAqZGVzYywKIAl1bnNpZ25lZCBsb25nIGZsYWdzOwogCiAJLyoKLQkg
+KiBSZWdpc3RlciB0aGUgSVJRIHBvc2l0aW9uIHdpdGggdGhlIGdsb2JhbCBJUlEgbWFwLCB0aGVu
+IGluc2VydAotCSAqIGl0IGluIHRvIHRoZSByYWRpeCB0cmVlLgorCSAqIGluc2VydCBpdCBpbiB0
+byB0aGUgcmFkaXggdHJlZS4KIAkgKi8KLQlpcnFfcmVzZXJ2ZV9pcnEoaXJxKTsKLQogCXJhd19z
+cGluX2xvY2tfaXJxc2F2ZSgmaW50Y19iaWdfbG9jaywgZmxhZ3MpOwogCXJhZGl4X3RyZWVfaW5z
+ZXJ0KCZkLT50cmVlLCBlbnVtX2lkLCBpbnRjX2lycV94bGF0ZV9nZXQoaXJxKSk7CiAJcmF3X3Nw
+aW5fdW5sb2NrX2lycXJlc3RvcmUoJmludGNfYmlnX2xvY2ssIGZsYWdzKTsKZGlmZiAtLWdpdCBh
+L2luY2x1ZGUvbGludXgvaXJxLmggYi9pbmNsdWRlL2xpbnV4L2lycS5oCmluZGV4IDdkYzEwMDMu
+LjU4NGYwZDcgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvaXJxLmgKKysrIGIvaW5jbHVkZS9s
+aW51eC9pcnEuaApAQCAtNjEzLDE4ICs2MTMsMTMgQEAgaW50IF9faXJxX2FsbG9jX2Rlc2NzKGlu
+dCBpcnEsIHVuc2lnbmVkIGludCBmcm9tLCB1bnNpZ25lZCBpbnQgY250LCBpbnQgbm9kZSwKIAlp
+cnFfYWxsb2NfZGVzY3MoLTEsIGZyb20sIGNudCwgbm9kZSkKIAogdm9pZCBpcnFfZnJlZV9kZXNj
+cyh1bnNpZ25lZCBpbnQgaXJxLCB1bnNpZ25lZCBpbnQgY250KTsKLWludCBpcnFfcmVzZXJ2ZV9p
+cnFzKHVuc2lnbmVkIGludCBmcm9tLCB1bnNpZ25lZCBpbnQgY250KTsKK2ludCBhcmNoX3Byb2Jl
+X2Vhcmx5X2FsbG9jYXRlX25yX2lycXModm9pZCk7CiAKIHN0YXRpYyBpbmxpbmUgdm9pZCBpcnFf
+ZnJlZV9kZXNjKHVuc2lnbmVkIGludCBpcnEpCiB7CiAJaXJxX2ZyZWVfZGVzY3MoaXJxLCAxKTsK
+IH0KIAotc3RhdGljIGlubGluZSBpbnQgaXJxX3Jlc2VydmVfaXJxKHVuc2lnbmVkIGludCBpcnEp
+Ci17Ci0JcmV0dXJuIGlycV9yZXNlcnZlX2lycXMoaXJxLCAxKTsKLX0KLQogI2lmbmRlZiBpcnFf
+cmVnX3dyaXRlbAogIyBkZWZpbmUgaXJxX3JlZ193cml0ZWwodmFsLCBhZGRyKQl3cml0ZWwodmFs
+LCBhZGRyKQogI2VuZGlmCmRpZmYgLS1naXQgYS9rZXJuZWwvaXJxL2NoaXAuYyBiL2tlcm5lbC9p
+cnEvY2hpcC5jCmluZGV4IGRjMDRjMTYuLjRkODZjZjUgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9pcnEv
+Y2hpcC5jCisrKyBiL2tlcm5lbC9pcnEvY2hpcC5jCkBAIC0zOCwxMiArMzgsNyBAQCBpbnQgaXJx
+X3NldF9jaGlwKHVuc2lnbmVkIGludCBpcnEsIHN0cnVjdCBpcnFfY2hpcCAqY2hpcCkKIAogCWRl
+c2MtPmlycV9kYXRhLmNoaXAgPSBjaGlwOwogCWlycV9wdXRfZGVzY191bmxvY2soZGVzYywgZmxh
+Z3MpOwotCS8qCi0JICogRm9yICFDT05GSUdfU1BBUlNFX0lSUSBtYWtlIHRoZSBpcnEgc2hvdyB1
+cCBpbgotCSAqIGFsbG9jYXRlZF9pcnFzLiBGb3IgdGhlIENPTkZJR19TUEFSU0VfSVJRIGNhc2Us
+IGl0IGlzCi0JICogYWxyZWFkeSBtYXJrZWQsIGFuZCB0aGlzIGNhbGwgaXMgaGFybWxlc3MuCi0J
+ICovCi0JaXJxX3Jlc2VydmVfaXJxKGlycSk7CisKIAlyZXR1cm4gMDsKIH0KIEVYUE9SVF9TWU1C
+T0woaXJxX3NldF9jaGlwKTsKZGlmZiAtLWdpdCBhL2tlcm5lbC9pcnEvaXJxZGVzYy5jIGIva2Vy
+bmVsL2lycS9pcnFkZXNjLmMKaW5kZXggOGFiOGU5My4uNGIyYWI5NiAxMDA2NDQKLS0tIGEva2Vy
+bmVsL2lycS9pcnFkZXNjLmMKKysrIGIva2VybmVsL2lycS9pcnFkZXNjLmMKQEAgLTI0OCwxMCAr
+MjQ4LDE2IEBAIHN0cnVjdCBpcnFfZGVzYyBpcnFfZGVzY1tOUl9JUlFTXSBfX2NhY2hlbGluZV9h
+bGlnbmVkX2luX3NtcCA9IHsKIAl9CiB9OwogCitpbnQgX193ZWFrIGFyY2hfcHJvYmVfZWFybHlf
+YWxsb2NhdGVfbnJfaXJxcyh2b2lkKQoreworICAgICAgICByZXR1cm4gMDsKK30KKwogaW50IF9f
+aW5pdCBlYXJseV9pcnFfaW5pdCh2b2lkKQogewogCWludCBjb3VudCwgaSwgbm9kZSA9IGZpcnN0
+X29ubGluZV9ub2RlOwogCXN0cnVjdCBpcnFfZGVzYyAqZGVzYzsKKwlpbnQgbnIgPSBhcmNoX3By
+b2JlX2Vhcmx5X2FsbG9jYXRlX25yX2lycXMoKTsKIAogCWluaXRfaXJxX2RlZmF1bHRfYWZmaW5p
+dHkoKTsKIApAQCAtMjY3LDYgKzI3MywxMCBAQCBpbnQgX19pbml0IGVhcmx5X2lycV9pbml0KHZv
+aWQpCiAJCWxvY2tkZXBfc2V0X2NsYXNzKCZkZXNjW2ldLmxvY2ssICZpcnFfZGVzY19sb2NrX2Ns
+YXNzKTsKIAkJZGVzY19zZXRfZGVmYXVsdHMoaSwgJmRlc2NbaV0sIG5vZGUsIE5VTEwpOwogCX0K
+KworCWZvciAoaSA9IDA7IGkgPCBucjsgaSsrKQorCQlzZXRfYml0KGksIGFsbG9jYXRlZF9pcnFz
+KTsKKwogCXJldHVybiBhcmNoX2Vhcmx5X2lycV9pbml0KCk7CiB9CiAKQEAgLTM5MCwzMSArNDAw
+LDYgQEAgZXJyOgogRVhQT1JUX1NZTUJPTF9HUEwoX19pcnFfYWxsb2NfZGVzY3MpOwogCiAvKioK
+LSAqIGlycV9yZXNlcnZlX2lycXMgLSBtYXJrIGlycXMgYWxsb2NhdGVkCi0gKiBAZnJvbToJbWFy
+ayBmcm9tIGlycSBudW1iZXIKLSAqIEBjbnQ6CW51bWJlciBvZiBpcnFzIHRvIG1hcmsKLSAqCi0g
+KiBSZXR1cm5zIDAgb24gc3VjY2VzcyBvciBhbiBhcHByb3ByaWF0ZSBlcnJvciBjb2RlCi0gKi8K
+LWludCBpcnFfcmVzZXJ2ZV9pcnFzKHVuc2lnbmVkIGludCBmcm9tLCB1bnNpZ25lZCBpbnQgY250
+KQotewotCXVuc2lnbmVkIGludCBzdGFydDsKLQlpbnQgcmV0ID0gMDsKLQotCWlmICghY250IHx8
+IChmcm9tICsgY250KSA+IG5yX2lycXMpCi0JCXJldHVybiAtRUlOVkFMOwotCi0JbXV0ZXhfbG9j
+aygmc3BhcnNlX2lycV9sb2NrKTsKLQlzdGFydCA9IGJpdG1hcF9maW5kX25leHRfemVyb19hcmVh
+KGFsbG9jYXRlZF9pcnFzLCBucl9pcnFzLCBmcm9tLCBjbnQsIDApOwotCWlmIChzdGFydCA9PSBm
+cm9tKQotCQliaXRtYXBfc2V0KGFsbG9jYXRlZF9pcnFzLCBzdGFydCwgY250KTsKLQllbHNlCi0J
+CXJldCA9IC1FRVhJU1Q7Ci0JbXV0ZXhfdW5sb2NrKCZzcGFyc2VfaXJxX2xvY2spOwotCXJldHVy
+biByZXQ7Ci19Ci0KLS8qKgogICogaXJxX2dldF9uZXh0X2lycSAtIGdldCBuZXh0IGFsbG9jYXRl
+ZCBpcnEgbnVtYmVyCiAgKiBAb2Zmc2V0Ogl3aGVyZSB0byBzdGFydCB0aGUgc2VhcmNoCiAgKgo=
+--001a11330c9e12892c04f305ee09--
