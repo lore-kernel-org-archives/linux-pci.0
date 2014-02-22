@@ -1,99 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:50558
-	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751435AbaBKSwi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Feb 2014 13:52:38 -0500
-From: Rajat Jain <rajatjain@juniper.net>
-To: Takashi Iwai <tiwai@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: pciehp: Remove surprise bit checks
-Date: Tue, 11 Feb 2014 18:52:30 +0000
-Message-ID: <1117e550ec6248e3a1834f887cbfdfad@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <s5hmwhx98vx.wl%tiwai@suse.de>
-In-Reply-To: <s5hmwhx98vx.wl%tiwai@suse.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5308C343.5040102@linux.intel.com>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+	<1388707565-16535-11-git-send-email-yinghai@kernel.org>
+	<53070393.5020005@linux.intel.com>
+	<CAE9FiQV8B271XCJQV=80S6pZDOVxG9LG0gaj9G98dCRetjkMUg@mail.gmail.com>
+	<53081614.4020503@linux.intel.com>
+	<CAE9FiQXnMgG=mOmcSK9ZwKR6tFAkJX2dVnGTj9Mmg3daDhPmEA@mail.gmail.com>
+	<5308C343.5040102@linux.intel.com>
+Date: Sat, 22 Feb 2014 09:30:48 -0800
+Message-ID: <CAE9FiQWp1AU2BeX_yyTmPm662T08kJfzSGbq_Nzy3jM6VAm9yQ@mail.gmail.com>
+Subject: Re: [PATCH v5 10/33] iommu, irq: Allocate irq_desc for dmar_msi with
+ local node
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gVGFrYXNoaSwNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBs
-aW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiBvd25l
-ckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBUYWthc2hpIEl3YWkNCj4gU2VudDogVHVl
-c2RheSwgRmVicnVhcnkgMTEsIDIwMTQgMzozOSBBTQ0KPiBUbzogQmpvcm4gSGVsZ2Fhcw0KPiBD
-YzogQWxleCBXaWxsaWFtc29uOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4g
-a2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIFBDSTogcGNpZWhwOiBS
-ZW1vdmUgc3VycHJpc2UgYml0IGNoZWNrcw0KPiANCj4gQ3VycmVudGx5IHBjaWVocCBkcml2ZXIg
-Y2hlY2tzIHRoZSBzdXJwcmlzZSByZW1vdmFsIGJpdCBhbmQgaGFuZGxlcw0KPiB0aGUgaG90cGx1
-ZyBldmVudCBvbmx5IHdoZW4gdGhlIGJpdCBpcyBzZXQuICBCdXQgdGhlcmUgYXJlIGRldmljZXMN
-Cj4gdGhhdCBkb24ndCBzZXQgdGhhdCBiaXQgYnV0IHlldCBleHBlY3QgdGhlIGhvdHBsdWcgd29y
-a2luZywgZS5nLiB0aGUNCj4gUENJIGNhcmQgcmVhZGVyIG9uIEhQIFByb0Jvb2sgNDQ1IGFuZCA0
-NTUgbGFwdG9wcyBhcHBlYXJzIG9ubHkgd2hlbg0KPiB5b3UgaW5zZXJ0IGEgY2FyZCwgYW5kIGl0
-IG5lZWRzIHRoZSBob3RwbHVnIGV2ZW50IGhhbmRsaW5nLg0KPiANCj4gRm9yIGZpeGluZyB0aGlz
-LCBiYXNpY2FsbHkgd2UgbWF5IGlnbm9yZSB0aGUgc3VycHJpc2UgYml0IGFuZCBhbHdheXMNCj4g
-aGFuZGxlIHRoZSBldmVudC4NCg0KU29tZSBvZiB0aGlzIGhhcyBiZWVuIHRha2VuIGNhcmUgb2Yg
-aW4gdGhlIHJlY2VudCBjaGFuZ2VzIHRvIHBjaWVoY3AgKGxhc3QgbmlnaHQpLg0KDQpQbGVhc2Ug
-c2VlDQoNCmh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2hlbGdh
-YXMvcGNpLmdpdC9jb21taXQvP2g9cGNpL3BjaWVocCZpZD1hM2ViYTM4ODc5NjBkMDBhYmI5MTJm
-ZTM3MDNjZDNhMDU4YzcyMWI4DQoNCkFsc28sIGxpbmsgc3RhdGUgaG90cGx1ZyBoYXMgYmVlbiBh
-ZGRlZCBhcyBwYXJ0IG9mIHRoaXMgcGF0Y2ggc2V0LiBDYW4geW91IHBsZWFzZSB0cnkgd2l0aCBC
-am9ybidzIGxhdGVzdCBwY2kgdHJlZT8NCg0KV2l0aCB0aGF0LCBJIHRoaW5rIHlvdSBzaG91bGQg
-bm90IHNlZSB0aGUgaXNzdWUgeW91IGFyZSBkZXNjcmliaW5nLCBiZWNhdXNlIGlmIHRoZSBQQ0ll
-IExpbmsgY29tZXMgdXAgd2hlbiB5b3UgaW5zZXJ0IHRoZSBjYXJkLCBpdCBzaGFsbCBiZSBhZGRl
-ZCAobm93KSBpcnJlc3BlY3RpdmUgb2Ygd2hldGhlciBvciBub3QgeW91IGhhdmUgdGhlIHN1cnBy
-aXNlIGJpdCBzZXQuDQoNClRoYW5rcywNCg0KUmFqYXQNCg0KDQo+IFRoZSBvbmx5IGJpZyBjb25j
-ZXJuIGluIHRoZSBwYXN0IHdhcyB0aGUgS1ZNIGRldmljZQ0KPiBhc3NpZ25tZW50LCBidXQgdGhp
-cyBoYXMgYmVlbiBmaXhlZCBpbiBLVk0gc2lkZSAoaWdub3JpbmcgaG90cGx1Zw0KPiBldmVudHMg
-ZHVyaW5nIHNlY29uZGFyeSBidXMgcmVzZXRzKSwgdGhlcmUgc2hvdWxkIGJlIG5vIG9ic3RhY2xl
-DQo+IGFoZWFkLg0KPiANCj4gVGhlIGVhcmxpZXIgZGlzY3Vzc2lvbiB0aHJlYWQgaXMgZm91bmQg
-YXQ6DQo+ICAgICBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxMy8zLzIwLzI3NA0KPiANCj4gQnVn
-emlsbGE6IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9NzAyNjEN
-Cj4gU2lnbmVkLW9mZi1ieTogVGFrYXNoaSBJd2FpIDx0aXdhaUBzdXNlLmRlPg0KPiAtLS0NCj4g
-IGRyaXZlcnMvcGNpL2hvdHBsdWcvcGNpZWhwX2N0cmwuYyB8IDExIC0tLS0tLS0tLS0tDQo+ICBk
-cml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYyAgfCAxOSArKysrKysrLS0tLS0tLS0tLS0t
-DQo+ICAyIGZpbGVzIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygrKSwgMjMgZGVsZXRpb25zKC0pDQo+
-IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfY3RybC5jDQo+IGIv
-ZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfY3RybC5jDQo+IGluZGV4IDUwNjI4NDg3NTk3ZC4u
-OGY2YzYyNmI0ZTIxIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9j
-dHJsLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfY3RybC5jDQo+IEBAIC00
-MzQsOCArNDM0LDYgQEAgc3RhdGljIHZvaWQgaW50ZXJydXB0X2V2ZW50X2hhbmRsZXIoc3RydWN0
-DQo+IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiAgCQlicmVhazsNCj4gIAljYXNlIElOVF9QUkVTRU5D
-RV9PTjoNCj4gIAljYXNlIElOVF9QUkVTRU5DRV9PRkY6DQo+IC0JCWlmICghSFBfU1VQUl9STShj
-dHJsKSkNCj4gLQkJCWJyZWFrOw0KPiAgCQljdHJsX2RiZyhjdHJsLCAiU3VycHJpc2UgUmVtb3Zh
-bFxuIik7DQo+ICAJCWhhbmRsZV9zdXJwcmlzZV9ldmVudChwX3Nsb3QpOw0KPiAgCQlicmVhazsN
-Cj4gQEAgLTQ5NCwxNSArNDkyLDYgQEAgaW50IHBjaWVocF9kaXNhYmxlX3Nsb3Qoc3RydWN0IHNs
-b3QgKnBfc2xvdCkNCj4gIAlpZiAoIXBfc2xvdC0+Y3RybCkNCj4gIAkJcmV0dXJuIDE7DQo+IA0K
-PiAtCWlmICghSFBfU1VQUl9STShwX3Nsb3QtPmN0cmwpKSB7DQo+IC0JCXBjaWVocF9nZXRfYWRh
-cHRlcl9zdGF0dXMocF9zbG90LCAmZ2V0c3RhdHVzKTsNCj4gLQkJaWYgKCFnZXRzdGF0dXMpIHsN
-Cj4gLQkJCWN0cmxfaW5mbyhjdHJsLCAiTm8gYWRhcHRlciBvbiBzbG90KCVzKVxuIiwNCj4gLQkJ
-CQkgIHNsb3RfbmFtZShwX3Nsb3QpKTsNCj4gLQkJCXJldHVybiAtRU5PREVWOw0KPiAtCQl9DQo+
-IC0JfQ0KPiAtDQo+ICAJaWYgKE1STF9TRU5TKHBfc2xvdC0+Y3RybCkpIHsNCj4gIAkJcGNpZWhw
-X2dldF9sYXRjaF9zdGF0dXMocF9zbG90LCAmZ2V0c3RhdHVzKTsNCj4gIAkJaWYgKGdldHN0YXR1
-cykgew0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBjLmMNCj4g
-Yi9kcml2ZXJzL3BjaS9ob3RwbHVnL3BjaWVocF9ocGMuYw0KPiBpbmRleCAxNGFjZmNjYjc2NzAu
-LjVmOTE5NmE4NWE1MyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBf
-aHBjLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfaHBjLmMNCj4gQEAgLTYz
-NiwyMSArNjM2LDE2IEBAIGludCBwY2llaHBfcmVzZXRfc2xvdChzdHJ1Y3Qgc2xvdCAqc2xvdCwg
-aW50DQo+IHByb2JlKQ0KPiAgCWlmIChwcm9iZSkNCj4gIAkJcmV0dXJuIDA7DQo+IA0KPiAtCWlm
-IChIUF9TVVBSX1JNKGN0cmwpKSB7DQo+IC0JCXBjaWVfd3JpdGVfY21kKGN0cmwsIDAsIFBDSV9F
-WFBfU0xUQ1RMX1BEQ0UpOw0KPiAtCQlpZiAocGNpZWhwX3BvbGxfbW9kZSkNCj4gLQkJCWRlbF90
-aW1lcl9zeW5jKCZjdHJsLT5wb2xsX3RpbWVyKTsNCj4gLQl9DQo+ICsJcGNpZV93cml0ZV9jbWQo
-Y3RybCwgMCwgUENJX0VYUF9TTFRDVExfUERDRSk7DQo+ICsJaWYgKHBjaWVocF9wb2xsX21vZGUp
-DQo+ICsJCWRlbF90aW1lcl9zeW5jKCZjdHJsLT5wb2xsX3RpbWVyKTsNCj4gDQo+ICAJcGNpX3Jl
-c2V0X2JyaWRnZV9zZWNvbmRhcnlfYnVzKGN0cmwtPnBjaWUtPnBvcnQpOw0KPiANCj4gLQlpZiAo
-SFBfU1VQUl9STShjdHJsKSkgew0KPiAtCQlwY2llX2NhcGFiaWxpdHlfd3JpdGVfd29yZChwZGV2
-LCBQQ0lfRVhQX1NMVFNUQSwNCj4gLQkJCQkJICAgUENJX0VYUF9TTFRTVEFfUERDKTsNCj4gLQkJ
-cGNpZV93cml0ZV9jbWQoY3RybCwgUENJX0VYUF9TTFRDVExfUERDRSwNCj4gUENJX0VYUF9TTFRD
-VExfUERDRSk7DQo+IC0JCWlmIChwY2llaHBfcG9sbF9tb2RlKQ0KPiAtCQkJaW50X3BvbGxfdGlt
-ZW91dChjdHJsLT5wb2xsX3RpbWVyLmRhdGEpOw0KPiAtCX0NCj4gKwlwY2llX2NhcGFiaWxpdHlf
-d3JpdGVfd29yZChwZGV2LCBQQ0lfRVhQX1NMVFNUQSwNCj4gUENJX0VYUF9TTFRTVEFfUERDKTsN
-Cj4gKwlwY2llX3dyaXRlX2NtZChjdHJsLCBQQ0lfRVhQX1NMVENUTF9QRENFLCBQQ0lfRVhQX1NM
-VENUTF9QRENFKTsNCj4gKwlpZiAocGNpZWhwX3BvbGxfbW9kZSkNCj4gKwkJaW50X3BvbGxfdGlt
-ZW91dChjdHJsLT5wb2xsX3RpbWVyLmRhdGEpOw0KPiANCj4gIAlyZXR1cm4gMDsNCj4gIH0NCj4g
-LS0NCj4gMS44LjUuMg0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6
-IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4gdGhlIGJvZHkgb2Yg
-YSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8g
-aW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+IA0K
-DQo=
+On Sat, Feb 22, 2014 at 7:33 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> Hi Yinghai,
+>         I have a plan to test this patch set once I have reviewed
+> all patches in coming weeks. Do you have a plan to update to latest
+> kernel or is it ok to test this version?
 
+That will be great. I will refresh the branch on top of
+linus/tip/pci/acpi next week.
+
+Thanks
+
+Yinghai
