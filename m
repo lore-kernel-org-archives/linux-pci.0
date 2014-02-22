@@ -1,55 +1,242 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45373 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:21981 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754684AbaBRKLA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:11:00 -0500
+	id S1751661AbaBVTxY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 22 Feb 2014 14:53:24 -0500
+Date: Sat, 22 Feb 2014 20:55:21 +0100
 From: Alexander Gordeev <agordeev@redhat.com>
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Manish Chopra <manish.chopra@qlogic.com>,
-	Sony Chacko <sony.chacko@qlogic.com>,
-	Rajesh Borundia <rajesh.borundia@qlogic.com>,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH net-next 26/35] netxen: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:11:55 +0100
-Message-Id: <3f60c6b3767b7596d5d5d7bb236b7dde303594d9.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+Cc: Jon Mason <jon.mason@intel.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 3/4] ntb: Split ntb_setup_msix() into separate BWD/SNB
+ routines
+Message-ID: <20140222195521.GA14528@dhcp-26-207.brq.redhat.com>
+References: <cover.1392996332.git.agordeev@redhat.com>
+ <bb2b61719e4dd15c29bc8022e76a9463d548f561.1392996332.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bb2b61719e4dd15c29bc8022e76a9463d548f561.1392996332.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+This is an cleanup effort to make ntb_setup_msix() more
+readable - use ntb_setup_bwd_msix() to init MSI-Xs on
+BWD hardware and ntb_setup_snb_msix() - on SNB hardware.
+
+Function ntb_setup_snb_msix() also initializes MSI-Xs the
+way it should has been done - looping pci_enable_msix()
+until success or failure.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Manish Chopra <manish.chopra@qlogic.com>
-Cc: Sony Chacko <sony.chacko@qlogic.com>
-Cc: Rajesh Borundia <rajesh.borundia@qlogic.com>
-Cc: netdev@vger.kernel.org
+Cc: Jon Mason <jon.mason@intel.com>
 Cc: linux-pci@vger.kernel.org
 ---
- .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/ntb/ntb_hw.c |  171 +++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 106 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c b/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
-index 70849de..f09c35d 100644
---- a/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
-+++ b/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
-@@ -643,8 +643,9 @@ static int netxen_setup_msi_interrupts(struct netxen_adapter *adapter,
+diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+index 53468f4..679d4d0 100644
+--- a/drivers/ntb/ntb_hw.c
++++ b/drivers/ntb/ntb_hw.c
+@@ -1079,10 +1079,110 @@ static irqreturn_t ntb_interrupt(int irq, void *dev)
+ 	return IRQ_HANDLED;
+ }
  
- 	if (adapter->msix_supported) {
- 		netxen_init_msix_entries(adapter, num_msix);
--		err = pci_enable_msix(pdev, adapter->msix_entries, num_msix);
--		if (err == 0) {
-+		err = pci_enable_msix_range(pdev, adapter->msix_entries,
-+					    num_msix, num_msix);
-+		if (err > 0) {
- 			adapter->flags |= NETXEN_NIC_MSIX_ENABLED;
- 			netxen_set_msix_bit(pdev, 1);
+-static int ntb_setup_msix(struct ntb_device *ndev)
++static int ntb_setup_snb_msix(struct ntb_device *ndev, int msix_entries)
++{
++	struct pci_dev *pdev = ndev->pdev;
++	struct msix_entry *msix;
++	int rc, i;
++
++	if (msix_entries < SNB_MSIX_CNT)
++		return -ENOSPC;
++
++	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
++	if (rc < 0)
++		return rc;
++	else if (rc > 0)
++		return -ENOSPC;
++
++	for (i = 0; i < msix_entries; i++) {
++		msix = &ndev->msix_entries[i];
++		WARN_ON(!msix->vector);
++
++		if (i == msix_entries - 1) {
++			rc = request_irq(msix->vector,
++					 xeon_event_msix_irq, 0,
++					 "ntb-event-msix", ndev);
++			if (rc)
++				goto err;
++		} else {
++			rc = request_irq(msix->vector,
++					 xeon_callback_msix_irq, 0,
++					 "ntb-callback-msix",
++					 &ndev->db_cb[i]);
++			if (rc)
++				goto err;
++		}
++	}
++
++	ndev->num_msix = msix_entries;
++	ndev->max_cbs = msix_entries - 1;
++
++	return 0;
++
++err:
++	while (--i >= 0) {
++		msix = &ndev->msix_entries[i];
++		WARN_ON(i == ndev->num_msix - 1);
++
++		if (i == ndev->num_msix - 1)
++			free_irq(msix->vector, ndev);
++		else
++			free_irq(msix->vector, &ndev->db_cb[i]);
++	}
++
++	pci_disable_msix(pdev);
++	ndev->num_msix = 0;
++
++	return rc;
++}
++
++static int ntb_setup_bwd_msix(struct ntb_device *ndev, int msix_entries)
+ {
+ 	struct pci_dev *pdev = ndev->pdev;
+ 	struct msix_entry *msix;
++	int rc, i;
++
++retry:
++	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
++	if (rc < 0)
++		return rc;
++	else if (rc > 0) {
++		dev_warn(&pdev->dev,
++			 "Only %d MSI-X vectors. "
++			 "Limiting the number of queues to that number.\n",
++			 rc);
++		msix_entries = rc;
++		goto retry;
++	}
++
++	for (i = 0; i < msix_entries; i++) {
++		msix = &ndev->msix_entries[i];
++		WARN_ON(!msix->vector);
++
++		rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
++				 "ntb-callback-msix", &ndev->db_cb[i]);
++		if (rc)
++			goto err;
++	}
++
++	ndev->num_msix = msix_entries;
++	ndev->max_cbs = msix_entries;
++
++	return 0;
++
++err:
++	while (--i >= 0)
++		free_irq(msix->vector, &ndev->db_cb[i]);
++
++	pci_disable_msix(pdev);
++	ndev->num_msix = 0;
++
++	return rc;
++}
++
++static int ntb_setup_msix(struct ntb_device *ndev)
++{
++	struct pci_dev *pdev = ndev->pdev;
+ 	int msix_entries;
+ 	int rc, i;
+ 
+@@ -1105,78 +1205,19 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+ 	for (i = 0; i < msix_entries; i++)
+ 		ndev->msix_entries[i].entry = i;
+ 
+-	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+-	if (rc < 0)
+-		goto err1;
+-	if (rc > 0) {
+-		/* On SNB, the link interrupt is always tied to 4th vector.  If
+-		 * we can't get all 4, then we can't use MSI-X.
+-		 */
+-		if (ndev->hw_type != BWD_HW) {
+-			rc = -EIO;
+-			goto err1;
+-		}
+-
+-		dev_warn(&pdev->dev,
+-			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+-			 rc);
+-		msix_entries = rc;
+-
+-		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+-		if (rc)
+-			goto err1;
+-	}
+-
+-	for (i = 0; i < msix_entries; i++) {
+-		msix = &ndev->msix_entries[i];
+-		WARN_ON(!msix->vector);
+-
+-		/* Use the last MSI-X vector for Link status */
+-		if (ndev->hw_type == BWD_HW) {
+-			rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
+-					 "ntb-callback-msix", &ndev->db_cb[i]);
+-			if (rc)
+-				goto err2;
+-		} else {
+-			if (i == msix_entries - 1) {
+-				rc = request_irq(msix->vector,
+-						 xeon_event_msix_irq, 0,
+-						 "ntb-event-msix", ndev);
+-				if (rc)
+-					goto err2;
+-			} else {
+-				rc = request_irq(msix->vector,
+-						 xeon_callback_msix_irq, 0,
+-						 "ntb-callback-msix",
+-						 &ndev->db_cb[i]);
+-				if (rc)
+-					goto err2;
+-			}
+-		}
+-	}
+-
+-	ndev->num_msix = msix_entries;
+ 	if (ndev->hw_type == BWD_HW)
+-		ndev->max_cbs = msix_entries;
++		rc = ntb_setup_bwd_msix(ndev, msix_entries);
+ 	else
+-		ndev->max_cbs = msix_entries - 1;
++		rc = ntb_setup_snb_msix(ndev, msix_entries);
++	if (rc)
++		goto err1;
+ 
+ 	return 0;
+ 
+-err2:
+-	while (--i >= 0) {
+-		msix = &ndev->msix_entries[i];
+-		if (ndev->hw_type != BWD_HW && i == ndev->num_msix - 1)
+-			free_irq(msix->vector, ndev);
+-		else
+-			free_irq(msix->vector, &ndev->db_cb[i]);
+-	}
+-	pci_disable_msix(pdev);
+ err1:
+ 	kfree(ndev->msix_entries);
+-	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
+ err:
+-	ndev->num_msix = 0;
++	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
+ 	return rc;
+ }
  
 -- 
 1.7.7.6
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
