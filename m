@@ -1,56 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:45307 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111AbaBKAUB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 19:20:01 -0500
-Received: by mail-ig0-f171.google.com with SMTP id uy17so7751902igb.4
-        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 16:20:00 -0800 (PST)
-Date: Mon, 10 Feb 2014 17:19:58 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH 0/11] ACPI / hotplug / PCI: Updates on top of changes
- merged recently
-Message-ID: <20140211001958.GB12851@google.com>
-References: <2217793.001RY6hKlo@vostro.rjw.lan>
+Received: from mx1.redhat.com ([209.132.183.28]:51408 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751132AbaBVJWi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 22 Feb 2014 04:22:38 -0500
+Date: Sat, 22 Feb 2014 10:24:26 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-kernel@vger.kernel.org,
+	Himanshu Madhani <himanshu.madhani@qlogic.com>,
+	Rajesh Borundia <rajesh.borundia@qlogic.com>,
+	Shahed Shaikh <shahed.shaikh@qlogic.com>,
+	linux-driver@qlogic.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH net-next 28/35] qlcnic: Use pci_enable_msix_range()
+ instead of pci_enable_msix()
+Message-ID: <20140222092425.GA27897@dhcp-26-207.brq.redhat.com>
+References: <cover.1392717502.git.agordeev@redhat.com>
+ <cb8eb41f672c62d1149c375bdaf97ca3328703f9.1392717503.git.agordeev@redhat.com>
+ <1393029870.15717.71.camel@deadeye.wl.decadent.org.uk>
+ <1393030127.15717.72.camel@deadeye.wl.decadent.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2217793.001RY6hKlo@vostro.rjw.lan>
+In-Reply-To: <1393030127.15717.72.camel@deadeye.wl.decadent.org.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 27, 2014 at 01:37:17AM +0100, Rafael J. Wysocki wrote:
-> Hi All,
-> 
-> ACPIPHP can be simplified a bit on top of some PCI and ACPI changes merged
-> recently and the following series of patches implements those simplifications:
-> 
-> [1/11] Fix up two kerneldoc comments in acpiphp_glue.c.
-> [2/11] Get rid of an unnecessary label in register_slot().
-> [3/11] Drop acpiphp_bus_trim() and use acpi_bus_trim() instead of it directly.
-> [4/11] Move the acpi_bus_get_device() call out of acpiphp_no_hotplug().
-> [5/11] Store struct acpi_device pointers instead of ACPI handles in struct acpiphp_context.
-> [6/11] Drop acpiphp_bus_add() (which has only one user).
-> [7/11] Drop crit_sect mutexes (that are redundant).
-> [8/11] Clean up the usage of the slot variable in hotplug_event().
-> [9/11] Drop dev_in_slot() and rework disable_slot() to walk bus->devices directly.
-> [10/11] Use acpi_handle_debug() in hotplug_event() instead of open-coded stuff.
-> [11/11] Drop handle argument from the member functions of struct acpi_dock_ops.
+On Sat, Feb 22, 2014 at 12:48:47AM +0000, Ben Hutchings wrote:
+> Sorry, I'm confused and this does work.  But I wonder whether it is
+> really an improvement over using the old API.
 
-I assume you'll handle all these through your tree, Rafael.  Let me know if
-you need me to do anything.
+Slightly, as far as I am concerned - we just exchange tri-state oddity
+to re-enable MSI-X oddity. We're not going to improve drivers that can
+not work with any number of MSI-Xs from a range, like this one.
 
-Bjorn
+> Ben.
 
-> All of that is relateively straightforward, but I have some more intrusive changes
-> on top of it in the works.  They will be posted separately later this week.
-> 
-> Thanks!
-> 
-> -- 
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
