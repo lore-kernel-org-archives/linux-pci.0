@@ -1,41 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:55011 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbaBZK1b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 05:27:31 -0500
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Richard Zhu <r65037@freescale.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de
-Subject: [PATCH v2 1/2] ARM: dts: imx6: adjust the interrupt list in order to support MSI
-Date: Wed, 26 Feb 2014 11:27:17 +0100
-Message-Id: <1393410438-28205-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 22 Feb 2014 09:50:31 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Gleb Natapov <gleb@kernel.org>,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] kvm: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140222085030.GA26794@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-11-git-send-email-agordeev@redhat.com>
+ <5304B09D.7010900@redhat.com>
+ <20140221170414.GM17353@dhcp-26-207.brq.redhat.com>
+ <20140221170504.GN17353@dhcp-26-207.brq.redhat.com>
+ <530788C1.6030109@redhat.com>
+ <20140221185620.GA18725@dhcp-26-207.brq.redhat.com>
+ <5307C6D9.4030503@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5307C6D9.4030503@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Juergen Beisert <jbe@pengutronix.de>
+On Fri, Feb 21, 2014 at 10:36:25PM +0100, Paolo Bonzini wrote:
+> Il 21/02/2014 19:56, Alexander Gordeev ha scritto:
+> >On Fri, Feb 21, 2014 at 06:11:29PM +0100, Paolo Bonzini wrote:
+> >>It's okay, but it's not clear to me whether I should include this
+> >>patch or someone else will. :)
+> >
+> >Please, include it.
+> 
+> And where do I get pci_enable_msix_exact?  When will pci_enable_msix
+> disappear?
 
-Signed-off-by: Juergen Beisert <jbe@pengutronix.de>
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- arch/arm/boot/dts/imx6qdl.dtsi | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Commit d158fc7 ("Merge tag 'pci-v3.14-fixes-1'") in Linus's tree has it.
 
-diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
-index fb28b2ecb1db..aeccbb114fc5 100644
---- a/arch/arm/boot/dts/imx6qdl.dtsi
-+++ b/arch/arm/boot/dts/imx6qdl.dtsi
-@@ -126,7 +126,8 @@
- 				  0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
- 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
--			interrupts = <0 123 0x04>;
-+			/*               inta          intb         intc         intd/msi */
-+			interrupts = <0 123 0x04>, <0 122 0x04>, <0 121 0x04>, <0 120 0x04>;
- 			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
- 			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
- 			status = "disabled";
+pci_enable_msix() is going to be removed once all drivers updated with
+new interface.
+
+> So, do I have to pull something (which I'd rather not, since pulling
+> the wrong thing in a submaintainer tree will make Linus angry), or
+> should I do it in the next merge window after pci_enable_msix_exact
+> gets in?
+
+So it is already in.
+
+> All in all, it seems much simpler to me if the linux-pci tree just
+> includes the whole patch series with my Acked-by.
+>
+> Paolo
+> 
+> >Thanks!
+> >
+> >>Paolo
+> >
+> 
+
 -- 
-1.8.5.3
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
