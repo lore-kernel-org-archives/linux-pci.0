@@ -1,85 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <53081614.4020503@linux.intel.com>
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
+	<1388707565-16535-11-git-send-email-yinghai@kernel.org>
+	<53070393.5020005@linux.intel.com>
+	<CAE9FiQV8B271XCJQV=80S6pZDOVxG9LG0gaj9G98dCRetjkMUg@mail.gmail.com>
+	<53081614.4020503@linux.intel.com>
+Date: Fri, 21 Feb 2014 23:44:40 -0800
+Message-ID: <CAE9FiQXnMgG=mOmcSK9ZwKR6tFAkJX2dVnGTj9Mmg3daDhPmEA@mail.gmail.com>
+Subject: Re: [PATCH v5 10/33] iommu, irq: Allocate irq_desc for dmar_msi with
+ local node
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V2 03/17] iommu/vt-d: avoid caching stale domain_device_info when hot-removing PCI device
-Date: Wed, 19 Feb 2014 14:07:23 +0800
-Message-Id: <1392790057-32434-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function device_notifier() in intel-iommu.c only remove domain_device_info
-data structure associated with a PCI device when handling PCI device
-driver unbinding events. If a PCI device has never been bound to a PCI
-device driver, there won't be BUS_NOTIFY_UNBOUND_DRIVER event when
-hot-removing the PCI device. So associated domain_device_info data
-structure may get lost.
+On Fri, Feb 21, 2014 at 7:14 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
 
-On the other hand, if iommu_pass_through is enabled, function
-iommu_prepare_static_indentify_mapping() will create domain_device_info
-data structure for each PCIe to PCIe bridge and PCIe endpoint,
-no matter whether there are drivers associated with those PCIe devices
-or not. So those domain_device_info data structures will get lost when
-hot-removing the assocated PCIe devices if they have never bound to
-any PCI device driver.
+>         Seems there is no such protection on IA64 side. I feel create_irq_nr()
+> returns 0 for error is a little risky, 0 may be
+> a valid IRQ number on other platforms(no sure about this).
+> Thanks!
 
-To be even worse, it's not only an memory leak issue, but also an
-caching of stale information bug because the memory are kept in
-device_domain_list and domain->devices lists.
+in [PATCH] ia64, irq: Add dummy create_irq_nr()
 
-Fix the bug by trying to remove domain_device_info data structure when
-handling BUS_NOTIFY_DEL_DEVICE event.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index f75d3ae..5a411e8 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -3603,18 +3603,19 @@ static int device_notifier(struct notifier_block *nb,
- 	if (iommu_dummy(pdev))
- 		return 0;
- 
-+	if (action != BUS_NOTIFY_UNBOUND_DRIVER &&
-+	    action != BUS_NOTIFY_DEL_DEVICE)
-+		return 0;
++unsigned int create_irq_nr(unsigned int from, int node)
++{
++       int irq = create_irq();
 +
- 	domain = find_domain(pdev);
- 	if (!domain)
- 		return 0;
- 
--	if (action == BUS_NOTIFY_UNBOUND_DRIVER) {
--		domain_remove_one_dev_info(domain, pdev);
--
--		if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
--		    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
--		    list_empty(&domain->devices))
--			domain_exit(domain);
--	}
-+	domain_remove_one_dev_info(domain, pdev);
-+	if (!(domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
-+	    !(domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
-+	    list_empty(&domain->devices))
-+		domain_exit(domain);
- 
- 	return 0;
- }
--- 
-1.7.10.4
++       if (irq < 0)
++               irq = 0;
++
++       return irq;
++}
++
 
+so that from is ignored.
+
+create_irq_nr() is only with x86 and ia64.
+
+Thanks
+
+Yinghai
