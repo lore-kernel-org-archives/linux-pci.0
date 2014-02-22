@@ -1,30 +1,24 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9242 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752955AbaBJMOo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Feb 2014 07:14:44 -0500
-Date: Mon, 10 Feb 2014 13:16:38 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 22 Feb 2014 20:56:04 +0100
 From: Alexander Gordeev <agordeev@redhat.com>
-To: fengguang.wu@intel.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	wil6210@qca.qualcomm.com, linux-pci@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Subject: Re: [PATCH] wil6210: Fix switch operator "missing break?" warning
-Message-ID: <20140210121638.GA320@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <aedc9b7eb82232204a7d65b4c7d3302ba6ba3892.1389904167.git.agordeev@redhat.com>
- <20140207144639.GA10939@dhcp-26-207.brq.redhat.com>
- <3132701.EBRqRlvTI9@lx-vladimir>
+To: linux-kernel@vger.kernel.org
+Cc: Jon Mason <jon.mason@intel.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 0/4] ntb: Use pci_enable_msix_range() instead of
+ pci_enable_msix()
+Message-ID: <20140222195603.GB14528@dhcp-26-207.brq.redhat.com>
+References: <cover.1392996332.git.agordeev@redhat.com>
+ <20140221160937.GA913@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3132701.EBRqRlvTI9@lx-vladimir>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140221160937.GA913@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 10, 2014 at 12:54:13PM +0200, Vladimir Kondratiev wrote:
-> I can't reproduce this warning. What tools used to get it?
+On Fri, Feb 21, 2014 at 05:09:37PM +0100, Alexander Gordeev wrote:
+> Ouch, I was too fast. Patch #3 introduces warning "unused variable ‘msix’"
+> I can re-post if you want, but the rest is still is up to review ;)
 
-Fengguang?
+Resent.
 
 -- 
 Regards,
