@@ -1,64 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25930 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751551AbaBLKdq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Feb 2014 05:33:46 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-pci@vger.kernel.org
-Subject: [PATCH] PCI/MSI: Fix cut-and-paste errors in documentation
-Date: Wed, 12 Feb 2014 11:35:25 +0100
-Message-Id: <1392201325-11173-1-git-send-email-agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5308C343.5040102@linux.intel.com>
+Date: Sat, 22 Feb 2014 23:33:23 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
+	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Joerg Roedel <joro@8bytes.org>,
+	Donald Dutile <ddutile@redhat.com>,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH v5 10/33] iommu, irq: Allocate irq_desc for dmar_msi with
+ local node
+References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>	<1388707565-16535-11-git-send-email-yinghai@kernel.org>	<53070393.5020005@linux.intel.com>	<CAE9FiQV8B271XCJQV=80S6pZDOVxG9LG0gaj9G98dCRetjkMUg@mail.gmail.com>	<53081614.4020503@linux.intel.com> <CAE9FiQXnMgG=mOmcSK9ZwKR6tFAkJX2dVnGTj9Mmg3daDhPmEA@mail.gmail.com>
+In-Reply-To: <CAE9FiQXnMgG=mOmcSK9ZwKR6tFAkJX2dVnGTj9Mmg3daDhPmEA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pci_enable_msi_range() is used in examples where
-pci_enable_msix_range() should have been used instead.
+Hi Yinghai,
+	I have a plan to test this patch set once I have reviewed
+all patches in coming weeks. Do you have a plan to update to latest
+kernel or is it ok to test this version?
+Thanks!
+Gerry
 
-Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- Documentation/PCI/MSI-HOWTO.txt |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index a8d0100..43c5a5f 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -257,8 +257,8 @@ possible, likely up to the limit returned by pci_msix_vec_count() function:
- 
- static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
- {
--	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
--				    1, nvec);
-+	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-+				     1, nvec);
- }
- 
- Note the value of 'minvec' parameter is 1.  As 'minvec' is inclusive,
-@@ -269,8 +269,8 @@ In this case the function could look like this:
- 
- static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
- {
--	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
--				    FOO_DRIVER_MINIMUM_NVEC, nvec);
-+	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-+				     FOO_DRIVER_MINIMUM_NVEC, nvec);
- }
- 
- 4.3.1.2 Exact number of MSI-X interrupts
-@@ -282,8 +282,8 @@ parameters:
- 
- static int foo_driver_enable_msix(struct foo_adapter *adapter, int nvec)
- {
--	return pci_enable_msi_range(adapter->pdev, adapter->msix_entries,
--				    nvec, nvec);
-+	return pci_enable_msix_range(adapter->pdev, adapter->msix_entries,
-+				     nvec, nvec);
- }
- 
- 4.3.1.3 Specific requirements to the number of MSI-X interrupts
--- 
-1.7.7.6
-
+On 2014/2/22 15:44, Yinghai Lu wrote:
+> On Fri, Feb 21, 2014 at 7:14 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> 
+>>         Seems there is no such protection on IA64 side. I feel create_irq_nr()
+>> returns 0 for error is a little risky, 0 may be
+>> a valid IRQ number on other platforms(no sure about this).
+>> Thanks!
+> 
+> in [PATCH] ia64, irq: Add dummy create_irq_nr()
+> 
+> +unsigned int create_irq_nr(unsigned int from, int node)
+> +{
+> +       int irq = create_irq();
+> +
+> +       if (irq < 0)
+> +               irq = 0;
+> +
+> +       return irq;
+> +}
+> +
+> 
+> so that from is ignored.
+> 
+> create_irq_nr() is only with x86 and ia64.
+> 
+> Thanks
+> 
+> Yinghai
+> 
