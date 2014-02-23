@@ -1,50 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:52155 "EHLO
-	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752356AbaB1Lzy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 06:55:54 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <arnd@arndb.de>
-Cc: Mohit Kumar <mohit.kumar@st.com>,
-	Pratyush Anand <pratyush.anand@st.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH V7 10/10] MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
-Date: Fri, 28 Feb 2014 17:25:03 +0530
-Message-ID: <0274095453d14c848977441f303aab6b53a098cd.1393568715.git.mohit.kumar@st.com>
-In-Reply-To: <cover.1393568715.git.mohit.kumar@st.com>
-References: <cover.1393568715.git.mohit.kumar@st.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:60180 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751241AbaBWTnz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 23 Feb 2014 14:43:55 -0500
+Date: Sun, 23 Feb 2014 20:45:49 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: James Smart <james.smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 12/22] lpfc: Use pci_enable_msix_range()
+Message-ID: <20140223194548.GA16635@dhcp-26-207.brq.redhat.com>
+References: <a34533b1-77d9-45bc-ad66-aab336972b95@CMEXHTCAS2.ad.emulex.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a34533b1-77d9-45bc-ad66-aab336972b95@CMEXHTCAS2.ad.emulex.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Mohit Kumar as maintainer for ST SPEAr13xx PCIe driver.
+On Thu, Feb 20, 2014 at 11:47:02AM -0500, James Smart wrote:
+> Alexander,
+> 
+> I've reworked this patch to layer on top of our rev 8.3.45 patches
+> that were just posted to linux-scsi. There were some conflicts due to
+> new additions.  Additionally, there were two other uses of pci_enable_msiXXX
+> that needed to be addressed.  The changes in this patch also address the
+> change requested by:
+> "[PATCH 11/22] lpfc: Remove superfluous call to pci_disable_msix()"
+> 
+> To avoid creating merge conflicts - either by your patches going in then
+> scsi git tree trying to merge or by scsi git tree going in and your patches
+> trying to merge - I recommend that you eliminate your lpfc patches from the
+> kernel and apply the patch below once scsi git with the updated lpfc driver
+> has actually merged.
 
-Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-Acked-by: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-pci@vger.kernel.org
----
- MAINTAINERS |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Hi James,
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b2cf5cf..ebdca89 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6596,6 +6596,12 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*designware*
- 
-+PCIE DRIVER FOR ST SPEAR13XX
-+M:	Mohit Kumar <mohit.kumar@st.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	drivers/pci/host/pcie-spear13xx.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
+Thank you for the review and for the updated patch - it is embarrassing 
+I have not addressed all pci_enable_msix()'s.
+
+I will keep the two patches separate to ease bisecting -
+I am going to repost the patches on top of scsi tree.
+
+Cheers!
+
 -- 
-1.7.0.1
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
