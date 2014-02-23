@@ -1,127 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:38959 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578AbaBXU60 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 15:58:26 -0500
-Received: by mail-ig0-f177.google.com with SMTP id h3so5701241igd.4
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 12:58:25 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:33883 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750973AbaBWGsq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 23 Feb 2014 01:48:46 -0500
+Date: Sun, 23 Feb 2014 07:50:41 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andy King <acking@vmware.com>,
+	Dmitry Torokhov <dtor@vmware.com>, linux-pci@vger.kernel.org
+Subject: [PATCH v2] vmw_vmci: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140223065041.GA24747@dhcp-26-207.brq.redhat.com>
+References: <1392804931-30671-5-git-send-email-agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <3851541.s2776YTCMH@vostro.rjw.lan>
-References: <1853950.oxM3KDpyLu@vostro.rjw.lan> <3851541.s2776YTCMH@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Feb 2014 13:58:05 -0700
-Message-ID: <CAErSpo5rX=1YnAR8QZYLsww-1c4_KvAgEZEkkQ5C26=+cEYqFw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI / PM: Resume runtime-suspended devices later
- during system suspend
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392804931-30671-5-git-send-email-agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 23, 2014 at 4:21 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Runtime-suspended devices are resumed during system suspend by
-> pci_pm_prepare() for two reasons: First, because they may need
-> to be reprogrammed in order to change their wakeup settings and,
-> second, because they may need to be operatonal for their children
-> to be successfully suspended.  That is a problem, though, if there
-> are many runtime-suspended devices that need to be resumed this
-> way during system suspend, because the .prepare() PM callbacks of
-> devices are executed sequentially and the times taken by them
-> accumulate, which may increase the total system suspend time quite
-> a bit.
->
-> For this reason, move the resume of runtime-suspended devices up
-> to the next phase of device suspend (during system suspend), except
-> for the ones that have power.ignore_children set.  The exception is
-> made, because the devices with power.ignore_children set may still
-> be necessary for their children to be successfully suspended (during
-> system suspend) and they won't be resumed automatically as a result
-> of the runtime resume of their children.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Andy King <acking@vmware.com>
+Cc: Dmitry Torokhov <dtor@vmware.com>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/misc/vmw_vmci/vmci_guest.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-You can merge these two via your tree if you want.  I don't have any
-changes queued up for pci-driver.c.
+diff --git a/drivers/misc/vmw_vmci/vmci_guest.c b/drivers/misc/vmw_vmci/vmci_guest.c
+index d35cda0..e0d5017 100644
+--- a/drivers/misc/vmw_vmci/vmci_guest.c
++++ b/drivers/misc/vmw_vmci/vmci_guest.c
+@@ -383,11 +383,12 @@ static int vmci_enable_msix(struct pci_dev *pdev,
+ 		vmci_dev->msix_entries[i].vector = i;
+ 	}
+ 
+-	result = pci_enable_msix(pdev, vmci_dev->msix_entries, VMCI_MAX_INTRS);
++	result = pci_enable_msix_exact(pdev,
++				       vmci_dev->msix_entries, VMCI_MAX_INTRS);
+ 	if (result == 0)
+ 		vmci_dev->exclusive_vectors = true;
+-	else if (result > 0)
+-		result = pci_enable_msix(pdev, vmci_dev->msix_entries, 1);
++	else if (result == -ENOSPC)
++		result = pci_enable_msix_exact(pdev, vmci_dev->msix_entries, 1);
+ 
+ 	return result;
+ }
+-- 
+1.7.7.6
 
-Bjorn
-
-> ---
->  drivers/pci/pci-driver.c |   33 +++++++++++++++++++++++++--------
->  1 file changed, 25 insertions(+), 8 deletions(-)
->
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -616,15 +616,11 @@ static int pci_pm_prepare(struct device
->         int error = 0;
->
->         /*
-> -        * PCI devices suspended at run time need to be resumed at this
-> -        * point, because in general it is necessary to reconfigure them for
-> -        * system suspend.  Namely, if the device is supposed to wake up the
-> -        * system from the sleep state, we may need to reconfigure it for this
-> -        * purpose.  In turn, if the device is not supposed to wake up the
-> -        * system from the sleep state, we'll have to prevent it from signaling
-> -        * wake-up.
-> +        * Devices having power.ignore_children set may still be necessary for
-> +        * suspending their children in the next phase of device suspend.
->          */
-> -       pm_runtime_resume(dev);
-> +       if (dev->power.ignore_children)
-> +               pm_runtime_resume(dev);
->
->         if (drv && drv->pm && drv->pm->prepare)
->                 error = drv->pm->prepare(dev);
-> @@ -654,6 +650,16 @@ static int pci_pm_suspend(struct device
->                 goto Fixup;
->         }
->
-> +       /*
-> +        * PCI devices suspended at run time need to be resumed at this point,
-> +        * because in general it is necessary to reconfigure them for system
-> +        * suspend.  Namely, if the device is supposed to wake up the system
-> +        * from the sleep state, we may need to reconfigure it for this purpose.
-> +        * In turn, if the device is not supposed to wake up the system from the
-> +        * sleep state, we'll have to prevent it from signaling wake-up.
-> +        */
-> +       pm_runtime_resume(dev);
-> +
->         pci_dev->state_saved = false;
->         if (pm->suspend) {
->                 pci_power_t prev = pci_dev->current_state;
-> @@ -808,6 +814,14 @@ static int pci_pm_freeze(struct device *
->                 return 0;
->         }
->
-> +       /*
-> +        * This used to be done in pci_pm_prepare() for all devices and some
-> +        * drivers may depend on it, so do it here.  Ideally, runtime-suspended
-> +        * devices should not be touched during freeze/thaw transitions,
-> +        * however.
-> +        */
-> +       pm_runtime_resume(dev);
-> +
->         pci_dev->state_saved = false;
->         if (pm->freeze) {
->                 int error;
-> @@ -915,6 +929,9 @@ static int pci_pm_poweroff(struct device
->                 goto Fixup;
->         }
->
-> +       /* The reason to do that is the same as in pci_pm_suspend(). */
-> +       pm_runtime_resume(dev);
-> +
->         pci_dev->state_saved = false;
->         if (pm->poweroff) {
->                 int error;
->
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
