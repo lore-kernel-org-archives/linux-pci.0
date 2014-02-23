@@ -1,54 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38758 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753375AbaBSQDE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 11:03:04 -0500
-Date: Wed, 19 Feb 2014 17:05:01 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc: linux-kernel@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] xen-pciback: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140219160501.GA32067@dhcp-26-207.brq.redhat.com>
-References: <1392804931-30671-10-git-send-email-agordeev@redhat.com>
- <5304CC49.7020000@oracle.com>
- <5304D063.90000@oracle.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:64961 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752163AbaBWXGX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Feb 2014 18:06:23 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 1/2] ACPI / PM: Resume runtime-suspended devices later during system suspend
+Date: Mon, 24 Feb 2014 00:20:11 +0100
+Message-ID: <24034179.VSBkt6DiQs@vostro.rjw.lan>
+In-Reply-To: <1853950.oxM3KDpyLu@vostro.rjw.lan>
+References: <1853950.oxM3KDpyLu@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5304D063.90000@oracle.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 10:40:19AM -0500, Boris Ostrovsky wrote:
-> >>diff --git a/drivers/xen/xen-pciback/pciback_ops.c
-> >>b/drivers/xen/xen-pciback/pciback_ops.c
-> >>index 64eb0cd..f5b4c3e 100644
-> >>--- a/drivers/xen/xen-pciback/pciback_ops.c
-> >>+++ b/drivers/xen/xen-pciback/pciback_ops.c
-> >>@@ -213,9 +213,15 @@ int xen_pcibk_enable_msix(struct
-> >>xen_pcibk_device *pdev,
-> >>          entries[i].vector = op->msix_entries[i].vector;
-> >>      }
-> >>  -    result = pci_enable_msix(dev, entries, op->value);
-> >>+    result = pci_enable_msix_range(dev, entries, op->value, op->value);
-> >>+    if (result < op->value) {
-> >
-> >
-> >I think it would be better to have 'if (result != op->value)', in
-> >case op->value is negative (which presumably it should never be).
-> 
-> 
-> Better yet, at the top of the routine we check 'if (op->value >
-> SH_INFO_MAX_VEC)'. If you add '|| op->value < 0' we'd be all set.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-xen_pci_op::value is uint32_t
+Runtime-suspended devices are resumed during system suspend by
+acpi_subsys_prepare() for two reasons: First, because they may need
+to be reprogrammed in order to change their wakeup settings and,
+second, because they may need to be operatonal for their children
+to be successfully suspended.  That is a problem, though, if there
+are many runtime-suspended devices that need to be resumed this
+way during system suspend, because the .prepare() PM callbacks of
+devices are executed sequentially and the times taken by them
+accumulate, which may increase the total system suspend time quite
+a bit.
 
-> -boris
+For this reason, move the resume of runtime-suspended devices up
+to the next phase of device suspend (during system suspend), except
+for the ones that have power.ignore_children set.  The exception is
+made, because the devices with power.ignore_children set may still
+be necessary for their children to be successfully suspended (during
+system suspend) and they won't be resumed automatically as a result
+of the runtime resume of their children.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/device_pm.c |   41 ++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 3 deletions(-)
+
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -901,15 +901,30 @@ EXPORT_SYMBOL_GPL(acpi_dev_resume_early)
+ int acpi_subsys_prepare(struct device *dev)
+ {
+ 	/*
+-	 * Follow PCI and resume devices suspended at run time before running
+-	 * their system suspend callbacks.
++	 * Devices having power.ignore_children set may still be necessary for
++	 * suspending their children in the next phase of device suspend.
+ 	 */
+-	pm_runtime_resume(dev);
++	if (dev->power.ignore_children)
++		pm_runtime_resume(dev);
++
+ 	return pm_generic_prepare(dev);
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_prepare);
+ 
+ /**
++ * acpi_subsys_suspend - Run the device driver's suspend callback.
++ * @dev: Device to handle.
++ *
++ * Follow PCI and resume devices suspended at run time before running their
++ * system suspend callbacks.
++ */
++int acpi_subsys_suspend(struct device *dev)
++{
++	pm_runtime_resume(dev);
++	return pm_generic_suspend(dev);
++}
++
++/**
+  * acpi_subsys_suspend_late - Suspend device using ACPI.
+  * @dev: Device to suspend.
+  *
+@@ -937,6 +952,23 @@ int acpi_subsys_resume_early(struct devi
+ 	return ret ? ret : pm_generic_resume_early(dev);
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_resume_early);
++
++/**
++ * acpi_subsys_freeze - Run the device driver's freeze callback.
++ * @dev: Device to handle.
++ */
++int acpi_subsys_freeze(struct device *dev)
++{
++	/*
++	 * This used to be done in acpi_subsys_prepare() for all devices and
++	 * some drivers may depend on it, so do it here.  Ideally, however,
++	 * runtime-suspended devices should not be touched during freeze/thaw
++	 * transitions.
++	 */
++	pm_runtime_resume(dev);
++	return pm_generic_freeze(dev);
++}
++
+ #endif /* CONFIG_PM_SLEEP */
+ 
+ static struct dev_pm_domain acpi_general_pm_domain = {
+@@ -947,8 +979,11 @@ static struct dev_pm_domain acpi_general
+ #endif
+ #ifdef CONFIG_PM_SLEEP
+ 		.prepare = acpi_subsys_prepare,
++		.suspend = acpi_subsys_suspend,
+ 		.suspend_late = acpi_subsys_suspend_late,
+ 		.resume_early = acpi_subsys_resume_early,
++		.freeze = acpi_subsys_freeze,
++		.poweroff = acpi_subsys_suspend,
+ 		.poweroff_late = acpi_subsys_suspend_late,
+ 		.restore_early = acpi_subsys_resume_early,
+ #endif
+
