@@ -1,83 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 5/6] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
-Date: Sun, 02 Feb 2014 01:58:04 +0100
-Message-ID: <2548915.5LSBQHCSHC@vostro.rjw.lan>
-In-Reply-To: <1519631.YS65c9Af2C@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1693151.2qrLZHyp0o@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:64805 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750786AbaBXIKU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 03:10:20 -0500
+Date: Mon, 24 Feb 2014 09:12:09 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Brian King <brking@linux.vnet.ibm.com>,
+	James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Wendy Xiong <wenxiong@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 4/9] ipr: Use pci_enable_msi_range() and
+ pci_enable_msix_range()
+Message-ID: <20140224081209.GA32200@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <eb0b62be65c050533f2565fcf3f1d673770dfd67.1389904166.git.agordeev@redhat.com>
+ <20140128095441.GA6951@dhcp-26-207.brq.redhat.com>
+ <52E7CCAD.5070008@linux.vnet.ibm.com>
+ <20140129132651.GA27764@dhcp-26-207.brq.redhat.com>
+ <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140130140630.GA32349@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Jan 30, 2014 at 03:06:30PM +0100, Alexander Gordeev wrote:
+> On Wed, Jan 29, 2014 at 02:26:52PM +0100, Alexander Gordeev wrote:
+> > > Do you want me to rediff your patches on top of this one,
+> > > or do you want to keep the entire MSI series together
+> > > and do the rediff? Otherwise the patches seem fine.
+> > 
+> > I would prefer the former.
+> 
+> Hi Brian,
+> 
+> I am sending the refreshed patches on top of "ipr: Handle early EEH".
 
-Since acpi_hotplug_notify_cb() does not use its data argument any
-more, the second argument of acpi_install_hotplug_notify_handler()
-can be dropped, so do that and update its callers accordingly.
+Hi Brian,
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c                |    6 +++---
- drivers/pci/hotplug/acpiphp_glue.c |    2 +-
- include/acpi/acpi_bus.h            |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+What three the two patches you ACKed are against?
+Should I ask James to take them?
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -582,10 +582,10 @@ static void acpi_hotplug_notify_cb(acpi_
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
-+void acpi_install_hotplug_notify_handler(acpi_handle handle)
- {
- 	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				    acpi_hotplug_notify_cb, data);
-+				    acpi_hotplug_notify_cb, NULL);
- }
- 
- void acpi_remove_hotplug_notify_handler(acpi_handle handle)
-@@ -2024,7 +2024,7 @@ static void acpi_scan_init_hotplug(acpi_
- 	list_for_each_entry(hwid, &pnp.ids, list) {
- 		handler = acpi_scan_match_handler(hwid->id, NULL);
- 		if (handler) {
--			acpi_install_hotplug_notify_handler(handle, handler);
-+			acpi_install_hotplug_notify_handler(handle);
- 			break;
- 		}
- 	}
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -362,7 +362,7 @@ static acpi_status register_slot(acpi_ha
- 
- 	/* install notify handler */
- 	if (!(newfunc->flags & FUNC_HAS_DCK))
--		acpi_install_hotplug_notify_handler(handle, NULL);
-+		acpi_install_hotplug_notify_handler(handle);
- 
- 	return AE_OK;
- }
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -443,7 +443,7 @@ static inline bool acpi_device_enumerate
- typedef void (*acpi_hp_callback)(void *data, u32 src);
- 
- acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
-+void acpi_install_hotplug_notify_handler(acpi_handle handle);
- void acpi_remove_hotplug_notify_handler(acpi_handle handle);
- 
- /**
+Thanks!
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
