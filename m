@@ -1,43 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:59331 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753040AbaBZTsh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:48:37 -0500
-Received: by mail-ie0-f172.google.com with SMTP id as1so637102iec.3
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:48:37 -0800 (PST)
+Received: from mail.skyhub.de ([78.46.96.112]:55379 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752439AbaBXOJe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 09:09:34 -0500
+Date: Mon, 24 Feb 2014 15:09:31 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, dougthompson@xmission.com, bhelgaas@google.com,
+	JBeulich@suse.com, dan.carpenter@oracle.com,
+	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
+	linux-pci@vger.kernel.org, Arindam.Nath@amd.com
+Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
+Message-ID: <20140224140931.GA16457@pd.tnic>
+References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+ <20140221142749.GC11531@pd.tnic>
+ <5307BF6F.8040303@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <201402241200.21944.arnd@arndb.de>
-References: <201402241200.21944.arnd@arndb.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Feb 2014 12:48:17 -0700
-Message-ID: <CAErSpo5RV=w+DkgHSZZPOFGiEBBxMSraLV3TepYUZwDJuV+Jzg@mail.gmail.com>
-Subject: Re: DMABOUNCE in pci-rcar
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Magnus Damm <damm@opensource.se>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Simon Horman <horms+renesas@verge.net.au>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-sh@vger.kernel.org, Ben Dooks <ben-linux@fluff.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5307BF6F.8040303@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 24, 2014 at 4:00 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> Hi Magnus,
+On Fri, Feb 21, 2014 at 03:04:47PM -0600, Aravind Gopalakrishnan wrote:
+> F{3,4} are used by hwmon/k10temp.c and hwmon/fam15h_power.c and they
+> will need definitions to be places here in pci_ids.h But I'm not sure
+> if the hwmon drivers need to carry support for this model yet (will
+> verify that)
 >
-> I noticed during randconfig testing that you enabled DMABOUNCE for the
-> pci-rcar-gen2 driver as posted in this patch https://lkml.org/lkml/2014/2/5/30
->
-> I didn't see the original post unfortunately, but I fear we have to
-> revert it and come up with a better solution, ...
+> If not, I'll remove them and resend.
 
-Sounds like I should drop the following patches from my pci/host-rcar
-branch for now?
+Yes, please check that and let me know.
 
-  PCI: rcar: Add DMABOUNCE support
-  PCI: rcar: Enable BOUNCE in case of HIGHMEM
-  PCI: rcar: Make the Kconfig dependencies more generic
+Thanks.
 
-Bjorn
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
