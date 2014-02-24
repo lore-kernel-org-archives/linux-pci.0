@@ -1,81 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from know-smtprelay-omc-10.server.virginmedia.net ([80.0.253.74]:60926
-	"EHLO know-smtprelay-omc-10.server.virginmedia.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753948AbaBRRbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 12:31:22 -0500
-Message-ID: <1392744674.15829.31.camel@artifact>
-Subject: Re: pci-3.14 resource alloc
-From: Steven Newbury <steve@snewbury.org.uk>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:64715 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbaBXUvx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 15:51:53 -0500
+Received: by mail-ie0-f180.google.com with SMTP id ar20so4003362iec.39
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 12:51:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
+References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
+ <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
+ <1393020186.9111.91.camel@ul30vt.home> <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
+ <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 24 Feb 2014 13:51:32 -0700
+Message-ID: <CAErSpo7tyzujCqvsQcns1wX+j5jM1=Xo9TiCC+5-h67uXqbGSg@mail.gmail.com>
+Subject: Re: Architectural question regarding IOV support in Linux 3.13.4
+To: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+Cc: Yu Zhao <yuzhao@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Tue, 18 Feb 2014 17:31:14 +0000
-In-Reply-To: <CAErSpo4CLB7G5DHpdr69t+wZjywuOXKXsvS6W3eTMJgU5Xpycg@mail.gmail.com>
-References: <1390773698.3450.12.camel@artifact>
-	 <CAE9FiQVD=oVHM5WJgSJ5cNpXZ1NYy9E_pcGWfjKnmD9OZoHHsw@mail.gmail.com>
-	 <1391643656.1067.1.camel@artifact>
-	 <CAE9FiQV8jutRhaBicL4kjqVYd07FzHmNoSN3NxdA2TYvOc_KUg@mail.gmail.com>
-	 <z9zi9m.n0zpxd.1hgeaud-qmf@mail.snewbury.org.uk>
-	 <i9nn22.n0zs79.1hgeaud-qmf@mail.snewbury.org.uk>
-	 <1392392764.3520.11.camel@devel-n900>
-	 <CAE9FiQV3H_nxH0gxcM0kW4uLm6b_qmHT9hRQUVY_4xPqjpvMtA@mail.gmail.com>
-	 <1392718107.15829.12.camel@artifact>
-	 <CAErSpo6cnT6JDh0rj_3TCjw8vkLbM0ztzES0Qh1R=wUCp0PfTw@mail.gmail.com>
-	 <CAErSpo4CLB7G5DHpdr69t+wZjywuOXKXsvS6W3eTMJgU5Xpycg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2014-02-18 at 07:37 -0700, Bjorn Helgaas wrote:
-> On Tue, Feb 18, 2014 at 6:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Tue, Feb 18, 2014 at 3:08 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
-> 
-> >> No, the only unusual option is I use pci=nocrs since the bios is
-> >> completely ignorant of support for 64bit BARs.
-> >
-> > Hi Steven, this is a tangent, but can you collect the complete dmesg
-> > log with "pci=nocrs" and let me know what happens when you *don't* use
-> > "pci=nocrs" (a complete dmesg log there would be useful too, but I
-> > don't know if you can boot without it)?  I think Linux *should* be
-> > able to handle 64bit BARs even if the BIOS doesn't.
-> >
-> > Please post these as a separate thread so we don't muddle this
-> > conversation with Yinghai.
-> 
-> Oh, never mind.  I think I remember now.  I think the problem is not
-> so much that the BIOS doesn't handle 64bit *BARs*, but that your BIOS
-> doesn't report 64bit host bridge *apertures*, and you want to use
-> space above 4G for a graphics card or something.
-> 
-Yes, exactly. I should have stated it better.  I need to push the
-on-board i965 up above 4G to make room for a radeon which is accessed
-through a 32 bit only bridge.  The BIOS doesn't provide any
-functionality like this.  The intel devs seemed a little surprised that
-the i965 actually worked stably in this configuration given known
-errata, but I've actually had no problems with this side of things. 
+On Mon, Feb 24, 2014 at 12:22 PM, Zytaruk, Kelly <Kelly.Zytaruk@amd.com> wrote:
+>
+>>On Fri, Feb 21, 2014 at 2:03 PM, Alex Williamson <alex.williamson@redhat.com> wrote:
+>>On Fri, 2014-02-21 at 14:11 -0700, Bjorn Helgaas wrote:
+>>> [+cc Alex, Yu]
+>>>
+>>> On Fri, Feb 21, 2014 at 10:45 AM, Zytaruk, Kelly <Kelly.Zytaruk@amd.com> wrote:
+>>> >
+>>> > I am working with SR-IOV and I have a question regarding the function
+>>> > sriov_init() in ../drivers/pci/iov.c (linux versions 3.4.9 and 3.13.4)
+>>> >
+>>> > In sriov_init() the code first checks whether the PF is a Root complex
+>>> >  endpoint (0x9) or an Express Endpoint (0x0) as shown in the code
+>>> >  snippet below.  If it is neither it returns the No device error.
+>>> >
+>>> > static int sriov_init(struct pci_dev *dev, int pos)
+>>> > {
+>>> >          int i;
+>>> >          int rc;
+>>> >          int nres;
+>>> >          u32 pgsz;
+>>> >          u16 ctrl, total, offset, stride;
+>>> >          struct pci_sriov *iov;
+>>> >          struct resource *res;
+>>> >          struct pci_dev *pdev;
+>>> >
+>>> >        if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
+>>> >              pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+>>> >                  return -ENODEV;
+>>> >
+>>> > My question is why PCI_EXP_TYPE_LEG_END (0x1) is omitted as being a
+>>> >  valid endpoint.  By excluding Legacy endpoints it fails enabling
+>>> >  SR-IOV on a VGA PF.
+>>> >
+>>> > Is there a design/specification reason why legacy was excluded or was
+>>> >  it just an assumption that VGA would never support SR-IOV?
+>>> >
+>>> > If there is no valid reason to exclude PCI_EXP_TYPE_LEG_END, I would
+>>> >  like to discuss having it included as a valid endpoint for SR-IOV.
+>>>
+>>> Good question.  It looks like it's been that way since the beginning
+>>> [1], but I don't know why.  I don't see any restriction in the spec
+>>> about SR-IOV and legacy endpoints.
+>>>
+>>> I also don't know whether VGA is an issue.  There are some legacy
+>>> addressing issues for [mem 0xa0000-0xbffff] and [io 0x3b0-0x3bb] and
+>>> [io 0x3c0-0x3df].  For example, when a bridge has its VGA Enable bit
+>>> set, it positively decodes [mem 0xa0000-0xbffff] even if that range
+>>> isn't included in one of the bridge windows.  I don't know whether a
+>>> VGA device is similarly allowed to decode that range even if it's not
+>>> in a BAR.  If it is, I could imagine issues if enabling SR-IOV created
+>>> several VGA VFs.
+>>VFs cannot support I/O port space by definition, so I don't think a "VGA
+>>VF" could actually exist.  There would be nothing wrong with a non-VGA
+>>GPU VF though.  I also don't see how the differences in Legacy Endpoint
+>>rules versus a standard Endpoint would preclude supporting SR-IOV.  I
+>>don't think the SR-IOV spec makes any demands on whether the PF requires
+>>I/O port resources, which I assume is the main reason for this to call
+>>itself Legacy.  I'd guess it was likely just an oversight and we should
+>>add legacy endpoints (or remove the test altogether and trust that if a
+>>device has an SR-IOV capability, we should initialize it).  Thanks,
+>>
+>>Alex
+>>
+>>I agree. I vaguely remember there was some reason that excludes legacy
+>>endpoints from using SR-IOV. But after a quick look at the latest specs,
+>>I didn't find any.
+>>
+> Only Legacy Endpoints can claim I/O.  VFs are not allowed to claim I/O.
+> VGA devices claim I/O.
+>
+> The SR-IOV spec 1.1 section 3.4.1.6 states
+> “The Class Code register is read-only and is used to identify the generic function
+> of the device and, in some cases, a specific register level programming interface.
+> The field in the PF and associated VFs must return the same value when read.”
+>
+> If the PF is a VGA device then by the definition in the SR-IOV spec the class code
+> of the VF would also indicate it as a VGA device, ie Subclass 0x0 = VGA,
+> subclass 0x80 = OTHER_DISPLAY_CONTROLLER.
+>
+> Ideally we would want to have the PF sub-class as 0x0 and the VF subclass as 0x80
+> But the spec doesn't support this.
+>
+> One speculation as to why Legacy endpoints were omitted might be the assumption
+> that doing so would allow VGA VFs to be created.
+>
+> It is not reasonable to prevent a VGA PF from enabling SR-IOV as this is a real world
+> possibility.  We might need to add more code elsewhere however to prevent a VF
+> from becoming a VGA device outside of passing it through to a guest VM.
 
-> That's not really anything we can fix in PCI because PCI doesn't
-> discover those apertures.  Host bridge drivers like the generic ACPI
-> pci_root.c or the native amd_bus.c discover them.  If those drivers
-> don't discover them, PCI can't just make them up.
+Can you try out Yu's patch and see what happens?  If you do turn on
+SR-IOV on this device, it would be interesting to see the complete
+dmesg log and "lspci -vv" output to see what we do with it.
 
-32 bit only bridges must be getting pretty rare by now, and I presume
-any new hardware out there with a dockable PCI bus would provide 64 bit
-resource allocation for host bridge apertures when booting to a 64 bit
-OS?  Maybe not?
-> 
-> It might be nice if we had cleaner kernel options to say "assume a
-> host bridge window here" and "put this device here," so you didn't
-> have to use the big hammer of "pci=nocrs".  It's sort of a pain to
-> figure out how to attach info like that to the correct device (there
-> might be several host bridges, so how do you specify which one you
-> care about?), but maybe it could be done.
-> 
-That would be much better, even if it's only some way to say "ignore crs
-for *this* host bridge (and parents)", or "for host bridges to which
-*this* device is attached".
-
-
+Bjorn
