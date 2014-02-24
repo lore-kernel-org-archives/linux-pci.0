@@ -1,93 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50110 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754180AbaBSPip (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 10:38:45 -0500
-Message-ID: <5304D063.90000@oracle.com>
-Date: Wed, 19 Feb 2014 10:40:19 -0500
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] xen-pciback: Use pci_enable_msix_range() instead of pci_enable_msix()
-References: <1392804931-30671-10-git-send-email-agordeev@redhat.com> <5304CC49.7020000@oracle.com>
-In-Reply-To: <5304CC49.7020000@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:30566 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751175AbaBXIAx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 03:00:53 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Naresh Kumar Inna <naresh@chelsio.com>,
+	Arvind Bhushan <arvindb@chelsio.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 06/23] csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:06 +0100
+Message-Id: <c7d2dc937c290f25c179f2ebbe1fcdb79e13b010.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/19/2014 10:22 AM, Boris Ostrovsky wrote:
-> On 02/19/2014 05:15 AM, Alexander Gordeev wrote:
->> As result of deprecation of MSI-X/MSI enablement functions
->> pci_enable_msix() and pci_enable_msi_block() all drivers
->> using these two interfaces need to be updated to use the
->> new pci_enable_msi_range() and pci_enable_msix_range()
->> interfaces.
->>
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
->> Cc: David Vrabel <david.vrabel@citrix.com>
->> Cc: linux-pci@vger.kernel.org
->> ---
->>   drivers/xen/xen-pciback/pciback_ops.c |   16 ++++++++++------
->>   1 files changed, 10 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/xen/xen-pciback/pciback_ops.c 
->> b/drivers/xen/xen-pciback/pciback_ops.c
->> index 64eb0cd..f5b4c3e 100644
->> --- a/drivers/xen/xen-pciback/pciback_ops.c
->> +++ b/drivers/xen/xen-pciback/pciback_ops.c
->> @@ -213,9 +213,15 @@ int xen_pcibk_enable_msix(struct 
->> xen_pcibk_device *pdev,
->>           entries[i].vector = op->msix_entries[i].vector;
->>       }
->>   -    result = pci_enable_msix(dev, entries, op->value);
->> +    result = pci_enable_msix_range(dev, entries, op->value, op->value);
->> +    if (result < op->value) {
->
->
-> I think it would be better to have 'if (result != op->value)', in case 
-> op->value is negative (which presumably it should never be).
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Naresh Kumar Inna <naresh@chelsio.com>
+Cc: Arvind Bhushan <arvindb@chelsio.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/csiostor/csio_hw.h  |    2 +-
+ drivers/scsi/csiostor/csio_isr.c |   22 +++++++++-------------
+ 2 files changed, 10 insertions(+), 14 deletions(-)
 
-Better yet, at the top of the routine we check 'if (op->value > 
-SH_INFO_MAX_VEC)'. If you add '|| op->value < 0' we'd be all set.
-
--boris
-
->
->
-> -boris
->
->
->> +        if (result > 0)
->> +            pci_disable_msix(dev);
->>   -    if (result == 0) {
->> +        pr_warn_ratelimited("%s: error enabling MSI-X for guest %u: 
->> err %d!\n",
->> +                    pci_name(dev), pdev->xdev->otherend_id,
->> +                    result);
->> +    } else {
->>           for (i = 0; i < op->value; i++) {
->>               op->msix_entries[i].entry = entries[i].entry;
->>               if (entries[i].vector)
->> @@ -227,10 +233,8 @@ int xen_pcibk_enable_msix(struct 
->> xen_pcibk_device *pdev,
->>                           pci_name(dev), i,
->>                           op->msix_entries[i].vector);
->>           }
->> -    } else
->> -        pr_warn_ratelimited("%s: error enabling MSI-X for guest %u: 
->> err %d!\n",
->> -                    pci_name(dev), pdev->xdev->otherend_id,
->> -                    result);
->> +    }
->> +
->>       kfree(entries);
->>         op->value = result;
->
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 49b1daa..5db2d85 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -94,7 +94,7 @@ enum {
+ };
+ 
+ struct csio_msix_entries {
+-	unsigned short	vector;		/* Vector assigned by pci_enable_msix */
++	unsigned short	vector;		/* Assigned MSI-X vector */
+ 	void		*dev_id;	/* Priv object associated w/ this msix*/
+ 	char		desc[24];	/* Description of this vector */
+ };
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 91ba91d..a8c748a 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -499,7 +499,7 @@ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
+ static int
+ csio_enable_msix(struct csio_hw *hw)
+ {
+-	int rv, i, j, k, n, min, cnt;
++	int i, j, k, n, min, cnt;
+ 	struct csio_msix_entries *entryp;
+ 	struct msix_entry *entries;
+ 	int extra = CSIO_EXTRA_VECS;
+@@ -521,19 +521,15 @@ csio_enable_msix(struct csio_hw *hw)
+ 
+ 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
+ 
+-	while ((rv = pci_enable_msix(hw->pdev, entries, cnt)) >= min)
+-		cnt = rv;
+-	if (!rv) {
+-		if (cnt < (hw->num_sqsets + extra)) {
+-			csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
+-			csio_reduce_sqsets(hw, cnt - extra);
+-		}
+-	} else {
+-		if (rv > 0)
+-			csio_info(hw, "Not using MSI-X, remainder:%d\n", rv);
+-
++	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
++	if (cnt < 0) {
+ 		kfree(entries);
+-		return -ENOMEM;
++		return cnt;
++	}
++
++	if (cnt < (hw->num_sqsets + extra)) {
++		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
++		csio_reduce_sqsets(hw, cnt - extra);
+ 	}
+ 
+ 	/* Save off vectors */
+-- 
+1.7.7.6
 
