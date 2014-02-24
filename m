@@ -1,58 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:51225 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270AbaBKBIH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 20:08:07 -0500
-Received: by mail-ig0-f170.google.com with SMTP id m12so7865441iga.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 17:08:07 -0800 (PST)
-Date: Mon, 10 Feb 2014 18:08:03 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: David Miller <davem@davemloft.net>
-Cc: agordeev@redhat.com, linux-kernel@vger.kernel.org,
-	mchan@broadcom.com, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 01/34] bnx2: Use pci_enable_msix_range()
-Message-ID: <20140211010803.GD12851@google.com>
-References: <cover.1391172839.git.agordeev@redhat.com>
- <434a34e01c353441131204edef36126a95e8928a.1391172839.git.agordeev@redhat.com>
- <20140131.133051.483295479425700960.davem@davemloft.net>
- <20140211003814.GC12851@google.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:34739 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316AbaBXRQO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 12:16:14 -0500
+Received: by mail-pa0-f46.google.com with SMTP id rd3so6789446pab.19
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 09:16:13 -0800 (PST)
+Message-ID: <530B7E63.2070908@kernel.dk>
+Date: Mon, 24 Feb 2014 09:16:19 -0800
+From: Jens Axboe <axboe@kernel.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140211003814.GC12851@google.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: linux-kernel@vger.kernel.org, Mike Miller <mike.miller@hp.com>,
+	Asai Thambi S P <asamymuthupa@micron.com>,
+	Joshua Morris <josh.h.morris@us.ibm.com>,
+	Philip Kelleher <pjk1939@linux.vnet.ibm.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	iss_storagedev@hp.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/9] block: Use pci_enable_msix_range() instead of pci_enable_msix()
+References: <cover.1392799751.git.agordeev@redhat.com> <20140221234613.GE29129@kernel.dk> <20140222093843.GB27897@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20140222093843.GB27897@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 10, 2014 at 05:38:14PM -0700, Bjorn Helgaas wrote:
-> On Fri, Jan 31, 2014 at 01:30:51PM -0800, David Miller wrote:
-> > 
-> > Please submit this patch series when the net-next tree opens back up,
-> > I'm only accepting bug fixes at this time.
-> > 
-> > Also, please always provide a proper "00/NN" openning posting for a
-> > patch series, that gives background and high level information about
-> > what your patch series is trying to achieve and how it achieves it.
-> > 
-> > That way people reviewing the patches know what to expect, and why,
-> > and I have exactly one posting to reply to if I apply the whole
-> > series.
-> 
-> I *think* this whole series applies to drivers/net (the usual patch sending
-> tools like "stg mail" insert the diffstat automatically in the 00/nn
-> message), and it sounds like David is willing to apply them via his tree,
-> so I'm ignoring these for now.  Let me know if you need me to do anything.
+On 2014-02-22 01:38, Alexander Gordeev wrote:
+> On Fri, Feb 21, 2014 at 03:46:13PM -0800, Jens Axboe wrote:
+>> On Wed, Feb 19 2014, Alexander Gordeev wrote:
+>>> As result of deprecation of MSI-X/MSI enablement functions
+>>> pci_enable_msix() and pci_enable_msi_block() all drivers
+>>> using these two interfaces need to be updated to use the
+>>> new pci_enable_msi_range() and pci_enable_msix_range()
+>>> interfaces.
+>>
+>> Thanks. Applied 3-4, and 6-9 (didn't get the others).
+>
+> Oh, I just realized I posted outdated series, sorry for that :(
+> Out of applied patch 4 is not needed and patch 9 needs a rework.
+>
+> Should I repost the whole series?
 
-I skimmed these and the scsi patches, and I think you were right in
-proposing an MSI-X enable function that takes a single "number of vectors"
-argument, in addition to pci_enable_msix_range(), which takes a minimum and
-a maximum.  Obviously the pci_enable_msix_fixed() or whatever could be a
-simple #define wrapper or something.
+Send a revised series against the previous, since they are already 
+committed.
 
-Of the fifty-some net and scsi patches, I counted 23 that use the min ==
-max pattern, and it seems a shame to have to repeat that expression.
+-- 
+Jens Axboe
 
-BTW, I noticed that Documentation/PCI/MSI-HOWTO.txt uses
-pci_enable_msi_range() in some of the examples that are really talking
-about pci_enable_msix_range() (4.3.1.1 and 4.3.1.2, at least).
-
-Bjorn
