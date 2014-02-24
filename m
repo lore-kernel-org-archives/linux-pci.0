@@ -1,77 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49352 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbaBCOwX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 09:52:23 -0500
-Date: Mon, 3 Feb 2014 09:52:05 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Eiichiro Oiwa <eiichiro.oiwa.nm@hitachi.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-kernel @ vger . kernel . org" <linux-kernel@vger.kernel.org>,
-	"linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
-	linux-ia64@vger.kernel.org
-Subject: Re: [PATCH v2] Setting the IORESOURCE_ROM_SHADOW flag on a VGA card
- other than the primary prevents it from reading it's own rom. It will get
- the content of the shadowrom at C000 instead, which is of the primary VGA
- card and the driver of the secondary card will bail out.
-Message-ID: <20140203145205.GB2992@phenom.dumpdata.com>
-References: <20140130000831.GJ16825@google.com>
- <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1391160503-11122-1-git-send-email-linux@eikelenboom.it>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
+	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 08/23] hpsa: Fallback to MSI rather than to INTx if MSI-X failed
+Date: Mon, 24 Feb 2014 09:02:08 +0100
+Message-Id: <86ea36942166dad4c641425c1e9508a7b5d76836.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 31, 2014 at 10:28:22AM +0100, Sander Eikelenboom wrote:
-> Hi Bjorn / Tony,
-> 
-> I fixed up ia64 as well and brought it inline again with the x86 code,
-> but i don't have a ia64 machine, so that part is untested.
-> Perhaps Tony is able to review/test it ?
-> 
-> Sander
-> 
-> 
-> 
-> Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the primary
-> prevents it from reading it's own rom. It will get the content of the shadowrom
-> at C000 instead, which is of the primary VGA card and the driver of the
-> secondary card will bail out.
-> 
-> Fix this by checking if the arch code or vga-arbitration has already
-> determined the vga_default_device, if so only apply the fix to this
-> primary video device and let the comment reflect this.
-> 
-> v2:
->     - Fix pci_fixup_video both in x86 and ia64
-> 
-> 
-> Sander Eikelenboom (1):
->   Setting the IORESOURCE_ROM_SHADOW flag on a VGA card other than the
->     primary     prevents it from reading it's own rom. It will get the
->     content of the shadowrom     at C000 instead, which is of the
->     primary VGA card and the driver of the     secondary card will bail
->     out.
+Currently the driver falls back to INTx mode when MSI-X
+initialization failed. This is a suboptimal behaviour
+for chips that also support MSI. This update changes that
+behaviour and falls back to MSI mode in case MSI-X mode
+initialization failed.
 
-Your editor mutilated your subject line. It ought to have been just
-one line.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: iss_storagedev@hp.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/hpsa.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Anyhow, you can also add 'Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com'
-on the patch for the x86 part.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 868318a..52cfd19 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4180,11 +4180,9 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 		if (err > 0) {
+ 			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
+ 			       "available\n", err);
+-			goto default_int_mode;
+ 		} else {
+ 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+ 			       err);
+-			goto default_int_mode;
+ 		}
+ 	}
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+-- 
+1.7.7.6
 
-The ia64 "looks" OK to me, but my ia64 box won't boot v3.11 or later
-so I can't give it a 'Tested-by' yet.
-
-> 
->  arch/ia64/pci/fixup.c |   24 +++++++++++++-----------
->  arch/x86/pci/fixup.c  |   18 ++++++++++--------
->  2 files changed, 23 insertions(+), 19 deletions(-)
-> 
-> -- 
-> 1.7.10.4
-> 
