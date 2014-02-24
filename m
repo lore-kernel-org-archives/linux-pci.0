@@ -1,88 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 23/35] forcedeth: Fix invalid errno reporting in nv_request_irq()
-Date: Tue, 18 Feb 2014 11:11:52 +0100
-Message-Id: <d9b66ce651ddfc5ac7930cd1ac3574745ef4b511.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:46573 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716AbaBXVic (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 16:38:32 -0500
+Received: by mail-ig0-f171.google.com with SMTP id l13so662532iga.4
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 13:38:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <21860356.103351393198399120.JavaMail.weblogic@epml01>
+References: <21860356.103351393198399120.JavaMail.weblogic@epml01>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 24 Feb 2014 14:38:11 -0700
+Message-ID: <CAErSpo5WW4=aL_BqhnrG+J1Xq=FVtdu0BWkHUyeiOrbBhqmYwg@mail.gmail.com>
+Subject: Re: [patch 07/26] pci: pcie-designware: Remove irq_desc abuse
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	LKML <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Patrick McHardy <kaber@trash.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/nvidia/forcedeth.c |   22 ++++++++++++++--------
- 1 files changed, 14 insertions(+), 8 deletions(-)
+On Sun, Feb 23, 2014 at 4:33 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> On Monday, February 24, 2014 6:40 AM, Thomas Gleixner wrote:
+>>
+>> There is no reason to care about irq_desc in that context, escpecially
+>> as irq_data for that interrupt is retrieved as well.
+>>
+>> Use the proper accessor for the msi descriptor
+>>
+>> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Jingoo Han <jg1.han@samsung.com>
+>> Cc: Mohit Kumar <mohit.kumar@st.com>
+>> Cc: pci <linux-pci@vger.kernel.org>
+>
+> Acked-by: Jingoo Han <jg1.han@samsung.com>
 
-diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
-index 70cf97f..f4270b8 100644
---- a/drivers/net/ethernet/nvidia/forcedeth.c
-+++ b/drivers/net/ethernet/nvidia/forcedeth.c
-@@ -3952,8 +3952,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 			if (optimization_mode == NV_OPTIMIZATION_MODE_THROUGHPUT && !intr_test) {
- 				/* Request irq for rx handling */
- 				sprintf(np->name_rx, "%s-rx", dev->name);
--				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_RX].vector,
--						nv_nic_irq_rx, IRQF_SHARED, np->name_rx, dev) != 0) {
-+				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_RX].vector,
-+						  nv_nic_irq_rx, IRQF_SHARED, np->name_rx, dev);
-+				if (ret) {
- 					netdev_info(dev,
- 						    "request_irq failed for rx %d\n",
- 						    ret);
-@@ -3963,8 +3964,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 				}
- 				/* Request irq for tx handling */
- 				sprintf(np->name_tx, "%s-tx", dev->name);
--				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_TX].vector,
--						nv_nic_irq_tx, IRQF_SHARED, np->name_tx, dev) != 0) {
-+				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_TX].vector,
-+						  nv_nic_irq_tx, IRQF_SHARED, np->name_tx, dev);
-+				if (ret) {
- 					netdev_info(dev,
- 						    "request_irq failed for tx %d\n",
- 						    ret);
-@@ -3974,8 +3976,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 				}
- 				/* Request irq for link and timer handling */
- 				sprintf(np->name_other, "%s-other", dev->name);
--				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_OTHER].vector,
--						nv_nic_irq_other, IRQF_SHARED, np->name_other, dev) != 0) {
-+				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_OTHER].vector,
-+						  nv_nic_irq_other, IRQF_SHARED, np->name_other, dev);
-+				if (ret) {
- 					netdev_info(dev,
- 						    "request_irq failed for link %d\n",
- 						    ret);
-@@ -3991,7 +3994,9 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 				set_msix_vector_map(dev, NV_MSI_X_VECTOR_OTHER, NVREG_IRQ_OTHER);
- 			} else {
- 				/* Request irq for all interrupts */
--				if (request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_ALL].vector, handler, IRQF_SHARED, dev->name, dev) != 0) {
-+				ret = request_irq(np->msi_x_entry[NV_MSI_X_VECTOR_ALL].vector,
-+						  handler, IRQF_SHARED, dev->name, dev);
-+				if (ret) {
- 					netdev_info(dev,
- 						    "request_irq failed %d\n",
- 						    ret);
-@@ -4011,7 +4016,8 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 		ret = pci_enable_msi(np->pci_dev);
- 		if (ret == 0) {
- 			np->msi_flags |= NV_MSI_ENABLED;
--			if (request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev) != 0) {
-+			ret = request_irq(np->pci_dev->irq, handler, IRQF_SHARED, dev->name, dev);
-+			if (ret) {
- 				netdev_info(dev, "request_irq failed %d\n",
- 					    ret);
- 				pci_disable_msi(np->pci_dev);
--- 
-1.7.7.6
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
+Thomas, I assume you'll merge this along with the rest of your series.
+ I don't have any pending changes in this area.
+
+Bjorn
+
+> A few days ago, I noticed that irq_data_get_msi() can be used.
+> However, I did not submit the same patch. I really appreciate
+> your patch. :-)
+>
+> Best regards,
+> Jingoo Han
+>
+>> ---
+>>  drivers/pci/host/pcie-designware.c |    4 +---
+>>  1 file changed, 1 insertion(+), 3 deletions(-)
+>>
+>> Index: tip/drivers/pci/host/pcie-designware.c
+>> ===================================================================
+>> --- tip.orig/drivers/pci/host/pcie-designware.c
+>> +++ tip/drivers/pci/host/pcie-designware.c
+>> @@ -294,14 +294,12 @@ no_valid_irq:
+>>  static void clear_irq(unsigned int irq)
+>>  {
+>>       unsigned int pos, nvec;
+>> -     struct irq_desc *desc;
+>>       struct msi_desc *msi;
+>>       struct pcie_port *pp;
+>>       struct irq_data *data = irq_get_irq_data(irq);
+>>
+>>       /* get the port structure */
+>> -     desc = irq_to_desc(irq);
+>> -     msi = irq_desc_get_msi_desc(desc);
+>> +     msi = irq_data_get_msi(data);
+>>       pp = sys_to_pcie(msi->dev->bus->sysdata);
+>>       if (!pp) {
+>>               BUG();
