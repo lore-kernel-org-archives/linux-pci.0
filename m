@@ -1,52 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35875 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755196AbaBRKKs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:10:48 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jon Mason <jdmason@kudzu.us>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 21/35] s2io: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:11:50 +0100
-Message-Id: <0ec6a4ab2cfbebdfaa3eca063bc21e4d87161a6c.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+Received: from www.linutronix.de ([62.245.132.108]:60888 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752516AbaBXWGx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 17:06:53 -0500
+Date: Mon, 24 Feb 2014 23:06:48 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Jingoo Han <jg1.han@samsung.com>,
+	LKML <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Mohit Kumar <mohit.kumar@st.com>,
+	pci <linux-pci@vger.kernel.org>
+Subject: Re: [patch 07/26] pci: pcie-designware: Remove irq_desc abuse
+In-Reply-To: <CAErSpo5WW4=aL_BqhnrG+J1Xq=FVtdu0BWkHUyeiOrbBhqmYwg@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1402242306060.21251@ionos.tec.linutronix.de>
+References: <21860356.103351393198399120.JavaMail.weblogic@epml01> <CAErSpo5WW4=aL_BqhnrG+J1Xq=FVtdu0BWkHUyeiOrbBhqmYwg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Mon, 24 Feb 2014, Bjorn Helgaas wrote:
+> On Sun, Feb 23, 2014 at 4:33 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> > On Monday, February 24, 2014 6:40 AM, Thomas Gleixner wrote:
+> >>
+> >> There is no reason to care about irq_desc in that context, escpecially
+> >> as irq_data for that interrupt is retrieved as well.
+> >>
+> >> Use the proper accessor for the msi descriptor
+> >>
+> >> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> Cc: Jingoo Han <jg1.han@samsung.com>
+> >> Cc: Mohit Kumar <mohit.kumar@st.com>
+> >> Cc: pci <linux-pci@vger.kernel.org>
+> >
+> > Acked-by: Jingoo Han <jg1.han@samsung.com>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Thomas, I assume you'll merge this along with the rest of your series.
+>  I don't have any pending changes in this area.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/neterion/s2io.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+I can do, but it does not depend on anything else, so you can pick it
+up as well. Either way is fine.
 
-diff --git a/drivers/net/ethernet/neterion/s2io.c b/drivers/net/ethernet/neterion/s2io.c
-index 9eeddbd..56e3a9d 100644
---- a/drivers/net/ethernet/neterion/s2io.c
-+++ b/drivers/net/ethernet/neterion/s2io.c
-@@ -3792,9 +3792,10 @@ static int s2io_enable_msi_x(struct s2io_nic *nic)
- 	writeq(rx_mat, &bar0->rx_mat);
- 	readq(&bar0->rx_mat);
- 
--	ret = pci_enable_msix(nic->pdev, nic->entries, nic->num_entries);
-+	ret = pci_enable_msix_range(nic->pdev, nic->entries,
-+				    nic->num_entries, nic->num_entries);
- 	/* We fail init if error or we get less vectors than min required */
--	if (ret) {
-+	if (ret < 0) {
- 		DBG_PRINT(ERR_DBG, "Enabling MSI-X failed\n");
- 		kfree(nic->entries);
- 		swstats->mem_freed += nic->num_entries *
--- 
-1.7.7.6
+Thanks,
 
+	tglx
