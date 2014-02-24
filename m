@@ -1,73 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:63143 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753834AbaBCX2c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 18:28:32 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: [PATCH 1/24][Resend] ACPI / hotplug / PCI: Remove entries from bus->devices in reverse order
-Date: Tue, 04 Feb 2014 00:14:48 +0100
-Message-ID: <1839968.W3QXGMsfBF@vostro.rjw.lan>
-In-Reply-To: <7532948.aJNUotNMpR@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <20140203104408.GQ18029@intel.com> <7532948.aJNUotNMpR@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:27254 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751175AbaBXIAt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 03:00:49 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 03/23] bfa: Cleanup bfad_setup_intr() function
+Date: Mon, 24 Feb 2014 09:02:03 +0100
+Message-Id: <c3fb3d552113a7c180741cf9f577081fc690366f.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-According to the changelog of commit 29ed1f29b68a (PCI: pciehp: Fix null
-pointer deref when hot-removing SR-IOV device) it is unsafe to walk the
-bus->devices list of a PCI bus and remove devices from it in direct order,
-because that may lead to NULL pointer dereferences related to virtual
-functions.
-
-For this reason, change all of the bus->devices list walks in
-acpiphp_glue.c during which devices may be removed to be carried out in
-reverse order.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/bfa/bfad.c |   18 ++++++++----------
+ 1 files changed, 8 insertions(+), 10 deletions(-)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -742,7 +742,7 @@ static void trim_stale_devices(struct pc
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 972ff8d..e7e4774 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)
+ int
+ bfad_setup_intr(struct bfad_s *bfad)
+ {
+-	int error = 0;
++	int error;
+ 	u32 mask = 0, i, num_bit = 0, max_bit = 0;
+ 	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
+ 	struct pci_dev *pdev = bfad->pcidev;
+@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
  
- 		/* The device is a bridge. so check the bus below it. */
- 		pm_runtime_get_sync(&dev->dev);
--		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-+		list_for_each_entry_safe_reverse(child, tmp, &bus->devices, bus_list)
- 			trim_stale_devices(child);
+ 		bfad->bfad_flags |= BFAD_MSIX_ON;
  
- 		pm_runtime_put(&dev->dev);
-@@ -773,8 +773,8 @@ static void acpiphp_check_bridge(struct
- 			; /* do nothing */
- 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
- 			/* remove stale devices if any */
--			list_for_each_entry_safe(dev, tmp, &bus->devices,
--						 bus_list)
-+			list_for_each_entry_safe_reverse(dev, tmp,
-+							 &bus->devices, bus_list)
- 				if (PCI_SLOT(dev->devfn) == slot->device)
- 					trim_stale_devices(dev);
+-		return error;
++		return 0;
+ 	}
  
-@@ -805,7 +805,7 @@ static void acpiphp_sanitize_bus(struct
- 	int i;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+ line_based:
+-	error = 0;
+-	if (request_irq
+-	    (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
+-	     BFAD_DRIVER_NAME, bfad) != 0) {
+-		/* Enable interrupt handler failed */
+-		return 1;
+-	}
++	error = request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
++			    BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
++	if (error)
++		return error;
++
+ 	bfad->bfad_flags |= BFAD_INTX_ON;
  
--	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
- 		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
- 			struct resource *res = &dev->resource[i];
- 			if ((res->flags & type_mask) && !res->start &&
+-	return error;
++	return 0;
+ }
+ 
+ void
+-- 
+1.7.7.6
+
