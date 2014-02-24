@@ -1,38 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40113 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725AbaBUTH2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 14:07:28 -0500
-Message-ID: <5307A44E.7060006@oracle.com>
-Date: Fri, 21 Feb 2014 14:09:02 -0500
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Received: from mail-by2lp0241.outbound.protection.outlook.com ([207.46.163.241]:34944
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751351AbaBXC6a convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Feb 2014 21:58:30 -0500
+From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
+To: Kamel BOUHARA <k.bouhara@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: iMX6 PCIe EP
+Date: Mon, 24 Feb 2014 02:58:26 +0000
+Message-ID: <cbb2ca07700a4cdb85261cbc738cfca2@BLUPR03MB136.namprd03.prod.outlook.com>
+References: <CAM9uW_4bXH_jmcY7eJhC-YyMrmQ_FQmU78N380fNfTmkjf0Yfg@mail.gmail.com>
+In-Reply-To: <CAM9uW_4bXH_jmcY7eJhC-YyMrmQ_FQmU78N380fNfTmkjf0Yfg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] xen-pciback: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-References: <1392804931-30671-10-git-send-email-agordeev@redhat.com> <5304CC49.7020000@oracle.com> <5304D063.90000@oracle.com> <20140219160501.GA32067@dhcp-26-207.brq.redhat.com> <5304DABD.9000605@oracle.com> <20140221165235.GF17353@dhcp-26-207.brq.redhat.com> <20140221165340.GG17353@dhcp-26-207.brq.redhat.com> <53079BFE.3010702@oracle.com> <20140221185858.GB18725@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20140221185858.GB18725@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/21/2014 01:58 PM, Alexander Gordeev wrote:
-> On Fri, Feb 21, 2014 at 01:33:34PM -0500, Boris Ostrovsky wrote:
->> Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> Thank you, Boris!
-> Whom should I ask this patch for inclusion?
->
-
-This should go into the Xen tree. Konrad is usually the one putting 
-together pull requests for Linus.
-
-I don't think this needs to go in right away so presumably this will be 
-queued for the next merge window (unless Konrad has other things for 
-next RCs and decides to tack this onto other patches).
+Hi K.Bouhara:
 
 
--boris
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org]
+> On Behalf Of Kamel BOUHARA
+> Sent: Friday, February 21, 2014 4:47 PM
+> To: linux-pci@vger.kernel.org
+> Subject: iMX6 PCIe EP
+> 
+> Hi,
+> 
+> I was wondering if there is any effort made to support imx6 pcie as endpoint ?
+> And how hard it will be to get a simple configuration with two BAR's (IO and
+> MEM) ?
+
+[Richard] I used to setup one i.MX6 PCIe EP/RC validation system in FSL Linux BSP(imx_3.0.35_4.1.0 release, or, imx_3.10 beta release),
+ and validated the i.MX6 PCIe EP mode.
+You can make a reference from FSL Linux BSP, if you want the i.MX6 PCIe used as EP mode.
+About the HW environment setup, you can make a reference to the following URL.
+https://community.freescale.com/docs/DOC-95014
+
+> 
+> BR,
+> K.Bouhara
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+> 
+Best Regards
+Richard Zhu
+
