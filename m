@@ -1,84 +1,131 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Robert Moore <robert.moore@intel.com>
-Subject: [PATCH v3 6/7] ACPI / hotplug / PCI: Simplify acpi_install_hotplug_notify_handler()
-Date: Sun, 02 Feb 2014 18:19:30 +0100
-Message-ID: <1565480.8q752YNKSl@vostro.rjw.lan>
-In-Reply-To: <5157096.hCmU2aoKCT@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan> <5157096.hCmU2aoKCT@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:62436 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752212AbaBXU7H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 15:59:07 -0500
+Message-ID: <1393275541.9111.219.camel@ul30vt.home>
+Subject: Re: Architectural question regarding IOV support in Linux 3.13.4
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+Cc: Yu Zhao <yuzhao@google.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Mon, 24 Feb 2014 13:59:01 -0700
+In-Reply-To: <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
+References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
+	 <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
+	 <1393020186.9111.91.camel@ul30vt.home>
+	 <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
+	 <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, 2014-02-24 at 19:22 +0000, Zytaruk, Kelly wrote:
+> >On Fri, Feb 21, 2014 at 2:03 PM, Alex Williamson <alex.williamson@redhat.com> wrote:
+> >On Fri, 2014-02-21 at 14:11 -0700, Bjorn Helgaas wrote:
+> >> [+cc Alex, Yu]
+> >>
+> >> On Fri, Feb 21, 2014 at 10:45 AM, Zytaruk, Kelly <Kelly.Zytaruk@amd.com> wrote:
+> >> >
+> >> > I am working with SR-IOV and I have a question regarding the function
+> >> > sriov_init() in ../drivers/pci/iov.c (linux versions 3.4.9 and 3.13.4)
+> >> >
+> >> > In sriov_init() the code first checks whether the PF is a Root complex
+> >> >  endpoint (0x9) or an Express Endpoint (0x0) as shown in the code
+> >> >  snippet below.  If it is neither it returns the No device error.
+> >> >
+> >> > static int sriov_init(struct pci_dev *dev, int pos)
+> >> > {
+> >> >          int i;
+> >> >          int rc;
+> >> >          int nres;
+> >> >          u32 pgsz;
+> >> >          u16 ctrl, total, offset, stride;
+> >> >          struct pci_sriov *iov;
+> >> >          struct resource *res;
+> >> >          struct pci_dev *pdev;
+> >> >
+> >> >        if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
+> >> >              pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+> >> >                  return -ENODEV;
+> >> >
+> >> > My question is why PCI_EXP_TYPE_LEG_END (0x1) is omitted as being a
+> >> >  valid endpoint.  By excluding Legacy endpoints it fails enabling
+> >> >  SR-IOV on a VGA PF.
+> >> >
+> >> > Is there a design/specification reason why legacy was excluded or was
+> >> >  it just an assumption that VGA would never support SR-IOV?
+> >> >
+> >> > If there is no valid reason to exclude PCI_EXP_TYPE_LEG_END, I would
+> >> >  like to discuss having it included as a valid endpoint for SR-IOV.
+> >>
+> >> Good question.  It looks like it's been that way since the beginning
+> >> [1], but I don't know why.  I don't see any restriction in the spec
+> >> about SR-IOV and legacy endpoints.
+> >>
+> >> I also don't know whether VGA is an issue.  There are some legacy
+> >> addressing issues for [mem 0xa0000-0xbffff] and [io 0x3b0-0x3bb] and
+> >> [io 0x3c0-0x3df].  For example, when a bridge has its VGA Enable bit
+> >> set, it positively decodes [mem 0xa0000-0xbffff] even if that range
+> >> isn't included in one of the bridge windows.  I don't know whether a
+> >> VGA device is similarly allowed to decode that range even if it's not
+> >> in a BAR.  If it is, I could imagine issues if enabling SR-IOV created
+> >> several VGA VFs.
+> >VFs cannot support I/O port space by definition, so I don't think a "VGA
+> >VF" could actually exist.  There would be nothing wrong with a non-VGA
+> >GPU VF though.  I also don't see how the differences in Legacy Endpoint
+> >rules versus a standard Endpoint would preclude supporting SR-IOV.  I
+> >don't think the SR-IOV spec makes any demands on whether the PF requires
+> >I/O port resources, which I assume is the main reason for this to call
+> >itself Legacy.  I'd guess it was likely just an oversight and we should
+> >add legacy endpoints (or remove the test altogether and trust that if a
+> >device has an SR-IOV capability, we should initialize it).  Thanks,
+> >
+> >Alex
+> >
+> >I agree. I vaguely remember there was some reason that excludes legacy
+> >endpoints from using SR-IOV. But after a quick look at the latest specs,
+> >I didn't find any.
+> >
+> Only Legacy Endpoints can claim I/O.  VFs are not allowed to claim I/O.
+> VGA devices claim I/O.
+> 
+> The SR-IOV spec 1.1 section 3.4.1.6 states
+> “The Class Code register is read-only and is used to identify the generic function 
+> of the device and, in some cases, a specific register level programming interface. 
+> The field in the PF and associated VFs must return the same value when read.”
+> 
+> If the PF is a VGA device then by the definition in the SR-IOV spec the class code 
+> of the VF would also indicate it as a VGA device, ie Subclass 0x0 = VGA, 
+> subclass 0x80 = OTHER_DISPLAY_CONTROLLER.  
+> 
+> Ideally we would want to have the PF sub-class as 0x0 and the VF subclass as 0x80
+> But the spec doesn't support this.
+> 
+> One speculation as to why Legacy endpoints were omitted might be the assumption
+> that doing so would allow VGA VFs to be created.
+> 
+> It is not reasonable to prevent a VGA PF from enabling SR-IOV as this is a real world 
+> possibility.  We might need to add more code elsewhere however to prevent a VF
+> from becoming a VGA device outside of passing it through to a guest VM.
+> 
+> Any thoughts on this?
 
-Since acpi_hotplug_notify_cb() does not use its data argument any
-more, the second argument of acpi_install_hotplug_notify_handler()
-can be dropped, so do that and update its callers accordingly.
+Good catch, I think you'll need to contact the PCI SIG for
+clarification.  A VF with a VGA class code implies I/O space that a VF
+is not allowed to have.  I wouldn't be surprised if they had hoped VGA
+was a non-issue by this point and legacy-free graphics were standard.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c                |    6 +++---
- drivers/pci/hotplug/acpiphp_glue.c |    2 +-
- include/acpi/acpi_bus.h            |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+Probably the most appealing solution would be an ECN allowing the VF to
+expose a different class code from the PF.  This seems generally useful
+even beyond the scope of this legacy resource issue.  Probably a less
+appealing option for you would be to expose the PF as a non-VGA display
+controller, which avoids both the legacy endpoint problem and the VF
+class code problem.  I suspect we wouldn't find a lot of support for a
+software only solution to virtualize the class code unless it was
+standardized.  Such a change would require support in every hypervisor.
+Thanks,
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -576,10 +576,10 @@ static void acpi_hotplug_notify_cb(acpi_
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
-+void acpi_install_hotplug_notify_handler(acpi_handle handle)
- {
- 	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				    acpi_hotplug_notify_cb, data);
-+				    acpi_hotplug_notify_cb, NULL);
- }
- 
- void acpi_remove_hotplug_notify_handler(acpi_handle handle)
-@@ -2044,7 +2044,7 @@ static void acpi_scan_init_hotplug(acpi_
- 	list_for_each_entry(hwid, &pnp.ids, list) {
- 		handler = acpi_scan_match_handler(hwid->id, NULL);
- 		if (handler) {
--			acpi_install_hotplug_notify_handler(handle, handler);
-+			acpi_install_hotplug_notify_handler(handle);
- 			break;
- 		}
- 	}
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -362,7 +362,7 @@ static acpi_status register_slot(acpi_ha
- 
- 	/* install notify handler */
- 	if (!(newfunc->flags & FUNC_HAS_DCK))
--		acpi_install_hotplug_notify_handler(handle, NULL);
-+		acpi_install_hotplug_notify_handler(handle);
- 
- 	return AE_OK;
- }
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -443,7 +443,7 @@ static inline bool acpi_device_enumerate
- typedef void (*acpi_hp_callback)(void *data, u32 src);
- 
- acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
--void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
-+void acpi_install_hotplug_notify_handler(acpi_handle handle);
- void acpi_remove_hotplug_notify_handler(acpi_handle handle);
- 
- /**
+Alex
 
