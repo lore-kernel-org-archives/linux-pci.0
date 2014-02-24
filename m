@@ -1,81 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:43493 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538AbaBLIAY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 03:00:24 -0500
-Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 2EEA23EE1B9
-	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:23 +0900 (JST)
-Received: from smail (m2 [127.0.0.1])
-	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 2145C45DF43
-	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:23 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (s2.gw.nic.fujitsu.com [10.0.50.92])
-	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 0AAC045DF40
-	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:23 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id EB3FD1DB803C
-	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:22 +0900 (JST)
-Received: from g01jpfmpwyt01.exch.g01.fujitsu.local (g01jpfmpwyt01.exch.g01.fujitsu.local [10.128.193.38])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 9AFB81DB802C
-	for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 17:00:22 +0900 (JST)
-From: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: RE: [PATCH] PCI: pciehp: Fix the problem that the present bit is
- not cleared though slot is empty
-Date: Wed, 12 Feb 2014 08:00:20 +0000
-Message-ID: <E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
-References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
- <20140212004927.GH21057@google.com>
-In-Reply-To: <20140212004927.GH21057@google.com>
-Content-Type: text/plain; charset="iso-2022-jp"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:54953 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751722AbaBXIAy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 03:00:54 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, iss_storagedev@hp.com,
+	intel-linux-scu@intel.com, support@lsi.com,
+	DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com,
+	iscsi-driver@qlogic.com, pv-drivers@vmware.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:00 +0100
+Message-Id: <cover.1393191330.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hello!
 
-> Hi Taku,
-> 
-> Thanks a lot for finding and bisecting this problem.  I recently merged
-> some patches from Rajat that partially revert 2debd9289997.  Can you try
-> out my pci/pciehp branch and see whether it is enough to fix the problem
-> for you?
-> 
-> Here's the branch:
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pciehp
-> 
-> and the specific change Rajat made is:
-> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/pciehp&id=b1811d2455f32754cc3d8725bf2e961c
-> 5eda2a72
-> 
-> Let me know if that isn't enough to fix the problem you're seeing, and we
-> can work on it some more.
+This series is against James Bottomley's SCSI tree [1], but it needs
+commit f7fc32c ("PCI/MSI: Add pci_enable_msi_exact() and
+pci_enable_msix_exact()") from from Bjorn Helgaas's PCI tree [2]:
 
- I tested the kernel checkouted from remotes/origin/pci/pciehp.
- The original problem I reported was fixed.
- However the sequence of hot-plug operation got changed.
- The slot power becomes ON the moment when I insert PCIe card on the slot.
- This behavior is unacceptable to me.
+1. git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+2. git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
 
- (before)
-   - hot-add
-     1. insert PCIe card
-     2. echo 1 > power
-   - hot-remove
-     1. echo 0 > power
-     2. eject PCIe card
+Recently pci_enable_msix_exact() function has been accepted to
+the mainline. That is a variation of pci_enable_msix_range() which
+allows a device driver to request a particular number of MSI-Xs.
 
- (after)
-   - hot-add
-    1. insert PCIe card (and automatically power-on)
+As result, most of the changes posted in version 1 of this series
+are invalidated and need to use pci_enable_msix_exact() instead of
+originally posted pci_enable_msix_range() usages.
 
-   - hot-remove
-    1. echo 0 > power
-    2. eject PCIe card
-   
+I removed almost all ACKs, since unlike pci_enable_msix_range()
+function which returns the number of MSI-Xs allocated or negative
+errno, pci_enable_msix_exact() returns either zero success code or
+a negative errno. Although this change is simple, it still entails
+an updated error code analysis and would be better reviewed by
+driver maintainers.
 
- Best regards,
- Taku Izumi
+Thanks!
+
+Cc: iss_storagedev@hp.com
+Cc: intel-linux-scu@intel.com
+Cc: support@lsi.com
+Cc: DL-MPTFusionLinux@lsi.com
+Cc: qla2xxx-upstream@qlogic.com
+Cc: iscsi-driver@qlogic.com
+Cc: pv-drivers@vmware.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+
+Alexander Gordeev (23):
+  be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  bfa: Do not call pci_enable_msix() after it failed once
+  bfa: Cleanup bfad_setup_intr() function
+  bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  csiostor: Remove superfluous call to pci_disable_msix()
+  csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
+  fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  hpsa: Fallback to MSI rather than to INTx if MSI-X failed
+  hpsa: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  lpfc: Remove superfluous call to pci_disable_msix()
+  lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
+  megaraid: Fail resume if MSI-X re-initialization failed
+  megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+  mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  pm8001: Fix invalid return when request_irq() failed
+  pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  pmcraid: Get rid of a redundant assignment
+  pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+  qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+  qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
+  vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+
+ drivers/scsi/be2iscsi/be_main.c           |    6 +--
+ drivers/scsi/bfa/bfad.c                   |   62 ++++++++++++-----------------
+ drivers/scsi/csiostor/csio_hw.h           |    2 +-
+ drivers/scsi/csiostor/csio_isr.c          |   24 ++++-------
+ drivers/scsi/fnic/fnic_isr.c              |    4 +-
+ drivers/scsi/hpsa.c                       |   12 +-----
+ drivers/scsi/isci/init.c                  |    2 +-
+ drivers/scsi/lpfc/lpfc_init.c             |   54 ++++++++++++-------------
+ drivers/scsi/megaraid/megaraid_sas_base.c |   24 +++++------
+ drivers/scsi/mpt2sas/mpt2sas_base.c       |    6 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c       |    4 +-
+ drivers/scsi/pm8001/pm8001_init.c         |   44 +++++++++++----------
+ drivers/scsi/pmcraid.c                    |   14 +------
+ drivers/scsi/qla2xxx/qla_isr.c            |   27 +++++-------
+ drivers/scsi/qla4xxx/ql4_nx.c             |    2 +-
+ drivers/scsi/vmw_pvscsi.c                 |    2 +-
+ 16 files changed, 121 insertions(+), 168 deletions(-)
+
+-- 
+1.7.7.6
+
