@@ -1,106 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20140214075511.22701.15084.stgit@srivatsabhat.in.ibm.com>
-References: <20140214074750.22701.47330.stgit@srivatsabhat.in.ibm.com> <20140214075511.22701.15084.stgit@srivatsabhat.in.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Feb 2014 10:35:03 -0700
-Message-ID: <CAErSpo4nyoY8jCR5omywB06ka5T-qKMQURSO6c3_569o-WbOgw@mail.gmail.com>
-Subject: Re: [PATCH v2 27/52] x86, pci, amd-bus: Fix CPU hotplug callback registration
-To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Cc: "paulus@samba.org" <paulus@samba.org>, oleg@redhat.com,
-	Ingo Molnar <mingo@kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Paul McKenney <paulmck@linux.vnet.ibm.com>,
-	Tejun Heo <tj@kernel.org>,
-	Michel Lespinasse <walken@google.com>, ego@linux.vnet.ibm.com,
-	Russell King <linux@arm.linux.org.uk>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux-Arch <linux-arch@vger.kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 14/23] megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:14 +0100
+Message-Id: <1d5b73562b0854934ae8615046b1be9d4b1b7743.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 12:55 AM, Srivatsa S. Bhat
-<srivatsa.bhat@linux.vnet.ibm.com> wrote:
-> Subsystems that want to register CPU hotplug callbacks, as well as perform
-> initialization for the CPUs that are already online, often do it as shown
-> below:
->
->         get_online_cpus();
->
->         for_each_online_cpu(cpu)
->                 init_cpu(cpu);
->
->         register_cpu_notifier(&foobar_cpu_notifier);
->
->         put_online_cpus();
->
-> This is wrong, since it is prone to ABBA deadlocks involving the
-> cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
-> with CPU hotplug operations).
->
-> Instead, the correct and race-free way of performing the callback
-> registration is:
->
->         cpu_notifier_register_begin();
->
->         for_each_online_cpu(cpu)
->                 init_cpu(cpu);
->
->         /* Note the use of the double underscored version of the API */
->         __register_cpu_notifier(&foobar_cpu_notifier);
->
->         cpu_notifier_register_done();
->
->
-> Fix the amd-bus code in x86 by using this latter form of callback
-> registration.
->
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Ingo Molnar <mingo@kernel.org>
-> Cc: "H. Peter Anvin" <hpa@zytor.com>
-> Cc: x86@kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-This looks fine to me.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c |   20 +++++++-------------
+ 1 files changed, 7 insertions(+), 13 deletions(-)
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 01afe38..b276aa3 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3731,17 +3731,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 					     (unsigned int)num_online_cpus());
+ 		for (i = 0; i < instance->msix_vectors; i++)
+ 			instance->msixentry[i].entry = i;
+-		i = pci_enable_msix(instance->pdev, instance->msixentry,
+-				    instance->msix_vectors);
+-		if (i >= 0) {
+-			if (i) {
+-				if (!pci_enable_msix(instance->pdev,
+-						     instance->msixentry, i))
+-					instance->msix_vectors = i;
+-				else
+-					instance->msix_vectors = 0;
+-			}
+-		} else
++		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
++					  1, instance->msix_vectors);
++		if (i)
++			instance->msix_vectors = i;
++		else
+ 			instance->msix_vectors = 0;
+ 
+ 		dev_info(&instance->pdev->dev, "[scsi%d]: FW supports"
+@@ -4668,8 +4662,8 @@ megasas_resume(struct pci_dev *pdev)
+ 
+ 	/* Now re-enable MSI-X */
+ 	if (instance->msix_vectors &&
+-	    pci_enable_msix(instance->pdev, instance->msixentry,
+-			    instance->msix_vectors))
++	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
++				  instance->msix_vectors))
+ 		goto fail_reenable_msix;
+ 
+ 	switch (instance->pdev->device) {
+-- 
+1.7.7.6
 
-I think it makes sense for you to merge it along with all your other
-similar changes.  I don't foresee any conflicts with things in my PCI
-tree.
-
-> ---
->
->  arch/x86/pci/amd_bus.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
-> index a48be98..f05cbf0 100644
-> --- a/arch/x86/pci/amd_bus.c
-> +++ b/arch/x86/pci/amd_bus.c
-> @@ -380,10 +380,13 @@ static int __init pci_io_ecs_init(void)
->         if (early_pci_allowed())
->                 pci_enable_pci_io_ecs();
->
-> -       register_cpu_notifier(&amd_cpu_notifier);
-> +       cpu_notifier_register_begin();
->         for_each_online_cpu(cpu)
->                 amd_cpu_notify(&amd_cpu_notifier, (unsigned long)CPU_ONLINE,
->                                (void *)(long)cpu);
-> +       __register_cpu_notifier(&amd_cpu_notifier);
-> +       cpu_notifier_register_done();
-> +
->         pci_probe |= PCI_HAS_IO_ECS;
->
->         return 0;
->
