@@ -1,116 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og110.obsmtp.com ([64.18.0.20]:59425 "HELO
-	exprod5og110.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753399AbaBMIgr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Feb 2014 03:36:47 -0500
-Received: by mail-vc0-f174.google.com with SMTP id im17so7849395vcb.19
-        for <linux-pci@vger.kernel.org>; Thu, 13 Feb 2014 00:36:44 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.186]:54445 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbaBXLA5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 06:00:57 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Magnus Damm <damm@opensource.se>, linux-pci@vger.kernel.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: DMABOUNCE in pci-rcar
+Date: Mon, 24 Feb 2014 12:00:21 +0100
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
+	Ben Dooks <ben-linux@fluff.org>
 MIME-Version: 1.0
-In-Reply-To: <000201cf2893$0f5e3710$2e1aa530$%han@samsung.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
-	<1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
-	<7398333.9L5KlyFggU@wuerfel>
-	<CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
-	<20140206101814.GA4993@e106497-lin.cambridge.arm.com>
-	<000201cf2893$0f5e3710$2e1aa530$%han@samsung.com>
-Date: Thu, 13 Feb 2014 00:36:44 -0800
-Message-ID: <CACoXjc=epN8=tFQKw6kZ27hTA=a+c56q1pikX_SSMKK1rsScCw@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
- device tree
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201402241200.21944.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 13, 2014 at 12:10 AM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Thursday, February 06, 2014 7:18 PM, Liviu Dudau wrote:
->> On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
->> > Hello Liviu,
->> >
->> > I did not get the first email of this particular patch on any of
->> > subscribed mailing lists (don't know why), hence replying here.
->>
->> Strange, it shows in the MARC and GMANE archive for linux-pci, probably
->> a hickup on your receiving side?
->>
->> >
->> > +struct pci_host_bridge *
->> > +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
->> > + void *host_data, struct list_head *resources)
->> > +{
->> > + struct pci_bus *root_bus;
->> > + struct pci_host_bridge *bridge;
->> > +
->> > + /* first parse the host bridge bus ranges */
->> > + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
->> > + return NULL;
->> > +
->> > + /* then create the root bus */
->> > + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
->> > + if (!root_bus)
->> > + return NULL;
->> > +
->> > + bridge = to_pci_host_bridge(root_bus->bridge);
->> > +
->> > + return bridge;
->> > +}
->> >
->> > You are keeping the domain_nr inside pci_host_bridge structure. In
->> > above API, domain_nr is required in 'pci_find_bus' function called
->> > from 'pci_create_root_bus'. Since the bridge is allocated after
->> > creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
->> > will cause problem for scanning multiple domains.
->>
->> Good catch. I was switching between creating a pci_controller in arch/arm64 and
->> adding the needed bits in pci_host_bridge. After internal review I've decided to
->> add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
->
-> Hi Liviu Dudau,
->
-> One more thing,
-> I am reviewing and compiling your patch.
-> Would you consider adding 'struct pci_sys_data' and 'struct hw_pci'?
->
-> Currently, 4 PCIe Host drivers (pci-mvebu.c, pci-tegra.c,
-> pci-rcar-gen2.c, pcie-designware.c) are using 'struct pci_sys_data'
-> and 'struct hw_pci' in their drivers. Without this, it makes build
-> errors.
->
-> In arm32, 'struct pci_sys_data' and 'struct hw_pci' is defined
-> in "arch/arm/include/asm/mach/pci.h".
->
-> Tanmay Inamdar,
-> Your 'APM X-Gene PCIe' patch also needs 'struct pci_sys_data' and
-> 'struct hw_pci'. With Liviu Dudau's patch, it will make build
-> errors. Would you check this?
+Hi Magnus,
 
-X-Gene PCIe host driver is dependent on arm64 PCI patch. My previous
-approach was based on 32bit arm PCI support. With Liviu's approach, I
-will have to make changes in host driver to get rid of hw_pci and
-pci_sys_data which are no longer required.
+I noticed during randconfig testing that you enabled DMABOUNCE for the
+pci-rcar-gen2 driver as posted in this patch https://lkml.org/lkml/2014/2/5/30
 
-IMO it should not cause build errors for PCI host drivers dependent on
-architectures other than arm64. Can you post the error?
+I didn't see the original post unfortunately, but I fear we have to
+revert it and come up with a better solution, as your approach seems
+wrong on a number of levels:
 
->
-> Thank you.
->
-> Best regards,
-> Jingoo Han
->
->>
->> Thanks for reviewing this, will fix in v2.
->>
->> Do you find porting to the new API straight forward?
->>
->
+* We really don't want any new users of DMABOUNCE on ARM but instead leave
+  it to the PXA/IXP/SA1100 based platforms using it today.
+
+* If your SoCs have an IOMMU, you should really use it, as that would
+  give you much better performance than bounce buffers anyway
+
+* If the hardware is so screwed up that you have to use bounce buffers,
+  use the SWIOTLB code that is reasonably modern.
+
+* The window base and size in the driver should not be hardcoded, as
+  this is likely not a device specific property but rather an artifact of
+  how it's connected. Use the standard "dma-ranges" property.
+
+* You should not need your own dma_map_ops in the driver. What you
+  do there isn't really specific to your host but should live in some
+  place where it can be shared with other drivers.
+
+* The implementation of the dma_map_ops is wrong: at the very least,
+  you cannot use the dma_mask of the pci host when translating
+  calls from the device, since each pci device can have a different
+  dma mask that is set by the driver if it needs larger or smaller
+  than 32-bit DMA space.
+
+* The block bounce code can't be enabled if CONFIG_BLOCK is disabled,
+  this is how I noticed your changes.
+
+* The block layer assumes that it will bounce any highmem pages,
+  but that isn't necessarily what you want here: if you have 2GB
+  of lowmem space (CONFIG_VMSPLIT_2G) or more, you will also have
+  lowmem pages that need bouncing.
+
+* (completely unrelated, I noticed you set up a bogus I/O space
+  window. Don't do that, you will get get a panic if a device happens
+  to use it. Not providing an resource should work fine though)
+
+On the bright side, your other changes in the same series all look
+good. Thanks especially for sorting out the probe() function, I was
+already wondering if we could change that the way you did.
+
+	Arnd
