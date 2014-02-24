@@ -1,87 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:47376 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690AbaBNNjN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 08:39:13 -0500
-MIME-Version: 1.0
-Date: Fri, 14 Feb 2014 14:39:11 +0100
-Message-ID: <CAJZ5v0jNWGKqQKozyqWeJnGReKLrzArfrWOntHEaXaJ1R_B7xw@mail.gmail.com>
-Subject: [GIT PULL] ACPI and power management fixes for v3.14-rc3
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:21017 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752650AbaBXIBT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 03:01:19 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 21/23] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:21 +0100
+Message-Id: <09a448376c6da694f2d865a063f0eb75efa2e408.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Please pull from the git repository at
+Log message code 0x00c6 preserved, although it is reported
+after successful call to pci_enable_msix_range(), not before
+possibly unsuccessful call to pci_enable_msix(). Consumers
+of the error code should not notice the difference.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm+acpi-3.14-rc3
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: qla2xxx-upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
+ 1 files changed, 11 insertions(+), 16 deletions(-)
 
-to receive ACPI and power management fixes for v3.14-rc3
-with top-most commit 465e5fc41dbeeb5331bbff6e9e734f0542dfc739
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 9bc86b9..b2dcfa4 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2896,27 +2896,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	for (i = 0; i < ha->msix_count; i++)
+ 		entries[i].entry = i;
+ 
+-	ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-	if (ret) {
+-		if (ret < MIN_MSIX_COUNT)
+-			goto msix_failed;
+-
++	ret = pci_enable_msix_range(ha->pdev,
++				    entries, MIN_MSIX_COUNT, ha->msix_count);
++	if (ret < 0) {
++		ql_log(ql_log_fatal, vha, 0x00c7,
++		    "MSI-X: Failed to enable support, "
++		    "giving   up -- %d/%d.\n",
++		    ha->msix_count, ret);
++		goto msix_out;
++	} else if (ret < ha->msix_count) {
+ 		ql_log(ql_log_warn, vha, 0x00c6,
+ 		    "MSI-X: Failed to enable support "
+ 		    "-- %d/%d\n Retry with %d vectors.\n",
+ 		    ha->msix_count, ret, ret);
+-		ha->msix_count = ret;
+-		ret = pci_enable_msix(ha->pdev, entries, ha->msix_count);
+-		if (ret) {
+-msix_failed:
+-			ql_log(ql_log_fatal, vha, 0x00c7,
+-			    "MSI-X: Failed to enable support, "
+-			    "giving   up -- %d/%d.\n",
+-			    ha->msix_count, ret);
+-			goto msix_out;
+-		}
+-		ha->max_rsp_queues = ha->msix_count - 1;
+ 	}
++	ha->msix_count = ret;
++	ha->max_rsp_queues = ha->msix_count - 1;
+ 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
+ 				ha->msix_count, GFP_KERNEL);
+ 	if (!ha->msix_entries) {
+-- 
+1.7.7.6
 
-  Merge branch 'pm-cpufreq'
-
-on top of commit b28a960c42fcd9cfc987441fa6d1c1a471f0f9ed
-
-  Linux 3.14-rc2
-
-These include a fix for a recent intel_pstate regression, a fix for
-a regression in the ACPI-based PCI hotplug (ACPIPHP) code introduced
-during the 3.12 cycle, fixes for two bugs in the ACPI core introduced
-recently and a MAINTAINERS update related to cpufreq.
-
-Specifics:
-
- - Fix for a recent regression in the intel_pstate driver that
-   introduced a race condition causing systems to crash during
-   initialization in some situations.  This removes the affected
-   code altogether.  From Dirk Brandewie.
-
- - ACPIPHP fix for a regression introduced during the 3.12 cycle
-   causing devices to be dropped as a result of bus check notifications
-   after system resume on some systems due to the way ACPIPHP interprets
-   _STA return values (arguably incorrectly).  From Mika Westerberg.
-
- - ACPI dock driver fix for a problem causing docking to fail due to
-   a check that always fails after recent ACPI core changes (found by
-   code inspection).
-
- - ACPI container driver fix to prevent memory from being leaked in
-   an error code path after device_register() failures.
-
- - Update of the arm_big_little cpufreq driver maintainer's e-mail
-   address.
-
-Thanks!
-
-
----------------
-
-Dirk Brandewie (1):
-      intel_pstate: Remove energy reporting from pstate_sample tracepoint
-
-Mika Westerberg (1):
-      ACPI / hotplug / PCI: Relax the checking of _STA return values
-
-Rafael J. Wysocki (2):
-      ACPI / dock: Use acpi_device_enumerated() to check if dock is present
-      ACPI / container: Fix error code path in container_device_attach()
-
-Sudeep Holla (1):
-      MAINTAINERS / cpufreq: update Sudeep's email address
-
----------------
-
- MAINTAINERS                        |  2 +-
- drivers/acpi/container.c           |  5 +++--
- drivers/acpi/dock.c                |  5 +++--
- drivers/cpufreq/intel_pstate.c     |  9 ---------
- drivers/pci/hotplug/acpiphp_glue.c | 15 +++++++++++++--
- include/trace/events/power.h       |  7 +------
- 6 files changed, 21 insertions(+), 22 deletions(-)
