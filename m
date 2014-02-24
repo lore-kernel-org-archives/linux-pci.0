@@ -1,41 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:47216 "EHLO mail.skyhub.de"
+Received: from mx1.redhat.com ([209.132.183.28]:24339 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751979AbaB0RNY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 27 Feb 2014 12:13:24 -0500
-Date: Thu, 27 Feb 2014 18:13:17 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	x86@kernel.org, dougthompson@xmission.com, bhelgaas@google.com,
-	JBeulich@suse.com, dan.carpenter@oracle.com,
-	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
-	linux-pci@vger.kernel.org, Arindam.Nath@amd.com
-Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
-Message-ID: <20140227171317.GL18191@pd.tnic>
-References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+	id S1752142AbaBXIAt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 03:00:49 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Anil Gurumurthy <agurumur@brocade.com>,
+	Vijaya Mohan Guvva <vmohan@brocade.com>,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 04/23] bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:04 +0100
+Message-Id: <0b55d0b643b1fd831a32c17030b1fc11c011a802.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 10:28:46AM -0600, Aravind Gopalakrishnan wrote:
-> Extending ECC decoding support for F16h M30h.
-> 
-> Tested on F16h M30h with ECC turned on using mce_amd_inj module and
-> the patch works fine.
-> 
-> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
-> Tested-by: Arindam Nath <Arindam.Nath@amd.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Added hpa's ack and applied,
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/bfa/bfad.c |   18 +++++-------------
+ 1 files changed, 5 insertions(+), 13 deletions(-)
 
-Thanks.
-
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index e7e4774..b7b0733 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1234,26 +1234,18 @@ bfad_setup_intr(struct bfad_s *bfad)
+ 	if ((bfa_asic_id_ctc(pdev->device) && !msix_disable_ct) ||
+ 	   (bfa_asic_id_cb(pdev->device) && !msix_disable_cb)) {
+ 
+-		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
++		error = pci_enable_msix_exact(bfad->pcidev,
++					      msix_entries, bfad->nvec);
+ 		/* In CT1 & CT2, try to allocate just one vector */
+-		if (error > 0 && bfa_asic_id_ctc(pdev->device)) {
++		if (error == -ENOSPC && bfa_asic_id_ctc(pdev->device)) {
+ 			printk(KERN_WARNING "bfa %s: trying one msix "
+ 			       "vector failed to allocate %d[%d]\n",
+ 			       bfad->pci_name, bfad->nvec, error);
+ 			bfad->nvec = 1;
+-			error = pci_enable_msix(bfad->pcidev,
+-						msix_entries, bfad->nvec);
++			error = pci_enable_msix_exact(bfad->pcidev,
++						      msix_entries, 1);
+ 		}
+ 
+-		/*
+-		 * Only error number of vector is available.
+-		 * We don't have a mechanism to map multiple
+-		 * interrupts into one vector, so even if we
+-		 * can try to request less vectors, we don't
+-		 * know how to associate interrupt events to
+-		 *  vectors. Linux doesn't duplicate vectors
+-		 * in the MSIX table for this case.
+-		 */
+ 		if (error) {
+ 			printk(KERN_WARNING "bfad%d: "
+ 			       "pci_enable_msix failed (%d), "
 -- 
-Regards/Gruss,
-    Boris.
+1.7.7.6
 
-Sent from a fat crate under my desk. Formatting is fine.
---
