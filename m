@@ -1,56 +1,102 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1402221104440.21251@ionos.tec.linutronix.de>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-	<1388707565-16535-3-git-send-email-yinghai@kernel.org>
-	<alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
-	<CAE9FiQUo9NGbjiZbMsf2yBFbn=iLJ-jc3QtZ8K6qwVuhmqzq=Q@mail.gmail.com>
-	<alpine.DEB.2.02.1402221104440.21251@ionos.tec.linutronix.de>
-Date: Sat, 22 Feb 2014 09:28:33 -0800
-Message-ID: <CAE9FiQVf2L-FjkXR3WC=0iHNY73D2G4jyMeko4f4DPuxAXTK+Q@mail.gmail.com>
-Subject: Re: [PATCH v5 02/33] genirq: Add irq_alloc_reserved_desc()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from [213.199.154.208] ([213.199.154.208]:2517 "EHLO
+	am1outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752880AbaBXTXn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 14:23:43 -0500
+From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+To: Yu Zhao <yuzhao@google.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: RE: Architectural question regarding IOV support in Linux 3.13.4
+Date: Mon, 24 Feb 2014 19:22:22 +0000
+Message-ID: <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
+References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
+	<CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
+	<1393020186.9111.91.camel@ul30vt.home>
+ <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
+In-Reply-To: <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 22, 2014 at 2:08 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> As I said before irq_reserve_irq() is a misnomer and a
-> misconception. Of course this needs to be fixed as well.
->
-> And you cannot just blindly change it because !SPARSE can use the
-> allocation. We are not creating stupid corner cases just to support
-> your sloppyness. Its not rocket science to do it the right way.
->
-> That said, it might be worthwhile to get rid of the !SPARSE case
-> completely. That would probably make quite some stuff simpler.
+DQo+T24gRnJpLCBGZWIgMjEsIDIwMTQgYXQgMjowMyBQTSwgQWxleCBXaWxsaWFtc29uIDxhbGV4
+LndpbGxpYW1zb25AcmVkaGF0LmNvbT4gd3JvdGU6DQo+T24gRnJpLCAyMDE0LTAyLTIxIGF0IDE0
+OjExIC0wNzAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPj4gWytjYyBBbGV4LCBZdV0NCj4+DQo+
+PiBPbiBGcmksIEZlYiAyMSwgMjAxNCBhdCAxMDo0NSBBTSwgWnl0YXJ1aywgS2VsbHkgPEtlbGx5
+Llp5dGFydWtAYW1kLmNvbT4gd3JvdGU6DQo+PiA+DQo+PiA+IEkgYW0gd29ya2luZyB3aXRoIFNS
+LUlPViBhbmQgSSBoYXZlIGEgcXVlc3Rpb24gcmVnYXJkaW5nIHRoZSBmdW5jdGlvbg0KPj4gPiBz
+cmlvdl9pbml0KCkgaW4gLi4vZHJpdmVycy9wY2kvaW92LmMgKGxpbnV4IHZlcnNpb25zIDMuNC45
+IGFuZCAzLjEzLjQpDQo+PiA+DQo+PiA+IEluIHNyaW92X2luaXQoKSB0aGUgY29kZSBmaXJzdCBj
+aGVja3Mgd2hldGhlciB0aGUgUEYgaXMgYSBSb290IGNvbXBsZXgNCj4+ID4gwqBlbmRwb2ludCAo
+MHg5KSBvciBhbiBFeHByZXNzIEVuZHBvaW50ICgweDApIGFzIHNob3duIGluIHRoZSBjb2RlDQo+
+PiA+IMKgc25pcHBldCBiZWxvdy4gwqBJZiBpdCBpcyBuZWl0aGVyIGl0IHJldHVybnMgdGhlIE5v
+IGRldmljZSBlcnJvci4NCj4+ID4NCj4+ID4gc3RhdGljIGludCBzcmlvdl9pbml0KHN0cnVjdCBw
+Y2lfZGV2ICpkZXYsIGludCBwb3MpDQo+PiA+IHsNCj4+ID4gwqAgwqAgwqAgwqAgwqBpbnQgaTsN
+Cj4+ID4gwqAgwqAgwqAgwqAgwqBpbnQgcmM7DQo+PiA+IMKgIMKgIMKgIMKgIMKgaW50IG5yZXM7
+DQo+PiA+IMKgIMKgIMKgIMKgIMKgdTMyIHBnc3o7DQo+PiA+IMKgIMKgIMKgIMKgIMKgdTE2IGN0
+cmwsIHRvdGFsLCBvZmZzZXQsIHN0cmlkZTsNCj4+ID4gwqAgwqAgwqAgwqAgwqBzdHJ1Y3QgcGNp
+X3NyaW92ICppb3Y7DQo+PiA+IMKgIMKgIMKgIMKgIMKgc3RydWN0IHJlc291cmNlICpyZXM7DQo+
+PiA+IMKgIMKgIMKgIMKgIMKgc3RydWN0IHBjaV9kZXYgKnBkZXY7DQo+PiA+DQo+PiA+IMKgIMKg
+IMKgIMKgaWYgKHBjaV9wY2llX3R5cGUoZGV2KSAhPSBQQ0lfRVhQX1RZUEVfUkNfRU5EICYmDQo+
+PiA+IMKgIMKgIMKgIMKgIMKgIMKgIMKgcGNpX3BjaWVfdHlwZShkZXYpICE9IFBDSV9FWFBfVFlQ
+RV9FTkRQT0lOVCkNCj4+ID4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqByZXR1cm4gLUVOT0RF
+VjsNCj4+ID4NCj4+ID4gTXkgcXVlc3Rpb24gaXMgd2h5IFBDSV9FWFBfVFlQRV9MRUdfRU5EICgw
+eDEpIGlzIG9taXR0ZWQgYXMgYmVpbmcgYQ0KPj4gPiDCoHZhbGlkIGVuZHBvaW50LiDCoEJ5IGV4
+Y2x1ZGluZyBMZWdhY3kgZW5kcG9pbnRzIGl0IGZhaWxzIGVuYWJsaW5nDQo+PiA+IMKgU1ItSU9W
+IG9uIGEgVkdBIFBGLg0KPj4gPg0KPj4gPiBJcyB0aGVyZSBhIGRlc2lnbi9zcGVjaWZpY2F0aW9u
+IHJlYXNvbiB3aHkgbGVnYWN5IHdhcyBleGNsdWRlZCBvciB3YXMNCj4+ID4gwqBpdCBqdXN0IGFu
+IGFzc3VtcHRpb24gdGhhdCBWR0Egd291bGQgbmV2ZXIgc3VwcG9ydCBTUi1JT1Y/DQo+PiA+DQo+
+PiA+IElmIHRoZXJlIGlzIG5vIHZhbGlkIHJlYXNvbiB0byBleGNsdWRlIFBDSV9FWFBfVFlQRV9M
+RUdfRU5ELCBJIHdvdWxkDQo+PiA+IMKgbGlrZSB0byBkaXNjdXNzIGhhdmluZyBpdCBpbmNsdWRl
+ZCBhcyBhIHZhbGlkIGVuZHBvaW50IGZvciBTUi1JT1YuDQo+Pg0KPj4gR29vZCBxdWVzdGlvbi4g
+wqBJdCBsb29rcyBsaWtlIGl0J3MgYmVlbiB0aGF0IHdheSBzaW5jZSB0aGUgYmVnaW5uaW5nDQo+
+PiBbMV0sIGJ1dCBJIGRvbid0IGtub3cgd2h5LiDCoEkgZG9uJ3Qgc2VlIGFueSByZXN0cmljdGlv
+biBpbiB0aGUgc3BlYw0KPj4gYWJvdXQgU1ItSU9WIGFuZCBsZWdhY3kgZW5kcG9pbnRzLg0KPj4N
+Cj4+IEkgYWxzbyBkb24ndCBrbm93IHdoZXRoZXIgVkdBIGlzIGFuIGlzc3VlLiDCoFRoZXJlIGFy
+ZSBzb21lIGxlZ2FjeQ0KPj4gYWRkcmVzc2luZyBpc3N1ZXMgZm9yIFttZW0gMHhhMDAwMC0weGJm
+ZmZmXSBhbmQgW2lvIDB4M2IwLTB4M2JiXSBhbmQNCj4+IFtpbyAweDNjMC0weDNkZl0uIMKgRm9y
+IGV4YW1wbGUsIHdoZW4gYSBicmlkZ2UgaGFzIGl0cyBWR0EgRW5hYmxlIGJpdA0KPj4gc2V0LCBp
+dCBwb3NpdGl2ZWx5IGRlY29kZXMgW21lbSAweGEwMDAwLTB4YmZmZmZdIGV2ZW4gaWYgdGhhdCBy
+YW5nZQ0KPj4gaXNuJ3QgaW5jbHVkZWQgaW4gb25lIG9mIHRoZSBicmlkZ2Ugd2luZG93cy4gwqBJ
+IGRvbid0IGtub3cgd2hldGhlciBhDQo+PiBWR0EgZGV2aWNlIGlzIHNpbWlsYXJseSBhbGxvd2Vk
+IHRvIGRlY29kZSB0aGF0IHJhbmdlIGV2ZW4gaWYgaXQncyBub3QNCj4+IGluIGEgQkFSLiDCoElm
+IGl0IGlzLCBJIGNvdWxkIGltYWdpbmUgaXNzdWVzIGlmIGVuYWJsaW5nIFNSLUlPViBjcmVhdGVk
+DQo+PiBzZXZlcmFsIFZHQSBWRnMuDQo+VkZzIGNhbm5vdCBzdXBwb3J0IEkvTyBwb3J0IHNwYWNl
+IGJ5IGRlZmluaXRpb24sIHNvIEkgZG9uJ3QgdGhpbmsgYSAiVkdBDQo+VkYiIGNvdWxkIGFjdHVh
+bGx5IGV4aXN0LiDCoFRoZXJlIHdvdWxkIGJlIG5vdGhpbmcgd3Jvbmcgd2l0aCBhIG5vbi1WR0EN
+Cj5HUFUgVkYgdGhvdWdoLiDCoEkgYWxzbyBkb24ndCBzZWUgaG93IHRoZSBkaWZmZXJlbmNlcyBp
+biBMZWdhY3kgRW5kcG9pbnQNCj5ydWxlcyB2ZXJzdXMgYSBzdGFuZGFyZCBFbmRwb2ludCB3b3Vs
+ZCBwcmVjbHVkZSBzdXBwb3J0aW5nIFNSLUlPVi4gwqBJDQo+ZG9uJ3QgdGhpbmsgdGhlIFNSLUlP
+ViBzcGVjIG1ha2VzIGFueSBkZW1hbmRzIG9uIHdoZXRoZXIgdGhlIFBGIHJlcXVpcmVzDQo+SS9P
+IHBvcnQgcmVzb3VyY2VzLCB3aGljaCBJIGFzc3VtZSBpcyB0aGUgbWFpbiByZWFzb24gZm9yIHRo
+aXMgdG8gY2FsbA0KPml0c2VsZiBMZWdhY3kuIMKgSSdkIGd1ZXNzIGl0IHdhcyBsaWtlbHkganVz
+dCBhbiBvdmVyc2lnaHQgYW5kIHdlIHNob3VsZA0KPmFkZCBsZWdhY3kgZW5kcG9pbnRzIChvciBy
+ZW1vdmUgdGhlIHRlc3QgYWx0b2dldGhlciBhbmQgdHJ1c3QgdGhhdCBpZiBhDQo+ZGV2aWNlIGhh
+cyBhbiBTUi1JT1YgY2FwYWJpbGl0eSwgd2Ugc2hvdWxkIGluaXRpYWxpemUgaXQpLiDCoFRoYW5r
+cywNCj4NCj5BbGV4DQo+DQo+SSBhZ3JlZS4gSSB2YWd1ZWx5IHJlbWVtYmVyIHRoZXJlIHdhcyBz
+b21lIHJlYXNvbiB0aGF0IGV4Y2x1ZGVzIGxlZ2FjeQ0KPmVuZHBvaW50cyBmcm9tIHVzaW5nIFNS
+LUlPVi4gQnV0IGFmdGVyIGEgcXVpY2sgbG9vayBhdCB0aGUgbGF0ZXN0IHNwZWNzLA0KPkkgZGlk
+bid0IGZpbmQgYW55Lg0KPg0KT25seSBMZWdhY3kgRW5kcG9pbnRzIGNhbiBjbGFpbSBJL08uICBW
+RnMgYXJlIG5vdCBhbGxvd2VkIHRvIGNsYWltIEkvTy4NClZHQSBkZXZpY2VzIGNsYWltIEkvTy4N
+Cg0KVGhlIFNSLUlPViBzcGVjIDEuMSBzZWN0aW9uIDMuNC4xLjYgc3RhdGVzDQrigJxUaGUgQ2xh
+c3MgQ29kZSByZWdpc3RlciBpcyByZWFkLW9ubHkgYW5kIGlzIHVzZWQgdG8gaWRlbnRpZnkgdGhl
+IGdlbmVyaWMgZnVuY3Rpb24gDQpvZiB0aGUgZGV2aWNlIGFuZCwgaW4gc29tZSBjYXNlcywgYSBz
+cGVjaWZpYyByZWdpc3RlciBsZXZlbCBwcm9ncmFtbWluZyBpbnRlcmZhY2UuIA0KVGhlIGZpZWxk
+IGluIHRoZSBQRiBhbmQgYXNzb2NpYXRlZCBWRnMgbXVzdCByZXR1cm4gdGhlIHNhbWUgdmFsdWUg
+d2hlbiByZWFkLuKAnQ0KDQpJZiB0aGUgUEYgaXMgYSBWR0EgZGV2aWNlIHRoZW4gYnkgdGhlIGRl
+ZmluaXRpb24gaW4gdGhlIFNSLUlPViBzcGVjIHRoZSBjbGFzcyBjb2RlIA0Kb2YgdGhlIFZGIHdv
+dWxkIGFsc28gaW5kaWNhdGUgaXQgYXMgYSBWR0EgZGV2aWNlLCBpZSBTdWJjbGFzcyAweDAgPSBW
+R0EsIA0Kc3ViY2xhc3MgMHg4MCA9IE9USEVSX0RJU1BMQVlfQ09OVFJPTExFUi4gIA0KDQpJZGVh
+bGx5IHdlIHdvdWxkIHdhbnQgdG8gaGF2ZSB0aGUgUEYgc3ViLWNsYXNzIGFzIDB4MCBhbmQgdGhl
+IFZGIHN1YmNsYXNzIGFzIDB4ODANCkJ1dCB0aGUgc3BlYyBkb2Vzbid0IHN1cHBvcnQgdGhpcy4N
+Cg0KT25lIHNwZWN1bGF0aW9uIGFzIHRvIHdoeSBMZWdhY3kgZW5kcG9pbnRzIHdlcmUgb21pdHRl
+ZCBtaWdodCBiZSB0aGUgYXNzdW1wdGlvbg0KdGhhdCBkb2luZyBzbyB3b3VsZCBhbGxvdyBWR0Eg
+VkZzIHRvIGJlIGNyZWF0ZWQuDQoNCkl0IGlzIG5vdCByZWFzb25hYmxlIHRvIHByZXZlbnQgYSBW
+R0EgUEYgZnJvbSBlbmFibGluZyBTUi1JT1YgYXMgdGhpcyBpcyBhIHJlYWwgd29ybGQgDQpwb3Nz
+aWJpbGl0eS4gIFdlIG1pZ2h0IG5lZWQgdG8gYWRkIG1vcmUgY29kZSBlbHNld2hlcmUgaG93ZXZl
+ciB0byBwcmV2ZW50IGEgVkYNCmZyb20gYmVjb21pbmcgYSBWR0EgZGV2aWNlIG91dHNpZGUgb2Yg
+cGFzc2luZyBpdCB0aHJvdWdoIHRvIGEgZ3Vlc3QgVk0uDQoNCkFueSB0aG91Z2h0cyBvbiB0aGlz
+Pw0KDQpLZWxseQ0K
 
-So we need to make all arches support SPARSE_IRQ at first?
-
-Now we have arm, arm64, c6x, metag, powerpc, sh, x86 support SPARSE_IRQ.
-
-The following  are not with SPARSE_IRQ yet:
-alpha, arc, avr32, blackfin, cris, frv, hexagon, m32r, m68k, microblaze,
-mips, mn10300, openrisc, parisc, s390, score, sparc, tile, um,
-unicore32, xtensa.
-
-Thanks
-
-Yinghai
-
-
-Thanks
-
-Yinghai
