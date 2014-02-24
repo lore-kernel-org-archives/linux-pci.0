@@ -1,62 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 20 Feb 2014 10:45:03 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Srikanth Thokala <sthokal@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Michal Simek <michal.simek@xilinx.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] pcie: Add Xilinx PCIe Host Bridge IP driver
-Message-ID: <20140220174503.GB19893@obsidianresearch.com>
-References: <1392564830-5868-1-git-send-email-sthokal@xilinx.com>
- <CAErSpo5FGPhgnp8Gfy-1_Lk7ckCi7U5+z5pLnPU+jScPxD5yUQ@mail.gmail.com>
- <20140219003523.GJ29304@obsidianresearch.com>
- <CA+mB=1KSxkN+mKce5k1n93pmAA_FnWYaqNweWzxd4GD3Mo4PZA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+mB=1KSxkN+mKce5k1n93pmAA_FnWYaqNweWzxd4GD3Mo4PZA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:3064 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752558AbaBXIBU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Feb 2014 03:01:20 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Vikas Chaudhary <vikas.chaudhary@qlogic.com>,
+	iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 22/23] qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:22 +0100
+Message-Id: <ed9a994c24845cccfc96282fc2b0fd800c9c6ea9.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 12:39:48PM +0530, Srikanth Thokala wrote:
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-> > These should use the standard ranges mechanism for translations and
-> > apertures.
-> 
-> This AXI PCIe bridge IP do have two kind of BARs AXI-to-PCIe BAR and
-> PCIe-to-AXI BAR.  The former specifies the AXI Base address and are the
-> memory windows, these are listed in the 'ranges' DT property.  The latter
-> BAR specifies the addresses that PCI Express should respond to/is
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: iscsi-driver@qlogic.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/qla4xxx/ql4_nx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-The PCIe-to-AXI window should be setup by the driver automatically to
-span all system memory, it doesn't need to be in DT.
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index d001202..2cfcfbf 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -3805,7 +3805,7 @@ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
+ 	for (i = 0; i < QLA_MSIX_ENTRIES; i++)
+ 		entries[i].entry = qla4_8xxx_msix_entries[i].entry;
+ 
+-	ret = pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
++	ret = pci_enable_msix_exact(ha->pdev, entries, ARRAY_SIZE(entries));
+ 	if (ret) {
+ 		ql4_printk(KERN_WARNING, ha,
+ 		    "MSI-X: Failed to enable support -- %d/%d\n",
+-- 
+1.7.7.6
 
-The AXI-to-PCIe is the host bridge aperture and it should be in the DT
-ranges.
-
-> tallowed to write to and these addresses written to configuration space
-> during the initialization.
-
-Hopefully this was done in a conformant way, please provide a lspci
--vv next round please..
-
-> > Also, IMHO, only root ports should be supported in a host bridge
-> > driver. A PCI end point is something entirely different.
-> 
-> We are not supporting end point in this driver.  This is a soft IP
-> and can be configurable as a Root Port/End point while creating a HW
-> design in the FPGA.  So, the driver use this DT property to first
-> check if it is configured for Root Port and bail out if it is not.
-
-This is something that should be handled via the compatible string, not
-special properties. Root port and End port will have different
-drivers, so they must have different compatible strings.
-
-There is nothing wrong with dumping core generator configuration
-properties into the DT (as a form of documentation), but you must
-still use the standard techniques and properties whenever possible.
-
-Jason
