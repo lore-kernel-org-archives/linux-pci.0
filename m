@@ -1,127 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog125.obsmtp.com ([207.126.144.159]:39416 "EHLO
-	eu1sys200aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751965AbaBJIxC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 03:53:02 -0500
-From: Mohit Kumar <mohit.kumar@st.com>
-To: <arnd@arndb.de>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <spear-devel@list.st.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pm@vger.kernel.org>
-Subject: [PATCH V5 0/8]PCI:Add SPEAr13xx PCie support
-Date: Mon, 10 Feb 2014 14:21:51 +0530
-Message-ID: <cover.1391871170.git.pratyush.anand@st.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
+	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 09/23] hpsa: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Mon, 24 Feb 2014 09:02:09 +0100
+Message-Id: <e490be11a3b734f9c024e8542274ccc495ac3bd2.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pratyush Anand <pratyush.anand@st.com>
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-First three patches are improvement and fixes for SPEAr13xx support.
-Patches 4-6 add miphy40lp skelten driver and support for spear1310/40 miphy
-wrapper. Patch 7 add support for SPEAr13xx PCIe.
-
-These pathes are tested with linux-3.14-rc1 with following patch on the top of
-it:
-Author: Balaji T K <balajitk@ti.com>
-Date:   Mon Jan 20 16:41:27 2014 +0200
-
-    ata: ahci_platform: Manage SATA PHY
-
-Tested with SPEAr1310 evaluation board:
-	- INTEL PRO 100/100 EP card
-	- USB xhci gen2 card
- 	- Above cards connected through LeCROY PTC switch
-
-Modifications for SATA are tested with SPEAr1340-evb board
-
-Changes since v4:
-- Uses per device function pointers passed from .data field to
-  the of_device_id instead of of_device_is_compatible.
-- Incorporated other minor comments from v4
-
-Changes since v3:
-- Phy driver renamed to phy-miphy40lp
-- ahci phy hook patch used as suggested by Arnd
-- Incorporated other minor comments from v3
-
-Changes since v2:
-- Incorporated comments to move SPEAr13xx PCIe and SATA phy specific routines to
-  the phy framework
-- Modify ahci driver to include phy hooks
-- phy-core driver modifications for subsys_initcall() 
- 
-Changes since v1:
-- Few patches of the series are already accepted and applied to mainline e.g.
- pcie designware driver improvements,fixes for IO translation bug, PCIe dw
- driver maintainer. So dropped these from v2.
-- Incorporated comment to move the common/reset PCIe code to the seperate driver
-- PCIe and SATA share common PHY configuration registers, so move SATA
- platform code to the system config driver
-Fourth patch is improves pcie designware driver and fixes the IO
-translation bug. IO translation bug fix leads to the working of PCIe EP devices
-connected to RC through switch.
-
-PCIe driver support for SPEAr1310/40 platform board is added.
-
-These patches are tested with SPEAr1310 evaluation board:
-	- INTEL PRO 100/100 EP card
-	- USB xhci gen2 card
- 	- Above cards connected through LeCROY PTC switch
-
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: devicetree@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: iss_storagedev@hp.com
+Cc: linux-scsi@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
-Cc: spear-devel@list.st.com
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pm@vger.kernel.org
+---
+ drivers/scsi/hpsa.c |   10 ++--------
+ 1 files changed, 2 insertions(+), 8 deletions(-)
 
-
-Mohit Kumar (2):
-  SPEAr13xx: defconfig: Update
-  MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
-
-Pratyush Anand (6):
-  clk: SPEAr13xx: Fix pcie clock name
-  SPEAr13xx: Fix static mapping table
-  phy: st-miphy-40lp: Add skeleton driver
-  SPEAr13xx: Fixup: Move SPEAr1340 SATA platform code to phy driver
-  phy: st-miphy-40lp: Add SPEAr1310 and SPEAr1340 PCIe phy support
-  pcie: SPEAr13xx: Add designware pcie support
-
- .../devicetree/bindings/arm/spear-misc.txt         |   4 +
- .../devicetree/bindings/pci/spear13xx-pcie.txt     |   7 +
- .../devicetree/bindings/phy/st-miphy40lp.txt       |  12 +
- MAINTAINERS                                        |   6 +
- arch/arm/boot/dts/spear1310-evb.dts                |   4 +
- arch/arm/boot/dts/spear1310.dtsi                   |  96 +++-
- arch/arm/boot/dts/spear1340-evb.dts                |   4 +
- arch/arm/boot/dts/spear1340.dtsi                   |  32 +-
- arch/arm/boot/dts/spear13xx.dtsi                   |  10 +-
- arch/arm/configs/spear13xx_defconfig               |  15 +
- arch/arm/mach-spear/Kconfig                        |   3 +
- arch/arm/mach-spear/include/mach/spear.h           |   4 +-
- arch/arm/mach-spear/spear1340.c                    | 127 +----
- arch/arm/mach-spear/spear13xx.c                    |   2 +-
- drivers/clk/spear/spear1310_clock.c                |   6 +-
- drivers/clk/spear/spear1340_clock.c                |   2 +-
- drivers/pci/host/Kconfig                           |   5 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-spear13xx.c                  | 414 ++++++++++++++++
- drivers/phy/Kconfig                                |   6 +
- drivers/phy/Makefile                               |   1 +
- drivers/phy/phy-miphy40lp.c                        | 538 +++++++++++++++++++++
- 22 files changed, 1160 insertions(+), 139 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/spear-misc.txt
- create mode 100644 Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/phy/st-miphy40lp.txt
- create mode 100644 drivers/pci/host/pcie-spear13xx.c
- create mode 100644 drivers/phy/phy-miphy40lp.c
-
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 52cfd19..523a60e 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4169,7 +4169,7 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 		goto default_int_mode;
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+ 		dev_info(&h->pdev->dev, "MSIX\n");
+-		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
++		err = pci_enable_msix_exact(h->pdev, hpsa_msix_entries,
+ 						MAX_REPLY_QUEUES);
+ 		if (!err) {
+ 			for (i = 0; i < MAX_REPLY_QUEUES; i++)
+@@ -4177,13 +4177,7 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 			h->msix_vector = 1;
+ 			return;
+ 		}
+-		if (err > 0) {
+-			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
+-			       "available\n", err);
+-		} else {
+-			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
+-			       err);
+-		}
++		dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
+ 	}
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+ 		dev_info(&h->pdev->dev, "MSI\n");
 -- 
-1.8.1.2
+1.7.7.6
 
