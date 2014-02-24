@@ -1,125 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:54676 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904AbaBSAwp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 19:52:45 -0500
-Received: by mail-oa0-f49.google.com with SMTP id i7so20165286oag.36
-        for <linux-pci@vger.kernel.org>; Tue, 18 Feb 2014 16:52:45 -0800 (PST)
-Date: Tue, 18 Feb 2014 17:52:41 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Guo Chao <yan@linux.vnet.ibm.com>,
-	Nikhil P Rao <nikhil.rao@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: Support huge alignment in pbus_size_mem()
-Message-ID: <20140219005241.GE8786@google.com>
-References: <20140217045004.GB3230@yanx>
- <CAE9FiQXmWG2RNP-t=U06JUsqkmDm2My5762za8QuwUMZsG+yNg@mail.gmail.com>
- <CAE9FiQWxcBCy+dp-0D2erB83uyyTNKFo5y0sKwiiFxo1xM0Z=g@mail.gmail.com>
+Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:47385
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752495AbaBXVIu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 16:08:50 -0500
+From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yu Zhao <yuzhao@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: RE: Architectural question regarding IOV support in Linux 3.13.4
+Date: Mon, 24 Feb 2014 21:08:41 +0000
+Message-ID: <B756807489D6244883AC0B799A6EEC15EB2BEA@storexdag02.amd.com>
+References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
+ <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
+ <1393020186.9111.91.camel@ul30vt.home>
+ <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
+ <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
+ <CAErSpo7tyzujCqvsQcns1wX+j5jM1=Xo9TiCC+5-h67uXqbGSg@mail.gmail.com>
+In-Reply-To: <CAErSpo7tyzujCqvsQcns1wX+j5jM1=Xo9TiCC+5-h67uXqbGSg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQWxcBCy+dp-0D2erB83uyyTNKFo5y0sKwiiFxo1xM0Z=g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 17, 2014 at 01:15:15PM -0800, Yinghai Lu wrote:
-> On Mon, Feb 17, 2014 at 11:28 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Sun, Feb 16, 2014 at 8:50 PM, Guo Chao <yan@linux.vnet.ibm.com> wrote:
-> >> pbus_size_mem() limits resource alignment within 2G. We want to extend
-> >> this limit to support a 16G BAR. I found similar effort was tried before:
-> >>
-> >>         https://lkml.org/lkml/2012/6/21/411
-> >>
-> >> What's the result? Does anyone come up with an adaptive algorithm?
-> >
-> > I suggest following changes:
-> >
-> > From: Nikhil P Rao <nikhil.rao@intel.com>
-> > Subject: [PATCH] PCI: Fix bus align checking to support more than 2G
-> >
-> > current 2G is out of date.
-> >
-> > -v3: We only need to extend that when 64bit mmio is supported.
-> >      So extract mmio64 mask checking, and still keep old 2G checking
-> >      for other path.  --- Yinghai
-> >
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >
-> > ---
-> >  drivers/pci/setup-bus.c |   42 ++++++++++++++++++++++++++++++++++++++----
-> >  1 file changed, 38 insertions(+), 4 deletions(-)
-> >
-> > Index: linux-2.6/drivers/pci/setup-bus.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/pci/setup-bus.c
-> > +++ linux-2.6/drivers/pci/setup-bus.c
-> > @@ -921,7 +921,7 @@ static int pbus_size_mem(struct pci_bus
-> >  {
-> >      struct pci_dev *dev;
-> >      resource_size_t min_align, align, size, size0, size1;
-> > -    resource_size_t aligns[12];    /* Alignments from 1Mb to 2Gb */
-> > +    resource_size_t aligns[44];    /* Alignments from 1Mb to 2^63 */
-> >      int order, max_order;
-> >      struct resource *b_res = find_free_bus_resource(bus, type);
-> >      unsigned int mem64_mask = 0;
-> > @@ -937,6 +937,40 @@ static int pbus_size_mem(struct pci_bus
-> >      mem64_mask = b_res->flags & IORESOURCE_MEM_64;
-> >      b_res->flags &= ~IORESOURCE_MEM_64;
-> >
-> > +    /* kernel does not support 64bit */
-> > +    if (sizeof(resource_size_t) == 4)
-> > +        mem64_mask &=  ~IORESOURCE_MEM_64;
-> > +
-> > +    if (!(mem64_mask & IORESOURCE_MEM_64))
-> > +        goto mem64_mask_check_done;
-> > +
-> > +    /* check if mem64 support is supported and needed at first */
-> > +    list_for_each_entry(dev, &bus->devices, bus_list) {
-> > +        int i;
-> > +
-> > +        for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> > +            struct resource *r = &dev->resource[i];
-> > +            resource_size_t r_size;
-> > +
-> > +            if (r->parent || (r->flags & mask) != type)
-> > +                continue;
-> > +            r_size = resource_size(r);
-> > +#ifdef CONFIG_PCI_IOV
-> > +            /* put SRIOV requested res to the optional list */
-> > +            if (realloc_head && i >= PCI_IOV_RESOURCES &&
-> > +                    i <= PCI_IOV_RESOURCE_END)
-> > +                continue;
-> > +#endif
-> > +            mem64_mask &= r->flags & IORESOURCE_MEM_64;
-> > +
-> > +            if (!(mem64_mask & IORESOURCE_MEM_64))
-> > +                goto mem64_mask_check_done;
-> > +
-> > +        }
-> > +    }
+DQo+T24gTW9uLCBGZWIgMjQsIDIwMTQgYXQgMTI6MjIgUE0sIFp5dGFydWssIEtlbGx5IDxLZWxs
+eS5aeXRhcnVrQGFtZC5jb20+IHdyb3RlOg0KPj4NCj4+Pk9uIEZyaSwgRmViIDIxLCAyMDE0IGF0
+IDI6MDMgUE0sIEFsZXggV2lsbGlhbXNvbiA8YWxleC53aWxsaWFtc29uQHJlZGhhdC5jb20+IHdy
+b3RlOg0KPj4+T24gRnJpLCAyMDE0LTAyLTIxIGF0IDE0OjExIC0wNzAwLCBCam9ybiBIZWxnYWFz
+IHdyb3RlOg0KPj4+PiBbK2NjIEFsZXgsIFl1XQ0KPj4+Pg0KPj4+PiBPbiBGcmksIEZlYiAyMSwg
+MjAxNCBhdCAxMDo0NSBBTSwgWnl0YXJ1aywgS2VsbHkgPEtlbGx5Llp5dGFydWtAYW1kLmNvbT4g
+d3JvdGU6DQo+Pj4+ID4NCj4+Pj4gPiBJIGFtIHdvcmtpbmcgd2l0aCBTUi1JT1YgYW5kIEkgaGF2
+ZSBhIHF1ZXN0aW9uIHJlZ2FyZGluZyB0aGUgDQo+Pj4+ID4gZnVuY3Rpb24NCj4+Pj4gPiBzcmlv
+dl9pbml0KCkgaW4gLi4vZHJpdmVycy9wY2kvaW92LmMgKGxpbnV4IHZlcnNpb25zIDMuNC45IGFu
+ZCANCj4+Pj4gPiAzLjEzLjQpDQo+Pj4+ID4NCj4+Pj4gPiBJbiBzcmlvdl9pbml0KCkgdGhlIGNv
+ZGUgZmlyc3QgY2hlY2tzIHdoZXRoZXIgdGhlIFBGIGlzIGEgUm9vdCANCj4+Pj4gPiBjb21wbGV4
+ICBlbmRwb2ludCAoMHg5KSBvciBhbiBFeHByZXNzIEVuZHBvaW50ICgweDApIGFzIHNob3duIGlu
+IA0KPj4+PiA+IHRoZSBjb2RlICBzbmlwcGV0IGJlbG93LiAgSWYgaXQgaXMgbmVpdGhlciBpdCBy
+ZXR1cm5zIHRoZSBObyBkZXZpY2UgZXJyb3IuDQo+Pj4+ID4NCj4+Pj4gPiBzdGF0aWMgaW50IHNy
+aW92X2luaXQoc3RydWN0IHBjaV9kZXYgKmRldiwgaW50IHBvcykgew0KPj4+PiA+ICAgICAgICAg
+IGludCBpOw0KPj4+PiA+ICAgICAgICAgIGludCByYzsNCj4+Pj4gPiAgICAgICAgICBpbnQgbnJl
+czsNCj4+Pj4gPiAgICAgICAgICB1MzIgcGdzejsNCj4+Pj4gPiAgICAgICAgICB1MTYgY3RybCwg
+dG90YWwsIG9mZnNldCwgc3RyaWRlOw0KPj4+PiA+ICAgICAgICAgIHN0cnVjdCBwY2lfc3Jpb3Yg
+KmlvdjsNCj4+Pj4gPiAgICAgICAgICBzdHJ1Y3QgcmVzb3VyY2UgKnJlczsNCj4+Pj4gPiAgICAg
+ICAgICBzdHJ1Y3QgcGNpX2RldiAqcGRldjsNCj4+Pj4gPg0KPj4+PiA+ICAgICAgICBpZiAocGNp
+X3BjaWVfdHlwZShkZXYpICE9IFBDSV9FWFBfVFlQRV9SQ19FTkQgJiYNCj4+Pj4gPiAgICAgICAg
+ICAgICAgcGNpX3BjaWVfdHlwZShkZXYpICE9IFBDSV9FWFBfVFlQRV9FTkRQT0lOVCkNCj4+Pj4g
+PiAgICAgICAgICAgICAgICAgIHJldHVybiAtRU5PREVWOw0KPj4+PiA+DQo+Pj4+ID4gTXkgcXVl
+c3Rpb24gaXMgd2h5IFBDSV9FWFBfVFlQRV9MRUdfRU5EICgweDEpIGlzIG9taXR0ZWQgYXMgYmVp
+bmcgDQo+Pj4+ID4gYSAgdmFsaWQgZW5kcG9pbnQuICBCeSBleGNsdWRpbmcgTGVnYWN5IGVuZHBv
+aW50cyBpdCBmYWlscyANCj4+Pj4gPiBlbmFibGluZyAgU1ItSU9WIG9uIGEgVkdBIFBGLg0KPj4+
+PiA+DQo+Pj4+ID4gSXMgdGhlcmUgYSBkZXNpZ24vc3BlY2lmaWNhdGlvbiByZWFzb24gd2h5IGxl
+Z2FjeSB3YXMgZXhjbHVkZWQgb3IgDQo+Pj4+ID4gd2FzICBpdCBqdXN0IGFuIGFzc3VtcHRpb24g
+dGhhdCBWR0Egd291bGQgbmV2ZXIgc3VwcG9ydCBTUi1JT1Y/DQo+Pj4+ID4NCj4+Pj4gPiBJZiB0
+aGVyZSBpcyBubyB2YWxpZCByZWFzb24gdG8gZXhjbHVkZSBQQ0lfRVhQX1RZUEVfTEVHX0VORCwg
+SSANCj4+Pj4gPiB3b3VsZCAgbGlrZSB0byBkaXNjdXNzIGhhdmluZyBpdCBpbmNsdWRlZCBhcyBh
+IHZhbGlkIGVuZHBvaW50IGZvciBTUi1JT1YuDQo+Pj4+DQo+Pj4+IEdvb2QgcXVlc3Rpb24uICBJ
+dCBsb29rcyBsaWtlIGl0J3MgYmVlbiB0aGF0IHdheSBzaW5jZSB0aGUgYmVnaW5uaW5nIA0KPj4+
+PiBbMV0sIGJ1dCBJIGRvbid0IGtub3cgd2h5LiAgSSBkb24ndCBzZWUgYW55IHJlc3RyaWN0aW9u
+IGluIHRoZSBzcGVjIA0KPj4+PiBhYm91dCBTUi1JT1YgYW5kIGxlZ2FjeSBlbmRwb2ludHMuDQo+
+Pj4+DQo+Pj4+IEkgYWxzbyBkb24ndCBrbm93IHdoZXRoZXIgVkdBIGlzIGFuIGlzc3VlLiAgVGhl
+cmUgYXJlIHNvbWUgbGVnYWN5IA0KPj4+PiBhZGRyZXNzaW5nIGlzc3VlcyBmb3IgW21lbSAweGEw
+MDAwLTB4YmZmZmZdIGFuZCBbaW8gMHgzYjAtMHgzYmJdIGFuZCANCj4+Pj4gW2lvIDB4M2MwLTB4
+M2RmXS4gIEZvciBleGFtcGxlLCB3aGVuIGEgYnJpZGdlIGhhcyBpdHMgVkdBIEVuYWJsZSBiaXQg
+DQo+Pj4+IHNldCwgaXQgcG9zaXRpdmVseSBkZWNvZGVzIFttZW0gMHhhMDAwMC0weGJmZmZmXSBl
+dmVuIGlmIHRoYXQgcmFuZ2UgDQo+Pj4+IGlzbid0IGluY2x1ZGVkIGluIG9uZSBvZiB0aGUgYnJp
+ZGdlIHdpbmRvd3MuICBJIGRvbid0IGtub3cgd2hldGhlciBhIA0KPj4+PiBWR0EgZGV2aWNlIGlz
+IHNpbWlsYXJseSBhbGxvd2VkIHRvIGRlY29kZSB0aGF0IHJhbmdlIGV2ZW4gaWYgaXQncyANCj4+
+Pj4gbm90IGluIGEgQkFSLiAgSWYgaXQgaXMsIEkgY291bGQgaW1hZ2luZSBpc3N1ZXMgaWYgZW5h
+YmxpbmcgU1ItSU9WIA0KPj4+PiBjcmVhdGVkIHNldmVyYWwgVkdBIFZGcy4NCj4+PlZGcyBjYW5u
+b3Qgc3VwcG9ydCBJL08gcG9ydCBzcGFjZSBieSBkZWZpbml0aW9uLCBzbyBJIGRvbid0IHRoaW5r
+IGEgDQo+Pj4iVkdBIFZGIiBjb3VsZCBhY3R1YWxseSBleGlzdC4gIFRoZXJlIHdvdWxkIGJlIG5v
+dGhpbmcgd3Jvbmcgd2l0aCBhIA0KPj4+bm9uLVZHQSBHUFUgVkYgdGhvdWdoLiAgSSBhbHNvIGRv
+bid0IHNlZSBob3cgdGhlIGRpZmZlcmVuY2VzIGluIExlZ2FjeSANCj4+PkVuZHBvaW50IHJ1bGVz
+IHZlcnN1cyBhIHN0YW5kYXJkIEVuZHBvaW50IHdvdWxkIHByZWNsdWRlIHN1cHBvcnRpbmcgDQo+
+Pj5TUi1JT1YuICBJIGRvbid0IHRoaW5rIHRoZSBTUi1JT1Ygc3BlYyBtYWtlcyBhbnkgZGVtYW5k
+cyBvbiB3aGV0aGVyIA0KPj4+dGhlIFBGIHJlcXVpcmVzIEkvTyBwb3J0IHJlc291cmNlcywgd2hp
+Y2ggSSBhc3N1bWUgaXMgdGhlIG1haW4gcmVhc29uIA0KPj4+Zm9yIHRoaXMgdG8gY2FsbCBpdHNl
+bGYgTGVnYWN5LiAgSSdkIGd1ZXNzIGl0IHdhcyBsaWtlbHkganVzdCBhbiANCj4+Pm92ZXJzaWdo
+dCBhbmQgd2Ugc2hvdWxkIGFkZCBsZWdhY3kgZW5kcG9pbnRzIChvciByZW1vdmUgdGhlIHRlc3Qg
+DQo+Pj5hbHRvZ2V0aGVyIGFuZCB0cnVzdCB0aGF0IGlmIGEgZGV2aWNlIGhhcyBhbiBTUi1JT1Yg
+Y2FwYWJpbGl0eSwgd2UgDQo+Pj5zaG91bGQgaW5pdGlhbGl6ZSBpdCkuICBUaGFua3MsDQo+Pj4N
+Cj4+PkFsZXgNCj4+Pg0KPj4+SSBhZ3JlZS4gSSB2YWd1ZWx5IHJlbWVtYmVyIHRoZXJlIHdhcyBz
+b21lIHJlYXNvbiB0aGF0IGV4Y2x1ZGVzIGxlZ2FjeSANCj4+PmVuZHBvaW50cyBmcm9tIHVzaW5n
+IFNSLUlPVi4gQnV0IGFmdGVyIGEgcXVpY2sgbG9vayBhdCB0aGUgbGF0ZXN0IA0KPj4+c3BlY3Ms
+IEkgZGlkbid0IGZpbmQgYW55Lg0KPj4+DQo+PiBPbmx5IExlZ2FjeSBFbmRwb2ludHMgY2FuIGNs
+YWltIEkvTy4gIFZGcyBhcmUgbm90IGFsbG93ZWQgdG8gY2xhaW0gSS9PLg0KPj4gVkdBIGRldmlj
+ZXMgY2xhaW0gSS9PLg0KPj4NCj4+IFRoZSBTUi1JT1Ygc3BlYyAxLjEgc2VjdGlvbiAzLjQuMS42
+IHN0YXRlcyDigJxUaGUgQ2xhc3MgQ29kZSByZWdpc3RlciBpcyANCj4+IHJlYWQtb25seSBhbmQg
+aXMgdXNlZCB0byBpZGVudGlmeSB0aGUgZ2VuZXJpYyBmdW5jdGlvbiBvZiB0aGUgZGV2aWNlIA0K
+Pj4gYW5kLCBpbiBzb21lIGNhc2VzLCBhIHNwZWNpZmljIHJlZ2lzdGVyIGxldmVsIHByb2dyYW1t
+aW5nIGludGVyZmFjZS4NCj4+IFRoZSBmaWVsZCBpbiB0aGUgUEYgYW5kIGFzc29jaWF0ZWQgVkZz
+IG11c3QgcmV0dXJuIHRoZSBzYW1lIHZhbHVlIHdoZW4gcmVhZC7igJ0NCj4+DQo+PiBJZiB0aGUg
+UEYgaXMgYSBWR0EgZGV2aWNlIHRoZW4gYnkgdGhlIGRlZmluaXRpb24gaW4gdGhlIFNSLUlPViBz
+cGVjIA0KPj4gdGhlIGNsYXNzIGNvZGUgb2YgdGhlIFZGIHdvdWxkIGFsc28gaW5kaWNhdGUgaXQg
+YXMgYSBWR0EgZGV2aWNlLCBpZSANCj4+IFN1YmNsYXNzIDB4MCA9IFZHQSwgc3ViY2xhc3MgMHg4
+MCA9IE9USEVSX0RJU1BMQVlfQ09OVFJPTExFUi4NCj4+DQo+PiBJZGVhbGx5IHdlIHdvdWxkIHdh
+bnQgdG8gaGF2ZSB0aGUgUEYgc3ViLWNsYXNzIGFzIDB4MCBhbmQgdGhlIFZGIA0KPj4gc3ViY2xh
+c3MgYXMgMHg4MCBCdXQgdGhlIHNwZWMgZG9lc24ndCBzdXBwb3J0IHRoaXMuDQo+Pg0KPj4gT25l
+IHNwZWN1bGF0aW9uIGFzIHRvIHdoeSBMZWdhY3kgZW5kcG9pbnRzIHdlcmUgb21pdHRlZCBtaWdo
+dCBiZSB0aGUgDQo+PiBhc3N1bXB0aW9uIHRoYXQgZG9pbmcgc28gd291bGQgYWxsb3cgVkdBIFZG
+cyB0byBiZSBjcmVhdGVkLg0KPj4NCj4+IEl0IGlzIG5vdCByZWFzb25hYmxlIHRvIHByZXZlbnQg
+YSBWR0EgUEYgZnJvbSBlbmFibGluZyBTUi1JT1YgYXMgdGhpcyANCj4+IGlzIGEgcmVhbCB3b3Js
+ZCBwb3NzaWJpbGl0eS4gIFdlIG1pZ2h0IG5lZWQgdG8gYWRkIG1vcmUgY29kZSBlbHNld2hlcmUg
+DQo+PiBob3dldmVyIHRvIHByZXZlbnQgYSBWRiBmcm9tIGJlY29taW5nIGEgVkdBIGRldmljZSBv
+dXRzaWRlIG9mIHBhc3NpbmcgaXQgdGhyb3VnaCB0byBhIGd1ZXN0IFZNLg0KPg0KPkNhbiB5b3Ug
+dHJ5IG91dCBZdSdzIHBhdGNoIGFuZCBzZWUgd2hhdCBoYXBwZW5zPyAgSWYgeW91IGRvIHR1cm4g
+b24gU1ItSU9WIG9uIHRoaXMgZGV2aWNlLCBpdCB3b3VsZCBiZSBpbnRlcmVzdGluZyB0byBzZWUg
+dGhlIGNvbXBsZXRlIGRtZXNnIGxvZyBhbmQgImxzcGNpIC12diIgb3V0cHV0IHRvID5zZWUgd2hh
+dCB3ZSBkbyB3aXRoIGl0Lg0KPg0KPkJqb3JuDQoNCkkgYW0gYXdheSBmcm9tIG15IHRlc3Qgc3lz
+dGVtIGZvciB0aGUgbmV4dCAyIHdlZWtzIGJ1dCBJIHdpbGwgZ2l2ZSBpdCBhIHRyeSB3aGVuIEkg
+cmV0dXJuLiAgSSBoYXZlIGJlZW4gd29ya2luZyBhcm91bmQgdGhlIGlzc3VlIGJ5IGNoYW5naW5n
+IHRoZSBwY2ktdHlwZSB0byBQQ0lfRVhQX1RZUEVfRU5EUE9JTlQgd2hpY2ggaGFzIHdvcmtlZCBm
+b3IgbWUgZXZlbiB0aG91Z2ggaXQgaXMgbm90IGNvcnJlY3QuDQoNClRoYW5rcywNCktlbGx5DQo=
 
-Why did you add the loop above?  Didn't the original loop compute the same
-value of mem64_mask as your new loop?
-
-> > +mem64_mask_check_done:
-> > +
-> >      list_for_each_entry(dev, &bus->devices, bus_list) {
-> >          int i;
-> >
-> > @@ -959,8 +993,9 @@ static int pbus_size_mem(struct pci_bus
-> >  #endif
-> >              /* For bridges size != alignment */
-> >              align = pci_resource_alignment(dev, r);
-> > -            order = __ffs(align) - 20;
-> > -            if (order > 11) {
-> > +            order = __ffs64(align) - 20;
-> > +            if (order > ARRAY_SIZE(aligns) ||
-> > +                (!(mem64_mask & IORESOURCE_MEM_64) && order > 11) ) {
-> 
-> ...
-> > For 64bit systems, we want to ensure that the align < 1^63, so shouldn't
-> > order be checked against 43, instead of ARRAY_SIZE(aligns) ?
-> 
-> yes, should change to 43.
-
-Can you post an updated patch with this change, please?
