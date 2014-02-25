@@ -1,57 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:40115 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948AbaBLT2V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 14:28:21 -0500
-Received: by mail-ob0-f181.google.com with SMTP id va2so11097176obc.12
-        for <linux-pci@vger.kernel.org>; Wed, 12 Feb 2014 11:28:20 -0800 (PST)
+Received: from mx0b-0016ce01.pphosted.com ([67.231.156.153]:63456 "EHLO
+	mx0b-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750735AbaBYJwG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 04:52:06 -0500
+Content-Type: multipart/mixed;
+	boundary="_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_"
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+CC: Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 20/22] qla2xxx: Use pci_enable_msix_range()
+Date: Tue, 25 Feb 2014 09:52:02 +0000
+Message-ID: <F5D084D6342F9B479C34599BB0A03E4D89867332@AVMB1.qlogic.org>
+References: <cover.1391512266.git.agordeev@redhat.com>
+ <36da37b8ca3a13e24a3363ed19d6a08061c85970.1391512266.git.agordeev@redhat.com>
+In-Reply-To: <36da37b8ca3a13e24a3363ed19d6a08061c85970.1391512266.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com> <ad5cc6d6bdf4c8f5ce4681ec27674d07fbda089e.1389904167.git.agordeev@redhat.com>
- <20140130134819.GA31909@dhcp-26-207.brq.redhat.com> <87y51qohjn.fsf@kamboji.qca.qualcomm.com>
- <20140204190935.GA1430@dhcp-26-207.brq.redhat.com> <8761oum0l3.fsf@kamboji.qca.qualcomm.com>
- <20140205085047.GA27820@dhcp-26-207.brq.redhat.com> <871tzilz1u.fsf@kamboji.qca.qualcomm.com>
- <20140212003143.GD21057@google.com> <20140212133816.GB3147@dhcp-26-207.brq.redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Feb 2014 12:28:00 -0700
-Message-ID: <CAErSpo6c_EPc5c8aaTeD9=eXWw4OowcKhWHG6YZgTOkZRMtZHQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath10k: Get rid of superfluous call to pci_disable_msi()
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 6:38 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Tue, Feb 11, 2014 at 05:31:43PM -0700, Bjorn Helgaas wrote:
->> I haven't put these in my branch, so you can take them.
->>
->> Alexander has a whole batch of network driver updates that I think David
->> Miller is going to apply; would it make sense to include these in that
->> batch?
->>
->> There's also the wil6210 patch for
->> drivers/net/wireless/ath/wil6210/pcie_bus.c, which seems like it maybe
->> could be in that batch, too.
+--_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <B0CACDB358679F4DADA7A77C27A9DB10@qlogic.com>
+Content-Transfer-Encoding: quoted-printable
+
+Looks good to me.
+
+Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+
+>As result of deprecation of MSI-X/MSI enablement functions
+>pci_enable_msix() and pci_enable_msi_block() all drivers
+>using these two interfaces need to be updated to use the
+>new pci_enable_msi_range() and pci_enable_msix_range()
+>interfaces.
 >
-> Well, as this series is small I thought it could quickly go thru your
-> tree. But since ipr had conflicts, there is no point routing all patches
-> altogether, so up to you guys. The wil6210 patch is already in your pci/msi
-> branch though.
+>Log message code 0x00c6 preserved, although it is reported
+>after successful call to pci_enable_msix_range(), not before
+>possibly unsuccessful call to pci_enable_msix(). Consumers
+>of the error code should not notice the difference.
+>
+>Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+>Cc: qla2xxx-upstream@qlogic.com
+>Cc: linux-scsi@vger.kernel.org
+>Cc: linux-pci@vger.kernel.org
+>---
+> drivers/scsi/qla2xxx/qla_isr.c |   27 +++++++++++----------------
+> 1 files changed, 11 insertions(+), 16 deletions(-)
+>
+>diff --git a/drivers/scsi/qla2xxx/qla_isr.c
+>b/drivers/scsi/qla2xxx/qla_isr.c
+>index 9bc86b9..b2dcfa4 100644
+>--- a/drivers/scsi/qla2xxx/qla_isr.c
+>+++ b/drivers/scsi/qla2xxx/qla_isr.c
+>@@ -2896,27 +2896,22 @@ qla24xx_enable_msix(struct qla_hw_data *ha,
+>struct rsp_que *rsp)
+> 	for (i =3D 0; i < ha->msix_count; i++)
+> 		entries[i].entry =3D i;
+>=20
+>-	ret =3D pci_enable_msix(ha->pdev, entries, ha->msix_count);
+>-	if (ret) {
+>-		if (ret < MIN_MSIX_COUNT)
+>-			goto msix_failed;
+>-
+>+	ret =3D pci_enable_msix_range(ha->pdev,
+>+				    entries, MIN_MSIX_COUNT, ha->msix_count);
+>+	if (ret < 0) {
+>+		ql_log(ql_log_fatal, vha, 0x00c7,
+>+		    "MSI-X: Failed to enable support, "
+>+		    "giving   up -- %d/%d.\n",
+>+		    ha->msix_count, ret);
+>+		goto msix_out;
+>+	} else if (ret < ha->msix_count) {
+> 		ql_log(ql_log_warn, vha, 0x00c6,
+> 		    "MSI-X: Failed to enable support "
+> 		    "-- %d/%d\n Retry with %d vectors.\n",
+> 		    ha->msix_count, ret, ret);
+>-		ha->msix_count =3D ret;
+>-		ret =3D pci_enable_msix(ha->pdev, entries, ha->msix_count);
+>-		if (ret) {
+>-msix_failed:
+>-			ql_log(ql_log_fatal, vha, 0x00c7,
+>-			    "MSI-X: Failed to enable support, "
+>-			    "giving   up -- %d/%d.\n",
+>-			    ha->msix_count, ret);
+>-			goto msix_out;
+>-		}
+>-		ha->max_rsp_queues =3D ha->msix_count - 1;
+> 	}
+>+	ha->msix_count =3D ret;
+>+	ha->max_rsp_queues =3D ha->msix_count - 1;
+> 	ha->msix_entries =3D kzalloc(sizeof(struct qla_msix_entry) *
+> 				ha->msix_count, GFP_KERNEL);
+> 	if (!ha->msix_entries) {
+>--=20
+>1.7.7.6
+>
 
-It's in pci/msi, but that's not in my -next branch yet, so I can
-easily drop it.  Do drivers/net/wireless patches normally follow a
-different path than the other drivers/net patches?  The wil6210 and
-ath10k patches look just like the others in the 34-patch series (bnx2,
-bnx2x, tg3, bna, cxgb3, etc.), so I thought it would make more sense
-to include them there.
 
-I think I need to put the ahci regression fix in v3.14, so I'll move
-that to my for-linus branch and just keep the other odds and ends
-(ahci and vfio) for v3.15.
+--_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-Bjorn
+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
+Pnk1cBgQqY6tD8NmR0YAUF9LRVJORUz3fIhylLSyIdLOfftmwCdG6DEuN91xNjh9IrUVQgHfcAAA
+HwBCAAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAGUAAQAAADQAAABz
+AGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwBkAAEA
+AAAKAAAAUwBNAFQAUAAAAAAAAgFBAAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBh
+AHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMA
+aAB5AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAJdAQAAADQAAABzAGEAdQByAGEAdgAu
+AGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwDlXwEAAAA8AAAAcwBpAHAA
+OgBzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAa
+DAEAAAAeAAAAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfAB8MAQAAADQAAABzAGEA
+dQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAeDAEAAAAK
+AAAAUwBNAFQAUAAAAAAAAgEZDAEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUA
+cgBhAHYAIABLAGEAcwBoAHkAYQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5
+AGEAcABAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAFdAQAAADQAAABzAGEAdQByAGEAdgAuAGsA
+YQBzAGgAeQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwD4PwEAAAAeAAAAUwBhAHUAcgBh
+AHYAIABLAGEAcwBoAHkAYQBwAAAAAAAfACNAAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgA
+eQBhAHAAQABxAGwAbwBnAGkAYwAuAGMAbwBtAAAAHwAiQAEAAAAKAAAAUwBNAFQAUAAAAAAAAgH5
+PwEAAAB0AAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHUAcgBhAHYAIABLAGEAcwBoAHkA
+YQBwAAAAUwBNAFQAUAAAAHMAYQB1AHIAYQB2AC4AawBhAHMAaAB5AGEAcABAAHEAbABvAGcAaQBj
+AC4AYwBvAG0AAAAfAAldAQAAADQAAABzAGEAdQByAGEAdgAuAGsAYQBzAGgAeQBhAHAAQABxAGwA
+bwBnAGkAYwAuAGMAbwBtAAAAHwAxQAEAAAACAAAAAAAAAAsAQDoBAAAAHwAwQAEAAAACAAAAAAAA
+AB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwDxPwkEAAALAEA6AQAAAAMA/T/kBAAA
+AgELMAEAAAAQAAAArfCOXAZneUGCozxVO1LqOAMAFwABAAAAQAA5AAANbjsPMs8BQAAIME8M0jsP
+Ms8BCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEA
+AAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAA
+AAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAAAAAAHwA3AAEAAABuAAAAUgBlADoAIABbAFAA
+QQBUAEMASAAgADIAMAAvADIAMgBdACAAcQBsAGEAMgB4AHgAeAA6ACAAVQBzAGUAIABwAGMAaQBf
+AGUAbgBhAGIAbABlAF8AbQBzAGkAeABfAHIAYQBuAGcAZQAoACkAAAAAAB8APQABAAAACgAAAFIA
+ZQA6ACAAAAAAAAMANgAAAAAAHwBCEAEAAACcAAAAPAAzADYAZABhADMANwBiADgAYwBhADMAYQAx
+ADMAZQAyADQAYQAzADMANgAzAGUAZAAxADkAZAA2AGEAMAA4ADAANgAxAGMAOAA1ADkANwAwAC4A
+MQAzADkAMQA1ADEAMgAyADYANgAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABh
+AHQALgBjAG8AbQA+AAAAAgFxAAEAAAAWAAAAAQHPMg87iD1LWGzPO067X063mCiHIgAAHwBwAAEA
+AABmAAAAWwBQAEEAVABDAEgAIAAyADAALwAyADIAXQAgAHEAbABhADIAeAB4AHgAOgAgAFUAcwBl
+ACAAcABjAGkAXwBlAG4AYQBiAGwAZQBfAG0AcwBpAHgAXwByAGEAbgBnAGUAKAApAAAAAAAfADUQ
+AQAAAHgAAAA8AEYANQBEADAAOAA0AEQANgAzADQAMgBGADkAQgA0ADcAOQBDADMANAA1ADkAOQBC
+AEIAMABBADAAMwBFADQARAA4ADkAOAA2ADcAMwAzADIAQABBAFYATQBCADEALgBxAGwAbwBnAGkA
+YwAuAG8AcgBnAD4AAAAfADkQAQAAAPIAAAA8AGMAbwB2AGUAcgAuADEAMwA5ADEANQAxADIAMgA2
+ADYALgBnAGkAdAAuAGEAZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAgADwA
+MwA2AGQAYQAzADcAYgA4AGMAYQAzAGEAMQAzAGUAMgA0AGEAMwAzADYAMwBlAGQAMQA5AGQANgBh
+ADAAOAAwADYAMQBjADgANQA5ADcAMAAuADEAMwA5ADEANQAxADIAMgA2ADYALgBnAGkAdAAuAGEA
+ZwBvAHIAZABlAGUAdgBAAHIAZQBkAGgAYQB0AC4AYwBvAG0APgAAAAAAAwDeP59OAABAAAcwNejK
+Ow8yzwEDACYAAAAAAAIBRwABAAAALwAAAGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjEtMTQwMjI1
+MDk1MjAyWi0xMDAwNjUAAB8AFRABAAAAWAAAAEIAMABDAEEAQwBEAEIAMwA1ADgANgA3ADkARgA0
+AEQAQQBEAEEANwBBADcANwBDADIANwBBADkARABCADEAMABAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAACARQwAQAAAAwAAADBAAAAvMaH7UwAAAAfAPo/AQAAAB4AAABTAGEAdQByAGEAdgAgAEsAYQBz
+AGgAeQBhAHAAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAABYAAAB1AHMAZQByAC0AYQBnAGUA
+bgB0AAAAAAABAAAARgAAAE0AaQBjAHIAbwBzAG8AZgB0AC0ATQBhAGMATwB1AHQAbABvAG8AawAv
+ADEANAAuADMALgA5AC4AMQAzADEAMAAzADAAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgA
+AABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAA
+AAEAAADwAAAASQBJAD0AMAAxADAAMQBDAEYAMwAyADAARgAzAEIAOAA4ADMARAA0AEIANQA4ADYA
+QwBDAEYAMwBCADQARQBCAEIANQBGADQARQBCADcAOQA4ADIAOAA4ADcAMgAyADsAUwBCAE0ASQBE
+AD0ANAA7AFMAQgBUAD0AMwA7AFQASABBAD0AMwA0ADUANAAxADAAMQA2ADsAVgBlAHIAcwBpAG8A
+bgA9AFYAZQByAHMAaQBvAG4AIAAxADQALgAyACAAKABCAHUAaQBsAGQAIAAzADgANwAuADAAKQAs
+ACAAUwB0AGEAZwBlAD0ASAA3AAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAgAAAA
+eAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMCAAAAAADA
+AAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAAAQAAABoA
+AABbADEAMAAuADMANQAuADcALgA2ADQAXQAAAAAAkwc=
+
+--_000_F5D084D6342F9B479C34599BB0A03E4D89867332AVMB1qlogicorg_--
