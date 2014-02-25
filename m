@@ -1,84 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63066 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754055AbaBDLPu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:15:50 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	James Smart <james.smart@emulex.com>,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 12/22] lpfc: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:16:58 +0100
-Message-Id: <605e7b6cc5ef782344ad8de2b14766126ada061a.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:44161 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbaBYV2T (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 16:28:19 -0500
+Received: by mail-oa0-f41.google.com with SMTP id o6so1142218oag.28
+        for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2014 13:28:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAA93t1osfYie-CWSTsqdeyzFOwCfsBPaGJ2rtyEkiY0e4kHUMw@mail.gmail.com>
+References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
+	<CAA93t1osfYie-CWSTsqdeyzFOwCfsBPaGJ2rtyEkiY0e4kHUMw@mail.gmail.com>
+Date: Tue, 25 Feb 2014 13:28:18 -0800
+Message-ID: <CAE9FiQX9-eSe06STMjhFhwk6RoupOd5v6Jsi3yBwJsCna1uk=A@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
+From: Yinghai Lu <yinghai@kernel.org>
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Tue, Feb 25, 2014 at 11:27 AM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> On Mon, Feb 24, 2014 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc Rajat]
+>>
+>> On Mon, Feb 24, 2014 at 4:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On system with 16 PCI express hotplug slots, customer complain every slot
+>>> will report "Command not completed in 1000 msec" during initialization.
+>>>
+>>> Intel says that we should only wait command complete only for
+>>>            Electromechanical Interlock Control
+>>>            Power Controller Control
+>>>            Power Indicator Control
+>>>            Attention Indicator Control
+>
+>
+> Hello,
+>
+> I have a HW that generates Command Completion notifications, even
+> though it does not implement any of the EMI, Power Controller, Power
+> Indicator, Attention indicator. Although I'm not sure whether or not
+> this behavior is compliant to PCIe spec, just wanted to pitch in to
+> convey that there are HW which have this behavior:
+>
+> PCI bridge: Integrated Device Technology, Inc. Device 807a (rev 02)
+> (prog-if 00 [Normal decode])
+>         SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise-
+>                 Slot #13, PowerLimit 0.000W; Interlock- NoCompl-
+>         SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt+ HPIrq+ LinkChg+
+>                 Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+>         SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+>                 Changed: MRL- PresDet- LinkState-
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/lpfc/lpfc_init.c |   21 +++++++++------------
- 1 files changed, 9 insertions(+), 12 deletions(-)
+Looks like different vendors have different understanding of that part.
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index a9df97a..5bb40ca 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8187,8 +8187,8 @@ lpfc_sli_disable_msix(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI interrupt mode to device with
-- * SLI-3 interface spec. The kernel function pci_enable_msi() is called to
-- * enable the MSI vector. The device driver is responsible for calling the
-+ * SLI-3 interface spec. The kernel function pci_enable_msi_range() is called
-+ * to enable the MSI vector. The device driver is responsible for calling the
-  * request_irq() to register MSI vector with a interrupt the handler, which
-  * is done in this function.
-  *
-@@ -8201,8 +8201,8 @@ lpfc_sli_enable_msi(struct lpfc_hba *phba)
- {
- 	int rc;
- 
--	rc = pci_enable_msi(phba->pcidev);
--	if (!rc)
-+	rc = pci_enable_msi_range(phba->pcidev, 1, 1);
-+	if (rc > 0)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0462 PCI enable MSI mode success.\n");
- 	else {
-@@ -8636,17 +8636,14 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->sli4_hba.msix_entries[index].entry = index;
- 
- 	/* Configure MSI-X capability structure */
--	vectors = phba->cfg_fcp_io_channel;
--enable_msix_vectors:
--	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     vectors);
--	if (rc > 1) {
--		vectors = rc;
--		goto enable_msix_vectors;
--	} else if (rc) {
-+	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
-+				   2, phba->cfg_fcp_io_channel);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto vec_fail_out;
-+	} else {
-+		vectors = rc;
- 	}
- 
- 	/* Log MSI-X vector assignment */
--- 
-1.7.7.6
+so may need to add vendor quirk checking for waiting..., aka only wait for IDT
+for all bits, and other vendor will only wait for 4 bits.
 
+Thanks
+
+Yinghai
