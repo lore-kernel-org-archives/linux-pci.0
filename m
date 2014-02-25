@@ -1,39 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17502 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754486AbaBSTJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 14:09:13 -0500
-Message-ID: <1392836949.15608.536.camel@ul30vt.home>
-Subject: Re: pci_reset_bus() usage in rc drivers
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jagan Teki <jagannadh.teki@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Wed, 19 Feb 2014 12:09:09 -0700
-In-Reply-To: <CAErSpo6_kXR_GWbK8SjOTVXYTZWEtMoH3FBww2Vn4He6TcuYEA@mail.gmail.com>
-References: <CAD6G_RRUjWLYkzR_=EFwO_tx1aJOqqn-jqixhj4tnnqpamv92g@mail.gmail.com>
-	 <CAErSpo6_kXR_GWbK8SjOTVXYTZWEtMoH3FBww2Vn4He6TcuYEA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.126.130]:65011 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753220AbaBYPoc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 10:44:32 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Magnus Damm <magnus.damm@gmail.com>
+Subject: Re: DMABOUNCE in pci-rcar
+Date: Tue, 25 Feb 2014 16:44:01 +0100
+Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
+	Magnus Damm <damm@opensource.se>, linux-pci@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>,
+	"linux-kernel" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"SH-Linux" <linux-sh@vger.kernel.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Santosh Shilimkar <santosh.shilimkar@ti.com>
+References: <201402241200.21944.arnd@arndb.de> <20140225001748.GS21483@n2100.arm.linux.org.uk> <CANqRtoSsra-NQF_4dz1iBjzEvdaUco9o3gbPi_6rEgswV=maCw@mail.gmail.com>
+In-Reply-To: <CANqRtoSsra-NQF_4dz1iBjzEvdaUco9o3gbPi_6rEgswV=maCw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201402251644.01463.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2014-02-19 at 07:57 -0700, Bjorn Helgaas wrote:
-> On Wed, Feb 19, 2014 at 5:52 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
-> > Hi Bjorn,
-> >
-> > One of the functionality of pci_reset_bus could reset the secondary bus
-> > as described in the configuration space - pci_reset_bridge_secondary_bus()
-> >
-> > Does this reset require in the part of enumeration, what is usage of
-> > this in root complex
-> > driver perspective.
-> 
-> Sorry, I don't understand this last sentence.
+On Tuesday 25 February 2014, Magnus Damm wrote:
+> And the DMABOUNCE code does not support HIGHMEM, so because of that
+> the block layer BOUNCE is also used.
 
-I don't fully understand either, but pci_reset_bus() will error if you
-attempt to use it for the root complex bus.  It only knows how to reset
-a bus when there's a parent bridge.  Thanks,
+Ah, I misunderstood this part previously. I understand better what's
+going on now, but this also enforces the impression that both BOUNCE
+and DMABOUNCE are not what you should be doing here.
 
-Alex
+On a related note, I've had some more discussions with Santosh on IRC,
+and I think he's in the exact same position on mach-keystone, so we
+should make sure that whatever solution either of you comes up with
+also works for the other one.
 
+The situation on keystone may be a little worse even, because all their
+DMA masters have a 2GB limit, but it's also possible that the same
+is true for you. Which categories of DMA masters do you have on R-Car?
+
+a) less than 32-bit mask, with IOMMU
+b) less than 32-bit mask, without IOMMU
+c) 32-bit mask
+d) 64-bit mask
+
+	Arnd
