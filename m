@@ -1,94 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:53903 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346AbaBEJA1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Feb 2014 04:00:27 -0500
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:49293 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753525AbaBYRpy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 12:45:54 -0500
+Received: by mail-ie0-f178.google.com with SMTP id ar20so631697iec.37
+        for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2014 09:45:54 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <52F1F74C.2090106@codethink.co.uk>
-References: <20140205065243.29445.76593.sendpatchset@w520>
-	<52F1F74C.2090106@codethink.co.uk>
-Date: Wed, 5 Feb 2014 18:00:26 +0900
-Message-ID: <CANqRtoRMAjBEXjBzivPxqMu8KhFsOkp0wb6jBbuZQx=B-qYuUA@mail.gmail.com>
-Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space update
-From: Magnus Damm <magnus.damm@gmail.com>
-To: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	"Simon Horman [Horms]" <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAE9FiQUvU=BqPXDHC+B=zC7ZGarimLDdvHsDbVL8t8qnZLJpzw@mail.gmail.com>
+References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
+ <CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com> <CAE9FiQUvU=BqPXDHC+B=zC7ZGarimLDdvHsDbVL8t8qnZLJpzw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 25 Feb 2014 10:45:33 -0700
+Message-ID: <CAErSpo6vuzaKJ-qWKfwcY_MsDhSdG9NazaYzG3=tabJerUv6mw@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ben,
-
-On Wed, Feb 5, 2014 at 5:33 PM, Ben Dooks <ben.dooks@codethink.co.uk> wrote:
-> On 05/02/14 06:52, Magnus Damm wrote:
+On Mon, Feb 24, 2014 at 6:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Feb 24, 2014 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> [+cc Rajat]
 >>
->> PCI: rcar: Driver model and physical address space update
+>> On Mon, Feb 24, 2014 at 4:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On system with 16 PCI express hotplug slots, customer complain every slot
+>>> will report "Command not completed in 1000 msec" during initialization.
+>>>
+>>> Intel says that we should only wait command complete only for
+>>>            Electromechanical Interlock Control
+>>>            Power Controller Control
+>>>            Power Indicator Control
+>>>            Attention Indicator Control
 >>
->> [PATCH 01/04] PCI: rcar: Register each instance independently
->> [PATCH 02/04] PCI: rcar: Break out window size handling
->> [PATCH 03/04] PCI: rcar: Add DMABOUNCE support
->> [PATCH 04/04] PCI: rcar: Enable BOUNCE in case of HIGHMEM
->>
->> These patches update the pci-rcar-gen2.c driver in various ways
->> including cleanups for driver model interface (1/4), readability
->> update (2/4) and also bounce buffer support (3/4, 4/4). Basically
->> the first two are just cleanups and the rest are fixes.
->>
->> As it is today without these patches the system memory start address
->> is hard coded at 0x4000000 and the window is fixed at 1GiB. So we
->> have board specific code hidden in the driver which is good to avoid.
->>
->> With these hard coded board specific constants there are some error cases
->> that are not handled, in particular the issue that only maximum 1GiB of
->> physical address space can be used for bus mastering with a single window.
->> The common case of using ARM CONFIG_VMSPLIT_3G results in no visible
->> issues
->> as long as CONFIG_BOUNCE is used, but other CONFIG_VMSPLIT settings will
->> break due to the hard coded 1GiB window not being enough. It has been
->> verified that reducing the window size to 256MB makes the driver behave
->> the same with VMSPLIT_3G as 1GiB window size and other VMSPLIT settings.
->>
->> To handle the maximum 1GiB physical address space limitation two types
->> of bounce buffers are added. The ARM specific DMABOUNCE code is in 3/4
->> hooked up to a chunk of local memory that is also handed of as coherent
->> memory to the pci devices hanging off the PCI bridge. The driver makes
->> sure to set the window so the local memory is always included. When the
->> PCI devices are operating and in case memory is used outside the window
->> then the DMABOUNCE buffers kicks in. This makes the driver support all
->> kinds of VMSPLIT settings and window sizes. The BOUNCE code in 4/4 is
->> selected to make sure bounce buffers are used for HIGHMEM.
->>
->> With these patches this driver can be used with or without CMA and
->> with or without DMA zone. Basically the system wide memory setup is
->> left to the user. If a DMA zone is used then the PCI window will
->> be setup to cover that. Same thing with CMA.
->>
->> Tested with USB storage using LPAE and various VMSPLIT settings together
->> with renesas git tag renesas-devel-v3.14-rc1-20140204 from kernel.org
+>> Is there something in the spec that says this?  I'm looking at section
+>> 6.7.3.2.  It says "If command completed events are supported, then
+>> software must wait for a command to complete before issuing the next
+>> command."  It's obvious that this is conditional on the "No Command
+>> Completed Support" bit, but I don't see anything about a connection
+>> with the other bits you mentioned.
 >
+> others told me that other os does not check command complete
+> when enabling notification.
 >
-> Ok, is it possible to build a set with my of updates ready for next
-> merge window? I can update the set based on this if you like and try
-> and make the necessary changes to deal with the modifications from this
-> series.
+>>
+>> Is this related to an erratum in the Intel/AMD/Nvidia chipsets?  If
+>> so, we need at least a comment about that in the source, and
+>> preferably, some sort of quirk for these chipsets.
+>
+> Vendor does not agree that is silicon problem.
+> But will update EDS to state that CC will be only set when those four
+> control bits are handled.
 
-I think we should try to pick out the stuff that is ready to be merged
-first. I think these patches may require a bit of time before people
-start looking at them. I don't mind resending in the future.
+It's quite likely that I'm mistaken, and this is not a silicon
+problem, especially since two vendors apparently did it the same way.
+But I'd like to see the explanation from Intel about how this complies
+with the spec.  I provided a spec reference for why I think we should
+wait for a command completed event.  The next step would be for you or
+Intel to respond with "here's the section in the spec that you missed,
+and it says the OS should not wait for an event unless it is changing
+the EIC, PCC, PIC, or AIC bits."
 
-To be honest, I have not been paying too much attention to other
-patches including yours - been focused trying to get the memory
-management part right.. So I'd like to focus on correctness over DT
-for now if possible. Of course we it all.
-
-Would it be possible for you to provide a list of pci-rcar-gen2.c
-patches that you posted? Or perhaps you can resend your series and
-include acks that you received?
-
-Thanks,
-
-/ magnus
+Bjorn
