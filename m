@@ -1,51 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7208 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753234AbaBSKNl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 05:13:41 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] ioat: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed, 19 Feb 2014 11:15:22 +0100
-Message-Id: <1392804931-30671-2-git-send-email-agordeev@redhat.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:36261 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810AbaBYRri (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 12:47:38 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <r65037@freescale.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de
+Subject: [PATCH 1/2] ARM: dts: imx6: adjust the interrupt list in order to support MSI
+Date: Tue, 25 Feb 2014 18:47:23 +0100
+Message-Id: <1393350444-29784-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1393350444-29784-1-git-send-email-l.stach@pengutronix.de>
+References: <1393350444-29784-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+From: Juergen Beisert <jbe@pengutronix.de>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Vinod Koul <vinod.koul@intel.com>
-Cc: dmaengine@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Juergen Beisert <jbe@pengutronix.de>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- drivers/dma/ioat/dma.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ arch/arm/boot/dts/imx6qdl.dtsi | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
-index 8752918..af0d8b1 100644
---- a/drivers/dma/ioat/dma.c
-+++ b/drivers/dma/ioat/dma.c
-@@ -909,8 +909,9 @@ msix:
- 	for (i = 0; i < msixcnt; i++)
- 		device->msix_entries[i].entry = i;
- 
--	err = pci_enable_msix(pdev, device->msix_entries, msixcnt);
--	if (err)
-+	err = pci_enable_msix_range(pdev,
-+				    device->msix_entries, msixcnt, msixcnt);
-+	if (err < 0)
- 		goto msi;
- 
- 	for (i = 0; i < msixcnt; i++) {
+diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+index fb28b2ecb1db..aeccbb114fc5 100644
+--- a/arch/arm/boot/dts/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/imx6qdl.dtsi
+@@ -126,7 +126,8 @@
+ 				  0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
+ 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
+ 			num-lanes = <1>;
+-			interrupts = <0 123 0x04>;
++			/*               inta          intb         intc         intd/msi */
++			interrupts = <0 123 0x04>, <0 122 0x04>, <0 121 0x04>, <0 120 0x04>;
+ 			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
+ 			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
+ 			status = "disabled";
 -- 
-1.7.7.6
+1.8.5.3
 
