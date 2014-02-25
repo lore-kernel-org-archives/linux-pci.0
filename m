@@ -1,84 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:33882 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952AbaB0UHn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 27 Feb 2014 15:07:43 -0500
-Date: Thu, 27 Feb 2014 13:07:29 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
- resources.
-Message-ID: <20140227200729.GB7773@obsidianresearch.com>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
- <20140227191259.GA31753@bart.dudau.co.uk>
- <20140227193627.GA7773@obsidianresearch.com>
- <5379319.g8IPYmY2Zo@wuerfel>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:42955 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753646AbaBYBzK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 20:55:10 -0500
+Received: by mail-ob0-f181.google.com with SMTP id wp4so6159390obc.40
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 17:55:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5379319.g8IPYmY2Zo@wuerfel>
+In-Reply-To: <CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
+References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
+Date: Mon, 24 Feb 2014 17:55:09 -0800
+Message-ID: <CAE9FiQUvU=BqPXDHC+B=zC7ZGarimLDdvHsDbVL8t8qnZLJpzw@mail.gmail.com>
+Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 08:48:08PM +0100, Arnd Bergmann wrote:
-> > It also looks correct for architectures that use the CPU MMIO address
-> > as the IO address directly (where IO_SPACE_LIMIT would be 4G)
-> 
-> Are you aware of any that still do? I thought we had stopped doing
-> that.
+On Mon, Feb 24, 2014 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Rajat]
+>
+> On Mon, Feb 24, 2014 at 4:59 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On system with 16 PCI express hotplug slots, customer complain every slot
+>> will report "Command not completed in 1000 msec" during initialization.
+>>
+>> Intel says that we should only wait command complete only for
+>>            Electromechanical Interlock Control
+>>            Power Controller Control
+>>            Power Indicator Control
+>>            Attention Indicator Control
+>
+> Is there something in the spec that says this?  I'm looking at section
+> 6.7.3.2.  It says "If command completed events are supported, then
+> software must wait for a command to complete before issuing the next
+> command."  It's obvious that this is conditional on the "No Command
+> Completed Support" bit, but I don't see anything about a connection
+> with the other bits you mentioned.
 
-I thought ia64 used to, but it has been a long time since I've touched
-one...
+others told me that other os does not check command complete
+when enabling notification.
 
-> > Architectures that use the virtual IO window technique will always
-> > require a custom pci_address_to_pio implementation.
-> 
-> Hmm, at the moment we only call it from of_address_to_resource(),
-> which in turn does not get called on PCI devices, and does not
-> call pci_address_to_pio for 'simple' platform devices. The only
-> case I can think of where it actually matters is when we have
-> ISA devices in DT that use an I/O port address in the reg property,
-> and that case hopefully won't happen on ARM32 or ARM64.
+>
+> Is this related to an erratum in the Intel/AMD/Nvidia chipsets?  If
+> so, we need at least a comment about that in the source, and
+> preferably, some sort of quirk for these chipsets.
 
-Sure, I ment, after Liviu's patch it will become required since he is
-cleverly using it to figure out what the io mapping the bridge driver
-setup before calling the helper.
+Vendor does not agree that is silicon problem.
+But will update EDS to state that CC will be only set when those four
+control bits are handled.
 
-> > I think the legacy reasons for having all those layers of translation
-> > are probably not applicable to ARM64, and it is much simpler without
-> > the extra translation step....
-> > 
-> > Arnd, what do you think?
-> 
-> Either I don't like it or I misunderstand you ;-)
-> 
-> Most PCI drivers normally don't call ioport_map or pci_iomap, so
-> we can't just do it there. If you are thinking of calling ioport_map
+>
+> This is similar to the issue Rajat is working on with
+> http://patchwork.ozlabs.org/patch/322387/ .  I haven't merged that
+> yet, but I probably will.  Is there any connection between that patch
+> and this issue?  Does this issue still happen even with Rajat's patch
+> applied?
 
-Okay, that was one of the 'legacy reasons'. Certainly lots of drivers
-do call pci_iomap, but if you think legacy drivers that don't are
-important to ARM64 then it makes sense to use the virtual IO window.
+looks like other way.
 
-> for every PCI device that has an I/O BAR and storing the virtual
-> address in the pci_dev resource, I don't see what that gains us
+The issue still happen with Rajat's patch.
 
-Mainly we get to drop the fancy dynamic allocation stuff for the fixed
-virtual window, and it gives the option to have a 1:1 relationship
-between CPU addresses and PCI BARs.
+Thanks
 
-> in terms of complexity, and it will also break /dev/port.
-
-Yes, /dev/port needs updating, it would need to iomap (arguably it
-probably should be doing that already anyhow), and the hardwired limit
-of 65536 needs to be replaced with the arch's IO limit, but those do
-not seem to be fundemental problems with the UAPI??
-
-Jason
+Yinghai
