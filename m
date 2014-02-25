@@ -1,103 +1,86 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:62688 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142AbaBYDCD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 22:02:03 -0500
+Received: by mail-pa0-f46.google.com with SMTP id rd3so7396703pab.5
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 19:02:02 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1402222338420.21251@ionos.tec.linutronix.de>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-	<1388707565-16535-3-git-send-email-yinghai@kernel.org>
-	<alpine.DEB.2.02.1401222241100.24986@ionos.tec.linutronix.de>
-	<CAE9FiQUo9NGbjiZbMsf2yBFbn=iLJ-jc3QtZ8K6qwVuhmqzq=Q@mail.gmail.com>
-	<alpine.DEB.2.02.1402221104440.21251@ionos.tec.linutronix.de>
-	<CAE9FiQVf2L-FjkXR3WC=0iHNY73D2G4jyMeko4f4DPuxAXTK+Q@mail.gmail.com>
-	<CAE9FiQVf7u62S4puc2iMqiFO2YU-Kf35XVB9mC+SEP6Z73x7Zw@mail.gmail.com>
-	<alpine.DEB.2.02.1402222338420.21251@ionos.tec.linutronix.de>
-Date: Mon, 24 Feb 2014 17:31:43 -0800
-Message-ID: <CAE9FiQUbWrAeavs-9Ze19FxWWn7dC1JA-69FfVhZSgwYCcohhA@mail.gmail.com>
-Subject: Re: [PATCH v5 02/33] genirq: Add irq_alloc_reserved_desc()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <CAA93t1pApi2zDk81JKiW8WK+foOdKL=tDiCJSpc9WCwSO64NdA@mail.gmail.com>
+References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
+	<20140212004927.GH21057@google.com>
+	<E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
+	<CAErSpo5ycKF4Xm26z80wNrms7G5onn1ASzcU2AHy7XN1YNAYuA@mail.gmail.com>
+	<CAA93t1psHnnVSbaaaJ1LsqeNzRYmNiiO9RiTggVovDVJpk4cqw@mail.gmail.com>
+	<E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01>
+	<11994c276661475080d900fa8b5942a5@DM2PR05MB671.namprd05.prod.outlook.com>
+	<E86EADE93E2D054CBCD4E708C38D364A53C3D4C5@G01JPEXMBYT01>
+	<CAErSpo6ku31cXTPNw-Ri6=DBSpCOk25yYs4peqkKA08eWxm5dQ@mail.gmail.com>
+	<CAA93t1pApi2zDk81JKiW8WK+foOdKL=tDiCJSpc9WCwSO64NdA@mail.gmail.com>
+Date: Mon, 24 Feb 2014 19:02:01 -0800
+Message-ID: <CAA93t1ozi=r7zKmnB0apRwnmXQg+6HkN1SFw6aYO=w2e2b+Weg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: pciehp: Fix the problem that the present bit is not
+ cleared though slot is empty
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
+	Rajat Jain <rajatjain@juniper.net>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	Guenter Roeck <groeck@juniper.net>,
+	Takashi Iwai <tiwai@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 22, 2014 at 3:38 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> OMG, you really mean that:
->
-> +++ b/arch/alpha/kernel/irq_i8259.c
-> @@ -92,6 +92,7 @@ init_i8259a_irqs(void)
->         outb(0xff, 0xA1);       /* mask all of 8259A-2 */
->
->         for (i = 0; i < 16; i++) {
-> +               irq_alloc_desc_at(i, 0);
->                 irq_set_chip_and_handler(i, &i8259a_irq_type, handle_level_irq);
->         }
->
-> You can't be serious about that. There are tons of ways to call into
-> the core and access an irq descriptor aside of irq_set_chip* before it
-> is potentially allocated.
->
-> Are you going to analyze all of them and add an irq_alloc_desc_at()
-> before that call?
->
-> HELL, NO!
->
-> I'm really tired of that.
->
-> Stay away from kernel/irq/* and wait for people who are competent
-> enough and willing to spend the extra thoughts to come up with
-> solutions which are not completely ass backwards.
+Hello Bjorn,
 
-oh, no, sorry for annoying you again.
+>>
+>> I think our handling of slot capabilities and control is a bit
+>> haphazard.  It seems like we're mostly responding to things that
+>> break, and we don't really have a coherent explanation of how things
+>> *should* work in different configurations.  I think it would be good
+>> if somebody wrote up something for Documentation/PCI, with references
+>> to the relevant specifications, that describes how we think things
+>> should work.
+>
+> Sure, I think I'll take a stab.
+>
+> Thanks,
+>
+> Rajat
+>
+>>  For example, I think we have at least four models:
+>>
+>>   1) ExpressCard
+>>   2) Slots with attention button
+>>   3) Slots with no button where we expect a software UI, e.g., Taku's box
+>>   4) Devices with no actual slot, no button, etc., e.g., Rajat's system
+>>
 
-In the irq_alloc_desc_at() path for !SPARSE_IRQ, it should not touch anything
-except setting that bit in allocated_irqs bitmap.
+I'm trying to come up with a write up for this. And am trying to
+understand what differentiates (1) from others - from the view of use
+case model of course. I briefly looked at the ExpressCard specs at
 
-Or could just replace irq_reserve_irq in irq_set_chip(), in that way will avoid
-touching arch codes.
+http://www.usb.org/developers/expresscard/EC_specifications/ExpressCard_2_0_FINAL.pdf
 
-like
+I understand that ExpressCard shall be an actual slot and of course
+has a defined form factor etc, but, when I think of the _use case_
+that the user is expected to follow, it shall be pretty much dependent
+on the HP elements. For e.g, if there is attention button, it would
+follow (2), but if link comes up automatically (no power controller
+etc), then it would follow (4) etc.
 
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index dc04c16..02d6ad0 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -28,8 +28,13 @@
- int irq_set_chip(unsigned int irq, struct irq_chip *chip)
- {
-     unsigned long flags;
--    struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
-+    struct irq_desc *desc;
-+
-+#ifndef CONFIG_SPARSE_IRQ
-+    irq_alloc_desc_at(irq, 0);
-+#endif
+Thus I think that the use cases (sequence to be followed for hotplug)
+shall be more appropriately categorized based on what hot-plug
+elements (button etc) are present in a system. Of course, we can give
+examples ("ExpressCards are one example in this category and is
+typically characterized by .. ") within those categories, while also
+making references to the appropriate standards.
 
-+    desc = irq_get_desc_lock(irq, &flags, 0);
-     if (!desc)
-         return -EINVAL;
+ What do you think?
 
-@@ -38,12 +43,7 @@ int irq_set_chip(unsigned int irq, struct irq_chip *chip)
+Thanks,
 
-     desc->irq_data.chip = chip;
-     irq_put_desc_unlock(desc, flags);
--    /*
--     * For !CONFIG_SPARSE_IRQ make the irq show up in
--     * allocated_irqs. For the CONFIG_SPARSE_IRQ case, it is
--     * already marked, and this call is harmless.
--     */
--    irq_reserve_irq(irq);
-+
-     return 0;
- }
- EXPORT_SYMBOL(irq_set_chip);
+Rajat
