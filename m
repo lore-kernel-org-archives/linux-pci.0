@@ -1,85 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:52833 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753056AbaBLUQu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 15:16:50 -0500
-From: Will Deacon <will.deacon@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
-Subject: [PATCH v2 2/3] ARM: bios32: use pci_enable_resource to enable PCI resources
-Date: Wed, 12 Feb 2014 20:16:10 +0000
-Message-Id: <1392236171-10512-3-git-send-email-will.deacon@arm.com>
-In-Reply-To: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:32612 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380AbaBYVba (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Feb 2014 16:31:30 -0500
+Date: Tue, 25 Feb 2014 22:33:18 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>,
+	Asai Thambi S P <asamymuthupa@micron.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 11/9] mtip32xx: Use pci_enable_msi() instead of
+ pci_enable_msi_range()
+Message-ID: <20140225213317.GB20652@dhcp-26-207.brq.redhat.com>
+References: <cover.1392799751.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves bios32 over to using the generic code for enabling PCI
-resources. Since the core code takes care of bridge resources too, we
-can also drop the explicit IO and MEMORY enabling for them in the arch
-code.
+Commit "mtip32xx: Use pci_enable_msix_range() instead of
+pci_enable_msix()" was unnecessary, since pci_enable_msi()
+function is not deprecated and is still preferable for
+enabling the single MSI mode. This update reverts usage of
+pci_enable_msi() function.
 
-A side-effect of this change is that we no longer explicitly enable
-devices when running in PCI_PROBE_ONLY mode. This stays closer to the
-meaning of the option and prevents us from trying to enable devices
-without any assigned resources (the core code refuses to enable
-resources without parents).
+Besides, the changelog for that commit was bogus, since
+mtip32xx driver uses MSI interrupt, not MSI-X.
 
-Signed-off-by: Will Deacon <will.deacon@arm.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Asai Thambi S P <asamymuthupa@micron.com>
+Cc: linux-pci@vger.kernel.org
 ---
- arch/arm/kernel/bios32.c | 37 +++----------------------------------
- 1 file changed, 3 insertions(+), 34 deletions(-)
+ drivers/block/mtip32xx/mtip32xx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 317da88ae65b..91f48804e3bb 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -608,41 +608,10 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-  */
- int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
--	u16 cmd, old_cmd;
--	int idx;
--	struct resource *r;
--
--	pci_read_config_word(dev, PCI_COMMAND, &cmd);
--	old_cmd = cmd;
--	for (idx = 0; idx < 6; idx++) {
--		/* Only set up the requested stuff */
--		if (!(mask & (1 << idx)))
--			continue;
--
--		r = dev->resource + idx;
--		if (!r->start && r->end) {
--			printk(KERN_ERR "PCI: Device %s not available because"
--			       " of resource collisions\n", pci_name(dev));
--			return -EINVAL;
--		}
--		if (r->flags & IORESOURCE_IO)
--			cmd |= PCI_COMMAND_IO;
--		if (r->flags & IORESOURCE_MEM)
--			cmd |= PCI_COMMAND_MEMORY;
--	}
-+	if (pci_has_flag(PCI_PROBE_ONLY))
-+		return 0;
+diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
+index 60e86e8..5299a65 100644
+--- a/drivers/block/mtip32xx/mtip32xx.c
++++ b/drivers/block/mtip32xx/mtip32xx.c
+@@ -4611,8 +4611,8 @@ static int mtip_pci_probe(struct pci_dev *pdev,
+ 	INIT_WORK(&dd->work[7].work, mtip_workq_sdbf7);
  
--	/*
--	 * Bridges (eg, cardbus bridges) need to be fully enabled
--	 */
--	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
--		cmd |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
--
--	if (cmd != old_cmd) {
--		printk("PCI: enabling device %s (%04x -> %04x)\n",
--		       pci_name(dev), old_cmd, cmd);
--		pci_write_config_word(dev, PCI_COMMAND, cmd);
--	}
--	return 0;
-+	return pci_enable_resources(dev, mask);
- }
- 
- int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 	pci_set_master(pdev);
+-	rv = pci_enable_msi_range(pdev, 1, 1);
+-	if (rv < 0) {
++	rv = pci_enable_msi(pdev);
++	if (rv) {
+ 		dev_warn(&pdev->dev,
+ 			"Unable to enable MSI interrupt.\n");
+ 		goto msi_initialize_err;
 -- 
-1.8.2.2
+1.7.7.6
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
