@@ -1,87 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:55205 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755263AbaBRMV3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 07:21:29 -0500
-From: Will Deacon <will.deacon@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Cc: arnd@arndb.de, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	jgunthorpe@obsidianresearch.com, Will Deacon <will.deacon@arm.com>
-Subject: [PATCH v3 2/3] ARM: bios32: use pci_enable_resource to enable PCI resources
-Date: Tue, 18 Feb 2014 12:20:42 +0000
-Message-Id: <1392726043-31088-3-git-send-email-will.deacon@arm.com>
-In-Reply-To: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:36254 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810AbaBYRra (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 12:47:30 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <r65037@freescale.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de
+Subject: [PATCH 0/2] PCI: imx6: MSI support
+Date: Tue, 25 Feb 2014 18:47:22 +0100
+Message-Id: <1393350444-29784-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch moves bios32 over to using the generic code for enabling PCI
-resources. Since the core code takes care of bridge resources too, we
-can also drop the explicit IO and MEMORY enabling for them in the arch
-code.
+Those two simple patches add support for MSI to the
+i.MX6 PCIe host controller driver.
 
-A side-effect of this change is that we no longer explicitly enable
-devices when running in PCI_PROBE_ONLY mode. This stays closer to the
-meaning of the option and prevents us from trying to enable devices
-without any assigned resources (the core code refuses to enable
-resources without parents).
+The first patch should probably go through Shawns tree, while
+the second one should go through the PCI tree. I'm only posting
+them together to get you the whole picture.
 
-Tested-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Tested-by: Jingoo Han <jg1.han@samsung.com>
-Signed-off-by: Will Deacon <will.deacon@arm.com>
----
- arch/arm/kernel/bios32.c | 37 +++----------------------------------
- 1 file changed, 3 insertions(+), 34 deletions(-)
+Juergen Beisert (2):
+  ARM: dts: imx6: adjust the interrupt list in order to support MSI
+  PCI: imx6: add support for MSI
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 317da88ae65b..91f48804e3bb 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -608,41 +608,10 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-  */
- int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
--	u16 cmd, old_cmd;
--	int idx;
--	struct resource *r;
--
--	pci_read_config_word(dev, PCI_COMMAND, &cmd);
--	old_cmd = cmd;
--	for (idx = 0; idx < 6; idx++) {
--		/* Only set up the requested stuff */
--		if (!(mask & (1 << idx)))
--			continue;
--
--		r = dev->resource + idx;
--		if (!r->start && r->end) {
--			printk(KERN_ERR "PCI: Device %s not available because"
--			       " of resource collisions\n", pci_name(dev));
--			return -EINVAL;
--		}
--		if (r->flags & IORESOURCE_IO)
--			cmd |= PCI_COMMAND_IO;
--		if (r->flags & IORESOURCE_MEM)
--			cmd |= PCI_COMMAND_MEMORY;
--	}
-+	if (pci_has_flag(PCI_PROBE_ONLY))
-+		return 0;
- 
--	/*
--	 * Bridges (eg, cardbus bridges) need to be fully enabled
--	 */
--	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
--		cmd |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY;
--
--	if (cmd != old_cmd) {
--		printk("PCI: enabling device %s (%04x -> %04x)\n",
--		       pci_name(dev), old_cmd, cmd);
--		pci_write_config_word(dev, PCI_COMMAND, cmd);
--	}
--	return 0;
-+	return pci_enable_resources(dev, mask);
- }
- 
- int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ arch/arm/boot/dts/imx6qdl.dtsi |  3 ++-
+ drivers/pci/host/pci-imx6.c    | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 1 deletion(-)
+
 -- 
-1.8.2.2
+1.8.5.3
 
