@@ -1,126 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dliviu.plus.com ([80.229.23.120]:51687 "EHLO smtp.dudau.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752738AbaBNWLc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Feb 2014 17:11:32 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by smtp.dudau.co.uk (Postfix) with SMTP id B89B2FFAFE
-	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 22:06:06 +0000 (GMT)
-Date: Fri, 14 Feb 2014 22:00:47 +0000
-From: Liviu Dudau <liviu@dudau.co.uk>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Will Deacon <will.deacon@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Russell King <rmk@arm.linux.org.uk>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140214220047.GA5394@bart.dudau.co.uk>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <20140213182654.GA20043@obsidianresearch.com>
- <20140213195317.GQ13576@mudshark.cambridge.arm.com>
- <5805232.JrD2FybBlg@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5805232.JrD2FybBlg@wuerfel>
+Received: from mail-we0-f175.google.com ([74.125.82.175]:52370 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751317AbaBYGcZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Feb 2014 01:32:25 -0500
+Received: by mail-we0-f175.google.com with SMTP id q59so5449362wes.6
+        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 22:32:24 -0800 (PST)
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, bhelgass@google.com,
+	benh@kernel.crashing.org,
+	Andrew Murray <amurray@embedded-bits.co.uk>
+Subject: [PATCH] powerpc/pci: Use of_pci_range_parser helper in pci_process_bridge_OF_ranges
+Date: Tue, 25 Feb 2014 06:32:11 +0000
+Message-Id: <1393309931-20405-1-git-send-email-amurray@embedded-bits.co.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 10:59:06AM +0100, Arnd Bergmann wrote:
-> On Thursday 13 February 2014 19:53:17 Will Deacon wrote:
-> > On Thu, Feb 13, 2014 at 06:26:54PM +0000, Jason Gunthorpe wrote:
-> > > On Thu, Feb 13, 2014 at 05:28:20PM +0100, Arnd Bergmann wrote:
-> > > 
-> > > > > Huh?  The reg property clearly has the size in it (as shown in the
-> > > > > example below).  I guess I was just asking for the description
-> > > > > here to say what the size was for the 2 compatibles since its
-> > > > > fixed and known.
-> > > > 
-> > > > It's still an open question whether the config space in the reg
-> > > > property should cover all 256 buses or just the ones in the
-> > > > bus-range. In the latter case, it would be variable (but
-> > > > predictable) size.
-> > > 
-> > > The 'describe the hardware principle' says the reg should be the
-> > > entire available ECAM/CAM region the hardware is able to support.
-> > > 
-> > > This may be less than 256 busses, as ECAM allows the implementor to
-> > > select how many upper address bits are actually supported.
-> > 
-> > Ok, but the ECAM/CAM base always corresponds to bus 0, right?
-> 
-> Ah, plus I suppose it ought to be a power-of-two size?
-> 
-> > > IMHO, the bus-range should be used to indicate the range of busses
-> > > discovered by the firmware, but we have historically tweaked it to
-> > > indicate the max range of bus numbers available on this bus (I think
-> > > to support the hack where two physical PCI domains were roughly glued
-> > > into a single Linux domain).
-> 
-> There is an interesting point about the domain assignment, brought to
-> my attention by Russell's comment about the hw_pci struct: If we want
-> to support arbitrary combinations of pci host bridges described in DT,
-> we need a better policy to decide what domain to use. The approaches
-> I've seen so far are:
-> 
-> 1. We assume each host bridge in DT is a domain by itself. I think
-> we do that for all DT probed bridges on ARM (aside from shmobile)
-> at the moment. In some cases, the the host bridge is a really a
-> fiction made up by the host driver to couple various identical
-> but independent PCIe root ports, but the same fiction is shared
-> between DT and the PCI core view of it. This requires that we
-> enable the PCI domain code unconditionally, and breaks all user
-> space that doesn't understand domains (this should be rare but
-> can still exist for x86 based software).
-> 
-> 2. The architecture or platform code decides and uses a method equivalent
-> to ARM's pci_common_init_dev() after it has found all host bridges.
-> The architecture "knows" how many domains it wants and calls
-> pci_common_init_dev() for each domain, and then the setup() callbacks
-> grab as many buses as they need within the domain. For a generic
-> multiplatform kernel, this means we need to add a top-level driver
-> that looks at all pci hosts in DT before any of them are probed.
-> It also means the pci host drivers can't be loadable modules.
-> 
-> 3. We assume there is only one domain, and require each host bridge
-> in DT to specify a bus-range that is a subset of the available 256
-> bus numbers. This should work for anything but really big systems
-> with many hot-pluggable ports, since we need to reserve a few bus
-> numbers on each port for hotplugging.
-> 
-> 4. Like 3, but start a new domain if the bus-range properties don't
-> fit in the existing domains.
-> 
-> 5. Like 3, but specify a generic "pci-domain" property for DT
-> that allows putting host bridges into explicit domains in
-> a predictable way.
+This patch updates the implementation of pci_process_bridge_OF_ranges to use
+the of_pci_range_parser helpers.
 
-What I'm going to suggest in my v2 patch (hope to send it before Monday)
-is a new API in the generic PCI code that will allow you to create a
-host bridge in a new domain or in the existing domain, with the management
-of the domain number being done in the generic code.
+Signed-off-by: Andrew Murray <amurray@embedded-bits.co.uk>
+---
+I've verified that this builds, however I have no hardware to test this.
+---
+ arch/powerpc/kernel/pci-common.c | 88 +++++++++++++---------------------------
+ 1 file changed, 29 insertions(+), 59 deletions(-)
 
-Something like:
-
-  int create_hostbridge_in_new_domain(....);
-  int create_hostbridge(....);
-
-with the functions being wrappers around the pci_hostbridge_of_init function
-that I'm introducing.
-
-What do you think?
-
-Best regards,
-Liviu
-
-> 
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index d9476c1..a05fe18 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -666,60 +666,36 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 				  struct device_node *dev, int primary)
+ {
+-	const __be32 *ranges;
+-	int rlen;
+-	int pna = of_n_addr_cells(dev);
+-	int np = pna + 5;
+ 	int memno = 0;
+-	u32 pci_space;
+-	unsigned long long pci_addr, cpu_addr, pci_next, cpu_next, size;
+ 	struct resource *res;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
+ 
+ 	printk(KERN_INFO "PCI host bridge %s %s ranges:\n",
+ 	       dev->full_name, primary ? "(primary)" : "");
+ 
+-	/* Get ranges property */
+-	ranges = of_get_property(dev, "ranges", &rlen);
+-	if (ranges == NULL)
++	/* Check for ranges property */
++	if (of_pci_range_parser_init(&parser, dev))
+ 		return;
+ 
+ 	/* Parse it */
+-	while ((rlen -= np * 4) >= 0) {
+-		/* Read next ranges element */
+-		pci_space = of_read_number(ranges, 1);
+-		pci_addr = of_read_number(ranges + 1, 2);
+-		cpu_addr = of_translate_address(dev, ranges + 3);
+-		size = of_read_number(ranges + pna + 3, 2);
+-		ranges += np;
+-
++	for_each_of_pci_range(&parser, &range) {
+ 		/* If we failed translation or got a zero-sized region
+ 		 * (some FW try to feed us with non sensical zero sized regions
+ 		 * such as power3 which look like some kind of attempt at exposing
+ 		 * the VGA memory hole)
+ 		 */
+-		if (cpu_addr == OF_BAD_ADDR || size == 0)
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+ 			continue;
+ 
+-		/* Now consume following elements while they are contiguous */
+-		for (; rlen >= np * sizeof(u32);
+-		     ranges += np, rlen -= np * 4) {
+-			if (of_read_number(ranges, 1) != pci_space)
+-				break;
+-			pci_next = of_read_number(ranges + 1, 2);
+-			cpu_next = of_translate_address(dev, ranges + 3);
+-			if (pci_next != pci_addr + size ||
+-			    cpu_next != cpu_addr + size)
+-				break;
+-			size += of_read_number(ranges + pna + 3, 2);
+-		}
+-
+ 		/* Act based on address space type */
+ 		res = NULL;
+-		switch ((pci_space >> 24) & 0x3) {
+-		case 1:		/* PCI IO space */
++		switch (range.flags & IORESOURCE_TYPE_BITS) {
++		case IORESOURCE_IO:
+ 			printk(KERN_INFO
+ 			       "  IO 0x%016llx..0x%016llx -> 0x%016llx\n",
+-			       cpu_addr, cpu_addr + size - 1, pci_addr);
++			       range.cpu_addr, range.cpu_addr + range.size - 1,
++			       range.pci_addr);
+ 
+ 			/* We support only one IO range */
+ 			if (hose->pci_io_size) {
+@@ -729,11 +705,12 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 			}
+ #ifdef CONFIG_PPC32
+ 			/* On 32 bits, limit I/O space to 16MB */
+-			if (size > 0x01000000)
+-				size = 0x01000000;
++			if (range.size > 0x01000000)
++				range.size = 0x01000000;
+ 
+ 			/* 32 bits needs to map IOs here */
+-			hose->io_base_virt = ioremap(cpu_addr, size);
++			hose->io_base_virt = ioremap(range.cpu_addr,
++						range.size);
+ 
+ 			/* Expect trouble if pci_addr is not 0 */
+ 			if (primary)
+@@ -743,20 +720,20 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 			/* pci_io_size and io_base_phys always represent IO
+ 			 * space starting at 0 so we factor in pci_addr
+ 			 */
+-			hose->pci_io_size = pci_addr + size;
+-			hose->io_base_phys = cpu_addr - pci_addr;
++			hose->pci_io_size = range.pci_addr + range.size;
++			hose->io_base_phys = range.cpu_addr - range.pci_addr;
+ 
+ 			/* Build resource */
+ 			res = &hose->io_resource;
+-			res->flags = IORESOURCE_IO;
+-			res->start = pci_addr;
++			range.cpu_addr = range.pci_addr;
+ 			break;
+-		case 2:		/* PCI Memory space */
+-		case 3:		/* PCI 64 bits Memory space */
++		case IORESOURCE_MEM:
+ 			printk(KERN_INFO
+ 			       " MEM 0x%016llx..0x%016llx -> 0x%016llx %s\n",
+-			       cpu_addr, cpu_addr + size - 1, pci_addr,
+-			       (pci_space & 0x40000000) ? "Prefetch" : "");
++			       range.cpu_addr, range.cpu_addr + range.size - 1,
++			       range.pci_addr,
++			       (range.pci_space & 0x40000000) ?
++			       "Prefetch" : "");
+ 
+ 			/* We support only 3 memory ranges */
+ 			if (memno >= 3) {
+@@ -765,28 +742,21 @@ void pci_process_bridge_OF_ranges(struct pci_controller *hose,
+ 				continue;
+ 			}
+ 			/* Handles ISA memory hole space here */
+-			if (pci_addr == 0) {
++			if (range.pci_addr == 0) {
+ 				if (primary || isa_mem_base == 0)
+-					isa_mem_base = cpu_addr;
+-				hose->isa_mem_phys = cpu_addr;
+-				hose->isa_mem_size = size;
++					isa_mem_base = range.cpu_addr;
++				hose->isa_mem_phys = range.cpu_addr;
++				hose->isa_mem_size = range.size;
+ 			}
+ 
+ 			/* Build resource */
+-			hose->mem_offset[memno] = cpu_addr - pci_addr;
++			hose->mem_offset[memno] = range.cpu_addr -
++							range.pci_addr;
+ 			res = &hose->mem_resources[memno++];
+-			res->flags = IORESOURCE_MEM;
+-			if (pci_space & 0x40000000)
+-				res->flags |= IORESOURCE_PREFETCH;
+-			res->start = cpu_addr;
+ 			break;
+ 		}
+ 		if (res != NULL) {
+-			res->name = dev->full_name;
+-			res->end = res->start + size - 1;
+-			res->parent = NULL;
+-			res->sibling = NULL;
+-			res->child = NULL;
++			of_pci_range_to_resource(&range, dev, res);
+ 		}
+ 	}
+ }
+-- 
+1.8.3.2
 
