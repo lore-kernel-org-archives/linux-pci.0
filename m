@@ -1,60 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:49938 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558AbaBRS75 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 13:59:57 -0500
-Date: Tue, 18 Feb 2014 11:59:47 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140218185947.GA22340@obsidianresearch.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
- <1392726043-31088-4-git-send-email-will.deacon@arm.com>
- <20140218182142.GF29304@obsidianresearch.com>
- <20140218184420.GD2010@mudshark.cambridge.arm.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:63185 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754007AbaBZThT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:19 -0500
+Received: by mail-ie0-f177.google.com with SMTP id rl12so1062965iec.8
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:18 -0800 (PST)
+Subject: [PATCH 2/9] vsprintf: Add support for IORESOURCE_UNSET in %pR
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:37:16 -0700
+Message-ID: <20140226193716.10125.11835.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140218184420.GD2010@mudshark.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 06:44:20PM +0000, Will Deacon wrote:
-> On Tue, Feb 18, 2014 at 06:21:42PM +0000, Jason Gunthorpe wrote:
-> > On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
-> > > +
-> > > +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
-> > > +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
-> >                                            ^^^^^^^^^^^^^^
-> > 
-> > This probably shouldn't be 0 in the example, nor in your kvm tool
-> > output. For example purposes any value will do.
-> 
-> Hmm, so kvmtool actually provides a PC ioport at 0x0, which is handy since
-> there's an 8250 down there. That means we have:
-> 
-> 0x0    - 0x6200  : Weird PC stuff
-> 0x6200 - 0x10000 : PCI IO space
-> 
-> Should I just change everything to be offset by 0x6200?
+Sometimes we have a struct resource where we know the type (MEM/IO/etc.)
+and the size, but we haven't assigned address space for it.  The
+IORESOURCE_UNSET flag is a way to indicate this situation.  For these
+"unset" resources, the start address is meaningless, so print only the
+size, e.g.,
 
-Just to be clear, kvm has reserved the first 64k of physical address
-space for this IO window? The 0 is fine then, but it isn't typical of
-real hardware.
+  - pci 0000:0c:00.0: reg 184: [mem 0x00000000-0x00001fff 64bit]
+  + pci 0000:0c:00.0: reg 184: [mem size 0x2000 64bit]
 
-Regarding the 0x6200.. There are two conflicting issues there :(
- - You really don't want to let the PCI core assign resources to that
-   range, it probably won't work.
- - You probably need that range mapped into the ARM IO window, and the
-   PCI driver is the thing doing that
+For %pr (printing with raw flags), we still print the address range,
+because %pr is mostly used for debugging anyway.
 
-The PCI core already has a black out for low IO ports, I think it
-already covers the usual PC suspects so you are probably fine with
-what you have for KVM.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/linux/ioport.h |    2 +-
+ lib/vsprintf.c         |   13 +++++++++----
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
-Jason
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 9fcaac8bc4f6..5e3a906cc089 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -51,7 +51,7 @@ struct resource {
+ 
+ #define IORESOURCE_EXCLUSIVE	0x08000000	/* Userland may not map this resource */
+ #define IORESOURCE_DISABLED	0x10000000
+-#define IORESOURCE_UNSET	0x20000000
++#define IORESOURCE_UNSET	0x20000000	/* No address assigned yet */
+ #define IORESOURCE_AUTO		0x40000000
+ #define IORESOURCE_BUSY		0x80000000	/* Driver has marked this resource busy */
+ 
+diff --git a/lib/vsprintf.c b/lib/vsprintf.c
+index 185b6d300ebc..c14669f4ffc4 100644
+--- a/lib/vsprintf.c
++++ b/lib/vsprintf.c
+@@ -719,10 +719,15 @@ char *resource_string(char *buf, char *end, struct resource *res,
+ 		specp = &mem_spec;
+ 		decode = 0;
+ 	}
+-	p = number(p, pend, res->start, *specp);
+-	if (res->start != res->end) {
+-		*p++ = '-';
+-		p = number(p, pend, res->end, *specp);
++	if (decode && res->flags & IORESOURCE_UNSET) {
++		p = string(p, pend, "size ", str_spec);
++		p = number(p, pend, res->end - res->start + 1, *specp);
++	} else {
++		p = number(p, pend, res->start, *specp);
++		if (res->start != res->end) {
++			*p++ = '-';
++			p = number(p, pend, res->end, *specp);
++		}
+ 	}
+ 	if (decode) {
+ 		if (res->flags & IORESOURCE_MEM_64)
+
