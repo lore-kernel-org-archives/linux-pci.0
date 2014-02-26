@@ -1,111 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:44227 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754067AbaBLTnS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Feb 2014 14:43:18 -0500
-Date: Wed, 12 Feb 2014 12:43:13 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 2/3] PCI: ARM: add support for virtual PCI host controller
-Message-ID: <20140212194313.GA17248@obsidianresearch.com>
-References: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
- <201402092130.25615.arnd@arndb.de>
- <20140210173450.GA5554@obsidianresearch.com>
- <2006726.HhIT01YuXY@wuerfel>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:59435 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753532AbaBZTJX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:09:23 -0500
+Received: by mail-ig0-f170.google.com with SMTP id uq10so3007448igb.1
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:09:22 -0800 (PST)
+Subject: [PATCH 3/4] i2o: Refactor i2o_iop_systab_set() PCI space allocation
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>,
+	linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:09:20 -0700
+Message-ID: <20140226190920.9616.82654.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2006726.HhIT01YuXY@wuerfel>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 11, 2014 at 11:42:52AM +0100, Arnd Bergmann wrote:
-> I looked briefly at the code and found that mach-kirkwood/pcie.c does
-> both request_resource() and pci_add_resource_offset(), while
-> drivers/pci/host/pci-mvebu.c only does the latter. Does the patch
-> below restore the previous behavior?
+Refactor the PCI space allocation in i2o_iop_systab_set().  This might
+improve readability slightly, but mainly it is to make the next patch
+simpler.
 
-It gets closer:
+No functional change.
 
-e0000000-f0000000 : <BAD>
-  e0000000-e00fffff : PCI Bus 0000:01
-    e0000000-e001ffff : 0000:01:00.0
-      e0001000-e0001fff : /mbus/pex@e0000000/pcie@1,0/fpga@0/fpga_sysmon@1000
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/message/i2o/iop.c |   89 +++++++++++++++++++++++----------------------
+ 1 file changed, 46 insertions(+), 43 deletions(-)
 
-This patch:
-
-diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
-index 2394e97..7fd54e9 100644
---- a/drivers/bus/mvebu-mbus.c
-+++ b/drivers/bus/mvebu-mbus.c
-@@ -876,14 +876,14 @@ static void __init mvebu_mbus_get_pcie_resources(struct device_node *np,
-        ret = of_property_read_u32_array(np, "pcie-mem-aperture", reg, ARRAY_SIZE(reg));
-        if (!ret) {
-                mem->start = reg[0];
--               mem->end = mem->start + reg[1];
-+               mem->end = mem->start + reg[1] - 1;
-                mem->flags = IORESOURCE_MEM;
-        }
+diff --git a/drivers/message/i2o/iop.c b/drivers/message/i2o/iop.c
+index 68aef58bf89c..c334ba7224a1 100644
+--- a/drivers/message/i2o/iop.c
++++ b/drivers/message/i2o/iop.c
+@@ -652,6 +652,48 @@ static int i2o_iop_activate(struct i2o_controller *c)
+ 	return i2o_hrt_get(c);
+ };
  
-        ret = of_property_read_u32_array(np, "pcie-io-aperture", reg, ARRAY_SIZE(reg));
-        if (!ret) {
-                io->start = reg[0];
--               io->end = io->start + reg[1];
-+               io->end = io->start + reg[1] - 1;
-                io->flags = IORESOURCE_IO;
-        }
- }
-
-Fixes the wrong length (e0000000-f0000000 should be e0000000-efffffff)
-
-And this fixes the <BAD>:
-
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index ef8691a..fbb89cb 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -109,7 +109,9 @@ struct mvebu_pcie {
-        struct mvebu_pcie_port *ports;
-        struct msi_chip *msi;
-        struct resource io;
-+       char io_name[30];
-        struct resource realio;
-+       char mem_name[30];
-        struct resource mem;
-        struct resource busn;
-        int nports;
-@@ -681,10 +683,29 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
- {
-        struct mvebu_pcie *pcie = sys_to_pcie(sys);
-        int i;
-+       int domain = 0;
++static void i2o_res_alloc(struct i2o_controller *c, unsigned long flags)
++{
++	i2o_status_block *sb = c->status_block.virt;
++	struct resource *root, *res = &c->mem_resource;
++	resource_size_t size, min, max, align;
++	int err;
++
++	res->name = c->pdev->bus->name;
++	res->flags = flags;
++	res->start = 0;
++	res->end = 0;
++	osm_info("%s: requires private memory resources.\n", c->name);
++	root = pci_find_parent_resource(c->pdev, res);
++	if (root == NULL) {
++		osm_warn("%s: Can't find parent resource!\n", c->name);
++		return;
++	}
++
++	if (flags & IORESOURCE_MEM) {
++		size = min = max = sb->desired_mem_size;
++		align = 1 << 20;	/* unspecified, use 1Mb and play safe */
++	} else if (flags & IORESOURCE_IO) {
++		size = min = max = sb->desired_io_size;
++		align = 1 << 12;	/* unspecified, use 4Kb and play safe */
++	}
++
++	err = allocate_resource(root, res, size, min, max, align, NULL, NULL);
++	if (err < 0)
++		return;
++
++	if (flags & IORESOURCE_MEM) {
++		c->mem_alloc = 1;
++		sb->current_mem_size = resource_size(res);
++		sb->current_mem_base = res->start;
++	} else if (flags & IORESOURCE_IO) {
++		c->io_alloc = 1;
++		sb->current_io_size = resource_size(res);
++		sb->current_io_base = res->start;
++	}
++	osm_info("%s: allocated PCI space %pR\n", c->name, res);
++}
++
+ /**
+  *	i2o_iop_systab_set - Set the I2O System Table of the specified IOP
+  *	@c: I2O controller to which the system table should be send
+@@ -665,52 +707,13 @@ static int i2o_iop_systab_set(struct i2o_controller *c)
+ 	struct i2o_message *msg;
+ 	i2o_status_block *sb = c->status_block.virt;
+ 	struct device *dev = &c->pdev->dev;
+-	struct resource *root;
+ 	int rc;
  
-+#ifdef CONFIG_PCI_DOMAINS
-+       domain = sys->domain;
-+#endif
-+
-+       snprintf(pcie->mem_name, sizeof(pcie->mem_name), "PCI MEM %04x", domain);
-+       pcie->mem.name = pcie->mem_name;
-+
-+       snprintf(pcie->io_name, sizeof(pcie->io_name), "PCI I/O %04x", domain);
-+       pcie->realio.name = pcie->io_name;
+-	if (sb->current_mem_size < sb->desired_mem_size) {
+-		struct resource *res = &c->mem_resource;
+-		res->name = c->pdev->bus->name;
+-		res->flags = IORESOURCE_MEM;
+-		res->start = 0;
+-		res->end = 0;
+-		osm_info("%s: requires private memory resources.\n", c->name);
+-		root = pci_find_parent_resource(c->pdev, res);
+-		if (root == NULL)
+-			osm_warn("%s: Can't find parent resource!\n", c->name);
+-		if (root && allocate_resource(root, res, sb->desired_mem_size, sb->desired_mem_size, sb->desired_mem_size, 1 << 20,	/* Unspecified, so use 1Mb and play safe */
+-					      NULL, NULL) >= 0) {
+-			c->mem_alloc = 1;
+-			sb->current_mem_size = resource_size(res);
+-			sb->current_mem_base = res->start;
+-			osm_info("%s: allocated %llu bytes of PCI memory at "
+-				"0x%016llX.\n", c->name,
+-				(unsigned long long)resource_size(res),
+-				(unsigned long long)res->start);
+-		}
+-	}
++	if (sb->current_mem_size < sb->desired_mem_size)
++		i2o_res_alloc(c, IORESOURCE_MEM);
+ 
+-	if (sb->current_io_size < sb->desired_io_size) {
+-		struct resource *res = &c->io_resource;
+-		res->name = c->pdev->bus->name;
+-		res->flags = IORESOURCE_IO;
+-		res->start = 0;
+-		res->end = 0;
+-		osm_info("%s: requires private memory resources.\n", c->name);
+-		root = pci_find_parent_resource(c->pdev, res);
+-		if (root == NULL)
+-			osm_warn("%s: Can't find parent resource!\n", c->name);
+-		if (root && allocate_resource(root, res, sb->desired_io_size, sb->desired_io_size, sb->desired_io_size, 1 << 12,	/* Unspecified, so use 4Kb and play safe */
+-					      NULL, NULL) >= 0) {
+-			c->io_alloc = 1;
+-			sb->current_io_size = resource_size(res);
+-			sb->current_io_base = res->start;
+-			osm_info("%s: allocated %llu bytes of PCI I/O at "
+-				"0x%016llX.\n", c->name,
+-				(unsigned long long)resource_size(res),
+-				(unsigned long long)res->start);
+-		}
+-	}
++	if (sb->current_io_size < sb->desired_io_size)
++		i2o_res_alloc(c, IORESOURCE_IO);
+ 
+ 	msg = i2o_msg_get_wait(c, I2O_TIMEOUT_MESSAGE_GET);
+ 	if (IS_ERR(msg))
 
-
-Still missing release_region..
-
-Thoughts on upstreamining these bits?
-
-> Since the mvebu_pcie_setup() function seems very generic at this,
-> we should probably try to factor out that code into a common
-> helper, at least for arm64, but ideally shared with arm32
-> as well.
-
-Yah, especially since people are not getting it completely right..
-
-But some of the trouble here is a lack of a generic pci host driver
-structure, eg I have to pull the domain number out of the ARM32
-specific structure ..
-
-Jason
