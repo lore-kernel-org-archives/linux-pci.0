@@ -1,94 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:58271 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753677AbaBDNXS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 08:23:18 -0500
-Received: by mail-yk0-f170.google.com with SMTP id 9so47007659ykp.1
-        for <linux-pci@vger.kernel.org>; Tue, 04 Feb 2014 05:23:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140204122951.GC27975@e106497-lin.cambridge.arm.com>
-References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com>
-	<1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
-	<CAPcvp5EF_=G=VwWLfbw6mwczErTHeq4AbVALYpuAzb3c5eb2rA@mail.gmail.com>
-	<20140204122951.GC27975@e106497-lin.cambridge.arm.com>
-Date: Tue, 4 Feb 2014 13:23:17 +0000
-Message-ID: <CAPcvp5HN4pBysOdS5_ep_3Lp7GDDKw4YrgmKjYzBet7PtaOLUg@mail.gmail.com>
-Subject: Re: [PATCH] arm64: Add architecture support for PCI
-From: Andrew Murray <amurray@embedded-bits.co.uk>
-To: Andrew Murray <amurray@embedded-bits.co.uk>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:2116 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751072AbaBZJBD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Feb 2014 04:01:03 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
+	Jens Axboe <axboe@kernel.dk>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 1/2] cciss: Fallback to MSI rather than to INTx if MSI-X failed
+Date: Wed, 26 Feb 2014 10:02:41 +0100
+Message-Id: <ef248ef28d15d5e6813108a04b4d3532abb22125.1393404496.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393404496.git.agordeev@redhat.com>
+References: <cover.1393404496.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4 February 2014 12:29, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Mon, Feb 03, 2014 at 10:34:40PM +0000, Andrew Murray wrote:
->> On 3 February 2014 18:43, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
->> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
->> > index 4cc813e..ce5bad2 100644
->> > --- a/arch/arm64/include/asm/io.h
->> > +++ b/arch/arm64/include/asm/io.h
->> > @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
->> >  /*
->> >   *  I/O port access primitives.
->> >   */
->> > +#define arch_has_dev_port()    (0)
->> >  #define IO_SPACE_LIMIT         0xffff
->> >  #define PCI_IOBASE             ((void __iomem *)(MODULES_VADDR - SZ_2M))
->> >
->> > +#define ioport_map(port, nr)   (PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
->> > +#define ioport_unmap(addr)
->>
->> I'm not sure that this will work. The in[bwl], out[bwl] macros in
->> arch/arm64/include/asm/io.h already add the PCI_IOBASE offset.
->>
->> Instead of these two #defines, why not just enforce that
->> GENERIC_PCI_IOMAP is enabled? Or at least wrap these defines with 'if
->> (!config_enabled(CONFIG_GENERIC_PCI_IOMAP))' or similar.
->
-> GENERIC_PCI_IOMAP *is* enabled for AArch64. We have select GENERIC_IOMAP in
-> arch/arm64/Kconfig which in turn selects GENERIC_PCI_IOMAP in lib/Kconfig.
+Currently the driver falls back to INTx mode when MSI-X
+initialization failed. This is a suboptimal behaviour
+for chips that also support MSI. This update changes that
+behaviour and falls back to MSI mode in case MSI-X mode
+initialization failed.
 
-Sorry, it was intent to suggest using the ioport_[map|unmap] functions
-in lib/iomap.c instead of defining something similar here. I guess you
-will also need to also define CONFIG_HAS_IOPORT for this to happen.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Mike Miller <mike.miller@hp.com>
+Cc: iss_storagedev@hp.com
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/block/cciss.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Andrew Murray
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 036e8ab..73894ca 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -4092,11 +4092,9 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
+ 		if (err > 0) {
+ 			dev_warn(&h->pdev->dev,
+ 				"only %d MSI-X vectors available\n", err);
+-			goto default_int_mode;
+ 		} else {
+ 			dev_warn(&h->pdev->dev,
+ 				"MSI-X init failed %d\n", err);
+-			goto default_int_mode;
+ 		}
+ 	}
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+-- 
+1.7.7.6
 
->
-> Best regards,
-> Liviu
->
->>
->> > +
->> >  static inline u8 inb(unsigned long addr)
->> >  {
->> >         return readb(addr + PCI_IOBASE);
->>
->>
->> Andrew Murray
->>
->
-> --
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
->
-> -- IMPORTANT NOTICE: The contents of this email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and do not disclose the contents to any other person, use it for any purpose, or store or copy the information in any medium.  Thank you.
->
-> ARM Limited, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2557590
-> ARM Holdings plc, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2548782
->
