@@ -1,74 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:63552 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753603AbaBZTJR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:09:17 -0500
+Received: by mail-ie0-f171.google.com with SMTP id to1so1085120ieb.16
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:09:16 -0800 (PST)
+Subject: [PATCH 2/4] i2o: Fix I/O space alignment requirement
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>,
+	linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:09:12 -0700
+Message-ID: <20140226190912.9616.50210.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <53070393.5020005@linux.intel.com>
-References: <1388707565-16535-1-git-send-email-yinghai@kernel.org>
-	<1388707565-16535-11-git-send-email-yinghai@kernel.org>
-	<53070393.5020005@linux.intel.com>
-Date: Fri, 21 Feb 2014 15:18:36 -0800
-Message-ID: <CAE9FiQV8B271XCJQV=80S6pZDOVxG9LG0gaj9G98dCRetjkMUg@mail.gmail.com>
-Subject: Re: [PATCH v5 10/33] iommu, irq: Allocate irq_desc for dmar_msi with
- local node
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>,
-	"H. Peter Anvin" <hpa@zytor.com>, Tony Luck <tony.luck@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	Donald Dutile <ddutile@redhat.com>,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 20, 2014 at 11:43 PM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
->
->
-> On 2014/1/3 8:05, Yinghai Lu wrote:
->> iommu irq's irq_desc should be on local node ram.
->>
->> Fix the return value checking problem.
->>   create_irq() will return -1 when fail to allocate.
->>   create_irq_nr() will return 0 when fail to allocate.
->> here only check !irq, so need to change it to use create_irq_nr instead.
->>
->> -v2: According to Sebastian, add cc to stable.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Joerg Roedel <joro@8bytes.org>
->> Cc: Donald Dutile <ddutile@redhat.com>
->> Acked-by: Donald Dutile <ddutile@redhat.com>
->> Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
->> Cc: stable@vger.kernel.org
->> ---
->>  drivers/iommu/dmar.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
->> index 8b452c9..f4eaa50 100644
->> --- a/drivers/iommu/dmar.c
->> +++ b/drivers/iommu/dmar.c
->> @@ -1277,7 +1277,7 @@ int dmar_set_interrupt(struct intel_iommu *iommu)
->>       if (iommu->irq)
->>               return 0;
->>
->> -     irq = create_irq();
->> +     irq = create_irq_nr(0, iommu->node);
-> Hi Yinghai,
->         How about create_irq_nrq(1, iommu->node) here to clearly state
-> that 0 is not a valid irq number for dmar here?
+When i2o_iop_systab_set() allocates I/O port space, it specifies 1Mb
+alignment required.  This seems unlikely, since most platforms have only
+64Kb of I/O space total.  I think 4Kb is a more reasonable choice, since
+that's the minimum alignment of a PCI-PCI bridge I/O window.
 
-Should be the same. that 0 or 1 will be from in __create_irqs().
+My guess is that this is a copy/paste error from the memory allocation
+code, which specifies 1Mb alignment (which is the minimum alignment of a
+PCI-PCI bridge memory window).
 
-And we have
-        if (from < nr_irqs_gsi)
-                from = nr_irqs_gsi;
-in __create_irqs().
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/message/i2o/iop.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks
+diff --git a/drivers/message/i2o/iop.c b/drivers/message/i2o/iop.c
+index a8373d7aaef7..68aef58bf89c 100644
+--- a/drivers/message/i2o/iop.c
++++ b/drivers/message/i2o/iop.c
+@@ -700,7 +700,7 @@ static int i2o_iop_systab_set(struct i2o_controller *c)
+ 		root = pci_find_parent_resource(c->pdev, res);
+ 		if (root == NULL)
+ 			osm_warn("%s: Can't find parent resource!\n", c->name);
+-		if (root && allocate_resource(root, res, sb->desired_io_size, sb->desired_io_size, sb->desired_io_size, 1 << 20,	/* Unspecified, so use 1Mb and play safe */
++		if (root && allocate_resource(root, res, sb->desired_io_size, sb->desired_io_size, sb->desired_io_size, 1 << 12,	/* Unspecified, so use 4Kb and play safe */
+ 					      NULL, NULL) >= 0) {
+ 			c->io_alloc = 1;
+ 			sb->current_io_size = resource_size(res);
 
-Yinghai
