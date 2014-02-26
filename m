@@ -1,67 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Eli Cohen <eli@mellanox.com>, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH net-next 19/35] mlx5: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:11:48 +0100
-Message-Id: <3a48ed13ea35014e0fcdf7bf18b928d9de525779.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:32776 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753520AbaBZThG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:06 -0500
+Received: by mail-ie0-f172.google.com with SMTP id as1so617486iec.31
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:06 -0800 (PST)
+Subject: [PATCH 0/9] PCI: Use IORESOURCE_UNSET for unassigned BARs
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:37:04 -0700
+Message-ID: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+I'm trying to unify the way we handle unassigned PCI BARs, i.e., resources
+where we know the type and size, but we haven't assigned an address yet.
+The PCI core and the various architectures don't really have a consistent
+way of dealing with these.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Eli Cohen <eli@mellanox.com>
-Cc: linux-rdma@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Many places currently use "res->start == 0" to indicate unassigned
+resources.  I don't think that's a good idea in general, because it's
+possible for a resource to actually start at zero.  Zero is also a
+perfectly good BAR value, especially for a host bridge that translates
+addresses, so I want to support that, too.
+
+The IORESOURCE_UNSET flag exists already, but is hardly used at all.  In
+drivers/pci, we set it for an obscure error case, and clear it when
+updating a BAR.  The microblaze and powerpc architectures use it the same
+way I want to use it here: to indicate a resource with no assigned address.
+
+Here's the outline of what this series does:
+
+- Add resource_contains(): true iff r1 contains r2 (for minor cleanup)
+- Make %pR print resource size, not address, when IORESOURCE_UNSET
+- Stop advertising pci_find_parent_resource() for use in allocation
+- Mark PCI resources IORESOURCE_UNSET when BIOS left decoding disabled
+- Mark PCI resources IORESOURCE_UNSET while we're trying to assign addresses
+- Don't enable PCI decoding when no address has been assigned to BARs
+
+It might be too aggressive to ignore the initial value of a BAR and try to
+reassign it when the BIOS left decoding disabled.  If the BIOS left
+decoding *enabled*, we can have some confidence that the BAR value is
+valid.  It's possible the BAR is also valid even if the BIOS turned off
+decoding.  We could conceivably try to use BAR values that are inside
+upstream bridge windows, even if the BAR was initially disabled.  But this
+first pass just ignores the values in BARs that are disabled.
+
+I welcome any comments :)
+
 ---
- drivers/net/ethernet/mellanox/mlx5/core/main.c |   16 +++++-----------
- 1 files changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-index a064f06..81df046 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-@@ -116,7 +116,6 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
- 	struct mlx5_eq_table *table = &dev->priv.eq_table;
- 	int num_eqs = 1 << dev->caps.log_max_eq;
- 	int nvec;
--	int err;
- 	int i;
- 
- 	nvec = dev->caps.num_ports * num_online_cpus() + MLX5_EQ_VEC_COMP_BASE;
-@@ -131,17 +130,12 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
- 	for (i = 0; i < nvec; i++)
- 		table->msix_arr[i].entry = i;
- 
--retry:
--	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
--	err = pci_enable_msix(dev->pdev, table->msix_arr, nvec);
--	if (err <= 0) {
--		return err;
--	} else if (err > 2) {
--		nvec = err;
--		goto retry;
--	}
-+	nvec = pci_enable_msix_range(dev->pdev, table->msix_arr,
-+				     MLX5_EQ_VEC_COMP_BASE, nvec);
-+	if (nvec < 0)
-+		return nvec;
- 
--	mlx5_core_dbg(dev, "received %d MSI vectors out of %d requested\n", err, nvec);
-+	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
- 
- 	return 0;
- }
--- 
-1.7.7.6
+Bjorn Helgaas (9):
+      resource: Add resource_contains()
+      vsprintf: Add support for IORESOURCE_UNSET in %pR
+      PCI: Remove pci_find_parent_resource() use for allocation
+      PCI: Mark resources as IORESOURCE_UNSET if we can't assign them
+      PCI: Don't clear IORESOURCE_UNSET when updating BAR
+      PCI: Check IORESOURCE_UNSET before updating BAR
+      PCI: Don't try to claim IORESOURCE_UNSET resources
+      PCI: Ignore BAR contents when firmware left decoding disabled
+      PCI: Don't enable decoding if BAR hasn't been assigned an address
 
+
+ drivers/pci/host-bridge.c |    8 --------
+ drivers/pci/pci.c         |   41 +++++++++++++++++++++++++----------------
+ drivers/pci/probe.c       |    8 +++++++-
+ drivers/pci/quirks.c      |    5 +++++
+ drivers/pci/rom.c         |    2 ++
+ drivers/pci/setup-res.c   |   37 +++++++++++++++++++++++++------------
+ include/linux/ioport.h    |   12 +++++++++++-
+ kernel/resource.c         |    8 ++------
+ lib/vsprintf.c            |   13 +++++++++----
+ 9 files changed, 86 insertions(+), 48 deletions(-)
