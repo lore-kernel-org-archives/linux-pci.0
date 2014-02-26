@@ -1,38 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:49244 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638AbaBLW2e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Feb 2014 17:28:34 -0500
-Date: Wed, 12 Feb 2014 15:28:25 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
-	linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH v2 2/3] ARM: bios32: use pci_enable_resource to enable
- PCI resources
-Message-ID: <20140212222825.GC17248@obsidianresearch.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com>
- <1392236171-10512-3-git-send-email-will.deacon@arm.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:61403 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754533AbaBZXmL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 18:42:11 -0500
+Received: by mail-ie0-f178.google.com with SMTP id ar20so1388376iec.37
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 15:42:11 -0800 (PST)
+Subject: [PATCH 6/7] tile PCI RC: Use default pcibios_enable_device()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Chris Metcalf <cmetcalf@tilera.com>
+Date: Wed, 26 Feb 2014 16:42:08 -0700
+Message-ID: <20140226234208.18970.41395.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392236171-10512-3-git-send-email-will.deacon@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 12, 2014 at 08:16:10PM +0000, Will Deacon wrote:
-> This patch moves bios32 over to using the generic code for enabling PCI
-> resources. Since the core code takes care of bridge resources too, we
-> can also drop the explicit IO and MEMORY enabling for them in the arch
-> code.
+We don't need anything arch-specific in pcibios_enable_device(), so drop
+the arch implementation and use the default generic one.
 
-Tested-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com> (on Kirkwood)
+Note: pci_enable_resources() checks that r->parent is non-NULL, which
+basically checks that pci_claim_resource() or request_resource() has been
+called for each BAR.  I don't see where that happens for tile, but this
+patch doesn't change that behavior, so if it worked before, it should still
+work.
 
-PCI: bus1: Fast back to back transfers disabled
-pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-pci 0000:00:01.0: BAR 8: assigned [mem 0xe0000000-0xe00fffff]
-pci 0000:01:00.0: BAR 0: assigned [mem 0xe0000000-0xe001ffff]
-pci 0000:00:01.0: PCI bridge to [bus 01]
-pci 0000:00:01.0:   bridge window [mem 0xe0000000-0xe00fffff]
-pci 0000:00:01.0: enabling device (0140 -> 0142)
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Chris Metcalf <cmetcalf@tilera.com>
+---
+ arch/tile/kernel/pci_gx.c |   12 ------------
+ 1 file changed, 12 deletions(-)
 
-Jason
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index a97a6452b812..077b7bc437e5 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -1065,18 +1065,6 @@ char *__init pcibios_setup(char *str)
+ }
+ 
+ /*
+- * Enable memory address decoding, as appropriate, for the
+- * device described by the 'dev' struct.
+- *
+- * This is called from the generic PCI layer, and can be called
+- * for bridges or endpoints.
+- */
+-int pcibios_enable_device(struct pci_dev *dev, int mask)
+-{
+-	return pci_enable_resources(dev, mask);
+-}
+-
+-/*
+  * Called for each device after PCI setup is done.
+  * We initialize the PCI device capabilities conservatively, assuming that
+  * all devices can only address the 32-bit DMA space. The exception here is
+
