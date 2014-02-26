@@ -1,50 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:56597 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753284AbaBLW5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Feb 2014 17:57:15 -0500
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] bus: mvebu-mbus: Fix incorrect size for PCI aperture resources
-Date: Wed, 12 Feb 2014 15:57:07 -0700
-Message-Id: <1392245828-23244-1-git-send-email-jgunthorpe@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 4/4] i2o: Use pci_bus_alloc_resource(),
+ not allocate_resource() directly
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>,
+	linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:09:27 -0700
+Message-ID: <20140226190927.9616.43043.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-reg[0] is the DT base, reg[1] is the DT length in bytes,
-struct resource.end is the inclusive end address, so a -1 is
-required.
+Convert i2o_res_alloc() to use pci_bus_alloc_resource() rather than
+pci_find_parent_resource() and allocate_resource().  We don't have a
+resource to start with, so pci_find_parent_resource() can't do anything
+useful: a bus may have several memory resources available, so there might
+be several possible parents.  This is more likely on root buses because
+host bridges may have any number of apertures.
 
-Tested on kirkwood.
+I'm pretty sure this didn't work in the first place because it passed
+size == min == max to allocate_resource().  The min and max parameters are
+constraints on the *addresses* of the resource, not on its size, so I think
+it was impossible for allocate_resource() to succeed.
 
-Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/bus/mvebu-mbus.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/message/i2o/iop.c |   16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
-index 2394e97..7fd54e9 100644
---- a/drivers/bus/mvebu-mbus.c
-+++ b/drivers/bus/mvebu-mbus.c
-@@ -876,14 +876,14 @@ static void __init mvebu_mbus_get_pcie_resources(struct device_node *np,
- 	ret = of_property_read_u32_array(np, "pcie-mem-aperture", reg, ARRAY_SIZE(reg));
- 	if (!ret) {
- 		mem->start = reg[0];
--		mem->end = mem->start + reg[1];
-+		mem->end = mem->start + reg[1] - 1;
- 		mem->flags = IORESOURCE_MEM;
+diff --git a/drivers/message/i2o/iop.c b/drivers/message/i2o/iop.c
+index c334ba7224a1..5e7b1b75f999 100644
+--- a/drivers/message/i2o/iop.c
++++ b/drivers/message/i2o/iop.c
+@@ -655,8 +655,8 @@ static int i2o_iop_activate(struct i2o_controller *c)
+ static void i2o_res_alloc(struct i2o_controller *c, unsigned long flags)
+ {
+ 	i2o_status_block *sb = c->status_block.virt;
+-	struct resource *root, *res = &c->mem_resource;
+-	resource_size_t size, min, max, align;
++	struct resource *res = &c->mem_resource;
++	resource_size_t size, align;
+ 	int err;
+ 
+ 	res->name = c->pdev->bus->name;
+@@ -664,21 +664,17 @@ static void i2o_res_alloc(struct i2o_controller *c, unsigned long flags)
+ 	res->start = 0;
+ 	res->end = 0;
+ 	osm_info("%s: requires private memory resources.\n", c->name);
+-	root = pci_find_parent_resource(c->pdev, res);
+-	if (root == NULL) {
+-		osm_warn("%s: Can't find parent resource!\n", c->name);
+-		return;
+-	}
+ 
+ 	if (flags & IORESOURCE_MEM) {
+-		size = min = max = sb->desired_mem_size;
++		size = sb->desired_mem_size;
+ 		align = 1 << 20;	/* unspecified, use 1Mb and play safe */
+ 	} else if (flags & IORESOURCE_IO) {
+-		size = min = max = sb->desired_io_size;
++		size = sb->desired_io_size;
+ 		align = 1 << 12;	/* unspecified, use 4Kb and play safe */
  	}
  
- 	ret = of_property_read_u32_array(np, "pcie-io-aperture", reg, ARRAY_SIZE(reg));
- 	if (!ret) {
- 		io->start = reg[0];
--		io->end = io->start + reg[1];
-+		io->end = io->start + reg[1] - 1;
- 		io->flags = IORESOURCE_IO;
- 	}
- }
--- 
-1.8.1.2
+-	err = allocate_resource(root, res, size, min, max, align, NULL, NULL);
++	err = pci_bus_alloc_resource(c->pdev->bus, res, size, align, 0, 0,
++				     NULL, NULL);
+ 	if (err < 0)
+ 		return;
+ 
 
