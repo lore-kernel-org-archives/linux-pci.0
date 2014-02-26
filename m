@@ -1,31 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:51755 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbaBSO5s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 09:57:48 -0500
-Received: by mail-ig0-f180.google.com with SMTP id m12so1370626iga.1
-        for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2014 06:57:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAD6G_RRUjWLYkzR_=EFwO_tx1aJOqqn-jqixhj4tnnqpamv92g@mail.gmail.com>
-References: <CAD6G_RRUjWLYkzR_=EFwO_tx1aJOqqn-jqixhj4tnnqpamv92g@mail.gmail.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:33279 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754433AbaBZXlw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 18:41:52 -0500
+Received: by mail-ig0-f175.google.com with SMTP id hl1so11559030igb.2
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 15:41:52 -0800 (PST)
+Subject: [PATCH 3/7] microblaze/PCI: Use default pcibios_enable_device()
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Feb 2014 07:57:28 -0700
-Message-ID: <CAErSpo6_kXR_GWbK8SjOTVXYTZWEtMoH3FBww2Vn4He6TcuYEA@mail.gmail.com>
-Subject: Re: pci_reset_bus() usage in rc drivers
-To: Jagan Teki <jagannadh.teki@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: microblaze-uclinux@itee.uq.edu.au, Michal Simek <monstr@monstr.eu>,
+	linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 16:41:48 -0700
+Message-ID: <20140226234148.18970.24484.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 5:52 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
-> Hi Bjorn,
->
-> One of the functionality of pci_reset_bus could reset the secondary bus
-> as described in the configuration space - pci_reset_bridge_secondary_bus()
->
-> Does this reset require in the part of enumeration, what is usage of
-> this in root complex
-> driver perspective.
+We don't need anything arch-specific in pcibios_enable_device(), so drop
+the arch implementation and use the default generic one.
 
-Sorry, I don't understand this last sentence.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Michal Simek <monstr@monstr.eu>
+CC: microblaze-uclinux@itee.uq.edu.au
+---
+ arch/microblaze/pci/pci-common.c |    5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 66804adcacf0..70996cc66aa2 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -1294,11 +1294,6 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pcibios_finish_adding_to_bus);
+ 
+-int pcibios_enable_device(struct pci_dev *dev, int mask)
+-{
+-	return pci_enable_resources(dev, mask);
+-}
+-
+ static void pcibios_setup_phb_resources(struct pci_controller *hose,
+ 					struct list_head *resources)
+ {
+
