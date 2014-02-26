@@ -1,115 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:42636 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789AbaBZThZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:25 -0500
-Received: by mail-ig0-f174.google.com with SMTP id h18so1516171igc.1
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:25 -0800 (PST)
-Subject: [PATCH 3/9] PCI: Remove pci_find_parent_resource() use for
- allocation
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:37:23 -0700
-Message-ID: <20140226193723.10125.15799.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:53308 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751094AbaBZHrq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Feb 2014 02:47:46 -0500
+Message-ID: <530D9C0F.30200@ti.com>
+Date: Wed, 26 Feb 2014 13:17:27 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Ajay Khandelwal <ajay.khandelwal@st.com>
+CC: "jg1.han@samsung.com" <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io
+ and mem viewport
+References: <17773172.14231392946292058.JavaMail.weblogic@epml01> <5306E3FE.1070405@ti.com> <530D8A40.2070707@st.com>
+In-Reply-To: <530D8A40.2070707@st.com>
+Content-Type: text/plain; charset="EUC-KR"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the resource hasn't been allocated yet, pci_find_parent_resource() is
-documented as returning the region "where it should be allocated from."
-This is impossible in general because there may be several candidates: a
-prefetchable BAR can be put in either a prefetchable or non-prefetchable
-window, a transparent bridge may have overlapping positively- and
-subtractively-decoded windows, and a root bus may have several windows of
-the same type.
+On Wednesday 26 February 2014 12:01 PM, Ajay Khandelwal wrote:
+> Hi Kishon,
+> 
+> On 2/21/2014 10:58 AM, Kishon Vijay Abraham I wrote:
+>> Thanks for the patch. I have just burnt my PCIE-to-PCI bridge card :-s Will
+>> test this once I get a new card.
+> 
+> were you able to solve issue in PCIE-to-PCI bridge.
 
-Allocation should be done by pci_bus_alloc_resource(), which iterates
-through all bus resources and looks for the best match, e.g., one with the
-desired prefetchability attributes, and falls back to less-desired
-possibilities.
+oh yes. I was giving the total configuration space as 4k (2k for cfg0 and  2k
+for cfg1). But there was some problem when I write 0x800 to
+PCIE_ATU_LOWER_BASE. If I read back PCIE_ATU_LOWER_BASE after writing 0x800, it
+has 0x0.
 
-The only valid use of pci_find_parent_resource() is to find the parent of
-an already-allocated resource so we can claim it via request_resource(),
-and all we need for that is a bus region of the correct type that contains
-the resource.
+So I increased the configuration space to 8k (4k for cfg0 and  4k for cfg1).
+With this I write 0x1000 to  PCIE_ATU_LOWER_BASE and able to enumerate devices
+behind a PCIE-to-PCI bridge.
+> 
+> On SPEAr I see issues with PCIe to PCI bridge and PCIe to PCIe switch.
+> 
+> Imprecise external abort is generated, providing hook for abort(similar
+> to imx6) solves this.
 
-Note that like 8c8def26bfaa ("PCI: allow matching of prefetchable resources
-to non-prefetchable windows"), this depends on pci_bus_for_each_resource()
-iterating through positively-decoded regions before subtractively-decoded
-ones.  We prefer not to return a subtractively-decoded region because
-requesting from it will likely conflict with the overlapping positively-
-decoded window (see Launchpad report below).
+But this issue seems to be different :-s
 
-Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/424142
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>
----
- drivers/pci/pci.c |   39 +++++++++++++++++++++++----------------
- 1 file changed, 23 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1febe90831b4..99293fa40db9 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -401,33 +401,40 @@ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
-  * @res: child resource record for which parent is sought
-  *
-  *  For given resource region of given device, return the resource
-- *  region of parent bus the given region is contained in or where
-- *  it should be allocated from.
-+ *  region of parent bus the given region is contained in.
-  */
- struct resource *
- pci_find_parent_resource(const struct pci_dev *dev, struct resource *res)
- {
- 	const struct pci_bus *bus = dev->bus;
-+	struct resource *r;
- 	int i;
--	struct resource *best = NULL, *r;
- 
- 	pci_bus_for_each_resource(bus, r, i) {
- 		if (!r)
- 			continue;
--		if (res->start && !(res->start >= r->start && res->end <= r->end))
--			continue;	/* Not contained */
--		if ((res->flags ^ r->flags) & (IORESOURCE_IO | IORESOURCE_MEM))
--			continue;	/* Wrong type */
--		if (!((res->flags ^ r->flags) & IORESOURCE_PREFETCH))
--			return r;	/* Exact match */
--		/* We can't insert a non-prefetch resource inside a prefetchable parent .. */
--		if (r->flags & IORESOURCE_PREFETCH)
--			continue;
--		/* .. but we can put a prefetchable resource inside a non-prefetchable one */
--		if (!best)
--			best = r;
-+		if (res->start && resource_contains(r, res)) {
-+
-+			/*
-+			 * If the window is prefetchable but the BAR is
-+			 * not, the allocator made a mistake.
-+			 */
-+			if (r->flags & IORESOURCE_PREFETCH &&
-+			    !(res->flags & IORESOURCE_PREFETCH))
-+				return NULL;
-+
-+			/*
-+			 * If we're below a transparent bridge, there may
-+			 * be both a positively-decoded aperture and a
-+			 * subtractively-decoded region that contain the BAR.
-+			 * We want the positively-decoded one, so this depends
-+			 * on pci_bus_for_each_resource() giving us those
-+			 * first.
-+			 */
-+			return r;
-+		}
- 	}
--	return best;
-+	return NULL;
- }
- 
- /**
-
+Thanks
+Kishon
