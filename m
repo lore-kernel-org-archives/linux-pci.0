@@ -1,138 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2 10/13] ACPI / hotplug / PCI: Drop crit_sect locking
-Date: Sun, 02 Feb 2014 01:29:39 +0100
-Message-ID: <1979833.qUfQksyhnP@vostro.rjw.lan>
-In-Reply-To: <1935791.liE9ZlzmO9@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1935791.liE9ZlzmO9@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:24987 "EHLO
+	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752392AbaBZSMS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 13:12:18 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
+References: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1393438283-10542-3-git-send-email-phil.edworthy@renesas.com>
+Date: Wed, 26 Feb 2014 18:11:20 +0000
+Subject: [PATCH 2/5 v2 RFC] ARM: shmobile: r8a7791: Add PCIe clock
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-After recent PCI core changes related to the rescan/remove locking,
-the code sections under crit_sect mutexes from ACPIPHP slot objects
-are always executed under the general PCI rescan/remove lock.
-For this reason, the crit_sect mutexes are simply redundant, so drop
-them.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
 ---
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_glue.c |   23 +++--------------------
- 2 files changed, 3 insertions(+), 21 deletions(-)
+ arch/arm/mach-shmobile/clock-r8a7791.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -328,7 +328,6 @@ static acpi_status register_slot(acpi_ha
- 	slot->bus = bridge->pci_bus;
- 	slot->device = device;
- 	INIT_LIST_HEAD(&slot->funcs);
--	mutex_init(&slot->crit_sect);
+diff --git a/arch/arm/mach-shmobile/clock-r8a7791.c b/arch/arm/mach-shmobile/clock-r8a7791.c
+index c574292..cba9b3c 100644
+--- a/arch/arm/mach-shmobile/clock-r8a7791.c
++++ b/arch/arm/mach-shmobile/clock-r8a7791.c
+@@ -123,6 +123,7 @@ enum {
+ 	MSTP813,
+ 	MSTP721, MSTP720,
+ 	MSTP719, MSTP718, MSTP715, MSTP714,
++	MSTP319,
+ 	MSTP216, MSTP207, MSTP206,
+ 	MSTP204, MSTP203, MSTP202, MSTP1105, MSTP1106, MSTP1107,
+ 	MSTP124,
+@@ -137,6 +138,7 @@ static struct clk mstp_clks[MSTP_NR] = {
+ 	[MSTP718] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 18, 0), /* SCIF3 */
+ 	[MSTP715] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 15, 0), /* SCIF4 */
+ 	[MSTP714] = SH_CLK_MSTP32(&p_clk, SMSTPCR7, 14, 0), /* SCIF5 */
++	[MSTP319] = SH_CLK_MSTP32(&mp_clk, SMSTPCR3, 19, 0), /* PCIEC */
+ 	[MSTP216] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 16, 0), /* SCIFB2 */
+ 	[MSTP207] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 7, 0), /* SCIFB1 */
+ 	[MSTP206] = SH_CLK_MSTP32(&mp_clk, SMSTPCR2, 6, 0), /* SCIFB0 */
+@@ -166,6 +168,7 @@ static struct clk_lookup lookups[] = {
+ 	CLKDEV_CON_ID("peripheral_clk", &hp_clk),
  
- 	list_add_tail(&slot->node, &bridge->slots);
- 
-@@ -723,7 +722,6 @@ static void acpiphp_check_bridge(struct
- 		struct pci_bus *bus = slot->bus;
- 		struct pci_dev *dev, *tmp;
- 
--		mutex_lock(&slot->crit_sect);
- 		if (slot_no_hotplug(slot)) {
- 			; /* do nothing */
- 		} else if (get_slot_status(slot) == ACPI_STA_ALL) {
-@@ -738,7 +736,6 @@ static void acpiphp_check_bridge(struct
- 		} else {
- 			disable_slot(slot);
- 		}
--		mutex_unlock(&slot->crit_sect);
- 	}
- }
- 
-@@ -821,12 +818,8 @@ static void hotplug_event(acpi_handle ha
- 		} else {
- 			struct acpiphp_slot *slot = func->slot;
- 
--			if (slot->flags & SLOT_IS_GOING_AWAY)
--				break;
--
--			mutex_lock(&slot->crit_sect);
--			enable_slot(slot);
--			mutex_unlock(&slot->crit_sect);
-+			if (!(slot->flags & SLOT_IS_GOING_AWAY))
-+				enable_slot(slot);
- 		}
- 		break;
- 
-@@ -837,7 +830,6 @@ static void hotplug_event(acpi_handle ha
- 			acpiphp_check_bridge(bridge);
- 		} else {
- 			struct acpiphp_slot *slot = func->slot;
--			int ret;
- 
- 			if (slot->flags & SLOT_IS_GOING_AWAY)
- 				break;
-@@ -846,10 +838,7 @@ static void hotplug_event(acpi_handle ha
- 			 * Check if anything has changed in the slot and rescan
- 			 * from the parent if that's the case.
- 			 */
--			mutex_lock(&slot->crit_sect);
--			ret = acpiphp_rescan_slot(slot);
--			mutex_unlock(&slot->crit_sect);
--			if (ret)
-+			if (acpiphp_rescan_slot(slot))
- 				acpiphp_check_bridge(func->parent);
- 		}
- 		break;
-@@ -1055,13 +1044,10 @@ int acpiphp_enable_slot(struct acpiphp_s
- 	if (slot->flags & SLOT_IS_GOING_AWAY)
- 		return -ENODEV;
- 
--	mutex_lock(&slot->crit_sect);
- 	/* configure all functions */
- 	if (!(slot->flags & SLOT_ENABLED))
- 		enable_slot(slot);
- 
--	mutex_unlock(&slot->crit_sect);
--
- 	pci_unlock_rescan_remove();
- 	return 0;
- }
-@@ -1077,8 +1063,6 @@ static int acpiphp_disable_and_eject_slo
- 	if (slot->flags & SLOT_IS_GOING_AWAY)
- 		return -ENODEV;
- 
--	mutex_lock(&slot->crit_sect);
--
- 	/* unconfigure all functions */
- 	disable_slot(slot);
- 
-@@ -1092,7 +1076,6 @@ static int acpiphp_disable_and_eject_slo
- 			break;
- 		}
- 
--	mutex_unlock(&slot->crit_sect);
- 	return 0;
- }
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -93,7 +93,6 @@ struct acpiphp_slot {
- 	struct list_head funcs;		/* one slot may have different
- 					   objects (i.e. for each function) */
- 	struct slot *slot;
--	struct mutex crit_sect;
- 
- 	u8		device;		/* pci device# */
- 	u32		flags;		/* see below */
+ 	/* MSTP */
++	CLKDEV_DEV_ID("r8a7791-pcie", &mstp_clks[MSTP319]),
+ 	CLKDEV_DEV_ID("sh-sci.0", &mstp_clks[MSTP204]), /* SCIFA0 */
+ 	CLKDEV_DEV_ID("sh-sci.1", &mstp_clks[MSTP203]), /* SCIFA1 */
+ 	CLKDEV_DEV_ID("sh-sci.2", &mstp_clks[MSTP206]), /* SCIFB0 */
+-- 
+1.7.9.5
 
