@@ -1,69 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:37161 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712AbaBNV0Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 16:26:25 -0500
-Message-ID: <52FE89FF.4020700@gmail.com>
-Date: Fri, 14 Feb 2014 13:26:23 -0800
-From: Rajat Jain <rajatxjain@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/7] PCI: Add "weak" generic pcibios_enable_device()
+ implementation
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 16:41:36 -0700
+Message-ID: <20140226234136.18970.21352.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-CC: rajatjain@juniper.net, groeck@juniper.net,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Kees Cook <keescook@chromium.org>
-Subject: [PATCH] pciehp: Display the link state change reporting capability
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With recent addition of Link state change based hot-plug, it makes
-sense to display this capability in dbg_ctrl() addition to others.
+Many architectures implement pcibios_enable_device() the same way, so
+provide a default implementation in the core.
 
-(Also move the call to dbg_ctrl() further down untill after the value
-is populated in ctrl->link_active_reporting)
-
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/pci.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index da4b020..cbe8e924 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -747,6 +747,8 @@ static inline void dbg_ctrl(struct controller *ctrl)
- 		  EMI(ctrl)        ? "yes" : "no");
- 	ctrl_info(ctrl, "  Command Completed    : %3s\n",
- 		  NO_CMD_CMPL(ctrl) ? "no" : "yes");
-+	ctrl_info(ctrl, "  Link Change Reporting: %3s\n",
-+		  ctrl->link_active_reporting ? "yes" : "no");
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &reg16);
- 	ctrl_info(ctrl, "Slot Status            : 0x%04x\n", reg16);
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &reg16);
-@@ -771,7 +773,6 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	ctrl->slot_cap = slot_cap;
- 	mutex_init(&ctrl->ctrl_lock);
- 	init_waitqueue_head(&ctrl->queue);
--	dbg_ctrl(ctrl);
- 	/*
- 	 * Controller doesn't notify of command completion if the "No
- 	 * Command Completed Support" bit is set in Slot Capability
-@@ -784,10 +785,9 @@ struct controller *pcie_init(struct pcie_device *dev)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index dc9ce62be7aa..c3ce3d61091c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1185,6 +1185,11 @@ int pci_load_and_free_saved_state(struct pci_dev *dev,
+ }
+ EXPORT_SYMBOL_GPL(pci_load_and_free_saved_state);
  
-         /* Check if Data Link Layer Link Active Reporting is implemented */
-         pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
--        if (link_cap & PCI_EXP_LNKCAP_DLLLARC) {
--                ctrl_dbg(ctrl, "Link Active Reporting supported\n");
-+	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
-                 ctrl->link_active_reporting = 1;
--        }
-+	dbg_ctrl(ctrl);
- 
- 	/* Clear all remaining event bits in Slot Status register */
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
--- 
-1.7.9.5
++int __weak pcibios_enable_device(struct pci_dev *dev, int bars)
++{
++	return pci_enable_resources(dev, bars);
++}
++
+ static int do_pci_enable_device(struct pci_dev *dev, int bars)
+ {
+ 	int err;
 
