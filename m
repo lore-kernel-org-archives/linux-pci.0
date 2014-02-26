@@ -1,58 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:63882 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751823AbaBRSwY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 13:52:24 -0500
-Date: Tue, 18 Feb 2014 18:51:50 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH v3 3/3] PCI: ARM: add support for generic PCI host
- controller
-Message-ID: <20140218185150.GE2010@mudshark.cambridge.arm.com>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com>
- <20140218182142.GF29304@obsidianresearch.com>
- <20140218184420.GD2010@mudshark.cambridge.arm.com>
- <10244486.cKXs90tdz5@wuerfel>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding
+ disabled
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:37:57 -0700
+Message-ID: <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <10244486.cKXs90tdz5@wuerfel>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 06:47:15PM +0000, Arnd Bergmann wrote:
-> On Tuesday 18 February 2014 18:44:20 Will Deacon wrote:
-> > On Tue, Feb 18, 2014 at 06:21:42PM +0000, Jason Gunthorpe wrote:
-> > > On Tue, Feb 18, 2014 at 12:20:43PM +0000, Will Deacon wrote:
-> > > > +
-> > > > +    // BUS_ADDRESS(3)  CPU_PHYSICAL(2)  SIZE(2)
-> > > > +    ranges = <0x1000000 0x0 0x00000000  0x0 0x00000000  0x0 0x00010000>,
-> > >                                            ^^^^^^^^^^^^^^
-> > > 
-> > > This probably shouldn't be 0 in the example, nor in your kvm tool
-> > > output. For example purposes any value will do.
-> > 
-> > Hmm, so kvmtool actually provides a PC ioport at 0x0, which is handy since
-> > there's an 8250 down there. That means we have:
-> > 
-> > 0x0    - 0x6200  : Weird PC stuff
-> > 0x6200 - 0x10000 : PCI IO space
-> > 
-> > Should I just change everything to be offset by 0x6200?
-> 
-> Do you have a list of the stuff in there?
+Don't rely on BAR contents when the command register says the BAR is
+disabled.
 
-kvmtool provides an i8042, pci-shmem, an rtc, 8250 and vesa at the usual PC
-offsets. On ARM, I regularly use the 8250 (there are even DT bindings for
-it) and MarcZ got the rtc working for fun. Not tried the others though.
+If we receive a PCI device from firmware (or a hot-added device that was
+just powered up) with the MEMORY or IO enable bits in the PCI command
+register cleared, there's no reason to believe the BARs contain valid
+addresses.
 
-> If that is actually port I/O, leaving it in there may be best,
-> but I agree the example should be changed.
+In that case, we still know the type and size of the BAR, but this
+patch marks the resource as "unset" so we have a chance to reassign it.
 
-Yup, it is port I/O. I'll make something up for the example.
+Historically, we often used "BAR == 0" to decide the BAR is invalid.  But 0
+is a legal BAR value, especially if the host bridge translates addresses,
+so I think it's better to decide based on the PCI command register, and
+store the conclusion in the IORESOURCE_UNSET bit.
 
-Will
+Reference: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=679545
+Reference: https://bugzilla.kernel.org/show_bug.cgi?id=48451
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6e34498ec9f0..02654b5ec1b9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -177,9 +177,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 
+ 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
+ 
++	pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
++
+ 	/* No printks while decoding is disabled! */
+ 	if (!dev->mmio_always_on) {
+-		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
+ 		if (orig_cmd & PCI_COMMAND_DECODE_ENABLE) {
+ 			pci_write_config_word(dev, PCI_COMMAND,
+ 				orig_cmd & ~PCI_COMMAND_DECODE_ENABLE);
+@@ -215,9 +216,13 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		if (res->flags & IORESOURCE_IO) {
+ 			l &= PCI_BASE_ADDRESS_IO_MASK;
+ 			mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT;
++			if (!(orig_cmd & PCI_COMMAND_IO))
++				res->flags |= IORESOURCE_UNSET;
+ 		} else {
+ 			l &= PCI_BASE_ADDRESS_MEM_MASK;
+ 			mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
++			if (!(orig_cmd & PCI_COMMAND_MEMORY))
++				res->flags |= IORESOURCE_UNSET;
+ 		}
+ 	} else {
+ 		res->flags |= (l & IORESOURCE_ROM_ENABLE);
+@@ -252,6 +257,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 			/* Address above 32-bit boundary; disable the BAR */
+ 			pci_write_config_dword(dev, pos, 0);
+ 			pci_write_config_dword(dev, pos + 4, 0);
++			res->flags |= IORESOURCE_UNSET;
+ 			region.start = 0;
+ 			region.end = sz64;
+ 			bar_disabled = true;
+
