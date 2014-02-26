@@ -1,51 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5304B09D.7010900@redhat.com>
-Date: Wed, 19 Feb 2014 14:24:45 +0100
-From: Paolo Bonzini <pbonzini@redhat.com>
-MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>,
-	linux-kernel@vger.kernel.org
-CC: Gleb Natapov <gleb@kernel.org>, kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] kvm: Use pci_enable_msix_range() instead of pci_enable_msix()
-References: <1392804931-30671-11-git-send-email-agordeev@redhat.com>
-In-Reply-To: <1392804931-30671-11-git-send-email-agordeev@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor2.renesas.com ([210.160.252.172]:64830 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752142AbaBZSMS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 13:12:18 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
+References: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1393438283-10542-4-git-send-email-phil.edworthy@renesas.com>
+Date: Wed, 26 Feb 2014 18:11:21 +0000
+Subject: [PATCH 3/5 v2 RFC] ARM: shmobile: Add PCIe resources to r8a7791 device
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Il 19/02/2014 11:15, Alexander Gordeev ha scritto:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
->
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Gleb Natapov <gleb@kernel.org>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: kvm@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  virt/kvm/assigned-dev.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/virt/kvm/assigned-dev.c b/virt/kvm/assigned-dev.c
-> index 8db4370..92e25e9 100644
-> --- a/virt/kvm/assigned-dev.c
-> +++ b/virt/kvm/assigned-dev.c
-> @@ -395,8 +395,9 @@ static int assigned_device_enable_host_msix(struct kvm *kvm,
->  	if (dev->entries_nr == 0)
->  		return r;
->
-> -	r = pci_enable_msix(dev->dev, dev->host_msix_entries, dev->entries_nr);
-> -	if (r)
-> +	r = pci_enable_msix_range(dev->dev, dev->host_msix_entries,
-> +				  dev->entries_nr, dev->entries_nr);
-> +	if (r < 0)
->  		return r;
->
->  	for (i = 0; i < dev->entries_nr; i++) {
->
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7791.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index d9393d6..7751aae 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -136,6 +136,16 @@ static struct resource irqc0_resources[] = {
+ 					  &irqc##idx##_data,		\
+ 					  sizeof(struct renesas_irqc_config))
+ 
++/* PCI Express */
++static struct resource pcie_resources[] = {
++	DEFINE_RES_MEM(0xfe000000, SZ_512K),
++	DEFINE_RES_MEM(0xfe100000, SZ_1M),
++	DEFINE_RES_MEM(0xfe200000, SZ_2M),
++	DEFINE_RES_MEM(0x30000000, SZ_128M),
++	DEFINE_RES_MEM(0x38000000, SZ_128M),
++	DEFINE_RES_IRQ(gic_spi(116)),
++};
++
+ void __init r8a7791_add_dt_devices(void)
+ {
+ 	r8a7791_register_scif(SCIFA0);
+@@ -160,6 +170,9 @@ void __init r8a7791_add_standard_devices(void)
+ {
+ 	r8a7791_add_dt_devices();
+ 	r8a7791_register_irqc(0);
++	platform_device_register_simple("r8a7791-pcie", -1,
++					pcie_resources,
++					ARRAY_SIZE(pcie_resources));
+ }
+ 
+ void __init r8a7791_init_early(void)
+-- 
+1.7.9.5
+
