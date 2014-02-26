@@ -1,59 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:63447 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751747AbaBZQOO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 11:14:14 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:62285 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754104AbaBZThx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:53 -0500
+Received: by mail-ie0-f179.google.com with SMTP id to1so1118976ieb.38
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:53 -0800 (PST)
+Subject: [PATCH 7/9] PCI: Don't try to claim IORESOURCE_UNSET resources
 To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1393430893-2466-1-git-send-email-phil.edworthy@renesas.com>
-References: <1393430893-2466-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1393430893-2466-4-git-send-email-phil.edworthy@renesas.com>
-Date: Wed, 26 Feb 2014 16:08:11 +0000
-Subject: [PATCH 3/5] ARM: shmobile: Add PCIe resources to r8a7791 device
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:37:51 -0700
+Message-ID: <20140226193751.10125.5434.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/mach-shmobile/setup-r8a7791.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+If the IORESOURCE_UNSET bit is set, it means we haven't assigned an address
+yet, so don't try to claim the region.
 
-diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
-index d9393d6..7751aae 100644
---- a/arch/arm/mach-shmobile/setup-r8a7791.c
-+++ b/arch/arm/mach-shmobile/setup-r8a7791.c
-@@ -136,6 +136,16 @@ static struct resource irqc0_resources[] = {
- 					  &irqc##idx##_data,		\
- 					  sizeof(struct renesas_irqc_config))
+Also, make the error messages more uniform and add info about which BAR is
+involved.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/setup-res.c |   15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 7f7652176fc5..6e443135ba24 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -111,18 +111,23 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
+ 	struct resource *res = &dev->resource[resource];
+ 	struct resource *root, *conflict;
  
-+/* PCI Express */
-+static struct resource pcie_resources[] = {
-+	DEFINE_RES_MEM(0xfe000000, SZ_512K),
-+	DEFINE_RES_MEM(0xfe100000, SZ_1M),
-+	DEFINE_RES_MEM(0xfe200000, SZ_2M),
-+	DEFINE_RES_MEM(0x30000000, SZ_128M),
-+	DEFINE_RES_MEM(0x38000000, SZ_128M),
-+	DEFINE_RES_IRQ(gic_spi(116)),
-+};
++	if (res->flags & IORESOURCE_UNSET) {
++		dev_info(&dev->dev, "can't claim BAR %d %pR: no address assigned\n",
++			 resource, res);
++		return -EINVAL;
++	}
 +
- void __init r8a7791_add_dt_devices(void)
- {
- 	r8a7791_register_scif(SCIFA0);
-@@ -160,6 +170,9 @@ void __init r8a7791_add_standard_devices(void)
- {
- 	r8a7791_add_dt_devices();
- 	r8a7791_register_irqc(0);
-+	platform_device_register_simple("r8a7791-pcie", -1,
-+					pcie_resources,
-+					ARRAY_SIZE(pcie_resources));
- }
+ 	root = pci_find_parent_resource(dev, res);
+ 	if (!root) {
+-		dev_info(&dev->dev, "no compatible bridge window for %pR\n",
+-			 res);
++		dev_info(&dev->dev, "can't claim BAR %d %pR: no compatible bridge window\n",
++			 resource, res);
+ 		return -EINVAL;
+ 	}
  
- void __init r8a7791_init_early(void)
--- 
-1.7.9.5
+ 	conflict = request_resource_conflict(root, res);
+ 	if (conflict) {
+-		dev_info(&dev->dev,
+-			 "address space collision: %pR conflicts with %s %pR\n",
+-			 res, conflict->name, conflict);
++		dev_info(&dev->dev, "can't claim BAR %d %pR: address conflict with %s %pR\n",
++			 resource, res, conflict->name, conflict);
+ 		return -EBUSY;
+ 	}
+ 
 
