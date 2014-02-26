@@ -1,143 +1,140 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 19 Feb 2014 20:22:55 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] ntb: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140219192255.GA20609@dhcp-26-207.brq.redhat.com>
-References: <1392804931-30671-1-git-send-email-agordeev@redhat.com>
- <20140219180926.GA1333@jonmason-lab>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:33286 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750813AbaBZRsD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 12:48:03 -0500
+Date: Wed, 26 Feb 2014 17:46:59 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"jgunthorpe@obsidianresearch.com" <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v4] PCI: ARM: add support for generic PCI host controller
+Message-ID: <20140226174659.GF12882@mudshark.cambridge.arm.com>
+References: <1393268359-17224-1-git-send-email-will.deacon@arm.com>
+ <1721648.K4nYY7eS55@wuerfel>
+ <20140225180111.GF23136@mudshark.cambridge.arm.com>
+ <201402252330.34236.arnd@arndb.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140219180926.GA1333@jonmason-lab>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <201402252330.34236.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 19, 2014 at 11:09:27AM -0700, Jon Mason wrote:
-> > diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-> > index 170e8e6..fda37eb 100644
-> > --- a/drivers/ntb/ntb_hw.c
-> > +++ b/drivers/ntb/ntb_hw.c
-> > @@ -1085,21 +1085,15 @@ static int ntb_setup_msix(struct ntb_device *ndev)
-> >  	struct msix_entry *msix;
-> >  	int msix_entries;
-> >  	int rc, i;
-> > -	u16 val;
-> >  
-> > -	if (!pdev->msix_cap) {
-> > -		rc = -EIO;
-> > -		goto err;
-> > -	}
-> > -
-> > -	rc = pci_read_config_word(pdev, pdev->msix_cap + PCI_MSIX_FLAGS, &val);
-> > -	if (rc)
-> > +	rc = pci_msix_vec_count(pdev);
+Hi Arnd,
+
+On Tue, Feb 25, 2014 at 10:30:33PM +0000, Arnd Bergmann wrote:
+> On Tuesday 25 February 2014, Will Deacon wrote:
+> > I need the alignment code so I can handle being passed a CPU physical
+> > address which isn't 64K aligned. In this case, pci_ioremap_io needs a 64K
+> > aligned address so that the __io macro does the right thing.
 > 
-> Nit, you should probably use msix_entries instead of rc in this case.
+> I still don't see why pci_ioremap_io needs 64K alignment. For all I can tell,
+> it just needs a page-aligned address.
 
-This way it resembles the code few lines below, so the style looks more
-consistent. Whichever you wish, though ;)
+I misread __io as an '|' rather than a '+'. You're right, we just need page
+alignment for the mapping.
 
-> > +	if (rc < 0) {
-> >  		goto err;
-> > -
-> > -	msix_entries = msix_table_size(val);
-> > -	if (msix_entries > ndev->limits.msix_cnt) {
-> > +	} else if (rc > ndev->limits.msix_cnt) {
-> >  		rc = -EINVAL;
-> >  		goto err;
-> > +	} else {
-> > +		msix_entries = rc;
-> >  	}
+> > For example, I can tell kvmtool to place I/O space at CPU physical 0x16000,
+> > bus address 0x6000 (so ports 0x0-0x5fff are unavailable). In that case, I
+> > still need to map those lower ports for the __io macro to offset into the
+> > window correctly.
+>  
+> I don't think so. pci_ioremap_io will still try to map 64K of address space,
+> but you can map 0x16000-0x25fff to PCI_IO_VIRT_BASE. The io_offset in
+> that case will be negative (-0x6000).
+
+Yes, and that means that all this rounding is unnecessary; I can just fail
+addresses that aren't page-aligned (which is much more reasonable).
+
+> > 	of_pci_range_to_resource(range, dev->of_node, res);
+> > 	res->start = window + range->pci_addr;
+> > 	res->end = res->start + range->size - 1;
+> > 	*offset = window - range->pci_addr;
+> > 	return 0;
+> > }
 > 
-> Style Nit.  Braces with only one line.  If you make the change above,
-> then it is moot.
+> The offset is good now, but the start is not: res->start refers to
+> the linux I/O space and should just be 'window' here. Adding up
+> window and pci_addr makes no sense. Think of the case where you
+> have two host bridges, one using bus address 0x0-0xffff and the other
+> one using 0x10000-0x1ffff. You really want the first one to
+> have res->start=0 and the second one res->start=0x10000, and
+> using offset=0. Instead the second one get start=0x20000,
+> which is wrong in both CPU and bus space.
 
-Not on the top of my head, but do we mix bracing this way?
+Aha, so res->start is the offset into our virtual I/O space at which the
+window starts? That's what I've been getting wrong -- I thought res->start
+was a PCI bus address for some reason.
 
-> >  
-> >  	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
-> > @@ -1112,26 +1106,21 @@ static int ntb_setup_msix(struct ntb_device *ndev)
-> >  	for (i = 0; i < msix_entries; i++)
-> >  		ndev->msix_entries[i].entry = i;
-> >  
-> > -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-> > -	if (rc < 0)
-> > -		goto err1;
-> > -	if (rc > 0) {
-> > +	if (ndev->hw_type != BWD_HW)
-> >  		/* On SNB, the link interrupt is always tied to 4th vector.  If
-> >  		 * we can't get all 4, then we can't use MSI-X.
-> >  		 */
-> > -		if (ndev->hw_type != BWD_HW) {
-> > -			rc = -EIO;
-> > -			goto err1;
-> > -		}
-> > -
-> > -		dev_warn(&pdev->dev,
-> > -			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
-> > -			 rc);
-> > +		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
-> > +					   msix_entries, msix_entries);
-> > +	else
-> > +		rc = pci_enable_msix_range(pdev, ndev->msix_entries,
-> > +					   1, msix_entries);
-> 
-> Actually, this must be 2 for the min.  One for the Data and one for
-> the Link.  If you look a few lines after this in the original code,
-> there is a grabbing of the last vector for the link.  I realize there
-> is currently no check for this in the driver and a potential error
-> case occurs.  I can make a separate patch to correct this issue if
-> this patch is not going through my tree.
+> The round_down() also still gets you into trouble here, because you
+> don't adjust the start or the size.
 
-Well, I can re-post with a separate fix with this condition updated...
+I'll just get rid of the rounding.
 
-	} else if (rc < 2 || rc > ndev->limits.msix_cnt) {
-		rc = -EINVAL;
-		goto err;
-	}
-
-...and the original patch with call to pci_enable_msix_range( ...,
-2, ndev->limits.msix_cnt)
-
-Will it work with both BWD_HW and non-BWD_HW hardware?
-
-> Thanks,
-> Jon
-> 
-> 
-> > +	if (rc < 0)
-> > +		goto err1;
-> > +	else if (rc < msix_entries) {
-> > +		dev_warn(&pdev->dev, "Only %d MSI-X vectors. "
-> > +			 "Limiting the number of queues to that number.\n", rc);
-> >  		msix_entries = rc;
-> > -
-> > -		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-> > -		if (rc)
-> > -			goto err1;
-> >  	}
-> >  
-> >  	for (i = 0; i < msix_entries; i++) {
-> > diff --git a/drivers/ntb/ntb_hw.h b/drivers/ntb/ntb_hw.h
-> > index bbdb7ed..d307107 100644
-> > --- a/drivers/ntb/ntb_hw.h
-> > +++ b/drivers/ntb/ntb_hw.h
-> > @@ -60,8 +60,6 @@
-> >  #define PCI_DEVICE_ID_INTEL_NTB_SS_HSX		0x2F0F
-> >  #define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
-> >  
-> > -#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
-> > -
-> >  #ifndef readq
-> >  static inline u64 readq(void __iomem *addr)
-> >  {
-> > -- 
-> > 1.7.7.6
+> > If I do:
 > > 
+> > 	*offset = window;
+> > 
+> > then things work as expected (this is all referring back to the kvmtool example
+> > I mentioned earlier in this mail).
+> 
+> Yes, but only only because you have two bugs that cancel each other out
+> to some degree. It only works for the first bus though, as explained
+> above: if offset is >0, the Linux I/O port number that gets assigned
+> in the resource is no longer the one that maps to the one in your
+> virtual address space pointing to the right physical address.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Ok, so taking all this on board I end up with the diff below (against v4).
+It seems to work well with my kvmtool setup:
+
+  pci_bus 0000:00: root bus resource [io  0x0000-0x9fff] (bus address [0x6000-0xffff])
+
+Will
+
+--->8
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 71b0960772ec..b761f3e64a6a 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -133,30 +133,25 @@ static int gen_pci_calc_io_offset(struct device *dev,
+ {
+        static atomic_t wins = ATOMIC_INIT(0);
+        int err, idx, max_win;
+-       unsigned int io_offset;
++       unsigned int window;
+ 
+-       /* Ensure the CPU physical address is aligned to a 64K boundary */
+-       range->size += range->cpu_addr & (SZ_64K - 1);
+-       range->cpu_addr = round_down(range->cpu_addr, SZ_64K);
+-       range->pci_addr = round_down(range->pci_addr, SZ_64K);
+-
+-       if (range->size > SZ_64K)
+-               return -E2BIG;
++       if (!PAGE_ALIGNED(range->cpu_addr))
++               return -EINVAL;
+ 
+-       max_win = IO_SPACE_LIMIT + 1 / SZ_64K;
++       max_win = (IO_SPACE_LIMIT + 1) / SZ_64K;
+        idx = atomic_inc_return(&wins);
+        if (idx >= max_win)
+                return -ENOSPC;
+ 
+-       io_offset = (idx - 1) * SZ_64K;
+-       err = pci_ioremap_io(io_offset, range->cpu_addr);
++       window = (idx - 1) * SZ_64K;
++       err = pci_ioremap_io(window, range->cpu_addr);
+        if (err)
+                return err;
+ 
+        of_pci_range_to_resource(range, dev->of_node, res);
+-       res->start = io_offset + range->pci_addr;
++       res->start = window;
+        res->end = res->start + range->size - 1;
+-       *offset = io_offset;
++       *offset = window - range->pci_addr;
+        return 0;
+ }
