@@ -1,97 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:42353 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752286AbaBTLie (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 06:38:34 -0500
-Message-ID: <5305E928.5070505@ti.com>
-Date: Thu, 20 Feb 2014 17:08:16 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/9] resource: Add resource_contains()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:37:10 -0700
+Message-ID: <20140226193710.10125.95477.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Mohit Kumar <mohit.kumar@st.com>, <jg1.han@samsung.com>
-CC: Ajay Khandelwal <ajay.khandelwal@st.com>,
-	Bjorn Helgaas <bhelgass@google.com>, <spear-devel@list.st.com>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io
- and mem viewport
-References: <1392873774-22249-1-git-send-email-mohit.kumar@st.com> <1392873774-22249-2-git-send-email-mohit.kumar@st.com>
-In-Reply-To: <1392873774-22249-2-git-send-email-mohit.kumar@st.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+We have two identical copies of resource_contains() already, and more
+places that could use it.  This moves it to ioport.h where it can be
+shared.
 
-On Thursday 20 February 2014 10:52 AM, Mohit Kumar wrote:
-> This patch correct iATU programming for cfg1, io and mem viewport.
-> Enable ATU only after configuring it.
+resource_contains(struct resource *r1, struct resource *r2) returns true
+iff r1 and r2 are the same type (most callers already checked this
+separately) and the r1 address range completely contains r2.
 
-Does this patch actually fixes device enumeration behind a PCIe-pci bridge or
-this is more of cleaning up the sequence?
+In addition, the new resource_contains() checks that both r1 and r2 have
+addresses assigned to them.  If a resource is IORESOURCE_UNSET, it doesn't
+have a valid address and can't contain or be contained by another resource.
+Some callers already check this or for res->start.
 
-Thanks
-Kishon
+No functional change.
 
-> 
-> Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
-> Signed-off-by: Ajay Khandelwal <ajay.khandelwal@st.com>
-> Cc: Jingoo Han <jg1.han@samsung.com>
-> Cc: Bjorn Helgaas <bhelgass@google.com>
-> Cc: spear-devel@list.st.com
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/host/pcie-designware.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 391966f..46f4a19 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -522,13 +522,13 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
->  			  PCIE_ATU_VIEWPORT);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->  	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
->  	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
->  			  PCIE_ATU_LIMIT);
->  	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
->  	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
-> +	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->  }
->  
->  static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
-> @@ -537,7 +537,6 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
->  			  PCIE_ATU_VIEWPORT);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->  	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
->  	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
-> @@ -545,6 +544,7 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
->  	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
->  	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
->  			  PCIE_ATU_UPPER_TARGET);
-> +	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->  }
->  
->  static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
-> @@ -553,7 +553,6 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
->  	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
->  			  PCIE_ATU_VIEWPORT);
->  	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
-> -	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->  	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
->  	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
->  	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
-> @@ -561,6 +560,7 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
->  	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
->  	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
->  			  PCIE_ATU_UPPER_TARGET);
-> +	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->  }
->  
->  static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-> 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host-bridge.c |    8 --------
+ include/linux/ioport.h    |   10 ++++++++++
+ kernel/resource.c         |    8 ++------
+ 3 files changed, 12 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 06ace6248c61..47aaf22d814e 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -32,11 +32,6 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 	bridge->release_data = release_data;
+ }
+ 
+-static bool resource_contains(struct resource *res1, struct resource *res2)
+-{
+-	return res1->start <= res2->start && res1->end >= res2->end;
+-}
+-
+ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ 			     struct resource *res)
+ {
+@@ -45,9 +40,6 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
+ 	resource_size_t offset = 0;
+ 
+ 	list_for_each_entry(window, &bridge->windows, list) {
+-		if (resource_type(res) != resource_type(window->res))
+-			continue;
+-
+ 		if (resource_contains(window->res, res)) {
+ 			offset = window->offset;
+ 			break;
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 89b7c24a36e9..9fcaac8bc4f6 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -169,6 +169,16 @@ static inline unsigned long resource_type(const struct resource *res)
+ {
+ 	return res->flags & IORESOURCE_TYPE_BITS;
+ }
++/* True iff r1 completely contains r2 */
++static inline bool resource_contains(struct resource *r1, struct resource *r2)
++{
++	if (resource_type(r1) != resource_type(r2))
++		return false;
++	if (r1->flags & IORESOURCE_UNSET || r2->flags & IORESOURCE_UNSET)
++		return false;
++	return r1->start <= r2->start && r1->end >= r2->end;
++}
++
+ 
+ /* Convenience shorthand with allocation */
+ #define request_region(start,n,name)		__request_region(&ioport_resource, (start), (n), (name), 0)
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 3f285dce9347..a8344dda7049 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -432,11 +432,6 @@ static void resource_clip(struct resource *res, resource_size_t min,
+ 		res->end = max;
+ }
+ 
+-static bool resource_contains(struct resource *res1, struct resource *res2)
+-{
+-	return res1->start <= res2->start && res1->end >= res2->end;
+-}
+-
+ /*
+  * Find empty slot in the resource tree with the given range and
+  * alignment constraints
+@@ -471,10 +466,11 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 		arch_remove_reservations(&tmp);
+ 
+ 		/* Check for overflow after ALIGN() */
+-		avail = *new;
+ 		avail.start = ALIGN(tmp.start, constraint->align);
+ 		avail.end = tmp.end;
++		avail.flags = new->flags & ~IORESOURCE_UNSET;
+ 		if (avail.start >= tmp.start) {
++			alloc.flags = avail.flags;
+ 			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
+ 					size, constraint->align);
+ 			alloc.end = alloc.start + size - 1;
 
