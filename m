@@ -1,51 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.24]:52119 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbaB1KWk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 05:22:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Mark Rutland <mark.rutland@arm.com>, kernel@pengutronix.de
-Subject: Re: [PATCH v3 2/3] ARM: dts: imx6: extend PCIe interrupt list for MSI
-Date: Fri, 28 Feb 2014 11:22:26 +0100
-Message-ID: <59506012.lKQmfIR71j@wuerfel>
-In-Reply-To: <1393582776.5219.2.camel@weser.hi.pengutronix.de>
-References: <1393519305-15128-1-git-send-email-l.stach@pengutronix.de> <6495086.OFxrshKaiu@wuerfel> <1393582776.5219.2.camel@weser.hi.pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from relmlor2.renesas.com ([210.160.252.172]:63447 "EHLO
+	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751747AbaBZQOO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 11:14:14 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>
+In-Reply-To: <1393430893-2466-1-git-send-email-phil.edworthy@renesas.com>
+References: <1393430893-2466-1-git-send-email-phil.edworthy@renesas.com>
+Message-ID: <1393430893-2466-4-git-send-email-phil.edworthy@renesas.com>
+Date: Wed, 26 Feb 2014 16:08:11 +0000
+Subject: [PATCH 3/5] ARM: shmobile: Add PCIe resources to r8a7791 device
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 28 February 2014 11:19:36 Lucas Stach wrote:
-> Am Donnerstag, den 27.02.2014, 17:44 +0100 schrieb Arnd Bergmann:
-> > On Thursday 27 February 2014 17:41:44 Lucas Stach wrote:
-> > >                         num-lanes = <1>;
-> > > -                       interrupts = <0 123 0x04>;
-> > > +                       interrupt-names = "inta", "intb", "intc", "intd/msi";
-> > > +                       interrupts = <0 123 0x04>, <0 122 0x04>, <0 121 0x04>, <0 120 0x04>;
-> > >                         clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
-> > > 
-> > 
-> > The standard PCI interrupts should not be listed here, you need to
-> > put them into the "interrupt-map" property so the of_irq_parse_and_map_pci()
-> > function can translate them.
-> > 
-> 
-> So as INTA is already listed and implemented in the driver this way,
-> this means the binding is totally bogus (taking into account that it
-> didn't match the documented designware binding in more places).
-> 
-> I wonder if we should just break the binding to sort things out, given
-> that there are not that many users of imx-pcie yet.
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/arm/mach-shmobile/setup-r8a7791.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-That may be best, yes. If we have to provide backwards compatibility,
-the driver can have a fallback for the case where no interrupt-map
-property is present, but it should not try to handle multiple
-interrupt lines that way, only the trivial case where you have a single
-IntA line for all devices.
+diff --git a/arch/arm/mach-shmobile/setup-r8a7791.c b/arch/arm/mach-shmobile/setup-r8a7791.c
+index d9393d6..7751aae 100644
+--- a/arch/arm/mach-shmobile/setup-r8a7791.c
++++ b/arch/arm/mach-shmobile/setup-r8a7791.c
+@@ -136,6 +136,16 @@ static struct resource irqc0_resources[] = {
+ 					  &irqc##idx##_data,		\
+ 					  sizeof(struct renesas_irqc_config))
+ 
++/* PCI Express */
++static struct resource pcie_resources[] = {
++	DEFINE_RES_MEM(0xfe000000, SZ_512K),
++	DEFINE_RES_MEM(0xfe100000, SZ_1M),
++	DEFINE_RES_MEM(0xfe200000, SZ_2M),
++	DEFINE_RES_MEM(0x30000000, SZ_128M),
++	DEFINE_RES_MEM(0x38000000, SZ_128M),
++	DEFINE_RES_IRQ(gic_spi(116)),
++};
++
+ void __init r8a7791_add_dt_devices(void)
+ {
+ 	r8a7791_register_scif(SCIFA0);
+@@ -160,6 +170,9 @@ void __init r8a7791_add_standard_devices(void)
+ {
+ 	r8a7791_add_dt_devices();
+ 	r8a7791_register_irqc(0);
++	platform_device_register_simple("r8a7791-pcie", -1,
++					pcie_resources,
++					ARRAY_SIZE(pcie_resources));
+ }
+ 
+ void __init r8a7791_init_early(void)
+-- 
+1.7.9.5
 
-	Arnd
