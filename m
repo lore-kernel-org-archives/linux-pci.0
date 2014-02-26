@@ -1,67 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5557 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750980AbaBWGzM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 23 Feb 2014 01:55:12 -0500
-Date: Sun, 23 Feb 2014 07:57:05 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Roland Dreier <roland@kernel.org>,
-	Sean Hefty <sean.hefty@intel.com>,
-	Hal Rosenstock <hal.rosenstock@gmail.com>,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 1/2] IB/mthca: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140223065704.GB24747@dhcp-26-207.brq.redhat.com>
-References: <cover.1392733151.git.agordeev@redhat.com>
- <479c40ee9e4f3efa45aa6f57647ed1a1918e9deb.1392733151.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <479c40ee9e4f3efa45aa6f57647ed1a1918e9deb.1392733151.git.agordeev@redhat.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:55011 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbaBZK1b (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 05:27:31 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Richard Zhu <r65037@freescale.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de
+Subject: [PATCH v2 1/2] ARM: dts: imx6: adjust the interrupt list in order to support MSI
+Date: Wed, 26 Feb 2014 11:27:17 +0100
+Message-Id: <1393410438-28205-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+From: Juergen Beisert <jbe@pengutronix.de>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Roland Dreier <roland@kernel.org>
-Cc: Sean Hefty <sean.hefty@intel.com>
-Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
-Cc: linux-rdma@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: Juergen Beisert <jbe@pengutronix.de>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- drivers/infiniband/hw/mthca/mthca_main.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+ arch/arm/boot/dts/imx6qdl.dtsi | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/infiniband/hw/mthca/mthca_main.c b/drivers/infiniband/hw/mthca/mthca_main.c
-index 87897b9..ded76c1 100644
---- a/drivers/infiniband/hw/mthca/mthca_main.c
-+++ b/drivers/infiniband/hw/mthca/mthca_main.c
-@@ -858,13 +858,9 @@ static int mthca_enable_msi_x(struct mthca_dev *mdev)
- 	entries[1].entry = 1;
- 	entries[2].entry = 2;
- 
--	err = pci_enable_msix(mdev->pdev, entries, ARRAY_SIZE(entries));
--	if (err) {
--		if (err > 0)
--			mthca_info(mdev, "Only %d MSI-X vectors available, "
--				   "not using MSI-X\n", err);
-+	err = pci_enable_msix_exact(mdev->pdev, entries, ARRAY_SIZE(entries));
-+	if (err)
- 		return err;
--	}
- 
- 	mdev->eq_table.eq[MTHCA_EQ_COMP ].msi_x_vector = entries[0].vector;
- 	mdev->eq_table.eq[MTHCA_EQ_ASYNC].msi_x_vector = entries[1].vector;
+diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+index fb28b2ecb1db..aeccbb114fc5 100644
+--- a/arch/arm/boot/dts/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/imx6qdl.dtsi
+@@ -126,7 +126,8 @@
+ 				  0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
+ 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
+ 			num-lanes = <1>;
+-			interrupts = <0 123 0x04>;
++			/*               inta          intb         intc         intd/msi */
++			interrupts = <0 123 0x04>, <0 122 0x04>, <0 121 0x04>, <0 120 0x04>;
+ 			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
+ 			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
+ 			status = "disabled";
 -- 
-1.7.7.6
+1.8.5.3
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
