@@ -1,39 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:61946 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034AbaBNTYM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 14:24:12 -0500
-Received: by mail-ob0-f178.google.com with SMTP id wn1so14582293obc.9
-        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 11:24:11 -0800 (PST)
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:46294 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751638AbaBZTJE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:09:04 -0500
+Received: by mail-ig0-f176.google.com with SMTP id uy17so2856179igb.3
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:09:02 -0800 (PST)
+Subject: [PATCH 0/4] i2o: Use pci_bus_alloc_resource()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>,
+	linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:08:59 -0700
+Message-ID: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <3E54258959B69E4282D79E01AB1F32B704696651@DFLE11.ent.ti.com>
-References: <3E54258959B69E4282D79E01AB1F32B704695360@DFLE11.ent.ti.com>
-	<20140214164444.GA29491@google.com>
-	<3E54258959B69E4282D79E01AB1F32B704696651@DFLE11.ent.ti.com>
-Date: Fri, 14 Feb 2014 11:24:11 -0800
-Message-ID: <CAE9FiQWRvQNpGXhDJXFGV1rhqPrRctBO5HO9dzwGk1xSzJgE=Q@mail.gmail.com>
-Subject: Re: PCI memory BAR assigned by u-boot not honored when using recent kernel
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 14, 2014 at 9:32 AM, Karicheri, Muralidharan
->>There is no guarantee that the kernel will keep the BAR assignments done by firmware or
->>a bootloader.  Usually the kernel *does* keep them, as long as they are valid, but you
->>can not rely on that.
+i20 currently uses pci_find_parent_resource() followed by
+allocate_resource() to allocate PCI space.  The problem is that this won't
+work reliably because before we allocate the space, we don't know its
+address, and therefore we can't find the parent resource.  Even if we know
+the *type* of space we want, in some cases there are multiple possibilities
+(root buses with multiple apertures to them, prefetchable or
+non-prefetchable apertures, etc.)
 
-Not sure what arch in your case.
+This changes it to use pci_bus_alloc_resource(), which takes care of those
+details.
 
-You need to have code like pcibios_resource_survey() in x86 to
-checking and reserve resource from firmware.
+This also fixes some things that look like copy/paste errors, e.g., trying
+to allocate an I/O space with 1MB alignment.
 
-Also firmware need to make sure mmio assignments are valid otherwise
-kernel will reject and reassign a new one.
+I don't have hardware to test these changes, but I don't think these
+allocation paths actually worked before, this shouldn't be any worse than
+what we have today.
 
-Thanks
+---
 
-Yinghai
+Bjorn Helgaas (4):
+      i2o: Fix I/O space allocation copy/paste error
+      i2o: Fix I/O space alignment requirement
+      i2o: Refactor i2o_iop_systab_set() PCI space allocation
+      i2o: Use pci_bus_alloc_resource(), not allocate_resource() directly
+
+
+ drivers/message/i2o/iop.c |   85 ++++++++++++++++++++++-----------------------
+ 1 file changed, 42 insertions(+), 43 deletions(-)
