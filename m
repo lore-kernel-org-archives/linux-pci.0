@@ -1,47 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34739 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbaBXRQO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 12:16:14 -0500
-Received: by mail-pa0-f46.google.com with SMTP id rd3so6789446pab.19
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 09:16:13 -0800 (PST)
-Message-ID: <530B7E63.2070908@kernel.dk>
-Date: Mon, 24 Feb 2014 09:16:19 -0800
-From: Jens Axboe <axboe@kernel.dk>
-MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: linux-kernel@vger.kernel.org, Mike Miller <mike.miller@hp.com>,
-	Asai Thambi S P <asamymuthupa@micron.com>,
-	Joshua Morris <josh.h.morris@us.ibm.com>,
-	Philip Kelleher <pjk1939@linux.vnet.ibm.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	iss_storagedev@hp.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/9] block: Use pci_enable_msix_range() instead of pci_enable_msix()
-References: <cover.1392799751.git.agordeev@redhat.com> <20140221234613.GE29129@kernel.dk> <20140222093843.GB27897@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20140222093843.GB27897@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:1767 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750748AbaBZJlR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 26 Feb 2014 04:41:17 -0500
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>,
+	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
+	Jens Axboe <axboe@kernel.dk>, linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/2] cciss: Use pci_enable_msix_exact() instead of pci_enable_msix()
+Date: Wed, 26 Feb 2014 10:02:42 +0100
+Message-Id: <1a724c5d82ae6476960e4beedefdd65217bb6832.1393404496.git.agordeev@redhat.com>
+In-Reply-To: <cover.1393404496.git.agordeev@redhat.com>
+References: <cover.1393404496.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2014-02-22 01:38, Alexander Gordeev wrote:
-> On Fri, Feb 21, 2014 at 03:46:13PM -0800, Jens Axboe wrote:
->> On Wed, Feb 19 2014, Alexander Gordeev wrote:
->>> As result of deprecation of MSI-X/MSI enablement functions
->>> pci_enable_msix() and pci_enable_msi_block() all drivers
->>> using these two interfaces need to be updated to use the
->>> new pci_enable_msi_range() and pci_enable_msix_range()
->>> interfaces.
->>
->> Thanks. Applied 3-4, and 6-9 (didn't get the others).
->
-> Oh, I just realized I posted outdated series, sorry for that :(
-> Out of applied patch 4 is not needed and patch 9 needs a rework.
->
-> Should I repost the whole series?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Send a revised series against the previous, since they are already 
-committed.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Mike Miller <mike.miller@hp.com>
+Cc: iss_storagedev@hp.com
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/block/cciss.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 73894ca..4595c22 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -4080,7 +4080,7 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
+ 		goto default_int_mode;
+ 
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
+-		err = pci_enable_msix(h->pdev, cciss_msix_entries, 4);
++		err = pci_enable_msix_exact(h->pdev, cciss_msix_entries, 4);
+ 		if (!err) {
+ 			h->intr[0] = cciss_msix_entries[0].vector;
+ 			h->intr[1] = cciss_msix_entries[1].vector;
+@@ -4088,10 +4088,6 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
+ 			h->intr[3] = cciss_msix_entries[3].vector;
+ 			h->msix_vector = 1;
+ 			return;
+-		}
+-		if (err > 0) {
+-			dev_warn(&h->pdev->dev,
+-				"only %d MSI-X vectors available\n", err);
+ 		} else {
+ 			dev_warn(&h->pdev->dev,
+ 				"MSI-X init failed %d\n", err);
 -- 
-Jens Axboe
+1.7.7.6
 
