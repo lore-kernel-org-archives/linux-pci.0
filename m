@@ -1,66 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:53429 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932083AbaBUPVQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 10:21:16 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Gerlando Falauto <gerlando.falauto@keymile.com>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Gregory =?ISO-8859-1?Q?Cl=E9ment?=
-	<gregory.clement@free-electrons.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: pci-mvebu driver on km_kirkwood
-Date: Fri, 21 Feb 2014 16:20:45 +0100
-Message-ID: <2344852.BKudsNuPXM@wuerfel>
-In-Reply-To: <20140221161108.50a4c932@skate>
-References: <53039894.10905@keymile.com> <2193926.ls2teBqnfK@wuerfel> <20140221161108.50a4c932@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 26 Feb 2014 22:48:44 +0000
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Markus Lidel <Markus.Lidel@shadowconnect.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/4] i2o: Use pci_bus_alloc_resource(), not
+ allocate_resource() directly
+Message-ID: <20140226224844.219fe0ac@alan.etchedpixels.co.uk>
+In-Reply-To: <20140226190927.9616.43043.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+	<20140226190927.9616.43043.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 21 February 2014 16:11:08 Thomas Petazzoni wrote:
-> On Fri, 21 Feb 2014 16:05:16 +0100, Arnd Bergmann wrote:
-> 
-> > >  *) I don't know if the algorithm to split the BAR into multiple
-> > >     windows is going to be trivial.
-> > 
-> > The easiest solution would be to special case 'size is between
-> > 128MB+1 and 192MB' if that turns out to be the most interesting
-> > case. It's easy enough to make the second window smaller than 64MB
-> > if we want.
-> > 
-> > If we want things to be a little fancier, we could use:
-> > 
-> >       switch (size) {
-> >               case (SZ_32M+1) ... (SZ_32M+SZ_16M):
-> >                       size2 = size - SZ_32M;
-> >                       size -= SZ_32M;
-> >                       break;
-> >               case (SZ_64M+1) ... (SZ_64M+SZ_32M):
-> >                       size2 = size - SZ_64M;
-> >                       size -= SZ_64M;
-> >                       break;
-> >               case (SZ_128M+1) ... (SZ_128M+SZ_64M):
-> >                       size2 = size - SZ_128M;
-> >                       size -= SZ_128M;
-> >                       break;
-> >       };
-> 
-> What if the size of your BAR is 128 MB + 64 MB + 32 MB ? Then you need
-> three windows, and your algorithm doesn't work 
+On Wed, 26 Feb 2014 12:09:27 -0700
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-I was hoping we could avoid using more than two windows.
-With the algorithm above we would round up to 256MB and
-fail if that doesn't fit, which is the same thing that
-happens when you run out of space.
+> Convert i2o_res_alloc() to use pci_bus_alloc_resource() rather than
+> pci_find_parent_resource() and allocate_resource().  We don't have a
+> resource to start with, so pci_find_parent_resource() can't do anything
+> useful: a bus may have several memory resources available, so there might
+> be several possible parents.  This is more likely on root buses because
+> host bridges may have any number of apertures.
+> 
+> I'm pretty sure this didn't work in the first place because it passed
+> size == min == max to allocate_resource().  The min and max parameters are
+> constraints on the *addresses* of the resource, not on its size, so I think
+> it was impossible for allocate_resource() to succeed.
 
-	Arnd
+I don't think many i2o controllers ever used that path, and I doubt any
+in normal use did as the vision of offloading for devices on the host bus
+basically never happened (it happened even less than i2o)
+
+A rather more sensible question might be "If i2o went away is there
+anyone who would even notice". About the only devices that ever used i2o
+in the real world (AMI MegaRAID and some FC stuff) had native firmware or
+modes that worked better anyway.
+
+Alan
