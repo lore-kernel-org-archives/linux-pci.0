@@ -1,84 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18482 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752293AbaBSGHX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 01:07:23 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:57061 "EHLO
+	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750748AbaBZGbn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 01:31:43 -0500
+Message-ID: <530D8A40.2070707@st.com>
+Date: Wed, 26 Feb 2014 12:01:28 +0530
+From: Ajay Khandelwal <ajay.khandelwal@st.com>
+MIME-Version: 1.0
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: "jg1.han@samsung.com" <jg1.han@samsung.com>,
+	Mohit KUMAR DCG <Mohit.KUMAR@st.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: [Patch Part2 V2 07/17] iommu/vt-d: free resources if failed to create domain for PCIe endpoint
-Date: Wed, 19 Feb 2014 14:07:27 +0800
-Message-Id: <1392790057-32434-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI:designware:Fix iATU programming for cfg1, io
+ and mem viewport
+References: <17773172.14231392946292058.JavaMail.weblogic@epml01> <5306E3FE.1070405@ti.com>
+In-Reply-To: <5306E3FE.1070405@ti.com>
+Content-Type: text/plain; charset="EUC-KR"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance function get_domain_for_dev() to release allocated resources
-if failed to create domain for PCIe endpoint, otherwise the allocated
-resources will get lost.
+Hi Kishon,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/iommu/intel-iommu.c |   15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+On 2/21/2014 10:58 AM, Kishon Vijay Abraham I wrote:
+> Thanks for the patch. I have just burnt my PCIE-to-PCI bridge card :-s Will
+> test this once I get a new card.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 67b114e..503cc73 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -2015,7 +2015,7 @@ static int dmar_insert_dev_info(int segment, int bus, int devfn,
- /* domain is initialized */
- static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- {
--	struct dmar_domain *domain;
-+	struct dmar_domain *domain, *free = NULL;
- 	struct intel_iommu *iommu;
- 	struct dmar_drhd_unit *drhd;
- 	struct pci_dev *dev_tmp;
-@@ -2062,17 +2062,16 @@ static struct dmar_domain *get_domain_for_dev(struct pci_dev *pdev, int gaw)
- 		free_domain_mem(domain);
- 		goto error;
- 	}
--	if (domain_init(domain, gaw)) {
--		domain_exit(domain);
-+	free = domain;
-+	if (domain_init(domain, gaw))
- 		goto error;
--	}
- 
- 	/* register pcie-to-pci device */
- 	if (dev_tmp) {
--		if (dmar_insert_dev_info(segment, bus, devfn, NULL, &domain)) {
--			domain_exit(domain);
-+		if (dmar_insert_dev_info(segment, bus, devfn, NULL, &domain))
- 			goto error;
--		}
-+		else
-+			free = NULL;
- 	}
- 
- found_domain:
-@@ -2080,6 +2079,8 @@ found_domain:
- 				 pdev, &domain) == 0)
- 		return domain;
- error:
-+	if (free)
-+		domain_exit(free);
- 	/* recheck it here, maybe others set it */
- 	return find_domain(pdev);
- }
--- 
-1.7.10.4
+were you able to solve issue in PCIE-to-PCI bridge.
 
+On SPEAr I see issues with PCIe to PCI bridge and PCIe to PCIe switch.
+
+Imprecise external abort is generated, providing hook for abort(similar
+to imx6) solves this.
+
+Thanks and Regards,
+Ajay
