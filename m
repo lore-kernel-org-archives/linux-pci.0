@@ -1,66 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62645 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755371AbaBRKLW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:11:22 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 12/35] e1000e: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:11:41 +0100
-Message-Id: <535cdf2dd9a61b8272b6323b72f1dca6a2460ab3.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:62151 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754024AbaBZThr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:47 -0500
+Received: by mail-ie0-f178.google.com with SMTP id ar20so1131934iec.9
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:46 -0800 (PST)
+Subject: [PATCH 6/9] PCI: Check IORESOURCE_UNSET before updating BAR
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:37:44 -0700
+Message-ID: <20140226193744.10125.99627.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Check to make sure we don't update a BAR with an address we haven't
+assigned.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-Cc: Bruce Allan <bruce.w.allan@intel.com>
-Cc: e1000-devel@lists.sourceforge.net
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+If we haven't assigned an address to a resource, we shouldn't write it to a
+BAR.  This isn't a problem for the usual path via pci_assign_resource(),
+which clears IORESOURCE_UNSET before calling pci_update_resource(), but
+paths like pci_restore_bars() can call this for resources we haven't
+assigned.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/net/ethernet/intel/e1000e/netdev.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/pci/setup-res.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index 6d91933..e6f8961d 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -2038,13 +2038,16 @@ void e1000e_set_interrupt_capability(struct e1000_adapter *adapter)
- 							       msix_entry),
- 							GFP_KERNEL);
- 			if (adapter->msix_entries) {
-+				struct e1000_adapter *a = adapter;
-+
- 				for (i = 0; i < adapter->num_vectors; i++)
- 					adapter->msix_entries[i].entry = i;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 725d5b28398c..7f7652176fc5 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -44,6 +44,9 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 	if (!res->flags)
+ 		return;
  
--				err = pci_enable_msix(adapter->pdev,
--						      adapter->msix_entries,
--						      adapter->num_vectors);
--				if (err == 0)
-+				err = pci_enable_msix_range(a->pdev,
-+							    a->msix_entries,
-+							    a->num_vectors,
-+							    a->num_vectors);
-+				if (err > 0)
- 					return;
- 			}
- 			/* MSI-X failed, so fall through and try MSI */
--- 
-1.7.7.6
++	if (res->flags & IORESOURCE_UNSET)
++		return;
++
+ 	/*
+ 	 * Ignore non-moveable resources.  This might be legacy resources for
+ 	 * which no functional BAR register exists or another important
 
