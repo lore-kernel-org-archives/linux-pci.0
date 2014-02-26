@@ -1,119 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:52781 "EHLO
-	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751026AbaB0NHN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:07:13 -0500
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 2/4] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-Date: Thu, 27 Feb 2014 13:06:40 +0000
-Message-Id: <1393506402-11474-3-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:42636 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753789AbaBZThZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:37:25 -0500
+Received: by mail-ig0-f174.google.com with SMTP id h18so1516171igc.1
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:37:25 -0800 (PST)
+Subject: [PATCH 3/9] PCI: Remove pci_find_parent_resource() use for
+ allocation
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org
+Date: Wed, 26 Feb 2014 12:37:23 -0700
+Message-ID: <20140226193723.10125.15799.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-the creation order has been changed for no good reason. Revert the order of
-creation as we are going to depend on the pci_host_bridge structure to retrieve the
-domain number of the root bus.
+If the resource hasn't been allocated yet, pci_find_parent_resource() is
+documented as returning the region "where it should be allocated from."
+This is impossible in general because there may be several candidates: a
+prefetchable BAR can be put in either a prefetchable or non-prefetchable
+window, a transparent bridge may have overlapping positively- and
+subtractively-decoded windows, and a root bus may have several windows of
+the same type.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Allocation should be done by pci_bus_alloc_resource(), which iterates
+through all bus resources and looks for the best match, e.g., one with the
+desired prefetchability attributes, and falls back to less-desired
+possibilities.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6e34498..78ccba0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
- 	kfree(bridge);
- }
- 
--static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-+static struct pci_host_bridge *pci_alloc_host_bridge(void)
+The only valid use of pci_find_parent_resource() is to find the parent of
+an already-allocated resource so we can claim it via request_resource(),
+and all we need for that is a bus region of the correct type that contains
+the resource.
+
+Note that like 8c8def26bfaa ("PCI: allow matching of prefetchable resources
+to non-prefetchable windows"), this depends on pci_bus_for_each_resource()
+iterating through positively-decoded regions before subtractively-decoded
+ones.  We prefer not to return a subtractively-decoded region because
+requesting from it will likely conflict with the overlapping positively-
+decoded window (see Launchpad report below).
+
+Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/424142
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ drivers/pci/pci.c |   39 +++++++++++++++++++++++----------------
+ 1 file changed, 23 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1febe90831b4..99293fa40db9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -401,33 +401,40 @@ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+  * @res: child resource record for which parent is sought
+  *
+  *  For given resource region of given device, return the resource
+- *  region of parent bus the given region is contained in or where
+- *  it should be allocated from.
++ *  region of parent bus the given region is contained in.
+  */
+ struct resource *
+ pci_find_parent_resource(const struct pci_dev *dev, struct resource *res)
  {
- 	struct pci_host_bridge *bridge;
+ 	const struct pci_bus *bus = dev->bus;
++	struct resource *r;
+ 	int i;
+-	struct resource *best = NULL, *r;
  
-@@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- 		return NULL;
- 
- 	INIT_LIST_HEAD(&bridge->windows);
--	bridge->bus = b;
- 	return bridge;
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		if (!r)
+ 			continue;
+-		if (res->start && !(res->start >= r->start && res->end <= r->end))
+-			continue;	/* Not contained */
+-		if ((res->flags ^ r->flags) & (IORESOURCE_IO | IORESOURCE_MEM))
+-			continue;	/* Wrong type */
+-		if (!((res->flags ^ r->flags) & IORESOURCE_PREFETCH))
+-			return r;	/* Exact match */
+-		/* We can't insert a non-prefetch resource inside a prefetchable parent .. */
+-		if (r->flags & IORESOURCE_PREFETCH)
+-			continue;
+-		/* .. but we can put a prefetchable resource inside a non-prefetchable one */
+-		if (!best)
+-			best = r;
++		if (res->start && resource_contains(r, res)) {
++
++			/*
++			 * If the window is prefetchable but the BAR is
++			 * not, the allocator made a mistake.
++			 */
++			if (r->flags & IORESOURCE_PREFETCH &&
++			    !(res->flags & IORESOURCE_PREFETCH))
++				return NULL;
++
++			/*
++			 * If we're below a transparent bridge, there may
++			 * be both a positively-decoded aperture and a
++			 * subtractively-decoded region that contain the BAR.
++			 * We want the positively-decoded one, so this depends
++			 * on pci_bus_for_each_resource() giving us those
++			 * first.
++			 */
++			return r;
++		}
+ 	}
+-	return best;
++	return NULL;
  }
  
-@@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	char bus_addr[64];
- 	char *fmt;
- 
-+	bridge = pci_alloc_host_bridge();
-+	if (!bridge)
-+		return NULL;
-+
-+	bridge->dev.parent = parent;
-+	bridge->dev.release = pci_release_host_bridge_dev;
-+	error = pcibios_root_bridge_prepare(bridge);
-+	if (error) {
-+		kfree(bridge);
-+		return NULL;
-+	}
-+
- 	b = pci_alloc_bus();
- 	if (!b)
--		return NULL;
-+		goto err_out;
- 
- 	b->sysdata = sysdata;
- 	b->ops = ops;
-@@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	if (b2) {
- 		/* If we already got to this bus through a different bridge, ignore it */
- 		dev_dbg(&b2->dev, "bus already known\n");
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 
--	bridge = pci_alloc_host_bridge(b);
--	if (!bridge)
--		goto err_out;
--
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_host_bridge_dev;
-+	bridge->bus = b;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
--	error = pcibios_root_bridge_prepare(bridge);
--	if (error) {
--		kfree(bridge);
--		goto err_out;
--	}
--
- 	error = device_register(&bridge->dev);
- 	if (error) {
- 		put_device(&bridge->dev);
--		goto err_out;
-+		goto err_bus_out;
- 	}
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
-@@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- class_dev_reg_err:
- 	put_device(&bridge->dev);
- 	device_unregister(&bridge->dev);
--err_out:
-+err_bus_out:
- 	kfree(b);
-+err_out:
-+	kfree(bridge);
- 	return NULL;
- }
- 
--- 
-1.9.0
+ /**
 
