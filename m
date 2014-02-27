@@ -1,57 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:51644 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752293AbaBEQyu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Feb 2014 11:54:50 -0500
-Date: Wed, 5 Feb 2014 17:54:32 +0100
-From: Andrew Lunn <andrew@lunn.ch>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, bhelgaas@google.com,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux ARM <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] PCI: MVEBU: Use Device ID and revision from underlying
- endpoint
-Message-ID: <20140205165432.GD29860@lunn.ch>
-References: <1391597749-29807-1-git-send-email-andrew@lunn.ch>
- <20140205172110.22507687@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140205172110.22507687@skate>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50525 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751646AbaB0NKa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:10:30 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2 2/3] arm64: Extend the PCI I/O space to 16MB
+Date: Thu, 27 Feb 2014 13:09:58 +0000
+Message-Id: <1393506599-11561-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > @@ -388,7 +380,8 @@ static void mvebu_sw_pci_bridge_init(struct mvebu_pcie_port *port)
-> >  
-> >  	bridge->class = PCI_CLASS_BRIDGE_PCI;
-> >  	bridge->vendor = PCI_VENDOR_ID_MARVELL;
-> 
-> This could also have been replaced by:
-> 
-> 	bridge->vendor = mvebu_readl(port, PCIE_DEV_ID_OFF) & 0xff;
+From: Catalin Marinas <catalin.marinas@arm.com>
 
-O.K, but do we ever expect it not to be PCI_VENDOR_ID_MARVELL on the
-underlying hardware?
+The patch moves the PCI I/O space (currently at 64K) before the
+earlyprintk mapping and extends it to 16MB.
 
-> 
-> > -	bridge->device = MARVELL_EMULATED_PCI_PCI_BRIDGE_ID;
-> > +	bridge->device = mvebu_readl(port, PCIE_DEV_ID_OFF) >> 16;
-> > +	bridge->revision = mvebu_readl(port, PCIE_DEV_REV_OFF) & 0xff;
-> 
-> On Armada 370 and XP, this field is apparently always 0x0, so not very
-> useful. But if it's useful on other mvebu SoCs, that's fine, it's just
-> an informative field anyway.
+Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
 
-Humm, that should be the stepping, unless i have made a mistake. The
-code Gregory wrote for mvebu-soc-id.c does:
+diff --git a/Documentation/arm64/memory.txt b/Documentation/arm64/memory.txt
+index 5e054bf..85e24c4 100644
+--- a/Documentation/arm64/memory.txt
++++ b/Documentation/arm64/memory.txt
+@@ -35,11 +35,13 @@ ffffffbc00000000	ffffffbdffffffff	   8GB		vmemmap
+ 
+ ffffffbe00000000	ffffffbffbbfffff	  ~8GB		[guard, future vmmemap]
+ 
+-ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
++ffffffbffa000000	ffffffbffaffffff	  16MB		PCI I/O space
++
++ffffffbffb000000	ffffffbffbbfffff	  12MB		[guard]
+ 
+-ffffffbffbe00000	ffffffbffbe0ffff	  64KB		PCI I/O space
++ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
+ 
+-ffffffbffbe10000	ffffffbcffffffff	  ~2MB		[guard]
++ffffffbffbe00000	ffffffbffbffffff	   2MB		[guard]
+ 
+ ffffffbffc000000	ffffffbfffffffff	  64MB		modules
+ 
+@@ -60,11 +62,13 @@ fffffdfc00000000	fffffdfdffffffff	   8GB		vmemmap
+ 
+ fffffdfe00000000	fffffdfffbbfffff	  ~8GB		[guard, future vmmemap]
+ 
+-fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
++fffffdfffa000000	fffffdfffaffffff	  16MB		PCI I/O space
++
++fffffdfffb000000	fffffdfffbbfffff	  12MB		[guard]
+ 
+-fffffdfffbe00000	fffffdfffbe0ffff	  64KB		PCI I/O space
++fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
+ 
+-fffffdfffbe10000	fffffdfffbffffff	  ~2MB		[guard]
++fffffdfffbe00000	fffffdfffbffffff	   2MB		[guard]
+ 
+ fffffdfffc000000	fffffdffffffffff	  64MB		modules
+ 
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index 4cc813e..7846a6b 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -121,7 +121,7 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+  *  I/O port access primitives.
+  */
+ #define IO_SPACE_LIMIT		0xffff
+-#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
++#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
+ 
+ static inline u8 inb(unsigned long addr)
+ {
+-- 
+1.9.0
 
-       /* SoC ID */
-        soc_dev_id = readl(pci_base + PCIE_DEV_ID_OFF) >> 16;
-
-        /* SoC revision */
-        soc_rev = readl(pci_base + PCIE_DEV_REV_OFF) & SOC_REV_MASK;
-
-However, the box i'm testing on has stepping 0, so it is hard to test.
-Could you test this in an OpenBlocks AX3 B0, or some other B0 device?
-
-Thanks
-	Andrew
