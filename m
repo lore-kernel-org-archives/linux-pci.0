@@ -1,60 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from know-smtprelay-omc-10.server.virginmedia.net ([80.0.253.74]:47703
-	"EHLO know-smtprelay-omc-10.server.virginmedia.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755035AbaBRKIc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Feb 2014 05:08:32 -0500
-Message-ID: <1392718107.15829.12.camel@artifact>
-Subject: Re: pci-3.14 resource alloc
-From: Steven Newbury <steve@snewbury.org.uk>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Tue, 18 Feb 2014 10:08:27 +0000
-In-Reply-To: <CAE9FiQV3H_nxH0gxcM0kW4uLm6b_qmHT9hRQUVY_4xPqjpvMtA@mail.gmail.com>
-References: <1390773698.3450.12.camel@artifact>
-	 <CAE9FiQVD=oVHM5WJgSJ5cNpXZ1NYy9E_pcGWfjKnmD9OZoHHsw@mail.gmail.com>
-	 <1391643656.1067.1.camel@artifact>
-	 <CAE9FiQV8jutRhaBicL4kjqVYd07FzHmNoSN3NxdA2TYvOc_KUg@mail.gmail.com>
-	 <z9zi9m.n0zpxd.1hgeaud-qmf@mail.snewbury.org.uk>
-	 <i9nn22.n0zs79.1hgeaud-qmf@mail.snewbury.org.uk>
-	 <1392392764.3520.11.camel@devel-n900>
-	 <CAE9FiQV3H_nxH0gxcM0kW4uLm6b_qmHT9hRQUVY_4xPqjpvMtA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.17.13]:54031 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbaB0Nte (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:49:34 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linaro-kernel@lists.linaro.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic host_bridge from device tree
+Date: Thu, 27 Feb 2014 14:48:44 +0100
+Message-ID: <7910042.azG0y0Ppv9@wuerfel>
+In-Reply-To: <18746655.qWHLpMg2Yy@wuerfel>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com> <1393506402-11474-5-git-send-email-Liviu.Dudau@arm.com> <18746655.qWHLpMg2Yy@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-02-14 at 11:11 -0800, Yinghai Lu wrote:
-> On Fri, Feb 14, 2014 at 7:46 AM, Steven Newbury <steve@snewbury.org.uk> wrote:
-> >>
-> >> Oh, never mind! I didn't notice pref_bar has been renamed to
-> >> assign_pref_bars. It's working now! :)
-> >
-> > There's no pci bridge/bus hotplug though. Docking doesn't reveal the
-> > pci-e->pci bridge or the (radeon) devices on the other side.
+On Thursday 27 February 2014 14:38:32 Arnd Bergmann wrote:
+> > +     pr_debug("Parsing ranges property...\n");
+> > +     for_each_of_pci_range(&parser, &range) {
+> > +             /* Read next ranges element */
+> > +             pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+> > +                             range.pci_space, range.pci_addr);
+> > +             pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+> > +                                     range.cpu_addr, range.size);
+> > +
+> > +             /*
+> > +              * If we failed translation or got a zero-sized region
+> > +              * then skip this range
+> > +              */
+> > +             if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> > +                     continue;
+> > +
+> > +             res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> > +             if (!res) {
+> > +                     err = -ENOMEM;
+> > +                     goto bridge_ranges_nomem;
+> > +             }
+> > +
+> > +             of_pci_range_to_resource(&range, dev, res);
+> > +
+> > +             if (resource_type(res) == IORESOURCE_IO)
+> > +                     *io_base = range.cpu_addr;
+> > +
+> > +             pci_add_resource_offset(resources, res,
+> > +                             res->start - range.pci_addr);
+> > +     }
 > 
-> oh, no. could be other regression in linus tree or pci/next.
+> This is not the correct resource for I/O space at all. Please talk
+> to Will, I've been over this with him in detail and he probably
+> understands it now. I assume you are both working in the same
+> building.
 > 
 
-Sorry about taking a while to get back to you.
+Sorry, I initially missed part of your changes in patch 1.
+I think it's actually correct now.
 
-Previously I needed the busn work to get it working, this was included
-in the resource-alloc branch.  It never worked on mainline, the bridge
-used to show up but never get scanned.  Now it's not showing up at all
-on hotplug.  It could be a dock driver regression.
-
-> Can you check if linus tree could reveal pci-e->pci bridge?
-> 
-I'll give it a go.
-
-> or do you use iommu/dmar with the system?
-> 
-No, the only unusual option is I use pci=nocrs since the bios is
-completely ignorant of support for 64bit BARs.   
-> Thanks
-> 
-> Yinghai
-
-
-
+	Arnd
