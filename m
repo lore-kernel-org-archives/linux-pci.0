@@ -1,66 +1,293 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:42027 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752089AbaBJK0U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Feb 2014 05:26:20 -0500
-Received: by mail-bk0-f45.google.com with SMTP id mz11so1344728bkb.32
-        for <linux-pci@vger.kernel.org>; Mon, 10 Feb 2014 02:26:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAG-2HqWYZtTMNRvLwWRy-5_5yb=EasiWzpL2xc0_42SyP=bg1w@mail.gmail.com>
-References: <1378302428-19758-1-git-send-email-teg@jklm.no>
- <mj+md-20130904.134928.12262.nikam@ucw.cz> <CAG-2HqWcnZ-z7EbDd0aAj6y_Ho6szfRZUiK0psEnmoz17Kw-xA@mail.gmail.com>
- <mj+md-20131110.114139.9646.albireo@ucw.cz> <CAG-2HqXsEBB_nxUF4gza-eTsUjmysYR7iPEjJPUFyR1rC2KGMg@mail.gmail.com>
- <CAPXgP12MLL_Z5gyrCndQLRT6SR_TJi9xHp1HkHMX1ahwnxx3yw@mail.gmail.com>
- <mj+md-20131215.091609.28546.nikam@ucw.cz> <CAPXgP10+1WtX8_xN+QSHvKws01hbKhP3FN95sXk9EtezdSPtqg@mail.gmail.com>
- <mj+md-20131215.110132.29802.nikam@ucw.cz> <CAG-2HqUGcBB1-YUvLZpqm1EZ69OSksa+iGcCEqVWxYsehDqx8Q@mail.gmail.com>
- <CAG-2HqWYZtTMNRvLwWRy-5_5yb=EasiWzpL2xc0_42SyP=bg1w@mail.gmail.com>
-From: Tom Gundersen <teg@jklm.no>
-Date: Mon, 10 Feb 2014 11:25:57 +0100
-Message-ID: <CAG-2HqVS1avGdvi6SFc1dq0sCzcA4z5sZUBH4WhpNN87tZrnxA@mail.gmail.com>
-Subject: Re: [PATCH RESEND][pciutils] libpci: pci_id_lookup - add udev/hwdb support
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Kay Sievers <kay@vrfy.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:50509 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750742AbaB0NK2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:10:28 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2 3/3] arm64: Add architecture support for PCI
+Date: Thu, 27 Feb 2014 13:09:59 +0000
+Message-Id: <1393506599-11561-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ping?
+Use the generic host bridge functions to provide support for
+PCI Express on arm64. There is no support for ISA memory.
 
-On Wed, Jan 29, 2014 at 5:13 PM, Tom Gundersen <teg@jklm.no> wrote:
-> Ping?
->
-> On 30 Dec 2013 19:53, "Tom Gundersen" <teg@jklm.no> wrote:
->>
->> Hi Martin,
->>
->> On Sun, Dec 15, 2013 at 12:33 PM, Martin Mares <mj@ucw.cz> wrote:
->> > I see that a mechanism for fast lookup of hardware identification data
->> > is needed. However, why should such a mechanism depend on udev, systemd,
->> > or Linux in general?
->> >
->> > What I would really like to have is a universal library for HW lookup,
->> > independent of anything else and widely portable. All the hardware data
->> > would be provided by other packages -- pci.ids, usb.ids, kernel modules,
->> > etc. -- and compiled to a binary format available for instant queries.
->>
->> I'd like to reach an agreement on this patch, so I'll resend it with
->> the changes we agreed on so far. Please let me know if further changes
->> are needed.
->>
->> If I understand correctly, you are ok with the functionality hwdb
->> provides, but would have preferred an OS-agnostic solution. However,
->> as no such solution currently exist, and the patch adding hwdb support
->> is pretty minimal and self-contained, would you be happy taking that
->> for now, and rather revisit the topic if and when a generic solution
->> appears?
->>
->> FWIW, I made the analogous change to lsusb some time ago [0], so would
->> be cool to get this all done.
->>
->> Cheers,
->>
->> Tom
->>
->> [0]:
->> <https://github.com/gregkh/usbutils/commit/c6282a7a0e20fbb9c56837f055843635a43ba8b4>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 27bbcfc..d1c8568 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -62,7 +62,7 @@ config MMU
+ 	def_bool y
+ 
+ config NO_IOPORT
+-	def_bool y
++	def_bool y if !PCI
+ 
+ config STACKTRACE_SUPPORT
+ 	def_bool y
+@@ -134,6 +134,23 @@ menu "Bus support"
+ config ARM_AMBA
+ 	bool
+ 
++config PCI
++	bool "PCI support"
++	help
++	  This feature enables support for PCIe bus system. If you say Y
++	  here, the kernel will include drivers and infrastructure code
++	  to support PCIe bus devices.
++
++config PCI_DOMAINS
++	def_bool PCI
++
++config PCI_SYSCALL
++	def_bool PCI
++
++source "drivers/pci/Kconfig"
++source "drivers/pci/pcie/Kconfig"
++source "drivers/pci/hotplug/Kconfig"
++
+ endmenu
+ 
+ menu "Kernel Features"
+diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
+index 71c53ec..46924bc 100644
+--- a/arch/arm64/include/asm/Kbuild
++++ b/arch/arm64/include/asm/Kbuild
+@@ -26,6 +26,7 @@ generic-y += mman.h
+ generic-y += msgbuf.h
+ generic-y += mutex.h
+ generic-y += pci.h
++generic-y += pci-bridge.h
+ generic-y += poll.h
+ generic-y += posix_types.h
+ generic-y += resource.h
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index 7846a6b..67463a5 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -120,7 +120,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+ /*
+  *  I/O port access primitives.
+  */
+-#define IO_SPACE_LIMIT		0xffff
++#define arch_has_dev_port()	(1)
++#define IO_SPACE_LIMIT		0x1ffffff
+ #define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
+ 
+ static inline u8 inb(unsigned long addr)
+diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+new file mode 100644
+index 0000000..3edf9e0
+--- /dev/null
++++ b/arch/arm64/include/asm/pci.h
+@@ -0,0 +1,47 @@
++#ifndef __ASM_PCI_H
++#define __ASM_PCI_H
++#ifdef __KERNEL__
++
++#include <linux/types.h>
++#include <linux/slab.h>
++#include <linux/dma-mapping.h>
++
++#include <asm/io.h>
++#include <asm-generic/pci-bridge.h>
++#include <asm-generic/pci-dma-compat.h>
++
++#define PCIBIOS_MIN_IO		0x1000
++#define PCIBIOS_MIN_MEM		0
++
++/*
++ * Set to 1 if the kernel should re-assign all PCI bus numbers
++ */
++#define pcibios_assign_all_busses() \
++	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
++
++/*
++ * PCI address space differs from physical memory address space
++ */
++#define PCI_DMA_BUS_IS_PHYS	(0)
++
++extern int isa_dma_bridge_buggy;
++
++static inline int pci_domain_nr(struct pci_bus *bus)
++{
++	struct pci_host_bridge *bridge = to_pci_host_bridge(bus->bridge);
++
++	if (bridge)
++		return bridge->domain_nr;
++
++	return 0;
++}
++
++static inline int pci_proc_domain(struct pci_bus *bus)
++{
++	return pci_domain_nr(bus);
++}
++
++extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
++
++#endif  /* __KERNEL__ */
++#endif  /* __ASM_PCI_H */
+diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+index 2d4554b..64fc479 100644
+--- a/arch/arm64/kernel/Makefile
++++ b/arch/arm64/kernel/Makefile
+@@ -20,6 +20,7 @@ arm64-obj-$(CONFIG_HAVE_HW_BREAKPOINT)+= hw_breakpoint.o
+ arm64-obj-$(CONFIG_EARLY_PRINTK)	+= early_printk.o
+ arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)	+= sleep.o suspend.o
+ arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
++arm64-obj-$(CONFIG_PCI)			+= pci.o
+ 
+ obj-y					+= $(arm64-obj-y) vdso/
+ obj-m					+= $(arm64-obj-m)
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+new file mode 100644
+index 0000000..496df41
+--- /dev/null
++++ b/arch/arm64/kernel/pci.c
+@@ -0,1 +1,126 @@
++/*
++ * Code borrowed from powerpc/kernel/pci-common.c
++ *
++ * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
++ * Copyright (C) 2014 ARM Ltd.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/init.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/mm.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/slab.h>
++
++#include <asm/pci-bridge.h>
++
++
++/*
++ * Called after each bus is probed, but before its children are examined
++ */
++void pcibios_fixup_bus(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	struct resource *res;
++	int i;
++
++	if (!pci_is_root_bus(bus)) {
++		pci_read_bridge_bases(bus);
++
++		pci_bus_for_each_resource(bus, res, i) {
++			if (!res || !res->flags || res->parent)
++				continue;
++
++			/*
++			 * If we are going to reassign everything, we can
++			 * shrink the P2P resource to have zero size to
++			 * save space
++			 */
++			if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
++				res->flags |= IORESOURCE_UNSET;
++				res->start = 0;
++				res->end = -1;
++				continue;
++			}
++		}
++	}
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		/* Ignore fully discovered devices */
++		if (dev->is_added)
++			continue;
++
++		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
++
++		/* Read default IRQs and fixup if necessary */
++		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++	}
++}
++EXPORT_SYMBOL(pcibios_fixup_bus);
++
++/*
++ * We don't have to worry about legacy ISA devices, so nothing to do here
++ */
++resource_size_t pcibios_align_resource(void *data, const struct resource *res,
++				resource_size_t size, resource_size_t align)
++{
++	return ALIGN(res->start, align);
++}
++EXPORT_SYMBOL(pcibios_align_resource);
++
++int pcibios_enable_device(struct pci_dev *dev, int mask)
++{
++	return pci_enable_resources(dev, mask);
++}
++
++void pcibios_fixup_bridge_ranges(struct list_head *resources)
++{
++}
++
++#define IO_SPACE_PAGES	((IO_SPACE_LIMIT + 1) / PAGE_SIZE)
++static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
++
++unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr)
++{
++	unsigned long start, len, virt_start;
++	int err;
++
++	if (res->end > IO_SPACE_LIMIT)
++		return -EINVAL;
++
++	/*
++	 * try finding free space for the whole size first,
++	 * fall back to 64K if not available
++	 */
++	len = resource_size(res);
++	start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
++				res->start / PAGE_SIZE, len / PAGE_SIZE, 0);
++	if (start == IO_SPACE_PAGES && len > SZ_64K) {
++		len = SZ_64K;
++		start = 0;
++		start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
++					start, len / PAGE_SIZE, 0);
++	}
++
++	/* no 64K area found */
++	if (start == IO_SPACE_PAGES)
++		return -ENOMEM;
++
++	/* ioremap physical aperture to virtual aperture */
++	virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
++	err = ioremap_page_range(virt_start, virt_start + len,
++				phys_addr, __pgprot(PROT_DEVICE_nGnRE));
++	if (err)
++		return err;
++
++	bitmap_set(pci_iospace, start, len / PAGE_SIZE);
++
++	/* return io_offset */
++	return start * PAGE_SIZE - res->start;
++}
+-- 
+1.9.0
+
