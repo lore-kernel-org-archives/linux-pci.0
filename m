@@ -1,95 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:19090 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753988AbaBUBwj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Feb 2014 20:52:39 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0N1B00BNOP7NGRB0@mailout4.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 21 Feb 2014 10:52:35 +0900 (KST)
-Date: Fri, 21 Feb 2014 01:52:34 +0000 (GMT)
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH] PCI: designware: Remove unnecessary use of 'conf_lock'
- spinlock
-To: Andrew Murray <amurray@embedded-bits.co.uk>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"mohit.kumar@st.com" <mohit.kumar@st.com>, r65037@freescale.com,
-	shawn.guo@linaro.org, Jingoo Han <jg1.han@samsung.com>
-Reply-to: jg1.han@samsung.com
-MIME-version: 1.0
-Content-type: text/plain; charset=euc-kr
-MIME-version: 1.0
-Message-id: <25373032.16121392947553972.JavaMail.weblogic@epml01>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 27 Feb 2014 19:12:59 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
+ resources.
+Message-ID: <20140227191259.GA31753@bart.dudau.co.uk>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393506402-11474-2-git-send-email-Liviu.Dudau@arm.com>
+ <20140227181951.GC24656@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140227181951.GC24656@obsidianresearch.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpZGF5LCBGZWJydWFyeSAyMSwgMjAxNCA2OjQyIEFNLCBBbmRyZXcgTXVycmF5IHdyb3Rl
-Og0KPiANCj4gU2VyaWFsaXphdGlvbiBvZiBjb25maWd1cmF0aW9uIGFjY2Vzc2VzIGlzIHByb3Zp
-ZGVkIGJ5ICdwY2lfbG9jaycgaW4NCj4gZHJpdmVycy9wY2kvYWNjZXNzLmMgdGh1cyBtYWtpbmcg
-dGhlIGRyaXZlcidzICdjb25mX2xvY2snIHN1cGVyZmx1b3VzLg0KPiANCj4gU2lnbmVkLW9mZi1i
-eTogQW5kcmV3IE11cnJheSA8YW11cnJheUBlbWJlZGRlZC1iaXRzLmNvLnVrPg0KDQooK2NjIFJp
-Y2hhcmQgWmh1LCBTaGF3biBHdW8pDQoNCkFja2VkLWJ5OiBKaW5nb28gSGFuIDxqZzEuaGFuQHNh
-bXN1bmcuY29tPg0KDQpSaWdodCwgdGhhbmsgeW91IGZvciBzZW5kaW5nIHRoZSBwYXRjaC4gOi0p
-DQoNCkJlc3QgcmVnYXJkcywNCkppbmdvbyBIYW4NCg0KPiAtLS0NCj4gIGRyaXZlcnMvcGNpL2hv
-c3QvcGNpLWV4eW5vcy5jICAgICAgfCAxIC0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYu
-YyAgICAgICAgfCAxIC0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMgfCA2
-IC0tLS0tLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuaCB8IDEgLQ0KPiAg
-NCBmaWxlcyBjaGFuZ2VkLCA5IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvcGNpL2hvc3QvcGNpLWV4eW5vcy5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktZXh5bm9zLmMN
-Cj4gaW5kZXggM2RlNmJmYi4uMzJjNmQ1NiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvaG9z
-dC9wY2ktZXh5bm9zLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktZXh5bm9zLmMNCj4g
-QEAgLTU0Niw3ICs1NDYsNiBAQCBzdGF0aWMgaW50IGFkZF9wY2llX3BvcnQoc3RydWN0IHBjaWVf
-cG9ydCAqcHAsIHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYpDQo+ICAJcHAtPnJvb3RfYnVz
-X25yID0gLTE7DQo+ICAJcHAtPm9wcyA9ICZleHlub3NfcGNpZV9ob3N0X29wczsNCj4gDQo+IC0J
-c3Bpbl9sb2NrX2luaXQoJnBwLT5jb25mX2xvY2spOw0KPiAgCXJldCA9IGR3X3BjaWVfaG9zdF9p
-bml0KHBwKTsNCj4gIAlpZiAocmV0KSB7DQo+ICAJCWRldl9lcnIoJnBkZXYtPmRldiwgImZhaWxl
-ZCB0byBpbml0aWFsaXplIGhvc3RcbiIpOw0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvaG9z
-dC9wY2ktaW14Ni5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jDQo+IGluZGV4IGU4NjYz
-YTguLjc3NTg4ZjEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYw0K
-PiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMNCj4gQEAgLTQ4MCw3ICs0ODAsNiBA
-QCBzdGF0aWMgaW50IGlteDZfYWRkX3BjaWVfcG9ydChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCwNCj4g
-IAlwcC0+cm9vdF9idXNfbnIgPSAtMTsNCj4gIAlwcC0+b3BzID0gJmlteDZfcGNpZV9ob3N0X29w
-czsNCj4gDQo+IC0Jc3Bpbl9sb2NrX2luaXQoJnBwLT5jb25mX2xvY2spOw0KPiAgCXJldCA9IGR3
-X3BjaWVfaG9zdF9pbml0KHBwKTsNCj4gIAlpZiAocmV0KSB7DQo+ICAJCWRldl9lcnIoJnBkZXYt
-PmRldiwgImZhaWxlZCB0byBpbml0aWFsaXplIGhvc3RcbiIpOw0KPiBkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1k
-ZXNpZ253YXJlLmMNCj4gaW5kZXggMTdjZTg4Zi4uYjI1YWRiOCAxMDA2NDQNCj4gLS0tIGEvZHJp
-dmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0
-L3BjaWUtZGVzaWdud2FyZS5jDQo+IEBAIC02NDAsNyArNjQwLDYgQEAgc3RhdGljIGludCBkd19w
-Y2llX3JkX2NvbmYoc3RydWN0IHBjaV9idXMgKmJ1cywgdTMyIGRldmZuLCBpbnQgd2hlcmUsDQo+
-ICAJCQlpbnQgc2l6ZSwgdTMyICp2YWwpDQo+ICB7DQo+ICAJc3RydWN0IHBjaWVfcG9ydCAqcHAg
-PSBzeXNfdG9fcGNpZShidXMtPnN5c2RhdGEpOw0KPiAtCXVuc2lnbmVkIGxvbmcgZmxhZ3M7DQo+
-ICAJaW50IHJldDsNCj4gDQo+ICAJaWYgKCFwcCkgew0KPiBAQCAtNjUzLDEzICs2NTIsMTEgQEAg
-c3RhdGljIGludCBkd19wY2llX3JkX2NvbmYoc3RydWN0IHBjaV9idXMgKmJ1cywgdTMyIGRldmZu
-LCBpbnQgd2hlcmUsDQo+ICAJCXJldHVybiBQQ0lCSU9TX0RFVklDRV9OT1RfRk9VTkQ7DQo+ICAJ
-fQ0KPiANCj4gLQlzcGluX2xvY2tfaXJxc2F2ZSgmcHAtPmNvbmZfbG9jaywgZmxhZ3MpOw0KPiAg
-CWlmIChidXMtPm51bWJlciAhPSBwcC0+cm9vdF9idXNfbnIpDQo+ICAJCXJldCA9IGR3X3BjaWVf
-cmRfb3RoZXJfY29uZihwcCwgYnVzLCBkZXZmbiwNCj4gIAkJCQkJCXdoZXJlLCBzaXplLCB2YWwp
-Ow0KPiAgCWVsc2UNCj4gIAkJcmV0ID0gZHdfcGNpZV9yZF9vd25fY29uZihwcCwgd2hlcmUsIHNp
-emUsIHZhbCk7DQo+IC0Jc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcHAtPmNvbmZfbG9jaywgZmxh
-Z3MpOw0KPiANCj4gIAlyZXR1cm4gcmV0Ow0KPiAgfQ0KPiBAQCAtNjY4LDcgKzY2NSw2IEBAIHN0
-YXRpYyBpbnQgZHdfcGNpZV93cl9jb25mKHN0cnVjdCBwY2lfYnVzICpidXMsIHUzMiBkZXZmbiwN
-Cj4gIAkJCWludCB3aGVyZSwgaW50IHNpemUsIHUzMiB2YWwpDQo+ICB7DQo+ICAJc3RydWN0IHBj
-aWVfcG9ydCAqcHAgPSBzeXNfdG9fcGNpZShidXMtPnN5c2RhdGEpOw0KPiAtCXVuc2lnbmVkIGxv
-bmcgZmxhZ3M7DQo+ICAJaW50IHJldDsNCj4gDQo+ICAJaWYgKCFwcCkgew0KPiBAQCAtNjc5LDEz
-ICs2NzUsMTEgQEAgc3RhdGljIGludCBkd19wY2llX3dyX2NvbmYoc3RydWN0IHBjaV9idXMgKmJ1
-cywgdTMyIGRldmZuLA0KPiAgCWlmIChkd19wY2llX3ZhbGlkX2NvbmZpZyhwcCwgYnVzLCBQQ0lf
-U0xPVChkZXZmbikpID09IDApDQo+ICAJCXJldHVybiBQQ0lCSU9TX0RFVklDRV9OT1RfRk9VTkQ7
-DQo+IA0KPiAtCXNwaW5fbG9ja19pcnFzYXZlKCZwcC0+Y29uZl9sb2NrLCBmbGFncyk7DQo+ICAJ
-aWYgKGJ1cy0+bnVtYmVyICE9IHBwLT5yb290X2J1c19ucikNCj4gIAkJcmV0ID0gZHdfcGNpZV93
-cl9vdGhlcl9jb25mKHBwLCBidXMsIGRldmZuLA0KPiAgCQkJCQkJd2hlcmUsIHNpemUsIHZhbCk7
-DQo+ICAJZWxzZQ0KPiAgCQlyZXQgPSBkd19wY2llX3dyX293bl9jb25mKHBwLCB3aGVyZSwgc2l6
-ZSwgdmFsKTsNCj4gLQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZwcC0+Y29uZl9sb2NrLCBmbGFn
-cyk7DQo+IA0KPiAgCXJldHVybiByZXQ7DQo+ICB9DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Bj
-aS9ob3N0L3BjaWUtZGVzaWdud2FyZS5oIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndh
-cmUuaA0KPiBpbmRleCAzMDYzYjM1Li5hMTA3NDdkIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Bj
-aS9ob3N0L3BjaWUtZGVzaWdud2FyZS5oDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1k
-ZXNpZ253YXJlLmgNCj4gQEAgLTQxLDcgKzQxLDYgQEAgc3RydWN0IHBjaWVfcG9ydCB7DQo+ICAJ
-dm9pZCBfX2lvbWVtCQkqdmFfY2ZnMV9iYXNlOw0KPiAgCXU2NAkJCWlvX2Jhc2U7DQo+ICAJdTY0
-CQkJbWVtX2Jhc2U7DQo+IC0Jc3BpbmxvY2tfdAkJY29uZl9sb2NrOw0KPiAgCXN0cnVjdCByZXNv
-dXJjZQkJY2ZnOw0KPiAgCXN0cnVjdCByZXNvdXJjZQkJaW87DQo+ICAJc3RydWN0IHJlc291cmNl
-CQltZW07DQo+IC0tDQo+IDEuOC4zLjINCg==
+On Thu, Feb 27, 2014 at 11:19:51AM -0700, Jason Gunthorpe wrote:
+> On Thu, Feb 27, 2014 at 01:06:39PM +0000, Liviu Dudau wrote:
+> > +	if (res->flags & IORESOURCE_IO) {
+> > +		unsigned long port;
+> > +		port = pci_address_to_pio(range->pci_addr);
+> 
+> This looks very suspicious, pci_addr is not unique across all domains,
+> so there is no way to convert from a pci_addr to the virtual IO
+> address without knowing the domain number as well.
+> 
+> I would like to see it be:
+>   port = pci_address_to_pio(range->cpu_addr);
+> 
+> cpu_addr is unique across all domains.
 
+Jason,
+
+First thanks for reviewing the updated series.
+
+We have agreed early on that indeed using range->cpu_addr is the correct aproach
+and me taking the lazy shortcut of using range->pci_addr because of the broken
+default implementation of pci_address_to_pio is wrong. I will fix this for v3.
+
+The outstanding issue is how to fix pci_address_to_pio() as it will not
+for for range->cpu_addr > IO_SPACE_LIMIT (16MB in my case).
+
+Best regards,
+Liviu
+
+> 
+> Looking at the microblaze and PPC versions I think the above version
+> is actually correct (assuming io_base_phys is the CPU address of the
+> IO window)
+> 
+> Jason
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
