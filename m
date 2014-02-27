@@ -1,115 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:54215 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752559AbaBCS7E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Feb 2014 13:59:04 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:52781 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751026AbaB0NHN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:07:13 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
 	linaro-kernel <linaro-kernel@lists.linaro.org>
-Subject: Re: [PATCH] arm64: Add architecture support for PCI
-Date: Mon, 03 Feb 2014 19:58:56 +0100
-Message-ID: <21596846.kVTqp7roW4@wuerfel>
-In-Reply-To: <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
-References: <1391453028-23191-1-git-send-email-Liviu.Dudau@arm.com> <1391453028-23191-2-git-send-email-Liviu.Dudau@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2 2/4] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+Date: Thu, 27 Feb 2014 13:06:40 +0000
+Message-Id: <1393506402-11474-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 03 February 2014 18:43:48 Liviu Dudau wrote:
-> diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-> index 4cc813e..ce5bad2 100644
-> --- a/arch/arm64/include/asm/io.h
-> +++ b/arch/arm64/include/asm/io.h
-> @@ -120,9 +120,13 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
->  /*
->   *  I/O port access primitives.
->   */
-> +#define arch_has_dev_port()	(0)
+Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+the creation order has been changed for no good reason. Revert the order of
+creation as we are going to depend on the pci_host_bridge structure to retrieve the
+domain number of the root bus.
 
-Why not?
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
->  #define IO_SPACE_LIMIT		0xffff
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6e34498..78ccba0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ 	kfree(bridge);
+ }
+ 
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
++static struct pci_host_bridge *pci_alloc_host_bridge(void)
+ {
+ 	struct pci_host_bridge *bridge;
+ 
+@@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+ 	return bridge;
+ }
+ 
+@@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
++	bridge = pci_alloc_host_bridge();
++	if (!bridge)
++		return NULL;
++
++	bridge->dev.parent = parent;
++	bridge->dev.release = pci_release_host_bridge_dev;
++	error = pcibios_root_bridge_prepare(bridge);
++	if (error) {
++		kfree(bridge);
++		return NULL;
++	}
++
+ 	b = pci_alloc_bus();
+ 	if (!b)
+-		return NULL;
++		goto err_out;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+@@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->bus = b;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
+-		goto err_out;
+-	}
+-
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+@@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ class_dev_reg_err:
+ 	put_device(&bridge->dev);
+ 	device_unregister(&bridge->dev);
+-err_out:
++err_bus_out:
+ 	kfree(b);
++err_out:
++	kfree(bridge);
+ 	return NULL;
+ }
+ 
+-- 
+1.9.0
 
-You probably want to increase this a bit, to allow multiple host bridges
-to have their own I/O space.
-
->  #define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
-
-And modify this location: There is no particular reason to have the I/O space
-mapped exactly 2MB below the loadable modules, as virtual address space is
-essentially free.
-
-> +#define ioport_map(port, nr)	(PCI_IOBASE + ((port) & IO_SPACE_LIMIT))
-> +#define ioport_unmap(addr)
-
-inline functions?
-
->  static inline u8 inb(unsigned long addr)
->  {
->  	return readb(addr + PCI_IOBASE);
-> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-> new file mode 100644
-> index 0000000..dd084a3
-> --- /dev/null
-> +++ b/arch/arm64/include/asm/pci.h
-> @@ -0,0 +1,35 @@
-> +#ifndef __ASM_PCI_H
-> +#define __ASM_PCI_H
-> +#ifdef __KERNEL__
-> +
-> +#include <linux/types.h>
-> +#include <linux/slab.h>
-> +#include <linux/dma-mapping.h>
-> +
-> +#include <asm/io.h>
-> +#include <asm-generic/pci-bridge.h>
-> +#include <asm-generic/pci-dma-compat.h>
-> +
-> +#define PCIBIOS_MIN_IO		0
-> +#define PCIBIOS_MIN_MEM		0
-
-PCIBIOS_MIN_IO is normally set to 0x1000, to stay out of the ISA range.
-
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> new file mode 100644
-> index 0000000..7b652cf
-> --- /dev/null
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -0,0 +1,112 @@
-
-None of this looks really arm64 specific, nor should it be. I think
-we should try a little harder to move this as a default implementation
-into common code, even if we start out by having all architectures
-override it.
-
-> +int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
-> +{
-> +	BUG_ON(offset + SZ_64K - 1 > IO_SPACE_LIMIT);
-> +
-> +	return ioremap_page_range((unsigned long)PCI_IOBASE + offset,
-> +				(unsigned long)PCI_IOBASE + offset + SZ_64K,
-> +				phys_addr,
-> +				__pgprot(PROT_DEVICE_nGnRE));
-> +}
-
-Not sure if we want to treat this one as architecture specific though.
-It certainly won't be portable to x86, but it could be shared with
-a couple of others. We may also want to redesign the interface.
-I've been thinking we could make this function allocate space in the
-Linux virtual I/O space aperture, and pass two resources into it
-(physical I/O aperture and bus I/O range), and get the actual
-io_offset as the return value, or a negative error number.
-
-That way, you could have an arbitrary number of host bridges in the
-system and each one gets a share of the virtual aperture until
-it's full.
-
-	Arnd
