@@ -1,188 +1,325 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:34366 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902AbaBNHVQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Feb 2014 02:21:16 -0500
-Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id DDF333EE0BB
-	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 16:21:14 +0900 (JST)
-Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id CF5B245DE92
-	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 16:21:14 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.nic.fujitsu.com [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id B7BD945DE8C
-	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 16:21:14 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id A29AD1DB803E
-	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 16:21:14 +0900 (JST)
-Received: from g01jpfmpwyt02.exch.g01.fujitsu.local (g01jpfmpwyt02.exch.g01.fujitsu.local [10.128.193.56])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 434671DB8032
-	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2014 16:21:14 +0900 (JST)
-From: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>
-To: Rajat Jain <rajatjain@juniper.net>,
-	"rajatxjain@gmail.com" <rajatxjain@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	Guenter Roeck <groeck@juniper.net>,
-	Takashi Iwai <tiwai@suse.de>
-Subject: RE: [PATCH] PCI: pciehp: Fix the problem that the present bit is
- not cleared though slot is empty
-Date: Fri, 14 Feb 2014 07:21:11 +0000
-Message-ID: <E86EADE93E2D054CBCD4E708C38D364A53C3D4C5@G01JPEXMBYT01>
-References: <20140203160724.949a0ee5.izumi.taku@jp.fujitsu.com>
-	<20140212004927.GH21057@google.com>
-	<E86EADE93E2D054CBCD4E708C38D364A53C32F56@G01JPEXMBYT01>
-	<CAErSpo5ycKF4Xm26z80wNrms7G5onn1ASzcU2AHy7XN1YNAYuA@mail.gmail.com>
- <CAA93t1psHnnVSbaaaJ1LsqeNzRYmNiiO9RiTggVovDVJpk4cqw@mail.gmail.com>
- <E86EADE93E2D054CBCD4E708C38D364A53C37ABC@G01JPEXMBYT01>
- <11994c276661475080d900fa8b5942a5@DM2PR05MB671.namprd05.prod.outlook.com>
-In-Reply-To: <11994c276661475080d900fa8b5942a5@DM2PR05MB671.namprd05.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from service87.mimecast.com ([91.220.42.44]:47753 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbaB0Nlx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:41:53 -0500
+Date: Thu, 27 Feb 2014 13:41:50 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 3/3] arm64: Add architecture support for PCI
+Message-ID: <20140227134150.GI1692@e106497-lin.cambridge.arm.com>
+References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393506599-11561-4-git-send-email-Liviu.Dudau@arm.com>
+ <CAPcvp5G_xZQqcySBfxFbCBCmeYL3n6OeaVW6qZ2k3cGQkga2QA@mail.gmail.com>
 MIME-Version: 1.0
+In-Reply-To: <CAPcvp5G_xZQqcySBfxFbCBCmeYL3n6OeaVW6qZ2k3cGQkga2QA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUmFqYXQsDQoNCj4gWytUYWthc2hpXQ0KPiANCj4gSGVsbG8sDQo+ID4NCj4gPiA+ID4gSHVo
-LCB0aGF0IGRvZXNuJ3Qgc291bmQgZ29vZC4gIERvZXMgeW91ciBzbG90IGhhdmUgYW4gYXR0ZW50
-aW9uDQo+ID4gPiA+IGJ1dHRvbj8gIENhbiB5b3UgY29sbGVjdCB0aGUgImxzcGNpIC12dnYiIG91
-dHB1dCBmb3IgdGhlIERvd25zdHJlYW0NCj4gPiA+ID4gUG9ydCBsZWFkaW5nIHRvIHRoaXMgc2xv
-dD8NCj4gPg0KPiA+ICAgIFRoZSBzbG90cyBoYXZlIG5vIEF0dGVudGlvbiBidXR0b24gYW5kIGFy
-ZSBub3QgZm9yIEV4cHJlc3NDYXJkLg0KPiA+ICAgIGxzcGNpIC12dnYgb3V0cHV0IGlzOg0KPiA+
-DQo+ID4gICAgICAgICBDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1l
-bVdJTlYtIFZHQVNub29wLQ0KPiA+IFBhckVycisgU3RlcHBpbmctIFNFUlIrIEZhc3RCMkItIERp
-c0lOVHgrDQo+ID4gICAgICAgICBTdGF0dXM6IENhcCsgNjZNSHotIFVERi0gRmFzdEIyQi0gUGFy
-RXJyLSBERVZTRUw9ZmFzdCA+VEFib3J0LQ0KPiA+IDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8
-UEVSUi0gSU5UeC0NCj4gPiAgICAgICAgIExhdGVuY3k6IDANCj4gPiAgICAgICAgIEJ1czogcHJp
-bWFyeT0yYywgc2Vjb25kYXJ5PTJkLCBzdWJvcmRpbmF0ZT0yZiwgc2VjLWxhdGVuY3k9MA0KPiA+
-ICAgICAgICAgSS9PIGJlaGluZCBicmlkZ2U6IDAwMDBmMDAwLTAwMDAwZmZmDQo+ID4gICAgICAg
-ICBNZW1vcnkgYmVoaW5kIGJyaWRnZTogYjE4MDAwMDAtYjFmZmZmZmYNCj4gPiAgICAgICAgIFBy
-ZWZldGNoYWJsZSBtZW1vcnkgYmVoaW5kIGJyaWRnZTogMDAwMDAwMDBhZTgwMDAwMC0NCj4gPiAw
-MDAwMDAwMGFlZmZmZmZmDQo+ID4gICAgICAgICBTZWNvbmRhcnkgc3RhdHVzOiA2Nk1Iei0gRmFz
-dEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdCA+VEFib3J0LQ0KPiA+IDxUQWJvcnQtIDxNQWJvcnQt
-IDxTRVJSLSA8UEVSUi0NCj4gPiAgICAgICAgIEJyaWRnZUN0bDogUGFyaXR5LSBTRVJSKyBOb0lT
-QS0gVkdBLSBNQWJvcnQtID5SZXNldC0gRmFzdEIyQi0NCj4gPiAgICAgICAgICAgICAgICAgUHJp
-RGlzY1Rtci0gU2VjRGlzY1Rtci0gRGlzY1RtclN0YXQtIERpc2NUbXJTRVJSRW4tDQo+ID4gICAg
-ICAgICBDYXBhYmlsaXRpZXM6IFs0MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDMNCj4gPiAg
-ICAgICAgICAgICAgICAgRmxhZ3M6IFBNRUNsay0gRFNJLSBEMS0gRDItIEF1eEN1cnJlbnQ9MG1B
-IFBNRShEMCssRDEtDQo+ID4gLEQyLSxEM2hvdCssRDNjb2xkKykNCj4gPiAgICAgICAgICAgICAg
-ICAgU3RhdHVzOiBEMCBOb1NvZnRSc3QrIFBNRS1FbmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUt
-DQo+ID4gICAgICAgICBDYXBhYmlsaXRpZXM6IFs0OF0gTVNJOiBFbmFibGUrIENvdW50PTEvOCBN
-YXNrYWJsZSsgNjRiaXQrDQo+ID4gICAgICAgICAgICAgICAgIEFkZHJlc3M6IDAwMDAwMDAwZmVl
-MDA1MTggIERhdGE6IDAwMDANCj4gPiAgICAgICAgICAgICAgICAgTWFza2luZzogMDAwMDAwZmUg
-IFBlbmRpbmc6IDAwMDAwMDAwDQo+ID4gICAgICAgICBDYXBhYmlsaXRpZXM6IFs2OF0gRXhwcmVz
-cyAodjIpIERvd25zdHJlYW0gUG9ydCAoU2xvdCspLCBNU0kgMDANCj4gPiAgICAgICAgICAgICAg
-ICAgRGV2Q2FwOiBNYXhQYXlsb2FkIDIwNDggYnl0ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5IEww
-cw0KPiA+IDw2NG5zLCBMMSA8MXVzDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgRXh0VGFn
-LSBSQkUrIEZMUmVzZXQtDQo+ID4gICAgICAgICAgICAgICAgIERldkN0bDogUmVwb3J0IGVycm9y
-czogQ29ycmVjdGFibGUrIE5vbi1GYXRhbCsgRmF0YWwrDQo+ID4gVW5zdXBwb3J0ZWQtDQo+ID4g
-ICAgICAgICAgICAgICAgICAgICAgICAgUmx4ZE9yZCsgRXh0VGFnLSBQaGFudEZ1bmMtIEF1eFB3
-ci0gTm9Tbm9vcCsNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICBNYXhQYXlsb2FkIDEyOCBi
-eXRlcywgTWF4UmVhZFJlcSAxMjggYnl0ZXMNCj4gPiAgICAgICAgICAgICAgICAgRGV2U3RhOiBD
-b3JyRXJyKyBVbmNvcnJFcnItIEZhdGFsRXJyLSBVbnN1cHBSZXErIEF1eFB3ci0NCj4gPiBUcmFu
-c1BlbmQtDQo+ID4gICAgICAgICAgICAgICAgIExua0NhcDogUG9ydCAjMSwgU3BlZWQgOEdUL3Ms
-IFdpZHRoIHg4LCBBU1BNIEwxLCBMYXRlbmN5DQo+ID4gTDAgPDR1cywgTDEgPDR1cw0KPiA+ICAg
-ICAgICAgICAgICAgICAgICAgICAgIENsb2NrUE0tIFN1cnByaXNlKyBMTEFjdFJlcCsgQndOb3Qr
-DQo+ID4gICAgICAgICAgICAgICAgIExua0N0bDogQVNQTSBEaXNhYmxlZDsgRGlzYWJsZWQtIFJl
-dHJhaW4tIENvbW1DbGstDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgRXh0U3luY2gtIENs
-b2NrUE0tIEF1dFdpZERpcy0gQldJbnQtIEF1dEJXSW50LQ0KPiA+ICAgICAgICAgICAgICAgICBM
-bmtTdGE6IFNwZWVkIDIuNUdUL3MsIFdpZHRoIHgwLCBUckVyci0gVHJhaW4tIFNsb3RDbGsrDQo+
-ID4gRExBY3RpdmUtIEJXTWdtdC0gQUJXTWdtdC0NCj4gPiAgICAgICAgICAgICAgICAgU2x0Q2Fw
-OiBBdHRuQnRuLSBQd3JDdHJsKyBNUkwrIEF0dG5JbmQrIFB3ckluZCsgSG90UGx1ZysNCj4gPiBT
-dXJwcmlzZS0NCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICBTbG90ICM2NywgUG93ZXJMaW1p
-dCAyNS4wMDBXOyBJbnRlcmxvY2stDQo+ID4gTm9Db21wbC0NCj4gDQo+IEhtbS4uLiBJIHNlZSB0
-aGF0IHRoZSBTbG90IGhhcyBhIHBvd2VyIGNvbnRyb2xsZXIuIFdoaWNoIG1lYW5zIHRoYXQgdGhl
-IHBvd2VyIHRvIHRoZSBzbG90IHNoYWxsIG5vdCBiZSB0dXJuZWQgb24gYXV0b21hdGljYWxseQ0K
-PiAoYnkgSFcpIHdoZW4gdGhlIGNhcmQgaXMgcGx1Z2dlZCBpbi4gQWxzbyBtZWFuaW5nIHRoYXQg
-dGhlIGxpbmsgd2lsbCBub3QgY29tZSB1cCBhdXRvbWF0aWNhbGx5IC0gc28gdGhpcyBkb2VzIG5v
-dCBzZWVtDQo+IGxpa2UgdGhlIExpbmsgc3RhdGUgYmFzZWQgaG90cGx1ZyBraWNraW5nIGluLg0K
-PiANCj4gV2hhdCBJIHN1c3BlY3QgaXMgdGhpcyBvbmU6DQo+IA0KPiBmMDJkMTg0M2Q4M2IgIlBD
-STogcGNpZWhwOiBSZW1vdmUgc3VycHJpc2UgYml0IGNoZWNrcyINCg0KICBZb3UgYXJlIHJpZ2h0
-Lg0KICBJbiBjYXNlIG9mIG9taXR0aW5nIGNvbWl0LWYwMmQxODQzLCBpdCB3b3JrZWQgYXMgZXhw
-ZWN0ZWQuDQogIFNsb3QgcG93ZXIgZG9lc24ndCBiZWNvbWUgT04gYXV0b21hdGljYWxseSB3aGVu
-IFBDSWUgY2FyZCBpcyBpbnNlcnRlZC4NCiAgDQogIEJlc3QgcmVnYXJkcywNCiAgVGFrdSBJenVt
-aQ0KDQo+IA0KPiBTaW5jZSB0aGlzIHBhdGNoIHJlbW92ZXMgKmFsbCogdGhlIHN1cnByaXNlIGJp
-dCBjaGVja3MgY2F1c2luZyBhbGwgdGhlIHByZXNlbmNlIGRldGVjdCBjaGFuZ2VzIChpbmNsdWRp
-bmcgMC0+MSkgdG8gYmUNCj4gaW5pdGlhdGUgaG90cGx1Zy4gSSB0aGluayBpdCBtYXkgYmUgd29y
-dGh3aGlsZSB0byB0cnkgaXQgb3V0IHdoaWxlIHJlbW92aW5nIHRoaXMgcGFydGljdWxhciBodW5r
-Og0KPiANCj4gQEAgLTUzNSw4ICs1MzUsNiBAQCBzdGF0aWMgdm9pZCBpbnRlcnJ1cHRfZXZlbnRf
-aGFuZGxlcihzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQo+ICAJCWJyZWFrOw0KPiAgCWNhc2Ug
-SU5UX1BSRVNFTkNFX09OOg0KPiAgCWNhc2UgSU5UX1BSRVNFTkNFX09GRjoNCj4gLQkJaWYgKCFI
-UF9TVVBSX1JNKGN0cmwpKQ0KPiAtCQkJYnJlYWs7DQo+ICAJCWN0cmxfZGJnKGN0cmwsICJTdXJw
-cmlzZSBSZW1vdmFsXG4iKTsNCj4gIAkJaGFuZGxlX3N1cnByaXNlX2V2ZW50KHBfc2xvdCk7DQo+
-ICAJCWJyZWFrOw0KPiANCj4gTWF5IGJlIHdlIHNob3VsZCByZW1vdmUgdGhlIHN1cnByaXNlIGNo
-ZWNrIGZvciBJTlRfUFJFU0VOQ0VfT0ZGIG9ubHkgKGFuZCBsZXQgaXQgc3RheSBmb3IgSU5UX1BS
-RVNFV05DRV9PTik/DQo+IA0KPiBUaGFua3MsDQo+IA0KPiBSYWphdA0KPiANCj4gDQo+IA0KPiA+
-ICAgICAgICAgICAgICAgICBTbHRDdGw6IEVuYWJsZTogQXR0bkJ0bi0gUHdyRmx0LSBNUkwrIFBy
-ZXNEZXQrIENtZENwbHQrDQo+ID4gSFBJcnErIExpbmtDaGcrDQo+ID4gICAgICAgICAgICAgICAg
-ICAgICAgICAgQ29udHJvbDogQXR0bkluZCBPZmYsIFB3ckluZCBPZmYsIFBvd2VyKw0KPiA+IElu
-dGVybG9jay0NCj4gPiAgICAgICAgICAgICAgICAgU2x0U3RhOiBTdGF0dXM6IEF0dG5CdG4tIFBv
-d2VyRmx0LSBNUkwtIENtZENwbHQtDQo+ID4gUHJlc0RldC0gSW50ZXJsb2NrLQ0KPiA+ICAgICAg
-ICAgICAgICAgICAgICAgICAgIENoYW5nZWQ6IE1STC0gUHJlc0RldC0gTGlua1N0YXRlLQ0KPiA+
-ICAgICAgICAgICAgICAgICBEZXZDYXAyOiBDb21wbGV0aW9uIFRpbWVvdXQ6IE5vdCBTdXBwb3J0
-ZWQsIFRpbWVvdXREaXMtLA0KPiA+IExUUissIE9CRkYgVmlhIG1lc3NhZ2UgQVJJRndkKw0KPiA+
-ICAgICAgICAgICAgICAgICBEZXZDdGwyOiBDb21wbGV0aW9uIFRpbWVvdXQ6IDUwdXMgdG8gNTBt
-cywgVGltZW91dERpcy0sDQo+ID4gTFRSLSwgT0JGRiBEaXNhYmxlZCBBUklGd2QtDQo+ID4gICAg
-ICAgICAgICAgICAgIExua0N0bDI6IFRhcmdldCBMaW5rIFNwZWVkOiA4R1QvcywgRW50ZXJDb21w
-bGlhbmNlLQ0KPiA+IFNwZWVkRGlzLSwgU2VsZWN0YWJsZSBEZS1lbXBoYXNpczogLTZkQg0KPiA+
-ICAgICAgICAgICAgICAgICAgICAgICAgICBUcmFuc21pdCBNYXJnaW46IE5vcm1hbCBPcGVyYXRp
-bmcgUmFuZ2UsDQo+ID4gRW50ZXJNb2RpZmllZENvbXBsaWFuY2UtIENvbXBsaWFuY2VTT1MtDQo+
-ID4gICAgICAgICAgICAgICAgICAgICAgICAgIENvbXBsaWFuY2UgRGUtZW1waGFzaXM6IC02ZEIN
-Cj4gPiAgICAgICAgICAgICAgICAgTG5rU3RhMjogQ3VycmVudCBEZS1lbXBoYXNpcyBMZXZlbDog
-LTMuNWRCLA0KPiA+IEVxdWFsaXphdGlvbkNvbXBsZXRlLSwgRXF1YWxpemF0aW9uUGhhc2UxLQ0K
-PiA+ICAgICAgICAgICAgICAgICAgICAgICAgICBFcXVhbGl6YXRpb25QaGFzZTItLCBFcXVhbGl6
-YXRpb25QaGFzZTMtLA0KPiA+IExpbmtFcXVhbGl6YXRpb25SZXF1ZXN0LQ0KPiA+ICAgICAgICAg
-Q2FwYWJpbGl0aWVzOiBbYTRdIFN1YnN5c3RlbTogRnVqaXRzdSBMaW1pdGVkLiBEZXZpY2UgMTgw
-NA0KPiA+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTAwIHYxXSBEZXZpY2UgU2VyaWFsIE51bWJl
-ciBhYS04Ny0wMC0xMC1iNS1kZi0NCj4gPiAwZS0wMA0KPiA+ICAgICAgICAgQ2FwYWJpbGl0aWVz
-OiBbZmI0IHYxXSBBZHZhbmNlZCBFcnJvciBSZXBvcnRpbmcNCj4gPiAgICAgICAgICAgICAgICAg
-VUVTdGE6ICBETFAtIFNERVMtIFRMUC0gRkNQLSBDbXBsdFRPLSBDbXBsdEFicnQtDQo+ID4gVW54
-Q21wbHQtIFJ4T0YtIE1hbGZUTFAtIEVDUkMtIFVuc3VwUmVxLSBBQ1NWaW9sLQ0KPiA+ICAgICAg
-ICAgICAgICAgICBVRU1zazogIERMUC0gU0RFUy0gVExQLSBGQ1AtIENtcGx0VE8tIENtcGx0QWJy
-dC0NCj4gPiBVbnhDbXBsdC0gUnhPRi0gTWFsZlRMUC0gRUNSQysgVW5zdXBSZXErIEFDU1Zpb2wt
-DQo+ID4gICAgICAgICAgICAgICAgIFVFU3ZydDogRExQKyBTREVTKyBUTFArIEZDUCsgQ21wbHRU
-Ty0gQ21wbHRBYnJ0Kw0KPiA+IFVueENtcGx0KyBSeE9GKyBNYWxmVExQKyBFQ1JDKyBVbnN1cFJl
-cS0gQUNTVmlvbCsNCj4gPiAgICAgICAgICAgICAgICAgQ0VTdGE6ICBSeEVyci0gQmFkVExQLSBC
-YWRETExQLSBSb2xsb3Zlci0gVGltZW91dC0NCj4gPiBOb25GYXRhbEVycisNCj4gPiAgICAgICAg
-ICAgICAgICAgQ0VNc2s6ICBSeEVyci0gQmFkVExQLSBCYWRETExQLSBSb2xsb3Zlci0gVGltZW91
-dC0NCj4gPiBOb25GYXRhbEVycisNCj4gPiAgICAgICAgICAgICAgICAgQUVSQ2FwOiBGaXJzdCBF
-cnJvciBQb2ludGVyOiAxZiwgR2VuQ2FwKyBDR2VuRW4tIENoa0NhcCsNCj4gPiBDaGtFbi0NCj4g
-PiAgICAgICAgIENhcGFiaWxpdGllczogWzEzOCB2MV0gUG93ZXIgQnVkZ2V0aW5nIDw/Pg0KPiA+
-ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTBjIHYxXSAjMTkNCj4gPiAgICAgICAgIENhcGFiaWxp
-dGllczogWzE0OCB2MV0gVmlydHVhbCBDaGFubmVsDQo+ID4gICAgICAgICAgICAgICAgIENhcHM6
-ICAgTFBFVkM9MCBSZWZDbGs9MTAwbnMgUEFURW50cnlCaXRzPTENCj4gPiAgICAgICAgICAgICAg
-ICAgQXJiOiAgICBGaXhlZC0gV1JSMzItIFdSUjY0LSBXUlIxMjgtDQo+ID4gICAgICAgICAgICAg
-ICAgIEN0cmw6ICAgQXJiU2VsZWN0PUZpeGVkDQo+ID4gICAgICAgICAgICAgICAgIFN0YXR1czog
-SW5Qcm9ncmVzcy0NCj4gPiAgICAgICAgICAgICAgICAgVkMwOiAgICBDYXBzOiAgIFBBVE9mZnNl
-dD0wMCBNYXhUaW1lU2xvdHM9MQ0KPiA+IFJlalNub29wVHJhbnMtDQo+ID4gICAgICAgICAgICAg
-ICAgICAgICAgICAgQXJiOiAgICBGaXhlZCsgV1JSMzItIFdSUjY0LSBXUlIxMjgtIFRXUlIxMjgt
-DQo+ID4gV1JSMjU2LQ0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIEN0cmw6ICAgRW5hYmxl
-KyBJRD0wIEFyYlNlbGVjdD1GaXhlZCBUQy9WQz1mZg0KPiA+ICAgICAgICAgICAgICAgICAgICAg
-ICAgIFN0YXR1czogTmVnb1BlbmRpbmcrIEluUHJvZ3Jlc3MtDQo+ID4gICAgICAgICBDYXBhYmls
-aXRpZXM6IFtlMDAgdjFdICMxMg0KPiA+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbZjI0IHYxXSBB
-Y2Nlc3MgQ29udHJvbCBTZXJ2aWNlcw0KPiA+ICAgICAgICAgICAgICAgICBBQ1NDYXA6IFNyY1Zh
-bGlkKyBUcmFuc0JsaysgUmVxUmVkaXIrIENtcGx0UmVkaXIrDQo+ID4gVXBzdHJlYW1Gd2QrIEVn
-cmVzc0N0cmwrIERpcmVjdFRyYW5zKw0KPiA+ICAgICAgICAgICAgICAgICBBQ1NDdGw6IFNyY1Zh
-bGlkLSBUcmFuc0Jsay0gUmVxUmVkaXItIENtcGx0UmVkaXItDQo+ID4gVXBzdHJlYW1Gd2QtIEVn
-cmVzc0N0cmwtIERpcmVjdFRyYW5zLQ0KPiA+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbYjcwIHYx
-XSBWZW5kb3IgU3BlY2lmaWMgSW5mb3JtYXRpb246IElEPTAwMDENCj4gPiBSZXY9MCBMZW49MDEw
-IDw/Pg0KPiA+ICAgICAgICAgS2VybmVsIGRyaXZlciBpbiB1c2U6IHBjaWVwb3J0DQo+ID4NCj4g
-Pg0KPiA+ID4gSWYgdGhlcmUgaXMgbm8gYXR0ZW50aW9uIGJ1dHRvbiwgdGhlbiB0aGUgYmVoYXZp
-b3Igc2VlbiwgbWF0Y2hlcyB3aXRoDQo+ID4gPiB3aGF0IEkgZXhwZWN0ZWQgb2YgdGhlIGNvZGUu
-DQo+ID4gPg0KPiA+ID4gU2VlbWluZ2x5LCB0aGUgSFcgZG9lcyBub3QgaGF2ZSBhIHBvd2VyIGNv
-bnRyb2xsZXIgKGFuZCBhdHRlbnRpb24NCj4gPiA+IGJ1dHRvbiksIHRodXMgdGhlIHBvd2VyIGlz
-IGF1dG9tYXRpY2FsbHkgdHVybmVkIG9uIChieSBIVykgd2hlbiBjYXJkDQo+ID4gPiBpcyBpbnNl
-cnRlZCBhbmQgdGhlIGxpbmsgY29tZXMgdXAuIFRodXMgcHJpb3IgdG8gbGluayBzdGF0ZSBiYXNl
-ZA0KPiA+ID4gaG90LXBsdWcsICJlY2hvIDEgPiBwb3dlciIgdXNlZCB0byBkbyBhIGxpdHRsZSBl
-bHNlIHRoYW4gaW5pdGlhdGUgYQ0KPiA+ID4gcmVzY2FuIGZvciB0aGlzIHBhcnRpY3VsYXIgSFcu
-DQo+ID4NCj4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+IEkgdGhpbmsgdGhhdCBmb3IgRXhwcmVzc0Nh
-cmQgYW5kIHNpbWlsYXIgZGV2aWNlcywgd2Ugd2FudCB0byB0dXJuIG9uDQo+ID4gPiA+IHRoZSBk
-ZXZpY2UgYW5kIGF0dGFjaCBhIGRyaXZlciBhcyBzb29uIGFzIHRoZSBjYXJkIGlzIGluc2VydGVk
-LiAgQnV0DQo+ID4gPiA+IGluIHlvdXIgY2FzZSwgSSBhc3N1bWUgd2Ugd2FudCBhIG1vZGVsIGxp
-a2UgdGhhdCBpbiBUYWJsZSAyLTcgb2YgdGhlDQo+ID4gPiA+ICJQQ0kgU3RhbmRhcmQgSG90LVBs
-dWcgQ29udHJvbGxlciBhbmQgU3Vic3lzdGVtIFNwZWNpZmljYXRpb24sIiByZXYNCj4gPiA+ID4g
-MS4wLCBpLmUuLCAiSG90IEluc2VydGlvbiBJbml0aWF0ZWQgdmlhIFNvZnR3YXJlIFVJLiIgIFNv
-IHRoZXJlIG11c3QNCj4gPiA+ID4gYmUgc29tZSB3YXkgdG8gZGlmZmVyZW50aWF0ZSBhbiBFeHBy
-ZXNzQ2FyZCBzbG90IGZyb20gYSBzbG90IGxpa2UNCj4gPiA+ID4geW91cnMuDQo+ID4gPg0KPiA+
-ID4gWWVzLCB0aGF0IHdvdWxkIGhlbHAgaWYgdGhlcmUgd2FzIHNvbWUgd2F5Lg0KPiA+ID4NCj4g
-Pg0KPiA+IEJlc3QgcmVnYXJkcywNCj4gPiBUYWt1IEl6dW1pDQoNCg==
+On Thu, Feb 27, 2014 at 01:35:22PM +0000, Andrew Murray wrote:
+> On 27 February 2014 13:09, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > Use the generic host bridge functions to provide support for
+> > PCI Express on arm64. There is no support for ISA memory.
+> >
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> >
+> >  create mode 100644 arch/arm64/include/asm/pci.h
+> >  create mode 100644 arch/arm64/kernel/pci.c
+> >
+> > diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> > index 27bbcfc..d1c8568 100644
+> > --- a/arch/arm64/Kconfig
+> > +++ b/arch/arm64/Kconfig
+> > @@ -62,7 +62,7 @@ config MMU
+> >         def_bool y
+> >
+> >  config NO_IOPORT
+> > -       def_bool y
+> > +       def_bool y if !PCI
+> >
+> >  config STACKTRACE_SUPPORT
+> >         def_bool y
+> > @@ -134,6 +134,23 @@ menu "Bus support"
+> >  config ARM_AMBA
+> >         bool
+> >
+> > +config PCI
+> > +       bool "PCI support"
+> > +       help
+> > +         This feature enables support for PCIe bus system. If you say Y
+> > +         here, the kernel will include drivers and infrastructure code
+> > +         to support PCIe bus devices.
+> > +
+> > +config PCI_DOMAINS
+> > +       def_bool PCI
+> > +
+> > +config PCI_SYSCALL
+> > +       def_bool PCI
+> > +
+> > +source "drivers/pci/Kconfig"
+> > +source "drivers/pci/pcie/Kconfig"
+> > +source "drivers/pci/hotplug/Kconfig"
+> > +
+> >  endmenu
+> >
+> >  menu "Kernel Features"
+> > diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
+> > index 71c53ec..46924bc 100644
+> > --- a/arch/arm64/include/asm/Kbuild
+> > +++ b/arch/arm64/include/asm/Kbuild
+> > @@ -26,6 +26,7 @@ generic-y += mman.h
+> >  generic-y += msgbuf.h
+> >  generic-y += mutex.h
+> >  generic-y += pci.h
+> > +generic-y += pci-bridge.h
+> >  generic-y += poll.h
+> >  generic-y += posix_types.h
+> >  generic-y += resource.h
+> > diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+> > index 7846a6b..67463a5 100644
+> > --- a/arch/arm64/include/asm/io.h
+> > +++ b/arch/arm64/include/asm/io.h
+> > @@ -120,7 +120,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+> >  /*
+> >   *  I/O port access primitives.
+> >   */
+> > -#define IO_SPACE_LIMIT         0xffff
+> > +#define arch_has_dev_port()    (1)
+> > +#define IO_SPACE_LIMIT         0x1ffffff
+> >  #define PCI_IOBASE             ((void __iomem *)(MODULES_VADDR - SZ_32M))
+> >
+> >  static inline u8 inb(unsigned long addr)
+> > diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> > new file mode 100644
+> > index 0000000..3edf9e0
+> > --- /dev/null
+> > +++ b/arch/arm64/include/asm/pci.h
+> > @@ -0,0 +1,47 @@
+> > +#ifndef __ASM_PCI_H
+> > +#define __ASM_PCI_H
+> > +#ifdef __KERNEL__
+> > +
+> > +#include <linux/types.h>
+> > +#include <linux/slab.h>
+> > +#include <linux/dma-mapping.h>
+> > +
+> > +#include <asm/io.h>
+> > +#include <asm-generic/pci-bridge.h>
+> > +#include <asm-generic/pci-dma-compat.h>
+> > +
+> > +#define PCIBIOS_MIN_IO         0x1000
+> > +#define PCIBIOS_MIN_MEM                0
+> > +
+> > +/*
+> > + * Set to 1 if the kernel should re-assign all PCI bus numbers
+> > + */
+> > +#define pcibios_assign_all_busses() \
+> > +       (pci_has_flag(PCI_REASSIGN_ALL_BUS))
+> > +
+> > +/*
+> > + * PCI address space differs from physical memory address space
+> > + */
+> > +#define PCI_DMA_BUS_IS_PHYS    (0)
+> > +
+> > +extern int isa_dma_bridge_buggy;
+> > +
+> > +static inline int pci_domain_nr(struct pci_bus *bus)
+> > +{
+> > +       struct pci_host_bridge *bridge = to_pci_host_bridge(bus->bridge);
+> > +
+> > +       if (bridge)
+> > +               return bridge->domain_nr;
+> > +
+> > +       return 0;
+> > +}
+> > +
+> > +static inline int pci_proc_domain(struct pci_bus *bus)
+> > +{
+> > +       return pci_domain_nr(bus);
+> > +}
+> > +
+> > +extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
+> > +
+> > +#endif  /* __KERNEL__ */
+> > +#endif  /* __ASM_PCI_H */
+> > diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+> > index 2d4554b..64fc479 100644
+> > --- a/arch/arm64/kernel/Makefile
+> > +++ b/arch/arm64/kernel/Makefile
+> > @@ -20,6 +20,7 @@ arm64-obj-$(CONFIG_HAVE_HW_BREAKPOINT)+= hw_breakpoint.o
+> >  arm64-obj-$(CONFIG_EARLY_PRINTK)       += early_printk.o
+> >  arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)  += sleep.o suspend.o
+> >  arm64-obj-$(CONFIG_JUMP_LABEL)         += jump_label.o
+> > +arm64-obj-$(CONFIG_PCI)                        += pci.o
+> >
+> >  obj-y                                  += $(arm64-obj-y) vdso/
+> >  obj-m                                  += $(arm64-obj-m)
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > new file mode 100644
+> > index 0000000..496df41
+> > --- /dev/null
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -0,1 +1,126 @@
+> > +/*
+> > + * Code borrowed from powerpc/kernel/pci-common.c
+> > + *
+> > + * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
+> > + * Copyright (C) 2014 ARM Ltd.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License
+> > + * version 2 as published by the Free Software Foundation.
+> > + *
+> > + */
+> > +
+> > +#include <linux/init.h>
+> > +#include <linux/io.h>
+> > +#include <linux/kernel.h>
+> > +#include <linux/mm.h>
+> > +#include <linux/of_pci.h>
+> > +#include <linux/of_platform.h>
+> > +#include <linux/slab.h>
+> > +
+> > +#include <asm/pci-bridge.h>
+> > +
+> > +
+> > +/*
+> > + * Called after each bus is probed, but before its children are examined
+> > + */
+> > +void pcibios_fixup_bus(struct pci_bus *bus)
+> > +{
+> > +       struct pci_dev *dev;
+> > +       struct resource *res;
+> > +       int i;
+> > +
+> > +       if (!pci_is_root_bus(bus)) {
+> > +               pci_read_bridge_bases(bus);
+> > +
+> > +               pci_bus_for_each_resource(bus, res, i) {
+> > +                       if (!res || !res->flags || res->parent)
+> > +                               continue;
+> > +
+> > +                       /*
+> > +                        * If we are going to reassign everything, we can
+> > +                        * shrink the P2P resource to have zero size to
+> > +                        * save space
+> > +                        */
+> > +                       if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
+> > +                               res->flags |= IORESOURCE_UNSET;
+> > +                               res->start = 0;
+> > +                               res->end = -1;
+> > +                               continue;
+> > +                       }
+> > +               }
+> > +       }
+> > +
+> > +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> > +               /* Ignore fully discovered devices */
+> > +               if (dev->is_added)
+> > +                       continue;
+> > +
+> > +               set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+> > +
+> > +               /* Read default IRQs and fixup if necessary */
+> > +               dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > +       }
+> > +}
+> > +EXPORT_SYMBOL(pcibios_fixup_bus);
+> > +
+> > +/*
+> > + * We don't have to worry about legacy ISA devices, so nothing to do here
+> > + */
+> > +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> > +                               resource_size_t size, resource_size_t align)
+> > +{
+> > +       return ALIGN(res->start, align);
+> > +}
+> > +EXPORT_SYMBOL(pcibios_align_resource);
+> > +
+> > +int pcibios_enable_device(struct pci_dev *dev, int mask)
+> > +{
+> > +       return pci_enable_resources(dev, mask);
+> > +}
+> 
+> It looks like you will soon be able to remove this and rely on the
+> shinny new weak implementation of pcibios_enable_device now
+> (http://www.spinics.net/lists/linux-pci/msg29387.html)
+
+Yes, I've seen the patches, will probably remove before the final version
+gets submitted.
+
+Thanks,
+Liviu
+
+
+> 
+> Andrew Murray
+> 
+> > +
+> > +void pcibios_fixup_bridge_ranges(struct list_head *resources)
+> > +{
+> > +}
+> > +
+> > +#define IO_SPACE_PAGES ((IO_SPACE_LIMIT + 1) / PAGE_SIZE)
+> > +static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
+> > +
+> > +unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr)
+> > +{
+> > +       unsigned long start, len, virt_start;
+> > +       int err;
+> > +
+> > +       if (res->end > IO_SPACE_LIMIT)
+> > +               return -EINVAL;
+> > +
+> > +       /*
+> > +        * try finding free space for the whole size first,
+> > +        * fall back to 64K if not available
+> > +        */
+> > +       len = resource_size(res);
+> > +       start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
+> > +                               res->start / PAGE_SIZE, len / PAGE_SIZE, 0);
+> > +       if (start == IO_SPACE_PAGES && len > SZ_64K) {
+> > +               len = SZ_64K;
+> > +               start = 0;
+> > +               start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
+> > +                                       start, len / PAGE_SIZE, 0);
+> > +       }
+> > +
+> > +       /* no 64K area found */
+> > +       if (start == IO_SPACE_PAGES)
+> > +               return -ENOMEM;
+> > +
+> > +       /* ioremap physical aperture to virtual aperture */
+> > +       virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
+> > +       err = ioremap_page_range(virt_start, virt_start + len,
+> > +                               phys_addr, __pgprot(PROT_DEVICE_nGnRE));
+> > +       if (err)
+> > +               return err;
+> > +
+> > +       bitmap_set(pci_iospace, start, len / PAGE_SIZE);
+> > +
+> > +       /* return io_offset */
+> > +       return start * PAGE_SIZE - res->start;
+> > +}
+> > --
+> > 1.9.0
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
