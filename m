@@ -1,48 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, xjtuwjp@gmail.com,
-	lindar_liu@usish.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 17/23] pm8001: Fix invalid return when request_irq() failed
-Date: Mon, 24 Feb 2014 09:02:17 +0100
-Message-Id: <d4fd5f0bf31cb1a035dc077f5b0f1cf5d840fc77.1393191330.git.agordeev@redhat.com>
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:54218 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716AbaB0J7x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 04:59:53 -0500
+MIME-Version: 1.0
+In-Reply-To: <1393438283-10542-2-git-send-email-phil.edworthy@renesas.com>
+References: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>
+	<1393438283-10542-2-git-send-email-phil.edworthy@renesas.com>
+Date: Thu, 27 Feb 2014 18:59:51 +0900
+Message-ID: <CANqRtoT8huX5QFqU6M4t=gKCW8wrk13b0nsR2+8C84HUKHrCLg@mail.gmail.com>
+Subject: Re: [PATCH 1/5 v2 RFC] PCI: host: Add Renesas R-Car PCIe driver
+From: Magnus Damm <magnus.damm@gmail.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	Simon Horman <horms@verge.net.au>,
+	Ben Dooks <ben.dooks@codethink.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a call to request_irq() failed pm8001_setup_msix()
-still returns the success. This udate fixes the described
-misbehaviour.
+On Thu, Feb 27, 2014 at 3:11 AM, Phil Edworthy
+<phil.edworthy@renesas.com> wrote:
+> This PCIe Host driver currently does not support MSI, so cards
+> fall back to INTx interrupts.
+>
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> ---
+> v2:
+>  - Use msleep instead of udelay when waiting for the link
+>  - Use pm_runtime
+>  - Removed unused definition
+>  - Also replaced call to devm_request_and_ioremap with devm_ioremap_resource
+>    and fixed a bug with this when reporting errors.
+>
+>  drivers/pci/host/Kconfig     |    6 +
+>  drivers/pci/host/Makefile    |    1 +
+>  drivers/pci/host/pcie-rcar.c |  588 ++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pcie-rcar.h |   82 ++++++
+>  4 files changed, 677 insertions(+)
+>  create mode 100644 drivers/pci/host/pcie-rcar.c
+>  create mode 100644 drivers/pci/host/pcie-rcar.h
+>
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 47d46c6..b1c1787 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -33,4 +33,10 @@ config PCI_RCAR_GEN2
+>           There are 3 internal PCI controllers available with a single
+>           built-in EHCI/OHCI host controller present on each one.
+>
+> +config PCI_RCAR_GEN2_PCIE
+> +       bool "Renesas R-Car PCIe controller"
+> +       depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || COMPILE_TEST)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: xjtuwjp@gmail.com
-Cc: lindar_liu@usish.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Acked-by: Jack Wang <xjtuwjp@gmail.com>
----
- drivers/scsi/pm8001/pm8001_init.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Hi Phil,
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 73a120d..efffbb9 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -739,9 +739,10 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
- 			pm8001_ha->irq_vector[i].irq_id = i;
- 			pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
- 
--			if (request_irq(pm8001_ha->msix_entries[i].vector,
-+			rc = request_irq(pm8001_ha->msix_entries[i].vector,
- 				pm8001_interrupt_handler_msix, flag,
--				intr_drvname[i], &(pm8001_ha->irq_vector[i]))) {
-+				intr_drvname[i], &(pm8001_ha->irq_vector[i]));
-+			if (rc) {
- 				for (j = 0; j < i; j++)
- 					free_irq(
- 					pm8001_ha->msix_entries[j].vector,
--- 
-1.7.7.6
+Thanks for the patch! Just a minor comment from my side at this point:
 
+Please adjust the Kconfig dependencies into excluding SoC strings to
+follow same style as our other drivers.
+
+-       depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || COMPILE_TEST)
++       depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
+
+Cheers,
+
+/ magnus
