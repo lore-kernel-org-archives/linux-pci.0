@@ -1,569 +1,311 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:57701 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751953AbaBBRGY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Feb 2014 12:06:24 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Robert Moore <robert.moore@intel.com>
-Subject: [PATCH v3 4/7] ACPI / hotplug / PCI: Consolidate ACPIPHP with ACPI core hotplug
-Date: Sun, 02 Feb 2014 18:17:52 +0100
-Message-ID: <1441263.4NcvkvWEG5@vostro.rjw.lan>
-In-Reply-To: <5157096.hCmU2aoKCT@vostro.rjw.lan>
-References: <2217793.001RY6hKlo@vostro.rjw.lan> <1519631.YS65c9Af2C@vostro.rjw.lan> <5157096.hCmU2aoKCT@vostro.rjw.lan>
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:57582 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753118AbaB0NfX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:35:23 -0500
+Received: by mail-yh0-f54.google.com with SMTP id c41so2583978yho.41
+        for <linux-pci@vger.kernel.org>; Thu, 27 Feb 2014 05:35:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1393506599-11561-4-git-send-email-Liviu.Dudau@arm.com>
+References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
+	<1393506599-11561-4-git-send-email-Liviu.Dudau@arm.com>
+Date: Thu, 27 Feb 2014 13:35:22 +0000
+Message-ID: <CAPcvp5G_xZQqcySBfxFbCBCmeYL3n6OeaVW6qZ2k3cGQkga2QA@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] arm64: Add architecture support for PCI
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 27 February 2014 13:09, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> Use the generic host bridge functions to provide support for
+> PCI Express on arm64. There is no support for ISA memory.
+>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>
+>  create mode 100644 arch/arm64/include/asm/pci.h
+>  create mode 100644 arch/arm64/kernel/pci.c
+>
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index 27bbcfc..d1c8568 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -62,7 +62,7 @@ config MMU
+>         def_bool y
+>
+>  config NO_IOPORT
+> -       def_bool y
+> +       def_bool y if !PCI
+>
+>  config STACKTRACE_SUPPORT
+>         def_bool y
+> @@ -134,6 +134,23 @@ menu "Bus support"
+>  config ARM_AMBA
+>         bool
+>
+> +config PCI
+> +       bool "PCI support"
+> +       help
+> +         This feature enables support for PCIe bus system. If you say Y
+> +         here, the kernel will include drivers and infrastructure code
+> +         to support PCIe bus devices.
+> +
+> +config PCI_DOMAINS
+> +       def_bool PCI
+> +
+> +config PCI_SYSCALL
+> +       def_bool PCI
+> +
+> +source "drivers/pci/Kconfig"
+> +source "drivers/pci/pcie/Kconfig"
+> +source "drivers/pci/hotplug/Kconfig"
+> +
+>  endmenu
+>
+>  menu "Kernel Features"
+> diff --git a/arch/arm64/include/asm/Kbuild b/arch/arm64/include/asm/Kbuild
+> index 71c53ec..46924bc 100644
+> --- a/arch/arm64/include/asm/Kbuild
+> +++ b/arch/arm64/include/asm/Kbuild
+> @@ -26,6 +26,7 @@ generic-y += mman.h
+>  generic-y += msgbuf.h
+>  generic-y += mutex.h
+>  generic-y += pci.h
+> +generic-y += pci-bridge.h
+>  generic-y += poll.h
+>  generic-y += posix_types.h
+>  generic-y += resource.h
+> diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+> index 7846a6b..67463a5 100644
+> --- a/arch/arm64/include/asm/io.h
+> +++ b/arch/arm64/include/asm/io.h
+> @@ -120,7 +120,8 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+>  /*
+>   *  I/O port access primitives.
+>   */
+> -#define IO_SPACE_LIMIT         0xffff
+> +#define arch_has_dev_port()    (1)
+> +#define IO_SPACE_LIMIT         0x1ffffff
+>  #define PCI_IOBASE             ((void __iomem *)(MODULES_VADDR - SZ_32M))
+>
+>  static inline u8 inb(unsigned long addr)
+> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> new file mode 100644
+> index 0000000..3edf9e0
+> --- /dev/null
+> +++ b/arch/arm64/include/asm/pci.h
+> @@ -0,0 +1,47 @@
+> +#ifndef __ASM_PCI_H
+> +#define __ASM_PCI_H
+> +#ifdef __KERNEL__
+> +
+> +#include <linux/types.h>
+> +#include <linux/slab.h>
+> +#include <linux/dma-mapping.h>
+> +
+> +#include <asm/io.h>
+> +#include <asm-generic/pci-bridge.h>
+> +#include <asm-generic/pci-dma-compat.h>
+> +
+> +#define PCIBIOS_MIN_IO         0x1000
+> +#define PCIBIOS_MIN_MEM                0
+> +
+> +/*
+> + * Set to 1 if the kernel should re-assign all PCI bus numbers
+> + */
+> +#define pcibios_assign_all_busses() \
+> +       (pci_has_flag(PCI_REASSIGN_ALL_BUS))
+> +
+> +/*
+> + * PCI address space differs from physical memory address space
+> + */
+> +#define PCI_DMA_BUS_IS_PHYS    (0)
+> +
+> +extern int isa_dma_bridge_buggy;
+> +
+> +static inline int pci_domain_nr(struct pci_bus *bus)
+> +{
+> +       struct pci_host_bridge *bridge = to_pci_host_bridge(bus->bridge);
+> +
+> +       if (bridge)
+> +               return bridge->domain_nr;
+> +
+> +       return 0;
+> +}
+> +
+> +static inline int pci_proc_domain(struct pci_bus *bus)
+> +{
+> +       return pci_domain_nr(bus);
+> +}
+> +
+> +extern unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr);
+> +
+> +#endif  /* __KERNEL__ */
+> +#endif  /* __ASM_PCI_H */
+> diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+> index 2d4554b..64fc479 100644
+> --- a/arch/arm64/kernel/Makefile
+> +++ b/arch/arm64/kernel/Makefile
+> @@ -20,6 +20,7 @@ arm64-obj-$(CONFIG_HAVE_HW_BREAKPOINT)+= hw_breakpoint.o
+>  arm64-obj-$(CONFIG_EARLY_PRINTK)       += early_printk.o
+>  arm64-obj-$(CONFIG_ARM64_CPU_SUSPEND)  += sleep.o suspend.o
+>  arm64-obj-$(CONFIG_JUMP_LABEL)         += jump_label.o
+> +arm64-obj-$(CONFIG_PCI)                        += pci.o
+>
+>  obj-y                                  += $(arm64-obj-y) vdso/
+>  obj-m                                  += $(arm64-obj-m)
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> new file mode 100644
+> index 0000000..496df41
+> --- /dev/null
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -0,1 +1,126 @@
+> +/*
+> + * Code borrowed from powerpc/kernel/pci-common.c
+> + *
+> + * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
+> + * Copyright (C) 2014 ARM Ltd.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * version 2 as published by the Free Software Foundation.
+> + *
+> + */
+> +
+> +#include <linux/init.h>
+> +#include <linux/io.h>
+> +#include <linux/kernel.h>
+> +#include <linux/mm.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/slab.h>
+> +
+> +#include <asm/pci-bridge.h>
+> +
+> +
+> +/*
+> + * Called after each bus is probed, but before its children are examined
+> + */
+> +void pcibios_fixup_bus(struct pci_bus *bus)
+> +{
+> +       struct pci_dev *dev;
+> +       struct resource *res;
+> +       int i;
+> +
+> +       if (!pci_is_root_bus(bus)) {
+> +               pci_read_bridge_bases(bus);
+> +
+> +               pci_bus_for_each_resource(bus, res, i) {
+> +                       if (!res || !res->flags || res->parent)
+> +                               continue;
+> +
+> +                       /*
+> +                        * If we are going to reassign everything, we can
+> +                        * shrink the P2P resource to have zero size to
+> +                        * save space
+> +                        */
+> +                       if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
+> +                               res->flags |= IORESOURCE_UNSET;
+> +                               res->start = 0;
+> +                               res->end = -1;
+> +                               continue;
+> +                       }
+> +               }
+> +       }
+> +
+> +       list_for_each_entry(dev, &bus->devices, bus_list) {
+> +               /* Ignore fully discovered devices */
+> +               if (dev->is_added)
+> +                       continue;
+> +
+> +               set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+> +
+> +               /* Read default IRQs and fixup if necessary */
+> +               dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +       }
+> +}
+> +EXPORT_SYMBOL(pcibios_fixup_bus);
+> +
+> +/*
+> + * We don't have to worry about legacy ISA devices, so nothing to do here
+> + */
+> +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> +                               resource_size_t size, resource_size_t align)
+> +{
+> +       return ALIGN(res->start, align);
+> +}
+> +EXPORT_SYMBOL(pcibios_align_resource);
+> +
+> +int pcibios_enable_device(struct pci_dev *dev, int mask)
+> +{
+> +       return pci_enable_resources(dev, mask);
+> +}
 
-The ACPI-based PCI hotplug (ACPIPHP) code currently attaches its
-hotplug context objects directly to ACPI namespace nodes representing
-hotplug devices.  However, after recent changes causing struct
-acpi_device to be created for every namespace node representing a
-device (regardless of its status), that is not necessary any more.
-Moreover, it's vulnerable to a theoretical issue that the ACPI
-handle passed in the context between handle_hotplug_event() and
-hotplug_event_work() may become invalid in the meantime (as a
-result of a concurrent table unload).
+It looks like you will soon be able to remove this and rely on the
+shinny new weak implementation of pcibios_enable_device now
+(http://www.spinics.net/lists/linux-pci/msg29387.html)
 
-In principle, this issue might be addressed by adding a non-empty
-release handler for ACPIPHP hotplug context objects analogous to
-acpi_scan_drop_device(), but that would duplicate the code in that
-function and in acpi_device_del_work_fn().  For this reason, it's
-better to modify ACPIPHP to attach its device hotplug contexts to
-struct device objects representing hotplug devices and make it
-use acpi_hotplug_notify_cb() as its notify handler.  At the same
-time, acpi_device_hotplug() can be modified to dispatch the new
-.hp.event() callback pointing to acpiphp_hotplug_event() from ACPI
-device objects associated with PCI devices and use the generic
-ACPI device hotplug code for device objects with scan handlers
-attached to them.
+Andrew Murray
 
-This allows the existing code duplication between ACPIPHP and the
-ACPI core to be reduced too and makes further ACPI-based device
-hotplug consolidation possible.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c                |  106 +++++++++++++++++++++-------
- drivers/pci/hotplug/acpiphp.h      |    9 +-
- drivers/pci/hotplug/acpiphp_glue.c |  136 +++++++------------------------------
- include/acpi/acpi_bus.h            |   22 +++++
- 4 files changed, 136 insertions(+), 137 deletions(-)
-
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -450,43 +450,61 @@ static int acpi_scan_bus_check(struct ac
- 	return 0;
- }
- 
-+static int acpi_generic_hotplug_event(struct acpi_device *adev, u32 type)
-+{
-+	switch (type) {
-+	case ACPI_NOTIFY_BUS_CHECK:
-+		return acpi_scan_bus_check(adev);
-+	case ACPI_NOTIFY_DEVICE_CHECK:
-+		return acpi_scan_device_check(adev);
-+	case ACPI_NOTIFY_EJECT_REQUEST:
-+	case ACPI_OST_EC_OSPM_EJECT:
-+		return acpi_scan_hot_remove(adev);
-+	}
-+	return -EINVAL;
-+}
-+
- static void acpi_device_hotplug(void *data, u32 src)
- {
- 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
- 	struct acpi_device *adev = data;
--	int error;
-+	int error = -ENODEV;
- 
- 	lock_device_hotplug();
- 	mutex_lock(&acpi_scan_lock);
- 
- 	/*
- 	 * The device object's ACPI handle cannot become invalid as long as we
--	 * are holding acpi_scan_lock, but it may have become invalid before
-+	 * are holding acpi_scan_lock, but it might have become invalid before
- 	 * that lock was acquired.
- 	 */
- 	if (adev->handle == INVALID_ACPI_HANDLE)
--		goto out;
-+		goto err_out;
- 
--	switch (src) {
--	case ACPI_NOTIFY_BUS_CHECK:
--		error = acpi_scan_bus_check(adev);
--		break;
--	case ACPI_NOTIFY_DEVICE_CHECK:
--		error = acpi_scan_device_check(adev);
--		break;
--	case ACPI_NOTIFY_EJECT_REQUEST:
--	case ACPI_OST_EC_OSPM_EJECT:
--		error = acpi_scan_hot_remove(adev);
--		break;
--	default:
--		error = -EINVAL;
--		break;
-+	if (adev->handler) {
-+		error = acpi_generic_hotplug_event(adev, src);
-+	} else {
-+		int (*event)(struct acpi_device *, u32);
-+
-+		acpi_lock_hp_context();
-+		event = adev->hp ? adev->hp->event : NULL;
-+		acpi_unlock_hp_context();
-+		/*
-+		 * There may be additional notify handlers for device objects
-+		 * without the .event() callback, so ignore them here.
-+		 */
-+		if (event)
-+			error = event(adev, src);
-+		else
-+			goto out;
- 	}
- 	if (!error)
- 		ost_code = ACPI_OST_SC_SUCCESS;
- 
-- out:
-+ err_out:
- 	acpi_evaluate_hotplug_ost(adev->handle, src, ost_code, NULL);
-+
-+ out:
- 	acpi_bus_put_acpi_device(adev);
- 	mutex_unlock(&acpi_scan_lock);
- 	unlock_device_hotplug();
-@@ -494,8 +512,8 @@ static void acpi_device_hotplug(void *da
- 
- static void acpi_hotplug_notify_cb(acpi_handle handle, u32 type, void *data)
- {
--	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
- 	struct acpi_scan_handler *handler = data;
-+	u32 ost_code = ACPI_OST_SC_SUCCESS;
- 	struct acpi_device *adev;
- 	acpi_status status;
- 
-@@ -503,25 +521,48 @@ static void acpi_hotplug_notify_cb(acpi_
- 	case ACPI_NOTIFY_BUS_CHECK:
- 		acpi_handle_debug(handle, "ACPI_NOTIFY_BUS_CHECK event\n");
- 		break;
-+
- 	case ACPI_NOTIFY_DEVICE_CHECK:
- 		acpi_handle_debug(handle, "ACPI_NOTIFY_DEVICE_CHECK event\n");
- 		break;
-+
- 	case ACPI_NOTIFY_EJECT_REQUEST:
- 		acpi_handle_debug(handle, "ACPI_NOTIFY_EJECT_REQUEST event\n");
--		if (!handler->hotplug.enabled) {
-+		if (handler && !handler->hotplug.enabled) {
- 			acpi_handle_err(handle, "Eject disabled\n");
- 			ost_code = ACPI_OST_SC_EJECT_NOT_SUPPORTED;
--			goto err_out;
-+			goto out;
- 		}
- 		acpi_evaluate_hotplug_ost(handle, ACPI_NOTIFY_EJECT_REQUEST,
- 					  ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
- 		break;
--	default:
--		/* non-hotplug event; possibly handled by other handler */
-+
-+	case ACPI_NOTIFY_DEVICE_WAKE:
- 		return;
-+
-+	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
-+		acpi_handle_err(handle, "Device cannot be configured due "
-+				"to a frequency mismatch\n");
-+		goto out;
-+
-+	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
-+		acpi_handle_err(handle, "Device cannot be configured due "
-+				"to a bus mode mismatch\n");
-+		goto out;
-+
-+	case ACPI_NOTIFY_POWER_FAULT:
-+		acpi_handle_err(handle, "Device has suffered a power fault\n");
-+		goto out;
-+
-+	default:
-+		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
-+		ost_code = ACPI_OST_SC_UNRECOGNIZED_NOTIFY;
-+		goto out;
- 	}
-+
-+	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
- 	if (acpi_bus_get_acpi_device(handle, &adev))
--		goto err_out;
-+		goto out;
- 
- 	status = acpi_hotplug_execute(acpi_device_hotplug, adev, type);
- 	if (ACPI_SUCCESS(status))
-@@ -529,10 +570,22 @@ static void acpi_hotplug_notify_cb(acpi_
- 
- 	acpi_bus_put_acpi_device(adev);
- 
-- err_out:
-+ out:
- 	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
- }
- 
-+void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data)
-+{
-+	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+				    acpi_hotplug_notify_cb, data);
-+}
-+
-+void acpi_remove_hotplug_notify_handler(acpi_handle handle)
-+{
-+	acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+				   acpi_hotplug_notify_cb);
-+}
-+
- static ssize_t real_power_state_show(struct device *dev,
- 				     struct device_attribute *attr, char *buf)
- {
-@@ -1991,8 +2044,7 @@ static void acpi_scan_init_hotplug(acpi_
- 	list_for_each_entry(hwid, &pnp.ids, list) {
- 		handler = acpi_scan_match_handler(hwid->id, NULL);
- 		if (handler) {
--			acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--					acpi_hotplug_notify_cb, handler);
-+			acpi_install_hotplug_notify_handler(handle, handler);
- 			break;
- 		}
- 	}
-Index: linux-pm/drivers/pci/hotplug/acpiphp.h
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp.h
-+++ linux-pm/drivers/pci/hotplug/acpiphp.h
-@@ -116,12 +116,17 @@ struct acpiphp_func {
- };
- 
- struct acpiphp_context {
-+	struct acpi_hotplug_context hp;
- 	struct acpiphp_func func;
--	struct acpi_device *adev;
- 	struct acpiphp_bridge *bridge;
- 	unsigned int refcount;
- };
- 
-+static inline struct acpiphp_context *to_acpiphp_context(struct acpi_hotplug_context *hp)
-+{
-+	return container_of(hp, struct acpiphp_context, hp);
-+}
-+
- static inline struct acpiphp_context *func_to_context(struct acpiphp_func *func)
- {
- 	return container_of(func, struct acpiphp_context, func);
-@@ -129,7 +134,7 @@ static inline struct acpiphp_context *fu
- 
- static inline struct acpi_device *func_to_acpi_device(struct acpiphp_func *func)
- {
--	return func_to_context(func)->adev;
-+	return func_to_context(func)->hp.self;
- }
- 
- static inline acpi_handle func_to_handle(struct acpiphp_func *func)
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -59,17 +59,12 @@
- static LIST_HEAD(bridge_list);
- static DEFINE_MUTEX(bridge_mutex);
- 
--static void handle_hotplug_event(acpi_handle handle, u32 type, void *data);
-+static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
- static void hotplug_event(u32 type, void *data);
- static void free_bridge(struct kref *kref);
- 
--static void acpiphp_context_handler(acpi_handle handle, void *context)
--{
--	/* Intentionally empty. */
--}
--
- /**
-  * acpiphp_init_context - Create hotplug context and grab a reference to it.
-  * @adev: ACPI device object to create the context for.
-@@ -79,39 +74,27 @@ static void acpiphp_context_handler(acpi
- static struct acpiphp_context *acpiphp_init_context(struct acpi_device *adev)
- {
- 	struct acpiphp_context *context;
--	acpi_status status;
- 
- 	context = kzalloc(sizeof(*context), GFP_KERNEL);
- 	if (!context)
- 		return NULL;
- 
--	context->adev = adev;
- 	context->refcount = 1;
--	status = acpi_attach_data(adev->handle, acpiphp_context_handler, context);
--	if (ACPI_FAILURE(status)) {
--		kfree(context);
--		return NULL;
--	}
-+	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_event);
- 	return context;
- }
- 
- /**
-  * acpiphp_get_context - Get hotplug context and grab a reference to it.
-- * @handle: ACPI object handle to get the context for.
-+ * @adev: ACPI device object to get the context for.
-  *
-  * Call under acpi_hp_context_lock.
-  */
--static struct acpiphp_context *acpiphp_get_context(acpi_handle handle)
-+static struct acpiphp_context *acpiphp_get_context(struct acpi_device *adev)
- {
--	struct acpiphp_context *context = NULL;
--	acpi_status status;
--	void *data;
-+	struct acpiphp_context *context = to_acpiphp_context(adev->hp);
- 
--	status = acpi_get_data(handle, acpiphp_context_handler, &data);
--	if (ACPI_SUCCESS(status)) {
--		context = data;
--		context->refcount++;
--	}
-+	context->refcount++;
- 	return context;
- }
- 
-@@ -129,7 +112,7 @@ static void acpiphp_put_context(struct a
- 		return;
- 
- 	WARN_ON(context->bridge);
--	acpi_detach_data(context->adev->handle, acpiphp_context_handler);
-+	context->hp.self->hp = NULL;
- 	kfree(context);
- }
- 
-@@ -378,14 +361,8 @@ static acpi_status register_slot(acpi_ha
- 	}
- 
- 	/* install notify handler */
--	if (!(newfunc->flags & FUNC_HAS_DCK)) {
--		status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--						     handle_hotplug_event,
--						     context);
--		if (ACPI_FAILURE(status))
--			acpi_handle_err(handle,
--					"failed to install notify handler\n");
--	}
-+	if (!(newfunc->flags & FUNC_HAS_DCK))
-+		acpi_install_hotplug_notify_handler(handle, NULL);
- 
- 	return AE_OK;
- }
-@@ -394,9 +371,13 @@ static struct acpiphp_bridge *acpiphp_ha
- {
- 	struct acpiphp_context *context;
- 	struct acpiphp_bridge *bridge = NULL;
-+	struct acpi_device *adev;
-+
-+	if (acpi_bus_get_device(handle, &adev))
-+		return NULL;
- 
- 	acpi_lock_hp_context();
--	context = acpiphp_get_context(handle);
-+	context = acpiphp_get_context(adev);
- 	if (context) {
- 		bridge = context->bridge;
- 		if (bridge)
-@@ -412,7 +393,6 @@ static void cleanup_bridge(struct acpiph
- {
- 	struct acpiphp_slot *slot;
- 	struct acpiphp_func *func;
--	acpi_status status;
- 
- 	list_for_each_entry(slot, &bridge->slots, node) {
- 		list_for_each_entry(func, &slot->funcs, sibling) {
-@@ -421,13 +401,8 @@ static void cleanup_bridge(struct acpiph
- 			if (is_dock_device(handle))
- 				unregister_hotplug_dock_device(handle);
- 
--			if (!(func->flags & FUNC_HAS_DCK)) {
--				status = acpi_remove_notify_handler(handle,
--							ACPI_SYSTEM_NOTIFY,
--							handle_hotplug_event);
--				if (ACPI_FAILURE(status))
--					pr_err("failed to remove notify handler\n");
--			}
-+			if (!(func->flags & FUNC_HAS_DCK))
-+				acpi_remove_hotplug_notify_handler(handle);
- 		}
- 		slot->flags |= SLOT_IS_GOING_AWAY;
- 		if (slot->slot)
-@@ -792,7 +767,7 @@ static void hotplug_event(u32 type, void
- 	struct acpiphp_context *context = data;
- 	struct acpiphp_func *func = &context->func;
- 	struct acpiphp_slot *slot = func->slot;
--	acpi_handle handle = context->adev->handle;
-+	acpi_handle handle = context->hp.self->handle;
- 	struct acpiphp_bridge *bridge;
- 
- 	acpi_lock_hp_context();
-@@ -842,79 +817,24 @@ static void hotplug_event(u32 type, void
- 		put_bridge(bridge);
- }
- 
--static void hotplug_event_work(void *data, u32 type)
--{
--	struct acpiphp_context *context = data;
--
--	acpi_scan_lock_acquire();
--
--	hotplug_event(type, context);
--
--	acpi_scan_lock_release();
--	acpi_evaluate_hotplug_ost(context->adev->handle, type,
--				  ACPI_OST_SC_SUCCESS, NULL);
--	put_bridge(context->func.parent);
--}
--
--/**
-- * handle_hotplug_event - handle ACPI hotplug event
-- * @handle: Notify()'ed acpi_handle
-- * @type: Notify code
-- * @data: pointer to acpiphp_context structure
-- *
-- * Handles ACPI event notification on slots.
-- */
--static void handle_hotplug_event(acpi_handle handle, u32 type, void *data)
-+static int acpiphp_hotplug_event(struct acpi_device *adev, u32 type)
- {
- 	struct acpiphp_context *context;
--	u32 ost_code = ACPI_OST_SC_SUCCESS;
--
--	switch (type) {
--	case ACPI_NOTIFY_BUS_CHECK:
--	case ACPI_NOTIFY_DEVICE_CHECK:
--		break;
--	case ACPI_NOTIFY_EJECT_REQUEST:
--		ost_code = ACPI_OST_SC_EJECT_IN_PROGRESS;
--		acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
--		break;
--
--	case ACPI_NOTIFY_DEVICE_WAKE:
--		return;
--
--	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
--		acpi_handle_err(handle, "Device cannot be configured due "
--				"to a frequency mismatch\n");
--		goto out;
--
--	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
--		acpi_handle_err(handle, "Device cannot be configured due "
--				"to a bus mode mismatch\n");
--		goto out;
--
--	case ACPI_NOTIFY_POWER_FAULT:
--		acpi_handle_err(handle, "Device has suffered a power fault\n");
--		goto out;
--
--	default:
--		acpi_handle_warn(handle, "Unsupported event type 0x%x\n", type);
--		ost_code = ACPI_OST_SC_UNRECOGNIZED_NOTIFY;
--		goto out;
--	}
- 
- 	acpi_lock_hp_context();
--	context = acpiphp_get_context(handle);
--	if (context && !WARN_ON(context->adev->handle != handle)) {
--		get_bridge(context->func.parent);
--		acpiphp_put_context(context);
--		acpi_hotplug_execute(hotplug_event_work, context, type);
-+	context = acpiphp_get_context(adev);
-+	if (!context) {
- 		acpi_unlock_hp_context();
--		return;
-+		return -ENODATA;
- 	}
-+	get_bridge(context->func.parent);
-+	acpiphp_put_context(context);
- 	acpi_unlock_hp_context();
--	ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE;
- 
-- out:
--	acpi_evaluate_hotplug_ost(handle, type, ost_code, NULL);
-+	hotplug_event(type, context);
-+
-+	put_bridge(context->func.parent);
-+	return 0;
- }
- 
- /**
-@@ -967,7 +887,7 @@ void acpiphp_enumerate_slots(struct pci_
- 		 * bridge is not interesting to us either.
- 		 */
- 		acpi_lock_hp_context();
--		context = acpiphp_get_context(handle);
-+		context = acpiphp_get_context(adev);
- 		if (!context) {
- 			acpi_unlock_hp_context();
- 			put_device(&bus->dev);
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -137,6 +137,16 @@ struct acpi_scan_handler {
- };
- 
- /*
-+ * ACPI Hotplug Context
-+ * --------------------
-+ */
-+
-+struct acpi_hotplug_context {
-+	struct acpi_device *self;
-+	int (*event)(struct acpi_device *, u32);
-+};
-+
-+/*
-  * ACPI Driver
-  * -----------
-  */
-@@ -329,6 +339,7 @@ struct acpi_device {
- 	struct acpi_device_perf performance;
- 	struct acpi_device_dir dir;
- 	struct acpi_scan_handler *handler;
-+	struct acpi_hotplug_context *hp;
- 	struct acpi_driver *driver;
- 	void *driver_data;
- 	struct device dev;
-@@ -351,6 +362,15 @@ static inline void acpi_set_device_statu
- 	*((u32 *)&adev->status) = sta;
- }
- 
-+static inline void acpi_set_hp_context(struct acpi_device *adev,
-+				       struct acpi_hotplug_context *hp,
-+				       int (*event)(struct acpi_device *, u32))
-+{
-+	hp->self = adev;
-+	hp->event = event;
-+	adev->hp = hp;
-+}
-+
- /* acpi_device.dev.bus == &acpi_bus_type */
- extern struct bus_type acpi_bus_type;
- 
-@@ -423,6 +443,8 @@ static inline bool acpi_device_enumerate
- typedef void (*acpi_hp_callback)(void *data, u32 src);
- 
- acpi_status acpi_hotplug_execute(acpi_hp_callback func, void *data, u32 src);
-+void acpi_install_hotplug_notify_handler(acpi_handle handle, void *data);
-+void acpi_remove_hotplug_notify_handler(acpi_handle handle);
- 
- /**
-  * module_acpi_driver(acpi_driver) - Helper macro for registering an ACPI driver
-
+> +
+> +void pcibios_fixup_bridge_ranges(struct list_head *resources)
+> +{
+> +}
+> +
+> +#define IO_SPACE_PAGES ((IO_SPACE_LIMIT + 1) / PAGE_SIZE)
+> +static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
+> +
+> +unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr)
+> +{
+> +       unsigned long start, len, virt_start;
+> +       int err;
+> +
+> +       if (res->end > IO_SPACE_LIMIT)
+> +               return -EINVAL;
+> +
+> +       /*
+> +        * try finding free space for the whole size first,
+> +        * fall back to 64K if not available
+> +        */
+> +       len = resource_size(res);
+> +       start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
+> +                               res->start / PAGE_SIZE, len / PAGE_SIZE, 0);
+> +       if (start == IO_SPACE_PAGES && len > SZ_64K) {
+> +               len = SZ_64K;
+> +               start = 0;
+> +               start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
+> +                                       start, len / PAGE_SIZE, 0);
+> +       }
+> +
+> +       /* no 64K area found */
+> +       if (start == IO_SPACE_PAGES)
+> +               return -ENOMEM;
+> +
+> +       /* ioremap physical aperture to virtual aperture */
+> +       virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
+> +       err = ioremap_page_range(virt_start, virt_start + len,
+> +                               phys_addr, __pgprot(PROT_DEVICE_nGnRE));
+> +       if (err)
+> +               return err;
+> +
+> +       bitmap_set(pci_iospace, start, len / PAGE_SIZE);
+> +
+> +       /* return io_offset */
+> +       return start * PAGE_SIZE - res->start;
+> +}
+> --
+> 1.9.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
