@@ -1,48 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:46294 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751638AbaBZTJE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Feb 2014 14:09:04 -0500
-Received: by mail-ig0-f176.google.com with SMTP id uy17so2856179igb.3
-        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2014 11:09:02 -0800 (PST)
-Subject: [PATCH 0/4] i2o: Use pci_bus_alloc_resource()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Markus Lidel <Markus.Lidel@shadowconnect.com>,
-	linux-kernel@vger.kernel.org
-Date: Wed, 26 Feb 2014 12:08:59 -0700
-Message-ID: <20140226190306.9616.30567.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail.skyhub.de ([78.46.96.112]:54901 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751114AbaB0QbQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 27 Feb 2014 11:31:16 -0500
+Date: Thu, 27 Feb 2014 17:31:08 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, dougthompson@xmission.com, bhelgaas@google.com,
+	JBeulich@suse.com, dan.carpenter@oracle.com,
+	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
+	linux-pci@vger.kernel.org, Arindam.Nath@amd.com
+Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
+Message-ID: <20140227163108.GH18191@pd.tnic>
+References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+ <20140221142749.GC11531@pd.tnic>
+ <5307BF6F.8040303@amd.com>
+ <20140224140931.GA16457@pd.tnic>
+ <530F6643.5090009@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <530F6643.5090009@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-i20 currently uses pci_find_parent_resource() followed by
-allocate_resource() to allocate PCI space.  The problem is that this won't
-work reliably because before we allocate the space, we don't know its
-address, and therefore we can't find the parent resource.  Even if we know
-the *type* of space we want, in some cases there are multiple possibilities
-(root buses with multiple apertures to them, prefetchable or
-non-prefetchable apertures, etc.)
+On Thu, Feb 27, 2014 at 10:22:27AM -0600, Aravind Gopalakrishnan wrote:
+> Ok, here's more info: we will need to add support in k10temp for this
+> model; and support is not required in fam15h_power as register bits
+> used by the driver code are unavailable for OS. But F{3,4} usage is
+> split: k10temp uses F3 device ID and fam15h_power uses F4 device ID.
+>
+> Not sure if you want to split these definitions between amd_nb.h and
+> pci_ids.h or just let it be.
 
-This changes it to use pci_bus_alloc_resource(), which takes care of those
-details.
+Yeah, let's let it be. Thanks for getting the info - I'll ack the
+original submission.
 
-This also fixes some things that look like copy/paste errors, e.g., trying
-to allocate an I/O space with 1MB alignment.
+-- 
+Regards/Gruss,
+    Boris.
 
-I don't have hardware to test these changes, but I don't think these
-allocation paths actually worked before, this shouldn't be any worse than
-what we have today.
-
----
-
-Bjorn Helgaas (4):
-      i2o: Fix I/O space allocation copy/paste error
-      i2o: Fix I/O space alignment requirement
-      i2o: Refactor i2o_iop_systab_set() PCI space allocation
-      i2o: Use pci_bus_alloc_resource(), not allocate_resource() directly
-
-
- drivers/message/i2o/iop.c |   85 ++++++++++++++++++++++-----------------------
- 1 file changed, 42 insertions(+), 43 deletions(-)
+Sent from a fat crate under my desk. Formatting is fine.
+--
