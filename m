@@ -1,87 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:45079 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234AbaBECaI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 21:30:08 -0500
-Message-ID: <52F1A22C.3090202@gmail.com>
-Date: Tue, 04 Feb 2014 18:30:04 -0800
-From: Rajat Jain <rajatxjain@gmail.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:33882 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750952AbaB0UHn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 27 Feb 2014 15:07:43 -0500
+Date: Thu, 27 Feb 2014 13:07:29 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
+ resources.
+Message-ID: <20140227200729.GB7773@obsidianresearch.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+ <20140227191259.GA31753@bart.dudau.co.uk>
+ <20140227193627.GA7773@obsidianresearch.com>
+ <5379319.g8IPYmY2Zo@wuerfel>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yinghai Lu <yhlu.kernel@gmail.com>
-CC: Guenter Roeck <groeck@juniper.net>,
-	Rajat Jain <rajatjain@juniper.net>,
-	Rajat Jain <rajatxjain@gmail.com>
-Subject: [PATCH v4 4/8] pciehp: Don't disable the link permanently, during
- removal
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5379319.g8IPYmY2Zo@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need future link up events for hot-add, thus don't disable
-the link permanently during device removal. Also, remove the static
-functions that are now left unused.
+On Thu, Feb 27, 2014 at 08:48:08PM +0100, Arnd Bergmann wrote:
+> > It also looks correct for architectures that use the CPU MMIO address
+> > as the IO address directly (where IO_SPACE_LIMIT would be 4G)
+> 
+> Are you aware of any that still do? I thought we had stopped doing
+> that.
 
-This reverts part of 2debd9289997 ("PCI: pciehp: Disable/enable link
-during slot power off/on"). This was dicussed at
-http://marc.info/?l=linux-pci&m=138963477507425&w=2
-where it was revealed that it was done for a bug in a pcie repeater
-chip on that particular platform.
+I thought ia64 used to, but it has been a long time since I've touched
+one...
 
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
- drivers/pci/hotplug/pciehp_hpc.c |   18 ------------------
- 1 file changed, 18 deletions(-)
+> > Architectures that use the virtual IO window technique will always
+> > require a custom pci_address_to_pio implementation.
+> 
+> Hmm, at the moment we only call it from of_address_to_resource(),
+> which in turn does not get called on PCI devices, and does not
+> call pci_address_to_pio for 'simple' platform devices. The only
+> case I can think of where it actually matters is when we have
+> ISA devices in DT that use an I/O port address in the reg property,
+> and that case hopefully won't happen on ARM32 or ARM64.
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 245a3cb..15ca3a1 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -242,11 +242,6 @@ static void pcie_wait_link_active(struct controller *ctrl)
- 	__pcie_wait_link_active(ctrl, true);
- }
- 
--static void pcie_wait_link_not_active(struct controller *ctrl)
--{
--	__pcie_wait_link_active(ctrl, false);
--}
--
- static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
- {
- 	u32 l;
-@@ -332,11 +327,6 @@ static int pciehp_link_enable(struct controller *ctrl)
- 	return __pciehp_link_set(ctrl, true);
- }
- 
--static int pciehp_link_disable(struct controller *ctrl)
--{
--	return __pciehp_link_set(ctrl, false);
--}
--
- void pciehp_get_attention_status(struct slot *slot, u8 *status)
- {
- 	struct controller *ctrl = slot->ctrl;
-@@ -508,14 +498,6 @@ void pciehp_power_off_slot(struct slot * slot)
- {
- 	struct controller *ctrl = slot->ctrl;
- 
--	/* Disable the link at first */
--	pciehp_link_disable(ctrl);
--	/* wait the link is down */
--	if (ctrl->link_active_reporting)
--		pcie_wait_link_not_active(ctrl);
--	else
--		msleep(1000);
--
- 	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
--- 
-1.7.9.5
+Sure, I ment, after Liviu's patch it will become required since he is
+cleverly using it to figure out what the io mapping the bridge driver
+setup before calling the helper.
 
+> > I think the legacy reasons for having all those layers of translation
+> > are probably not applicable to ARM64, and it is much simpler without
+> > the extra translation step....
+> > 
+> > Arnd, what do you think?
+> 
+> Either I don't like it or I misunderstand you ;-)
+> 
+> Most PCI drivers normally don't call ioport_map or pci_iomap, so
+> we can't just do it there. If you are thinking of calling ioport_map
+
+Okay, that was one of the 'legacy reasons'. Certainly lots of drivers
+do call pci_iomap, but if you think legacy drivers that don't are
+important to ARM64 then it makes sense to use the virtual IO window.
+
+> for every PCI device that has an I/O BAR and storing the virtual
+> address in the pci_dev resource, I don't see what that gains us
+
+Mainly we get to drop the fancy dynamic allocation stuff for the fixed
+virtual window, and it gives the option to have a 1:1 relationship
+between CPU addresses and PCI BARs.
+
+> in terms of complexity, and it will also break /dev/port.
+
+Yes, /dev/port needs updating, it would need to iomap (arguably it
+probably should be doing that already anyhow), and the hardwired limit
+of 65536 needs to be replaced with the arch's IO limit, but those do
+not seem to be fundemental problems with the UAPI??
+
+Jason
