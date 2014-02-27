@@ -1,50 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:41332 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619AbaBMDCT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:02:19 -0500
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
-Date: Thu, 13 Feb 2014 12:03:32 +0900
-Message-Id: <20140213030332.10398.67426.sendpatchset@w520>
-In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
-References: <20140213030302.10398.37322.sendpatchset@w520>
-Subject: [PATCH 03/08] PCI: rcar: fix bridge logic configuration accesses
+Received: from relmlor3.renesas.com ([210.160.252.173]:24160 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750952AbaB0KJK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 05:09:10 -0500
+In-Reply-To: <CANqRtoT8huX5QFqU6M4t=gKCW8wrk13b0nsR2+8C84HUKHrCLg@mail.gmail.com>
+References: <1393438283-10542-1-git-send-email-phil.edworthy@renesas.com>	<1393438283-10542-2-git-send-email-phil.edworthy@renesas.com> <CANqRtoT8huX5QFqU6M4t=gKCW8wrk13b0nsR2+8C84HUKHrCLg@mail.gmail.com>
+To: Magnus Damm <magnus.damm@gmail.com>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+	SH-Linux <linux-sh@vger.kernel.org>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>
+MIME-Version: 1.0
+From: Phil.Edworthy@renesas.com
+Message-ID: <OFA9DD1EC8.C9E2E5C8-ON80257C8C.00378F02-80257C8C.0037AF2C@eu.necel.com>
+Date: Thu, 27 Feb 2014 10:08:13 +0000
+Subject: Re: [PATCH 1/5 v2 RFC] PCI: host: Add Renesas R-Car PCIe driver
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Hi Magnus,
 
-The bridge logic at slot 0 only supports reads up to 0x40 and the
-rest of the PCI configuration space for this slot is marked as
-reserved in the manual.
+On 27/02/2014 09:59, Magnus Damm wrote:
+> On Thu, Feb 27, 2014 at 3:11 AM, Phil Edworthy
+> <phil.edworthy@renesas.com> wrote:
+> > This PCIe Host driver currently does not support MSI, so cards
+> > fall back to INTx interrupts.
+> >
+> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> > ---
+> > v2:
+> >  - Use msleep instead of udelay when waiting for the link
+> >  - Use pm_runtime
+> >  - Removed unused definition
+> >  - Also replaced call to devm_request_and_ioremap with 
+devm_ioremap_resource
+> >    and fixed a bug with this when reporting errors.
+> >
+> >  drivers/pci/host/Kconfig     |    6 +
+> >  drivers/pci/host/Makefile    |    1 +
+> >  drivers/pci/host/pcie-rcar.c |  588 
+++++++++++++++++++++++++++++++++++++++++++
+> >  drivers/pci/host/pcie-rcar.h |   82 ++++++
+> >  4 files changed, 677 insertions(+)
+> >  create mode 100644 drivers/pci/host/pcie-rcar.c
+> >  create mode 100644 drivers/pci/host/pcie-rcar.h
+> >
+> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> > index 47d46c6..b1c1787 100644
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -33,4 +33,10 @@ config PCI_RCAR_GEN2
+> >           There are 3 internal PCI controllers available with a single
+> >           built-in EHCI/OHCI host controller present on each one.
+> >
+> > +config PCI_RCAR_GEN2_PCIE
+> > +       bool "Renesas R-Car PCIe controller"
+> > +       depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || 
+COMPILE_TEST)
+> 
+> Hi Phil,
+> 
+> Thanks for the patch! Just a minor comment from my side at this point:
+> 
+> Please adjust the Kconfig dependencies into excluding SoC strings to
+> follow same style as our other drivers.
+> 
+> -       depends on ARM && (ARCH_R8A7790 || ARCH_R8A7791 || COMPILE_TEST)
+> +       depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
 
-Trying a read from offset 0x100 is producing an error from the
-bridge. With error interrupts enabled, the following is printed:
+Ok, will do!
 
-pci-rcar-gen2 ee0d0000.pci: error irq: status 00000014
+Thanks
+Phil
 
-Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
-Signed-off-by: Magnus Damm <damm@opensource.se>
----
-
- drivers/pci/host/pci-rcar-gen2.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
---- 0005/drivers/pci/host/pci-rcar-gen2.c
-+++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 09:45:45.000000000 +0900
-@@ -119,6 +119,10 @@ static void __iomem *rcar_pci_cfg_base(s
- 	if (slot > 2)
- 		return NULL;
- 
-+	/* bridge logic only has registers to 0x40 */
-+	if (slot == 0x0 && where >= 0x40)
-+		return NULL;
-+
- 	val = slot ? RCAR_AHBPCI_WIN1_DEVICE | RCAR_AHBPCI_WIN_CTR_CFG :
- 		     RCAR_AHBPCI_WIN1_HOST | RCAR_AHBPCI_WIN_CTR_CFG;
- 
