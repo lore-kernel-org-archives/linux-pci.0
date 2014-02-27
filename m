@@ -1,44 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:52642 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751114AbaBCWQK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Feb 2014 17:16:10 -0500
-Date: Mon, 3 Feb 2014 15:15:59 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
-	Jon Masters <jcm@redhat.com>, Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [RFC PATCH V3 1/4] pci: APM X-Gene PCIe controller driver
-Message-ID: <20140203221559.GG2519@obsidianresearch.com>
-References: <1390599168-13150-1-git-send-email-tinamdar@apm.com>
- <201401301516.27091.arnd@arndb.de>
- <CACoXjcnXoysMeBsGuOb3t5b10zdeJ8pOnuOOzR8AaZhsOOYVEw@mail.gmail.com>
- <4985267.LnsktRmabM@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4985267.LnsktRmabM@wuerfel>
+Received: from nat28.tlf.novell.com ([130.57.49.28]:50960 "EHLO
+	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbaB0I4X convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:3:1>);
+	Thu, 27 Feb 2014 03:56:23 -0500
+Message-Id: <530F0BD3020000780011FC25@nat28.tlf.novell.com>
+Date: Thu, 27 Feb 2014 08:56:35 +0000
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Bjorn Helgaas" <bhelgaas@google.com>
+Cc: <gregkh@linuxfoundation.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH] PCI/MSI: simplify populate_msi_sysfs()
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 03, 2014 at 09:12:32PM +0100, Arnd Bergmann wrote:
+While originally this was a patch to fix the two memory leaks (which
+got preempted by the two commits that went in the day before I wanted
+to submit this fix), I think this can (and should) be done more
+efficiently:
+- swapping the order of the two allocations and storing the
+  msi_dev_attr-derived pointer right after allocation, allowing the
+  cleanup code to pick things up without extra effort
+- using kasprintf() instead of the kmalloc()/sprintf() pair
 
-> Are you sure that is true for the root bridge as well? I don't
-> remember the details, but I though that for the host bridge,
-> we don't actually look at the BARs at all.
+Signed-off-by: Jan Beulich <jbeulich@suse.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/pci/msi.c |   16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-That is right, but this isn't a host bridge device, it is a PCI-PCI
-bridge with root complex registers. The root complex bridge is not the
-same as the host bridge.
+--- 3.14-rc4/drivers/pci/msi.c
++++ 3.14-rc4-pci-msi-sysfs-cleanup/drivers/pci/msi.c
+@@ -544,22 +544,18 @@ static int populate_msi_sysfs(struct pci
+ 	if (!msi_attrs)
+ 		return -ENOMEM;
+ 	list_for_each_entry(entry, &pdev->msi_list, list) {
+-		char *name = kmalloc(20, GFP_KERNEL);
+-		if (!name)
+-			goto error_attrs;
+-
+ 		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+-		if (!msi_dev_attr) {
+-			kfree(name);
++		if (!msi_dev_attr)
+ 			goto error_attrs;
+-		}
++		msi_attrs[count] = &msi_dev_attr->attr;
+ 
+-		sprintf(name, "%d", entry->irq);
+ 		sysfs_attr_init(&msi_dev_attr->attr);
+-		msi_dev_attr->attr.name = name;
++		msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
++						    entry->irq);
++		if (!msi_dev_attr->attr.name)
++			goto error_attrs;
+ 		msi_dev_attr->attr.mode = S_IRUGO;
+ 		msi_dev_attr->show = msi_mode_show;
+-		msi_attrs[count] = &msi_dev_attr->attr;
+ 		++count;
+ 	}
+ 
 
-Unfortunately the implementation is non-conforming. :(
 
-Jason
+
