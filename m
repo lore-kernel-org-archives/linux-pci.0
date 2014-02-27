@@ -1,101 +1,54 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Ariel Elior <ariele@broadcom.com>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 02/35] bnx2x: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:07:54 +0100
-Message-Id: <f8822086d21320729a274f5920d5ed613016501b.1392717502.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
+Date: Thu, 27 Feb 2014 12:36:27 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
+ resources.
+Message-ID: <20140227193627.GA7773@obsidianresearch.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393506402-11474-2-git-send-email-Liviu.Dudau@arm.com>
+ <20140227181951.GC24656@obsidianresearch.com>
+ <20140227191259.GA31753@bart.dudau.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140227191259.GA31753@bart.dudau.co.uk>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+On Thu, Feb 27, 2014 at 07:12:59PM +0000, Liviu Dudau wrote:
+> The outstanding issue is how to fix pci_address_to_pio() as it will not
+> for for range->cpu_addr > IO_SPACE_LIMIT (16MB in my case).
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Ariel Elior <ariele@broadcom.com>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c |   46 ++++++++++-------------
- 1 files changed, 20 insertions(+), 26 deletions(-)
+The default actually looks fine to me, it is the correct behavior for
+systems that actually have a dedicated IO space (like x86) where the
+'CPU' value for IO is the exact value used in the IO accessor
+instructions. In this case the IO_SPACE_LIMIT test is appropriate.
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
-index 9ded3db..8363b9d 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.c
-@@ -1638,36 +1638,16 @@ int bnx2x_enable_msix(struct bnx2x *bp)
- 	DP(BNX2X_MSG_SP, "about to request enable msix with %d vectors\n",
- 	   msix_vec);
- 
--	rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], msix_vec);
--
-+	rc = pci_enable_msix_range(bp->pdev, &bp->msix_table[0],
-+				   BNX2X_MIN_MSIX_VEC_CNT(bp), msix_vec);
- 	/*
- 	 * reconfigure number of tx/rx queues according to available
- 	 * MSI-X vectors
- 	 */
--	if (rc >= BNX2X_MIN_MSIX_VEC_CNT(bp)) {
--		/* how less vectors we will have? */
--		int diff = msix_vec - rc;
--
--		BNX2X_DEV_INFO("Trying to use less MSI-X vectors: %d\n", rc);
--
--		rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], rc);
--
--		if (rc) {
--			BNX2X_DEV_INFO("MSI-X is not attainable rc %d\n", rc);
--			goto no_msix;
--		}
--		/*
--		 * decrease number of queues by number of unallocated entries
--		 */
--		bp->num_ethernet_queues -= diff;
--		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
--
--		BNX2X_DEV_INFO("New queue configuration set: %d\n",
--			       bp->num_queues);
--	} else if (rc > 0) {
-+	if (rc == -ENOSPC) {
- 		/* Get by with single vector */
--		rc = pci_enable_msix(bp->pdev, &bp->msix_table[0], 1);
--		if (rc) {
-+		rc = pci_enable_msix_range(bp->pdev, &bp->msix_table[0], 1, 1);
-+		if (rc < 0) {
- 			BNX2X_DEV_INFO("Single MSI-X is not attainable rc %d\n",
- 				       rc);
- 			goto no_msix;
-@@ -1680,8 +1660,22 @@ int bnx2x_enable_msix(struct bnx2x *bp)
- 		bp->num_ethernet_queues = 1;
- 		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
- 	} else if (rc < 0) {
--		BNX2X_DEV_INFO("MSI-X is not attainable  rc %d\n", rc);
-+		BNX2X_DEV_INFO("MSI-X is not attainable rc %d\n", rc);
- 		goto no_msix;
-+	} else if (rc < msix_vec) {
-+		/* how less vectors we will have? */
-+		int diff = msix_vec - rc;
-+
-+		BNX2X_DEV_INFO("Trying to use less MSI-X vectors: %d\n", rc);
-+
-+		/*
-+		 * decrease number of queues by number of unallocated entries
-+		 */
-+		bp->num_ethernet_queues -= diff;
-+		bp->num_queues = bp->num_ethernet_queues + bp->num_cnic_queues;
-+
-+		BNX2X_DEV_INFO("New queue configuration set: %d\n",
-+			       bp->num_queues);
- 	}
- 
- 	bp->flags |= USING_MSIX_FLAG;
--- 
-1.7.7.6
+It also looks correct for architectures that use the CPU MMIO address
+as the IO address directly (where IO_SPACE_LIMIT would be 4G)
 
+Architectures that use the virtual IO window technique will always
+require a custom pci_address_to_pio implementation.
+
+BTW, something that occured to me after reading the patches:
+
+For ARM64 you might want to think about doing away with the fixed
+virtual IO window like we see in ARM32. Just use the CPU MMIO address
+directly within the kernel, and implement a ioport_map to setup the MM
+on demand.
+
+I think the legacy reasons for having all those layers of translation
+are probably not applicable to ARM64, and it is much simpler without
+the extra translation step....
+
+Arnd, what do you think?
+
+Jason
