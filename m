@@ -1,60 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 22 Feb 2014 09:50:31 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Gleb Natapov <gleb@kernel.org>,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] kvm: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140222085030.GA26794@dhcp-26-207.brq.redhat.com>
-References: <1392804931-30671-11-git-send-email-agordeev@redhat.com>
- <5304B09D.7010900@redhat.com>
- <20140221170414.GM17353@dhcp-26-207.brq.redhat.com>
- <20140221170504.GN17353@dhcp-26-207.brq.redhat.com>
- <530788C1.6030109@redhat.com>
- <20140221185620.GA18725@dhcp-26-207.brq.redhat.com>
- <5307C6D9.4030503@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5307C6D9.4030503@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:52926 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751613AbaB0NHT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:07:19 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO resources.
+Date: Thu, 27 Feb 2014 13:06:39 +0000
+Message-Id: <1393506402-11474-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 10:36:25PM +0100, Paolo Bonzini wrote:
-> Il 21/02/2014 19:56, Alexander Gordeev ha scritto:
-> >On Fri, Feb 21, 2014 at 06:11:29PM +0100, Paolo Bonzini wrote:
-> >>It's okay, but it's not clear to me whether I should include this
-> >>patch or someone else will. :)
-> >
-> >Please, include it.
-> 
-> And where do I get pci_enable_msix_exact?  When will pci_enable_msix
-> disappear?
+The ranges property for a host bridge controller in DT describes
+the mapping between the PCI bus address and the CPU physical address.
+The resources framework however expects that the IO resources start
+at a pseudo "port" address 0 (zero) and have a maximum size of 64kb.
+The conversion from pci ranges to resources failed to take that into
+account.
 
-Commit d158fc7 ("Merge tag 'pci-v3.14-fixes-1'") in Linus's tree has it.
+In the process move the function into drivers/of/address.c as it
+now depends on pci_address_to_pio() code.
 
-pci_enable_msix() is going to be removed once all drivers updated with
-new interface.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-> So, do I have to pull something (which I'd rather not, since pulling
-> the wrong thing in a submaintainer tree will make Linus angry), or
-> should I do it in the next merge window after pci_enable_msix_exact
-> gets in?
-
-So it is already in.
-
-> All in all, it seems much simpler to me if the linux-pci tree just
-> includes the whole patch series with my Acked-by.
->
-> Paolo
-> 
-> >Thanks!
-> >
-> >>Paolo
-> >
-> 
-
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 1a54f1f..7cf2b16 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -719,3 +719,34 @@ void __iomem *of_iomap(struct device_node *np, int index)
+ 	return ioremap(res.start, resource_size(&res));
+ }
+ EXPORT_SYMBOL(of_iomap);
++
++/**
++ * of_pci_range_to_resource - Create a resource from an of_pci_range
++ * @range:	the PCI range that describes the resource
++ * @np:		device node where the range belongs to
++ * @res:	pointer to a valid resource that will be updated to
++ *              reflect the values contained in the range.
++ * Note that if the range is an IO range, the resource will be converted
++ * using pci_address_to_pio() which can fail if it is called to early or
++ * if the range cannot be matched to any host bridge IO space.
++ */
++void of_pci_range_to_resource(struct of_pci_range *range,
++	struct device_node *np, struct resource *res)
++{
++	res->flags = range->flags;
++	if (res->flags & IORESOURCE_IO) {
++		unsigned long port;
++		port = pci_address_to_pio(range->pci_addr);
++		if (port == (unsigned long)-1) {
++			res->start = (resource_size_t)OF_BAD_ADDR;
++			res->end = (resource_size_t)OF_BAD_ADDR;
++			return;
++		}
++		res->start = port;
++	} else {
++		res->start = range->cpu_addr;
++	}
++	res->end = res->start + range->size - 1;
++	res->parent = res->child = res->sibling = NULL;
++	res->name = np->full_name;
++}
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 5f6ed6b..a667762 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -23,17 +23,8 @@ struct of_pci_range {
+ #define for_each_of_pci_range(parser, range) \
+ 	for (; of_pci_range_parser_one(parser, range);)
+ 
+-static inline void of_pci_range_to_resource(struct of_pci_range *range,
+-					    struct device_node *np,
+-					    struct resource *res)
+-{
+-	res->flags = range->flags;
+-	res->start = range->cpu_addr;
+-	res->end = range->cpu_addr + range->size - 1;
+-	res->parent = res->child = res->sibling = NULL;
+-	res->name = np->full_name;
+-}
+-
++extern void of_pci_range_to_resource(struct of_pci_range *range,
++		struct device_node *np, struct resource *res);
+ /* Translate a DMA address from device space to CPU space */
+ extern u64 of_translate_dma_address(struct device_node *dev,
+ 				    const __be32 *in_addr);
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.9.0
+
