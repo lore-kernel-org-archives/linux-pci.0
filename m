@@ -1,132 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18482 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752293AbaBSGHb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 01:07:31 -0500
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
+Received: from moutng.kundenserver.de ([212.227.126.130]:65242 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106AbaB0N6n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 08:58:43 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Andrew Murray <amurray@embedded-bits.co.uk>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: [Patch Part2 V2 09/17] iommu/vt-d: fix incorrect iommu_count for si_domain
-Date: Wed, 19 Feb 2014 14:07:29 +0800
-Message-Id: <1392790057-32434-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO resources.
+Date: Thu, 27 Feb 2014 14:58:34 +0100
+Message-ID: <23116993.AhiSYlcnvx@wuerfel>
+In-Reply-To: <CAPcvp5EqcKEWoH_--azp+sMykmEWtY5whHG=c9t3sZVXZyAPUg@mail.gmail.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com> <1393506402-11474-2-git-send-email-Liviu.Dudau@arm.com> <CAPcvp5EqcKEWoH_--azp+sMykmEWtY5whHG=c9t3sZVXZyAPUg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The iommu_count field in si_domain(static identity domain) is
-initialized to zero and never increases. It will underflow
-when tearing down iommu unit in function free_dmar_iommu()
-and leak memory. So refine code to correctly manage
-si_domain->iommu_count.
+On Thursday 27 February 2014 13:22:19 Andrew Murray wrote:
+> On 27 February 2014 13:06, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> >
+> > The ranges property for a host bridge controller in DT describes
+> > the mapping between the PCI bus address and the CPU physical address.
+> > The resources framework however expects that the IO resources start
+> > at a pseudo "port" address 0 (zero) and have a maximum size of 64kb.
+> 
+> Is this just in the case of ARM? (I've tried to keep up with the
+> conversation, but apologies if I've misunderstood).
 
-Warning message caused by si_domain memory leak:
-[   14.609681] IOMMU: Setting RMRR:
-[   14.613496] Ignoring identity map for HW passthrough device 0000:00:1a.0 [0xbdcfd000 - 0xbdd1dfff]
-[   14.623809] Ignoring identity map for HW passthrough device 0000:00:1d.0 [0xbdcfd000 - 0xbdd1dfff]
-[   14.634162] IOMMU: Prepare 0-16MiB unity mapping for LPC
-[   14.640329] Ignoring identity map for HW passthrough device 0000:00:1f.0 [0x0 - 0xffffff]
-[   14.673360] IOMMU: dmar init failed
-[   14.678157] kmem_cache_destroy iommu_devinfo: Slab cache still has objects
-[   14.686076] CPU: 12 PID: 1 Comm: swapper/0 Not tainted 3.13.0-rc1-gerry+ #59
-[   14.694176] Hardware name: Intel Corporation LH Pass ........../SVRBD-ROW_T, BIOS SE5C600.86B.99.99.x059.091020121352 09/10/2012
-[   14.707412]  0000000000000000 ffff88042dd33db0 ffffffff8156223d ffff880c2cc37c00
-[   14.716407]  ffff88042dd33dc8 ffffffff811790b1 ffff880c2d3533b8 ffff88042dd33e00
-[   14.725468]  ffffffff81dc7a6a ffffffff81b1e8e0 ffffffff81f84058 ffffffff81d8a711
-[   14.734464] Call Trace:
-[   14.737453]  [<ffffffff8156223d>] dump_stack+0x4d/0x66
-[   14.743430]  [<ffffffff811790b1>] kmem_cache_destroy+0xf1/0x100
-[   14.750279]  [<ffffffff81dc7a6a>] intel_iommu_init+0x122/0x56a
-[   14.757035]  [<ffffffff81d8a711>] ? iommu_setup+0x27d/0x27d
-[   14.763491]  [<ffffffff81d8a739>] pci_iommu_init+0x28/0x52
-[   14.769846]  [<ffffffff81000342>] do_one_initcall+0x122/0x180
-[   14.776506]  [<ffffffff81077738>] ? parse_args+0x1e8/0x320
-[   14.782866]  [<ffffffff81d850e8>] kernel_init_freeable+0x1e1/0x26c
-[   14.789994]  [<ffffffff81d84833>] ? do_early_param+0x88/0x88
-[   14.796556]  [<ffffffff8154ffc0>] ? rest_init+0xd0/0xd0
-[   14.802626]  [<ffffffff8154ffce>] kernel_init+0xe/0x130
-[   14.808698]  [<ffffffff815756ac>] ret_from_fork+0x7c/0xb0
-[   14.814963]  [<ffffffff8154ffc0>] ? rest_init+0xd0/0xd0
-[   14.821640] kmem_cache_destroy iommu_domain: Slab cache still has objects
-[   14.829456] CPU: 12 PID: 1 Comm: swapper/0 Not tainted 3.13.0-rc1-gerry+ #59
-[   14.837562] Hardware name: Intel Corporation LH Pass ........../SVRBD-ROW_T, BIOS SE5C600.86B.99.99.x059.091020121352 09/10/2012
-[   14.850803]  0000000000000000 ffff88042dd33db0 ffffffff8156223d ffff88102c1ee3c0
-[   14.861222]  ffff88042dd33dc8 ffffffff811790b1 ffff880c2d3533b8 ffff88042dd33e00
-[   14.870284]  ffffffff81dc7a76 ffffffff81b1e8e0 ffffffff81f84058 ffffffff81d8a711
-[   14.879271] Call Trace:
-[   14.882227]  [<ffffffff8156223d>] dump_stack+0x4d/0x66
-[   14.888197]  [<ffffffff811790b1>] kmem_cache_destroy+0xf1/0x100
-[   14.895034]  [<ffffffff81dc7a76>] intel_iommu_init+0x12e/0x56a
-[   14.901781]  [<ffffffff81d8a711>] ? iommu_setup+0x27d/0x27d
-[   14.908238]  [<ffffffff81d8a739>] pci_iommu_init+0x28/0x52
-[   14.914594]  [<ffffffff81000342>] do_one_initcall+0x122/0x180
-[   14.921244]  [<ffffffff81077738>] ? parse_args+0x1e8/0x320
-[   14.927598]  [<ffffffff81d850e8>] kernel_init_freeable+0x1e1/0x26c
-[   14.934738]  [<ffffffff81d84833>] ? do_early_param+0x88/0x88
-[   14.941309]  [<ffffffff8154ffc0>] ? rest_init+0xd0/0xd0
-[   14.947380]  [<ffffffff8154ffce>] kernel_init+0xe/0x130
-[   14.953430]  [<ffffffff815756ac>] ret_from_fork+0x7c/0xb0
-[   14.959689]  [<ffffffff8154ffc0>] ? rest_init+0xd0/0xd0
-[   14.966299] kmem_cache_destroy iommu_iova: Slab cache still has objects
-[   14.973923] CPU: 12 PID: 1 Comm: swapper/0 Not tainted 3.13.0-rc1-gerry+ #59
-[   14.982020] Hardware name: Intel Corporation LH Pass ........../SVRBD-ROW_T, BIOS SE5C600.86B.99.99.x059.091020121352 09/10/2012
-[   14.995263]  0000000000000000 ffff88042dd33db0 ffffffff8156223d ffff88042cb5c980
-[   15.004265]  ffff88042dd33dc8 ffffffff811790b1 ffff880c2d3533b8 ffff88042dd33e00
-[   15.013322]  ffffffff81dc7a82 ffffffff81b1e8e0 ffffffff81f84058 ffffffff81d8a711
-[   15.022318] Call Trace:
-[   15.025238]  [<ffffffff8156223d>] dump_stack+0x4d/0x66
-[   15.031202]  [<ffffffff811790b1>] kmem_cache_destroy+0xf1/0x100
-[   15.038038]  [<ffffffff81dc7a82>] intel_iommu_init+0x13a/0x56a
-[   15.044786]  [<ffffffff81d8a711>] ? iommu_setup+0x27d/0x27d
-[   15.051242]  [<ffffffff81d8a739>] pci_iommu_init+0x28/0x52
-[   15.057601]  [<ffffffff81000342>] do_one_initcall+0x122/0x180
-[   15.064254]  [<ffffffff81077738>] ? parse_args+0x1e8/0x320
-[   15.070608]  [<ffffffff81d850e8>] kernel_init_freeable+0x1e1/0x26c
-[   15.077747]  [<ffffffff81d84833>] ? do_early_param+0x88/0x88
-[   15.084300]  [<ffffffff8154ffc0>] ? rest_init+0xd0/0xd0
-[   15.090362]  [<ffffffff8154ffce>] kernel_init+0xe/0x130
-[   15.096431]  [<ffffffff815756ac>] ret_from_fork+0x7c/0xb0
-[   15.102693]  [<ffffffff8154ffc0>] ? rest_init+0xd0/0xd0
-[   15.189273] PCI-DMA: Using software bounce buffering for IO (SWIOTLB)
+We are a bit inconsistent on Linux. The limitation cited above is
+indeed something we came up with on ARM to simplify the possible
+cases we have to worry about.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/iommu/intel-iommu.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In theory, each PCI host can have its own 4GB I/O space, but in practice
+limiting to 64KB is the most reasonable way to use it, and that
+still provides plenty of room for I/O registers since most devices
+don't use any, and at most a few bytes of address space.
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 6724772..a27d3eb 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1365,6 +1365,7 @@ static int iommu_attach_domain(struct dmar_domain *domain,
- 	}
- 
- 	domain->id = num;
-+	domain->iommu_count++;
- 	set_bit(num, iommu->domain_ids);
- 	set_bit(iommu->seq_id, domain->iommu_bmp);
- 	iommu->domains[num] = domain;
-@@ -1489,7 +1490,6 @@ static int domain_init(struct dmar_domain *domain, int guest_width)
- 		domain->iommu_snooping = 0;
- 
- 	domain->iommu_superpage = fls(cap_super_page_val(iommu->cap));
--	domain->iommu_count = 1;
- 	domain->nid = iommu->node;
- 
- 	/* always allocate the top pgd */
--- 
-1.7.10.4
+The limit we enforce on Linux is IO_SPACE_LIMIT, which is sometimes set
+to 0xffffffff, but I think most if not all of those cases are done so
+in error.
 
+> > + * of_pci_range_to_resource - Create a resource from an of_pci_range
+> > + * @range:     the PCI range that describes the resource
+> > + * @np:                device node where the range belongs to
+> > + * @res:       pointer to a valid resource that will be updated to
+> > + *              reflect the values contained in the range.
+> > + * Note that if the range is an IO range, the resource will be converted
+> > + * using pci_address_to_pio() which can fail if it is called to early or
+> > + * if the range cannot be matched to any host bridge IO space.
+> > + */
+> > +void of_pci_range_to_resource(struct of_pci_range *range,
+> > +       struct device_node *np, struct resource *res)
+> > +{
+> > +       res->flags = range->flags;
+> > +       if (res->flags & IORESOURCE_IO) {
+> > +               unsigned long port;
+> > +               port = pci_address_to_pio(range->pci_addr);
+> 
+> Is this likely to break existing users of of_pci_range_to_resource?
+> 
+> For example arch/mips: IO_SPACE_LIMIT defaults to 0xffff and there is
+> no overridden implementation for pci_address_to_pio, therefore this
+> will set res->start to OF_BAD_ADDR whereas previously it would have
+> been the CPU address for I/O (assuming the cpu_addr was previously >
+> 64K).
+
+The function is used on MIPS, Microblaze and ARM at the moment.
+MIPS currently gets it wrong, by calling pci_add_resource_offset
+on the CPU address for IORESOURCE_IO, which is the wrong space.
+Limiting to IO_SPACE_LIMIT will fix it for the first host bridge
+on MIPS, and the second one will still not work, until
+IO_SPACE_LIMIT is fixed.
+
+On ARM, I believe we have a couple of drivers that make the
+same mistake, and others that at the moment override the
+address with range->pci_addr, so they won't change.
+
+Microblaze does 'range.cpu_addr = range.pci_addr;' for the I/O
+space window to fix it up. We should probably take a closer look there.
+
+	Arnd
