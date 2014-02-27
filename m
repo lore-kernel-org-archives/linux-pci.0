@@ -1,38 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8694 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751397AbaBMRwU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Feb 2014 12:52:20 -0500
-Date: Thu, 13 Feb 2014 18:54:19 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>,
-	iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 21/22] qla4xxx: Use pci_enable_msix_range()
-Message-ID: <20140213175418.GF26610@dhcp-26-207.brq.redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
- <eb9c6c476786ff901512e46859f0d59a5e62170d.1391512266.git.agordeev@redhat.com>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:17839
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753651AbaB0Qcb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 11:32:31 -0500
+Message-ID: <530F6898.1040807@amd.com>
+Date: Thu, 27 Feb 2014 10:32:24 -0600
+From: Aravind Gopalakrishnan <aravind.gopalakrishnan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <eb9c6c476786ff901512e46859f0d59a5e62170d.1391512266.git.agordeev@redhat.com>
+To: Borislav Petkov <bp@alien8.de>
+CC: <tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<x86@kernel.org>, <dougthompson@xmission.com>,
+	<bhelgaas@google.com>, <JBeulich@suse.com>,
+	<dan.carpenter@oracle.com>, <linux-kernel@vger.kernel.org>,
+	<linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<Arindam.Nath@amd.com>
+Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
+References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com> <20140221142749.GC11531@pd.tnic> <5307BF6F.8040303@amd.com> <20140224140931.GA16457@pd.tnic> <530F6643.5090009@amd.com> <20140227163108.GH18191@pd.tnic>
+In-Reply-To: <20140227163108.GH18191@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 04, 2014 at 12:17:07PM +0100, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range() and pci_enable_msix_range()
-> interfaces.
+On 2/27/2014 10:31 AM, Borislav Petkov wrote:
+> On Thu, Feb 27, 2014 at 10:22:27AM -0600, Aravind Gopalakrishnan wrote:
+>> Ok, here's more info: we will need to add support in k10temp for this
+>> model; and support is not required in fam15h_power as register bits
+>> used by the driver code are unavailable for OS. But F{3,4} usage is
+>> split: k10temp uses F3 device ID and fam15h_power uses F4 device ID.
+>>
+>> Not sure if you want to split these definitions between amd_nb.h and
+>> pci_ids.h or just let it be.
+> Yeah, let's let it be. Thanks for getting the info - I'll ack the
+> original submission.
+>
 
-Hi Vikas,
+Thanks,
+-Aravind.
 
-Any feedback on this?
-
-Thanks!
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
