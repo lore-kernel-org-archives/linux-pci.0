@@ -1,50 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19236 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751375AbaBSI4c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Feb 2014 03:56:32 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 1/9] cciss: Fallback to MSI rather than to INTx if MSI-X failed
-Date: Wed, 19 Feb 2014 09:58:13 +0100
-Message-Id: <2b4fbd561d282fb3301e2a72d8ebce9f35a81514.1392799751.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392799751.git.agordeev@redhat.com>
-References: <cover.1392799751.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 27 Feb 2014 14:21:03 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
+ resources.
+Message-ID: <20140227142103.GM1692@e106497-lin.cambridge.arm.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+ <CAPcvp5EqcKEWoH_--azp+sMykmEWtY5whHG=c9t3sZVXZyAPUg@mail.gmail.com>
+ <20140227135616.GK1692@e106497-lin.cambridge.arm.com>
+ <7049275.SxVd47MEQ4@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <7049275.SxVd47MEQ4@wuerfel>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Mike Miller <mike.miller@hp.com>
-Cc: iss_storagedev@hp.com
-Cc: linux-pci@vger.kernel.org
----
- drivers/block/cciss.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+On Thu, Feb 27, 2014 at 02:08:44PM +0000, Arnd Bergmann wrote:
+> On Thursday 27 February 2014 13:56:16 Liviu Dudau wrote:
+> > On Thu, Feb 27, 2014 at 01:22:19PM +0000, Andrew Murray wrote:
+> > > On 27 February 2014 13:06, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > > >
+> > > > +/**
+> > > > + * of_pci_range_to_resource - Create a resource from an of_pci_range
+> > > > + * @range:     the PCI range that describes the resource
+> > > > + * @np:                device node where the range belongs to
+> > > > + * @res:       pointer to a valid resource that will be updated to
+> > > > + *              reflect the values contained in the range.
+> > > > + * Note that if the range is an IO range, the resource will be converted
+> > > > + * using pci_address_to_pio() which can fail if it is called to early or
+> > > > + * if the range cannot be matched to any host bridge IO space.
+> > > > + */
+> > > > +void of_pci_range_to_resource(struct of_pci_range *range,
+> > > > +       struct device_node *np, struct resource *res)
+> > > > +{
+> > > > +       res->flags = range->flags;
+> > > > +       if (res->flags & IORESOURCE_IO) {
+> > > > +               unsigned long port;
+> > > > +               port = pci_address_to_pio(range->pci_addr);
+> > > 
+> > > Is this likely to break existing users of of_pci_range_to_resource?
+> > 
+> > I've tested the change with a tegra2 based device (trimslice) and I've
+> > got a functional board.
+> 
+> Did you have any devices using I/O ports though? They are fairly rare
+> these days.
+> 
+> > > I have no idea if I/O previously worked for mips, but this patch seems
+> > > to change that behavior. It may be a similar story for microblaze and
+> > > powerpc.
+> > 
+> > Both microblaze and powerpc share an identical implementation and it is
+> > expecting that the physical address passed as parameter fits between
+> > io_base_phys and io_base_phys + pcibios_io_size(hose). So yes, the
+> > correct way is to use cpu_addr and fix the weak implementation? But we
+> > don't have enough information for the weak implementation to work, as
+> > we don't know where the physical IO base start (we are just about to
+> > find out from DT).
+> 
+> I think using pci_address_to_pio() at that point is just wrong
+> in either way. Before the host is fully registered, you can't actually
+> look up the port number -- you are only trying to assign one at this time.
+> 
+> The implementation that Will wrote for ARM would work here: find the
+> next available virtual I/O range, call pci_ioremap_io on range->pci_addr
+> and then return the virtual address. Unfortunately that code is not
+> architecture independent at this time, and we will first have to come
+> up with something that can be made to work for powerpc, microblaze,
+> mips and arm.
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 036e8ab..fc5b0a4 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -4092,13 +4092,14 @@ static void cciss_interrupt_mode(ctlr_info_t *h)
- 		if (err > 0) {
- 			dev_warn(&h->pdev->dev,
- 				"only %d MSI-X vectors available\n", err);
--			goto default_int_mode;
-+			goto single_msi_mode;
- 		} else {
- 			dev_warn(&h->pdev->dev,
- 				"MSI-X init failed %d\n", err);
--			goto default_int_mode;
-+			goto single_msi_mode;
- 		}
- 	}
-+single_msi_mode:
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
- 		if (!pci_enable_msi(h->pdev))
- 			h->msi_vector = 1;
+No, no, no... we cannot use the virtual address as the start of the resource
+as this will later be used when doing pcibios_resource_to_bus(). What
+we need here is a portable way of converting from PCI range that uses physical
+CPU addresses to a IORESOURCE_IO type resource that uses logical IO
+addresses. Using logical IO values works, as Bjorn's code treats it as
+physical address.
+
+The alternative is to introduce a thorough revision of the pci_host_bridge
+calls that understand that IORESOURCE_IO and IORESOURCE_MEM are different
+beasts. That is what caught Will and others a number of times.
+
+Best regards,
+Liviu
+
+> 
+> 	Arnd
+> 
+> 
+
 -- 
-1.7.7.6
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
