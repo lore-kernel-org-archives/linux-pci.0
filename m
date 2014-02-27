@@ -1,96 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:38543 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754117AbaBURFM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 12:05:12 -0500
-Date: Fri, 21 Feb 2014 18:05:08 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Gerlando Falauto <gerlando.falauto@keymile.com>,
+Received: from moutng.kundenserver.de ([212.227.126.131]:59996 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbaB0TsP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 14:48:15 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Gregory Cl??ment <gregory.clement@free-electrons.com>
-Subject: Re: pci-mvebu driver on km_kirkwood
-Message-ID: <20140221180508.7ed6cfaf@skate>
-In-Reply-To: <20140221163902.GB4706@obsidianresearch.com>
-References: <20140220173518.GA19893@obsidianresearch.com>
-	<20140220212914.29ddc031@skate>
-	<20140221003227.GF19893@obsidianresearch.com>
-	<20140221093444.35870a73@skate>
-	<5307152D.3020804@keymile.com>
-	<20140221101218.45766e8a@skate>
-	<53071970.1040400@keymile.com>
-	<20140221103936.56b3d9f8@skate>
-	<53074584.5010202@keymile.com>
-	<20140221144708.48559045@skate>
-	<20140221163902.GB4706@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO resources.
+Date: Thu, 27 Feb 2014 20:48:08 +0100
+Message-ID: <5379319.g8IPYmY2Zo@wuerfel>
+In-Reply-To: <20140227193627.GA7773@obsidianresearch.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com> <20140227191259.GA31753@bart.dudau.co.uk> <20140227193627.GA7773@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
-
-On Fri, 21 Feb 2014 09:39:02 -0700, Jason Gunthorpe wrote:
-> On Fri, Feb 21, 2014 at 02:47:08PM +0100, Thomas Petazzoni wrote:
-> >  *) I don't know if the algorithm to split the BAR into multiple
-> >     windows is going to be trivial.
+On Thursday 27 February 2014 12:36:27 Jason Gunthorpe wrote:
+> On Thu, Feb 27, 2014 at 07:12:59PM +0000, Liviu Dudau wrote:
+> > The outstanding issue is how to fix pci_address_to_pio() as it will not
+> > for for range->cpu_addr > IO_SPACE_LIMIT (16MB in my case).
 > 
-> physaddr_t base,size;
+> The default actually looks fine to me, it is the correct behavior for
+> systems that actually have a dedicated IO space (like x86) where the
+> 'CPU' value for IO is the exact value used in the IO accessor
+> instructions. In this case the IO_SPACE_LIMIT test is appropriate.
+
+Right.
+
+> It also looks correct for architectures that use the CPU MMIO address
+> as the IO address directly (where IO_SPACE_LIMIT would be 4G)
+
+Are you aware of any that still do? I thought we had stopped doing
+that.
+
+> Architectures that use the virtual IO window technique will always
+> require a custom pci_address_to_pio implementation.
+
+Hmm, at the moment we only call it from of_address_to_resource(),
+which in turn does not get called on PCI devices, and does not
+call pci_address_to_pio for 'simple' platform devices. The only
+case I can think of where it actually matters is when we have
+ISA devices in DT that use an I/O port address in the reg property,
+and that case hopefully won't happen on ARM32 or ARM64.
+
+> BTW, something that occured to me after reading the patches:
 > 
-> while (size != 0) {
->    physaddr_t window_size = 1 << log2_round_down(size);
->    create_window(base,window_size);
->    base += window_size;
->    size -= window_size;
-> }
+> For ARM64 you might want to think about doing away with the fixed
+> virtual IO window like we see in ARM32. Just use the CPU MMIO address
+> directly within the kernel, and implement a ioport_map to setup the MM
+> on demand.
 > 
-> At the very worst log2_round_down is approxmiately
+> I think the legacy reasons for having all those layers of translation
+> are probably not applicable to ARM64, and it is much simpler without
+> the extra translation step....
 > 
-> unsigned int log2_round_down(unsigned int val)
-> {
-> 	unsigned int res = 0;
-> 	while ((1<<res) <= val)
-> 		res++;
-> 	return res - 1;
-> }
-> 
-> Minimum PCI required alignment for windows is 1MB so it will always
-> work out into some number of mbus windows..
+> Arnd, what do you think?
 
-Interesting! Thanks!
+Either I don't like it or I misunderstand you ;-)
 
-Now I have another question: our mvebu_pcie_align_resource() function
-makes sure that the base address of the BAR is aligned on its size,
-because it is a requirement of MBus windows. However, if you later
-split the BAR into multiple windows, will this continue to work out?
+Most PCI drivers normally don't call ioport_map or pci_iomap, so
+we can't just do it there. If you are thinking of calling ioport_map
+for every PCI device that has an I/O BAR and storing the virtual
+address in the pci_dev resource, I don't see what that gains us
+in terms of complexity, and it will also break /dev/port.
 
-Let's take an example: a 96 MB BAR. If it gets put at 0xe0000000, then
-no problem: we create one 64 MB window at 0xe0000000 and a 32 MB window
-at 0xe4000000. Both base addresses are aligned on the size of the
-window.
-
-However, if the 96 MB BAR gets put at 0xea000000 (which is aligned on a
-96 MB boundary, as required by our mvebu_pcie_align_resource). We
-create one 64 MB window at 0xea000000, and one 32 MB window at
-0xee000000. Unfortunately, while 0xea000000 is aligned on a 96 MB
-boundary, it is not aligned on a 64 MB boundary, so the 64 MB window we
-have created is wrong.
-
-Which also makes me think that our mvebu_pcie_align_resource()
-function uses round_up(start, size), which most likely doesn't work with
-non power-of-two sizes.
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+	Arnd
