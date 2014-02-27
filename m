@@ -1,50 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55520 "EHLO mx1.redhat.com"
+Received: from mail.skyhub.de ([78.46.96.112]:54927 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751175AbaBZJCF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 26 Feb 2014 04:02:05 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Jens Axboe <axboe@kernel.dk>, Mike Miller <mike.miller@hp.com>,
-	iss_storagedev@hp.com, linux-pci@vger.kernel.org
-Subject: [PATCH v2 0/2] block: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Wed, 26 Feb 2014 10:02:40 +0100
-Message-Id: <cover.1393404496.git.agordeev@redhat.com>
+	id S1753004AbaB0Qbu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 27 Feb 2014 11:31:50 -0500
+Date: Thu, 27 Feb 2014 17:31:43 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+Cc: tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, dougthompson@xmission.com, bhelgaas@google.com,
+	JBeulich@suse.com, dan.carpenter@oracle.com,
+	linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
+	linux-pci@vger.kernel.org, Arindam.Nath@amd.com
+Subject: Re: [PATCH] amd64_edac: Add support for newer F16h models
+Message-ID: <20140227163143.GI18191@pd.tnic>
+References: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1392913726-16961-1-git-send-email-Aravind.Gopalakrishnan@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes since v1:
-  - cciss: patch #1: a weird 'goto' removed;
-  - cciss: patch #2: pci_enable_msix_exact() used, not pci_enable_msix_range();
-  - rsxx: patch dropped - no need to change anything;
+On Thu, Feb 20, 2014 at 10:28:46AM -0600, Aravind Gopalakrishnan wrote:
+> Extending ECC decoding support for F16h M30h.
+> 
+> Tested on F16h M30h with ECC turned on using mce_amd_inj module and
+> the patch works fine.
+> 
+> Signed-off-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+> Tested-by: Arindam Nath <Arindam.Nath@amd.com>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
-
-This change updates 'cciss' only, but there is also 'nvme' update
-pending - I am waiting for Intel guys to clarify if they want to
-route it thru their tree. If not, I will post the 'nvme' patch as
-a follow-up to this series.
-
-Thanks!
-
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Mike Miller <mike.miller@hp.com>
-Cc: iss_storagedev@hp.com
-Cc: linux-pci@vger.kernel.org
-
-Alexander Gordeev (2):
-  cciss: Fallback to MSI rather than to INTx if MSI-X failed
-  cciss: Use pci_enable_msix_exact() instead of pci_enable_msix()
-
- drivers/block/cciss.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
+Acked-by: Borislav Petkov <bp@suse.de>
 
 -- 
-1.7.7.6
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
