@@ -1,78 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:59796 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751718AbaBQGkG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 17 Feb 2014 01:40:06 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1WFHs3-0002L8-MQ
-	for linux-pci@vger.kernel.org; Mon, 17 Feb 2014 07:40:03 +0100
-Received: from ABTS-North-Static-072.159.160.122.airtelbroadband.in ([ABTS-North-Static-072.159.160.122.airtelbroadband.in])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2014 07:40:03 +0100
-Received: from anand.mistry by ABTS-North-Static-072.159.160.122.airtelbroadband.in with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Mon, 17 Feb 2014 07:40:03 +0100
-To: linux-pci@vger.kernel.org
-From: Anand Mistry <anand.mistry@spectross.com>
-Subject: PCI-PCI bridge memory ranges in linux device tree
-Date: Mon, 17 Feb 2014 06:31:16 +0000 (UTC)
-Message-ID: <loom.20140217T065100-603@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:58001 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751198AbaB0GCA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 01:02:00 -0500
+From: Mohit Kumar <mohit.kumar@st.com>
+To: <bhelgaas@google.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>,
+	Ajay Khandelwal <ajay.khandelwal@st.com>,
+	<spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
+	<stable@vger.kernel.org>
+Subject: [PATCH V2 2/2] PCI: designware: Fix iATU programming for cfg1, io and mem viewport
+Date: Thu, 27 Feb 2014 11:31:28 +0530
+Message-ID: <c7dac8780d569a521a9eb06c4a7d79efecaa6f40.1392904207.git.mohit.kumar@st.com>
+In-Reply-To: <cover.1392904207.git.mohit.kumar@st.com>
+References: <cover.1392904207.git.mohit.kumar@st.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+This patch correct iATU programming for cfg1, io and mem viewport.
+Enable ATU only after configuring it.
 
-Can anybody please help me out with this one. My linux kernel is not
-programming memory ranges of PCI-PCI bridges and crashes on finding devices
-beyond the bridge. How do i enable automatic resource allocation of PCI-PCi
-bridges in the kernel? 
+Signed-off-by: Mohit Kumar <mohit.kumar@st.com>
+Signed-off-by: Ajay Khandelwal <ajay.khandelwal@st.com>
+Acked-by: Jingoo Han <jg1.han@samsung.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: spear-devel@list.st.com
+Cc: linux-pci@vger.kernel.org
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/host/pcie-designware.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-For reference,
-Processor is MPC8313
-Kernel version is 2.6.23.
-Code from the DTS file
-
-/* code starts */
-pci@8500 {
-	bus-range = <0 0>;
-	ranges = <02000000 0 90000000 90000000 0 10000000
-	          42000000 0 80000000 80000000 0 10000000
-	          01000000 0 00000000 e2000000 0 00100000>;
-	#interrupt-cells = <1>;
-	#size-cells = <2>;
-	#address-cells = <3>;
-	reg = <8500 100>;
-	compatible = "fsl,mpc8349-pci";
-	device_type = "pci";
-	interrupt-parent = < &ipic >;
-	interrupts = <42 8>;
-	interrupt-map-mask = <0F800 0 0 7>;
-	interrupt-map = <
-
-			// ** For reference **
-			// INTA = IRQ1 = 0x11
-			// INTB = IRQ2 = 0x12
-			// INTC = IRQ0 = 0x30
-			// INTD = IRQ4 = 0x14
-
-			// BUS 0 IDSEL 0x18 (IDSEL = AD24)
-			0c000 0 0 1 &ipic 11 8  // PCI_INTA 
-			0c000 0 0 2 &ipic 12 8  // PCI_INTB  
-			0c000 0 0 3 &ipic 30 8  // PCI_INTC 
-			0c000 0 0 4 &ipic 14 8  // PCI_INTD 
-			>;
-
-}; 
-
-/* code ends */
-
-
-
-Thanks and Regards,
-Anand Mistry
-
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 391966f..46f4a19 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -522,13 +522,13 @@ static void dw_pcie_prog_viewport_cfg1(struct pcie_port *pp, u32 busdev)
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_CFG1, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+ 	dw_pcie_writel_rc(pp, pp->cfg1_base, PCIE_ATU_LOWER_BASE);
+ 	dw_pcie_writel_rc(pp, (pp->cfg1_base >> 32), PCIE_ATU_UPPER_BASE);
+ 	dw_pcie_writel_rc(pp, pp->cfg1_base + pp->config.cfg1_size - 1,
+ 			  PCIE_ATU_LIMIT);
+ 	dw_pcie_writel_rc(pp, busdev, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, 0, PCIE_ATU_UPPER_TARGET);
++	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+ }
+ 
+ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+@@ -537,7 +537,6 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX0,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_MEM, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+ 	dw_pcie_writel_rc(pp, pp->mem_base, PCIE_ATU_LOWER_BASE);
+ 	dw_pcie_writel_rc(pp, (pp->mem_base >> 32), PCIE_ATU_UPPER_BASE);
+ 	dw_pcie_writel_rc(pp, pp->mem_base + pp->config.mem_size - 1,
+@@ -545,6 +544,7 @@ static void dw_pcie_prog_viewport_mem_outbound(struct pcie_port *pp)
+ 	dw_pcie_writel_rc(pp, pp->config.mem_bus_addr, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.mem_bus_addr),
+ 			  PCIE_ATU_UPPER_TARGET);
++	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+ }
+ 
+ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
+@@ -553,7 +553,6 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_REGION_OUTBOUND | PCIE_ATU_REGION_INDEX1,
+ 			  PCIE_ATU_VIEWPORT);
+ 	dw_pcie_writel_rc(pp, PCIE_ATU_TYPE_IO, PCIE_ATU_CR1);
+-	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+ 	dw_pcie_writel_rc(pp, pp->io_base, PCIE_ATU_LOWER_BASE);
+ 	dw_pcie_writel_rc(pp, (pp->io_base >> 32), PCIE_ATU_UPPER_BASE);
+ 	dw_pcie_writel_rc(pp, pp->io_base + pp->config.io_size - 1,
+@@ -561,6 +560,7 @@ static void dw_pcie_prog_viewport_io_outbound(struct pcie_port *pp)
+ 	dw_pcie_writel_rc(pp, pp->config.io_bus_addr, PCIE_ATU_LOWER_TARGET);
+ 	dw_pcie_writel_rc(pp, upper_32_bits(pp->config.io_bus_addr),
+ 			  PCIE_ATU_UPPER_TARGET);
++	dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
+ }
+ 
+ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+-- 
+1.7.3.4
 
