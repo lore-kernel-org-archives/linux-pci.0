@@ -1,89 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:34571 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751087AbaBLH2Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 02:28:16 -0500
-From: Sascha Hauer <s.hauer@pengutronix.de>
-To: linux-pci@vger.kernel.org
-Cc: kernel@pengutronix.de, Sascha Hauer <s.hauer@pengutronix.de>,
-	Richard Zhu <r65037@freescale.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org, Marek Vasut <marex@denx.de>
-Subject: [PATCH] PCI: imx6: Fix link_up detection
-Date: Wed, 12 Feb 2014 08:27:55 +0100
-Message-Id: <1392190075-23204-1-git-send-email-s.hauer@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2 0/3] [RFC] Add support for PCI in AArch64
+Date: Thu, 27 Feb 2014 13:09:56 +0000
+Message-Id: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is broken since:
+Hi,
 
-| commit e6daf4a5e1b813bc7f85507ec83b8c2452c121e6
-| Author: Marek Vasut <marex@denx.de>
-| Date:   Thu Dec 12 22:49:59 2013 +0100
-|
-|     PCI: imx6: Report "link up" only after link training completes
-|
-|     While waiting for the PHY to report the PCIe link is up, we might hit a
-|     situation where the link training is still in progress, while the PHY
-|     already reports the link is up.  Add additional check for this condition.
-|
-|     Signed-off-by: Marek Vasut <marex@denx.de>
-|     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-|     Acked-by: Shawn Guo <shawn.guo@linaro.org>
+This patch adds support for PCI to AArch64. It is based on my v2 patch
+that adds support for creating generic host bridge structure from
+device tree. With that in place, I was able to boot a platform that
+has PCIe host bridge support and use a PCIe network card.
 
-The problem is: Before the above commit only the PCIE_PHY_DEBUG_R1_XMLH_LINK_UP
-bit was used to determine whether the link is up or not. Since the above commit
-also the PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING is used. This means a link
-still being trained is as link down.
-The designware driver changes the PORT_LOGIC_SPEED_CHANGE bit in
-dw_pcie_host_init() which causes the link to be retrained. During the next call
-to dw_pcie_rd_conf() the link is then reported being down and the function
-returns PCIBIOS_DEVICE_NOT_FOUND resulting in nonfunctioning PCIe.
+Changes from v1:
+  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
+    its size to 16MB
+  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
+    keeping track of assigned IO space and returns an io_offset. At the
+    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
+  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
+    as suggested by Arnd.
 
-This patch fixes this by waiting until the link training has finished before
-testing the PCIE_PHY_DEBUG_R1_XMLH_LINK_UP bit. This is hardly the correct
-solution, but I don't know what should be done instead.
+The API used is different from the one used by ARM architecture. There is
+no pci_common_init_dev() function and no hw_pci structure, as that is no
+longer needed. Once the last signature is added to the legal agreement, I
+will post the host bridge driver code that I am using. Meanwhile, here
+is an example of what the probe function looks like, posted as an example:
 
-Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Richard Zhu <r65037@freescale.com> (maintainer:PCI DRIVER FOR IMX6)
-Cc: Shawn Guo <shawn.guo@linaro.org> (maintainer:PCI DRIVER FOR IMX6)
-Cc: Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM)
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: Marek Vasut <marex@denx.de>
----
- drivers/pci/host/pci-imx6.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct myhostbridge_port *pp;
+	resource_size_t lastbus;
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 866bdc7..9b6b501 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -449,6 +449,7 @@ static void imx6_pcie_reset_phy(struct pcie_port *pp)
- static int imx6_pcie_link_up(struct pcie_port *pp)
- {
- 	u32 rc, ltssm, rx_valid;
-+	int count = 1000;
- 
- 	/*
- 	 * Test if the PHY reports that the link is up and also that
-@@ -458,8 +459,13 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
- 	 * as well here.
- 	 */
- 	rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
--	if ((rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP) &&
--	    !(rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING))
-+	while (rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING) {
-+		if (!count--)
-+			return 0;
-+		rc = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
-+	}
-+
-+	if (rc & PCIE_PHY_DEBUG_R1_XMLH_LINK_UP)
- 		return 1;
- 
- 	/*
+	dev = pdev->dev.of_node;
+
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
+
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
+
+	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
+	if (!bridge) {
+		err = -EINVAL;
+		goto bridge_init_fail;
+	}
+
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_init_fail;
+
+	/* We always enable PCI domains and we keep domain 0 backward
+	 * compatible in /proc for video cards
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+
+	lastbus = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+
+	pci_assign_unassigned_bus_resources(bridge->bus);
+
+	pci_bus_add_devices(bridge->bus);
+
+	return 0;
+
+bridge_init_fail:
+	kfree(pp);
+	return err;
+}
+
+
+Best regards,
+Liviu
+
+
+
+Catalin Marinas (1):
+  arm64: Extend the PCI I/O space to 16MB
+
+Liviu Dudau (2):
+  Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+  arm64: Add architecture support for PCI
+
+ Documentation/arm64/memory.txt |  16 ++++--
+ arch/arm64/Kconfig             |  19 ++++++-
+ arch/arm64/include/asm/Kbuild  |   1 +
+ arch/arm64/include/asm/io.h    |   5 +-
+ arch/arm64/include/asm/pci.h   |  47 +++++++++++++++
+ arch/arm64/kernel/Makefile     |   1 +
+ arch/arm64/kernel/pci.c        | 126 +++++++++++++++++++++++++++++++++++++++++
+ include/asm-generic/io.h       |   2 +-
+ 8 files changed, 207 insertions(+), 10 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
 -- 
-1.8.5.3
+1.9.0
 
