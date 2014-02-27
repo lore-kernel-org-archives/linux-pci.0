@@ -1,140 +1,329 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f202.google.com ([209.85.220.202]:35371 "EHLO
-	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbaBXWEg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Feb 2014 17:04:36 -0500
-Received: by mail-vc0-f202.google.com with SMTP id hu8so795056vcb.3
-        for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2014 14:04:35 -0800 (PST)
-Date: Mon, 24 Feb 2014 13:57:08 -0800
-From: Yu Zhao <yuzhao@google.com>
-To: Kelly.Zytaruk@amd.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	alex.williamson@redhat.com
-Subject: Re: Architectural question regarding IOV support in Linux 3.13.4
-Message-ID: <20140224215708.GC9421@google.com>
-References: <B756807489D6244883AC0B799A6EEC15EAB2E8@storexdag02.amd.com>
- <CAErSpo4OkgGrrZ9anAJ2vSZJDYikv4WC6hjt4T2-mMXpGA=w6A@mail.gmail.com>
- <1393020186.9111.91.camel@ul30vt.home>
- <CAOUHufai=eoR+tgVB5Zdp6veCQgY=pHDSAESZ5cLOjPTw-R8CQ@mail.gmail.com>
- <B756807489D6244883AC0B799A6EEC15EB26C6@storexdag02.amd.com>
- <1393275541.9111.219.camel@ul30vt.home>
+Received: from service87.mimecast.com ([91.220.42.44]:52543 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbaB0ON0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 09:13:26 -0500
+Date: Thu, 27 Feb 2014 14:13:22 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic
+ host_bridge from device tree
+Message-ID: <20140227141322.GL1692@e106497-lin.cambridge.arm.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393506402-11474-5-git-send-email-Liviu.Dudau@arm.com>
+ <18746655.qWHLpMg2Yy@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1393275541.9111.219.camel@ul30vt.home>
+In-Reply-To: <18746655.qWHLpMg2Yy@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 24, 2014 at 01:59:01PM -0700, Alex Williamson wrote:
-> On Mon, 2014-02-24 at 19:22 +0000, Zytaruk, Kelly wrote:
-> > >On Fri, Feb 21, 2014 at 2:03 PM, Alex Williamson <alex.williamson@redhat.com> wrote:
-> > >On Fri, 2014-02-21 at 14:11 -0700, Bjorn Helgaas wrote:
-> > >> [+cc Alex, Yu]
-> > >>
-> > >> On Fri, Feb 21, 2014 at 10:45 AM, Zytaruk, Kelly <Kelly.Zytaruk@amd.com> wrote:
-> > >> >
-> > >> > I am working with SR-IOV and I have a question regarding the function
-> > >> > sriov_init() in ../drivers/pci/iov.c (linux versions 3.4.9 and 3.13.4)
-> > >> >
-> > >> > In sriov_init() the code first checks whether the PF is a Root complex
-> > >> >  endpoint (0x9) or an Express Endpoint (0x0) as shown in the code
-> > >> >  snippet below.  If it is neither it returns the No device error.
-> > >> >
-> > >> > static int sriov_init(struct pci_dev *dev, int pos)
-> > >> > {
-> > >> >          int i;
-> > >> >          int rc;
-> > >> >          int nres;
-> > >> >          u32 pgsz;
-> > >> >          u16 ctrl, total, offset, stride;
-> > >> >          struct pci_sriov *iov;
-> > >> >          struct resource *res;
-> > >> >          struct pci_dev *pdev;
-> > >> >
-> > >> >        if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
-> > >> >              pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-> > >> >                  return -ENODEV;
-> > >> >
-> > >> > My question is why PCI_EXP_TYPE_LEG_END (0x1) is omitted as being a
-> > >> >  valid endpoint.  By excluding Legacy endpoints it fails enabling
-> > >> >  SR-IOV on a VGA PF.
-> > >> >
-> > >> > Is there a design/specification reason why legacy was excluded or was
-> > >> >  it just an assumption that VGA would never support SR-IOV?
-> > >> >
-> > >> > If there is no valid reason to exclude PCI_EXP_TYPE_LEG_END, I would
-> > >> >  like to discuss having it included as a valid endpoint for SR-IOV.
-> > >>
-> > >> Good question.  It looks like it's been that way since the beginning
-> > >> [1], but I don't know why.  I don't see any restriction in the spec
-> > >> about SR-IOV and legacy endpoints.
-> > >>
-> > >> I also don't know whether VGA is an issue.  There are some legacy
-> > >> addressing issues for [mem 0xa0000-0xbffff] and [io 0x3b0-0x3bb] and
-> > >> [io 0x3c0-0x3df].  For example, when a bridge has its VGA Enable bit
-> > >> set, it positively decodes [mem 0xa0000-0xbffff] even if that range
-> > >> isn't included in one of the bridge windows.  I don't know whether a
-> > >> VGA device is similarly allowed to decode that range even if it's not
-> > >> in a BAR.  If it is, I could imagine issues if enabling SR-IOV created
-> > >> several VGA VFs.
-> > >VFs cannot support I/O port space by definition, so I don't think a "VGA
-> > >VF" could actually exist.  There would be nothing wrong with a non-VGA
-> > >GPU VF though.  I also don't see how the differences in Legacy Endpoint
-> > >rules versus a standard Endpoint would preclude supporting SR-IOV.  I
-> > >don't think the SR-IOV spec makes any demands on whether the PF requires
-> > >I/O port resources, which I assume is the main reason for this to call
-> > >itself Legacy.  I'd guess it was likely just an oversight and we should
-> > >add legacy endpoints (or remove the test altogether and trust that if a
-> > >device has an SR-IOV capability, we should initialize it).  Thanks,
-> > >
-> > >Alex
-> > >
-> > >I agree. I vaguely remember there was some reason that excludes legacy
-> > >endpoints from using SR-IOV. But after a quick look at the latest specs,
-> > >I didn't find any.
-> > >
-> > Only Legacy Endpoints can claim I/O.  VFs are not allowed to claim I/O.
-> > VGA devices claim I/O.
+On Thu, Feb 27, 2014 at 01:38:32PM +0000, Arnd Bergmann wrote:
+> On Thursday 27 February 2014 13:06:42 Liviu Dudau wrote:
+> > Several platforms use a rather generic version of parsing
+> > the device tree to find the host bridge ranges. Move the common code
+> > into the generic PCI code and use it to create a pci_host_bridge
+> > structure that can be used by arch code.
 > > 
-> > The SR-IOV spec 1.1 section 3.4.1.6 states
-> > “The Class Code register is read-only and is used to identify the generic function 
-> > of the device and, in some cases, a specific register level programming interface. 
-> > The field in the PF and associated VFs must return the same value when read.”
+> > Based on early attempts by Andrew Murray to unify the code.
+> > Used powerpc and microblaze PCI code as starting point.
 > > 
-> > If the PF is a VGA device then by the definition in the SR-IOV spec the class code 
-> > of the VF would also indicate it as a VGA device, ie Subclass 0x0 = VGA, 
-> > subclass 0x80 = OTHER_DISPLAY_CONTROLLER.  
-> > 
-> > Ideally we would want to have the PF sub-class as 0x0 and the VF subclass as 0x80
-> > But the spec doesn't support this.
-> > 
-> > One speculation as to why Legacy endpoints were omitted might be the assumption
-> > that doing so would allow VGA VFs to be created.
-> > 
-> > It is not reasonable to prevent a VGA PF from enabling SR-IOV as this is a real world 
-> > possibility.  We might need to add more code elsewhere however to prevent a VF
-> > from becoming a VGA device outside of passing it through to a guest VM.
-> > 
-> > Any thoughts on this?
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 > 
-> Good catch, I think you'll need to contact the PCI SIG for
-> clarification.  A VF with a VGA class code implies I/O space that a VF
-> is not allowed to have.  I wouldn't be surprised if they had hoped VGA
-> was a non-issue by this point and legacy-free graphics were standard.
+> Please add Benjamin Herrenschmidt to Cc here, I think it would be helpful
+> to get his input so we can make this work on powerpc as well.
+
+Sorry to Benjamin for omitting him, I will add him to future postings (if he finds
+the direction interesting ;) ).
+
 > 
-> Probably the most appealing solution would be an ECN allowing the VF to
-> expose a different class code from the PF.  This seems generally useful
-> even beyond the scope of this legacy resource issue.  Probably a less
-> appealing option for you would be to expose the PF as a non-VGA display
-> controller, which avoids both the legacy endpoint problem and the VF
-> class code problem.  I suspect we wouldn't find a lot of support for a
-> software only solution to virtualize the class code unless it was
-> standardized.  Such a change would require support in every hypervisor.
-> Thanks,
+> > diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> > index 06ace62..feb8436 100644
+> > --- a/drivers/pci/host-bridge.c
+> > +++ b/drivers/pci/host-bridge.c
+> > @@ -6,9 +6,13 @@
+> >  #include <linux/init.h>
+> >  #include <linux/pci.h>
+> >  #include <linux/module.h>
+> > +#include <linux/of_address.h>
+> > +#include <linux/of_pci.h>
+> >  
+> >  #include "pci.h"
+> >  
+> > +static int domain_nr;
+> > +
 > 
-> Alex
+> For correctness, I think you want an 'atomic_t' here and use
+> atomic_inc_return() to get a new value.
+
+OK, will do.
+
+> 
+> >  static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+> >  {
+> >  	while (bus->parent)
+> > @@ -91,3 +95,133 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+> >  	res->end = region->end + offset;
+> >  }
+> >  EXPORT_SYMBOL(pcibios_bus_to_resource);
+> > +
+> > +/**
+> > + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
+> > + * @dev: device node of the host bridge having the range property
+> > + * @resources: list where the range of resources will be added after DT parsing
+> > + * @io_base: pointer to a variable that will contain the physical address for
+> > + * the start of the I/O range.
+> > + *
+> > + * If this function returns an error then the @resources list will be freed.
+> > + *
+> > + * This function will parse the "ranges" property of a PCI host bridge device
+> > + * node and setup the resource mapping based on its content. It is expected
+> > + * that the property conforms with the Power ePAPR document.
+> > + *
+> > + * Each architecture is then offered the chance of applying their own
+> > + * filtering of pci_host_bridge_windows based on their own restrictions by
+> > + * calling pcibios_fixup_bridge_ranges(). The filtered list of windows
+> > + * can then be used when creating a pci_host_bridge structure.
+> > + */
+> > +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
+> > +		struct list_head *resources, resource_size_t *io_base)
+> > +{
+> > +	struct resource *res;
+> > +	struct of_pci_range range;
+> > +	struct of_pci_range_parser parser;
+> > +	int err;
+> > +
+> > +	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
+> > +
+> > +	/* Check for ranges property */
+> > +	err = of_pci_range_parser_init(&parser, dev);
+> > +	if (err)
+> > +		return err;
+> > +
+> > +	pr_debug("Parsing ranges property...\n");
+> > +	for_each_of_pci_range(&parser, &range) {
+> > +		/* Read next ranges element */
+> > +		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
+> > +				range.pci_space, range.pci_addr);
+> > +		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
+> > +					range.cpu_addr, range.size);
+> > +
+> > +		/*
+> > +		 * If we failed translation or got a zero-sized region
+> > +		 * then skip this range
+> > +		 */
+> > +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+> > +			continue;
+> > +
+> > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> > +		if (!res) {
+> > +			err = -ENOMEM;
+> > +			goto bridge_ranges_nomem;
+> > +		}
+> > +
+> > +		of_pci_range_to_resource(&range, dev, res);
+> > +
+> > +		if (resource_type(res) == IORESOURCE_IO)
+> > +			*io_base = range.cpu_addr;
+> > +
+> > +		pci_add_resource_offset(resources, res,
+> > +				res->start - range.pci_addr);
+> > +	}
+> 
+> This is not the correct resource for I/O space at all. Please talk
+> to Will, I've been over this with him in detail and he probably
+> understands it now. I assume you are both working in the same
+> building.
+
+As you noticed later, it is now correct because res->start will
+have the start logical I/O port. I'm talking with Will on regular basis
+and I think we are both on the same sheet.
+
+> 
+> Since this is common PCI code, you could also decide to open-code
+> the pci_add_resource_offset() function. If you don't do that, I
+> think you have a memory leak for the resources that you can avoid
+> by allocating the resource and pci_host_bridge_window structures
+> together with a single kzalloc.
+
+This is a list of temporary resources that hasn't been yet added
+to pci_host_bridge_window. As noted in the comment for the function, if
+the call fails it will clear the resources list.
+
+> 
+> > +	/* Apply architecture specific fixups for the ranges */
+> > +	pcibios_fixup_bridge_ranges(resources);
+> > +
+> > +	return 0;
+> > +
+> > +bridge_ranges_nomem:
+> > +	pci_free_resource_list(resources);
+> > +	return err;
+> > +}
+> > +
+> > +/**
+> > + * of_create_pci_host_bridge - Create a PCI host bridge structure using
+> > + * information passed in the DT.
+> > + * @parent: device owning this host bridge
+> > + * @ops: pci_ops associated with the host controller
+> > + * @host_data: opaque data structure used by the host controller.
+> > + *
+> > + * returns a pointer to the newly created pci_host_bridge structure, or
+> > + * NULL if the call failed.
+> > + *
+> > + * This function will try to obtain the host bridge domain number by
+> > + * using of_alias_get_id() call with "pci-domain" as a stem. If that
+> > + * fails, a local allocator will be used that will put each host bridge
+> > + * in a new domain.
+> > + */
+> > +struct pci_host_bridge *
+> > +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
+> > +{
+> > +	int err, domain, busno;
+> > +	struct resource bus_range;
+> > +	struct pci_bus *root_bus;
+> > +	struct pci_host_bridge *bridge;
+> > +	resource_size_t io_base;
+> > +	LIST_HEAD(res);
+> > +
+> > +	domain = of_alias_get_id(parent->of_node, "pci-domain");
+> > +	if (domain == -ENODEV)
+> > +		domain = domain_nr++;
+> > +
+> > +	err = of_pci_parse_bus_range(parent->of_node, &bus_range);
+> > +	if (err) {
+> > +		dev_info(parent, "No bus range for %s, using default [0-255]\n",
+> > +			parent->of_node->full_name);
+> > +		bus_range.start = 0;
+> > +		bus_range.end = 255;
+> > +		bus_range.flags = IORESOURCE_BUS;
+> > +	}
+> > +	busno = bus_range.start;
+> > +	pci_add_resource(&res, &bus_range);
+> > +
+> > +	/* now parse the rest of host bridge bus ranges */
+> > +	if (pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base))
+> > +		return NULL;
+> > +
+> > +	/* then create the root bus */
+> > +	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
+> > +						ops, host_data, &res);
+> > +	if (!root_bus)
+> > +		return NULL;
+> 
+> Do we have any code that checks for conflicting domain/bus numbers here?
+> I guess pci_create_root_bus_in_domain() will fail if you have that.
+
+It does fail.
+
+> 
+> Since pci_create_root_bus_in_domain() is a new function that you just
+> introduced, it would be helpful to change the calling conventions
+> so it returns an error pointer instead of NULL upon failing.
+> of_create_pci_host_bridge() can do the same, but pci_create_root_bus()
+> should keep returning NULL so we don't have to change all the
+> callers.
+
+I need to look if any useful information is being captured in the function.
+Please note that pci_create_root_bus_in_domain() is actually the old
+pci_create_root_bus() function with an added parameter.
+
+> 
+> > +	bridge = to_pci_host_bridge(root_bus->bridge);
+> > +	bridge->io_base = io_base;
+
+To answer your later question, io_base is remembered here.
+
+> > +
+> > +	return bridge;
+> > +}
+> > +EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 1eed009..0c5e269 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -395,6 +395,7 @@ struct pci_host_bridge {
+> >  	struct device dev;
+> >  	struct pci_bus *bus;		/* root bus */
+> >  	int domain_nr;
+> > +	resource_size_t io_base;	/* physical address for the start of I/O area */
+> >  	struct list_head windows;	/* pci_host_bridge_windows */
+> >  	void (*release_fn)(struct pci_host_bridge *);
+> >  	void *release_data;
+> 
+> What is the io_base used for here?
+
+It is useful for host bridge drivers as this is the only place where we store
+the physical CPU address for the IO range. This is then needed when setting up the
+translation registers. Also used when calling the pci_ioremap_io function that I'm
+introducing in the AArch64 patches.
+
+Whole patch is still under legal review, but the fragment for setting up the ATR looks
+like this:
+
+	list_for_each_entry(window, &bridge->windows, list) {
+		res = window->res;
+		offset = window->offset;
+		wsize = ilog2(resource_size(res)) - 1;
+
+		if (resource_type(res) == IORESOURCE_MEM)
+			update_atr_entry(pp->base + ATR_REG_whatever,
+				res->start, 	                        /* CPU address */
+				res->start - offset,                    /* PCI address */
+				0, wsize);
+		else if (resource_type(res) == IORESOURCE_IO) {
+			io_offset = pci_ioremap_io(res, bridge->io_base + offset);
+			update_atr_entry(pp->base + ATR_REG_whatever,
+				bridge->io_base + res->start + offset,  /* CPU address */
+				res->start,                             /* PCI address */
+				0x20000, wsize);
+		}
+	}
+
+
+Best regards,
+Liviu
+
+
+> 
+> > @@ -1786,11 +1787,23 @@ static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
+> >  	return bus ? bus->dev.of_node : NULL;
+> >  }
+> >  
+> > +struct pci_host_bridge *
+> > +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
+> > +			void *host_data);
+> > +
+> > +void pcibios_fixup_bridge_ranges(struct list_head *resources);
+> >  #else /* CONFIG_OF */
+> >  static inline void pci_set_of_node(struct pci_dev *dev) { }
+> >  static inline void pci_release_of_node(struct pci_dev *dev) { }
+> >  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+> >  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+> > +
+> > +static inline struct pci_host_bridge *
+> > +pci_host_bridge_of_init(struct device *parent, struct pci_ops *ops,
+> > +			void *host_data)
+> > +{
+> > +	return NULL;
+> > +}
+> >  #endif  /* CONFIG_OF */
+> >  
+> >  #ifdef CONFIG_EEH
+> > 
+> 
+> 
 > 
 
-SR-IOV device can have mixed function types. So the third option would
-be to make the function 0 regular VGA device and function 1 PF with
-subclass 0x80. By doing this, you retain the compatibility for your
-host VGA driver and solve the subclass problem.
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
