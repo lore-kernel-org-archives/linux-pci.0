@@ -1,48 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <52F20388.9080109@codethink.co.uk>
-Date: Wed, 05 Feb 2014 09:25:28 +0000
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.130]:56929 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753098AbaB0P6x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Feb 2014 10:58:53 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linaro-kernel@lists.linaro.org
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic host_bridge from device tree
+Date: Thu, 27 Feb 2014 16:58:41 +0100
+Message-ID: <5722634.VerP6OyMlP@wuerfel>
+In-Reply-To: <20140227141322.GL1692@e106497-lin.cambridge.arm.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com> <18746655.qWHLpMg2Yy@wuerfel> <20140227141322.GL1692@e106497-lin.cambridge.arm.com>
 MIME-Version: 1.0
-To: Magnus Damm <magnus.damm@gmail.com>
-CC: linux-pci@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	"Simon Horman [Horms]" <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 00/04] PCI: rcar: Driver model and physical address space
- update
-References: <20140205065243.29445.76593.sendpatchset@w520> <52F1F74C.2090106@codethink.co.uk> <CANqRtoRMAjBEXjBzivPxqMu8KhFsOkp0wb6jBbuZQx=B-qYuUA@mail.gmail.com>
-In-Reply-To: <CANqRtoRMAjBEXjBzivPxqMu8KhFsOkp0wb6jBbuZQx=B-qYuUA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/02/14 09:00, Magnus Damm wrote:
-> Hi Ben,
+On Thursday 27 February 2014 14:13:22 Liviu Dudau wrote:
+> 
+> It is useful for host bridge drivers as this is the only place where we store
+> the physical CPU address for the IO range. This is then needed when setting up the
+> translation registers. Also used when calling the pci_ioremap_io function that I'm
+> introducing in the AArch64 patches.
 
-[snip]
-> I think we should try to pick out the stuff that is ready to be merged
-> first. I think these patches may require a bit of time before people
-> start looking at them. I don't mind resending in the future.
->
-> To be honest, I have not been paying too much attention to other
-> patches including yours - been focused trying to get the memory
-> management part right.. So I'd like to focus on correctness over DT
-> for now if possible. Of course we it all.
->
-> Would it be possible for you to provide a list of pci-rcar-gen2.c
-> patches that you posted? Or perhaps you can resend your series and
-> include acks that you received?
+I don't understand what translation windows you are talking about. Is this
+about how the PCI spaces are mapped into the CPU address space? If so, I
+would strongly recommend to have this handled by the boot loader before
+calling into the kernel. For ARM32, we have a lot of embedded systems
+that require the PCI host driver to set up those windows, but actually
+it would be much better to just have the firmware tell us what the setup
+is and that use that.
 
-I don't think I have any acks, only review comments. I think the code
-itself is pretty much ready to be merged and has been tested here with
-the Lager board.
+> Whole patch is still under legal review, but the fragment for setting up the ATR looks
+> like this:
+> 
+>         list_for_each_entry(window, &bridge->windows, list) {
+>                 res = window->res;
+>                 offset = window->offset;
+>                 wsize = ilog2(resource_size(res)) - 1;
+> 
+>                 if (resource_type(res) == IORESOURCE_MEM)
+>                         update_atr_entry(pp->base + ATR_REG_whatever,
+>                                 res->start,                             /* CPU address */
+>                                 res->start - offset,                    /* PCI address */
+>                                 0, wsize);
+>                 else if (resource_type(res) == IORESOURCE_IO) {
+>                         io_offset = pci_ioremap_io(res, bridge->io_base + offset);
+>                         update_atr_entry(pp->base + ATR_REG_whatever,
+>                                 bridge->io_base + res->start + offset,  /* CPU address */
+>                                 res->start,                             /* PCI address */
+>                                 0x20000, wsize);
+>                 }
+>         }
 
-The big issue for us is that we /must/ boot with fdt, which means the
-less fdt support that is in the kernel then the more patches we end up
-carrying out of tree. This is why we have been pushing patches out to
-try and get the support in.
+Hmm, I again don't see how 'bridge->io_base + res->start + offset' is
+the correct address here. What is it you are trying to pass into
+update_atr_entry()?
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+	Arnd
