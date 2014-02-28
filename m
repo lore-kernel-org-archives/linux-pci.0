@@ -1,57 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:49518 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754733AbaBDQxi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Feb 2014 11:53:38 -0500
-From: Will Deacon <will.deacon@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Cc: arnd@arndb.de, Liviu.Dudau@arm.com, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, mohit.kumar@st.com,
-	Will Deacon <will.deacon@arm.com>
-Subject: [PATCH 0/3] ARM: PCI: implement virtual PCI host controller
-Date: Tue,  4 Feb 2014 16:53:01 +0000
-Message-Id: <1391532784-1953-1-git-send-email-will.deacon@arm.com>
+Received: from mail-vc0-f172.google.com ([209.85.220.172]:60661 "EHLO
+	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457AbaB1Syn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 13:54:43 -0500
+Received: by mail-vc0-f172.google.com with SMTP id lf12so1143560vcb.31
+        for <linux-pci@vger.kernel.org>; Fri, 28 Feb 2014 10:54:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAPykPMmLkQ2O5253EcUFuwNdmMKcL-Nr9KQi1EZoMH2yuHXcjQ@mail.gmail.com>
+References: <CAPykPMmLkQ2O5253EcUFuwNdmMKcL-Nr9KQi1EZoMH2yuHXcjQ@mail.gmail.com>
+Date: Fri, 28 Feb 2014 19:54:42 +0100
+Message-ID: <CAPykPM=HhgvAebJbFW76D2umQjH5jz66FVh9egVY5khvGFNH2Q@mail.gmail.com>
+Subject: Fwd: Attaching drivers to identical PCI devices.
+From: Jeroen Van den Keybus <jeroen.vandenkeybus@triphase.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+I would like to use 2 versions of a PCI driver, each for one of 2
+identical devices. The driver that gets probed first will seize both
+devices in driver_attach().
 
-This small set of patches brings PCI support to mach-virt based upon an
-idealised host controller (see patch 2 for more details).
+Using sysfs's bind and unbind methods, you can arrange to release the
+device for use by the other driver, but the first driver has
+nevertheless been initializing, driving and shutting down the device,
+which is unacceptable in my case.
 
-This has been tested with kvmtool, for which I have a corresponding set
-of patches which you can find in my kvmtool/pci branch at:
+What would be the best way to deal with this ?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/will/kvmtool.git
-
-Once the arm64 PCI patches from Liviu have stabilised, I plan to port
-this host controller to work there as well.
-
-The main issue I can see with this code is how to describe configuration
-space in the device-tree. I'm following the ePAPR PCI bindings (SS == 0)
-, but this adds an ugly 'case 0:' line in the pci range parser, which
-also exists in mainline for the pcie-designware.c driver.
-
-All feedback welcome,
-
-Will
+Thanks,
 
 
-Will Deacon (3):
-  ARM: bios32: use pci_enable_resource to enable PCI resources
-  PCI: ARM: add support for virtual PCI host controller
-  ARM: mach-virt: allow PCI support to be selected
-
- .../devicetree/bindings/pci/linux,pci-virt.txt     |  38 ++++
- arch/arm/kernel/bios32.c                           |  35 ++--
- arch/arm/mach-virt/Kconfig                         |   1 +
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-virt.c                        | 200 +++++++++++++++++++++
- 6 files changed, 257 insertions(+), 25 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/linux,pci-virt.txt
- create mode 100644 drivers/pci/host/pci-virt.c
-
--- 
-1.8.2.2
-
+J.
