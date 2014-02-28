@@ -1,154 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:56159 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706AbaBMDCa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Feb 2014 22:02:30 -0500
-From: Magnus Damm <magnus.damm@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: horms@verge.net.au, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, valentine.barshak@cogentembedded.com,
-	ben.dooks@codethink.co.uk, geert@linux-m68k.org,
-	bhelgaas@google.com, Magnus Damm <magnus.damm@gmail.com>
-Date: Thu, 13 Feb 2014 12:03:42 +0900
-Message-Id: <20140213030342.10398.10051.sendpatchset@w520>
-In-Reply-To: <20140213030302.10398.37322.sendpatchset@w520>
-References: <20140213030302.10398.37322.sendpatchset@w520>
-Subject: [PATCH v2 04/08] PCI: rcar: Register each instance independently
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 2/3] arm64: Extend the PCI I/O space to 16MB
+Date: Fri, 28 Feb 2014 13:08:32 +0000
+Message-Id: <1393592913-24796-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393592913-24796-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393592913-24796-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Magnus Damm <damm@opensource.se>
+From: Catalin Marinas <catalin.marinas@arm.com>
 
-Convert the code to allow per-device probe() like other device
-drivers. This also delays driver registration due to change from
-subsys_initcall() to regular module_platform_driver().
+The patch moves the PCI I/O space (currently at 64K) before the
+earlyprintk mapping and extends it to 16MB.
 
-Signed-off-by: Magnus Damm <damm@opensource.se>
----
+Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
 
-Changes since V1:
- - Updated to fit on top of patches from Ben Dooks
- - Use hw_private[1] for hw.private_data, thanks Geert!
- - Use ARRAY_SIZE with hw_private for hw.nr_controllers
-
- drivers/pci/host/pci-rcar-gen2.c |   76 +++++++++-----------------------------
- 1 file changed, 18 insertions(+), 58 deletions(-)
-
---- 0006/drivers/pci/host/pci-rcar-gen2.c
-+++ work/drivers/pci/host/pci-rcar-gen2.c	2014-02-13 10:10:25.000000000 +0900
-@@ -91,9 +91,6 @@
+diff --git a/Documentation/arm64/memory.txt b/Documentation/arm64/memory.txt
+index 5e054bf..85e24c4 100644
+--- a/Documentation/arm64/memory.txt
++++ b/Documentation/arm64/memory.txt
+@@ -35,11 +35,13 @@ ffffffbc00000000	ffffffbdffffffff	   8GB		vmemmap
  
- #define RCAR_PCI_UNIT_REV_REG		(RCAR_AHBPCI_PCICOM_OFFSET + 0x48)
+ ffffffbe00000000	ffffffbffbbfffff	  ~8GB		[guard, future vmmemap]
  
--/* Number of internal PCI controllers */
--#define RCAR_PCI_NR_CONTROLLERS		3
--
- struct rcar_pci_priv {
- 	struct device *dev;
- 	void __iomem *reg;
-@@ -292,6 +289,8 @@ static int __init rcar_pci_setup(int nr,
- 	pci_add_resource(&sys->resources, &priv->io_res);
- 	pci_add_resource(&sys->resources, &priv->mem_res);
+-ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
++ffffffbffa000000	ffffffbffaffffff	  16MB		PCI I/O space
++
++ffffffbffb000000	ffffffbffbbfffff	  12MB		[guard]
  
-+	/* Setup bus number based on platform device id */
-+	sys->busnr = to_platform_device(priv->dev)->id;
- 	return 1;
- }
+-ffffffbffbe00000	ffffffbffbe0ffff	  64KB		PCI I/O space
++ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
  
-@@ -300,48 +299,13 @@ static struct pci_ops rcar_pci_ops = {
- 	.write	= rcar_pci_write_config,
- };
+-ffffffbffbe10000	ffffffbcffffffff	  ~2MB		[guard]
++ffffffbffbe00000	ffffffbffbffffff	   2MB		[guard]
  
--static struct hw_pci rcar_hw_pci __initdata = {
--	.map_irq	= rcar_pci_map_irq,
--	.ops		= &rcar_pci_ops,
--	.setup		= rcar_pci_setup,
--};
--
--static int rcar_pci_count __initdata;
--
--static int __init rcar_pci_add_controller(struct rcar_pci_priv *priv)
--{
--	void **private_data;
--	int count;
--
--	if (rcar_hw_pci.nr_controllers < rcar_pci_count)
--		goto add_priv;
--
--	/* (Re)allocate private data pointer array if needed */
--	count = rcar_pci_count + RCAR_PCI_NR_CONTROLLERS;
--	private_data = kzalloc(count * sizeof(void *), GFP_KERNEL);
--	if (!private_data)
--		return -ENOMEM;
--
--	rcar_pci_count = count;
--	if (rcar_hw_pci.private_data) {
--		memcpy(private_data, rcar_hw_pci.private_data,
--		       rcar_hw_pci.nr_controllers * sizeof(void *));
--		kfree(rcar_hw_pci.private_data);
--	}
--
--	rcar_hw_pci.private_data = private_data;
--
--add_priv:
--	/* Add private data pointer to the array */
--	rcar_hw_pci.private_data[rcar_hw_pci.nr_controllers++] = priv;
--	return 0;
--}
--
--static int __init rcar_pci_probe(struct platform_device *pdev)
-+static int rcar_pci_probe(struct platform_device *pdev)
+ ffffffbffc000000	ffffffbfffffffff	  64MB		modules
+ 
+@@ -60,11 +62,13 @@ fffffdfc00000000	fffffdfdffffffff	   8GB		vmemmap
+ 
+ fffffdfe00000000	fffffdfffbbfffff	  ~8GB		[guard, future vmmemap]
+ 
+-fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
++fffffdfffa000000	fffffdfffaffffff	  16MB		PCI I/O space
++
++fffffdfffb000000	fffffdfffbbfffff	  12MB		[guard]
+ 
+-fffffdfffbe00000	fffffdfffbe0ffff	  64KB		PCI I/O space
++fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
+ 
+-fffffdfffbe10000	fffffdfffbffffff	  ~2MB		[guard]
++fffffdfffbe00000	fffffdfffbffffff	   2MB		[guard]
+ 
+ fffffdfffc000000	fffffdffffffffff	  64MB		modules
+ 
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index 4cc813e..7846a6b 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -121,7 +121,7 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
+  *  I/O port access primitives.
+  */
+ #define IO_SPACE_LIMIT		0xffff
+-#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
++#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
+ 
+ static inline u8 inb(unsigned long addr)
  {
- 	struct resource *cfg_res, *mem_res;
- 	struct rcar_pci_priv *priv;
- 	void __iomem *reg;
-+	struct hw_pci hw;
-+	void *hw_private[1];
- 
- 	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	reg = devm_ioremap_resource(&pdev->dev, cfg_res);
-@@ -377,31 +341,27 @@ static int __init rcar_pci_probe(struct
- 		return priv->irq;
- 	}
- 
--	return rcar_pci_add_controller(priv);
-+	hw_private[0] = priv;
-+	memset(&hw, 0, sizeof(hw));
-+	hw.nr_controllers = ARRAY_SIZE(hw_private);
-+	hw.private_data = hw_private;
-+	hw.map_irq = rcar_pci_map_irq;
-+	hw.ops = &rcar_pci_ops;
-+	hw.setup = rcar_pci_setup;
-+	pci_common_init_dev(&pdev->dev, &hw);
-+	return 0;
- }
- 
- static struct platform_driver rcar_pci_driver = {
- 	.driver = {
- 		.name = "pci-rcar-gen2",
-+		.owner = THIS_MODULE,
-+		.suppress_bind_attrs = true,
- 	},
-+	.probe = rcar_pci_probe,
- };
- 
--static int __init rcar_pci_init(void)
--{
--	int retval;
--
--	retval = platform_driver_probe(&rcar_pci_driver, rcar_pci_probe);
--	if (!retval)
--		pci_common_init(&rcar_hw_pci);
--
--	/* Private data pointer array is not needed any more */
--	kfree(rcar_hw_pci.private_data);
--	rcar_hw_pci.private_data = NULL;
--
--	return retval;
--}
--
--subsys_initcall(rcar_pci_init);
-+module_platform_driver(rcar_pci_driver);
- 
- MODULE_LICENSE("GPL v2");
- MODULE_DESCRIPTION("Renesas R-Car Gen2 internal PCI");
+-- 
+1.9.0
+
