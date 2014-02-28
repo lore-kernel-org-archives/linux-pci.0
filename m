@@ -1,51 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH net-next 25/35] forcedeth: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Tue, 18 Feb 2014 11:11:54 +0100
-Message-Id: <437d3cd09e304168f525a3097d89e46adc4e73fa.1392717503.git.agordeev@redhat.com>
-In-Reply-To: <cover.1392717502.git.agordeev@redhat.com>
-References: <cover.1392717502.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53554 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751378AbaB1NI4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 08:08:56 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 1/5] pci: Introduce pci_register_io_range() helper function.
+Date: Fri, 28 Feb 2014 13:08:18 +0000
+Message-Id: <1393592902-24750-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+Some architectures do not share x86 simple view of the I/O space and
+instead use a range of addresses that map to external devices. For PCI,
+these ranges can be expressed by OF bindings in a device tree file.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Patrick McHardy <kaber@trash.net>
-Cc: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/net/ethernet/nvidia/forcedeth.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+Introduce a pci_register_io_range() helper function that can be used
+by the architecture code to keep track of the io ranges described by the
+PCI bindings.
 
-diff --git a/drivers/net/ethernet/nvidia/forcedeth.c b/drivers/net/ethernet/nvidia/forcedeth.c
-index 74da489..bad3c05 100644
---- a/drivers/net/ethernet/nvidia/forcedeth.c
-+++ b/drivers/net/ethernet/nvidia/forcedeth.c
-@@ -3946,8 +3946,11 @@ static int nv_request_irq(struct net_device *dev, int intr_test)
- 	if (np->msi_flags & NV_MSI_X_CAPABLE) {
- 		for (i = 0; i < (np->msi_flags & NV_MSI_X_VECTORS_MASK); i++)
- 			np->msi_x_entry[i].entry = i;
--		ret = pci_enable_msix(np->pci_dev, np->msi_x_entry, (np->msi_flags & NV_MSI_X_VECTORS_MASK));
--		if (ret == 0) {
-+		ret = pci_enable_msix_range(np->pci_dev,
-+					    np->msi_x_entry,
-+					    np->msi_flags & NV_MSI_X_VECTORS_MASK,
-+					    np->msi_flags & NV_MSI_X_VECTORS_MASK);
-+		if (ret > 0) {
- 			np->msi_flags |= NV_MSI_X_ENABLED;
- 			if (optimization_mode == NV_OPTIMIZATION_MODE_THROUGHPUT && !intr_test) {
- 				/* Request irq for rx handling */
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 1a54f1f..d1bb30f 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -619,6 +619,11 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
+ 
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++	return 0;
++}
++
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ 	if (address > IO_SPACE_LIMIT)
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 5f6ed6b..40c418d 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
++extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ extern unsigned long pci_address_to_pio(phys_addr_t addr);
+ 
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
 -- 
-1.7.7.6
+1.9.0
 
