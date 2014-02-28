@@ -1,72 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52424 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754479AbaBDLQw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Feb 2014 06:16:52 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	"Stephen M. Cameron" <scameron@beardog.cce.hp.com>,
-	iss_storagedev@hp.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 09/22] hpsa: Use pci_enable_msix_range()
-Date: Tue,  4 Feb 2014 12:16:55 +0100
-Message-Id: <0c2c5eba34a7903d36ac2908d608bc2d47a491a7.1391512266.git.agordeev@redhat.com>
-In-Reply-To: <cover.1391512266.git.agordeev@redhat.com>
-References: <cover.1391512266.git.agordeev@redhat.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53739 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752285AbaB1NJJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 08:09:09 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+Date: Fri, 28 Feb 2014 13:08:31 +0000
+Message-Id: <1393592913-24796-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393592913-24796-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393592913-24796-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range() and pci_enable_msix_range()
-interfaces.
+The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
+is wrong. It returns a mapped (i.e. virtual) address that can start from
+zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
+architectures that use !CONFIG_GENERIC_MAP define.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: iss_storagedev@hp.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/scsi/hpsa.c |   20 +++++++-------------
- 1 files changed, 7 insertions(+), 13 deletions(-)
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 68eec7a..3323628 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4169,23 +4169,17 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
- 		goto default_int_mode;
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSIX)) {
- 		dev_info(&h->pdev->dev, "MSIX\n");
--		err = pci_enable_msix(h->pdev, hpsa_msix_entries,
--						MAX_REPLY_QUEUES);
--		if (!err) {
--			for (i = 0; i < MAX_REPLY_QUEUES; i++)
--				h->intr[i] = hpsa_msix_entries[i].vector;
--			h->msix_vector = 1;
--			return;
--		}
--		if (err > 0) {
--			dev_warn(&h->pdev->dev, "only %d MSI-X vectors "
--			       "available\n", err);
--			goto single_msi_mode;
--		} else {
-+		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
-+					    MAX_REPLY_QUEUES, MAX_REPLY_QUEUES);
-+		if (err < 0) {
- 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n",
- 			       err);
- 			goto single_msi_mode;
- 		}
-+		for (i = 0; i < MAX_REPLY_QUEUES; i++)
-+			h->intr[i] = hpsa_msix_entries[i].vector;
-+		h->msix_vector = 1;
-+		return;
- 	}
- single_msi_mode:
- 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index d5afe96..df72051 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
+ #ifndef CONFIG_GENERIC_IOMAP
+ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+ {
+-	return (void __iomem *) port;
++	return (void __iomem *)(PCI_IOBASE + (port & IO_SPACE_LIMIT));
+ }
+ 
+ static inline void ioport_unmap(void __iomem *p)
 -- 
-1.7.7.6
+1.9.0
 
