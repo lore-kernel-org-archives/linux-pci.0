@@ -1,119 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.130]:58551 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753573AbaBSUzG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Feb 2014 15:55:06 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Liviu Dudau <liviu@dudau.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King <rmk@arm.linux.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Subject: Re: [PATCH v2 3/3] PCI: ARM: add support for generic PCI host controller
-Date: Wed, 19 Feb 2014 21:48:48 +0100
-Message-ID: <3905203.TvF8RmfLsz@wuerfel>
-In-Reply-To: <CAErSpo5PCTyZ5jzumJxD=CCN+-t-Z31Cw+9ejT_oTQ4fFQePag@mail.gmail.com>
-References: <1392236171-10512-1-git-send-email-will.deacon@arm.com> <3312083.odPX4th7oi@wuerfel> <CAErSpo5PCTyZ5jzumJxD=CCN+-t-Z31Cw+9ejT_oTQ4fFQePag@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 0/3] [RFC] Add support for PCI in AArch64
+Date: Fri, 28 Feb 2014 13:08:30 +0000
+Message-Id: <1393592913-24796-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 19 February 2014 13:18:24 Bjorn Helgaas wrote:
-> >
-> > Right, this is an interesting case indeed, and I think we haven't
-> > considered it in the binding so far. We already encode a "bus-range"
-> > in DT, so we can easily partition the ECAM config space, but it
-> > still violates one of the two assumptions:
-> > a) that the register ranges for the two host bridge devices are
-> >    non-overlapping in DT
-> > b) that the ECAM register range as specified in DT starts at bus
-> >    0 and is a power-of-two size.
-> > Since the binding is not fixed that, we could change the definition to
-> > say that the ECAM register range in the "reg" property must match
-> > the buses listed in the "bus-range" property.
-> 
-> Addresses in the ACPI MCFG table correspond to bus number 0, but the
-> MCFG also provides start & end bus numbers, so the valid range does
-> not necessarily start with bus 0 and need not be power-of-two in size.
->  Something similar sounds like a good idea for DT.
+Hi,
 
-Hmm, we'll have to think about that. From a DT perspective, we try
-to keep things local to the node using it, so listing only the
-registers we are allowed to access is more natural.
+This patch adds support for PCI to AArch64. It is based on my v3 patch
+that adds support for creating generic host bridge structure from
+device tree. With that in place, I was able to boot a platform that
+has PCIe host bridge support and use a PCIe network card.
 
-Another option would be to have a separate device node for the ECAM
-registers and point to that from the host controller node, which
-would describe this cleanly but also add a bit of complexity that
-will rarely be used.
+Changes from v2:
+  - Implement an arch specific version of pci_register_io_range() and
+    pci_address_to_pio().
+  - Return 1 from pci_proc_domain().
 
-> > I still want to make sure I understand exactly what this case is about
-> > though, i.e. what is shared and what is separate if you have two host
-> > bridges with a common ECAM region:
-> >
-> > * I assume I/O space is always shared on x86, but probably separate
-> >   elsewhere.
-> 
-> I think x86 *could* support multiple I/O spaces, but user-mode
-> inb/outb could only reach the 0-64K space.  I think ia64 has the same
-> limitation on user code, but it supports many spaces in the kernel.
+Changes from v1:
+  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
+    its size to 16MB
+  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
+    keeping track of assigned IO space and returns an io_offset. At the
+    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
+  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
+    as suggested by Arnd.
 
-Ok.
+The API used is different from the one used by ARM architecture. There is
+no pci_common_init_dev() function and no hw_pci structure, as that is no
+longer needed. Once the last signature is added to the legal agreement, I
+will post the host bridge driver code that I am using. Meanwhile, here
+is an example of what the probe function looks like, posted as an example:
 
-> > * Each host would always have a fixed memory space aperture, right?
-> 
-> The ACPI _CRS/_PRS/_SRS mechanism theoretically allows changes to the
-> bus number, I/O space, and memory space apertures of host bridges.
-> But we don't do any of those changes today, and I don't know if any
-> BIOSes actually allow it.
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct myhostbridge_port *pp;
+	resource_size_t lastbus;
 
-I mean non-overlapping apertures in particular. We also have
-cases where the aperture that we list in DT is just programmed
-into hardware registers by the host driver and could be arbitrary,
-but you can't normally have the same MMIO address go to two
-devices on internal buses (or not in a sensible way).
+	dev = pdev->dev.of_node;
 
-> > * From what I understand from your description, the hardware does
-> >   not enforce specific bus numbers for each host. How does the
-> >   host bridge know its root bus number then?
-> 
-> I don't know details of any specific hardware.  I'm just saying that
-> ACPI provides a mechanism for the OS to manipulate the bus number
-> range below a host bridge.  Of course, a BIOS is free to omit _PRS and
-> _SRS, and in that case, the bus/IO/memory apertures reported by _CRS
-> are fixed and can't be changed.  We learn the root bus number from the
-> host bridge _CRS (but I'm sure you knew that, so maybe I missed the
-> point of your question).
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
 
-I guess the answer then is that the host bridge can have a register
-for programming the root bus number, but it's not standardized and
-therefore the access is hidden in the _PRS/_SRS methods. If we have
-the same on DT and want to reprogram the bus numbers, we'd need to
-have a kernel driver for the nonstandard registers of the host bridge.
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
 
-> > * Should I expect one IOMMU per host bridge or one ECAM region,
-> >   or can either be possible?
-> 
-> It's possible to have multiple IOMMUs per host bridge, and I think
-> they can even be buried down in the PCIe hierarchy.
+	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
+	if (!bridge) {
+		err = -EINVAL;
+		goto bridge_init_fail;
+	}
 
-Oh, I didn't know that. So how do you actually find the IOMMU for
-a given domain/bus/device/function combination?
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_init_fail;
 
-> > * The IntA-IntB IRQ numbers are always per host bridge I assume.
-> 
-> For conventional PCI, INTx are just wires that could go anywhere, so
-> there's no connection between them and a host bridge.  You have to
-> have a _PRT or similar to make sense out of them.  For PCIe, a Root
-> Complex maps INTx emulation messages to system interrupts in an
-> implementation-specific way, so we need a _PRT there, too.  I don't
-> think there's a requirement that these IRQ numbers be per-host bridge.
+	/* We always enable PCI domains and we keep domain 0 backward
+	 * compatible in /proc for video cards
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
 
-Right, makes sense.
+	lastbus = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, lastbus);
 
-Thanks for the detailed explanations!
+	pci_assign_unassigned_bus_resources(bridge->bus);
 
-	Arnd
+	pci_bus_add_devices(bridge->bus);
+
+	return 0;
+
+bridge_init_fail:
+	kfree(pp);
+	return err;
+}
+
+
+Best regards,
+Liviu
+
+
+Catalin Marinas (1):
+  arm64: Extend the PCI I/O space to 16MB
+
+Liviu Dudau (2):
+  Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+  arm64: Add architecture support for PCI
+
+ Documentation/arm64/memory.txt |  16 ++--
+ arch/arm64/Kconfig             |  19 ++++-
+ arch/arm64/include/asm/Kbuild  |   1 +
+ arch/arm64/include/asm/io.h    |   5 +-
+ arch/arm64/include/asm/pci.h   |  47 +++++++++++
+ arch/arm64/kernel/Makefile     |   1 +
+ arch/arm64/kernel/pci.c        | 178 +++++++++++++++++++++++++++++++++++++++++
+ include/asm-generic/io.h       |   2 +-
+ 8 files changed, 259 insertions(+), 10 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
+-- 
+1.9.0
+
