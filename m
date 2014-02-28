@@ -1,70 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37877 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750838AbaBVVNb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 22 Feb 2014 16:13:31 -0500
-Date: Sat, 22 Feb 2014 23:18:24 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>,
-	linux-kernel@vger.kernel.org, virtio-dev@lists.oasis-open.org,
-	virtualization@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] virtio: Use pci_enable_msix_exact() instead of
- pci_enable_msix()
-Message-ID: <20140222211824.GA9777@redhat.com>
-References: <1392804931-30671-9-git-send-email-agordeev@redhat.com>
- <87eh2yblsk.fsf@rustcorp.com.au>
- <20140221165946.GJ17353@dhcp-26-207.brq.redhat.com>
- <20140221170128.GK17353@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140221170128.GK17353@dhcp-26-207.brq.redhat.com>
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53609 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752150AbaB1NJA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 08:09:00 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 0/5] [RFC] Support for creating generic host_bridge from device tree
+Date: Fri, 28 Feb 2014 13:08:17 +0000
+Message-Id: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 21, 2014 at 06:01:28PM +0100, Alexander Gordeev wrote:
-> As result of deprecation of MSI-X/MSI enablement functions
-> pci_enable_msix() and pci_enable_msi_block() all drivers
-> using these two interfaces need to be updated to use the
-> new pci_enable_msi_range()  or pci_enable_msi_exact()
-> and pci_enable_msix_range() or pci_enable_msix_exact()
-> interfaces.
+This is v3 of my attempt to add support for a generic pci_host_bridge controller created
+from a description passed in the device tree.
+
+Changes from v2:
+  - Use range->cpu_addr when calling pci_address_to_pio()
+  - Introduce pci_register_io_range() helper function in order to register
+    io ranges ahead of their conversion to PIO values. This is needed as no
+    information is being stored yet regarding the range mapping, making
+    pci_address_to_pio() fail. Default weak implementation does nothing,
+    to cover the default weak implementation of pci_address_to_pio() that
+    expects direct mapping of physical addresses into PIO values (x86 view).
+
+Changes from v1:
+  - Add patch to fix conversion of IO ranges into IO resources.
+  - Added a domain_nr member to pci_host_bridge structure, and a new function
+    to create a root bus in a given domain number. In order to facilitate that
+    I propose changing the order of initialisation between pci_host_bridge and
+    it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
+    This is done in patch 1/4 and 2/4.
+  - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
+    code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
+    and if that fails assign the next unallocated domain id.
+  - Changed the name of the function that creates the generic host bridge from
+    pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
+
+v1 thread here: https://lkml.org/lkml/2014/2/3/380
+
+The following is an edit of the original blurb:
+
+Following the discussion started here [1], I now have a proposal for tackling
+generic support for host bridges described via device tree. It is an initial
+stab at it, to try to get feedback and suggestions, but it is functional enough
+that I have PCI Express for arm64 working on an FPGA using the patch that I am
+also publishing that adds support for PCI for that platform.
+
+Looking at the existing architectures that fit the requirements (use of device
+tree and PCI) yields the powerpc and microblaze as generic enough to make them
+candidates for conversion. I have a tentative patch for microblaze that I can
+only compile test it, unfortunately using qemu-microblaze leads to an early
+crash in the kernel.
+
+As Bjorn has mentioned in the previous discussion, the idea is to add to
+struct pci_host_bridge enough data to be able to reduce the size or remove the
+architecture specific pci_controller structure. arm64 support actually manages
+to get rid of all the architecture static data and has no pci_controller structure
+defined. For host bridge drivers that means a change of API unless architectures
+decide to provide a compatibility layer (comments here please).
+
+In order to initialise a host bridge with the new API, the following example
+code is sufficient for a _probe() function:
+
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct myhostbridge_port *pp;
+	resource_size_t lastbus;
+
+	dev = pdev->dev.of_node;
+
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
+
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
+
+	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
+	if (!bridge) {
+		err = -EINVAL;
+		goto bridge_init_fail;
+	}
+
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_init_fail;
+
+	/* We always enable PCI domains and we keep domain 0 backward
+	 * compatible in /proc for video cards
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS | PCI_COMPAT_DOMAIN_0);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+
+	lastbus = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+
+	pci_assign_unassigned_bus_resources(bridge->bus);
+
+	pci_bus_add_devices(bridge->bus);
+
+	return 0;
+
+bridge_init_fail:
+	kfree(pp);
+	return err;
+}
+
+[1] http://thread.gmane.org/gmane.linux.kernel.pci/25946
+
+Best regards,
+Liviu
 
 
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
+Liviu Dudau (5):
+  pci: Introduce pci_register_io_range() helper function.
+  pci: OF: Fix the conversion of IO ranges into IO resources.
+  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+  pci: Introduce a domain number for pci_host_bridge.
+  pci: Add support for creating a generic host_bridge from device tree
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Rusty Russell <rusty@rustcorp.com.au>
-> Cc: "Michael S. Tsirkin" <mst@redhat.com>
-> Cc: virtio-dev@lists.oasis-open.org
-> Cc: virtualization@lists.linux-foundation.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/virtio/virtio_pci.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/virtio/virtio_pci.c b/drivers/virtio/virtio_pci.c
-> index a416f9b..101db3f 100644
-> --- a/drivers/virtio/virtio_pci.c
-> +++ b/drivers/virtio/virtio_pci.c
-> @@ -333,10 +333,8 @@ static int vp_request_msix_vectors(struct virtio_device *vdev, int nvectors,
->  	for (i = 0; i < nvectors; ++i)
->  		vp_dev->msix_entries[i].entry = i;
->  
-> -	/* pci_enable_msix returns positive if we can't get this many. */
-> -	err = pci_enable_msix(vp_dev->pci_dev, vp_dev->msix_entries, nvectors);
-> -	if (err > 0)
-> -		err = -ENOSPC;
-> +	err = pci_enable_msix_exact(vp_dev->pci_dev,
-> +				    vp_dev->msix_entries, nvectors);
->  	if (err)
->  		goto error;
->  	vp_dev->msix_enabled = 1;
-> -- 
-> 1.7.7.6
-> 
-> -- 
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
+ drivers/of/address.c       |  39 +++++++++++++
+ drivers/pci/host-bridge.c  | 134 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c        |  66 ++++++++++++++--------
+ include/linux/of_address.h |  14 +----
+ include/linux/pci.h        |  17 ++++++
+ 5 files changed, 236 insertions(+), 34 deletions(-)
+
+-- 
+1.9.0
+
