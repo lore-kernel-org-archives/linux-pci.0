@@ -1,121 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:35597 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753499AbaBUJjw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Feb 2014 04:39:52 -0500
-Date: Fri, 21 Feb 2014 10:39:36 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Gerlando Falauto <gerlando.falauto@keymile.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53599 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751378AbaB1NJA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 08:09:00 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"Longchamp, Valentin" <Valentin.Longchamp@keymile.com>,
-	Ezequiel Garcia <ezequiel.garcia@free-electrons.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Gregory =?UTF-8?B?Q2zDqW1lbnQ=?=
-	<gregory.clement@free-electrons.com>
-Subject: Re: pci-mvebu driver on km_kirkwood
-Message-ID: <20140221103936.56b3d9f8@skate>
-In-Reply-To: <53071970.1040400@keymile.com>
-References: <53039894.10905@keymile.com>
-	<20140218212751.07c2aeb5@skate>
-	<53046D98.6020801@keymile.com>
-	<20140219102658.76eec91e@skate>
-	<53047BBB.6040108@keymile.com>
-	<20140219143749.65ff3155@skate>
-	<CAErSpo4=6VgJazaErcx=ztKhZ_62xBrQ6K1eN_dVpvV4R0T2ag@mail.gmail.com>
-	<20140220095518.7ca36f0a@skate>
-	<20140220173518.GA19893@obsidianresearch.com>
-	<20140220212914.29ddc031@skate>
-	<20140221003227.GF19893@obsidianresearch.com>
-	<20140221093444.35870a73@skate>
-	<5307152D.3020804@keymile.com>
-	<20140221101218.45766e8a@skate>
-	<53071970.1040400@keymile.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 4/5] pci: Introduce a domain number for pci_host_bridge.
+Date: Fri, 28 Feb 2014 13:08:21 +0000
+Message-Id: <1393592902-24750-5-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393592902-24750-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Gerlando Falauto,
+Make it easier to discover the domain number of a bus by storing
+the number in pci_host_bridge for the root bus. Several architectures
+have their own way of storing this information, so it makes sense
+to try to unify the code. While at this, add a new function that
+creates a root bus in a given domain and make pci_create_root_bus()
+a wrapper around this function.
 
-On Fri, 21 Feb 2014 10:16:32 +0100, Gerlando Falauto wrote:
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-> > Sure, but whichever choice we make, the Linux PCI core must know by how
-> > much we've enlarge the bridge window BAR, otherwise the Linux PCI core
-> > may allocate for the next bridge window BAR a range of addresses that
-> > doesn't overlap with what it has allocate for the previous bridge
-> > window BAR, but that ends up overlapping due to us "extending" the
-> > previous bridge window BAR to match the MBus requirements.
-> >
-> > Gerlando, would you be able to test a quick hack that creates 2 windows
-> > to cover exactly 128 MB + 64 MB ? This would at least allow us to
-> > confirm that the strategy of splitting in multiple windows is usable.
-> 
-> Sure, though probably not until next week.
-
-No problem at all.
-
-> I guess it would then also be useful to restore my previous setup, where 
-> the total PCIe aperture is 192MB, right?
-
-Yes, that's the case I'm interested in at the moment. If you could try
-the above (ugly) patch, and see if you can access all your device BARs,
-it would be interesting. It would tell us if two separate windows
-having the same target/attribute and consecutive placement in the
-physical address space can actually work to address a given PCIe
-device. As you will see, the patch makes a very ugly special case for
-192 MB :-)
-
-diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
-index 2394e97..f763ecc 100644
---- a/drivers/bus/mvebu-mbus.c
-+++ b/drivers/bus/mvebu-mbus.c
-@@ -223,11 +223,13 @@ static int mvebu_mbus_window_conflicts(struct mvebu_mbus_state *mbus,
-                if ((u64)base < wend && end > wbase)
-                        return 0;
- 
-+#if 0
-                /*
-                 * Check if target/attribute conflicts
-                 */
-                if (target == wtarget && attr == wattr)
-                        return 0;
-+#endif
-        }
- 
-        return 1;
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 2aa7b77c..67fe6df 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -361,8 +361,15 @@ static void mvebu_pcie_handle_membase_change(struct mvebu_pcie_port *port)
-                (((port->bridge.memlimit & 0xFFF0) << 16) | 0xFFFFF) -
-                port->memwin_base;
- 
--       mvebu_mbus_add_window_by_id(port->mem_target, port->mem_attr,
--                                   port->memwin_base, port->memwin_size);
-+       if (port->memwin_size == (SZ_128M + SZ_64M)) {
-+               mvebu_mbus_add_window_by_id(port->mem_target, port->mem_attr,
-+                                           port->memwin_base, SZ_128M);
-+               mvebu_mbus_add_window_by_id(port->mem_target, port->mem_attr,
-+                                           port->memwin_base + SZ_128M, SZ_64M);
-+       } else {
-+               mvebu_mbus_add_window_by_id(port->mem_target, port->mem_attr,
-+                                           port->memwin_base, port->memwin_size);
-+       }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 78ccba0..1b2f45c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1714,8 +1714,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
  }
  
- /*
-
-
-
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
++		int domain, int bus, struct pci_ops *ops, void *sysdata,
++		struct list_head *resources)
+ {
+ 	int error;
+ 	struct pci_host_bridge *bridge;
+@@ -1732,6 +1733,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->domain_nr = domain;
+ 	error = pcibios_root_bridge_prepare(bridge);
+ 	if (error) {
+ 		kfree(bridge);
+@@ -1745,7 +1747,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+ 	b->number = b->busn_res.start = bus;
+-	b2 = pci_find_bus(pci_domain_nr(b), bus);
++	b2 = pci_find_bus(bridge->domain_nr, bus);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+@@ -1753,7 +1755,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	}
+ 
+ 	bridge->bus = b;
+-	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+@@ -1768,7 +1770,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+-	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
++	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
+ 	error = device_register(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
+@@ -1821,6 +1823,22 @@ err_out:
+ 	return NULL;
+ }
+ 
++struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	int domain_nr;
++	struct pci_bus *b = pci_alloc_bus();
++	if (!b)
++		return NULL;
++
++	b->sysdata = sysdata;
++	domain_nr = pci_domain_nr(b);
++	kfree(b);
++
++	return pci_create_root_bus_in_domain(parent, domain_nr, bus,
++				ops, sysdata, resources);
++}
++
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+ {
+ 	struct resource *res = &b->busn_res;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33aa2ca..1eed009 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -394,6 +394,7 @@ struct pci_host_bridge_window {
+ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
++	int domain_nr;
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+@@ -747,6 +748,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 				    struct pci_ops *ops, void *sysdata,
+ 				    struct list_head *resources);
++struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
++			int domain, int bus, struct pci_ops *ops,
++			void *sysdata, struct list_head *resources);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.9.0
+
