@@ -1,45 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:40686 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932104AbaBRPlr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Feb 2014 10:41:47 -0500
-Date: Tue, 18 Feb 2014 15:41:39 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Will Deacon <will.deacon@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, arnd@arndb.de,
-	jgunthorpe@obsidianresearch.com
-Subject: Re: [PATCH v3 2/3] ARM: bios32: use pci_enable_resource to enable
-	PCI resources
-Message-ID: <20140218154139.GF21483@n2100.arm.linux.org.uk>
-References: <1392726043-31088-1-git-send-email-will.deacon@arm.com> <1392726043-31088-3-git-send-email-will.deacon@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1392726043-31088-3-git-send-email-will.deacon@arm.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:35627 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751974AbaB1Rao (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 12:30:44 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, kernel@pengutronix.de
+Subject: [PATCH 0/3] i.MX6 MSI support
+Date: Fri, 28 Feb 2014 18:30:30 +0100
+Message-Id: <1393608633-18321-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 18, 2014 at 12:20:42PM +0000, Will Deacon wrote:
-> This patch moves bios32 over to using the generic code for enabling PCI
-> resources. Since the core code takes care of bridge resources too, we
-> can also drop the explicit IO and MEMORY enabling for them in the arch
-> code.
-> 
-> A side-effect of this change is that we no longer explicitly enable
-> devices when running in PCI_PROBE_ONLY mode. This stays closer to the
-> meaning of the option and prevents us from trying to enable devices
-> without any assigned resources (the core code refuses to enable
-> resources without parents).
-> 
-> Tested-By: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-> Tested-by: Jingoo Han <jg1.han@samsung.com>
-> Signed-off-by: Will Deacon <will.deacon@arm.com>
+This adds MSI support to the i.MX6 PCIe host
+controller driver. We keep MSI optional in order
+to not break any existing DTs.
 
-Tested acceptably fine here with crudbus-from-hell.
+This series depends on the previous sent series
+"PCI irq mapping fixes and cleanups".
 
-Tested-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Lucas Stach (3):
+  ARM: dts: imx6: extend PCIe interrupt list for MSI
+  PCI: designware: make MSI isr shared irq aware
+  PCI: imx6: add support for MSI
+
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  9 +++++++-
+ arch/arm/boot/dts/imx6qdl.dtsi                     |  4 +++-
+ drivers/pci/host/pci-exynos.c                      |  4 +---
+ drivers/pci/host/pci-imx6.c                        | 26 ++++++++++++++++++++++
+ drivers/pci/host/pcie-designware.c                 |  6 ++++-
+ drivers/pci/host/pcie-designware.h                 |  2 +-
+ 6 files changed, 44 insertions(+), 7 deletions(-)
 
 -- 
-FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
-in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
-Estimate before purchase was "up to 13.2Mbit".
+1.8.5.3
+
