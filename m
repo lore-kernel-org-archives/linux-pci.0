@@ -1,221 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og119.obsmtp.com ([64.18.0.189]:38468 "HELO
-	exprod5og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751289AbaBHAV6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Feb 2014 19:21:58 -0500
-Received: by mail-vc0-f178.google.com with SMTP id ik5so3275113vcb.9
-        for <linux-pci@vger.kernel.org>; Fri, 07 Feb 2014 16:21:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20140206101814.GA4993@e106497-lin.cambridge.arm.com>
-References: <1391452428-22917-1-git-send-email-Liviu.Dudau@arm.com>
-	<1391452428-22917-2-git-send-email-Liviu.Dudau@arm.com>
-	<7398333.9L5KlyFggU@wuerfel>
-	<CACoXjckKRQfR3CbC1JpgbhOumED+OqiMh1_Y73-h6q=ByMNanw@mail.gmail.com>
-	<20140206101814.GA4993@e106497-lin.cambridge.arm.com>
-Date: Fri, 7 Feb 2014 16:21:56 -0800
-Message-ID: <CACoXjcnTHgtBDesqFUOca1nf34HvNGAV0vP9AEB5xV1mvcRGfw@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add support for creating a generic host_bridge from
- device tree
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>, Arnd Bergmann <arnd@arndb.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 28 Feb 2014 12:50:45 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] pci: OF: Fix the conversion of IO ranges into IO
+ resources.
+Message-ID: <20140228125045.GV1692@e106497-lin.cambridge.arm.com>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com>
+ <5379319.g8IPYmY2Zo@wuerfel>
+ <20140227200729.GB7773@obsidianresearch.com>
+ <11097076.0C13zaKdYD@wuerfel>
+MIME-Version: 1.0
+In-Reply-To: <11097076.0C13zaKdYD@wuerfel>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 6, 2014 at 2:18 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> On Wed, Feb 05, 2014 at 10:26:27PM +0000, Tanmay Inamdar wrote:
->> Hello Liviu,
->>
->> I did not get the first email of this particular patch on any of
->> subscribed mailing lists (don't know why), hence replying here.
->
-> Strange, it shows in the MARC and GMANE archive for linux-pci, probably
-> a hickup on your receiving side?
->
->>
->> +struct pci_host_bridge *
->> +pci_host_bridge_of_init(struct device *parent, int busno, struct pci_ops *ops,
->> + void *host_data, struct list_head *resources)
->> +{
->> + struct pci_bus *root_bus;
->> + struct pci_host_bridge *bridge;
->> +
->> + /* first parse the host bridge bus ranges */
->> + if (pci_host_bridge_of_get_ranges(parent->of_node, resources))
->> + return NULL;
->> +
->> + /* then create the root bus */
->> + root_bus = pci_create_root_bus(parent, busno, ops, host_data, resources);
->> + if (!root_bus)
->> + return NULL;
->> +
->> + bridge = to_pci_host_bridge(root_bus->bridge);
->> +
->> + return bridge;
->> +}
->>
->> You are keeping the domain_nr inside pci_host_bridge structure. In
->> above API, domain_nr is required in 'pci_find_bus' function called
->> from 'pci_create_root_bus'. Since the bridge is allocated after
->> creating root bus, 'pci_find_bus' always gets domain_nr as 0. This
->> will cause problem for scanning multiple domains.
->
-> Good catch. I was switching between creating a pci_controller in arch/arm64 and
-> adding the needed bits in pci_host_bridge. After internal review I've decided to
-> add the domain_nr to pci_host_bridge, but forgot to update the code everywhere.
->
-> Thanks for reviewing this, will fix in v2.
->
-> Do you find porting to the new API straight forward?
+On Thu, Feb 27, 2014 at 08:22:12PM +0000, Arnd Bergmann wrote:
+> On Thursday 27 February 2014 13:07:29 Jason Gunthorpe wrote:
+> > On Thu, Feb 27, 2014 at 08:48:08PM +0100, Arnd Bergmann wrote:
+> > > > It also looks correct for architectures that use the CPU MMIO address
+> > > > as the IO address directly (where IO_SPACE_LIMIT would be 4G)
+> > > 
+> > > Are you aware of any that still do? I thought we had stopped doing
+> > > that.
+> > 
+> > I thought ia64 used to, but it has been a long time since I've touched
+> > one...
+> 
+> They have a different way of doing it now, no idea how it looked in
+> the past:
+> 
+> #define IO_SPACE_LIMIT          0xffffffffffffffffUL
+> 
+> #define MAX_IO_SPACES_BITS              8
+> #define MAX_IO_SPACES                   (1UL << MAX_IO_SPACES_BITS)
+> #define IO_SPACE_BITS                   24
+> #define IO_SPACE_SIZE                   (1UL << IO_SPACE_BITS)
+> 
+> #define IO_SPACE_NR(port)               ((port) >> IO_SPACE_BITS)
+> #define IO_SPACE_BASE(space)            ((space) << IO_SPACE_BITS)
+> #define IO_SPACE_PORT(port)             ((port) & (IO_SPACE_SIZE - 1))
+> 
+> #define IO_SPACE_SPARSE_ENCODING(p)     ((((p) >> 2) << 12) | ((p) & 0xfff))
+> 
+> So their port number is a logical token that contains the I/O space number
+> and a 16MB offset.
+> 
+> Apparently sparc64 uses physical memory addressing for I/O space, the
+> same way they do for memory space, and they just set IO_SPACE_LIMIT to
+> 0xffffffffffffffffUL.
+> 
+> > > > Architectures that use the virtual IO window technique will always
+> > > > require a custom pci_address_to_pio implementation.
+> > > 
+> > > Hmm, at the moment we only call it from of_address_to_resource(),
+> > > which in turn does not get called on PCI devices, and does not
+> > > call pci_address_to_pio for 'simple' platform devices. The only
+> > > case I can think of where it actually matters is when we have
+> > > ISA devices in DT that use an I/O port address in the reg property,
+> > > and that case hopefully won't happen on ARM32 or ARM64.
+> > 
+> > Sure, I ment, after Liviu's patch it will become required since he is
+> > cleverly using it to figure out what the io mapping the bridge driver
+> > setup before calling the helper.
+> 
+> Ok. I was arguing more that we should add this dependency.
 
-It is quite straight forward for MEM regions but for IO regions it is
-not. You always assume IO resource starting at 0x0. IMO, this will
-cause problem for systems with multiple ports / IO windows. You can
-take a look at 'drivers/pci/host/pcie-designware.c'.
+I've thought about this last night and I think I was trying to be too clever
+for my own good. As Jason points out, arm64 needs its own version of
+pci_address_to_pio(). I have an idea on how to borrow the powerpc/microblaze
+one and make it useful without the need for pci_controller *hose. It would
+be generic enough for other platforms that use virtual I/O windows can use,
+but I'll start with it being defined for arm64 for discussions in this list.
 
-Also the manipulations of addresses for IO_RESOURCES can be dangerous.
-It can make some value negative. For example if my PCI IO range starts
-in 32 bit address range say 0x8000_0000 with CPU address
-0xb0_8000_0000, window->offset after manipulation will become
-negative.
+I'll post v3 shortly.
 
-Personally I would like to do get all the PCI and CPU addresses from
-my device tree as is and do the 'pci_add_resource_offset'. This will
-help me setup my regions correctly without any further arithmetic.
-Please let me know what you think.
+Best regards,
+Liviu
 
->
-> Best regards,
-> Liviu
->
->>
->>
->> On Mon, Feb 3, 2014 at 10:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> > On Monday 03 February 2014 18:33:48 Liviu Dudau wrote:
->> >> +/**
->> >> + * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
->> >> + * @dev: device node of the host bridge having the range property
->> >> + * @resources: list where the range of resources will be added after DT parsing
->> >> + *
->> >> + * This function will parse the "ranges" property of a PCI host bridge device
->> >> + * node and setup the resource mapping based on its content. It is expected
->> >> + * that the property conforms with the Power ePAPR document.
->> >> + *
->> >> + * Each architecture will then apply their filtering based on the limitations
->> >> + * of each platform. One general restriction seems to be the number of IO space
->> >> + * ranges, the PCI framework makes intensive use of struct resource management,
->> >> + * and for IORESOURCE_IO types they can only be requested if they are contained
->> >> + * within the global ioport_resource, so that should be limited to one IO space
->> >> + * range.
->> >
->> > Actually we have quite a different set of restrictions around I/O space on ARM32
->> > at the moment: Each host bridge can have its own 64KB range in an arbitrary
->> > location on MMIO space, and the total must not exceed 2MB of I/O space.
->> >
->> >> + */
->> >> +static int pci_host_bridge_of_get_ranges(struct device_node *dev,
->> >> +                                     struct list_head *resources)
->> >> +{
->> >> +     struct resource *res;
->> >> +     struct of_pci_range range;
->> >> +     struct of_pci_range_parser parser;
->> >> +     int err;
->> >> +
->> >> +     pr_info("PCI host bridge %s ranges:\n", dev->full_name);
->> >> +
->> >> +     /* Check for ranges property */
->> >> +     err = of_pci_range_parser_init(&parser, dev);
->> >> +     if (err)
->> >> +             return err;
->> >> +
->> >> +     pr_debug("Parsing ranges property...\n");
->> >> +     for_each_of_pci_range(&parser, &range) {
->> >> +             /* Read next ranges element */
->> >> +             pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
->> >> +                             range.pci_space, range.pci_addr);
->> >> +             pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
->> >> +                                     range.cpu_addr, range.size);
->> >> +
->> >> +             /* If we failed translation or got a zero-sized region
->> >> +              * (some FW try to feed us with non sensical zero sized regions
->> >> +              * such as power3 which look like some kind of attempt
->> >> +              * at exposing the VGA memory hole) then skip this range
->> >> +              */
->> >> +             if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->> >> +                     continue;
->> >> +
->> >> +             res = kzalloc(sizeof(struct resource), GFP_KERNEL);
->> >> +             if (!res) {
->> >> +                     err = -ENOMEM;
->> >> +                     goto bridge_ranges_nomem;
->> >> +             }
->> >> +
->> >> +             of_pci_range_to_resource(&range, dev, res);
->> >> +
->> >> +             pci_add_resource_offset(resources, res,
->> >> +                             range.cpu_addr - range.pci_addr);
->> >> +     }
->> >
->> > I believe of_pci_range_to_resource() will return the MMIO aperture for the
->> > I/O space window here, which is not what you are supposed to pass into
->> > pci_add_resource_offset.
->> >
->> >> +EXPORT_SYMBOL(pci_host_bridge_of_init);
->> >
->> > EXPORT_SYMBOL_GPL
->> >
->> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> >> index 6e34498..16febae 100644
->> >> --- a/drivers/pci/probe.c
->> >> +++ b/drivers/pci/probe.c
->> >> @@ -1787,6 +1787,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->> >>       list_for_each_entry_safe(window, n, resources, list) {
->> >>               list_move_tail(&window->list, &bridge->windows);
->> >>               res = window->res;
->> >> +             /*
->> >> +              * IO resources are stored in the kernel with a CPU start
->> >> +              * address of zero. Adjust the data accordingly and remember
->> >> +              * the offset
->> >> +              */
->> >> +             if (resource_type(res) == IORESOURCE_IO) {
->> >> +                     bridge->io_offset = res->start;
->> >> +                     res->end -= res->start;
->> >> +                     window->offset -= res->start;
->> >> +                     res->start = 0;
->> >> +             }
->> >>               offset = window->offset;
->> >>               if (res->flags & IORESOURCE_BUS)
->> >
->> > Won't this break all existing host bridges?
->> >
->> >         Arnd
->> >
->> > _______________________________________________
->> > linux-arm-kernel mailing list
->> > linux-arm-kernel@lists.infradead.org
->> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->>
->
-> --
-> ====================
-> | I would like to |
-> | fix the world,  |
-> | but they're not |
-> | giving me the   |
->  \ source code!  /
->   ---------------
->     ¯\_(ツ)_/¯
->
-> -- IMPORTANT NOTICE: The contents of this email and any attachments are confidential and may also be privileged. If you are not the intended recipient, please notify the sender immediately and do not disclose the contents to any other person, use it for any purpose, or store or copy the information in any medium.  Thank you.
->
-> ARM Limited, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2557590
-> ARM Holdings plc, Registered office 110 Fulbourn Road, Cambridge CB1 9NJ, Registered in England & Wales, Company No:  2548782
->
+> 
+> > > > I think the legacy reasons for having all those layers of translation
+> > > > are probably not applicable to ARM64, and it is much simpler without
+> > > > the extra translation step....
+> > > > 
+> > > > Arnd, what do you think?
+> > > 
+> > > Either I don't like it or I misunderstand you ;-)
+> > > 
+> > > Most PCI drivers normally don't call ioport_map or pci_iomap, so
+> > > we can't just do it there. If you are thinking of calling ioport_map
+> > 
+> > Okay, that was one of the 'legacy reasons'. Certainly lots of drivers
+> > do call pci_iomap, but if you think legacy drivers that don't are
+> > important to ARM64 then it makes sense to use the virtual IO window.
+> 
+> I think all uses of I/O space are legacy, but I don't think that
+> drivers doing inb/outb are more obsolete than those doing pci_iomap.
+> It's got more to do with the subsystem requirements, e.g. libata
+> requires the use of pci_iomap.
+> 
+> > > for every PCI device that has an I/O BAR and storing the virtual
+> > > address in the pci_dev resource, I don't see what that gains us
+> > 
+> > Mainly we get to drop the fancy dynamic allocation stuff for the fixed
+> > virtual window, and it gives the option to have a 1:1 relationship
+> > between CPU addresses and PCI BARs.
+> 
+> I don't think the allocation is much of a problem, as long as we
+> can localize it in one function that is shared by everyone.
+> The problems I saw were all about explaining to people how it
+> works, but they really shouldn't have to know.
+> 
+> 
+> 	Arnd
+> 
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
