@@ -1,40 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40117 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751665AbaB1TDm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Feb 2014 14:03:42 -0500
-Message-ID: <1393614220.26901.28.camel@ul30vt.home>
-Subject: Re: Fwd: Attaching drivers to identical PCI devices.
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Jeroen Van den Keybus <jeroen.vandenkeybus@triphase.com>
-Cc: linux-pci@vger.kernel.org
-Date: Fri, 28 Feb 2014 12:03:40 -0700
-In-Reply-To: <CAPykPM=HhgvAebJbFW76D2umQjH5jz66FVh9egVY5khvGFNH2Q@mail.gmail.com>
-References: <CAPykPMmLkQ2O5253EcUFuwNdmMKcL-Nr9KQi1EZoMH2yuHXcjQ@mail.gmail.com>
-	 <CAPykPM=HhgvAebJbFW76D2umQjH5jz66FVh9egVY5khvGFNH2Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from moutng.kundenserver.de ([212.227.126.130]:50385 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751859AbaB1Iqq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 03:46:46 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linaro-kernel@lists.linaro.org,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 4/4] pci: Add support for creating a generic host_bridge from device tree
+Date: Fri, 28 Feb 2014 09:46:39 +0100
+Message-ID: <41426943.fCMrEO9t9X@wuerfel>
+In-Reply-To: <1393543924.14012.56.camel@pasglop>
+References: <1393506402-11474-1-git-send-email-Liviu.Dudau@arm.com> <18746655.qWHLpMg2Yy@wuerfel> <1393543924.14012.56.camel@pasglop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2014-02-28 at 19:54 +0100, Jeroen Van den Keybus wrote:
-> I would like to use 2 versions of a PCI driver, each for one of 2
-> identical devices. The driver that gets probed first will seize both
-> devices in driver_attach().
+On Friday 28 February 2014 10:32:04 Benjamin Herrenschmidt wrote:
+> On Thu, 2014-02-27 at 14:38 +0100, Arnd Bergmann wrote:
+> > On Thursday 27 February 2014 13:06:42 Liviu Dudau wrote:
+> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > 
+> > Please add Benjamin Herrenschmidt to Cc here, I think it would be helpful
+> > to get his input so we can make this work on powerpc as well.
 > 
-> Using sysfs's bind and unbind methods, you can arrange to release the
-> device for use by the other driver, but the first driver has
-> nevertheless been initializing, driving and shutting down the device,
-> which is unacceptable in my case.
+> Tricky... We would need hooks which would turn the whole thing into a
+> pile of spaghetti. I think we should stick to using the range helpers
+> (Andrew latest patch), which makes the powerpc code a lot smaller,
+> and leave it at that.
+
+We can certainly do both: small helpers that let you shrink the powerpc
+code, and a generic implementation that can be shared by some of the
+other architectures that you don't use. The PCI core already uses
+a number of 'weak' functions here, and we can expand on that.
+
+ > > +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+> > > +		if (!res) {
+> > > +			err = -ENOMEM;
+> > > +			goto bridge_ranges_nomem;
+> > > +		}
+> > > +
+> > > +		of_pci_range_to_resource(&range, dev, res);
+> > > +
+> > > +		if (resource_type(res) == IORESOURCE_IO)
+> > > +			*io_base = range.cpu_addr;
 > 
-> What would be the best way to deal with this ?
+> You don't care about the size of the IO space ?
 
-It's not a very good solution, but you can use pci-stub to claim both
-devices, then manually unbind each from pci-stub and bind it to the
-driver you want.  Compile pci-stub statically so it gets first dibs
-(CONFIG_PCI_STUB=y) and boot with pci-stub.ids=xxxx:yyyy where x/y is
-vendor/device ID.  Use sysfs to unbind the device you want, load the
-driver, repeat for the second device & driver.  Thanks,
+We probably should. The ARM code currently assumes that each I/O
+space is 64KB, but for a generic implementation we probably want
+to handle both smaller and larger windows. I suggested not supporting
+more than 1MB though, which is the maximum that I can see a reason
+for, i.e. the pci-mvebu fake host bridge that has to combine
+multiple per-port HW I/O spaces into one logical space.
 
-Alex
+> > > +		pci_add_resource_offset(resources, res,
+> > > +				res->start - range.pci_addr);
+> > > +	}
+> > 
+> > This is not the correct resource for I/O space at all. Please talk
+> > to Will, I've been over this with him in detail and he probably
+> > understands it now. I assume you are both working in the same
+> > building.
+> 
+> Yes, the IO offsets work differently on powerpc as well
 
+As I noticed later, the first patch in the series actually changes
+the range_to_resource parser to return the logical start here, which
+would make the offset correct even on powerpc, but unfortunately
+I think that cannot work.
+
+> > > +struct pci_host_bridge *
+> > > +of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
+> > > +{
+> > > +	int err, domain, busno;
+> > > +	struct resource bus_range;
+> > > +	struct pci_bus *root_bus;
+> > > +	struct pci_host_bridge *bridge;
+> > > +	resource_size_t io_base;
+> > > +	LIST_HEAD(res);
+> > > +
+> > > +	domain = of_alias_get_id(parent->of_node, "pci-domain");
+> > > +	if (domain == -ENODEV)
+> > > +		domain = domain_nr++;
+> > >
+> We probably want some uniqueness testing here.
+
+I thought this at first too, but as Liviu mentioned, this does
+get caught later when trying to create the root bus with
+a conflicting number.
+
+What the above code cannot do is to put multiple host bridges
+into the same domain, using distinct bus ranges. This is an
+intentional simplification over what some architectures currently
+do, and we could not see a reason why you would still need
+to put multiple host bridges into one domain in 2014.
+
+x86 with ACPI does it, but they won't call of_create_pci_host_bridge.
+
+	Arnd
