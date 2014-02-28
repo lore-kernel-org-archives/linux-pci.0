@@ -1,253 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 27 Feb 2014 16:48:57 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:53755 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbaB1KUN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 05:20:13 -0500
+Message-ID: <1393582776.5219.2.camel@weser.hi.pengutronix.de>
+Subject: Re: [PATCH v3 2/3] ARM: dts: imx6: extend PCIe interrupt list for
+ MSI
+From: Lucas Stach <l.stach@pengutronix.de>
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
+Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Richard Zhu <r65037@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 3/3] arm64: Add architecture support for PCI
-Message-ID: <20140227164857.GQ1692@e106497-lin.cambridge.arm.com>
-References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
- <1393506599-11561-4-git-send-email-Liviu.Dudau@arm.com>
- <5402126.Dbh9PNPIjR@wuerfel>
-MIME-Version: 1.0
-In-Reply-To: <5402126.Dbh9PNPIjR@wuerfel>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Shawn Guo <shawn.guo@linaro.org>,
+	Mark Rutland <mark.rutland@arm.com>, kernel@pengutronix.de
+Date: Fri, 28 Feb 2014 11:19:36 +0100
+In-Reply-To: <6495086.OFxrshKaiu@wuerfel>
+References: <1393519305-15128-1-git-send-email-l.stach@pengutronix.de>
+	 <1393519305-15128-2-git-send-email-l.stach@pengutronix.de>
+	 <6495086.OFxrshKaiu@wuerfel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 27, 2014 at 04:06:24PM +0000, Arnd Bergmann wrote:
-> On Thursday 27 February 2014 13:09:59 Liviu Dudau wrote:
-> 
-> > +/*
-> > + * PCI address space differs from physical memory address space
-> > + */
-> > +#define PCI_DMA_BUS_IS_PHYS	(0)
-> > +
-> > +extern int isa_dma_bridge_buggy;
-> 
-> I got curious about isa_dma_bridge_buggy: apparently this is a quirk for
-> some old x86 bridges. We don't have those on arm64, and we also don't have
-> ISA_DMA_API, so just define this to (0).
+Hi Arnd,
 
-OK.
-
+Am Donnerstag, den 27.02.2014, 17:44 +0100 schrieb Arnd Bergmann:
+> On Thursday 27 February 2014 17:41:44 Lucas Stach wrote:
+> >                         num-lanes = <1>;
+> > -                       interrupts = <0 123 0x04>;
+> > +                       interrupt-names = "inta", "intb", "intc", "intd/msi";
+> > +                       interrupts = <0 123 0x04>, <0 122 0x04>, <0 121 0x04>, <0 120 0x04>;
+> >                         clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
+> > 
 > 
-> > +static inline int pci_domain_nr(struct pci_bus *bus)
-> > +{
-> > +	struct pci_host_bridge *bridge = to_pci_host_bridge(bus->bridge);
-> > +
-> > +	if (bridge)
-> > +		return bridge->domain_nr;
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static inline int pci_proc_domain(struct pci_bus *bus)
-> > +{
-> > +	return pci_domain_nr(bus);
-> > +}
-> 
-> And this one I would change to always return '1': we can deal with
-> domain numbers showing up in /procfs for all buses, since there is
-> no legacy software to worry about.
-
-Will do, thanks for reviewing this.
-
-> 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > new file mode 100644
-> > index 0000000..496df41
-> > --- /dev/null
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -0,1 +1,126 @@
-> 
-> Ok, this is nice and short. Let's see if we can reduce it to nothing ;-)
-> 
-> > +/*
-> > + * Called after each bus is probed, but before its children are examined
-> > + */
-> > +void pcibios_fixup_bus(struct pci_bus *bus)
-> > +{
-> > +	struct pci_dev *dev;
-> > +	struct resource *res;
-> > +	int i;
-> > +
-> > +	if (!pci_is_root_bus(bus)) {
-> > +		pci_read_bridge_bases(bus);
-> > +
-> > +		pci_bus_for_each_resource(bus, res, i) {
-> > +			if (!res || !res->flags || res->parent)
-> > +				continue;
-> > +
-> > +			/*
-> > +			 * If we are going to reassign everything, we can
-> > +			 * shrink the P2P resource to have zero size to
-> > +			 * save space
-> > +			 */
-> > +			if (pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
-> > +				res->flags |= IORESOURCE_UNSET;
-> > +				res->start = 0;
-> > +				res->end = -1;
-> > +				continue;
-> > +			}
-> > +		}
-> > +	}
-> > +
-> > +	list_for_each_entry(dev, &bus->devices, bus_list) {
-> > +		/* Ignore fully discovered devices */
-> > +		if (dev->is_added)
-> > +			continue;
-> > +
-> > +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
-> > +
-> > +		/* Read default IRQs and fixup if necessary */
-> > +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> > +	}
-> > +}
-> > +EXPORT_SYMBOL(pcibios_fixup_bus);
-> 
-> Shrinking the P2P resources I suppose is optional, but everything
-> else is in fact needed for any DT based architecture. Could this
-> be turned into a generic helper function in the PCI core that we
-> can call from architecture code?
-> 
-> If you name it pci_generic_fixup_bus(), we can add a weak helper
-> like:
-> 
-> void __weak pcibios_fixup_bus(struct pci_bus *bus)
-> {
-> 	pci_generic_fixup_bus(bus);
-> }
-> 
-> for architectures like arm64 that don't actually need to do anything
-> else.
-
-Sure, it can be done. Don't know what is the policy for these kind of functions
-that are used by architectures, but I can try sending a patch that adds the
-weak implementations in the core PCI code.
-
-> 
-> > +/*
-> > + * We don't have to worry about legacy ISA devices, so nothing to do here
-> > + */
-> > +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> > +				resource_size_t size, resource_size_t align)
-> > +{
-> > +	return ALIGN(res->start, align);
-> > +}
-> > +EXPORT_SYMBOL(pcibios_align_resource);
-> 
-> Where did this come from? 
-
->From an internal version that Will posted. See, we do talk to each other ;)
-
-
-> The most common implementation seems to be
-> 
-> resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> 				resource_size_t size, resource_size_t align)
-> {
-> 	return start;
-> }
-> EXPORT_SYMBOL(pcibios_align_resource);
-> 
-> if you don't have to worry about ISA devices. The ALIGN() part seems to
-> be handled by __find_resource() already.
-> 
-> I'd say that should be made the default implementation in the PCI core.
-> 
-> I'm also pretty sure you don't need the EXPORT_SYMBOL, since the PCI
-> core cannot be a loadable module (yet).
-
-OK.
-
-> 
-> > +int pcibios_enable_device(struct pci_dev *dev, int mask)
-> > +{
-> > +	return pci_enable_resources(dev, mask);
-> > +}
-> > +
-> > +void pcibios_fixup_bridge_ranges(struct list_head *resources)
-> > +{
-> > +}
-> 
-> These are clearly the right implementations, but they should be weak
-> functions, too.
-
-pcibios_enable_devices is already subject to a patch series from Bjorn that make
-the weak implementation do the right thing for arm64, so the final version will
-not contain this.
-
-> 
-> > +#define IO_SPACE_PAGES	((IO_SPACE_LIMIT + 1) / PAGE_SIZE)
-> > +static DECLARE_BITMAP(pci_iospace, IO_SPACE_PAGES);
-> > +
-> > +unsigned long pci_ioremap_io(const struct resource *res, phys_addr_t phys_addr)
-> > +{
-> > +	unsigned long start, len, virt_start;
-> > +	int err;
-> > +
-> > +	if (res->end > IO_SPACE_LIMIT)
-> > +		return -EINVAL;
-> > +
-> > +	/*
-> > +	 * try finding free space for the whole size first,
-> > +	 * fall back to 64K if not available
-> > +	 */
-> > +	len = resource_size(res);
-> > +	start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-> > +				res->start / PAGE_SIZE, len / PAGE_SIZE, 0);
-> > +	if (start == IO_SPACE_PAGES && len > SZ_64K) {
-> > +		len = SZ_64K;
-> > +		start = 0;
-> > +		start = bitmap_find_next_zero_area(pci_iospace, IO_SPACE_PAGES,
-> > +					start, len / PAGE_SIZE, 0);
-> > +	}
-> > +
-> > +	/* no 64K area found */
-> > +	if (start == IO_SPACE_PAGES)
-> > +		return -ENOMEM;
-> > +
-> > +	/* ioremap physical aperture to virtual aperture */
-> > +	virt_start = start * PAGE_SIZE + (unsigned long)PCI_IOBASE;
-> > +	err = ioremap_page_range(virt_start, virt_start + len,
-> > +				phys_addr, __pgprot(PROT_DEVICE_nGnRE));
-> > +	if (err)
-> > +		return err;
-> > +
-> > +	bitmap_set(pci_iospace, start, len / PAGE_SIZE);
-> > +
-> > +	/* return io_offset */
-> > +	return start * PAGE_SIZE - res->start;
-> > +}
-> 
-> Maybe this can become an optional helper function with a separate Kconfig symbol
-> to enable it.
-
-Probably need to find a different name for it as well when it moves into core, arm
-already has an externalised function with this name.
-
-Best regards,
-Liviu
-
+> The standard PCI interrupts should not be listed here, you need to
+> put them into the "interrupt-map" property so the of_irq_parse_and_map_pci()
+> function can translate them.
 > 
 > 	Arnd
-> 
-> 
 
+So as INTA is already listed and implemented in the driver this way,
+this means the binding is totally bogus (taking into account that it
+didn't match the documented designware binding in more places).
+
+I wonder if we should just break the binding to sort things out, given
+that there are not that many users of imx-pcie yet.
+
+Regards,
+Lucas
 -- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Pengutronix e.K.                           | Lucas Stach                 |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-5076 |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
