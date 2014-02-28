@@ -1,71 +1,37 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
-	Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH 2/9] ACPI / hotplug: Add .fixup() callback to struct acpi_hotplug_context
-Date: Wed, 19 Feb 2014 02:27:45 +0100
-Message-ID: <3202096.sgetyLoJFZ@vostro.rjw.lan>
-In-Reply-To: <3011875.q18rCmXyYX@vostro.rjw.lan>
-References: <3011875.q18rCmXyYX@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fw-tnat.austin.arm.com ([217.140.110.23]:16837 "EHLO
+	collaborate-mta1.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751677AbaB1P1X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Feb 2014 10:27:23 -0500
+Date: Fri, 28 Feb 2014 15:27:10 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 2/3] arm64: Extend the PCI I/O space to 16MB
+Message-ID: <20140228152710.GC13970@arm.com>
+References: <1393506599-11561-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393506599-11561-3-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1393506599-11561-3-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Feb 27, 2014 at 01:09:58PM +0000, Liviu Dudau wrote:
+> From: Catalin Marinas <catalin.marinas@arm.com>
+> 
+> The patch moves the PCI I/O space (currently at 64K) before the
+> earlyprintk mapping and extends it to 16MB.
+> 
+> Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
 
-In order for the ACPI dock station code to be able to use the
-callbacks pointed to by the ACPI device objects' hotplug contexts
-add a .fixup() callback pointer to struct acpi_hotplug_context.
-That callback will be useful to handle PCI devices located in
-dock stations.
+I'll push this into mainline for 3.15, no need to carry it.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |    2 +-
- include/acpi/acpi_bus.h            |    5 ++++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
-
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -146,6 +146,7 @@ struct acpi_scan_handler {
- struct acpi_hotplug_context {
- 	struct acpi_device *self;
- 	int (*event)(struct acpi_device *, u32);
-+	void (*fixup)(struct acpi_device *);
- };
- 
- /*
-@@ -368,10 +369,12 @@ static inline void acpi_set_device_statu
- 
- static inline void acpi_set_hp_context(struct acpi_device *adev,
- 				       struct acpi_hotplug_context *hp,
--				       int (*event)(struct acpi_device *, u32))
-+				       int (*event)(struct acpi_device *, u32),
-+				       void (*fixup)(struct acpi_device *))
- {
- 	hp->self = adev;
- 	hp->event = event;
-+	hp->fixup = fixup;
- 	adev->hp = hp;
- }
- 
-Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
-@@ -80,7 +80,7 @@ static struct acpiphp_context *acpiphp_i
- 		return NULL;
- 
- 	context->refcount = 1;
--	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_event);
-+	acpi_set_hp_context(adev, &context->hp, acpiphp_hotplug_event, NULL);
- 	return context;
- }
- 
-
+-- 
+Catalin
