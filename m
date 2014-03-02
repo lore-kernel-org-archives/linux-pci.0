@@ -1,114 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:54381 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755468AbaCCTJv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Mar 2014 14:09:51 -0500
-Date: Mon, 3 Mar 2014 12:09:46 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Srikanth Thokala <sthokal@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v2] pcie: Add Xilinx PCIe Host Bridge IP driver
-Message-ID: <20140303190946.GA28341@obsidianresearch.com>
-References: <1393854036-5244-1-git-send-email-sthokal@xilinx.com>
- <20140303174325.GB31062@obsidianresearch.com>
- <CA+mB=1JmRVzpz=32AbdN8W+2RrsxkPUb+s0zLUQXBrsj2Cdiwg@mail.gmail.com>
+Received: from mx0a-0016ce01.pphosted.com ([67.231.148.157]:62049 "EHLO
+	mx0a-0016ce01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751716AbaCBIC0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Mar 2014 03:02:26 -0500
+Content-Type: multipart/mixed;
+	boundary="_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_"
+From: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+To: Alexander Gordeev <agordeev@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+CC: linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v2 03/23] bfa: Cleanup bfad_setup_intr() function
+Date: Sun, 2 Mar 2014 08:02:24 +0000
+Message-ID: <20B1A3CBD98F3845B3F5F56D8597EF59F7A207@avmb2.qlogic.org>
+References: <cover.1393191330.git.agordeev@redhat.com>
+ <c3fb3d552113a7c180741cf9f577081fc690366f.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <c3fb3d552113a7c180741cf9f577081fc690366f.1393191330.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+mB=1JmRVzpz=32AbdN8W+2RrsxkPUb+s0zLUQXBrsj2Cdiwg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 04, 2014 at 12:21:55AM +0530, Srikanth Thokala wrote:
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-> >> +     pci_express: axi-pcie@50000000 {
-> >> +             #address-cells = <3>;
-> >> +             #size-cells = <2>;
-> >> +             compatible = "xlnx,axi-pcie-host-1.00.a";
-> >> +             reg = < 0x50000000 0x10000000 >;
-> >> +             interrupts = < 0 52 4 >;
-> >> +             ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
-> >> +     };
+Patch look good.
+Acked-by: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
 
-> >  - How are INTA/B/C/D handled? Typically I'd like to see an
-> >    interrupt-mapping block describing them.
-> >
-> >    There are a few options here, if the HW can decode A/B/C/D then
-> >    it probably needs another irq_domain for INTx, and have the IRQ
-> >    handler decode like it does for MSI.
-> 
-> The core provides a single interrupt for both INTx/MSI messages.  The
-> core decodes the TLP messages and accordingly assert the INTx/MSI
-> bits.  It provides two registers Interrupt FIFO Read 1 and Read 2 to get
-> more information of these.
-> 
->    | CPU |  <------  | PCIe IP |   <--  MSI/INTx Message (INTA, INTB,
-> INTC, INTD)
-> 
->    Reading Interrupt Status Reg -> MSI/INTx bit set/not set
->    Reading Root Port FIFO Read Register1 -> Mentions which interrupt
-> (INTx) is received
->    Reading Root Port FIFO Read Register2 -> MSI Data
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel=
+.org] On Behalf Of Alexander Gordeev
+Sent: 24 February 2014 13:32
+To: linux-kernel
+Cc: Alexander Gordeev; Anil Gurumurthy; Vijaya Mohan Guvva; linux-scsi; lin=
+ux-pci
+Subject: [PATCH v2 03/23] bfa: Cleanup bfad_setup_intr() function
 
-Okay, that matches my guess based on the code.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Anil Gurumurthy <agurumur@brocade.com>
+Cc: Vijaya Mohan Guvva <vmohan@brocade.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/bfa/bfad.c |   18 ++++++++----------
+ 1 files changed, 8 insertions(+), 10 deletions(-)
 
-You probably want to do something like this:
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c index 972ff8=
+d..e7e4774 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1219,7 +1219,7 @@ bfad_install_msix_handler(struct bfad_s *bfad)  int  =
+bfad_setup_intr(struct bfad_s *bfad)  {
+-       int error =3D 0;
++       int error;
+        u32 mask =3D 0, i, num_bit =3D 0, max_bit =3D 0;
+        struct msix_entry msix_entries[MAX_MSIX_ENTRY];
+        struct pci_dev *pdev =3D bfad->pcidev;
+@@ -1279,20 +1279,18 @@ bfad_setup_intr(struct bfad_s *bfad)
 
-     pci_express: axi-pcie@50000000 {
-             #address-cells = <3>;
-             #size-cells = <2>;
-	     device_type ="pci";
-             compatible = "xlnx,axi-pcie-host-1.00.a";
-             reg = < 0x50000000 0x10000000 >;
-             interrupts = < 0 52 4 >;
-             ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+                bfad->bfad_flags |=3D BFAD_MSIX_ON;
 
-	     pcie_intc: interrupt-controller {
-    		interrupt-controller;
-		#address-cells = <0>;
-		#interrupt-cells = <1>;
-	     }
+-               return error;
++               return 0;
+        }
 
-	     interrupt-map-mask = <0 0 0 7>;
-	     interrupt-map = <0 0 0 1 &pcie_intc 0>, // INT A
-	                     <0 0 0 2 &pcie_intc 2>, // INT B
-	                     <0 0 0 3 &pcie_intc 3>, // INT C
-	                     <0 0 0 4 &pcie_intc 4>; // INT D
-     };
+ line_based:
+-       error =3D 0;
+-       if (request_irq
+-           (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
+-            BFAD_DRIVER_NAME, bfad) !=3D 0) {
+-               /* Enable interrupt handler failed */
+-               return 1;
+-       }
++       error =3D request_irq(bfad->pcidev->irq, (irq_handler_t)bfad_intx,
++                           BFAD_IRQ_FLAGS, BFAD_DRIVER_NAME, bfad);
++       if (error)
++               return error;
++
+        bfad->bfad_flags |=3D BFAD_INTX_ON;
 
-(similar to what ralink,rt3883 does for their binding)
+-       return error;
++       return 0;
+ }
 
-Setup a interrupt domain like for MSI, except attach it to the
-nested interrupt-controller DT node. Decode the 4 interrutps from
-the core in the ISR and route them into the domain.
+ void
+--
+1.7.7.6
 
-The generic code will take care of the rest.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in th=
+e body of a message to majordomo@vger.kernel.org More majordomo info at  ht=
+tp://vger.kernel.org/majordomo-info.html
 
-This way all the interrupts are decoded and the interrupt-map DT
-functionality is supported, which is important in a number of
-board-specific corner cases.
+________________________________
 
-> > You may want to work with Liviu to use his patch set which provides
-> > more generic support. Also, the driver needs to put every one of these
-> > ports in a PCI domain, Liviu is working on generic support for that
-> > too.
-> 
-> I will check and come back to you.
+This message and any attached documents contain information from QLogic Cor=
+poration or its wholly-owned subsidiaries that may be confidential. If you =
+are not the intended recipient, you may not read, copy, distribute, or use =
+this information. If you have received this transmission in error, please n=
+otify the sender immediately by reply e-mail and then delete this message.
 
-Will's latest patch that was just posted is a very good example of how
-the resource stuff should work correctly.
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_
+Content-Disposition: attachment; filename="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Type: application/ms-tnef; name="winmail.dat"
 
-> > Don't forget to think about hot plug
-> 
-> Did you mean using 'rescan' (from sysfs), correct?
+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
+4jvABbBwBbDD1AWxk1YQBCB3aAbwbHks8/8cYLEiDdEKwHEBsgG50QDAfySQsZEb4VHAAQACMAcx
+LnQgSS7weQhgW/C4sW7+bwVAsxKSwi+RHGAJcDlQ/nAIkAIwUpDJksgSyhIJcOc8cFKQBaBweVKQ
+DeFw4dxidRAgUpAFsXUSALIE38N5yUcR0BowyxJlXoGy8veyMT0gAHFtBAHD8rUxheP/UpALUDvw
+zlHKEQaQJJCzEv+ywhuxB3AHgMdBECDGYDtw/ySQCXALUCSQKJAr4sEzsxF/A6BT885ltkUilhVC
+2IAAHwBCAAEAAAAgAAAAQQBuAGkAbAAgAEcAdQByAHUAbQB1AHIAdABoAHkAAAAfAGUAAQAAADYA
+AABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAA
+AB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIBQQABAAAAeAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QC
+AAAAgEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAUwBNAFQAUAAAAEEAbgBpAGwALgBH
+AHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAB8AAl0BAAAANgAAAEEA
+bgBpAGwALgBHAHUAcgB1AG0AdQByAHQAaAB5AEAAcQBsAG8AZwBpAGMALgBjAG8AbQAAAAAAHwDl
+XwEAAAA+AAAAcwBpAHAAOgBhAG4AaQBsAC4AZwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcA
+aQBjAC4AYwBvAG0AAAAAAB8AGgwBAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5
+AAAAHwAfDAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkA
+YwAuAGMAbwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAHgAAAAAAAAAgSsf
+pL6jEBmdbgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAA
+AABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAf
+AAFdAQAAADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4A
+YwBvAG0AAAAAAB8A+D8BAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQAaAB5AAAAHwAj
+QAEAAAA2AAAAQQBuAGkAbAAuAEcAdQByAHUAbQB1AHIAdABoAHkAQABxAGwAbwBnAGkAYwAuAGMA
+bwBtAAAAAAAfACJAAQAAAAoAAABTAE0AVABQAAAAAAACAfk/AQAAAHgAAAAAAAAAgSsfpL6jEBmd
+bgDdAQ9UAgAAAIBBAG4AaQBsACAARwB1AHIAdQBtAHUAcgB0AGgAeQAAAFMATQBUAFAAAABBAG4A
+aQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0AAAAfAAldAQAA
+ADYAAABBAG4AaQBsAC4ARwB1AHIAdQBtAHUAcgB0AGgAeQBAAHEAbABvAGcAaQBjAC4AYwBvAG0A
+AAAAAB8AMUABAAAAAgAAAAAAAAALAEA6AQAAAB8AMEABAAAAAgAAAAAAAAAfABoAAQAAABIAAABJ
+AFAATQAuAE4AbwB0AGUAAAAAAAMA8T8JBAAACwBAOgEAAAADAP0/5AQAAAIBCzABAAAAEAAAAMvG
+OukvqhdFgkFQB7dzAm8DABcAAQAAAEAAOQAAqLO+7TXPAUAACDC1dh2/7TXPAQsAKQAAAAAACwAj
+AAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAeAAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEA
+ZwBlAAAAAAABAAAADAAAAGUAbgAtAFUAUwAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAAaFAAAA
+AAAAHwA3AAEAAAB6AAAAUgBFADoAIABbAFAAQQBUAEMASAAgAHYAMgAgADAAMwAvADIAMwBdACAA
+YgBmAGEAOgAgAEMAbABlAGEAbgB1AHAAIABiAGYAYQBkAF8AcwBlAHQAdQBwAF8AaQBuAHQAcgAo
+ACkAIABmAHUAbgBjAHQAaQBvAG4AAAAAAB8APQABAAAACgAAAFIARQA6ACAAAAAAAAMANgAAAAAA
+AwAuAAAAAAAfAEIQAQAAAJwAAAA8AGMAMwBmAGIAMwBkADUANQAyADEAMQAzAGEANwBjADEAOAAw
+ADcANAAxAGMAZgA5AGYANQA3ADcAMAA4ADEAZgBjADYAOQAwADMANgA2AGYALgAxADMAOQAzADEA
+OQAxADMAMwAwAC4AZwBpAHQALgBhAGcAbwByAGQAZQBlAHYAQAByAGUAZABoAGEAdAAuAGMAbwBt
+AD4AAAACAXEAAQAAABsAAAABAc8xON5Z6NPEnf45R5ibBjPc6+Vams147yAAHwBwAAEAAAByAAAA
+WwBQAEEAVABDAEgAIAB2ADIAIAAwADMALwAyADMAXQAgAGIAZgBhADoAIABDAGwAZQBhAG4AdQBw
+ACAAYgBmAGEAZABfAHMAZQB0AHUAcABfAGkAbgB0AHIAKAApACAAZgB1AG4AYwB0AGkAbwBuAAAA
+AAAfADUQAQAAAHQAAAA8ADIAMABCADEAQQAzAEMAQgBEADkAOABGADMAOAA0ADUAQgAzAEYANQBG
+ADUANgBEADgANQA5ADcARQBGADUAOQBGADcAQQAyADAANwBAAGEAdgBtAGIAMgAuAHEAbABvAGcA
+aQBjAC4AbwByAGcAPgAAAB8AORABAAAA8gAAADwAYwBvAHYAZQByAC4AMQAzADkAMwAxADkAMQAz
+ADMAMAAuAGcAaQB0AC4AYQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+ACAA
+PABjADMAZgBiADMAZAA1ADUAMgAxADEAMwBhADcAYwAxADgAMAA3ADQAMQBjAGYAOQBmADUANwA3
+ADAAOAAxAGYAYwA2ADkAMAAzADYANgBmAC4AMQAzADkAMwAxADkAMQAzADMAMAAuAGcAaQB0AC4A
+YQBnAG8AcgBkAGUAZQB2AEAAcgBlAGQAaABhAHQALgBjAG8AbQA+AAAAAAADAN4/n04AAAsAAIAI
+IAYAAAAAAMAAAAAAAABGAAAAAAOFAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAAYUAAAAA
+AAADAIAQ/////0AABzB1ft697TXPAQsAAgABAAAAAwAmAAAAAAALACsAAAAAAAIBRwABAAAALwAA
+AGM9VVM7YT0gO3A9UUxvZ2ljO2w9QVZNQjItMTQwMzAyMDgwMjI0Wi0xNDg1OTAAAAIBEDABAAAA
+RgAAAAAAAACl9rpY+JScQJeq5kM6RFa/BwAgsaPL2Y84RbP19W2Fl+9ZAAAA9I0YAABnBDGMy3Gi
+SKVd3se6CF95AEt6pYzLAAAAAB8A+j8BAAAAIAAAAEEAbgBpAGwAIABHAHUAcgB1AG0AdQByAHQA
+aAB5AAAAAwAJWQEAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAA
+AMAAAAAAAABGAAAAAA6FAAAAAAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACA
+CCAGAAAAAADAAAAAAAAARgAAAACChQAAAAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAAB
+AAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAAAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEA
+AAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAAAAAAAAAfAACAhgMC
+AAAAAADAAAAAAAAARgEAAAAiAAAAeAAtAG8AcgBpAGcAaQBuAGEAdABpAG4AZwAtAGkAcAAAAAAA
+AQAAABgAAABbADEAMAAuADEALgA0AC4AMQAwAF0AAADoPw==
 
-Yes
-
-Jason
+--_000_20B1A3CBD98F3845B3F5F56D8597EF59F7A207avmb2qlogicorg_--
