@@ -1,74 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 25 Mar 2014 11:35:26 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Richard Zhu <r65037@freescale.com>,
-	linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jingoo Han <jg1.han@samsung.com>, linux-kernel@vger.kernel.org,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Santosh Shilimkar <santosh.shilimkar@ti.com>,
-	Mohit Kumar <mohit.kumar@st.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Kukjin Kim <kgene.kim@samsung.com>,
-	Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [RESEND: RFC PATCH 3/3] pcie: keystone: add pcie driver based on
- designware core driver
-Message-ID: <20140325103525.GA14789@ulmo>
-References: <1395707726-20437-1-git-send-email-m-karicheri2@ti.com>
- <1395707726-20437-4-git-send-email-m-karicheri2@ti.com>
- <235376049.yyfljDtinu@wuerfel>
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] ACPI / hotplug / PCI: Use pci_device_is_present()
+Date: Mon, 03 Mar 2014 01:19:25 +0100
+Message-ID: <1505390.MlpMqG8COu@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="SLDf9lqlvOQaIe6s"
-In-Reply-To: <235376049.yyfljDtinu@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
---SLDf9lqlvOQaIe6s
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Make the ACPI-based PCI hotplug (ACPIPHP) code use
+pci_device_is_present() for checking if devices are present instead
+of open coding the same thing.
 
-On Tue, Mar 25, 2014 at 08:44:36AM +0100, Arnd Bergmann wrote:
-> On Monday 24 March 2014 20:35:26 Murali Karicheri wrote:
-[...]
-> > +/* Keystone PCIe driver does not allow module unload */
-> > +static int __init ks_pcie_init(void)
-> > +{
-> > +	return platform_driver_probe(&ks_pcie_driver, ks_pcie_probe);
-> > +}
-> > +subsys_initcall(ks_pcie_init);
->=20
-> Why subsys_initcall?
->=20
-> We should probably try to fix unloading soon.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-I did some work on this a few months ago but never got around to
-cleaning up the patches. Let me see if I can resurrect that work.
+On top of current linux-next.
 
-Thierry
+Thanks!
 
---SLDf9lqlvOQaIe6s
-Content-Type: application/pgp-signature
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Index: linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux-pm.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux-pm/drivers/pci/hotplug/acpiphp_glue.c
+@@ -668,12 +668,9 @@ static void trim_stale_devices(struct pc
+ 		alive = (ACPI_SUCCESS(status) && device_status_valid(sta))
+ 			|| acpiphp_no_hotplug(adev);
+ 	}
+-	if (!alive) {
+-		u32 v;
++	if (!alive)
++		alive = pci_device_is_present(dev);
+ 
+-		/* Check if the device responds. */
+-		alive = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &v, 0);
+-	}
+ 	if (!alive) {
+ 		pci_stop_and_remove_bus_device(dev);
+ 		if (adev)
 
-iQIcBAEBAgAGBQJTMVvtAAoJEN0jrNd/PrOhcKEP/0NkWbv69rdDV7DzjWXxvVR2
-NfwiCP+rXOmdk2DdBahkUhbimlGsHTQpG4yUkOTsGOq5qmai6TXjqP+0WhUstBaw
-l6tUd3bSxaYUw+QAk1wlgxuX39xycHEBgVgaXWTTIViIa6JWI+r3AHZuc0zStpOO
-fPyNuDwF9/cDZ2vfiKjSc0hgG/mSXA0ZaY13PsoQB/OcDiyjDYNL9exTD3a9Y0+A
-eOefJqYJEpJwPsgiGHGna39eOn0TLGGMDtiCHN+uMtOR0QFT2JUk5Wd1+lA8jDcz
-aXrJEgohSgkFPaiCZ5N2F87ZrKzH2PrDqs36GJEO3LOj/MOcfodlJ2OJVy4RbHw8
-hZvKbHSTV/F1gbg/CBxsf5SICpMos5FUCK07UvOKVeZeqQH6+Yb85kYesqHUg6JX
-H0Vcc32S6fLyHrBmP0LyWYfIjWaDiEzS9fkiaRbZAAUCFdNubCnHHl/6+z1x63O4
-XFoJtT+TAlo6pGw2ZX+KflPMeBOlP5Hs9LBVDWI0l1R+08I8CaV/i8VTh0A7rLIK
-gS3xjN6N++hAZYRmb4X0cFnBTD/eqxelHSToEnTIRb5J0ZCfzTGJJritZA0rbXUt
-3mc5mn5V8EqbIth6jqpQryMhJBtSO1W6TcS3Getww3tku2gUEdaruDiLv7ReiMfh
-J/ZuERHd+pVQMD1yddOb
-=xEJX
------END PGP SIGNATURE-----
-
---SLDf9lqlvOQaIe6s--
