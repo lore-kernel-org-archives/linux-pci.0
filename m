@@ -1,224 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 28 Mar 2014 10:50:00 +0000
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Rob Herring <robh@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [pci] BUG: unable to handle kernel NULL pointer dereference at
- 00000000000000c8
-Message-ID: <20140328105000.GX17163@e106497-lin.cambridge.arm.com>
-References: <20140328075851.GA18800@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og117.obsmtp.com ([64.18.0.149]:39779 "HELO
+	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755436AbaCCXOs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 18:14:48 -0500
+Received: by mail-ve0-f174.google.com with SMTP id oz11so3450955veb.19
+        for <linux-pci@vger.kernel.org>; Mon, 03 Mar 2014 15:14:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20140328075851.GA18800@localhost>
+In-Reply-To: <1393867996-32299-6-git-send-email-Liviu.Dudau@arm.com>
+References: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
+	<1393867996-32299-6-git-send-email-Liviu.Dudau@arm.com>
+Date: Mon, 3 Mar 2014 15:14:47 -0800
+Message-ID: <CACoXjcnP80rSaYqy2EK8SBh8Q=5E8kh_GQ84Y_0hg3WrQ=fy+A@mail.gmail.com>
+Subject: Re: [PATCH v4 5/6] pci: Use parent domain number when allocating
+ child busses.
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 28, 2014 at 07:58:51AM +0000, Fengguang Wu wrote:
-> Greetings,
-> 
-> I got the below dmesg and the first bad commit is
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux versatile
-> 
-> commit 003b5e6f33242288b3da627ac8a9fffdc61067a0
-> Author:     Liviu Dudau <Liviu.Dudau@arm.com>
-> AuthorDate: Fri Mar 14 15:34:29 2014 +0000
-> Commit:     Rob Herring <robh@kernel.org>
-> CommitDate: Thu Mar 27 17:00:57 2014 -0500
-> 
->     pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
->     
->     Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
->     As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
->     the creation order has been changed for no good reason. Revert the order of
->     creation as we are going to depend on the pci_host_bridge structure to retrieve the
->     domain number of the root bus.
->     
->     Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->     Acked-by: Grant Likely <grant.likely@linaro.org>
->     Tested-by: Tanmay Inamdar <tinamdar@apm.com>
-> 
-> +-----------------------------------------------------------+------------+------------+
-> |                                                           | 003b5e6f33 | eef38aacf6 |
-> +-----------------------------------------------------------+------------+------------+
-> | boot_successes                                            | 0          | 0          |
-> | boot_failures                                             | 20         | 19         |
-> | BUG:unable_to_handle_kernel_NULL_pointer_dereference      | 20         | 19         |
-> | Oops:SMP                                                  | 20         | 19         |
-> | RIP:pcibios_root_bridge_prepare                           | 20         | 19         |
-> | Kernel_panic-not_syncing:Attempted_to_kill_init_exitcode= | 20         | 19         |
-> | backtrace:acpi_bus_scan                                   | 20         | 19         |
-> | backtrace:acpi_scan_init                                  | 20         | 19         |
-> | backtrace:acpi_init                                       | 20         | 19         |
-> | backtrace:kernel_init_freeable                            | 20         | 19         |
-> +-----------------------------------------------------------+------------+------------+
-> 
-> [    0.886041] acpi PNP0A03:00: _OSC: OS supports [Segments MSI]
-> [    0.888121] acpi PNP0A03:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
-> [    0.895383] acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended PCI configuration space under this bridge.
-> [    0.896026] BUG: unable to handle kernel NULL pointer dereference at 00000000000000c8
-> [    0.897000] IP: [<ffffffff819a9387>] pcibios_root_bridge_prepare+0x11/0x26
-> [    0.897000] PGD 0 
-> [    0.897000] Oops: 0000 [#1] SMP 
-> [    0.897000] Modules linked in:
-> [    0.897000] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc2-00030-g003b5e6 #712
-> [    0.897000] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-> [    0.897000] task: ffff88001e6c8000 ti: ffff88001e6c4000 task.ti: ffff88001e6c4000
-> [    0.897000] RIP: 0010:[<ffffffff819a9387>]  [<ffffffff819a9387>] pcibios_root_bridge_prepare+0x11/0x26
-> [    0.897000] RSP: 0000:ffff88001e6c5c00  EFLAGS: 00010282
-> [    0.897000] RAX: 0000000000000000 RBX: ffff88001de68ee8 RCX: 0000000000000000
-> [    0.897000] RDX: 0000000000000498 RSI: ffff88001e6c87f0 RDI: ffff88001dfe5cd0
-> [    0.897000] RBP: ffff88001e6c5c90 R08: 00000000b0fa9e28 R09: 0000000000000001
-> [    0.897000] R10: 000000000000a1e0 R11: 0000000000000000 R12: ffff88001dfe5cd0
-> [    0.897000] R13: ffff88001de68f18 R14: 0000000000000000 R15: ffffffff821b1270
-> [    0.897000] FS:  0000000000000000(0000) GS:ffff88001ea00000(0000) knlGS:0000000000000000
-> [    0.897000] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [    0.897000] CR2: 00000000000000c8 CR3: 00000000020ae000 CR4: 00000000000006f0
-> [    0.897000] Stack:
-> [    0.897000]  ffffffff814b15dc ffff88001dfe6148 ffff88001e428000 ffff88001e6c5cc8
-> [    0.897000]  0000000000000000 ffff88001e6c5c90 ffffffff815f10ea ffffffff82026a3d
-> [    0.897000]  ffff88001e6c5c48 ffff880000000010 ffff88001e6c5ca0 ffff88001e6c5c60
-> [    0.897000] Call Trace:
-> [    0.897000]  [<ffffffff814b15dc>] ? pci_create_root_bus+0x7e/0x31e
-> [    0.897000]  [<ffffffff815f10ea>] ? dev_warn+0x5c/0x5e
-> [    0.897000]  [<ffffffff819a82be>] ? pci_mmconfig_insert+0xb2/0x1d0
-> [    0.897000]  [<ffffffff819a92d8>] pci_acpi_scan_root+0x30c/0x3aa
-> [    0.897000]  [<ffffffff814e0db9>] acpi_pci_root_add+0x25b/0x32f
-> [    0.897000]  [<ffffffff814dd3c9>] acpi_bus_attach+0x85/0xf4
-> [    0.897000]  [<ffffffff814dd425>] acpi_bus_attach+0xe1/0xf4
-> [    0.897000]  [<ffffffff814dd425>] acpi_bus_attach+0xe1/0xf4
-> [    0.897000]  [<ffffffff814dd493>] acpi_bus_scan+0x5b/0x6b
-> [    0.897000]  [<ffffffff82412c02>] ? acpi_sleep_proc_init+0x2a/0x2a
-> [    0.897000]  [<ffffffff82412ff2>] acpi_scan_init+0x60/0x18e
-> [    0.897000]  [<ffffffff82412c02>] ? acpi_sleep_proc_init+0x2a/0x2a
-> [    0.897000]  [<ffffffff82412e41>] acpi_init+0x23f/0x257
-> [    0.897000]  [<ffffffff810002b2>] do_one_initcall+0x84/0x11a
-> [    0.897000]  [<ffffffff81094152>] ? parse_args+0x189/0x249
-> [    0.897000]  [<ffffffff823cdf75>] kernel_init_freeable+0x1d8/0x25d
-> [    0.897000]  [<ffffffff823cd759>] ? do_early_param+0x88/0x88
-> [    0.897000]  [<ffffffff81ae8469>] ? rest_init+0xcd/0xcd
-> [    0.897000]  [<ffffffff81ae8477>] kernel_init+0xe/0xda
-> [    0.897000]  [<ffffffff81b0f83c>] ret_from_fork+0x7c/0xb0
-> [    0.897000]  [<ffffffff81ae8469>] ? rest_init+0xcd/0xcd
-> [    0.897000] Code: 71 b0 ff 48 8b 1b eb ee 48 83 c4 38 4c 89 e8 5b 41 5c 41 5d 41 5e 41 5f 5d c3 0f 1f 44 00 00 48 8b 87 70 04 00 00 55 48 89 e5 5d <48> 8b 80 c8 00 00 00 48 8b 40 08 48 89 87 c0 03 00 00 31 c0 c3 
-> [    0.897000] RIP  [<ffffffff819a9387>] pcibios_root_bridge_prepare+0x11/0x26
-> [    0.897000]  RSP <ffff88001e6c5c00>
-> [    0.897000] CR2: 00000000000000c8
-> [    0.897000] ---[ end trace 6110a1dd1810ff29 ]---
-> [    0.897033] swapper/0 (1) used greatest stack depth: 3816 bytes left
-> 
-> git bisect start eef38aacf67aae8b10c07c8b55b3f0fee627c8fa a79528e9d849803457b6235ddb1a1cfd4e11c6cd --
-> git bisect good f22b3e5788b29311219620adeb3edac565881241  # 09:02     20+      0  dts: versatile: add pci controller binding
-> git bisect  bad 36623599ba01b3aba32c615a210ce50e195204fa  # 09:04      0-     20  pci: Export find_pci_host_bridge() function.
-> git bisect good d5bb25094600d096be062f823109753c6b218400  # 09:12     20+      0  pci: OF: Fix the conversion of IO ranges into IO resources.
-> git bisect  bad 003b5e6f33242288b3da627ac8a9fffdc61067a0  # 09:19      0-      7  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-> # first bad commit: [003b5e6f33242288b3da627ac8a9fffdc61067a0] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
-> git bisect good d5bb25094600d096be062f823109753c6b218400  # 09:26     60+      0  pci: OF: Fix the conversion of IO ranges into IO resources.
-> git bisect  bad eef38aacf67aae8b10c07c8b55b3f0fee627c8fa  # 09:26      0-     19  ARM: versatile: register sched_clock directly
-> git bisect good f217c44ebd41ce7369d2df07622b2839479183b0  # 09:33     60+      0  Merge tag 'trace-fixes-v3.14-rc7-v2' of git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/linux-trace
-> git bisect good 9eee0105595d9d1f3702d0e8d8cf4950e400ed0b  # 09:41     60+      0  Add linux-next specific files for 20140327
-> 
-> This script may reproduce the error.
-> 
-> -----------------------------------------------------------------------------
-> #!/bin/bash
-> 
-> kernel=$1
-> 
-> kvm=(
->         qemu-system-x86_64 -cpu kvm64 -enable-kvm
->         -kernel $kernel
->         -smp 2
->         -m 256M
->         -net nic,vlan=0,macaddr=00:00:00:00:00:00,model=virtio
->         -net user,vlan=0
->         -net nic,vlan=1,model=e1000
->         -net user,vlan=1
->         -boot order=nc
->         -no-reboot
->         -watchdog i6300esb
->         -serial stdio
->         -display none
->         -monitor null
-> )
-> 
-> append=(
->         debug
->         sched_debug
->         apic=debug
->         ignore_loglevel
->         sysrq_always_enabled
->         panic=10
->         prompt_ramdisk=0
->         earlyprintk=ttyS0,115200
->         console=ttyS0,115200
->         console=tty0
->         vga=normal
->         root=/dev/ram0
->         rw            
-> )
->  
-> "${kvm[@]}" --append "${append[*]}"
-> -----------------------------------------------------------------------------
-> 
-> 
-> Thanks,
-> Fengguang
+Hello Liviu,
 
-[kernel log removed]
+Thanks for fixing up domain_nr. Now I have moved on further to a new
+domain_nr related warning dump :-)
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+xgene-pcie 1f500000.pcie: (rc) x8 gen-3 link up
+pci_bus 0001:00: scanning bus
+pci_setup_device:1101 domain_nr = 1
+pci 0001:00:00.0: [e008:e004] type 01 class 0x060400
+pci 0001:00:00.0: reg 0x10: [mem 0x4000000000-0x7fffffffff 64bit]
+pci 0001:00:00.0: calling xgene_pcie_fixup_bridge+0x0/0x80
+pci 0001:00:00.0: Hiding X-Gene pci host bridge resources 0001:00:00.0
+pci 0001:00:00.0: supports D1 D2
+pci_bus 0001:00: fixups for bus
+pci 0001:00:00.0: scanning [bus 03-03] behind bridge, pass 0
+pci 0001:00:00.0: bridge configuration invalid ([bus 03-03]), reconfiguring
+pci 0001:00:00.0: scanning [bus 00-00] behind bridge, pass 1
+** pci_scan_bridge:855  pci_domain_nr(bus) = 1
+** pci_alloc_child_bus:681  pci_domain_nr(bus) = 1
+pci_bus 0001:01: scanning bus
+pci_setup_device:1101 domain_nr = 0
+pci 0000:01:00.0: [15b3:1003] type 00 class 0x020000
+pci 0000:01:00.0: reg 0x10: [mem 0x00100000-0x001fffff 64bit]
+pci 0000:01:00.0: reg 0x18: [mem 0x00800000-0x00ffffff 64bit pref]
+pci 0000:01:00.0: reg 0x30: [mem 0x01000000-0x010fffff pref]
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1 at
+/home/tinamdar/work/open-source/linux/fs/sysfs/dir.c:52
+sysfs_warn_dup+0x80/0xc0()
+sysfs: cannot create duplicate filename '/bus/pci/devices/0000:01:00.0'
+Modules linked in:
+CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc5+ #40
+Call trace:
+[<ffffffc000088180>] dump_backtrace+0x0/0x140
+[<ffffffc0000882d0>] show_stack+0x10/0x20
+[<ffffffc0004f65ac>] dump_stack+0x74/0xc4
+[<ffffffc000096e04>] warn_slowpath_common+0x84/0xc0
+[<ffffffc000096e8c>] warn_slowpath_fmt+0x4c/0x60
+[<ffffffc0001b83dc>] sysfs_warn_dup+0x7c/0xc0
+[<ffffffc0001b8894>] sysfs_do_create_link_sd.isra.2+0xf4/0x100
+[<ffffffc0001b88bc>] sysfs_create_link+0x1c/0x40
+[<ffffffc0003250b0>] bus_add_device+0x110/0x1c0
+[<ffffffc000322f1c>] device_add+0x31c/0x520
+[<ffffffc0002c444c>] pci_device_add+0xec/0x140
+[<ffffffc0004f1758>] pci_scan_single_device+0x98/0xe0
+[<ffffffc0002c44e8>] pci_scan_slot+0x48/0x120
+[<ffffffc0002c5368>] pci_scan_child_bus+0x48/0x140
+[<ffffffc0002c522c>] pci_scan_bridge+0x4ec/0x5e0
+[<ffffffc0002c53c8>] pci_scan_child_bus+0xa8/0x140
+[<ffffffc0004f1b30>] pci_rescan_bus+0x10/0x40
+[<ffffffc0006a12ac>] xgene_pcie_probe_bridge+0x660/0x72c
+[<ffffffc000327d20>] platform_drv_probe+0x20/0x60
+[<ffffffc000325e30>] really_probe+0xf0/0x220
+[<ffffffc000326080>] __driver_attach+0xa0/0xc0
+[<ffffffc000323ed4>] bus_for_each_dev+0x54/0xa0
+[<ffffffc0003258bc>] driver_attach+0x1c/0x40
+[<ffffffc00032548c>] bus_add_driver+0x14c/0x220
+[<ffffffc00032683c>] driver_register+0x5c/0x120
+[<ffffffc000327cdc>] __platform_driver_register+0x5c/0x80
+[<ffffffc0006a0c40>] xgene_pcie_driver_init+0x14/0x20
+[<ffffffc0000814c0>] do_one_initcall+0xe0/0x160
+[<ffffffc00068c934>] kernel_init_freeable+0x134/0x1d8
+[<ffffffc0004f07ac>] kernel_init+0xc/0xe0
+---[ end trace 3ee052d463aab7f3 ]---
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1 at
+/home/tinamdar/work/open-source/linux/drivers/pci/probe.c:1380
+pci_device_add+0x128/0x140()
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Fengguang,
-
-Thanks for testing this. I will post an updated series soon and hope that Rob
-will update his branch soon. Until then, can you try the following patch on
-top of Rob's series?
-
-Best regards,
-Liviu
-
-8<--------------------------------------------------------------------------
->From 46bc56e9239c04ee236f4b17526f3e7ebcda52cf Mon Sep 17 00:00:00 2001
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-Date: Fri, 28 Mar 2014 10:47:59 +0000
-Subject: pci: Fix crash on pcibios_root_bridge_prepare()
-
-Commit 003b5e6f33242 changed the order of creation between bridge
-and the root bus, but pcibios_root_bridge_prepare() is expecting
-the root bus to be properly configured when called. Move the call
-after the bus has been initialised (back in the original spot).
-
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/pci/probe.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+I have made a small fix above your patch. After the fix is applied,
+dumps are gone and the enumeration finishes up smoothly for all the
+ports.
+Since the change is small, just pasting it here. Please review and
+apply if it's clean.
 
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 172c615..ddc7e34 100644
+index a12cda5..aac8366 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -1734,9 +1734,6 @@ struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	bridge->domain_nr = domain;
--	error = pcibios_root_bridge_prepare(bridge);
--	if (error)
--		goto err_out;
- 
- 	b = pci_alloc_bus();
- 	if (!b) {
-@@ -1757,6 +1754,10 @@ struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
- 
- 	bridge->bus = b;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
-+	error = pcibios_root_bridge_prepare(bridge);
-+	if (error)
-+		goto err_out;
-+
- 	error = device_register(&bridge->dev);
- 	if (error) {
- 		put_device(&bridge->dev);
+@@ -693,7 +693,7 @@ static struct pci_bus *pci_alloc_child_bus(struct
+pci_bus *parent,
+        }
 
+        child->self = bridge;
+-       child->bridge = get_device(&bridge->dev);
++       child->bridge = get_device(parent->bridge);
+        child->dev.parent = child->bridge;
+        pci_set_bus_of_node(child);
+        pci_set_bus_speed(child);
 
+Thanks,
+Tanmay
+
+On Mon, Mar 3, 2014 at 9:33 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> pci_alloc_child_bus() uses the newly allocated child bus to figure
+> out the domain number that is going to use for setting the device
+> name. A better option is to use the parent bus domain number.
+>
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 26237a0..a12cda5 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -677,7 +677,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>          * now as the parent is not properly set up yet.
+>          */
+>         child->dev.class = &pcibus_class;
+> -       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+> +       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(parent), busnr);
+>
+>         /*
+>          * Set up the primary, secondary and subordinate
+> --
+> 1.9.0
+>
