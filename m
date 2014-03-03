@@ -1,44 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:38257 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752094AbaCUOGt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 10:06:49 -0400
-Message-ID: <532C4774.20803@codethink.co.uk>
-Date: Fri, 21 Mar 2014 15:06:44 +0100
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 3 Mar 2014 17:26:00 +0800
+From: Lee Jones <lee.jones@linaro.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] timberdale: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140303092600.GB8282@lee--X1>
+References: <1392804931-30671-3-git-send-email-agordeev@redhat.com>
+ <20140219114424.GD10504@lee--X1>
+ <20140221165606.GH17353@dhcp-26-207.brq.redhat.com>
+ <20140221165809.GI17353@dhcp-26-207.brq.redhat.com>
+ <20140224162902.GI15847@lee--X1>
+ <20140303072551.GC4674@lee--X1>
+ <20140303081023.GA25705@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-To: Phil.Edworthy@renesas.com
-CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
-Subject: Re: [PATCH v4 1/9] PCI: host: rcar: Add Renesas R-Car PCIe driver
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com> <1395397968-6242-2-git-send-email-phil.edworthy@renesas.com> <27671657.LuGQtNBfqX@wuerfel> <OF038A7DC3.59E6288A-ON80257CA2.004AF404-80257CA2.004CDD76@eu.necel.com>
-In-Reply-To: <OF038A7DC3.59E6288A-ON80257CA2.004AF404-80257CA2.004CDD76@eu.necel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140303081023.GA25705@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21/03/14 14:59, Phil.Edworthy@renesas.com wrote:
-> Hi Arnd,
->
-> Thanks for the review.
->
->
->>> +static int __init pcie_init(void)
->>> +{
->>> +   return platform_driver_probe(&rcar_pcie_driver, rcar_pcie_probe);
->>> +}
->>> +subsys_initcall(pcie_init);
->>
->> Why so early?
-> Good catch, copied from another PCIe driver!
+> > > Applied, thanks.
+> > 
+> > I've reverted this patch, as it doesn't build othognally.
+> > 
+> > drivers/mfd/timberdale.c:718:2:
+> >   error: implicit declaration of function ‘pci_enable_msix_exact’
+> >      [-Werror=implicit-function-declaration]
+> 
+> I should have to clarify it I think. Do you build on top of 3.14-rc4?
 
-I think you can change it to use module_driver() instead of the
-init_call.
-
+Not yet. Is the required patch in there?
 
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Lee Jones
+Linaro STMicroelectronics Landing Team Lead
+Linaro.org │ Open source software for ARM SoCs
+Follow Linaro: Facebook | Twitter | Blog
