@@ -1,46 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:41163 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121AbaCYARm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 20:17:42 -0400
-Received: by mail-ig0-f175.google.com with SMTP id ur14so9349726igb.2
-        for <linux-pci@vger.kernel.org>; Mon, 24 Mar 2014 17:17:41 -0700 (PDT)
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:54901
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751990AbaCCGTR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 01:19:17 -0500
+Date: Mon, 3 Mar 2014 13:22:21 +0800
+From: Shawn Guo <shawn.guo@linaro.org>
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Richard Zhu <r65037@freescale.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, <kernel@pengutronix.de>
+Subject: Re: [PATCH 1/3] ARM: dts: imx6: extend PCIe interrupt list for MSI
+Message-ID: <20140303052216.GC9706@shlinux1.ap.freescale.net>
+References: <1393608633-18321-1-git-send-email-l.stach@pengutronix.de>
+ <1393608633-18321-2-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <83f00436a12b44f799bd1222b91297cd@DM2PR05MB671.namprd05.prod.outlook.com>
-References: <CAA93t1rPE3yUh8nAGJDiqeGhixznZdhdyFwRoX_c1VWT3WEtvw@mail.gmail.com>
-	<1395699232-28727-1-git-send-email-yinghai@kernel.org>
-	<83f00436a12b44f799bd1222b91297cd@DM2PR05MB671.namprd05.prod.outlook.com>
-Date: Mon, 24 Mar 2014 17:17:41 -0700
-Message-ID: <CAE9FiQXuv4tW44_9sRUyx7NxgGaw4hxVm7DJCYugX33K-ZrVcg@mail.gmail.com>
-Subject: Re: [PATCH v2] pciehp: only wait command complete for real hotplug control
-From: Yinghai Lu <yinghai@kernel.org>
-To: Rajat Jain <rajatjain@juniper.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Guenter Roeck <groeck@juniper.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1393608633-18321-2-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 24, 2014 at 4:19 PM, Rajat Jain <rajatjain@juniper.net> wrote:
-> Just a note  :-)
->
->> -v2: use second way that is suggested by Bjorn.
->>     It also solve the problem on Rajat's sytem that have wrong inital CC
->
-> Er, not wrong initial CC.
->
-> Just a different (but not necessarily wrong) different CC bit behavior :-). In my systems, the CC bit gets set for every write to the slot control register (even if Button, LED, EMI, power controller are not implemented).
->
->> Tested-by: Rajat Jain <rajatxjain@gmail.com>
->
-> Yes, I tested and it seems to work fine on such systems too.
+On Fri, Feb 28, 2014 at 06:30:31PM +0100, Lucas Stach wrote:
+> Optional IRQ necessary for handling MSI.
+> 
+> Signed-off-by: Juergen Beisert <jbe@pengutronix.de>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 9 ++++++++-
 
-Thanks for inputs for change log changes.
+Please have this change go with driver or a separate patch, not with
+dts update.
 
-Assume Bjorn will sort it out.
+Shawn
 
-Thanks
+>  arch/arm/boot/dts/imx6qdl.dtsi                           | 4 +++-
+>  2 files changed, 11 insertions(+), 2 deletions(-)
 
-Yinghai
