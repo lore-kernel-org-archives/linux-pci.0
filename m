@@ -1,71 +1,208 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:31759 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753819AbaCaKbF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:05 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Received: from dliviu.plus.com ([80.229.23.120]:52087 "EHLO smtp.dudau.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755326AbaCCX4d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Mar 2014 18:56:33 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.dudau.co.uk (Postfix) with SMTP id E1F73FFA70
+	for <linux-pci@vger.kernel.org>; Mon,  3 Mar 2014 23:56:31 +0000 (GMT)
+Date: Mon, 3 Mar 2014 23:51:32 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1396261856-22465-4-git-send-email-phil.edworthy@renesas.com>
-Date: Mon, 31 Mar 2014 11:30:48 +0100
-Subject: [PATCH v7 03/10] ARM: shmobile: r8a7790: Add PCIe clock device tree nodes
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 5/6] pci: Use parent domain number when allocating
+ child busses.
+Message-ID: <20140303235132.GA13582@bart.dudau.co.uk>
+References: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393867996-32299-6-git-send-email-Liviu.Dudau@arm.com>
+ <CACoXjcnP80rSaYqy2EK8SBh8Q=5E8kh_GQ84Y_0hg3WrQ=fy+A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACoXjcnP80rSaYqy2EK8SBh8Q=5E8kh_GQ84Y_0hg3WrQ=fy+A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree clock nodes for PCIe
+On Mon, Mar 03, 2014 at 03:14:47PM -0800, Tanmay Inamdar wrote:
+> Hello Liviu,
+> 
+> Thanks for fixing up domain_nr. Now I have moved on further to a new
+> domain_nr related warning dump :-)
+> 
+> -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+> xgene-pcie 1f500000.pcie: (rc) x8 gen-3 link up
+> pci_bus 0001:00: scanning bus
+> pci_setup_device:1101 domain_nr = 1
+> pci 0001:00:00.0: [e008:e004] type 01 class 0x060400
+> pci 0001:00:00.0: reg 0x10: [mem 0x4000000000-0x7fffffffff 64bit]
+> pci 0001:00:00.0: calling xgene_pcie_fixup_bridge+0x0/0x80
+> pci 0001:00:00.0: Hiding X-Gene pci host bridge resources 0001:00:00.0
+> pci 0001:00:00.0: supports D1 D2
+> pci_bus 0001:00: fixups for bus
+> pci 0001:00:00.0: scanning [bus 03-03] behind bridge, pass 0
+> pci 0001:00:00.0: bridge configuration invalid ([bus 03-03]), reconfiguring
+> pci 0001:00:00.0: scanning [bus 00-00] behind bridge, pass 1
+> ** pci_scan_bridge:855  pci_domain_nr(bus) = 1
+> ** pci_alloc_child_bus:681  pci_domain_nr(bus) = 1
+> pci_bus 0001:01: scanning bus
+> pci_setup_device:1101 domain_nr = 0
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/boot/dts/r8a7790.dtsi            | 7 ++++---
- include/dt-bindings/clock/r8a7790-clock.h | 1 +
- 2 files changed, 5 insertions(+), 3 deletions(-)
+Why does the domain_nr change here?
 
-diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
-index da69afc..df9ec61 100644
---- a/arch/arm/boot/dts/r8a7790.dtsi
-+++ b/arch/arm/boot/dts/r8a7790.dtsi
-@@ -704,16 +704,17 @@
- 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
- 			clocks = <&cp_clk>, <&mmc1_clk>, <&sd3_clk>, <&sd2_clk>,
- 				 <&cpg_clocks R8A7790_CLK_SD1>, <&cpg_clocks R8A7790_CLK_SD0>,
--				 <&mmc0_clk>, <&rclk_clk>;
-+				 <&mmc0_clk>, <&rclk_clk>, <&mp_clk>;
- 			#clock-cells = <1>;
- 			renesas,clock-indices = <
- 				R8A7790_CLK_TPU0 R8A7790_CLK_MMCIF1 R8A7790_CLK_SDHI3
- 				R8A7790_CLK_SDHI2 R8A7790_CLK_SDHI1 R8A7790_CLK_SDHI0
--				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1
-+				R8A7790_CLK_MMCIF0 R8A7790_CLK_CMT1 R8A7790_CLK_PCIE
- 			>;
- 			clock-output-names =
- 				"tpu0", "mmcif1", "sdhi3", "sdhi2",
--				"sdhi1", "sdhi0", "mmcif0", "cmt1";
-+				"sdhi1", "sdhi0", "mmcif0", "cmt1",
-+				"pcie";
- 		};
- 		mstp5_clks: mstp5_clks@e6150144 {
- 			compatible = "renesas,r8a7790-mstp-clocks", "renesas,cpg-mstp-clocks";
-diff --git a/include/dt-bindings/clock/r8a7790-clock.h b/include/dt-bindings/clock/r8a7790-clock.h
-index 6548a5f..840dbc8 100644
---- a/include/dt-bindings/clock/r8a7790-clock.h
-+++ b/include/dt-bindings/clock/r8a7790-clock.h
-@@ -57,6 +57,7 @@
- #define R8A7790_CLK_SDHI1		13
- #define R8A7790_CLK_SDHI0		14
- #define R8A7790_CLK_MMCIF0		15
-+#define R8A7790_CLK_PCIE		19
- #define R8A7790_CLK_SSUSB		28
- #define R8A7790_CLK_CMT1		29
- #define R8A7790_CLK_USBDMAC0		30
+> pci 0000:01:00.0: [15b3:1003] type 00 class 0x020000
+> pci 0000:01:00.0: reg 0x10: [mem 0x00100000-0x001fffff 64bit]
+> pci 0000:01:00.0: reg 0x18: [mem 0x00800000-0x00ffffff 64bit pref]
+> pci 0000:01:00.0: reg 0x30: [mem 0x01000000-0x010fffff pref]
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 1 at
+> /home/tinamdar/work/open-source/linux/fs/sysfs/dir.c:52
+> sysfs_warn_dup+0x80/0xc0()
+> sysfs: cannot create duplicate filename '/bus/pci/devices/0000:01:00.0'
+> Modules linked in:
+> CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc5+ #40
+> Call trace:
+> [<ffffffc000088180>] dump_backtrace+0x0/0x140
+> [<ffffffc0000882d0>] show_stack+0x10/0x20
+> [<ffffffc0004f65ac>] dump_stack+0x74/0xc4
+> [<ffffffc000096e04>] warn_slowpath_common+0x84/0xc0
+> [<ffffffc000096e8c>] warn_slowpath_fmt+0x4c/0x60
+> [<ffffffc0001b83dc>] sysfs_warn_dup+0x7c/0xc0
+> [<ffffffc0001b8894>] sysfs_do_create_link_sd.isra.2+0xf4/0x100
+> [<ffffffc0001b88bc>] sysfs_create_link+0x1c/0x40
+> [<ffffffc0003250b0>] bus_add_device+0x110/0x1c0
+> [<ffffffc000322f1c>] device_add+0x31c/0x520
+> [<ffffffc0002c444c>] pci_device_add+0xec/0x140
+> [<ffffffc0004f1758>] pci_scan_single_device+0x98/0xe0
+> [<ffffffc0002c44e8>] pci_scan_slot+0x48/0x120
+> [<ffffffc0002c5368>] pci_scan_child_bus+0x48/0x140
+> [<ffffffc0002c522c>] pci_scan_bridge+0x4ec/0x5e0
+> [<ffffffc0002c53c8>] pci_scan_child_bus+0xa8/0x140
+> [<ffffffc0004f1b30>] pci_rescan_bus+0x10/0x40
+> [<ffffffc0006a12ac>] xgene_pcie_probe_bridge+0x660/0x72c
+> [<ffffffc000327d20>] platform_drv_probe+0x20/0x60
+> [<ffffffc000325e30>] really_probe+0xf0/0x220
+> [<ffffffc000326080>] __driver_attach+0xa0/0xc0
+> [<ffffffc000323ed4>] bus_for_each_dev+0x54/0xa0
+> [<ffffffc0003258bc>] driver_attach+0x1c/0x40
+> [<ffffffc00032548c>] bus_add_driver+0x14c/0x220
+> [<ffffffc00032683c>] driver_register+0x5c/0x120
+> [<ffffffc000327cdc>] __platform_driver_register+0x5c/0x80
+> [<ffffffc0006a0c40>] xgene_pcie_driver_init+0x14/0x20
+> [<ffffffc0000814c0>] do_one_initcall+0xe0/0x160
+> [<ffffffc00068c934>] kernel_init_freeable+0x134/0x1d8
+> [<ffffffc0004f07ac>] kernel_init+0xc/0xe0
+> ---[ end trace 3ee052d463aab7f3 ]---
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 1 at
+> /home/tinamdar/work/open-source/linux/drivers/pci/probe.c:1380
+> pci_device_add+0x128/0x140()
+> -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+> 
+> I have made a small fix above your patch. After the fix is applied,
+> dumps are gone and the enumeration finishes up smoothly for all the
+> ports.
+> Since the change is small, just pasting it here. Please review and
+> apply if it's clean.
+
+Honestly, I have no idea. I kept staring at the code for a better part of an hour
+trying to decipher what the intent of the code was, without too much progress. I
+still don't understand why the code in pci_alloc_child_bus() takes a shortcut when
+the bridge argument is NULL when in my opinion it should use parent->bridge instead
+and continue as normal.
+
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index a12cda5..aac8366 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -693,7 +693,7 @@ static struct pci_bus *pci_alloc_child_bus(struct
+> pci_bus *parent,
+>         }
+> 
+>         child->self = bridge;
+> -       child->bridge = get_device(&bridge->dev);
+> +       child->bridge = get_device(parent->bridge);
+>         child->dev.parent = child->bridge;
+
+Hmm, not sure why this is needed. What does get_device(&bridge->dev)
+return for you? The next line sets child->dev.parent to child->bridge,
+but with your change I'm not sure we end up using the correct parent.
+
+Can you try to revert your change and modify the implementation of pci_domain_nr() in arm64
+to look like this:
+
+static inline int pci_domain_nr(struct pci_bus *bus)
+{
+	struct pci_host_bridge *bridge;
+
+	while (bus->parent)
+		bus = bus->parent;
+
+	bridge = to_pci_host_bridge(bus->bridge);
+	if (bridge)
+		return bridge->domain_nr;
+
+	return 0;
+}
+
+Please let me know what results you get.
+
+Best regards,
+Liviu
+
+
+>         pci_set_bus_of_node(child);
+>         pci_set_bus_speed(child);
+> 
+> Thanks,
+> Tanmay
+> 
+> On Mon, Mar 3, 2014 at 9:33 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > pci_alloc_child_bus() uses the newly allocated child bus to figure
+> > out the domain number that is going to use for setting the device
+> > name. A better option is to use the parent bus domain number.
+> >
+> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> >
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 26237a0..a12cda5 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -677,7 +677,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+> >          * now as the parent is not properly set up yet.
+> >          */
+> >         child->dev.class = &pcibus_class;
+> > -       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+> > +       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(parent), busnr);
+> >
+> >         /*
+> >          * Set up the primary, secondary and subordinate
+> > --
+> > 1.9.0
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.9.0
+-------------------
+   .oooO
+   (   )
+    \ (  Oooo.
+     \_) (   )
+          ) /
+         (_/
+
+ One small step
+   for me ...
 
