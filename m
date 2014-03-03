@@ -1,126 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:43804 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759AbaCMEEp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 00:04:45 -0400
-Received: by mail-qc0-f174.google.com with SMTP id x13so524551qcv.33
-        for <linux-pci@vger.kernel.org>; Wed, 12 Mar 2014 21:04:45 -0700 (PDT)
-Date: Wed, 12 Mar 2014 22:04:40 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alexander Gordeev <agordeev@redhat.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com,
-	intel-linux-scu@intel.com, support@lsi.com,
-	DL-MPTFusionLinux@lsi.com, qla2xxx-upstream@qlogic.com,
-	iscsi-driver@qlogic.com, pv-drivers@vmware.com,
-	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 00/23] scsi: Use pci_enable_msix_range() instead of
- pci_enable_msix()
-Message-ID: <20140313040440.GB26657@google.com>
-References: <cover.1393191330.git.agordeev@redhat.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:54381 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755468AbaCCTJv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Mar 2014 14:09:51 -0500
+Date: Mon, 3 Mar 2014 12:09:46 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Srikanth Thokala <sthokal@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v2] pcie: Add Xilinx PCIe Host Bridge IP driver
+Message-ID: <20140303190946.GA28341@obsidianresearch.com>
+References: <1393854036-5244-1-git-send-email-sthokal@xilinx.com>
+ <20140303174325.GB31062@obsidianresearch.com>
+ <CA+mB=1JmRVzpz=32AbdN8W+2RrsxkPUb+s0zLUQXBrsj2Cdiwg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1393191330.git.agordeev@redhat.com>
+In-Reply-To: <CA+mB=1JmRVzpz=32AbdN8W+2RrsxkPUb+s0zLUQXBrsj2Cdiwg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 24, 2014 at 09:02:00AM +0100, Alexander Gordeev wrote:
-> Hello!
-> 
-> This series is against James Bottomley's SCSI tree [1], but it needs
-> commit f7fc32c ("PCI/MSI: Add pci_enable_msi_exact() and
-> pci_enable_msix_exact()") from from Bjorn Helgaas's PCI tree [2]:
-> 
-> 1. git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-> 2. git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/msi
-> 
-> Recently pci_enable_msix_exact() function has been accepted to
-> the mainline. That is a variation of pci_enable_msix_range() which
-> allows a device driver to request a particular number of MSI-Xs.
-> 
-> As result, most of the changes posted in version 1 of this series
-> are invalidated and need to use pci_enable_msix_exact() instead of
-> originally posted pci_enable_msix_range() usages.
-> 
-> I removed almost all ACKs, since unlike pci_enable_msix_range()
-> function which returns the number of MSI-Xs allocated or negative
-> errno, pci_enable_msix_exact() returns either zero success code or
-> a negative errno. Although this change is simple, it still entails
-> an updated error code analysis and would be better reviewed by
-> driver maintainers.
+On Tue, Mar 04, 2014 at 12:21:55AM +0530, Srikanth Thokala wrote:
 
-Hi James,
+> >> +     pci_express: axi-pcie@50000000 {
+> >> +             #address-cells = <3>;
+> >> +             #size-cells = <2>;
+> >> +             compatible = "xlnx,axi-pcie-host-1.00.a";
+> >> +             reg = < 0x50000000 0x10000000 >;
+> >> +             interrupts = < 0 52 4 >;
+> >> +             ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+> >> +     };
 
-I think Alexander sent these to linux-scsi hoping that you would handle
-them, but I know it's a hassle because they depend on f7fc32c, which went
-in after the merge window.
+> >  - How are INTA/B/C/D handled? Typically I'd like to see an
+> >    interrupt-mapping block describing them.
+> >
+> >    There are a few options here, if the HW can decode A/B/C/D then
+> >    it probably needs another irq_domain for INTx, and have the IRQ
+> >    handler decode like it does for MSI.
+> 
+> The core provides a single interrupt for both INTx/MSI messages.  The
+> core decodes the TLP messages and accordingly assert the INTx/MSI
+> bits.  It provides two registers Interrupt FIFO Read 1 and Read 2 to get
+> more information of these.
+> 
+>    | CPU |  <------  | PCIe IP |   <--  MSI/INTx Message (INTA, INTB,
+> INTC, INTD)
+> 
+>    Reading Interrupt Status Reg -> MSI/INTx bit set/not set
+>    Reading Root Port FIFO Read Register1 -> Mentions which interrupt
+> (INTx) is received
+>    Reading Root Port FIFO Read Register2 -> MSI Data
 
-I'd be glad to review these and apply them through my tree, unless you want
-to do it.  I'd like to get these merged in the v3.15 merge window so
-Alexander can move on to something else.  I haven't checked for merge
-conflicts with scsi.git yet, but I assume they'd be pretty trivial if there
-are any.
+Okay, that matches my guess based on the code.
 
-Bjorn
+You probably want to do something like this:
 
-> Cc: iss_storagedev@hp.com
-> Cc: intel-linux-scu@intel.com
-> Cc: support@lsi.com
-> Cc: DL-MPTFusionLinux@lsi.com
-> Cc: qla2xxx-upstream@qlogic.com
-> Cc: iscsi-driver@qlogic.com
-> Cc: pv-drivers@vmware.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
+     pci_express: axi-pcie@50000000 {
+             #address-cells = <3>;
+             #size-cells = <2>;
+	     device_type ="pci";
+             compatible = "xlnx,axi-pcie-host-1.00.a";
+             reg = < 0x50000000 0x10000000 >;
+             interrupts = < 0 52 4 >;
+             ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+
+	     pcie_intc: interrupt-controller {
+    		interrupt-controller;
+		#address-cells = <0>;
+		#interrupt-cells = <1>;
+	     }
+
+	     interrupt-map-mask = <0 0 0 7>;
+	     interrupt-map = <0 0 0 1 &pcie_intc 0>, // INT A
+	                     <0 0 0 2 &pcie_intc 2>, // INT B
+	                     <0 0 0 3 &pcie_intc 3>, // INT C
+	                     <0 0 0 4 &pcie_intc 4>; // INT D
+     };
+
+(similar to what ralink,rt3883 does for their binding)
+
+Setup a interrupt domain like for MSI, except attach it to the
+nested interrupt-controller DT node. Decode the 4 interrutps from
+the core in the ISR and route them into the domain.
+
+The generic code will take care of the rest.
+
+This way all the interrupts are decoded and the interrupt-map DT
+functionality is supported, which is important in a number of
+board-specific corner cases.
+
+> > You may want to work with Liviu to use his patch set which provides
+> > more generic support. Also, the driver needs to put every one of these
+> > ports in a PCI domain, Liviu is working on generic support for that
+> > too.
 > 
-> Alexander Gordeev (23):
->   be2iscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   bfa: Do not call pci_enable_msix() after it failed once
->   bfa: Cleanup bfad_setup_intr() function
->   bfa: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   csiostor: Remove superfluous call to pci_disable_msix()
->   csiostor: Use pci_enable_msix_range() instead of pci_enable_msix()
->   fnic: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   hpsa: Fallback to MSI rather than to INTx if MSI-X failed
->   hpsa: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   isci: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   lpfc: Remove superfluous call to pci_disable_msix()
->   lpfc: Use pci_enable_msix_range() instead of pci_enable_msix()
->   megaraid: Fail resume if MSI-X re-initialization failed
->   megaraid: Use pci_enable_msix_range() instead of pci_enable_msix()
->   mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   pm8001: Fix invalid return when request_irq() failed
->   pm8001: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   pmcraid: Get rid of a redundant assignment
->   pmcraid: Use pci_enable_msix_range() instead of pci_enable_msix()
->   qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
->   qla4xxx: Use pci_enable_msix_exact() instead of pci_enable_msix()
->   vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+> I will check and come back to you.
+
+Will's latest patch that was just posted is a very good example of how
+the resource stuff should work correctly.
+
+> > Don't forget to think about hot plug
 > 
->  drivers/scsi/be2iscsi/be_main.c           |    6 +--
->  drivers/scsi/bfa/bfad.c                   |   62 ++++++++++++-----------------
->  drivers/scsi/csiostor/csio_hw.h           |    2 +-
->  drivers/scsi/csiostor/csio_isr.c          |   24 ++++-------
->  drivers/scsi/fnic/fnic_isr.c              |    4 +-
->  drivers/scsi/hpsa.c                       |   12 +-----
->  drivers/scsi/isci/init.c                  |    2 +-
->  drivers/scsi/lpfc/lpfc_init.c             |   54 ++++++++++++-------------
->  drivers/scsi/megaraid/megaraid_sas_base.c |   24 +++++------
->  drivers/scsi/mpt2sas/mpt2sas_base.c       |    6 +-
->  drivers/scsi/mpt3sas/mpt3sas_base.c       |    4 +-
->  drivers/scsi/pm8001/pm8001_init.c         |   44 +++++++++++----------
->  drivers/scsi/pmcraid.c                    |   14 +------
->  drivers/scsi/qla2xxx/qla_isr.c            |   27 +++++-------
->  drivers/scsi/qla4xxx/ql4_nx.c             |    2 +-
->  drivers/scsi/vmw_pvscsi.c                 |    2 +-
->  16 files changed, 121 insertions(+), 168 deletions(-)
-> 
-> -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> Did you mean using 'rescan' (from sysfs), correct?
+
+Yes
+
+Jason
