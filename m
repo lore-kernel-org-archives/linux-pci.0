@@ -1,71 +1,128 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 4/4] xhci: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Thu,  6 Mar 2014 21:11:24 +0100
-Message-Id: <606a52afdccf627b6273379b21daffc460b9559a.1394128952.git.agordeev@redhat.com>
-In-Reply-To: <cover.1394128952.git.agordeev@redhat.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v4 0/3] [RFC] Add support for PCI in AArch64
+Date: Mon,  3 Mar 2014 17:33:30 +0000
+Message-Id: <1393868013-32345-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+Hi,
 
-This update also cleans up a bit xhci_setup_msi() and
-xhci_setup_msix() returning of success.
+This patch adds support for PCI to AArch64. It is based on my v4 patch
+that adds support for creating generic host bridge structure from
+device tree. With that in place, I was able to boot a platform that
+has PCIe host bridge support and use a PCIe network card.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/usb/host/xhci.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+Changes from v3:
+  - Added Acks accumulated so far ;)
+  - Still carrying Catalin's patch for moving the PCI_IO_BASE until it
+    lands in linux-next or mainline, in order to ease applying the series
 
-diff --git a/drivers/usb/host/xhci.c b/drivers/usb/host/xhci.c
-index 6fe577d..dc7cfb5 100644
---- a/drivers/usb/host/xhci.c
-+++ b/drivers/usb/host/xhci.c
-@@ -232,9 +232,10 @@ static int xhci_setup_msi(struct xhci_hcd *xhci)
- 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
- 				"disable MSI interrupt");
- 		pci_disable_msi(pdev);
-+		return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- /*
-@@ -291,7 +292,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
- 		xhci->msix_entries[i].vector = 0;
- 	}
- 
--	ret = pci_enable_msix(pdev, xhci->msix_entries, xhci->msix_count);
-+	ret = pci_enable_msix_exact(pdev, xhci->msix_entries, xhci->msix_count);
- 	if (ret) {
- 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
- 				"Failed to enable MSI-X");
-@@ -307,7 +308,7 @@ static int xhci_setup_msix(struct xhci_hcd *xhci)
- 	}
- 
- 	hcd->msix_enabled = 1;
--	return ret;
-+	return 0;
- 
- disable_msix:
- 	xhci_dbg_trace(xhci, trace_xhci_dbg_init, "disable MSI-X interrupt");
+Changes from v2:
+  - Implement an arch specific version of pci_register_io_range() and
+    pci_address_to_pio().
+  - Return 1 from pci_proc_domain().
+
+Changes from v1:
+  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
+    its size to 16MB
+  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
+    keeping track of assigned IO space and returns an io_offset. At the
+    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
+  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
+    as suggested by Arnd.
+
+The API used is different from the one used by ARM architecture. There is
+no pci_common_init_dev() function and no hw_pci structure, as that is no
+longer needed. Once the last signature is added to the legal agreement, I
+will post the host bridge driver code that I am using. Meanwhile, here
+is an example of what the probe function looks like, posted as an example:
+
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct myhostbridge_port *pp;
+	resource_size_t lastbus;
+
+	dev = pdev->dev.of_node;
+
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
+
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
+
+	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
+	if (IS_ERR(bridge)) {
+		err = PTR_ERR(bridge);
+		goto bridge_create_fail;
+	}
+
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_setup_fail;
+
+	/* We always enable PCI domains and we keep domain 0 backward
+	 * compatible in /proc for video cards
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+
+	lastbus = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+
+	pci_assign_unassigned_bus_resources(bridge->bus);
+
+	pci_bus_add_devices(bridge->bus);
+
+	return 0;
+
+bridge_setup_fail:
+	put_device(&bridge->dev);
+	device_unregister(&bridge->dev);
+bridge_create_fail:
+	kfree(pp);
+	return err;
+}
+
+Best regards,
+Liviu
+
+
+Catalin Marinas (1):
+  arm64: Extend the PCI I/O space to 16MB
+
+Liviu Dudau (2):
+  Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+  arm64: Add architecture support for PCI
+
+ Documentation/arm64/memory.txt |  16 ++--
+ arch/arm64/Kconfig             |  19 ++++-
+ arch/arm64/include/asm/Kbuild  |   1 +
+ arch/arm64/include/asm/io.h    |   5 +-
+ arch/arm64/include/asm/pci.h   |  47 +++++++++++
+ arch/arm64/kernel/Makefile     |   1 +
+ arch/arm64/kernel/pci.c        | 178 +++++++++++++++++++++++++++++++++++++++++
+ include/asm-generic/io.h       |   2 +-
+ 8 files changed, 259 insertions(+), 10 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
 -- 
-1.7.7.6
+1.9.0
 
