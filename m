@@ -1,101 +1,230 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:64611 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbaCUUfF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Mar 2014 16:35:05 -0400
-Received: by mail-ie0-f178.google.com with SMTP id lx4so3051425iec.37
-        for <linux-pci@vger.kernel.org>; Fri, 21 Mar 2014 13:35:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMm_7EqArczxmyG3Za+Gs5hjTJZ+rDRiDxakCUNi50dO1h9ikg@mail.gmail.com>
-References: <CAMm_7EozAX7OTAAOzvFfqrar7xnZG+KoX=VygEKNAB6yO=4q=A@mail.gmail.com>
- <CAErSpo45sDNPt6=Yw-qgqdojYL8+_JNOVNEnVxRLatga+bY+2A@mail.gmail.com> <CAMm_7EqArczxmyG3Za+Gs5hjTJZ+rDRiDxakCUNi50dO1h9ikg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 21 Mar 2014 14:34:43 -0600
-Message-ID: <CAErSpo5ygKWTuPKo1ki-Rrpf+DizkAT0UqrwZH3UFsNNyDvt-w@mail.gmail.com>
-Subject: Re: Help with listing devices in physical PCI slots
-To: Cristina Olariu <colariu@elfiq.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53870 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754165AbaCCReW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 12:34:22 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v4 6/6] pci: Add support for creating a generic host_bridge from device tree
+Date: Mon,  3 Mar 2014 17:33:16 +0000
+Message-Id: <1393867996-32299-7-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 21, 2014 at 2:14 PM, Cristina Olariu <colariu@elfiq.com> wrote:
-> Hello Bjorn,
->
-> Thank you very much for your answer.
->
-> You were right. I was trying to get sysfs info via pci_create_slot().
-> The PCIe slots on our platform don't support hotplug; consequently
-> /sys/bus/pci/slots remains empty.
->
-> For us it is important to be able to list all the devices in a physical PCI
-> slot even if it doesn't implement the hotplug functionnality.
->
-> I will follow your advice and open a bugzilla.
+Several platforms use a rather generic version of parsing
+the device tree to find the host bridge ranges. Move the common code
+into the generic PCI code and use it to create a pci_host_bridge
+structure that can be used by arch code.
 
-Thanks.  Please respond to this thread with the bugzilla URL.
+Based on early attempts by Andrew Murray to unify the code.
+Used powerpc and microblaze PCI code as starting point.
 
-By the way, your email is something other than plain text, so I don't
-think it made it to the linux-pci list.  See
-http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-> On Fri, Mar 21, 2014 at 2:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> [+cc linux-pci]
->>
->> On Fri, Mar 21, 2014 at 11:56 AM, Cristina Olariu <colariu@elfiq.com>
->> wrote:
->> > Hello Bjorn,
->> >
->> > I was trying to use the pci_slot module in order to associate a network
->> > interface  to  its corresponding network port by matching devices with
->> > physical slot information.
->> >
->> > Unfortunately the PCIe slots on our platform don't support the hot-plug
->> > function and the pci_slot module doesn't expose the slots interface in
->> > sysfs.
->> >
->> > Is there another way to list devices by physical add-in slots?  We are
->> > using
->> > kernel version 3.4.67.
->> > Any pointers you may be able to offer would be appreciated.
->>
->> I haven't paid much attention recently to the way we expose slot
->> numbers.  I assume you're looking for the sysfs info that is exposed
->> via pci_create_slot().
->>
->> The pci_slot module only puts slot info in sysfs (via
->> pci_create_slot()) when the ACPI namespace contains certain
->> information (_ADR, _SUN, etc.)  If you don't support hotplug, you
->> probably wouldn't have this info in the namespace.
->>
->> It looks like the only other user of pci_create_slot() is
->> pci_hp_register(), which is called by various hotplug drivers.  But
->> none of these help you either if you don't support hotplug.
->>
->> "lspci -vv" should show you the "Physical Slot Number" from the Slot
->> Capabilities register in the PCIe capability.  Is that the number
->> you're looking for?  That seems like something we might want to expose
->> via sysfs, but based on the places that use PCI_EXP_SLTCAP_PSN, I
->> don't see anything that would do so.  (Sigh, I see that pciehp defines
->> PSN, which doesn't use PCI_EXP_SLTCAP_PSN but is extracting the same
->> field.  I'll fix this.)
->>
->> In any event, I'm guessing pciehp doesn't do anything (including
->> creating the sysfs slot info) on your system because you don't support
->> hotplug.  But it seems reasonable that the slot number could be useful
->> even without hotplug, so maybe this functionality should be moved out
->> of pciehp somehow.
->>
->> Could you open a bugzilla at http://bugzilla.kernel.org and attach a
->> complete dmesg log (with pciehp and pci_slot enabled) and complete
->> "lspci -vv" info?  Maybe we can figure out a nice way to do this.
->>
->> Bjorn
->
->
->
->
-> --
-> CRISTINA OLARIU • Elfiq Networks • Software Developer
-> T. 514.667.0611 x 821 •  E.  colariu@elfiq.com
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 06ace62..3c6cbd3 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -6,9 +6,13 @@
+ #include <linux/init.h>
+ #include <linux/pci.h>
+ #include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
+ 
+ #include "pci.h"
+ 
++static atomic_t domain_nr = ATOMIC_INIT(-1);
++
+ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ {
+ 	while (bus->parent)
+@@ -91,3 +95,138 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 	res->end = region->end + offset;
+ }
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
++
++/**
++ * pci_host_bridge_of_get_ranges - Parse PCI host bridge resources from DT
++ * @dev: device node of the host bridge having the range property
++ * @resources: list where the range of resources will be added after DT parsing
++ * @io_base: pointer to a variable that will contain the physical address for
++ * the start of the I/O range.
++ *
++ * If this function returns an error then the @resources list will be freed.
++ *
++ * This function will parse the "ranges" property of a PCI host bridge device
++ * node and setup the resource mapping based on its content. It is expected
++ * that the property conforms with the Power ePAPR document.
++ *
++ * Each architecture is then offered the chance of applying their own
++ * filtering of pci_host_bridge_windows based on their own restrictions by
++ * calling pcibios_fixup_bridge_ranges(). The filtered list of windows
++ * can then be used when creating a pci_host_bridge structure.
++ */
++static int pci_host_bridge_of_get_ranges(struct device_node *dev,
++		struct list_head *resources, resource_size_t *io_base)
++{
++	struct resource *res;
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	int err;
++
++	pr_info("PCI host bridge %s ranges:\n", dev->full_name);
++
++	/* Check for ranges property */
++	err = of_pci_range_parser_init(&parser, dev);
++	if (err)
++		return err;
++
++	pr_debug("Parsing ranges property...\n");
++	for_each_of_pci_range(&parser, &range) {
++		/* Read next ranges element */
++		pr_debug("pci_space: 0x%08x pci_addr:0x%016llx ",
++				range.pci_space, range.pci_addr);
++		pr_debug("cpu_addr:0x%016llx size:0x%016llx\n",
++					range.cpu_addr, range.size);
++
++		/*
++		 * If we failed translation or got a zero-sized region
++		 * then skip this range
++		 */
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
++			continue;
++
++		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		if (!res) {
++			err = -ENOMEM;
++			goto bridge_ranges_nomem;
++		}
++
++		of_pci_range_to_resource(&range, dev, res);
++
++		if (resource_type(res) == IORESOURCE_IO)
++			*io_base = range.cpu_addr;
++
++		pci_add_resource_offset(resources, res,
++				res->start - range.pci_addr);
++	}
++
++	/* Apply architecture specific fixups for the ranges */
++	pcibios_fixup_bridge_ranges(resources);
++
++	return 0;
++
++bridge_ranges_nomem:
++	pci_free_resource_list(resources);
++	return err;
++}
++
++/**
++ * of_create_pci_host_bridge - Create a PCI host bridge structure using
++ * information passed in the DT.
++ * @parent: device owning this host bridge
++ * @ops: pci_ops associated with the host controller
++ * @host_data: opaque data structure used by the host controller.
++ *
++ * returns a pointer to the newly created pci_host_bridge structure, or
++ * NULL if the call failed.
++ *
++ * This function will try to obtain the host bridge domain number by
++ * using of_alias_get_id() call with "pci-domain" as a stem. If that
++ * fails, a local allocator will be used that will put each host bridge
++ * in a new domain.
++ */
++struct pci_host_bridge *
++of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops, void *host_data)
++{
++	int err, domain, busno;
++	struct resource *bus_range;
++	struct pci_bus *root_bus;
++	struct pci_host_bridge *bridge;
++	resource_size_t io_base;
++	LIST_HEAD(res);
++
++	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
++	if (!bus_range)
++		return ERR_PTR(-ENOMEM);
++
++	domain = of_alias_get_id(parent->of_node, "pci-domain");
++	if (domain == -ENODEV)
++		domain = atomic_inc_return(&domain_nr);
++
++	err = of_pci_parse_bus_range(parent->of_node, bus_range);
++	if (err) {
++		dev_info(parent, "No bus range for %s, using default [0-255]\n",
++			parent->of_node->full_name);
++		bus_range->start = 0;
++		bus_range->end = 255;
++		bus_range->flags = IORESOURCE_BUS;
++	}
++	busno = bus_range->start;
++	pci_add_resource(&res, bus_range);
++
++	/* now parse the rest of host bridge bus ranges */
++	err = pci_host_bridge_of_get_ranges(parent->of_node, &res, &io_base);
++	if (err)
++		return ERR_PTR(err);
++
++	/* then create the root bus */
++	root_bus = pci_create_root_bus_in_domain(parent, domain, busno,
++						ops, host_data, &res);
++	if (!root_bus)
++		return NULL;
++
++	bridge = to_pci_host_bridge(root_bus->bridge);
++	bridge->io_base = io_base;
++
++	return bridge;
++}
++EXPORT_SYMBOL_GPL(of_create_pci_host_bridge);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1eed009..0c5e269 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -395,6 +395,7 @@ struct pci_host_bridge {
+ 	struct device dev;
+ 	struct pci_bus *bus;		/* root bus */
+ 	int domain_nr;
++	resource_size_t io_base;	/* physical address for the start of I/O area */
+ 	struct list_head windows;	/* pci_host_bridge_windows */
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+@@ -1786,11 +1787,23 @@ static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
+ 	return bus ? bus->dev.of_node : NULL;
+ }
+ 
++struct pci_host_bridge *
++of_create_pci_host_bridge(struct device *parent, struct pci_ops *ops,
++			void *host_data);
++
++void pcibios_fixup_bridge_ranges(struct list_head *resources);
+ #else /* CONFIG_OF */
+ static inline void pci_set_of_node(struct pci_dev *dev) { }
+ static inline void pci_release_of_node(struct pci_dev *dev) { }
+ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+ static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
++
++static inline struct pci_host_bridge *
++pci_host_bridge_of_init(struct device *parent, struct pci_ops *ops,
++			void *host_data)
++{
++	return NULL;
++}
+ #endif  /* CONFIG_OF */
+ 
+ #ifdef CONFIG_EEH
+-- 
+1.9.0
+
