@@ -1,92 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:51005 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751914AbaC0Lke (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 07:40:34 -0400
-In-Reply-To: <53340690.20006@cogentembedded.com>
-References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com> <1395912416-20087-6-git-send-email-phil.edworthy@renesas.com> <53340690.20006@cogentembedded.com>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Received: from quartz.orcorp.ca ([184.70.90.242]:38527 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751661AbaCCRnb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Mar 2014 12:43:31 -0500
+Date: Mon, 3 Mar 2014 10:43:25 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Srikanth Thokala <sthokal@xilinx.com>
+Cc: bhelgaas@google.com, michal.simek@xilinx.com,
+	grant.likely@linaro.org, robh+dt@kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2] pcie: Add Xilinx PCIe Host Bridge IP driver
+Message-ID: <20140303174325.GB31062@obsidianresearch.com>
+References: <1393854036-5244-1-git-send-email-sthokal@xilinx.com>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OF9F94FEE3.D67AC138-ON80257CA8.00401203-80257CA8.00401F68@eu.necel.com>
-Date: Thu, 27 Mar 2014 11:40:24 +0000
-Subject: Re: [PATCH v6 05/10] dt-bindings: pci: rcar pcie device tree bindings
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1393854036-5244-1-git-send-email-sthokal@xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sergei,
+On Mon, Mar 03, 2014 at 07:10:36PM +0530, Srikanth Thokala wrote:
 
-On: 27/03/2014 11:08, Sergei wrote:
-> Subject: Re: [PATCH v6 05/10] dt-bindings: pci: rcar pcie device tree 
-bindings
-> 
-> Hello.
-> 
-> On 27-03-2014 13:26, Phil Edworthy wrote:
-> 
-> > This patch adds the bindings for the R-Car PCIe driver. The driver
-> > resides under drivers/pci/host/pcie-rcar.c
-> 
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> 
-> > v6:
-> >   - Correct DT bindings description for reg and clocks
-> 
-> > v5:
-> >   - Add PCIe bus clock reference
-> >   - Add additional interrupt bindings
-> >   - Use dma-ranges property to specify inbound memory regions
-> 
->     Put these under --- tear line, please.
-> 
-> > ---
-> >   Documentation/devicetree/bindings/pci/rcar-pci.txt | 45 
-++++++++++++++++++++++
-> >   1 file changed, 45 insertions(+)
-> >   create mode 100644 
-Documentation/devicetree/bindings/pci/rcar-pci.txt
-> 
-> > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/
-> Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > new file mode 100644
-> > index 0000000..a97ebe6
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > @@ -0,0 +1,45 @@
-> > +* Renesas RCar PCIe interface
-> > +
-> > +Required properties:
-> > +- compatible: should contain one of the following
-> > +   "renesas,pcie-r8a7779", "renesas,pcie-r8a7790", 
-"renesas,pcie-r8a7791"
-> > +- reg: base address and length of the pcie controller registers.
-> > +- #address-cells: set to <3>
-> > +- #size-cells: set to <2>
-> > +- device_type: set to "pci"
-> > +- ranges: ranges for the PCI memory and I/O regions.
-> > +- dma-ranges: ranges for the inbound memory regions.
-> > +- interrupts: two interrupt sources for MSI interrupts, followed by 
-interrupt
-> > +   source for hardware related interrupts (e.g. link speed change).
-> > +- #interrupt-cells: set to <1>
-> > +- interrupt-map-mask and interrupt-map: standard PCI properties
-> > +   to define the mapping of the PCIe interface to interrupt
-> > +   numbers.
-> > +- clocks: from common clock binding: phandles to PCIe controller and 
-PCIe bus
-> > +   clocks.
-> 
->     I told it's not only phandles (e.g. &mstp3_clks) but the clock 
-specifiers.
-Ah, yes you did.
+> +Required properties:
+> +- #address-cells: Address representation for root ports, set to <3>
+> +- #size-cells: Size representation for root ports, set to <2>
+> +- compatible: Should contain "xlnx,axi-pcie-host-1.00.a"
+> +- reg: Should contain AXI PCIe registers location and length
+> +- interrupts: Should contain AXI PCIe interrupt
+> +- ranges: ranges for the PCI memory regions
+> +	Please refer to the standard PCI bus binding document for a more
+> +	detailed explanation
+> +
+> +Example:
+> +++++++++
+> +
+> +	pci_express: axi-pcie@50000000 {
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		compatible = "xlnx,axi-pcie-host-1.00.a";
+> +		reg = < 0x50000000 0x10000000 >;
+> +		interrupts = < 0 52 4 >;
+> +		ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+> +	};
 
-Thanks
-Phil
+That is much shorter, more notes:
+ - It looks like the driver (HW?) has no support for IO space?
+ - How are INTA/B/C/D handled? Typically I'd like to see an
+   interrupt-mapping block describing them.
+
+   There are a few options here, if the HW can decode A/B/C/D then
+   it probably needs another irq_domain for INTx, and have the IRQ
+   handler decode like it does for MSI.
+- The stanza needs a
+    device_type = "pci";
+
+> +	for (i = 0; i < port->mem_resno; i++)
+> +		pci_add_resource_offset(&sys->resources, &port->mem[i],
+> +					sys->mem_offset);
+
+The sys->mem_offset is probably wrong, please review Arnd's comments
+on the recent threads with Will and Liviu regarding how this is
+supposed to work with DT.
+
+You may want to work with Liviu to use his patch set which provides
+more generic support. Also, the driver needs to put every one of these
+ports in a PCI domain, Liviu is working on generic support for that
+too.
+
+> +static struct pci_bus __init *xilinx_pcie_scan_bus(int nr,
+> +				struct pci_sys_data *sys)
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(sys);
+> +	struct pci_bus *bus;
+> +
+> +	if (port) {
+> +		port->root_busno = sys->busnr;
+> +		bus = pci_scan_root_bus(NULL, sys->busnr, &xilinx_pcie_ops,
+> +					sys, &sys->resources);
+
+The NULL is probably wrong, please review the recent thread with Lucas
+and Jingoo 'PCI irq mapping fixes and cleanups'
+
+> +static int xilinx_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> +{
+> +	struct xilinx_pcie_port *port = sys_to_pcie(dev->bus->sysdata);
+> +
+> +	if (!port)
+> +		return -EINVAL;
+> +
+> +	return port->irq;
+> +}
+
+It is preferred to use DT mechanisms via of_irq_parse_and_map_pci
+(interrupt-mapping, etc) to define the slot IRQ, drivers should not
+provide a map_irq unless absolutely necessary.
+
+> +	/* make sure it is root port before touching header */
+> +	pcie_write(port, PCI_COMMAND_MASTER, PCI_COMMAND);
+
+Bit of a confusing comment
+
+> +	/* Check if PCIe link is up? */
+> +	port->link_up = xilinx_pcie_is_link_up(port);
+> +	if (!port->link_up)
+> +		dev_info(port->dev, "PCIe Link is DOWN\n");
+> +	else
+> +		dev_info(port->dev, "PCIe Link is UP\n");
+
+Don't forget to think about hot plug
+
+> +	/* Register Interrupt Handler */
+> +	err = request_irq(port->irq, xilinx_pcie_intr_handler,
+> +				IRQF_SHARED, "xilinx-pcie", port);
+
+Use devm? This is leaking on error cases.
+
+Review other resources too...
+
+> +	/* Request and map I/O memory */
+> +	io = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	port->phys_reg_base = io->start;
+> +	port->reg_size = resource_size(io);
+
+Here it uses the platform resource..
+
+> +	/* Map the IRQ */
+> +	port->irq = irq_of_parse_and_map(node, 0);
+
+.. And here it doesn't, probably should be consistent and just use the
+platform resources.
+
+Jason
