@@ -1,111 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:28523 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756229AbaCFCrF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 21:47:05 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Lucas Stach' <l.stach@pengutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Cc: linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Simon Horman' <horms@verge.net.au>,
-	'Shawn Guo' <shawn.guo@linaro.org>,
-	'Stephen Warren' <swarren@wwwdotorg.org>,
-	'Ben Dooks' <ben-linux@fluff.org>,
-	'Kukjin Kim' <kgene.kim@samsung.com>,
-	'Thierry Reding' <thierry.reding@gmail.com>,
-	'Arnd Bergmann' <arnd@arndb.de>, kernel@pengutronix.de,
-	'Jingoo Han' <jg1.han@samsung.com>,
-	'Mohit KUMAR DCG' <Mohit.KUMAR@st.com>,
-	'Pratyush Anand' <pratyush.anand@st.com>,
-	'Richard Zhu' <r65037@freescale.com>,
-	'Marek Vasut' <marex@denx.de>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>
-References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
- <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
-In-reply-to: <1394025951-32438-7-git-send-email-l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 6/6] PCI: designware: use new OF interrupt mapping when
- possible
-Date: Thu, 06 Mar 2014 11:47:03 +0900
-Message-id: <000201cf38e6$5b02d6e0$110884a0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53901 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753925AbaCCRe0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 12:34:26 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v4 0/6] [RFC] Support for creating generic host_bridge from device tree
+Date: Mon,  3 Mar 2014 17:33:10 +0000
+Message-Id: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, March 05, 2014 10:26 PM, Lucas Stach wrote:
-> 
-> This is the recommended method of doing the IRQ
-> mapping. For old devicetrees we fall back to the
-> previous practice.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
+This is v4 of my attempt to add support for a generic pci_host_bridge controller created
+from a description passed in the device tree.
 
-(+cc Mohit KUMAR, Richard Zhu, Pratyush Anand, Marek Vasut,
-       Kishon Vijay Abraham I)
+Changes from v3:
+  - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
+  - Fix the domain number used when creating child busses.
+  - Changed domain number allocator to use atomic operations.
+  - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
+    and of_create_pci_host_bridge().
 
-Acked-by: Jingoo Han <jg1.han@samsung.com>
+Changes from v2:
+  - Use range->cpu_addr when calling pci_address_to_pio()
+  - Introduce pci_register_io_range() helper function in order to register
+    io ranges ahead of their conversion to PIO values. This is needed as no
+    information is being stored yet regarding the range mapping, making
+    pci_address_to_pio() fail. Default weak implementation does nothing,
+    to cover the default weak implementation of pci_address_to_pio() that
+    expects direct mapping of physical addresses into PIO values (x86 view).
 
-It works properly on Exynos platform.
-Thank you.
+Changes from v1:
+  - Add patch to fix conversion of IO ranges into IO resources.
+  - Added a domain_nr member to pci_host_bridge structure, and a new function
+    to create a root bus in a given domain number. In order to facilitate that
+    I propose changing the order of initialisation between pci_host_bridge and
+    it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
+    This is done in patch 1/4 and 2/4.
+  - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
+    code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
+    and if that fails assign the next unallocated domain id.
+  - Changed the name of the function that creates the generic host bridge from
+    pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
+
+v1 thread here: https://lkml.org/lkml/2014/2/3/380
+
+The following is an edit of the original blurb:
+
+Following the discussion started here [1], I now have a proposal for tackling
+generic support for host bridges described via device tree. It is an initial
+stab at it, to try to get feedback and suggestions, but it is functional enough
+that I have PCI Express for arm64 working on an FPGA using the patch that I am
+also publishing that adds support for PCI for that platform.
+
+Looking at the existing architectures that fit the requirements (use of device
+tree and PCI) yields the powerpc and microblaze as generic enough to make them
+candidates for conversion. I have a tentative patch for microblaze that I can
+only compile test it, unfortunately using qemu-microblaze leads to an early
+crash in the kernel.
+
+As Bjorn has mentioned in the previous discussion, the idea is to add to
+struct pci_host_bridge enough data to be able to reduce the size or remove the
+architecture specific pci_controller structure. arm64 support actually manages
+to get rid of all the architecture static data and has no pci_controller structure
+defined. For host bridge drivers that means a change of API unless architectures
+decide to provide a compatibility layer (comments here please).
+
+In order to initialise a host bridge with the new API, the following example
+code is sufficient for a _probe() function:
+
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct myhostbridge_port *pp;
+	resource_size_t lastbus;
+
+	dev = pdev->dev.of_node;
+
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
+
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
+
+	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
+	if (IS_ERR(bridge)) {
+		err = PTR_ERR(bridge);
+		goto bridge_create_fail;
+	}
+
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_setup_fail;
+
+	/* We always enable PCI domains and we keep domain 0 backward
+	 * compatible in /proc for video cards
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+
+	lastbus = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+
+	pci_assign_unassigned_bus_resources(bridge->bus);
+
+	pci_bus_add_devices(bridge->bus);
+
+	return 0;
+
+bridge_setup_fail:
+	put_device(&bridge->dev);
+	device_unregister(&bridge->dev);
+bridge_create_fail:
+	kfree(pp);
+	return err;
+}
+
+[1] http://thread.gmane.org/gmane.linux.kernel.pci/25946
 
 Best regards,
-Jingoo Han
+Liviu
 
-> ---
-> v2: pass in parent dev to relevant functions, to make DT parsing
->     work (spotted by Tim Harvey <tharvey@gateworks.com>)
-> ---
->  drivers/pci/host/pcie-designware.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 17ce88f79d2b..98c118e04dba 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -17,6 +17,7 @@
->  #include <linux/module.h>
->  #include <linux/msi.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_pci.h>
->  #include <linux/pci.h>
->  #include <linux/pci_regs.h>
->  #include <linux/types.h>
-> @@ -492,7 +493,7 @@ int __init dw_pcie_host_init(struct pcie_port *pp)
->  	dw_pci.nr_controllers = 1;
->  	dw_pci.private_data = (void **)&pp;
-> 
-> -	pci_common_init(&dw_pci);
-> +	pci_common_init_dev(pp->dev, &dw_pci);
->  	pci_assign_unassigned_resources();
->  #ifdef CONFIG_PCI_DOMAINS
->  	dw_pci.domain++;
-> @@ -725,7 +726,7 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> 
->  	if (pp) {
->  		pp->root_bus_nr = sys->busnr;
-> -		bus = pci_scan_root_bus(NULL, sys->busnr, &dw_pcie_ops,
-> +		bus = pci_scan_root_bus(pp->dev, sys->busnr, &dw_pcie_ops,
->  					sys, &sys->resources);
->  	} else {
->  		bus = NULL;
-> @@ -738,8 +739,13 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->  static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->  {
->  	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
-> +	int irq;
-> 
-> -	return pp->irq;
-> +	irq = of_irq_parse_and_map_pci(dev, slot, pin);
-> +	if (!irq)
-> +		irq = pp->irq;
-> +
-> +	return irq;
->  }
-> 
->  static void dw_pcie_add_bus(struct pci_bus *bus)
-> --
-> 1.9.0
+
+Liviu Dudau (6):
+  pci: Introduce pci_register_io_range() helper function.
+  pci: OF: Fix the conversion of IO ranges into IO resources.
+  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+  pci: Introduce a domain number for pci_host_bridge.
+  pci: Use parent domain number when allocating child busses.
+  pci: Add support for creating a generic host_bridge from device tree
+
+ drivers/of/address.c       |  39 +++++++++++++
+ drivers/pci/host-bridge.c  | 139 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c        |  72 +++++++++++++++--------
+ include/linux/of_address.h |  14 +----
+ include/linux/pci.h        |  17 ++++++
+ 5 files changed, 246 insertions(+), 35 deletions(-)
+
+-- 
+1.9.0
 
