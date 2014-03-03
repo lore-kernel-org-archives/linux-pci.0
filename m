@@ -1,71 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:34095 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755967AbaCOAac (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 20:30:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <20140311174809.23257.77363.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20140311174555.23257.66798.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<20140311174809.23257.77363.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Date: Fri, 14 Mar 2014 17:30:31 -0700
-Message-ID: <CAE9FiQUFoKrhKfHqE6cq=R54Uo5GyL1u=GZnBZAGZ+JJ-fR+fg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Do not enable INTx in pci_reenable_device()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Chris Cheng <chris.cheng@atrustcorp.com>,
-	Jamie Chen <jamie.chen@intel.com>,
-	Andreas Noever <andreas.noever@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53675 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753976AbaCCReB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 12:34:01 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v4 3/6] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+Date: Mon,  3 Mar 2014 17:33:13 +0000
+Message-Id: <1393867996-32299-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393867996-32299-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 10:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Andreas reported that after 1f42db786b14 ("PCI: Enable INTx if BIOS left
-> them disabled"), pciehp surprise removal stopped working.
->
-> This happens because pci_reenable_device() on the hotplug bridge (used in
-> the pciehp_configure_device() path) clears the Interrupt Disable bit, which
-> apparently breaks the bridge's MSI hotplug event reporting.
->
-> Previously we cleared the Interrupt Disable bit in do_pci_enable_device(),
-> which is used by both pci_enable_device() and pci_reenable_device().  But
-> we use pci_reenable_device() after the driver may have enabled MSI or
-> MSI-X, and we *set* Interrupt Disable as part of enabling MSI/MSI-X.
->
-> This patch clears Interrupt Disable only when MSI/MSI-X has not been
-> enabled.
->
-> Fixes: 1f42db786b14 PCI: Enable INTx if BIOS left them disabled
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=71691
-> Reported-and-tested-by: Andreas Noever <andreas.noever@gmail.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: stable@vger.kernel.org
-> CC: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-> ---
->  drivers/pci/pci.c |    3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8dc3e701ec57..79fc89c6c3f3 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1192,6 +1192,9 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
->                 return err;
->         pci_fixup_device(pci_fixup_enable, dev);
->
-> +       if (dev->msi_enabled || dev->msix_enabled)
-> +               return 0;
-> +
->         pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
->         if (pin) {
->                 pci_read_config_word(dev, PCI_COMMAND, &cmd);
+Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+the creation order has been changed for no good reason. Revert the order of
+creation as we are going to depend on the pci_host_bridge structure to retrieve the
+domain number of the root bus.
 
-looks ugly.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-We really should move out those irq handling out of pci_enable_device.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6e34498..78ccba0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ 	kfree(bridge);
+ }
+ 
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
++static struct pci_host_bridge *pci_alloc_host_bridge(void)
+ {
+ 	struct pci_host_bridge *bridge;
+ 
+@@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+ 	return bridge;
+ }
+ 
+@@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
++	bridge = pci_alloc_host_bridge();
++	if (!bridge)
++		return NULL;
++
++	bridge->dev.parent = parent;
++	bridge->dev.release = pci_release_host_bridge_dev;
++	error = pcibios_root_bridge_prepare(bridge);
++	if (error) {
++		kfree(bridge);
++		return NULL;
++	}
++
+ 	b = pci_alloc_bus();
+ 	if (!b)
+-		return NULL;
++		goto err_out;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+@@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->bus = b;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
+-		goto err_out;
+-	}
+-
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+@@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ class_dev_reg_err:
+ 	put_device(&bridge->dev);
+ 	device_unregister(&bridge->dev);
+-err_out:
++err_bus_out:
+ 	kfree(b);
++err_out:
++	kfree(bridge);
+ 	return NULL;
+ }
+ 
+-- 
+1.9.0
 
-Yinghai
