@@ -1,53 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f43.google.com ([209.85.213.43]:50249 "EHLO
-	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757036AbaCEUCy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 15:02:54 -0500
-MIME-Version: 1.0
-In-Reply-To: <1394002230.4632.28.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-References: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
-	<CAD6G_RQ130TunwZDL+8vwx__8NsfzE0AfcfnS7z5OXtZF5T8xQ@mail.gmail.com>
-	<1393975344.4632.10.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	<CAD6G_RTVVb2qdU43PqKm3BAD2-pvVcs_O=Wck2SCBhRRV-d+Lw@mail.gmail.com>
-	<1393992738.4632.15.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-	<CAD6G_RR=y+myvtEpa3YKiOx_8LR=Ad_nHUxuaXKakfKKyjuEaw@mail.gmail.com>
-	<1394002230.4632.28.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
-Date: Thu, 6 Mar 2014 01:32:54 +0530
-Message-ID: <CAD6G_RQ=Zomytu+CAd0Os1ZZokJQiju-LvpABHdRRaQGSVC7FQ@mail.gmail.com>
-Subject: Re: sblk->status_tag on drivers/net/ethernet/broadcom/tg3.c
-From: Jagan Teki <jagannadh.teki@gmail.com>
-To: Michael Chan <mchan@broadcom.com>
-Cc: netdev@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Nithin Nayak Sujir <nsujir@broadcom.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:53754 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754082AbaCCReK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 12:34:10 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: [PATCH v4 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+Date: Mon,  3 Mar 2014 17:33:31 +0000
+Message-Id: <1393868013-32345-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393868013-32345-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393868013-32345-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 5, 2014 at 12:20 PM, Michael Chan <mchan@broadcom.com> wrote:
-> On Wed, 2014-03-05 at 11:43 +0530, Jagan Teki wrote:
->> As per your point I've a question here like - the status block is not properly
->> updated (DMA'ed), does this depends on the address range we are advertised
->> on PCIe ranges filed to make sure to use EP-
->> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
->
-> The status block is in host memory (CPU memory).  This memory is
-> allocated by the driver.  The DMA address of the status block is then
-> programmed into the NIC register HOSTCC_STATUS_BLK_HOST_ADDR so that the
-> NIC knows where to DMA the status block.  When there is an event, the
-> NIC DMAs a new status block and then generates IRQ.
->
-> The status block is not in PCI memory.  PCI memory is where the
-> registers are mapped.  Hope this helps.
+The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
+is wrong. It returns a mapped (i.e. virtual) address that can start from
+zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
+architectures that use !CONFIG_GENERIC_MAP define.
 
-Thanks this really help my understanding.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-BTW: I got all 0's on tnapi->hw_status, looks like host memory contents were
-violated or not-been updated properly I guess.
-
-thanks!
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index d5afe96..df72051 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
+ #ifndef CONFIG_GENERIC_IOMAP
+ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+ {
+-	return (void __iomem *) port;
++	return (void __iomem *)(PCI_IOBASE + (port & IO_SPACE_LIMIT));
+ }
+ 
+ static inline void ioport_unmap(void __iomem *p)
 -- 
-Jagan.
+1.9.0
+
