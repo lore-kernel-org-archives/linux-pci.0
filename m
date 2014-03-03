@@ -1,264 +1,178 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14994 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754852AbaCDQjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Mar 2014 11:39:35 -0500
-Date: Tue, 4 Mar 2014 17:41:28 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 3/4] ntb: Split ntb_setup_msix() into separate BWD/SNB
- routines
-Message-ID: <20140304164127.GA18971@dhcp-26-207.brq.redhat.com>
-References: <cover.1392996332.git.agordeev@redhat.com>
- <bb2b61719e4dd15c29bc8022e76a9463d548f561.1392996332.git.agordeev@redhat.com>
- <20140304001224.GD9679@jonmason-lab>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20140304001224.GD9679@jonmason-lab>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CA+mB=1Lz6Wux-fZ-tECpn3QnwXa4pAZxpSbNng9KHbs_ACnzXQ@mail.gmail.com>
+References: <1393854036-5244-1-git-send-email-sthokal@xilinx.com>
+	<20140303174325.GB31062@obsidianresearch.com>
+	<CA+mB=1Lz6Wux-fZ-tECpn3QnwXa4pAZxpSbNng9KHbs_ACnzXQ@mail.gmail.com>
+Date: Mon, 3 Mar 2014 23:44:24 +0530
+Message-ID: <CA+mB=1LY7=7CTf==L=Ohe0Wai5jHsma7FV3F-m=c=6kJXsDCUw@mail.gmail.com>
+Subject: Re: [PATCH v2] pcie: Add Xilinx PCIe Host Bridge IP driver
+From: Srikanth Thokala <sthokal@xilinx.com>
+To: Srikanth Thokala <sthokal@xilinx.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	devicetree@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 03, 2014 at 05:12:25PM -0700, Jon Mason wrote:
-> On Fri, Feb 21, 2014 at 04:49:31PM +0100, Alexander Gordeev wrote:
-> > This is an cleanup effort to make ntb_setup_msix() more
-> > readable - use ntb_setup_bwd_msix() to init MSI-Xs on
-> > BWD hardware and ntb_setup_snb_msix() - on SNB hardware.
-> > 
-> > Function ntb_setup_snb_msix() also initializes MSI-Xs the
-> > way it should has been done - looping pci_enable_msix()
-> > until success or failure.
-> > 
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: Jon Mason <jon.mason@intel.com>
-> > Cc: linux-pci@vger.kernel.org
-> > ---
-> >  drivers/ntb/ntb_hw.c |  170 +++++++++++++++++++++++++++++++-------------------
-> >  1 files changed, 106 insertions(+), 64 deletions(-)
-> > 
-> > diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
-> > index 53468f4..0472045 100644
-> > --- a/drivers/ntb/ntb_hw.c
-> > +++ b/drivers/ntb/ntb_hw.c
-> > @@ -1079,6 +1079,107 @@ static irqreturn_t ntb_interrupt(int irq, void *dev)
-> >  	return IRQ_HANDLED;
-> >  }
-> >  
-> > +static int ntb_setup_snb_msix(struct ntb_device *ndev, int msix_entries)
-> > +{
-> > +	struct pci_dev *pdev = ndev->pdev;
-> > +	struct msix_entry *msix;
-> > +	int rc, i;
-> > +
-> > +	if (msix_entries < SNB_MSIX_CNT)
-> 
-> I would prefer ndev->limits.msix_cnt here to keep it generic.  I could
-> foresee this number changing on upcoming hardware with a similar
-> design.
-> 
-> > +		return -ENOSPC;
-> > +
-> > +	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-> > +	if (rc < 0)
-> > +		return rc;
-> > +	else if (rc > 0)
-> > +		return -ENOSPC;
-> > +
-> > +	for (i = 0; i < msix_entries; i++) {
-> > +		msix = &ndev->msix_entries[i];
-> > +		WARN_ON(!msix->vector);
-> > +
-> > +		if (i == msix_entries - 1) {
-> > +			rc = request_irq(msix->vector,
-> > +					 xeon_event_msix_irq, 0,
-> > +					 "ntb-event-msix", ndev);
-> > +			if (rc)
-> > +				goto err;
-> > +		} else {
-> > +			rc = request_irq(msix->vector,
-> > +					 xeon_callback_msix_irq, 0,
-> > +					 "ntb-callback-msix",
-> > +					 &ndev->db_cb[i]);
-> > +			if (rc)
-> > +				goto err;
-> > +		}
-> > +	}
-> > +
-> > +	ndev->num_msix = msix_entries;
-> > +	ndev->max_cbs = msix_entries - 1;
-> > +
-> > +	return 0;
-> > +
-> > +err:
-> > +	while (--i >= 0) {
-> > +		msix = &ndev->msix_entries[i];
-> > +		WARN_ON(i == ndev->num_msix - 1);
-> > +
-> > +		if (i == ndev->num_msix - 1)
-> 
-> Why have a WARN followed by a if statement on the same condition?  As
-> it stands right now, there is no way it could be hit.  So I'd say
-> remove both of them.
+Please ignore the last message,  accidentally it was sent.  Apologies.
 
-Right, WARN_ON() is stupid here. But we can not remove the condition,
-because of 'dev_id' parameter for free_irq() is 'ndev' for the last
-MSI-X, unlike &ndev->db_cb[i] for all other MSI-Xs, unless I am
-missing something.
+Srikanth
 
-> 
-> Aside from that it looks good.  Thanks for taking the time to cleanup
-> the code!
-> 
-> Thanks,
-> Jon
-> 
-> > +			free_irq(msix->vector, ndev);
-> > +		else
-> > +			free_irq(msix->vector, &ndev->db_cb[i]);
-> > +	}
-> > +
-> > +	pci_disable_msix(pdev);
-> > +	ndev->num_msix = 0;
-> > +
-> > +	return rc;
-> > +}
-> > +
-> > +static int ntb_setup_bwd_msix(struct ntb_device *ndev, int msix_entries)
-> > +{
-> > +	struct pci_dev *pdev = ndev->pdev;
-> > +	struct msix_entry *msix;
-> > +	int rc, i;
-> > +
-> > +retry:
-> > +	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-> > +	if (rc < 0)
-> > +		return rc;
-> > +	else if (rc > 0) {
-> > +		dev_warn(&pdev->dev,
-> > +			 "Only %d MSI-X vectors. "
-> > +			 "Limiting the number of queues to that number.\n",
-> > +			 rc);
-> > +		msix_entries = rc;
-> > +		goto retry;
-> > +	}
-> > +
-> > +	for (i = 0; i < msix_entries; i++) {
-> > +		msix = &ndev->msix_entries[i];
-> > +		WARN_ON(!msix->vector);
-> > +
-> > +		rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
-> > +				 "ntb-callback-msix", &ndev->db_cb[i]);
-> > +		if (rc)
-> > +			goto err;
-> > +	}
-> > +
-> > +	ndev->num_msix = msix_entries;
-> > +	ndev->max_cbs = msix_entries;
-> > +
-> > +	return 0;
-> > +
-> > +err:
-> > +	while (--i >= 0)
-> > +		free_irq(msix->vector, &ndev->db_cb[i]);
-> > +
-> > +	pci_disable_msix(pdev);
-> > +	ndev->num_msix = 0;
-> > +
-> > +	return rc;
-> > +}
-> > +
-> >  static int ntb_setup_msix(struct ntb_device *ndev)
-> >  {
-> >  	struct pci_dev *pdev = ndev->pdev;
-> > @@ -1105,78 +1206,19 @@ static int ntb_setup_msix(struct ntb_device *ndev)
-> >  	for (i = 0; i < msix_entries; i++)
-> >  		ndev->msix_entries[i].entry = i;
-> >  
-> > -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-> > -	if (rc < 0)
-> > -		goto err1;
-> > -	if (rc > 0) {
-> > -		/* On SNB, the link interrupt is always tied to 4th vector.  If
-> > -		 * we can't get all 4, then we can't use MSI-X.
-> > -		 */
-> > -		if (ndev->hw_type != BWD_HW) {
-> > -			rc = -EIO;
-> > -			goto err1;
-> > -		}
-> > -
-> > -		dev_warn(&pdev->dev,
-> > -			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
-> > -			 rc);
-> > -		msix_entries = rc;
-> > -
-> > -		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-> > -		if (rc)
-> > -			goto err1;
-> > -	}
-> > -
-> > -	for (i = 0; i < msix_entries; i++) {
-> > -		msix = &ndev->msix_entries[i];
-> > -		WARN_ON(!msix->vector);
-> > -
-> > -		/* Use the last MSI-X vector for Link status */
-> > -		if (ndev->hw_type == BWD_HW) {
-> > -			rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
-> > -					 "ntb-callback-msix", &ndev->db_cb[i]);
-> > -			if (rc)
-> > -				goto err2;
-> > -		} else {
-> > -			if (i == msix_entries - 1) {
-> > -				rc = request_irq(msix->vector,
-> > -						 xeon_event_msix_irq, 0,
-> > -						 "ntb-event-msix", ndev);
-> > -				if (rc)
-> > -					goto err2;
-> > -			} else {
-> > -				rc = request_irq(msix->vector,
-> > -						 xeon_callback_msix_irq, 0,
-> > -						 "ntb-callback-msix",
-> > -						 &ndev->db_cb[i]);
-> > -				if (rc)
-> > -					goto err2;
-> > -			}
-> > -		}
-> > -	}
-> > -
-> > -	ndev->num_msix = msix_entries;
-> >  	if (ndev->hw_type == BWD_HW)
-> > -		ndev->max_cbs = msix_entries;
-> > +		rc = ntb_setup_bwd_msix(ndev, msix_entries);
-> >  	else
-> > -		ndev->max_cbs = msix_entries - 1;
-> > +		rc = ntb_setup_snb_msix(ndev, msix_entries);
-> > +	if (rc)
-> > +		goto err1;
-> >  
-> >  	return 0;
-> >  
-> > -err2:
-> > -	while (--i >= 0) {
-> > -		msix = &ndev->msix_entries[i];
-> > -		if (ndev->hw_type != BWD_HW && i == ndev->num_msix - 1)
-> > -			free_irq(msix->vector, ndev);
-> > -		else
-> > -			free_irq(msix->vector, &ndev->db_cb[i]);
-> > -	}
-> > -	pci_disable_msix(pdev);
-> >  err1:
-> >  	kfree(ndev->msix_entries);
-> > -	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
-> >  err:
-> > -	ndev->num_msix = 0;
-> > +	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
-> >  	return rc;
-> >  }
-> >  
-> > -- 
-> > 1.7.7.6
-> > 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+On Mon, Mar 3, 2014 at 11:43 PM, Srikanth Thokala <sthokal@xilinx.com> wrote:
+> On Mon, Mar 3, 2014 at 11:13 PM, Jason Gunthorpe
+> <jgunthorpe@obsidianresearch.com> wrote:
+>> On Mon, Mar 03, 2014 at 07:10:36PM +0530, Srikanth Thokala wrote:
+>>
+>>> +Required properties:
+>>> +- #address-cells: Address representation for root ports, set to <3>
+>>> +- #size-cells: Size representation for root ports, set to <2>
+>>> +- compatible: Should contain "xlnx,axi-pcie-host-1.00.a"
+>>> +- reg: Should contain AXI PCIe registers location and length
+>>> +- interrupts: Should contain AXI PCIe interrupt
+>>> +- ranges: ranges for the PCI memory regions
+>>> +     Please refer to the standard PCI bus binding document for a more
+>>> +     detailed explanation
+>>> +
+>>> +Example:
+>>> +++++++++
+>>> +
+>>> +     pci_express: axi-pcie@50000000 {
+>>> +             #address-cells = <3>;
+>>> +             #size-cells = <2>;
+>>> +             compatible = "xlnx,axi-pcie-host-1.00.a";
+>>> +             reg = < 0x50000000 0x10000000 >;
+>>> +             interrupts = < 0 52 4 >;
+>>> +             ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+>>> +     };
+>>
+>> That is much shorter, more notes:
+>>  - It looks like the driver (HW?) has no support for IO space?
+>
+> Yes, there is no support for IO space.
+>
+>>  - How are INTA/B/C/D handled? Typically I'd like to see an
+>>    interrupt-mapping block describing them.
+>
+>                                   /
+>                                  /
+> CPU   <--- PCIe IP  <---
+>
+>
+>
+>>
+>>    There are a few options here, if the HW can decode A/B/C/D then
+>>    it probably needs another irq_domain for INTx, and have the IRQ
+>>    handler decode like it does for MSI.
+>> - The stanza needs a
+>>     device_type = "pci";
+>>
+>>> +     for (i = 0; i < port->mem_resno; i++)
+>>> +             pci_add_resource_offset(&sys->resources, &port->mem[i],
+>>> +                                     sys->mem_offset);
+>>
+>> The sys->mem_offset is probably wrong, please review Arnd's comments
+>> on the recent threads with Will and Liviu regarding how this is
+>> supposed to work with DT.
+>>
+>> You may want to work with Liviu to use his patch set which provides
+>> more generic support. Also, the driver needs to put every one of these
+>> ports in a PCI domain, Liviu is working on generic support for that
+>> too.
+>
+> Sure, I will check and come back to you.
+>
+>>
+>>> +static struct pci_bus __init *xilinx_pcie_scan_bus(int nr,
+>>> +                             struct pci_sys_data *sys)
+>>> +{
+>>> +     struct xilinx_pcie_port *port = sys_to_pcie(sys);
+>>> +     struct pci_bus *bus;
+>>> +
+>>> +     if (port) {
+>>> +             port->root_busno = sys->busnr;
+>>> +             bus = pci_scan_root_bus(NULL, sys->busnr, &xilinx_pcie_ops,
+>>> +                                     sys, &sys->resources);
+>>
+>> The NULL is probably wrong, please review the recent thread with Lucas
+>> and Jingoo 'PCI irq mapping fixes and cleanups'
+>
+> Ok.
+>
+>>
+>>> +static int xilinx_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>>> +{
+>>> +     struct xilinx_pcie_port *port = sys_to_pcie(dev->bus->sysdata);
+>>> +
+>>> +     if (!port)
+>>> +             return -EINVAL;
+>>> +
+>>> +     return port->irq;
+>>> +}
+>>
+>> It is preferred to use DT mechanisms via of_irq_parse_and_map_pci
+>> (interrupt-mapping, etc) to define the slot IRQ, drivers should not
+>> provide a map_irq unless absolutely necessary.
+>
+> Ok.
+>
+>>
+>>> +     /* make sure it is root port before touching header */
+>>> +     pcie_write(port, PCI_COMMAND_MASTER, PCI_COMMAND);
+>>
+>> Bit of a confusing comment
+>
+> I will correct it.
+>
+>>
+>>> +     /* Check if PCIe link is up? */
+>>> +     port->link_up = xilinx_pcie_is_link_up(port);
+>>> +     if (!port->link_up)
+>>> +             dev_info(port->dev, "PCIe Link is DOWN\n");
+>>> +     else
+>>> +             dev_info(port->dev, "PCIe Link is UP\n");
+>>
+>> Don't forget to think about hot plug
+>
+> Ok, you mean using the 'rescan' correct?
+>
+>>
+>>> +     /* Register Interrupt Handler */
+>>> +     err = request_irq(port->irq, xilinx_pcie_intr_handler,
+>>> +                             IRQF_SHARED, "xilinx-pcie", port);
+>>
+>> Use devm? This is leaking on error cases.
+>>
+>> Review other resources too...
+>>
+>>> +     /* Request and map I/O memory */
+>>> +     io = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>>> +     port->phys_reg_base = io->start;
+>>> +     port->reg_size = resource_size(io);
+>>
+>> Here it uses the platform resource..
+>>
+>>> +     /* Map the IRQ */
+>>> +     port->irq = irq_of_parse_and_map(node, 0);
+>>
+>> .. And here it doesn't, probably should be consistent and just use the
+>> platform resources.
+>
+> Ok, I will correct it.
+>
+> Srikanth
+>
+>>
+>> Jason
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
