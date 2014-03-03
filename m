@@ -1,382 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:31759 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753883AbaCaKbH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:07 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1396261856-22465-3-git-send-email-phil.edworthy@renesas.com>
-Date: Mon, 31 Mar 2014 11:30:47 +0100
-Subject: [PATCH v7 02/10] PCI: host: rcar: Add MSI support
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:48658 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753980AbaCCQOD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 11:14:03 -0500
+Received: by mail-ie0-f169.google.com with SMTP id to1so71024ieb.28
+        for <linux-pci@vger.kernel.org>; Mon, 03 Mar 2014 08:14:02 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <alpine.LFD.2.11.1403031429080.1476@denkbrett>
+References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20140226234215.18970.1743.stgit@bhelgaas-glaptop.roam.corp.google.com> <alpine.LFD.2.11.1403031429080.1476@denkbrett>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 3 Mar 2014 09:13:42 -0700
+Message-ID: <CAErSpo7dg0-W7Dxn0wismfsOD-ZWCBXggFvcFXCUxkBUkia5sA@mail.gmail.com>
+Subject: Re: [PATCH 7/7] s390/PCI: Use generic pci_enable_resources()
+To: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jan Glauber <jang@linux.vnet.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	linux390@de.ibm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+On Mon, Mar 3, 2014 at 6:35 AM, Sebastian Ott <sebott@linux.vnet.ibm.com> wrote:
+> Hello Bjorn,
+>
+> On Wed, 26 Feb 2014, Bjorn Helgaas wrote:
+>
+>> The generic pci_enable_resources() does essentially the same thing as the
+>> code in the s390 version of pcibios_enable_device().
+>>
+>> There are differences, but I don't think any of them are a problem.  The
+>> generic code:
+>>
+>>   - Checks everything up to PCI_NUM_RESOURCES, not PCI_BAR_COUNT (6), so
+>>     we'll now check the ROM resource, IOV resources, and bridge windows.
+>>
+>>   - Checks for res->flags & IORESOURCE_UNSET.  The s390 code never sets
+>>     IORESOURCE_UNSET, so this isn't a problem.
+>>
+>>   - Checks res->parent.  The s390 pcibios_add_device() calls
+>>     pci_claim_resource() on all BARs (except ROM, IOV, and bridge windows)
+>>     so this isn't a problem either.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Martin Schwidefsky <schwidefsky@de.ibm.com>
+>> CC: Heiko Carstens <heiko.carstens@de.ibm.com>
+>> CC: Sebastian Ott <sebott@linux.vnet.ibm.com>
+>> CC: Jan Glauber <jang@linux.vnet.ibm.com>
+>> CC: linux390@de.ibm.com
+>> ---
+>>  arch/s390/pci/pci.c |   13 +------------
+>>  1 file changed, 1 insertion(+), 12 deletions(-)
+>>
+>> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+>> index 66670ff262a0..7d5fcaed3361 100644
+>> --- a/arch/s390/pci/pci.c
+>> +++ b/arch/s390/pci/pci.c
+>> @@ -695,18 +695,7 @@ int pcibios_enable_device(struct pci_dev *pdev, int mask)
+>>       zpci_fmb_enable_device(zdev);
+>>       zpci_map_resources(zdev);
+>>
+>> -     pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+>> -     for (i = 0; i < PCI_BAR_COUNT; i++) {
+>> -             res = &pdev->resource[i];
+>> -
+>> -             if (res->flags & IORESOURCE_IO)
+>> -                     return -EINVAL;
+>> -
+>> -             if (res->flags & IORESOURCE_MEM)
+>> -                     cmd |= PCI_COMMAND_MEMORY;
+>> -     }
+>> -     pci_write_config_word(pdev, PCI_COMMAND, cmd);
+>> -     return 0;
+>> +     return pci_enable_resources(pdev, mask);
+>>  }
+>>
+>>  void pcibios_disable_device(struct pci_dev *pdev)
+>>
+>
+> Let's also remove some now unused variables (updated patch below). Other
+> than that:
+>
+> Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
 
-v6:
- - Don't check MSI irq number is valid, as upper level checks this
- - Change "Unexpected MSI" msg to debug level
- - Reword "Unexpected MSI" comment so that it's one line
+Hi Sebastian,
 
-v5:
- - Return IRQ_NONE from MSI isr when there is no pending MSI
- - Add additional interrupt bindings
----
- drivers/pci/host/pcie-rcar.c | 238 ++++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/host/pcie-rcar.h |   5 +
- 2 files changed, 242 insertions(+), 1 deletion(-)
+Sorry, that was sloppy of me to leave those unused variables.  I
+updated the patch and added your ack.  Thanks!
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index c22c896..e3ce3d1 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -15,8 +15,11 @@
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/msi.h>
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
-@@ -28,6 +31,8 @@
- 
- #define DRV_NAME "rcar-pcie"
- 
-+#define INT_PCI_MSI_NR	32
-+
- #define RCONF(x)	(PCICONF(0)+(x))
- #define RPMCAP(x)	(PMCAP(0)+(x))
- #define REXPCAP(x)	(EXPCAP(0)+(x))
-@@ -40,6 +45,21 @@
- #define PCI_MAX_RESOURCES 4
- #define MAX_NR_INBOUND_MAPS 6
- 
-+struct rcar_msi {
-+	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-+	struct irq_domain *domain;
-+	struct msi_chip chip;
-+	unsigned long pages;
-+	struct mutex lock;
-+	int irq1;
-+	int irq2;
-+};
-+
-+static inline struct rcar_msi *to_rcar_msi(struct msi_chip *chip)
-+{
-+	return container_of(chip, struct rcar_msi, chip);
-+}
-+
- /* Structure representing the PCIe interface */
- struct rcar_pcie {
- 	struct device		*dev;
-@@ -48,6 +68,7 @@ struct rcar_pcie {
- 	u8			root_bus_nr;
- 	struct clk		*clk;
- 	struct clk		*bus_clk;
-+	struct			rcar_msi msi;
- };
- 
- static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
-@@ -292,6 +313,15 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
- 	return 1;
- }
- 
-+static void rcar_pcie_add_bus(struct pci_bus *bus)
-+{
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
-+
-+		bus->msi = &pcie->msi.chip;
-+	}
-+}
-+
- static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
- {
- 	struct platform_device *pdev = to_platform_device(pcie->dev);
-@@ -301,6 +331,7 @@ static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
- 		.setup          = rcar_pcie_setup,
- 		.map_irq        = of_irq_parse_and_map_pci,
- 		.ops            = &rcar_pcie_ops,
-+		.add_bus        = rcar_pcie_add_bus,
- 	};
- 
- 	pci_common_init_dev(&pdev->dev, &hw);
-@@ -408,6 +439,10 @@ static int __init rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	/* Enable MAC data scrambling. */
- 	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
- 
-+	/* Enable MSI */
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		pci_write_reg(pcie, 0x101f0000, PCIEMSITXR);
-+
- 	/* Finish initialization - establish a PCI Express link */
- 	pci_write_reg(pcie, CFINIT, PCIETCTLR);
- 
-@@ -461,11 +496,186 @@ static int __init rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
- 	return -ETIMEDOUT;
- }
- 
-+static int rcar_msi_alloc(struct rcar_msi *chip)
-+{
-+	int msi;
-+
-+	mutex_lock(&chip->lock);
-+
-+	msi = find_first_zero_bit(chip->used, INT_PCI_MSI_NR);
-+	if (msi < INT_PCI_MSI_NR)
-+		set_bit(msi, chip->used);
-+	else
-+		msi = -ENOSPC;
-+
-+	mutex_unlock(&chip->lock);
-+
-+	return msi;
-+}
-+
-+static void rcar_msi_free(struct rcar_msi *chip, unsigned long irq)
-+{
-+	struct device *dev = chip->chip.dev;
-+
-+	mutex_lock(&chip->lock);
-+	clear_bit(irq, chip->used);
-+	mutex_unlock(&chip->lock);
-+}
-+
-+static irqreturn_t rcar_pcie_msi_irq(int irq, void *data)
-+{
-+	struct rcar_pcie *pcie = data;
-+	struct rcar_msi *msi = &pcie->msi;
-+	unsigned long reg;
-+
-+	reg = pci_read_reg(pcie, PCIEMSIFR);
-+
-+	/* MSI & INTx share an interrupt - we only handle MSI here */
-+	if (!reg)
-+		return IRQ_NONE;
-+
-+	while (reg) {
-+		unsigned int index = find_first_bit(&reg, 32);
-+		unsigned int irq;
-+
-+		/* clear the interrupt */
-+		pci_write_reg(pcie, 1 << index, PCIEMSIFR);
-+
-+		irq = irq_find_mapping(msi->domain, index);
-+		if (irq) {
-+			if (test_bit(index, msi->used))
-+				generic_handle_irq(irq);
-+			else
-+				dev_info(pcie->dev, "unhandled MSI\n");
-+		} else {
-+			/* Unknown MSI, just clear it */
-+			dev_dbg(pcie->dev, "unexpected MSI\n");
-+		}
-+
-+		/* see if there's any more pending in this vector */
-+		reg = pci_read_reg(pcie, PCIEMSIFR);
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int rcar_msi_setup_irq(struct msi_chip *chip, struct pci_dev *pdev,
-+			       struct msi_desc *desc)
-+{
-+	struct rcar_msi *msi = to_rcar_msi(chip);
-+	struct rcar_pcie *pcie = container_of(chip, struct rcar_pcie, msi.chip);
-+	struct msi_msg msg;
-+	unsigned int irq;
-+	int hwirq;
-+
-+	hwirq = rcar_msi_alloc(msi);
-+	if (hwirq < 0)
-+		return hwirq;
-+
-+	irq = irq_create_mapping(msi->domain, hwirq);
-+	if (!irq) {
-+		rcar_msi_free(msi, hwirq);
-+		return -EINVAL;
-+	}
-+
-+	irq_set_msi_desc(irq, desc);
-+
-+	msg.address_lo = pci_read_reg(pcie, PCIEMSIALR) & ~MSIFE;
-+	msg.address_hi = pci_read_reg(pcie, PCIEMSIAUR);
-+	msg.data = hwirq;
-+
-+	write_msi_msg(irq, &msg);
-+
-+	return 0;
-+}
-+
-+static void rcar_msi_teardown_irq(struct msi_chip *chip, unsigned int irq)
-+{
-+	struct rcar_msi *msi = to_rcar_msi(chip);
-+	struct irq_data *d = irq_get_irq_data(irq);
-+
-+	rcar_msi_free(msi, d->hwirq);
-+}
-+
-+static struct irq_chip rcar_msi_irq_chip = {
-+	.name = "R-Car PCIe MSI",
-+	.irq_enable = unmask_msi_irq,
-+	.irq_disable = mask_msi_irq,
-+	.irq_mask = mask_msi_irq,
-+	.irq_unmask = unmask_msi_irq,
-+};
-+
-+static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
-+			 irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+	set_irq_flags(irq, IRQF_VALID);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops msi_domain_ops = {
-+	.map = rcar_msi_map,
-+};
-+
-+static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
-+{
-+	struct platform_device *pdev = to_platform_device(pcie->dev);
-+	struct rcar_msi *msi = &pcie->msi;
-+	unsigned long base;
-+	int err;
-+
-+	mutex_init(&msi->lock);
-+
-+	msi->chip.dev = pcie->dev;
-+	msi->chip.setup_irq = rcar_msi_setup_irq;
-+	msi->chip.teardown_irq = rcar_msi_teardown_irq;
-+
-+	msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
-+					    &msi_domain_ops, &msi->chip);
-+	if (!msi->domain) {
-+		dev_err(&pdev->dev, "failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
-+	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
-+			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
-+		goto err;
-+	}
-+
-+	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
-+			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
-+		goto err;
-+	}
-+
-+	/* setup MSI data target */
-+	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-+	base = virt_to_phys((void *)msi->pages);
-+
-+	pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-+	pci_write_reg(pcie, 0, PCIEMSIAUR);
-+
-+	/* enable all MSI interrupts */
-+	pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-+
-+	return 0;
-+
-+err:
-+	irq_domain_remove(msi->domain);
-+	return err;
-+}
-+
- static int __init rcar_pcie_get_resources(struct platform_device *pdev,
- 	struct rcar_pcie *pcie)
- {
- 	struct resource res;
--	int err;
-+	int err, i;
- 
- 	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
- 	if (err)
-@@ -490,6 +700,22 @@ static int __init rcar_pcie_get_resources(struct platform_device *pdev,
- 	if (err)
- 		goto err_map_reg;
- 
-+	i = irq_of_parse_and_map(pdev->dev.of_node, 0);
-+	if (i < 0) {
-+		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
-+		err = -ENOENT;
-+		goto err_map_reg;
-+	}
-+	pcie->msi.irq1 = i;
-+
-+	i = irq_of_parse_and_map(pdev->dev.of_node, 1);
-+	if (i < 0) {
-+		dev_err(pcie->dev, "cannot get platform resources for msi interrupt\n");
-+		err = -ENOENT;
-+		goto err_map_reg;
-+	}
-+	pcie->msi.irq2 = i;
-+
- 	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
- 	if (IS_ERR(pcie->base)) {
- 		err = PTR_ERR(pcie->base);
-@@ -657,6 +883,16 @@ static int __init rcar_pcie_probe(struct platform_device *pdev)
- 	 if (err)
- 		return err;
- 
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		err = rcar_pcie_enable_msi(pcie);
-+		if (err < 0) {
-+			dev_err(&pdev->dev,
-+				"failed to enable MSI support: %d\n",
-+				err);
-+			return err;
-+		}
-+	}
-+
- 	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
- 	if (!of_id || !of_id->data)
- 		return -EINVAL;
-diff --git a/drivers/pci/host/pcie-rcar.h b/drivers/pci/host/pcie-rcar.h
-index 3dc026b..4f0c678 100644
---- a/drivers/pci/host/pcie-rcar.h
-+++ b/drivers/pci/host/pcie-rcar.h
-@@ -13,6 +13,7 @@
- #define PCIEMSR			0x000028
- #define PCIEINTXR		0x000400
- #define PCIEPHYSR		0x0007f0
-+#define PCIEMSITXR		0x000840
- 
- /* Transfer control */
- #define PCIETCTLR		0x02000
-@@ -28,6 +29,10 @@
- #define PCIEPMSR		0x02034
- #define PCIEPMSCIER		0x02038
- #define PCIEMSIFR		0x02044
-+#define PCIEMSIALR		0x02048
-+#define  MSIFE			1
-+#define PCIEMSIAUR		0x0204c
-+#define PCIEMSIIER		0x02050
- 
- /* root port address */
- #define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
--- 
-1.9.0
+Bjorn
 
+> ---
+> s390/PCI: Use generic pci_enable_resources()
+>
+> The generic pci_enable_resources() does essentially the same thing as the
+> code in the s390 version of pcibios_enable_device().
+>
+> There are differences, but I don't think any of them are a problem.  The
+> generic code:
+>
+>   - Checks everything up to PCI_NUM_RESOURCES, not PCI_BAR_COUNT (6), so
+>     we'll now check the ROM resource, IOV resources, and bridge windows.
+>
+>   - Checks for res->flags & IORESOURCE_UNSET.  The s390 code never sets
+>     IORESOURCE_UNSET, so this isn't a problem.
+>
+>   - Checks res->parent.  The s390 pcibios_add_device() calls
+>     pci_claim_resource() on all BARs (except ROM, IOV, and bridge windows)
+>     so this isn't a problem either.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Martin Schwidefsky <schwidefsky@de.ibm.com>
+> CC: Heiko Carstens <heiko.carstens@de.ibm.com>
+> CC: Sebastian Ott <sebott@linux.vnet.ibm.com>
+> CC: Jan Glauber <jang@linux.vnet.ibm.com>
+> CC: linux390@de.ibm.com
+> ---
+>  arch/s390/pci/pci.c |   16 +---------------
+>  1 file changed, 1 insertion(+), 15 deletions(-)
+>
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -686,27 +686,13 @@ int pcibios_add_device(struct pci_dev *p
+>  int pcibios_enable_device(struct pci_dev *pdev, int mask)
+>  {
+>         struct zpci_dev *zdev = get_zdev(pdev);
+> -       struct resource *res;
+> -       u16 cmd;
+> -       int i;
+>
+>         zdev->pdev = pdev;
+>         zpci_debug_init_device(zdev);
+>         zpci_fmb_enable_device(zdev);
+>         zpci_map_resources(zdev);
+>
+> -       pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> -       for (i = 0; i < PCI_BAR_COUNT; i++) {
+> -               res = &pdev->resource[i];
+> -
+> -               if (res->flags & IORESOURCE_IO)
+> -                       return -EINVAL;
+> -
+> -               if (res->flags & IORESOURCE_MEM)
+> -                       cmd |= PCI_COMMAND_MEMORY;
+> -       }
+> -       pci_write_config_word(pdev, PCI_COMMAND, cmd);
+> -       return 0;
+> +       return pci_enable_resources(pdev, mask);
+>  }
+>
+>  void pcibios_disable_device(struct pci_dev *pdev)
+>
