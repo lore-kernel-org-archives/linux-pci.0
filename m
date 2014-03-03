@@ -1,69 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:58253 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752729AbaCYIwf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 04:52:35 -0400
-In-Reply-To: <1395270762-6055-2-git-send-email-tinamdar@apm.com>
-References: <1395270762-6055-1-git-send-email-tinamdar@apm.com> <1395270762-6055-2-git-send-email-tinamdar@apm.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	devicetree@vger.kernel.org, Grant Likely <grant.likely@linaro.org>,
-	jcm@redhat.com, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pci-owner@vger.kernel.org, Liviu Dudau <liviu.dudau@arm.com>,
-	patches@apm.com, Rob Landley <rob@landley.net>,
-	Rob Herring <robh+dt@kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:50461 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbaCCH0D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Mar 2014 02:26:03 -0500
+Received: by mail-pd0-f170.google.com with SMTP id v10so1320591pde.15
+        for <linux-pci@vger.kernel.org>; Sun, 02 Mar 2014 23:26:01 -0800 (PST)
+Date: Mon, 3 Mar 2014 15:25:51 +0800
+From: Lee Jones <lee.jones@linaro.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Samuel Ortiz <sameo@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] timberdale: Use pci_enable_msix_exact() instead of
+ pci_enable_msix()
+Message-ID: <20140303072551.GC4674@lee--X1>
+References: <1392804931-30671-3-git-send-email-agordeev@redhat.com>
+ <20140219114424.GD10504@lee--X1>
+ <20140221165606.GH17353@dhcp-26-207.brq.redhat.com>
+ <20140221165809.GI17353@dhcp-26-207.brq.redhat.com>
+ <20140224162902.GI15847@lee--X1>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OF8E4162E1.91105680-ON80257CA6.002FEBD9-80257CA6.0030BE31@eu.necel.com>
-Date: Tue, 25 Mar 2014 08:52:24 +0000
-Subject: Re: [PATCH v5 1/4] pci: APM X-Gene PCIe controller driver
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20140224162902.GI15847@lee--X1>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tanmay,
-
-On: 19/03/2014 23:15, Tanmay wrote:
-> Subject: [PATCH v5 1/4] pci: APM X-Gene PCIe controller driver
-> Sent by: linux-pci-owner@vger.kernel.org
+> > As result of deprecation of MSI-X/MSI enablement functions
+> > pci_enable_msix() and pci_enable_msi_block() all drivers
+> > using these two interfaces need to be updated to use the
+> > new pci_enable_msi_range()  or pci_enable_msi_exact()
+> > and pci_enable_msix_range() or pci_enable_msix_exact()
+> > interfaces.
+> > 
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > Cc: Samuel Ortiz <sameo@linux.intel.com>
+> > Cc: Lee Jones <lee.jones@linaro.org>
+> > Cc: linux-pci@vger.kernel.org
+> > ---
+> >  drivers/mfd/timberdale.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> This patch adds the AppliedMicro X-Gene SOC PCIe controller driver.
-> X-Gene PCIe controller supports maximum up to 8 lanes and GEN3 speed.
-> X-Gene SOC supports maximum 5 PCIe ports.
-<snip>
+> Applied, thanks.
 
-> +static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
-> +                struct of_pci_range *range, u8 *ib_reg_mask)
-> +{
-> +   void __iomem *csr_base = port->csr_base;
-> +   void __iomem *cfg_base = port->cfg_base;
-> +   void *bar_addr;
-> +   void *pim_addr;
-> +   u64 restype = range->flags & IORESOURCE_TYPE_BITS;
-> +   u64 cpu_addr = range->cpu_addr;
-> +   u64 pci_addr = range->pci_addr;
-> +   u64 size = range->size;
-> +   u64 mask = ~(size - 1) | EN_REG;
-> +   u32 flags = PCI_BASE_ADDRESS_MEM_TYPE_64;
-> +   u32 bar_low;
-> +   int region;
-> +
-> +   region = xgene_pcie_select_ib_reg(ib_reg_mask, range->size);
-> +   if (region < 0) {
-> +      dev_warn(port->dev, "invalid pcie dma-range config\n");
-> +      return;
-> +   }
-> +
-> +   if (restype == PCI_BASE_ADDRESS_MEM_PREFETCH)
-> +      flags |= PCI_BASE_ADDRESS_MEM_PREFETCH;
+I've reverted this patch, as it doesn't build othognally.
 
-Since IORESOURCE_TYPE_BITS is 0x00001f00, and 
-PCI_BASE_ADDRESS_MEM_PREFETCH is 0x08, this will never match. I think you 
-are mixing up different sets of definitions here. Also, the address 
-properties in range->flags are bitfields.
+drivers/mfd/timberdale.c:718:2:
+  error: implicit declaration of function ‘pci_enable_msix_exact’
+     [-Werror=implicit-function-declaration]
 
-Regards
-Phil
+-- 
+Lee Jones
+Linaro STMicroelectronics Landing Team Lead
+Linaro.org │ Open source software for ARM SoCs
+Follow Linaro: Facebook | Twitter | Blog
