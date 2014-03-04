@@ -1,44 +1,264 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:49079 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755535AbaCKXy5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Mar 2014 19:54:57 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:14994 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754852AbaCDQjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Mar 2014 11:39:35 -0500
+Date: Tue, 4 Mar 2014 17:41:28 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 3/4] ntb: Split ntb_setup_msix() into separate BWD/SNB
+ routines
+Message-ID: <20140304164127.GA18971@dhcp-26-207.brq.redhat.com>
+References: <cover.1392996332.git.agordeev@redhat.com>
+ <bb2b61719e4dd15c29bc8022e76a9463d548f561.1392996332.git.agordeev@redhat.com>
+ <20140304001224.GD9679@jonmason-lab>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5Xxr96hsNxO5HrxV31B4Uh=oTsTgfQ-CfHNXP+quM+kg@mail.gmail.com>
-References: <20140311173556.23084.57635.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<20140311174243.23084.77689.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	<CAE9FiQVdk6Tg4tNPQihm2YJ5BQO8jrQXfQfgVOSXTaK3o76yqg@mail.gmail.com>
-	<CAErSpo5Xxr96hsNxO5HrxV31B4Uh=oTsTgfQ-CfHNXP+quM+kg@mail.gmail.com>
-Date: Tue, 11 Mar 2014 16:54:57 -0700
-Message-ID: <CAE9FiQVVEbHQGV0i_kXVFZFZLFH4sv0OsKLOVnDYDg30S9NrDA@mail.gmail.com>
-Subject: Re: [PATCH 1/5] PCI: Don't check resource_size() in pci_bus_alloc_resource()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20140304001224.GD9679@jonmason-lab>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 11, 2014 at 3:02 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Mar 11, 2014 at 3:39 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> how about replacing that with:
->>
->>         if (avail.start > avail.end)
->>                   continue;
->>
->> so we do not need to go deep into allocate_resource()
->
-> We could, but why bother?  This isn't a performance path, so there's
-> no need to add more code to optimize it.  Adding code means there's
-> more for human readers to look at and understand, so I prefer not to
-> add it unless it's needed.
+On Mon, Mar 03, 2014 at 05:12:25PM -0700, Jon Mason wrote:
+> On Fri, Feb 21, 2014 at 04:49:31PM +0100, Alexander Gordeev wrote:
+> > This is an cleanup effort to make ntb_setup_msix() more
+> > readable - use ntb_setup_bwd_msix() to init MSI-Xs on
+> > BWD hardware and ntb_setup_snb_msix() - on SNB hardware.
+> > 
+> > Function ntb_setup_snb_msix() also initializes MSI-Xs the
+> > way it should has been done - looping pci_enable_msix()
+> > until success or failure.
+> > 
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> > Cc: Jon Mason <jon.mason@intel.com>
+> > Cc: linux-pci@vger.kernel.org
+> > ---
+> >  drivers/ntb/ntb_hw.c |  170 +++++++++++++++++++++++++++++++-------------------
+> >  1 files changed, 106 insertions(+), 64 deletions(-)
+> > 
+> > diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+> > index 53468f4..0472045 100644
+> > --- a/drivers/ntb/ntb_hw.c
+> > +++ b/drivers/ntb/ntb_hw.c
+> > @@ -1079,6 +1079,107 @@ static irqreturn_t ntb_interrupt(int irq, void *dev)
+> >  	return IRQ_HANDLED;
+> >  }
+> >  
+> > +static int ntb_setup_snb_msix(struct ntb_device *ndev, int msix_entries)
+> > +{
+> > +	struct pci_dev *pdev = ndev->pdev;
+> > +	struct msix_entry *msix;
+> > +	int rc, i;
+> > +
+> > +	if (msix_entries < SNB_MSIX_CNT)
+> 
+> I would prefer ndev->limits.msix_cnt here to keep it generic.  I could
+> foresee this number changing on upcoming hardware with a similar
+> design.
+> 
+> > +		return -ENOSPC;
+> > +
+> > +	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> > +	if (rc < 0)
+> > +		return rc;
+> > +	else if (rc > 0)
+> > +		return -ENOSPC;
+> > +
+> > +	for (i = 0; i < msix_entries; i++) {
+> > +		msix = &ndev->msix_entries[i];
+> > +		WARN_ON(!msix->vector);
+> > +
+> > +		if (i == msix_entries - 1) {
+> > +			rc = request_irq(msix->vector,
+> > +					 xeon_event_msix_irq, 0,
+> > +					 "ntb-event-msix", ndev);
+> > +			if (rc)
+> > +				goto err;
+> > +		} else {
+> > +			rc = request_irq(msix->vector,
+> > +					 xeon_callback_msix_irq, 0,
+> > +					 "ntb-callback-msix",
+> > +					 &ndev->db_cb[i]);
+> > +			if (rc)
+> > +				goto err;
+> > +		}
+> > +	}
+> > +
+> > +	ndev->num_msix = msix_entries;
+> > +	ndev->max_cbs = msix_entries - 1;
+> > +
+> > +	return 0;
+> > +
+> > +err:
+> > +	while (--i >= 0) {
+> > +		msix = &ndev->msix_entries[i];
+> > +		WARN_ON(i == ndev->num_msix - 1);
+> > +
+> > +		if (i == ndev->num_msix - 1)
+> 
+> Why have a WARN followed by a if statement on the same condition?  As
+> it stands right now, there is no way it could be hit.  So I'd say
+> remove both of them.
 
-oh, i did not look further, if the code path could handle strange
-constraints properly.
-like min > max.
+Right, WARN_ON() is stupid here. But we can not remove the condition,
+because of 'dev_id' parameter for free_irq() is 'ndev' for the last
+MSI-X, unlike &ndev->db_cb[i] for all other MSI-Xs, unless I am
+missing something.
 
-Thanks
+> 
+> Aside from that it looks good.  Thanks for taking the time to cleanup
+> the code!
+> 
+> Thanks,
+> Jon
+> 
+> > +			free_irq(msix->vector, ndev);
+> > +		else
+> > +			free_irq(msix->vector, &ndev->db_cb[i]);
+> > +	}
+> > +
+> > +	pci_disable_msix(pdev);
+> > +	ndev->num_msix = 0;
+> > +
+> > +	return rc;
+> > +}
+> > +
+> > +static int ntb_setup_bwd_msix(struct ntb_device *ndev, int msix_entries)
+> > +{
+> > +	struct pci_dev *pdev = ndev->pdev;
+> > +	struct msix_entry *msix;
+> > +	int rc, i;
+> > +
+> > +retry:
+> > +	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> > +	if (rc < 0)
+> > +		return rc;
+> > +	else if (rc > 0) {
+> > +		dev_warn(&pdev->dev,
+> > +			 "Only %d MSI-X vectors. "
+> > +			 "Limiting the number of queues to that number.\n",
+> > +			 rc);
+> > +		msix_entries = rc;
+> > +		goto retry;
+> > +	}
+> > +
+> > +	for (i = 0; i < msix_entries; i++) {
+> > +		msix = &ndev->msix_entries[i];
+> > +		WARN_ON(!msix->vector);
+> > +
+> > +		rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
+> > +				 "ntb-callback-msix", &ndev->db_cb[i]);
+> > +		if (rc)
+> > +			goto err;
+> > +	}
+> > +
+> > +	ndev->num_msix = msix_entries;
+> > +	ndev->max_cbs = msix_entries;
+> > +
+> > +	return 0;
+> > +
+> > +err:
+> > +	while (--i >= 0)
+> > +		free_irq(msix->vector, &ndev->db_cb[i]);
+> > +
+> > +	pci_disable_msix(pdev);
+> > +	ndev->num_msix = 0;
+> > +
+> > +	return rc;
+> > +}
+> > +
+> >  static int ntb_setup_msix(struct ntb_device *ndev)
+> >  {
+> >  	struct pci_dev *pdev = ndev->pdev;
+> > @@ -1105,78 +1206,19 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+> >  	for (i = 0; i < msix_entries; i++)
+> >  		ndev->msix_entries[i].entry = i;
+> >  
+> > -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> > -	if (rc < 0)
+> > -		goto err1;
+> > -	if (rc > 0) {
+> > -		/* On SNB, the link interrupt is always tied to 4th vector.  If
+> > -		 * we can't get all 4, then we can't use MSI-X.
+> > -		 */
+> > -		if (ndev->hw_type != BWD_HW) {
+> > -			rc = -EIO;
+> > -			goto err1;
+> > -		}
+> > -
+> > -		dev_warn(&pdev->dev,
+> > -			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+> > -			 rc);
+> > -		msix_entries = rc;
+> > -
+> > -		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> > -		if (rc)
+> > -			goto err1;
+> > -	}
+> > -
+> > -	for (i = 0; i < msix_entries; i++) {
+> > -		msix = &ndev->msix_entries[i];
+> > -		WARN_ON(!msix->vector);
+> > -
+> > -		/* Use the last MSI-X vector for Link status */
+> > -		if (ndev->hw_type == BWD_HW) {
+> > -			rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
+> > -					 "ntb-callback-msix", &ndev->db_cb[i]);
+> > -			if (rc)
+> > -				goto err2;
+> > -		} else {
+> > -			if (i == msix_entries - 1) {
+> > -				rc = request_irq(msix->vector,
+> > -						 xeon_event_msix_irq, 0,
+> > -						 "ntb-event-msix", ndev);
+> > -				if (rc)
+> > -					goto err2;
+> > -			} else {
+> > -				rc = request_irq(msix->vector,
+> > -						 xeon_callback_msix_irq, 0,
+> > -						 "ntb-callback-msix",
+> > -						 &ndev->db_cb[i]);
+> > -				if (rc)
+> > -					goto err2;
+> > -			}
+> > -		}
+> > -	}
+> > -
+> > -	ndev->num_msix = msix_entries;
+> >  	if (ndev->hw_type == BWD_HW)
+> > -		ndev->max_cbs = msix_entries;
+> > +		rc = ntb_setup_bwd_msix(ndev, msix_entries);
+> >  	else
+> > -		ndev->max_cbs = msix_entries - 1;
+> > +		rc = ntb_setup_snb_msix(ndev, msix_entries);
+> > +	if (rc)
+> > +		goto err1;
+> >  
+> >  	return 0;
+> >  
+> > -err2:
+> > -	while (--i >= 0) {
+> > -		msix = &ndev->msix_entries[i];
+> > -		if (ndev->hw_type != BWD_HW && i == ndev->num_msix - 1)
+> > -			free_irq(msix->vector, ndev);
+> > -		else
+> > -			free_irq(msix->vector, &ndev->db_cb[i]);
+> > -	}
+> > -	pci_disable_msix(pdev);
+> >  err1:
+> >  	kfree(ndev->msix_entries);
+> > -	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
+> >  err:
+> > -	ndev->num_msix = 0;
+> > +	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
+> >  	return rc;
+> >  }
+> >  
+> > -- 
+> > 1.7.7.6
+> > 
 
-Yinghai
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
