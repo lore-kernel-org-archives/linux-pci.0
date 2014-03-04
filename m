@@ -1,171 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:63219 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449AbaCHFcf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Mar 2014 00:32:35 -0500
-Received: by mail-wg0-f52.google.com with SMTP id k14so6209685wgh.35
-        for <linux-pci@vger.kernel.org>; Fri, 07 Mar 2014 21:32:34 -0800 (PST)
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v6 4/6] pci: Introduce a domain number for pci_host_bridge.
-To: Liviu Dudau <Liviu.Dudau@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	LAKML <linux-arm-kernel@lists.infradead.org>
-In-Reply-To: <1394020137-1830-5-git-send-email-Liviu.Dudau@arm.com>
-References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com> < 1394020137-1830-5-git-send-email-Liviu.Dudau@arm.com>
-Date: Fri, 07 Mar 2014 21:09:17 +0000
-Message-Id: <20140307210917.152E8C40F14@trevor.secretlab.ca>
+Received: from smtp-outbound-2.vmware.com ([208.91.2.13]:48056 "EHLO
+	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754847AbaCDT1p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 14:27:45 -0500
+Date: Tue, 4 Mar 2014 11:27:44 -0800 (PST)
+From: Arvind Kumar <arvindkumar@vmware.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, pv-drivers@vmware.com,
+	linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Message-ID: <1412188603.36940054.1393961264565.JavaMail.root@vmware.com>
+In-Reply-To: <a414d28c5587e57e78777a75c07873e1535dc839.1393191330.git.agordeev@redhat.com>
+References: <cover.1393191330.git.agordeev@redhat.com> <a414d28c5587e57e78777a75c07873e1535dc839.1393191330.git.agordeev@redhat.com>
+Subject: Re: [PATCH v2 23/23] vmw_pvscsi: Use pci_enable_msix_exact()
+ instead of pci_enable_msix()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed,  5 Mar 2014 11:48:55 +0000, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> Make it easier to discover the domain number of a bus by storing
-> the number in pci_host_bridge for the root bus. Several architectures
-> have their own way of storing this information, so it makes sense
-> to try to unify the code. While at this, add a new function that
-> creates a root bus in a given domain and make pci_create_root_bus()
-> a wrapper around this function.
-> 
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+Hi Alexander,
 
-Looks okay to me structure wise, again I'd like an ack from Ben or Arnd.
+This looks fine to me.
 
-g.
+Acked-by: Arvind Kumar <arvindkumar@vmware.com>
 
-> ---
->  drivers/pci/probe.c | 41 +++++++++++++++++++++++++++++++++--------
->  include/linux/pci.h |  4 ++++
->  2 files changed, 37 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index fd11c12..172c615 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1714,8 +1714,9 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
->  {
->  }
->  
-> -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
-> +		int domain, int bus, struct pci_ops *ops, void *sysdata,
-> +		struct list_head *resources)
->  {
->  	int error;
->  	struct pci_host_bridge *bridge;
-> @@ -1728,30 +1729,34 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  
->  	bridge = pci_alloc_host_bridge();
->  	if (!bridge)
-> -		return NULL;
-> +		return ERR_PTR(-ENOMEM);
->  
->  	bridge->dev.parent = parent;
->  	bridge->dev.release = pci_release_host_bridge_dev;
-> +	bridge->domain_nr = domain;
->  	error = pcibios_root_bridge_prepare(bridge);
->  	if (error)
->  		goto err_out;
->  
->  	b = pci_alloc_bus();
-> -	if (!b)
-> +	if (!b) {
-> +		error = -ENOMEM;
->  		goto err_out;
-> +	}
->  
->  	b->sysdata = sysdata;
->  	b->ops = ops;
->  	b->number = b->busn_res.start = bus;
-> -	b2 = pci_find_bus(pci_domain_nr(b), bus);
-> +	b2 = pci_find_bus(bridge->domain_nr, bus);
->  	if (b2) {
->  		/* If we already got to this bus through a different bridge, ignore it */
->  		dev_dbg(&b2->dev, "bus already known\n");
-> +		error = -EEXIST;
->  		goto err_bus_out;
->  	}
->  
->  	bridge->bus = b;
-> -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> +	dev_set_name(&bridge->dev, "pci%04x:%02x", bridge->domain_nr, bus);
->  	error = device_register(&bridge->dev);
->  	if (error) {
->  		put_device(&bridge->dev);
-> @@ -1766,7 +1771,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  
->  	b->dev.class = &pcibus_class;
->  	b->dev.parent = b->bridge;
-> -	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-> +	dev_set_name(&b->dev, "%04x:%02x", bridge->domain_nr, bus);
->  	error = device_register(&b->dev);
->  	if (error)
->  		goto class_dev_reg_err;
-> @@ -1816,7 +1821,27 @@ err_bus_out:
->  	kfree(b);
->  err_out:
->  	kfree(bridge);
-> -	return NULL;
-> +	return ERR_PTR(error);
-> +}
-> +
-> +struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> +		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> +{
-> +	int domain_nr;
-> +	struct pci_bus *b = pci_alloc_bus();
-> +	if (!b)
-> +		return NULL;
-> +
-> +	b->sysdata = sysdata;
-> +	domain_nr = pci_domain_nr(b);
-> +	kfree(b);
-> +
-> +	b = pci_create_root_bus_in_domain(parent, domain_nr, bus,
-> +				ops, sysdata, resources);
-> +	if (IS_ERR(b))
-> +		return NULL;
-> +
-> +	return b;
->  }
->  
->  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 33aa2ca..1eed009 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -394,6 +394,7 @@ struct pci_host_bridge_window {
->  struct pci_host_bridge {
->  	struct device dev;
->  	struct pci_bus *bus;		/* root bus */
-> +	int domain_nr;
->  	struct list_head windows;	/* pci_host_bridge_windows */
->  	void (*release_fn)(struct pci_host_bridge *);
->  	void *release_data;
-> @@ -747,6 +748,9 @@ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
->  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  				    struct pci_ops *ops, void *sysdata,
->  				    struct list_head *resources);
-> +struct pci_bus *pci_create_root_bus_in_domain(struct device *parent,
-> +			int domain, int bus, struct pci_ops *ops,
-> +			void *sysdata, struct list_head *resources);
->  int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
->  int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
->  void pci_bus_release_busn_res(struct pci_bus *b);
-> -- 
-> 1.9.0
-> 
-> 
-> _______________________________________________
-> linaro-kernel mailing list
-> linaro-kernel@lists.linaro.org
-> http://lists.linaro.org/mailman/listinfo/linaro-kernel
+Thanks!
+Arvind
 
+----- Original Message -----
+From: "Alexander Gordeev" <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: "Alexander Gordeev" <agordeev@redhat.com>, "Arvind Kumar" <arvindkumar@vmware.com>, pv-drivers@vmware.com, linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
+Sent: Monday, February 24, 2014 12:02:23 AM
+Subject: [PATCH v2 23/23] vmw_pvscsi: Use pci_enable_msix_exact() instead of pci_enable_msix()
+
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Arvind Kumar <arvindkumar@vmware.com>
+Cc: pv-drivers@vmware.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/scsi/vmw_pvscsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index b9755ec..a046618 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1078,7 +1078,7 @@ static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
+ 	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
+ 	int ret;
+ 
+-	ret = pci_enable_msix(adapter->dev, &entry, 1);
++	ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+1.7.7.6
