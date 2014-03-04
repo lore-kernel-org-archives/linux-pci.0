@@ -1,222 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og112.obsmtp.com ([64.18.0.24]:43173 "HELO
-	exprod5og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751805AbaCFGG1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 01:06:27 -0500
-Received: by mail-pa0-f49.google.com with SMTP id lj1so2163633pab.8
-        for <linux-pci@vger.kernel.org>; Wed, 05 Mar 2014 22:06:23 -0800 (PST)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+Received: from mail-yh0-f48.google.com ([209.85.213.48]:32911 "EHLO
+	mail-yh0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753972AbaCDRzQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 12:55:16 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
+References: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
+Date: Tue, 4 Mar 2014 23:25:15 +0530
+Message-ID: <CAD6G_RQ130TunwZDL+8vwx__8NsfzE0AfcfnS7z5OXtZF5T8xQ@mail.gmail.com>
+Subject: Re: sblk->status_tag on drivers/net/ethernet/broadcom/tg3.c
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: netdev@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Nithin Nayak Sujir <nsujir@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>,
 	Grant Likely <grant.likely@linaro.org>,
 	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v4 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
-Date: Wed,  5 Mar 2014 22:06:01 -0800
-Message-Id: <1394085963-27553-3-git-send-email-tinamdar@apm.com>
-In-Reply-To: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
-References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree nodes for APM X-Gene PCIe controller and
-PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
-nodes are added.
+Hi All,
 
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/boot/dts/apm-mustang.dts |    8 ++
- arch/arm64/boot/dts/apm-storm.dtsi  |  155 +++++++++++++++++++++++++++++++++++
- 2 files changed, 163 insertions(+)
+I have a board setup with PCIe host bridge links to BCRM NIC/tg3 EP.
 
-diff --git a/arch/arm64/boot/dts/apm-mustang.dts b/arch/arm64/boot/dts/apm-mustang.dts
-index 1247ca1..507b6c9 100644
---- a/arch/arm64/boot/dts/apm-mustang.dts
-+++ b/arch/arm64/boot/dts/apm-mustang.dts
-@@ -24,3 +24,11 @@
- 		reg = < 0x1 0x00000000 0x0 0x80000000 >; /* Updated by bootloader */
- 	};
- };
-+
-+&pcie0clk {
-+	status = "ok";
-+};
-+
-+&pcie0 {
-+	status = "ok";
-+};
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index d37d736..6011d25 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,161 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			pcie0clk: pcie0clk@1f2bc000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2bc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie0clk";
-+			};
-+
-+			pcie1clk: pcie1clk@1f2cc000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2cc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie1clk";
-+			};
-+
-+			pcie2clk: pcie2clk@1f2dc000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f2dc000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie2clk";
-+			};
-+
-+			pcie3clk: pcie3clk@1f50c000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f50c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie3clk";
-+			};
-+
-+			pcie4clk: pcie4clk@1f51c000 {
-+				status = "disabled";
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				reg = <0x0 0x1f51c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "pcie4clk";
-+			};
-+		};
-+
-+		pcie0: pcie@1f2b0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-+				0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
-+				  0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
-+			clocks = <&pcie0clk 0>;
-+		};
-+
-+		pcie1: pcie@1f2c0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
-+				0xd0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x0 0x00000000 0xd0 0x00000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x0 0x10000000 0xd0 0x10000000 0x00 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc8 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xc9 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xca 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
-+			clocks = <&pcie1clk 0>;
-+		};
-+
-+		pcie2: pcie@1f2d0000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
-+				 0x90 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x0 0x00000000 0x90 0x00000000 0x0 0x00010000   /* io  */
-+				  0x02000000 0x0 0x10000000 0x90 0x10000000 0x0 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xce 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xcf 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xd0 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
-+			clocks = <&pcie2clk 0>;
-+		};
-+
-+		pcie3: pcie@1f500000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
-+				0xa0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x0 0x00000000 0xa0 0x00000000 0x0 0x00010000  /* io */
-+				  0x02000000 0x0 0x10000000 0xa0 0x10000000 0x0 0x80000000>; /* mem  */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xd4 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xd5 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xd6 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
-+			clocks = <&pcie3clk 0>;
-+		};
-+
-+		pcie4: pcie@1f510000 {
-+			status = "disabled";
-+			device_type = "pci";
-+			compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			#address-cells = <3>;
-+			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
-+				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+			reg-names = "csr", "cfg";
-+			ranges = <0x01000000 0x0 0x00000000 0xc0 0x00000000 0x0 0x00010000   /* io  */
-+				  0x02000000 0x0 0x10000000 0xc0 0x10000000 0x0 0x80000000>; /* mem */
-+			dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xda 0x1
-+					 0x0 0x0 0x0 0x2 &gic 0x0 0xdb 0x1
-+					 0x0 0x0 0x0 0x3 &gic 0x0 0xdc 0x1
-+					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
-+			clocks = <&pcie4clk 0>;
- 		};
- 
- 		serial0: serial@1c020000 {
--- 
-1.7.9.5
+I'm verifying legacy INT# for ifconfig up operation, typically for
+link up EP trigger an interrupt as Assert_INT# and PCIe RC driver
+ISR will called and then EP ISR will clear and send Dessert_INT#
 
+But I got the continues interrupts from EP which will keep ISR's in
+both PCIe RC and EP in busy loop.
+
+Log dump:
+# ifconfig eth0 172.16.0.2 up
+RC: handler
+tg3_interrupt_tagged: write status = 0x1
+RC: handler
+tg3_interrupt_tagged: write status = 0x1
+RC: handler
+tg3_interrupt_tagged: write status = 0x1
+RC: handler
+tg3_interrupt_tagged: write status = 0x1
+............................
+..............
+
+I debugged further on EP driver where I could see interrupt
+re-enabling is happening continuously by writing 0x0 to onto
+MAILBOX_INTERRUPT_0 + TG3_64BIT_REG_LOW
+
+Debug code:
+static irqreturn_t tg3_interrupt_tagged(int irq, void *dev_id)
+{
+      ...................
+      printk(" ++status_tag = 0x%x", sblk->status_tag);
+      .......................
+
+      tw32_mailbox_f(MAILBOX_
+INTERRUPT_0 + TG3_64BIT_REG_LOW, 0x00000001);
+      printk(" write status = 0x%x", tr32(MAILBOX_INTERRUPT_0 +
+TG3_64BIT_REG_LOW));
+      ..................
+      tnapi->last_irq_tag = sblk->status_tag;
+      printk(" --status_tag = 0x%x\n", tnapi->last_irq_tag);
+}
+
+static int tg3_poll(struct napi_struct *napi, int budget)
+{
+               printk("%s: ", __func__);
+               if (tg3_flag(tp, TAGGED_STATUS)) {
+                        /* tp->last_tag is used in tg3_int_reenable() below
+                         * to tell the hw how much work has been processed,
+                         * so we must read it before checking for more work.
+                         */
+                        tnapi->last_tag = sblk->status_tag;
+                        tnapi->last_irq_tag = tnapi->last_tag;
+                        rmb();
+                } else
+                        sblk->status &= ~SD_STATUS_UPDATED;
+
+                printk(" tag = 0x%x\n", sblk->status_tag);
+                if (likely(!tg3_has_work(tnapi))) {
+                        napi_complete(napi);
+                        printk("calling tg3_int_reenable\n");
+                        tg3_int_reenable(tnapi);
+                        break;
+              }
+}
+
+static void tg3_int_reenable(struct tg3_napi *tnapi)
+{
+        struct tg3 *tp = tnapi->tp;
+
+        printk("%s val = 0x%x\n", __func__, tnapi->last_tag << 24);
+        tw32_mailbox(tnapi->int_mbox, tnapi->last_tag << 24);
+        ..............................
+}
+
+Log dump:
+# ifconfig eth0 172.16.0.2 up
+RC: handler
+tg3_interrupt_tagged: ++status_tag = 0x0 write status = 0x1
+--status_tag = 0x0 tg3_poll: tag = 0x0 calling tg3_int_reenable val =
+0x0
+RC: handler
+tg3_interrupt_tagged: ++status_tag = 0x0 write status = 0x1
+--status_tag = 0x0 tg3_poll: tag = 0x0 calling tg3_int_reenable val =
+0x0
+RC: handler
+tg3_interrupt_tagged: ++status_tag = 0x0 write status = 0x1
+--status_tag = 0x0 tg3_poll: tag = 0x0 calling tg3_int_reenable val =
+0x0
+RC: handler
+tg3_interrupt_tagged: ++status_tag = 0x0 write status = 0x1
+--status_tag = 0x0 tg3_poll: tag = 0x0 calling tg3_int_reenable val =
+0x0
+............................
+..............
+
+>From the comments in ISR any non-zero value to intr-mbox-0 clear
+the interrupt ie write status as 1 so I assume interrupt is clear and then
+in tg3_int_reenable is going to write 0x0 on to intr-mbox-0
+which again reenables the interrupt, was my guess is true?
+
+And sblk->status_tag is always 0 in ISR and BH(poll) why is that so?
+If it's is 1(unsigned non-zero) then possibly tg3_int_reenable will write
+non-zero value on intr-mbox-0 which will clear the interrupt.
+
+Request for any help who updates sblk->status_tag value and
+how many time the ISR in PCIe RC and ISR in EP will call for link up?
+
+thanks!
+--
+Jagan.
