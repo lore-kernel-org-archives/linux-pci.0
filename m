@@ -1,51 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12144 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751986AbaCFUJf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Mar 2014 15:09:35 -0500
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 RESEND 1/4] ioat: Use pci_enable_msix_exact() instead of pci_enable_msix()
-Date: Thu,  6 Mar 2014 21:11:21 +0100
-Message-Id: <2ba22558b5db90740d5833c35570c3e7cc1e359e.1394128952.git.agordeev@redhat.com>
-In-Reply-To: <cover.1394128952.git.agordeev@redhat.com>
-References: <cover.1394128952.git.agordeev@redhat.com>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:33058 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932938AbaCDUxf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 15:53:35 -0500
+Received: by mail-ie0-f178.google.com with SMTP id lx4so88738iec.23
+        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 12:53:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Mar 2014 13:53:13 -0700
+Message-ID: <CAErSpo6V+P-fVibXysQeDRRcxAarrtqpe+UNemy=LECCXT_QhA@mail.gmail.com>
+Subject: Re: [PATCH 0/9] PCI: Use IORESOURCE_UNSET for unassigned BARs
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
+On Wed, Feb 26, 2014 at 12:37 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> I'm trying to unify the way we handle unassigned PCI BARs, i.e., resources
+> where we know the type and size, but we haven't assigned an address yet.
+> The PCI core and the various architectures don't really have a consistent
+> way of dealing with these.
+>
+> Many places currently use "res->start == 0" to indicate unassigned
+> resources.  I don't think that's a good idea in general, because it's
+> possible for a resource to actually start at zero.  Zero is also a
+> perfectly good BAR value, especially for a host bridge that translates
+> addresses, so I want to support that, too.
+>
+> The IORESOURCE_UNSET flag exists already, but is hardly used at all.  In
+> drivers/pci, we set it for an obscure error case, and clear it when
+> updating a BAR.  The microblaze and powerpc architectures use it the same
+> way I want to use it here: to indicate a resource with no assigned address.
+>
+> Here's the outline of what this series does:
+>
+> - Add resource_contains(): true iff r1 contains r2 (for minor cleanup)
+> - Make %pR print resource size, not address, when IORESOURCE_UNSET
+> - Stop advertising pci_find_parent_resource() for use in allocation
+> - Mark PCI resources IORESOURCE_UNSET when BIOS left decoding disabled
+> - Mark PCI resources IORESOURCE_UNSET while we're trying to assign addresses
+> - Don't enable PCI decoding when no address has been assigned to BARs
+>
+> It might be too aggressive to ignore the initial value of a BAR and try to
+> reassign it when the BIOS left decoding disabled.  If the BIOS left
+> decoding *enabled*, we can have some confidence that the BAR value is
+> valid.  It's possible the BAR is also valid even if the BIOS turned off
+> decoding.  We could conceivably try to use BAR values that are inside
+> upstream bridge windows, even if the BAR was initially disabled.  But this
+> first pass just ignores the values in BARs that are disabled.
+>
+> I welcome any comments :)
+>
+> ---
+>
+> Bjorn Helgaas (9):
+>       resource: Add resource_contains()
+>       vsprintf: Add support for IORESOURCE_UNSET in %pR
+>       PCI: Remove pci_find_parent_resource() use for allocation
+>       PCI: Mark resources as IORESOURCE_UNSET if we can't assign them
+>       PCI: Don't clear IORESOURCE_UNSET when updating BAR
+>       PCI: Check IORESOURCE_UNSET before updating BAR
+>       PCI: Don't try to claim IORESOURCE_UNSET resources
+>       PCI: Ignore BAR contents when firmware left decoding disabled
+>       PCI: Don't enable decoding if BAR hasn't been assigned an address
+>
+>
+>  drivers/pci/host-bridge.c |    8 --------
+>  drivers/pci/pci.c         |   41 +++++++++++++++++++++++++----------------
+>  drivers/pci/probe.c       |    8 +++++++-
+>  drivers/pci/quirks.c      |    5 +++++
+>  drivers/pci/rom.c         |    2 ++
+>  drivers/pci/setup-res.c   |   37 +++++++++++++++++++++++++------------
+>  include/linux/ioport.h    |   12 +++++++++++-
+>  kernel/resource.c         |    8 ++------
+>  lib/vsprintf.c            |   13 +++++++++----
+>  9 files changed, 86 insertions(+), 48 deletions(-)
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Vinod Koul <vinod.koul@intel.com>
-Cc: dmaengine@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/dma/ioat/dma.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
-index 4e3549a..b76c148 100644
---- a/drivers/dma/ioat/dma.c
-+++ b/drivers/dma/ioat/dma.c
-@@ -947,7 +947,7 @@ msix:
- 	for (i = 0; i < msixcnt; i++)
- 		device->msix_entries[i].entry = i;
- 
--	err = pci_enable_msix(pdev, device->msix_entries, msixcnt);
-+	err = pci_enable_msix_exact(pdev, device->msix_entries, msixcnt);
- 	if (err)
- 		goto msi;
- 
--- 
-1.7.7.6
-
+I applied these to pci/resource for v3.15.
