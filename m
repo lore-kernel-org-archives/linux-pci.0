@@ -1,143 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:48229 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756675AbaCEEli (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 23:41:38 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Yijing Wang' <wangyijing@huawei.com>,
-	'Liviu Dudau' <Liviu.Dudau@arm.com>
-Cc: 'linux-pci' <linux-pci@vger.kernel.org>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Catalin Marinas' <Catalin.Marinas@arm.com>,
-	'Will Deacon' <Will.Deacon@arm.com>,
-	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
-	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
-	'LKML' <linux-kernel@vger.kernel.org>,
-	devicetree@vger.kernel.org,
-	'LAKML' <linux-arm-kernel@lists.infradead.org>,
-	'Tanmay Inamdar' <tinamdar@apm.com>,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Jingoo Han' <jg1.han@samsung.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
- <1393948204-11555-4-git-send-email-Liviu.Dudau@arm.com>
- <53169E86.1090609@huawei.com>
-In-reply-to: <53169E86.1090609@huawei.com>
-Subject: Re: [PATCH v5 3/7] pci: Create pci_host_bridge before its associated
- bus in pci_create_root_bus.
-Date: Wed, 05 Mar 2014 13:41:35 +0900
-Message-id: <002401cf382d$3062aa50$9127fef0$%han@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:44949 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932481AbaCDVdy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 16:33:54 -0500
+Received: by mail-ie0-f181.google.com with SMTP id tp5so143133ieb.40
+        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 13:33:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <FC41C24E35F18A40888AACA1A36F3E418A1ECC8F@FMSMSX102.amr.corp.intel.com>
+References: <5315F785.4050602@redhat.com> <CAErSpo4hjEG7bVu_T+X6Kie3tzj4PKV_4hoWmxr-pyVu5uD_1Q@mail.gmail.com>
+ <FC41C24E35F18A40888AACA1A36F3E418A1ECC8F@FMSMSX102.amr.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Mar 2014 14:33:33 -0700
+Message-ID: <CAErSpo4H=yKEnYwOPZ+i3sn08UqMzpXQg92e6ZxpDyZse=QSEQ@mail.gmail.com>
+Subject: Re: [E1000-devel] kmemleak through e1000?
+To: "Nelson, Shannon" <shannon.nelson@intel.com>
+Cc: Daniel Borkmann <dborkman@redhat.com>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Brandeburg, Jesse" <jesse.brandeburg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, March 05, 2014 12:48 PM, Yijing Wang wrote:
-> On 2014/3/4 23:50, Liviu Dudau wrote:
-> > Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
-> > As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
-> > the creation order has been changed for no good reason. Revert the order of
-> > creation as we are going to depend on the pci_host_bridge structure to retrieve the
-> > domain number of the root bus.
-> >
-> > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> >
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 6e34498..78ccba0 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
-> >  	kfree(bridge);
-> >  }
-> >
-> > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> > +static struct pci_host_bridge *pci_alloc_host_bridge(void)
-> >  {
-> >  	struct pci_host_bridge *bridge;
-> >
-> > @@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> >  		return NULL;
-> >
-> >  	INIT_LIST_HEAD(&bridge->windows);
-> > -	bridge->bus = b;
-> >  	return bridge;
-> >  }
-> >
-> > @@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >  	char bus_addr[64];
-> >  	char *fmt;
-> >
-> > +	bridge = pci_alloc_host_bridge();
-> > +	if (!bridge)
-> > +		return NULL;
-> > +
-> > +	bridge->dev.parent = parent;
-> > +	bridge->dev.release = pci_release_host_bridge_dev;
-> > +	error = pcibios_root_bridge_prepare(bridge);
-> > +	if (error) {
-> > +		kfree(bridge);
-> > +		return NULL;
-> 
-> What about use goto err_out?
+On Tue, Mar 4, 2014 at 2:11 PM, Nelson, Shannon
+<shannon.nelson@intel.com> wrote:
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>>
+>> On Tue, Mar 4, 2014 at 8:55 AM, Daniel Borkmann <dborkman@redhat.com>
+>> wrote:
+>> > Hi all, I'm not very familiar with the e1000 code, but on the latest
+>> > net.git kernel I get reliably the following (not sure if it's actually
+>> > caused by e1000 though):
+>>
+>> Thanks a lot for the report.  What kernel is this exactly (URL and
+>> SHA-1 hash)?  We have fixes for a couple leaks already queued up [1,
+>> 2], so possibly you're seeing those leaks.  If you already have those
+>> fixes in net.git, then we should investigate further.
+>>
+>> Bjorn
+>
+>
+> FYI - I've recently seen similar kmemleak reports from ixgbe and i40e drivers, all seemly pointing to the msix allocations.  I didn't have a chance to track them down, but they were seen in variations of net-next 3.14.0-rc3.
 
-+1
+I don't think that has the leak fixes in it yet.  I'm looking here:
 
-I agree with your opinion.
-It makes the code simpler.
+  http://git.kernel.org/cgit/linux/kernel/git/davem/net-next.git/log/drivers/pci/msi.c
 
-Best regards,
-Jingoo Han
+which does not contain the fixes from 2014-02-13 that are listed here:
 
-> 
-> > +	}
-> > +
-> >  	b = pci_alloc_bus();
-> >  	if (!b)
-> > -		return NULL;
-> > +		goto err_out;
-> >
-> >  	b->sysdata = sysdata;
-> >  	b->ops = ops;
-> > @@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >  	if (b2) {
-> >  		/* If we already got to this bus through a different bridge, ignore it */
-> >  		dev_dbg(&b2->dev, "bus already known\n");
-> > -		goto err_out;
-> > +		goto err_bus_out;
-> >  	}
-> >
-> > -	bridge = pci_alloc_host_bridge(b);
-> > -	if (!bridge)
-> > -		goto err_out;
-> > -
-> > -	bridge->dev.parent = parent;
-> > -	bridge->dev.release = pci_release_host_bridge_dev;
-> > +	bridge->bus = b;
-> >  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> > -	error = pcibios_root_bridge_prepare(bridge);
-> > -	if (error) {
-> > -		kfree(bridge);
-> > -		goto err_out;
-> > -	}
-> > -
-> >  	error = device_register(&bridge->dev);
-> >  	if (error) {
-> >  		put_device(&bridge->dev);
-> > -		goto err_out;
-> > +		goto err_bus_out;
-> >  	}
-> >  	b->bridge = get_device(&bridge->dev);
-> >  	device_enable_async_suspend(b->bridge);
-> > @@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >  class_dev_reg_err:
-> >  	put_device(&bridge->dev);
-> >  	device_unregister(&bridge->dev);
-> > -err_out:
-> > +err_bus_out:
-> >  	kfree(b);
-> > +err_out:
-> > +	kfree(bridge);
-> >  	return NULL;
-> >  }
-> >
-> >
+  http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/log/drivers/pci/msi.c
 
+In particular, these two look related:
+
+  PCI/MSI: Fix leak of msi_attrs
+  PCI/MSI: Check kmalloc() return value, fix leak of name
+
+So if you do look into them further, make sure you pick up these fixes
+first, and let me know if you still see issues.
+
+Bjorn
