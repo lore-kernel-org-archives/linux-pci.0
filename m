@@ -1,124 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:51713 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756670AbaCDWum (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 17:50:42 -0500
-Received: by mail-ig0-f175.google.com with SMTP id ur14so6423185igb.2
-        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 14:50:42 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.187]:58586 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108AbaCFPoK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 10:44:10 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH v5 1/7] pci: Introduce pci_register_io_range() helper function.
+Date: Tue, 4 Mar 2014 23:30:09 +0100
+Cc: "linux-pci" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linaro-kernel" <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com> <1393948204-11555-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393948204-11555-2-git-send-email-Liviu.Dudau@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <53164BEE.9060405@redhat.com>
-References: <5315F785.4050602@redhat.com> <CAErSpo4hjEG7bVu_T+X6Kie3tzj4PKV_4hoWmxr-pyVu5uD_1Q@mail.gmail.com>
- <53164BEE.9060405@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Mar 2014 15:49:28 -0700
-Message-ID: <CAErSpo54aGGbqGG08bOWCor3xp5r=kxOXm0wp27Lyhr5=qJRGA@mail.gmail.com>
-Subject: Re: kmemleak through e1000?
-To: Daniel Borkmann <dborkman@redhat.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201403042330.09607.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 4, 2014 at 2:55 PM, Daniel Borkmann <dborkman@redhat.com> wrote:
-> On 03/04/2014 09:58 PM, Bjorn Helgaas wrote:
->>
->> On Tue, Mar 4, 2014 at 8:55 AM, Daniel Borkmann <dborkman@redhat.com>
->> wrote:
->>>
->>> Hi all, I'm not very familiar with the e1000 code, but on the latest
->>> net.git kernel I get reliably the following (not sure if it's actually
->>> caused by e1000 though):
->>
->>
->> Thanks a lot for the report.  What kernel is this exactly (URL and
->> SHA-1 hash)?  We have fixes for a couple leaks already queued up [1,
->> 2], so possibly you're seeing those leaks.  If you already have those
->> fixes in net.git, then we should investigate further.
->
->
-> Great, good to know Bjorn.
->
-> I was using [1] with 8b4703e9bd117 ("macvlan: Add support for 'always_on'
-> offload features") as HEAD.
->
->   [1] https://git.kernel.org/cgit/linux/kernel/git/davem/net.git/
+On Tuesday 04 March 2014, Liviu Dudau wrote:
+> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +{
+> +       return 0;
+> +}
+> +
 
-Thanks, Daniel.  I confirmed that the two MSI fixes are not in the
-tree you're testing, so that's probably what you're seeing.
+How about returning an error here? You don't actually register the range.
 
->> [1]
->> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/msi&id=13f81c099bee8141f764fd41a1f4b68b93be3296
->> [2]
->> http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/msi&id=b3bac8e57c82e8d3e05f4abcb18c4f0a40656655
->>
->>> unreferenced object 0xffff8800361a7d80 (size 32):
->>>    comm "systemd-udevd", pid 246, jiffies 4294677997 (age 1117.522s)
->>>    hex dump (first 32 bytes):
->>>      60 7d 1a 36 00 88 ff ff 24 01 00 00 00 00 00 00  `}.6....$.......
->>>      f0 aa 35 81 ff ff ff ff 00 00 00 00 00 00 00 00  ..5.............
->>>    backtrace:
->>>      [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
->>>      [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
->>>      [<ffffffff8135ad48>] populate_msi_sysfs+0x128/0x220
->>>      [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
->>>      [<ffffffffa0221781>] e1000e_set_interrupt_capability+0x41/0x120
->>> [e1000e]
->>>      [<ffffffffa0226047>] e1000_probe+0x3a7/0xe20 [e1000e]
->>>      [<ffffffff81343805>] local_pci_probe+0x45/0xa0
->>>      [<ffffffff81344b89>] pci_device_probe+0xd9/0x130
->>>      [<ffffffff813fc317>] driver_probe_device+0x87/0x390
->>>      [<ffffffff813fc6f3>] __driver_attach+0x93/0xa0
->>>      [<ffffffff813fa323>] bus_for_each_dev+0x63/0xa0
->>>      [<ffffffff813fbd6e>] driver_attach+0x1e/0x20
->>>      [<ffffffff813fb950>] bus_add_driver+0x180/0x250
->>>      [<ffffffff813fcd04>] driver_register+0x64/0xf0
->>>      [<ffffffff813431ab>] __pci_register_driver+0x4b/0x50
->>>      [<ffffffffa0240041>] iptable_filter_hook+0x41/0x70 [iptable_filter]
->>> unreferenced object 0xffff8800c4ac1920 (size 32):
->>>    comm "NetworkManager", pid 409, jiffies 4294693366 (age 1102.161s)
->>>    hex dump (first 32 bytes):
->>>      34 34 00 c4 00 88 ff ff 00 00 00 00 00 00 00 00  44..............
->>>      00 00 00 00 00 00 00 00 6f 2e 32 00 00 00 00 00  ........o.2.....
->>>    backtrace:
->>>      [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
->>>      [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
->>>      [<ffffffff8135ad2f>] populate_msi_sysfs+0x10f/0x220
->>>      [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
->>>      [<ffffffffa0226ce5>] e1000_open+0x225/0x5b0 [e1000e]
->>>      [<ffffffff815785af>] __dev_open+0xbf/0x140
->>>      [<ffffffff815788bd>] __dev_change_flags+0x9d/0x170
->>>      [<ffffffff815789b9>] dev_change_flags+0x29/0x60
->>>      [<ffffffff81585482>] do_setlink+0x312/0x9e0
->>>      [<ffffffff81587958>] rtnl_newlink+0x508/0x710
->>>      [<ffffffff81584199>] rtnetlink_rcv_msg+0x99/0x260
->>>      [<ffffffff815a3269>] netlink_rcv_skb+0xa9/0xc0
->>>      [<ffffffff815840f8>] rtnetlink_rcv+0x28/0x30
->>>      [<ffffffff815a2bd8>] netlink_unicast+0x168/0x250
->>>      [<ffffffff815a2fa1>] netlink_sendmsg+0x2e1/0x3f0
->>>      [<ffffffff8155cc6b>] sock_sendmsg+0x8b/0xc0
->>> unreferenced object 0xffff8800c4ac17a0 (size 32):
->>>    comm "NetworkManager", pid 409, jiffies 4294693366 (age 1102.161s)
->>>    hex dump (first 32 bytes):
->>>      20 19 ac c4 00 88 ff ff 24 01 00 00 00 00 00 00   .......$.......
->>>      f0 aa 35 81 ff ff ff ff 00 00 00 00 00 00 00 00  ..5.............
->>>    backtrace:
->>>      [<ffffffff8166609e>] kmemleak_alloc+0x4e/0xb0
->>>      [<ffffffff8119f547>] kmem_cache_alloc_trace+0xd7/0x220
->>>      [<ffffffff8135ad48>] populate_msi_sysfs+0x128/0x220
->>>      [<ffffffff8135b4b8>] pci_enable_msi_block+0x1b8/0x2c0
->>>      [<ffffffffa0226ce5>] e1000_open+0x225/0x5b0 [e1000e]
->>>      [<ffffffff815785af>] __dev_open+0xbf/0x140
->>>      [<ffffffff815788bd>] __dev_change_flags+0x9d/0x170
->>>      [<ffffffff815789b9>] dev_change_flags+0x29/0x60
->>>      [<ffffffff81585482>] do_setlink+0x312/0x9e0
->>>      [<ffffffff81587958>] rtnl_newlink+0x508/0x710
->>>      [<ffffffff81584199>] rtnetlink_rcv_msg+0x99/0x260
->>>      [<ffffffff815a3269>] netlink_rcv_skb+0xa9/0xc0
->>>      [<ffffffff815840f8>] rtnetlink_rcv+0x28/0x30
->>>      [<ffffffff815a2bd8>] netlink_unicast+0x168/0x250
->>>      [<ffffffff815a2fa1>] netlink_sendmsg+0x2e1/0x3f0
->>>      [<ffffffff8155cc6b>] sock_sendmsg+0x8b/0xc0
+	Arnd
