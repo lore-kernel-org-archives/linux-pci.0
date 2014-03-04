@@ -1,68 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:35420 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753579AbaCMJua (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Mar 2014 05:50:30 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
-References: <1394704208-7490-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1394704208-7490-5-git-send-email-phil.edworthy@renesas.com>
-Date: Thu, 13 Mar 2014 09:50:03 +0000
-Subject: [PATCH 4/9] ARM: shmobile: r8a7791: Add PCIe clock device tree nodes
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51382 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753922AbaCDPul (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 10:50:41 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 1/7] pci: Introduce pci_register_io_range() helper function.
+Date: Tue,  4 Mar 2014 15:49:58 +0000
+Message-Id: <1393948204-11555-2-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the device tree clock nodes for PCIe
+Some architectures do not share x86 simple view of the I/O space and
+instead use a range of addresses that map to external devices. For PCI,
+these ranges can be expressed by OF bindings in a device tree file.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/boot/dts/r8a7791.dtsi            |    7 +++++--
- include/dt-bindings/clock/r8a7791-clock.h |    1 +
- 2 files changed, 6 insertions(+), 2 deletions(-)
+Introduce a pci_register_io_range() helper function that can be used
+by the architecture code to keep track of the io ranges described by the
+PCI bindings.
 
-diff --git a/arch/arm/boot/dts/r8a7791.dtsi b/arch/arm/boot/dts/r8a7791.dtsi
-index 71bac2c..ccfba57 100644
---- a/arch/arm/boot/dts/r8a7791.dtsi
-+++ b/arch/arm/boot/dts/r8a7791.dtsi
-@@ -717,14 +717,17 @@
- 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
- 			reg = <0 0xe615013c 0 4>, <0 0xe6150048 0 4>;
- 			clocks = <&cp_clk>, <&sd2_clk>, <&sd1_clk>,
--				<&cpg_clocks R8A7791_CLK_SD0>, <&mmc0_clk>, <&rclk_clk>;
-+				<&cpg_clocks R8A7791_CLK_SD0>, <&mmc0_clk>, <&rclk_clk>,
-+				<&mp_clk>;
- 			#clock-cells = <1>;
- 			renesas,clock-indices = <
- 				R8A7791_CLK_TPU0 R8A7791_CLK_SDHI2 R8A7791_CLK_SDHI1
- 				R8A7791_CLK_SDHI0 R8A7791_CLK_MMCIF0 R8A7791_CLK_CMT1
-+				R8A7791_CLK_PCIE
- 			>;
- 			clock-output-names =
--				"tpu0", "sdhi2", "sdhi1", "sdhi0", "mmcif0", "cmt1";
-+				"tpu0", "sdhi2", "sdhi1", "sdhi0", "mmcif0", "cmt1",
-+				"pcie";
- 		};
- 		mstp5_clks: mstp5_clks@e6150144 {
- 			compatible = "renesas,r8a7791-mstp-clocks", "renesas,cpg-mstp-clocks";
-diff --git a/include/dt-bindings/clock/r8a7791-clock.h b/include/dt-bindings/clock/r8a7791-clock.h
-index 30f82f2..d3e2cf5 100644
---- a/include/dt-bindings/clock/r8a7791-clock.h
-+++ b/include/dt-bindings/clock/r8a7791-clock.h
-@@ -51,6 +51,7 @@
- #define R8A7791_CLK_SDHI1		12
- #define R8A7791_CLK_SDHI0		14
- #define R8A7791_CLK_MMCIF0		15
-+#define R8A7791_CLK_PCIE		19
- #define R8A7791_CLK_SSUSB		28
- #define R8A7791_CLK_CMT1		29
- #define R8A7791_CLK_USBDMAC0		30
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 1a54f1f..d1bb30f 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -619,6 +619,11 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
+ 
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++	return 0;
++}
++
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ 	if (address > IO_SPACE_LIMIT)
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 5f6ed6b..40c418d 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -56,6 +56,7 @@ extern void __iomem *of_iomap(struct device_node *device, int index);
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
++extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ extern unsigned long pci_address_to_pio(phys_addr_t addr);
+ 
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
 -- 
-1.7.9.5
+1.9.0
 
