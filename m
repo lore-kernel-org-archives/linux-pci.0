@@ -1,51 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26709 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbaCSVXq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 17:23:46 -0400
-Message-ID: <532A0AB9.5050907@oracle.com>
-Date: Wed, 19 Mar 2014 17:23:05 -0400
-From: Sasha Levin <sasha.levin@oracle.com>
+Received: from usmamail.tilera.com ([12.216.194.151]:35130 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275AbaCDRZY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 12:25:24 -0500
+Message-ID: <53160B51.90309@tilera.com>
+Date: Tue, 4 Mar 2014 12:20:17 -0500
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ming Lei <tom.leiming@gmail.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Pekka Enberg <penberg@kernel.org>
-Subject: Re: [PATCH 8/9] PCI: Ignore BAR contents when firmware left decoding
- disabled
-References: <20140226192614.10125.68711.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140226193757.10125.81865.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140319185423.GA5514@google.com> <CAErSpo42K6W8b+7A7dyxUp-rNQttMQY7jcbpgyGv9sctyAqJCA@mail.gmail.com>
-In-Reply-To: <CAErSpo42K6W8b+7A7dyxUp-rNQttMQY7jcbpgyGv9sctyAqJCA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 6/7] tile PCI RC: Use default pcibios_enable_device()
+References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com> <20140226234208.18970.41395.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20140226234208.18970.41395.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/19/2014 05:16 PM, Bjorn Helgaas wrote:
-> On Wed, Mar 19, 2014 at 12:54 PM, Bjorn Helgaas<bhelgaas@google.com>  wrote:
->> >[+cc Ming, Rusty, Pekka, Sasha]
->> >...
->> >I plan to replace this patch with the following, which only sets
->> >IORESOURCE_UNSET when we already have been clearing the bus region start
->> >address.  (This probably should have been a separate patch to begin with,
->> >mea culpa.)
->> >
->> >This is intended for the v3.15 merge window, so I made the minimal change
->> >to reduce risk.
-> I put this patch in my pci/resource branch and re-merged it into my
-> "next" branch.  This rebased both pci/resource and next, which is
-> unfortunate, but I think it's the cleanest and least risky way at this
-> point.
+On 2/26/2014 6:42 PM, Bjorn Helgaas wrote:
+> We don't need anything arch-specific in pcibios_enable_device(), so drop
+> the arch implementation and use the default generic one.
+>
+> Note: pci_enable_resources() checks that r->parent is non-NULL, which
+> basically checks that pci_claim_resource() or request_resource() has been
+> called for each BAR.  I don't see where that happens for tile, but this
+> patch doesn't change that behavior, so if it worked before, it should still
+> work.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Chris Metcalf <cmetcalf@tilera.com>
+> ---
+>  arch/tile/kernel/pci_gx.c |   12 ------------
+>  1 file changed, 12 deletions(-)
+>
 
-Thanks for pointing out the issue Ming. I must admit that I haven't referred
-to the PCI spec when sending in my "fix" since the upstream patch sort of
-made sense. OTOH, you can't really call the kvm tool PCI implementation spec
-compliant :)
+Acked-by: Chris Metcalf <cmetcalf@tilera.com>
 
-Pekka, we can either revert my patch completely since the issue won't ever be
-visible (since the pci tree got rebase) or just keep it in. Let me know what you
-prefer.
+-- 
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
 
-
-Thanks,
-Sasha
