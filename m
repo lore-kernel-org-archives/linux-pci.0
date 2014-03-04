@@ -1,52 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1393948204-11555-6-git-send-email-Liviu.Dudau@arm.com>
-References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
-	<1393948204-11555-6-git-send-email-Liviu.Dudau@arm.com>
-Date: Tue, 4 Mar 2014 17:49:13 -0800
-Message-ID: <CACoXjcmKKObSFignRWZAuOmmvfFtLf5O04Y5romJ=c6a9Jriqg@mail.gmail.com>
-Subject: Re: [PATCH v5 5/7] pci: Use parent domain number when allocating
- child busses.
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33030 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751275AbaCDSK6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Mar 2014 13:10:58 -0500
+Message-ID: <1393956649.2895.128.camel@ul30vt.home>
+Subject: Re: PCIE: Program pcie device private registers
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	shiv prakash Agarwal <chhotu.shiv@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 04 Mar 2014 11:10:49 -0700
+In-Reply-To: <CAErSpo7s7fdUZH6zXr3ZWHq8s+zQ_5_sszzBZWrqFOh+jXHUgA@mail.gmail.com>
+References: <CAHH3p5JzL-9T-Hn=fp1S9=URzycpKTy6toaA0AjQfJYt7mQXsA@mail.gmail.com>
+	 <20140304035917.GA3032@pratyush-vbox>
+	 <CAErSpo7s7fdUZH6zXr3ZWHq8s+zQ_5_sszzBZWrqFOh+jXHUgA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Tue, 2014-03-04 at 10:45 -0700, Bjorn Helgaas wrote:
+> On Mon, Mar 3, 2014 at 8:59 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+> > On Thu, Feb 27, 2014 at 05:12:38PM +0800, shiv prakash Agarwal wrote:
+> >>    Hi All,
+> >>
+> >>
+> >>
+> >>    One query:
+> >>
+> >>
+> >>
+> >>    We can program config space registers of a pcie device using setpci but
+> >>    how can we program private registers of a pcie device?
+> >
+> > You mean application specific registers?
+> > These registers will not be accessible through any generic user space program.
+> >
+> > If you want to access them for debug purposes then you can provide
+> > support in your driver.
+> 
+> If the registers are in config space, you can use setpci, even if they
+> are non-architected registers specific to the device.
+> 
+> If they are in MMIO space, you can use lspci to learn where the BARs
+> are mapped, and then use something like rdwrmem
+> (http://cmp.felk.cvut.cz/~pisa/linux/rdwrmem.c) to access the
+> registers.
+> 
+> If they are in I/O port space, you can again use lspci to learn where
+> they are mapped, and then use ioperm()/iopl()/inb()/outb()/etc.
 
-On Tue, Mar 4, 2014 at 7:50 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
-> pci_alloc_child_bus() uses the newly allocated child bus to figure
-> out the domain number that is going to use for setting the device
-> name. A better option is to use the parent bus domain number.
->
-> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 26237a0..a12cda5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -677,7 +677,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->          * now as the parent is not properly set up yet.
->          */
->         child->dev.class = &pcibus_class;
-> -       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-> +       dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(parent), busnr);
->
->         /*
->          * Set up the primary, secondary and subordinate
-> --
-> 1.9.0
->
+The pci-sysfs resource# files are probably an easier alternative.  MMIO
+regions can be mmap'd and I/O port regions support direct read/write.
+Thanks,
 
-This patch is not required after the fix in pci_domain_nr for arm64.
+Alex
+
