@@ -1,83 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:36039 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932559AbaCDUyE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 15:54:04 -0500
+Received: by mail-ie0-f180.google.com with SMTP id as1so88348iec.25
+        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 12:54:04 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <000001cf3dcd$751a4680$5f4ed380$%han@samsung.com>
-References: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
-	<1394085963-27553-3-git-send-email-tinamdar@apm.com>
-	<000001cf3dcd$751a4680$5f4ed380$%han@samsung.com>
-Date: Wed, 12 Mar 2014 09:44:20 -0700
-Message-ID: <CACoXjckTMbt2GgLFgh39CRNGydZ4u4-L2J1PQfFi8fR7A=LUGQ@mail.gmail.com>
-Subject: Re: [PATCH v4 2/4] arm64: dts: APM X-Gene PCIe device tree nodes
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches <patches@apm.com>,
-	Jon Masters <jcm@redhat.com>
+In-Reply-To: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20140226233541.18970.83328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Mar 2014 13:53:44 -0700
+Message-ID: <CAErSpo50x1_iww5EmGXKUxbXUY2NLUxn6_yqF_3ABAjDSeFxog@mail.gmail.com>
+Subject: Re: [PATCH 0/7] PCI: Use default pcibios_enable_device()
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Jingoo Han,
+On Wed, Feb 26, 2014 at 4:41 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Several architectures implement a simple pcibios_enable_device() that looks
+> like this:
+>
+>   int pcibios_enable_device(struct pci_dev *dev, int mask)
+>   {
+>          return pci_enable_resources(dev, mask);
+>   }
+>
+> This puts a weak version of that in the PCI core and removes the
+> corresponding implementations from the architectures.
+>
+> s390 is slightly less trivial but the same general idea.
+>
+> I'd like to do the same for all the other architectures, but some (arm,
+> cris, m68k, mips, unicore32, xtensa, and parts of sparc and tile) don't
+> seem to use pci_claim_resource(), so BAR resource r->parent pointers
+> probably aren't set, so I can't change them yet.
+>
+> ---
+>
+> Bjorn Helgaas (7):
+>       PCI: Add "weak" generic pcibios_enable_device() implementation
+>       alpha/PCI: Use default pcibios_enable_device()
+>       microblaze/PCI: Use default pcibios_enable_device()
+>       sh/PCI: Use default pcibios_enable_device()
+>       sparc/PCI: Use default pcibios_enable_device() (Leon only)
+>       tile PCI RC: Use default pcibios_enable_device()
+>       s390/PCI: Use generic pci_enable_resources()
+>
+>
+>  arch/alpha/kernel/pci.c          |    6 ------
+>  arch/microblaze/pci/pci-common.c |    5 -----
+>  arch/s390/pci/pci.c              |   13 +------------
+>  arch/sh/drivers/pci/pci.c        |    5 -----
+>  arch/sparc/kernel/leon_pci.c     |    5 -----
+>  arch/tile/kernel/pci_gx.c        |   12 ------------
+>  drivers/pci/pci.c                |    5 +++++
+>  7 files changed, 6 insertions(+), 45 deletions(-)
 
-On Wed, Mar 12, 2014 at 1:31 AM, Jingoo Han <jg1.han@samsung.com> wrote:
-> On Thursday, March 06, 2014 3:06 PM, Tanmay Inamdar wrote:
->>
->> This patch adds the device tree nodes for APM X-Gene PCIe controller and
->> PCIe clock interface. Since X-Gene SOC supports maximum 5 ports, 5 dts
->> nodes are added.
->>
->> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
->> ---
->>  arch/arm64/boot/dts/apm-mustang.dts |    8 ++
->>  arch/arm64/boot/dts/apm-storm.dtsi  |  155 +++++++++++++++++++++++++++++++++++
->>  2 files changed, 163 insertions(+)
->
-> [.....]
->
->> --- a/arch/arm64/boot/dts/apm-storm.dtsi
->> +++ b/arch/arm64/boot/dts/apm-storm.dtsi
->
-> [.....]
->
->> +
->> +             pcie0: pcie@1f2b0000 {
->> +                     status = "disabled";
->> +                     device_type = "pci";
->> +                     compatible = "apm,xgene-storm-pcie", "apm,xgene-pcie";
->> +                     #interrupt-cells = <1>;
->> +                     #size-cells = <2>;
->> +                     #address-cells = <3>;
->> +                     reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
->> +                             0xe0 0xd0000000 0x0 0x00200000>; /* PCI config space */
->> +                     reg-names = "csr", "cfg";
->> +                     ranges = <0x01000000 0x00 0x00000000 0xe0 0x00000000 0x00 0x00010000   /* io */
->> +                               0x02000000 0x00 0x10000000 0xe0 0x10000000 0x00 0x80000000>; /* mem */
->                                                                           ^^^
->
-> I have a question about the fourth number '0xe0' of 'ranges' property.
-> Would you let me know what the '0xe0' means?
->
-
-In X-Gene address map, the physical address range starting from
-0xe0_00000000 is reserved for PCIe Port 0 outbound memory mappings.
-
-> Best regards,
-> Jingoo Han
->
->> +                     dma-ranges = <0x42000000 0x40 0x00000000 0x40 0x00000000 0x40 0x00000000>;
->> +                     interrupt-map-mask = <0x0 0x0 0x0 0x7>;
->> +                     interrupt-map = <0x0 0x0 0x0 0x1 &gic 0x0 0xc2 0x1
->> +                                      0x0 0x0 0x0 0x2 &gic 0x0 0xc3 0x1
->> +                                      0x0 0x0 0x0 0x3 &gic 0x0 0xc4 0x1
->> +                                      0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
->> +                     clocks = <&pcie0clk 0>;
->> +             };
->
+I applied these to pci/resource for v3.15.
