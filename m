@@ -1,43 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28625 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752725AbaCaSVl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 31 Mar 2014 14:21:41 -0400
-Subject: [PATCH] PCI: Add Patsburg (X79) to Intel PCH root port ACS quirk
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Don Dugger <donald.d.dugger@intel.com>
-Date: Mon, 31 Mar 2014 12:21:38 -0600
-Message-ID: <20140331182113.23398.38246.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51662 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753484AbaCDPu5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 10:50:57 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 0/3] [RFC] Add support for PCI in AArch64
+Date: Tue,  4 Mar 2014 15:50:13 +0000
+Message-Id: <1393948216-11599-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Intel has updated Red Hat bz1037684 to note that X79 PCH root ports
-also provide isolation and the same ACS quirks apply.  Some sources
-indicate additional device IDs for X79, but this patch includes only
-the ones specifically identified by Intel:
-https://bugzilla.redhat.com/show_bug.cgi?id=1037684#c11
+Hi,
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Don Dugger <donald.d.dugger@intel.com>
----
- drivers/pci/quirks.c |    2 ++
- 1 file changed, 2 insertions(+)
+This patch adds support for PCI to AArch64. It is based on my v5 patch
+that adds support for creating generic host bridge structure from
+device tree. With that in place, I was able to boot a platform that
+has PCIe host bridge support and use a PCIe network card.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e729206..5e4ac63 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3453,6 +3453,8 @@ static const u16 pci_quirk_intel_pch_acs_ids[] = {
- 	/* Wildcat PCH */
- 	0x9c90, 0x9c91, 0x9c92, 0x9c93, 0x9c94, 0x9c95, 0x9c96, 0x9c97,
- 	0x9c98, 0x9c99, 0x9c9a, 0x9c9b,
-+	/* Patsburg (X79) PCH */
-+	0x1d10, 0x1d12, 0x1d14, 0x1d16, 0x1d18, 0x1d1a, 0x1d1c, 0x1d1e,
- };
- 
- static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
+Changes from v4:
+  - Fixed the pci_domain_nr() implementation for arm64. Now we use
+    find_pci_host_bride() to find the host bridge before we retrieve
+    the domain number.
+
+Changes from v3:
+  - Added Acks accumulated so far ;)
+  - Still carrying Catalin's patch for moving the PCI_IO_BASE until it
+    lands in linux-next or mainline, in order to ease applying the series
+
+Changes from v2:
+  - Implement an arch specific version of pci_register_io_range() and
+    pci_address_to_pio().
+  - Return 1 from pci_proc_domain().
+
+Changes from v1:
+  - Added Catalin's patch for moving the PCI_IO_BASE location and extend
+    its size to 16MB
+  - Integrated Arnd's version of pci_ioremap_io that uses a bitmap for
+    keeping track of assigned IO space and returns an io_offset. At the
+    moment the code is added in arch/arm64 but it can be moved in drivers/pci.
+  - Added a fix for the generic ioport_map() function when !CONFIG_GENERIC_IOMAP
+    as suggested by Arnd.
+
+v4 thread here: https://lkml.org/lkml/2014/3/3/298
+v3 thread here: https://lkml.org/lkml/2014/2/28/211
+v2 thread here: https://lkml.org/lkml/2014/2/27/255
+v1 thread here: https://lkml.org/lkml/2014/2/3/389
+
+
+The API used is different from the one used by ARM architecture. There is
+no pci_common_init_dev() function and no hw_pci structure, as that is no
+longer needed. Once the last signature is added to the legal agreement, I
+will post the host bridge driver code that I am using. Meanwhile, here
+is an example of what the probe function looks like, posted as an example:
+
+static int myhostbridge_probe(struct platform_device *pdev)
+{
+	int err;
+	struct device_node *dev;
+	struct pci_host_bridge *bridge;
+	struct myhostbridge_port *pp;
+	resource_size_t lastbus;
+
+	dev = pdev->dev.of_node;
+
+	if (!of_device_is_available(dev)) {
+		pr_warn("%s: disabled\n", dev->full_name);
+		return -ENODEV;
+	}
+
+	pp = kzalloc(sizeof(struct myhostbridge_port), GFP_KERNEL);
+	if (!pp)
+		return -ENOMEM;
+
+	bridge = of_create_pci_host_bridge(&pdev->dev, &myhostbridge_ops, pp);
+	if (IS_ERR(bridge)) {
+		err = PTR_ERR(bridge);
+		goto bridge_create_fail;
+	}
+
+	err = myhostbridge_setup(bridge->bus);
+	if (err)
+		goto bridge_setup_fail;
+
+	/* We always enable PCI domains and we keep domain 0 backward
+	 * compatible in /proc for video cards
+	 */
+	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
+	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
+
+	lastbus = pci_scan_child_bus(bridge->bus);
+	pci_bus_update_busn_res_end(bridge->bus, lastbus);
+
+	pci_assign_unassigned_bus_resources(bridge->bus);
+
+	pci_bus_add_devices(bridge->bus);
+
+	return 0;
+
+bridge_setup_fail:
+	put_device(&bridge->dev);
+	device_unregister(&bridge->dev);
+bridge_create_fail:
+	kfree(pp);
+	return err;
+}
+
+Best regards,
+Liviu
+
+
+
+Catalin Marinas (1):
+  arm64: Extend the PCI I/O space to 16MB
+
+Liviu Dudau (2):
+  Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
+  arm64: Add architecture support for PCI
+
+ Documentation/arm64/memory.txt |  16 ++--
+ arch/arm64/Kconfig             |  19 ++++-
+ arch/arm64/include/asm/Kbuild  |   1 +
+ arch/arm64/include/asm/io.h    |   5 +-
+ arch/arm64/include/asm/pci.h   |  49 ++++++++++++
+ arch/arm64/kernel/Makefile     |   1 +
+ arch/arm64/kernel/pci.c        | 178 +++++++++++++++++++++++++++++++++++++++++
+ include/asm-generic/io.h       |   2 +-
+ 8 files changed, 261 insertions(+), 10 deletions(-)
+ create mode 100644 arch/arm64/include/asm/pci.h
+ create mode 100644 arch/arm64/kernel/pci.c
+
+-- 
+1.9.0
 
