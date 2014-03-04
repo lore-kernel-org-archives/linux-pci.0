@@ -1,134 +1,251 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:42365 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439AbaCaXvz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 19:51:55 -0400
-Message-ID: <5339FF99.2050200@gmail.com>
-Date: Mon, 31 Mar 2014 16:51:53 -0700
-From: Rajat Jain <rajatxjain@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:5389 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755343AbaCDAMt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Mar 2014 19:12:49 -0500
+Date: Mon, 3 Mar 2014 17:12:25 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 3/4] ntb: Split ntb_setup_msix() into separate BWD/SNB
+ routines
+Message-ID: <20140304001224.GD9679@jonmason-lab>
+References: <cover.1392996332.git.agordeev@redhat.com>
+ <bb2b61719e4dd15c29bc8022e76a9463d548f561.1392996332.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-CC: Rajat Jain <rajatjain@juniper.net>,
-	Guenter Roeck <groeck@juniper.net>
-Subject: [PATCH] pci/pciehp: Allow polling/irq mode to be decided on a per-port
- basis
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bb2b61719e4dd15c29bc8022e76a9463d548f561.1392996332.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Today, there is a global pciehp_poll_mode module parameter using which
-either _all_ the hot-pluggable ports are to use polling, or _all_ the
-ports are to use interrupts.
+On Fri, Feb 21, 2014 at 04:49:31PM +0100, Alexander Gordeev wrote:
+> This is an cleanup effort to make ntb_setup_msix() more
+> readable - use ntb_setup_bwd_msix() to init MSI-Xs on
+> BWD hardware and ntb_setup_snb_msix() - on SNB hardware.
+> 
+> Function ntb_setup_snb_msix() also initializes MSI-Xs the
+> way it should has been done - looping pci_enable_msix()
+> until success or failure.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Jon Mason <jon.mason@intel.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/ntb/ntb_hw.c |  170 +++++++++++++++++++++++++++++++-------------------
+>  1 files changed, 106 insertions(+), 64 deletions(-)
+> 
+> diff --git a/drivers/ntb/ntb_hw.c b/drivers/ntb/ntb_hw.c
+> index 53468f4..0472045 100644
+> --- a/drivers/ntb/ntb_hw.c
+> +++ b/drivers/ntb/ntb_hw.c
+> @@ -1079,6 +1079,107 @@ static irqreturn_t ntb_interrupt(int irq, void *dev)
+>  	return IRQ_HANDLED;
+>  }
+>  
+> +static int ntb_setup_snb_msix(struct ntb_device *ndev, int msix_entries)
+> +{
+> +	struct pci_dev *pdev = ndev->pdev;
+> +	struct msix_entry *msix;
+> +	int rc, i;
+> +
+> +	if (msix_entries < SNB_MSIX_CNT)
 
-In a system where a certain port has IRQ issues, today the only option
-is to use the parameter that converts ALL the ports to use polling mode.
-This is not good, and hence this patch intruduces a bit field that can
-be set using a PCI quirk that indicates that polling should always be
-used for this particular PCIe port. The remaining ports can still
-hoose to continue to operate in whatever mode they wish to.
+I would prefer ndev->limits.msix_cnt here to keep it generic.  I could
+foresee this number changing on upcoming hardware with a similar
+design.
 
-Signed-off-by: Rajat Jain <rajatxjain@gmail.com>
-Signed-off-by: Rajat Jain <rajatjain@juniper.net>
-Signed-off-by: Guenter Roeck <groeck@juniper.net>
----
- drivers/pci/hotplug/pciehp.h     |    1 +
- drivers/pci/hotplug/pciehp_hpc.c |   16 ++++++++++------
- include/linux/pci.h              |    1 +
- 3 files changed, 12 insertions(+), 6 deletions(-)
+> +		return -ENOSPC;
+> +
+> +	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> +	if (rc < 0)
+> +		return rc;
+> +	else if (rc > 0)
+> +		return -ENOSPC;
+> +
+> +	for (i = 0; i < msix_entries; i++) {
+> +		msix = &ndev->msix_entries[i];
+> +		WARN_ON(!msix->vector);
+> +
+> +		if (i == msix_entries - 1) {
+> +			rc = request_irq(msix->vector,
+> +					 xeon_event_msix_irq, 0,
+> +					 "ntb-event-msix", ndev);
+> +			if (rc)
+> +				goto err;
+> +		} else {
+> +			rc = request_irq(msix->vector,
+> +					 xeon_callback_msix_irq, 0,
+> +					 "ntb-callback-msix",
+> +					 &ndev->db_cb[i]);
+> +			if (rc)
+> +				goto err;
+> +		}
+> +	}
+> +
+> +	ndev->num_msix = msix_entries;
+> +	ndev->max_cbs = msix_entries - 1;
+> +
+> +	return 0;
+> +
+> +err:
+> +	while (--i >= 0) {
+> +		msix = &ndev->msix_entries[i];
+> +		WARN_ON(i == ndev->num_msix - 1);
+> +
+> +		if (i == ndev->num_msix - 1)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index d208791..753a3b4 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -98,6 +98,7 @@ struct controller {
- 	unsigned int no_cmd_complete:1;
- 	unsigned int link_active_reporting:1;
- 	unsigned int notification_enabled:1;
-+	unsigned int use_polling:1;	/* Always uses polling for this slot */
- 	unsigned int power_fault_detected;
- };
- 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index d7d058f..d210d23 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -82,7 +82,7 @@ static inline int pciehp_request_irq(struct controller *ctrl)
- 	int retval, irq = ctrl->pcie->irq;
- 
- 	/* Install interrupt polling timer. Start with 10 sec delay */
--	if (pciehp_poll_mode) {
-+	if (ctrl->use_polling) {
- 		init_timer(&ctrl->poll_timer);
- 		start_int_poll_timer(ctrl, 10);
- 		return 0;
-@@ -98,7 +98,7 @@ static inline int pciehp_request_irq(struct controller *ctrl)
- 
- static inline void pciehp_free_irq(struct controller *ctrl)
- {
--	if (pciehp_poll_mode)
-+	if (ctrl->use_polling)
- 		del_timer_sync(&ctrl->poll_timer);
- 	else
- 		free_irq(ctrl->pcie->irq, ctrl);
-@@ -131,7 +131,7 @@ static int pcie_poll_cmd(struct controller *ctrl)
- 
- static void pcie_wait_cmd(struct controller *ctrl, int poll)
- {
--	unsigned int msecs = pciehp_poll_mode ? 2500 : 1000;
-+	unsigned int msecs = ctrl->use_polling ? 2500 : 1000;
- 	unsigned long timeout = msecs_to_jiffies(msecs);
- 	int rc;
- 
-@@ -595,7 +595,7 @@ void pcie_enable_notification(struct controller *ctrl)
- 		cmd |= PCI_EXP_SLTCTL_PDCE;
- 	if (MRL_SENS(ctrl))
- 		cmd |= PCI_EXP_SLTCTL_MRLSCE;
--	if (!pciehp_poll_mode)
-+	if (!ctrl->use_polling)
- 		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
- 
- 	mask = (PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_ABPE |
-@@ -642,14 +642,14 @@ int pciehp_reset_slot(struct slot *slot, int probe)
- 	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
- 
- 	pcie_write_cmd(ctrl, 0, ctrl_mask);
--	if (pciehp_poll_mode)
-+	if (ctrl->use_polling)
- 		del_timer_sync(&ctrl->poll_timer);
- 
- 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
- 
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
- 	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
--	if (pciehp_poll_mode)
-+	if (ctrl->use_polling)
- 		int_poll_timeout(ctrl->poll_timer.data);
- 
- 	return 0;
-@@ -789,6 +789,10 @@ struct controller *pcie_init(struct pcie_device *dev)
-                 ctrl_dbg(ctrl, "Link Active Reporting supported\n");
-                 ctrl->link_active_reporting = 1;
-         }
-+	if (pciehp_poll_mode || dev->port->hotplug_polling) {
-+		ctrl_info(ctrl, "will use polling\n");
-+		ctrl->use_polling = 1;
-+	}
- 
- 	/* Clear all remaining event bits in Slot Status register */
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a13d682..b2ec72e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -336,6 +336,7 @@ struct pci_dev {
- 	unsigned int	is_virtfn:1;
- 	unsigned int	reset_fn:1;
- 	unsigned int    is_hotplug_bridge:1;
-+	unsigned int    hotplug_polling:1; /* Port uses polling for hotplug */
- 	unsigned int    __aer_firmware_first_valid:1;
- 	unsigned int	__aer_firmware_first:1;
- 	unsigned int	broken_intx_masking:1;
--- 
-1.7.9.5
+Why have a WARN followed by a if statement on the same condition?  As
+it stands right now, there is no way it could be hit.  So I'd say
+remove both of them.
 
+Aside from that it looks good.  Thanks for taking the time to cleanup
+the code!
+
+Thanks,
+Jon
+
+> +			free_irq(msix->vector, ndev);
+> +		else
+> +			free_irq(msix->vector, &ndev->db_cb[i]);
+> +	}
+> +
+> +	pci_disable_msix(pdev);
+> +	ndev->num_msix = 0;
+> +
+> +	return rc;
+> +}
+> +
+> +static int ntb_setup_bwd_msix(struct ntb_device *ndev, int msix_entries)
+> +{
+> +	struct pci_dev *pdev = ndev->pdev;
+> +	struct msix_entry *msix;
+> +	int rc, i;
+> +
+> +retry:
+> +	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> +	if (rc < 0)
+> +		return rc;
+> +	else if (rc > 0) {
+> +		dev_warn(&pdev->dev,
+> +			 "Only %d MSI-X vectors. "
+> +			 "Limiting the number of queues to that number.\n",
+> +			 rc);
+> +		msix_entries = rc;
+> +		goto retry;
+> +	}
+> +
+> +	for (i = 0; i < msix_entries; i++) {
+> +		msix = &ndev->msix_entries[i];
+> +		WARN_ON(!msix->vector);
+> +
+> +		rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
+> +				 "ntb-callback-msix", &ndev->db_cb[i]);
+> +		if (rc)
+> +			goto err;
+> +	}
+> +
+> +	ndev->num_msix = msix_entries;
+> +	ndev->max_cbs = msix_entries;
+> +
+> +	return 0;
+> +
+> +err:
+> +	while (--i >= 0)
+> +		free_irq(msix->vector, &ndev->db_cb[i]);
+> +
+> +	pci_disable_msix(pdev);
+> +	ndev->num_msix = 0;
+> +
+> +	return rc;
+> +}
+> +
+>  static int ntb_setup_msix(struct ntb_device *ndev)
+>  {
+>  	struct pci_dev *pdev = ndev->pdev;
+> @@ -1105,78 +1206,19 @@ static int ntb_setup_msix(struct ntb_device *ndev)
+>  	for (i = 0; i < msix_entries; i++)
+>  		ndev->msix_entries[i].entry = i;
+>  
+> -	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> -	if (rc < 0)
+> -		goto err1;
+> -	if (rc > 0) {
+> -		/* On SNB, the link interrupt is always tied to 4th vector.  If
+> -		 * we can't get all 4, then we can't use MSI-X.
+> -		 */
+> -		if (ndev->hw_type != BWD_HW) {
+> -			rc = -EIO;
+> -			goto err1;
+> -		}
+> -
+> -		dev_warn(&pdev->dev,
+> -			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
+> -			 rc);
+> -		msix_entries = rc;
+> -
+> -		rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
+> -		if (rc)
+> -			goto err1;
+> -	}
+> -
+> -	for (i = 0; i < msix_entries; i++) {
+> -		msix = &ndev->msix_entries[i];
+> -		WARN_ON(!msix->vector);
+> -
+> -		/* Use the last MSI-X vector for Link status */
+> -		if (ndev->hw_type == BWD_HW) {
+> -			rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
+> -					 "ntb-callback-msix", &ndev->db_cb[i]);
+> -			if (rc)
+> -				goto err2;
+> -		} else {
+> -			if (i == msix_entries - 1) {
+> -				rc = request_irq(msix->vector,
+> -						 xeon_event_msix_irq, 0,
+> -						 "ntb-event-msix", ndev);
+> -				if (rc)
+> -					goto err2;
+> -			} else {
+> -				rc = request_irq(msix->vector,
+> -						 xeon_callback_msix_irq, 0,
+> -						 "ntb-callback-msix",
+> -						 &ndev->db_cb[i]);
+> -				if (rc)
+> -					goto err2;
+> -			}
+> -		}
+> -	}
+> -
+> -	ndev->num_msix = msix_entries;
+>  	if (ndev->hw_type == BWD_HW)
+> -		ndev->max_cbs = msix_entries;
+> +		rc = ntb_setup_bwd_msix(ndev, msix_entries);
+>  	else
+> -		ndev->max_cbs = msix_entries - 1;
+> +		rc = ntb_setup_snb_msix(ndev, msix_entries);
+> +	if (rc)
+> +		goto err1;
+>  
+>  	return 0;
+>  
+> -err2:
+> -	while (--i >= 0) {
+> -		msix = &ndev->msix_entries[i];
+> -		if (ndev->hw_type != BWD_HW && i == ndev->num_msix - 1)
+> -			free_irq(msix->vector, ndev);
+> -		else
+> -			free_irq(msix->vector, &ndev->db_cb[i]);
+> -	}
+> -	pci_disable_msix(pdev);
+>  err1:
+>  	kfree(ndev->msix_entries);
+> -	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
+>  err:
+> -	ndev->num_msix = 0;
+> +	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
+>  	return rc;
+>  }
+>  
+> -- 
+> 1.7.7.6
+> 
