@@ -1,87 +1,86 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1395322983.2721.12.camel@rzhang1-mobl4>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-From: Zhang Rui <rui.zhang@intel.com>
-To: "Yan, Zheng" <zheng.z.yan@intel.com>
-Cc: Stephane Eranian <eranian@google.com>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Borislav Petkov <bp@alien8.de>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Date: Thu, 20 Mar 2014 21:43:03 +0800
-In-Reply-To: <532AA3F6.9090402@intel.com>
-References: <20140224162400.GE16457@pd.tnic>
-		<4205942.Tp8ltEsv6e@vostro.rjw.lan>	<532A514C.5010106@intel.com>
-		<744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
-	 <CABPqkBTyti0owCA_cWf9GcvYnOSvbMQpRC29rgpicjW1iYBjYQ@mail.gmail.com>
-	 <744357E9AAD1214791ACBA4B0B9092630121F3B7@SHSMSX101.ccr.corp.intel.com>
-	 <532AA3F6.9090402@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 0/7] [RFC] Support for creating generic host_bridge from device tree
+Date: Tue,  4 Mar 2014 15:49:57 +0000
+Message-Id: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2014-03-20 at 16:16 +0800, Yan, Zheng wrote:
-> On 03/20/2014 03:53 PM, Zhang, Rui wrote:
-> > The resource length is also hardcoded to 0x6000, right?
-> > This is probably a problem, because
-> > only if the resource length read from PCI config space is larger than 0x4000,
-> > drivers/pnp/quirks.c will detect the conflict and disable the PNP0C02
-> > resource 0xfed10000 - 0xfed13fff, and the PCI device can request this
-> > resource successfully.
-> > In order to check this, can you please attach the dmesg output after boot?
-> 
-> maybe the issue can be fixed by below untested patch
-> 
-> ---
-> diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore.c b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-> index fd5e883..2b3d834 100644
-> --- a/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-> +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-> @@ -1701,7 +1701,7 @@ static struct uncore_event_desc snb_uncore_imc_events[] = {
->  #define SNB_UNCORE_PCI_IMC_BAR_OFFSET		0x48
->  
->  /* page size multiple covering all config regs */
-> -#define SNB_UNCORE_PCI_IMC_MAP_SIZE		0x6000
-> +#define SNB_UNCORE_PCI_IMC_MAP_SIZE		0x8
->  
->  #define SNB_UNCORE_PCI_IMC_DATA_READS		0x1
->  #define SNB_UNCORE_PCI_IMC_DATA_READS_BASE	0x5050
-> @@ -1736,7 +1736,8 @@ static void snb_uncore_imc_init_box(struct intel_uncore_box *box)
->  
->  	addr &= ~(PAGE_SIZE - 1);
->  
-> -	box->io_addr = ioremap(addr, SNB_UNCORE_PCI_IMC_MAP_SIZE);
-> +	box->io_addr = ioremap(addr + SNB_UNCORE_PCI_IMC_CTR_BASE,
-> +			       SNB_UNCORE_PCI_IMC_MAP_SIZE);
+This is v5 of my attempt to add support for a generic pci_host_bridge controller created
+from a description passed in the device tree.
 
-you're remapping 0xfed15050 - 0xfed1b04f instead of 0xfed10000 -
-0xfed15fff ?
-I do not quite understand this, but apparently this is not a FIX.
-If it works for this problem, it is because 0xfed15050 - 0xfed1b04f
-happens to be not conflict with any resource reserved by PNP system
-driver, on this machine.
+Changes from v4:
+  - Export pci_find_host_bridge() to be used by arch code. There is scope for
+    making the arch/arm64 version of pci_domain_nr the default weak implementation
+    but that would double the size of this series in order to handle all #define
+    versions of the pci_domain_nr() function, so I suggest keeping that for a separate
+    cleanup series.
 
-thanks,
-rui
+Changes from v3:
+  - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
+  - Fix the domain number used when creating child busses.
+  - Changed domain number allocator to use atomic operations.
+  - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
+    and of_create_pci_host_bridge().
 
->  	box->hrtimer_duration = UNCORE_SNB_IMC_HRTIMER_INTERVAL;
->  }
->  
-> @@ -1832,7 +1833,7 @@ static int snb_uncore_imc_event_init(struct perf_event *event)
->  	}
->  
->  	/* must be done before validate_group */
-> -	event->hw.event_base = base;
-> +	event->hw.event_base = base - SNB_UNCORE_PCI_IMC_CTR_BASE;
->  	event->hw.config = cfg;
->  	event->hw.idx = idx;
->  
+Changes from v2:
+  - Use range->cpu_addr when calling pci_address_to_pio()
+  - Introduce pci_register_io_range() helper function in order to register
+    io ranges ahead of their conversion to PIO values. This is needed as no
+    information is being stored yet regarding the range mapping, making
+    pci_address_to_pio() fail. Default weak implementation does nothing,
+    to cover the default weak implementation of pci_address_to_pio() that
+    expects direct mapping of physical addresses into PIO values (x86 view).
 
+Changes from v1:
+  - Add patch to fix conversion of IO ranges into IO resources.
+  - Added a domain_nr member to pci_host_bridge structure, and a new function
+    to create a root bus in a given domain number. In order to facilitate that
+    I propose changing the order of initialisation between pci_host_bridge and
+    it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
+    This is done in patch 1/4 and 2/4.
+  - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
+    code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
+    and if that fails assign the next unallocated domain id.
+  - Changed the name of the function that creates the generic host bridge from
+    pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
+
+
+v4 thread here: https://lkml.org/lkml/2014/3/3/301
+v3 thread here: https://lkml.org/lkml/2014/2/28/216
+v2 thread here: https://lkml.org/lkml/2014/2/27/245
+v1 thread here: https://lkml.org/lkml/2014/2/3/380
+
+Best regards,
+Liviu
+
+Liviu Dudau (7):
+  pci: Introduce pci_register_io_range() helper function.
+  pci: OF: Fix the conversion of IO ranges into IO resources.
+  pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+  pci: Introduce a domain number for pci_host_bridge.
+  pci: Use parent domain number when allocating child busses.
+  pci: Export find_pci_host_bridge() function.
+  pci: Add support for creating a generic host_bridge from device tree
+
+ drivers/of/address.c       |  39 +++++++++++++
+ drivers/pci/host-bridge.c  | 142 ++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/probe.c        |  72 +++++++++++++++--------
+ include/linux/of_address.h |  14 +----
+ include/linux/pci.h        |  17 ++++++
+ 5 files changed, 248 insertions(+), 36 deletions(-)
+
+-- 
+1.9.0
 
