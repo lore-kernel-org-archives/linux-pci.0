@@ -1,63 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:65027 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755039AbaCLSG1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Mar 2014 14:06:27 -0400
-Received: by mail-yk0-f169.google.com with SMTP id 142so27998706ykq.0
-        for <linux-pci@vger.kernel.org>; Wed, 12 Mar 2014 11:06:27 -0700 (PDT)
-Date: Wed, 12 Mar 2014 12:06:18 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Paul Bolle <pebolle@tiscali.nl>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: [GIT PULL] PCI updates for v3.14
-Message-ID: <20140312180618.GA11931@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51465 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754477AbaCDPur (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 10:50:47 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 5/7] pci: Use parent domain number when allocating child busses.
+Date: Tue,  4 Mar 2014 15:50:02 +0000
+Message-Id: <1393948204-11555-6-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+pci_alloc_child_bus() uses the newly allocated child bus to figure
+out the domain number that is going to use for setting the device
+name. A better option is to use the parent bus domain number.
 
-These are two important regression fixes for bugs we've introduced so far
-in v3.14.
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-One of the resource allocation changes from the merge window is broken for
-32-bit kernels where we don't use _CRS for PCI host bridges (mostly
-pre-2008 machines), so there's a fix for that.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 26237a0..a12cda5 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -677,7 +677,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	 * now as the parent is not properly set up yet.
+ 	 */
+ 	child->dev.class = &pcibus_class;
+-	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
++	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(parent), busnr);
+ 
+ 	/*
+ 	 * Set up the primary, secondary and subordinate
+-- 
+1.9.0
 
-The INTx enable change we put in after the merge window turned out to break
-pciehp because we re-enable INTx on the hotplug bridge, which apparently
-breaks MSI for future hotplug events.
-
-The following changes since commit fa389e220254c69ffae0d403eac4146171062d08:
-
-  Linux 3.14-rc6 (2014-03-09 19:41:57 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v3.14-fixes-2
-
-for you to fetch changes up to ac93ac7403493f8707b7734de9f40d5cb5db9045:
-
-  PCI: Don't check resource_size() in pci_bus_alloc_resource() (2014-03-12 11:19:20 -0600)
-
-----------------------------------------------------------------
-PCI updates for v3.14:
-
-  Resource management
-    - Fix allocation from 0-4GB regions (Bjorn Helgaas)
-
-  Miscellaneous
-    - Enable INTx only when MSI/MSI-X not enabled (Bjorn Helgaas)
-
-----------------------------------------------------------------
-Bjorn Helgaas (2):
-      PCI: Enable INTx in pci_reenable_device() only when MSI/MSI-X not enabled
-      PCI: Don't check resource_size() in pci_bus_alloc_resource()
-
- drivers/pci/bus.c | 2 --
- drivers/pci/pci.c | 3 +++
- 2 files changed, 3 insertions(+), 2 deletions(-)
