@@ -1,83 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og109.obsmtp.com ([64.18.0.188]:45777 "HELO
-	exprod5og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750810AbaCFGGS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Mar 2014 01:06:18 -0500
-Received: by mail-pd0-f181.google.com with SMTP id p10so2080569pdj.40
-        for <linux-pci@vger.kernel.org>; Wed, 05 Mar 2014 22:06:17 -0800 (PST)
-From: Tanmay Inamdar <tinamdar@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Rob Landley <rob@landley.net>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, patches@apm.com, jcm@redhat.com,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: [PATCH v4 0/4] APM X-Gene PCIe controller
-Date: Wed,  5 Mar 2014 22:05:59 -0800
-Message-Id: <1394085963-27553-1-git-send-email-tinamdar@apm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 3/7] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+Date: Tue,  4 Mar 2014 15:50:00 +0000
+Message-Id: <1393948204-11555-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support for AppliedMicro X-Gene PCIe host controller. The
-driver is tested on X-Gene platform with different gen1/2/3 PCIe endpoint
-cards.
+Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+the creation order has been changed for no good reason. Revert the order of
+creation as we are going to depend on the pci_host_bridge structure to retrieve the
+domain number of the root bus.
 
-X-Gene PCIe controller driver has depedency on the pcie arm64 arch support.
-Liviu Dudau from ARM has sent a patch set for pcie arm64 arch support and
-support for creating generic pcie bridge from device tree. Liviu's patches
-are available here
-1. https://lkml.org/lkml/2014/3/5/179
-2. https://lkml.org/lkml/2014/3/5/41
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-If someone wishes to test PCIe on X-Gene with this patch set, above mentioned
-patches from Liviu must be applied before the patches in this patch set.
-
-changes since V3:
-1. remove 'struct hw_pci' and supporting ops in hw_pci
-2. add code to create the host bridge from dts
-3. add code to scan the the host bridge
-4. modify outbound windows setup function to get resource information from
-   'bridge->windows'
-5. add compatible string in pcie dts node with current X-Gene SOC name.
-
-changes since V2:
-1. redefined each PCI port in different PCI domain correctly.
-2. removed setup_lane and setup_link functions from driver.
-3. removed scan_bus wrapper and set_primary_bus hack.
-4. added pci_ioremap_io for io resources.
-
-changes since V1:
-1. added PCI domain support
-2. reading cpu and pci addresses from device tree to configure regions.
-3. got rid of unnecessary wrappers for readl and writel.
-4. got rid of endpoint configuration code.
-5. added 'dma-ranges' property support to read inbound region configuration.
-6. renamed host driver file to 'pci-xgene.c' from 'pcie-xgene.c'
-7. dropped 'clock-names' property from bindings
-8. added comments whereever requested.
-
-Tanmay Inamdar (4):
-  pci: APM X-Gene PCIe controller driver
-  arm64: dts: APM X-Gene PCIe device tree nodes
-  dt-bindings: pci: xgene pcie device tree bindings
-  MAINTAINERS: entry for APM X-Gene PCIe host driver
-
- .../devicetree/bindings/pci/xgene-pci.txt          |   52 ++
- MAINTAINERS                                        |    7 +
- arch/arm64/boot/dts/apm-mustang.dts                |    8 +
- arch/arm64/boot/dts/apm-storm.dtsi                 |  155 ++++
- drivers/pci/host/Kconfig                           |   10 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-xgene.c                       |  739 ++++++++++++++++++++
- 7 files changed, 972 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci.txt
- create mode 100644 drivers/pci/host/pci-xgene.c
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6e34498..78ccba0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ 	kfree(bridge);
+ }
+ 
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
++static struct pci_host_bridge *pci_alloc_host_bridge(void)
+ {
+ 	struct pci_host_bridge *bridge;
+ 
+@@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+ 	return bridge;
+ }
+ 
+@@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
++	bridge = pci_alloc_host_bridge();
++	if (!bridge)
++		return NULL;
++
++	bridge->dev.parent = parent;
++	bridge->dev.release = pci_release_host_bridge_dev;
++	error = pcibios_root_bridge_prepare(bridge);
++	if (error) {
++		kfree(bridge);
++		return NULL;
++	}
++
+ 	b = pci_alloc_bus();
+ 	if (!b)
+-		return NULL;
++		goto err_out;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+@@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->bus = b;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
+-		goto err_out;
+-	}
+-
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+@@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ class_dev_reg_err:
+ 	put_device(&bridge->dev);
+ 	device_unregister(&bridge->dev);
+-err_out:
++err_bus_out:
+ 	kfree(b);
++err_out:
++	kfree(bridge);
+ 	return NULL;
+ }
+ 
 -- 
-1.7.9.5
+1.9.0
 
