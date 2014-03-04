@@ -1,47 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:33045 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755770AbaCNJfH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Mar 2014 05:35:07 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 2/3] PCI: Refactor pci_is_bridge()
-Date: Fri, 14 Mar 2014 17:34:51 +0800
-Message-ID: <1394789691-13512-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51412 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754109AbaCDPun (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 10:50:43 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 2/7] pci: OF: Fix the conversion of IO ranges into IO resources.
+Date: Tue,  4 Mar 2014 15:49:59 +0000
+Message-Id: <1393948204-11555-3-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refactor pci_is_bridge(), check pci device
-hdr_type instead, and move it in include/linux/pci.h
+The ranges property for a host bridge controller in DT describes
+the mapping between the PCI bus address and the CPU physical address.
+The resources framework however expects that the IO resources start
+at a pseudo "port" address 0 (zero) and have a maximum size of IO_SPACE_LIMIT.
+The conversion from pci ranges to resources failed to take that into account.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- include/linux/pci.h |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+In the process move the function into drivers/of/address.c as it
+now depends on pci_address_to_pio() code.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33aa2ca..22370c4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1649,6 +1649,12 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
- 	return pci_pcie_cap(dev);
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index d1bb30f..d595d98 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -724,3 +724,37 @@ void __iomem *of_iomap(struct device_node *np, int index)
+ 	return ioremap(res.start, resource_size(&res));
  }
- 
-+static inline bool pci_is_bridge(struct pci_dev *dev)
-+{
-+	return dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-+		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
-+}
+ EXPORT_SYMBOL(of_iomap);
 +
- /**
-  * pcie_caps_reg - get the PCIe Capabilities Register
-  * @dev: PCI device
++/**
++ * of_pci_range_to_resource - Create a resource from an of_pci_range
++ * @range:	the PCI range that describes the resource
++ * @np:		device node where the range belongs to
++ * @res:	pointer to a valid resource that will be updated to
++ *              reflect the values contained in the range.
++ * Note that if the range is an IO range, the resource will be converted
++ * using pci_address_to_pio() which can fail if it is called too early or
++ * if the range cannot be matched to any host bridge IO space (our case here).
++ * To guard against that we try to register the IO range first.
++ * If that fails we know that pci_address_to_pio() will do too.
++ */
++void of_pci_range_to_resource(struct of_pci_range *range,
++	struct device_node *np, struct resource *res)
++{
++	res->flags = range->flags;
++	if (res->flags & IORESOURCE_IO) {
++		unsigned long port = -1;
++		if (!pci_register_io_range(range->cpu_addr, range->size))
++			port = pci_address_to_pio(range->cpu_addr);
++		if (port == (unsigned long)-1) {
++			res->start = (resource_size_t)OF_BAD_ADDR;
++			res->end = (resource_size_t)OF_BAD_ADDR;
++			return;
++		}
++		res->start = port;
++	} else {
++		res->start = range->cpu_addr;
++	}
++	res->end = res->start + range->size - 1;
++	res->parent = res->child = res->sibling = NULL;
++	res->name = np->full_name;
++}
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 40c418d..3fe500a 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -23,17 +23,8 @@ struct of_pci_range {
+ #define for_each_of_pci_range(parser, range) \
+ 	for (; of_pci_range_parser_one(parser, range);)
+ 
+-static inline void of_pci_range_to_resource(struct of_pci_range *range,
+-					    struct device_node *np,
+-					    struct resource *res)
+-{
+-	res->flags = range->flags;
+-	res->start = range->cpu_addr;
+-	res->end = range->cpu_addr + range->size - 1;
+-	res->parent = res->child = res->sibling = NULL;
+-	res->name = np->full_name;
+-}
+-
++extern void of_pci_range_to_resource(struct of_pci_range *range,
++		struct device_node *np, struct resource *res);
+ /* Translate a DMA address from device space to CPU space */
+ extern u64 of_translate_dma_address(struct device_node *dev,
+ 				    const __be32 *in_addr);
 -- 
-1.7.1
-
+1.9.0
 
