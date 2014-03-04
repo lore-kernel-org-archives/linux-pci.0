@@ -1,51 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ducie-dc1.codethink.co.uk ([185.25.241.215]:41435 "EHLO
-	ducie-dc1.codethink.co.uk" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755381AbaCTRc3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Mar 2014 13:32:29 -0400
-Message-ID: <532B2628.5080305@codethink.co.uk>
-Date: Thu, 20 Mar 2014 18:32:24 +0100
-From: Ben Dooks <ben.dooks@codethink.co.uk>
+Received: from mx1.redhat.com ([209.132.183.28]:51968 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932301AbaCDPUn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Mar 2014 10:20:43 -0500
+Date: Tue, 4 Mar 2014 16:22:00 +0100
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH v2 3/2] nvme: Use pci_enable_msi_range() and
+ pci_enable_msix_range()
+Message-ID: <20140304152200.GA18364@dhcp-26-207.brq.redhat.com>
+References: <cover.1393404496.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-sh@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Magnus Damm <damm@opensource.se>,
-	Ben Dooks <ben-linux@fluff.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms+renesas@verge.net.au>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: DMABOUNCE in pci-rcar
-References: <201402241200.21944.arnd@arndb.de> <5527822.QYtFYiIpiW@wuerfel> <532B137B.7010900@codethink.co.uk> <4884083.IuNl44Y6XD@wuerfel> <532B2485.6010005@codethink.co.uk> <20140320173106.GA19395@obsidianresearch.com>
-In-Reply-To: <20140320173106.GA19395@obsidianresearch.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1393404496.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/03/14 18:31, Jason Gunthorpe wrote:
-> On Thu, Mar 20, 2014 at 06:25:25PM +0100, Ben Dooks wrote:
->> So doing:
->>
->> static void pci_rcar_fixup(struct pci_dev *dev)
->> {
->> 	if (dev->bus->ops == &rcar_pci_ops) {
->> 		dev_info(&dev->dev, "applying new dma mask\n");
->> 		dev->dma_mask = DMA_BIT_MASK(31);
->> 	}
->> }
->>
->> DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_rcar_fixup);
->>
->> Did not work for me :(
->
-> Seems like it should work, do you have CONFIG_PCI_QUIRKS turned on?
+As result of deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range()  or pci_enable_msi_exact()
+and pci_enable_msix_range() or pci_enable_msix_exact()
+interfaces.
 
-Yes, see the print happening, just still PCI OHCI dies horribly.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Matthew Wilcox <willy@linux.intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-nvme@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/block/nvme-core.c |   33 +++++++++------------------------
+ 1 files changed, 9 insertions(+), 24 deletions(-)
 
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index 51824d1..eca2b3e 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -1837,31 +1837,16 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	/* Deregister the admin queue's interrupt */
+ 	free_irq(dev->entry[0].vector, adminq);
+ 
+-	vecs = nr_io_queues;
+-	for (i = 0; i < vecs; i++)
++	for (i = 0; i < nr_io_queues; i++)
+ 		dev->entry[i].entry = i;
+-	for (;;) {
+-		result = pci_enable_msix(pdev, dev->entry, vecs);
+-		if (result <= 0)
+-			break;
+-		vecs = result;
+-	}
+-
+-	if (result < 0) {
+-		vecs = nr_io_queues;
+-		if (vecs > 32)
+-			vecs = 32;
+-		for (;;) {
+-			result = pci_enable_msi_block(pdev, vecs);
+-			if (result == 0) {
+-				for (i = 0; i < vecs; i++)
+-					dev->entry[i].vector = i + pdev->irq;
+-				break;
+-			} else if (result < 0) {
+-				vecs = 1;
+-				break;
+-			}
+-			vecs = result;
++	vecs = pci_enable_msix_range(pdev, dev->entry, 1, nr_io_queues);
++	if (vecs < 0) {
++		vecs = pci_enable_msi_range(pdev, 1, min(nr_io_queues, 32));
++		if (vecs < 0) {
++			vecs = 1;
++		} else {
++			for (i = 0; i < vecs; i++)
++				dev->entry[i].vector = i + pdev->irq;
+ 		}
+ 	}
+ 
+-- 
+1.7.7.6
 
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
