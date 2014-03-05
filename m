@@ -1,60 +1,28 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:43434 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753136AbaCJTQ0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 15:16:26 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:42804 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751943AbaCEIXf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Mar 2014 03:23:35 -0500
+Message-ID: <5316DEFA.8060600@redhat.com>
+Date: Wed, 05 Mar 2014 09:23:22 +0100
+From: Daniel Borkmann <dborkman@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1469359.kil5iaOqdU@wuerfel>
-References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
-	<2115856.ZTdgp5fkma@wuerfel>
-	<20140310163343.GY6457@e106497-lin.cambridge.arm.com>
-	<1469359.kil5iaOqdU@wuerfel>
-Date: Mon, 10 Mar 2014 20:16:25 +0100
-Message-ID: <CAMuHMdWzm1D83zquwuQVKwbqRdXmSw7u1ui7iZyC3VGdGhn0HA@mail.gmail.com>
-Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic
- host_bridge from device tree
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>
+Subject: Re: kmemleak through e1000?
+References: <5315F785.4050602@redhat.com> <CAErSpo4hjEG7bVu_T+X6Kie3tzj4PKV_4hoWmxr-pyVu5uD_1Q@mail.gmail.com> <53164BEE.9060405@redhat.com> <CAErSpo54aGGbqGG08bOWCor3xp5r=kxOXm0wp27Lyhr5=qJRGA@mail.gmail.com>
+In-Reply-To: <CAErSpo54aGGbqGG08bOWCor3xp5r=kxOXm0wp27Lyhr5=qJRGA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 10, 2014 at 7:59 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> arch/avr32/include/asm/io.h:#define IO_SPACE_LIMIT    0xffffffff
->> arch/frv/include/asm/io.h:#define IO_SPACE_LIMIT      0xffffffff
->
-> They have no MMU, and the code relies on the port number to match
-> both the virtual and the physical address. You could be right about
-> these, but I would guess that the code also needs some other
-> changes if we want to make it work on nommu kernels. It also depends
-> on whether the I/O bus address is the same as the CPU address, or
-> if it starts at bus address 0.
+On 03/04/2014 11:49 PM, Bjorn Helgaas wrote:
+...
+> Thanks, Daniel.  I confirmed that the two MSI fixes are not in the
+> tree you're testing, so that's probably what you're seeing.
 
->> arch/m68k/include/asm/io_no.h:#define IO_SPACE_LIMIT 0xffffffff
->
-> This looks like a mistake, it should be smaller
-
-io_no.h is for nommu.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Ok, that's great, thanks a lot for the clarification Bjorn.
