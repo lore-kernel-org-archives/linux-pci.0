@@ -1,107 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:39791 "EHLO
+Received: from service87.mimecast.com ([91.220.42.44]:34132 "EHLO
 	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753769AbaCJQdr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 12:33:47 -0400
-Date: Mon, 10 Mar 2014 16:33:44 +0000
+	with ESMTP id S1751551AbaCEITd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 03:19:33 -0500
+Date: Wed, 5 Mar 2014 08:19:29 +0000
 From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>,
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: 'Yijing Wang' <wangyijing@huawei.com>,
+	'linux-pci' <linux-pci@vger.kernel.org>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
 	Catalin Marinas <Catalin.Marinas@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
 	Will Deacon <Will.Deacon@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v6 6/6] pci: Add support for creating a generic
- host_bridge from device tree
-Message-ID: <20140310163343.GY6457@e106497-lin.cambridge.arm.com>
-References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
- <201403081815.08829.arnd@arndb.de>
- <20140310144414.GT6457@e106497-lin.cambridge.arm.com>
- <2115856.ZTdgp5fkma@wuerfel>
+	'linaro-kernel' <linaro-kernel@lists.linaro.org>,
+	'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
+	'LKML' <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	'LAKML' <linux-arm-kernel@lists.infradead.org>,
+	'Tanmay Inamdar' <tinamdar@apm.com>,
+	'Arnd Bergmann' <arnd@arndb.de>
+Subject: Re: [PATCH v5 3/7] pci: Create pci_host_bridge before its associated
+ bus in pci_create_root_bus.
+Message-ID: <20140305081929.GE1692@e106497-lin.cambridge.arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+ <1393948204-11555-4-git-send-email-Liviu.Dudau@arm.com>
+ <53169E86.1090609@huawei.com>
+ <002401cf382d$3062aa50$9127fef0$%han@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <2115856.ZTdgp5fkma@wuerfel>
+In-Reply-To: <002401cf382d$3062aa50$9127fef0$%han@samsung.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 10, 2014 at 03:21:01PM +0000, Arnd Bergmann wrote:
-> On Monday 10 March 2014 14:44:14 Liviu Dudau wrote:
-> > I will try to improve the error handling in the next patchset version.
-> > However I am still confused about the earlier discussion on
-> > pci_register_io_range(). Your suggestion initially was to return an
-> > error in the default weak implementation, but in your last email you
-> > are talking about returning 'port'.
+On Wed, Mar 05, 2014 at 04:41:35AM +0000, Jingoo Han wrote:
+> On Wednesday, March 05, 2014 12:48 PM, Yijing Wang wrote:
+> > On 2014/3/4 23:50, Liviu Dudau wrote:
+> > > Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+> > > As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+> > > the creation order has been changed for no good reason. Revert the order of
+> > > creation as we are going to depend on the pci_host_bridge structure to retrieve the
+> > > domain number of the root bus.
+> > >
+> > > Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > >
+> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > index 6e34498..78ccba0 100644
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+> > >  	kfree(bridge);
+> > >  }
+> > >
+> > > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> > > +static struct pci_host_bridge *pci_alloc_host_bridge(void)
+> > >  {
+> > >  	struct pci_host_bridge *bridge;
+> > >
+> > > @@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> > >  		return NULL;
+> > >
+> > >  	INIT_LIST_HEAD(&bridge->windows);
+> > > -	bridge->bus = b;
+> > >  	return bridge;
+> > >  }
+> > >
+> > > @@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> > >  	char bus_addr[64];
+> > >  	char *fmt;
+> > >
+> > > +	bridge = pci_alloc_host_bridge();
+> > > +	if (!bridge)
+> > > +		return NULL;
+> > > +
+> > > +	bridge->dev.parent = parent;
+> > > +	bridge->dev.release = pci_release_host_bridge_dev;
+> > > +	error = pcibios_root_bridge_prepare(bridge);
+> > > +	if (error) {
+> > > +		kfree(bridge);
+> > > +		return NULL;
+> > 
+> > What about use goto err_out?
 > 
-> You can do either one: 'port' should be positive or zero, while the
-> error would always be negative. We do the same thing in many interfaces
-> in the kernel.
+> +1
 > 
-> > My idea when I've introduced the
-> > helper function was that it would return an error if it fails to
-> > register the IO range and zero otherwise. I agree that we can treat
-> > the default 'do nothing with the IO range' case as an error, with
-> > the caveat that will force architectures that use this code to
-> > provide their own implementation of pci_register_io_range() in order
-> > to avoid failure, even for the cases where the architecture has a 1:1
-> > mapping between IO and CPU addresses.
-> 
-> Which architectures are you thinking of? The only one I know that
-> does this is ia64, and we won't ever have to support this helper
-> on that architecture.
+> I agree with your opinion.
+> It makes the code simpler.
 
-I was thinking about architectures that have IO_SPACE_LIMIT >= 0xffffffff.
-While not an absolute indicator, with the default pci_address_to_pio()
-that means that they can use the CPU MMIO address as IO address directly.
+Hi Yijing and Jingoo,
 
-$ git grep IO_SPACE_LIMIT | grep -i ffffffff
-arch/arm/include/asm/io.h:#define IO_SPACE_LIMIT ((resource_size_t)0xffffffff)
-arch/arm/mach-at91/include/mach/io.h:#define IO_SPACE_LIMIT		0xFFFFFFFF
-arch/arm/mach-omap1/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
-arch/arm/mach-pxa/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
-arch/arm/mach-s3c24xx/include/mach/io.h:#define IO_SPACE_LIMIT 0xffffffff
-arch/avr32/include/asm/io.h:#define IO_SPACE_LIMIT	0xffffffff
-arch/frv/include/asm/io.h:#define IO_SPACE_LIMIT	0xffffffff
-arch/ia64/include/asm/io.h:#define IO_SPACE_LIMIT		0xffffffffffffffffUL
-arch/m32r/include/asm/io.h:#define IO_SPACE_LIMIT  0xFFFFFFFF
-arch/m68k/include/asm/io_no.h:#define IO_SPACE_LIMIT 0xffffffff
-arch/microblaze/include/asm/io.h:#define IO_SPACE_LIMIT (0xFFFFFFFF)
-arch/mn10300/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
-arch/sh/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
-arch/sparc/include/asm/io_32.h:#define IO_SPACE_LIMIT 0xffffffff
-arch/sparc/include/asm/io_64.h:#define IO_SPACE_LIMIT 0xffffffffffffffffUL
-arch/tile/include/asm/io.h:#define IO_SPACE_LIMIT 0xffffffff
-
-
-> 
-> I did not ask to treat 'do nothing with the IO range' as an error,
-> what I meant is that we should treat 'architecture cannot translate
-> from I/O space to memory space but DT lists a translation anyway'
-> as an error. On x86, you should never see an entry for the I/O space
-> in "ranges", so we will not call this function unless there is a
-> bug in DT.
-
-Ok, it's just that there is no "architecture cannot translate from I/O
-space to memory space" indicator anywhere and I don't want to make x86
-a special case.
-
-So, my proposal is this: default weak implementation of pci_register_io_range()
-returns an error (meaning I have no idea how to translate IO addresses
-to memory space) and anyone that wants this function to return success will
-have to provide their implementation.
-
-I will send an updated series.
+Thanks for reviewing these patches, I will make the change for the next version.
 
 Best regards,
 Liviu
 
 > 
-> 	Arnd
+> Best regards,
+> Jingoo Han
+> 
+> > 
+> > > +	}
+> > > +
+> > >  	b = pci_alloc_bus();
+> > >  	if (!b)
+> > > -		return NULL;
+> > > +		goto err_out;
+> > >
+> > >  	b->sysdata = sysdata;
+> > >  	b->ops = ops;
+> > > @@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> > >  	if (b2) {
+> > >  		/* If we already got to this bus through a different bridge, ignore it */
+> > >  		dev_dbg(&b2->dev, "bus already known\n");
+> > > -		goto err_out;
+> > > +		goto err_bus_out;
+> > >  	}
+> > >
+> > > -	bridge = pci_alloc_host_bridge(b);
+> > > -	if (!bridge)
+> > > -		goto err_out;
+> > > -
+> > > -	bridge->dev.parent = parent;
+> > > -	bridge->dev.release = pci_release_host_bridge_dev;
+> > > +	bridge->bus = b;
+> > >  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> > > -	error = pcibios_root_bridge_prepare(bridge);
+> > > -	if (error) {
+> > > -		kfree(bridge);
+> > > -		goto err_out;
+> > > -	}
+> > > -
+> > >  	error = device_register(&bridge->dev);
+> > >  	if (error) {
+> > >  		put_device(&bridge->dev);
+> > > -		goto err_out;
+> > > +		goto err_bus_out;
+> > >  	}
+> > >  	b->bridge = get_device(&bridge->dev);
+> > >  	device_enable_async_suspend(b->bridge);
+> > > @@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> > >  class_dev_reg_err:
+> > >  	put_device(&bridge->dev);
+> > >  	device_unregister(&bridge->dev);
+> > > -err_out:
+> > > +err_bus_out:
+> > >  	kfree(b);
+> > > +err_out:
+> > > +	kfree(bridge);
+> > >  	return NULL;
+> > >  }
+> > >
+> > >
 > 
 > 
 
