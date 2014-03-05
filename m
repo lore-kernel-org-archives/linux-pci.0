@@ -1,63 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:59003 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbaC1QxH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Mar 2014 12:53:07 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Sean Cross <xobs@kosagi.com>, Marek Vasut <marex@denx.de>,
-	Richard Zhu <r65037@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from avon.wwwdotorg.org ([70.85.31.133]:43163 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931AbaCEVzp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 16:55:45 -0500
+Message-ID: <53179D5D.4070303@wwwdotorg.org>
+Date: Wed, 05 Mar 2014 14:55:41 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 	Jingoo Han <jg1.han@samsung.com>,
+	Simon Horman <horms@verge.net.au>,
 	Shawn Guo <shawn.guo@linaro.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de
-Subject: [PATCH 3/8] ARM: dts: imx6: update pcie to bring in line with new binding
-Date: Fri, 28 Mar 2014 17:52:54 +0100
-Message-Id: <1396025579-14344-4-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
-References: <1396025579-14344-1-git-send-email-l.stach@pengutronix.de>
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Subject: Re: [PATCH v2 1/6] ARM: dts: tegra: add PCIe interrupt mapping properties
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de> <1394025951-32438-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1394025951-32438-2-git-send-email-l.stach@pengutronix.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The new bindings drops one clock, renames the others and
-drops the old interrupt mapping.
+On 03/05/2014 06:25 AM, Lucas Stach wrote:
+> Those are defined by the common PCI binding.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- arch/arm/boot/dts/imx6qdl.dtsi | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
-index c1c06d25decc..1ea1adb6d8c6 100644
---- a/arch/arm/boot/dts/imx6qdl.dtsi
-+++ b/arch/arm/boot/dts/imx6qdl.dtsi
-@@ -128,15 +128,16 @@
- 				  0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
- 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
--			interrupts = <0 123 0x04>;
-+			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi";
- 			#interrupt-cells = <1>;
- 			interrupt-map-mask = <0 0 0 0x7>;
- 			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
- 			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
- 			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
- 			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
--			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
--			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
-+			clocks = <&clks 144>, <&clks 206>, <&clks 189>;
-+			clock-names = "pcie", "pcie_bus", "pcie_phy";
- 			status = "disabled";
- 		};
- 
--- 
-1.9.0
-
+It sounds like there's no dependency between pathces 1/6 and 2/6, so I
+should apply 1/6 to the Tegra tree, and Bjorn apply 2/6 to the PCI tree?
