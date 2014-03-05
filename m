@@ -1,161 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:43761 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752729AbaCaF0e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 01:26:34 -0400
-From: Mohit KUMAR DCG <Mohit.KUMAR@st.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Nicholson <mark@nicholnet.com>,
-	"Arnd Bergmann (arnd@arndb.de)" <arnd@arndb.de>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Mon, 31 Mar 2014 13:25:53 +0800
-Subject: RE: [PATCH V7 00/10] PCI: Add SPEAr13xx PCie support
-Message-ID: <2CC2A0A4A178534D93D5159BF3BCB66189FEB131C4@EAPEX1MAIL1.st.com>
-References: <cover.1393568715.git.mohit.kumar@st.com>
- <2CC2A0A4A178534D93D5159BF3BCB66189FEB12EE3@EAPEX1MAIL1.st.com>
- <CAErSpo6vAdXV+ObZNySiQjs-x3_TxEiYLG2ZPscmHVGVspE55w@mail.gmail.com>
- <CAAxdfz_pJ3HbKTQmAyFSM1Z+hu=31OOdQCdvdd3Nu_rpr_vC7g@mail.gmail.com>
- <CAErSpo4pr5GC65pphxDUJGfep+yY06C8+RBmhygJPPQ7O5CD_g@mail.gmail.com>
-In-Reply-To: <CAErSpo4pr5GC65pphxDUJGfep+yY06C8+RBmhygJPPQ7O5CD_g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from service87.mimecast.com ([91.220.42.44]:43204 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754832AbaCELk7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 06:40:59 -0500
+Date: Wed, 5 Mar 2014 11:40:54 +0000
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Tanmay Inamdar <tinamdar@apm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v5 0/7] [RFC] Support for creating generic host_bridge
+ from device tree
+Message-ID: <20140305114054.GG1692@e106497-lin.cambridge.arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+ <CACoXjcmmbVsmvy46NhjFoBg8mRO=APiY3dZZY=ra-Ceib9Sr4A@mail.gmail.com>
 MIME-Version: 1.0
+In-Reply-To: <CACoXjcmmbVsmvy46NhjFoBg8mRO=APiY3dZZY=ra-Ceib9Sr4A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gQXJuZCwNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9y
-biBIZWxnYWFzIFttYWlsdG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gU2VudDogRnJpZGF5LCBN
-YXJjaCAyOCwgMjAxNCA5OjU2IFBNDQo+IFRvOiBNYXJrIE5pY2hvbHNvbg0KPiBDYzogTW9oaXQg
-S1VNQVIgRENHOyBBcm5kIEJlcmdtYW5uIChhcm5kQGFybmRiLmRlKTsgQmFydGxvbWllag0KPiBa
-b2xuaWVya2lld2ljeg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFY3IDAwLzEwXSBQQ0k6IEFkZCBT
-UEVBcjEzeHggUENpZSBzdXBwb3J0DQo+IA0KPiBOb3QgZnJvbSBtZS4gIEl0IHNob3VsZCBiZSBp
-biBwYXRjaHdvcmsNCj4gKGh0dHA6Ly9wYXRjaHdvcmsub3psYWJzLm9yZy9wcm9qZWN0L2xpbnV4
-LXBjaS9saXN0LyksIHdoZXJlIHlvdSBjYW4NCj4gZG93bmxvYWQgcGF0Y2hlcyBhbmQgYXBwbHkg
-bWFudWFsbHkuDQo+IA0KPiBJZiBpdCdzICpub3QqIGluIHBhdGNod29yaywgaXQgbWVhbnMgSSBk
-aXNjYXJkZWQgaXQgZm9yIHNvbWUgcmVhc29uDQo+IChzdXBlcnNlZGVkLCBjaGFuZ2VzIHJlcXVl
-c3RlZCwgaXQgd2Fzbid0IHNlbnQgdG8gbGludXgtcGNpLCBldGMuLCBhbmQgeW91DQo+IHNob3Vs
-ZCByZXNlbmQgaXQgc28gSSdsbCByZW1lbWJlciB0byBsb29rIGF0IGl0Lg0KPiANCi0gWWVzLCBJ
-IGNhbiBmaW5kIFBDSWUgc3BlY2lmaWMgcGF0Y2gjOCwxMCBoZXJlLiBJIHRoaW5rIHJlc3Qgb2Yg
-dGhlIA0KcGF0Y2hlcyBzaG91bGQgYmUgY29taW5nIHRocm91Z2ggeW91ciB0cmVlLg0KDQpSZWdh
-cmRzDQpNb2hpdA0KDQo+IE9uIEZyaSwgTWFyIDI4LCAyMDE0IGF0IDEwOjIxIEFNLCBNYXJrIE5p
-Y2hvbHNvbiA8bWFya0BuaWNob2xuZXQuY29tPg0KPiB3cm90ZToNCj4gPiBHcmVhdCEgIEluIHRo
-ZSBtZWFuIHRpbWUsIGlzIHRoZXJlIGEgcGxhY2UgdG8gZG93bmxvYWQgdGhlIHBhdGNoc2V0Pw0K
-PiA+DQo+ID4gVGhhbmtzIQ0KPiA+IH5NYXJrDQo+ID4NCj4gPg0KPiA+DQo+ID4gT24gRnJpLCBN
-YXIgMjgsIDIwMTQgYXQgNzo1MyBBTSwgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNv
-bT4NCj4gd3JvdGU6DQo+ID4+DQo+ID4+IE9uIFRodSwgTWFyIDI3LCAyMDE0IGF0IDEwOjM3IFBN
-LCBNb2hpdCBLVU1BUiBEQ0cNCj4gPj4gPE1vaGl0LktVTUFSQHN0LmNvbT4NCj4gPj4gd3JvdGU6
-DQo+ID4+ID4gR2VudGxlIFJlbWluZGVyISENCj4gPj4gPg0KPiA+PiA+IEhlbGxvIEJqb3JuLA0K
-PiA+PiA+DQo+ID4+ID4gSSBhbSBnZXR0aW5nIG11bHRpcGxlIHF1ZXJpZXMgb24gdGhlIGF2YWls
-YWJpbGl0eSBvZiB0aGVzZSBwYXRjaGVzKENDKS4NCj4gPj4gPiBDb3VsZCB5b3UgcGxzIHBpY2sg
-dXAgdGhpcyBzZXJpZXMgYXQgbGVhc3QgZm9yIHlvdXIgdHJlZS4NCj4gPj4NCj4gPj4gSSdsbCBz
-dGFydCBtZXJnaW5nIHRoaW5ncyBmb3IgdjMuMTYgbmV4dCB3ZWVrIGFmdGVyIHYzLjE0IGlzIHJl
-bGVhc2VkLg0KPiA+PiAgRG9uJ3Qgd29ycnksIGl0J3Mgbm90IGZvcmdvdHRlbiA6KQ0KPiA+Pg0K
-PiA+PiBCam9ybg0KPiA+Pg0KPiA+PiA+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+
-PiA+PiBGcm9tOiBNb2hpdCBLVU1BUiBEQ0cNCj4gPj4gPj4gU2VudDogRnJpZGF5LCBGZWJydWFy
-eSAyOCwgMjAxNCA1OjI1IFBNDQo+ID4+ID4+IFRvOiBhcm5kQGFybmRiLmRlDQo+ID4+ID4+IENj
-OiBNb2hpdCBLVU1BUiBEQ0cNCj4gPj4gPj4gU3ViamVjdDogW1BBVENIIFY3IDAwLzEwXSBQQ0k6
-IEFkZCBTUEVBcjEzeHggUENpZSBzdXBwb3J0DQo+ID4+ID4+DQo+ID4+ID4+IFBhdGNoIyAxIGFu
-ZCAyOiBJbXByb3ZlbWVudCBhbmQgZml4ZXMgZm9yIFNQRUFyMTN4eCBzdXBwb3J0Lg0KPiA+PiA+
-PiBQYXRjaCMgMyw0IGFuZCA2OiBBZGQgRFQgYmluZGluZ3MgZm9yIHNwZWFyMTMxMC80MC1taXBo
-eSwgbWlzYyBhbmQNCj4gPj4gPj4gcGNpZSBub2RlIFBhdGNoIyA1OiBBZGQgc3BlYXIxMzEwLzQw
-LW1pcGh5IGRyaXZlciBhbmQgc3VwcG9ydCBmb3INCj4gPj4gPj4gc3BlYXIxMzEwLzQwDQo+ID4+
-ID4+IG1pcGh5IHdyYXBwZXIuDQo+ID4+ID4+IFBhdGNoIyA3LTk6IEFkZCBTUEVBcjEzeHggUENJ
-ZSBkcml2ZXIgYW5kIGR0IHN1cHBvcnQuDQo+ID4+ID4+DQo+ID4+ID4+IFRoZXNlIHBhdGhlcyBh
-cmUgdGVzdGVkIHdpdGggbGludXgtMy4xNC1yYzEgd2l0aCBmb2xsb3dpbmcgcGF0Y2gNCj4gPj4g
-Pj4gb24gdGhlIHRvcCBvZg0KPiA+PiA+PiBpdDoNCj4gPj4gPj4gQXV0aG9yOiBCYWxhamkgVCBL
-IDxiYWxhaml0a0B0aS5jb20+DQo+ID4+ID4+IERhdGU6ICAgTW9uIEphbiAyMCAxNjo0MToyNyAy
-MDE0ICswMjAwDQo+ID4+ID4+DQo+ID4+ID4+ICAgICBhdGE6IGFoY2lfcGxhdGZvcm06IE1hbmFn
-ZSBTQVRBIFBIWQ0KPiA+PiA+Pg0KPiA+PiA+PiBUZXN0ZWQgd2l0aCBTUEVBcjEzMTAgZXZhbHVh
-dGlvbiBib2FyZDoNCj4gPj4gPj4gICAgICAgLSBJTlRFTCBQUk8gMTAwLzEwMCBFUCBjYXJkDQo+
-ID4+ID4+ICAgICAgIC0gVVNCIHhoY2kgZ2VuMiBjYXJkDQo+ID4+ID4+ICAgICAgIC0gQWJvdmUg
-Y2FyZHMgY29ubmVjdGVkIHRocm91Z2ggTGVDUk9ZIFBUQyBzd2l0Y2gNCj4gPj4gPj4NCj4gPj4g
-Pj4gTW9kaWZpY2F0aW9ucyBmb3IgU0FUQSBhcmUgdGVzdGVkIHdpdGggU1BFQXIxMzQwLWV2YiBi
-b2FyZA0KPiA+PiA+Pg0KPiA+PiA+PiBDaGFuZ2VzIHNpbmNlIHY2Og0KPiA+PiA+PiAtIFNwbGl0
-IG1pcGh5IGRyaXZlciBmb3IgU1BFQXIxMzEwIGFuZCBTUEVBcjEzNDANCj4gPj4gPj4gLSBTb21l
-IGNsZWFudXAgYW5kIGluY29ycG9yYXRlZCBvdGhlciBtaW5vciBjb21tZW50cyBDaGFuZ2VzDQo+
-IHNpbmNlIHY1Og0KPiA+PiA+PiAtIFNwbGl0IERUIGJpbmRpbmdzIGZvciBtaXNjLCBtaXBoeS00
-MGxwIGFuZCBwY2llIG5vZGUgaW50bw0KPiA+PiA+PiBzZXBlYXJ0ZSBwYXRjaGVzDQo+ID4+ID4+
-IC0gTWVyZ2UgY29uZmlnIG9wdGlvbnMgUENJRV9TUEVBUjEzWFggYW5kIFBDSV9NU0kgaW50byBk
-ZWZjb25maWcNCj4gPj4gPj4gcGF0Y2gNCj4gPj4gPj4gLSBJbmNvcnBvcmF0ZWQgb3RoZXIgbWlu
-b3IgY29tbWVudHMgQ2hhbmdlcyBzaW5jZSB2NDoNCj4gPj4gPj4gLSBVc2VzIHBlciBkZXZpY2Ug
-ZnVuY3Rpb24gcG9pbnRlcnMgcGFzc2VkIGZyb20gLmRhdGEgZmllbGQgdG8NCj4gPj4gPj4gICB0
-aGUgb2ZfZGV2aWNlX2lkIGluc3RlYWQgb2Ygb2ZfZGV2aWNlX2lzX2NvbXBhdGlibGUuDQo+ID4+
-ID4+IC0gSW5jb3Jwb3JhdGVkIG90aGVyIG1pbm9yIGNvbW1lbnRzIGZyb20gdjQNCj4gPj4gPj4N
-Cj4gPj4gPj4gQ2hhbmdlcyBzaW5jZSB2MzoNCj4gPj4gPj4gLSBQaHkgZHJpdmVyIHJlbmFtZWQg
-dG8gcGh5LW1pcGh5NDBscA0KPiA+PiA+PiAtIGFoY2kgcGh5IGhvb2sgcGF0Y2ggdXNlZCBhcyBz
-dWdnZXN0ZWQgYnkgQXJuZA0KPiA+PiA+PiAtIEluY29ycG9yYXRlZCBvdGhlciBtaW5vciBjb21t
-ZW50cyBmcm9tIHYzDQo+ID4+ID4+DQo+ID4+ID4+IENoYW5nZXMgc2luY2UgdjI6DQo+ID4+ID4+
-IC0gSW5jb3Jwb3JhdGVkIGNvbW1lbnRzIHRvIG1vdmUgU1BFQXIxM3h4IFBDSWUgYW5kIFNBVEEg
-cGh5DQo+ID4+ID4+IHNwZWNpZmljIHJvdXRpbmVzIHRvDQo+ID4+ID4+ICAgdGhlIHBoeSBmcmFt
-ZXdvcmsNCj4gPj4gPj4gLSBNb2RpZnkgYWhjaSBkcml2ZXIgdG8gaW5jbHVkZSBwaHkgaG9va3MN
-Cj4gPj4gPj4gLSBwaHktY29yZSBkcml2ZXIgbW9kaWZpY2F0aW9ucyBmb3Igc3Vic3lzX2luaXRj
-YWxsKCkNCj4gPj4gPj4NCj4gPj4gPj4gQ2hhbmdlcyBzaW5jZSB2MToNCj4gPj4gPj4gLSBGZXcg
-cGF0Y2hlcyBvZiB0aGUgc2VyaWVzIGFyZSBhbHJlYWR5IGFjY2VwdGVkIGFuZCBhcHBsaWVkIHRv
-DQo+ID4+ID4+IG1haW5saW5lIGUuZy4NCj4gPj4gPj4gIHBjaWUgZGVzaWdud2FyZSBkcml2ZXIg
-aW1wcm92ZW1lbnRzLGZpeGVzIGZvciBJTyB0cmFuc2xhdGlvbiBidWcsDQo+ID4+ID4+IFBDSWUg
-ZHcgZHJpdmVyIG1haW50YWluZXIuIFNvIGRyb3BwZWQgdGhlc2UgZnJvbSB2Mi4NCj4gPj4gPj4g
-LSBJbmNvcnBvcmF0ZWQgY29tbWVudCB0byBtb3ZlIHRoZSBjb21tb24vcmVzZXQgUENJZSBjb2Rl
-IHRvIHRoZQ0KPiA+PiA+PiBzZXBlcmF0ZSBkcml2ZXINCj4gPj4gPj4gLSBQQ0llIGFuZCBTQVRB
-IHNoYXJlIGNvbW1vbiBQSFkgY29uZmlndXJhdGlvbiByZWdpc3RlcnMsIHNvIG1vdmUNCj4gPj4g
-Pj4gU0FUQSBwbGF0Zm9ybSBjb2RlIHRvIHRoZSBzeXN0ZW0gY29uZmlnIGRyaXZlciBGb3VydGgg
-cGF0Y2ggaXMNCj4gPj4gPj4gaW1wcm92ZXMgcGNpZSBkZXNpZ253YXJlIGRyaXZlciBhbmQgZml4
-ZXMgdGhlIElPIHRyYW5zbGF0aW9uIGJ1Zy4NCj4gPj4gPj4gSU8gdHJhbnNsYXRpb24gYnVnIGZp
-eCBsZWFkcyB0byB0aGUgd29ya2luZyBvZiBQQ0llIEVQIGRldmljZXMNCj4gPj4gPj4gY29ubmVj
-dGVkIHRvIFJDIHRocm91Z2ggc3dpdGNoLg0KPiA+PiA+Pg0KPiA+PiA+PiBNb2hpdCBLdW1hciAo
-Mik6DQo+ID4+ID4+ICAgU1BFQXIxM3h4OiBkZWZjb25maWc6IFVwZGF0ZQ0KPiA+PiA+PiAgIE1B
-SU5UQUlORVJTOiBBZGQgU1QgU1BFQXIxM3h4IFBDSWUgZHJpdmVyIG1haW50YWluZXINCj4gPj4g
-Pj4NCj4gPj4gPj4gUHJhdHl1c2ggQW5hbmQgKDgpOg0KPiA+PiA+PiAgIGNsazogU1BFQXIxM1hY
-OiBGaXggcGNpZSBjbG9jayBuYW1lDQo+ID4+ID4+ICAgU1BFQXIxM1hYOiBGaXggc3RhdGljIG1h
-cHBpbmcgdGFibGUNCj4gPj4gPj4gICBwaHk6IFNQRUFyMTMxMC80MC1taXBoeTogQWRkIGJpbmRp
-bmcgaW5mb3JtYXRpb24NCj4gPj4gPj4gICBTUEVBcjogbWlzYzogQWRkIGJpbmRpbmcgaW5mb3Jt
-YXRpb24NCj4gPj4gPj4gICBwaHk6IFNQRUFyMTMxMC80MC1taXBoeTogQWRkIHBoeSBkcml2ZXIg
-Zm9yIFBDSWUgYW5kIFNBVEENCj4gPj4gPj4gICBTUEVBcjEzWFg6IEFkZCBiaW5kaW5nIGluZm9y
-bWF0aW9uIGZvciBQQ0llIGNvbnRyb2xsZXINCj4gPj4gPj4gICBTUEVBcjEzWFg6IGR0czogQWRk
-IFBDSWUgbm9kZSBpbmZvcm1hdGlvbg0KPiA+PiA+PiAgIHBjaWU6IFNQRUFyMTN4eDogQWRkIGRl
-c2lnbndhcmUgd3JhcHBlciBzdXBwb3J0DQo+ID4+ID4+DQo+ID4+ID4+ICAuLi4vZGV2aWNldHJl
-ZS9iaW5kaW5ncy9hcm0vc3BlYXItbWlzYy50eHQgICAgICAgICB8ICAgIDkgKw0KPiA+PiA+PiAg
-Li4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3NwZWFyMTN4eC1wY2llLnR4dCAgICAgfCAgIDE0
-ICsNCj4gPj4gPj4gIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS9zdC1zcGVhcjEzMTAtbWlw
-aHkudHh0IHwgICAxMiArDQo+ID4+ID4+ICAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvc3Qt
-c3BlYXIxMzQwLW1pcGh5LnR4dCB8ICAgMTEgKw0KPiA+PiA+PiAgTUFJTlRBSU5FUlMgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICA2ICsNCj4gPj4gPj4gIGFyY2gv
-YXJtL2Jvb3QvZHRzL3NwZWFyMTMxMC1ldmIuZHRzICAgICAgICAgICAgICAgIHwgICAgNCArDQo+
-ID4+ID4+ICBhcmNoL2FybS9ib290L2R0cy9zcGVhcjEzMTAuZHRzaSAgICAgICAgICAgICAgICAg
-ICB8ICAgOTMgKysrKystDQo+ID4+ID4+ICBhcmNoL2FybS9ib290L2R0cy9zcGVhcjEzNDAtZXZi
-LmR0cyAgICAgICAgICAgICAgICB8ICAgIDQgKw0KPiA+PiA+PiAgYXJjaC9hcm0vYm9vdC9kdHMv
-c3BlYXIxMzQwLmR0c2kgICAgICAgICAgICAgICAgICAgfCAgIDMwICsrLQ0KPiA+PiA+PiAgYXJj
-aC9hcm0vYm9vdC9kdHMvc3BlYXIxM3h4LmR0c2kgICAgICAgICAgICAgICAgICAgfCAgICA5ICst
-DQo+ID4+ID4+ICBhcmNoL2FybS9jb25maWdzL3NwZWFyMTN4eF9kZWZjb25maWcgICAgICAgICAg
-ICAgICB8ICAgMTYgKw0KPiA+PiA+PiAgYXJjaC9hcm0vbWFjaC1zcGVhci9LY29uZmlnICAgICAg
-ICAgICAgICAgICAgICAgICAgfCAgICA0ICsNCj4gPj4gPj4gIGFyY2gvYXJtL21hY2gtc3BlYXIv
-aW5jbHVkZS9tYWNoL3NwZWFyLmggICAgICAgICAgIHwgICAgNCArLQ0KPiA+PiA+PiAgYXJjaC9h
-cm0vbWFjaC1zcGVhci9zcGVhcjEzNDAuYyAgICAgICAgICAgICAgICAgICAgfCAgMTI3ICstLS0t
-LS0NCj4gPj4gPj4gIGFyY2gvYXJtL21hY2gtc3BlYXIvc3BlYXIxM3h4LmMgICAgICAgICAgICAg
-ICAgICAgIHwgICAgMiArLQ0KPiA+PiA+PiAgZHJpdmVycy9jbGsvc3BlYXIvc3BlYXIxMzEwX2Ns
-b2NrLmMgICAgICAgICAgICAgICAgfCAgICA2ICstDQo+ID4+ID4+ICBkcml2ZXJzL2Nsay9zcGVh
-ci9zcGVhcjEzNDBfY2xvY2suYyAgICAgICAgICAgICAgICB8ICAgIDIgKy0NCj4gPj4gPj4gIGRy
-aXZlcnMvcGNpL2hvc3QvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgOCAr
-DQo+ID4+ID4+ICBkcml2ZXJzL3BjaS9ob3N0L01ha2VmaWxlICAgICAgICAgICAgICAgICAgICAg
-ICAgICB8ICAgIDEgKw0KPiA+PiA+PiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLXNwZWFyMTN4eC5j
-ICAgICAgICAgICAgICAgICAgfCAgNDE0DQo+ID4+ID4+ICsrKysrKysrKysrKysrKysrKysrDQo+
-ID4+ID4+ICBkcml2ZXJzL3BoeS9LY29uZmlnICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICB8ICAgMTIgKw0KPiA+PiA+PiAgZHJpdmVycy9waHkvTWFrZWZpbGUgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgfCAgICAyICsNCj4gPj4gPj4gIGRyaXZlcnMvcGh5L3BoeS1zcGVhcjEz
-MTAtbWlwaHkuYyAgICAgICAgICAgICAgICAgIHwgIDI3NA0KPiA+PiA+PiArKysrKysrKysrKysr
-DQo+ID4+ID4+ICBkcml2ZXJzL3BoeS9waHktc3BlYXIxMzQwLW1pcGh5LmMgICAgICAgICAgICAg
-ICAgICB8ICAzMDANCj4gPj4gPj4gKysrKysrKysrKysrKysNCj4gPj4gPj4gIDI0IGZpbGVzIGNo
-YW5nZWQsIDEyMjUgaW5zZXJ0aW9ucygrKSwgMTM5IGRlbGV0aW9ucygtKSAgY3JlYXRlDQo+ID4+
-ID4+IG1vZGUNCj4gPj4gPj4gMTAwNjQ0DQo+ID4+ID4+IERvY3VtZW50YXRpb24vZGV2aWNldHJl
-ZS9iaW5kaW5ncy9hcm0vc3BlYXItbWlzYy50eHQNCj4gPj4gPj4gIGNyZWF0ZSBtb2RlIDEwMDY0
-NA0KPiA+PiA+PiBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3NwZWFyMTN4
-eC0NCj4gPj4gPj4gcGNpZS50eHQNCj4gPj4gPj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVu
-dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGh5L3N0LQ0KPiA+PiA+PiBzcGVhcjEzMTAtbWlw
-aHkudHh0DQo+ID4+ID4+ICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0
-cmVlL2JpbmRpbmdzL3BoeS9zdC0NCj4gPj4gPj4gc3BlYXIxMzQwLW1pcGh5LnR4dA0KPiA+PiA+
-PiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1zcGVhcjEzeHguYyAg
-Y3JlYXRlIG1vZGUNCj4gPj4gPj4gMTAwNjQ0DQo+ID4+ID4+IGRyaXZlcnMvcGh5L3BoeS1zcGVh
-cjEzMTAtbWlwaHkuYyAgY3JlYXRlIG1vZGUgMTAwNjQ0DQo+ID4+ID4+IGRyaXZlcnMvcGh5L3Bo
-eS0gc3BlYXIxMzQwLW1pcGh5LmMNCj4gPj4gPg0KPiA+DQo+ID4NCg==
+On Wed, Mar 05, 2014 at 01:53:55AM +0000, Tanmay Inamdar wrote:
+> Hello,
+> 
+> Thanks for the patch set.
+> 
+> On Tue, Mar 4, 2014 at 7:49 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> > This is v5 of my attempt to add support for a generic pci_host_bridge controller created
+> > from a description passed in the device tree.
+> >
+> > Changes from v4:
+> >   - Export pci_find_host_bridge() to be used by arch code. There is scope for
+> >     making the arch/arm64 version of pci_domain_nr the default weak implementation
+> >     but that would double the size of this series in order to handle all #define
+> >     versions of the pci_domain_nr() function, so I suggest keeping that for a separate
+> >     cleanup series.
+> >
+> > Changes from v3:
+> >   - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
+> >   - Fix the domain number used when creating child busses.
+> >   - Changed domain number allocator to use atomic operations.
+> >   - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
+> >     and of_create_pci_host_bridge().
+> >
+> > Changes from v2:
+> >   - Use range->cpu_addr when calling pci_address_to_pio()
+> >   - Introduce pci_register_io_range() helper function in order to register
+> >     io ranges ahead of their conversion to PIO values. This is needed as no
+> >     information is being stored yet regarding the range mapping, making
+> >     pci_address_to_pio() fail. Default weak implementation does nothing,
+> >     to cover the default weak implementation of pci_address_to_pio() that
+> >     expects direct mapping of physical addresses into PIO values (x86 view).
+> >
+> > Changes from v1:
+> >   - Add patch to fix conversion of IO ranges into IO resources.
+> >   - Added a domain_nr member to pci_host_bridge structure, and a new function
+> >     to create a root bus in a given domain number. In order to facilitate that
+> >     I propose changing the order of initialisation between pci_host_bridge and
+> >     it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
+> >     This is done in patch 1/4 and 2/4.
+> >   - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
+> >     code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
+> >     and if that fails assign the next unallocated domain id.
+> >   - Changed the name of the function that creates the generic host bridge from
+> >     pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
+> >
+> >
+> > v4 thread here: https://lkml.org/lkml/2014/3/3/301
+> > v3 thread here: https://lkml.org/lkml/2014/2/28/216
+> > v2 thread here: https://lkml.org/lkml/2014/2/27/245
+> > v1 thread here: https://lkml.org/lkml/2014/2/3/380
+> >
+> > Best regards,
+> > Liviu
+> >
+> > Liviu Dudau (7):
+> >   pci: Introduce pci_register_io_range() helper function.
+> >   pci: OF: Fix the conversion of IO ranges into IO resources.
+> >   pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+> >   pci: Introduce a domain number for pci_host_bridge.
+> >   pci: Use parent domain number when allocating child busses.
+> >   pci: Export find_pci_host_bridge() function.
+> >   pci: Add support for creating a generic host_bridge from device tree
+> >
+> >  drivers/of/address.c       |  39 +++++++++++++
+> >  drivers/pci/host-bridge.c  | 142 ++++++++++++++++++++++++++++++++++++++++++++-
+> >  drivers/pci/probe.c        |  72 +++++++++++++++--------
+> >  include/linux/of_address.h |  14 +----
+> >  include/linux/pci.h        |  17 ++++++
+> >  5 files changed, 248 insertions(+), 36 deletions(-)
+> >
+> > --
+> > 1.9.0
+> >
+> 
+> This series is working fine on X-Gene with multiple PCIe ports. You
+> can add my Tested-by if you want.
+
+What about the arm64 series, can I add a Tested-by to that one as well?
+
+Thanks,
+Liviu
+
+> 
+> Thanks,
+> Tanmay
+> 
+
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
+
