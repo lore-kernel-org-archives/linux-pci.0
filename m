@@ -1,92 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <532AA3F6.9090402@intel.com>
-References: <20140224162400.GE16457@pd.tnic>
-	<4205942.Tp8ltEsv6e@vostro.rjw.lan>
-	<532A514C.5010106@intel.com>
-	<744357E9AAD1214791ACBA4B0B9092630121F201@SHSMSX101.ccr.corp.intel.com>
-	<CABPqkBTyti0owCA_cWf9GcvYnOSvbMQpRC29rgpicjW1iYBjYQ@mail.gmail.com>
-	<744357E9AAD1214791ACBA4B0B9092630121F3B7@SHSMSX101.ccr.corp.intel.com>
-	<532AA3F6.9090402@intel.com>
-Date: Thu, 20 Mar 2014 17:03:34 +0100
-Message-ID: <CABPqkBT4xmF-0Z_zk++KEtDzV7Z4zbisdG4uH7WKqw+kNF_nCA@mail.gmail.com>
-Subject: Re: Info: mapping multiple BARs. Your kernel is fine.
-From: Stephane Eranian <eranian@google.com>
-To: "Yan, Zheng" <zheng.z.yan@intel.com>
-Cc: "Zhang, Rui" <rui.zhang@intel.com>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Borislav Petkov <bp@alien8.de>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 5 Mar 2014 08:48:04 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: Re: [Patch Part2 V2 00/17] Enhance DMAR drivers to handle PCI/memory
+ hotplug events
+Message-ID: <20140305074804.GE27471@8bytes.org>
+References: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1392790057-32434-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 20, 2014 at 9:16 AM, Yan, Zheng <zheng.z.yan@intel.com> wrote:
-> On 03/20/2014 03:53 PM, Zhang, Rui wrote:
->> The resource length is also hardcoded to 0x6000, right?
->> This is probably a problem, because
->> only if the resource length read from PCI config space is larger than 0x4000,
->> drivers/pnp/quirks.c will detect the conflict and disable the PNP0C02
->> resource 0xfed10000 - 0xfed13fff, and the PCI device can request this
->> resource successfully.
->> In order to check this, can you please attach the dmesg output after boot?
->
-> maybe the issue can be fixed by below untested patch
->
-> ---
-> diff --git a/arch/x86/kernel/cpu/perf_event_intel_uncore.c b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-> index fd5e883..2b3d834 100644
-> --- a/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-> +++ b/arch/x86/kernel/cpu/perf_event_intel_uncore.c
-> @@ -1701,7 +1701,7 @@ static struct uncore_event_desc snb_uncore_imc_events[] = {
->  #define SNB_UNCORE_PCI_IMC_BAR_OFFSET          0x48
->
->  /* page size multiple covering all config regs */
-> -#define SNB_UNCORE_PCI_IMC_MAP_SIZE            0x6000
-> +#define SNB_UNCORE_PCI_IMC_MAP_SIZE            0x8
->
-I assume ioremap() works on page boundaries.
-Eventually want to expose the other counters too, not just read and
-writes ( 8 bytes total).
+On Wed, Feb 19, 2014 at 02:07:20PM +0800, Jiang Liu wrote:
+> Jiang Liu (17):
+>   iommu/vt-d: avoid double free of g_iommus on error recovery path
+>   iommu/vt-d: avoid caching stale domain_device_info and fix memory
+>     leak
+>   iommu/vt-d: avoid caching stale domain_device_info when hot-removing
+>     PCI device
+>   iommu/vt-d: factor out dmar_alloc_dev_scope() for later reuse
+>   iommu/vt-d: move private structures and variables into intel-iommu.c
+>   iommu/vt-d: simplify function get_domain_for_dev()
+>   iommu/vt-d: free resources if failed to create domain for PCIe
+>     endpoint
+>   iommu/vt-d: reduce duplicated code to handle virtual machine domains
+>   iommu/vt-d: fix incorrect iommu_count for si_domain
+>   iommu/vt-d: check for NULL pointer when freeing IOMMU data structure
+>   iommu/vt-d: fix error in detect ATS capability
+>   iommu/vt-d: introduce macro for_each_dev_scope() to walk device scope
+>     entries
+>   iommu/vt-d: introduce a rwsem to protect global data structures
+>   iommu/vt-d: use RCU to protect global resources in interrupt context
+>   iommu/vt-d, PCI: update DRHD/RMRR/ATSR device scope caches when PCI
+>     hotplug happens
+>   iommu/vt-d, PCI: unify the way to process DMAR device scope array
+>   iommu/vt-d: update IOMMU state when memory hotplug happens
+> 
+>  drivers/iommu/dmar.c                |  412 +++++++++++++------
+>  drivers/iommu/intel-iommu.c         |  750 ++++++++++++++++++-----------------
+>  drivers/iommu/intel_irq_remapping.c |  108 +++--
+>  drivers/iommu/iova.c                |   64 ++-
+>  include/linux/dmar.h                |   74 ++--
+>  include/linux/iova.h                |    2 +
+>  6 files changed, 848 insertions(+), 562 deletions(-)
 
-The size of 0x6000 comes from the counter offsets: BAR + 0x5040 to BAR + 0x5054.
-May be a better way of doing this would be to remap just the one page
-holding them
-instead of the 6 covering the entire BAR + counters. That would need
-changes in the
-read_counter() but that is okay.
-
-So that would something along the line of:
-
-    addr = (addr + 0x5040) & (PAGE_SIZE - 1);
-    ioremap(addr, 0x1000);
+Applied, thanks Jiang.
 
 
->  #define SNB_UNCORE_PCI_IMC_DATA_READS          0x1
->  #define SNB_UNCORE_PCI_IMC_DATA_READS_BASE     0x5050
-> @@ -1736,7 +1736,8 @@ static void snb_uncore_imc_init_box(struct intel_uncore_box *box)
->
->         addr &= ~(PAGE_SIZE - 1);
->
-> -       box->io_addr = ioremap(addr, SNB_UNCORE_PCI_IMC_MAP_SIZE);
-> +       box->io_addr = ioremap(addr + SNB_UNCORE_PCI_IMC_CTR_BASE,
-> +                              SNB_UNCORE_PCI_IMC_MAP_SIZE);
->         box->hrtimer_duration = UNCORE_SNB_IMC_HRTIMER_INTERVAL;
->  }
->
-> @@ -1832,7 +1833,7 @@ static int snb_uncore_imc_event_init(struct perf_event *event)
->         }
->
->         /* must be done before validate_group */
-> -       event->hw.event_base = base;
-> +       event->hw.event_base = base - SNB_UNCORE_PCI_IMC_CTR_BASE;
->         event->hw.config = cfg;
->         event->hw.idx = idx;
->
