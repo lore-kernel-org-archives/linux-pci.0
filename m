@@ -1,45 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:21937 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753583AbaCYQ4z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Mar 2014 12:56:55 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Received: from v094114.home.net.pl ([79.96.170.134]:56956 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755713AbaCEATT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 19:19:19 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
-References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1395766604-30926-9-git-send-email-phil.edworthy@renesas.com>
-Date: Tue, 25 Mar 2014 16:56:43 +0000
-Subject: [PATCH v5 8/9] ARM: koelsch: Add PCIe to defconfig
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ACPI / hotplug / PCI: Use pci_device_is_present()
+Date: Wed, 05 Mar 2014 01:34:29 +0100
+Message-ID: <4033818.pd6BkAIJKt@vostro.rjw.lan>
+In-Reply-To: <20140304082358.GV5018@intel.com>
+References: <1505390.MlpMqG8COu@vostro.rjw.lan> <20140304082358.GV5018@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
- arch/arm/configs/koelsch_defconfig | 3 +++
- 1 file changed, 3 insertions(+)
+On Tuesday, March 04, 2014 10:23:58 AM Mika Westerberg wrote:
+> On Mon, Mar 03, 2014 at 01:19:25AM +0100, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Make the ACPI-based PCI hotplug (ACPIPHP) code use
+> > pci_device_is_present() for checking if devices are present instead
+> > of open coding the same thing.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-diff --git a/arch/arm/configs/koelsch_defconfig b/arch/arm/configs/koelsch_defconfig
-index 86faab5..ec14547 100644
---- a/arch/arm/configs/koelsch_defconfig
-+++ b/arch/arm/configs/koelsch_defconfig
-@@ -15,6 +15,9 @@ CONFIG_MACH_KOELSCH=y
- CONFIG_CPU_BPREDICT_DISABLE=y
- CONFIG_PL310_ERRATA_588369=y
- CONFIG_ARM_ERRATA_754322=y
-+CONFIG_PCI=y
-+CONFIG_PCI_MSI=y
-+CONFIG_PCI_RCAR_GEN2_PCIE=y
- CONFIG_SMP=y
- CONFIG_SCHED_MC=y
- CONFIG_NR_CPUS=8
+Thanks!
+
 -- 
-1.9.0
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
