@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51640 "EHLO
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51444 "EHLO
 	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756039AbaCELtt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 06:49:49 -0500
+	by vger.kernel.org with ESMTP id S1754806AbaCELtg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 06:49:36 -0500
 From: Liviu Dudau <Liviu.Dudau@arm.com>
 To: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -15,76 +15,42 @@ Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	LAKML <linux-arm-kernel@lists.infradead.org>,
 	Tanmay Inamdar <tinamdar@apm.com>,
 	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v6 2/3] arm64: Extend the PCI I/O space to 16MB
-Date: Wed,  5 Mar 2014 11:49:09 +0000
-Message-Id: <1394020150-1875-3-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
+Subject: [PATCH v6 5/6] pci: Export find_pci_host_bridge() function.
+Date: Wed,  5 Mar 2014 11:48:56 +0000
+Message-Id: <1394020137-1830-6-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Catalin Marinas <catalin.marinas@arm.com>
+This is a useful function and we should make it visible outside the
+generic PCI code. Export it as a GPL symbol.
 
-The patch moves the PCI I/O space (currently at 64K) before the
-earlyprintk mapping and extends it to 16MB.
-
-Signed-off-by: Catalin Marinas <catalin.marinas@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- Documentation/arm64/memory.txt | 16 ++++++++++------
- arch/arm64/include/asm/io.h    |  2 +-
- 2 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/pci/host-bridge.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/arm64/memory.txt b/Documentation/arm64/memory.txt
-index 5e054bf..85e24c4 100644
---- a/Documentation/arm64/memory.txt
-+++ b/Documentation/arm64/memory.txt
-@@ -35,11 +35,13 @@ ffffffbc00000000	ffffffbdffffffff	   8GB		vmemmap
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 06ace62..8708b652 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -17,12 +17,13 @@ static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+ 	return bus;
+ }
  
- ffffffbe00000000	ffffffbffbbfffff	  ~8GB		[guard, future vmmemap]
- 
--ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
-+ffffffbffa000000	ffffffbffaffffff	  16MB		PCI I/O space
-+
-+ffffffbffb000000	ffffffbffbbfffff	  12MB		[guard]
- 
--ffffffbffbe00000	ffffffbffbe0ffff	  64KB		PCI I/O space
-+ffffffbffbc00000	ffffffbffbdfffff	   2MB		earlyprintk device
- 
--ffffffbffbe10000	ffffffbcffffffff	  ~2MB		[guard]
-+ffffffbffbe00000	ffffffbffbffffff	   2MB		[guard]
- 
- ffffffbffc000000	ffffffbfffffffff	  64MB		modules
- 
-@@ -60,11 +62,13 @@ fffffdfc00000000	fffffdfdffffffff	   8GB		vmemmap
- 
- fffffdfe00000000	fffffdfffbbfffff	  ~8GB		[guard, future vmmemap]
- 
--fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
-+fffffdfffa000000	fffffdfffaffffff	  16MB		PCI I/O space
-+
-+fffffdfffb000000	fffffdfffbbfffff	  12MB		[guard]
- 
--fffffdfffbe00000	fffffdfffbe0ffff	  64KB		PCI I/O space
-+fffffdfffbc00000	fffffdfffbdfffff	   2MB		earlyprintk device
- 
--fffffdfffbe10000	fffffdfffbffffff	  ~2MB		[guard]
-+fffffdfffbe00000	fffffdfffbffffff	   2MB		[guard]
- 
- fffffdfffc000000	fffffdffffffffff	  64MB		modules
- 
-diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-index 4cc813e..7846a6b 100644
---- a/arch/arm64/include/asm/io.h
-+++ b/arch/arm64/include/asm/io.h
-@@ -121,7 +121,7 @@ static inline u64 __raw_readq(const volatile void __iomem *addr)
-  *  I/O port access primitives.
-  */
- #define IO_SPACE_LIMIT		0xffff
--#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_2M))
-+#define PCI_IOBASE		((void __iomem *)(MODULES_VADDR - SZ_32M))
- 
- static inline u8 inb(unsigned long addr)
+-static struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
++struct pci_host_bridge *find_pci_host_bridge(struct pci_bus *bus)
  {
+ 	struct pci_bus *root_bus = find_pci_root_bus(bus);
+ 
+ 	return to_pci_host_bridge(root_bus->bridge);
+ }
++EXPORT_SYMBOL_GPL(find_pci_host_bridge);
+ 
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 				 void (*release_fn)(struct pci_host_bridge *),
 -- 
 1.9.0
 
