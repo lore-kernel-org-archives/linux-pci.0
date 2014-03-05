@@ -1,83 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:46521 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753794AbaCSWBv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Mar 2014 18:01:51 -0400
-Received: by mail-ie0-f176.google.com with SMTP id rd18so9323934iec.7
-        for <linux-pci@vger.kernel.org>; Wed, 19 Mar 2014 15:01:51 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <53169E86.1090609@huawei.com>
+Date: Wed, 5 Mar 2014 11:48:22 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV3bM087uhWc5oH6j_7AJim0ECwTZKD05JSe2R5KmuCAQ@mail.gmail.com>
-References: <1393286367-16482-1-git-send-email-yinghai@kernel.org>
- <CAErSpo4E3Kd6Vk94NQy3Nj-Hd9WFaphoXL-eCmsaQ4KvQ-fK6Q@mail.gmail.com>
- <CAE9FiQUvU=BqPXDHC+B=zC7ZGarimLDdvHsDbVL8t8qnZLJpzw@mail.gmail.com>
- <CAErSpo6vuzaKJ-qWKfwcY_MsDhSdG9NazaYzG3=tabJerUv6mw@mail.gmail.com> <CAE9FiQV3bM087uhWc5oH6j_7AJim0ECwTZKD05JSe2R5KmuCAQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Mar 2014 16:01:30 -0600
-Message-ID: <CAErSpo75LCpED6T48osUkGJ5CS7tUSEmdKye0wJZVOSb_OwnQQ@mail.gmail.com>
-Subject: Re: [PATCH] pciehp: only wait command complete for really hotplug control
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Liviu Dudau <Liviu.Dudau@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v5 3/7] pci: Create pci_host_bridge before its associated
+ bus in pci_create_root_bus.
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com> <1393948204-11555-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1393948204-11555-4-git-send-email-Liviu.Dudau@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 19, 2014 at 12:18 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Feb 25, 2014 at 9:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Mon, Feb 24, 2014 at 6:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>
->> It's quite likely that I'm mistaken, and this is not a silicon
->> problem, especially since two vendors apparently did it the same way.
->> But I'd like to see the explanation from Intel about how this complies
->> with the spec.  I provided a spec reference for why I think we should
->> wait for a command completed event.  The next step would be for you or
->> Intel to respond with "here's the section in the spec that you missed,
->> and it says the OS should not wait for an event unless it is changing
->> the EIC, PCC, PIC, or AIC bits."
->
-> Hi, Bjorn,
->
-> Intel admits that it is silicon problem.
-> CC will be set iff EIC || PCC || PIC || AIC is set.
->
-> so please me know if you want
-> 1. just use the patch in current form. it will do that for ...
-> 2. or modify the patch to check vendor to set flag for every controller, and use
-> that to decide if need to wait CC.
->
-> BTW, other OS does not check CC for other than the four bits.
+On 2014/3/4 23:50, Liviu Dudau wrote:
+> Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+> As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+> the creation order has been changed for no good reason. Revert the order of
+> creation as we are going to depend on the pci_host_bridge structure to retrieve the
+> domain number of the root bus.
+> 
+> Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6e34498..78ccba0 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+>  	kfree(bridge);
+>  }
+>  
+> -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> +static struct pci_host_bridge *pci_alloc_host_bridge(void)
+>  {
+>  	struct pci_host_bridge *bridge;
+>  
+> @@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+>  		return NULL;
+>  
+>  	INIT_LIST_HEAD(&bridge->windows);
+> -	bridge->bus = b;
+>  	return bridge;
+>  }
+>  
+> @@ -1727,9 +1726,21 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	char bus_addr[64];
+>  	char *fmt;
+>  
+> +	bridge = pci_alloc_host_bridge();
+> +	if (!bridge)
+> +		return NULL;
+> +
+> +	bridge->dev.parent = parent;
+> +	bridge->dev.release = pci_release_host_bridge_dev;
+> +	error = pcibios_root_bridge_prepare(bridge);
+> +	if (error) {
+> +		kfree(bridge);
+> +		return NULL;
 
-I think the current pciehp design is a bit broken.  Today we perform
-commands very synchronously:
+What about use goto err_out?
 
-    pcie_write_cmd() {
-        write Slot Control
-        if (Command Complete supported) {
-            wait for Command Complete
-        }
-    }
+> +	}
+> +
+>  	b = pci_alloc_bus();
+>  	if (!b)
+> -		return NULL;
+> +		goto err_out;
+>  
+>  	b->sysdata = sysdata;
+>  	b->ops = ops;
+> @@ -1738,26 +1749,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	if (b2) {
+>  		/* If we already got to this bus through a different bridge, ignore it */
+>  		dev_dbg(&b2->dev, "bus already known\n");
+> -		goto err_out;
+> +		goto err_bus_out;
+>  	}
+>  
+> -	bridge = pci_alloc_host_bridge(b);
+> -	if (!bridge)
+> -		goto err_out;
+> -
+> -	bridge->dev.parent = parent;
+> -	bridge->dev.release = pci_release_host_bridge_dev;
+> +	bridge->bus = b;
+>  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> -	error = pcibios_root_bridge_prepare(bridge);
+> -	if (error) {
+> -		kfree(bridge);
+> -		goto err_out;
+> -	}
+> -
+>  	error = device_register(&bridge->dev);
+>  	if (error) {
+>  		put_device(&bridge->dev);
+> -		goto err_out;
+> +		goto err_bus_out;
+>  	}
+>  	b->bridge = get_device(&bridge->dev);
+>  	device_enable_async_suspend(b->bridge);
+> @@ -1814,8 +1814,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  class_dev_reg_err:
+>  	put_device(&bridge->dev);
+>  	device_unregister(&bridge->dev);
+> -err_out:
+> +err_bus_out:
+>  	kfree(b);
+> +err_out:
+> +	kfree(bridge);
+>  	return NULL;
+>  }
+>  
+> 
 
-The typical driver pattern would be more asynchronous, like this:
 
-    pcie_write_cmd() {
-        read Slot Status
-        if (!Command Completed) {
-            wait for Command Complete
-        }
-        write Slot Control
-    }
+-- 
+Thanks!
+Yijing
 
-With the asynchronous pattern, we would probably never wait at all
-unless we performed two commands in immediate succession.  I wouldn't
-be surprised if doing this asynchronously would effectively cover up
-these hardware differences.
-
-But as long as we have the current synchronous design, I think we have
-to do *something* so we handle both the Intel/AMD/Nvidia-style chips
-and the IDT-style chips correctly.  I suspect that means an explicit
-quirk, or maybe some sort of test, e.g., set one of the other bits
-(not EIC, PCC, PIC, AIC) and see whether we get an interrupt.
-
-In any case, it needs to be clear why we expect CC for some bits but not others.
-
-Bjorn
