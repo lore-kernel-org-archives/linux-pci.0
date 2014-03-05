@@ -1,49 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Liviu Dudau <Liviu.Dudau@arm.com>
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	linaro-kernel <linaro-kernel@lists.linaro.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v6 1/3] Fix ioport_map() for !CONFIG_GENERIC_IOMAP cases.
-Date: Wed,  5 Mar 2014 11:49:08 +0000
-Message-Id: <1394020150-1875-2-git-send-email-Liviu.Dudau@arm.com>
-In-Reply-To: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
-References: <1394020150-1875-1-git-send-email-Liviu.Dudau@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yh0-f49.google.com ([209.85.213.49]:61867 "EHLO
+	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755984AbaCEEDx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 23:03:53 -0500
+MIME-Version: 1.0
+In-Reply-To: <1393975344.4632.10.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+References: <CAD6G_RQVD7=v7b6S-muiZBYV7PEykTHOTM23i-BL=wcA5z=4Qg@mail.gmail.com>
+	<CAD6G_RQ130TunwZDL+8vwx__8NsfzE0AfcfnS7z5OXtZF5T8xQ@mail.gmail.com>
+	<1393975344.4632.10.camel@LTIRV-MCHAN1.corp.ad.broadcom.com>
+Date: Wed, 5 Mar 2014 09:33:52 +0530
+Message-ID: <CAD6G_RTVVb2qdU43PqKm3BAD2-pvVcs_O=Wck2SCBhRRV-d+Lw@mail.gmail.com>
+Subject: Re: sblk->status_tag on drivers/net/ethernet/broadcom/tg3.c
+From: Jagan Teki <jagannadh.teki@gmail.com>
+To: Michael Chan <mchan@broadcom.com>
+Cc: netdev@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Nithin Nayak Sujir <nsujir@broadcom.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The inline version of ioport_map() that gets used when !CONFIG_GENERIC_IOMAP
-is wrong. It returns a mapped (i.e. virtual) address that can start from
-zero and completely ignores the PCI_IOBASE and IO_SPACE_LIMIT that most
-architectures that use !CONFIG_GENERIC_MAP define.
+On Wed, Mar 5, 2014 at 4:52 AM, Michael Chan <mchan@broadcom.com> wrote:
+> On Tue, 2014-03-04 at 23:25 +0530, Jagan Teki wrote:
+>> From the comments in ISR any non-zero value to intr-mbox-0 clear
+>> the interrupt ie write status as 1 so I assume interrupt is clear and then
+>> in tg3_int_reenable is going to write 0x0 on to intr-mbox-0
+>> which again reenables the interrupt, was my guess is true?
+>
+> Yes, the (last_tag << 24) is also written to the intr-mbox-0 to
+> acknowledge the status block.
 
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Tested-by: Tanmay Inamdar <tinamdar@apm.com>
----
- include/asm-generic/io.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes, I saw it.
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index d5afe96..df72051 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -331,7 +331,7 @@ static inline void iounmap(void __iomem *addr)
- #ifndef CONFIG_GENERIC_IOMAP
- static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- {
--	return (void __iomem *) port;
-+	return (void __iomem *)(PCI_IOBASE + (port & IO_SPACE_LIMIT));
- }
- 
- static inline void ioport_unmap(void __iomem *p)
+>
+>> And sblk->status_tag is always 0 in ISR and BH(poll) why is that so?
+>> If it's is 1(unsigned non-zero) then possibly tg3_int_reenable will write
+>> non-zero value on intr-mbox-0 which will clear the interrupt.
+>
+> You should print out the entire status block.  It shouldn't be zero.
+> The status tag should be incrementing for each interrupt.
+
+I see the status_tag is 0, at starting of ISR.
+OK will try to print entire block members.
+
+>> Request for any help who updates sblk->status_tag value and
+>> how many time the ISR in PCIe RC and ISR in EP will call for link up?
+>>
+>>
+> If you are expecting link up, the first 32-bit word of the status block
+> should have bit 1 set (bit 0 should also be set).  I think the driver is
+> not seeing the status block correctly, so it is not acknowledging the
+> link change interrupt and the status_tag.
+
+The driver is not seeing the status block mean - tg3.c driver?
+Does it relates to ISR or addressing of PCIe RC driver, I'm doing
+nothing on my PCIe RC driver just read the legacy INT# status and return.
+
+Any inputs if you see it on PCIe RC, let me know.
+
+thanks!
 -- 
-1.9.0
-
+Jagan.
