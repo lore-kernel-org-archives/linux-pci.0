@@ -1,67 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:26033 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754102AbaC0J1K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Mar 2014 05:27:10 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
+Received: from exprod5og104.obsmtp.com ([64.18.0.178]:58253 "HELO
+	exprod5og104.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755693AbaCEBx5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Mar 2014 20:53:57 -0500
+Received: by mail-vc0-f169.google.com with SMTP id hq11so384099vcb.28
+        for <linux-pci@vger.kernel.org>; Tue, 04 Mar 2014 17:53:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1393948204-11555-1-git-send-email-Liviu.Dudau@arm.com>
+Date: Tue, 4 Mar 2014 17:53:55 -0800
+Message-ID: <CACoXjcmmbVsmvy46NhjFoBg8mRO=APiY3dZZY=ra-Ceib9Sr4A@mail.gmail.com>
+Subject: Re: [PATCH v5 0/7] [RFC] Support for creating generic host_bridge
+ from device tree
+From: Tanmay Inamdar <tinamdar@apm.com>
+To: Liviu Dudau <Liviu.Dudau@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
-References: <1395912416-20087-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1395912416-20087-7-git-send-email-phil.edworthy@renesas.com>
-Date: Thu, 27 Mar 2014 09:26:52 +0000
-Subject: [PATCH v6 06/10] ARM: shmobile: r8a7790: Add PCIe device nodes
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Hello,
 
-v6:
- - Split device and board DT changes
----
- arch/arm/boot/dts/r8a7790.dtsi | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+Thanks for the patch set.
 
-diff --git a/arch/arm/boot/dts/r8a7790.dtsi b/arch/arm/boot/dts/r8a7790.dtsi
-index df9ec61..dbcea57 100644
---- a/arch/arm/boot/dts/r8a7790.dtsi
-+++ b/arch/arm/boot/dts/r8a7790.dtsi
-@@ -821,4 +821,28 @@
- 		#size-cells = <0>;
- 		status = "disabled";
- 	};
-+
-+	pcie: pcie@fe000000 {
-+		compatible = "renesas,pcie-r8a7790";
-+		reg = <0 0xfe000000 0 0x80000>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
-+			  0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
-+			  0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
-+			  0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-+		/* Map all possible DDR as inbound ranges */
-+		dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000
-+			      0x43000000 1 0x80000000 1 0x80000000 0 0x80000000>;
-+		interrupts = <0 116 IRQ_TYPE_LEVEL_HIGH
-+			      0 117 IRQ_TYPE_LEVEL_HIGH
-+			      0 118 IRQ_TYPE_LEVEL_HIGH>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 116 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&mstp3_clks R8A7790_CLK_PCIE>, <&pcie_bus_clk>;
-+		clock-names = "pcie", "pcie_bus";
-+		status = "disabled";
-+	};
- };
--- 
-1.9.0
+On Tue, Mar 4, 2014 at 7:49 AM, Liviu Dudau <Liviu.Dudau@arm.com> wrote:
+> This is v5 of my attempt to add support for a generic pci_host_bridge controller created
+> from a description passed in the device tree.
+>
+> Changes from v4:
+>   - Export pci_find_host_bridge() to be used by arch code. There is scope for
+>     making the arch/arm64 version of pci_domain_nr the default weak implementation
+>     but that would double the size of this series in order to handle all #define
+>     versions of the pci_domain_nr() function, so I suggest keeping that for a separate
+>     cleanup series.
+>
+> Changes from v3:
+>   - Dynamically allocate bus_range resource in of_create_pci_host_bridge()
+>   - Fix the domain number used when creating child busses.
+>   - Changed domain number allocator to use atomic operations.
+>   - Use ERR_PTR() to propagate the error out of pci_create_root_bus_in_domain()
+>     and of_create_pci_host_bridge().
+>
+> Changes from v2:
+>   - Use range->cpu_addr when calling pci_address_to_pio()
+>   - Introduce pci_register_io_range() helper function in order to register
+>     io ranges ahead of their conversion to PIO values. This is needed as no
+>     information is being stored yet regarding the range mapping, making
+>     pci_address_to_pio() fail. Default weak implementation does nothing,
+>     to cover the default weak implementation of pci_address_to_pio() that
+>     expects direct mapping of physical addresses into PIO values (x86 view).
+>
+> Changes from v1:
+>   - Add patch to fix conversion of IO ranges into IO resources.
+>   - Added a domain_nr member to pci_host_bridge structure, and a new function
+>     to create a root bus in a given domain number. In order to facilitate that
+>     I propose changing the order of initialisation between pci_host_bridge and
+>     it's related bus in pci_create_root_bus() as sort of a rever of 7b5436635800.
+>     This is done in patch 1/4 and 2/4.
+>   - Added a simple allocator of domain numbers in drivers/pci/host-bridge.c. The
+>     code will first try to get a domain id from of_alias_get_id(..., "pci-domain")
+>     and if that fails assign the next unallocated domain id.
+>   - Changed the name of the function that creates the generic host bridge from
+>     pci_host_bridge_of_init to of_create_pci_host_bridge and exported as GPL symbol.
+>
+>
+> v4 thread here: https://lkml.org/lkml/2014/3/3/301
+> v3 thread here: https://lkml.org/lkml/2014/2/28/216
+> v2 thread here: https://lkml.org/lkml/2014/2/27/245
+> v1 thread here: https://lkml.org/lkml/2014/2/3/380
+>
+> Best regards,
+> Liviu
+>
+> Liviu Dudau (7):
+>   pci: Introduce pci_register_io_range() helper function.
+>   pci: OF: Fix the conversion of IO ranges into IO resources.
+>   pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+>   pci: Introduce a domain number for pci_host_bridge.
+>   pci: Use parent domain number when allocating child busses.
+>   pci: Export find_pci_host_bridge() function.
+>   pci: Add support for creating a generic host_bridge from device tree
+>
+>  drivers/of/address.c       |  39 +++++++++++++
+>  drivers/pci/host-bridge.c  | 142 ++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/pci/probe.c        |  72 +++++++++++++++--------
+>  include/linux/of_address.h |  14 +----
+>  include/linux/pci.h        |  17 ++++++
+>  5 files changed, 248 insertions(+), 36 deletions(-)
+>
+> --
+> 1.9.0
+>
 
+This series is working fine on X-Gene with multiple PCIe ports. You
+can add my Tested-by if you want.
+
+Thanks,
+Tanmay
