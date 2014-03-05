@@ -1,121 +1,286 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:12022 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752419AbaCXMEi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Mar 2014 08:04:38 -0400
-In-Reply-To: <OFC7DD5DAC.D378B300-ON80257CA2.0051ECEE-80257CA2.00529F98@LocalDomain>
-References: <1395397968-6242-1-git-send-email-phil.edworthy@renesas.com>		 <1395397968-6242-6-git-send-email-phil.edworthy@renesas.com>
-	 <1395401031.4554.9.camel@weser.hi.pengutronix.de>	 <OF03C9E23D.07B7D998-ON80257CA2.004E5877-80257CA2.004E9BFB@eu.necel.com> <1395412213.4554.17.camel@weser.hi.pengutronix.de> <OFC7DD5DAC.D378B300-ON80257CA2.0051ECEE-80257CA2.00529F98@LocalDomain>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>
+Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:35872
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756758AbaCEVHV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 16:07:21 -0500
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <aravind.gopalakrishnan@amd.com>,
+	<kim.naru@amd.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Subject: [PATCH 2/3] amd/pci: Support additional MMIO ranges capabilities
+Date: Wed, 5 Mar 2014 15:06:42 -0600
+Message-ID: <1394053603-3724-3-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
 MIME-Version: 1.0
-From: Phil.Edworthy@renesas.com
-Message-ID: <OF9DD6173A.94976872-ON80257CA5.0041752F-80257CA5.0042532C@eu.necel.com>
-Date: Mon, 24 Mar 2014 12:04:27 +0000
-Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree bindings
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 
-On: 21/03/2014 15:02, Phil wrote:
-> Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-bindings
-> 
-> Hi Lucas,
-> 
-> On: 21/03/2014 14:31, Lucas wrote:
-> > Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device tree 
-bindings
-> > 
-> > Am Freitag, den 21.03.2014, 14:18 +0000 schrieb
-> > Phil.Edworthy@renesas.com:
-> > > Hi Lucas,
-> > > 
-> > > On 21/03/2014 11:24, Lucas wrote:
-> > > > Subject: Re: [PATCH v4 5/9] dt-bindings: pci: rcar pcie device 
-tree 
-> > > bindings
-> > > > 
-> > > > Am Freitag, den 21.03.2014, 10:32 +0000 schrieb Phil Edworthy:
-> > > > > This patch adds the bindings for the rcar PCIE driver. The 
-driver
-> > > > > resides under drivers/pci/host/pcie-rcar.c
-> > > > > 
-> > > > > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > > > 
-> > > > I have one question below. If you can answer this with yes after
-> > > > thinking again about it, this is:
-> > > > 
-> > > > Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> > > > > ---
-> > > > >  Documentation/devicetree/bindings/pci/rcar-pci.txt | 40 
-> > > ++++++++++++++++++++++
-> > > > >  1 file changed, 40 insertions(+)
-> > > > >  create mode 100644 
-Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > > > 
-> > > > > diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt 
-b/
-> > > > Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > > > new file mode 100644
-> > > > > index 0000000..0e219b0
-> > > > > --- /dev/null
-> > > > > +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> > > > > @@ -0,0 +1,40 @@
-> > > > > +* Renesas RCar PCIe interface
-> > > > > +
-> > > > > +Required properties:
-> > > > > +- compatible: should contain one of the following
-> > > > > +   "renesas,r8a7779-pcie", "renesas,r8a7790-pcie", 
-> > > "renesas,r8a7791-pcie"
-> > > > > +- reg: base addresses and lengths of the pcie controller.
-> > > > > +- #address-cells: set to <3>
-> > > > > +- #size-cells: set to <2>
-> > > > > +- device_type: set to "pci"
-> > > > > +- ranges: ranges for the PCI memory and I/O regions
-> > > > > +- interrupts: interrupt values for MSI interrupt
-> > > > > +- #interrupt-cells: set to <1>
-> > > > > +- interrupt-map-mask and interrupt-map: standard PCI properties
-> > > > > +   to define the mapping of the PCIe interface to interrupt
-> > > > > +   numbers.
-> > > > > +- clocks: from common clock binding: handle to pci clock.
-> > > > > +- clock-names: from common clock binding: should be "pcie"
-> > > > 
-> > > > You really only have one PCIe clock? So the controller is 
-generating the
-> > > > PCIe bus clock from it's register clock? No need to enable any 
-other
-> > > > clock for PCIe to work?
-> > > Yes, just the one clock. The PCIe bus clock is an external clock 
-dedicated 
-> > > to PCIe and SATA, and we have no control over it.
-> > > 
-> > Is this some kind of always-on clock? If not you probably want a
-> > reference to it from the PCIe driver even if it's shared between SATA
-> > and PCIe. After all you don't want to end up unconditionally enabling
-> > this clock from the board or SoC level just to have PCIe working, 
-right?
-> Ok, I see, I'll need a reference to a board clock, even if it's always 
-on for 
-> these boards. 
-One small question...
+This patch adds supports for additional MMIO ranges (16 ranges)
+Also, each MMIO base/limit can now supports upto 48-bit MMIO address.
+However, this requires initializing the ECS sooner since the new registers
+are in the ECS ranges.
 
-The patches added the PCIe host controller to two devices, r8a7790 and 
-r8a7791. The r8a7790-based Lager board doesn't have the necessary hardware 
-to use PCIe, so should I add a dummy pcie_bus clock to the Lager board 
-dts, even though PCIe is not used?
+This applies for AMD family15h and later.
 
-I'm just wondering what the dts file looks like for a board that doesn't 
-support many interfaces. Does it become littered with dummy clocks and 
-regulators?
+Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
+---
+ arch/x86/pci/amd_bus.c |  116 +++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 94 insertions(+), 22 deletions(-)
 
-Thanks
-Phil
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index 4041cbe..577995e 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -15,15 +15,28 @@
+ #define AMD_NB_F0_UNIT_ID                       0x64
+ #define AMD_NB_F1_MMIO_BASE_REG                 0x80
+ #define AMD_NB_F1_MMIO_LIMIT_REG                0x84
++#define AMD_NB_F1_MMIO_BASE_LIMIT_HI_REG        0x180
+ #define AMD_NB_F1_IO_BASEA_DDR_REG              0xc0
+ #define AMD_NB_F1_IO_LIMIT_ADDR_REG             0xc4
+ #define AMD_NB_F1_CONFIG_MAP_REG                0xe0
+ 
+ #define RANGE_NUM                               16
+-#define AMD_NB_F1_MMIO_RANGES                   8
++#define AMD_NB_F1_MMIO_RANGES                   16
+ #define AMD_NB_F1_IOPORT_RANGES                 4
+ #define AMD_NB_F1_CONFIG_MAP_RANGES             4
+ 
++#define AMD_PCIE_CF8(bus, dev, fn, reg) \
++			(0x80000000 | \
++			((reg & 0xF00) << 16) | \
++			((bus & 0xF) << 16) | \
++			((dev & 0x1F) << 11) | \
++			((fn & 0x7) << 8) | \
++			((reg & 0xFC)))
++
++static bool amd_early_ecs_enabled;
++
++static int __init pci_io_ecs_init(u8 bus, u8 slot);
++
+ /*
+  * This discovers the pcibus <-> node mapping on AMD K8.
+  * also get peer root bus resource for io,mmio
+@@ -44,6 +57,20 @@ static struct amd_hostbridge hb_probes[] __initdata = {
+ 	{ 0xff, 0   , PCI_DEVICE_ID_AMD_10H_NB_HT },
+ };
+ 
++/* This version of read_pci_config allows reading of registers in ECS area */
++static inline int _amd_read_pci_config(u8 bus, u8 slot, u8 fn, u32 offset)
++{
++	u32 value;
++
++	if ((!amd_early_ecs_enabled) && (offset > 0xFF))
++		return -1;
++
++	outl(AMD_PCIE_CF8(bus, slot, fn, offset), 0xcf8);
++	value = inl(0xcfc);
++
++	return value;
++}
++
+ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ {
+ 	struct pci_root_info *info;
+@@ -53,6 +80,9 @@ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ 		if (info->node == node && info->link == link)
+ 			return info;
+ 
++	pr_warn("AMD-Bus: WARNING: Failed to find root info for node %#x, link %#x\n",
++		node, link);
++
+ 	return NULL;
+ }
+ 
+@@ -65,6 +95,7 @@ static void __init set_mp_bus_range_to_node(int min_bus, int max_bus, int node)
+ 		set_mp_bus_to_node(j, node);
+ #endif
+ }
++
+ /**
+  * early_fill_mp_bus_to_node()
+  * called before pcibios_scan_root and pci_scan_bus
+@@ -132,6 +163,12 @@ static int __init early_fill_mp_bus_info(void)
+ 
+ 	printk(KERN_DEBUG "Found AMD hostbridge at %x:%x.0\n", bus, slot);
+ 
++	/* We enabling ECS mode prior to probing MMIO since
++	 * the MMIO-related registers are in the ECS area.
++	 */
++	pci_io_ecs_init(bus, slot);
++
++	found = false;
+ 	for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
+ 		int min_bus;
+ 		int max_bus;
+@@ -142,6 +179,7 @@ static int __init early_fill_mp_bus_info(void)
+ 		if ((reg & 7) != 3)
+ 			continue;
+ 
++		found = true;
+ 		min_bus = (reg >> 16) & 0xff;
+ 		max_bus = (reg >> 24) & 0xff;
+ 		node = (reg >> 4) & 0x07;
+@@ -151,6 +189,14 @@ static int __init early_fill_mp_bus_info(void)
+ 		info = alloc_pci_root_info(min_bus, max_bus, node, link);
+ 	}
+ 
++	if (!found) {
++		/* In case there is no AMDNB_F1_CONFIG_MAP_REGs,
++		 * we just use default to bus 0, node 0 link 0)
++		 */
++		set_mp_bus_range_to_node(0, 0, 0);
++		info = alloc_pci_root_info(0, 0, 0, 0);
++	}
++
+ 	/* get the default node and link for left over res */
+ 	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
+ 	def_node = (reg >> 8) & 0x07;
+@@ -159,6 +205,7 @@ static int __init early_fill_mp_bus_info(void)
+ 
+ 	memset(range, 0, sizeof(range));
+ 	add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
++
+ 	/* io port resource */
+ 	for (i = 0; i < AMD_NB_F1_IOPORT_RANGES; i++) {
+ 		reg = read_pci_config(bus, slot, 1,
+@@ -186,6 +233,7 @@ static int __init early_fill_mp_bus_info(void)
+ 		update_res(info, start, end, IORESOURCE_IO, 1);
+ 		subtract_range(range, RANGE_NUM, start, end + 1);
+ 	}
++
+ 	/* add left over io port range to def node/link, [0, 0xffff] */
+ 	/* find the position */
+ 	info = find_pci_root_info(def_node, def_link);
+@@ -229,23 +277,45 @@ static int __init early_fill_mp_bus_info(void)
+ 
+ 	/* mmio resource */
+ 	for (i = 0; i < AMD_NB_F1_MMIO_RANGES; i++) {
+-		reg = read_pci_config(bus, slot, 1,
+-				AMD_NB_F1_MMIO_BASE_REG + (i << 3));
++		u64 tmp;
++		u32 base = AMD_NB_F1_MMIO_BASE_REG + (i << 3);
++		u32 limit = AMD_NB_F1_MMIO_LIMIT_REG + (i << 3);
++		u32 base_limit_hi = AMD_NB_F1_MMIO_BASE_LIMIT_HI_REG + (i << 2);
++
++		if (i >= 12) {
++			/* Range 12 base/limit starts at 0x2A0 */
++			base += 0x1c0;
++			limit += 0x1c0;
++			/* Range 12 base/limit hi starts at 0x2C0 */
++			base_limit_hi += 0x110;
++		} else if (i >= 8) {
++			/* Range 8 base/limit starts at 0x1A0 */
++			base += 0xe0;
++			limit += 0xe0;
++			/* Range 12 base/limit hi starts at 0x1C0 */
++			base_limit_hi += 0x20;
++		}
++
++		/* Base lo */
++		reg = _amd_read_pci_config(bus, slot, 1, base);
+ 		if (!(reg & 3))
+ 			continue;
+ 
+-		start = reg & 0xffffff00; /* 39:16 on 31:8*/
+-		start <<= 8;
+-		reg = read_pci_config(bus, slot, 1,
+-				AMD_NB_F1_MMIO_LIMIT_REG + (i << 3));
++		start = (reg & 0xffffff00UL) << 8; /* 39:16 on 31:8*/
++
++		/* Limit lo */
++		reg = _amd_read_pci_config(bus, slot, 1, limit);
+ 		node = reg & 0x07;
+ 		link = (reg >> 4) & 0x03;
+-		end = (reg & 0xffffff00);
+-		end <<= 8;
+-		end |= 0xffff;
++		end = (reg & 0xffffff00UL) << 8; /* 39:16 on 31:8*/
++		end |= 0xffffUL;
+ 
+-		info = find_pci_root_info(node, link);
++		/* Base/Limit hi */
++		tmp = _amd_read_pci_config(bus, slot, 1, base_limit_hi);
++		start |= ((tmp & 0xffUL) << 40);
++		end |= ((tmp & (0xffUL << 16)) << 24);
+ 
++		info = find_pci_root_info(node, link);
+ 		if (!info)
+ 			continue;
+ 
+@@ -373,20 +443,24 @@ static struct notifier_block amd_cpu_notifier = {
+ 	.notifier_call	= amd_cpu_notify,
+ };
+ 
+-static void __init pci_enable_pci_io_ecs(void)
++static void __init pci_enable_pci_io_ecs(u8 bus, u8 slot)
+ {
+ #ifdef CONFIG_AMD_NB
+ 	unsigned int i, n;
++	u8 limit;
+ 
+ 	for (n = i = 0; !n && amd_nb_bus_dev_ranges[i].dev_limit; ++i) {
+-		u8 bus = amd_nb_bus_dev_ranges[i].bus;
+-		u8 slot = amd_nb_bus_dev_ranges[i].dev_base;
+-		u8 limit = amd_nb_bus_dev_ranges[i].dev_limit;
++		/* Try matching for the bus range */
++		if ((bus != amd_nb_bus_dev_ranges[i].bus) ||
++		    (slot != amd_nb_bus_dev_ranges[i].dev_base))
++			continue;
++
++		limit = amd_nb_bus_dev_ranges[i].dev_limit;
+ 
++		/* Setup all northbridges within the range */
+ 		for (; slot < limit; ++slot) {
+ 			u32 val = read_pci_config(bus, slot, 3, 0);
+-
+-			if (!early_is_amd_nb(val))
++			if (!val)
+ 				continue;
+ 
+ 			val = read_pci_config(bus, slot, 3, 0x8c);
+@@ -394,13 +468,14 @@ static void __init pci_enable_pci_io_ecs(void)
+ 				val |= ENABLE_CF8_EXT_CFG >> 32;
+ 				write_pci_config(bus, slot, 3, 0x8c, val);
+ 			}
++			amd_early_ecs_enabled = true;
+ 			++n;
+ 		}
+ 	}
+ #endif
+ }
+ 
+-static int __init pci_io_ecs_init(void)
++static int __init pci_io_ecs_init(u8 bus, u8 slot)
+ {
+ 	int cpu;
+ 
+@@ -408,9 +483,7 @@ static int __init pci_io_ecs_init(void)
+         if (boot_cpu_data.x86 < 0x10)
+ 		return 0;
+ 
+-	/* Try the PCI method first. */
+-	if (early_pci_allowed())
+-		pci_enable_pci_io_ecs();
++	pci_enable_pci_io_ecs(bus, slot);
+ 
+ 	register_cpu_notifier(&amd_cpu_notifier);
+ 	for_each_online_cpu(cpu)
+@@ -427,7 +500,6 @@ static int __init amd_postcore_init(void)
+ 		return 0;
+ 
+ 	early_fill_mp_bus_info();
+-	pci_io_ecs_init();
+ 
+ 	return 0;
+ }
+-- 
+1.7.10.4
+
+
