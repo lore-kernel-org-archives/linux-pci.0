@@ -1,64 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:63724 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752780AbaCZLxN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Mar 2014 07:53:13 -0400
-From: Arnd Bergmann <arnd@arndb.de>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:33538 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753412AbaCEN0f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 08:26:35 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
 To: linux-arm-kernel@lists.infradead.org
-Cc: Phil.Edworthy@renesas.com, Simon Horman <horms@verge.net.au>,
-	linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v5 6/9] ARM: shmobile: Add PCIe device tree nodes for R8A7790
-Date: Wed, 26 Mar 2014 12:52:31 +0100
-Message-ID: <17762778.T67iL7T7u4@wuerfel>
-In-Reply-To: <OF362EF259.A035C442-ON80257CA7.003E97FF-80257CA7.003F9959@eu.necel.com>
-References: <1395766604-30926-1-git-send-email-phil.edworthy@renesas.com> <5228683.eofaEcInBi@wuerfel> <OF362EF259.A035C442-ON80257CA7.003E97FF-80257CA7.003F9959@eu.necel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Cc: linux-sh@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ben Dooks <ben-linux@fluff.org>,
+	Kukjin Kim <kgene.kim@samsung.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, kernel@pengutronix.de
+Subject: [PATCH v2 5/6] ARM: dts: imx6: add PCIe interrupt mapping properties
+Date: Wed,  5 Mar 2014 14:25:50 +0100
+Message-Id: <1394025951-32438-6-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
+References: <1394025951-32438-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 26 March 2014 11:34:41 Phil.Edworthy@renesas.com wrote:
-> > But the ranges you specified in the property don't actually fit in those
-> > constraints: you have a range with size 0x8000000 and start 0x40000000,
-> > which you say can't be programmed into the hardware.
-> 
-> Actually, the driver checks the dma-ranges against these constraints, and 
-> if necessary will create multiple mappings to fulfil the requested 
-> dma-ranges.
+As defined by the common PCI bindings.
 
-Ok, I didn't notice. My initial suggestion was to not put that logic
-into the driver but instead specify in the host bridge binding that each
-entry in the dma-ranges property has to meet the hardware constraints.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+---
+v2: drop blank lines
+---
+ arch/arm/boot/dts/imx6qdl.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-As long as you don't have too much complexity to detect this case, I'm
-fine with it either way.
+diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
+index fb28b2ecb1db..c1c06d25decc 100644
+--- a/arch/arm/boot/dts/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/imx6qdl.dtsi
+@@ -10,6 +10,8 @@
+  * http://www.gnu.org/copyleft/gpl.html
+  */
  
-> > > Still, my comment about the OF PCI range code treating both 32 and 
-> 64-bit 
-> > > types the same way means that PCIe host driver has to assume it's a 
-> 64-bit 
-> > > mapping.
-> > 
-> > I was thinking more of PCI devices than the host itself. If the host
-> > driver can verify that all mappings are in the first 4GB and cover all 
-> of
-> > RAM, we won't have to use an swiotlb for devices that don't support 
-> 64-bit
-> > DMA, which is a very significant performance difference.
-> Ok, I think I understand. However, all the other PCI host drivers just do 
-> 1-to-1 mapping between PCI and CPU addresses, right? Whilst it might be 
-> nice be able to support mapping CPU addresses > 4GiB to PCI addresses 
-> under 4GiB, can that be something to consider later on?
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++
+ #include "skeleton.dtsi"
+ 
+ / {
+@@ -127,6 +129,12 @@
+ 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
+ 			num-lanes = <1>;
+ 			interrupts = <0 123 0x04>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &intc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 2 &intc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 3 &intc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
++			                <0 0 0 4 &intc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&clks 189>, <&clks 187>, <&clks 206>, <&clks 144>;
+ 			clock-names = "pcie_ref_125m", "sata_ref_100m", "lvds_gate", "pcie_axi";
+ 			status = "disabled";
+-- 
+1.9.0
 
-Yes, fair enough. The current version is much simpler, so that's ok.
-Just keep it in mind if you run into performance problems. Also, note
-that we don't actually support swiotlb on arm32 yet, so your current
-code is broken for an PCI DMA master that is not 64-bit capable.
-We need swiotlb on arm32 anyway, and that will fix this problem, but
-adding the hack I described would also fix it.
-
-	Arnd
