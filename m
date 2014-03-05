@@ -1,75 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:44767
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752161AbaCJWEs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Mar 2014 18:04:48 -0400
-Received: from mail162-ch1 (localhost [127.0.0.1])	by
- mail162-ch1-R.bigfish.com (Postfix) with ESMTP id 9CB7A4800E6	for
- <linux-pci@vger.kernel.org>; Mon, 10 Mar 2014 22:04:45 +0000 (UTC)
-Received: from CH1EHSMHS025.bigfish.com (snatpool1.int.messaging.microsoft.com
- [10.43.68.253])	by mail162-ch1.bigfish.com (Postfix) with ESMTP id
- 957E22000E1	for <linux-pci@vger.kernel.org>; Mon, 10 Mar 2014 22:04:43 +0000
- (UTC)
-From: Rajat Jain <rajatjain@juniper.net>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Guenter Roeck <groeck@juniper.net>
-Subject: Faking a PCI interrupt
-Date: Mon, 10 Mar 2014 22:04:39 +0000
-Message-ID: <e1766e5c6aec48a588975c07fc00935d@DM2PR05MB671.namprd05.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from fw-tnat.cambridge.arm.com ([217.140.96.21]:51633 "EHLO
+	cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752502AbaCELts (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 06:49:48 -0500
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	linaro-kernel <linaro-kernel@lists.linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	LAKML <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v6 3/6] pci: Create pci_host_bridge before its associated bus in pci_create_root_bus.
+Date: Wed,  5 Mar 2014 11:48:54 +0000
+Message-Id: <1394020137-1830-4-git-send-email-Liviu.Dudau@arm.com>
+In-Reply-To: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
+References: <1394020137-1830-1-git-send-email-Liviu.Dudau@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8sDQoNCkkgaGF2ZSBhIGJyb2tlbiBQQ0kgYnJpZGdlIChQQ0llIGRvd25zdHJlYW0gcG9y
-dCksIHRoYXQgaXMgbm90IHJhaXNpbmcgaW50ZXJydXB0cyBhdCBjZXJ0YWluIGNvbmRpdGlvbnMu
-DQogDQpJJ20gdHJ5aW5nIHRvIGZvb2wgdGhlIGRyaXZlciBpbnRvIGJlbGlldmluZyB0aGF0IHRo
-ZSBkZXZpY2UgaXMgYWN0dWFsbHkgc2VuZGluZyBpbnRlcnJ1cHRzIGJ5IGhhdmluZyBhIHF1aXJr
-IHRoYXQ6DQoNCjEpIFBvbGxzIHRoZSBkZXZpY2UgcmVnaXN0ZXIgdG8gbW9uaXRvciB0aGUgaW50
-ZXJydXB0IGNvbmRpdGlvbi4NCg0KMikgV2hlbiBhIGNvbmRpdGlvbiBpcyBkZXRlcm1pbmVkIHRo
-YXQgbmVlZHMgYW4gaW50ZXJydXB0IC0gY2FsbHMgdGhlIGRyaXZlcidzIElTUiBtZXRob2QuDQoN
-Ck15IHF1ZXN0aW9uIC0gSW5zdGVhZCBvZiBkaXJlY3RseSBjYWxsaW5nIHRoZSBJU1IsIGlzIHRo
-ZXJlIGEgd2F5IG15IHF1aXJrIGNhbiBmYWtlIGFuIGludGVycnVwdCBiZWluZyBnZW5lcmF0ZWQs
-IHRocm91Z2ggdGhlIFBDSSBzdWJzeXN0ZW0/IFRoYXQgd2F5LCBteSBxdWlyayBkb2VzIG5vdCBo
-YXZlIHRvIGJlIGEgcGFydCBvZiB0aGUgKGdlbmVyaWMpIFBDSSBkcml2ZXIuDQoNClBDSSBicmlk
-Z2U6IEludGVncmF0ZWQgRGV2aWNlIFRlY2hub2xvZ3ksIEluYy4gUEVTMTJOVDMgUENJIEV4cHJl
-c3MgU3dpdGNoIChyZXYgMDEpIChwcm9nLWlmIDAwIFtOb3JtYWwgZGVjb2RlXSkNCkNvbnRyb2w6
-IEkvTy0gTWVtKyBCdXNNYXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVy
-ci0gU3RlcHBpbmctIFNFUlItIEZhc3RCMkItIERpc0lOVHgtDQpTdGF0dXM6IENhcCsgNjZNSHot
-IFVERi0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9ZmFzdCA+VEFib3J0LSA8VEFib3J0LSA8TUFi
-b3J0LSA+U0VSUi0gPFBFUlItIElOVHgtDQpMYXRlbmN5OiAwDQpCdXM6IHByaW1hcnk9MTEsIHNl
-Y29uZGFyeT0xMywgc3Vib3JkaW5hdGU9MTMsIHNlYy1sYXRlbmN5PTANCkkvTyBiZWhpbmQgYnJp
-ZGdlOiAwMDAwZjAwMC0wMDAwMGZmZg0KTWVtb3J5IGJlaGluZCBicmlkZ2U6IDgwMDAwMDAwLTgw
-ZmZmZmZmDQpQcmVmZXRjaGFibGUgbWVtb3J5IGJlaGluZCBicmlkZ2U6IDAwMDAwMDAwZmZmMDAw
-MDAtMDAwMDAwMDAwMDBmZmZmZg0KU2Vjb25kYXJ5IHN0YXR1czogNjZNSHotIEZhc3RCMkItIFBh
-ckVyci0gREVWU0VMPWZhc3QgPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0gPFNFUlItIDxQRVJS
-LQ0KQnJpZGdlQ3RsOiBQYXJpdHktIFNFUlItIE5vSVNBLSBWR0EtIE1BYm9ydC0gPlJlc2V0LSBG
-YXN0QjJCLQ0KICAgICAgICBQcmlEaXNjVG1yLSBTZWNEaXNjVG1yLSBEaXNjVG1yU3RhdC0gRGlz
-Y1RtclNFUlJFbi0NCkNhcGFiaWxpdGllczogWzQwXSBFeHByZXNzICh2MSkgRG93bnN0cmVhbSBQ
-b3J0IChTbG90LSksIE1TSSAwMA0KICAgICAgICBEZXZDYXA6IE1heFBheWxvYWQgMjA0OCBieXRl
-cywgUGhhbnRGdW5jIDAsIExhdGVuY3kgTDBzIDw2NG5zLCBMMSA8MXVzDQogICAgICAgICAgICAg
-ICAgRXh0VGFnKyBSQkUtIEZMUmVzZXQtDQogICAgICAgIERldkN0bDogUmVwb3J0IGVycm9yczog
-Q29ycmVjdGFibGUtIE5vbi1GYXRhbC0gRmF0YWwtIFVuc3VwcG9ydGVkLQ0KICAgICAgICAgICAg
-ICAgIFJseGRPcmQtIEV4dFRhZy0gUGhhbnRGdW5jLSBBdXhQd3ItIE5vU25vb3AtDQogICAgICAg
-ICAgICAgICAgTWF4UGF5bG9hZCAxMjggYnl0ZXMsIE1heFJlYWRSZXEgMTI4IGJ5dGVzDQogICAg
-ICAgIERldlN0YTogQ29yckVyci0gVW5jb3JyRXJyKyBGYXRhbEVyci0gVW5zdXBwUmVxKyBBdXhQ
-d3ItIFRyYW5zUGVuZC0NCiAgICAgICAgTG5rQ2FwOiBQb3J0ICMxLCBTcGVlZCAyLjVHVC9zLCBX
-aWR0aCB4NCwgQVNQTSBMMHMgTDEsIExhdGVuY3kgTDAgPDJ1cywgTDEgPDR1cw0KICAgICAgICAg
-ICAgICAgIENsb2NrUE0tIFN1cnByaXNlLSBMTEFjdFJlcC0gQndOb3QtDQogICAgICAgIExua0N0
-bDogQVNQTSBEaXNhYmxlZDsgRGlzYWJsZWQtIFJldHJhaW4tIENvbW1DbGstDQogICAgICAgICAg
-ICAgICAgRXh0U3luY2gtIENsb2NrUE0tIEF1dFdpZERpcy0gQldJbnQtIEF1dEJXSW50LQ0KICAg
-ICAgICBMbmtTdGE6IFNwZWVkIDIuNUdUL3MsIFdpZHRoIHgwLCBUckVyci0gVHJhaW4tIFNsb3RD
-bGstIERMQWN0aXZlLSBCV01nbXQtIEFCV01nbXQtDQpDYXBhYmlsaXRpZXM6IFs3MF0gUG93ZXIg
-TWFuYWdlbWVudCB2ZXJzaW9uIDINCiAgICAgICAgRmxhZ3M6IFBNRUNsay0gRFNJLSBEMS0gRDIt
-IEF1eEN1cnJlbnQ9MG1BIFBNRShEMCssRDEtLEQyLSxEM2hvdCssRDNjb2xkKykNCiAgICAgICAg
-U3RhdHVzOiBEMCBOb1NvZnRSc3QtIFBNRS1FbmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtDQpD
-YXBhYmlsaXRpZXM6IFsxMDAgdjFdIFZpcnR1YWwgQ2hhbm5lbA0KICAgICAgICBDYXBzOiAgIExQ
-RVZDPTAgUmVmQ2xrPTEwMG5zIFBBVEVudHJ5Qml0cz0yDQogICAgICAgIEFyYjogICAgRml4ZWQt
-IFdSUjMyLSBXUlI2NC0gV1JSMTI4LQ0KICAgICAgICBDdHJsOiAgIEFyYlNlbGVjdD1GaXhlZA0K
-ICAgICAgICBTdGF0dXM6IEluUHJvZ3Jlc3MtDQogICAgICAgIFZDMDogICAgQ2FwczogICBQQVRP
-ZmZzZXQ9MDAgTWF4VGltZVNsb3RzPTEgUmVqU25vb3BUcmFucy0NCiAgICAgICAgICAgICAgICBB
-cmI6ICAgIEZpeGVkKyBXUlIzMi0gV1JSNjQtIFdSUjEyOC0gVFdSUjEyOC0gV1JSMjU2LQ0KICAg
-ICAgICAgICAgICAgIEN0cmw6ICAgRW5hYmxlKyBJRD0wIEFyYlNlbGVjdD1GaXhlZCBUQy9WQz1m
-Zg0KICAgICAgICAgICAgICAgIFN0YXR1czogTmVnb1BlbmRpbmctIEluUHJvZ3Jlc3MtDQpLZXJu
-ZWwgZHJpdmVyIGluIHVzZTogcGNpZXBvcnQNCg0KDQpUaGFua3MsDQoNClJhamF0DQoNCg0K
+Before commit 7b5436635800 the pci_host_bridge was created before the root bus.
+As that commit has added a needless dependency on the bus for pci_alloc_host_bridge()
+the creation order has been changed for no good reason. Revert the order of
+creation as we are going to depend on the pci_host_bridge structure to retrieve the
+domain number of the root bus.
+
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/pci/probe.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6e34498..fd11c12 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -505,7 +505,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ 	kfree(bridge);
+ }
+ 
+-static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
++static struct pci_host_bridge *pci_alloc_host_bridge(void)
+ {
+ 	struct pci_host_bridge *bridge;
+ 
+@@ -514,7 +514,6 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&bridge->windows);
+-	bridge->bus = b;
+ 	return bridge;
+ }
+ 
+@@ -1727,9 +1726,19 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
++	bridge = pci_alloc_host_bridge();
++	if (!bridge)
++		return NULL;
++
++	bridge->dev.parent = parent;
++	bridge->dev.release = pci_release_host_bridge_dev;
++	error = pcibios_root_bridge_prepare(bridge);
++	if (error)
++		goto err_out;
++
+ 	b = pci_alloc_bus();
+ 	if (!b)
+-		return NULL;
++		goto err_out;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
+@@ -1738,26 +1747,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+ 		dev_dbg(&b2->dev, "bus already known\n");
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
+-		goto err_out;
+-
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
++	bridge->bus = b;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+-	error = pcibios_root_bridge_prepare(bridge);
+-	if (error) {
+-		kfree(bridge);
+-		goto err_out;
+-	}
+-
+ 	error = device_register(&bridge->dev);
+ 	if (error) {
+ 		put_device(&bridge->dev);
+-		goto err_out;
++		goto err_bus_out;
+ 	}
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+@@ -1814,8 +1812,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ class_dev_reg_err:
+ 	put_device(&bridge->dev);
+ 	device_unregister(&bridge->dev);
+-err_out:
++err_bus_out:
+ 	kfree(b);
++err_out:
++	kfree(bridge);
+ 	return NULL;
+ }
+ 
+-- 
+1.9.0
 
