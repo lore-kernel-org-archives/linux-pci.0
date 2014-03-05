@@ -1,877 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:18325 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753837AbaCaKbG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Mar 2014 06:31:06 -0400
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org,
-	LAKML <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-In-Reply-To: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-References: <1396261856-22465-1-git-send-email-phil.edworthy@renesas.com>
-Message-ID: <1396261856-22465-2-git-send-email-phil.edworthy@renesas.com>
-Date: Mon, 31 Mar 2014 11:30:46 +0100
-Subject: [PATCH v7 01/10] PCI: host: rcar: Add Renesas R-Car PCIe driver
+Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:2735 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754349AbaCEVHR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Mar 2014 16:07:17 -0500
+From: <suravee.suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <aravind.gopalakrishnan@amd.com>,
+	<kim.naru@amd.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Subject: [PATCH 1/3] amd/pci: Add supports for generic AMD hostbridges
+Date: Wed, 5 Mar 2014 15:06:41 -0600
+Message-ID: <1394053603-3724-2-git-send-email-suravee.suthikulpanit@amd.com>
+In-Reply-To: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1394053603-3724-1-git-send-email-suravee.suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This PCIe Host driver currently does not support MSI, so cards
-fall back to INTx interrupts.
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+AMD hostbridges are gnenerally show up as PCI device 0:18.0.
+This patch adds logic to automatically probe the device at
+this location and check PCI device class code.
 
-v5:
- - Use module_platform_driver instead of subsys_initcall
- - Use the of_device_id data field for HW init function
- - Init hw_pci struct in declaration
- - Renesas SoC compatible string has peripheral before device name
- - Add PCIe bus clock reference
- - Use dma-ranges property to specify inbound memory regions
- - Support multiple IO windows and correct resources
+This patch should support AMD hostbridges from AMD platforms
+(K8, family10h, 11h, 12h, 14h 15h  and 16h processors).
 
-v4:
- - Use runtime PM properly
-
-v3:
- - Add DT support
- - Use 'of_irq_parse_and_map_pci' for '.map_irq'
- - Use pm ops to enable clocks
- - Fix checkpatch errors
- - Use subsys_initcall to overcome issues with port bus driver
- - Adjust Kconfig to match other R-Car drivers
-
-v2:
- - Use msleep instead of udelay when waiting for the link
- - Use pm_runtime
- - Removed unused definition
- - Also replaced call to devm_request_and_ioremap with devm_ioremap_resource
-   and fixed a bug with this when reporting errors.
+Signed-off-by: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Tested-by: Aravind Gopalakrishnan <Aravind.Gopalakrishnan@amd.com>
 ---
- drivers/pci/host/Kconfig     |   6 +
- drivers/pci/host/Makefile    |   1 +
- drivers/pci/host/pcie-rcar.c | 693 +++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/host/pcie-rcar.h |  82 +++++
- 4 files changed, 782 insertions(+)
- create mode 100644 drivers/pci/host/pcie-rcar.c
- create mode 100644 drivers/pci/host/pcie-rcar.h
+ arch/x86/pci/amd_bus.c |   88 +++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 60 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 47d46c6..dc627e5 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -33,4 +33,10 @@ config PCI_RCAR_GEN2
- 	  There are 3 internal PCI controllers available with a single
- 	  built-in EHCI/OHCI host controller present on each one.
+diff --git a/arch/x86/pci/amd_bus.c b/arch/x86/pci/amd_bus.c
+index a48be98..4041cbe 100644
+--- a/arch/x86/pci/amd_bus.c
++++ b/arch/x86/pci/amd_bus.c
+@@ -11,27 +11,39 @@
  
-+config PCI_RCAR_GEN2_PCIE
-+	bool "Renesas R-Car PCIe controller"
-+	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
-+	help
-+	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
+ #include "bus_numa.h"
+ 
++#define AMD_NB_F0_NODE_ID                       0x60
++#define AMD_NB_F0_UNIT_ID                       0x64
++#define AMD_NB_F1_MMIO_BASE_REG                 0x80
++#define AMD_NB_F1_MMIO_LIMIT_REG                0x84
++#define AMD_NB_F1_IO_BASEA_DDR_REG              0xc0
++#define AMD_NB_F1_IO_LIMIT_ADDR_REG             0xc4
++#define AMD_NB_F1_CONFIG_MAP_REG                0xe0
 +
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 13fb333..19946f9 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -4,3 +4,4 @@ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
-+obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-new file mode 100644
-index 0000000..c22c896
---- /dev/null
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -0,0 +1,693 @@
-+/*
-+ * PCIe driver for Renesas R-Car SoCs
-+ *  Copyright (C) 2014 Renesas Electronics Europe Ltd
-+ *
-+ * Based on:
-+ *  arch/sh/drivers/pci/pcie-sh7786.c
-+ *  arch/sh/drivers/pci/ops-sh7786.c
-+ *  Copyright (C) 2009 - 2011  Paul Mundt
-+ *
-+ * This file is licensed under the terms of the GNU General Public
-+ * License version 2.  This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
++#define RANGE_NUM                               16
++#define AMD_NB_F1_MMIO_RANGES                   8
++#define AMD_NB_F1_IOPORT_RANGES                 4
++#define AMD_NB_F1_CONFIG_MAP_RANGES             4
 +
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_platform.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/slab.h>
-+#include "pcie-rcar.h"
-+
-+#define DRV_NAME "rcar-pcie"
-+
-+#define RCONF(x)	(PCICONF(0)+(x))
-+#define RPMCAP(x)	(PMCAP(0)+(x))
-+#define REXPCAP(x)	(EXPCAP(0)+(x))
-+#define RVCCAP(x)	(VCCAP(0)+(x))
-+
-+#define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
-+#define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
-+#define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
-+
-+#define PCI_MAX_RESOURCES 4
-+#define MAX_NR_INBOUND_MAPS 6
-+
-+/* Structure representing the PCIe interface */
-+struct rcar_pcie {
-+	struct device		*dev;
-+	void __iomem		*base;
-+	struct resource		res[PCI_MAX_RESOURCES];
-+	u8			root_bus_nr;
-+	struct clk		*clk;
-+	struct clk		*bus_clk;
-+};
-+
-+static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
-+{
-+	return sys->private_data;
-+}
-+
-+static void
-+pci_write_reg(struct rcar_pcie *pcie, unsigned long val, unsigned long reg)
-+{
-+	writel(val, pcie->base + reg);
-+}
-+
-+static unsigned long
-+pci_read_reg(struct rcar_pcie *pcie, unsigned long reg)
-+{
-+	return readl(pcie->base + reg);
-+}
-+
-+enum {
-+	PCI_ACCESS_READ,
-+	PCI_ACCESS_WRITE,
-+};
-+
-+static void rcar_rmw32(struct rcar_pcie *pcie,
-+			    int where, u32 mask, u32 data)
-+{
-+	int shift = 8 * (where & 3);
-+	u32 val = pci_read_reg(pcie, where & ~3);
-+	val &= ~(mask << shift);
-+	val |= data << shift;
-+	pci_write_reg(pcie, val, where & ~3);
-+}
-+
-+static u32 rcar_read_conf(struct rcar_pcie *pcie, int where)
-+{
-+	int shift = 8 * (where & 3);
-+	u32 val = pci_read_reg(pcie, where & ~3);
-+	return val >> shift;
-+}
-+
-+static int rcar_pcie_config_access(struct rcar_pcie *pcie,
-+		unsigned char access_type, struct pci_bus *bus,
-+		unsigned int devfn, int where, u32 *data)
-+{
-+	int dev, func, reg, index;
-+
-+	dev = PCI_SLOT(devfn);
-+	func = PCI_FUNC(devfn);
-+	reg = where & ~3;
-+	index = reg / 4;
-+
-+	if (bus->number > 255 || dev > 31 || func > 7)
-+		return PCIBIOS_FUNC_NOT_SUPPORTED;
-+
-+	/*
-+	 * While each channel has its own memory-mapped extended config
-+	 * space, it's generally only accessible when in endpoint mode.
-+	 * When in root complex mode, the controller is unable to target
-+	 * itself with either type 0 or type 1 accesses, and indeed, any
-+	 * controller initiated target transfer to its own config space
-+	 * result in a completer abort.
-+	 *
-+	 * Each channel effectively only supports a single device, but as
-+	 * the same channel <-> device access works for any PCI_SLOT()
-+	 * value, we cheat a bit here and bind the controller's config
-+	 * space to devfn 0 in order to enable self-enumeration. In this
-+	 * case the regular ECAR/ECDR path is sidelined and the mangled
-+	 * config access itself is initiated as an internal bus  transaction.
+ /*
+  * This discovers the pcibus <-> node mapping on AMD K8.
+  * also get peer root bus resource for io,mmio
+  */
+ 
+-struct pci_hostbridge_probe {
++struct amd_hostbridge {
+ 	u32 bus;
+ 	u32 slot;
+-	u32 vendor;
+ 	u32 device;
+ };
+ 
+-static struct pci_hostbridge_probe pci_probes[] __initdata = {
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1100 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0xff, 0, PCI_VENDOR_ID_AMD, 0x1200 },
+-	{ 0, 0x18, PCI_VENDOR_ID_AMD, 0x1300 },
++static struct amd_hostbridge hb_probes[] __initdata = {
++	/* Standard AMD Hostbriges is at bus 0x0 slot 0x18.
++	 * In case of PCI_ANY_ID, the logic will try matching
++	 * PCI_CLASS_BRIDGE_HOST instead.
 +	 */
-+	if (pci_is_root_bus(bus)) {
-+		if (dev != 0)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
++	{ 0x0 , 0x18, PCI_ANY_ID },
++	{ 0xff, 0   , PCI_DEVICE_ID_AMD_10H_NB_HT },
+ };
+ 
+-#define RANGE_NUM 16
+-
+ static struct pci_root_info __init *find_pci_root_info(int node, int link)
+ {
+ 	struct pci_root_info *info;
+@@ -84,31 +96,47 @@ static int __init early_fill_mp_bus_info(void)
+ 		return -1;
+ 
+ 	found = false;
+-	for (i = 0; i < ARRAY_SIZE(pci_probes); i++) {
++	for (i = 0; i < ARRAY_SIZE(hb_probes); i++) {
+ 		u32 id;
+ 		u16 device;
+ 		u16 vendor;
++		u32 class;
+ 
+-		bus = pci_probes[i].bus;
+-		slot = pci_probes[i].slot;
++		bus = hb_probes[i].bus;
++		slot = hb_probes[i].slot;
+ 		id = read_pci_config(bus, slot, 0, PCI_VENDOR_ID);
+-
+ 		vendor = id & 0xffff;
+ 		device = (id>>16) & 0xffff;
+-		if (pci_probes[i].vendor == vendor &&
+-		    pci_probes[i].device == device) {
+-			found = true;
+-			break;
++		class = read_pci_config(bus, slot, 0,
++			PCI_CLASS_REVISION) >> 16;
 +
-+		if (access_type == PCI_ACCESS_READ)
-+			*data = pci_read_reg(pcie, PCICONF(index));
-+		else
-+			pci_write_reg(pcie, *data, PCICONF(index));
++		if (PCI_VENDOR_ID_AMD == vendor) {
++			if (hb_probes[i].device == device) {
++				found = true;
++				break;
++			}
 +
-+		return PCIBIOS_SUCCESSFUL;
++			if ((hb_probes[i].device == PCI_ANY_ID) &&
++			    (class == PCI_CLASS_BRIDGE_HOST)) {
++				hb_probes[i].device = device;
++				found = true;
++				break;
++			}
+ 		}
+ 	}
+ 
+-	if (!found)
++	if (!found) {
++		printk(KERN_WARNING "AMD hostbridge not found\n");
+ 		return 0;
 +	}
 +
-+	/* Clear errors */
-+	pci_write_reg(pcie, pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
-+
-+	/* Set the PIO address */
-+	pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) | PCIE_CONF_DEV(dev) |
-+				PCIE_CONF_FUNC(func) | reg, PCIECAR);
-+
-+	/* Enable the configuration access */
-+	if (bus->parent->number == pcie->root_bus_nr)
-+		pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE0, PCIECCTLR);
-+	else
-+		pci_write_reg(pcie, CONFIG_SEND_ENABLE | TYPE1, PCIECCTLR);
-+
-+	/* Check for errors */
-+	if (pci_read_reg(pcie, PCIEERRFR) & UNSUPPORTED_REQUEST)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	/* Check for master and target aborts */
-+	if (rcar_read_conf(pcie, RCONF(PCI_STATUS)) &
-+		(PCI_STATUS_REC_MASTER_ABORT | PCI_STATUS_REC_TARGET_ABORT))
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	if (access_type == PCI_ACCESS_READ)
-+		*data = pci_read_reg(pcie, PCIECDR);
-+	else
-+		pci_write_reg(pcie, *data, PCIECDR);
-+
-+	/* Disable the configuration access */
-+	pci_write_reg(pcie, 0, PCIECCTLR);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int rcar_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
-+				int where, int size, u32 *val)
-+{
-+	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	int ret;
-+
-+	if ((size == 2) && (where & 1))
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	else if ((size == 4) && (where & 3))
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
-+				      bus, devfn, where, val);
-+	if (ret != PCIBIOS_SUCCESSFUL) {
-+		*val = 0xffffffff;
-+		return ret;
-+	}
-+
-+	if (size == 1)
-+		*val = (*val >> (8 * (where & 3))) & 0xff;
-+	else if (size == 2)
-+		*val = (*val >> (8 * (where & 2))) & 0xffff;
-+
-+	dev_dbg(&bus->dev, "pcie-config-read: bus=%3d devfn=0x%04x "
-+		"where=0x%04x size=%d val=0x%08lx\n", bus->number,
-+		devfn, where, size, (unsigned long)*val);
-+
-+	return ret;
-+}
-+
-+static int rcar_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
-+				 int where, int size, u32 val)
-+{
-+	struct rcar_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	int shift, ret;
-+	u32 data;
-+
-+	if ((size == 2) && (where & 1))
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	else if ((size == 4) && (where & 3))
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_READ,
-+				      bus, devfn, where, &data);
-+	if (ret != PCIBIOS_SUCCESSFUL)
-+		return ret;
-+
-+	dev_dbg(&bus->dev, "pcie-config-write: bus=%3d devfn=0x%04x "
-+		"where=0x%04x size=%d val=0x%08lx\n", bus->number,
-+		devfn, where, size, (unsigned long)val);
-+
-+	if (size == 1) {
-+		shift = 8 * (where & 3);
-+		data &= ~(0xff << shift);
-+		data |= ((val & 0xff) << shift);
-+	} else if (size == 2) {
-+		shift = 8 * (where & 2);
-+		data &= ~(0xffff << shift);
-+		data |= ((val & 0xffff) << shift);
-+	} else
-+		data = val;
-+
-+	ret = rcar_pcie_config_access(pcie, PCI_ACCESS_WRITE,
-+				      bus, devfn, where, &data);
-+
-+	return ret;
-+}
-+
-+static struct pci_ops rcar_pcie_ops = {
-+	.read	= rcar_pcie_read_conf,
-+	.write	= rcar_pcie_write_conf,
-+};
-+
-+static int rcar_pcie_setup_window(int win, struct resource *res,
-+					struct rcar_pcie *pcie)
-+{
-+	/* Setup PCIe address space mappings for each resource */
-+	resource_size_t size;
-+	u32 mask;
-+
-+	pci_write_reg(pcie, 0x00000000, PCIEPTCTLR(win));
-+
-+	/*
-+	 * The PAMR mask is calculated in units of 128Bytes, which
-+	 * keeps things pretty simple.
-+	 */
-+	size = resource_size(res);
-+	mask = (roundup_pow_of_two(size) / SZ_128) - 1;
-+	pci_write_reg(pcie, mask << 7, PCIEPAMR(win));
-+
-+	pci_write_reg(pcie, upper_32_bits(res->start), PCIEPARH(win));
-+	pci_write_reg(pcie, lower_32_bits(res->start), PCIEPARL(win));
-+
-+	/* First resource is for IO */
-+	mask = PAR_ENABLE;
-+	if (res->flags & IORESOURCE_IO)
-+		mask |= IO_SPACE;
-+
-+	pci_write_reg(pcie, mask, PCIEPTCTLR(win));
-+
-+	return 0;
-+}
-+
-+static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
-+{
-+	struct rcar_pcie *pcie = sys_to_pcie(sys);
-+	struct resource *res;
-+	int i;
-+
-+	pcie->root_bus_nr = sys->busnr;
-+
-+	/* Setup PCI resources */
-+	for (i = 0; i < PCI_MAX_RESOURCES; i++) {
-+
-+		res = &pcie->res[i];
-+		if (!res->flags)
-+			continue;
-+
-+		rcar_pcie_setup_window(i, res, pcie);
-+
-+		if (res->flags & IORESOURCE_IO)
-+			pci_ioremap_io(nr * SZ_64K, res->start);
-+		else
-+			pci_add_resource(&sys->resources, res);
-+	}
-+
-+	return 1;
-+}
-+
-+static void __init rcar_pcie_enable(struct rcar_pcie *pcie)
-+{
-+	struct platform_device *pdev = to_platform_device(pcie->dev);
-+	struct hw_pci hw = {
-+		.nr_controllers = 1,
-+		.private_data   = (void **)&pcie,
-+		.setup          = rcar_pcie_setup,
-+		.map_irq        = of_irq_parse_and_map_pci,
-+		.ops            = &rcar_pcie_ops,
-+	};
-+
-+	pci_common_init_dev(&pdev->dev, &hw);
-+}
-+
-+static int __init phy_wait_for_ack(struct rcar_pcie *pcie)
-+{
-+	unsigned int timeout = 100;
-+
-+	while (timeout--) {
-+		if (pci_read_reg(pcie, H1_PCIEPHYADRR) & PHY_ACK)
-+			return 0;
-+
-+		udelay(100);
-+	}
-+
-+	dev_err(pcie->dev, "Access to PCIe phy timed out\n");
-+
-+	return -ETIMEDOUT;
-+}
-+
-+static void __init phy_write_reg(struct rcar_pcie *pcie,
-+				 unsigned int rate, unsigned int addr,
-+				 unsigned int lane, unsigned int data)
-+{
-+	unsigned long phyaddr;
-+
-+	phyaddr = WRITE_CMD |
-+		((rate & 1) << RATE_POS) |
-+		((lane & 0xf) << LANE_POS) |
-+		((addr & 0xff) << ADR_POS);
-+
-+	/* Set write data */
-+	pci_write_reg(pcie, data, H1_PCIEPHYDOUTR);
-+	pci_write_reg(pcie, phyaddr, H1_PCIEPHYADRR);
-+
-+	/* Ignore errors as they will be dealt with if the data link is down */
-+	phy_wait_for_ack(pcie);
-+
-+	/* Clear command */
-+	pci_write_reg(pcie, 0, H1_PCIEPHYDOUTR);
-+	pci_write_reg(pcie, 0, H1_PCIEPHYADRR);
-+
-+	/* Ignore errors as they will be dealt with if the data link is down */
-+	phy_wait_for_ack(pcie);
-+}
-+
-+static int __init rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
-+{
-+	unsigned int timeout = 10;
-+
-+	while (timeout--) {
-+		if ((pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
-+			return 0;
-+
-+		msleep(5);
-+	}
-+
-+	return -ETIMEDOUT;
-+}
-+
-+static int __init rcar_pcie_hw_init(struct rcar_pcie *pcie)
-+{
-+	int err;
-+
-+	/* Begin initialization */
-+	pci_write_reg(pcie, 0, PCIETCTLR);
-+
-+	/* Set mode */
-+	pci_write_reg(pcie, 1, PCIEMSR);
-+
-+	/*
-+	 * Initial header for port config space is type 1, set the device
-+	 * class to match. Hardware takes care of propagating the IDSETR
-+	 * settings, so there is no need to bother with a quirk.
-+	 */
-+	pci_write_reg(pcie, PCI_CLASS_BRIDGE_PCI << 16, IDSETR1);
-+
-+	/*
-+	 * Setup Secondary Bus Number & Subordinate Bus Number, even though
-+	 * they aren't used, to avoid bridge being detected as broken.
-+	 */
-+	rcar_rmw32(pcie, RCONF(PCI_SECONDARY_BUS), 0xff, 1);
-+	rcar_rmw32(pcie, RCONF(PCI_SUBORDINATE_BUS), 0xff, 1);
-+
-+	/* Initialize default capabilities. */
-+	rcar_rmw32(pcie, REXPCAP(0), 0, PCI_CAP_ID_EXP);
-+	rcar_rmw32(pcie, REXPCAP(PCI_EXP_FLAGS),
-+		PCI_EXP_FLAGS_TYPE, PCI_EXP_TYPE_ROOT_PORT << 4);
-+	rcar_rmw32(pcie, RCONF(PCI_HEADER_TYPE), 0x7f,
-+		PCI_HEADER_TYPE_BRIDGE);
-+
-+	/* Enable data link layer active state reporting */
-+	rcar_rmw32(pcie, REXPCAP(PCI_EXP_LNKCAP), 0, PCI_EXP_LNKCAP_DLLLARC);
-+
-+	/* Write out the physical slot number = 0 */
-+	rcar_rmw32(pcie, REXPCAP(PCI_EXP_SLTCAP), PCI_EXP_SLTCAP_PSN, 0);
-+
-+	/* Set the completion timer timeout to the maximum 50ms. */
-+	rcar_rmw32(pcie, TLCTLR+1, 0x3f, 50);
-+
-+	/* Terminate list of capabilities (Next Capability Offset=0) */
-+	rcar_rmw32(pcie, RVCCAP(0), 0xfff0, 0);
-+
-+	/* Enable MAC data scrambling. */
-+	rcar_rmw32(pcie, MACCTLR, SCRAMBLE_DISABLE, 0);
-+
-+	/* Finish initialization - establish a PCI Express link */
-+	pci_write_reg(pcie, CFINIT, PCIETCTLR);
-+
-+	/* This will timeout if we don't have a link. */
-+	err = rcar_pcie_wait_for_dl(pcie);
-+	if (err)
-+		return err;
-+
-+	/* Enable INTx interrupts */
-+	rcar_rmw32(pcie, PCIEINTXR, 0, 0xF << 8);
-+
-+	/* Enable slave Bus Mastering */
-+	rcar_rmw32(pcie, RCONF(PCI_STATUS), PCI_STATUS_DEVSEL_MASK,
-+		PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER |
-+		PCI_STATUS_CAP_LIST | PCI_STATUS_DEVSEL_FAST);
-+
-+	wmb();
-+
-+	return 0;
-+}
-+
-+static int __init rcar_pcie_hw_init_h1(struct rcar_pcie *pcie)
-+{
-+	unsigned int timeout = 10;
-+
-+	/* Initialize the phy */
-+	phy_write_reg(pcie, 0, 0x42, 0x1, 0x0EC34191);
-+	phy_write_reg(pcie, 1, 0x42, 0x1, 0x0EC34180);
-+	phy_write_reg(pcie, 0, 0x43, 0x1, 0x00210188);
-+	phy_write_reg(pcie, 1, 0x43, 0x1, 0x00210188);
-+	phy_write_reg(pcie, 0, 0x44, 0x1, 0x015C0014);
-+	phy_write_reg(pcie, 1, 0x44, 0x1, 0x015C0014);
-+	phy_write_reg(pcie, 1, 0x4C, 0x1, 0x786174A0);
-+	phy_write_reg(pcie, 1, 0x4D, 0x1, 0x048000BB);
-+	phy_write_reg(pcie, 0, 0x51, 0x1, 0x079EC062);
-+	phy_write_reg(pcie, 0, 0x52, 0x1, 0x20000000);
-+	phy_write_reg(pcie, 1, 0x52, 0x1, 0x20000000);
-+	phy_write_reg(pcie, 1, 0x56, 0x1, 0x00003806);
-+
-+	phy_write_reg(pcie, 0, 0x60, 0x1, 0x004B03A5);
-+	phy_write_reg(pcie, 0, 0x64, 0x1, 0x3F0F1F0F);
-+	phy_write_reg(pcie, 0, 0x66, 0x1, 0x00008000);
-+
-+	while (timeout--) {
-+		if (pci_read_reg(pcie, H1_PCIEPHYSR))
-+			return rcar_pcie_hw_init(pcie);
-+
-+		msleep(5);
-+	}
-+
-+	return -ETIMEDOUT;
-+}
-+
-+static int __init rcar_pcie_get_resources(struct platform_device *pdev,
-+	struct rcar_pcie *pcie)
-+{
-+	struct resource res;
-+	int err;
-+
-+	err = of_address_to_resource(pdev->dev.of_node, 0, &res);
-+	if (err)
-+		return err;
-+
-+	pcie->clk = devm_clk_get(&pdev->dev, "pcie");
-+	if (IS_ERR(pcie->clk)) {
-+		dev_err(pcie->dev, "cannot get platform clock\n");
-+		return PTR_ERR(pcie->clk);
-+	}
-+	err = clk_prepare_enable(pcie->clk);
-+	if (err)
-+		goto fail_clk;
-+
-+	pcie->bus_clk = devm_clk_get(&pdev->dev, "pcie_bus");
-+	if (IS_ERR(pcie->bus_clk)) {
-+		dev_err(pcie->dev, "cannot get pcie bus clock\n");
-+		err = PTR_ERR(pcie->bus_clk);
-+		goto fail_clk;
-+	}
-+	err = clk_prepare_enable(pcie->bus_clk);
-+	if (err)
-+		goto err_map_reg;
-+
-+	pcie->base = devm_ioremap_resource(&pdev->dev, &res);
-+	if (IS_ERR(pcie->base)) {
-+		err = PTR_ERR(pcie->base);
-+		goto err_map_reg;
-+	}
-+
-+	return 0;
-+
-+err_map_reg:
-+	clk_disable_unprepare(pcie->bus_clk);
-+fail_clk:
-+	clk_disable_unprepare(pcie->clk);
-+
-+	return err;
-+}
-+
-+static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
-+				    struct of_pci_range *range,
-+				    int *index)
-+{
-+	u64 restype = range->flags;
-+	u64 cpu_addr = range->cpu_addr;
-+	u64 cpu_end = range->cpu_addr + range->size;
-+	u64 pci_addr = range->pci_addr;
-+	u32 flags = LAM_64BIT | LAR_ENABLE;
-+	u64 mask;
-+	u64 size;
-+	int idx = *index;
-+
-+	if (restype & IORESOURCE_PREFETCH)
-+		flags |= LAM_PREFETCH;
-+
-+	/*
-+	 * If the size of the range is larger than the alignment of the start
-+	 * address, we have to use multiple entries to perform the mapping.
-+	 */
-+	if (cpu_addr > 0) {
-+		unsigned long nr_zeros = __ffs64(cpu_addr);
-+		u64 alignment = 1ULL << nr_zeros;
-+		size = min(range->size, alignment);
-+	} else {
-+		size = range->size;
-+	}
-+	/* Hardware supports max 4GiB inbound region */
-+	size = min(size, 1ULL << 32);
-+
-+	mask = roundup_pow_of_two(size) - 1;
-+	mask &= ~0xf;
-+
-+	while (cpu_addr < cpu_end) {
-+		/*
-+		 * Set up 64-bit inbound regions as the range parser doesn't
-+		 * distinguish between 32 and 64-bit types.
-+		 */
-+		pci_write_reg(pcie, lower_32_bits(pci_addr), PCIEPRAR(idx));
-+		pci_write_reg(pcie, lower_32_bits(cpu_addr), PCIELAR(idx));
-+		pci_write_reg(pcie, lower_32_bits(mask) | flags, PCIELAMR(idx));
-+
-+		pci_write_reg(pcie, upper_32_bits(pci_addr), PCIEPRAR(idx+1));
-+		pci_write_reg(pcie, upper_32_bits(cpu_addr), PCIELAR(idx+1));
-+		pci_write_reg(pcie, 0, PCIELAMR(idx+1));
-+
-+		pci_addr += size;
-+		cpu_addr += size;
-+		idx += 2;
-+
-+		if (idx > MAX_NR_INBOUND_MAPS) {
-+			dev_err(pcie->dev, "Failed to map inbound regions!\n");
-+			return -EINVAL;
-+		}
-+	}
-+	*index = idx;
-+
-+	return 0;
-+}
-+
-+static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+				     struct device_node *node)
-+{
-+	const int na = 3, ns = 2;
-+	int rlen;
-+
-+	parser->node = node;
-+	parser->pna = of_n_addr_cells(node);
-+	parser->np = parser->pna + na + ns;
-+
-+	parser->range = of_get_property(node, "dma-ranges", &rlen);
-+	if (!parser->range)
-+		return -ENOENT;
-+
-+	parser->end = parser->range + rlen / sizeof(__be32);
-+	return 0;
-+}
-+
-+static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
-+					  struct device_node *np)
-+{
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
-+	int index = 0;
-+	int err;
-+
-+	if (pci_dma_range_parser_init(&parser, np))
-+		return -EINVAL;
-+
-+	/* Get the dma-ranges from DT */
-+	for_each_of_pci_range(&parser, &range) {
-+		u64 end = range.cpu_addr + range.size - 1;
-+		dev_dbg(pcie->dev, "0x%08x 0x%016llx..0x%016llx -> 0x%016llx\n",
-+			range.flags, range.cpu_addr, end, range.pci_addr);
-+
-+		err = rcar_pcie_inbound_ranges(pcie, &range, &index);
-+		if (err)
-+			return err;
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id rcar_pcie_of_match[] = {
-+	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
-+	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
-+	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, rcar_pcie_of_match);
-+
-+static int __init rcar_pcie_probe(struct platform_device *pdev)
-+{
-+	struct rcar_pcie *pcie;
-+	unsigned int data;
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
-+	const struct of_device_id *of_id;
-+	int err, win = 0;
-+	int (*hw_init_fn)(struct rcar_pcie *);
-+
-+	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->dev = &pdev->dev;
-+	platform_set_drvdata(pdev, pcie);
-+
-+	if (of_pci_range_parser_init(&parser, pdev->dev.of_node)) {
-+		dev_err(&pdev->dev, "missing ranges property\n");
-+		return -EINVAL;
-+	}
-+
-+	err = rcar_pcie_get_resources(pdev, pcie);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "failed to request resources: %d\n", err);
-+		return err;
-+	}
-+
-+	for_each_of_pci_range(&parser, &range) {
-+		of_pci_range_to_resource(&range, pdev->dev.of_node,
-+						&pcie->res[win++]);
-+
-+		if (win > PCI_MAX_RESOURCES)
-+			break;
-+	}
-+
-+	 err = rcar_pcie_parse_map_dma_ranges(pcie, pdev->dev.of_node);
-+	 if (err)
-+		return err;
-+
-+	of_id = of_match_device(rcar_pcie_of_match, pcie->dev);
-+	if (!of_id || !of_id->data)
-+		return -EINVAL;
-+	hw_init_fn = of_id->data;
-+
-+	/* Failure to get a link might just be that no cards are inserted */
-+	err = hw_init_fn(pcie);
-+	if (err) {
-+		dev_info(&pdev->dev, "PCIe link down\n");
-+		return 0;
-+	}
-+
-+	data = pci_read_reg(pcie, MACSR);
-+	dev_info(&pdev->dev, "PCIe x%d: link up\n", (data >> 20) & 0x3f);
-+
-+	rcar_pcie_enable(pcie);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver rcar_pcie_driver = {
-+	.driver = {
-+		.name = DRV_NAME,
-+		.owner = THIS_MODULE,
-+		.of_match_table = rcar_pcie_of_match,
-+		.suppress_bind_attrs = true,
-+	},
-+	.probe = rcar_pcie_probe,
-+};
-+module_platform_driver(rcar_pcie_driver);
-+
-+MODULE_AUTHOR("Phil Edworthy <phil.edworthy@renesas.com>");
-+MODULE_DESCRIPTION("Renesas R-Car PCIe driver");
-+MODULE_LICENSE("GPLv2");
-diff --git a/drivers/pci/host/pcie-rcar.h b/drivers/pci/host/pcie-rcar.h
-new file mode 100644
-index 0000000..3dc026b
---- /dev/null
-+++ b/drivers/pci/host/pcie-rcar.h
-@@ -0,0 +1,82 @@
-+/*
-+ * PCI Express definitions for Renesas R-Car SoCs
-+ */
-+#ifndef __PCI_RCAR_H
-+#define __PCI_RCAR_H
-+
-+#define PCIECAR			0x000010
-+#define PCIECCTLR		0x000018
-+#define  CONFIG_SEND_ENABLE	(1 << 31)
-+#define  TYPE0			(0 << 8)
-+#define  TYPE1			(1 << 8)
-+#define PCIECDR			0x000020
-+#define PCIEMSR			0x000028
-+#define PCIEINTXR		0x000400
-+#define PCIEPHYSR		0x0007f0
-+
-+/* Transfer control */
-+#define PCIETCTLR		0x02000
-+#define  CFINIT			1
-+#define PCIETSTR		0x02004
-+#define  DATA_LINK_ACTIVE	1
-+#define PCIEINTR		0x02008
-+#define PCIEINTER		0x0200c
-+#define PCIEERRFR		0x02020
-+#define  UNSUPPORTED_REQUEST	(1 << 4)
-+#define PCIEERRFER		0x02024
-+#define PCIEERRFR2		0x02028
-+#define PCIEPMSR		0x02034
-+#define PCIEPMSCIER		0x02038
-+#define PCIEMSIFR		0x02044
-+
-+/* root port address */
-+#define PCIEPRAR(x)		(0x02080 + ((x) * 0x4))
-+
-+/* local address reg & mask */
-+#define PCIELAR(x)		(0x02200 + ((x) * 0x20))
-+#define PCIELAMR(x)		(0x02208 + ((x) * 0x20))
-+#define  LAM_PMIOLAMnB3		(1 << 3)
-+#define  LAM_PMIOLAMnB2		(1 << 2)
-+#define  LAM_PREFETCH		(1 << 3)
-+#define  LAM_64BIT		(1 << 2)
-+#define  LAR_ENABLE		(1 << 1)
-+
-+/* PCIe address reg & mask */
-+#define PCIEPARL(x)		(0x03400 + ((x) * 0x20))
-+#define PCIEPARH(x)		(0x03404 + ((x) * 0x20))
-+#define PCIEPAMR(x)		(0x03408 + ((x) * 0x20))
-+#define PCIEPTCTLR(x)		(0x0340c + ((x) * 0x20))
-+#define  PAR_ENABLE		(1 << 31)
-+#define  IO_SPACE		(1 << 8)
-+
-+/* Configuration */
-+#define PCICONF(x)		(0x010000 + ((x) * 0x4))
-+#define PMCAP(x)		(0x010040 + ((x) * 0x4))
-+#define MSICAP(x)		(0x010050 + ((x) * 0x4))
-+#define EXPCAP(x)		(0x010070 + ((x) * 0x4))
-+#define VCCAP(x)		(0x010100 + ((x) * 0x4))
-+#define SERNUMCAP(x)		(0x0101b0 + ((x) * 0x4))
-+
-+/* link layer */
-+#define IDSETR0			0x011000
-+#define IDSETR1			0x011004
-+#define SUBIDSETR		0x011024
-+#define DSERSETR0		0x01102c
-+#define DSERSETR1		0x011030
-+#define TLCTLR			0x011048
-+#define MACSR			0x011054
-+#define MACCTLR			0x011058
-+#define  SCRAMBLE_DISABLE	(1 << 27)
-+
-+/* R-Car H1 PHY */
-+#define H1_PCIEPHYCTLR		0x040008
-+#define H1_PCIEPHYADRR		0x04000c
-+#define  WRITE_CMD		(1 << 16)
-+#define  PHY_ACK		(1 << 24)
-+#define  RATE_POS		12
-+#define  LANE_POS		8
-+#define  ADR_POS		0
-+#define H1_PCIEPHYDOUTR		0x040014
-+#define H1_PCIEPHYSR		0x040018
-+
-+#endif /* __PCI_RCAR_H */
++	printk(KERN_DEBUG "Found AMD hostbridge at %x:%x.0\n", bus, slot);
+ 
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i < AMD_NB_F1_CONFIG_MAP_RANGES; i++) {
+ 		int min_bus;
+ 		int max_bus;
+-		reg = read_pci_config(bus, slot, 1, 0xe0 + (i << 2));
++		reg = read_pci_config(bus, slot, 1,
++				AMD_NB_F1_CONFIG_MAP_REG + (i << 2));
+ 
+ 		/* Check if that register is enabled for bus range */
+ 		if ((reg & 7) != 3)
+@@ -124,21 +152,23 @@ static int __init early_fill_mp_bus_info(void)
+ 	}
+ 
+ 	/* get the default node and link for left over res */
+-	reg = read_pci_config(bus, slot, 0, 0x60);
++	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_NODE_ID);
+ 	def_node = (reg >> 8) & 0x07;
+-	reg = read_pci_config(bus, slot, 0, 0x64);
++	reg = read_pci_config(bus, slot, 0, AMD_NB_F0_UNIT_ID);
+ 	def_link = (reg >> 8) & 0x03;
+ 
+ 	memset(range, 0, sizeof(range));
+ 	add_range(range, RANGE_NUM, 0, 0, 0xffff + 1);
+ 	/* io port resource */
+-	for (i = 0; i < 4; i++) {
+-		reg = read_pci_config(bus, slot, 1, 0xc0 + (i << 3));
++	for (i = 0; i < AMD_NB_F1_IOPORT_RANGES; i++) {
++		reg = read_pci_config(bus, slot, 1,
++				AMD_NB_F1_IO_BASEA_DDR_REG + (i << 3));
+ 		if (!(reg & 3))
+ 			continue;
+ 
+ 		start = reg & 0xfff000;
+-		reg = read_pci_config(bus, slot, 1, 0xc4 + (i << 3));
++		reg = read_pci_config(bus, slot, 1,
++				AMD_NB_F1_IO_LIMIT_ADDR_REG + (i << 3));
+ 		node = reg & 0x07;
+ 		link = (reg >> 4) & 0x03;
+ 		end = (reg & 0xfff000) | 0xfff;
+@@ -198,14 +228,16 @@ static int __init early_fill_mp_bus_info(void)
+ 	}
+ 
+ 	/* mmio resource */
+-	for (i = 0; i < 8; i++) {
+-		reg = read_pci_config(bus, slot, 1, 0x80 + (i << 3));
++	for (i = 0; i < AMD_NB_F1_MMIO_RANGES; i++) {
++		reg = read_pci_config(bus, slot, 1,
++				AMD_NB_F1_MMIO_BASE_REG + (i << 3));
+ 		if (!(reg & 3))
+ 			continue;
+ 
+ 		start = reg & 0xffffff00; /* 39:16 on 31:8*/
+ 		start <<= 8;
+-		reg = read_pci_config(bus, slot, 1, 0x84 + (i << 3));
++		reg = read_pci_config(bus, slot, 1,
++				AMD_NB_F1_MMIO_LIMIT_REG + (i << 3));
+ 		node = reg & 0x07;
+ 		link = (reg >> 4) & 0x03;
+ 		end = (reg & 0xffffff00);
 -- 
-1.9.0
+1.7.10.4
+
 
